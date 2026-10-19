@@ -1,0 +1,39 @@
+id: hm_goosed
+name: "Goosed"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 20
+pool_only: true
+
+slots:
+  - role: wall_balls
+    slot_type: rounds_for_time
+    rounds: 5
+    duration_sec: 1080
+    intensity: max_effort
+    load: "9 kg (20 lb)"
+    exercise_filter:
+      exercise_ids: [wall_ball]
+      ordered: true
+    notes: >
+      50-40-30-20-10 reps of each: wall balls, then ball slams.
+
+  - role: ball_slams
+    slot_type: amrap_movement
+    reps_per_round: 50
+    parent_slot_role: wall_balls
+    load: "9 kg (20 lb)"
+    exercise_filter:
+      exercise_ids: [ball_slam]
+      ordered: true
+    notes: >
+      50, 40, 30, 20 and 10 ball slams after each set of wall balls.
+
+required_equipment:
+  - medicine_ball
+sources:
+  - Horsemen
+notes: >
+  50-40-30-20-10 wall balls and ball slams with a 20 lb ball. The source writes only the rep
+  scheme, no clock.

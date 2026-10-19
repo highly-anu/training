@@ -1,0 +1,50 @@
+id: hm_meritorious
+name: Meritorious
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 30
+slots:
+- role: meritorious
+  slot_type: for_time
+  rounds: 1
+  duration_sec: 1500
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids: [handstand_push_up]
+    ordered: true
+  notes: 'For time, in order: 30 handstand push-ups, 40 pull-ups, 50 kettlebell swings, 60 sit-ups, 70 burpees.'
+- role: pull_up
+  slot_type: amrap_movement
+  parent_slot_role: meritorious
+  reps_per_round: 40
+  exercise_filter:
+    exercise_ids: [pull_up]
+    ordered: true
+- role: kb_swing
+  slot_type: amrap_movement
+  parent_slot_role: meritorious
+  reps_per_round: 50
+  exercise_filter:
+    exercise_ids: [kb_swing_two_hand]
+    ordered: true
+  load: 24 kg (53 lb)
+- role: sit_up
+  slot_type: amrap_movement
+  parent_slot_role: meritorious
+  reps_per_round: 60
+  exercise_filter:
+    exercise_ids: [sit_up]
+    ordered: true
+- role: burpee
+  slot_type: amrap_movement
+  parent_slot_role: meritorious
+  reps_per_round: 70
+  exercise_filter:
+    exercise_ids: [burpee]
+    ordered: true
+required_equipment: [pull_up_bar, kettlebell]
+sources: [Horsemen]
+notes: 'A chipper: 30 handstand push-ups, 40 pull-ups, 50 kettlebell swings at 24 kg (53 lb), 60 sit-ups and 70
+  burpees, each finished before the next.'

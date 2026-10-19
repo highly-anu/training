@@ -1,0 +1,26 @@
+id: hm_one_mile_tire_drag
+name: 1-Mile Tire Drag
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 20
+slots:
+- role: tire_drag
+  slot_type: distance
+  distance_m: 1609
+  exercise_filter:
+    exercise_ids:
+    - tire_drag_forward
+    ordered: true
+  notes: Drag a tire 1 mile.
+required_equipment:
+- tire
+- open_space
+sources:
+- Horsemen
+notes: >-
+  A warm-up: a 1-mile tire drag. The source gives no tire weight and no time. Unnamed in the source.

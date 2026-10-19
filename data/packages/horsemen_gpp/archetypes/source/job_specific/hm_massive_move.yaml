@@ -1,0 +1,89 @@
+id: hm_massive_move
+name: Massive Move
+modality: durability
+category: gpp_durability
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 40
+slots:
+- role: move_the_kettlebells
+  slot_type: sets_reps
+  sets: 1
+  reps: 1
+  exercise_filter:
+    exercise_ids:
+    - kb_walking_lunge_double
+    - db_walking_lunge
+    ordered: true
+  notes: >-
+    Move all the kettlebells in the gym across the room and back, lunging with them. One trip; the source
+    gives no count or load.
+- role: towel_pull_ups
+  slot_type: sets_reps
+  sets: 5
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - towel_pull_up
+    ordered: true
+  notes: >-
+    5 rounds, in order: 10 towel pull-ups, 15 towel KB swings, 20 towel halos, 10 fingertip push-ups,
+    50 m farmer carry, 50 m KB bear crawl — not for time.
+- role: towel_kb_swings
+  slot_type: sets_reps
+  sets: 5
+  reps: 15
+  exercise_filter:
+    exercise_ids:
+    - towel_kb_swing
+    ordered: true
+- role: towel_halos
+  slot_type: sets_reps
+  sets: 5
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - towel_kb_halo
+    ordered: true
+- role: fingertip_push_ups
+  slot_type: sets_reps
+  sets: 5
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - push_up_fingertip
+    ordered: true
+- role: farmer_carry
+  slot_type: distance
+  distance_m: 50
+  sets: 5
+  exercise_filter:
+    exercise_ids:
+    - kb_farmer_carry_double
+    ordered: true
+  load: 2 x 20 kg (2 x 44 lb)
+- role: kb_bear_crawl
+  slot_type: distance
+  distance_m: 50
+  sets: 5
+  exercise_filter:
+    exercise_ids:
+    - kb_bear_crawl
+    - db_crawl
+    ordered: true
+  load: 2 x 20 kg (2 x 44 lb)
+  notes: Bear crawl holding two kettlebells (or dumbbells).
+required_equipment:
+- kettlebell
+- pull_up_bar
+- open_space
+sources:
+- Horsemen
+notes: >-
+  One of the source's hard job-specific workouts, for grip: lunge every kettlebell in the gym across the
+  room and back, then five rounds of towel pull-ups, towel swings and halos, fingertip push-ups, a farmer
+  carry and a kettlebell bear crawl. The source does not say for time. Where the source gives no load
+  the weight is the athlete's call, by its weight-loading rule. Source name cleaned of profanity.

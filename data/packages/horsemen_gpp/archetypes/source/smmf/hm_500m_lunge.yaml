@@ -1,0 +1,22 @@
+id: hm_500m_lunge
+name: 500 m Lunge
+modality: strength_endurance
+category: gpp_durability
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 30
+slots:
+- role: lunge
+  slot_type: distance
+  distance_m: 50
+  sets: 10
+  exercise_filter:
+    exercise_ids: [walking_lunge]
+    ordered: true
+  notes: 10 x 50 m of walking lunges, changing how the weight is carried every 50 m — suitcase, farmer, overhead,
+    crosswalk — and adding then subtracting weight progressively. The source gives no loads.
+required_equipment: [kettlebell, open_space]
+sources: [Horsemen]
+notes: 500 m of walking lunges in ten 50 m legs, the carry changing every leg (suitcase, farmer, overhead and crosswalk)
+  and the weight added then taken away progressively. The source gives no loads and no time; it leaves the weight
+  to the athlete.

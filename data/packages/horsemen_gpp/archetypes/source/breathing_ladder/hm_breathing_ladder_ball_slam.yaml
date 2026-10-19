@@ -1,0 +1,33 @@
+id: hm_breathing_ladder_ball_slam
+name: 'Breathing Ladder: Ball Slams'
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 25
+slots:
+- role: ladder
+  slot_type: sets_reps
+  sets: 20
+  reps: 1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20
+  exercise_filter:
+    exercise_ids:
+    - ball_slam
+    ordered: true
+  notes: >-
+    1 rep, then the allotted breaths, then 2 reps, adding one rep each rung up to 20. Stop when
+    you can no longer do the rung within the allotted breaths. The source does not say how many
+    breaths.
+required_equipment:
+- medicine_ball
+sources:
+- Horsemen
+notes: >-
+  A breathing ladder of ball slams: add one rep each rung, the prescribed breaths between rungs,
+  stopping when the movement can no longer be done in the allotted breaths. The source's other
+  schemes are 1-20-1 and repeated 1-10 ladders; under 30 minutes it counts as power endurance,
+  as in the template's "less than 30 breathing ladder". The source does not say how many breaths.
+  The source gives no load; by its weight-loading rule the choice is the athlete's.

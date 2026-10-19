@@ -1,0 +1,76 @@
+id: hm_chin_up_soldier_on
+name: Chin Up. Soldier On.
+modality: max_strength
+category: strength
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 55
+slots:
+- role: work_up_1rm
+  slot_type: sets_reps
+  sets: 1
+  reps: 1
+  intensity: max
+  exercise_filter:
+    exercise_ids: [deadlift]
+    ordered: true
+  load: today's 1RM
+  notes: Work up to a 1-rep max for the day; the percentages below are of it.
+- role: deadlift
+  slot_type: sets_reps
+  sets: 5
+  reps: 3
+  exercise_filter:
+    exercise_ids: [deadlift]
+    ordered: true
+  load: 85% of today's 1RM
+  notes: '5 rounds, alternating: 3 deadlifts, 10 ring push-ups — not for time.'
+- role: ring_push_up
+  slot_type: sets_reps
+  sets: 5
+  reps: 10
+  exercise_filter:
+    exercise_ids: [push_up_ring]
+    ordered: true
+- role: thruster
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  exercise_filter:
+    exercise_ids: [thruster]
+    ordered: true
+  load: heavy
+  notes: '5 rounds, alternating: 5 heavy thrusters ("GO HEAVY!"), a 15 ft rope climb (or 10 pull-ups) — not for
+    time.'
+- role: rope_climb
+  slot_type: sets_reps
+  sets: 5
+  reps: 1
+  exercise_filter:
+    exercise_ids: [rope_climb, pull_up]
+    ordered: true
+  notes: One 15 ft rope climb, or 10 pull-ups without a rope.
+- role: double_eagle
+  slot_type: sets_reps
+  sets: 5
+  reps: 1
+  exercise_filter:
+    exercise_ids: [sandbag_double_eagle]
+    ordered: true
+  notes: '5 rounds, alternating: 1 sandbag double eagle, 10 one-arm bench presses each arm — not for time. Clean
+    the sandbag to the shoulder, around the neck, 10 deep squats, drag the tire 40 ft forward, put the bag in the
+    tire and drag it back.'
+- role: one_arm_bench_press
+  slot_type: sets_reps
+  sets: 5
+  reps: 10
+  exercise_filter:
+    exercise_ids: [db_bench_press_single_arm]
+    ordered: true
+  notes: Each arm.
+required_equipment: [barbell, rack, plates, rings, pull_up_bar, sandbag, tire, open_space, dumbbell]
+sources: [Horsemen]
+notes: Work up to a 1-rep max deadlift, then 5 rounds of 3 deadlifts at 85% of it with ring push-ups, 5 rounds of
+  heavy thrusters and rope climbs, and 5 rounds of sandbag double eagles with one-arm bench presses. The source
+  does not time it. Without a rope, 10 pull-ups replace each climb. Where no load is given, the source leaves it
+  to the athlete (its Weight Loading rule).

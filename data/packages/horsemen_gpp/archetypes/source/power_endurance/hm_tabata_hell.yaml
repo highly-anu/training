@@ -1,0 +1,89 @@
+id: hm_tabata_hell
+name: Tabata Hell
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 24
+slots:
+- role: tabata_squats
+  slot_type: emom
+  work_sec: 20
+  rest_sec: 10
+  sets: 8
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids:
+    - squat_air
+    ordered: true
+  load: bodyweight
+  notes: >-
+    Tabata: 8 x 20 s work / 10 s rest. Rest in the bottom hold, thighs parallel to the floor. 1 min rest,
+    then the next movement.
+- role: tabata_push_ups
+  slot_type: emom
+  work_sec: 20
+  rest_sec: 10
+  sets: 8
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids:
+    - push_up
+    ordered: true
+  load: bodyweight
+  notes: >-
+    Tabata: 8 x 20 s work / 10 s rest. Rest locked out at the top (the forward leaning rest). 1 min rest,
+    then the next movement.
+- role: tabata_ball_slams
+  slot_type: emom
+  work_sec: 20
+  rest_sec: 10
+  sets: 8
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids:
+    - ball_slam
+    ordered: true
+  load: 9 kg (20 lb) ball
+  notes: >-
+    Tabata: 8 x 20 s work / 10 s rest. Rest with the ball overhead, both arms locked out. 1 min rest,
+    then the next movement.
+- role: tabata_sit_ups
+  slot_type: emom
+  work_sec: 20
+  rest_sec: 10
+  sets: 8
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids:
+    - sit_up
+    ordered: true
+  load: bodyweight
+  notes: >-
+    Tabata: 8 x 20 s work / 10 s rest. Rest with the legs held straight 15-30 cm (6-12 in) above the floor,
+    head off the floor. 1 min rest, then the next movement.
+- role: tabata_kb_swings
+  slot_type: emom
+  work_sec: 20
+  rest_sec: 10
+  sets: 8
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids:
+    - kb_swing_two_hand
+    ordered: true
+  load: 24 kg (53 lb)
+  notes: >-
+    Tabata: 8 x 20 s work / 10 s rest. Rest without setting the bell down or resting it on your body.
+required_equipment:
+- medicine_ball
+- kettlebell
+sources:
+- Horsemen
+notes: >-
+  Five Tabatas in a row — squats, push-ups, ball slams, sit-ups, kettlebell swings — each 8 x 20 s work
+  / 10 s rest, resting in a hold the source names, with one minute between movements. Score is the sum
+  of all reps.

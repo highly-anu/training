@@ -1,0 +1,162 @@
+id: hm_1000_reps
+name: 1000 Reps
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 60
+slots:
+- role: chest_press
+  slot_type: sets_reps
+  sets: 2
+  reps: 50
+  exercise_filter:
+    exercise_ids:
+    - bench_press
+    ordered: true
+  load: 20 kg (45 lb) bar
+  notes: >-
+    2 rounds, in order: 50 chest press, 50 bent-over rows, run 0.2 mi, 50 overhead squats, 50 shoulder
+    press, run, 50 front squats, 50 RDLs, run, 50 standing twists, 50 good mornings, run, 50 snatches,
+    50 back squats, run — 1,000 reps with the empty bar. Not for time.
+- role: bent_over_rows
+  slot_type: sets_reps
+  sets: 2
+  reps: 50
+  exercise_filter:
+    exercise_ids:
+    - barbell_row
+    ordered: true
+  load: 20 kg (45 lb) bar
+- role: run_1
+  slot_type: distance
+  distance_m: 322
+  sets: 2
+  exercise_filter:
+    exercise_ids:
+    - run_hard
+    ordered: true
+  notes: Run 0.2 miles.
+- role: overhead_squats
+  slot_type: sets_reps
+  sets: 2
+  reps: 50
+  exercise_filter:
+    exercise_ids:
+    - overhead_squat
+    ordered: true
+  load: 20 kg (45 lb) bar
+- role: shoulder_press
+  slot_type: sets_reps
+  sets: 2
+  reps: 50
+  exercise_filter:
+    exercise_ids:
+    - strict_press
+    ordered: true
+  load: 20 kg (45 lb) bar
+- role: run_2
+  slot_type: distance
+  distance_m: 322
+  sets: 2
+  exercise_filter:
+    exercise_ids:
+    - run_hard
+    ordered: true
+  notes: Run 0.2 miles.
+- role: front_squats
+  slot_type: sets_reps
+  sets: 2
+  reps: 50
+  exercise_filter:
+    exercise_ids:
+    - front_squat
+    ordered: true
+  load: 20 kg (45 lb) bar
+- role: rdl
+  slot_type: sets_reps
+  sets: 2
+  reps: 50
+  exercise_filter:
+    exercise_ids:
+    - romanian_deadlift
+    ordered: true
+  load: 20 kg (45 lb) bar
+- role: run_3
+  slot_type: distance
+  distance_m: 322
+  sets: 2
+  exercise_filter:
+    exercise_ids:
+    - run_hard
+    ordered: true
+  notes: Run 0.2 miles.
+- role: standing_twists
+  slot_type: sets_reps
+  sets: 2
+  reps: 50
+  exercise_filter:
+    exercise_ids:
+    - standing_twist
+    ordered: true
+  load: 20 kg (45 lb) bar
+- role: good_mornings
+  slot_type: sets_reps
+  sets: 2
+  reps: 50
+  exercise_filter:
+    exercise_ids:
+    - good_morning
+    ordered: true
+  load: 20 kg (45 lb) bar
+- role: run_4
+  slot_type: distance
+  distance_m: 322
+  sets: 2
+  exercise_filter:
+    exercise_ids:
+    - run_hard
+    ordered: true
+  notes: Run 0.2 miles.
+- role: snatches
+  slot_type: sets_reps
+  sets: 2
+  reps: 50
+  exercise_filter:
+    exercise_ids:
+    - snatch
+    ordered: true
+  load: 20 kg (45 lb) bar
+- role: back_squats
+  slot_type: sets_reps
+  sets: 2
+  reps: 50
+  exercise_filter:
+    exercise_ids:
+    - back_squat
+    ordered: true
+  load: 20 kg (45 lb) bar
+  notes: The source's "rear squats".
+- role: run_5
+  slot_type: distance
+  distance_m: 322
+  sets: 2
+  exercise_filter:
+    exercise_ids:
+    - run_hard
+    ordered: true
+  notes: Run 0.2 miles.
+required_equipment:
+- barbell
+- rack
+- plates
+- open_space
+sources:
+- Horsemen
+- API (Athletic Performance Inc)
+notes: >-
+  An API workout tagged ME/CE in the source: two rounds of ten barbell movements, 50 reps each with a
+  45 lb bar, with a 0.2-mile run after every pair — 1,000 reps in all. The source does not say for time.

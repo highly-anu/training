@@ -1,0 +1,85 @@
+id: hm_angry_girlfriend
+name: Angry Girlfriend
+modality: durability
+category: gpp_durability
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 45
+slots:
+- role: step_ups
+  slot_type: time_domain
+  duration_sec: 60
+  sets: 10
+  exercise_filter:
+    exercise_ids:
+    - weighted_step_up
+    ordered: true
+  notes: >-
+    10 rounds, in order: 1 min step-ups onto a 20 in (51 cm) box with weight, a 30 s squat hold, 10 s
+    rest. The weight is not given (the source's step-ups take a rucksack, DBs or KBs).
+- role: squat_hold
+  slot_type: static_hold
+  hold_seconds: 30
+  sets: 10
+  rest_sec: 10
+  exercise_filter:
+    exercise_ids:
+    - squat_iso_hold
+    ordered: true
+  notes: >-
+    30 s isometric hold in the squat position, then 10 s rest before the next round.
+- role: turkish_get_ups
+  slot_type: time_domain
+  duration_sec: 720
+  exercise_filter:
+    exercise_ids:
+    - kb_tgu
+    ordered: true
+  load: 16 kg (35 lb)
+  notes: 12 minutes of Turkish get-ups.
+- role: jingle_jangles
+  slot_type: time_domain
+  duration_sec: 60
+  sets: 10
+  exercise_filter:
+    exercise_ids:
+    - jingle_jangles
+    ordered: true
+  notes: >-
+    10 rounds, in order: 1 min jingle jangles (5-yard sprint back and forth between two cones), 5 box/depth
+    jump combos, 10 s rest.
+- role: box_jumps
+  slot_type: sets_reps
+  sets: 10
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - box_jump
+    ordered: true
+  notes: >-
+    5 box/depth jump combos each round: a box jump, then a depth jump. Box height not given.
+- role: depth_jumps
+  slot_type: sets_reps
+  sets: 10
+  reps: 5
+  rest_sec: 10
+  exercise_filter:
+    exercise_ids:
+    - depth_jump
+    ordered: true
+  notes: The depth jump of each combo; 10 s rest after the combos.
+required_equipment:
+- kettlebell
+- dumbbell
+- box
+- open_space
+sources:
+- Horsemen
+notes: >-
+  A job-specific workout: ten rounds of weighted step-ups and squat holds, 12 minutes of Turkish get-ups,
+  then ten rounds of jingle jangles and box/depth jump combos, with the source's 10 s rests. The source
+  does not say for time. Where the source gives no load the weight is the athlete's call, by its weight-loading
+  rule. Source name cleaned of profanity.

@@ -1,0 +1,52 @@
+id: hm_linda
+name: "Linda"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 30
+pool_only: true
+
+slots:
+  - role: deadlifts
+    slot_type: rounds_for_time
+    rounds: 10
+    duration_sec: 1800
+    intensity: max_effort
+    load: "1.5x bodyweight"
+    exercise_filter:
+      exercise_ids: [deadlift]
+      ordered: true
+    notes: >
+      10-9-8-7-6-5-4-3-2-1 reps of each: deadlift, bench press, clean.
+
+  - role: bench_press
+    slot_type: amrap_movement
+    reps_per_round: 10
+    parent_slot_role: deadlifts
+    load: "1x bodyweight"
+    exercise_filter:
+      exercise_ids: [bench_press]
+      ordered: true
+
+  - role: cleans
+    slot_type: amrap_movement
+    reps_per_round: 10
+    parent_slot_role: deadlifts
+    load: "0.75x bodyweight"
+    exercise_filter:
+      exercise_ids: [squat_clean]
+      ordered: true
+    notes: >
+      The source writes "Clean".
+
+required_equipment:
+  - barbell
+  - plates
+  - rack
+sources:
+  - Horsemen
+  - CrossFit
+notes: >
+  CrossFit's Linda as the source writes it: 10 down to 1 deadlifts at 1.5x bodyweight, bench
+  press at bodyweight and cleans at 0.75x bodyweight. The source writes only the rep scheme; it
+  is run for time, as CrossFit runs it.

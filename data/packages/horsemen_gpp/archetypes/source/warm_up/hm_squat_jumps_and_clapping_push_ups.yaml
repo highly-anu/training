@@ -1,0 +1,52 @@
+id: hm_squat_jumps_and_clapping_push_ups
+name: Squat Jumps and Clapping Push-ups
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 10
+slots:
+- role: squat_jumps
+  slot_type: sets_reps
+  sets: 5
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - squat_jump
+    ordered: true
+  notes: >-
+    5 rounds, alternating: 10 squat jumps, 10 clapping push-ups, 5 shoulder pole presses, 5 PVC
+    halos — not for time.
+- role: clapping_push_ups
+  slot_type: sets_reps
+  sets: 5
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - push_up_clapping
+    ordered: true
+- role: pole_presses
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - pvc_pole_press
+    ordered: true
+- role: pvc_halos
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - pvc_halo
+    ordered: true
+required_equipment: []
+sources:
+- Horsemen
+notes: >-
+  A warm-up: 5 rounds of squat jumps, clapping push-ups, shoulder pole presses and halos with
+  a PVC pipe. Unnamed in the source.

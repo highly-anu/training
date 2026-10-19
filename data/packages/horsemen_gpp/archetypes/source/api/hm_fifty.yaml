@@ -1,0 +1,91 @@
+id: hm_fifty
+name: Fifty
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 30
+slots:
+- role: deadlifts
+  slot_type: sets_reps
+  sets: 1
+  reps: 50
+  exercise_filter:
+    exercise_ids:
+    - deadlift
+    ordered: true
+  load: 1x bodyweight
+  notes: >-
+    In order: 50 deadlifts at bodyweight, 2 min double-unders, 50 box jumps, 2 min double-unders, 50 pull-ups,
+    2 min double-unders, 50 dips, 2 min double-unders. Not for time.
+- role: double_unders_1
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - jump_rope_double_under
+    ordered: true
+- role: box_jumps
+  slot_type: sets_reps
+  sets: 1
+  reps: 50
+  exercise_filter:
+    exercise_ids:
+    - box_jump
+    ordered: true
+  notes: Onto a 24 in (61 cm) box.
+- role: double_unders_2
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - jump_rope_double_under
+    ordered: true
+- role: pull_ups
+  slot_type: sets_reps
+  sets: 1
+  reps: 50
+  exercise_filter:
+    exercise_ids:
+    - pull_up
+    ordered: true
+  load: bodyweight
+- role: double_unders_3
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - jump_rope_double_under
+    ordered: true
+- role: dips
+  slot_type: sets_reps
+  sets: 1
+  reps: 50
+  exercise_filter:
+    exercise_ids:
+    - dip
+    ordered: true
+  load: bodyweight
+- role: double_unders_4
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - jump_rope_double_under
+    ordered: true
+required_equipment:
+- barbell
+- plates
+- pull_up_bar
+- parallettes
+- box
+- jump_rope
+sources:
+- Horsemen
+- API (Athletic Performance Inc)
+notes: >-
+  An API workout tagged ME/CE in the source: 50 deadlifts at bodyweight, 50 box jumps, 50 pull-ups and
+  50 dips, each followed by 2 minutes of double-unders. The source does not say for time.

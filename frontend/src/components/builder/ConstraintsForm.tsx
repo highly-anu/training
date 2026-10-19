@@ -28,7 +28,7 @@ const EQUIPMENT_CATEGORIES = [
   {
     name: 'Bodyweight & Gymnastics',
     color: MODALITY_COLORS.relative_strength.hex,
-    items: ['pull_up_bar', 'rings', 'parallettes', 'dip_bar'] as EquipmentId[],
+    items: ['pull_up_bar', 'rings', 'parallettes', 'dip_bar', 'hangboard'] as EquipmentId[],
   },
   {
     name: 'Aerobic & Conditioning',
@@ -38,7 +38,7 @@ const EQUIPMENT_CATEGORIES = [
   {
     name: 'GPP & Durability',
     color: MODALITY_COLORS.durability.hex,
-    items: ['ruck_pack', 'sandbag', 'sled', 'medicine_ball', 'box'] as EquipmentId[],
+    items: ['ruck_pack', 'sandbag', 'sled', 'tire', 'sledgehammer', 'medicine_ball', 'box'] as EquipmentId[],
   },
   {
     name: 'Mobility & Prehab',
@@ -48,7 +48,7 @@ const EQUIPMENT_CATEGORIES = [
   {
     name: 'General',
     color: '#6366f1',
-    items: ['rope', 'open_space'] as EquipmentId[],
+    items: ['rope', 'open_space', 'training_partner', 'cable_machine', 'hurdles', 'agility_ladder'] as EquipmentId[],
   },
 ]
 

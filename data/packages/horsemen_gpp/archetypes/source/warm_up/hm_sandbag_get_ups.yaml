@@ -1,0 +1,28 @@
+id: hm_sandbag_get_ups
+name: Sandbag Get-ups
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 10
+slots:
+- role: sandbag_get_ups
+  slot_type: sets_reps
+  sets: 2
+  reps: 20
+  load: 36 kg (80 lb)
+  exercise_filter:
+    exercise_ids:
+    - sb_getup
+    ordered: true
+  notes: 20 get-ups with the sandbag on each shoulder.
+required_equipment:
+- sandbag
+sources:
+- Horsemen
+notes: >-
+  A warm-up: 20 sandbag get-ups on each shoulder with an 80 lb bag. The source gives no rest and
+  does not time it. Unnamed in the source.

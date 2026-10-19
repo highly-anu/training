@@ -1,0 +1,90 @@
+id: hm_soviet_capitalists
+name: Soviet Capitalists
+modality: max_strength
+category: strength
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 60
+slots:
+- role: work_up_1rm
+  slot_type: sets_reps
+  sets: 1
+  reps: 1
+  intensity: max
+  exercise_filter:
+    exercise_ids: [squat_clean]
+    ordered: true
+  load: today's 1RM
+  notes: Work up to a 1-rep max for the day; the percentages below are of it.
+- role: clean_and_squat
+  slot_type: sets_reps
+  sets: 5
+  reps: 2
+  exercise_filter:
+    exercise_ids: [squat_clean]
+    ordered: true
+  load: 85-90% of today's 1RM
+  notes: '5 rounds, alternating: 2 squat cleans, 10 glute-ham raises, 10 dips — not for time.'
+- role: glute_ham_raise
+  slot_type: sets_reps
+  sets: 5
+  reps: 10
+  exercise_filter:
+    exercise_ids: [glute_ham_raise]
+    ordered: true
+- role: dip
+  slot_type: sets_reps
+  sets: 5
+  reps: 10
+  exercise_filter:
+    exercise_ids: [dip]
+    ordered: true
+- role: heavy_bag_clean_and_squat
+  slot_type: sets_reps
+  sets: 7
+  reps: 6
+  exercise_filter:
+    exercise_ids: [sb_clean_and_squat]
+    ordered: true
+  load: heavy
+  notes: '7 rounds, alternating: 6 heavy-bag clean and squats, 30 m sled push, 1 rope climb (or 10 pull-ups) — not
+    for time.'
+- role: sled_push
+  slot_type: distance
+  distance_m: 30
+  sets: 7
+  exercise_filter:
+    exercise_ids: [sled_push, jingle_jangles]
+    ordered: true
+  notes: 'No sled: 40 s of jingle jangles instead.'
+- role: rope_climb
+  slot_type: sets_reps
+  sets: 7
+  reps: 1
+  exercise_filter:
+    exercise_ids: [rope_climb, pull_up]
+    ordered: true
+  notes: 1 rope climb, or 10 pull-ups without a rope.
+- role: mini_leg_blaster
+  slot_type: sets_reps
+  sets: 5
+  reps: 1
+  exercise_filter:
+    exercise_ids: [mini_leg_blaster]
+    ordered: true
+  notes: '5 rounds, alternating: 1 mini leg blaster (10 squats, 5 lunges and 5 jumping lunges each leg, 5 squat
+    jumps), 10 GHD sit-ups or 5 ankles to bar — not for time.'
+- role: ghd_sit_up
+  slot_type: sets_reps
+  sets: 5
+  reps: 10
+  exercise_filter:
+    exercise_ids: [ghd_sit_up, ankles_to_bar]
+    ordered: true
+  notes: 10 GHD sit-ups, or 5 ankles to bar.
+required_equipment: [barbell, plates, ghd, parallettes, sandbag, open_space, pull_up_bar]
+sources: [Horsemen]
+notes: Work up to a 1-rep max squat clean, then 5 rounds of 2 at 85-90% of it with glute-ham raises and dips, 7
+  rounds of heavy-bag clean and squats, sled pushes and rope climbs, and 5 rounds of mini leg blasters with GHD
+  sit-ups or ankles to bar. The source does not time it. Without a sled, 40 s of jingle jangles; without a rope,
+  10 pull-ups.

@@ -1,0 +1,20 @@
+id: hm_100_get_ups
+name: 100 Get-Ups
+modality: strength_endurance
+category: gpp_durability
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 20
+slots:
+- role: turkish_get_up
+  slot_type: sets_reps
+  sets: 1
+  reps: 100
+  exercise_filter:
+    exercise_ids: [kb_tgu]
+    ordered: true
+  load: 16 kg (35 lb)
+  notes: 100 Turkish get-ups; the source's time is 15-20 minutes.
+required_equipment: [kettlebell]
+sources: [Horsemen]
+notes: One hundred Turkish get-ups with a 16 kg (35 lb) kettlebell, in 15-20 minutes as the source gives it.

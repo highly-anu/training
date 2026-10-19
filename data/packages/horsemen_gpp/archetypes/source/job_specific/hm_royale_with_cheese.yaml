@@ -1,0 +1,102 @@
+id: hm_royale_with_cheese
+name: Royale with Cheese
+modality: durability
+category: gpp_durability
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 55
+slots:
+- role: tire_flips
+  slot_type: emom
+  work_sec: 60
+  sets: 5
+  reps_per_round: 15
+  exercise_filter:
+    exercise_ids:
+    - tire_flip
+    ordered: true
+  notes: >-
+    15 tire flips every minute for 5 minutes. Rest 3 min between each exercise of the workout.
+- role: sprints
+  slot_type: distance
+  distance_m: 100
+  sets: 5
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids:
+    - run_sprint
+    ordered: true
+  notes: >-
+    5 x 100 m sprints; the rest is the walk back to the start. Then 3 min rest.
+- role: sledge_swings
+  slot_type: emom
+  work_sec: 60
+  sets: 5
+  reps_per_round: 30
+  exercise_filter:
+    exercise_ids:
+    - sledgehammer_tire_strike
+    ordered: true
+  notes: >-
+    30 sledgehammer swings on a tire every minute for 5 minutes. Then 3 min rest.
+- role: towel_kb_halo
+  slot_type: emom
+  work_sec: 30
+  rest_sec: 15
+  sets: 5
+  exercise_filter:
+    exercise_ids:
+    - towel_kb_halo
+    ordered: true
+  load: 16 kg (35 lb)
+  notes: Towel KB halo, 30 s on / 15 s rest, 5 times. Then 3 min rest.
+- role: fast_rope_drag
+  slot_type: emom
+  work_sec: 60
+  sets: 5
+  reps_per_round: 2
+  exercise_filter:
+    exercise_ids:
+    - fast_rope_drag
+    ordered: true
+  load: 2 x 25 kg (2 x 55 lb)
+  notes: >-
+    2 fast-rope drags of two kettlebells every minute for 5 minutes. Then 3 min rest.
+- role: heavy_object_throw
+  slot_type: distance
+  distance_m: 50
+  sets: 5
+  exercise_filter:
+    exercise_ids:
+    - heavy_object_throw
+    ordered: true
+  notes: >-
+    Throw a heavy object (rock, slam ball) 50 m, then pick it up and carry it back to the start; 5 times.
+    Then 3 min rest.
+- role: goblet_squats
+  slot_type: emom
+  work_sec: 60
+  sets: 5
+  reps_per_round: 15
+  exercise_filter:
+    exercise_ids:
+    - kb_squat_goblet
+    ordered: true
+  load: 32 kg (71 lb)
+  notes: 15-20 goblet squats every minute for 5 minutes.
+required_equipment:
+- kettlebell
+- tire
+- medicine_ball
+- rope
+- open_space
+- sledgehammer
+sources:
+- Horsemen
+notes: >-
+  One of the source's hard job-specific workouts: seven stations — tire flips, sprints, sledgehammer swings,
+  towel halos, fast-rope drags, a heavy-object throw and carry, goblet squats — mostly every minute for
+  5 minutes, with 3 minutes' rest between stations.

@@ -1,0 +1,20 @@
+id: hm_hspu_every_30_seconds
+name: Handstand Push-Up Every 30 Seconds
+modality: strength_endurance
+category: gpp_durability
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 50
+slots:
+- role: handstand_push_up
+  slot_type: emom
+  work_sec: 30
+  sets: 100
+  reps_per_round: 1
+  exercise_filter:
+    exercise_ids: [handstand_push_up]
+    ordered: true
+  notes: 1 handstand push-up every 30 seconds for 50 minutes, 100 in all.
+required_equipment: []
+sources: [Horsemen]
+notes: One handstand push-up every 30 seconds for 50 minutes, 100 in all.

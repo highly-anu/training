@@ -1,0 +1,48 @@
+id: hm_get_ups_burpees_step_ups
+name: Get-ups, Burpees and Step-ups
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 12
+slots:
+- role: turkish_get_ups
+  slot_type: sets_reps
+  sets: 4
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - kb_tgu
+    ordered: true
+  notes: >-
+    4 rounds, alternating: 5 Turkish get-ups, 5 burpees, 10 step-ups at 35 lb — not for time.
+    The source gives no load for the get-ups.
+- role: burpees
+  slot_type: sets_reps
+  sets: 4
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - burpee
+    ordered: true
+- role: step_ups
+  slot_type: sets_reps
+  sets: 4
+  reps: 10
+  load: 16 kg (35 lb)
+  exercise_filter:
+    exercise_ids:
+    - weighted_step_up
+    ordered: true
+  notes: The source gives no box height here.
+required_equipment:
+- kettlebell
+- box
+- dumbbell
+sources:
+- Horsemen
+notes: >-
+  A warm-up: 4 rounds of Turkish get-ups, burpees and step-ups at 35 lb. Unnamed in the source.

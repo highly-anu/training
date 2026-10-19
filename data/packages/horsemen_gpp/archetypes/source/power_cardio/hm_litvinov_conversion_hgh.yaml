@@ -1,0 +1,44 @@
+id: hm_litvinov_conversion_hgh
+name: 'Litvinov Conversion: HGH!!!'
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 15
+slots:
+- role: front_squats
+  slot_type: sets_reps
+  sets: 3
+  reps: 8
+  exercise_filter:
+    exercise_ids:
+    - front_squat
+    ordered: true
+  load: 70% of 1RM
+  notes: >-
+    3 rounds: 8 front squats, then a 20 m sled drag; rest as needed between rounds. The 1RM is not worked
+    up to that day.
+- role: sled_drag
+  slot_type: distance
+  distance_m: 20
+  sets: 3
+  exercise_filter:
+    exercise_ids:
+    - sled_drag
+    - jingle_jangles
+    ordered: true
+  load: 45 kg (100 lb)
+  notes: Without a sled, 40 s of jingle jangles instead.
+required_equipment:
+- barbell
+- rack
+- plates
+- open_space
+sources:
+- Horsemen
+notes: >-
+  Three rounds of 8 front squats at 70% of 1RM and a 20 m sled drag at 100 lb, resting as needed; without
+  a sled, 40 s of jingle jangles.

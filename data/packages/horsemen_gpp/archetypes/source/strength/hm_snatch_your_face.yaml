@@ -1,0 +1,63 @@
+id: hm_snatch_your_face
+name: Snatch Your Face
+modality: max_strength
+category: strength
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 60
+slots:
+- role: snatch
+  slot_type: sets_reps
+  sets: 4
+  reps: 3-2-1-2
+  exercise_filter:
+    exercise_ids: [snatch]
+    ordered: true
+  load: 80, 85, 90, 85% of 1RM
+  notes: Each lift in turn, a wave of 80% x 3, 85% x 2, 90% x 1, 85% x 2.
+- role: power_clean
+  slot_type: sets_reps
+  sets: 4
+  reps: 3-2-1-2
+  exercise_filter:
+    exercise_ids: [power_clean]
+    ordered: true
+  load: 80, 85, 90, 85% of 1RM
+- role: jerk_from_rack
+  slot_type: sets_reps
+  sets: 4
+  reps: 3-2-1-2
+  exercise_filter:
+    exercise_ids: [push_jerk]
+    ordered: true
+  load: 80, 85, 90, 85% of 1RM
+  notes: Jerk from the rack.
+- role: clean_pull
+  slot_type: sets_reps
+  sets: 4
+  reps: 3-2-1-2
+  exercise_filter:
+    exercise_ids: [clean_pull]
+    ordered: true
+  load: 80, 85, 90, 85% of 1RM
+- role: front_squat
+  slot_type: sets_reps
+  sets: 4
+  reps: 3-2-1-2
+  exercise_filter:
+    exercise_ids: [front_squat]
+    ordered: true
+  load: 80, 85, 90, 85% of 1RM
+- role: good_morning
+  slot_type: sets_reps
+  sets: 4
+  reps: 3-2-1-2
+  exercise_filter:
+    exercise_ids: [good_morning]
+    ordered: true
+  load: 80, 85, 90, 85% of 1RM
+required_equipment: [barbell, rack, plates]
+sources: [Horsemen]
+notes: 'An Olympic lifting day: snatch, power clean, jerk from the rack, clean pull, front squat and good morning,
+  each as one wave of 80% x 3, 85% x 2, 90% x 1, 85% x 2 of its 1RM. The source gives no rest and no time. In the
+  source''s templates it stands for the all-Olympic-lifting day (light load, work on form).'

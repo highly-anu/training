@@ -1,0 +1,37 @@
+id: hm_fallen_angel_torn_wings
+name: "Fallen Angel/Torn Wings"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 12
+pool_only: true
+
+slots:
+  - role: deadlifts
+    slot_type: sets_reps
+    sets: 3
+    reps: 10
+    load: "110-115% of bodyweight"
+    exercise_filter:
+      exercise_ids: [deadlift]
+      ordered: true
+    notes: >
+      3 rounds, alternating: 10 deadlifts, run 400 m — the source gives no clock.
+
+  - role: run
+    slot_type: distance
+    sets: 3
+    distance_m: 400
+    exercise_filter:
+      exercise_ids: [run_hard]
+      ordered: true
+
+required_equipment:
+  - barbell
+  - open_space
+  - plates
+sources:
+  - Horsemen
+notes: >
+  Three rounds of 10 deadlifts at 110-115% of bodyweight and a 400 m run; the source says
+  neither for time nor how to rest.

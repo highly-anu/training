@@ -379,6 +379,10 @@ def _transform_program(raw: dict, goal: dict, constraints: dict, validation) -> 
                     # A test of the phase's standards, put in place of a
                     # session of `in_place_of` (src/generator._plan_week_tests).
                     **({'test': session['test']} if session.get('test') else {}),
+                    # A templated day (src/week_template.py): its category, the
+                    # named workouts it does and the warm-up that opens it.
+                    **{k: session[k] for k in ('category', 'category_name', 'pieces', 'warm_up', 'light')
+                       if session.get(k)},
                     'exercises': [
                         _clean_exercise_assignment(ea)
                         for ea in session.get('exercises', [])

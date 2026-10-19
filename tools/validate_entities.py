@@ -93,11 +93,47 @@ def _extra_checks(data: dict, schema_filename: str, path: str | None = None) -> 
                for f in glob.glob(os.path.join(fw_dir, '*.yaml'))}
         errors.extend(phases.validate_philosophy_tracks(data, own))
         # Each test a phase declares is one of this package's test archetypes.
-        own_tests = {}
+        own_tests, pool_only = {}, {}
         for f in glob.glob(os.path.join(os.path.dirname(path), 'archetypes', '**', '*.yaml'), recursive=True):
             with open(f, encoding='utf-8') as fh:
                 arch = yaml.safe_load(fh) or {}
             own_tests[arch.get('id')] = 'test' in arch
+            pool_only[arch.get('id')] = bool(arch.get('pool_only'))
+        frameworks = {}
+        for f in glob.glob(os.path.join(fw_dir, '*.yaml')):
+            with open(f, encoding='utf-8') as fh:
+                fw = yaml.safe_load(fh) or {}
+            frameworks[fw.get('id')] = fw
+        pooled = set()
+        for track in data.get('tracks') or []:
+            for ph in track.get('phases') or []:
+                # A week template names its framework's day categories, whose
+                # pools are this package's pool-only named workouts.
+                if not ph.get('week_templates'):
+                    continue
+                fw = frameworks.get(ph.get('framework_id')) or {}
+                cats = fw.get('categories') or {}
+                where = f"{track.get('id')}/{ph.get('id')}"
+                if not cats:
+                    errors.append(f"{where}: week_templates on a framework with no categories")
+                named = {c for w in ph['week_templates'] for d in w if d != 'rest'
+                         for c in ([d] if isinstance(d, str) else d if isinstance(d, list) else d['categories'])}
+                named |= set(ph.get('drop_order') or [])
+                if fw.get('warm_up_category'):
+                    named.add(fw['warm_up_category'])
+                for c in sorted(named - set(cats)):
+                    errors.append(f"{where}: day category '{c}' is not in {fw.get('id')}'s categories")
+                for cid, cat in cats.items():
+                    for other in cat.get('fallback') or []:
+                        if other not in cats:
+                            errors.append(f"{fw.get('id')}: category '{cid}' falls back to unknown '{other}'")
+                    for aid in cat['archetypes']:
+                        pooled.add(aid)
+                        if aid not in pool_only:
+                            errors.append(f"{fw.get('id')}: category '{cid}' names '{aid}', not an archetype of this package")
+        for aid, flag in pool_only.items():
+            if flag and aid not in pooled and frameworks:
+                errors.append(f"'{aid}' is pool_only but no day category of a templated phase names it")
         for track in data.get('tracks') or []:
             for ph in track.get('phases') or []:
                 for t in ph.get('tests') or []:

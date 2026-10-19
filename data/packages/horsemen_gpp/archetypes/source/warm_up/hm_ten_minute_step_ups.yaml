@@ -1,0 +1,30 @@
+id: hm_ten_minute_step_ups
+name: 10-Minute Step-ups
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 10
+slots:
+- role: step_ups
+  slot_type: time_domain
+  duration_sec: 600
+  load: your choice (rucksack, dumbbells, kettlebells)
+  exercise_filter:
+    exercise_ids:
+    - weighted_step_up
+    ordered: true
+  notes: >-
+    10 minutes of step-ups onto a 20-inch box, holding a weight of your choice (rucksack, dumbbells,
+    kettlebells).
+required_equipment:
+- box
+- dumbbell
+sources:
+- Horsemen
+notes: >-
+  A warm-up: 10 minutes of weighted step-ups onto a 20-inch box, the load the athlete's choice.
+  Unnamed in the source.

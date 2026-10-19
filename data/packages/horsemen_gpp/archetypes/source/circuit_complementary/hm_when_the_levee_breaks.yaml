@@ -1,0 +1,38 @@
+id: hm_when_the_levee_breaks
+name: "When the Levee Breaks"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 15
+pool_only: true
+
+slots:
+  - role: deadlifts
+    slot_type: sets_reps
+    sets: 5
+    reps: 15
+    load: "1x bodyweight"
+    exercise_filter:
+      exercise_ids: [deadlift]
+      ordered: true
+    notes: >
+      5 rounds, alternating: 15 deadlifts at bodyweight, 15 ring push-ups — the source gives no
+      clock.
+
+  - role: ring_push_ups
+    slot_type: sets_reps
+    sets: 5
+    reps: 15
+    exercise_filter:
+      exercise_ids: [push_up_ring]
+      ordered: true
+
+required_equipment:
+  - barbell
+  - plates
+  - rings
+sources:
+  - Horsemen
+notes: >
+  Five rounds of 15 deadlifts at bodyweight and 15 ring push-ups; the source says neither for
+  time nor how to rest.

@@ -1,0 +1,40 @@
+id: hm_girl_farts
+name: Girl Farts
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 35
+slots:
+- role: row
+  slot_type: distance
+  distance_m: 1000
+  sets: 10
+  exercise_filter:
+    exercise_ids:
+    - row_erg
+    ordered: true
+  notes: >-
+    10 rungs: row 1000 m, 900 m, 800 m ... down to 100 m, each followed by renegade man makers matching
+    the rung (10 down to 1).
+- role: renegade_man_makers
+  slot_type: sets_reps
+  sets: 10
+  reps: 10-9-8-7-6-5-4-3-2-1
+  exercise_filter:
+    exercise_ids:
+    - renegade_man_maker
+    ordered: true
+  load: 2 x 11 kg (2 x 25 lb)
+  notes: The source writes 25 lb; its definition of the man maker uses two dumbbells.
+required_equipment:
+- rower
+- dumbbell
+sources:
+- Horsemen
+notes: >-
+  A 10-to-1 ladder: a row that starts at 1000 m and drops 100 m a rung, then renegade man makers at 25
+  lb matching the rung. The source gives no clock.

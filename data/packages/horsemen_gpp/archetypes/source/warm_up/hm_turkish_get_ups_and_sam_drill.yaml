@@ -1,0 +1,39 @@
+id: hm_turkish_get_ups_and_sam_drill
+name: Turkish Get-ups and SAM Drill
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 12
+slots:
+- role: turkish_get_ups
+  slot_type: sets_reps
+  sets: 5
+  reps: 3
+  load: light
+  exercise_filter:
+    exercise_ids:
+    - kb_tgu
+    ordered: true
+  notes: >-
+    5 rounds, alternating: 3 Turkish get-ups, the SAM shoulder drill — not for time. Go light
+    and come straight to your feet.
+- role: sam_shoulder_drill
+  slot_type: sets_reps
+  sets: 5
+  reps: 1
+  exercise_filter:
+    exercise_ids:
+    - sam_shoulder_drill
+    ordered: true
+  notes: 'With a PVC pipe: 5 pole presses, 3 halos, 5 overhead squats.'
+required_equipment:
+- kettlebell
+sources:
+- Horsemen
+notes: >-
+  A warm-up: 5 rounds of 3 light Turkish get-ups, straight to the feet, and the SAM shoulder mobility
+  drill with a PVC pipe. Unnamed in the source.

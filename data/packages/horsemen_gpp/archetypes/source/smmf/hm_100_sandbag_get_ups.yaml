@@ -1,0 +1,19 @@
+id: hm_100_sandbag_get_ups
+name: 100 Sandbag Get-Ups
+modality: strength_endurance
+category: gpp_durability
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 25
+slots:
+- role: sandbag_get_up
+  slot_type: sets_reps
+  sets: 1
+  reps: 100
+  exercise_filter:
+    exercise_ids: [sb_getup]
+    ordered: true
+  notes: 100 sandbag get-ups.
+required_equipment: [sandbag]
+sources: [Horsemen]
+notes: One hundred sandbag get-ups. The source gives no load and no time; the weight is left to the athlete.

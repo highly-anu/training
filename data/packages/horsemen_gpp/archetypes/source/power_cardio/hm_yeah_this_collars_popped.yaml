@@ -1,0 +1,37 @@
+id: hm_yeah_this_collars_popped
+name: Yeah, This Collar's Popped
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 10
+slots:
+- role: goblet_squats
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - kb_squat_goblet
+    ordered: true
+  load: 32 kg (71 lb)
+  notes: '3 rounds: 10 goblet squats, then a 100 m sprint; rest as needed between rounds.'
+- role: sprint_100m
+  slot_type: distance
+  distance_m: 100
+  sets: 3
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids:
+    - run_sprint
+    ordered: true
+required_equipment:
+- kettlebell
+- open_space
+sources:
+- Horsemen
+notes: >-
+  Three rounds of 10 goblet squats with a 71 lb kettlebell and a 100 m sprint, resting as needed.

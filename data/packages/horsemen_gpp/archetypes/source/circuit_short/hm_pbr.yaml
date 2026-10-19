@@ -1,0 +1,53 @@
+id: hm_pbr
+name: "PBR"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 20
+pool_only: true
+
+slots:
+  - role: front_squats
+    slot_type: amrap
+    duration_sec: 1200
+    exercise_filter:
+      exercise_ids: [front_squat]
+      ordered: true
+    notes: >
+      As many rounds as possible in 20 minutes of 10 front squats, 10 pull-ups, 10 weighted
+      sit-ups, 10 push-ups.
+
+  - role: pull_ups
+    slot_type: amrap_movement
+    reps_per_round: 10
+    parent_slot_role: front_squats
+    exercise_filter:
+      exercise_ids: [pull_up]
+      ordered: true
+
+  - role: weighted_sit_ups
+    slot_type: amrap_movement
+    reps_per_round: 10
+    parent_slot_role: front_squats
+    exercise_filter:
+      exercise_ids: [sit_up_weighted]
+      ordered: true
+
+  - role: push_ups
+    slot_type: amrap_movement
+    reps_per_round: 10
+    parent_slot_role: front_squats
+    exercise_filter:
+      exercise_ids: [push_up]
+      ordered: true
+
+required_equipment:
+  - barbell
+  - plates
+  - pull_up_bar
+  - rack
+sources:
+  - Horsemen
+notes: >
+  As many rounds as possible in 20 minutes of 10 front squats, pull-ups, weighted sit-ups and
+  push-ups. Where the source gives no load it is the athlete's choice (its Weight Loading rule).

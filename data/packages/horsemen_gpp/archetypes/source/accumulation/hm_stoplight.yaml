@@ -1,0 +1,56 @@
+id: hm_stoplight
+name: Stoplight
+modality: strength_endurance
+category: gpp_durability
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 30
+slots:
+- role: team_jerk_ladder
+  slot_type: sets_reps
+  sets: 5
+  reps: 1-2-3
+  exercise_filter:
+    exercise_ids:
+    - push_jerk
+    ordered: true
+  load: 75-80% of bodyweight
+  notes: >-
+    5 ladders of 1-2-3 jerks, 30 reps in all. A team ladder; the source does not say how the team splits
+    the work.
+- role: team_get_up_ladder
+  slot_type: sets_reps
+  sets: 2
+  reps: 1-2-3-4
+  exercise_filter:
+    exercise_ids:
+    - kb_tgu
+    ordered: true
+  load: 24 kg (53 lb)
+  notes: 2 ladders of 1-4 get-ups on each arm, 40 reps in all, 20 on each arm.
+- role: team_decline_push_up_ladder
+  slot_type: sets_reps
+  sets: 1
+  reps: 1-2-3-4-5-6-7-8-9-10-9-8-7-6-5-4-3-2-1
+  exercise_filter:
+    exercise_ids:
+    - push_up_decline
+    ordered: true
+  load: bodyweight
+  notes: A 1-10-1 ladder of decline push-ups, feet higher than the hands, 100 reps in all.
+required_equipment:
+- barbell
+- rack
+- plates
+- kettlebell
+- box
+- training_partner
+sources:
+- Horsemen
+notes: >-
+  Three team ladders: jerks at 75-80% of bodyweight (5 x 1-3, 30 reps), get-ups at 53 lb (2 x 1-4 each
+  arm, 40 reps) and decline push-ups (1-10-1, 100 reps). The source: 30 minutes, "and say goodbye to the
+  shoulders for a few days".

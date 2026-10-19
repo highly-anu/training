@@ -53,6 +53,14 @@ const EQUIPMENT_OPTIONS: { id: EquipmentId; label: string }[] = [
   { id: 'sled', label: 'Sled' },
   { id: 'tire', label: 'Tire' },
   { id: 'dip_belt', label: 'Dip Belt' },
+  { id: 'ghd', label: 'GHD' },
+  { id: 'medicine_ball', label: 'Medicine Ball' },
+  { id: 'hangboard', label: 'Hangboard' },
+  { id: 'sledgehammer', label: 'Sledgehammer' },
+  { id: 'cable_machine', label: 'Cable Machine' },
+  { id: 'hurdles', label: 'Hurdles' },
+  { id: 'agility_ladder', label: 'Agility Ladder' },
+  { id: 'training_partner', label: 'Training Partner' },
   { id: 'open_space', label: 'Open Space' },
 ]
 

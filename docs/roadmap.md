@@ -749,17 +749,16 @@ badly the default misrepresents the method and whether its policies exist:
    declared borrowing kept.
 4. *Marcus Filly* — a novice track on Base Camp's shape (warm-up, strength by
    pattern, conditioning); RPE targets from the framework.
-5. *Horsemen* — source re-extracted 2026-10-19 (`docs/package-quality-and-generation-audit.md`
-   points at the comparison; all three audit claims confirmed, and much of the
-   package was invented: Fan Dance, the ruck benchmarks, the second track, deloads,
-   RPE, a four-day template, three archetypes). **Stage 1 (corrections, labels,
-   the PT test's real events) is done.** Stage 2 rebuilds it as a contract: each
-   month's day-by-category template, named workouts as fixed modules in rotating
-   pools, circuits, and loads as a percentage of the day's worked-up max — compiler
-   support for all three is needed first. Decisions it waits for: the canonical
-   edition (with or without the API workouts), display names for the profane
-   workouts and the one with a slur, whether the PT test is placed at all, and the
-   partner and facility workouts.
+5. *Horsemen* — **done 2026-10-19.** Stage 1 corrected the package against the source;
+   stage 2 runs the 4-Month Macro as written: each month's example weeks day by day
+   (`week_templates`), every named workout of the source (and its API section) an archetype in
+   its category's pool, prescribed as written, the athlete's missing equipment passing a
+   workout over (`src/week_template.py`, CLAUDE.md). Names with profanity or the slur are
+   cleaned; the PT test takes the first and last hard job-specific days. Left: single-session
+   regenerate and swap still pick by modality (they should take the next workout of the
+   day's category); elliptical, stair master, climbing, paddling and skiing have no equipment
+   id; "400 m Rob Shauls" is undefined in the source; GPP Circuits remains an app track on
+   its own archetypes.
 6. *CrossFit* — after the variation policy.
 7. *Gym Jones* — refuse novices (its Foundation assumes training history); variation.
 8. *ATG, Kelly Starrett, Ido Portal* — after assessment gating, once their

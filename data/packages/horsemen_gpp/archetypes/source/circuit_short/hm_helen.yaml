@@ -1,0 +1,48 @@
+id: hm_helen
+name: "Helen"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 14
+pool_only: true
+
+slots:
+  - role: run
+    slot_type: rounds_for_time
+    rounds: 3
+    duration_sec: 720
+    distance_m: 400
+    intensity: max_effort
+    exercise_filter:
+      exercise_ids: [run_hard]
+      ordered: true
+    notes: >
+      3 rounds for time: run 400 m, 21 kettlebell swings, 12 pull-ups.
+
+  - role: kb_swings
+    slot_type: amrap_movement
+    reps_per_round: 21
+    parent_slot_role: run
+    load: "24 kg (53 lb)"
+    exercise_filter:
+      exercise_ids: [kb_swing_two_hand]
+      ordered: true
+
+  - role: pull_ups
+    slot_type: amrap_movement
+    reps_per_round: 12
+    parent_slot_role: run
+    exercise_filter:
+      exercise_ids: [pull_up]
+      ordered: true
+
+required_equipment:
+  - kettlebell
+  - open_space
+  - pull_up_bar
+sources:
+  - Horsemen
+  - CrossFit
+notes: >
+  CrossFit's Helen as the source writes it: 3 rounds for time of a 400 m run, 21 kettlebell
+  swings at 53 lb and 12 pull-ups.

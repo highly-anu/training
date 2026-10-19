@@ -1,0 +1,92 @@
+id: hm_world_war_ii
+name: World War II
+modality: strength_endurance
+category: gpp_durability
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 35
+slots:
+- role: sprint_starts_forward
+  slot_type: sets_reps
+  sets: 3
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - band_sprint_start_forward
+    ordered: true
+  load: green band
+  notes: '3 rounds: 5 forward sprint starts against a green band, then 15 parallette push-ups.'
+- role: parallette_push_ups
+  slot_type: sets_reps
+  sets: 3
+  reps: 15
+  exercise_filter:
+    exercise_ids:
+    - parallette_push_up
+    ordered: true
+  load: bodyweight
+- role: sprint_starts_backward
+  slot_type: sets_reps
+  sets: 3
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - band_sprint_start_backward
+    ordered: true
+  load: green band
+  notes: '3 rounds: 5 backward sprint starts against a green band, then 10 deadlifts.'
+- role: deadlifts
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - deadlift
+    ordered: true
+  load: 61 kg (135 lb)
+- role: box_jumps
+  slot_type: sets_reps
+  sets: 3
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - box_jump
+    ordered: true
+  notes: '3 rounds: 20 box jumps onto a 61 cm (24 in) box, then 7 clapping pull-ups.'
+- role: clapping_pull_ups
+  slot_type: sets_reps
+  sets: 3
+  reps: 7
+  exercise_filter:
+    exercise_ids:
+    - clapping_pull_up
+    ordered: true
+  load: bodyweight
+- role: blindfolded_get_ups
+  slot_type: sets_reps
+  sets: 1
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - kb_tgu
+    ordered: true
+  load: 16 kg (35 lb)
+  notes: 10 kettlebell get-ups, blindfolded. The source does not say each arm.
+required_equipment:
+- resistance_band
+- open_space
+- parallettes
+- barbell
+- plates
+- box
+- pull_up_bar
+- kettlebell
+sources:
+- Horsemen
+notes: >-
+  Three pairs done 3 times each — band sprint starts forward with parallette push-ups, band sprint starts
+  backward with 135 lb deadlifts, box jumps with clapping pull-ups — then 10 blindfolded kettlebell get-ups
+  at 35 lb.

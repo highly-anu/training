@@ -1,0 +1,193 @@
+id: hm_2_minutes
+name: 2 Minutes
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 45
+slots:
+- role: jump_rope_1
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - jump_rope_single_under
+    ordered: true
+  notes: >-
+    Two minutes per station, in order, jump rope between every station: rope, cable crawl, rope, chop
+    station, rope, punches, rope, tire flips, rope, med ball throw, rope, over/unders, rope, squat jumps,
+    rope, get-ups, rope, plyo push-ups, rope, lateral hops, then gorilla drills. The source gives the
+    two minutes only in the name.
+- role: cable_crawl
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - horizontal_cable_crawl
+    ordered: true
+  notes: Horizontal cable crawl.
+- role: jump_rope_2
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - jump_rope_single_under
+    ordered: true
+- role: chop_station
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - cable_chop
+    ordered: true
+  notes: Chop station.
+- role: jump_rope_3
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - jump_rope_single_under
+    ordered: true
+- role: resisted_punches
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - resisted_punch_mount
+    ordered: true
+  notes: Resisted punches from the mount.
+- role: jump_rope_4
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - jump_rope_single_under
+    ordered: true
+- role: tire_flips
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - tire_flip
+    ordered: true
+- role: jump_rope_5
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - jump_rope_single_under
+    ordered: true
+- role: med_ball_throw
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - med_ball_underhand_throw
+    ordered: true
+  notes: >-
+    Med ball throw "@ 16'" as the source writes it; it gives neither the ball's weight nor the throw.
+- role: jump_rope_6
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - jump_rope_single_under
+    ordered: true
+- role: over_unders
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - hurdle_over_under
+    ordered: true
+  notes: Over/unders "@ 30'" as the source writes it (hurdle height).
+- role: jump_rope_7
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - jump_rope_single_under
+    ordered: true
+- role: squat_jumps
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - squat_jump
+    ordered: true
+- role: jump_rope_8
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - jump_rope_single_under
+    ordered: true
+- role: turkish_get_ups
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - kb_tgu
+    ordered: true
+  load: 16 kg (35 lb)
+- role: jump_rope_9
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - jump_rope_single_under
+    ordered: true
+- role: plyo_push_ups
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - plyo_push_up_box
+    ordered: true
+  notes: Plyo push-ups off a 4 in (10 cm) box.
+- role: jump_rope_10
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - jump_rope_single_under
+    ordered: true
+- role: lateral_hops
+  slot_type: time_domain
+  duration_sec: 120
+  exercise_filter:
+    exercise_ids:
+    - lateral_hop_over_bag
+    ordered: true
+  notes: Lateral hops over bags.
+- role: gorilla_drills
+  slot_type: time_domain
+  duration_sec: 30
+  sets: 3
+  exercise_filter:
+    exercise_ids:
+    - gorilla_drill
+    ordered: true
+  notes: Gorilla drills, 30 s, 3 times. The source does not describe them.
+required_equipment:
+- kettlebell
+- sandbag
+- tire
+- medicine_ball
+- resistance_band
+- box
+- jump_rope
+- open_space
+- cable_machine
+- hurdles
+sources:
+- Horsemen
+- API (Athletic Performance Inc)
+notes: >-
+  An API station workout tagged ME/CE in the source: ten stations of two minutes, jump rope between every
+  one, then gorilla drills. The source gives the station length only in its name and gives no loads except
+  the get-up's 35 lb. Where the source gives no load the weight is the athlete's call, by its weight-loading
+  rule.

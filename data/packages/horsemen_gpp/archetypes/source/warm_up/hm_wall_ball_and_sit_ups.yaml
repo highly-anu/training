@@ -1,0 +1,44 @@
+id: hm_wall_ball_and_sit_ups
+name: Wall Ball and Sit-ups
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 10
+slots:
+- role: wall_ball
+  slot_type: sets_reps
+  sets: 5
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - wall_ball
+    ordered: true
+  notes: >-
+    5 rounds, alternating: 10 wall balls, 20 sit-ups, shoulder dislocate stretch — not for time.
+- role: sit_ups
+  slot_type: sets_reps
+  sets: 5
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - sit_up
+    ordered: true
+- role: shoulder_dislocates
+  slot_type: sets_reps
+  sets: 5
+  exercise_filter:
+    exercise_ids:
+    - shoulder_dislocate_pvc
+    ordered: true
+  notes: The source gives no count for the stretch.
+required_equipment:
+- medicine_ball
+sources:
+- Horsemen
+notes: >-
+  A warm-up: 5 rounds of wall balls, sit-ups and a shoulder dislocate stretch. The source gives
+  no load; by its weight-loading rule the choice is the athlete's. Unnamed in the source.

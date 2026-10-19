@@ -1,0 +1,45 @@
+id: hm_louder_than_10
+name: "Louder Than 10"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 20
+pool_only: true
+
+slots:
+  - role: ball_slams
+    slot_type: sets_reps
+    sets: 11
+    reps: 5
+    exercise_filter:
+      exercise_ids: [ball_slam]
+      ordered: true
+    notes: >
+      11 rounds, alternating: 5 ball slams, 10 push-ups, 15 kettlebell swings — the source gives
+      no clock.
+
+  - role: push_ups
+    slot_type: sets_reps
+    sets: 11
+    reps: 10
+    exercise_filter:
+      exercise_ids: [push_up]
+      ordered: true
+
+  - role: kb_swings
+    slot_type: sets_reps
+    sets: 11
+    reps: 15
+    exercise_filter:
+      exercise_ids: [kb_swing_two_hand]
+      ordered: true
+
+required_equipment:
+  - kettlebell
+  - medicine_ball
+sources:
+  - Horsemen
+notes: >
+  Eleven rounds of 5 ball slams, 10 push-ups and 15 kettlebell swings; the source says neither
+  for time nor how to rest. Where the source gives no load it is the athlete's choice (its
+  Weight Loading rule).

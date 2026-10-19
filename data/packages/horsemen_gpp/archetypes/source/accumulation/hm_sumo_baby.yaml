@@ -1,0 +1,67 @@
+id: hm_sumo_baby
+name: Sumo Baby!
+modality: strength_endurance
+category: gpp_durability
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 35
+slots:
+- role: deadlifts
+  slot_type: sets_reps
+  sets: 4
+  reps: 6
+  exercise_filter:
+    exercise_ids:
+    - deadlift
+    ordered: true
+  notes: '4 rounds, alternating: 6 deadlifts, 6 bench presses.'
+- role: bench_presses
+  slot_type: sets_reps
+  sets: 4
+  reps: 6
+  exercise_filter:
+    exercise_ids:
+    - bench_press
+    ordered: true
+- role: sdhp
+  slot_type: sets_reps
+  sets: 7
+  reps: 21-18-15-12-9-6-3
+  exercise_filter:
+    exercise_ids:
+    - sdhp
+    ordered: true
+  notes: '21-18-15-12-9-6-3: sumo deadlift high pulls, then wall balls.'
+- role: wall_balls
+  slot_type: sets_reps
+  sets: 7
+  reps: 21-18-15-12-9-6-3
+  exercise_filter:
+    exercise_ids:
+    - wall_ball
+    ordered: true
+- role: ghd_sit_ups
+  slot_type: sets_reps
+  sets: 1
+  reps: 50
+  exercise_filter:
+    exercise_ids:
+    - ghd_sit_up
+    ordered: true
+  load: bodyweight
+  notes: 50 GHD sit-ups.
+required_equipment:
+- barbell
+- rack
+- plates
+- medicine_ball
+- ghd
+sources:
+- Horsemen
+notes: >-
+  4 rounds of 6 deadlifts and 6 bench presses; a 21-18-15-12-9-6-3 of sumo deadlift high pulls and wall
+  balls; 50 GHD sit-ups. Where no load is written it is the athlete's call, by the source's weight-loading
+  rule.

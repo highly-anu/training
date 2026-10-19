@@ -1,0 +1,51 @@
+id: hm_cottage_cheese
+name: Cottage Cheese
+modality: durability
+category: gpp_durability
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 25
+slots:
+- role: finger_board
+  slot_type: time_domain
+  duration_sec: 60
+  sets: 5
+  rest_sec: 60
+  exercise_filter:
+    exercise_ids:
+    - fingerboard_hang
+    ordered: true
+  notes: '5 rounds: 1 min on the finger board, 1 min rest.'
+- role: sledge_swings
+  slot_type: sets_reps
+  sets: 4
+  reps: 25
+  exercise_filter:
+    exercise_ids:
+    - sledgehammer_tire_strike
+    ordered: true
+  notes: >-
+    4 rounds, alternating: 25 sledgehammer swings on a tire, 1 leg blaster — not for time.
+- role: leg_blaster
+  slot_type: sets_reps
+  sets: 4
+  reps: 1
+  exercise_filter:
+    exercise_ids:
+    - leg_blaster
+    ordered: true
+  notes: >-
+    1 leg blaster: 20 squats, 10 lunges each leg, 10 jumping lunges each leg, 10 squat jumps.
+required_equipment:
+- tire
+- hangboard
+- sledgehammer
+sources:
+- Horsemen
+notes: >-
+  A job-specific workout: five minutes on the finger board with equal rest, then four rounds of sledgehammer
+  swings on a tire and a leg blaster. The source does not say for time and gives no rest in the second
+  part.

@@ -1,0 +1,39 @@
+id: hm_buddy_tonight
+name: Buddy Tonight
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 20
+slots:
+- role: sandbag_clean_and_squat
+  slot_type: emom
+  work_sec: 60
+  sets: 20
+  reps_per_round: 2
+  exercise_filter:
+    exercise_ids:
+    - sb_clean_and_squat
+    ordered: true
+  load: 39-43 kg (85-95 lb)
+  notes: >-
+    Every minute for 20 minutes: 2 sandbag clean and squats, then 3 burpees; rest out the minute.
+- role: burpees
+  slot_type: amrap_movement
+  parent_slot_role: sandbag_clean_and_squat
+  reps_per_round: 3
+  exercise_filter:
+    exercise_ids:
+    - burpee
+    ordered: true
+  load: bodyweight
+required_equipment:
+- sandbag
+sources:
+- Horsemen
+notes: >-
+  Every minute on the minute for 20 minutes: 2 sandbag clean and squats with an 85-95 lb bag and 3 burpees.
+  Source name cleaned of profanity.

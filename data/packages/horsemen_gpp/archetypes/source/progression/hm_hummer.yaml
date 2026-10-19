@@ -1,0 +1,59 @@
+id: hm_hummer
+name: Hummer
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 35
+slots:
+- role: hummer
+  slot_type: rounds_for_time
+  rounds: 4
+  duration_sec: 1800
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids: [kb_swing_two_hand]
+    ordered: true
+  notes: 4 rounds of 30 kettlebell swings, 15 GHD sit-ups, 30 jumping pull-ups, 25 back extensions, 20 deep kettlebell
+    squats with the swing bell, 10 push-ups. The source gives no time or scoring.
+- role: ghd_sit_up
+  slot_type: amrap_movement
+  parent_slot_role: hummer
+  reps_per_round: 15
+  exercise_filter:
+    exercise_ids: [ghd_sit_up]
+    ordered: true
+- role: jumping_pull_up
+  slot_type: amrap_movement
+  parent_slot_role: hummer
+  reps_per_round: 30
+  exercise_filter:
+    exercise_ids: [jumping_pull_up]
+    ordered: true
+- role: back_extension
+  slot_type: amrap_movement
+  parent_slot_role: hummer
+  reps_per_round: 25
+  exercise_filter:
+    exercise_ids: [back_extension]
+    ordered: true
+- role: deep_kb_squat
+  slot_type: amrap_movement
+  parent_slot_role: hummer
+  reps_per_round: 20
+  exercise_filter:
+    exercise_ids: [kb_squat_goblet]
+    ordered: true
+  notes: The same kettlebell as the swings.
+- role: push_up
+  slot_type: amrap_movement
+  parent_slot_role: hummer
+  reps_per_round: 10
+  exercise_filter:
+    exercise_ids: [push_up]
+    ordered: true
+required_equipment: [kettlebell, ghd, pull_up_bar]
+sources: [Horsemen]
+notes: Four rounds of 30 kettlebell swings, 15 GHD sit-ups, 30 jumping pull-ups, 25 back extensions, 20 deep kettlebell
+  squats with the same bell and 10 push-ups, worked through as a chipper. Where no load is given, the source leaves
+  it to the athlete (its Weight Loading rule).

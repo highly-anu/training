@@ -1,0 +1,26 @@
+id: hm_two_k_row
+name: 2K Row
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 8
+slots:
+- role: row_2k
+  slot_type: distance
+  distance_m: 2000
+  exercise_filter:
+    exercise_ids:
+    - row_erg
+    ordered: true
+  notes: Row 2,000 m. The source writes "8 min" beside it.
+required_equipment:
+- rower
+sources:
+- Horsemen
+notes: >-
+  A warm-up: a 2,000 m row, written "2K Row – 8 min". The source says no more about the pace.
+  Unnamed in the source.

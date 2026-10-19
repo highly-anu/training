@@ -261,6 +261,31 @@
                   "default": false,
                   "description": "Main-lift slots (heavy sets x reps, or a %1RM) draw a new exercise each session. Off by default: the generator keeps each main lift on one exercise for the phase so its load can progress."
                 },
+                "week_templates": {
+                  "type": "array",
+                  "minItems": 1,
+                  "description": "The source's own week, day by day, when it writes one (Horsemen's month templates): one list of seven days per week of the phase, repeating. A day is `rest`, a category id of the phase's framework (`categories`), several ids for a day that does two pieces, or {categories, warm_up, light} to override the warm-up or mark the day light (work on form). The generator maps the training days in order onto the athlete's days.",
+                  "items": {
+                    "type": "array", "minItems": 7, "maxItems": 7,
+                    "items": {
+                      "oneOf": [
+                        {"type": "string", "pattern": "^[a-z0-9_]+$"},
+                        {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^[a-z0-9_]+$"}},
+                        {"type": "object", "additionalProperties": false, "required": ["categories"],
+                         "properties": {
+                           "categories": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^[a-z0-9_]+$"}},
+                           "warm_up": {"type": "boolean"},
+                           "light": {"type": "boolean", "description": "The source's '(light, work on form)': loads well below the written ones."}
+                         }}
+                      ]
+                    }
+                  }
+                },
+                "drop_order": {
+                  "type": "array",
+                  "items": {"type": "string", "pattern": "^[a-z0-9_]+$"},
+                  "description": "With fewer training days than the template, the categories whose days go first, in order (a day goes when its first category is next in this list; the week's last such day goes first)."
+                },
                 "tests": {
                   "type": "array",
                   "description": "When this phase tests its standards. The generator puts the test archetype in place of one session of `in_place_of` in each week the test falls in, keeping the week's cadence and session count; the week records it as skipped (with why) when the athlete cannot do it. Positions are weeks in the phase (a repeatable phase repeats them every cycle).",

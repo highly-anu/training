@@ -1,0 +1,58 @@
+id: hm_drunken_lullaby
+name: Drunken Lullaby
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 35
+slots:
+- role: sandbag_get_ups
+  slot_type: sets_reps
+  sets: 4
+  reps: 20-15-10-5
+  exercise_filter:
+    exercise_ids:
+    - sb_getup
+    ordered: true
+  load: 39 kg (85 lb)
+  notes: >-
+    Rounds of 20, 15, 10 and 5: sandbag get-ups, push-ups, box jumps (twice the round: 40, 30 ...), sandbag
+    half moons. The source does not say for time.
+- role: push_ups
+  slot_type: sets_reps
+  sets: 4
+  reps: 20-15-10-5
+  exercise_filter:
+    exercise_ids:
+    - push_up
+    ordered: true
+  load: bodyweight
+- role: box_jumps
+  slot_type: sets_reps
+  sets: 4
+  reps: 40-30-20-10
+  exercise_filter:
+    exercise_ids:
+    - box_jump
+    ordered: true
+  notes: The source gives no box height.
+- role: sandbag_half_moons
+  slot_type: sets_reps
+  sets: 4
+  reps: 20-15-10-5
+  exercise_filter:
+    exercise_ids:
+    - sb_halfmoon
+    ordered: true
+  load: 16 kg (35 lb)
+required_equipment:
+- sandbag
+- box
+sources:
+- Horsemen
+notes: >-
+  A 20-15-10-5 descending scheme of sandbag get-ups at 85 lb, push-ups, box jumps at twice the count and
+  sandbag half moons at 35 lb. The source gives no clock and no box height.

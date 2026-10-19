@@ -1,0 +1,50 @@
+id: hm_johnnie_walker_red
+name: "Johnnie Walker Red"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 20
+pool_only: true
+
+slots:
+  - role: overhead_lunge
+    slot_type: distance
+    sets: 5
+    distance_m: 30
+    load: "12 kg (26 lb)"
+    exercise_filter:
+      exercise_ids: [kb_overhead_lunge]
+      ordered: true
+    notes: >
+      5 rounds, alternating: 30 m one-arm overhead kettlebell lunge, 2 rope climbs, 20 GHD
+      sit-ups — the source gives no clock.
+
+  - role: rope_climbs
+    slot_type: sets_reps
+    sets: 5
+    reps: 2
+    exercise_filter:
+      exercise_ids: [rope_climb, pull_up]
+      ordered: true
+    notes: >
+      2 rope climbs. Without a rope the source's substitute is 10 pull-ups; it does not say
+      whether that is per climb.
+
+  - role: ghd_sit_ups
+    slot_type: sets_reps
+    sets: 5
+    reps: 20
+    exercise_filter:
+      exercise_ids: [ghd_sit_up]
+      ordered: true
+
+required_equipment:
+  - ghd
+  - kettlebell
+  - open_space
+sources:
+  - Horsemen
+notes: >
+  Five rounds of a 30 m one-arm overhead lunge with a 26 lb kettlebell, 2 rope climbs (or the
+  source's pull-up substitute) and 20 GHD sit-ups; the source says neither for time nor how to
+  rest.

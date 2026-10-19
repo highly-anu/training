@@ -1,0 +1,44 @@
+id: hm_chelsea
+name: "Chelsea"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 30
+pool_only: true
+
+slots:
+  - role: pull_ups
+    slot_type: emom
+    sets: 30
+    reps_per_round: 5
+    work_sec: 60
+    exercise_filter:
+      exercise_ids: [pull_up]
+      ordered: true
+    notes: >
+      Each minute, on the minute, for 30 minutes: 5 pull-ups, 10 push-ups, 15 squats.
+
+  - role: push_ups
+    slot_type: amrap_movement
+    reps_per_round: 10
+    parent_slot_role: pull_ups
+    exercise_filter:
+      exercise_ids: [push_up]
+      ordered: true
+
+  - role: squats
+    slot_type: amrap_movement
+    reps_per_round: 15
+    parent_slot_role: pull_ups
+    exercise_filter:
+      exercise_ids: [squat_air]
+      ordered: true
+
+required_equipment:
+  - pull_up_bar
+sources:
+  - Horsemen
+  - CrossFit
+notes: >
+  CrossFit's Chelsea as the source writes it: 5 pull-ups, 10 push-ups and 15 squats each minute
+  on the minute for 30 minutes. The source says nothing of what to do when a minute is missed.

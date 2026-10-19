@@ -1,0 +1,30 @@
+id: hm_mad_dog_20_20
+name: Mad Dog 20/20
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 20
+slots:
+- role: jingle_jangles
+  slot_type: emom
+  work_sec: 30
+  rest_sec: 30
+  sets: 10
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids:
+    - jingle_jangles
+    ordered: true
+  notes: >-
+    10 rounds: 30 s of jingle jangles (a 5-yard sprint back and forth between two cones), 30 s rest.
+required_equipment:
+- open_space
+sources:
+- Horsemen
+notes: >-
+  10 rounds of 30 seconds of jingle jangles and 30 seconds of rest. The source says "10 rounds - 20 min
+  total", though 10 rounds of 30 s on and 30 s off make 10 minutes; both are kept as written.

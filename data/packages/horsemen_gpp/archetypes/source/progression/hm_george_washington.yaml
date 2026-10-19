@@ -1,0 +1,74 @@
+id: hm_george_washington
+name: George Washington
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 40
+slots:
+- role: george_washington
+  slot_type: for_time
+  rounds: 1
+  duration_sec: 2100
+  distance_m: 500
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids: [row_erg]
+    ordered: true
+  notes: 'For time, in order: row 500 m, 50 box jumps, 50 push-ups, 50 sit-ups, 50 jumping pull-ups, 50 back extensions,
+    50 ring dips, 20 get-ups.'
+- role: box_jump
+  slot_type: amrap_movement
+  parent_slot_role: george_washington
+  reps_per_round: 50
+  exercise_filter:
+    exercise_ids: [box_jump]
+    ordered: true
+  notes: 24 in (61 cm) box.
+- role: push_up
+  slot_type: amrap_movement
+  parent_slot_role: george_washington
+  reps_per_round: 50
+  exercise_filter:
+    exercise_ids: [push_up]
+    ordered: true
+- role: sit_up
+  slot_type: amrap_movement
+  parent_slot_role: george_washington
+  reps_per_round: 50
+  exercise_filter:
+    exercise_ids: [sit_up]
+    ordered: true
+- role: jumping_pull_up
+  slot_type: amrap_movement
+  parent_slot_role: george_washington
+  reps_per_round: 50
+  exercise_filter:
+    exercise_ids: [jumping_pull_up]
+    ordered: true
+- role: back_extension
+  slot_type: amrap_movement
+  parent_slot_role: george_washington
+  reps_per_round: 50
+  exercise_filter:
+    exercise_ids: [back_extension]
+    ordered: true
+- role: ring_dip
+  slot_type: amrap_movement
+  parent_slot_role: george_washington
+  reps_per_round: 50
+  exercise_filter:
+    exercise_ids: [ring_dip]
+    ordered: true
+- role: get_up
+  slot_type: amrap_movement
+  parent_slot_role: george_washington
+  reps_per_round: 20
+  exercise_filter:
+    exercise_ids: [kb_tgu]
+    ordered: true
+  load: 12 kg (26 lb)
+required_equipment: [rower, box, pull_up_bar, ghd, rings, kettlebell]
+sources: [Horsemen]
+notes: 'A chipper: row 500 m, then 50 each of box jumps, push-ups, sit-ups, jumping pull-ups, back extensions and
+  ring dips, and 20 get-ups with a 12 kg (26 lb) kettlebell.'

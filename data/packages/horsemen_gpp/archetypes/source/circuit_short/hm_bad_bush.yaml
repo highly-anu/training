@@ -1,0 +1,49 @@
+id: hm_bad_bush
+name: "Bad Bush"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 25
+pool_only: true
+
+slots:
+  - role: run
+    slot_type: distance
+    sets: 5
+    distance_m: 400
+    exercise_filter:
+      exercise_ids: [run_hard]
+      ordered: true
+    notes: >
+      5 rounds, alternating: run 400 m, 10 renegade man makers, 1 rope climb — the source gives
+      no clock.
+
+  - role: renegade_man_makers
+    slot_type: sets_reps
+    sets: 5
+    reps: 10
+    load: "2 x 11 kg (2 x 25 lb)"
+    exercise_filter:
+      exercise_ids: [renegade_man_maker]
+      ordered: true
+    notes: >
+      The source defines the renegade man maker with two dumbbells, "usually @ 25#".
+
+  - role: rope_climb
+    slot_type: sets_reps
+    sets: 5
+    reps: 1
+    exercise_filter:
+      exercise_ids: [rope_climb, pull_up]
+      ordered: true
+    notes: >
+      1 rope climb, or 10 pull-ups without a rope (the source's substitute).
+
+required_equipment:
+  - dumbbell
+  - open_space
+sources:
+  - Horsemen
+notes: >
+  Five rounds of a 400 m run, 10 renegade man makers and a rope climb (or 10 pull-ups). The
+  source says neither for time nor how to rest.

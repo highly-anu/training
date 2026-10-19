@@ -1,0 +1,71 @@
+id: hm_d_day
+name: D-Day
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 30
+slots:
+- role: kb_rack_step_ups
+  slot_type: sets_reps
+  sets: 10
+  reps: 10-9-8-7-6-5-4-3-2-1
+  exercise_filter:
+    exercise_ids:
+    - kb_step_up_double
+    - weighted_step_up
+    ordered: true
+  notes: >-
+    Rungs from 10 down to 1: step-ups with two kettlebells in the rack, then windshield wipers. The source
+    gives no bell weight or box height.
+- role: windshield_wipers
+  slot_type: sets_reps
+  sets: 10
+  reps: 10-9-8-7-6-5-4-3-2-1
+  exercise_filter:
+    exercise_ids:
+    - windshield_wiper
+    ordered: true
+  load: bodyweight
+- role: run_400m
+  slot_type: distance
+  distance_m: 400
+  sets: 3
+  exercise_filter:
+    exercise_ids:
+    - run_hard
+    ordered: true
+  notes: '3 rounds, alternating: 400 m run, 30 glute-ham sit-ups, 30 back extensions.'
+- role: glute_ham_sit_ups
+  slot_type: sets_reps
+  sets: 3
+  reps: 30
+  exercise_filter:
+    exercise_ids:
+    - ghd_sit_up
+    ordered: true
+  load: bodyweight
+- role: back_extensions
+  slot_type: sets_reps
+  sets: 3
+  reps: 30
+  exercise_filter:
+    exercise_ids:
+    - back_extension
+    ordered: true
+  load: bodyweight
+required_equipment:
+- box
+- pull_up_bar
+- ghd
+- open_space
+sources:
+- Horsemen
+notes: >-
+  The source says to perform it on June 6th. A 10-to-1 ladder of double-kettlebell rack step-ups and windshield
+  wipers, then 3 rounds of a 400 m run, 30 glute-ham sit-ups and 30 back extensions; the 3 rounds have
+  no title of their own and are read as part of it. By the source's rule dumbbells may stand in for the
+  kettlebells.

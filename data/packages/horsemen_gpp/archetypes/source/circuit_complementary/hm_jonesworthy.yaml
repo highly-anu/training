@@ -1,0 +1,50 @@
+id: hm_jonesworthy
+name: "Jonesworthy"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 25
+pool_only: true
+
+slots:
+  - role: squats
+    slot_type: rounds_for_time
+    rounds: 6
+    duration_sec: 1380
+    intensity: max_effort
+    exercise_filter:
+      exercise_ids: [squat_air]
+      ordered: true
+    notes: >
+      Six rounds: squats 80-64-48-32-24-12, kettlebell swings 40-32-24-16-12-6, pull-ups
+      20-16-12-8-6-3.
+
+  - role: kb_swings
+    slot_type: amrap_movement
+    reps_per_round: 40
+    parent_slot_role: squats
+    exercise_filter:
+      exercise_ids: [kb_swing_two_hand]
+      ordered: true
+    notes: >
+      40, 32, 24, 16, 12 and 6 swings.
+
+  - role: pull_ups
+    slot_type: amrap_movement
+    reps_per_round: 20
+    parent_slot_role: squats
+    exercise_filter:
+      exercise_ids: [pull_up]
+      ordered: true
+    notes: >
+      20, 16, 12, 8, 6 and 3 pull-ups.
+
+required_equipment:
+  - kettlebell
+  - pull_up_bar
+sources:
+  - Horsemen
+notes: >
+  Six descending rounds of squats (80 down to 12), kettlebell swings (40 to 6) and pull-ups (20
+  to 3). The source writes only the rep scheme, no clock. Where the source gives no load it is
+  the athlete's choice (its Weight Loading rule).

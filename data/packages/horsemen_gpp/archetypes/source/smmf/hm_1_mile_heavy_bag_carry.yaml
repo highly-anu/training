@@ -1,0 +1,20 @@
+id: hm_1_mile_heavy_bag_carry
+name: 1 Mile Heavy Bag Carry
+modality: strength_endurance
+category: gpp_durability
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 25
+slots:
+- role: heavy_bag_carry
+  slot_type: distance
+  distance_m: 1609
+  exercise_filter:
+    exercise_ids: [sb_carry_shoulder, sb_carry_bearhug]
+    ordered: true
+  load: a Yates bag holding 30, 60 or 90 ft of fast rope
+  notes: 'Carry the bag 1 mile (1.6 km). The source does not say how to hold it: on the shoulder, or in a bear hug.'
+required_equipment: [sandbag, open_space]
+sources: [Horsemen]
+notes: 'Carry a heavy bag one mile: a Yates bag with 30, 60 or 90 ft of fast rope in it. The source gives no time
+  and does not say how the bag is held.'

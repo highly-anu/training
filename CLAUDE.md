@@ -363,6 +363,26 @@ group's name.
   `/exercises/substitute` accept `phase_id` + `framework_id` (both clients send them) and
   apply that phase's `exclude_exercises` and the framework's deload share
   (`api._week_phase_rules`, `phases.phase_rules`); without them they behave as before.
+- **Weeks the source writes day by day** (`src/week_template.py`, since 2026-10-19). A
+  phase may declare `week_templates` (seven days per week of the phase: `rest`, a day
+  category, several, or `{categories, warm_up, light}`) and `drop_order` (which days go with
+  fewer training days); its framework declares `categories` — pools of named-workout
+  archetypes (`pool_only: true`, never picked by modality) with a `fallback` order — and a
+  `warm_up_category`. Each day takes the next workout of its pool the athlete can do **as
+  written** (level, every item of `required_equipment` — open space assumed — every movement
+  fillable, the day's minutes), passing a workout used in the last week of picks while another
+  fits; the warm-up opens it and both become one session (`category`, `pieces`, `warm_up` on
+  the session). Days keep their template positions (the source's rest day), honouring
+  preferred and forced-rest days. Loads are `progression_model: as_written`: the slot's `load`
+  text ("75% of today's 1RM", "24 kg (53 lb)", "1.25x bodyweight"), no ramp, level, phase or
+  deload scaling. A slot's `exercise_filter.ordered` takes the written movement first and the
+  source's declared substitutes after it; a workout's movements are `named_only` exercises,
+  so adding them never changes what an open slot picks. Rotation resumes where a regenerate's
+  first week stands (`prior_rotation`); a test may take a templated day nothing fitted; a
+  program in which nothing fits is `TEMPLATE_UNFILLED`. Fidelity reads a templated phase
+  against its template (`_check_template`), not `sessions_per_week`. Horsemen's 4-Month Macro
+  is the one user: ~190 named workouts, the PT test on the first and last hard job-specific
+  days (`test_week_template.py`).
 - **Cadence, loads and recovery live in YAML.** A framework's `cadence_options`
   (keyed by days per week, several patterns rotating week to week) is the only source of
   day patterns; an exercise's `starting_load_kg` / `weekly_increment_kg` the only source of

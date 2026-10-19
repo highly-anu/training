@@ -1,0 +1,19 @@
+id: hm_100_burpee_pull_ups
+name: 100 Burpee Pull-Ups
+modality: strength_endurance
+category: gpp_durability
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 20
+slots:
+- role: burpee_pull_up
+  slot_type: sets_reps
+  sets: 1
+  reps: 100
+  exercise_filter:
+    exercise_ids: [burpee_pull_up]
+    ordered: true
+  notes: 100 burpee and pull-up combos.
+required_equipment: [pull_up_bar]
+sources: [Horsemen]
+notes: One hundred burpee and pull-up combos. The source gives no time.

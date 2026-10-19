@@ -1,0 +1,40 @@
+id: hm_swing_and_push_press_ladder
+name: Swing and Push Press Ladder
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 12
+slots:
+- role: kb_swings
+  slot_type: sets_reps
+  sets: 10
+  reps: 20-18-16-14-12-10-8-6-4-2
+  load: 32 kg (70 lb)
+  exercise_filter:
+    exercise_ids:
+    - kb_swing_two_hand
+    ordered: true
+  notes: >-
+    A 10-to-1 ladder, alternating: swings at twice the rung (20, 18, 16 … 2), then dumbbell push
+    presses at the rung (10, 9, 8 … 1).
+- role: db_push_press
+  slot_type: sets_reps
+  sets: 10
+  reps: 10-9-8-7-6-5-4-3-2-1
+  load: 2 x 16 kg (2 x 35 lb)
+  exercise_filter:
+    exercise_ids:
+    - db_push_press
+    ordered: true
+required_equipment:
+- kettlebell
+- dumbbell
+sources:
+- Horsemen
+notes: >-
+  A warm-up: a 10-to-1 descending ladder of kettlebell swings (twice the rung's reps) and dumbbell
+  push presses. The source does not time it. Unnamed in the source.

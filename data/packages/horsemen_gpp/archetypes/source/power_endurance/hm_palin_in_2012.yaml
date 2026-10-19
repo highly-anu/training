@@ -1,0 +1,55 @@
+id: hm_palin_in_2012
+name: Palin in 2012!
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 35
+slots:
+- role: run_400m
+  slot_type: rounds_for_time
+  rounds: 4
+  distance_m: 400
+  duration_sec: 2100
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids:
+    - run_hard
+    ordered: true
+  notes: >-
+    For time, 4 rounds: run 400 m, Turkish get-ups (10, 7, 5, then 3 each hand), jumping lunges (40, 30,
+    20, then 10, half on each leg).
+- role: turkish_get_ups
+  slot_type: amrap_movement
+  parent_slot_role: run_400m
+  reps_per_round: 10
+  exercise_filter:
+    exercise_ids:
+    - kb_tgu
+    ordered: true
+  load: 16 kg (35 lb)
+  notes: >-
+    10, 7, 5, then 3 get-ups on each hand, one set a round. The source writes the 35 lb only on the first
+    set.
+- role: jumping_lunges
+  slot_type: amrap_movement
+  parent_slot_role: run_400m
+  reps_per_round: 40
+  exercise_filter:
+    exercise_ids:
+    - lunge_jumping
+    ordered: true
+  load: bodyweight
+  notes: 40, 30, 20, then 10 jumping lunges, half on each leg.
+required_equipment:
+- kettlebell
+- open_space
+sources:
+- Horsemen
+notes: >-
+  A descending chipper for time: four 400 m runs, each followed by Turkish get-ups (10, 7, 5, 3 each hand)
+  and jumping lunges (40, 30, 20, 10). The source loads the get-ups at 35 lb. The untitled "10 rounds,
+  grind" that follows it in the source is authored as its own workout.

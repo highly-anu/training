@@ -80,7 +80,13 @@
           "open_space",
           "pool",
           "dip_belt",
-          "none"
+          "none",
+          "hangboard",
+          "sledgehammer",
+          "cable_machine",
+          "hurdles",
+          "agility_ladder",
+          "training_partner"
         ]
       }
     },
@@ -129,6 +135,10 @@
         "type": "string"
       },
       "default": []
+    },
+    "named_only": {
+      "type": "boolean",
+      "description": "A movement of a named workout (Horsemen's): selected only by a slot that names it in exercise_filter.exercise_ids, so adding a workout's movements never changes what an open slot picks."
     },
     "test_only": {
       "type": "boolean",

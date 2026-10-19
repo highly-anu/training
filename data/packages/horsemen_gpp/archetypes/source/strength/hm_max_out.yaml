@@ -1,0 +1,62 @@
+id: hm_max_out
+name: Max Out!
+modality: max_strength
+category: strength
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 55
+slots:
+- role: deadlift
+  slot_type: sets_reps
+  sets: 8
+  reps: 5-4-3-2-1-1-1-1
+  exercise_filter:
+    exercise_ids: [deadlift]
+    ordered: true
+  notes: 5-4-3-2-1-1-1-1 deadlifts and bench presses. The source lists both under one scheme and does not say whether
+    to alternate them.
+- role: bench_press
+  slot_type: sets_reps
+  sets: 8
+  reps: 5-4-3-2-1-1-1-1
+  exercise_filter:
+    exercise_ids: [bench_press]
+    ordered: true
+- role: heavy_bag_clean_and_press
+  slot_type: sets_reps
+  sets: 3
+  reps: 3
+  exercise_filter:
+    exercise_ids: [sb_clean_press]
+    ordered: true
+  load: heavy
+  notes: '3 rounds, alternating: 3 heavy-bag clean and presses, 1 kettlebell pull — not for time.'
+- role: kb_pull
+  slot_type: sets_reps
+  sets: 3
+  reps: 1
+  exercise_filter:
+    exercise_ids: [kb_pull]
+    ordered: true
+  notes: A kettlebell sumo deadlift high pull.
+- role: box_jump
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  exercise_filter:
+    exercise_ids: [box_jump]
+    ordered: true
+  notes: '3 rounds, alternating: 10 box jumps, 5 get-ups each hand — not for time.'
+- role: get_up
+  slot_type: sets_reps
+  sets: 3
+  reps: 5
+  exercise_filter:
+    exercise_ids: [kb_tgu]
+    ordered: true
+  notes: Each hand.
+required_equipment: [barbell, rack, plates, sandbag, kettlebell, box]
+sources: [Horsemen]
+notes: Deadlift and bench press 5-4-3-2-1-1-1-1, then 3 rounds of heavy-bag clean and presses with a kettlebell
+  pull, and 3 rounds of box jumps and get-ups. The source does not time it. Where no load is given, the source leaves
+  it to the athlete (its Weight Loading rule).

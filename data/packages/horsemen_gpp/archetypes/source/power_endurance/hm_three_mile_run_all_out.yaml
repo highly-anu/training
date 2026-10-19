@@ -1,0 +1,29 @@
+id: hm_three_mile_run_all_out
+name: 3-Mile Run, All Out
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 20
+slots:
+- role: run_3_mile
+  slot_type: for_time
+  rounds: 1
+  distance_m: 4828
+  duration_sec: 1200
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids:
+    - run_tempo_horsemen
+    ordered: true
+  notes: 3 miles all out; the source's target is under 20:00.
+required_equipment:
+- open_space
+sources:
+- Horsemen
+notes: >-
+  A 3-mile run at all-out effort, the source's target under 20 minutes — the cardio half of the program's
+  stated goal (3 miles easily in under 20:00).

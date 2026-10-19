@@ -1,0 +1,45 @@
+id: hm_swings_jumping_lunges_push_ups
+name: Swings, Jumping Lunges and Push-ups
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 10
+slots:
+- role: kb_swings
+  slot_type: sets_reps
+  sets: 5
+  reps: 20
+  load: 20 kg (44 lb)
+  exercise_filter:
+    exercise_ids:
+    - kb_swing_two_hand
+    ordered: true
+  notes: >-
+    5 rounds, alternating: 20 kettlebell swings, 7 jumping lunges, 10 push-ups — not for time.
+- role: jumping_lunges
+  slot_type: sets_reps
+  sets: 5
+  reps: 7
+  exercise_filter:
+    exercise_ids:
+    - lunge_jumping
+    ordered: true
+- role: push_ups
+  slot_type: sets_reps
+  sets: 5
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - push_up
+    ordered: true
+required_equipment:
+- kettlebell
+sources:
+- Horsemen
+notes: >-
+  A warm-up: 5 rounds of 20 kettlebell swings at 44 lb, 7 jumping lunges and 10 push-ups. Unnamed
+  in the source.

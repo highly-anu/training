@@ -65,6 +65,12 @@ export type EquipmentId =
   | 'open_space'
   | 'pool'
   | 'dip_belt'
+  | 'hangboard'
+  | 'sledgehammer'
+  | 'cable_machine'
+  | 'hurdles'
+  | 'agility_ladder'
+  | 'training_partner'
 
 export type InjuryFlagId =
   | 'knee_meniscus_post_op'

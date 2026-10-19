@@ -1,0 +1,40 @@
+id: hm_get_ups_till_you_throw_up
+name: Get-Ups Till You Throw Up
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 45
+slots:
+- role: sandbag_get_ups
+  slot_type: sets_reps
+  sets: 1
+  reps: 100
+  exercise_filter:
+    exercise_ids:
+    - sb_getup
+    ordered: true
+  load: 39-43 kg (85-95 lb)
+  notes: 100 sandbag get-ups, then the sprints.
+- role: suicide_sprints
+  slot_type: emom
+  work_sec: 30
+  sets: 20
+  reps_per_round: 1
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids:
+    - suicide_sprint
+    ordered: true
+  notes: >-
+    A suicide sprint every 30 seconds for 10 minutes. The source does not give the sprint's distances.
+required_equipment:
+- sandbag
+- open_space
+sources:
+- Horsemen
+notes: >-
+  100 sandbag get-ups with an 85-95 lb bag, then a suicide sprint every 30 seconds for 10 minutes.

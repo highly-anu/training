@@ -1,0 +1,28 @@
+id: hm_slab_city
+name: Slab City
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 20
+slots:
+- role: kb_swings
+  slot_type: emom
+  work_sec: 30
+  rest_sec: 30
+  sets: 20
+  exercise_filter:
+    exercise_ids:
+    - kb_swing_two_hand
+    ordered: true
+  notes: '20 rounds: 30 s of kettlebell swings, 30 s rest — 20 min in all.'
+required_equipment:
+- kettlebell
+sources:
+- Horsemen
+notes: >-
+  20 rounds of 30 seconds of kettlebell swings and 30 seconds of rest, 20 minutes in all. Where no load
+  is written it is the athlete's call, by the source's weight-loading rule.

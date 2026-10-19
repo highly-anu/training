@@ -1,0 +1,29 @@
+id: hm_grace
+name: "Grace"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 8
+pool_only: true
+
+slots:
+  - role: clean_and_jerks
+    slot_type: for_time
+    rounds: 1
+    duration_sec: 420
+    intensity: max_effort
+    load: "61 kg (135 lb)"
+    exercise_filter:
+      exercise_ids: [clean_and_jerk]
+      ordered: true
+    notes: >
+      30 clean and jerks, for time.
+
+required_equipment:
+  - barbell
+  - plates
+sources:
+  - Horsemen
+  - CrossFit
+notes: >
+  CrossFit's Grace as the source writes it: 30 clean and jerks at 135 lb for time.

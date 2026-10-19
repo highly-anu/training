@@ -1,0 +1,48 @@
+id: hm_ten_rounds_pull_dip_push
+name: '10 Rounds: Pull-ups, Dips, Push-ups'
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 30
+slots:
+- role: pull_ups
+  slot_type: sets_reps
+  sets: 10
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - pull_up
+    ordered: true
+  load: bodyweight
+  notes: '10 rounds, alternating: 5 pull-ups, 10 dips, 15 push-ups — grind, not for time.'
+- role: dips
+  slot_type: sets_reps
+  sets: 10
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - dip
+    ordered: true
+  load: bodyweight
+- role: push_ups
+  slot_type: sets_reps
+  sets: 10
+  reps: 15
+  exercise_filter:
+    exercise_ids:
+    - push_up
+    ordered: true
+  load: bodyweight
+required_equipment:
+- pull_up_bar
+- parallettes
+sources:
+- Horsemen
+notes: >-
+  Unnamed in the source. Ten rounds of 5 pull-ups, 10 dips and 15 push-ups, a grind, not for time. It
+  follows Palin in 2012! without a title; its own header ("grind, not for time") sets it apart from that
+  for-time workout, so it stands as its own.

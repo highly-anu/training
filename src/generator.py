@@ -1,7 +1,7 @@
 """Main program generator — orchestrates all modules."""
 from __future__ import annotations
 
-from . import loader, phases, provenance, standard_tests
+from . import loader, phases, provenance, standard_tests, week_template
 from .scheduler import schedule_week, select_framework
 from .selector import populate_session, select_archetype
 from .progression import calculate_load
@@ -153,6 +153,10 @@ def _resolve_session(sessions: list, archetypes: list, fallback_archetypes: list
     resolved = []
     for session in sessions:
         modality = session['modality']
+        if session.get('_forced_archetype'):
+            # A template day's named workout, picked as written (week_template).
+            resolved.append(session)
+            continue
 
         # Pass 1: primary-sources archetypes, normal equipment filter
         if _has_archetype(modality, archetypes, constraints, phase):
@@ -178,6 +182,24 @@ def _resolve_session(sessions: list, archetypes: list, fallback_archetypes: list
     return resolved
 
 
+def _fits_as_written(arch: dict, constraints: dict, phase: str, populate) -> bool:
+    """Whether the athlete can do a named workout as written: their level, the
+    phase, every piece of its equipment (open space is assumed) and every
+    movement fillable (an injury or a phase exclusion can rule one out)."""
+    level = constraints.get('training_level', 'intermediate')
+    if arch.get('training_levels') and level not in arch['training_levels']:
+        return False
+    if arch.get('applicable_phases') and phase not in arch['applicable_phases']:
+        return False
+    have = set(constraints.get('equipment') or []) | {'open_space'}
+    if not set(arch.get('required_equipment') or []) <= have:
+        return False
+    populated = populate(arch)
+    return bool(populated.get('archetype')) and all(
+        ea.get('exercise') is not None or ea.get('meta') or (ea.get('slot') or {}).get('skip_exercise')
+        for ea in populated.get('exercises', []))
+
+
 _GEN_DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 
@@ -195,7 +217,7 @@ def _test_slot(resolved_by_day: dict, modalities: list, day_pref: str, taken: se
             if day_pref == 'last':
                 sessions.reverse()
             for idx, sess in sessions:
-                if sess.get('modality') != mod or (day, idx) in taken:
+                if mod not in (sess.get('modality'), sess.get('category')) or (day, idx) in taken:
                     continue
                 if sess.get('_substituted_for') or sess.get('_commons_fallback'):
                     continue
@@ -271,7 +293,11 @@ def _plan_week_tests(entry: dict, resolved_by_day: dict, archetypes: list, const
             if cap and (arch.get('duration_estimate_minutes') or 0) > cap * 1.1 and 'long' not in types:
                 reason = 'session_too_short'
                 continue
-            test_session = {**session, 'modality': arch.get('modality')}
+            # A templated day keeps its category (the day the test stands in
+            # for); the replaced day's pieces and warm-up are not the test's.
+            test_session = {k: v for k, v in session.items()
+                            if not k.startswith('_') and k not in ('pieces', 'warm_up', 'light', 'category_name')}
+            test_session['modality'] = arch.get('modality')
             populated = populate(test_session, arch)
             # The scored piece is every slot with a standard and the movements
             # inside it (Helen's swings and pull-ups): all of it, or no test.
@@ -490,6 +516,13 @@ def generate(
             return program
         return format_program(program, goal, constraints, validation)
     program = {'weeks': []}
+    # A templated phase's rotation through each category's workouts, and
+    # whether each workout fits the athlete as written (per phase).
+    template_rotation: dict = week_template.prior_rotation(
+        goal.get('phase_sequence') or [], entries[0], loader.load_all_frameworks()
+    ) if entries and entries[0].get('week_template') else {}
+    template_fits: dict = {}
+    template_recent: list = []
     recent_arch_ids: list[str] = []
     recent_ex_ids:   list[str] = []
     # Each phase's main lifts, (archetype id, slot index) -> exercise id; reset
@@ -533,6 +566,28 @@ def generate(
 
         # Collect compromises from this week (only unique ones)
         week_compromises = sched_result.get('compromises', [])
+        template_left_out: dict = {}
+        if entry.get('week_template') and framework.get('categories'):
+            # The source's own week, day by day: each day the next named
+            # workout of its category the athlete can do as written.
+            def _fits(arch: dict, minutes: float, _phase=phase, _excluded=phase_excluded,
+                      _week=week_in_phase, _key=phase_key) -> bool:
+                if (arch.get('duration_estimate_minutes') or 0) > minutes:
+                    return False
+                key = (arch['id'], _key)
+                if key not in template_fits:
+                    template_fits[key] = _fits_as_written(
+                        arch, constraints, _phase,
+                        lambda a: populate_session(
+                            {'modality': a.get('modality')}, goal, constraints, exercises, archetypes,
+                            injury_flags_data, _phase, _week, [], [], forced_archetype=a,
+                            exercises_by_package=lib.get('exercises_by_package'), policy=policy,
+                            level_seeds=lib.get('level_seeds'), exclude_exercise_ids=_excluded,
+                            pinned_lifts=None, unfilled_cache={}))
+                return template_fits[key]
+            week_schedule, week_compromises = week_template.plan_week(
+                entry, framework, constraints, {a['id']: a for a in archetypes}, template_rotation, _fits,
+                template_recent, template_left_out)
         for compromise in week_compromises:
             if compromise not in all_compromises:
                 all_compromises.append(compromise)
@@ -569,8 +624,18 @@ def generate(
                 pinned_lifts=None, deload_keep=deload_keep, unfilled_cache={},
             )
 
+        # A templated day nothing fitted may still take the phase's test (the
+        # PT test on a hard job-specific day the athlete's injury emptied).
+        categories = framework.get('categories') or {}
+        for day, cat in template_left_out.items():
+            resolved_by_day[day] = [{'modality': categories[cat]['modality'], 'category': cat, '_placeholder': True}]
         placed_tests, skipped_tests = _plan_week_tests(entry, resolved_by_day, archetypes, constraints,
                                                        is_deload, _populate_test)
+        for day in template_left_out:
+            if (day, 0) not in placed_tests:
+                del resolved_by_day[day]
+        week_schedule = {d: v for d, v in week_schedule.items()} | {d: [] for d in template_left_out
+                                                                     if d in resolved_by_day}
 
         for day in sorted(week_schedule.keys()):
             populated_sessions = []
@@ -589,6 +654,7 @@ def generate(
                 if session['modality'] == 'mobility' and mobility_hint:
                     preferred_arch = mobility_hint
 
+                forced = session.pop('_forced_archetype', None)
                 # Commons fallback: use full archetype pool with relaxed equipment
                 is_commons_fallback = session.pop('_commons_fallback', False)
                 substituted_for = session.pop('_substituted_for', None)
@@ -605,11 +671,14 @@ def generate(
                 # placed; the session it stands in for is still selected, so the
                 # rest of the program rotates exactly as it would have without
                 # the test (its picks feed the recency lists below).
-                rotation_source = populate_session(
+                # A placeholder day (nothing fitted; the test took it) stands
+                # in for no session.
+                rotation_source = {'exercises': []} if session.pop('_placeholder', False) else populate_session(
                     session, goal, constraints, exercises, session_archetypes,
                     injury_flags_data, phase, week_in_phase,
                     recent_arch_ids, recent_ex_ids,
                     collect_trace=include_trace,
+                    forced_archetype=forced,
                     exercises_by_package=lib.get('exercises_by_package'),
                     preferred_archetype_id=preferred_arch,
                     day_session_types=day_session_types,
@@ -617,7 +686,7 @@ def generate(
                     policy=policy,
                     level_seeds=lib.get('level_seeds'),
                     exclude_exercise_ids=phase_excluded,
-                    pinned_lifts=week_pins,
+                    pinned_lifts=None if forced else week_pins,
                     deload_keep=deload_keep,
                     unfilled_cache=unfilled_cache,
                 )
@@ -743,7 +812,8 @@ def generate(
                 # Complementary recovery work — mobility/rehab exercises targeting stressed patterns
                 session_package = (populated.get('archetype') or {}).get('_package')
                 recovery_exercises = data['exercises_by_package'].get(session_package, {})
-                comp = _select_complementary(populated.get('exercises', []), recovery_exercises)
+                # A named workout is the day as the source writes it: no extras.
+                comp = None if forced else _select_complementary(populated.get('exercises', []), recovery_exercises)
                 if comp:
                     populated['complementary_work'] = [
                         {
@@ -787,6 +857,20 @@ def generate(
 
     # Add compromises to program
     program['compromises'] = all_compromises
+    if entries and all(e.get('week_template') for e in entries) and \
+            not any(w['schedule'] for w in program['weeks']):
+        # Nothing of the source fits as written (Horsemen has no novice path;
+        # an athlete without its gear gets none of its workouts): say so
+        # rather than hand back weeks of rest.
+        level = constraints.get('training_level', 'intermediate')
+        return {'weeks': [], 'compromises': all_compromises,
+                'coverage_report': _build_coverage_report({}, policy),
+                'validation_errors': [{
+                    'code': 'TEMPLATE_UNFILLED',
+                    'message': (f"None of this track's named workouts can be done as written by a {level} "
+                                'athlete with this equipment and these injuries.'),
+                    'suggested_fix': 'The source is written for experienced athletes with a full gym; '
+                                     'check the training level and equipment.'}]}
     program['coverage_report'] = _build_coverage_report(program, policy)
 
     if output_format == 'dict':

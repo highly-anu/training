@@ -1,0 +1,66 @@
+id: hm_sherbert
+name: Sherbert
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 20
+slots:
+- role: sherbert
+  slot_type: for_time
+  rounds: 1
+  duration_sec: 1200
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids: [pull_up]
+    ordered: true
+  notes: 'For time, in order: 10 pull-ups, 20 kettlebell swings, 30 box jumps, 40 push-ups, 50 sit-ups, 60 burpees,
+    10 pull-ups. The source''s time is 10-20 minutes.'
+- role: kb_swing
+  slot_type: amrap_movement
+  parent_slot_role: sherbert
+  reps_per_round: 20
+  exercise_filter:
+    exercise_ids: [kb_swing_two_hand]
+    ordered: true
+  load: 24 kg (53 lb)
+- role: box_jump
+  slot_type: amrap_movement
+  parent_slot_role: sherbert
+  reps_per_round: 30
+  exercise_filter:
+    exercise_ids: [box_jump]
+    ordered: true
+  notes: 24 in (61 cm) box.
+- role: push_up
+  slot_type: amrap_movement
+  parent_slot_role: sherbert
+  reps_per_round: 40
+  exercise_filter:
+    exercise_ids: [push_up]
+    ordered: true
+- role: sit_up
+  slot_type: amrap_movement
+  parent_slot_role: sherbert
+  reps_per_round: 50
+  exercise_filter:
+    exercise_ids: [sit_up]
+    ordered: true
+- role: burpee
+  slot_type: amrap_movement
+  parent_slot_role: sherbert
+  reps_per_round: 60
+  exercise_filter:
+    exercise_ids: [burpee]
+    ordered: true
+- role: pull_up_finish
+  slot_type: amrap_movement
+  parent_slot_role: sherbert
+  reps_per_round: 10
+  exercise_filter:
+    exercise_ids: [pull_up]
+    ordered: true
+required_equipment: [pull_up_bar, kettlebell, box]
+sources: [Horsemen]
+notes: 'A chipper: 10 pull-ups, 20 kettlebell swings at 24 kg (53 lb), 30 box jumps, 40 push-ups, 50 sit-ups, 60
+  burpees and 10 more pull-ups, in the source''s 10-20 minutes.'

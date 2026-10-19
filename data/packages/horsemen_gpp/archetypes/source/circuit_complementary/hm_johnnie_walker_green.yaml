@@ -1,0 +1,42 @@
+id: hm_johnnie_walker_green
+name: "Johnnie Walker Green"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 20
+pool_only: true
+
+slots:
+  - role: row
+    slot_type: distance
+    sets: 5
+    distance_m: 500
+    exercise_filter:
+      exercise_ids: [row_erg]
+      ordered: true
+    notes: >
+      5 rounds, alternating: row 500 m, then max-rep bench press at 135 lb — the source gives no
+      clock.
+
+  - role: bench_press
+    slot_type: sets_reps
+    sets: 5
+    reps: "max"
+    intensity: max_effort
+    load: "61 kg (135 lb)"
+    exercise_filter:
+      exercise_ids: [bench_press]
+      ordered: true
+    notes: >
+      One set to as many reps as possible each round.
+
+required_equipment:
+  - barbell
+  - plates
+  - rack
+  - rower
+sources:
+  - Horsemen
+notes: >
+  Five rounds of a 500 m row and a max-rep set of bench press at 135 lb; the source says neither
+  for time nor how to rest.

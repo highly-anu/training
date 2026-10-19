@@ -1,0 +1,64 @@
+id: hm_enhance_your_freedom
+name: Enhance Your Freedom
+modality: durability
+category: gpp_durability
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 30
+slots:
+- role: freedom_enhancer
+  slot_type: time_domain
+  exercise_filter:
+    exercise_ids:
+    - fingerboard_hang
+    ordered: true
+  notes: >-
+    Choose a workout on the freedom enhancer (the hangboard). The source leaves the board workout and
+    its length to you; the duration shown is the app's placeholder, not the source's.
+- role: one_arm_negatives
+  slot_type: sets_reps
+  sets: 1
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - one_arm_negative_pull_up
+    ordered: true
+  notes: 5 one-arm negatives each arm.
+- role: knees_to_elbows
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - knees_to_elbows
+    ordered: true
+  notes: >-
+    3 rounds, alternating: 10 knees to elbows, 15 handstand push-ups, 20 ankles to bar — not for time.
+- role: handstand_push_ups
+  slot_type: sets_reps
+  sets: 3
+  reps: 15
+  exercise_filter:
+    exercise_ids:
+    - handstand_push_up
+    ordered: true
+- role: ankles_to_bar
+  slot_type: sets_reps
+  sets: 3
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - ankles_to_bar
+    ordered: true
+required_equipment:
+- pull_up_bar
+- hangboard
+sources:
+- Horsemen
+notes: >-
+  A job-specific workout for climbing: a hangboard workout of the athlete's choosing, one-arm negatives,
+  then three rounds of knees to elbows, handstand push-ups and ankles to bar. The source does not say
+  for time.

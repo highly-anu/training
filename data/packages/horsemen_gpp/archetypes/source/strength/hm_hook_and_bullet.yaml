@@ -1,0 +1,83 @@
+id: hm_hook_and_bullet
+name: Hook and Bullet
+modality: max_strength
+category: strength
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 45
+slots:
+- role: mr_spectacular
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  exercise_filter:
+    exercise_ids: [mr_spectacular]
+    ordered: true
+  load: 2 x 16 kg (2 x 35 lb)
+  notes: '5 rounds, alternating: 5 Mr. Spectaculars, 15 m dumbbell crawl, 10 cauldrons each direction — not for
+    time. A Mr. Spectacular is a two-hand kettlebell clean and press, then a walk-out to a push-up and back.'
+- role: db_crawl
+  slot_type: distance
+  distance_m: 15
+  sets: 5
+  exercise_filter:
+    exercise_ids: [db_crawl]
+    ordered: true
+  load: 2 x 11 kg (2 x 25 lb)
+- role: cauldron
+  slot_type: sets_reps
+  sets: 5
+  reps: 20
+  exercise_filter:
+    exercise_ids: [cauldron]
+    ordered: true
+  load: 11 kg (25 lb)
+  notes: 10 each direction, 20 in all.
+- role: one_arm_sit_up
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  exercise_filter:
+    exercise_ids: [one_arm_weighted_sit_up]
+    ordered: true
+  notes: '5 rounds, alternating: 5 one-arm sit-ups each arm, 10 floor wipers each direction, 10 corkscrews each
+    direction — not for time.'
+- role: floor_wiper
+  slot_type: sets_reps
+  sets: 5
+  reps: 20
+  exercise_filter:
+    exercise_ids: [floor_wiper]
+    ordered: true
+  notes: 10 each direction, 20 in all.
+- role: corkscrew
+  slot_type: sets_reps
+  sets: 5
+  reps: 20
+  exercise_filter:
+    exercise_ids: [corkscrew]
+    ordered: true
+  notes: 20 in all. The source does not describe the movement.
+- role: deadlift
+  slot_type: sets_reps
+  sets: 3
+  reps: 15
+  exercise_filter:
+    exercise_ids: [deadlift]
+    ordered: true
+  load: 52-61 kg (115-135 lb)
+  notes: '3 rounds, alternating: 15 deadlifts, 3 Turkish get-ups each arm — not for time.'
+- role: turkish_get_up
+  slot_type: sets_reps
+  sets: 3
+  reps: 3
+  exercise_filter:
+    exercise_ids: [kb_tgu]
+    ordered: true
+  notes: Each arm.
+required_equipment: [kettlebell, dumbbell, open_space, barbell, plates]
+sources: [Horsemen]
+notes: Five rounds of Mr. Spectaculars with two 16 kg (35 lb) kettlebells, dumbbell crawls and cauldrons, 5 rounds
+  of one-arm sit-ups, floor wipers and corkscrews, and 3 rounds of deadlifts at 52-61 kg (115-135 lb) with Turkish
+  get-ups. The source does not time it. Where no load is given, the source leaves it to the athlete (its Weight
+  Loading rule).

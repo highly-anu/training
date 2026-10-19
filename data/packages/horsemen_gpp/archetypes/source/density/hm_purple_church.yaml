@@ -1,0 +1,46 @@
+id: hm_purple_church
+name: Purple Church
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 10
+slots:
+- role: power_cleans
+  slot_type: emom
+  work_sec: 60
+  sets: 10
+  reps_per_round: 3
+  exercise_filter:
+    exercise_ids:
+    - power_clean
+    ordered: true
+  notes: 'Every minute for 10 minutes: 3 power cleans, 3 hang squat cleans, 3 push presses.'
+- role: hang_squat_cleans
+  slot_type: amrap_movement
+  parent_slot_role: power_cleans
+  reps_per_round: 3
+  exercise_filter:
+    exercise_ids:
+    - hang_squat_clean
+    ordered: true
+- role: push_presses
+  slot_type: amrap_movement
+  parent_slot_role: power_cleans
+  reps_per_round: 3
+  exercise_filter:
+    exercise_ids:
+    - push_press
+    ordered: true
+required_equipment:
+- barbell
+- rack
+- plates
+sources:
+- Horsemen
+notes: >-
+  Every minute on the minute for 10 minutes: 3 power cleans, 3 hang squat cleans and 3 push presses. Where
+  no load is written it is the athlete's call, by the source's weight-loading rule.

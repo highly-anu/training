@@ -1,0 +1,89 @@
+id: hm_johnnie_walker_blue
+name: "Johnnie Walker Blue"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 60
+pool_only: true
+
+slots:
+  - role: pull_ups
+    slot_type: for_time
+    rounds: 1
+    duration_sec: 3600
+    intensity: max_effort
+    exercise_filter:
+      exercise_ids: [pull_up]
+      ordered: true
+    notes: >
+      One pass, in order: 100 pull-ups, 30 get-ups, 100 push-ups, 30 get-ups, 100 atomic
+      sit-ups, 30 get-ups, 100 air squats, 30 get-ups.
+
+  - role: get_ups_1
+    slot_type: amrap_movement
+    reps_per_round: 30
+    parent_slot_role: pull_ups
+    load: "11 kg (25 lb)"
+    exercise_filter:
+      exercise_ids: [kb_tgu]
+      ordered: true
+
+  - role: push_ups
+    slot_type: amrap_movement
+    reps_per_round: 100
+    parent_slot_role: pull_ups
+    exercise_filter:
+      exercise_ids: [push_up]
+      ordered: true
+
+  - role: get_ups_2
+    slot_type: amrap_movement
+    reps_per_round: 30
+    parent_slot_role: pull_ups
+    load: "11 kg (25 lb)"
+    exercise_filter:
+      exercise_ids: [kb_tgu]
+      ordered: true
+
+  - role: atomic_sit_ups
+    slot_type: amrap_movement
+    reps_per_round: 100
+    parent_slot_role: pull_ups
+    exercise_filter:
+      exercise_ids: [atomic_sit_up]
+      ordered: true
+
+  - role: get_ups_3
+    slot_type: amrap_movement
+    reps_per_round: 30
+    parent_slot_role: pull_ups
+    load: "11 kg (25 lb)"
+    exercise_filter:
+      exercise_ids: [kb_tgu]
+      ordered: true
+
+  - role: air_squats
+    slot_type: amrap_movement
+    reps_per_round: 100
+    parent_slot_role: pull_ups
+    exercise_filter:
+      exercise_ids: [squat_air]
+      ordered: true
+
+  - role: get_ups_4
+    slot_type: amrap_movement
+    reps_per_round: 30
+    parent_slot_role: pull_ups
+    load: "11 kg (25 lb)"
+    exercise_filter:
+      exercise_ids: [kb_tgu]
+      ordered: true
+
+required_equipment:
+  - kettlebell
+  - pull_up_bar
+sources:
+  - Horsemen
+notes: >
+  A chipper of 100 pull-ups, push-ups, atomic sit-ups and air squats, with 30 Turkish get-ups at
+  25 lb after each hundred. The source gives it 45-60 minutes and does not say "for time".

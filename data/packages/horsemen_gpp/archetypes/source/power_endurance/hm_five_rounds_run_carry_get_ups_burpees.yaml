@@ -1,0 +1,51 @@
+id: hm_five_rounds_run_carry_get_ups_burpees
+name: '5 Rounds: Dumbbell Run Carry, Get-ups, Burpees'
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 30
+slots:
+- role: run_carry_400m
+  slot_type: distance
+  distance_m: 400
+  sets: 5
+  exercise_filter:
+    exercise_ids:
+    - db_carry_run
+    ordered: true
+  load: 11 kg (25 lb) dumbbell
+  notes: >-
+    5 rounds, alternating: a 400 m run carrying one dumbbell, 5 get-ups with the same dumbbell, 10 burpees.
+    The source gives no clock.
+- role: get_ups
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - kb_tgu
+    ordered: true
+  load: 11 kg (25 lb), the same dumbbell
+  notes: Turkish get-ups with the dumbbell you ran with; the source does not say each hand.
+- role: burpees
+  slot_type: sets_reps
+  sets: 5
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - burpee
+    ordered: true
+  load: bodyweight
+required_equipment:
+- dumbbell
+- open_space
+sources:
+- Horsemen
+notes: >-
+  Unnamed in the source. Five rounds of a 400 m run carrying a 25 lb dumbbell, 5 get-ups with the same
+  dumbbell and 10 burpees. It follows Start Your Face without a title; that ladder is a whole session
+  already and this block is one of its own, so it stands apart.

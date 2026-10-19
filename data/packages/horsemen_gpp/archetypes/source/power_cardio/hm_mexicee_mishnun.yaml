@@ -1,0 +1,34 @@
+id: hm_mexicee_mishnun
+name: Mexicee Mishnun
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 5
+slots:
+- role: row_500m
+  slot_type: distance
+  distance_m: 500
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids:
+    - row_erg
+    ordered: true
+  notes: 500 m row in under 1:30, the source's target; then the run.
+- role: run_400m
+  slot_type: distance
+  distance_m: 400
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids:
+    - run_hard
+    ordered: true
+required_equipment:
+- rower
+- open_space
+sources:
+- Horsemen
+notes: A 500 m row in under 1:30, then a 400 m run.

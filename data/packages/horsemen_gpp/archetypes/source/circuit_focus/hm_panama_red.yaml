@@ -1,0 +1,41 @@
+id: hm_panama_red
+name: "Panama Red"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 15
+pool_only: true
+
+slots:
+  - role: bench_press
+    slot_type: rounds_for_time
+    rounds: 10
+    duration_sec: 900
+    intensity: max_effort
+    load: "1x bodyweight"
+    exercise_filter:
+      exercise_ids: [bench_press]
+      ordered: true
+    notes: >
+      Digression-progression: 10 bench presses and 1 burpee, 9 and 2, 8 and 3 … down to 1 bench
+      press and 10 burpees.
+
+  - role: burpees
+    slot_type: amrap_movement
+    reps_per_round: 1
+    parent_slot_role: bench_press
+    exercise_filter:
+      exercise_ids: [burpee]
+      ordered: true
+    notes: >
+      1 burpee in the first round, one more each round, 10 in the last.
+
+required_equipment:
+  - barbell
+  - plates
+  - rack
+sources:
+  - Horsemen
+notes: >
+  A digression-progression of bench press at bodyweight (10 down to 1) and burpees (1 up to 10).
+  The source writes only the rep scheme, no clock.

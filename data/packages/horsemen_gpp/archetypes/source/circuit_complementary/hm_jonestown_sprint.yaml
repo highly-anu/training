@@ -1,0 +1,41 @@
+id: hm_jonestown_sprint
+name: "Jonestown Sprint"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 15
+pool_only: true
+
+slots:
+  - role: burpee_pull_ups
+    slot_type: rounds_for_time
+    rounds: 4
+    duration_sec: 900
+    intensity: max_effort
+    exercise_filter:
+      exercise_ids: [burpee_pull_up]
+      ordered: true
+    notes: >
+      20-20-10-10 reps of each: burpee/pull-up combos, then push presses.
+
+  - role: push_presses
+    slot_type: amrap_movement
+    reps_per_round: 20
+    parent_slot_role: burpee_pull_ups
+    load: "75% of bodyweight"
+    exercise_filter:
+      exercise_ids: [push_press]
+      ordered: true
+    notes: >
+      20, 20, 10 and 10 push presses after each set of burpee/pull-up combos.
+
+required_equipment:
+  - barbell
+  - plates
+  - pull_up_bar
+  - rack
+sources:
+  - Horsemen
+notes: >
+  20-20-10-10 burpee/pull-up combos and push presses at 75% of bodyweight. The source writes
+  only the rep scheme, no clock.

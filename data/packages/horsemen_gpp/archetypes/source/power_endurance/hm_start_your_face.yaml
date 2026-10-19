@@ -1,0 +1,43 @@
+id: hm_start_your_face
+name: Start Your Face
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 35
+slots:
+- role: renegade_man_makers
+  slot_type: sets_reps
+  sets: 10
+  reps: 10-9-8-7-6-5-4-3-2-1
+  exercise_filter:
+    exercise_ids:
+    - renegade_man_maker
+    ordered: true
+  load: 2 x 11 kg (2 x 25 lb)
+  notes: >-
+    Rungs from 10 down to 1: renegade man makers, then 2 min of step-ups holding the weights at your sides
+    in a farmer carry.
+- role: farmer_step_ups
+  slot_type: time_domain
+  duration_sec: 120
+  sets: 10
+  exercise_filter:
+    exercise_ids:
+    - weighted_step_up
+    ordered: true
+  notes: >-
+    2 min of step-ups after every rung, holding the weights in a farmer carry. The source gives no box
+    height or load.
+required_equipment:
+- dumbbell
+- box
+sources:
+- Horsemen
+notes: >-
+  A 10-to-1 ladder of renegade man makers with two 25 lb dumbbells, each rung followed by 2 minutes of
+  step-ups holding a farmer carry. The two untitled 5-round workouts that follow it in the source are
+  authored as their own. Source name cleaned of profanity.

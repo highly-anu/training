@@ -56,7 +56,9 @@
           "pull_up_bar", "rings", "parallettes", "rower", "bike",
           "ski_erg", "ruck_pack", "sandbag", "sled", "tire",
           "medicine_ball", "resistance_band", "rope", "box",
-          "ghd", "jump_rope", "open_space"
+          "ghd", "jump_rope", "open_space", "pool", "dip_belt",
+          "hangboard", "sledgehammer", "cable_machine", "hurdles", "agility_ladder",
+          "training_partner"
         ]
       },
       "minItems": 1

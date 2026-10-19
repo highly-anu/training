@@ -1,0 +1,147 @@
+id: hm_bannister
+name: Bannister
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 45
+slots:
+- role: one_arm_deadlifts
+  slot_type: sets_reps
+  sets: 1
+  reps: 100
+  exercise_filter:
+    exercise_ids:
+    - single_arm_deadlift
+    ordered: true
+  load: 61 kg (135 lb)
+  notes: >-
+    50 each arm. In order, each set followed by a 270-yard run: 100 one-arm deadlifts, 50 close-grip bench,
+    20 tire flips, 40 push presses, 25 hurdle over/unders, 50 bent-over rows, 2 lengths of cable crawl.
+- role: run_1
+  slot_type: distance
+  distance_m: 247
+  exercise_filter:
+    exercise_ids:
+    - run_hard
+    ordered: true
+  notes: 270-yard run.
+- role: close_grip_bench
+  slot_type: sets_reps
+  sets: 1
+  reps: 50
+  exercise_filter:
+    exercise_ids:
+    - close_grip_bench
+    ordered: true
+  load: 61 kg (135 lb)
+- role: run_2
+  slot_type: distance
+  distance_m: 247
+  exercise_filter:
+    exercise_ids:
+    - run_hard
+    ordered: true
+  notes: 270-yard run.
+- role: tire_flips
+  slot_type: sets_reps
+  sets: 1
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - tire_flip
+    ordered: true
+- role: run_3
+  slot_type: distance
+  distance_m: 247
+  exercise_filter:
+    exercise_ids:
+    - run_hard
+    ordered: true
+  notes: 270-yard run.
+- role: push_press
+  slot_type: sets_reps
+  sets: 1
+  reps: 40
+  exercise_filter:
+    exercise_ids:
+    - push_press
+    ordered: true
+  load: 61 kg (135 lb)
+- role: run_4
+  slot_type: distance
+  distance_m: 247
+  exercise_filter:
+    exercise_ids:
+    - run_hard
+    ordered: true
+  notes: 270-yard run.
+- role: over_unders
+  slot_type: sets_reps
+  sets: 1
+  reps: 25
+  exercise_filter:
+    exercise_ids:
+    - hurdle_over_under
+    ordered: true
+  notes: Over/unders on 30 in (76 cm) plyo hurdles.
+- role: run_5
+  slot_type: distance
+  distance_m: 247
+  exercise_filter:
+    exercise_ids:
+    - run_hard
+    ordered: true
+  notes: 270-yard run.
+- role: bent_over_rows
+  slot_type: sets_reps
+  sets: 1
+  reps: 50
+  exercise_filter:
+    exercise_ids:
+    - barbell_row
+    ordered: true
+  load: 61 kg (135 lb)
+- role: run_6
+  slot_type: distance
+  distance_m: 247
+  exercise_filter:
+    exercise_ids:
+    - run_hard
+    ordered: true
+  notes: 270-yard run.
+- role: cable_crawl
+  slot_type: sets_reps
+  sets: 1
+  reps: 2
+  exercise_filter:
+    exercise_ids:
+    - horizontal_cable_crawl
+    ordered: true
+  notes: Two lengths of the horizontal cable crawl.
+- role: run_7
+  slot_type: distance
+  distance_m: 247
+  exercise_filter:
+    exercise_ids:
+    - run_hard
+    ordered: true
+  notes: 270-yard run.
+required_equipment:
+- barbell
+- rack
+- plates
+- tire
+- open_space
+- cable_machine
+- hurdles
+sources:
+- Horsemen
+- API (Athletic Performance Inc)
+notes: >-
+  An API workout tagged ME/CE in the source: seven high-rep stations — one-arm deadlifts, close-grip bench,
+  tire flips, push presses, hurdle over/unders, bent-over rows, cable crawls — each followed by a 270-yard
+  run. The source does not say for time or give rests.

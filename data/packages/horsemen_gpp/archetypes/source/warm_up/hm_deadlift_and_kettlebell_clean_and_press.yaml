@@ -1,0 +1,41 @@
+id: hm_deadlift_and_kettlebell_clean_and_press
+name: Deadlift and Kettlebell Clean and Press
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 10
+slots:
+- role: deadlift
+  slot_type: sets_reps
+  sets: 5
+  reps: 10
+  load: 61 kg (135 lb)
+  exercise_filter:
+    exercise_ids:
+    - deadlift
+    ordered: true
+  notes: >-
+    5 rounds, alternating: 10 deadlifts, 5 one-arm kettlebell clean and presses — not for time.
+- role: kb_clean_and_press
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  load: 20 kg (44 lb)
+  exercise_filter:
+    exercise_ids:
+    - kb_clean_and_press_single
+    ordered: true
+  notes: 5 one-arm clean and presses; the source does not say whether each arm.
+required_equipment:
+- barbell
+- plates
+- kettlebell
+sources:
+- Horsemen
+notes: >-
+  A warm-up: 5 rounds of 10 deadlifts at 135 lb and 5 one-arm kettlebell clean and presses at
+  44 lb. Unnamed in the source.

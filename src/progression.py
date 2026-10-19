@@ -1,5 +1,7 @@
 """Calculate load targets per exercise slot."""
 from __future__ import annotations
+
+import math
 from typing import Optional
 
 from . import phases
@@ -318,6 +320,71 @@ def _skill_slot(slot: dict) -> dict:
     return out
 
 
+def _as_written(slot: dict) -> dict:
+    """The prescription exactly as the source writes it (Horsemen): no weekly
+    ramp, no level, phase or deload scaling. The slot's `load` text says what
+    to lift — "75% of today's 1RM", "24 kg (53 lb)", "1.25x bodyweight" —
+    because the source loads from a max worked up to on the day, fixed
+    weights and multiples of bodyweight, none of which the app can compute."""
+    slot_type = slot.get('slot_type', 'sets_reps')
+    minutes = (slot['duration_minutes'] if 'duration_minutes' in slot
+               else max(1, round(slot['duration_sec'] / 60)) if slot.get('duration_sec') else None)
+    if slot_type == 'sets_reps':
+        out: dict = {'sets': slot.get('sets', 1), 'reps': slot.get('reps', 1)}
+    elif slot_type == 'static_hold':
+        out = {'sets': slot.get('sets', 1),
+               'hold_seconds': slot.get('hold_seconds', slot.get('duration_sec', 30))}
+    elif slot_type in ('time_domain', 'skill_practice') and 0 < (slot.get('duration_sec') or 60) < 60 \
+            and 'duration_minutes' not in slot:
+        # A piece under a minute (30 s of GHD sit-ups) is an interval, never
+        # "1 min": its seconds, rounds and the rest between them.
+        out = {'target_rounds': slot.get('sets') or 1, 'work_sec': slot['duration_sec'],
+               'rest_sec': slot.get('rest_sec') or 0}
+    elif slot_type in ('time_domain', 'skill_practice'):
+        out = {'duration_minutes': minutes or 10}
+        if (slot.get('sets') or 1) > 1:
+            out['sets'] = slot['sets']
+    elif slot_type == 'distance':
+        metres = slot.get('distance_m', 400)
+        out = {'distance_m': metres} if metres < 1000 else {'distance_km': round(metres / 1000, 2)}
+        if (slot.get('sets') or 1) > 1:
+            out['sets'] = slot['sets']
+    elif slot_type in ('amrap', 'emom') and slot.get('work_sec'):
+        rounds = slot.get('sets') or slot.get('rounds') or 1
+        cycle = slot['work_sec'] + (slot.get('rest_sec') or 0)
+        out = {'target_rounds': rounds, 'work_sec': slot['work_sec'], 'rest_sec': slot.get('rest_sec') or 0,
+               'time_minutes': max(1, math.ceil(rounds * cycle / 60)), 'format': slot_type.upper()}
+        if slot.get('reps_per_round'):
+            out['reps_per_round'] = slot['reps_per_round']
+    elif slot_type in ('amrap', 'emom'):
+        out = {'time_minutes': minutes or 10, 'format': slot_type.upper()}
+    elif slot_type in ('for_time', 'rounds_for_time'):
+        out = {'target_rounds': slot.get('rounds', 1), 'format': 'FOR TIME'}
+        cap = slot.get('time_cap_sec') or slot.get('duration_sec')
+        if cap:
+            out['time_minutes'] = max(1, round(cap / 60))
+        if slot.get('distance_m'):
+            out['distance_km'] = round(slot['distance_m'] / 1000, 2)
+    elif slot_type == 'amrap_movement' and slot.get('distance_m'):
+        # A chipper's row or run is metres, not reps (Till U Collapse's 250 m).
+        out = {'distance_m': slot['distance_m']}
+    elif slot_type == 'amrap_movement' and slot.get('duration_sec') and not slot.get('reps_per_round'):
+        out = ({'duration_minutes': round(slot['duration_sec'] / 60)} if slot['duration_sec'] >= 60
+               else {'work_sec': slot['duration_sec'], 'target_rounds': 1})
+    elif slot_type == 'amrap_movement':
+        out = {'reps_per_round': slot.get('reps_per_round', 1)}
+    else:
+        out = {'sets': slot.get('sets', 1), 'reps': slot.get('reps', 1)}
+    lo, hi, label = zone_band(slot.get('intensity'))
+    if lo is not None and slot_type in ('time_domain', 'distance'):
+        out.update(zone_target=label, zone_lower=lo, zone_upper=hi)
+    if slot.get('load'):
+        out['load_note'] = slot['load']
+    if slot.get('pack_load_kg') is not None:
+        out['pack_load_kg'] = slot['pack_load_kg']
+    return out
+
+
 # ---------------------------------------------------------------------------
 # Public dispatcher
 # ---------------------------------------------------------------------------
@@ -345,8 +412,11 @@ def calculate_load(
         # (src/standard_tests.py), never ramped, levelled or deloaded.
         from src.standard_tests import protocol_load
         return protocol_load(exercise, slot)
-    load = _calculate_load(exercise, slot, progression_model, week_number, phase,
-                           training_level, is_deload, session_time_minutes, deload_keep)
+    if progression_model == 'as_written':
+        load = _as_written(slot)
+    else:
+        load = _calculate_load(exercise, slot, progression_model, week_number, phase,
+                               training_level, is_deload, session_time_minutes, deload_keep)
     rpm = paced_rpm(exercise, slot)
     if rpm is not None and isinstance(load, dict):
         load['target_rpm'] = rpm

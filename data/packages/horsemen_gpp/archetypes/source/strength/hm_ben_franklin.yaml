@@ -1,0 +1,54 @@
+id: hm_ben_franklin
+name: Ben Franklin
+modality: max_strength
+category: strength
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 35
+slots:
+- role: kb_swing
+  slot_type: time_domain
+  duration_sec: 60
+  sets: 5
+  exercise_filter:
+    exercise_ids: [kb_swing_two_hand]
+    ordered: true
+  load: 24 kg (53 lb)
+  notes: '5 rounds, alternating: 1 min of kettlebell swings, 20 cauldrons, 15 ankles to bar, 20 GHD sit-ups, 20
+    poor man''s reverse hypers — not for time.'
+- role: cauldron
+  slot_type: sets_reps
+  sets: 5
+  reps: 20
+  exercise_filter:
+    exercise_ids: [cauldron]
+    ordered: true
+  load: 14 kg (30 lb)
+  notes: 10 each side, 20 in all.
+- role: ankles_to_bar
+  slot_type: sets_reps
+  sets: 5
+  reps: 15
+  exercise_filter:
+    exercise_ids: [ankles_to_bar]
+    ordered: true
+- role: ghd_sit_up
+  slot_type: sets_reps
+  sets: 5
+  reps: 20
+  exercise_filter:
+    exercise_ids: [ghd_sit_up]
+    ordered: true
+- role: poor_mans_reverse_hyper
+  slot_type: sets_reps
+  sets: 5
+  reps: 20
+  exercise_filter:
+    exercise_ids: [poor_mans_reverse_hyper]
+    ordered: true
+  notes: The source does not describe the movement.
+required_equipment: [kettlebell, dumbbell, pull_up_bar, ghd, box]
+sources: [Horsemen]
+notes: Five rounds of a minute of kettlebell swings at 24 kg (53 lb), 20 cauldrons at 14 kg (30 lb), 15 ankles to
+  bar, 20 GHD sit-ups and 20 poor man's reverse hypers. The source gives no rest and no time. Where no load is given,
+  the source leaves it to the athlete (its Weight Loading rule).

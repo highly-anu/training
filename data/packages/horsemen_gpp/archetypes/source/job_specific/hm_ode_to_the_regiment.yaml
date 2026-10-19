@@ -1,0 +1,69 @@
+id: hm_ode_to_the_regiment
+name: Ode to the Regiment
+modality: durability
+category: gpp_durability
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 75
+slots:
+- role: ruck_run
+  slot_type: distance
+  distance_m: 4828
+  exercise_filter:
+    exercise_ids:
+    - ruck
+    ordered: true
+  load: 20 kg (45 lb) minimum
+  notes: 3-mile ruck run with at least 45 lb in the ruck.
+- role: lunges
+  slot_type: sets_reps
+  sets: 3
+  reps: 50
+  exercise_filter:
+    exercise_ids:
+    - lunge
+    ordered: true
+  load: the ruck (20 kg / 45 lb minimum)
+  notes: >-
+    3 rounds with the ruck on, alternating: 50 lunges, 50 dips, 10 pull-ups — not for time.
+- role: dips
+  slot_type: sets_reps
+  sets: 3
+  reps: 50
+  exercise_filter:
+    exercise_ids:
+    - dip
+    ordered: true
+  load: the ruck (20 kg / 45 lb minimum)
+- role: pull_ups
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - pull_up
+    ordered: true
+  load: the ruck (20 kg / 45 lb minimum)
+- role: cool_down_run
+  slot_type: distance
+  distance_m: 1609
+  intensity: zone1
+  exercise_filter:
+    exercise_ids:
+    - run_zone2
+    ordered: true
+  notes: 1-mile cool-down run without the ruck.
+required_equipment:
+- pull_up_bar
+- parallettes
+- ruck_pack
+- open_space
+sources:
+- Horsemen
+notes: >-
+  A job-specific rucking workout: a 3-mile ruck run with at least 45 lb, three rounds of lunges, dips
+  and pull-ups still wearing the ruck, then a 1-mile cool-down run without it. The source gives no time
+  for the ruck run.

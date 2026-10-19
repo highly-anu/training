@@ -1,0 +1,34 @@
+id: hm_1775
+name: "1775"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 20
+pool_only: true
+
+slots:
+  - role: burpee_pull_ups
+    slot_type: sets_reps
+    sets: 4
+    reps: 17
+    exercise_filter:
+      exercise_ids: [burpee_pull_up]
+      ordered: true
+    notes: >
+      4 rounds, alternating: 17 burpee/pull-up combos, 75 squats — the source gives no clock.
+
+  - role: squats
+    slot_type: sets_reps
+    sets: 4
+    reps: 75
+    exercise_filter:
+      exercise_ids: [squat_air]
+      ordered: true
+
+required_equipment:
+  - pull_up_bar
+sources:
+  - Horsemen
+notes: >
+  Four rounds of 17 burpee/pull-up combos and 75 squats; the source says neither for time nor
+  how to rest.

@@ -1,0 +1,94 @@
+id: hm_russian_aggression
+name: Russian Aggression
+modality: max_strength
+category: strength
+training_levels: [intermediate, advanced, elite]
+pool_only: true
+duration_estimate_minutes: 60
+slots:
+- role: work_up_1rm
+  slot_type: sets_reps
+  sets: 1
+  reps: 1
+  intensity: max
+  exercise_filter:
+    exercise_ids: [front_squat]
+    ordered: true
+  load: today's 1RM
+  notes: Work up to a 1-rep max for the day; the percentages below are of it.
+- role: front_squat_every_40s
+  slot_type: emom
+  work_sec: 40
+  sets: 10
+  reps_per_round: 3
+  exercise_filter:
+    exercise_ids: [front_squat]
+    ordered: true
+  load: 75% of today's 1RM
+  notes: 3 front squats every 40 seconds for 10 rounds.
+- role: deadlift
+  slot_type: sets_reps
+  sets: 5
+  reps: 8
+  exercise_filter:
+    exercise_ids: [deadlift]
+    ordered: true
+  load: 84 kg (185 lb)
+  notes: '5 rounds, alternating: 8 deadlifts, 30 m sled push, 5 one-arm weighted sit-ups each arm — not for time.'
+- role: sled_push
+  slot_type: distance
+  distance_m: 30
+  sets: 5
+  exercise_filter:
+    exercise_ids: [sled_push, jingle_jangles]
+    ordered: true
+  notes: 'No sled: 40 s of jingle jangles instead.'
+- role: one_arm_sit_up
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  exercise_filter:
+    exercise_ids: [one_arm_weighted_sit_up]
+    ordered: true
+  notes: 5 each arm.
+- role: elevated_push_up
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  exercise_filter:
+    exercise_ids: [push_up_decline]
+    ordered: true
+  notes: '3 rounds, alternating: 10 elevated push-ups, 1 rope climb (or 10 pull-ups), 8 standing dumbbell presses
+    — not for time. The source does not say which end is raised.'
+- role: rope_climb
+  slot_type: sets_reps
+  sets: 3
+  reps: 1
+  exercise_filter:
+    exercise_ids: [rope_climb, pull_up]
+    ordered: true
+  notes: 1 rope climb, or 10 pull-ups without a rope.
+- role: db_press
+  slot_type: sets_reps
+  sets: 3
+  reps: 8
+  exercise_filter:
+    exercise_ids: [db_press]
+    ordered: true
+  notes: Standing.
+- role: kb_swing_intervals
+  slot_type: emom
+  work_sec: 60
+  sets: 3
+  rest_sec: 30
+  exercise_filter:
+    exercise_ids: [kb_swing_two_hand]
+    ordered: true
+  load: 24 kg (53 lb)
+  notes: 3 rounds of 1 min kettlebell swings, 30 s rest.
+required_equipment: [barbell, rack, plates, dumbbell, box, pull_up_bar, kettlebell, open_space]
+sources: [Horsemen]
+notes: Work up to a 1-rep max front squat, then 3 front squats at 75% of it every 40 seconds for 10 rounds, followed
+  by rounds of deadlifts, sled pushes and one-arm sit-ups, then push-ups, rope climbs and dumbbell presses, and
+  three 1-minute bouts of swings. The source does not time it. Without a sled, 40 s of jingle jangles; without a
+  rope, 10 pull-ups. Where no load is given, the source leaves it to the athlete (its Weight Loading rule).

@@ -1,0 +1,64 @@
+id: hm_wicked_hangover
+name: Wicked Hangover
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 30
+slots:
+- role: bench_max_reps
+  slot_type: sets_reps
+  sets: 1
+  reps: max
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids:
+    - bench_press
+    ordered: true
+  load: 61 kg (135 lb)
+  notes: Bench press max rep test at 135 lb.
+- role: row_intervals
+  slot_type: emom
+  work_sec: 60
+  rest_sec: 30
+  sets: 5
+  exercise_filter:
+    exercise_ids:
+    - row_erg
+    ordered: true
+  notes: 5 x 1 min of rowing, 30 s rest after each; 1 min break before the next exercise.
+- role: curtis_p_intervals
+  slot_type: emom
+  work_sec: 60
+  rest_sec: 30
+  sets: 5
+  exercise_filter:
+    exercise_ids:
+    - curtis_p
+    ordered: true
+  load: 25 kg (55 lb)
+  notes: 5 x 1 min of Curtis P's, 30 s rest after each; 1 min break before the next exercise.
+- role: box_jump_intervals
+  slot_type: emom
+  work_sec: 60
+  rest_sec: 30
+  sets: 5
+  exercise_filter:
+    exercise_ids:
+    - box_jump
+    ordered: true
+  notes: 5 x 1 min of box jumps onto a 61 cm (24 in) box, 30 s rest after each.
+required_equipment:
+- barbell
+- rack
+- plates
+- rower
+- box
+sources:
+- Horsemen
+notes: >-
+  A bench press max-rep test at 135 lb, then 5 x 1-minute intervals with 30 s rest of each of row, Curtis
+  P at 55 lb and box jump onto a 24 in box, with a minute between exercises.

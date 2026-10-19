@@ -1,0 +1,98 @@
+id: hm_magnificent_7
+name: Magnificent 7
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 40
+slots:
+- role: hang_cleans
+  slot_type: sets_reps
+  sets: 7
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - hang_power_clean
+    ordered: true
+  load: 70 kg (155 lb)
+  notes: >-
+    Top to bottom 7 times: 5 hang cleans, 5 front squats, 5 push presses, 5 bent-over rows, 5 RDLs, 5
+    floor presses, 5 floor wipers, all at 155 lb — not for time.
+- role: front_squats
+  slot_type: sets_reps
+  sets: 7
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - front_squat
+    ordered: true
+  load: 70 kg (155 lb)
+- role: push_press
+  slot_type: sets_reps
+  sets: 7
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - push_press
+    ordered: true
+  load: 70 kg (155 lb)
+- role: bent_over_rows
+  slot_type: sets_reps
+  sets: 7
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - barbell_row
+    ordered: true
+  load: 70 kg (155 lb)
+- role: rdl
+  slot_type: sets_reps
+  sets: 7
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - romanian_deadlift
+    ordered: true
+  load: 70 kg (155 lb)
+- role: floor_press
+  slot_type: sets_reps
+  sets: 7
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - floor_press
+    ordered: true
+  load: 70 kg (155 lb)
+- role: floor_wipers
+  slot_type: sets_reps
+  sets: 7
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - floor_wiper
+    ordered: true
+  load: 70 kg (155 lb)
+- role: sprints
+  slot_type: time_domain
+  duration_sec: 600
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids:
+    - run_sprint
+    ordered: true
+  notes: >-
+    10 minutes of high-intensity sprints at the end. The source gives no distance or rest.
+required_equipment:
+- barbell
+- rack
+- plates
+- open_space
+sources:
+- Horsemen
+- API (Athletic Performance Inc)
+notes: >-
+  An API barbell workout tagged MP/CP in the source: seven lifts of five reps at 155 lb, top to bottom
+  seven times, then 10 minutes of high-intensity sprints. The source does not say for time.

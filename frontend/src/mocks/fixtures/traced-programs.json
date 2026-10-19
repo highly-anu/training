@@ -96,19 +96,19 @@
      "info": [
       {
        "code": "EQUIPMENT_SCALED",
-       "message": "'Heavy/Light/Medium (HLM)' will use equipment-limited scaling (missing: {'barbell', 'plates', 'rack'})."
+       "message": "'3×5 Linear Strength — Session A' will use equipment-limited scaling (missing: {'rack', 'plates', 'barbell'})."
       },
       {
        "code": "EQUIPMENT_SCALED",
-       "message": "'3×5 Linear Strength — Session B' will use equipment-limited scaling (missing: {'barbell', 'plates', 'rack'})."
+       "message": "'3×5 Linear Strength — Session B' will use equipment-limited scaling (missing: {'rack', 'plates', 'barbell'})."
       },
       {
        "code": "EQUIPMENT_SCALED",
-       "message": "'3×5 Linear Strength — Session A' will use equipment-limited scaling (missing: {'barbell', 'plates', 'rack'})."
+       "message": "'5×5 Classic Strength Volume' will use equipment-limited scaling (missing: {'rack', 'plates', 'barbell'})."
       },
       {
        "code": "EQUIPMENT_SCALED",
-       "message": "'5×5 Classic Strength Volume' will use equipment-limited scaling (missing: {'barbell', 'plates', 'rack'})."
+       "message": "'Heavy/Light/Medium (HLM)' will use equipment-limited scaling (missing: {'rack', 'plates', 'barbell'})."
       }
      ]
     },
@@ -121,200 +121,6 @@
       "framework": "linear_progression",
       "schedule": {
        "Monday": [
-        {
-         "modality": "max_strength",
-         "archetype": {
-          "id": "hlm",
-          "name": "Heavy/Light/Medium (HLM)",
-          "modality": "max_strength",
-          "category": "strength",
-          "training_levels": [
-           "intermediate",
-           "advanced"
-          ],
-          "duration_estimate_minutes": 60,
-          "required_equipment": [
-           "barbell",
-           "rack",
-           "plates"
-          ],
-          "applicable_phases": [
-           "base",
-           "build",
-           "peak",
-           "transition"
-          ],
-          "sources": [
-           "Starting Strength",
-           "Rippetoe"
-          ],
-          "notes": "Rippetoe's Heavy/Light/Medium weekly variant. Three training sessions per week on the same movement patterns but at differentiated intensities: Heavy day (Monday) at 90%+, Light day (Wednesday) at 80%, Medium day (Friday) at 85%. This distributes stress and recovery across the week, allows continued practice of patterns at every session, and prevents the repeated-heavy-exposure fatigue of 3×5 run long-term. Particularly useful when the athlete has stalled on linear progression. The three slots below are parameterized for the Heavy day; intensity_pct_1rm values should be scaled by the day modifier at generation time:\n  heavy_day_modifier: 1.00\n  medium_day_modifier: 0.94\n  light_day_modifier: 0.89\n",
-          "slots": [
-           {
-            "role": "primary_squat",
-            "slot_type": "sets_reps",
-            "sets": 3,
-            "reps": 5,
-            "intensity": "heavy",
-            "intensity_pct_1rm": 0.9,
-            "rest_sec": 300,
-            "exercise_filter": {
-             "movement_pattern": "squat",
-             "category": "barbell",
-             "bilateral": true
-            },
-            "notes": "Heavy day: 3×5 at 90%+. Light day: 3×5 at 80%. Medium day: 3×5 at 85%."
-           },
-           {
-            "role": "upper_press",
-            "slot_type": "sets_reps",
-            "sets": 3,
-            "reps": 5,
-            "intensity": "heavy",
-            "intensity_pct_1rm": 0.9,
-            "rest_sec": 240,
-            "exercise_filter": {
-             "movement_pattern": "press",
-             "category": "barbell"
-            },
-            "notes": "Alternate press and bench across sessions. Intensity follows same H/L/M pattern."
-           },
-           {
-            "role": "primary_pull",
-            "slot_type": "sets_reps",
-            "sets": 1,
-            "reps": 5,
-            "intensity": "heavy",
-            "intensity_pct_1rm": 0.9,
-            "rest_sec": 300,
-            "exercise_filter": {
-             "movement_pattern": "hinge",
-             "category": "barbell",
-             "bilateral": true
-            },
-            "notes": "Single top set deadlift. On Light day deadlift may be replaced with power clean 3×3."
-           },
-           {
-            "role": "accessory_upper",
-            "slot_type": "sets_reps",
-            "sets": 3,
-            "reps": 10,
-            "intensity": "moderate",
-            "intensity_pct_1rm": 0.65,
-            "rest_sec": 90,
-            "exercise_filter": {
-             "movement_pattern": "pull"
-            },
-            "notes": "Chin-ups or rows. Present on all three days; load does not vary with H/L/M."
-           }
-          ],
-          "scaling": {
-           "deload": {
-            "volume_multiplier": 0.6,
-            "intensity_pct": 0.9,
-            "notes": "Convert all three sessions to Light-day intensity (80%) and reduce sets to 2 per lift."
-           },
-           "time_limited": {
-            "drop_slots": [
-             "accessory_upper"
-            ],
-            "notes": "Drop accessory upper work. The three primary slots are non-negotiable for HLM integrity."
-           },
-           "equipment_limited": {
-            "substitutions": [
-             {
-              "missing_equipment": "rack",
-              "substitute_approach": "Cannot perform back squat. Substitute goblet squat or trap bar DL for lower. Floor press replaces bench."
-             }
-            ]
-           }
-          },
-          "_package": "starting_strength"
-         },
-         "is_deload": false,
-         "provenance": {
-          "package": "starting_strength",
-          "borrowed": false
-         },
-         "exercises": [
-          {
-           "exercise": null,
-           "load": {},
-           "slot_role": "primary_squat",
-           "slot_type": "sets_reps",
-           "rest_sec": 300,
-           "meta": false,
-           "injury_skip": false,
-           "coverage_gap": false,
-           "equipment_gap": true,
-           "gap_reason": "EQUIPMENT_UNAVAILABLE",
-           "substituted_for": null,
-           "error": "No exercise fits the available equipment",
-           "load_note": null,
-           "notes": "Heavy day: 3×5 at 90%+. Light day: 3×5 at 80%. Medium day: 3×5 at 85%.",
-           "parent_slot_role": null,
-           "skip_exercise": false
-          },
-          {
-           "exercise": null,
-           "load": {},
-           "slot_role": "upper_press",
-           "slot_type": "sets_reps",
-           "rest_sec": 240,
-           "meta": false,
-           "injury_skip": false,
-           "coverage_gap": false,
-           "equipment_gap": true,
-           "gap_reason": "EQUIPMENT_UNAVAILABLE",
-           "substituted_for": null,
-           "error": "No exercise fits the available equipment",
-           "load_note": null,
-           "notes": "Alternate press and bench across sessions. Intensity follows same H/L/M pattern.",
-           "parent_slot_role": null,
-           "skip_exercise": false
-          },
-          {
-           "exercise": null,
-           "load": {},
-           "slot_role": "primary_pull",
-           "slot_type": "sets_reps",
-           "rest_sec": 300,
-           "meta": false,
-           "injury_skip": false,
-           "coverage_gap": false,
-           "equipment_gap": true,
-           "gap_reason": "EQUIPMENT_UNAVAILABLE",
-           "substituted_for": null,
-           "error": "No exercise fits the available equipment",
-           "load_note": null,
-           "notes": "Single top set deadlift. On Light day deadlift may be replaced with power clean 3×3.",
-           "parent_slot_role": null,
-           "skip_exercise": false
-          },
-          {
-           "exercise": null,
-           "load": {},
-           "slot_role": "accessory_upper",
-           "slot_type": "sets_reps",
-           "rest_sec": 90,
-           "meta": false,
-           "injury_skip": false,
-           "coverage_gap": false,
-           "equipment_gap": true,
-           "gap_reason": "EQUIPMENT_UNAVAILABLE",
-           "substituted_for": null,
-           "error": "No exercise fits the available equipment",
-           "load_note": null,
-           "notes": "Chin-ups or rows. Present on all three days; load does not vary with H/L/M.",
-           "parent_slot_role": null,
-           "skip_exercise": false
-          }
-         ],
-         "complementary_work": []
-        }
-       ],
-       "Tuesday": [],
-       "Wednesday": [
         {
          "modality": "max_strength",
          "archetype": {
@@ -512,8 +318,8 @@
          "complementary_work": []
         }
        ],
-       "Thursday": [],
-       "Friday": [
+       "Tuesday": [],
+       "Wednesday": [
         {
          "modality": "max_strength",
          "archetype": {
@@ -706,6 +512,205 @@
          "complementary_work": []
         }
        ],
+       "Thursday": [],
+       "Friday": [
+        {
+         "modality": "max_strength",
+         "archetype": {
+          "id": "5x5",
+          "name": "5×5 Classic Strength Volume",
+          "modality": "max_strength",
+          "category": "strength",
+          "training_levels": [
+           "intermediate",
+           "advanced"
+          ],
+          "duration_estimate_minutes": 60,
+          "required_equipment": [
+           "barbell",
+           "rack",
+           "plates"
+          ],
+          "applicable_phases": [
+           "base",
+           "build",
+           "peak",
+           "transition"
+          ],
+          "sources": [
+           "Starting Strength",
+           "Gym Jones",
+           "Horsemen"
+          ],
+          "notes": "Five sets of five at approximately 85% 1RM. A proven intermediate strength volume format that accumulates significant total tonnage while staying below true max-effort intensity. Works across the main barbell compound patterns. Rest periods are long enough to ensure quality on every set; this is not a conditioning workout.\n",
+          "slots": [
+           {
+            "role": "primary_compound",
+            "slot_type": "sets_reps",
+            "sets": 5,
+            "reps": 5,
+            "intensity": "heavy",
+            "intensity_pct_1rm": 0.85,
+            "rest_sec": 300,
+            "exercise_filter": {
+             "movement_pattern": "squat",
+             "category": "barbell",
+             "bilateral": true
+            },
+            "notes": "Back squat is the default. Front squat or trap bar can substitute for equipment or injury constraints."
+           },
+           {
+            "role": "secondary_compound",
+            "slot_type": "sets_reps",
+            "sets": 5,
+            "reps": 5,
+            "intensity": "heavy",
+            "intensity_pct_1rm": 0.85,
+            "rest_sec": 240,
+            "exercise_filter": {
+             "movement_pattern": "press",
+             "category": "barbell"
+            },
+            "notes": "Bench press or overhead press. Do not combine two pressing patterns in the same session."
+           },
+           {
+            "role": "primary_pull",
+            "slot_type": "sets_reps",
+            "sets": 5,
+            "reps": 5,
+            "intensity": "heavy",
+            "intensity_pct_1rm": 0.85,
+            "rest_sec": 300,
+            "exercise_filter": {
+             "movement_pattern": "hinge",
+             "category": "barbell",
+             "bilateral": true
+            },
+            "notes": "Conventional or sumo deadlift. Can rotate to Romanian DL for volume phase variation."
+           },
+           {
+            "role": "accessory_pull",
+            "slot_type": "sets_reps",
+            "sets": 3,
+            "reps": "8-10",
+            "intensity": "moderate",
+            "intensity_pct_1rm": 0.65,
+            "rest_sec": 90,
+            "exercise_filter": {
+             "movement_pattern": "pull"
+            },
+            "notes": "Rows or pull-ups. Supports posterior chain balance; drop this slot if time-limited."
+           }
+          ],
+          "scaling": {
+           "deload": {
+            "volume_multiplier": 0.6,
+            "intensity_pct": 0.9,
+            "notes": "Reduce to 3×5 at 90% of current load. Maintain all movement patterns."
+           },
+           "time_limited": {
+            "drop_slots": [
+             "accessory_pull"
+            ],
+            "notes": "Drop accessory work first. If further pressed, reduce primary_pull to 3 sets."
+           },
+           "equipment_limited": {
+            "substitutions": [
+             {
+              "missing_equipment": "rack",
+              "substitute_approach": "Replace back squat with trap bar deadlift for lower body. Use dumbbell press in place of barbell press."
+             },
+             {
+              "missing_equipment": "barbell",
+              "substitute_approach": "Kettlebell double front squat and double press can approximate the pattern at lower loads. Use heaviest available KB."
+             }
+            ]
+           }
+          },
+          "_package": "starting_strength"
+         },
+         "is_deload": false,
+         "provenance": {
+          "package": "starting_strength",
+          "borrowed": false
+         },
+         "exercises": [
+          {
+           "exercise": null,
+           "load": {},
+           "slot_role": "primary_compound",
+           "slot_type": "sets_reps",
+           "rest_sec": 300,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": true,
+           "gap_reason": "EQUIPMENT_UNAVAILABLE",
+           "substituted_for": null,
+           "error": "No exercise fits the available equipment",
+           "load_note": null,
+           "notes": "Back squat is the default. Front squat or trap bar can substitute for equipment or injury constraints.",
+           "parent_slot_role": null,
+           "skip_exercise": false
+          },
+          {
+           "exercise": null,
+           "load": {},
+           "slot_role": "secondary_compound",
+           "slot_type": "sets_reps",
+           "rest_sec": 240,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": true,
+           "gap_reason": "EQUIPMENT_UNAVAILABLE",
+           "substituted_for": null,
+           "error": "No exercise fits the available equipment",
+           "load_note": null,
+           "notes": "Bench press or overhead press. Do not combine two pressing patterns in the same session.",
+           "parent_slot_role": null,
+           "skip_exercise": false
+          },
+          {
+           "exercise": null,
+           "load": {},
+           "slot_role": "primary_pull",
+           "slot_type": "sets_reps",
+           "rest_sec": 300,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": true,
+           "gap_reason": "EQUIPMENT_UNAVAILABLE",
+           "substituted_for": null,
+           "error": "No exercise fits the available equipment",
+           "load_note": null,
+           "notes": "Conventional or sumo deadlift. Can rotate to Romanian DL for volume phase variation.",
+           "parent_slot_role": null,
+           "skip_exercise": false
+          },
+          {
+           "exercise": null,
+           "load": {},
+           "slot_role": "accessory_pull",
+           "slot_type": "sets_reps",
+           "rest_sec": 90,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": true,
+           "gap_reason": "EQUIPMENT_UNAVAILABLE",
+           "substituted_for": null,
+           "error": "No exercise fits the available equipment",
+           "load_note": null,
+           "notes": "Rows or pull-ups. Supports posterior chain balance; drop this slot if time-limited.",
+           "parent_slot_role": null,
+           "skip_exercise": false
+          }
+         ],
+         "complementary_work": []
+        }
+       ],
        "Saturday": [],
        "Sunday": []
       },
@@ -751,16 +756,16 @@
       },
       "archetypes": [
        {
-        "id": "hlm",
-        "name": "Heavy/Light/Medium (HLM)",
+        "id": "5x5",
+        "name": "5×5 Classic Strength Volume",
         "modality": "max_strength",
         "sessions": 2,
         "per_week": 2.0,
         "status": null
        },
        {
-        "id": "5x5",
-        "name": "5×5 Classic Strength Volume",
+        "id": "hlm",
+        "name": "Heavy/Light/Medium (HLM)",
         "modality": "max_strength",
         "sessions": 1,
         "per_week": 1.0,
@@ -778,14 +783,14 @@
      }
     ],
     "compromises": [
-     "Heavy/Light/Medium (HLM): 'primary_squat' slot requires barbell exercises — add barbell to your equipment profile to fill this slot.",
-     "Heavy/Light/Medium (HLM): 'upper_press' slot requires barbell exercises — add barbell to your equipment profile to fill this slot.",
-     "Heavy/Light/Medium (HLM): 'primary_pull' slot requires barbell exercises — add barbell to your equipment profile to fill this slot.",
-     "Heavy/Light/Medium (HLM): 'accessory_upper' slot skipped — no matching exercises found for current equipment and training level.",
      "5×5 Classic Strength Volume: 'primary_compound' slot requires barbell exercises — add barbell to your equipment profile to fill this slot.",
      "5×5 Classic Strength Volume: 'secondary_compound' slot requires barbell exercises — add barbell to your equipment profile to fill this slot.",
      "5×5 Classic Strength Volume: 'primary_pull' slot requires barbell exercises — add barbell to your equipment profile to fill this slot.",
-     "5×5 Classic Strength Volume: 'accessory_pull' slot skipped — no matching exercises found for current equipment and training level."
+     "5×5 Classic Strength Volume: 'accessory_pull' slot skipped — no matching exercises found for current equipment and training level.",
+     "Heavy/Light/Medium (HLM): 'primary_squat' slot requires barbell exercises — add barbell to your equipment profile to fill this slot.",
+     "Heavy/Light/Medium (HLM): 'upper_press' slot requires barbell exercises — add barbell to your equipment profile to fill this slot.",
+     "Heavy/Light/Medium (HLM): 'primary_pull' slot requires barbell exercises — add barbell to your equipment profile to fill this slot.",
+     "Heavy/Light/Medium (HLM): 'accessory_upper' slot skipped — no matching exercises found for current equipment and training level."
     ],
     "coverage_report": {
      "philosophy": "starting_strength",
@@ -850,6 +855,120 @@
          {
           "modality": "max_strength",
           "archetype": {
+           "selected_id": "5x5",
+           "filter_counts": {
+            "by_modality": 4,
+            "by_phase": 4,
+            "by_level": 2,
+            "by_equipment": 2,
+            "by_duration": 2,
+            "final": 2
+           },
+           "candidates": [
+            {
+             "id": "5x5",
+             "name": "5×5 Classic Strength Volume",
+             "score": -30,
+             "breakdown": {
+              "equipment": 0,
+              "source": 0,
+              "recency": 0,
+              "injury_penalty": 0,
+              "total": 0
+             }
+            },
+            {
+             "id": "hlm",
+             "name": "Heavy/Light/Medium (HLM)",
+             "score": -30,
+             "breakdown": {
+              "equipment": 0,
+              "source": 0,
+              "recency": 0,
+              "injury_penalty": 0,
+              "total": 0
+             }
+            }
+           ]
+          },
+          "slots": [
+           {
+            "slot_index": 0,
+            "slot_role": "primary_compound",
+            "slot_type": "sets_reps",
+            "meta": false,
+            "movement_pattern": "squat",
+            "selected_id": null,
+            "injury_blocked": false,
+            "filter_counts": {
+             "in_pool": 13,
+             "after_package": 13,
+             "after_equip": 0,
+             "after_filter": 0,
+             "final": 0
+            },
+            "candidates": []
+           },
+           {
+            "slot_index": 1,
+            "slot_role": "secondary_compound",
+            "slot_type": "sets_reps",
+            "meta": false,
+            "movement_pattern": "press",
+            "selected_id": null,
+            "injury_blocked": false,
+            "filter_counts": {
+             "in_pool": 13,
+             "after_package": 13,
+             "after_equip": 0,
+             "after_filter": 0,
+             "final": 0
+            },
+            "candidates": []
+           },
+           {
+            "slot_index": 2,
+            "slot_role": "primary_pull",
+            "slot_type": "sets_reps",
+            "meta": false,
+            "movement_pattern": "hinge",
+            "selected_id": null,
+            "injury_blocked": false,
+            "filter_counts": {
+             "in_pool": 13,
+             "after_package": 13,
+             "after_equip": 0,
+             "after_filter": 0,
+             "final": 0
+            },
+            "candidates": []
+           },
+           {
+            "slot_index": 3,
+            "slot_role": "accessory_pull",
+            "slot_type": "sets_reps",
+            "meta": false,
+            "movement_pattern": "pull",
+            "selected_id": null,
+            "injury_blocked": false,
+            "filter_counts": {
+             "in_pool": 13,
+             "after_package": 13,
+             "after_equip": 0,
+             "after_filter": 0,
+             "final": 0
+            },
+            "candidates": []
+           }
+          ],
+          "progression": []
+         }
+        ],
+        "Tuesday": [],
+        "Wednesday": [
+         {
+          "modality": "max_strength",
+          "archetype": {
            "selected_id": "hlm",
            "filter_counts": {
             "by_modality": 4,
@@ -875,13 +994,13 @@
             {
              "id": "5x5",
              "name": "5×5 Classic Strength Volume",
-             "score": -30,
+             "score": -33,
              "breakdown": {
               "equipment": 0,
               "source": 0,
-              "recency": 0,
+              "recency": -3,
               "injury_penalty": 0,
-              "total": 0
+              "total": -3
              }
             }
            ]
@@ -959,8 +1078,8 @@
           "progression": []
          }
         ],
-        "Tuesday": [],
-        "Wednesday": [
+        "Thursday": [],
+        "Friday": [
          {
           "modality": "max_strength",
           "archetype": {
@@ -977,13 +1096,13 @@
             {
              "id": "5x5",
              "name": "5×5 Classic Strength Volume",
-             "score": -30,
+             "score": -33,
              "breakdown": {
               "equipment": 0,
               "source": 0,
-              "recency": 0,
+              "recency": -3,
               "injury_penalty": 0,
-              "total": 0
+              "total": -3
              }
             },
             {
@@ -1073,120 +1192,6 @@
           "progression": []
          }
         ],
-        "Thursday": [],
-        "Friday": [
-         {
-          "modality": "max_strength",
-          "archetype": {
-           "selected_id": "hlm",
-           "filter_counts": {
-            "by_modality": 4,
-            "by_phase": 4,
-            "by_level": 2,
-            "by_equipment": 2,
-            "by_duration": 2,
-            "final": 2
-           },
-           "candidates": [
-            {
-             "id": "hlm",
-             "name": "Heavy/Light/Medium (HLM)",
-             "score": -33,
-             "breakdown": {
-              "equipment": 0,
-              "source": 0,
-              "recency": -3,
-              "injury_penalty": 0,
-              "total": -3
-             }
-            },
-            {
-             "id": "5x5",
-             "name": "5×5 Classic Strength Volume",
-             "score": -33,
-             "breakdown": {
-              "equipment": 0,
-              "source": 0,
-              "recency": -3,
-              "injury_penalty": 0,
-              "total": -3
-             }
-            }
-           ]
-          },
-          "slots": [
-           {
-            "slot_index": 0,
-            "slot_role": "primary_squat",
-            "slot_type": "sets_reps",
-            "meta": false,
-            "movement_pattern": "squat",
-            "selected_id": null,
-            "injury_blocked": false,
-            "filter_counts": {
-             "in_pool": 13,
-             "after_package": 13,
-             "after_equip": 0,
-             "after_filter": 0,
-             "final": 0
-            },
-            "candidates": []
-           },
-           {
-            "slot_index": 1,
-            "slot_role": "upper_press",
-            "slot_type": "sets_reps",
-            "meta": false,
-            "movement_pattern": "press",
-            "selected_id": null,
-            "injury_blocked": false,
-            "filter_counts": {
-             "in_pool": 13,
-             "after_package": 13,
-             "after_equip": 0,
-             "after_filter": 0,
-             "final": 0
-            },
-            "candidates": []
-           },
-           {
-            "slot_index": 2,
-            "slot_role": "primary_pull",
-            "slot_type": "sets_reps",
-            "meta": false,
-            "movement_pattern": "hinge",
-            "selected_id": null,
-            "injury_blocked": false,
-            "filter_counts": {
-             "in_pool": 13,
-             "after_package": 13,
-             "after_equip": 0,
-             "after_filter": 0,
-             "final": 0
-            },
-            "candidates": []
-           },
-           {
-            "slot_index": 3,
-            "slot_role": "accessory_upper",
-            "slot_type": "sets_reps",
-            "meta": false,
-            "movement_pattern": "pull",
-            "selected_id": null,
-            "injury_blocked": false,
-            "filter_counts": {
-             "in_pool": 13,
-             "after_package": 13,
-             "after_equip": 0,
-             "after_filter": 0,
-             "final": 0
-            },
-            "candidates": []
-           }
-          ],
-          "progression": []
-         }
-        ],
         "Saturday": [],
         "Sunday": []
        }
@@ -1199,7 +1204,7 @@
     }
    }
   },
-  "horsemen_novice_injured": {
+  "horsemen_injured": {
    "request": {
     "philosophy_id": "horsemen_gpp",
     "num_weeks": 1,
@@ -1213,7 +1218,7 @@
       "shoulder_impingement",
       "lumbar_disc"
      ],
-     "training_level": "novice",
+     "training_level": "intermediate",
      "equipment": [
       "barbell",
       "rack",
@@ -1238,7 +1243,7 @@
      "track": {
       "id": "four_month_macro",
       "name": "4-Month Macro",
-      "description": "Month by month from strength to the job: strength-dominant, then power-endurance, then job-specific, then maintenance. The strength standards are prerequisites for entering it, not its goals.\n",
+      "description": "The source's four months — strength, power endurance, job specific, maintenance — each a 28-day template started on the 1st of the month, with the days left over free, and the whole run two or three times. Every week is six training days and a rest day. The strength and conditioning numbers the source names are what it aims to reach in four months.\n",
       "philosophy_id": "horsemen_gpp"
      },
      "phase_sequence": [
@@ -1249,21 +1254,75 @@
        "framework_id": "concurrent_training",
        "name": "Strength",
        "focus": "Strength-dominant month",
-       "description": "Month one leans on strength — four strength exposures every two weeks — with conditioning held at a level that does not interfere. RPE autoregulation sets the day's load against accumulated fatigue.\n",
+       "description": "Month one: strength twice a week, on days 1 and 5; a job-specific day, a power-endurance day and one rotating day (SMMF, power, a progression workout or a circuit) between them; recovery on day 6 and rest on day 7. Strength days work up to a 1RM in the day's lift, then percentages of it, then accessory rounds; there is no RPE. The source lists the PT test among its hard job-specific options and never schedules it; here it takes the month's first hard job-specific day (week 2) as a baseline for the four-month goals.\n",
        "adaptations": [
-        "Maximal and relative strength",
-        "Fatigue management across modalities"
+        "Maximal strength toward the bodyweight goals",
+        "Power endurance and job-specific capacity kept alongside it"
        ],
-       "intensity": "Heavy strength; conditioning held back",
+       "intensity": "Heavy: a 1RM worked up to on the day, then percentages of it",
        "tests": [
         {
          "archetype": "horsemen_pt_test",
-         "week": "first",
+         "week": 2,
          "in_place_of": [
-          "mixed_modal_conditioning",
-          "strength_endurance"
+          "job_specific_hard",
+          "job_specific_long",
+          "job_specific_short"
          ]
         }
+       ],
+       "week_templates": [
+        [
+         "strength",
+         "job_specific_long",
+         "power_endurance",
+         "smmf",
+         "strength",
+         "recovery",
+         "rest"
+        ],
+        [
+         "strength",
+         "power_explosive",
+         "job_specific_hard",
+         "power_endurance",
+         "strength",
+         "recovery",
+         "rest"
+        ],
+        [
+         "strength",
+         "power_cardio",
+         "job_specific_short",
+         [
+          "progression",
+          "breathing_ladder"
+         ],
+         "strength",
+         "recovery",
+         "rest"
+        ],
+        [
+         "strength",
+         "power_endurance",
+         "job_specific_long",
+         "circuit_complementary",
+         "strength",
+         "recovery",
+         "rest"
+        ]
+       ],
+       "drop_order": [
+        "recovery",
+        "smmf",
+        "power_explosive",
+        "power_cardio",
+        "progression",
+        "circuit_complementary",
+        "power_endurance",
+        "job_specific_short",
+        "job_specific_long",
+        "job_specific_hard"
        ]
       },
       {
@@ -1273,12 +1332,83 @@
        "framework_id": "concurrent_training",
        "name": "Power Endurance",
        "focus": "Power-endurance month",
-       "description": "Month two turns strength into repeatable output: barbell complexes, sandbag work and conditioning that asks for power again and again under fatigue.\n",
+       "description": "Month two puts power endurance first — about four sessions every two weeks: runs with get-ups, the Secret Service Snatch Test, Tabata, a 5K row, EMOMs. Strength drops to maintenance, about twice in two weeks, beside job-specific days, an endurance session of 60 minutes or more, recovery and a rest day each week.\n",
        "adaptations": [
         "Repeatable power under fatigue",
         "Work capacity"
        ],
-       "intensity": "High, in repeated efforts"
+       "intensity": "High, in repeated efforts",
+       "week_templates": [
+        [
+         "power_endurance",
+         "job_specific_short",
+         "strength_maintenance",
+         "power_endurance",
+         "endurance_long",
+         "recovery",
+         "rest"
+        ],
+        [
+         "power_endurance",
+         "circuit_focus",
+         "job_specific_long",
+         "power_endurance",
+         [
+          "strength_maintenance",
+          "job_specific_short"
+         ],
+         {
+          "categories": [
+           "olympic"
+          ],
+          "light": true
+         },
+         "rest"
+        ],
+        [
+         "power_endurance",
+         "strength_maintenance",
+         "job_specific_hard",
+         "endurance_long",
+         [
+          "power_endurance",
+          "circuit_short"
+         ],
+         "recovery",
+         "rest"
+        ],
+        [
+         "power_endurance",
+         "job_specific_long",
+         [
+          "strength_maintenance",
+          "run"
+         ],
+         "progression",
+         "power_endurance",
+         {
+          "categories": [
+           "smmf"
+          ],
+          "light": true
+         },
+         "rest"
+        ]
+       ],
+       "drop_order": [
+        "recovery",
+        "smmf",
+        "olympic",
+        "circuit_focus",
+        "progression",
+        "endurance_long",
+        "circuit_short",
+        "job_specific_short",
+        "job_specific_long",
+        "strength_maintenance",
+        "job_specific_hard",
+        "power_endurance"
+       ]
       },
       {
        "phase_id": "job_specific",
@@ -1287,12 +1417,68 @@
        "framework_id": "concurrent_training",
        "name": "Job Specific",
        "focus": "Job-specific month",
-       "description": "Month three shapes the work to the job: rucks, loaded carries, named workouts and the PT-test events, so fitness is expressed in the forms it will be needed.\n",
+       "description": "Month three makes job-specific days most of the week: climbing and grip work, leg blasters, a ruck run, the PT tests, tire and sled work. Strength and power endurance alternate around them, with recovery on day 6 and rest on day 7.\n",
        "adaptations": [
         "Task-specific conditioning",
-        "Load-carriage durability"
+        "Grip, climbing and load-carriage capacity"
        ],
-       "intensity": "Task-paced"
+       "intensity": "Hard, job-paced",
+       "week_templates": [
+        [
+         "job_specific_long",
+         "strength",
+         "job_specific_short",
+         "power_endurance",
+         "job_specific_long",
+         "recovery",
+         "rest"
+        ],
+        [
+         "job_specific_hard",
+         "circuit_short",
+         "job_specific_long",
+         "job_specific_short",
+         "density",
+         "recovery",
+         "rest"
+        ],
+        [
+         "job_specific_long",
+         "power_endurance",
+         "job_specific_short",
+         {
+          "categories": [
+           "smmf",
+           "progression"
+          ],
+          "light": true
+         },
+         "job_specific_long",
+         "recovery",
+         "rest"
+        ],
+        [
+         "job_specific_hard",
+         "endurance",
+         "job_specific_short",
+         "strength",
+         "job_specific_long",
+         "recovery",
+         "rest"
+        ]
+       ],
+       "drop_order": [
+        "recovery",
+        "smmf",
+        "density",
+        "circuit_short",
+        "endurance",
+        "power_endurance",
+        "strength",
+        "job_specific_short",
+        "job_specific_long",
+        "job_specific_hard"
+       ]
       },
       {
        "phase_id": "maintenance",
@@ -1301,21 +1487,102 @@
        "framework_id": "concurrent_training",
        "name": "Maintenance",
        "focus": "Maintenance month",
-       "description": "Month four holds what the macro built at a sustainable dose, with low-heart-rate recovery sessions (65% of max or less) between the hard days.\n",
+       "description": "Month four holds what the macro built: recovery twice a week at 65% of max heart rate or less, circuits, strength, and a hard job-specific day, with rest on day 7. The PT test, one of the source's hard job-specific options, takes the macro's last hard job-specific day: the most rested point of the four months, and the check against their goals.\n",
        "adaptations": [
         "Retained strength and conditioning",
         "Recovery"
        ],
-       "intensity": "Sustainable; recovery at ≤65% max HR",
+       "intensity": "Hard days between recovery at ≤65% max HR",
        "tests": [
         {
          "archetype": "horsemen_pt_test",
          "week": "last",
          "in_place_of": [
-          "mixed_modal_conditioning",
-          "strength_endurance"
+          "job_specific_hard",
+          "job_specific_long",
+          "job_specific_short"
          ]
         }
+       ],
+       "week_templates": [
+        [
+         "circuit_short",
+         "strength",
+         {
+          "categories": [
+           "recovery"
+          ],
+          "warm_up": true
+         },
+         "job_specific_hard",
+         "progression",
+         "recovery",
+         "rest"
+        ],
+        [
+         "circuit_complementary",
+         "strength",
+         {
+          "categories": [
+           "recovery"
+          ],
+          "warm_up": true
+         },
+         "job_specific_hard",
+         {
+          "categories": [
+           "smmf"
+          ],
+          "light": true
+         },
+         "recovery",
+         "rest"
+        ],
+        [
+         "circuit_focus",
+         "job_specific_hard",
+         {
+          "categories": [
+           "recovery"
+          ],
+          "warm_up": true
+         },
+         "strength",
+         "accumulation",
+         {
+          "categories": [
+           "recovery"
+          ],
+          "warm_up": true
+         },
+         "rest"
+        ],
+        [
+         "endurance_long",
+         "job_specific_hard",
+         {
+          "categories": [
+           "recovery"
+          ],
+          "warm_up": true
+         },
+         "strength",
+         "circuit_short",
+         "recovery",
+         "rest"
+        ]
+       ],
+       "drop_order": [
+        "recovery",
+        "accumulation",
+        "smmf",
+        "progression",
+        "endurance_long",
+        "circuit_complementary",
+        "circuit_focus",
+        "circuit_short",
+        "job_specific_hard",
+        "strength"
        ]
       }
      ],
@@ -1333,7 +1600,7 @@
      ],
      "minimum_prerequisites": {},
      "incompatible_with": [],
-     "notes": "4-month macro: Month 1 strength-dominant (4×strength/14 days), Month 2 power-endurance dominant, Month 3 job-specific dominant, Month 4 maintenance. Draws explicitly from Gym Jones (Twight), Mountain Athlete (Shaul), CrossFit (Glassman), and Dan John. Strength standards are prerequisites for the program, not training goals: deadlift 2.5× BW, front squat 1.5× BW, bench 1.5× BW, military press 1× BW. PT test standards: 15+ pull-ups, 200+ SSST reps (KB snatch 10min @ 53#), 3-mile run under 20:00. Sandbag get-ups, barbell complexes, and SMMF (Slow Massive Movement) challenges are signature formats. Recovery sessions are low-HR active recovery (≤65% MHR). Named workouts (Curtis P, Riley Black, Russian Aggression, SMMF) are distinct from generic archetypes.\n"
+     "notes": "Written by \"the Horsemen\" for special-operations operators (\"Team guys\") to build a broad operator base of fitness. It states no prerequisites and has no novice path; daily 1RM work, Olympic lifts at 80-100% and gymnastics such as handstand push-ups and rope climbs assume an experienced athlete. Its numbers are goals to reach within four months, not entry standards: deadlift 2.5x, front squat 1.5x, bench press 1.5x and military press 1.0x bodyweight, 3 miles in under 20:00, and at least 200 on the Secret Service Snatch Test (SSST). The PT test is a separate list: max pull-ups (minimum 15), sit-ups in 3 minutes (90), push-ups in 3 minutes (80), a 3-mile run (22:30) and an 800 m swim (14:30). The program is four 28-day months — strength, power endurance, job specific, maintenance — run two or three times. Every week is six sessions and a rest day, with recovery days (30-60 minutes at 65% of max heart rate or less) built in. Each day is a category — strength, power endurance, job specific, SMMF, progression, circuits, density, accumulation, endurance or recovery — and the workout is picked from that category's list of named workouts. Loads come from a 1RM worked up to on the day, then percentages of it, fixed loads or multiples of bodyweight; there is no RPE and no deload week. The 4-Month Macro track runs the source as written: each month's week templates day by day, every named workout as an archetype in its category's pool, taken in rotation, and prescribed exactly as the source writes it (src/week_template.py). A workout whose equipment the athlete lacks is passed over for the next one; names carrying profanity or a slur are cleaned.\n"
     },
     "constraints": {
      "days_per_week": 5,
@@ -1345,7 +1612,7 @@
       "shoulder_impingement",
       "lumbar_disc"
      ],
-     "training_level": "novice",
+     "training_level": "intermediate",
      "equipment": [
       "barbell",
       "rack",
@@ -1361,14 +1628,484 @@
      "errors": [],
      "warnings": [
       {
-       "code": "LEVEL_MISMATCH",
-       "message": "Framework 'Concurrent Training (GPP / Balanced Fitness)' is intended for intermediate, advanced, elite athletes; this athlete is novice.",
-       "suggested_fix": "Choose a framework that lists novice in applicable_when."
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype '2 Minutes' requires {'cable_machine', 'resistance_band', 'tire', 'sandbag', 'medicine_ball', 'jump_rope', 'hurdles', 'box'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
       },
       {
-       "code": "LEVEL_COVERAGE_GAP",
-       "message": "No max strength session in horsemen_gpp is written for a novice athlete (only intermediate, advanced, elite). Those sessions are scheduled as aerobic base instead.",
-       "suggested_fix": "Author a novice max strength archetype, or keep max strength out of the framework's sessions at this level."
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Bannister' requires {'tire', 'cable_machine', 'hurdles'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Crazy 8' requires {'agility_ladder', 'dumbbell', 'parallettes', 'medicine_ball', 'box'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Double/Doubles' requires {'cable_machine', 'rope', 'tire', 'jump_rope', 'box'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Fifty' requires {'jump_rope', 'parallettes', 'box'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Mirror' requires {'dumbbell', 'sandbag'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Mr Smith' requires {'sandbag'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Not So Short and Sweet' requires {'medicine_ball'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Tens' requires {'ghd', 'dumbbell', 'parallettes', 'medicine_ball', 'box'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Triples' requires {'rope', 'sandbag', 'cable_machine', 'medicine_ball'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Breathing Ladder: Ball Slams' requires {'medicine_ball'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Death to Infidels' requires {'rings', 'ghd', 'box'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Ex Wives & Flat Tires' requires {'box'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Johnnie Walker Black' requires {'rings'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Johnnie Walker Green' requires {'rower'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Johnnie Walker Red' requires {'ghd'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Louder Than 10' requires {'medicine_ball'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Stairway to Heaven' requires {'box'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'When the Levee Breaks' requires {'rings'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Appeal to God' requires {'rings', 'ghd'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Clockwork Orange' requires {'rings'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Flemingway' requires {'medicine_ball'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Goosed' requires {'medicine_ball'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Possum Stomper' requires {'rower'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Slam and Step' requires {'medicine_ball', 'box'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'The Cog' requires {'dumbbell', 'rower'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Twister' requires {'parallettes', 'medicine_ball', 'box'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Annie' requires {'jump_rope'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Bad Bush' requires {'dumbbell'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Elizabeth' requires {'rings'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Jackie' requires {'rower'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Joint's Up Committee' requires {'rower'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Over the Hills and Far Away' requires {'parallettes'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Wicked Hangover' requires {'rower', 'box'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Endurance Cycle (30 min)' requires {'bike'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Endurance Row (30 min)' requires {'rower'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Endurance Swim (30 min)' requires {'pool'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Endurance Cycle (60 min)' requires {'bike'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Endurance Row (60 min)' requires {'rower'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Endurance Swim (60 min)' requires {'pool'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Speedball' requires {'training_partner'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Mexicee Mishnun' requires {'rower'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Big 5-55' requires {'sandbag'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Buddy Tonight' requires {'sandbag'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Cheech' requires {'rower'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'D-Day' requires {'ghd', 'box'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Drunken Lullaby' requires {'sandbag', 'box'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype '5 Rounds: Deadlift, Burpees, Swings, Pull-ups, Push Press' requires {'dumbbell'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype '5 Rounds: Dumbbell Run Carry, Get-ups, Burpees' requires {'dumbbell'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Get-Ups Till You Throw Up' requires {'sandbag'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Girl Farts' requires {'dumbbell', 'rower'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'He'll Raise Your Taxes' requires {'sandbag'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Lovely Turd' requires {'sandbag', 'parallettes', 'box'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Ronald Reagan' requires {'sandbag'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Sick and Twisted' requires {'resistance_band'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Start Your Face' requires {'dumbbell', 'box'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Tabata Hell' requires {'medicine_ball'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype '10 Rounds: Pull-ups, Dips, Push-ups' requires {'parallettes'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype '10-to-1 Grind Ladder: Swings, Push-ups, Sit-ups, Dips, Pull-ups' requires {'parallettes', 'box'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Your Mama Called' requires {'ghd'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype '300' requires {'box'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Dead Storage' requires {'medicine_ball'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'George Washington' requires {'rower', 'rings', 'ghd', 'box'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Hummer' requires {'ghd'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Sherbert' requires {'box'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Till U Collapse' requires {'tire', 'ghd', 'medicine_ball', 'rower'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Recovery Cycle' requires {'bike'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Recovery Row' requires {'rower'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Recovery Swim' requires {'pool'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Winter in August' requires {'parallettes', 'rower'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Act With a Purpose' requires {'ghd', 'dumbbell', 'tire', 'parallettes', 'box'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Ben Franklin' requires {'dumbbell', 'ghd', 'box'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Bloody Nose' requires {'rings', 'ghd'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Chin Up. Soldier On.' requires {'dumbbell', 'rings', 'sandbag', 'tire'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Family Friendly Violence' requires {'dumbbell', 'tire', 'parallettes'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Goldman Sachs' requires {'tire'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Honey Butter' requires {'dumbbell', 'sandbag', 'ghd', 'box'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Hook and Bullet' requires {'dumbbell'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Juicy Heartache' requires {'sandbag'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Max Out!' requires {'sandbag', 'box'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Russian Aggression' requires {'dumbbell', 'box'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Soviet Capitalists' requires {'parallettes', 'sandbag', 'ghd'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Tongue Lashing' requires {'dumbbell'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Wasted Love' requires {'sandbag', 'medicine_ball'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Well Done Is Better Than Well Said' requires {'tire'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Finger Board Hangs' requires {'hangboard'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Get-ups, Burpees and Step-ups' requires {'dumbbell', 'box'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype '1-Mile Tire Drag' requires {'tire'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Row and Barbell Complex' requires {'rower'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Row and Power Cleans' requires {'rower'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Row, Deadlifts and Push-ups' requires {'rower'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Sandbag Get-ups' requires {'sandbag'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Swing and Push Press Ladder' requires {'dumbbell'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype '10-Minute Step-ups' requires {'dumbbell', 'box'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype '2K Row' requires {'rower'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
+      },
+      {
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype 'Wall Ball and Sit-ups' requires {'medicine_ball'} — not available. This archetype will be skipped in selection.",
+       "suggested_fix": null
       }
      ],
      "info": [
@@ -1386,83 +2123,45 @@
       "is_deload": false,
       "framework": "concurrent_training",
       "schedule": {
-       "Monday": [
+       "Wednesday": [
         {
-         "modality": "aerobic_base",
+         "modality": "mixed_modal_conditioning",
          "archetype": {
-          "id": "horsemen_aerobic_base",
-          "name": "Horsemen Aerobic Base (Run / Row / Ruck)",
-          "modality": "aerobic_base",
+          "id": "hm_three_mile_run_all_out",
+          "name": "3-Mile Run, All Out",
+          "modality": "mixed_modal_conditioning",
           "category": "conditioning",
-          "duration_estimate_minutes": 50,
-          "required_equipment": [
-           "open_space"
-          ],
-          "applicable_phases": [
-           "base",
-           "build",
-           "peak",
-           "taper",
-           "deload",
-           "maintenance",
-           "specific"
-          ],
           "training_levels": [
-           "novice",
            "intermediate",
            "advanced",
            "elite"
           ],
+          "pool_only": true,
+          "duration_estimate_minutes": 20,
+          "slots": [
+           {
+            "role": "run_3_mile",
+            "slot_type": "for_time",
+            "rounds": 1,
+            "distance_m": 4828,
+            "duration_sec": 1200,
+            "intensity": "max_effort",
+            "exercise_filter": {
+             "exercise_ids": [
+              "run_tempo_horsemen"
+             ],
+             "ordered": true
+            },
+            "notes": "3 miles all out; the source's target is under 20:00."
+           }
+          ],
+          "required_equipment": [
+           "open_space"
+          ],
           "sources": [
            "Horsemen"
           ],
-          "notes": "Steady aerobic work. In the Horsemen macro the aerobic base is infrastructure, not the objective: it exists so power-endurance and job-specific blocks can be repeated without accumulating unrecoverable fatigue, and so the 3-mile PT-test standard holds while the strength block is running. Modality is interchangeable (run, row, bike, ruck) — pick whatever the athlete's current lower-body load can absorb. Recovery-day versions of this session are held at or below 65% MHR, which is the deload scaling below.\n",
-          "slots": [
-           {
-            "role": "aerobic_main",
-            "slot_type": "time_domain",
-            "duration_sec": 2700,
-            "intensity": "zone2",
-            "exercise_filter": {
-             "category": "aerobic"
-            },
-            "notes": "45 min continuous at conversational pace. Nasal breathing is the pace check — if you cannot breathe through your nose, slow down. Duration scales with the athlete's session budget; intensity does not.\n"
-           },
-           {
-            "role": "cool_down",
-            "slot_type": "time_domain",
-            "duration_sec": 300,
-            "intensity": "zone1",
-            "exercise_filter": {
-             "category": "mobility"
-            },
-            "notes": "5 min easy walk plus hip flexor and calf work."
-           }
-          ],
-          "scaling": {
-           "deload": {
-            "volume_multiplier": 0.6,
-            "notes": "Active recovery session. Cap heart rate at 65% MHR, 25-30 min, and prefer bike or row over running so the legs unload.\n"
-           },
-           "time_limited": {
-            "drop_slots": [
-             "cool_down"
-            ],
-            "notes": "Keep the main effort and cut the cool-down. Below 20 min this session is not worth doing as aerobic base — ruck to work instead.\n"
-           },
-           "equipment_limited": {
-            "substitutions": [
-             {
-              "missing_equipment": "open_space",
-              "substitute_approach": "Row or bike at the same duration and heart rate."
-             },
-             {
-              "missing_equipment": "rower",
-              "substitute_approach": "Run, or ruck at 20-25 kg for the same duration."
-             }
-            ]
-           }
-          },
+          "notes": "A 3-mile run at all-out effort, the source's target under 20 minutes — the cardio half of the program's stated goal (3 miles easily in under 20:00).",
           "_package": "horsemen_gpp"
          },
          "is_deload": false,
@@ -1470,435 +2169,69 @@
           "package": "horsemen_gpp",
           "borrowed": false
          },
-         "substituted_for": "max_strength",
+         "category": "power_endurance",
+         "category_name": "Power endurance",
+         "pieces": [
+          {
+           "category": "power_endurance",
+           "archetype_id": "hm_three_mile_run_all_out",
+           "name": "3-Mile Run, All Out"
+          }
+         ],
          "exercises": [
           {
            "exercise": {
-            "id": "run_zone2",
-            "name": "Zone 2 Run",
+            "id": "run_tempo_horsemen",
+            "name": "Tempo Run (Zone 3)",
             "category": "aerobic",
             "modality": [
-             "aerobic_base"
+             "aerobic_base",
+             "anaerobic_intervals"
             ],
             "equipment": [
              "open_space"
             ],
-            "effort": "low",
+            "effort": "medium",
             "bilateral": true,
             "movement_patterns": [
              "aerobic_monostructural",
              "locomotion"
             ],
-            "requires": [],
-            "unlocks": [
-             "run_tempo_horsemen"
-            ],
-            "contraindicated_with": [
-             "ankle_sprain",
-             "achilles_tendinopathy",
-             "patellar_tendinopathy",
-             "knee_meniscus_post_op"
-            ],
-            "progressions": {
-             "volume": "increase_duration"
-            },
-            "scaling_down": [
-             "ruck"
-            ],
-            "typical_volume": {
-             "duration_sec": 2700
-            },
-            "sources": [
-             "Horsemen"
-            ],
-            "notes": "Conversational-pace run. The Horsemen aerobic base exists to support repeatable output, not to chase run times — the 3-mile-under-20:00 PT standard is a prerequisite, not the training target. Nasal breathing is the pace check. Recovery-day runs are capped at 65% MHR.",
-            "_package": "horsemen_gpp",
-            "_packages": [
-             "horsemen_gpp"
-            ]
-           },
-           "load": {
-            "duration_minutes": 45,
-            "zone_target": "Zone 1-2 (conversational pace)",
-            "zone_lower": 1,
-            "zone_upper": 2
-           },
-           "slot_role": "aerobic_main",
-           "slot_type": "time_domain",
-           "rest_sec": null,
-           "meta": false,
-           "injury_skip": false,
-           "coverage_gap": false,
-           "equipment_gap": false,
-           "gap_reason": null,
-           "substituted_for": null,
-           "error": null,
-           "load_note": null,
-           "notes": "45 min continuous at conversational pace. Nasal breathing is the pace check — if you cannot breathe through your nose, slow down. Duration scales with the athlete's session budget; intensity does not.\n",
-           "parent_slot_role": null,
-           "skip_exercise": false
-          },
-          {
-           "exercise": {
-            "id": "hip_flexor_stretch",
-            "name": "Hip Flexor Stretch (kneeling)",
-            "category": "mobility",
-            "modality": [
-             "mobility"
-            ],
-            "equipment": [
-             "none"
-            ],
-            "effort": "low",
-            "bilateral": false,
-            "movement_patterns": [
-             "hip_flexion"
-            ],
-            "requires": [],
-            "unlocks": [
-             "couch_stretch"
-            ],
-            "contraindicated_with": [],
-            "progressions": {
-             "volume": "increase_duration",
-             "complexity": "couch_stretch"
-            },
-            "scaling_down": [],
-            "typical_volume": {
-             "sets": 2,
-             "duration_sec": 60
-            },
-            "sources": [
-             "Horsemen",
-             "Ido Portal"
-            ],
-            "notes": "Half-kneeling lunge position, drive hips forward to load iliopsoas. Posterior pelvic tilt cue to deepen stretch. Essential counter to prolonged sitting and heavy squat/deadlift days.",
-            "_package": "horsemen_gpp",
-            "_packages": [
-             "horsemen_gpp"
-            ]
-           },
-           "load": {
-            "duration_minutes": 5,
-            "zone_target": "Zone 1 (recovery)",
-            "zone_lower": 1,
-            "zone_upper": 1
-           },
-           "slot_role": "cool_down",
-           "slot_type": "time_domain",
-           "rest_sec": null,
-           "meta": false,
-           "injury_skip": false,
-           "coverage_gap": false,
-           "equipment_gap": false,
-           "gap_reason": null,
-           "substituted_for": null,
-           "error": null,
-           "load_note": null,
-           "notes": "5 min easy walk plus hip flexor and calf work.",
-           "parent_slot_role": null,
-           "skip_exercise": false
-          }
-         ],
-         "complementary_work": [
-          {
-           "exercise": {
-            "id": "couch_stretch",
-            "name": "Couch Stretch (hip flexor/quad)",
-            "category": "mobility",
-            "modality": [
-             "mobility"
-            ],
-            "equipment": [
-             "none"
-            ],
-            "effort": "low",
-            "bilateral": false,
-            "movement_patterns": [
-             "hip_flexion",
-             "knee_extension"
-            ],
             "requires": [
-             "hip_flexor_stretch"
+             "run_zone2"
             ],
             "unlocks": [],
             "contraindicated_with": [
-             "knee_meniscus_acute",
-             "patellar_tendinopathy_acute"
+             "ankle_sprain",
+             "achilles_tendinopathy",
+             "patellar_tendinopathy"
             ],
             "progressions": {
              "volume": "increase_duration"
             },
             "scaling_down": [
-             "hip_flexor_stretch"
+             "run_zone2"
             ],
             "typical_volume": {
-             "sets": 2,
-             "duration_sec": 120
+             "duration_sec": 1200
             },
             "sources": [
-             "Horsemen",
-             "Ido Portal"
-            ],
-            "notes": "Rear foot elevated against wall, knee on floor, hip driven toward wall. Targets rectus femoris and hip flexor complex simultaneously. One of the most effective hip extension mobility drills. Contraindicated with acute knee conditions due to end-range knee flexion load.",
-            "_package": "horsemen_gpp",
-            "_packages": [
-             "horsemen_gpp"
-            ]
-           },
-           "prescription": {
-            "sets": 2,
-            "duration_sec": 60,
-            "note": "Hold or flow through full range — quality over speed"
-           }
-          },
-          {
-           "exercise": {
-            "id": "hip_circle",
-            "name": "Hip Circle",
-            "category": "mobility",
-            "modality": [
-             "mobility"
-            ],
-            "equipment": [
-             "none"
-            ],
-            "effort": "low",
-            "bilateral": true,
-            "movement_patterns": [
-             "hip_flexion",
-             "rotation"
-            ],
-            "requires": [],
-            "unlocks": [
-             "hip_90_90"
-            ],
-            "contraindicated_with": [],
-            "progressions": {
-             "volume": "increase_duration"
-            },
-            "scaling_down": [],
-            "typical_volume": {
-             "sets": 2,
-             "reps": 10
-            },
-            "sources": [
-             "Ido Portal",
              "Horsemen"
             ],
-            "notes": "Standing hip circumduction — large circles in both directions. Standard joint prep for any lower body session. Low threshold entry movement for hip mobility warm-up sequences.",
-            "_package": "horsemen_gpp",
-            "_packages": [
-             "horsemen_gpp"
-            ]
-           },
-           "prescription": {
-            "sets": 2,
-            "duration_sec": 60,
-            "note": "Hold or flow through full range — quality over speed"
-           }
-          },
-          {
-           "exercise": {
-            "id": "hip_flexor_stretch",
-            "name": "Hip Flexor Stretch (kneeling)",
-            "category": "mobility",
-            "modality": [
-             "mobility"
-            ],
-            "equipment": [
-             "none"
-            ],
-            "effort": "low",
-            "bilateral": false,
-            "movement_patterns": [
-             "hip_flexion"
-            ],
-            "requires": [],
-            "unlocks": [
-             "couch_stretch"
-            ],
-            "contraindicated_with": [],
-            "progressions": {
-             "volume": "increase_duration",
-             "complexity": "couch_stretch"
-            },
-            "scaling_down": [],
-            "typical_volume": {
-             "sets": 2,
-             "duration_sec": 60
-            },
-            "sources": [
-             "Horsemen",
-             "Ido Portal"
-            ],
-            "notes": "Half-kneeling lunge position, drive hips forward to load iliopsoas. Posterior pelvic tilt cue to deepen stretch. Essential counter to prolonged sitting and heavy squat/deadlift days.",
-            "_package": "horsemen_gpp",
-            "_packages": [
-             "horsemen_gpp"
-            ]
-           },
-           "prescription": {
-            "sets": 2,
-            "duration_sec": 60,
-            "note": "Hold or flow through full range — quality over speed"
-           }
-          }
-         ]
-        }
-       ],
-       "Tuesday": [
-        {
-         "modality": "durability",
-         "archetype": {
-          "id": "loaded_carry_circuit",
-          "name": "Loaded Carry Circuit (Farmer / Rack / Overhead)",
-          "modality": "durability",
-          "category": "gpp_durability",
-          "duration_estimate_minutes": 45,
-          "required_equipment": [
-           "kettlebell"
-          ],
-          "applicable_phases": [
-           "base",
-           "build",
-           "peak",
-           "maintenance",
-           "specific",
-           "transition"
-          ],
-          "sources": [
-           "Gym Jones",
-           "Horsemen"
-          ],
-          "notes": "Rotating loaded carry circuit using three carry variations: farmer carry (bilateral or suitcase), rack carry (single or double KB at chest), and overhead carry (single or double KB locked out). Each variation stresses a different stability demand — farmer is grip and lat, rack is anti-rotation and thoracic, overhead is shoulder stability and core bracing under load. Distance or time per variation; circuit repeated 3–5 rounds. Gym Jones includes farmer carry and bear crawl with DBs as a loaded carry complex. Horsemen uses loaded carries as active rest between strength sets and as standalone GPP. This is durability training — moderate load, sustained tension, quality posture throughout. Not a cardio workout; not a max strength workout.\n",
-          "slots": [
-           {
-            "role": "joint_prep",
-            "slot_type": "time_domain",
-            "duration_sec": 300,
-            "intensity": "light",
-            "exercise_filter": {
-             "category": "mobility"
-            },
-            "notes": "5-min shoulder, wrist, and hip warm-up. Wrist circles, shoulder circles, hip hinge pattern, light KB deadlift × 10."
-           },
-           {
-            "role": "farmer_carry",
-            "slot_type": "for_time",
-            "distance_m": 40,
-            "intensity": "heavy",
-            "exercise_filter": {
-             "movement_pattern": "farmer_carry"
-            },
-            "notes": "Farmer carry: bilateral, heaviest KB pair that maintains upright posture. Target ~75% of max farmer carry load. 40m per set (20m out, 20m back). Set down the bells, rest 30 sec, move to next carry variation. Dumbbell or barbell farmer carry if no kettlebells.\n"
-           },
-           {
-            "role": "rack_carry",
-            "slot_type": "for_time",
-            "distance_m": 40,
-            "intensity": "moderate",
-            "exercise_filter": {
-             "movement_pattern": "rack_carry"
-            },
-            "notes": "Single or double KB rack carry. Bell(s) held at shoulder in rack position. Challenges thoracic uprightness and anti-rotation. 40m per set. If only one KB available, alternate sides each round (right rack out, left rack back).\n"
-           },
-           {
-            "role": "overhead_carry",
-            "slot_type": "for_time",
-            "distance_m": 40,
-            "intensity": "moderate",
-            "exercise_filter": {
-             "movement_pattern": "vertical_push",
-             "category": "loaded_carry"
-            },
-            "notes": "Single or double KB overhead carry, arm(s) fully locked out, scapula packed. This is a shoulder stability and overhead position trainer. Load is lighter than farmer or rack — typically 50% of farmer carry load. 40m per set. Drop to bottoms-up KB carry for enhanced shoulder stability demand at lower load.\n"
-           },
-           {
-            "role": "circuit_rounds_structure",
-            "slot_type": "sets_reps",
-            "sets": 4,
-            "reps": 1,
-            "rest_sec": 90,
-            "intensity": "moderate",
-            "skip_exercise": true,
-            "notes": "Meta-slot: 4 complete rounds of farmer → rack → overhead carry. Rest 90 sec between rounds. Total: 480m of carrying."
-           }
-          ],
-          "scaling": {
-           "deload": {
-            "volume_multiplier": 0.6,
-            "intensity_pct": 0.9,
-            "notes": "Reduce to 2 circuit rounds. Drop farmer carry load 20%, rack and overhead load 15%."
-           },
-           "time_limited": {
-            "drop_slots": [
-             "overhead_carry"
-            ],
-            "notes": "Drop overhead carry first (highest skill demand). Run farmer + rack for 3 rounds if pressed for time."
-           },
-           "equipment_limited": {
-            "substitutions": [
-             {
-              "missing_equipment": "kettlebell",
-              "substitute_approach": "Use dumbbells for all three carry variations. Overhead carry can use a weight plate held at arm's length. Farmer carry with barbell (suitcase deadlift position) if only barbell available."
-             }
-            ]
-           }
-          },
-          "_package": "horsemen_gpp"
-         },
-         "is_deload": false,
-         "provenance": {
-          "package": "horsemen_gpp",
-          "borrowed": false
-         },
-         "exercises": [
-          {
-           "exercise": {
-            "id": "shoulder_circle",
-            "name": "Shoulder Circle",
-            "category": "mobility",
-            "modality": [
-             "mobility"
-            ],
-            "equipment": [
-             "none"
-            ],
-            "effort": "low",
-            "bilateral": true,
-            "movement_patterns": [],
-            "requires": [],
-            "unlocks": [
-             "shoulder_dislocate_pvc"
-            ],
-            "contraindicated_with": [],
-            "progressions": {
-             "volume": "increase_duration"
-            },
-            "scaling_down": [],
-            "typical_volume": {
-             "sets": 1,
-             "reps": 15
-            },
-            "sources": [
-             "Ido Portal",
-             "Horsemen"
-            ],
-            "notes": "Standing arm circles in both directions at varied speeds. Standard shoulder joint prep before any upper body or overhead work. Both forward and backward directions required.",
+            "notes": "Hard, sustained run. The Horsemen source runs 3 miles all-out (goal: under 20:00) and in the PT test (22:30); the tempo prescription is the app's.\n",
             "_package": "horsemen_gpp",
             "_packages": [
              "horsemen_gpp"
             ]
            },
            "load": {
-            "duration_minutes": 5,
-            "zone_target": "Zone 1-2 (light)",
-            "zone_lower": 1,
-            "zone_upper": 2
+            "target_rounds": 1,
+            "format": "FOR TIME",
+            "time_minutes": 20,
+            "distance_km": 4.83
            },
-           "slot_role": "joint_prep",
-           "slot_type": "time_domain",
+           "slot_role": "run_3_mile",
+           "slot_type": "for_time",
            "rest_sec": null,
            "meta": false,
            "injury_skip": false,
@@ -1908,924 +2241,52 @@
            "substituted_for": null,
            "error": null,
            "load_note": null,
-           "notes": "5-min shoulder, wrist, and hip warm-up. Wrist circles, shoulder circles, hip hinge pattern, light KB deadlift × 10.",
+           "notes": "3 miles all out; the source's target is under 20:00.",
            "parent_slot_role": null,
            "skip_exercise": false
-          },
-          {
-           "exercise": null,
-           "load": {},
-           "slot_role": "farmer_carry",
-           "slot_type": "for_time",
-           "rest_sec": null,
-           "meta": false,
-           "injury_skip": true,
-           "coverage_gap": false,
-           "equipment_gap": false,
-           "gap_reason": null,
-           "substituted_for": null,
-           "error": "skipped — excluded by injury flag",
-           "load_note": null,
-           "notes": "Farmer carry: bilateral, heaviest KB pair that maintains upright posture. Target ~75% of max farmer carry load. 40m per set (20m out, 20m back). Set down the bells, rest 30 sec, move to next carry variation. Dumbbell or barbell farmer carry if no kettlebells.\n",
-           "parent_slot_role": null,
-           "skip_exercise": false
-          },
-          {
-           "exercise": null,
-           "load": {},
-           "slot_role": "rack_carry",
-           "slot_type": "for_time",
-           "rest_sec": null,
-           "meta": false,
-           "injury_skip": true,
-           "coverage_gap": false,
-           "equipment_gap": false,
-           "gap_reason": null,
-           "substituted_for": null,
-           "error": "skipped — excluded by injury flag",
-           "load_note": null,
-           "notes": "Single or double KB rack carry. Bell(s) held at shoulder in rack position. Challenges thoracic uprightness and anti-rotation. 40m per set. If only one KB available, alternate sides each round (right rack out, left rack back).\n",
-           "parent_slot_role": null,
-           "skip_exercise": false
-          },
-          {
-           "exercise": null,
-           "load": {},
-           "slot_role": "overhead_carry",
-           "slot_type": "for_time",
-           "rest_sec": null,
-           "meta": false,
-           "injury_skip": true,
-           "coverage_gap": false,
-           "equipment_gap": false,
-           "gap_reason": null,
-           "substituted_for": null,
-           "error": "skipped — excluded by injury flag",
-           "load_note": null,
-           "notes": "Single or double KB overhead carry, arm(s) fully locked out, scapula packed. This is a shoulder stability and overhead position trainer. Load is lighter than farmer or rack — typically 50% of farmer carry load. 40m per set. Drop to bottoms-up KB carry for enhanced shoulder stability demand at lower load.\n",
-           "parent_slot_role": null,
-           "skip_exercise": false
-          },
-          {
-           "exercise": null,
-           "load": {
-            "sets": 4,
-            "intensity": "moderate",
-            "zone_target": "Zone 2-3 (moderate)",
-            "zone_lower": 2,
-            "zone_upper": 3
-           },
-           "slot_role": "circuit_rounds_structure",
-           "slot_type": "sets_reps",
-           "rest_sec": 90,
-           "meta": true,
-           "injury_skip": false,
-           "coverage_gap": false,
-           "equipment_gap": false,
-           "gap_reason": null,
-           "substituted_for": null,
-           "error": null,
-           "load_note": null,
-           "notes": "Meta-slot: 4 complete rounds of farmer → rack → overhead carry. Rest 90 sec between rounds. Total: 480m of carrying.",
-           "parent_slot_role": null,
-           "skip_exercise": true
           }
          ],
          "complementary_work": []
         }
        ],
-       "Wednesday": [],
        "Thursday": [
-        {
-         "modality": "aerobic_base",
-         "archetype": {
-          "id": "horsemen_aerobic_base",
-          "name": "Horsemen Aerobic Base (Run / Row / Ruck)",
-          "modality": "aerobic_base",
-          "category": "conditioning",
-          "duration_estimate_minutes": 50,
-          "required_equipment": [
-           "open_space"
-          ],
-          "applicable_phases": [
-           "base",
-           "build",
-           "peak",
-           "taper",
-           "deload",
-           "maintenance",
-           "specific"
-          ],
-          "training_levels": [
-           "novice",
-           "intermediate",
-           "advanced",
-           "elite"
-          ],
-          "sources": [
-           "Horsemen"
-          ],
-          "notes": "Steady aerobic work. In the Horsemen macro the aerobic base is infrastructure, not the objective: it exists so power-endurance and job-specific blocks can be repeated without accumulating unrecoverable fatigue, and so the 3-mile PT-test standard holds while the strength block is running. Modality is interchangeable (run, row, bike, ruck) — pick whatever the athlete's current lower-body load can absorb. Recovery-day versions of this session are held at or below 65% MHR, which is the deload scaling below.\n",
-          "slots": [
-           {
-            "role": "aerobic_main",
-            "slot_type": "time_domain",
-            "duration_sec": 2700,
-            "intensity": "zone2",
-            "exercise_filter": {
-             "category": "aerobic"
-            },
-            "notes": "45 min continuous at conversational pace. Nasal breathing is the pace check — if you cannot breathe through your nose, slow down. Duration scales with the athlete's session budget; intensity does not.\n"
-           },
-           {
-            "role": "cool_down",
-            "slot_type": "time_domain",
-            "duration_sec": 300,
-            "intensity": "zone1",
-            "exercise_filter": {
-             "category": "mobility"
-            },
-            "notes": "5 min easy walk plus hip flexor and calf work."
-           }
-          ],
-          "scaling": {
-           "deload": {
-            "volume_multiplier": 0.6,
-            "notes": "Active recovery session. Cap heart rate at 65% MHR, 25-30 min, and prefer bike or row over running so the legs unload.\n"
-           },
-           "time_limited": {
-            "drop_slots": [
-             "cool_down"
-            ],
-            "notes": "Keep the main effort and cut the cool-down. Below 20 min this session is not worth doing as aerobic base — ruck to work instead.\n"
-           },
-           "equipment_limited": {
-            "substitutions": [
-             {
-              "missing_equipment": "open_space",
-              "substitute_approach": "Row or bike at the same duration and heart rate."
-             },
-             {
-              "missing_equipment": "rower",
-              "substitute_approach": "Run, or ruck at 20-25 kg for the same duration."
-             }
-            ]
-           }
-          },
-          "_package": "horsemen_gpp"
-         },
-         "is_deload": false,
-         "provenance": {
-          "package": "horsemen_gpp",
-          "borrowed": false
-         },
-         "substituted_for": "mixed_modal_conditioning",
-         "exercises": [
-          {
-           "exercise": {
-            "id": "run_zone2",
-            "name": "Zone 2 Run",
-            "category": "aerobic",
-            "modality": [
-             "aerobic_base"
-            ],
-            "equipment": [
-             "open_space"
-            ],
-            "effort": "low",
-            "bilateral": true,
-            "movement_patterns": [
-             "aerobic_monostructural",
-             "locomotion"
-            ],
-            "requires": [],
-            "unlocks": [
-             "run_tempo_horsemen"
-            ],
-            "contraindicated_with": [
-             "ankle_sprain",
-             "achilles_tendinopathy",
-             "patellar_tendinopathy",
-             "knee_meniscus_post_op"
-            ],
-            "progressions": {
-             "volume": "increase_duration"
-            },
-            "scaling_down": [
-             "ruck"
-            ],
-            "typical_volume": {
-             "duration_sec": 2700
-            },
-            "sources": [
-             "Horsemen"
-            ],
-            "notes": "Conversational-pace run. The Horsemen aerobic base exists to support repeatable output, not to chase run times — the 3-mile-under-20:00 PT standard is a prerequisite, not the training target. Nasal breathing is the pace check. Recovery-day runs are capped at 65% MHR.",
-            "_package": "horsemen_gpp",
-            "_packages": [
-             "horsemen_gpp"
-            ]
-           },
-           "load": {
-            "duration_minutes": 45,
-            "zone_target": "Zone 1-2 (conversational pace)",
-            "zone_lower": 1,
-            "zone_upper": 2
-           },
-           "slot_role": "aerobic_main",
-           "slot_type": "time_domain",
-           "rest_sec": null,
-           "meta": false,
-           "injury_skip": false,
-           "coverage_gap": false,
-           "equipment_gap": false,
-           "gap_reason": null,
-           "substituted_for": null,
-           "error": null,
-           "load_note": null,
-           "notes": "45 min continuous at conversational pace. Nasal breathing is the pace check — if you cannot breathe through your nose, slow down. Duration scales with the athlete's session budget; intensity does not.\n",
-           "parent_slot_role": null,
-           "skip_exercise": false
-          },
-          {
-           "exercise": {
-            "id": "couch_stretch",
-            "name": "Couch Stretch (hip flexor/quad)",
-            "category": "mobility",
-            "modality": [
-             "mobility"
-            ],
-            "equipment": [
-             "none"
-            ],
-            "effort": "low",
-            "bilateral": false,
-            "movement_patterns": [
-             "hip_flexion",
-             "knee_extension"
-            ],
-            "requires": [
-             "hip_flexor_stretch"
-            ],
-            "unlocks": [],
-            "contraindicated_with": [
-             "knee_meniscus_acute",
-             "patellar_tendinopathy_acute"
-            ],
-            "progressions": {
-             "volume": "increase_duration"
-            },
-            "scaling_down": [
-             "hip_flexor_stretch"
-            ],
-            "typical_volume": {
-             "sets": 2,
-             "duration_sec": 120
-            },
-            "sources": [
-             "Horsemen",
-             "Ido Portal"
-            ],
-            "notes": "Rear foot elevated against wall, knee on floor, hip driven toward wall. Targets rectus femoris and hip flexor complex simultaneously. One of the most effective hip extension mobility drills. Contraindicated with acute knee conditions due to end-range knee flexion load.",
-            "_package": "horsemen_gpp",
-            "_packages": [
-             "horsemen_gpp"
-            ]
-           },
-           "load": {
-            "duration_minutes": 5,
-            "zone_target": "Zone 1 (recovery)",
-            "zone_lower": 1,
-            "zone_upper": 1
-           },
-           "slot_role": "cool_down",
-           "slot_type": "time_domain",
-           "rest_sec": null,
-           "meta": false,
-           "injury_skip": false,
-           "coverage_gap": false,
-           "equipment_gap": false,
-           "gap_reason": null,
-           "substituted_for": null,
-           "error": null,
-           "load_note": null,
-           "notes": "5 min easy walk plus hip flexor and calf work.",
-           "parent_slot_role": null,
-           "skip_exercise": false
-          }
-         ],
-         "complementary_work": [
-          {
-           "exercise": {
-            "id": "couch_stretch",
-            "name": "Couch Stretch (hip flexor/quad)",
-            "category": "mobility",
-            "modality": [
-             "mobility"
-            ],
-            "equipment": [
-             "none"
-            ],
-            "effort": "low",
-            "bilateral": false,
-            "movement_patterns": [
-             "hip_flexion",
-             "knee_extension"
-            ],
-            "requires": [
-             "hip_flexor_stretch"
-            ],
-            "unlocks": [],
-            "contraindicated_with": [
-             "knee_meniscus_acute",
-             "patellar_tendinopathy_acute"
-            ],
-            "progressions": {
-             "volume": "increase_duration"
-            },
-            "scaling_down": [
-             "hip_flexor_stretch"
-            ],
-            "typical_volume": {
-             "sets": 2,
-             "duration_sec": 120
-            },
-            "sources": [
-             "Horsemen",
-             "Ido Portal"
-            ],
-            "notes": "Rear foot elevated against wall, knee on floor, hip driven toward wall. Targets rectus femoris and hip flexor complex simultaneously. One of the most effective hip extension mobility drills. Contraindicated with acute knee conditions due to end-range knee flexion load.",
-            "_package": "horsemen_gpp",
-            "_packages": [
-             "horsemen_gpp"
-            ]
-           },
-           "prescription": {
-            "sets": 2,
-            "duration_sec": 60,
-            "note": "Hold or flow through full range — quality over speed"
-           }
-          },
-          {
-           "exercise": {
-            "id": "hip_circle",
-            "name": "Hip Circle",
-            "category": "mobility",
-            "modality": [
-             "mobility"
-            ],
-            "equipment": [
-             "none"
-            ],
-            "effort": "low",
-            "bilateral": true,
-            "movement_patterns": [
-             "hip_flexion",
-             "rotation"
-            ],
-            "requires": [],
-            "unlocks": [
-             "hip_90_90"
-            ],
-            "contraindicated_with": [],
-            "progressions": {
-             "volume": "increase_duration"
-            },
-            "scaling_down": [],
-            "typical_volume": {
-             "sets": 2,
-             "reps": 10
-            },
-            "sources": [
-             "Ido Portal",
-             "Horsemen"
-            ],
-            "notes": "Standing hip circumduction — large circles in both directions. Standard joint prep for any lower body session. Low threshold entry movement for hip mobility warm-up sequences.",
-            "_package": "horsemen_gpp",
-            "_packages": [
-             "horsemen_gpp"
-            ]
-           },
-           "prescription": {
-            "sets": 2,
-            "duration_sec": 60,
-            "note": "Hold or flow through full range — quality over speed"
-           }
-          },
-          {
-           "exercise": {
-            "id": "hip_flexor_stretch",
-            "name": "Hip Flexor Stretch (kneeling)",
-            "category": "mobility",
-            "modality": [
-             "mobility"
-            ],
-            "equipment": [
-             "none"
-            ],
-            "effort": "low",
-            "bilateral": false,
-            "movement_patterns": [
-             "hip_flexion"
-            ],
-            "requires": [],
-            "unlocks": [
-             "couch_stretch"
-            ],
-            "contraindicated_with": [],
-            "progressions": {
-             "volume": "increase_duration",
-             "complexity": "couch_stretch"
-            },
-            "scaling_down": [],
-            "typical_volume": {
-             "sets": 2,
-             "duration_sec": 60
-            },
-            "sources": [
-             "Horsemen",
-             "Ido Portal"
-            ],
-            "notes": "Half-kneeling lunge position, drive hips forward to load iliopsoas. Posterior pelvic tilt cue to deepen stretch. Essential counter to prolonged sitting and heavy squat/deadlift days.",
-            "_package": "horsemen_gpp",
-            "_packages": [
-             "horsemen_gpp"
-            ]
-           },
-           "prescription": {
-            "sets": 2,
-            "duration_sec": 60,
-            "note": "Hold or flow through full range — quality over speed"
-           }
-          }
-         ]
-        }
-       ],
-       "Friday": [],
-       "Saturday": [
         {
          "modality": "strength_endurance",
          "archetype": {
-          "id": "sandbag_complex",
-          "name": "Sandbag Complex (Horsemen GPP)",
+          "id": "hm_500m_lunge",
+          "name": "500 m Lunge",
           "modality": "strength_endurance",
           "category": "gpp_durability",
-          "duration_estimate_minutes": 50,
-          "required_equipment": [
-           "sandbag"
-          ],
-          "applicable_phases": [
-           "base",
-           "build",
-           "peak",
-           "maintenance",
-           "specific"
-          ],
-          "sources": [
-           "Horsemen",
-           "Gym Jones"
-          ],
-          "notes": "Horsemen-style 5–8 movement sandbag complex performed for 3–5 rounds. No rest between movements within a round; rest 60–90 seconds between rounds. Total session time is honest GPP work — the athlete accumulates fatigue across diverse movement patterns with the same implement. Sandbag loads range 60–95 lb; select load based on the athlete's capacity for quality reps across all movements. If any movement breaks down before the round is complete, load is too heavy. Horsemen philosophy: durability and repeatable output under fatigue, not peak strength. Movements include: clean & press, front squat, bent row, deadlift, lunge, shoulder carry, get-up, half moon (arc overhead from side to side), double eagle (shoulder + squat + drag).\n",
-          "slots": [
-           {
-            "role": "warm_up_movement",
-            "slot_type": "time_domain",
-            "duration_sec": 480,
-            "intensity": "light",
-            "notes": "8-min general movement warm-up: joint prep + 1 round of the complex at 60% load to learn/confirm movement patterns."
-           },
-           {
-            "role": "sandbag_complex_work",
-            "slot_type": "sets_reps",
-            "sets": 4,
-            "reps": 6,
-            "intensity": "moderate",
-            "rest_sec": 75,
-            "exercise_filter": {
-             "category": "sandbag"
-            },
-            "notes": "4 rounds of 5–6 movement complex. Default complex (6 movements × 6 reps each):\n  1. Sandbag deadlift\n  2. Sandbag clean to shoulder (alternating sides)\n  3. Sandbag front squat\n  4. Sandbag bent row\n  5. Sandbag lunge (6 per side)\n  6. Sandbag shoulder carry (20m each side)\nNo rest within the complex. 75-sec rest between rounds. Optional 7th–8th movement: half moon, sandbag get-up, or slasher variation. Selector populates from sandbag exercise pool based on available movements and athlete prerequisites.\n"
-           },
-           {
-            "role": "conditioning_finisher",
-            "slot_type": "time_domain",
-            "duration_sec": 600,
-            "intensity": "zone3",
-            "notes": "10-min conditioning piece following the complex: light jog, row, or 3 rounds of AMRAP burpees. Optional; keep intensity low — this is a cool-down stressor not a max effort."
-           }
-          ],
-          "scaling": {
-           "deload": {
-            "volume_multiplier": 0.6,
-            "intensity_pct": 0.9,
-            "notes": "Reduce to 2 rounds. Drop load 20%. Maintain all movement patterns. Extend rest to 90–120 sec between rounds."
-           },
-           "time_limited": {
-            "drop_slots": [
-             "conditioning_finisher"
-            ],
-            "notes": "Drop the finisher. Reduce complex rounds to 3. Never reduce below 3 rounds — the GPP effect requires sustained multi-round effort."
-           },
-           "equipment_limited": {
-            "substitutions": [
-             {
-              "missing_equipment": "sandbag",
-              "substitute_approach": "Substitute a heavy dumbbell or kettlebell held in both hands for sandbag deadlift and row. For carry: use kettlebell farmer carry or barbell zercher hold. Load and awkward feel cannot be fully replicated."
-             }
-            ]
-           }
-          },
-          "_package": "horsemen_gpp"
-         },
-         "is_deload": false,
-         "provenance": {
-          "package": "horsemen_gpp",
-          "borrowed": false
-         },
-         "exercises": [
-          {
-           "exercise": {
-            "id": "kb_squat_goblet",
-            "name": "Kettlebell Goblet Squat",
-            "category": "kettlebell",
-            "modality": [
-             "strength_endurance",
-             "mobility"
-            ],
-            "equipment": [
-             "kettlebell"
-            ],
-            "effort": "low",
-            "bilateral": true,
-            "movement_patterns": [
-             "squat"
-            ],
-            "requires": [
-             "hip_hinge"
-            ],
-            "unlocks": [
-             "kb_squat_double",
-             "kb_clean_single"
-            ],
-            "contraindicated_with": [
-             "knee_meniscus_post_op",
-             "hip_flexor_strain"
-            ],
-            "progressions": {
-             "load": "increase_bell_weight",
-             "volume": "increase_reps_per_set",
-             "complexity": "kb_squat_double"
-            },
-            "scaling_down": [],
-            "typical_volume": {
-             "sets": 3,
-             "reps": 10
-            },
-            "sources": [
-             "Gym Jones",
-             "Horsemen"
-            ],
-            "notes": "Bell held at chest level with both hands, elbows track inside knees. Gym Jones uses goblet squat (25#) in strength day warm-up: 2×5. Excellent teaching tool for squat mechanics. Low technical demand; appropriate as first-session squat pattern.\n",
-            "_package": "horsemen_gpp",
-            "_packages": [
-             "horsemen_gpp"
-            ]
-           },
-           "load": {
-            "duration_minutes": 8,
-            "zone_target": "Zone 1-2 (light)",
-            "zone_lower": 1,
-            "zone_upper": 2
-           },
-           "slot_role": "warm_up_movement",
-           "slot_type": "time_domain",
-           "rest_sec": null,
-           "meta": false,
-           "injury_skip": false,
-           "coverage_gap": false,
-           "equipment_gap": false,
-           "gap_reason": null,
-           "substituted_for": null,
-           "error": null,
-           "load_note": null,
-           "notes": "8-min general movement warm-up: joint prep + 1 round of the complex at 60% load to learn/confirm movement patterns.",
-           "parent_slot_role": null,
-           "skip_exercise": false
-          },
-          {
-           "exercise": null,
-           "load": {},
-           "slot_role": "sandbag_complex_work",
-           "slot_type": "sets_reps",
-           "rest_sec": 75,
-           "meta": false,
-           "injury_skip": false,
-           "coverage_gap": false,
-           "equipment_gap": false,
-           "gap_reason": null,
-           "substituted_for": null,
-           "error": "No exercise for slot 'sandbag_complex_work'",
-           "load_note": null,
-           "notes": "4 rounds of 5–6 movement complex. Default complex (6 movements × 6 reps each):\n  1. Sandbag deadlift\n  2. Sandbag clean to shoulder (alternating sides)\n  3. Sandbag front squat\n  4. Sandbag bent row\n  5. Sandbag lunge (6 per side)\n  6. Sandbag shoulder carry (20m each side)\nNo rest within the complex. 75-sec rest between rounds. Optional 7th–8th movement: half moon, sandbag get-up, or slasher variation. Selector populates from sandbag exercise pool based on available movements and athlete prerequisites.\n",
-           "parent_slot_role": null,
-           "skip_exercise": false
-          },
-          {
-           "exercise": {
-            "id": "kb_step_up",
-            "name": "Kettlebell Step-Up (Single-Arm)",
-            "category": "kettlebell",
-            "modality": [
-             "max_strength",
-             "durability"
-            ],
-            "equipment": [
-             "kettlebell"
-            ],
-            "effort": "high",
-            "bilateral": false,
-            "movement_patterns": [
-             "step_up",
-             "squat"
-            ],
-            "requires": [
-             "squat_pattern"
-            ],
-            "unlocks": [
-             "weighted_step_up"
-            ],
-            "contraindicated_with": [
-             "knee_meniscus_post_op",
-             "knee_osteoarthritis"
-            ],
-            "progressions": {
-             "load": "increase_bell_weight",
-             "volume": "increase_reps_per_set",
-             "complexity": "weighted_step_up"
-            },
-            "scaling_down": [
-             "single_leg_squat_box"
-            ],
-            "typical_volume": {
-             "sets": 5,
-             "reps": 2
-            },
-            "sources": [
-             "Gym Jones",
-             "Dan John"
-            ],
-            "notes": "Single-arm kettlebell step-up. Hold one KB at the chest (rack) or goblet position. Drive through the heel of the lead foot; no assistance from the trailing leg. 5×2 each side at a heavy bell. KB step-up approximates the Gym Jones loaded step-up protocol when a barbell is unavailable. Box height governs difficulty — a higher box increases unilateral demand.\n",
-            "_package": "horsemen_gpp",
-            "_packages": [
-             "horsemen_gpp"
-            ]
-           },
-           "load": {
-            "duration_minutes": 10,
-            "zone_target": "Zone 3 (tempo)",
-            "zone_lower": 3,
-            "zone_upper": 3
-           },
-           "slot_role": "conditioning_finisher",
-           "slot_type": "time_domain",
-           "rest_sec": null,
-           "meta": false,
-           "injury_skip": false,
-           "coverage_gap": false,
-           "equipment_gap": false,
-           "gap_reason": null,
-           "substituted_for": null,
-           "error": null,
-           "load_note": null,
-           "notes": "10-min conditioning piece following the complex: light jog, row, or 3 rounds of AMRAP burpees. Optional; keep intensity low — this is a cool-down stressor not a max effort.",
-           "parent_slot_role": null,
-           "skip_exercise": false
-          }
-         ],
-         "complementary_work": [
-          {
-           "exercise": {
-            "id": "couch_stretch",
-            "name": "Couch Stretch (hip flexor/quad)",
-            "category": "mobility",
-            "modality": [
-             "mobility"
-            ],
-            "equipment": [
-             "none"
-            ],
-            "effort": "low",
-            "bilateral": false,
-            "movement_patterns": [
-             "hip_flexion",
-             "knee_extension"
-            ],
-            "requires": [
-             "hip_flexor_stretch"
-            ],
-            "unlocks": [],
-            "contraindicated_with": [
-             "knee_meniscus_acute",
-             "patellar_tendinopathy_acute"
-            ],
-            "progressions": {
-             "volume": "increase_duration"
-            },
-            "scaling_down": [
-             "hip_flexor_stretch"
-            ],
-            "typical_volume": {
-             "sets": 2,
-             "duration_sec": 120
-            },
-            "sources": [
-             "Horsemen",
-             "Ido Portal"
-            ],
-            "notes": "Rear foot elevated against wall, knee on floor, hip driven toward wall. Targets rectus femoris and hip flexor complex simultaneously. One of the most effective hip extension mobility drills. Contraindicated with acute knee conditions due to end-range knee flexion load.",
-            "_package": "horsemen_gpp",
-            "_packages": [
-             "horsemen_gpp"
-            ]
-           },
-           "prescription": {
-            "sets": 2,
-            "duration_sec": 60,
-            "note": "Hold or flow through full range — quality over speed"
-           }
-          },
-          {
-           "exercise": {
-            "id": "hip_circle",
-            "name": "Hip Circle",
-            "category": "mobility",
-            "modality": [
-             "mobility"
-            ],
-            "equipment": [
-             "none"
-            ],
-            "effort": "low",
-            "bilateral": true,
-            "movement_patterns": [
-             "hip_flexion",
-             "rotation"
-            ],
-            "requires": [],
-            "unlocks": [
-             "hip_90_90"
-            ],
-            "contraindicated_with": [],
-            "progressions": {
-             "volume": "increase_duration"
-            },
-            "scaling_down": [],
-            "typical_volume": {
-             "sets": 2,
-             "reps": 10
-            },
-            "sources": [
-             "Ido Portal",
-             "Horsemen"
-            ],
-            "notes": "Standing hip circumduction — large circles in both directions. Standard joint prep for any lower body session. Low threshold entry movement for hip mobility warm-up sequences.",
-            "_package": "horsemen_gpp",
-            "_packages": [
-             "horsemen_gpp"
-            ]
-           },
-           "prescription": {
-            "sets": 2,
-            "duration_sec": 60,
-            "note": "Hold or flow through full range — quality over speed"
-           }
-          },
-          {
-           "exercise": {
-            "id": "hip_flexor_stretch",
-            "name": "Hip Flexor Stretch (kneeling)",
-            "category": "mobility",
-            "modality": [
-             "mobility"
-            ],
-            "equipment": [
-             "none"
-            ],
-            "effort": "low",
-            "bilateral": false,
-            "movement_patterns": [
-             "hip_flexion"
-            ],
-            "requires": [],
-            "unlocks": [
-             "couch_stretch"
-            ],
-            "contraindicated_with": [],
-            "progressions": {
-             "volume": "increase_duration",
-             "complexity": "couch_stretch"
-            },
-            "scaling_down": [],
-            "typical_volume": {
-             "sets": 2,
-             "duration_sec": 60
-            },
-            "sources": [
-             "Horsemen",
-             "Ido Portal"
-            ],
-            "notes": "Half-kneeling lunge position, drive hips forward to load iliopsoas. Posterior pelvic tilt cue to deepen stretch. Essential counter to prolonged sitting and heavy squat/deadlift days.",
-            "_package": "horsemen_gpp",
-            "_packages": [
-             "horsemen_gpp"
-            ]
-           },
-           "prescription": {
-            "sets": 2,
-            "duration_sec": 60,
-            "note": "Hold or flow through full range — quality over speed"
-           }
-          }
-         ]
-        }
-       ],
-       "Sunday": [
-        {
-         "modality": "aerobic_base",
-         "archetype": {
-          "id": "horsemen_aerobic_base",
-          "name": "Horsemen Aerobic Base (Run / Row / Ruck)",
-          "modality": "aerobic_base",
-          "category": "conditioning",
-          "duration_estimate_minutes": 50,
-          "required_equipment": [
-           "open_space"
-          ],
-          "applicable_phases": [
-           "base",
-           "build",
-           "peak",
-           "taper",
-           "deload",
-           "maintenance",
-           "specific"
-          ],
           "training_levels": [
-           "novice",
            "intermediate",
            "advanced",
            "elite"
           ],
+          "pool_only": true,
+          "duration_estimate_minutes": 30,
+          "slots": [
+           {
+            "role": "lunge",
+            "slot_type": "distance",
+            "distance_m": 50,
+            "sets": 10,
+            "exercise_filter": {
+             "exercise_ids": [
+              "walking_lunge"
+             ],
+             "ordered": true
+            },
+            "notes": "10 x 50 m of walking lunges, changing how the weight is carried every 50 m — suitcase, farmer, overhead, crosswalk — and adding then subtracting weight progressively. The source gives no loads."
+           }
+          ],
+          "required_equipment": [
+           "kettlebell",
+           "open_space"
+          ],
           "sources": [
            "Horsemen"
           ],
-          "notes": "Steady aerobic work. In the Horsemen macro the aerobic base is infrastructure, not the objective: it exists so power-endurance and job-specific blocks can be repeated without accumulating unrecoverable fatigue, and so the 3-mile PT-test standard holds while the strength block is running. Modality is interchangeable (run, row, bike, ruck) — pick whatever the athlete's current lower-body load can absorb. Recovery-day versions of this session are held at or below 65% MHR, which is the deload scaling below.\n",
-          "slots": [
-           {
-            "role": "aerobic_main",
-            "slot_type": "time_domain",
-            "duration_sec": 2700,
-            "intensity": "zone2",
-            "exercise_filter": {
-             "category": "aerobic"
-            },
-            "notes": "45 min continuous at conversational pace. Nasal breathing is the pace check — if you cannot breathe through your nose, slow down. Duration scales with the athlete's session budget; intensity does not.\n"
-           },
-           {
-            "role": "cool_down",
-            "slot_type": "time_domain",
-            "duration_sec": 300,
-            "intensity": "zone1",
-            "exercise_filter": {
-             "category": "mobility"
-            },
-            "notes": "5 min easy walk plus hip flexor and calf work."
-           }
-          ],
-          "scaling": {
-           "deload": {
-            "volume_multiplier": 0.6,
-            "notes": "Active recovery session. Cap heart rate at 65% MHR, 25-30 min, and prefer bike or row over running so the legs unload.\n"
-           },
-           "time_limited": {
-            "drop_slots": [
-             "cool_down"
-            ],
-            "notes": "Keep the main effort and cut the cool-down. Below 20 min this session is not worth doing as aerobic base — ruck to work instead.\n"
-           },
-           "equipment_limited": {
-            "substitutions": [
-             {
-              "missing_equipment": "open_space",
-              "substitute_approach": "Row or bike at the same duration and heart rate."
-             },
-             {
-              "missing_equipment": "rower",
-              "substitute_approach": "Run, or ruck at 20-25 kg for the same duration."
-             }
-            ]
-           }
-          },
+          "notes": "500 m of walking lunges in ten 50 m legs, the carry changing every leg (suitcase, farmer, overhead and crosswalk) and the weight added then taken away progressively. The source gives no loads and no time; it leaves the weight to the athlete.",
           "_package": "horsemen_gpp"
          },
          "is_deload": false,
@@ -2833,60 +2294,56 @@
           "package": "horsemen_gpp",
           "borrowed": false
          },
+         "category": "smmf",
+         "category_name": "SMMF",
+         "pieces": [
+          {
+           "category": "smmf",
+           "archetype_id": "hm_500m_lunge",
+           "name": "500 m Lunge"
+          }
+         ],
          "exercises": [
           {
            "exercise": {
-            "id": "run_zone2",
-            "name": "Zone 2 Run",
-            "category": "aerobic",
+            "id": "walking_lunge",
+            "named_only": true,
+            "name": "Walking Lunge",
+            "category": "bodyweight",
             "modality": [
-             "aerobic_base"
+             "strength_endurance",
+             "durability"
             ],
             "equipment": [
              "open_space"
             ],
-            "effort": "low",
-            "bilateral": true,
+            "effort": "medium",
+            "bilateral": false,
             "movement_patterns": [
-             "aerobic_monostructural",
+             "squat",
              "locomotion"
             ],
             "requires": [],
-            "unlocks": [
-             "run_tempo_horsemen"
-            ],
+            "unlocks": [],
             "contraindicated_with": [
-             "ankle_sprain",
-             "achilles_tendinopathy",
-             "patellar_tendinopathy",
-             "knee_meniscus_post_op"
+             "knee_meniscus_post_op",
+             "patellar_tendinopathy"
             ],
-            "progressions": {
-             "volume": "increase_duration"
-            },
-            "scaling_down": [
-             "ruck"
-            ],
-            "typical_volume": {
-             "duration_sec": 2700
-            },
             "sources": [
              "Horsemen"
             ],
-            "notes": "Conversational-pace run. The Horsemen aerobic base exists to support repeatable output, not to chase run times — the 3-mile-under-20:00 PT standard is a prerequisite, not the training target. Nasal breathing is the pace check. Recovery-day runs are capped at 65% MHR.",
+            "notes": "Lunging for distance. The SMMF 500 m lunge goes 10 x 50 m, adding then subtracting weight and changing how it is carried every 50 m (suitcase, farmer, overhead, crosswalk).",
             "_package": "horsemen_gpp",
             "_packages": [
              "horsemen_gpp"
             ]
            },
            "load": {
-            "duration_minutes": 45,
-            "zone_target": "Zone 1-2 (conversational pace)",
-            "zone_lower": 1,
-            "zone_upper": 2
+            "distance_m": 50,
+            "sets": 10
            },
-           "slot_role": "aerobic_main",
-           "slot_type": "time_domain",
+           "slot_role": "lunge",
+           "slot_type": "distance",
            "rest_sec": null,
            "meta": false,
            "injury_skip": false,
@@ -2896,239 +2353,29 @@
            "substituted_for": null,
            "error": null,
            "load_note": null,
-           "notes": "45 min continuous at conversational pace. Nasal breathing is the pace check — if you cannot breathe through your nose, slow down. Duration scales with the athlete's session budget; intensity does not.\n",
-           "parent_slot_role": null,
-           "skip_exercise": false
-          },
-          {
-           "exercise": {
-            "id": "ankle_circle",
-            "name": "Ankle Circle",
-            "category": "mobility",
-            "modality": [
-             "mobility"
-            ],
-            "equipment": [
-             "none"
-            ],
-            "effort": "low",
-            "bilateral": false,
-            "movement_patterns": [],
-            "requires": [],
-            "unlocks": [],
-            "contraindicated_with": [],
-            "progressions": {
-             "volume": "increase_duration"
-            },
-            "scaling_down": [],
-            "typical_volume": {
-             "sets": 1,
-             "reps": 15
-            },
-            "sources": [
-             "Horsemen",
-             "Ido Portal"
-            ],
-            "notes": "Non-weight-bearing ankle circumduction. Standard joint prep before any lower body or locomotive work. Perform both clockwise and counterclockwise.",
-            "_package": "horsemen_gpp",
-            "_packages": [
-             "horsemen_gpp"
-            ]
-           },
-           "load": {
-            "duration_minutes": 5,
-            "zone_target": "Zone 1 (recovery)",
-            "zone_lower": 1,
-            "zone_upper": 1
-           },
-           "slot_role": "cool_down",
-           "slot_type": "time_domain",
-           "rest_sec": null,
-           "meta": false,
-           "injury_skip": false,
-           "coverage_gap": false,
-           "equipment_gap": false,
-           "gap_reason": null,
-           "substituted_for": null,
-           "error": null,
-           "load_note": null,
-           "notes": "5 min easy walk plus hip flexor and calf work.",
+           "notes": "10 x 50 m of walking lunges, changing how the weight is carried every 50 m — suitcase, farmer, overhead, crosswalk — and adding then subtracting weight progressively. The source gives no loads.",
            "parent_slot_role": null,
            "skip_exercise": false
           }
          ],
-         "complementary_work": [
-          {
-           "exercise": {
-            "id": "couch_stretch",
-            "name": "Couch Stretch (hip flexor/quad)",
-            "category": "mobility",
-            "modality": [
-             "mobility"
-            ],
-            "equipment": [
-             "none"
-            ],
-            "effort": "low",
-            "bilateral": false,
-            "movement_patterns": [
-             "hip_flexion",
-             "knee_extension"
-            ],
-            "requires": [
-             "hip_flexor_stretch"
-            ],
-            "unlocks": [],
-            "contraindicated_with": [
-             "knee_meniscus_acute",
-             "patellar_tendinopathy_acute"
-            ],
-            "progressions": {
-             "volume": "increase_duration"
-            },
-            "scaling_down": [
-             "hip_flexor_stretch"
-            ],
-            "typical_volume": {
-             "sets": 2,
-             "duration_sec": 120
-            },
-            "sources": [
-             "Horsemen",
-             "Ido Portal"
-            ],
-            "notes": "Rear foot elevated against wall, knee on floor, hip driven toward wall. Targets rectus femoris and hip flexor complex simultaneously. One of the most effective hip extension mobility drills. Contraindicated with acute knee conditions due to end-range knee flexion load.",
-            "_package": "horsemen_gpp",
-            "_packages": [
-             "horsemen_gpp"
-            ]
-           },
-           "prescription": {
-            "sets": 2,
-            "duration_sec": 60,
-            "note": "Hold or flow through full range — quality over speed"
-           }
-          },
-          {
-           "exercise": {
-            "id": "hip_circle",
-            "name": "Hip Circle",
-            "category": "mobility",
-            "modality": [
-             "mobility"
-            ],
-            "equipment": [
-             "none"
-            ],
-            "effort": "low",
-            "bilateral": true,
-            "movement_patterns": [
-             "hip_flexion",
-             "rotation"
-            ],
-            "requires": [],
-            "unlocks": [
-             "hip_90_90"
-            ],
-            "contraindicated_with": [],
-            "progressions": {
-             "volume": "increase_duration"
-            },
-            "scaling_down": [],
-            "typical_volume": {
-             "sets": 2,
-             "reps": 10
-            },
-            "sources": [
-             "Ido Portal",
-             "Horsemen"
-            ],
-            "notes": "Standing hip circumduction — large circles in both directions. Standard joint prep for any lower body session. Low threshold entry movement for hip mobility warm-up sequences.",
-            "_package": "horsemen_gpp",
-            "_packages": [
-             "horsemen_gpp"
-            ]
-           },
-           "prescription": {
-            "sets": 2,
-            "duration_sec": 60,
-            "note": "Hold or flow through full range — quality over speed"
-           }
-          },
-          {
-           "exercise": {
-            "id": "hip_flexor_stretch",
-            "name": "Hip Flexor Stretch (kneeling)",
-            "category": "mobility",
-            "modality": [
-             "mobility"
-            ],
-            "equipment": [
-             "none"
-            ],
-            "effort": "low",
-            "bilateral": false,
-            "movement_patterns": [
-             "hip_flexion"
-            ],
-            "requires": [],
-            "unlocks": [
-             "couch_stretch"
-            ],
-            "contraindicated_with": [],
-            "progressions": {
-             "volume": "increase_duration",
-             "complexity": "couch_stretch"
-            },
-            "scaling_down": [],
-            "typical_volume": {
-             "sets": 2,
-             "duration_sec": 60
-            },
-            "sources": [
-             "Horsemen",
-             "Ido Portal"
-            ],
-            "notes": "Half-kneeling lunge position, drive hips forward to load iliopsoas. Posterior pelvic tilt cue to deepen stretch. Essential counter to prolonged sitting and heavy squat/deadlift days.",
-            "_package": "horsemen_gpp",
-            "_packages": [
-             "horsemen_gpp"
-            ]
-           },
-           "prescription": {
-            "sets": 2,
-            "duration_sec": 60,
-            "note": "Hold or flow through full range — quality over speed"
-           }
-          }
-         ]
+         "complementary_work": []
         }
        ]
       },
       "phase_id": "strength",
       "phase_name": "Strength",
-      "track_id": "four_month_macro",
-      "tests_skipped": [
-       {
-        "archetypes": [
-         "horsemen_pt_test"
-        ],
-        "phase_id": "strength",
-        "week_in_phase": 1,
-        "reason": "injury_skip"
-       }
-      ]
+      "track_id": "four_month_macro"
      }
     ],
     "volume_summary": [
      {
       "week_number": 1,
-      "strength_sets": 0,
-      "strength_minutes": 18,
-      "cond_minutes": 150,
-      "dur_minutes": 5,
+      "strength_sets": 10,
+      "strength_minutes": 0,
+      "cond_minutes": 20,
+      "dur_minutes": 0,
       "mob_minutes": 0,
-      "total_minutes": 173
+      "total_minutes": 50
      }
     ],
     "phase_summary": [
@@ -3142,41 +2389,32 @@
       "weeks": 1,
       "deload_weeks": 0,
       "sessions_per_week": {
-       "aerobic_base": 3.0,
-       "durability": 1.0,
+       "mixed_modal_conditioning": 1.0,
        "strength_endurance": 1.0
       },
       "minutes_per_week": {
-       "first": 173,
-       "last": 173,
-       "mean": 173
+       "first": 50,
+       "last": 50,
+       "mean": 50
       },
       "intensity": {
-       "zone1_2": 0.896,
-       "zone3": 0.0,
+       "zone1_2": 0.0,
+       "zone3": 0.4,
        "zone4_5": 0.0,
-       "max_effort": 0.104
+       "max_effort": 0.6
       },
       "archetypes": [
        {
-        "id": "horsemen_aerobic_base",
-        "name": "Horsemen Aerobic Base (Run / Row / Ruck)",
-        "modality": "aerobic_base",
-        "sessions": 3,
-        "per_week": 3.0,
-        "status": null
-       },
-       {
-        "id": "loaded_carry_circuit",
-        "name": "Loaded Carry Circuit (Farmer / Rack / Overhead)",
-        "modality": "durability",
+        "id": "hm_three_mile_run_all_out",
+        "name": "3-Mile Run, All Out",
+        "modality": "mixed_modal_conditioning",
         "sessions": 1,
         "per_week": 1.0,
         "status": null
        },
        {
-        "id": "sandbag_complex",
-        "name": "Sandbag Complex (Horsemen GPP)",
+        "id": "hm_500m_lunge",
+        "name": "500 m Lunge",
         "modality": "strength_endurance",
         "sessions": 1,
         "per_week": 1.0,
@@ -3185,89 +2423,36 @@
       ],
       "exercises": [
        {
-        "id": "run_zone2",
-        "name": "Zone 2 Run",
-        "modality": "aerobic_base",
-        "sessions": 3,
-        "per_week": 3.0,
-        "status": null
-       },
-       {
-        "id": "ankle_circle",
-        "name": "Ankle Circle",
-        "modality": "aerobic_base",
+        "id": "run_tempo_horsemen",
+        "name": "Tempo Run (Zone 3)",
+        "modality": "mixed_modal_conditioning",
         "sessions": 1,
         "per_week": 1.0,
         "status": null
        },
        {
-        "id": "couch_stretch",
-        "name": "Couch Stretch (hip flexor/quad)",
-        "modality": "aerobic_base",
-        "sessions": 1,
-        "per_week": 1.0,
-        "status": null
-       },
-       {
-        "id": "hip_flexor_stretch",
-        "name": "Hip Flexor Stretch (kneeling)",
-        "modality": "aerobic_base",
-        "sessions": 1,
-        "per_week": 1.0,
-        "status": null
-       },
-       {
-        "id": "kb_squat_goblet",
-        "name": "Kettlebell Goblet Squat",
+        "id": "walking_lunge",
+        "name": "Walking Lunge",
         "modality": "strength_endurance",
-        "sessions": 1,
-        "per_week": 1.0,
-        "status": null
-       },
-       {
-        "id": "kb_step_up",
-        "name": "Kettlebell Step-Up (Single-Arm)",
-        "modality": "strength_endurance",
-        "sessions": 1,
-        "per_week": 1.0,
-        "status": null
-       },
-       {
-        "id": "shoulder_circle",
-        "name": "Shoulder Circle",
-        "modality": "durability",
         "sessions": 1,
         "per_week": 1.0,
         "status": null
        }
       ],
       "lifts": [],
-      "tests": [
-       {
-        "week_number": 1,
-        "week_in_phase": 1,
-        "status": "skipped",
-        "reason": "injury_skip",
-        "archetype": {
-         "id": "horsemen_pt_test",
-         "name": "Horsemen PT Test"
-        }
-       }
-      ],
+      "tests": [],
       "dropped": {
        "archetypes": [],
        "exercises": []
       },
-      "changes": [
-       "Test skipped: Horsemen PT Test, week 1 (injury skip)"
-      ]
+      "changes": []
      }
     ],
     "compromises": [
-     "No max strength session in horsemen_gpp for a novice athlete — scheduled as aerobic base instead.",
-     "Loaded Carry Circuit (Farmer / Rack / Overhead): 'circuit_rounds_structure' slot skipped — no matching exercises found for current equipment and training level.",
-     "No mixed modal conditioning session in horsemen_gpp for the base phase — scheduled as aerobic base instead.",
-     "Sandbag Complex (Horsemen GPP): 'sandbag_complex_work' slot requires sandbag exercises — add sandbag to your equipment profile to fill this slot."
+     "With 5 training days the week leaves out: Recovery (the source trains 6 days).",
+     "No Strength workout fits as written (equipment, injuries or 52 minutes); the day is left out.",
+     "No Job specific (long) workout fits as written (equipment, injuries or 52 minutes); the day is left out.",
+     "No warm-up fits in 60 minutes beside the day's workout; warm up on your own."
     ],
     "coverage_report": {
      "philosophy": "horsemen_gpp",
@@ -3275,36 +2460,9 @@
      "unfilled_sessions": [],
      "unfilled_slots": [],
      "borrowed_sessions": [],
-     "substituted_sessions": [
-      {
-       "week": 1,
-       "day": "Monday",
-       "modality": "aerobic_base",
-       "substituted_for": "max_strength",
-       "archetype": "horsemen_aerobic_base",
-       "reason": "NO_ARCHETYPE_FOR_PHASE_OR_LEVEL"
-      },
-      {
-       "week": 1,
-       "day": "Thursday",
-       "modality": "aerobic_base",
-       "substituted_for": "mixed_modal_conditioning",
-       "archetype": "horsemen_aerobic_base",
-       "reason": "NO_ARCHETYPE_FOR_PHASE_OR_LEVEL"
-      }
-     ],
+     "substituted_sessions": [],
      "placed_tests": [],
-     "skipped_tests": [
-      {
-       "week": 1,
-       "archetypes": [
-        "horsemen_pt_test"
-       ],
-       "phase_id": "strength",
-       "week_in_phase": 1,
-       "reason": "injury_skip"
-      }
-     ]
+     "skipped_tests": []
     },
     "generation_trace": {
      "weeks": [
@@ -3376,131 +2534,38 @@
          }
         },
         "is_deload": false,
-        "deload_freq_weeks": 4
+        "deload_freq_weeks": null
        },
        "sessions": {
-        "Monday": [
+        "Wednesday": [
          {
-          "modality": "aerobic_base",
+          "modality": "mixed_modal_conditioning",
           "archetype": {
-           "selected_id": "horsemen_aerobic_base",
-           "filter_counts": {
-            "by_modality": 1,
-            "by_phase": 1,
-            "by_level": 1,
-            "by_equipment": 1,
-            "by_duration": 1,
-            "final": 1
-           },
-           "candidates": [
-            {
-             "id": "horsemen_aerobic_base",
-             "name": "Horsemen Aerobic Base (Run / Row / Ruck)",
-             "score": 6,
-             "breakdown": {
-              "equipment": 6,
-              "source": 0,
-              "recency": 0,
-              "injury_penalty": 0,
-              "total": 6
-             }
-            }
-           ]
+           "selected_id": "hm_three_mile_run_all_out",
+           "filter_counts": {},
+           "candidates": [],
+           "selection_reason": "power_endurance"
           },
           "slots": [
            {
             "slot_index": 0,
-            "slot_role": "aerobic_main",
-            "slot_type": "time_domain",
+            "slot_role": "run_3_mile",
+            "slot_type": "for_time",
             "meta": false,
             "movement_pattern": null,
-            "selected_id": "run_zone2",
+            "selected_id": "run_tempo_horsemen",
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 29,
-             "after_package": 29,
-             "after_equip": 18,
-             "after_filter": 2,
+             "in_pool": 31,
+             "after_package": 31,
+             "after_equip": 20,
+             "after_filter": 1,
              "final": 1
             },
             "candidates": [
              {
-              "id": "run_zone2",
-              "name": "Zone 2 Run",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": 1.0,
-              "breakdown": {
-               "recency_penalty": 0,
-               "unlocks_bonus": 0.5,
-               "pattern_bonus": 0.5
-              }
-             }
-            ]
-           },
-           {
-            "slot_index": 1,
-            "slot_role": "cool_down",
-            "slot_type": "time_domain",
-            "meta": false,
-            "movement_pattern": null,
-            "selected_id": "hip_flexor_stretch",
-            "injury_blocked": false,
-            "filter_counts": {
-             "in_pool": 29,
-             "after_package": 29,
-             "after_equip": 18,
-             "after_filter": 6,
-             "final": 6
-            },
-            "candidates": [
-             {
-              "id": "hip_flexor_stretch",
-              "name": "Hip Flexor Stretch (kneeling)",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": 1.0,
-              "breakdown": {
-               "recency_penalty": 0,
-               "unlocks_bonus": 0.5,
-               "pattern_bonus": 0.5
-              }
-             },
-             {
-              "id": "shoulder_circle",
-              "name": "Shoulder Circle",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": 0.5,
-              "breakdown": {
-               "recency_penalty": 0,
-               "unlocks_bonus": 0.5,
-               "pattern_bonus": 0
-              }
-             },
-             {
-              "id": "couch_stretch",
-              "name": "Couch Stretch (hip flexor/quad)",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": 0.5,
-              "breakdown": {
-               "recency_penalty": 0,
-               "unlocks_bonus": 0,
-               "pattern_bonus": 0.5
-              }
-             },
-             {
-              "id": "ankle_circle",
-              "name": "Ankle Circle",
+              "id": "run_tempo_horsemen",
+              "name": "Tempo Run (Zone 3)",
               "package": "horsemen_gpp",
               "packages": [
                "horsemen_gpp"
@@ -3509,35 +2574,7 @@
               "breakdown": {
                "recency_penalty": 0,
                "unlocks_bonus": 0,
-               "pattern_bonus": 0
-              }
-             },
-             {
-              "id": "neck_rotation",
-              "name": "Neck Rotation",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": 0,
-              "breakdown": {
-               "recency_penalty": 0,
-               "unlocks_bonus": 0,
-               "pattern_bonus": 0
-              }
-             },
-             {
-              "id": "neck_lateral_flexion",
-              "name": "Neck Lateral Flexion",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": 0,
-              "breakdown": {
-               "recency_penalty": 0,
-               "unlocks_bonus": 0,
-               "pattern_bonus": 0
+               "pattern_bonus": 0.5
               }
              }
             ]
@@ -3545,954 +2582,54 @@
           ],
           "progression": [
            {
-            "exercise_id": "run_zone2",
-            "exercise_name": "Zone 2 Run",
-            "slot_role": "aerobic_main",
-            "slot_type": "time_domain",
-            "model": "intensity_split_shift",
+            "exercise_id": "run_tempo_horsemen",
+            "exercise_name": "Tempo Run (Zone 3)",
+            "slot_role": "run_3_mile",
+            "slot_type": "for_time",
+            "model": "as_written",
             "week": 1,
             "phase": "base",
-            "level": "novice",
+            "level": "intermediate",
             "is_deload": false,
             "output": {
-             "duration_minutes": 45,
-             "zone_target": "Zone 1-2 (conversational pace)",
-             "zone_lower": 1,
-             "zone_upper": 2
-            }
-           },
-           {
-            "exercise_id": "hip_flexor_stretch",
-            "exercise_name": "Hip Flexor Stretch (kneeling)",
-            "slot_role": "cool_down",
-            "slot_type": "time_domain",
-            "model": "intensity_split_shift",
-            "week": 1,
-            "phase": "base",
-            "level": "novice",
-            "is_deload": false,
-            "output": {
-             "duration_minutes": 5,
-             "zone_target": "Zone 1 (recovery)",
-             "zone_lower": 1,
-             "zone_upper": 1
+             "target_rounds": 1,
+             "format": "FOR TIME",
+             "time_minutes": 20,
+             "distance_km": 4.83
             }
            }
           ]
          }
         ],
-        "Tuesday": [
-         {
-          "modality": "durability",
-          "archetype": {
-           "selected_id": "loaded_carry_circuit",
-           "filter_counts": {
-            "by_modality": 2,
-            "by_phase": 2,
-            "by_level": 2,
-            "by_equipment": 2,
-            "by_duration": 2,
-            "final": 2
-           },
-           "candidates": [
-            {
-             "id": "loaded_carry_circuit",
-             "name": "Loaded Carry Circuit (Farmer / Rack / Overhead)",
-             "score": 4,
-             "breakdown": {
-              "equipment": 6,
-              "source": 0,
-              "recency": 0,
-              "injury_penalty": -2,
-              "total": 4
-             }
-            },
-            {
-             "id": "ruck_session",
-             "name": "Ruck Session (Distance × Load)",
-             "score": -8,
-             "breakdown": {
-              "equipment": 0,
-              "source": 0,
-              "recency": 0,
-              "injury_penalty": -8,
-              "total": -8
-             }
-            }
-           ]
-          },
-          "slots": [
-           {
-            "slot_index": 0,
-            "slot_role": "joint_prep",
-            "slot_type": "time_domain",
-            "meta": false,
-            "movement_pattern": null,
-            "selected_id": "shoulder_circle",
-            "injury_blocked": false,
-            "filter_counts": {
-             "in_pool": 29,
-             "after_package": 29,
-             "after_equip": 18,
-             "after_filter": 6,
-             "final": 6
-            },
-            "candidates": [
-             {
-              "id": "shoulder_circle",
-              "name": "Shoulder Circle",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": 0.5,
-              "breakdown": {
-               "recency_penalty": 0,
-               "unlocks_bonus": 0.5,
-               "pattern_bonus": 0
-              }
-             },
-             {
-              "id": "couch_stretch",
-              "name": "Couch Stretch (hip flexor/quad)",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": 0.5,
-              "breakdown": {
-               "recency_penalty": 0,
-               "unlocks_bonus": 0,
-               "pattern_bonus": 0.5
-              }
-             },
-             {
-              "id": "ankle_circle",
-              "name": "Ankle Circle",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": 0,
-              "breakdown": {
-               "recency_penalty": 0,
-               "unlocks_bonus": 0,
-               "pattern_bonus": 0
-              }
-             },
-             {
-              "id": "neck_rotation",
-              "name": "Neck Rotation",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": 0,
-              "breakdown": {
-               "recency_penalty": 0,
-               "unlocks_bonus": 0,
-               "pattern_bonus": 0
-              }
-             },
-             {
-              "id": "neck_lateral_flexion",
-              "name": "Neck Lateral Flexion",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": 0,
-              "breakdown": {
-               "recency_penalty": 0,
-               "unlocks_bonus": 0,
-               "pattern_bonus": 0
-              }
-             },
-             {
-              "id": "hip_flexor_stretch",
-              "name": "Hip Flexor Stretch (kneeling)",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": -1.0,
-              "breakdown": {
-               "recency_penalty": -2,
-               "unlocks_bonus": 0.5,
-               "pattern_bonus": 0.5
-              }
-             }
-            ]
-           },
-           {
-            "slot_index": 1,
-            "slot_role": "farmer_carry",
-            "slot_type": "for_time",
-            "meta": false,
-            "movement_pattern": "farmer_carry",
-            "selected_id": null,
-            "injury_blocked": false,
-            "filter_counts": {
-             "in_pool": 29,
-             "after_package": 29,
-             "after_equip": 18,
-             "after_filter": 0,
-             "final": 0
-            },
-            "candidates": []
-           },
-           {
-            "slot_index": 2,
-            "slot_role": "rack_carry",
-            "slot_type": "for_time",
-            "meta": false,
-            "movement_pattern": "rack_carry",
-            "selected_id": null,
-            "injury_blocked": false,
-            "filter_counts": {
-             "in_pool": 29,
-             "after_package": 29,
-             "after_equip": 18,
-             "after_filter": 0,
-             "final": 0
-            },
-            "candidates": []
-           },
-           {
-            "slot_index": 3,
-            "slot_role": "overhead_carry",
-            "slot_type": "for_time",
-            "meta": false,
-            "movement_pattern": "vertical_push",
-            "selected_id": null,
-            "injury_blocked": true,
-            "filter_counts": {
-             "in_pool": 29,
-             "after_package": 29,
-             "after_equip": 18,
-             "after_filter": 0,
-             "final": 0
-            },
-            "candidates": []
-           },
-           {
-            "slot_index": 4,
-            "slot_role": "circuit_rounds_structure",
-            "slot_type": "sets_reps",
-            "meta": true,
-            "movement_pattern": null,
-            "selected_id": null,
-            "injury_blocked": false,
-            "filter_counts": {},
-            "candidates": []
-           }
-          ],
-          "progression": [
-           {
-            "exercise_id": "shoulder_circle",
-            "exercise_name": "Shoulder Circle",
-            "slot_role": "joint_prep",
-            "slot_type": "time_domain",
-            "model": "time_to_task",
-            "week": 1,
-            "phase": "base",
-            "level": "novice",
-            "is_deload": false,
-            "output": {
-             "duration_minutes": 5,
-             "zone_target": "Zone 1-2 (light)",
-             "zone_lower": 1,
-             "zone_upper": 2
-            }
-           }
-          ]
-         }
-        ],
-        "Wednesday": [],
         "Thursday": [
-         {
-          "modality": "aerobic_base",
-          "archetype": {
-           "selected_id": "horsemen_aerobic_base",
-           "filter_counts": {
-            "by_modality": 1,
-            "by_phase": 1,
-            "by_level": 1,
-            "by_equipment": 1,
-            "by_duration": 1,
-            "final": 1
-           },
-           "candidates": [
-            {
-             "id": "horsemen_aerobic_base",
-             "name": "Horsemen Aerobic Base (Run / Row / Ruck)",
-             "score": 3,
-             "breakdown": {
-              "equipment": 6,
-              "source": 0,
-              "recency": -3,
-              "injury_penalty": 0,
-              "total": 3
-             }
-            }
-           ]
-          },
-          "slots": [
-           {
-            "slot_index": 0,
-            "slot_role": "aerobic_main",
-            "slot_type": "time_domain",
-            "meta": false,
-            "movement_pattern": null,
-            "selected_id": "run_zone2",
-            "injury_blocked": false,
-            "filter_counts": {
-             "in_pool": 29,
-             "after_package": 29,
-             "after_equip": 18,
-             "after_filter": 2,
-             "final": 1
-            },
-            "candidates": [
-             {
-              "id": "run_zone2",
-              "name": "Zone 2 Run",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": -1.0,
-              "breakdown": {
-               "recency_penalty": -2,
-               "unlocks_bonus": 0.5,
-               "pattern_bonus": 0.5
-              }
-             }
-            ]
-           },
-           {
-            "slot_index": 1,
-            "slot_role": "cool_down",
-            "slot_type": "time_domain",
-            "meta": false,
-            "movement_pattern": null,
-            "selected_id": "couch_stretch",
-            "injury_blocked": false,
-            "filter_counts": {
-             "in_pool": 29,
-             "after_package": 29,
-             "after_equip": 18,
-             "after_filter": 6,
-             "final": 6
-            },
-            "candidates": [
-             {
-              "id": "couch_stretch",
-              "name": "Couch Stretch (hip flexor/quad)",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": 0.5,
-              "breakdown": {
-               "recency_penalty": 0,
-               "unlocks_bonus": 0,
-               "pattern_bonus": 0.5
-              }
-             },
-             {
-              "id": "ankle_circle",
-              "name": "Ankle Circle",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": 0,
-              "breakdown": {
-               "recency_penalty": 0,
-               "unlocks_bonus": 0,
-               "pattern_bonus": 0
-              }
-             },
-             {
-              "id": "neck_rotation",
-              "name": "Neck Rotation",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": 0,
-              "breakdown": {
-               "recency_penalty": 0,
-               "unlocks_bonus": 0,
-               "pattern_bonus": 0
-              }
-             },
-             {
-              "id": "neck_lateral_flexion",
-              "name": "Neck Lateral Flexion",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": 0,
-              "breakdown": {
-               "recency_penalty": 0,
-               "unlocks_bonus": 0,
-               "pattern_bonus": 0
-              }
-             },
-             {
-              "id": "hip_flexor_stretch",
-              "name": "Hip Flexor Stretch (kneeling)",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": -1.0,
-              "breakdown": {
-               "recency_penalty": -2,
-               "unlocks_bonus": 0.5,
-               "pattern_bonus": 0.5
-              }
-             },
-             {
-              "id": "shoulder_circle",
-              "name": "Shoulder Circle",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": -1.5,
-              "breakdown": {
-               "recency_penalty": -2,
-               "unlocks_bonus": 0.5,
-               "pattern_bonus": 0
-              }
-             }
-            ]
-           }
-          ],
-          "progression": [
-           {
-            "exercise_id": "run_zone2",
-            "exercise_name": "Zone 2 Run",
-            "slot_role": "aerobic_main",
-            "slot_type": "time_domain",
-            "model": "intensity_split_shift",
-            "week": 1,
-            "phase": "base",
-            "level": "novice",
-            "is_deload": false,
-            "output": {
-             "duration_minutes": 45,
-             "zone_target": "Zone 1-2 (conversational pace)",
-             "zone_lower": 1,
-             "zone_upper": 2
-            }
-           },
-           {
-            "exercise_id": "couch_stretch",
-            "exercise_name": "Couch Stretch (hip flexor/quad)",
-            "slot_role": "cool_down",
-            "slot_type": "time_domain",
-            "model": "intensity_split_shift",
-            "week": 1,
-            "phase": "base",
-            "level": "novice",
-            "is_deload": false,
-            "output": {
-             "duration_minutes": 5,
-             "zone_target": "Zone 1 (recovery)",
-             "zone_lower": 1,
-             "zone_upper": 1
-            }
-           }
-          ]
-         }
-        ],
-        "Friday": [],
-        "Saturday": [
          {
           "modality": "strength_endurance",
           "archetype": {
-           "selected_id": "sandbag_complex",
-           "filter_counts": {
-            "by_modality": 2,
-            "by_phase": 1,
-            "by_level": 1,
-            "by_equipment": 1,
-            "by_duration": 1,
-            "final": 1
-           },
-           "candidates": [
-            {
-             "id": "sandbag_complex",
-             "name": "Sandbag Complex (Horsemen GPP)",
-             "score": -10,
-             "breakdown": {
-              "equipment": 0,
-              "source": 0,
-              "recency": 0,
-              "injury_penalty": 0,
-              "total": 0
-             }
-            }
-           ]
+           "selected_id": "hm_500m_lunge",
+           "filter_counts": {},
+           "candidates": [],
+           "selection_reason": "smmf"
           },
           "slots": [
            {
             "slot_index": 0,
-            "slot_role": "warm_up_movement",
-            "slot_type": "time_domain",
+            "slot_role": "lunge",
+            "slot_type": "distance",
             "meta": false,
             "movement_pattern": null,
-            "selected_id": "kb_squat_goblet",
+            "selected_id": "walking_lunge",
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 29,
-             "after_package": 29,
-             "after_equip": 18,
-             "after_filter": 10,
-             "final": 10
-            },
-            "candidates": [
-             {
-              "id": "kb_squat_goblet",
-              "name": "Kettlebell Goblet Squat",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": 1.0,
-              "breakdown": {
-               "recency_penalty": 0,
-               "unlocks_bonus": 0.5,
-               "pattern_bonus": 0.5
-              }
-             },
-             {
-              "id": "kb_step_up",
-              "name": "Kettlebell Step-Up (Single-Arm)",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": 1.0,
-              "breakdown": {
-               "recency_penalty": 0,
-               "unlocks_bonus": 0.5,
-               "pattern_bonus": 0.5
-              }
-             },
-             {
-              "id": "run_tempo_horsemen",
-              "name": "Tempo Run (Zone 3)",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": 0.5,
-              "breakdown": {
-               "recency_penalty": 0,
-               "unlocks_bonus": 0,
-               "pattern_bonus": 0.5
-              }
-             },
-             {
-              "id": "ankle_circle",
-              "name": "Ankle Circle",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": 0,
-              "breakdown": {
-               "recency_penalty": 0,
-               "unlocks_bonus": 0,
-               "pattern_bonus": 0
-              }
-             },
-             {
-              "id": "neck_rotation",
-              "name": "Neck Rotation",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": 0,
-              "breakdown": {
-               "recency_penalty": 0,
-               "unlocks_bonus": 0,
-               "pattern_bonus": 0
-              }
-             },
-             {
-              "id": "neck_lateral_flexion",
-              "name": "Neck Lateral Flexion",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": 0,
-              "breakdown": {
-               "recency_penalty": 0,
-               "unlocks_bonus": 0,
-               "pattern_bonus": 0
-              }
-             },
-             {
-              "id": "hip_flexor_stretch",
-              "name": "Hip Flexor Stretch (kneeling)",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": -1.0,
-              "breakdown": {
-               "recency_penalty": -2,
-               "unlocks_bonus": 0.5,
-               "pattern_bonus": 0.5
-              }
-             },
-             {
-              "id": "shoulder_circle",
-              "name": "Shoulder Circle",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": -1.5,
-              "breakdown": {
-               "recency_penalty": -2,
-               "unlocks_bonus": 0.5,
-               "pattern_bonus": 0
-              }
-             },
-             {
-              "id": "couch_stretch",
-              "name": "Couch Stretch (hip flexor/quad)",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": -1.5,
-              "breakdown": {
-               "recency_penalty": -2,
-               "unlocks_bonus": 0,
-               "pattern_bonus": 0.5
-              }
-             },
-             {
-              "id": "run_zone2",
-              "name": "Zone 2 Run",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": -3.0,
-              "breakdown": {
-               "recency_penalty": -4,
-               "unlocks_bonus": 0.5,
-               "pattern_bonus": 0.5
-              }
-             }
-            ]
-           },
-           {
-            "slot_index": 1,
-            "slot_role": "sandbag_complex_work",
-            "slot_type": "sets_reps",
-            "meta": false,
-            "movement_pattern": null,
-            "selected_id": null,
-            "injury_blocked": false,
-            "filter_counts": {
-             "in_pool": 29,
-             "after_package": 29,
-             "after_equip": 18,
-             "after_filter": 0,
-             "final": 0
-            },
-            "candidates": []
-           },
-           {
-            "slot_index": 2,
-            "slot_role": "conditioning_finisher",
-            "slot_type": "time_domain",
-            "meta": false,
-            "movement_pattern": null,
-            "selected_id": "kb_step_up",
-            "injury_blocked": false,
-            "filter_counts": {
-             "in_pool": 29,
-             "after_package": 29,
-             "after_equip": 18,
-             "after_filter": 10,
-             "final": 10
-            },
-            "candidates": [
-             {
-              "id": "kb_step_up",
-              "name": "Kettlebell Step-Up (Single-Arm)",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": 1.0,
-              "breakdown": {
-               "recency_penalty": 0,
-               "unlocks_bonus": 0.5,
-               "pattern_bonus": 0.5
-              }
-             },
-             {
-              "id": "run_tempo_horsemen",
-              "name": "Tempo Run (Zone 3)",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": 0.5,
-              "breakdown": {
-               "recency_penalty": 0,
-               "unlocks_bonus": 0,
-               "pattern_bonus": 0.5
-              }
-             },
-             {
-              "id": "ankle_circle",
-              "name": "Ankle Circle",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": 0,
-              "breakdown": {
-               "recency_penalty": 0,
-               "unlocks_bonus": 0,
-               "pattern_bonus": 0
-              }
-             },
-             {
-              "id": "neck_rotation",
-              "name": "Neck Rotation",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": 0,
-              "breakdown": {
-               "recency_penalty": 0,
-               "unlocks_bonus": 0,
-               "pattern_bonus": 0
-              }
-             },
-             {
-              "id": "neck_lateral_flexion",
-              "name": "Neck Lateral Flexion",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": 0,
-              "breakdown": {
-               "recency_penalty": 0,
-               "unlocks_bonus": 0,
-               "pattern_bonus": 0
-              }
-             },
-             {
-              "id": "kb_squat_goblet",
-              "name": "Kettlebell Goblet Squat",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": -1.0,
-              "breakdown": {
-               "recency_penalty": -2,
-               "unlocks_bonus": 0.5,
-               "pattern_bonus": 0.5
-              }
-             },
-             {
-              "id": "hip_flexor_stretch",
-              "name": "Hip Flexor Stretch (kneeling)",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": -1.0,
-              "breakdown": {
-               "recency_penalty": -2,
-               "unlocks_bonus": 0.5,
-               "pattern_bonus": 0.5
-              }
-             },
-             {
-              "id": "shoulder_circle",
-              "name": "Shoulder Circle",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": -1.5,
-              "breakdown": {
-               "recency_penalty": -2,
-               "unlocks_bonus": 0.5,
-               "pattern_bonus": 0
-              }
-             },
-             {
-              "id": "couch_stretch",
-              "name": "Couch Stretch (hip flexor/quad)",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": -1.5,
-              "breakdown": {
-               "recency_penalty": -2,
-               "unlocks_bonus": 0,
-               "pattern_bonus": 0.5
-              }
-             },
-             {
-              "id": "run_zone2",
-              "name": "Zone 2 Run",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": -3.0,
-              "breakdown": {
-               "recency_penalty": -4,
-               "unlocks_bonus": 0.5,
-               "pattern_bonus": 0.5
-              }
-             }
-            ]
-           }
-          ],
-          "progression": [
-           {
-            "exercise_id": "kb_squat_goblet",
-            "exercise_name": "Kettlebell Goblet Squat",
-            "slot_role": "warm_up_movement",
-            "slot_type": "time_domain",
-            "model": "density",
-            "week": 1,
-            "phase": "base",
-            "level": "novice",
-            "is_deload": false,
-            "output": {
-             "duration_minutes": 8,
-             "zone_target": "Zone 1-2 (light)",
-             "zone_lower": 1,
-             "zone_upper": 2
-            }
-           },
-           {
-            "exercise_id": "kb_step_up",
-            "exercise_name": "Kettlebell Step-Up (Single-Arm)",
-            "slot_role": "conditioning_finisher",
-            "slot_type": "time_domain",
-            "model": "density",
-            "week": 1,
-            "phase": "base",
-            "level": "novice",
-            "is_deload": false,
-            "output": {
-             "duration_minutes": 10,
-             "zone_target": "Zone 3 (tempo)",
-             "zone_lower": 3,
-             "zone_upper": 3
-            }
-           }
-          ]
-         }
-        ],
-        "Sunday": [
-         {
-          "modality": "aerobic_base",
-          "archetype": {
-           "selected_id": "horsemen_aerobic_base",
-           "filter_counts": {
-            "by_modality": 1,
-            "by_phase": 1,
-            "by_level": 1,
-            "by_equipment": 1,
-            "by_duration": 1,
-            "final": 1
-           },
-           "candidates": [
-            {
-             "id": "horsemen_aerobic_base",
-             "name": "Horsemen Aerobic Base (Run / Row / Ruck)",
-             "score": 3,
-             "breakdown": {
-              "equipment": 6,
-              "source": 0,
-              "recency": -3,
-              "injury_penalty": 0,
-              "total": 3
-             }
-            }
-           ]
-          },
-          "slots": [
-           {
-            "slot_index": 0,
-            "slot_role": "aerobic_main",
-            "slot_type": "time_domain",
-            "meta": false,
-            "movement_pattern": null,
-            "selected_id": "run_zone2",
-            "injury_blocked": false,
-            "filter_counts": {
-             "in_pool": 29,
-             "after_package": 29,
-             "after_equip": 18,
-             "after_filter": 2,
+             "in_pool": 32,
+             "after_package": 32,
+             "after_equip": 21,
+             "after_filter": 1,
              "final": 1
             },
             "candidates": [
              {
-              "id": "run_zone2",
-              "name": "Zone 2 Run",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": -3.0,
-              "breakdown": {
-               "recency_penalty": -4,
-               "unlocks_bonus": 0.5,
-               "pattern_bonus": 0.5
-              }
-             }
-            ]
-           },
-           {
-            "slot_index": 1,
-            "slot_role": "cool_down",
-            "slot_type": "time_domain",
-            "meta": false,
-            "movement_pattern": null,
-            "selected_id": "ankle_circle",
-            "injury_blocked": false,
-            "filter_counts": {
-             "in_pool": 29,
-             "after_package": 29,
-             "after_equip": 18,
-             "after_filter": 6,
-             "final": 6
-            },
-            "candidates": [
-             {
-              "id": "ankle_circle",
-              "name": "Ankle Circle",
+              "id": "walking_lunge",
+              "name": "Walking Lunge",
               "package": "horsemen_gpp",
               "packages": [
                "horsemen_gpp"
@@ -4500,76 +2637,6 @@
               "score": 0,
               "breakdown": {
                "recency_penalty": 0,
-               "unlocks_bonus": 0,
-               "pattern_bonus": 0
-              }
-             },
-             {
-              "id": "neck_rotation",
-              "name": "Neck Rotation",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": 0,
-              "breakdown": {
-               "recency_penalty": 0,
-               "unlocks_bonus": 0,
-               "pattern_bonus": 0
-              }
-             },
-             {
-              "id": "neck_lateral_flexion",
-              "name": "Neck Lateral Flexion",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": 0,
-              "breakdown": {
-               "recency_penalty": 0,
-               "unlocks_bonus": 0,
-               "pattern_bonus": 0
-              }
-             },
-             {
-              "id": "hip_flexor_stretch",
-              "name": "Hip Flexor Stretch (kneeling)",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": -1.0,
-              "breakdown": {
-               "recency_penalty": -2,
-               "unlocks_bonus": 0.5,
-               "pattern_bonus": 0.5
-              }
-             },
-             {
-              "id": "shoulder_circle",
-              "name": "Shoulder Circle",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": -1.5,
-              "breakdown": {
-               "recency_penalty": -2,
-               "unlocks_bonus": 0.5,
-               "pattern_bonus": 0
-              }
-             },
-             {
-              "id": "couch_stretch",
-              "name": "Couch Stretch (hip flexor/quad)",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": -1.5,
-              "breakdown": {
-               "recency_penalty": -2,
                "unlocks_bonus": 0,
                "pattern_bonus": 0.5
               }
@@ -4579,37 +2646,18 @@
           ],
           "progression": [
            {
-            "exercise_id": "run_zone2",
-            "exercise_name": "Zone 2 Run",
-            "slot_role": "aerobic_main",
-            "slot_type": "time_domain",
-            "model": "intensity_split_shift",
+            "exercise_id": "walking_lunge",
+            "exercise_name": "Walking Lunge",
+            "slot_role": "lunge",
+            "slot_type": "distance",
+            "model": "as_written",
             "week": 1,
             "phase": "base",
-            "level": "novice",
+            "level": "intermediate",
             "is_deload": false,
             "output": {
-             "duration_minutes": 45,
-             "zone_target": "Zone 1-2 (conversational pace)",
-             "zone_lower": 1,
-             "zone_upper": 2
-            }
-           },
-           {
-            "exercise_id": "ankle_circle",
-            "exercise_name": "Ankle Circle",
-            "slot_role": "cool_down",
-            "slot_type": "time_domain",
-            "model": "intensity_split_shift",
-            "week": 1,
-            "phase": "base",
-            "level": "novice",
-            "is_deload": false,
-            "output": {
-             "duration_minutes": 5,
-             "zone_target": "Zone 1 (recovery)",
-             "zone_lower": 1,
-             "zone_upper": 1
+             "distance_m": 50,
+             "sets": 10
             }
            }
           ]

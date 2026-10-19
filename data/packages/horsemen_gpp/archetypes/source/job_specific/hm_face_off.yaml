@@ -1,0 +1,28 @@
+id: hm_face_off
+name: Face Off
+modality: durability
+category: gpp_durability
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 50
+slots:
+- role: leg_blasters
+  slot_type: sets_reps
+  sets: 20
+  reps: 1
+  exercise_filter:
+    exercise_ids:
+    - leg_blaster
+    ordered: true
+  notes: >-
+    20 leg blasters. One leg blaster is 20 squats, 10 lunges each leg, 10 jumping lunges each leg, 10
+    squat jumps. The source gives no rest.
+required_equipment: []
+sources:
+- Horsemen
+notes: >-
+  One of the source's hard job-specific workouts: twenty leg blasters, 1,400 bodyweight leg reps. The
+  source does not say for time or give rests. Source name cleaned of profanity.

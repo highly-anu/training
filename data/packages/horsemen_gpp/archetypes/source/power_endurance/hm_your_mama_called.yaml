@@ -1,0 +1,80 @@
+id: hm_your_mama_called
+name: Your Mama Called
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 40
+slots:
+- role: hang_squat_cleans
+  slot_type: sets_reps
+  sets: 15
+  reps: 15-14-13-12-11-10-9-8-7-6-5-4-3-2-1
+  exercise_filter:
+    exercise_ids:
+    - hang_squat_clean
+    ordered: true
+  load: 43 kg (95 lb)
+  notes: >-
+    Rungs from 15 down to 1: hang squat cleans, ankles to bar, push-ups. Then the 3 rounds below.
+- role: ankles_to_bar
+  slot_type: sets_reps
+  sets: 15
+  reps: 15-14-13-12-11-10-9-8-7-6-5-4-3-2-1
+  exercise_filter:
+    exercise_ids:
+    - ankles_to_bar
+    ordered: true
+  load: bodyweight
+- role: push_ups
+  slot_type: sets_reps
+  sets: 15
+  reps: 15-14-13-12-11-10-9-8-7-6-5-4-3-2-1
+  exercise_filter:
+    exercise_ids:
+    - push_up
+    ordered: true
+  load: bodyweight
+- role: plate_shuffle
+  slot_type: sets_reps
+  sets: 3
+  reps: not given
+  exercise_filter:
+    exercise_ids:
+    - plate_shuffle
+    ordered: true
+  notes: >-
+    3 rounds, alternating: plate shuffle, 10 sit-ups, 10 back extensions. The source neither defines the
+    plate shuffle nor gives its count.
+- role: sit_ups
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - sit_up
+    ordered: true
+  load: bodyweight
+- role: back_extensions
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - back_extension
+    ordered: true
+  load: bodyweight
+required_equipment:
+- barbell
+- plates
+- pull_up_bar
+- ghd
+sources:
+- Horsemen
+notes: >-
+  A 15-to-1 ladder of hang squat cleans at 95 lb, ankles to bar and push-ups, then 3 rounds of plate shuffle,
+  10 sit-ups and 10 back extensions. The 3 rounds sit under the title with no heading of their own and
+  are a short trunk finisher, not a session, so they are read as the workout's second part.

@@ -1,0 +1,40 @@
+id: hm_flemingway
+name: "Flemingway"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 6
+pool_only: true
+
+slots:
+  - role: run
+    slot_type: rounds_for_time
+    rounds: 4
+    duration_sec: 360
+    distance_m: 100
+    intensity: max_effort
+    exercise_filter:
+      exercise_ids: [run_sprint]
+      ordered: true
+    notes: >
+      Run 100 m + 20 ball slams, run 100 m + 15, run 100 m + 10, run 100 m + 5.
+
+  - role: ball_slams
+    slot_type: amrap_movement
+    reps_per_round: 20
+    parent_slot_role: run
+    load: "5 kg (10 lb)"
+    exercise_filter:
+      exercise_ids: [ball_slam]
+      ordered: true
+    notes: >
+      20, 15, 10 and 5 slams after each run.
+
+required_equipment:
+  - medicine_ball
+  - open_space
+sources:
+  - Horsemen
+notes: >
+  Four 100 m runs, each followed by ball slams with a 10 lb ball: 20, 15, 10, 5. The source
+  writes no clock.

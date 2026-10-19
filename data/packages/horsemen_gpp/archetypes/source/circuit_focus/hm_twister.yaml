@@ -1,0 +1,89 @@
+id: hm_twister
+name: "Twister"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 35
+pool_only: true
+
+slots:
+  - role: bench_press
+    slot_type: rounds_for_time
+    rounds: 4
+    duration_sec: 900
+    intensity: max_effort
+    exercise_filter:
+      exercise_ids: [bench_press]
+      ordered: true
+    notes: >
+      Part 1: 20-15-10-5 reps of each: bench press, dips, pull-ups, box jumps.
+
+  - role: dips
+    slot_type: amrap_movement
+    reps_per_round: 20
+    parent_slot_role: bench_press
+    exercise_filter:
+      exercise_ids: [dip]
+      ordered: true
+
+  - role: pull_ups
+    slot_type: amrap_movement
+    reps_per_round: 20
+    parent_slot_role: bench_press
+    exercise_filter:
+      exercise_ids: [pull_up]
+      ordered: true
+
+  - role: box_jumps
+    slot_type: amrap_movement
+    reps_per_round: 20
+    parent_slot_role: bench_press
+    exercise_filter:
+      exercise_ids: [box_jump]
+      ordered: true
+
+  - role: med_ball_toss_and_run
+    slot_type: sets_reps
+    sets: 10
+    reps: 5
+    exercise_filter:
+      exercise_ids: [med_ball_toss_and_run]
+      ordered: true
+    notes: >
+      Part 2, 10 rounds, alternating: 5 medicine-ball toss and runs, 10 push-ups, 15 swings —
+      the source gives no clock.
+
+  - role: push_ups
+    slot_type: sets_reps
+    sets: 10
+    reps: 10
+    exercise_filter:
+      exercise_ids: [push_up]
+      ordered: true
+
+  - role: swings
+    slot_type: sets_reps
+    sets: 10
+    reps: 15
+    exercise_filter:
+      exercise_ids: [kb_swing_two_hand]
+      ordered: true
+
+required_equipment:
+  - barbell
+  - box
+  - kettlebell
+  - medicine_ball
+  - open_space
+  - parallettes
+  - plates
+  - pull_up_bar
+  - rack
+sources:
+  - Horsemen
+notes: >
+  Two parts: 20-15-10-5 bench press, dips, pull-ups and box jumps, then 10 rounds of 5
+  medicine-ball toss and runs, 10 push-ups and 15 swings. The unnamed 10 rounds is read as
+  Twister's second part: the source opens every workout with a capitalised name, and its other
+  unnamed round blocks belong to the name above them. The source writes no clock and no loads
+  (the athlete's choice, its Weight Loading rule). Source name cleaned of profanity.

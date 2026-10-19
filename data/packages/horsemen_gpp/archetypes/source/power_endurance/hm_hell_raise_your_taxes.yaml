@@ -1,0 +1,51 @@
+id: hm_hell_raise_your_taxes
+name: He'll Raise Your Taxes
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels:
+- intermediate
+- advanced
+- elite
+pool_only: true
+duration_estimate_minutes: 15
+slots:
+- role: run_400m
+  slot_type: rounds_for_time
+  rounds: 3
+  distance_m: 400
+  duration_sec: 900
+  intensity: max_effort
+  exercise_filter:
+    exercise_ids:
+    - run_hard
+    ordered: true
+  notes: '3 rounds for time: run 400 m plus a hill with a sandbag, then 15 burpees.'
+- role: sandbag_hill
+  slot_type: amrap_movement
+  parent_slot_role: run_400m
+  reps_per_round: 1
+  exercise_filter:
+    exercise_ids:
+    - sb_run
+    ordered: true
+  notes: >-
+    The hill, with the sandbag. The source gives neither the hill nor the bag's weight, and does not say
+    whether the bag is carried for the whole 400 m.
+- role: burpees
+  slot_type: amrap_movement
+  parent_slot_role: run_400m
+  reps_per_round: 15
+  exercise_filter:
+    exercise_ids:
+    - burpee
+    ordered: true
+  load: bodyweight
+required_equipment:
+- sandbag
+- open_space
+sources:
+- Horsemen
+notes: >-
+  Three rounds for time of a 400 m run plus a hill with a sandbag, and 15 burpees. Where no load is written
+  it is the athlete's call, by the source's weight-loading rule. The untitled 10-to-1 grind ladder that
+  follows it in the source is authored as its own workout.
