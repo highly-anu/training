@@ -27,8 +27,7 @@ sources:
 - training_contract.yaml sources (public swing-program FAQ)
 notes: Executable rules live in training_contract.yaml. General Practice repeats stable single-bell modules;
   density and volume advance after clean successful exposures. The calendar never earns a harder movement.
-  Forecasts are conditional. Complementary technique and clean/press cycles are app adaptations of public
-  principles, not a purchased Wildman plan. Pentathlon is a separate sport-specific track requiring demonstrated
+  Forecasts are conditional. Pentathlon is a separate sport-specific track requiring demonstrated
   event proficiency.
 self_contained: true
 primary_track_id: general_practice
@@ -104,8 +103,7 @@ tracks:
 - id: pentathlon
   name: Pentathlon Prep
   description: "Sport preparation for the IKMF kettlebell pentathlon: clean, long cycle press, jerk, half\
-    \ snatch and strict push press, six minutes each. An app adaptation from kettlebell-sport practice,\
-    \ not a Wildman program. Not for novices \u2014 every one of the five lifts must already be proficient.\n"
+    \ snatch and strict push press, six minutes each. Built from kettlebell-sport practice. Not for novices \u2014 every one of the five lifts must already be proficient.\n"
   phases:
   - id: event_technique
     name: Event Technique
@@ -170,8 +168,7 @@ tracks:
       - -0.1
 - id: squat_practice
   name: Squat Practice
-  description: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not
-    a reproduction of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar time
+  description: 'Wildman movement families on nonconsecutive Tetris scheduling. Repeat these fixed modules twice weekly. Calendar time
     never grants proficiency or a heavier bell. '
   phases:
   - id: squat_practice_repeat
@@ -181,16 +178,14 @@ tracks:
     repeatable: true
     framework_id: kb_squat_practice
     focus: Repeat the selected movement family without calendar-based skill advancement
-    description: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not
-      a reproduction of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar
+    description: 'Wildman movement families on nonconsecutive Tetris scheduling. Repeat these fixed modules twice weekly. Calendar
       time never grants proficiency or a heavier bell. '
     checks:
       archetypes_required:
       - kb_squat_practice
 - id: snatch_practice
   name: Snatch Practice
-  description: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not
-    a reproduction of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar time
+  description: 'Wildman movement families on nonconsecutive Tetris scheduling. Repeat these fixed modules twice weekly. Calendar time
     never grants proficiency or a heavier bell. '
   phases:
   - id: snatch_practice_repeat
@@ -200,16 +195,14 @@ tracks:
     repeatable: true
     framework_id: kb_snatch_practice
     focus: Repeat the selected movement family without calendar-based skill advancement
-    description: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not
-      a reproduction of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar
+    description: 'Wildman movement families on nonconsecutive Tetris scheduling. Repeat these fixed modules twice weekly. Calendar
       time never grants proficiency or a heavier bell. '
     checks:
       archetypes_required:
       - kb_snatch_practice
 - id: getup_mobility
   name: Get-Up and Loaded Mobility
-  description: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not
-    a reproduction of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar time
+  description: 'Wildman movement families on nonconsecutive Tetris scheduling. Repeat these fixed modules twice weekly. Calendar time
     never grants proficiency or a heavier bell. Practice-window durations include rests; they never mean
     continuous overhead holds. Use one light bell appropriate for the most demanding movement, or omit
     this track if that cannot be controlled. '
@@ -221,8 +214,7 @@ tracks:
     repeatable: true
     framework_id: kb_getup_mobility
     focus: Repeat the selected movement family without calendar-based skill advancement
-    description: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not
-      a reproduction of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar
+    description: 'Wildman movement families on nonconsecutive Tetris scheduling. Repeat these fixed modules twice weekly. Calendar
       time never grants proficiency or a heavier bell. Practice-window durations include rests; they never
       mean continuous overhead holds. Use one light bell appropriate for the most demanding movement,
       or omit this track if that cannot be controlled. '
@@ -231,8 +223,7 @@ tracks:
       - kb_getup_mobility_practice
 - id: double_bell_practice
   name: Double-Bell Practice
-  description: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not
-    a reproduction of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar time
+  description: 'Wildman movement families on nonconsecutive Tetris scheduling. Repeat these fixed modules twice weekly. Calendar time
     never grants proficiency or a heavier bell. Requires two matching controllable bells and proficiency
     in every double-bell lift. Selected weight is per bell. The jerk technique module is an app-authored
     extension, not an official Wildman cycle. '
@@ -244,8 +235,7 @@ tracks:
     repeatable: true
     framework_id: kb_double_bell_practice
     focus: Repeat the selected movement family without calendar-based skill advancement
-    description: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not
-      a reproduction of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar
+    description: 'Wildman movement families on nonconsecutive Tetris scheduling. Repeat these fixed modules twice weekly. Calendar
       time never grants proficiency or a heavier bell. Requires two matching controllable bells and proficiency
       in every double-bell lift. Selected weight is per bell. The jerk technique module is an app-authored
       extension, not an official Wildman cycle. '

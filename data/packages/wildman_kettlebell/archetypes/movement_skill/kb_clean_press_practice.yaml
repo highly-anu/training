@@ -23,7 +23,7 @@ slots:
   duration_sec: 180
 - role: clean
   slot_type: emom
-  notes: 'App adaptation: alternate hands each minute; perform clean repetitions,
+  notes: 'Alternate hands each minute; perform clean repetitions,
     then rest for the remainder. Intermediate entry assumes a proficient single-bell
     clean.'
   exercise_filter:
@@ -35,7 +35,7 @@ slots:
   rest_sec: 0
 - role: press
   slot_type: emom
-  notes: 'App adaptation: alternate hands each minute; strict presses, no push press
+  notes: 'Alternate hands each minute; strict presses, no push press
     or jerk. Repeat the same bell and movement throughout the cycle.'
   exercise_filter:
     exercise_ids:
@@ -58,6 +58,6 @@ notes: 'Repeated single-bell practice in independently progressing modules. Comp
   only after clean completion at RPE 7 or below. Future exposures are conditional
   forecasts, not earned progress. Keep the chosen bell throughout the cycle; choosing
   a heavier bell starts a new cycle explicitly. No snatch, jerk or double-bell progression
-  is inferred from the calendar. Technique practice is an app adaptation.
+  is inferred from the calendar. 
 
   '

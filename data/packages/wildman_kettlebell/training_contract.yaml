@@ -34,7 +34,7 @@ tracks:
       at the start of each minute and rest for the remainder. Advance only after clean completion at RPE
       7 or below. Future exposures are conditional forecasts, not earned progress. Keep the chosen bell
       throughout the cycle; choosing a heavier bell starts a new cycle explicitly. No snatch, jerk or
-      double-bell progression is inferred from the calendar. Technique practice is an app adaptation.
+      double-bell progression is inferred from the calendar. 
 
       '
     modules:
@@ -136,13 +136,13 @@ tracks:
         exercise_id: wk_kb_clean_single
         slot_type: emom
         loaded: true
-        notes: 'App adaptation: alternate hands each minute; perform clean repetitions, then rest for
+        notes: 'Alternate hands each minute; perform clean repetitions, then rest for
           the remainder. Intermediate entry assumes a proficient single-bell clean.'
       - role: press
         exercise_id: wk_kb_press_single
         slot_type: emom
         loaded: true
-        notes: 'App adaptation: alternate hands each minute; strict presses, no push press or jerk. Repeat
+        notes: 'Alternate hands each minute; strict presses, no push press or jerk. Repeat
           the same bell and movement throughout the cycle.'
       - role: getup
         exercise_id: wk_kb_tgu
@@ -157,7 +157,7 @@ tracks:
     - advanced
     - elite
     test_module: pentathlon_events
-    notes: 'App adaptation for the IKMF pentathlon (Fedorenko''s five events, six minutes each with
+    notes: 'For the IKMF pentathlon (Fedorenko''s five events, six minutes each with
       five minutes between), built from kettlebell-sport practice; Wildman publishes no pentathlon
       program. Three event sessions a week: volume through all five events, building to the four-minute
       sets of a mini pentathlon at competition rest; repeats of three-minute sets slightly faster than
@@ -399,8 +399,7 @@ tracks:
     - intermediate
     - advanced
     - elite
-    notes: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not a reproduction
-      of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar time never grants
+    notes: 'Wildman movement families on nonconsecutive Tetris scheduling. Repeat these fixed modules twice weekly. Calendar time never grants
       proficiency or a heavier bell. '
     modules:
     - id: squat
@@ -430,7 +429,7 @@ tracks:
         exercise_id: wk_kb_squat_goblet
         slot_type: emom
         loaded: true
-        notes: "App adaptation: 1\u20135 controlled goblet squats at the start of each minute. Rest for\
+        notes: "1\u20135 controlled goblet squats at the start of each minute. Rest for\
           \ the remainder. Repeat at the same bell; no automatic complexity increase."
       - role: recovery
         exercise_id: wk_kb_halo
@@ -441,8 +440,7 @@ tracks:
     - intermediate
     - advanced
     - elite
-    notes: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not a reproduction
-      of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar time never grants
+    notes: 'Wildman movement families on nonconsecutive Tetris scheduling. Repeat these fixed modules twice weekly. Calendar time never grants
       proficiency or a heavier bell. '
     modules:
     - id: snatch
@@ -481,7 +479,7 @@ tracks:
         exercise_id: wk_kb_snatch
         slot_type: emom
         loaded: true
-        notes: 'App adaptation, not the purchased snatch protocol: alternate hands each minute; low-repetition
+        notes: 'Alternate hands each minute; low-repetition
           clean technique, then rest. A new bell requires a new cycle.'
       - role: recovery
         exercise_id: wk_kb_halo
@@ -489,8 +487,7 @@ tracks:
         duration_sec: 120
   getup_mobility:
     training_levels: *id002
-    notes: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not a reproduction
-      of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar time never grants
+    notes: 'Wildman movement families on nonconsecutive Tetris scheduling. Repeat these fixed modules twice weekly. Calendar time never grants
       proficiency or a heavier bell. Practice-window durations include rests; they never mean continuous
       overhead holds. Use one light bell appropriate for the most demanding movement, or omit this track
       if that cannot be controlled. '
@@ -545,8 +542,7 @@ tracks:
           not carry continuously for the entire practice window.
   double_bell_practice:
     training_levels: *id002
-    notes: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not a reproduction
-      of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar time never grants
+    notes: 'Wildman movement families on nonconsecutive Tetris scheduling. Repeat these fixed modules twice weekly. Calendar time never grants
       proficiency or a heavier bell. Requires two matching controllable bells and proficiency in every
       double-bell lift. Selected weight is per bell. The jerk technique module is an app-authored extension,
       not an official Wildman cycle. '
@@ -614,6 +610,6 @@ tracks:
         slot_type: skill_practice
         duration_sec: 360
         loaded: true
-        notes: 'App adaptation: brief sets of already-proficient double jerks, resting fully between sets.
+        notes: 'Brief sets of already-proficient double jerks, resting fully between sets.
           This six-minute window is not a continuous jerk set and is not an IKMF pentathlon event.'
     requires_kettlebell_pair: true

@@ -27,14 +27,13 @@ slots:
   exercise_filter:
     exercise_ids:
     - kb_jerk_double
-  notes: 'App adaptation: brief sets of already-proficient double jerks, resting fully between sets. This
+  notes: 'Brief sets of already-proficient double jerks, resting fully between sets. This
     six-minute window is not a continuous jerk set and is not an IKMF pentathlon event.'
 required_equipment:
 - kettlebell
 sources:
 - Wildman
-notes: 'App adaptation of Wildman movement families and nonconsecutive Tetris scheduling; not a reproduction
-  of a purchased Wildman program. Repeat these fixed modules twice weekly. Calendar time never grants
+notes: 'Wildman movement families on nonconsecutive Tetris scheduling. Repeat these fixed modules twice weekly. Calendar time never grants
   proficiency or a heavier bell. Requires two matching controllable bells and proficiency in every double-bell
   lift. Selected weight is per bell. The jerk technique module is an app-authored extension, not an official
   Wildman cycle. '
