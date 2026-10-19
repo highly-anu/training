@@ -31,14 +31,20 @@ def resolve_model(framework: dict, modality: str, modalities: dict) -> str:
             or (modalities.get(modality) or {}).get('progression_model', 'linear_load'))
 
 
-def load_contract(package: str, track: str) -> dict | None:
+_DOCUMENTS: dict = {}
+
+
+def _document(path: str) -> dict:
+    """The validated contract file, read once per change: `/philosophies` asks
+    for every track's contract on each request."""
     from . import loader
     import os
-    path = os.path.join(loader._PACKAGES_DIR, package, 'training_contract.yaml')
-    if not os.path.exists(path):
-        return None
     from jsonschema import Draft7Validator
     from yaml import YAMLError
+    mtime = os.path.getmtime(path)
+    cached = _DOCUMENTS.get(path)
+    if cached and cached[0] == mtime:
+        return cached[1]
     try:
         document = loader._load_yaml(path)
     except (OSError, YAMLError) as exc:
@@ -47,6 +53,17 @@ def load_contract(package: str, track: str) -> dict | None:
     errors = sorted(Draft7Validator(schema).iter_errors(document), key=lambda e: str(e.path))
     if errors:
         raise ContractError(f'Invalid training contract: {errors[0].message}')
+    _DOCUMENTS[path] = (mtime, document)
+    return document
+
+
+def load_contract(package: str, track: str) -> dict | None:
+    from . import loader
+    import os
+    path = os.path.join(loader._PACKAGES_DIR, package, 'training_contract.yaml')
+    if not os.path.exists(path):
+        return None
+    document = _document(path)
     contract = (document.get('tracks') or {}).get(track)
     if contract is None:
         raise ContractError(f'{package}/{track} has no executable training contract.')
@@ -227,7 +244,9 @@ def _module_rows(module, exercises, constraints, state, step, deload):
         row = _assignment(block, module, exercises, constraints, state, step, deload)
         rows.append(row)
         if block.get('rest_after_sec'):
-            rest = block['rest_after_sec']
+            # Whole minutes, as every timed block: the session's minutes are
+            # their sum, which `verify` compares exactly.
+            rest = math.ceil(block['rest_after_sec'] / 60) * 60
             role = f"{module['id']}_{block['role']}_recovery"
             rows.append({'slot_role': role, 'slot_type': 'time_domain', 'exercise': None, 'meta': True,
                          'slot': {'role': role, 'slot_type': 'time_domain', 'skip_exercise': True,
@@ -314,8 +333,10 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
         raise ContractError('No training modules are defined for this level.')
     if constraints.get('fatigue_state', 'normal') not in ('normal', 'overreached', 'fresh', 'accumulated'):
         raise ContractError('Unsupported fatigue state.')
-    if constraints.get('allow_split_sessions'):
-        raise ContractError('This contract already composes its required modules; automatic accessory sessions are unsupported.')
+    # `allow_split_sessions` is ignored: the contract composes its own days
+    # (modules share one when they must) and adds no accessory sessions. It
+    # used to refuse, so any schedule with a second session on a day — which
+    # the web turns into the flag — could not generate a contract track.
     learned = set(constraints.get('mastered_exercises') or []) | set(contract.get('level_seeds', {}).get(level, []))
     for m in modules:
         if set(m.get('requires_mastery') or []) - learned:
@@ -443,6 +464,10 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
             # Also honour per-day budgets, not just the overall session limit.
             day_cap = (constraints.get('day_configs', {}).get(day) or {}).get('minutes', cap)
             assignments, records, session_test = [], [], None
+            # A test day is a test session for every module on it: none deloads
+            # or advances, as `verify` and `confirmed_state` read the session.
+            test_today = bool(pending_test and day == test_day
+                              and any(m['id'] == contract.get('test_module') for m in day_modules))
             for m in day_modules:
                 if pending_test and day == test_day and m['id'] == contract['test_module']:
                     aid = pending_test['archetypes'][0]
@@ -467,7 +492,7 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
                                     'instead_of': {'archetype': m['archetype_id'], 'minutes': estimates[m['id']], 'buckets': {}}}
                     pending_test = None
                 rows = _module_rows(m, data['exercises_by_package'][contract['package']], constraints,
-                                    state[m['id']], cursor[m['id']], deload and session_test is None)
+                                    state[m['id']], cursor[m['id']], deload and not test_today)
                 for ea in rows:
                     ex = ea.get('exercise')
                     if not ex:
@@ -488,7 +513,7 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
                                     for r in rows if r.get('exercise') and r['load'].get('advances_module')},
                                 'duration_sec': next((r['load']['elapsed_sec'] for r in rows
                                                       if r.get('exercise') and r['slot_type'] == 'time_domain' and m['progression']['model'] == 'timed_cycle'), 0)})
-                if not deload and session_test is None:
+                if not deload and not test_today:
                     cursor[m['id']] += 1
             elapsed = sum(e['load']['elapsed_sec'] for e in assignments) // 60
             if elapsed > min(cap, day_cap):

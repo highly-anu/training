@@ -201,6 +201,10 @@ def blend_philosophy_goals(phil_ids: list, phil_weights: dict, all_frameworks: l
     ]
 
     result = dict(primary_goal)
+    # A contract fixes one method's modules; a blend averages several methods'
+    # priorities, so it is built by the general generator (a Wildman-led blend
+    # used to be refused as "one methodology at a time").
+    result.pop('training_contract', None)
     result['id'] = '_phil_blend'
     result['name'] = ' + '.join(
         loader.load_philosophy(pid).get('name', pid).split(' /')[0].split(' —')[0].strip()

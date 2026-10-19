@@ -3,8 +3,8 @@ import XCTest
 
 final class TrainingContractTests: XCTestCase {
     func testTrackReadinessDecodesAndIsSentWithGeneration() throws {
+        // As APIClient.fetchPhilosophies decodes: a plain JSONDecoder, no key strategy.
         let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
         let data = Data(#"{"id":"doubles","name":"Doubles","phases":[],"entry_requirements":{"training_levels":["intermediate"],"mastered_exercises":["kb_clean_double"],"mastered_exercises_by_level":{"intermediate":["kb_clean_double"]},"kettlebell_count":2}}"#.utf8)
         let track = try decoder.decode(PhilosophyTrack.self, from: data)
         XCTAssertEqual(track.entryRequirements?.kettlebellCount, 2)

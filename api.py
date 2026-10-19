@@ -508,8 +508,12 @@ def get_philosophies():
                 track['entry_requirements'] = {
                     'training_levels': contract['training_levels'],
                     'mastered_exercises': sorted({eid for m in contract['modules'] for eid in m.get('requires_mastery', [])}),
+                    # Less what the contract seeds for the level: General Practice
+                    # counts an intermediate's clean and press as known, and both
+                    # builders asked for them anyway.
                     'mastered_exercises_by_level': {level: sorted({eid for m in contract['modules']
-                        if level in m['training_levels'] for eid in m.get('requires_mastery', [])})
+                        if level in m['training_levels'] for eid in m.get('requires_mastery', [])}
+                        - set((contract.get('level_seeds') or {}).get(level) or []))
                         for level in contract['training_levels']},
                     'kettlebell_count': 2 if contract.get('requires_kettlebell_pair') else 1,
                 }
@@ -864,6 +868,11 @@ def generate_program():
         resp = app.make_response(_generate_program_inner(body))
         if resp.status_code >= 400:
             return resp
+        # An infeasible answer (the validator's, or a training contract that
+        # cannot run as written) is shown to the athlete, never saved: it used
+        # to persist as an empty program when a client asked to save.
+        if not (resp.get_json(silent=True) or {}).get('weeks'):
+            return resp
         # Persist only when the caller says this generate is a commit.
         #
         # This used to save unconditionally, and it saved `resp_data` — the bare
@@ -1201,7 +1210,10 @@ def _generate_program_inner(body):
                 validation.add_error(error['code'], error['message'])
         result = _transform_program(raw, goal, constraints, validation)
         result['detail'] = '; '.join(error['message'] for error in raw['validation_errors'])
-        return jsonify(result), 422
+        # 200 with `validation.feasible: false`, as every infeasible request
+        # has always been answered: the web builder shows the ValidationAlert
+        # from it and the phone its errors. The save path refuses it above.
+        return jsonify(result)
 
     # A modality the generator had to schedule as another one because nothing
     # in the package is written for this athlete's level.
@@ -1217,6 +1229,22 @@ def _generate_program_inner(body):
     if program_start_monday:
         result['program_start_date'] = program_start_monday.isoformat()
     return jsonify(result)
+
+
+def _stored_contract() -> str | None:
+    """The training contract the athlete's active program was built by, if any.
+
+    A single-session regenerate or an exercise swap would bypass its modules,
+    so both refuse for such a program. Asked of the stored program, not of the
+    request's packages: the phone sends no philosophy ids for a regenerate, and
+    a blend that includes a contract package is built by the general generator.
+    """
+    try:
+        from src.db import get_user_program
+        current = (get_user_program(g.user_id) or {}).get('currentProgram') or {}
+    except Exception:
+        return None
+    return (current.get('training_contract') or {}).get('id')
 
 
 @app.post('/api/sessions/generate')
@@ -1325,10 +1353,7 @@ def _generate_session_inner(body):
         # Use the archetype's own modality — the request modality is the session being replaced
         modality = forced_arch.get('modality', modality)
 
-    packages = set(primary_sources)
-    if forced_arch and forced_arch.get('_package'):
-        packages.add(forced_arch['_package'])
-    if any(os.path.exists(os.path.join(loader._PACKAGES_DIR, p, 'training_contract.yaml')) for p in packages):
+    if _stored_contract():
         return jsonify({'detail': 'Regenerate this contract program to replace a module while preserving its progression.'}), 422
     phase_excluded, deload_keep = _week_phase_rules(body, primary_sources)
     session_stub = {'modality': modality, 'is_deload': is_deload}
@@ -1346,9 +1371,6 @@ def _generate_session_inner(body):
 
     if populated.get('archetype') is None:
         return jsonify({'detail': f'No archetype found for {modality!r} in phase {phase!r}'}), 422
-    owner = populated['archetype'].get('_package')
-    if owner and os.path.exists(os.path.join(loader._PACKAGES_DIR, owner, 'training_contract.yaml')):
-        return jsonify({'detail': 'Generate this package through its training contract to preserve module progression.'}), 422
 
     # Apply progression loads
     prog_model = _prog_model_for(modality, body, data)
@@ -1412,7 +1434,7 @@ def substitute_exercise():
     arch = next((a for a in data['archetypes'] if a.get('id') == archetype_id), None)
     if arch is None:
         return jsonify({'detail': f'Archetype {archetype_id!r} not found'}), 404
-    if os.path.exists(os.path.join(loader._PACKAGES_DIR, arch.get('_package') or '', 'training_contract.yaml')):
+    if _stored_contract():
         return jsonify({'detail': 'This exercise belongs to a fixed training module; regenerate the contract program to change it.'}), 422
     slot_index, slot = next(((i, sl) for i, sl in enumerate(arch.get('slots') or [])
                              if sl.get('role') == slot_role), (None, None))

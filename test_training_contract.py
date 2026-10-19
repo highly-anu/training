@@ -206,9 +206,46 @@ def test_api_rejects_failed_contract_without_persisting():
         r = api.app.test_client().post('/api/programs/generate', json={
             'philosophy_id': 'wildman_kettlebell', 'track_id': 'pentathlon', 'persist': True,
             'constraints': setup()[1], 'num_weeks': 1})
-    assert r.status_code == 422
-    assert not r.get_json()['validation']['feasible']
+    # Answered as every infeasible request is (200, `validation.feasible: false`,
+    # the reason in `detail`) so both builders show it; never saved.
+    assert r.status_code == 200
+    assert not r.get_json()['validation']['feasible'] and 'mastery' in r.get_json()['detail']
     save.assert_not_called()
+
+
+def test_review_fixes_of_2026_10_19():
+    # A schedule with a second session on a day sets allow_split_sessions; the
+    # contract composes its own days and must not refuse it.
+    p, g, c = plan(weeks=2, allow_split_sessions=True)
+    assert p['weeks'] and not p.get('validation_errors')
+    # Builders ask only for what the level does not already count as known.
+    import api
+    phils = api.app.test_client().get('/api/philosophies').get_json()
+    gp = next(t for ph in phils if ph['id'] == 'wildman_kettlebell' for t in ph['tracks'] if t['id'] == 'general_practice')
+    by_level = gp['entry_requirements']['mastered_exercises_by_level']
+    assert by_level['intermediate'] == [] and by_level['novice'] == [], by_level
+    # A blend is built by the general generator, even when Wildman leads it.
+    blend = goals.blend_philosophy_goals(['wildman_kettlebell', 'uphill_athlete'],
+                                         {'wildman_kettlebell': 0.7, 'uphill_athlete': 0.3},
+                                         list(loader.load_all_frameworks().values()))
+    assert 'training_contract' not in blend
+    # Rests are budgeted in whole minutes, as the session's minutes are summed.
+    module = {'id': 'm', 'name': 'M', 'progression': {'model': 'skill_hold'}, 'blocks': [
+        {'role': 'a', 'exercise_id': 'wk_kb_halo', 'slot_type': 'skill_practice', 'duration_sec': 120, 'rest_after_sec': 90}]}
+    _, catalogs = loader.load_all_exercises()
+    rows = tc._module_rows(module, catalogs['wildman_kettlebell'], {'equipment': ['kettlebell']}, {}, 0, False)
+    assert [r['load']['elapsed_sec'] for r in rows] == [120, 120]
+    # Swaps and single-session regenerates refuse only for a stored contract program.
+    with patch('src.db.get_user_program', return_value={'currentProgram': {'training_contract': {'id': 'x/y@1'}}}):
+        r = api.app.test_client().post('/api/exercises/substitute', json={
+            'archetype_id': 'kb_ballistic_session', 'slot_role': 'main', 'exercise_id': 'wk_kb_swing_two_hand',
+            'modality': 'power', 'constraints': {}, 'philosophy_ids': ['wildman_kettlebell'], 'phase': 'base'})
+        assert r.status_code == 422
+    with patch('src.db.get_user_program', return_value={'currentProgram': {}}):
+        r = api.app.test_client().post('/api/exercises/substitute', json={
+            'archetype_id': 'kb_ballistic_session', 'slot_role': 'main', 'exercise_id': 'wk_kb_swing_two_hand',
+            'modality': 'power', 'constraints': {}, 'philosophy_ids': ['wildman_kettlebell'], 'phase': 'base'})
+        assert r.status_code != 422 or 'fixed training module' not in r.get_json().get('detail', ''), r.get_json()
 
 
 def test_api_regeneration_recovers_clean_work_from_saved_program():
@@ -266,7 +303,11 @@ def test_builder_requirements_are_scoped_to_the_selected_level():
     tracks = {t['id']: t for t in wildman['tracks']}
     req = tracks['general_practice']['entry_requirements']['mastered_exercises_by_level']
     assert req['novice'] == []
-    assert set(req['intermediate']) == {'wk_kb_clean_single', 'wk_kb_press_single'}
+    # The contract seeds an intermediate's clean and press: nothing to confirm.
+    assert req['intermediate'] == []
+    pent = tracks['pentathlon']['entry_requirements']['mastered_exercises_by_level']
+    assert set(pent['intermediate']) == {'wk_kb_clean_single', 'wk_kb_long_cycle_press', 'kb_jerk_single',
+                                         'wk_kb_half_snatch', 'wk_kb_push_press_single'}
     assert tracks['double_bell_practice']['entry_requirements']['kettlebell_count'] == 2
 
 

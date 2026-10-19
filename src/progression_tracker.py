@@ -966,8 +966,11 @@ def compute_progression_review(
         identity = program['training_contract']['id']
         package_track = identity.split('@')[0]
         package, track_id = package_track.split('/', 1)
-        contract = training_contract.load_contract(package, track_id)
-        state = training_contract.confirmed_state(program, session_logs, contract)
+        try:
+            contract = training_contract.load_contract(package, track_id)
+            state = training_contract.confirmed_state(program, session_logs, contract) if contract else {}
+        except training_contract.ContractError:
+            state = {}  # a contract renamed or broken since: report no confirmed positions
         recommendations = [f"{mid.replace('_', ' ').title()}: {s.get('completed', 0)} clean exposures confirmed. "
                            "Regenerate after logging outcomes to update the next prescription."
                            for mid, s in state.items()]

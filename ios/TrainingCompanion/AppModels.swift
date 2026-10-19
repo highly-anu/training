@@ -231,6 +231,14 @@ struct PhilosophyTrack: Codable, Identifiable, Hashable {
 
     /// Every phase's default length, summed — the track run end to end.
     var totalWeeks: Int { phases.reduce(0) { $0 + $1.weeks } }
+
+    // The server's keys are snake_case and `fetchPhilosophies` decodes with a
+    // plain JSONDecoder: without these the requirements never decoded and a
+    // contract track could not be confirmed from the phone.
+    enum CodingKeys: String, CodingKey {
+        case id, name, description, phases
+        case entryRequirements = "entry_requirements"
+    }
 }
 
 struct TrackEntryRequirements: Codable, Hashable {
@@ -238,6 +246,13 @@ struct TrackEntryRequirements: Codable, Hashable {
     let masteredExercises: [String]
     var masteredExercisesByLevel: [String: [String]]? = nil
     let kettlebellCount: Int
+
+    enum CodingKeys: String, CodingKey {
+        case trainingLevels = "training_levels"
+        case masteredExercises = "mastered_exercises"
+        case masteredExercisesByLevel = "mastered_exercises_by_level"
+        case kettlebellCount = "kettlebell_count"
+    }
 }
 
 /// A phase as its methodology names and describes it. `kind` is the shared

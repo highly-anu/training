@@ -251,9 +251,17 @@ def test_single_session_routes() -> None:
     def offered(extra):
         r = client.post('/api/exercises/substitute', json={**body, **extra})
         return {a['assignment']['exercise']['id'] for a in (r.get_json() or {}).get('alternatives') or []}
-    for extra in ({}, {'phase_id': 'foundations', 'framework_id': 'kb_general_practice'}):
-        response = client.post('/api/exercises/substitute', json={**body, **extra})
-        check('a generic swap cannot bypass a fixed module', response.status_code == 422, str(response.get_json()))
+    without = offered({})
+    with_phase = offered({'phase_id': 'foundations', 'framework_id': 'kb_general_practice'})
+    check('without the phase the banned lifts are on offer', bool(without & banned), str(without))
+    check('with it they are not', bool(with_phase) and not with_phase & banned, str(with_phase))
+    # A program built by a training contract keeps its fixed modules: the swap
+    # refuses. Asked of the stored program, so a legacy or blended program swaps.
+    from unittest.mock import patch
+    with patch('src.db.get_user_program',
+               return_value={'currentProgram': {'training_contract': {'id': 'wildman_kettlebell/general_practice@1'}}}):
+        response = client.post('/api/exercises/substitute', json=body)
+    check('a generic swap cannot bypass a fixed module', response.status_code == 422, str(response.get_json())[:200])
 
 
 def test_a_framework_prescribes_its_own_way() -> None:
