@@ -740,8 +740,12 @@ time domains (CrossFit, Gym Jones, Filly conditioning); assessment-gated selecti
 
 **4. Move packages onto contracts (M–L each, content + engine)**, ordered by how
 badly the default misrepresents the method and whether its policies exist:
-1. *Starting Strength* — fixed lifts fit today; add exposure-based loading and an
-   intermediate Texas Method / Heavy-Light-Medium track.
+1. *Starting Strength* — **done 2026-10-20** (partial: debt below). A contract from
+   Rippetoe's 2013 articles and Alter's "The Reset": A/B variants alternating A-B-A /
+   B-A-B, `load_per_exposure` (a made lift goes up, a miss repeats, two reset 5 %, a lift
+   with no weight works up), the Texas Method as the intermediate track
+   (`track_for_level`), confirm by lift on both clients. Left: the light squat day and
+   5×3 after a stall, layoff resets, a stalled Texas Method Friday, exercise media.
 2. *BJJ* — **done 2026-10-19** (`data/packages/bjj/training_contract.yaml`): classes
    grow with the week and always outnumber strength; strength by effort with joint
    maintenance inside; deloads drop rolling; declared substitutes and optional
@@ -772,6 +776,16 @@ badly the default misrepresents the method and whether its policies exist:
 package is checked and improved from here: the method, `status.yaml` (where each
 package stands and which engine shape it needs, gated by
 `tools/check_package_status.py`) and the source dossiers. The order below follows it.
+
+**The scorecard (2026-10-20)** is step 1 above made concrete: `tools/evaluate_packages.py`
+grades every package × track on Source, Execution, Robustness, Data and Measurement
+(`docs/package-fidelity/scorecard.md`), ratchets in CI, and derives `audited`. Audited:
+Wildman, BJJ, Horsemen (4-Month Macro); partial: Starting Strength. What the not-started
+packages fail, in order of the audit's concern: E3 (Gym Jones, Filly, Uphill serve
+novices their frameworks are not written for — 9.2.4), E4 (Uphill's transition is one
+archetype; CrossFit's variation needs claims), R1 (Gym Jones and Uphill hand out empty
+sessions under injuries), E5 (no defining claims declared outside the contracts), and
+M1 (no package but the audited ones declares its currency).
 
 **5. Wildman follow-ups (from the handoff).** General Practice runs Wildman's Phase II
 since 2026-10-20 (the Nerd Math swing approaches, get-up and deck squat stacked as time
