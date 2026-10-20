@@ -7,7 +7,7 @@ import { PHASE_COLORS } from '@/lib/phaseColors'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, ReferenceArea,
 } from 'recharts'
-import type { GeneratedProgram, ModalityId } from '@/api/types'
+import type { GeneratedProgram, ModalityId, WeekVolumeSummary } from '@/api/types'
 import type { PhaseSegment } from '@/hooks/usePhaseCalendar'
 import { usePhilosophies } from '@/api/philosophies'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
@@ -22,6 +22,13 @@ const VOL_CATEGORIES = [
   { id: 'Durability',   color: '#f59e0b' },
   { id: 'Mobility',     color: '#10b981' },
 ] as const
+
+// Strength minutes for the bars: a set counts four minutes, and a session with
+// no sets (a Nerd Math swing, a pentathlon event) counts its timed minutes,
+// which it used to drop — Wildman's power days vanished from the bar.
+function strengthMinutes(s: WeekVolumeSummary): number {
+  return s.strength_sets * 4 + (s.strength_minutes ?? 0)
+}
 
 // Phase words come only from the program's own goal (src/phases.py): each
 // philosophy names and describes its own phases. There used to be one map of
@@ -110,7 +117,7 @@ function buildWeekVolRows(
 
     rows.push({
       week: w,
-      strength: vs ? vs.strength_sets * 4 : 0,
+      strength: vs ? strengthMinutes(vs) : 0,
       conditioning: vs?.cond_minutes ?? 0,
       durability: vs?.dur_minutes ?? 0,
       mobility: vs?.mob_minutes ?? 0,
@@ -186,7 +193,7 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
 
   const chartData = (volume_summary ?? []).map((s) => ({
     week: `W${s.week_number}`,
-    Strength:     s.strength_sets * 4,
+    Strength:     strengthMinutes(s),
     Conditioning: s.cond_minutes,
     Durability:   s.dur_minutes,
     Mobility:     s.mob_minutes,
@@ -306,7 +313,7 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
                 (s) => s.week_number >= seg.startWeek && s.week_number <= seg.endWeek
               )
               const volData = [
-                { ...VOL_CATEGORIES[0], minutes: phaseVolWeeks.reduce((sum, s) => sum + s.strength_sets * 4, 0) },
+                { ...VOL_CATEGORIES[0], minutes: phaseVolWeeks.reduce((sum, s) => sum + strengthMinutes(s), 0) },
                 { ...VOL_CATEGORIES[1], minutes: phaseVolWeeks.reduce((sum, s) => sum + s.cond_minutes, 0) },
                 { ...VOL_CATEGORIES[2], minutes: phaseVolWeeks.reduce((sum, s) => sum + s.dur_minutes, 0) },
                 { ...VOL_CATEGORIES[3], minutes: phaseVolWeeks.reduce((sum, s) => sum + s.mob_minutes, 0) },
@@ -320,6 +327,7 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
               // Phase totals
               const totalSessions = weekVolRows.reduce((s, r) => s + r.sessions, 0)
               const totalStrengthSets = phaseVolWeeks.reduce((s, r) => s + r.strength_sets, 0)
+              const totalStrengthMinutes = phaseVolWeeks.reduce((s, r) => s + (r.strength_minutes ?? 0), 0)
               const totalConditioning = weekVolRows.reduce((s, r) => s + r.conditioning, 0)
               const totalDurability = weekVolRows.reduce((s, r) => s + r.durability, 0)
               const totalMobility = weekVolRows.reduce((s, r) => s + r.mobility, 0)
@@ -495,6 +503,12 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
                             <div className="text-center">
                               <div className="text-sm font-semibold tabular-nums">{totalStrengthSets}</div>
                               <div className="text-[9px] text-muted-foreground">str sets</div>
+                            </div>
+                          )}
+                          {totalStrengthMinutes > 0 && (
+                            <div className="text-center">
+                              <div className="text-sm font-semibold tabular-nums">{totalStrengthMinutes}m</div>
+                              <div className="text-[9px] text-muted-foreground">strength</div>
                             </div>
                           )}
                           {totalConditioning > 0 && (

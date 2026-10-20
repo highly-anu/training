@@ -17,7 +17,7 @@ Status: **audited** (2026-10-20). Engine shape: training contract
 
 | Rule (source) | Encoded as |
 |---|---|
-| Phases are I Restore, II Build, III Explore; Phase II "you are never done with" (/phases) | General Practice is one repeatable phase, `build` ("Phase II: Build"); `former_ids` keeps older stored weeks regenerating |
+| Phases are I Restore, II Build, III Explore; Phase II "you are never done with" (/phases) | General Practice is one repeatable phase, `build` ("Build" — the name is his Phase II's, without the numeral, which read as the program's second phase); `former_ids` keeps older stored weeks regenerating |
 | Phase II programs: swing, clean & press, Turkish get-up, deck squat, snatch (/kettlebell-programs) | General Practice modules `swing`, `clean_press`, `getup`, `deck_squat`, `snatch` |
 | Each program twice a week, never on consecutive days; stacked into a week as time allows (Tetris; PDF "How to use") | `exposures_per_week: 2`, `min_spacing_days: 2`; get-up and deck squat `optional` + `may_share_day` |
 | Swing: 10-min EMOM 6→20 reps (+2 a session), then 20-min EMOM, then start/stop in 10 and 20 rounds of 90 s; 16 weeks a bell; then a heavier bell (PDF approaches 1–4) | `swing` density cycle: `rounds` 10/20/10/20, `interval_sec` 60/60/90/90, `cues` start/stop |
