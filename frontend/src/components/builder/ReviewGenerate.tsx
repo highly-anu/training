@@ -120,8 +120,8 @@ export function ReviewGenerate() {
 
   // The track that will run, and its phases
   const picked = useMemo(
-    () => builderTrack(philosophies, selectedPhilosophyIds, selectedTrackId),
-    [philosophies, selectedPhilosophyIds, selectedTrackId],
+    () => builderTrack(philosophies, selectedPhilosophyIds, selectedTrackId, constraints.training_level),
+    [philosophies, selectedPhilosophyIds, selectedTrackId, constraints.training_level],
   )
   const activeTrack = sourceMode === 'philosophy' || sourceMode === 'blend' ? picked?.track : undefined
   const requirements = activeTrack?.entry_requirements
@@ -370,6 +370,35 @@ export function ReviewGenerate() {
               onChange={(event) => useBuilderStore.getState().updateConstraints({ kettlebell_count: event.target.checked ? 2 : 1 })} />
             I have two matching kettlebells appropriate for these exercises.
           </label>}
+          {(requirements.starting_loads?.length ?? 0) > 0 && (
+            <div className="space-y-1.5 pt-1">
+              <p className="text-muted-foreground">
+                The weight you last made on each lift, if you know it (optional). Leave one empty and its
+                first session works up to a weight from the empty bar.
+              </p>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {requirements.starting_loads!.map(({ id, name }) => (
+                  <label key={id} className="flex items-center justify-between gap-2 rounded-md border px-2 py-1">
+                    <span>{name}</span>
+                    <input
+                      aria-label={`${name} kg`}
+                      inputMode="decimal"
+                      placeholder="kg"
+                      className="h-7 w-16 rounded border bg-background px-1.5 text-right"
+                      value={constraints.starting_loads_kg?.[id] ?? ''}
+                      onChange={(event) => {
+                        const kg = Number(event.target.value)
+                        const next = { ...(constraints.starting_loads_kg ?? {}) }
+                        if (event.target.value && kg > 0) next[id] = kg
+                        else delete next[id]
+                        useBuilderStore.getState().updateConstraints({ starting_loads_kg: next })
+                      }}
+                    />
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
       <motion.div

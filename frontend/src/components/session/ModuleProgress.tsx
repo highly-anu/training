@@ -14,12 +14,20 @@ interface Props {
 }
 
 /**
- * "Done as written" for a training-contract session (Wildman, BJJ): clean or
- * not, and the RPE. Only a clean session at or below the module's RPE moves a
- * module on when the program is next rebuilt; a watch-recorded or linked
- * workout logs no per-exercise outcome, so without this none ever did.
+ * "Done as written" for a training-contract session. Wildman and BJJ: clean or
+ * not, and the RPE — only a clean session at or below the module's RPE moves a
+ * module on when the program is next rebuilt. Starting Strength: each lift made
+ * or missed. A watch-recorded or linked workout logs no per-exercise outcome,
+ * so without this none ever did.
  */
-export function ModuleProgress({ session, logKey, serverKey }: Props) {
+export function ModuleProgress(props: Props) {
+  const byLoad = props.session.exercises.some(
+    (ea) => ea.load?.advances_module && ea.exercise && ea.load.progression_model === 'load_per_exposure')
+  return byLoad ? <LiftProgress {...props} /> : <CleanProgress {...props} />
+}
+
+/** "Done as written" for modules that move on clean, low-RPE sessions (Wildman, BJJ). */
+function CleanProgress({ session, logKey, serverKey }: Props) {
   const progressing = session.exercises
     .filter((ea) => ea.load?.advances_module && ea.exercise)
     .map((ea) => ea.exercise!.id)
@@ -90,6 +98,120 @@ export function ModuleProgress({ session, logKey, serverKey }: Props) {
             </Button>
             <Button size="sm" variant="outline" disabled={busy} onClick={() => confirm(false)}>
               Not clean
+            </Button>
+          </div>
+        </>
+      )}
+      {failed && <p className="text-xs text-red-600">Not saved — try again.</p>}
+    </div>
+  )
+}
+
+interface LiftAnswer { made: boolean; kg: string }
+
+/**
+ * A loaded lift moves on what was made (Starting Strength): each lift made or
+ * missed, at its prescribed weight or the weight worked up to. A made lift
+ * goes up next time; a miss repeats the weight, and two in a row reset it.
+ */
+function LiftProgress({ session, logKey, serverKey }: Props) {
+  const lifts = session.exercises.filter(
+    (ea) => ea.load?.advances_module && ea.exercise && ea.load.progression_model === 'load_per_exposure')
+  const log = useBioStore((s) => s.sessionPerformanceLogs[logKey])
+  const applyConfirmation = useBioStore((s) => s.applyConfirmation)
+  const [answers, setAnswers] = useState<Record<string, LiftAnswer>>(() =>
+    Object.fromEntries(lifts.map((ea) => [ea.exercise!.id, { made: true, kg: '' }])))
+  const [busy, setBusy] = useState(false)
+  const [failed, setFailed] = useState(false)
+  const [changing, setChanging] = useState(false)
+
+  const logged = lifts.map((ea) => log?.exercises[ea.exercise!.id])
+  const answered = logged.every((p) => typeof p?.made === 'boolean') && !changing
+
+  async function save(allMade: boolean) {
+    setBusy(true)
+    setFailed(false)
+    const sent: Record<string, { made: boolean; weightKg?: number }> = {}
+    for (const ea of lifts) {
+      const a = answers[ea.exercise!.id]
+      const kg = Number(a.kg)
+      const made = allMade || a.made
+      if (!made || (a.kg && kg > 0)) sent[ea.exercise!.id] = { made, ...(a.kg && kg > 0 ? { weightKg: kg } : {}) }
+    }
+    try {
+      const everyMade = lifts.every((ea) => allMade || answers[ea.exercise!.id].made)
+      const res = await confirmSession(serverKey, everyMade, undefined, Object.keys(sent).length ? sent : undefined)
+      applyConfirmation(logKey, res.exercises, res.completedAt)
+      setChanging(false)
+    } catch {
+      setFailed(true)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
+      <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Progress</h4>
+      {answered ? (
+        <div className="space-y-1.5 text-sm">
+          {lifts.map((ea, i) => (
+            <div key={ea.exercise!.id} className="flex items-center gap-1.5">
+              {logged[i]!.made ? (
+                <BadgeCheck className="size-4 text-green-700 dark:text-green-400" />
+              ) : (
+                <MinusCircle className="size-4 text-muted-foreground" />
+              )}
+              <span>{ea.exercise!.name}</span>
+              <span className="text-muted-foreground">
+                {logged[i]!.weightKg != null ? `${logged[i]!.weightKg} kg` : ''}
+                {logged[i]!.made ? '' : ' · missed, repeats'}
+              </span>
+            </div>
+          ))}
+          <button type="button" className="text-xs text-muted-foreground hover:underline" onClick={() => setChanging(true)}>
+            Change
+          </button>
+        </div>
+      ) : (
+        <>
+          <p className="text-xs text-muted-foreground">
+            Made every rep? A made lift goes up next time; a miss repeats its weight.
+          </p>
+          <div className="space-y-2">
+            {lifts.map((ea) => {
+              const id = ea.exercise!.id
+              const a = answers[id]
+              const set = (next: Partial<LiftAnswer>) => setAnswers((s) => ({ ...s, [id]: { ...s[id], ...next } }))
+              return (
+                <div key={id} className="flex flex-wrap items-center gap-2 text-sm">
+                  <span className="min-w-32 font-medium">{ea.exercise!.name}</span>
+                  {ea.load.weight_kg != null ? (
+                    <span className="text-muted-foreground">{ea.load.weight_kg} kg</span>
+                  ) : (
+                    <input
+                      aria-label={`${ea.exercise!.name} kg`}
+                      inputMode="decimal"
+                      placeholder="kg"
+                      className="h-8 w-20 rounded-md border bg-background px-2 text-sm"
+                      value={a.kg}
+                      onChange={(e) => set({ kg: e.target.value })}
+                    />
+                  )}
+                  <div className="flex gap-1" role="group" aria-label={`${ea.exercise!.name} outcome`}>
+                    <Button size="sm" variant={a.made ? 'default' : 'outline'} onClick={() => set({ made: true })}>Made</Button>
+                    <Button size="sm" variant={a.made ? 'outline' : 'default'} onClick={() => set({ made: false })}>Missed</Button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" disabled={busy} onClick={() => save(true)}>
+              <BadgeCheck className="size-4 mr-1.5" /> All made
+            </Button>
+            <Button size="sm" variant="outline" disabled={busy} onClick={() => save(false)}>
+              Save
             </Button>
           </div>
         </>

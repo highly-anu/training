@@ -42,8 +42,8 @@ export function ProgramTuner() {
   // The track the program will run, and every track the selection offers
   // (a blend may run any member's track).
   const picked = useMemo(
-    () => builderTrack(philosophies, selectedPhilosophyIds, selectedTrackId),
-    [philosophies, selectedPhilosophyIds, selectedTrackId],
+    () => builderTrack(philosophies, selectedPhilosophyIds, selectedTrackId, constraints.training_level),
+    [philosophies, selectedPhilosophyIds, selectedTrackId, constraints.training_level],
   )
   const activeTrack = picked?.track
   const trackOptions = useMemo(() => {

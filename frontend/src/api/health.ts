@@ -120,11 +120,20 @@ export function removeWorkout(id: string): void {
  * the log, and answers with what it wrote. A watch-recorded or linked session
  * logs no per-exercise outcome, so this is what a regenerate counts.
  */
-export async function confirmSession(sessionKey: string, clean: boolean, rpe: number): Promise<{
+export async function confirmSession(
+  sessionKey: string,
+  clean: boolean,
+  rpe?: number,
+  /** A loaded lift's outcome (Starting Strength): the ones not named were made. */
+  lifts?: Record<string, { made: boolean; weightKg?: number }>,
+): Promise<{
   exercises: Record<string, ExercisePerformance>
   completedAt?: string
 }> {
-  const res = await apiClient.post(`${BASE}/sessions/${encodeURIComponent(sessionKey)}/confirm`, { clean, rpe })
+  const body: Record<string, unknown> = { clean }
+  if (rpe != null) body.rpe = rpe
+  if (lifts) body.lifts = lifts
+  const res = await apiClient.post(`${BASE}/sessions/${encodeURIComponent(sessionKey)}/confirm`, body)
   return res as unknown as { exercises: Record<string, ExercisePerformance>; completedAt?: string }
 }
 

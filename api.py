@@ -505,6 +505,7 @@ def get_frameworks():
 def get_philosophies():
     philosophies = loader.load_philosophies()
     from src.training_contract import load_contract
+    exercises, _ = loader.load_all_exercises()
     for philosophy in philosophies:
         for track in philosophy.get('tracks', []):
             contract = load_contract(philosophy['id'], track['id'])
@@ -524,6 +525,13 @@ def get_philosophies():
                         - set((contract.get('level_seeds') or {}).get(level) or []))
                         for level in contract['training_levels']},
                     'kettlebell_count': 2 if contract.get('requires_kettlebell_pair') else 1,
+                    # Lifts the athlete may start from a weight they last made
+                    # (`starting_loads_kg`); left empty, the first session
+                    # works up to one. Optional — never a requirement.
+                    'starting_loads': [{'id': lift, 'name': (exercises.get(lift) or {}).get('name', lift)}
+                                       for m in contract['modules']
+                                       if m['progression']['model'] == 'load_per_exposure'
+                                       for lift in m['progression'].get('lifts') or {}],
                 }
     return jsonify(philosophies)
 
