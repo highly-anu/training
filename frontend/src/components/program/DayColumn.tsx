@@ -17,13 +17,17 @@ interface DayColumnProps {
   sessions: Session[]
   weekNumber: number
   isToday: boolean
+  /** A draft program (SessionCard's onOpen): opens a session, never reads logs. */
+  onOpenSession?: (sessionIndex: number) => void
+  isHighlighted?: (sessionIndex: number) => boolean
 }
 
-export function DayColumn({ day, sessions, weekNumber, isToday }: DayColumnProps) {
+export function DayColumn({ day, sessions, weekNumber, isToday, onOpenSession, isHighlighted }: DayColumnProps) {
   const dayIndex = DAYS.indexOf(day)
   const isWeekend = dayIndex >= 5
   const sessionLogs = useProfileStore((s) => s.sessionLogs)
-  const isComplete = sessions.length > 0 && sessions.every((_, i) => sessionLogs[`${weekNumber}-${day}`]?.[i] === true)
+  const isComplete = !onOpenSession && sessions.length > 0
+    && sessions.every((_, i) => sessionLogs[`${weekNumber}-${day}`]?.[i] === true)
 
   return (
     <motion.div
@@ -53,7 +57,9 @@ export function DayColumn({ day, sessions, weekNumber, isToday }: DayColumnProps
       <div className="space-y-2">
         {sessions.length > 0 ? (
           sessions.map((session, i) => (
-            <SessionCard key={i} session={session} weekNumber={weekNumber} day={day} sessionIndex={i} />
+            <SessionCard key={i} session={session} weekNumber={weekNumber} day={day} sessionIndex={i}
+              onOpen={onOpenSession ? () => onOpenSession(i) : undefined}
+              highlight={isHighlighted?.(i)} />
           ))
         ) : (
           <div className="rounded-lg border border-dashed border-border/50 p-3 flex flex-col items-center justify-center gap-1.5">

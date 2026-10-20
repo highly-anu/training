@@ -6,7 +6,7 @@ import { LoadingCard } from '@/components/shared/LoadingCard'
 import { useSubstituteExercise } from '@/api/programs'
 import { useProgramStore } from '@/store/programStore'
 import { formatLoad } from '@/lib/formatLoad'
-import type { ExerciseAlternative, GeneratedProgram, WeekData } from '@/api/types'
+import type { ExerciseAlternative, ExerciseAssignment, GeneratedProgram, WeekData } from '@/api/types'
 
 interface SwapExerciseSheetProps {
   open: boolean
@@ -17,6 +17,10 @@ interface SwapExerciseSheetProps {
   day: string
   sessionIndex: number
   exerciseIndex: number
+  /** A draft program (the preview): the pick goes here instead of the active program. */
+  onPick?: (assignment: ExerciseAssignment) => void
+  /** The draft's methodologies; the active program's by default. */
+  philosophyIds?: string[]
 }
 
 /**
@@ -25,11 +29,12 @@ interface SwapExerciseSheetProps {
  * in place and saves through the usual revision-checked path.
  */
 export function SwapExerciseSheet({
-  open, onOpenChange, program, weekData, weekIndex, day, sessionIndex, exerciseIndex,
+  open, onOpenChange, program, weekData, weekIndex, day, sessionIndex, exerciseIndex, onPick, philosophyIds,
 }: SwapExerciseSheetProps) {
   const session = weekData.schedule[day]?.[sessionIndex]
   const assignment = session?.exercises[exerciseIndex]
-  const sourceGoalIds = useProgramStore((s) => s.sourceGoalIds)
+  const storedGoalIds = useProgramStore((s) => s.sourceGoalIds)
+  const sourceGoalIds = philosophyIds ?? storedGoalIds
   const replaceExercise = useProgramStore((s) => s.replaceExercise)
   const substitute = useSubstituteExercise()
   const [alternatives, setAlternatives] = useState<ExerciseAlternative[] | null>(null)
@@ -65,7 +70,8 @@ export function SwapExerciseSheet({
   if (!session || !assignment?.exercise) return null
 
   function pick(alt: ExerciseAlternative) {
-    replaceExercise(weekIndex, day, sessionIndex, exerciseIndex, alt.assignment)
+    if (onPick) onPick(alt.assignment)
+    else replaceExercise(weekIndex, day, sessionIndex, exerciseIndex, alt.assignment)
     onOpenChange(false)
   }
 

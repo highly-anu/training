@@ -7,6 +7,7 @@ import { MotionConfig } from 'framer-motion'
 import { RootLayout } from '@/components/layout/RootLayout'
 import { Dashboard } from '@/pages/Dashboard'
 import { ProgramBuilder } from '@/pages/ProgramBuilder'
+import { ProgramPreview } from '@/pages/ProgramPreview'
 import { ProgramView } from '@/pages/ProgramView'
 import { ProgramHistoryDetail } from '@/pages/ProgramHistoryDetail'
 import { SessionDetail } from '@/pages/SessionDetail'
@@ -61,6 +62,8 @@ export default function App() {
                     <Route path="program" element={<ProgramView />} />
                     {/* The builder is a flow under Program, not a destination. */}
                     <Route path="program/new" element={<ProgramBuilder />} />
+                    {/* The builder's last step: a draft, started only when asked. */}
+                    <Route path="program/preview" element={<ProgramPreview />} />
                     {/* Before the :week/:day route, or "history" is read as a week. */}
                     <Route path="program/history" element={<LegacyRedirect to="/program" params={{ tab: 'history' }} />} />
                     <Route path="program/history/:versionId" element={<ProgramHistoryDetail />} />

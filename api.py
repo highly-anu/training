@@ -29,6 +29,7 @@ from src import watch_spec as _watch_spec
 from src import standards as _standards_mod
 from src.analytics import benchmarks_data as _bd
 from src import goals, loader, provenance
+from src import blockers as _blockers
 from src import phases
 from src.phases import PhaseResolutionError
 from src.similarity import compute_all_similarities
@@ -341,7 +342,12 @@ def _clean_exercise_assignment(ea: dict) -> dict:
         'coverage_gap': bool(ea.get('coverage_gap')),
         'equipment_gap': bool(ea.get('equipment_gap')),
         'gap_reason':   ea.get('gap_reason'),
+        # What emptied the slot, named: {cause, exercise, needs | flags |
+        # requires} (selector._explain_unfilled); absent on a filled slot.
+        **({'blocked_by': ea['blocked_by']} if ea.get('blocked_by') else {}),
         'substituted_for': ea.get('substituted_for'),
+        # The injury flag whose `modified_exercises` gave the substitute.
+        **({'substituted_by_flag': ea['substituted_by_flag']} if ea.get('substituted_by_flag') else {}),
         'error':       ea.get('error'),
         'load_note':   load_note,
         'notes':       slot.get('notes'),
@@ -392,6 +398,16 @@ def _transform_program(raw: dict, goal: dict, constraints: dict, validation) -> 
                     # otherwise.
                     **({'substituted_for': session['substituted_for']}
                        if session.get('substituted_for') else {}),
+                    # Level or phase: why no archetype of `substituted_for` fit.
+                    **({'substitution_cause': session['substitution_cause']}
+                       if session.get('substitution_cause') else {}),
+                    # The equipment its archetype asks for that the athlete
+                    # lacks; it runs scaled (generator._resolve_session pass 2).
+                    **({'equipment_scaled': session['equipment_scaled']}
+                       if session.get('equipment_scaled') else {}),
+                    # A session no archetype could fill says why.
+                    **({'error': session['error']}
+                       if session.get('error') and not session.get('archetype') else {}),
                     # A test of the phase's standards, put in place of a
                     # session of `in_place_of` (src/generator._plan_week_tests).
                     **({'test': session['test']} if session.get('test') else {}),
@@ -439,6 +455,9 @@ def _transform_program(raw: dict, goal: dict, constraints: dict, validation) -> 
         'weeks':          weeks,
         'volume_summary': volume_summary,
         'phase_summary':  _phase_summary(weeks, goal),
+        # What the constraints held back, counted once for both clients
+        # (src/blockers.held_back); derived from the weeks, never stored.
+        'held_back':      _blockers.held_back(weeks),
         'compromises':    raw.get('compromises', []),
         'coverage_report': raw.get('coverage_report'),
         **{k: raw[k] for k in ('training_contract', 'module_state') if k in raw},
@@ -921,6 +940,14 @@ def generate_program():
         # failed generate can no longer replace a stored program.
         if not body.get('persist'):
             return resp
+        # The PUT's optimistic concurrency, for a caller that sends the
+        # revision it read: a commit may not replace newer work.
+        if body.get('baseRevision') is not None:
+            from src.db import get_program_revision as _current_rev
+            current_rev = _current_rev(g.user_id)
+            if current_rev is not None and str(body['baseRevision']) != str(current_rev):
+                return jsonify({'saved': False, 'detail': 'stale_revision',
+                                'currentRevision': current_rev}), 409
         try:
             from src.db import get_user_program, save_user_program
             import json as _json
@@ -1315,22 +1342,96 @@ def _generated_json(resp) -> tuple[dict, int]:
 @require_authoring
 def dev_constraint_impact():
     """What the athlete's equipment, injuries, level and proficiency change in a program,
-    and which one changes it (for the Dev Lab; src/constraint_impact.py).
+    and which one changes it (for the Dev Lab; src/constraint_impact.py)."""
+    out, status = _constraint_impact(request.get_json(silent=True) or {})
+    return jsonify(out), status
+
+
+# The impact and constraint-change routes run several generations each (up to
+# seven, a few seconds apiece) on a 256 MB machine serving four threads. One
+# runs at a time in the process and one per athlete; a request that finds the
+# gate taken answers 429 at once, never waiting on it — four threads parked on
+# a 20 s wait were the whole pool, and the watch's sync queued behind them
+# (test_worker_stalls.py). The clients retry a 429.
+#
+# Only impact answers are cached, small ones, for ten minutes, keyed on the
+# body and the athlete's day: a constraint-change answer carries a whole
+# generated program (~1 MB, several as dicts), and the clients already keep
+# theirs per program revision. The generator reads state the body does not
+# carry (a contract's confirmed sessions), so nothing is kept long.
+_HEAVY_GATE = threading.BoundedSemaphore(1)
+_HEAVY_USERS: set = set()
+_HEAVY_LOCK = threading.Lock()   # guards _HEAVY_USERS and _HEAVY_CACHE
+_HEAVY_CACHE: 'dict[str, tuple[float, tuple[dict, int]]]' = {}
+_HEAVY_CACHE_MAX = 8
+_HEAVY_CACHE_TTL = 600
+_HEAVY_CACHE_MAX_BYTES = 512 * 1024
+
+
+def _heavy_run(kind: str, body: dict, run, cache: bool = False):
+    """`run(body)` → (dict, status), one at a time; busy answers 429
+    `{busy: true}`. `cache` keeps a small 200 answer for ten minutes."""
+    import hashlib
+    import time
+    user = getattr(g, 'user_id', None)
+    key = hashlib.sha256(json.dumps([kind, user, _date.today().isoformat(), body],
+                                    sort_keys=True, default=str).encode()).hexdigest()
+    now = time.monotonic()
+    with _HEAVY_LOCK:
+        hit = _HEAVY_CACHE.get(key) if cache else None
+        if hit and now - hit[0] < _HEAVY_CACHE_TTL:
+            return hit[1]
+        if user in _HEAVY_USERS:
+            return {'busy': True, 'detail': 'Still working on your last request.'}, 429
+        _HEAVY_USERS.add(user)
+    try:
+        if not _HEAVY_GATE.acquire(blocking=False):
+            return {'busy': True, 'detail': 'The server is busy; trying again.'}, 429
+        try:
+            out = run(body)
+        finally:
+            _HEAVY_GATE.release()
+    finally:
+        with _HEAVY_LOCK:
+            _HEAVY_USERS.discard(user)
+    if cache and out[1] == 200 and len(json.dumps(out[0], default=str)) <= _HEAVY_CACHE_MAX_BYTES:
+        with _HEAVY_LOCK:
+            for stale in [k for k, (at, _) in _HEAVY_CACHE.items() if now - at >= _HEAVY_CACHE_TTL]:
+                _HEAVY_CACHE.pop(stale, None)
+            while len(_HEAVY_CACHE) >= _HEAVY_CACHE_MAX:
+                _HEAVY_CACHE.pop(next(iter(_HEAVY_CACHE)), None)
+            _HEAVY_CACHE[key] = (now, out)
+    return out
+
+
+@app.post('/api/programs/impact')
+@require_auth
+def program_impact():
+    """The program preview's "Held back": what the athlete's equipment, injuries,
+    level and proficiency change against a reference with nothing in the way,
+    and what would restore it (src/constraint_impact.py). Generate's body."""
+    body = request.get_json(silent=True) or {}
+    out, status = _heavy_run('impact', body, _constraint_impact, cache=True)
+    return jsonify(out), status
+
+
+def _constraint_impact(body: dict) -> tuple[dict, int]:
+    """The constraint-impact runs for generate's `body`.
 
     Takes generate's body (plus an optional `reference: {equipment,
     training_level}`) and generates the athlete's program, a reference with
     nothing in the way, and one run per constraint with only that one lifted —
-    up to seven generations, so it runs where the authoring routes do and on at
-    most 12 weeks. An event date would size the program to the event, so it is
-    dropped: the start phase is the request's. A request the generator refuses
-    (no weeks: a training contract that cannot run as written, or an infeasible
-    schedule) is answered with what alone would let it generate.
+    up to seven generations, on at most 12 weeks. An event date would size the
+    program to the event, so it is dropped: the start phase is the request's.
+    A request the generator refuses (no weeks: a training contract that cannot
+    run as written, or an infeasible schedule) is answered with what alone
+    would let it generate.
     """
     import copy as _copy
     from src import constraint_impact
     from src.selector import _get_unlocked
 
-    body = request.get_json(silent=True) or {}
+    body = _copy.deepcopy(body)
     body.pop('event_date', None)
     body.pop('persist', None)
     try:
@@ -1341,7 +1442,7 @@ def dev_constraint_impact():
 
     actual, status = _generated_json(_generate_program_inner(_copy.deepcopy(body)))
     if status != 200 or not actual.get('goal'):
-        return jsonify(actual), status
+        return actual, status
     refused = not actual.get('weeks')
 
     athlete = actual['constraints']
@@ -1383,17 +1484,17 @@ def dev_constraint_impact():
     lifts = constraint_impact.describe_lifts(
         athlete, {k: v for k, v in runs.items() if k != 'reference'}, exercises, flags)
     if refused:
-        return jsonify(constraint_impact.explain_refusal(
-            actual, {name: bool(p.get('weeks')) for name, p in programs.items()}, lifts, reference))
+        return constraint_impact.explain_refusal(
+            actual, {name: bool(p.get('weeks')) for name, p in programs.items()}, lifts, reference), 200
 
     if not programs['reference'].get('weeks'):
         # Nothing to compare against: every session would read as "added".
-        return jsonify({'feasible': True, 'reference_generates': False, 'lifts': lifts,
-                        'reference': {k: reference.get(k) for k in ('equipment', 'training_level',
-                                                                     'mastered_exercises', 'kettlebell_count')
-                                      if k in reference},
-                        'detail': 'The reference with nothing in the way does not generate, so there is '
-                                  'nothing to compare the program with.'})
+        return {'feasible': True, 'reference_generates': False, 'lifts': lifts,
+                'reference': {k: reference.get(k) for k in ('equipment', 'training_level',
+                                                             'mastered_exercises', 'kettlebell_count')
+                              if k in reference},
+                'detail': 'The reference with nothing in the way does not generate, so there is '
+                          'nothing to compare the program with.'}, 200
     level_now = athlete.get('training_level', 'intermediate')
     # Per package, as the selector unlocks for an archetype's own package.
     unlocked = {pkg: _get_unlocked(level_now, lib['exercises'], {pkg: (lib['level_seeds'] or {}).get(pkg, {})})
@@ -1406,7 +1507,56 @@ def dev_constraint_impact():
         injury_flags=flags,
         unlocked=unlocked,
     )
-    return jsonify({'feasible': True, 'validation': actual.get('validation'), 'lifts': lifts, **result})
+    return {'feasible': True, 'validation': actual.get('validation'), 'lifts': lifts, **result}, 200
+
+
+@app.post('/api/programs/constraint-change')
+@require_auth
+def program_constraint_change():
+    """Does a profile change change the program? Generate's body for the
+    remaining weeks with the profile's constraints, plus `baseline_constraints`:
+    the same request with the program's own. Both are generated and lined up
+    session by session (constraint_impact.diff_programs), so the answer is the
+    change's own effect — not the athlete's swaps on the stored plan, nor what
+    the generator does differently since it was built. `program` (the tail with
+    the new constraints) comes back only when something changed, for the
+    preview and the apply.
+    """
+    body = request.get_json(silent=True) or {}
+    if not isinstance(body.get('baseline_constraints'), dict) or not isinstance(body.get('constraints'), dict):
+        return jsonify({'error': 'constraints and baseline_constraints are required'}), 422
+    out, status = _heavy_run('constraint-change', body, _constraint_change)
+    return jsonify(out), status
+
+
+def _constraint_change(body: dict) -> tuple[dict, int]:
+    import copy as _copy
+    from src import constraint_impact
+
+    after_body = _copy.deepcopy(body)
+    after_body.pop('persist', None)
+    before_body = _copy.deepcopy(after_body)
+    before_body['constraints'] = before_body.pop('baseline_constraints')
+    after_body.pop('baseline_constraints', None)
+    if 'baseline_custom_injury_flags' in before_body:
+        before_body['custom_injury_flags'] = before_body.pop('baseline_custom_injury_flags')
+    after_body.pop('baseline_custom_injury_flags', None)
+
+    before, st_before = _generated_json(_generate_program_inner(before_body))
+    after, st_after = _generated_json(_generate_program_inner(after_body))
+    if st_after != 200:
+        return after, st_after
+    if st_before != 200 or not before.get('weeks'):
+        # Nothing to compare with: the program as it stands could not be
+        # rebuilt. Never "unaffected" — that would record the new settings
+        # on a program nobody checked — so the profile's version, built or
+        # refused, is what the client offers.
+        return {'affected': True, 'comparable': False,
+                'sessions': {'total': 0, 'changed': 0}, 'first_week_number': None, 'changes': [],
+                'program': after, 'validation': after.get('validation')}, 200
+    diff = constraint_impact.diff_programs(before, after)
+    return {**diff, 'comparable': True, 'validation': after.get('validation'),
+            **({'program': after} if diff['affected'] else {})}, 200
 
 
 @app.post('/api/sessions/generate')
@@ -2691,6 +2841,11 @@ def save_user_program_endpoint():
         # instead of destroying newer work. `revision` is omitted by older
         # clients, which keep the previous (unchecked) behaviour.
         from src.db import get_program_revision
+        # A previewed program being started (both clients' Start): a rebuild of
+        # the same block keeps the days already behind the athlete, as
+        # generate's persist branch does. Only on request — an ordinary save
+        # (a move into yesterday, a swap) must not be undone.
+        keep_days_behind = bool(body.pop('keepDaysBehind', False))
         base_rev = body.pop('baseRevision', None) or body.pop('revision', None)
         if base_rev is not None:
             current_rev = get_program_revision(user_id)
@@ -2756,6 +2911,12 @@ def save_user_program_endpoint():
 
             body['currentProgram'] = current
 
+        kept_days = 0
+        if keep_days_behind:
+            stored = get_user_program(user_id)
+            body, kept_days = _keep_days_behind_counted(
+                user_id, _normalize_program_keys(stored) if stored else None, body)
+
         save_user_program(user_id, body)
         revision = get_program_revision(user_id)
         # After the save and after the 409 check: history must never claim a
@@ -2770,9 +2931,55 @@ def save_user_program_endpoint():
             # The saved weeks' summary: a client that moved, swapped or
             # spliced weeks shows phase changes for what it just saved.
             'phaseSummary':     _phase_summary(saved.get('weeks') or [], saved.get('goal')),
+            # Elapsed days put back (keepDaysBehind): the saved weeks differ
+            # from what the client sent, so it reads the program again.
+            'keptDays':         kept_days,
         })
     except Exception as e:
         app.logger.warning('save_user_program error: %s', e)
+        return jsonify({'saved': False, 'detail': str(e)}), 503
+
+
+# The constraints a program records that a profile change can move.
+_ADOPTABLE_CONSTRAINTS = ('equipment', 'training_level', 'injury_flags', 'days_per_week')
+
+
+@app.patch('/api/user/program/constraints')
+@require_auth
+def adopt_program_constraints():
+    """Record that the active program holds for the profile's new constraints.
+
+    After POST /programs/constraint-change answered `affected: false`, the
+    program is what the new constraints would build, so it now says it was
+    built for them and the profile stops offering a regenerate. Merges only
+    `equipment`, `training_level`, `injury_flags` and `days_per_week` (and
+    `custom_injury_flags`); under the PUT's revision check. Constraints are
+    outside the skeleton hash, so no program version is minted.
+    """
+    from src.db import get_program_revision, get_user_program, save_user_program
+    body = request.get_json(silent=True) or {}
+    patch = {k: v for k, v in (body.get('constraints') or {}).items() if k in _ADOPTABLE_CONSTRAINTS}
+    if not patch and 'custom_injury_flags' not in body:
+        return jsonify({'saved': False, 'detail': 'nothing to adopt'}), 422
+    try:
+        user_id = g.user_id
+        base_rev = body.get('baseRevision')
+        current_rev = get_program_revision(user_id)
+        if base_rev is not None and current_rev is not None and str(base_rev) != str(current_rev):
+            return jsonify({'saved': False, 'detail': 'stale_revision', 'currentRevision': current_rev}), 409
+        stored = get_user_program(user_id) or {}
+        stored = _normalize_program_keys(stored) if stored else {}
+        program = stored.get('currentProgram')
+        if not program:
+            return jsonify({'saved': False, 'detail': 'no active program'}), 404
+        program['constraints'] = {**(program.get('constraints') or {}), **patch}
+        if 'custom_injury_flags' in body:
+            program['constraints']['custom_injury_flags'] = body.get('custom_injury_flags') or []
+        save_user_program(user_id, stored)
+        return jsonify({'saved': True, 'revision': get_program_revision(user_id),
+                        'constraints': program['constraints']})
+    except Exception as e:
+        app.logger.warning('adopt constraints error: %s', e)
         return jsonify({'saved': False, 'detail': str(e)}), 503
 
 
@@ -4220,22 +4427,27 @@ def _keep_days_behind(user_id: str, existing: dict | None, envelope: dict) -> di
     "from tomorrow" themselves; the whole-program regenerate saved here did
     not, and rewrote a session trained that morning (2026-10-19). With the past
     kept, record_version sees the block continue and carries its matches."""
+    return _keep_days_behind_counted(user_id, existing, envelope)[0]
+
+
+def _keep_days_behind_counted(user_id: str, existing: dict | None, envelope: dict) -> tuple[dict, int]:
+    """`_keep_days_behind`, and how many elapsed days it put back."""
     from src import program_history as ph
     try:
         start = ph.start_date_of(envelope)
         if not existing or not start or ph.start_date_of(existing) != start:
-            return envelope
+            return envelope, 0
         today = _today_for(_standards_context(user_id)[1])
         cutoff = today + _timedelta(days=1) if ph.trained_on(user_id, today) else today
         if _date.fromisoformat(start) >= cutoff:
-            return envelope
+            return envelope, 0
         restored, changed = ph.restore_elapsed(user_id, envelope, cutoff)
         if changed:
-            app.logger.info('generate: kept %d elapsed day(s) of %s', len(changed), user_id)
-        return restored
+            app.logger.info('program save: kept %d elapsed day(s) of %s', len(changed), user_id)
+        return restored, len(changed)
     except Exception as err:  # noqa: BLE001 — keeping the past must never fail the save
-        app.logger.warning('generate: could not keep the elapsed days: %s', err)
-        return envelope
+        app.logger.warning('program save: could not keep the elapsed days: %s', err)
+        return envelope, 0
 
 
 def _standards_context(user_id: str) -> tuple[str, str | None]:

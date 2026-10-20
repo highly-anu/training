@@ -269,6 +269,11 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
                 : 'No weeks remaining to regenerate — your program is complete.'}
             </p>
           </button>
+          {regenerate.isError && (
+            <p className="text-xs text-red-700 dark:text-red-300">
+              {regenerate.error instanceof Error ? regenerate.error.message : 'Could not regenerate'}
+            </p>
+          )}
 
           {/* Full rebuild option */}
           <button

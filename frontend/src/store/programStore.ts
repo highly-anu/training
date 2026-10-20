@@ -1,6 +1,7 @@
 import { create } from 'zustand'
-import type { ExerciseAssignment, GeneratedProgram, Session } from '@/api/types'
+import type { AthleteConstraints, ExerciseAssignment, GeneratedProgram, Session } from '@/api/types'
 import { fetchUserProgram, saveUserProgram, lastProgramSaveError } from '@/api/userdata'
+import { withExerciseReplaced, withSessionReplaced } from '@/lib/programEdits'
 
 interface ProgramStore {
   currentProgram: GeneratedProgram | null
@@ -37,7 +38,10 @@ interface ProgramStore {
     eventDate: string | null,
     startDate: string | null,
     sourceGoalIds: string[],
-    sourceGoalWeights: Record<string, number>
+    sourceGoalWeights: Record<string, number>,
+    /** keepDaysBehind: a previewed program's Start — a rebuild of the same
+     *  block keeps the days already behind the athlete (server-side). */
+    options?: { keepDaysBehind?: boolean },
   ) => void
   setProgramStartDate: (date: string | null) => void
   setEventDate: (date: string | null) => void
@@ -48,6 +52,12 @@ interface ProgramStore {
   replaceSession: (weekIndex: number, day: string, sessionIndex: number, newSession: Session) => void
   /** Replace one exercise inside a session (the swap flow). */
   replaceExercise: (weekIndex: number, day: string, sessionIndex: number, exerciseIndex: number, assignment: ExerciseAssignment) => void
+  /**
+   * The server recorded the profile's constraints on the program
+   * (PATCH /user/program/constraints): take them and the new revision, with
+   * no save of our own.
+   */
+  adoptConstraints: (constraints: AthleteConstraints, revision: string) => void
   /** Load program from server (called on login). */
   loadFromServer: (userId?: string) => Promise<void>
 }
@@ -71,6 +81,12 @@ async function persistProgram(
     // saveUserProgram advances the revision in place on success.
     revision: payload.revision ?? null,
   })
+  // The server put back days already behind the athlete (a Start with
+  // keepDaysBehind): what it stored is not what is on screen, so read it.
+  if (ok && (payload.keptDays ?? 0) > 0) {
+    await useProgramStore.getState().loadFromServer()
+    return
+  }
   // The server's summary of the weeks just saved (a move, a swap, a spliced
   // regenerate). Applied only while that copy is still the one on screen.
   const current = useProgramStore.getState().currentProgram
@@ -115,7 +131,7 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
     })
   },
 
-  setFullProgram: (program, eventDate, startDate, sourceGoalIds, sourceGoalWeights) => {
+  setFullProgram: (program, eventDate, startDate, sourceGoalIds, sourceGoalWeights, options) => {
     set({
       currentProgram:     program,
       programLoadState:   'loaded',
@@ -132,6 +148,7 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
       sourceGoalIds,
       sourceGoalWeights,
       revision: get().revision,
+      ...(options?.keepDaysBehind ? { keepDaysBehind: true } : {}),
     })
   },
 
@@ -168,18 +185,13 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
     }
   },
 
+  // Both saves send the loaded revision: without it the PUT went unchecked
+  // and persistProgram then cleared the revision, so every later save from
+  // this tab was unchecked too.
   replaceSession: (weekIndex, day, sessionIndex, newSession) => {
-    set((state) => {
-      if (!state.currentProgram) return {}
-      const weeks = state.currentProgram.weeks.map((week, i) => {
-        if (i !== weekIndex) return week
-        const sessions = [...(week.schedule[day] ?? [])]
-        if (sessionIndex < 0 || sessionIndex >= sessions.length) return week
-        sessions[sessionIndex] = newSession
-        return { ...week, schedule: { ...week.schedule, [day]: sessions } }
-      })
-      return { currentProgram: { ...state.currentProgram, weeks } }
-    })
+    set((state) => state.currentProgram
+      ? { currentProgram: withSessionReplaced(state.currentProgram, weekIndex, day, sessionIndex, newSession) }
+      : {})
     const s = get()
     if (s.currentProgram) {
       void persistProgram(set, {
@@ -188,25 +200,16 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
         eventDate:         s.eventDate,
         sourceGoalIds:     s.sourceGoalIds,
         sourceGoalWeights: s.sourceGoalWeights,
+        revision:          s.revision,
       })
     }
   },
 
   replaceExercise: (weekIndex, day, sessionIndex, exerciseIndex, assignment) => {
-    set((state) => {
-      if (!state.currentProgram) return {}
-      const weeks = state.currentProgram.weeks.map((week, i) => {
-        if (i !== weekIndex) return week
-        const sessions = [...(week.schedule[day] ?? [])]
-        const session = sessions[sessionIndex]
-        if (!session || exerciseIndex < 0 || exerciseIndex >= session.exercises.length) return week
-        const exercises = [...session.exercises]
-        exercises[exerciseIndex] = assignment
-        sessions[sessionIndex] = { ...session, exercises }
-        return { ...week, schedule: { ...week.schedule, [day]: sessions } }
-      })
-      return { currentProgram: { ...state.currentProgram, weeks } }
-    })
+    set((state) => state.currentProgram
+      ? { currentProgram: withExerciseReplaced(state.currentProgram, weekIndex, day, sessionIndex,
+                                               exerciseIndex, assignment) }
+      : {})
     const s = get()
     if (s.currentProgram) {
       void persistProgram(set, {
@@ -215,8 +218,15 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
         eventDate:         s.eventDate,
         sourceGoalIds:     s.sourceGoalIds,
         sourceGoalWeights: s.sourceGoalWeights,
+        revision:          s.revision,
       })
     }
+  },
+
+  adoptConstraints: (constraints, revision) => {
+    set((state) => state.currentProgram
+      ? { currentProgram: { ...state.currentProgram, constraints }, revision }
+      : {})
   },
 
   loadFromServer: async (userId?: string) => {

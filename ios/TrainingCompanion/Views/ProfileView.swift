@@ -83,7 +83,7 @@ private struct EquipmentTab: View {
 
     var body: some View {
         List {
-            if !appState.constraintDifferences.isEmpty {
+            if appState.showsRegenerateOffer {
                 Section { RegenerateOfferCard() }
             }
             Section {
@@ -419,7 +419,7 @@ private struct AthleteTab: View {
 
     var body: some View {
         List {
-            if !appState.constraintDifferences.isEmpty {
+            if appState.showsRegenerateOffer {
                 Section { RegenerateOfferCard() }
             }
             Section {
@@ -822,7 +822,7 @@ private struct ScheduleTab: View {
 
     var body: some View {
         List {
-            if !appState.constraintDifferences.isEmpty {
+            if appState.showsRegenerateOffer {
                 Section { RegenerateOfferCard() }
             }
             Section {

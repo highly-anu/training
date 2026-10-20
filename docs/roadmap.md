@@ -51,6 +51,7 @@ deferred is under *Later*.
 | 12 | Standards: the Garmin unit tests, a test day on both watches | P2 | S | API, watch |
 | 13 | Heart rate from the programming: ship the watches' exercise times, fidelity, pauses | P2 | M | watch, engine |
 | 14 | Watch parity: the Apple Watch on the server's contract and vocabulary | P2 | M | watch, iOS, API |
+| 15 | Program preview on the phone; the regenerate offer that asks the server first (*IA*) | P2 | M | iOS, web |
 
 ---
 
@@ -1033,6 +1034,56 @@ branch:
 
    `garmin/VERSION` (1.7.0) is read by `build.sh --release` and `--demo`, which print the
    version for the store form and the `ciq-v<VERSION>` tag.
+
+### 15. Program preview: the phone, and what is left — P2 · M
+
+The web and the server landed on 2026-10-20 (`feat/program-preview`): a generated program
+is a draft until started (Program ▸ Preview: Overview · Calendar · Held back, Adjust, swaps
+on the draft), slots carry `blocked_by`, `POST /programs/impact` opens the Dev Lab's
+comparison to every athlete, and the Profile offers a regenerate only when
+`POST /programs/constraint-change` says the change moves a session (an unaffected one is
+adopted with `PATCH /user/program/constraints`). Before this, adding a kettlebell no
+session used asked to rebuild the plan. Left open:
+
+1. **iOS (M) — done 2026-10-20** (`feat/program-preview-ios`). The builder and the
+   settings sheet's full regenerate preview a `persist: false` draft
+   (`ProgramPreviewView`, design-system §6.39: Plan · Held back, Adjust, swaps on the
+   draft) and start it through `saveProgramToServer`; `RegenerateOfferCard` asks
+   `/programs/constraint-change` and adopts or offers (§6.17); `ProgramConstraintsDiff`
+   ignores `open_space` and carries a contract's confirmations; the equipment and injury
+   toggles are one component (§6.38). Left: a replaced *session* on the draft (the web
+   has it; the phone swaps exercises only).
+2. **Week templates say which check failed (S).** `generator._fits_as_written` answers a
+   boolean; a templated day nothing fits says "equipment, injuries or N minutes". Return
+   the failed check so the day's note can name it (Held back already does, from the runs).
+3. **Held back is slow (S).** 7–10 s for 12 weeks (seven generations; 79 MB peak RSS
+   measured). Cached per body in the process; a deploy or a second machine starts cold.
+   Consider running the relaxed generations only for the constraints the athlete has
+   (already so) and fewer weeks for the comparison.
+4. **The Program page's injuries sheet and "From tomorrow onwards"** still regenerate
+   without a preview; route both through the regenerate preview. On the phone, Program
+   settings' "Regenerate from this week" does the same.
+5. **The regenerate offer said nothing after Apply — fixed 2026-10-20.** Apply removes the
+   difference the banner (web) and card (iOS) were shown for, so they vanished. Both now
+   say "Rebuilt N weeks with these settings" until a new difference appears (web
+   `RegenerateFromWeekBanner`'s `outcome`, iOS `AppState.profileOfferOutcome`, which also
+   carries "doesn't change"; `preview.test.tsx`).
+6. **Programs stored before `blocked_by` (S).** Their empty slots read the older generic
+   words ("Nothing fits your equipment") until they are regenerated. Leave it, or fill
+   `blocked_by` on read for the current program's empty slots (one selector call per slot).
+7. **The impact comparison's totals — fixed 2026-10-20.** `analyse` counted `total` over
+   the athlete's sessions while `changed` also counted reference sessions the program no
+   longer had, so Horsemen read 48 changed of 26. `total` is now every position either
+   program has a session at (`actual` and `reference` beside it), and both clients say
+   "N of M sessions change" again (`test_constraint_impact.py`).
+8. **The validator's minimum-days warning misleads single-modality methods (S).**
+   `MINIMAL_DAYS` says "lower-priority modalities will be dropped" for Starting Strength,
+   where nothing is; the preview's Schedule section repeats it. Word it from what the
+   scheduler actually dropped (its compromises), or say nothing when one modality runs.
+9. **Vite in a worktree under `.claude/` misses file changes (dev tooling, S).** The
+   watcher served the first transform of each file until Vite was restarted. Try
+   `server.watch.usePolling` or an explicit `server.watch` path when the root is under a
+   dot directory; meanwhile restart Vite (`--force`) after edits in a worktree.
 
 ## Later
 

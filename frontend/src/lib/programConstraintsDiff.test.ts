@@ -29,6 +29,12 @@ describe('programConstraintsDiff', () => {
     })).toEqual([])
   })
 
+  it('never counts open space, which the builder adds to every program', () => {
+    expect(constraintDifferences({ ...base, equipment: ['barbell', 'rack', 'plates', 'open_space'] }, {
+      trainingLevel: 'intermediate', equipment: ['plates', 'rack', 'barbell'], injuryFlags: [], weeklySchedule: null,
+    })).toEqual([])
+  })
+
   it('names each field that moved on', () => {
     const diffs = constraintDifferences(base, {
       trainingLevel: 'advanced', equipment: ['barbell', 'rack', 'kettlebell'], injuryFlags: ['lumbar_disc'],

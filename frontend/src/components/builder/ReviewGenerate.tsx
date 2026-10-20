@@ -10,32 +10,29 @@ import { ScheduleGuidance } from './ScheduleGuidance'
 import { useBuilderStore } from '@/store/builderStore'
 import { useProfileStore } from '@/store/profileStore'
 import { useFeasibility } from '@/hooks/useFeasibility'
-import { useGenerateProgram } from '@/api/programs'
+import { useGenerateDraft } from '@/api/programs'
 import { usePhilosophies } from '@/api/philosophies'
 import { useFrameworks } from '@/api/frameworks'
+import { usePreviewStore } from '@/store/previewStore'
+import { builderGenerateParams } from '@/lib/builderParams'
 import { scheduleToConstraints, type ScheduleConstraints } from '@/lib/scheduleToConstraints'
 import { builderTrack, mainFramework } from '@/lib/tracks'
-import type { AthleteConstraints } from '@/api/types'
 
 export function ReviewGenerate() {
   const navigate = useNavigate()
   const {
     selectedGoalIds,
-    goalWeights,
     sourceMode,
     selectedPhilosophyIds,
-    philosophyWeights,
     constraints,
     eventDate,
     startDate,
     selectedTrackId,
     startPhaseId,
-    priorityOverrides,
     numWeeks,
   } = useBuilderStore()
-  const setActiveGoalId = useProfileStore((s) => s.setActiveGoalId)
   const { customInjuryFlags, weeklySchedule } = useProfileStore()
-  const { mutate, isPending, error, data } = useGenerateProgram()
+  const { mutate, isPending, error, data } = useGenerateDraft()
   const { data: philosophies } = usePhilosophies()
   const { data: frameworks } = useFrameworks()
 
@@ -55,53 +52,19 @@ export function ReviewGenerate() {
 
   function handleGenerate() {
     if (!canGenerate) return
-
-    // Normalize blend weights
-    const blendTotal = selectedPhilosophyIds.reduce((s, id) => s + (philosophyWeights[id] ?? 50), 0) || 1
-    const normalizedPhilWeights = Object.fromEntries(
-      selectedPhilosophyIds.map((id) => [id, (philosophyWeights[id] ?? 50) / blendTotal])
-    )
-
-    const isMultiGoal = selectedGoalIds.length > 1
-    const goalTotal = selectedGoalIds.reduce((s, id) => s + (goalWeights[id] ?? 50), 0)
-    const normalizedGoalWeights = Object.fromEntries(
-      selectedGoalIds.map((id) => [id, (goalWeights[id] ?? 50) / goalTotal])
-    )
-
-    mutate(
-      {
-        // Philosophy path (modes 1 + 2)
-        ...(sourceMode === 'philosophy' ? { philosophyId: selectedPhilosophyIds[0] } : {}),
-        ...(sourceMode === 'blend' ? {
-          philosophyIds: selectedPhilosophyIds,
-          philosophyWeights: normalizedPhilWeights,
-        } : {}),
-        // Legacy goal path (custom mode)
-        ...(sourceMode === 'custom' || sourceMode === null ? {
-          goalId: selectedGoalIds[0],
-          goalIds: isMultiGoal ? selectedGoalIds : undefined,
-          goalWeights: isMultiGoal ? normalizedGoalWeights : undefined,
-        } : {}),
-        constraints: { ...constraints, ...scheduleOverride } as AthleteConstraints,
-        eventDate: eventDate ?? undefined,
-        startDate: startDate ?? undefined,
-        numWeeks: numWeeks ?? undefined,
-        trackId: selectedTrackId,
-        startPhaseId,
-        priorityOverrides: priorityOverrides,
-        customInjuryFlags,
+    const params = builderGenerateParams(useBuilderStore.getState(), weeklySchedule, customInjuryFlags)
+    mutate(params, {
+      onSuccess: (draft) => {
+        // A draft, not the program: the preview shows it, what the
+        // constraints held back, and starts it only when asked. A refusal
+        // goes there too — the preview says which change alone would let
+        // it build, and can adjust and try again — but never starts.
+        if (draft?.validation) {
+          usePreviewStore.getState().open('new', params, draft)
+          navigate('/program/preview')
+        }
       },
-      {
-        onSuccess: (result) => {
-          if (result.validation.feasible) {
-            setActiveGoalId(selectedGoalIds[0])
-            useBuilderStore.getState().reset()
-            navigate('/program')
-          }
-          // If infeasible, stay on step 4 so the ValidationAlert is visible
-        },
-      }
-    )
+    })
   }
 
   // Source summary label
@@ -272,10 +235,11 @@ export function ReviewGenerate() {
           Final step
         </p>
         <h2 className="text-2xl font-semibold leading-snug">
-          Review & generate.
+          Review & preview.
         </h2>
         <p className="text-sm text-muted-foreground leading-relaxed max-w-lg">
-          Verify your configuration below, then generate your personalized training program.
+          Verify your configuration below, then preview the program: what it plans, what your
+          equipment, injuries, level and schedule hold back. Nothing changes until you start it.
         </p>
       </div>
 
@@ -419,7 +383,7 @@ export function ReviewGenerate() {
           ) : (
             <>
               <Wand2 className="size-4" />
-              Generate Program
+              Preview program
             </>
           )}
         </Button>

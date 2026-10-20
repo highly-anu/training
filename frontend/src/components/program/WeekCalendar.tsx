@@ -13,9 +13,12 @@ function getTodayName(): string {
 interface WeekCalendarProps {
   weekData: WeekData
   isCurrentWeek: boolean
+  /** A draft program (the preview): sessions open through this, logs are not read. */
+  onOpenSession?: (day: string, sessionIndex: number) => void
+  isHighlighted?: (day: string, sessionIndex: number) => boolean
 }
 
-export function WeekCalendar({ weekData, isCurrentWeek }: WeekCalendarProps) {
+export function WeekCalendar({ weekData, isCurrentWeek, onOpenSession, isHighlighted }: WeekCalendarProps) {
   const today = getTodayName()
 
   return (
@@ -28,6 +31,8 @@ export function WeekCalendar({ weekData, isCurrentWeek }: WeekCalendarProps) {
             sessions={weekData.schedule[day] ?? []}
             weekNumber={weekData.week_number}
             isToday={isCurrentWeek && day === today}
+            onOpenSession={onOpenSession ? (i) => onOpenSession(day, i) : undefined}
+            isHighlighted={isHighlighted ? (i) => isHighlighted(day, i) : undefined}
           />
         ))}
       </div>

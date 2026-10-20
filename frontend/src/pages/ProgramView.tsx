@@ -294,6 +294,11 @@ export function ProgramView() {
                 ? 'Generating…'
                 : `Regenerate from Week ${weekIndex + 1}`}
             </button>
+            {regenerate.isError && (
+              <p className="text-xs text-red-700 dark:text-red-300">
+                {regenerate.error instanceof Error ? regenerate.error.message : 'Could not regenerate'}
+              </p>
+            )}
           </div>
         </SheetContent>
       </Sheet>

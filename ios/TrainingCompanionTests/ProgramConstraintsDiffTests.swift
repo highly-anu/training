@@ -93,7 +93,7 @@ final class ProgramConstraintsDiffTests: XCTestCase {
         XCTAssertEqual(sj["philosophy_id"] as? String, "starting_strength")
         XCTAssertNil(sj["philosophy_ids"])
         XCTAssertNil(sj["week_in_program"], "a full generate numbers from 1")
-        XCTAssertEqual(sj["persist"] as? Bool, true)
+        XCTAssertEqual(sj["persist"] as? Bool, false, "a full generate is a draft too; the preview saves it")
     }
 
     func testSpliceKeepsTheHeadAndTakesTheNewDocument() throws {

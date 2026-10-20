@@ -4,7 +4,7 @@ import os as _os
 import yaml as _yaml
 from typing import Optional
 from src.progression import zone_band as _zone_band
-from . import phases, provenance, standard_tests
+from . import blockers, phases, provenance, standard_tests
 
 # ---------------------------------------------------------------------------
 # Movement pattern aliases — loaded from data/movement_patterns.yaml
@@ -668,10 +668,11 @@ def _slot_unfillable_in_policy(slot: dict, exercises: dict, policy, modality: st
 
 def _explain_unfilled(slot, constraints, exercises, unlocked, excl_ids, injury_flags_data,
                       phase, primary_sources, policy, modality,
-                      phase_excluded=frozenset()) -> tuple[str | None, dict | None, str | None]:
+                      phase_excluded=frozenset(),
+                      known=frozenset()) -> tuple[str | None, dict | None, str | None, dict | None]:
     """Why a slot found no exercise, and the injury flag's substitute if one fits.
 
-    Returns (reason, substitute, instead_of), cheapest test first:
+    Returns (reason, substitute, instead_of, blocked_by), cheapest test first:
 
     - 'coverage': no exercise in the allowed packages matches the slot at all;
     - 'injury': it fills once the athlete's flags are lifted;
@@ -687,15 +688,23 @@ def _explain_unfilled(slot, constraints, exercises, unlocked, excl_ids, injury_f
     their equipment and the program's packages, not excluded or
     contraindicated by any flag, and clear of every other flag's excluded
     patterns (the flag that names it vouches only for its own).
+
+    `blocked_by` names the constraint concretely, read from the exercise the
+    lifted run would give: `{cause, exercise}` plus the equipment it `needs`,
+    the injury `flags` that rule it out, or the `requires` the level has not
+    reached; an injury substitute carries the flag it came `via`.
     """
     common = dict(primary_sources=primary_sources, policy=policy, modality=modality)
     if policy is not None and policy.strict and _slot_unfillable_in_policy(slot, exercises, policy, modality):
-        return 'coverage', None, None
+        return 'coverage', None, None, {'cause': 'coverage'}
     flags = list(constraints.get('injury_flags') or [])
     if flags:
         no_flags = {**constraints, 'injury_flags': []}
         everything = unlocked | (set(excl_ids) & set(exercises))
-        if select_exercise(slot, no_flags, exercises, everything, set(), set(), [], phase, **common):
+        found = select_exercise(slot, no_flags, exercises, everything, set(), set(), [], phase, **common)
+        if found:
+            hits = [fid for fid, _ in blockers.flag_hits(found, flags, injury_flags_data)]
+            blocked = {'cause': 'injury', 'exercise': found['id'], 'flags': hits or flags}
             available = set(constraints.get('equipment', []))
             ex_filter = slot.get('exercise_filter') or {}
             for flag_id in flags:
@@ -713,20 +722,31 @@ def _explain_unfilled(slot, constraints, exercises, unlocked, excl_ids, injury_f
                         continue
                     if policy is not None and not provenance.allows_exercise(use, policy, modality):
                         continue
-                    return 'injury', use, was['id']
-            return 'injury', None, None
+                    return 'injury', use, was['id'], {**blocked, 'exercise': was['id'], 'via': flag_id}
+            return 'injury', None, None, blocked
     all_equipment = {e for ex in exercises.values() for e in ex.get('equipment', [])}
-    if select_exercise(slot, {**constraints, 'equipment': sorted(all_equipment)}, exercises,
-                       unlocked, set(), excl_ids, [], phase, **common):
-        return 'equipment', None, None
+    found = select_exercise(slot, {**constraints, 'equipment': sorted(all_equipment)}, exercises,
+                            unlocked, set(), excl_ids, [], phase, **common)
+    if found:
+        return 'equipment', None, None, {
+            'cause': 'equipment', 'exercise': found['id'],
+            'needs': blockers.missing_equipment(found.get('equipment'), constraints.get('equipment'))}
     every_level = set(exercises) - set(excl_ids)
-    if select_exercise(slot, constraints, exercises, every_level - set(phase_excluded),
-                       set(), excl_ids, [], phase, **common):
-        return 'level', None, None
-    if phase_excluded and select_exercise(slot, constraints, exercises, every_level,
-                                          set(), excl_ids, [], phase, **common):
-        return 'phase', None, None
-    return None, None, None
+    found = select_exercise(slot, constraints, exercises, every_level - set(phase_excluded),
+                            set(), excl_ids, [], phase, **common)
+    if found:
+        # A requirement is met by an unlocked exercise or by a concept the
+        # level knows (`known`, as _get_unlocked resolves them); only the rest
+        # is missing — "needs bracing" for a novice who arrives bracing was wrong.
+        return 'level', None, None, {
+            'cause': 'level', 'exercise': found['id'], 'level': constraints.get('training_level'),
+            'requires': [r for r in found.get('requires') or [] if r not in unlocked and r not in known]}
+    if phase_excluded:
+        found = select_exercise(slot, constraints, exercises, every_level,
+                                set(), excl_ids, [], phase, **common)
+        if found:
+            return 'phase', None, None, {'cause': 'phase', 'exercise': found['id']}
+    return None, None, None, None
 
 
 def populate_session(
@@ -788,6 +808,7 @@ def populate_session(
     excl_patterns, excl_ids = _injury_exclusions(constraints, injury_flags_data)
     training_level = constraints.get('training_level', 'intermediate')
     unlocked = _get_unlocked(training_level, exercises, level_seeds) - excl_ids
+    known_seeds = level_seeds   # the seeds `unlocked` was resolved with (narrowed per package below)
     if exclude_exercise_ids:
         unlocked -= set(exclude_exercise_ids)
     primary_sources = set(goal.get('primary_sources', []))
@@ -847,6 +868,7 @@ def populate_session(
                     and provenance.allows_exercise(ex, session_policy, modality)}
         exercises = {**borrowed, **own}
         package_seeds = {arch_package: (level_seeds or {}).get(arch_package, {})}
+        known_seeds = package_seeds
         unlocked = _get_unlocked(training_level, exercises, package_seeds) - excl_ids
         unlocked -= set(exclude_exercise_ids or ())
 
@@ -950,18 +972,20 @@ def populate_session(
 
         substituted_for = None
         reason = None
+        blocked_by = None
         if ex is None:
             cache_key = (arch.get('id'), i, phase)
             if unfilled_cache is not None and cache_key in unfilled_cache:
-                reason, sub_id, instead_of = unfilled_cache[cache_key]
+                reason, sub_id, instead_of, blocked_by = unfilled_cache[cache_key]
                 sub = exercises.get(sub_id) if sub_id else None
             else:
-                reason, sub, instead_of = _explain_unfilled(
+                reason, sub, instead_of, blocked_by = _explain_unfilled(
                     slot, constraints, exercises, unlocked, excl_ids, injury_flags_data,
                     phase, primary_sources, policy, modality,
-                    phase_excluded=frozenset(exclude_exercise_ids or ()))
+                    phase_excluded=frozenset(exclude_exercise_ids or ()),
+                    known=_level_known(training_level, known_seeds))
                 if unfilled_cache is not None:
-                    unfilled_cache[cache_key] = (reason, sub['id'] if sub else None, instead_of)
+                    unfilled_cache[cache_key] = (reason, sub['id'] if sub else None, instead_of, blocked_by)
             if sub is not None and sub['id'] not in session_used_ids:
                 ex, substituted_for = sub, instead_of
 
@@ -987,6 +1011,7 @@ def populate_session(
                 'coverage_gap': coverage_gap,
                 'equipment_gap': reason == 'equipment' and not injury_blocked,
                 'gap_reason': gap_reason,
+                **({'blocked_by': dict(blocked_by)} if blocked_by else {}),
                 'error': (
                     "skipped — excluded by injury flag" if injury_blocked
                     else "No exercise fits the available equipment" if reason == 'equipment'
@@ -1024,6 +1049,8 @@ def populate_session(
                 assignment['standard'] = ref
             if substituted_for:
                 assignment['substituted_for'] = substituted_for
+                if blocked_by and blocked_by.get('via'):
+                    assignment['substituted_by_flag'] = blocked_by['via']
             exercise_assignments.append(assignment)
             if collect_trace:
                 slot_traces.append({

@@ -156,13 +156,23 @@ FLAGS = {'knee': {'excluded_movement_patterns': ['squat'],
                   'modified_exercises': [{'instead_of': 'back_squat', 'use': 'box_squat'}]}}
 
 
-def explain(exercises, unlocked=None, flags=('knee',), phase_excluded=frozenset()):
-    constraints = {'equipment': [], 'injury_flags': list(flags), 'training_level': 'intermediate'}
+def explain_all(exercises, unlocked=None, flags=('knee',), phase_excluded=frozenset(), equipment=()):
+    constraints = {'equipment': list(equipment), 'injury_flags': list(flags), 'training_level': 'intermediate'}
     _, excl_ids = selector._injury_exclusions(constraints, FLAGS)
     pool = (set(exercises) if unlocked is None else set(unlocked)) - excl_ids - set(phase_excluded)
     return selector._explain_unfilled(SLOT, constraints, exercises, pool, excl_ids, FLAGS,
                                       'base', set(), None, 'max_strength',
                                       phase_excluded=phase_excluded)
+
+
+def explain(*args, **kw):
+    """(reason, substitute, instead_of)."""
+    return explain_all(*args, **kw)[:3]
+
+
+def blocked(*args, **kw):
+    """The slot's `blocked_by`."""
+    return explain_all(*args, **kw)[3]
 
 
 def test_injury_substitute_rules() -> None:
@@ -187,6 +197,32 @@ def test_gap_reasons() -> None:
     reason, _, _ = explain({'snatch': _ex('snatch', requires=['zz_unknown_skill'])},
                            unlocked=set(), flags=())
     check('a locked lift is the level', reason == 'level', str(reason))
+
+
+def test_blocked_by_names_the_constraint() -> None:
+    print('an empty slot names what blocks it')
+    lib = {'back_squat': _ex('back_squat', equipment=['barbell', 'rack', 'open_space'])}
+    b = blocked(lib, flags=())
+    check('equipment: the items the lift needs, never open space',
+          b == {'cause': 'equipment', 'exercise': 'back_squat', 'needs': ['barbell', 'rack']}, str(b))
+    b = blocked(lib, flags=(), equipment=['barbell'])
+    check('equipment: only what is missing', b and b.get('needs') == ['rack'], str(b))
+    b = blocked({'back_squat': _ex('back_squat')})
+    check('injury: the flag that rules the lift out',
+          b and b['cause'] == 'injury' and b['flags'] == ['knee'] and b['exercise'] == 'back_squat', str(b))
+    b = blocked({'back_squat': _ex('back_squat'), 'box_squat': _ex('box_squat')})
+    check('injury substitute: the flag it came via', b and b.get('via') == 'knee', str(b))
+    b = blocked({'snatch': _ex('snatch', requires=['zz_unknown_skill'])}, unlocked=set(), flags=())
+    check('level: what it requires that the level has not reached',
+          b and b['cause'] == 'level' and b['requires'] == ['zz_unknown_skill'], str(b))
+    lib_known = {'snatch': _ex('snatch', requires=['bracing', 'zz_unknown_skill'])}
+    constraints = {'equipment': [], 'injury_flags': [], 'training_level': 'novice'}
+    b = selector._explain_unfilled(SLOT, constraints, lib_known, set(), set(), FLAGS, 'base', set(), None,
+                                   'max_strength', known=frozenset({'bracing'}))[3]
+    check('level: never a concept the level already knows',
+          b and b['requires'] == ['zz_unknown_skill'], str(b))
+    b = blocked({'snatch': _ex('snatch')}, flags=(), phase_excluded=frozenset({'snatch'}))
+    check('phase: the lift the phase leaves out', b == {'cause': 'phase', 'exercise': 'snatch'}, str(b))
 
 
 def _populate(exercises, slots, pins, cache=None, flags=()):
@@ -368,7 +404,7 @@ def test_substitution_is_recorded() -> None:
 def main() -> int:
     for t in (test_starting_strength, test_main_lift_pinning, test_deloads, test_constraints,
               test_cadence, test_phase_exclusions, test_injury_substitute_rules, test_gap_reasons,
-              test_pins_never_repeat_a_lift, test_unfilled_cache,
+              test_blocked_by_names_the_constraint, test_pins_never_repeat_a_lift, test_unfilled_cache,
               test_taper_keeps_the_framework_share_for_sets, test_declared_deloads,
               test_single_session_routes, test_a_framework_prescribes_its_own_way,
               test_substitution_is_recorded):
