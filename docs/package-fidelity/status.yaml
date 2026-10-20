@@ -1,10 +1,17 @@
 # Where every package stands against its source (docs/package-fidelity/README.md).
-# tools/check_package_status.py holds this file to the repository: every
-# package is listed, and an `audited` one has its dossier, a source test that CI
-# runs, no fidelity finding and no orphaned exercise.
+# `status` is earned, not chosen: tools/evaluate_packages.py grades every
+# package x track (the scorecard, docs/package-fidelity/scorecard.md) and fails
+# when this file declares a status the grades do not earn; tools/
+# check_package_status.py holds the rest of the file to the repository.
 #
 #   status:  audited | partial | not_started
+#            audited: every criterion but hygiene passes on every track not excluded;
+#            partial: a dossier exists; not_started: none yet
 #   shape:   contract | templates | scheduler   (the engine shape the method needs)
+#   sources_kind: primary | consensus | secondary   (S2; a consensus needs three sources)
+#   debt:    rules the dossier states that live only in prose (S3)
+#   currency: track -> the analytics entry the method counts progress in (M1)
+#   excluded_tracks: track -> why it does not count toward the status (an invention awaiting a decision)
 #   source_tests: "file.py::test_name" — the week as the source writes it, pinned
 #   inventions: what the app adds that the source does not contain (decided by the owner)
 
@@ -13,6 +20,15 @@ packages:
     status: audited
     shape: contract
     dossier: docs/package-fidelity/wildman_kettlebell.md
+    sources_kind: primary
+    debt: []
+    currency:
+      general_practice: interval_rounds
+      squat_practice: interval_rounds
+      snatch_practice: interval_rounds
+      double_bell_practice: interval_rounds
+      pentathlon: jerk_rpm
+      getup_mobility: technique_time
     source_tests:
       - test_training_contract.py::test_general_practice_runs_wildmans_phase_two
       - test_training_contract.py::test_source_cycle_retains_movements_and_spacing
@@ -25,21 +41,34 @@ packages:
     next: The hand-to-hand option (alternating minutes needs an alternating block); decide the two Codex tracks.
 
   bjj:
-    status: partial
+    status: audited
     shape: contract
     dossier: docs/package-fidelity/bjj.md
+    sources_kind: consensus
+    debt: []
+    currency:
+      mat_support: mat_time
     source_tests:
       - test_training_contract.py::test_bjj_mat_time_leads_the_week
       - test_training_contract.py::test_bjj_deload_drops_rolling_and_keeps_drilling
       - test_training_contract.py::test_bjj_substitutes_are_declared_and_supporting_blocks_say_when_they_go
+      - test_training_contract.py::test_bjj_conditioning_is_optional_and_never_outnumbers_the_mat
     inventions:
       - Class minutes are the shape of a typical class, not the coach's plan.
-    next: Five catalog exercises (bear crawl, shuttle sprint, sprawl intervals, takedowns, wall sit) are never prescribed — wire them into a module the sources support, or drop them.
+      - Competition conditioning from intermediate up; the sources write it for competitors.
+    next: A competition camp (its weeks and taper) if the owner wants one.
 
   horsemen_gpp:
-    status: partial
+    status: audited
     shape: templates
     dossier: docs/package-fidelity/horsemen_gpp.md
+    sources_kind: primary
+    debt: []
+    currency:
+      four_month_macro: strength
+      gpp_circuits: strength
+    excluded_tracks:
+      gpp_circuits: An invention; the owner decides whether to rebuild it on the source's circuits or drop it.
     source_tests:
       - test_week_template.py::test_horsemen_runs_the_source_weeks_as_written
       - test_week_template.py::test_horsemen_without_the_equipment_passes_workouts_over
@@ -47,12 +76,35 @@ packages:
     inventions:
       - The GPP Circuits track (not in the source) and its archetypes; all 26 fidelity findings are its.
       - The PT test placed on the macro's first and last hard job-specific days (the source never schedules it).
-    next: Decide GPP Circuits (rebuild on the source's circuits or drop it); remove the 25 pre-rebuild catalog exercises no workout uses.
+    next: Decide GPP Circuits (rebuild on the source's circuits or drop it).
 
   starting_strength:
-    status: not_started
+    status: partial
     shape: contract
-    next: Load per confirmed exposure (add weight after a completed session); A/B alternation is already right; a Texas Method / Heavy-Light-Medium intermediate track.
+    dossier: docs/package-fidelity/starting_strength.md
+    sources_kind: primary
+    debt:
+      - After a first stall a light squat day, after a second 5x5 becomes 5x3 (Alter 2018).
+      - Layoff resets by age and length of the layoff (Alter 2018).
+      - A stalled Texas Method Friday (no rule in the article).
+    currency:
+      linear_progression: bar_load
+      texas_method: five_rep_max
+    source_tests:
+      - test_training_contract.py::test_ss_alternates_a_and_b_across_weeks
+      - test_training_contract.py::test_ss_adds_weight_each_confirmed_session
+      - test_training_contract.py::test_ss_stall_repeats_then_resets
+      - test_training_contract.py::test_ss_first_session_works_up
+      - test_training_contract.py::test_ss_refuses_with_the_unblocking_constraint
+      - test_training_contract.py::test_ss_intermediate_routes_to_texas_method
+      - test_training_contract.py::test_texas_method_volume_light_intensity_week
+      - test_training_contract.py::test_confirm_route_records_each_lift
+      - test_training_contract.py::test_legacy_ss_program_seeds_loads
+    inventions:
+      - Chin-ups left out without a pull-up bar.
+      - The Texas Method's weekly increments.
+      - The light day's press shares.
+    next: The debt above (stall adjustments and layoff resets need the log dates and the athlete's age); exercise media for the six lifts.
 
   uphill_athlete:
     status: not_started

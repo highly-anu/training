@@ -568,32 +568,6 @@ exercises:
   notes: 'Closed guard is a sustained hollow position. Trains the same thing with
     nobody trying to open it.'
 
-- id: bjj_wall_sit
-  name: Wall Sit
-  category: bodyweight
-  modality:
-  - strength_endurance
-  equipment: []
-  effort: medium
-  bilateral: true
-  movement_patterns:
-  - isometric
-  - squat
-  requires: []
-  unlocks: []
-  contraindicated_with:
-  - patellar_tendinopathy
-  progressions:
-    volume: increase_duration
-  scaling_down: []
-  typical_volume:
-    sets: 3
-    duration_sec: 60
-  sources:
-  - BJJ
-  notes: 'Isometric quad endurance for sustained guard-passing pressure and a
-    long-held combat base.'
-
 # ── Joint maintenance ────────────────────────────────────────────────────────
 - id: bjj_neck_isometric
   name: Neck Isometric

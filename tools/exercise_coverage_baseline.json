@@ -1,12 +1,6 @@
 {
   "atg": [],
-  "bjj": [
-    "bjj_bear_crawl",
-    "bjj_shuttle_sprint",
-    "bjj_sprawl_interval",
-    "bjj_takedown_practice",
-    "bjj_wall_sit"
-  ],
+  "bjj": [],
   "crossfit": [
     "bike_interval",
     "farmer_carry_db",
@@ -39,33 +33,7 @@
     "squat_jump",
     "suitcase_carry"
   ],
-  "horsemen_gpp": [
-    "deficit_deadlift",
-    "kb_around_the_world",
-    "kb_clean_single",
-    "kb_halo",
-    "kb_lunge",
-    "kb_overhead_carry",
-    "kb_push_press_single",
-    "kb_slasher_to_halo",
-    "kb_step_up",
-    "legs_raised_hold",
-    "pvc_overhead_squat",
-    "ruck_carry",
-    "sandbag_bear_hug_carry",
-    "sb_bent_row",
-    "sb_clean",
-    "sb_complex",
-    "sb_deadlift",
-    "sb_front_squat",
-    "sb_press_overhead",
-    "sb_slam",
-    "sb_squat",
-    "split_jerk",
-    "suitcase_carry",
-    "yoke_carry",
-    "zercher_carry"
-  ],
+  "horsemen_gpp": [],
   "ido_portal": [],
   "kelly_starrett": [
     "foam_roll_it_band_ks"
@@ -88,12 +56,7 @@
     "ring_row",
     "side_plank_lat_activation"
   ],
-  "starting_strength": [
-    "box_squat",
-    "close_grip_bench",
-    "good_morning",
-    "sumo_deadlift"
-  ],
+  "starting_strength": [],
   "uphill_athlete": [],
   "wildman_kettlebell": []
 }

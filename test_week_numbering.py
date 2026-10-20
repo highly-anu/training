@@ -54,7 +54,9 @@ def test_tail_crossing_a_phase_resumes_in_the_right_phase():
 def test_route_numbers_the_tail_and_defaults_to_one():
     import api
     client = api.app.test_client()
-    body = {'philosophy_id': 'starting_strength', 'constraints': dict(CONSTRAINTS, periodization_week=2),
+    # Starting Strength's novice progression (an intermediate gets the Texas Method).
+    NOVICE = dict(CONSTRAINTS, training_level='novice')
+    body = {'philosophy_id': 'starting_strength', 'constraints': dict(NOVICE, periodization_week=2),
             'num_weeks': 2, 'week_in_program': 3}
     r = client.post('/api/programs/generate', json=body)
     assert r.status_code == 200, r.get_json()
@@ -63,11 +65,11 @@ def test_route_numbers_the_tail_and_defaults_to_one():
     assert [w['week_in_phase'] for w in weeks] == [2, 3], 'the phase continues from periodization_week'
 
     r = client.post('/api/programs/generate', json={'philosophy_id': 'starting_strength',
-                                                    'constraints': CONSTRAINTS, 'num_weeks': 2})
+                                                    'constraints': NOVICE, 'num_weeks': 2})
     assert [w['week_number'] for w in r.get_json()['weeks']] == [1, 2]
 
     r = client.post('/api/programs/generate', json={'philosophy_id': 'starting_strength',
-                                                    'constraints': CONSTRAINTS, 'num_weeks': 1,
+                                                    'constraints': NOVICE, 'num_weeks': 1,
                                                     'week_in_program': 'nonsense'})
     assert r.get_json()['weeks'][0]['week_number'] == 1, 'garbage is treated as unset'
 

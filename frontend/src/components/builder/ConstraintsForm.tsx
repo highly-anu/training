@@ -74,7 +74,7 @@ export function ConstraintsForm() {
   const setStartPhase = useBuilderStore((s) => s.setStartPhase)
   const { data: philosophies } = usePhilosophies()
   // The start phase is one of the chosen track's own phases.
-  const trackPhases = builderTrack(philosophies, selectedPhilosophyIds, selectedTrackId)?.track.phases ?? []
+  const trackPhases = builderTrack(philosophies, selectedPhilosophyIds, selectedTrackId, constraints.training_level)?.track.phases ?? []
 
   const currentMonday = useMemo(() => {
     const d = new Date()

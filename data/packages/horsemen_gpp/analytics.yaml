@@ -33,17 +33,19 @@ progress:
     scope: {archetypes: [ruck_session], slot_types: [distance]}
 
 # The source's goals, then PT test I and PT test II. There is no commons
-# front-squat ratio standard yet.
+# front-squat ratio standard yet. The macro's PT test measures the pull-ups,
+# sit-ups, push-ups and 3-mile run, and the day's worked-up maxes estimate the
+# ratios; the rest are tests the athlete runs on their own and enters by hand.
 benchmarks:
   - deadlift_bw_ratio
   - bench_press_bw_ratio
   - strict_press_bw_ratio
   - run_3mile_minutes
-  - ssst_reps
+  - {id: ssst_reps, manual: true}
   - pull_up_reps
   - pt_sit_ups_3min_reps
   - pt_push_ups_3min_reps
-  - swim_800m_minutes
-  - run_5mile_minutes
-  - bench_press_bodyweight_reps
-  - pull_ups_weighted_25lb_reps
+  - {id: swim_800m_minutes, manual: true}
+  - {id: run_5mile_minutes, manual: true}
+  - {id: bench_press_bodyweight_reps, manual: true}
+  - {id: pull_ups_weighted_25lb_reps, manual: true}

@@ -43,6 +43,37 @@ describe('ModuleProgress', () => {
     expect(useBioStore.getState().sessionPerformanceLogs['1-Monday'].exercises.wk_kb_swing_two_hand.clean).toBe(true)
   })
 
+  const lift = (id: string, name: string, load: Record<string, unknown>) => ({
+    exercise: { id, name },
+    load: { advances_module: true, progression_model: 'load_per_exposure', lift: id, sets: 3, reps: 5, ...load },
+  })
+
+  it('asks each loaded lift made or missed, and sends only what went otherwise', async () => {
+    post.mockResolvedValue({ exercises: {
+      back_squat: { sets: [], made: false, weightKg: 70 }, strict_press: { sets: [], made: true, weightKg: 40 } } })
+    render(<ModuleProgress session={session([lift('back_squat', 'Back Squat', { weight_kg: 70 }),
+                                              lift('strict_press', 'Press', { weight_kg: 40 })])}
+                           logKey="1-Monday" serverKey="1-Monday-0" />)
+    expect(screen.queryByLabelText('RPE')).toBeNull()
+    fireEvent.click(screen.getAllByText('Missed')[0])
+    fireEvent.click(screen.getByText('Save'))
+    await waitFor(() => expect(screen.getByText(/missed, repeats/)).toBeTruthy())
+    expect(post).toHaveBeenCalledWith('/health/sessions/1-Monday-0/confirm',
+                                      { clean: false, lifts: { back_squat: { made: false } } })
+  })
+
+  it('takes the weight worked up to on a first session', async () => {
+    post.mockResolvedValue({ exercises: { back_squat: { sets: [], made: true, weightKg: 62.5 } } })
+    render(<ModuleProgress session={session([lift('back_squat', 'Back Squat', { work_up: true })])}
+                           logKey="1-Monday" serverKey="1-Monday-0" />)
+    expect((screen.getByText('All made').closest('button') as HTMLButtonElement).disabled).toBe(true)
+    fireEvent.change(screen.getByLabelText('Back Squat kg'), { target: { value: '62.5' } })
+    fireEvent.click(screen.getByText('All made'))
+    await waitFor(() => expect(screen.getByText(/62.5 kg/)).toBeTruthy())
+    expect(post).toHaveBeenCalledWith('/health/sessions/1-Monday-0/confirm',
+                                      { clean: true, lifts: { back_squat: { made: true, weightKg: 62.5 } } })
+  })
+
   it('reads a "not clean" answer back from the log', () => {
     useBioStore.setState({ sessionPerformanceLogs: { '1-Monday': {
       sessionKey: '1-Monday', notes: '', completedAt: 'x',

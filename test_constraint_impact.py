@@ -209,20 +209,31 @@ def test_route():
     client = api.app.test_client()
     athlete = {'equipment': [], 'days_per_week': 3, 'session_time_minutes': 60, 'training_level': 'intermediate',
                'injury_flags': [], 'avoid_movements': [], 'periodization_week': 1, 'fatigue_state': 'normal'}
-    res = client.post('/api/dev/constraint-impact',
-                      json={'philosophy_id': 'starting_strength', 'num_weeks': 1, 'constraints': athlete})
+    # Starting Strength used to hand an intermediate with no barbell the
+    # novice track's sessions with every slot empty; its contract refuses, and
+    # the barbell is what would let it generate (the Texas Method, the track an
+    # intermediate gets).
+    res = client.post('/api/dev/constraint-impact', json={
+        'philosophy_id': 'starting_strength', 'num_weeks': 1,
+        'constraints': {**athlete, 'session_time_minutes': 90}})
     body = res.get_json()
     check('200', res.status_code == 200, (res.status_code, body))
-    check('the reference is the novice program with its equipment',
-          body['reference']['training_level'] == 'novice'
+    check('no barbell is refused', body.get('feasible') is False and body['reference_generates'], body)
+    check('the equipment alone unblocks it', [u['cause'] for u in body['unblocked_by']] == ['equipment'],
+          body.get('unblocked_by'))
+    check('the reference is the Texas Method athlete with a barbell',
+          body['reference']['training_level'] == 'intermediate'
           and {'barbell', 'plates', 'rack'} <= set(body['reference']['equipment']), body['reference'])
-    check('equipment and level are lifted, injuries are not', body['lifted'] == ['equipment', 'level'], body['lifted'])
+
+    res = client.post('/api/dev/constraint-impact', json={
+        'philosophy_id': 'gym_jones', 'num_weeks': 1,
+        'constraints': {**athlete, 'days_per_week': 5, 'session_time_minutes': 90}})
+    body = res.get_json()
+    check('equipment is lifted, injuries are not', body['lifted'] == ['equipment'], body['lifted'])
     changes = body['changes']
     check('every session changed', changes and body['sessions']['changed'] == body['sessions']['total'], body['sessions'])
-    check('each is the level and the equipment',
-          all(c['causes'] == ['level', 'equipment'] for c in changes), [c.get('causes') for c in changes])
-    check('the 3x5 sessions are what was planned',
-          all(c['reference']['archetype']['id'].startswith('3x5') for c in changes))
+    check('the direct changes are the equipment',
+          all(c['causes'] == ['equipment'] for c in changes if c.get('causes')), [c.get('causes') for c in changes])
     check('a barbell would restore them',
           body['restore']['equipment'] and body['restore']['equipment'][0]['id'] in ('barbell', 'plates'),
           body['restore'])

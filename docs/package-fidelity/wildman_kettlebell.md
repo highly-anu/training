@@ -41,6 +41,16 @@ Status: **audited** (2026-10-20). Engine shape: training contract
 - Pentathlon Prep (from kettlebell-sport practice, IKMF; sources in the contract).
 - Get-Up and Loaded Mobility, Double-Bell Practice (Codex tracks); double bells
   are his Phase III, which is deliberately non-repeating.
+- Clean and press, get-up and deck-squat cycles follow the Nerd Math pattern;
+  his own numbers are in the paid programs.
+
+## Measurement
+
+Every practice track but the get-up's runs density cycles, so the lead measure
+is the intervals completed (`interval_rounds`); Pentathlon Prep leads with
+cadence, Get-Up and Loaded Mobility with technique minutes. The snatch goal
+(200 in ten minutes) is the SSST count and the get-up's bodyweight ratio a
+standard, both entered by hand (`manual: true`): no session tests them.
 
 ## Tests
 

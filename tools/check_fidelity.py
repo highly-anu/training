@@ -94,12 +94,30 @@ def profiles_for(track: dict, fw_by_id: dict) -> list[tuple[str, dict]]:
     return out
 
 
-def run(package: str | None = None) -> list[dict]:
-    """Every finding, as dicts carrying label, profile and the finding."""
+def contract_entry(constraints: dict, contract: dict | None) -> dict:
+    """A contract athlete who qualifies: two bells and the level's mastery."""
+    if not contract:
+        return constraints
+    return {**constraints, 'kettlebell_count': constraints.get('kettlebell_count', 2),
+            'mastered_exercises': sorted({eid for m in contract['modules']
+                                          if constraints['training_level'] in m['training_levels']
+                                          for eid in m.get('requires_mastery', [])})}
+
+
+def iter_programs(package: str | None = None, extra_profiles=None):
+    """One record per philosophy x track x profile: what was asked and what came back.
+
+    Each record carries `phil`, `track`, `goal`, `policy`, `lib`, `frameworks`,
+    `label`, `profile`, `constraints`, `validation` (the pre-flight result),
+    `program` (None when the pre-flight refused) and `fidelity` (whether the
+    fidelity rules read it). `extra_profiles(phil, track, goal, base)` may add
+    `(name, constraints, {'weeks': n, 'fidelity': False})` rows: the package
+    scorecard's level and constraint profiles (tools/evaluate_packages.py),
+    generated in the same pass as the fidelity ones.
+    """
     frameworks = loader.load_all_frameworks()
     fw_list = list(frameworks.values())
     data = loader.load_all_data()
-    rows: list[dict] = []
 
     for phil in sorted(loader.load_philosophies(), key=lambda p: p['id']):
         if package and phil['id'] != package:
@@ -108,49 +126,62 @@ def run(package: str | None = None) -> list[dict]:
             goal = goals.philosophy_to_goal(phil['id'], fw_list, track_id=track['id'])
             policy = provenance.resolve_source_policy(goal)
             lib = provenance.scope(data, policy)
-            label = f"{phil['id']}/{track['id']}"
             n_weeks = sum(int(p.get('weeks') or 1) for p in track['phases'])
-            profiles = profiles_for(track, frameworks)
+            profiles = [(name, c, {'weeks': n_weeks, 'fidelity': True})
+                        for name, c in profiles_for(track, frameworks)]
             contract = goal.get('training_contract')
             if contract:
-                profiles += [(f'level-{level}', {**profiles[0][1], 'training_level': level})
-                             for level in contract['training_levels'] if level != profiles[0][1]['training_level']]
-            for profile, constraints in profiles:
-                if contract:
-                    constraints['kettlebell_count'] = 2
-                    constraints['mastered_exercises'] = sorted({eid for m in contract['modules']
-                        if constraints['training_level'] in m['training_levels'] for eid in m.get('requires_mastery', [])})
+                base = profiles[0][1]
+                profiles += [(f'level-{level}', {**base, 'training_level': level}, {'weeks': n_weeks, 'fidelity': True})
+                             for level in contract['training_levels'] if level != base['training_level']]
+            if extra_profiles:
+                profiles += extra_profiles(phil, track, goal, profiles[0][1])
+            for profile, constraints, opts in profiles:
+                constraints = contract_entry(constraints, contract)
                 result = validate(goal, constraints, lib['archetypes'], lib['modalities'],
                                   lib['injury_flags'], policy=policy)
-                if not result.feasible:
-                    rows.append({'label': label, 'profile': profile, 'finding': {
-                        'rule': 'infeasible', 'severity': 'info', 'phase_id': None,
-                        'subject': ','.join(e['code'] for e in result.errors),
-                        'detail': '; '.join(e.get('message', e['code']) for e in result.errors),
-                        'weeks': [], 'key': 'None|infeasible|' + ','.join(e['code'] for e in result.errors)}})
-                    continue
-                program = generate(goal_id=goal['id'], goal_dict=goal, constraints=constraints,
-                                   num_weeks=n_weeks, output_format='dict', policy=policy)
-                if program.get('validation_errors'):
-                    severity = 'error' if profile.startswith(('ideal-', 'level-')) else 'info'
-                    rows.append({'label': label, 'profile': profile, 'finding': {
-                        'rule': 'contract_unfulfilled', 'severity': severity, 'phase_id': None,
-                        'subject': track['id'], 'detail': str(program['validation_errors']),
-                        'weeks': [], 'key': 'None|contract_unfulfilled|' + track['id']}})
-                    continue
-                days = constraints['days_per_week']
-                out_of_range = {
-                    ph['id'] for ph in track['phases']
-                    if not (frameworks.get(ph['framework_id'], {}).get('applicable_when', {})
-                            .get('days_per_week_min', 1) <= days <=
-                            frameworks.get(ph['framework_id'], {}).get('applicable_when', {})
-                            .get('days_per_week_max', 7))
-                }
-                for f in fidelity.check_program(program, phil, track, constraints, frameworks, lib):
-                    if f.phase_id in out_of_range:
-                        continue
-                    rows.append({'label': label, 'profile': profile, 'finding': f.as_dict()})
-    return rows
+                program = None
+                if result.feasible:
+                    program = generate(goal_id=goal['id'], goal_dict=goal, constraints=constraints,
+                                       num_weeks=opts['weeks'], output_format='dict', policy=policy)
+                yield {'phil': phil, 'track': track, 'goal': goal, 'policy': policy, 'lib': lib,
+                       'frameworks': frameworks, 'label': f"{phil['id']}/{track['id']}",
+                       'profile': profile, 'constraints': constraints, 'validation': result,
+                       'program': program, 'fidelity': opts.get('fidelity', True)}
+
+
+def fidelity_rows(rec: dict) -> list[dict]:
+    """The fidelity findings of one `iter_programs` record."""
+    label, profile, track = rec['label'], rec['profile'], rec['track']
+    result, program, frameworks = rec['validation'], rec['program'], rec['frameworks']
+    if not result.feasible:
+        return [{'label': label, 'profile': profile, 'finding': {
+            'rule': 'infeasible', 'severity': 'info', 'phase_id': None,
+            'subject': ','.join(e['code'] for e in result.errors),
+            'detail': '; '.join(e.get('message', e['code']) for e in result.errors),
+            'weeks': [], 'key': 'None|infeasible|' + ','.join(e['code'] for e in result.errors)}}]
+    if program.get('validation_errors'):
+        severity = 'error' if profile.startswith(('ideal-', 'level-')) else 'info'
+        return [{'label': label, 'profile': profile, 'finding': {
+            'rule': 'contract_unfulfilled', 'severity': severity, 'phase_id': None,
+            'subject': track['id'], 'detail': str(program['validation_errors']),
+            'weeks': [], 'key': 'None|contract_unfulfilled|' + track['id']}}]
+    days = rec['constraints']['days_per_week']
+    out_of_range = {
+        ph['id'] for ph in track['phases']
+        if not (frameworks.get(ph['framework_id'], {}).get('applicable_when', {})
+                .get('days_per_week_min', 1) <= days <=
+                frameworks.get(ph['framework_id'], {}).get('applicable_when', {})
+                .get('days_per_week_max', 7))
+    }
+    return [{'label': label, 'profile': profile, 'finding': f.as_dict()}
+            for f in fidelity.check_program(program, rec['phil'], track, rec['constraints'], frameworks, rec['lib'])
+            if f.phase_id not in out_of_range]
+
+
+def run(package: str | None = None) -> list[dict]:
+    """Every finding, as dicts carrying label, profile and the finding."""
+    return [row for rec in iter_programs(package) for row in fidelity_rows(rec)]
 
 
 def _gate_key(row: dict) -> str:

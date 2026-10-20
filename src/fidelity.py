@@ -248,6 +248,9 @@ def check_program(program: dict, philosophy: dict, track: dict, constraints: dic
     supplies modalities, injury flags and exercises by id.
     """
     out = _Collector()
+    phase_by_id = {p['id']: p for p in track.get('phases') or []}
+    for phase_id, pweeks in _phase_groups(program.get('weeks') or []):
+        _check_claims(out, phase_id, pweeks, (phase_by_id.get(phase_id) or {}).get('checks') or {})
     if program.get('training_contract'):
         from . import training_contract
         try:
@@ -260,7 +263,6 @@ def check_program(program: dict, philosophy: dict, track: dict, constraints: dic
             out.add('training_contract', 'error', None, track['id'], str(exc))
         return out.findings()
     weeks = program.get('weeks') or []
-    phase_by_id = {p['id']: p for p in track.get('phases') or []}
     modalities = library.get('modalities') or {}
     level = constraints.get('training_level', 'intermediate')
     equipment = set(constraints.get('equipment') or [])
@@ -576,6 +578,68 @@ def _check_required(out, phase_id, work_weeks, checks):
             if not any(s.get('modality') == mod for _, s in _sessions(w)):
                 out.add('modality_required', 'error', phase_id, mod,
                         f"no {mod} session in a week the phase requires one", w.get('week_number'))
+
+
+def claim_violations(pweeks: list, checks: dict) -> list[tuple[str, str, str, int | None]]:
+    """The phase's defining claims (`checks:`) a generated phase breaks, as
+    (rule, subject, detail, week number). Shared by the fidelity gate and the
+    training contract's acceptance check (`training_contract.verify_phase_rules`),
+    so a contract program cannot be saved breaking what the gate would flag.
+
+    - `max_substituted_share`: sessions swapped to another modality because
+      nothing of theirs fitted (`substituted_for`), as a share of the phase's.
+    - `modality_outnumbers: [[a, b], ...]`: every non-deload week has more `a`
+      sessions than `b` (BJJ's mat time over its strength work).
+    - `max_archetype_share`: no archetype takes more than this share of its
+      modality's sessions in the phase, once the modality has four or more.
+    - `min_distinct_archetypes: {weeks, count, modality?}`: every run of that
+      many weeks has at least `count` distinct archetypes (of the modality).
+    """
+    out = []
+    sessions = [(w, s) for w in pweeks for _, s in _sessions(w) if not s.get('test')]
+    share = checks.get('max_substituted_share')
+    if share is not None and sessions:
+        swapped = [s for _, s in sessions if s.get('substituted_for')]
+        if len(swapped) / len(sessions) > share + 1e-9:
+            out.append(('substituted_share', 'sessions',
+                        f"{len(swapped)} of {len(sessions)} sessions are another modality's "
+                        f"(at most {share:.0%})", None))
+    for a, b in checks.get('modality_outnumbers') or []:
+        for w in pweeks:
+            if w.get('is_deload'):
+                continue
+            mods = [s.get('modality') for _, s in _sessions(w)]
+            if mods.count(a) + mods.count(b) and mods.count(a) <= mods.count(b):
+                out.append(('modality_outnumbers', f"{a}>{b}",
+                            f"{mods.count(a)} {a} against {mods.count(b)} {b}", w.get('week_number')))
+    cap = checks.get('max_archetype_share')
+    if cap is not None:
+        by_mod: dict = defaultdict(Counter)
+        for _, s in sessions:
+            by_mod[s.get('modality')][(s.get('archetype') or {}).get('id')] += 1
+        for mod, counts in by_mod.items():
+            total = sum(counts.values())
+            aid, top = counts.most_common(1)[0]
+            if total >= 4 and top / total > cap + 1e-9:
+                out.append(('archetype_share', f"{mod}:{aid}",
+                            f"{aid} is {top} of {total} {mod} sessions (at most {cap:.0%})", None))
+    spec = checks.get('min_distinct_archetypes')
+    if spec:
+        size = min(int(spec['weeks']), len(pweeks))
+        for i in range(len(pweeks) - size + 1):
+            window = pweeks[i:i + size]
+            ids = {(s.get('archetype') or {}).get('id') for w in window for _, s in _sessions(w)
+                   if not s.get('test') and (not spec.get('modality') or s.get('modality') == spec['modality'])}
+            if len(ids) < spec['count']:
+                out.append(('distinct_archetypes', spec.get('modality') or 'sessions',
+                            f"{len(ids)} distinct archetypes in {size} weeks (at least {spec['count']})",
+                            window[0].get('week_number')))
+    return out
+
+
+def _check_claims(out, phase_id, pweeks, checks):
+    for rule, subject, detail, week in claim_violations(pweeks, checks):
+        out.add(rule, 'error', phase_id, subject, detail, week)
 
 
 def _check_fixed(out, phase_id, pweeks, modalities, fixed: bool):

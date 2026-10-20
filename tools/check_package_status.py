@@ -1,45 +1,67 @@
 """docs/package-fidelity/status.yaml against the repository.
 
 Every package is listed (and nothing that is not a package). A dossier or
-source test that is named exists. An `audited` package also has a dossier,
-at least one source test that CI runs (.github/workflows/training-contract.yml),
-no finding in tools/fidelity_baseline.json and no orphan in
-tools/exercise_coverage_baseline.json — so "audited" cannot outlive the state
-that earned it. See docs/package-fidelity/README.md.
+source test that is named exists; `sources_kind` is one of the kinds; the
+tracks `currency` and `excluded_tracks` name are the package's own. And the
+declared `status` is the one the recorded scorecard earns
+(tools/scorecard_baseline.json, written by tools/evaluate_packages.py):
+`audited` when every criterion but hygiene passes on every track not excluded,
+`partial` once a dossier exists, else `not_started` — so "audited" cannot
+outlive the grades that earned it. See docs/package-fidelity/README.md.
 
     python tools/check_package_status.py
 """
 import json
 import sys
+from collections import defaultdict
 from pathlib import Path
 
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from src import package_eval as pe  # noqa: E402
+
 STATUSES = {'audited', 'partial', 'not_started'}
 SHAPES = {'contract', 'templates', 'scheduler'}
+SOURCE_KINDS = {'primary', 'consensus', 'secondary'}
+
+
+def _tracks(pkg: str) -> set:
+    phil = yaml.safe_load((ROOT / 'data/packages' / pkg / 'philosophy.yaml').read_text())
+    return {t['id'] for t in phil.get('tracks') or []}
 
 
 def problems() -> list[str]:
     status = yaml.safe_load((ROOT / 'docs/package-fidelity/status.yaml').read_text())['packages']
     packages = {p.name for p in (ROOT / 'data/packages').iterdir() if (p / 'philosophy.yaml').exists()}
-    workflow = (ROOT / '.github/workflows/training-contract.yml').read_text()
-    fidelity = json.loads((ROOT / 'tools/fidelity_baseline.json').read_text())
-    fidelity_items = fidelity if isinstance(fidelity, list) else list(fidelity)
-    orphans = json.loads((ROOT / 'tools/exercise_coverage_baseline.json').read_text())
+    scorecard = json.loads((ROOT / 'tools/scorecard_baseline.json').read_text())
+    grades: dict = defaultdict(lambda: defaultdict(dict))
+    for key, grade in scorecard.items():
+        where, criterion = key.split('|')
+        pkg, track = where.split('/')
+        grades[pkg][track][criterion] = (grade, '')
     out = []
     for pkg in sorted(packages - status.keys()):
         out.append(f'{pkg}: not listed')
     for pkg in sorted(status.keys() - packages):
         out.append(f'{pkg}: listed, but no such package')
     for pkg, entry in sorted(status.items()):
+        if pkg not in packages:
+            continue
         if entry.get('status') not in STATUSES:
             out.append(f"{pkg}: status {entry.get('status')!r} is not one of {sorted(STATUSES)}")
         if entry.get('shape') not in SHAPES:
             out.append(f"{pkg}: shape {entry.get('shape')!r} is not one of {sorted(SHAPES)}")
-        if entry.get('dossier') and not (ROOT / entry['dossier']).exists():
+        if entry.get('sources_kind') and entry['sources_kind'] not in SOURCE_KINDS:
+            out.append(f"{pkg}: sources_kind {entry['sources_kind']!r} is not one of {sorted(SOURCE_KINDS)}")
+        tracks = _tracks(pkg)
+        for field in ('currency', 'excluded_tracks'):
+            for tid in sorted(set(entry.get(field) or {}) - tracks):
+                out.append(f'{pkg}: {field} names {tid}, which is not one of its tracks')
+        has_dossier = bool(entry.get('dossier')) and (ROOT / entry['dossier']).exists()
+        if entry.get('dossier') and not has_dossier:
             out.append(f"{pkg}: dossier {entry['dossier']} does not exist")
-        run_in_ci = False
         for ref in entry.get('source_tests') or []:
             file, _, name = ref.partition('::')
             path = ROOT / file
@@ -48,18 +70,12 @@ def problems() -> list[str]:
                 continue
             if name and f'def {name}(' not in path.read_text():
                 out.append(f'{pkg}: {file} has no test {name}')
-            run_in_ci |= f'python {file}' in workflow
-        if entry.get('status') != 'audited':
+        if not grades.get(pkg):
+            out.append(f'{pkg}: no grades in tools/scorecard_baseline.json (run tools/evaluate_packages.py --update-baseline)')
             continue
-        if not entry.get('dossier'):
-            out.append(f'{pkg}: audited without a dossier')
-        if not run_in_ci:
-            out.append(f'{pkg}: audited, but CI runs none of its source tests')
-        findings = [f for f in fidelity_items if str(f).startswith(pkg + '/')]
-        if findings:
-            out.append(f'{pkg}: audited with {len(findings)} fidelity finding(s) in the baseline')
-        if orphans.get(pkg):
-            out.append(f'{pkg}: audited with orphaned exercises {orphans[pkg]}')
+        earned = pe.derived_status(grades[pkg], set(entry.get('excluded_tracks') or {}), has_dossier)
+        if entry.get('status') != earned:
+            out.append(f"{pkg}: status.yaml says {entry.get('status')}, the recorded scorecard earns {earned}")
     return out
 
 

@@ -709,10 +709,12 @@ Run in CI next to `check_fidelity.py`; its baseline only shrinks. Every step bel
 is judged by it.
 
 **2. Shared fixes for the ten packages still on the old generator (S–M).**
-1. *Injury data that resolves (S, content).* 55 of 63 `modified_exercises` pairs
-   and 94 of 143 `excluded_exercises` name no exercise. Point them at catalog ids
-   (or add the substitutes to the packages that need them) and validate the ids in
-   `validate_entities.py`.
+1. *Injury data that resolves (S, content)* — **done 2026-10-20.** 54 of 63
+   `modified_exercises` pairs and 78 of 143 `excluded_exercises` named no exercise
+   (the "94" first counted here predated Horsemen's full catalog). Every id now names
+   a catalog exercise, each pair is declared together in one package (a program draws
+   only on its own), names the flag's patterns already cover went, and
+   `validate_entities.py` holds both.
 2. *No silent degradation (S).* A session with no exercise left is refused or
    replaced by a declared substitute, never delivered; `EQUIPMENT_SCALED` stops
    promising scaling — the 44 archetypes' `scaling.equipment_limited` becomes
@@ -738,8 +740,12 @@ time domains (CrossFit, Gym Jones, Filly conditioning); assessment-gated selecti
 
 **4. Move packages onto contracts (M–L each, content + engine)**, ordered by how
 badly the default misrepresents the method and whether its policies exist:
-1. *Starting Strength* — fixed lifts fit today; add exposure-based loading and an
-   intermediate Texas Method / Heavy-Light-Medium track.
+1. *Starting Strength* — **done 2026-10-20** (partial: debt below). A contract from
+   Rippetoe's 2013 articles and Alter's "The Reset": A/B variants alternating A-B-A /
+   B-A-B, `load_per_exposure` (a made lift goes up, a miss repeats, two reset 5 %, a lift
+   with no weight works up), the Texas Method as the intermediate track
+   (`track_for_level`), confirm by lift on both clients. Left: the light squat day and
+   5×3 after a stall, layoff resets, a stalled Texas Method Friday, exercise media.
 2. *BJJ* — **done 2026-10-19** (`data/packages/bjj/training_contract.yaml`): classes
    grow with the week and always outnumber strength; strength by effort with joint
    maintenance inside; deloads drop rolling; declared substitutes and optional
@@ -770,6 +776,16 @@ badly the default misrepresents the method and whether its policies exist:
 package is checked and improved from here: the method, `status.yaml` (where each
 package stands and which engine shape it needs, gated by
 `tools/check_package_status.py`) and the source dossiers. The order below follows it.
+
+**The scorecard (2026-10-20)** is step 1 above made concrete: `tools/evaluate_packages.py`
+grades every package × track on Source, Execution, Robustness, Data and Measurement
+(`docs/package-fidelity/scorecard.md`), ratchets in CI, and derives `audited`. Audited:
+Wildman, BJJ, Horsemen (4-Month Macro); partial: Starting Strength. What the not-started
+packages fail, in order of the audit's concern: E3 (Gym Jones, Filly, Uphill serve
+novices their frameworks are not written for — 9.2.4), E4 (Uphill's transition is one
+archetype; CrossFit's variation needs claims), R1 (Gym Jones and Uphill hand out empty
+sessions under injuries), E5 (no defining claims declared outside the contracts), and
+M1 (no package but the audited ones declares its currency).
 
 **5. Wildman follow-ups (from the handoff).** General Practice runs Wildman's Phase II
 since 2026-10-20 (the Nerd Math swing approaches, get-up and deck squat stacked as time

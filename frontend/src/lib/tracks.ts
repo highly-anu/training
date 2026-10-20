@@ -13,9 +13,13 @@ export function tracksOf(phil: Philosophy | undefined | null): Track[] {
   return phil?.tracks ?? []
 }
 
-export function primaryTrack(phil: Philosophy | undefined | null): Track | undefined {
+/** The track a request that names none gets: the one written for the
+ *  athlete's level (`track_for_level`, as the server picks it — Starting
+ *  Strength's intermediate gets the Texas Method), else the primary. */
+export function primaryTrack(phil: Philosophy | undefined | null, level?: string | null): Track | undefined {
   const tracks = tracksOf(phil)
-  return tracks.find((t) => t.id === phil?.primary_track_id) ?? tracks[0]
+  const byLevel = level ? phil?.track_for_level?.[level] : undefined
+  return tracks.find((t) => t.id === byLevel) ?? tracks.find((t) => t.id === phil?.primary_track_id) ?? tracks[0]
 }
 
 export function findTrack(phil: Philosophy | undefined | null, trackId: string | null | undefined): Track | undefined {
@@ -94,6 +98,7 @@ export function builderTrack(
   philosophies: Philosophy[] | undefined,
   selectedPhilosophyIds: string[],
   trackId: string | null | undefined,
+  level?: string | null,
 ): { philosophy: Philosophy; track: Track } | undefined {
   const selected = selectedPhilosophyIds
     .map((id) => philosophies?.find((p) => p.id === id))
@@ -105,6 +110,6 @@ export function builderTrack(
     }
   }
   const first = selected[0]
-  const t = primaryTrack(first)
+  const t = primaryTrack(first, level)
   return first && t ? { philosophy: first, track: t } : undefined
 }

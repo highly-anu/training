@@ -38,9 +38,10 @@ final class BuilderState: ObservableObject {
     var isStep1Valid: Bool { selectedPhilosophyId != nil }
     var isStep3Valid: Bool { !constraints.equipment.isEmpty }
 
-    /// The track the program will run: the picked one, else the primary.
+    /// The track the program will run: the picked one, else the one written
+    /// for the athlete's level, else the primary — as the server picks it.
     func track(in philosophy: PhilosophyCard?) -> PhilosophyTrack? {
-        philosophy?.track(selectedTrackId)
+        philosophy?.track(selectedTrackId, level: constraints.trainingLevel)
     }
 
     /// A multi-phase track runs all its phases, so its length becomes the
@@ -503,6 +504,8 @@ struct BuilderStep4ReviewView: View {
     @ObservedObject var builder: BuilderState
     @EnvironmentObject var appState: AppState
     let onGenerate: () async -> Void
+    /// What the athlete typed for each starting weight, kept as typed ("62.").
+    @State private var startingText: [String: String] = [:]
 
     private var requirements: TrackEntryRequirements? {
         builder.track(in: appState.philosophies.first { $0.id == builder.selectedPhilosophyId })?.entryRequirements
@@ -577,6 +580,33 @@ struct BuilderStep4ReviewView: View {
                         Toggle("I have two appropriate matching kettlebells", isOn: Binding(
                             get: { (builder.constraints.kettlebellCount ?? 0) >= 2 },
                             set: { builder.constraints.kettlebellCount = $0 ? 2 : 1 }))
+                    }
+                }
+                if let lifts = r.startingLoads, !lifts.isEmpty {
+                    Section {
+                        ForEach(lifts) { lift in
+                            HStack {
+                                Text(lift.name)
+                                Spacer()
+                                TextField("kg", text: Binding(
+                                    get: { startingText[lift.id]
+                                        ?? builder.constraints.startingLoadsKg?[lift.id].map(LoadFormat.kilograms) ?? "" },
+                                    set: { text in
+                                        startingText[lift.id] = text
+                                        var loads = builder.constraints.startingLoadsKg ?? [:]
+                                        let kg = Double(text.replacingOccurrences(of: ",", with: "."))
+                                        loads[lift.id] = (kg ?? 0) > 0 ? kg : nil
+                                        builder.constraints.startingLoadsKg = loads.isEmpty ? nil : loads
+                                    }))
+                                    .keyboardType(.decimalPad)
+                                    .multilineTextAlignment(.trailing)
+                                    .frame(width: 72)
+                            }
+                        }
+                    } header: {
+                        Text("Starting weights")
+                    } footer: {
+                        Text("The weight you last made on each lift, if you know it. Leave one empty and its first session works up to a weight from the empty bar.")
                     }
                 }
             }

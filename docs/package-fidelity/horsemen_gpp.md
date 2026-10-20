@@ -1,7 +1,10 @@
 # Horsemen GPP — source dossier
 
-Status: **partial** (2026-10-20): the 4-Month Macro runs as written; the GPP
-Circuits track is an invention with its own findings. Engine shape: week
+Status: **audited** (2026-10-20) for the 4-Month Macro, which runs as written;
+the GPP Circuits track is an invention awaiting the owner's decision and is
+excluded from the status (status.yaml `excluded_tracks`). The 25 catalog
+exercises from before the rebuild that no workout names were removed the same
+day. Engine shape: week
 templates and category pools (philosophy.yaml `week_templates`,
 frameworks/concurrent_training.yaml `categories`, src/week_template.py).
 
@@ -33,7 +36,9 @@ placed where it fits the method.
 - Workouts the source leaves undefined ("400 m Rob Shauls"); movements it names
   without defining (cauldron, corkscrew, arm haulers …) are read as noted in the catalog.
 - No equipment id for elliptical, stair master, climbing, paddling or skiing.
-- The PT test's 800 m swim is logged by hand.
+- The PT test's 800 m swim, and the goals no session tests (SSST, the 5-mile run,
+  bodyweight bench reps, pull-ups with 25 lb), are entered by hand (`manual: true`
+  in analytics.yaml).
 
 ## Inventions (see status.yaml)
 

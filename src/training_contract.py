@@ -15,6 +15,7 @@ from __future__ import annotations
 from copy import deepcopy
 from itertools import combinations
 import math
+import os
 
 from . import provenance
 from .selector import _equipment_ok, _injury_exclusions
@@ -71,7 +72,26 @@ def load_contract(package: str, track: str) -> dict | None:
     if len(set(ids)) != len(ids):
         raise ContractError('Training module ids must be unique within a track.')
     for module in contract['modules']:
+        if module.get('variants'):
+            # A module whose sessions alternate (Starting Strength's A and B):
+            # the rotation names a variant per exposure. `blocks` becomes every
+            # variant's blocks once each, for what reads a module whole (the
+            # catalog-coverage tool, the optional-module blocker).
+            by_id = {v['id']: v for v in module['variants']}
+            if not module.get('rotation') or set(module['rotation']) - by_id.keys():
+                raise ContractError(f"{module['id']}: its rotation must name its variants.")
+            seen, merged = set(), []
+            for v in module['variants']:
+                for b in v['blocks']:
+                    if (b['role'], b['exercise_id']) not in seen:
+                        seen.add((b['role'], b['exercise_id']))
+                        merged.append(b)
+            module['blocks'] = merged
         p = module['progression']
+        if p['model'] == 'load_per_exposure':
+            missing = {b['exercise_id'] for b in module['blocks'] if b.get('loaded')} - set(p.get('lifts') or {})
+            if missing:
+                raise ContractError(f"{module['id']}: no increments declared for {sorted(missing)}.")
         if p['model'] == 'density_cycle':
             stages = list(zip(p['rounds'], p.get('interval_sec') or [60] * len(p['rounds'])))
             staged = bool(p.get('interval_sec'))
@@ -87,6 +107,142 @@ def load_contract(package: str, track: str) -> dict | None:
     return {**deepcopy(contract), 'version': document['version'], 'package': package, 'track_id': track}
 
 
+def at_step(module: dict, step: int) -> dict:
+    """The module as it runs at an exposure: a module with variants takes the
+    one its rotation names (A, B, A, B … — so a week is A-B-A, the next B-A-B)."""
+    if not module.get('variants'):
+        return module
+    vid = module['rotation'][step % len(module['rotation'])]
+    variant = next(v for v in module['variants'] if v['id'] == vid)
+    return {**module, 'blocks': variant['blocks'], 'variant': vid,
+            'name': variant.get('name', module['name']),
+            'archetype_id': variant.get('archetype_id', module['archetype_id'])}
+
+
+# ── Load per confirmed exposure (Starting Strength) ──────────────────────────
+#
+# Each lift carries {next_kg, kg, exposures, failures, resets, stalled}:
+# `next_kg` is what its next progressing exposure prescribes, `kg` the last
+# weight made (the basis of a percentage block: the Texas Method's Monday is
+# about 90 % of the five-rep max). A made exposure adds the lift's increment —
+# the first `first_exposures` at the larger step, a step smaller after each
+# reset; a miss repeats the weight; `stall.failures` misses in a row reset it
+# by `stall.reset_pct`, and a lift that stalls again after `stall.resets`
+# resets has finished its novice progression and holds (Alter, "The Reset").
+# A lift with no weight yet is worked up to on the day and recorded.
+
+def _advancing(block: dict) -> bool:
+    """A loaded block at full weight carries its lift forward; a percentage
+    block (the Texas Method's volume and light days) reads it."""
+    return bool(block.get('loaded')) and block.get('advances', block.get('pct', 1) == 1)
+
+
+def _round_kg(kg: float, step: float) -> float:
+    return round(round(kg / step) * step, 2)
+
+
+def lift_increment(module: dict, lift: str, exposures: int, resets: int) -> float:
+    """The kg a lift adds after its `exposures`-th made exposure."""
+    spec = (module['progression'].get('lifts') or {}).get(lift) or {}
+    steps = spec.get('increments_kg') or [0]
+    first = spec.get('first_exposures')
+    index = (1 if first is not None and exposures >= first else 0) + resets
+    return steps[min(index, len(steps) - 1)]
+
+
+def apply_lift_outcome(module: dict, lift: str, record: dict, made: bool, kg: float) -> None:
+    """One confirmed exposure of a lift, made or missed at `kg`."""
+    p = module['progression']
+    step = p.get('round_kg', 1.25)
+    record.setdefault('exposures', 0)
+    record.setdefault('failures', 0)
+    record.setdefault('resets', 0)
+    if made:
+        record['kg'] = kg
+        record['exposures'] += 1
+        record['failures'] = 0
+        record['next_kg'] = kg if record.get('stalled') else _round_kg(
+            kg + lift_increment(module, lift, record['exposures'], record['resets']), step)
+        return
+    record['failures'] += 1
+    record['next_kg'] = kg
+    stall = p.get('stall')
+    if stall and record['failures'] >= stall['failures']:
+        record['failures'] = 0
+        if record['resets'] >= stall.get('resets', 1):
+            record['stalled'] = True
+        else:
+            record['resets'] += 1
+            record['next_kg'] = _round_kg(kg * (1 - stall['reset_pct'] / 100), step)
+
+
+def lift_forecast(module: dict, state: dict, step: int) -> dict:
+    """Every lift as it stands at `step`, forecast from the confirmed state on
+    the assumption that each exposure between is made (the program says so:
+    `conditional`)."""
+    lifts = deepcopy(state.get('lifts') or {})
+    for s in range(state.get('completed', 0), step):
+        for b in at_step(module, s)['blocks']:
+            if not _advancing(b):
+                continue
+            record = lifts.setdefault(b['exercise_id'], {})
+            if record.get('next_kg') is None:
+                record['exposures'] = record.get('exposures', 0) + 1
+                continue
+            apply_lift_outcome(module, b['exercise_id'], record, True, record['next_kg'])
+    return lifts
+
+
+def _lift_outcome(outcome: dict, prescribed: dict) -> tuple[bool | None, float | None]:
+    """(made, kg) from a logged exercise: the one-tap answer's `made`, else the
+    logged sets — every prescribed set completed at its reps — else unknown."""
+    if not isinstance(outcome, dict):
+        return None, None
+    sets = [s for s in outcome.get('sets') or [] if isinstance(s, dict)]
+    weights = [s['weightKg'] for s in sets if isinstance(s.get('weightKg'), (int, float))
+               and not isinstance(s.get('weightKg'), bool) and math.isfinite(s['weightKg']) and s['weightKg'] > 0]
+    kg = outcome.get('weightKg')
+    if isinstance(kg, bool) or not isinstance(kg, (int, float)) or not math.isfinite(kg) or kg <= 0:
+        kg = max(weights) if weights else prescribed.get('kg')
+    if isinstance(outcome.get('made'), bool):
+        return outcome['made'], kg
+    if not sets:
+        return None, kg
+    reps = prescribed.get('reps')
+    done = [s for s in sets if s.get('completed') is True
+            and (not isinstance(reps, int) or not isinstance(s.get('repsActual'), int) or s['repsActual'] >= reps)]
+    return len(done) >= (prescribed.get('sets') or 1), kg
+
+
+def seed_lifts(current: dict, logs: dict, module: dict) -> dict:
+    """Each lift's state from the athlete's last logged working sets in a
+    program that ran before this contract (Starting Strength's linear
+    progression before 2026-10-20): the weight goes up from what was last
+    lifted, or repeats it if the sets were not all made."""
+    out: dict = {}
+    lifts = set((module['progression'].get('lifts') or {}))
+    day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    for week in current.get('weeks') or []:
+        schedule = week.get('schedule') or {}
+        for day in sorted(schedule, key=lambda d: d if isinstance(d, int) else day_order.index(d) + 1):
+            name = day_order[day - 1] if isinstance(day, int) else day
+            for si, session in enumerate(schedule[day]):
+                key = f"{week['week_number']}-{name}-{si}"
+                log = logs.get(key) or (logs.get(f"{week['week_number']}-{name}") if si == 0 else {}) or {}
+                for ea in session.get('exercises') or []:
+                    eid = (ea.get('exercise') or {}).get('id')
+                    if eid not in lifts:
+                        continue
+                    load = ea.get('load') or {}
+                    made, kg = _lift_outcome((log.get('exercises') or {}).get(eid) or {},
+                                             {'kg': None, 'sets': load.get('sets'), 'reps': load.get('reps')})
+                    if made is None or kg is None:
+                        continue
+                    record = out.setdefault(eid, {})
+                    apply_lift_outcome(module, eid, record, made, kg)
+    return out
+
+
 def confirmed_state(current: dict, logs: dict, contract: dict) -> dict:
     """Consume successful exposures once, in prescription order, never by date alone.
 
@@ -98,6 +254,7 @@ def confirmed_state(current: dict, logs: dict, contract: dict) -> dict:
     if (current.get('training_contract') or {}).get('id') != identity:
         return {}
     state = deepcopy(current.get('module_state') or {})
+    specs = {m['id']: m for m in contract['modules']}
     day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     for week in current.get('weeks') or []:
         schedule = week.get('schedule') or {}
@@ -114,6 +271,19 @@ def confirmed_state(current: dict, logs: dict, contract: dict) -> dict:
                     mid = module['id']
                     record = state.setdefault(mid, {'completed': 0})
                     if module.get('forecast_step') != record.get('completed', 0):
+                        continue
+                    spec = specs.get(mid) or {}
+                    if spec.get('progression', {}).get('model') == 'load_per_exposure':
+                        # Attendance moves the rotation (A, then B); each lift
+                        # moves on its own outcome — a missed squat does not
+                        # hold back the press. A lift with no outcome holds.
+                        record['completed'] += 1
+                        for eid, prescribed in (module.get('lifts') or {}).items():
+                            made, kg = _lift_outcome((log.get('exercises') or {}).get(eid) or {}, prescribed)
+                            if made is None or kg is None:
+                                continue
+                            lift = record.setdefault('lifts', {}).setdefault(prescribed.get('lift', eid), {})
+                            apply_lift_outcome(spec, prescribed.get('lift', eid), lift, made, kg)
                         continue
                     outcomes = [log.get('exercises', {}).get(eid, {}) for eid in module['exercise_ids']]
                     if not outcomes or not all(isinstance(o, dict) and o.get('clean') is True and not isinstance(o.get('rpe'), bool) and isinstance(o.get('rpe'), (int, float))
@@ -146,19 +316,46 @@ def confirmed_state(current: dict, logs: dict, contract: dict) -> dict:
 
 
 def confirmation_outcomes(session: dict, clean: bool, rpe: int | None,
-                          logged: dict | None = None) -> dict:
+                          logged: dict | None = None, lifts: dict | None = None) -> dict:
     """What "done as written" logs for a session's modules: each progressing
     exercise's prescribed rounds or seconds (the module record's
     `requirements`), whether it was clean, and the RPE — merged into whatever
     was logged for it already (sets, a bell), which wins where it says more.
 
+    A loaded lift (Starting Strength) logs `made` and the weight instead:
+    `lifts` — {exercise id: {made, weightKg}} — names the ones that went
+    otherwise than written (a missed squat, a heavier press) and every lift it
+    does not name was made; without it, `clean` says for all of them. Its sets
+    are written at that weight unless sets were logged already.
+
     The athlete's one-tap answer after a session: a watch-recorded or linked
     workout logs no per-exercise outcome, so without it no exposure was ever
     confirmed and every regenerate started each cycle again (2026-10-20)."""
     logged = logged or {}
+    named = lifts is not None
+    lifts = lifts or {}
     out: dict = {}
     for record in session.get('modules') or []:
+        for eid, prescribed in (record.get('lifts') or {}).items():
+            entry = dict(logged.get(eid) or {})
+            given = lifts.get(eid) or {}
+            made = given['made'] if isinstance(given.get('made'), bool) else (named or bool(clean))
+            kg = given.get('weightKg', entry.get('weightKg', prescribed.get('kg')))
+            entry['made'] = made
+            if kg is not None:
+                entry['weightKg'] = kg
+            if not entry.get('sets'):
+                reps = prescribed.get('reps')
+                entry['sets'] = [{'setIndex': i, 'weightKg': kg, 'completed': made,
+                                  **({'repsActual': reps} if made and isinstance(reps, int) else {})}
+                                 for i in range(prescribed.get('sets') or 1)]
+            entry['clean'] = bool(clean)
+            if rpe is not None:
+                entry['rpe'] = rpe
+            out[eid] = entry
         for eid, req in (record.get('requirements') or {}).items():
+            if eid in (record.get('lifts') or {}):
+                continue
             entry = dict(logged.get(eid) or {})
             if req.get('duration_sec'):
                 entry.setdefault('durationSec', req['duration_sec'])
@@ -281,7 +478,8 @@ def _assignment(block: dict, module: dict, exercises: dict, constraints: dict,
             sets = max(1, math.floor(sets * _keep(block, module)))
         rest = block.get('rest_sec', 60)
         if block['slot_type'] == 'sets_reps':
-            load = {'sets': sets, 'reps': block['reps'], 'rest_sec': rest}
+            # Chin-ups "to failure, each set" (Rippetoe) are sets of `max`.
+            load = {'sets': sets, 'reps': 'max' if block.get('to_failure') else block['reps'], 'rest_sec': rest}
             per_set = block['duration_sec'] / block['sets']
         else:
             load = {'sets': sets, 'hold_seconds': block['hold_sec'], 'rest_sec': rest}
@@ -334,8 +532,11 @@ def _assignment(block: dict, module: dict, exercises: dict, constraints: dict,
         slot['role'] = block['role']
         slot['duration_minutes'] = seconds / 60
         load.update(protocol_load(ex, slot))
-    weight = _bell(module, constraints, state)
-    if block.get('loaded'):
+    by_load = module['progression']['model'] == 'load_per_exposure'
+    weight = None if by_load else _bell(module, constraints, state)
+    if by_load and block.get('loaded'):
+        load.update(_lift_load(block, module, exercises, state, step))
+    elif block.get('loaded'):
         if weight is not None:
             load['weight_kg'] = weight
         load['load_note'] = (('Use two matching bells; selected weight is per bell. Finish repetitions cleanly, then rest.'
@@ -348,10 +549,48 @@ def _assignment(block: dict, module: dict, exercises: dict, constraints: dict,
         load['load_note'] = f"{load['focus']} {load.get('load_note') or ''}".strip()
     load.update(prescription_version=1, progression_model=module['progression']['model'],
                 module_id=module['id'], forecast_step=step,
-                advances_module=_progresses(block),
+                advances_module=_advancing(block) if by_load else _progresses(block),
                 conditional=step != state.get('completed', 0), elapsed_sec=seconds)
     return {'slot_role': slot['role'], 'slot_type': slot['slot_type'], 'slot': slot,
             'exercise': ex, 'load': load, **({'standard': block['standard']} if block.get('standard') else {})}
+
+
+def _lift_load(block: dict, module: dict, exercises: dict, state: dict, step: int) -> dict:
+    """A loaded block's weight by the lift's forecast: the next weight for a
+    progressing block, a share of the last one made for a percentage block,
+    a work-up on the day when the lift has no weight yet."""
+    lift = block['exercise_id']
+    record = lift_forecast(module, state, step).get(lift) or {}
+    increment = lift_increment(module, lift, record.get('exposures', 0) + 1, record.get('resets', 0))
+    step_kg = module['progression'].get('round_kg', 1.25)
+    out: dict = {'lift': lift}
+    if _advancing(block):
+        kg = record.get('next_kg')
+        out['increment_kg'] = increment
+        if kg is not None:
+            out['weight_kg'] = kg
+            out['load_note'] = (f"{kg:g} kg." if record.get('stalled')
+                                else f"{kg:g} kg. Make every rep and next time it is {increment:g} kg more.")
+        elif not record.get('exposures'):
+            out['work_up'] = True
+            out['load_note'] = ('Work up from the empty bar in sets of five, in small jumps. The weight that '
+                                'feels heavy but keeps your form is today\'s: do the rest of the sets there, '
+                                'and record it.')
+        else:
+            out['load_note'] = f"{increment:g} kg more than you made last time."
+    else:
+        pct = block.get('pct', 1)
+        basis = record.get('kg') if record.get('kg') is not None else record.get('next_kg')
+        if basis is not None:
+            out['weight_kg'] = _round_kg(basis * pct, step_kg)
+            out['load_note'] = f"{pct:.0%} of your current {(exercises.get(lift) or {}).get('name', lift)}."
+        else:
+            out['load_note'] = f"About {pct:.0%} of your five-rep max; record the weight."
+    if record.get('stalled'):
+        out['stalled'] = True
+        out['load_note'] += (' This lift stalled again after a reset: its novice progression is over, and '
+                             'the Texas Method carries it on.')
+    return out
 
 
 def _progresses(block: dict) -> bool:
@@ -476,6 +715,25 @@ def active_modules(contract: dict, constraints: dict) -> list[dict]:
     return out
 
 
+def _level_refusal(contract: dict, level: str) -> str:
+    """Why a level is refused, naming the package's track written for it if
+    there is one (an intermediate on Starting Strength's novice progression
+    is sent to the Texas Method), else the levels its tracks are written for."""
+    from . import loader
+    phil = loader.load_philosophy(contract['package'])
+    names = {t['id']: t.get('name', t['id']) for t in phil.get('tracks') or []}
+    this = names.get(contract['track_id'], contract['track_id'])
+    document = _document(os.path.join(loader._PACKAGES_DIR, contract['package'], 'training_contract.yaml'))
+    fits = [tid for tid, t in (document.get('tracks') or {}).items() if level in (t.get('training_levels') or [])]
+    if fits:
+        return (f"{this} is written for {' and '.join(contract['training_levels'])} lifters; "
+                f"at {level}, {names.get(fits[0], fits[0])} is the track for you.")
+    written = sorted({lv for t in (document.get('tracks') or {}).values() for lv in t.get('training_levels') or []},
+                     key=['novice', 'intermediate', 'advanced', 'elite'].index)
+    return (f"{this} is written for {' and '.join(contract['training_levels'])} lifters, and no track of this "
+            f"program is written for {level} (they cover {', '.join(written)}).")
+
+
 def generate(contract: dict, entries: list, constraints: dict, data: dict, policy,
              frameworks: dict, include_trace: bool = False) -> dict:
     """Compile the contract directly to the normal generator result shape."""
@@ -484,7 +742,7 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
         raise ContractError('Module contracts currently support one methodology at a time; a blend needs an explicit composition contract.')
     level = constraints.get('training_level', 'intermediate')
     if level not in contract['training_levels']:
-        raise ContractError(f"This track supports {contract['training_levels']}, not {level}.")
+        raise ContractError(_level_refusal(contract, level))
     if contract.get('requires_kettlebell_pair'):
         count = constraints.get('kettlebell_count', 0)
         if isinstance(count, bool) or not isinstance(count, int) or count < 2:
@@ -514,6 +772,23 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
         value = state.setdefault(m['id'], {'completed': 0})
         if not isinstance(value, dict) or isinstance(value.get('completed', 0), bool) or not isinstance(value.get('completed', 0), int) or value.get('completed', 0) < 0:
             raise ContractError('Module completed exposures must be nonnegative integers.')
+    # The weight the athlete last made on a lift (the builder's optional
+    # starting weights: a novice's last work sets, an intermediate's five-rep
+    # max), for a lift that has none yet: the next session adds to it.
+    # Without one, the lift's first session works up to a weight.
+    starting = constraints.get('starting_loads_kg') or {}
+    if not isinstance(starting, dict) or any(isinstance(v, bool) or not isinstance(v, (int, float))
+                                             or not math.isfinite(v) or v <= 0 for v in starting.values()):
+        raise ContractError('starting_loads_kg must map exercise ids to positive weights.')
+    for m in modules:
+        if m['progression']['model'] != 'load_per_exposure':
+            continue
+        for lift in m['progression'].get('lifts') or {}:
+            record = state[m['id']].setdefault('lifts', {}).setdefault(lift, {})
+            if record.get('next_kg') is None and starting.get(lift) is not None:
+                kg = _round_kg(starting[lift], m['progression'].get('round_kg', 1.25))
+                record.update(kg=kg, next_kg=_round_kg(kg + lift_increment(m, lift, 0, 0),
+                                                       m['progression'].get('round_kg', 1.25)))
     cursor = {m['id']: state[m['id']].get('completed', 0) for m in modules}
     blocked_patterns, blocked_ids = _injury_exclusions(constraints, data['injury_flags'])
     blocked_patterns |= set(constraints.get('avoid_movements') or [])
@@ -547,10 +822,19 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
         # The phase's `exclude_exercises` rule a movement out as an injury
         # does: a declared alternative or an optional block's absence applies.
         week_blocked = (blocked_ids | set(entry.get('exclude_exercises') or []), blocked_patterns)
-        estimates = {m['id']: sum(r['load']['elapsed_sec'] for r in _module_rows(
-                        m, data['exercises_by_package'][contract['package']], constraints, state[m['id']],
-                        cursor[m['id']] + m['exposures_per_week'] - 1, deload, week_blocked)) / 60
+        # The week's longest exposure: a cycle's last step, or the longer of
+        # alternating variants (Workout A runs longer than B).
+        estimates = {m['id']: max(sum(r['load']['elapsed_sec'] for r in _module_rows(
+                        at_step(m, cursor[m['id']] + k), data['exercises_by_package'][contract['package']],
+                        constraints, state[m['id']], cursor[m['id']] + k, deload, week_blocked))
+                        for k in ((range(m['exposures_per_week']) if m.get('variants')
+                                   else [m['exposures_per_week'] - 1]))) / 60
                      for m in modules}
+        for m in modules:
+            if not m.get('optional') and estimates[m['id']] > cap:
+                # Say which and by how much, not that "the budget cannot fit".
+                raise ContractError(f"{m['name']} needs {estimates[m['id']]:g} minutes a session; "
+                                    f"{cap:g} are available.")
         from . import standard_tests
         tests = standard_tests.tests_for_week(entry)
         if tests and not contract.get('test_module'):
@@ -592,7 +876,8 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
                 # programs stack into one session) then takes a day with the
                 # minutes left beside the essential work.
                 days = [d for d in pool if d < limit and clear_of_last_week(m['id'], d, m.get('min_spacing_days', 2))
-                        and (d not in candidate or m.get('may_share_day'))]
+                        and (d not in candidate or m.get('may_share_day'))
+                        and not {x['id'] for x in candidate.get(d, [])} & set(m.get('never_with') or [])]
                 days.sort(key=lambda d: (d in candidate, -room[d], d))
                 fit[m['id']] = _place_optional(m, estimates[m['id']], days, room)
                 for d in fit[m['id']]:
@@ -652,7 +937,10 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
             # or advances, as `verify` and `confirmed_state` read the session.
             test_today = bool(pending_test and day == test_day
                               and any(m['id'] == contract.get('test_module') for m in day_modules))
+            resolved = []
             for m in day_modules:
+                m = at_step(m, cursor[m['id']])
+                resolved.append(m)
                 if pending_test and day == test_day and m['id'] == contract['test_module']:
                     aid = pending_test['archetypes'][0]
                     test_arch = next((a for a in data['archetypes'] if a['id'] == aid and a.get('_package') == contract['package']), None)
@@ -704,15 +992,24 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
                                     'duration_sec': 0 if r['slot_type'] == 'emom' else r['load']['elapsed_sec']}
                                     for r in rows if r.get('exercise') and r['load'].get('advances_module')},
                                 'duration_sec': next((r['load']['elapsed_sec'] for r in rows
-                                                      if r.get('exercise') and r['slot_type'] == 'time_domain' and m['progression']['model'] == 'timed_cycle'), 0)})
+                                                      if r.get('exercise') and r['slot_type'] == 'time_domain' and m['progression']['model'] == 'timed_cycle'), 0),
+                                **({'variant': m['variant']} if m.get('variant') else {}),
+                                # What each progressing lift was prescribed, so
+                                # confirmed_state reads made or missed against it.
+                                **({'lifts': {r['exercise']['id']: {
+                                    'lift': r['load']['lift'], 'kg': r['load'].get('weight_kg'),
+                                    'sets': r['load'].get('sets'), 'reps': r['load'].get('reps')}
+                                    for r in rows if r.get('exercise') and r['load'].get('lift')
+                                    and r['load'].get('advances_module')}}
+                                   if m['progression']['model'] == 'load_per_exposure' else {})})
                 if not deload and not test_today:
                     cursor[m['id']] += 1
             elapsed = sum(e['load']['elapsed_sec'] for e in assignments) // 60
             if elapsed > min(cap, day_cap):
                 raise ContractError(f'Day {day}: required modules need {elapsed:g} minutes; available time is {min(cap, day_cap):g}.')
-            first = day_modules[0]
+            first = resolved[0]
             arch = {'id': session_test['archetype'] if session_test else first['archetype_id'],
-                    'name': test_arch['name'] if session_test else ' + '.join(m['name'] for m in day_modules),
+                    'name': test_arch['name'] if session_test else ' + '.join(m['name'] for m in resolved),
                     '_package': contract['package'], 'modality': first['modality'],
                     'duration_estimate_minutes': elapsed, 'slots': [a['slot'] for a in assignments],
                     'notes': contract['notes'], 'training_levels': contract['training_levels']}
@@ -821,10 +1118,23 @@ def verify(program: dict, contract: dict, constraints: dict) -> None:
                     last_day[mid] = absolute
                     actual = [e['exercise']['id'] for e in session['exercises'] if e['load']['module_id'] == mid and e.get('exercise')]
                     dropping = week['is_deload'] and not session.get('test')
-                    blocks = [b for b in expected[mid]['blocks']
+                    module_now = at_step(expected[mid], record['forecast_step'])
+                    if module_now.get('variant') != record.get('variant'):
+                        raise ContractError('A module ran a variant out of its rotation.')
+                    blocks = [b for b in module_now['blocks']
                               if not (dropping and not b.get('standard') and _keep(b, expected[mid]) == 0)]
                     if not _sequence_matches(actual, blocks):
                         raise ContractError('A module lost its fixed movement sequence.')
+                    if expected[mid]['progression']['model'] == 'load_per_exposure':
+                        # Every weight is the lift's forecast from the confirmed state.
+                        lift_state = (program.get('module_state') or {}).get(mid) or {}
+                        for b in blocks:
+                            if not b.get('loaded'):
+                                continue
+                            row = next((e for e in session['exercises'] if e['slot_role'] == f"{mid}_{b['role']}"), None)
+                            want = _lift_load(b, module_now, {}, lift_state, record['forecast_step'])
+                            if row is not None and row['load'].get('weight_kg') != want.get('weight_kg'):
+                                raise ContractError('A lift is not prescribed the weight its confirmed progression gives.')
                     requirements = {e['exercise']['id']: {
                         'rounds': e['load'].get('target_rounds', 1),
                         'duration_sec': 0 if e['slot_type'] == 'emom' else e['load']['elapsed_sec']}
@@ -883,6 +1193,10 @@ def verify_phase_rules(program: dict, goal: dict) -> None:
         if checks.get('intensity_split_tolerance') is not None:
             raise ContractError('This module contract does not implement heart-rate intensity split targets.')
         weeks = [w for w in program['weeks'] if w.get('phase_id') == phase['phase_id']]
+        from .fidelity import claim_violations
+        broken = claim_violations(weeks, checks)
+        if broken:
+            raise ContractError(f"The phase's defining claim is broken: {broken[0][2]}.")
         previous_work = None
         minutes = []
         for week in weeks:

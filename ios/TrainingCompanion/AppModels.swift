@@ -194,6 +194,9 @@ struct PhilosophyCard: Codable, Identifiable {
     /// phases (philosophy.yaml `tracks`). Nil from a server that predates them.
     let tracks: [PhilosophyTrack]?
     let primaryTrackId: String?
+    /// The track a request that names none gets at each level (Starting
+    /// Strength: novice → Linear Progression, intermediate → Texas Method).
+    let trackForLevel: [String: String]?
 
     /// What a card shows under the name. Packages write a folded `notes`
     /// paragraph; none has a `description`.
@@ -205,9 +208,12 @@ struct PhilosophyCard: Codable, Identifiable {
         return all.first { $0.id == primaryTrackId } ?? all.first
     }
 
-    /// The named track, else the primary one.
-    func track(_ id: String?) -> PhilosophyTrack? {
+    /// The named track, else the one written for the athlete's level
+    /// (`track_for_level`, as the server picks it), else the primary one.
+    func track(_ id: String?, level: String? = nil) -> PhilosophyTrack? {
         if let id, let match = tracks?.first(where: { $0.id == id }) { return match }
+        if let level, let byLevel = trackForLevel?[level],
+           let match = tracks?.first(where: { $0.id == byLevel }) { return match }
         return primaryTrack
     }
 
@@ -217,6 +223,7 @@ struct PhilosophyCard: Codable, Identifiable {
         case intensityModel = "intensity_model"
         case progressionPhilosophy = "progression_philosophy"
         case primaryTrackId = "primary_track_id"
+        case trackForLevel = "track_for_level"
     }
 }
 
@@ -246,12 +253,21 @@ struct TrackEntryRequirements: Codable, Hashable {
     let masteredExercises: [String]
     var masteredExercisesByLevel: [String: [String]]? = nil
     let kettlebellCount: Int
+    /// Lifts that may start from the weight last made (optional; else the
+    /// first session works up to one).
+    var startingLoads: [StartingLoad]? = nil
+
+    struct StartingLoad: Codable, Hashable, Identifiable {
+        let id: String
+        let name: String
+    }
 
     enum CodingKeys: String, CodingKey {
         case trainingLevels = "training_levels"
         case masteredExercises = "mastered_exercises"
         case masteredExercisesByLevel = "mastered_exercises_by_level"
         case kettlebellCount = "kettlebell_count"
+        case startingLoads = "starting_loads"
     }
 }
 
@@ -389,6 +405,9 @@ struct ExercisePerformanceLog: Codable, Equatable {
     /// A skill practised clean — every rep owned. Movements earned counts
     /// these where the package asks (`require_clean`).
     var clean: Bool? = nil
+    /// A loaded lift of a training contract (Starting Strength): made or
+    /// missed at `weightKg` — what moves its weight on or repeats it.
+    var made: Bool? = nil
 
     init(sets: [WatchSetLog] = [], rounds: Int? = nil, durationSec: Int? = nil,
          distanceKm: Double? = nil, rpe: Int? = nil, notes: String? = nil) {
@@ -400,7 +419,7 @@ struct ExercisePerformanceLog: Codable, Equatable {
         self.notes = notes
     }
 
-    private enum CodingKeys: String, CodingKey { case sets, rounds, durationSec, distanceKm, rpe, notes, clean, weightKg }
+    private enum CodingKeys: String, CodingKey { case sets, rounds, durationSec, distanceKm, rpe, notes, clean, weightKg, made }
 
     /// Rows were written by three clients over time; a malformed set is
     /// dropped and a number stored as 1800.0 reads as 1800.
@@ -414,6 +433,7 @@ struct ExercisePerformanceLog: Codable, Equatable {
         notes = try? c.decodeIfPresent(String.self, forKey: .notes)
         clean = try? c.decodeIfPresent(Bool.self, forKey: .clean)
         weightKg = try? c.decodeIfPresent(Double.self, forKey: .weightKg)
+        made = try? c.decodeIfPresent(Bool.self, forKey: .made)
     }
 
     private static func whole(_ c: KeyedDecodingContainer<CodingKeys>, _ key: CodingKeys) -> Int? {
@@ -432,6 +452,7 @@ struct ExercisePerformanceLog: Codable, Equatable {
         try c.encodeIfPresent(clean, forKey: .clean)
         try c.encodeIfPresent(notes, forKey: .notes)
         try c.encodeIfPresent(weightKg, forKey: .weightKg)
+        try c.encodeIfPresent(made, forKey: .made)
     }
 
     var isEmpty: Bool {
@@ -983,6 +1004,8 @@ struct GenerateConstraints: Encodable {
     var injuryFlags: [String] = []
     var masteredExercises: [String] = []
     var kettlebellCount: Int? = nil
+    /// A training contract's lift → the weight last made on it (Starting Strength).
+    var startingLoadsKg: [String: Double]? = nil
     var phase: String? = nil
     /// The legacy start: a phase kind, which the server maps to the first
     /// phase of that kind in the track. `startPhase` wins when both are set.
@@ -1005,6 +1028,7 @@ struct GenerateConstraints: Encodable {
         case injuryFlags = "injury_flags"
         case masteredExercises = "mastered_exercises"
         case kettlebellCount = "kettlebell_count"
+        case startingLoadsKg = "starting_loads_kg"
         case phase
         case trainingPhase = "training_phase"
         case trackId = "track_id"

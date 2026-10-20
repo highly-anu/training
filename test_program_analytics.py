@@ -918,8 +918,9 @@ def test_unlocks_benchmarks_completion_and_errors() -> None:
     check('cumulative series per week', [p['value'] for p in r['series']] == [2, 2, 2] or r['series'][0]['value'] <= r['series'][-1]['value'])
     avail = {a['exerciseId'] for a in r['available']}
     # A novice's own concepts (hip_hinge, bracing_mechanics) open back_squat,
-    # and back_squat opens box_squat — the generator programs both from day
-    # one, so practice opens nothing the level had not.
+    # and back_squat opens the front squat — the level opens them from day
+    # one, so practice opens nothing the level had not. Chin-ups read SS's own
+    # definition, not CrossFit's (which requires a dead hang).
     check('nothing in SS is "now available" by practice: the level already opens it all',
           not avail and r['lockedCount'] == 0, str(sorted(avail)[:8]))
     check('the level-opened movements are counted, box_squat among them', r['assumedCount'] > 0)
@@ -1166,16 +1167,16 @@ def test_document() -> None:
 
 def test_headline_follows_the_track() -> None:
     """A headline that does not apply to the program gives way. Wildman's
-    cadence measures only Pentathlon Prep; in General Practice movements
-    earned leads, and the cadence entries say where they apply instead of
-    counting against "N of M measurable"."""
+    cadence measures only Pentathlon Prep; in General Practice the completed
+    intervals of its density cycles lead, and the cadence entries say where
+    they apply instead of counting against "N of M measurable"."""
     print('\ndocument: headline and applicability follow the track')
     from src import generator, goals, loader
     frameworks = list(loader.load_all_frameworks().values())
     cons = {'training_level': 'intermediate', 'days_per_week': 4, 'session_time_minutes': 60,
             'equipment': ['kettlebell', 'open_space'], 'injury_flags': [],
             'periodization_week': 1, 'fatigue_state': 'normal'}
-    for track, lead in (('general_practice', 'practice_sessions'), ('pentathlon', 'jerk_rpm')):
+    for track, lead in (('general_practice', 'interval_rounds'), ('pentathlon', 'jerk_rpm')):
         goal = goals.philosophy_to_goal('wildman_kettlebell', frameworks, track_id=track)
         cons['mastered_exercises'] = [eid for m in goal['training_contract']['modules'] for eid in m.get('requires_mastery', [])]
         prog = generator.generate(goal_id=goal['id'], goal_dict=goal, constraints=cons,
@@ -1311,7 +1312,7 @@ def test_describe() -> None:
     check('scope ids resolve to names', bar['scope']['modalities'] == [{'id': 'max_strength', 'name': 'Max Strength'}])
     check('expected is normalised', bar['expected'] == {'kind': 'achieved_plus_increment'})
     check('stall 3 sessions / 1 %', bar['stall'] == {'sessions': 3, 'tolerancePct': 1.0})
-    novice = ss['progress'][1]
+    novice = next(p for p in ss['progress'] if p['id'] == 'novice_completion')
     check('benchmark names resolve on the entry',
           [b['name'] for b in novice['benchmarks']][0].startswith('Back Squat') and novice['targetLevel'] == 'intermediate')
     why = {b['id']: b['why'] for b in ss['benchmarks']}

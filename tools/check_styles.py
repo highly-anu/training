@@ -95,6 +95,11 @@ def main() -> int:
                     'fatigue_state': 'normal',
                 }
                 if goal.get('training_contract'):
+                    # A level the track is written for (Starting Strength's
+                    # novice progression refuses an intermediate).
+                    levels = goal['training_contract']['training_levels']
+                    if constraints['training_level'] not in levels:
+                        constraints['training_level'] = levels[0]
                     constraints['kettlebell_count'] = 2
                     constraints['mastered_exercises'] = sorted({eid for m in goal['training_contract']['modules']
                         for eid in m.get('requires_mastery', [])})

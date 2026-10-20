@@ -2,6 +2,14 @@
 # Each flag defines excluded movement patterns, excluded exercises, modified exercise substitutions,
 # the training phase forced by this flag, and clinical context notes.
 # IDs must match the enum in constraints.schema.json.
+#
+# Every id here names an exercise a package declares (tools/validate_entities.py
+# checks it). `excluded_exercises` lists only what the flag's movement patterns
+# do not already exclude, or names it for clarity. A `modified_exercises` pair
+# is declared together in one package (or a package it borrows from), because a
+# program draws only on its own packages: a pair across two packages could never
+# be given. Until 2026-10-20 most entries named generic movements ("running",
+# "overhead_press") no package declares, so no substitute was ever given.
 
 injury_flags:
 
@@ -13,34 +21,28 @@ injury_flags:
       - ballistic
       - locomotion
     excluded_exercises:
-      - barbell_squat
       - front_squat
       - overhead_squat
-      - goblet_squat
       - box_jump
-      - jump_squat
-      - tuck_jump
-      - split_jump
-      - jumping_lunge
-      - running
-      - sprinting
       - depth_jump
       - broad_jump
-      - leg_press_full_rom
-      - step_up_heavy
     modified_exercises:
-      - instead_of: barbell_squat
+      - instead_of: atg_split_squat
         use: quad_set
-      - instead_of: running
-        use: stationary_bike
-      - instead_of: box_jump
-        use: heel_slide
-      - instead_of: jumping_lunge
+      - instead_of: bulgarian_split_squat_light
         use: straight_leg_raise
-      - instead_of: step_up_heavy
-        use: step_up_bodyweight
-      - instead_of: front_squat
-        use: bulgarian_split_squat_partial_rom
+      - instead_of: step_up_low
+        use: heel_slide
+      - instead_of: leg_press_single_light
+        use: terminal_knee_extension_band
+      - instead_of: run_easy
+        use: bike_easy
+      - instead_of: run_interval
+        use: bike_interval
+      - instead_of: run_interval
+        use: swim_easy
+      - instead_of: run_zone2
+        use: bike_zone2
     training_phase_forced: post_op
     notes: >
       Weeks 0-8 post-meniscus surgery. Early phase: quad sets, straight leg raises,
@@ -57,29 +59,26 @@ injury_flags:
       - ballistic
       - olympic_lift
     excluded_exercises:
-      - overhead_press
       - push_press
-      - jerk
       - snatch
       - kipping_pull_up
-      - dumbbell_overhead_press
-      - kettlebell_overhead_press
       - overhead_squat
       - wall_ball
       - handstand_push_up
       - ring_dip
-      - upright_row
     modified_exercises:
-      - instead_of: overhead_press
+      - instead_of: mf_overhead_press
         use: landmine_press
+      - instead_of: strict_press
+        use: floor_press
       - instead_of: push_press
         use: floor_press
       - instead_of: kipping_pull_up
-        use: strict_pull_up_partial_rom
+        use: pull_up
       - instead_of: ring_dip
-        use: dip_support_hold_isometric
-      - instead_of: upright_row
-        use: face_pull
+        use: dip_support_hold
+      - instead_of: handstand_push_up
+        use: push_up
       - instead_of: overhead_squat
         use: front_squat
     training_phase_forced: rehab
@@ -98,28 +97,19 @@ injury_flags:
       - ballistic
       - olympic_lift
     excluded_exercises:
-      - overhead_press
       - push_press
-      - jerk
       - snatch
       - bench_press
       - ring_dip
       - kipping_pull_up
       - kb_snatch
-      - kb_clean
-      - push_up_wide_grip
-      - muscle_up
     modified_exercises:
-      - instead_of: bench_press
-        use: floor_press_neutral_grip
-      - instead_of: overhead_press
+      - instead_of: mf_overhead_press
         use: landmine_press
-      - instead_of: kb_snatch
+      - instead_of: wk_kb_snatch
         use: kb_deadlift
       - instead_of: ring_dip
-        use: ring_support_hold_isometric
-      - instead_of: push_up_wide_grip
-        use: push_up_narrow_grip
+        use: dip_support_hold
     training_phase_forced: rehab
     notes: >
       Instability (labrum, hypermobility, or post-dislocation) requires avoiding
@@ -143,31 +133,30 @@ injury_flags:
       - romanian_deadlift
       - good_morning
       - barbell_row
-      - kb_swing
       - kb_snatch
-      - kb_clean
       - power_clean
-      - hang_clean
       - sit_up
       - v_sit
       - russian_twist
       - back_extension
-      - barbell_squat_high_load
+      - front_squat
+      - mf_front_squat
       - overhead_squat
-      - farmers_carry_heavy
     modified_exercises:
-      - instead_of: deadlift
-        use: hip_hinge_bodyweight_only
+      - instead_of: back_squat
+        use: kb_squat_goblet
+      - instead_of: mf_back_squat
+        use: bulgarian_split_squat
       - instead_of: barbell_row
-        use: chest_supported_db_row
-      - instead_of: kb_swing
-        use: goblet_squat_light
+        use: db_row_single_arm
+      - instead_of: kb_swing_two_hand
+        use: kb_squat_goblet
+      - instead_of: wk_kb_swing_two_hand
+        use: wk_kb_squat_goblet
       - instead_of: sit_up
-        use: dead_bug
-      - instead_of: farmers_carry_heavy
-        use: farmers_carry_light
-      - instead_of: barbell_squat_high_load
-        use: goblet_squat_moderate
+        use: plank_hold
+      - instead_of: sit_up
+        use: plank
     training_phase_forced: rehab
     notes: >
       Lumbar disc pathology (herniation, bulge, or degenerative disc disease) with
@@ -184,25 +173,31 @@ injury_flags:
       - locomotion
       - ballistic
     excluded_exercises:
-      - running
-      - sprinting
       - box_jump
-      - jump_squat
-      - split_jump
-      - jumping_lunge
       - broad_jump
       - depth_jump
-      - kettlebell_swing_heavy
-      - single_leg_squat
+      - pistol_squat
+      - box_pistol_squat
+      - single_leg_squat_box
     modified_exercises:
-      - instead_of: running
-        use: stationary_bike
-      - instead_of: box_jump
-        use: seated_calf_raise
-      - instead_of: single_leg_squat
-        use: double_leg_squat_partial_rom
-      - instead_of: sprinting
-        use: upper_body_ergometer
+      - instead_of: run_easy
+        use: bike_easy
+      - instead_of: run_interval
+        use: bike_interval
+      - instead_of: run_sprint
+        use: bike_interval
+      - instead_of: run_interval
+        use: swim_easy
+      - instead_of: run_sprint
+        use: swim_easy
+      - instead_of: run_zone2
+        use: bike_zone2
+      - instead_of: pistol_squat
+        use: squat_air
+      - instead_of: pistol_squat
+        use: squat_clinic
+      - instead_of: single_leg_squat_box
+        use: squat_air
     training_phase_forced: rehab
     notes: >
       Grade I-III lateral ankle sprain. Acute phase: RICE, non-weight-bearing aerobic
@@ -221,30 +216,26 @@ injury_flags:
     excluded_exercises:
       - push_up
       - bench_press
-      - overhead_press
       - push_press
-      - jerk
       - snatch
-      - barbell_front_rack
-      - kb_clean
       - kb_snatch
-      - kb_jerk
       - plank
-      - handstand
       - handstand_push_up
-      - wrist_roller
+      - front_squat
+      - mf_front_squat
+      - rack_carry_barbell
     modified_exercises:
-      - instead_of: push_up
-        use: push_up_on_fists
-      - instead_of: bench_press
-        use: floor_press_neutral_grip_db
-      - instead_of: barbell_front_rack
-        use: safety_bar_squat
-      - instead_of: kb_clean
+      - instead_of: front_squat
+        use: back_squat
+      - instead_of: mf_front_squat
+        use: mf_back_squat
+      - instead_of: wk_kb_clean_single
         use: kb_deadlift
+      - instead_of: plank_hold
+        use: side_plank
       - instead_of: plank
-        use: forearm_plank
-      - instead_of: overhead_press
+        use: side_plank
+      - instead_of: mf_overhead_press
         use: landmine_press
     training_phase_forced: rehab
     notes: >
@@ -263,28 +254,27 @@ injury_flags:
       - ballistic
       - locomotion
     excluded_exercises:
-      - running
-      - sprinting
       - sit_up
       - v_sit
       - flutter_kick
-      - leg_raise
       - mountain_climber
       - power_clean
-      - hang_clean
-      - jumping_lunge
-      - high_step_up
+      - weighted_step_up
+      - kb_step_up
+      - kb_step_up_double
     modified_exercises:
-      - instead_of: running
-        use: stationary_bike_low_resistance
+      - instead_of: run_easy
+        use: bike_easy
+      - instead_of: run_zone2
+        use: bike_zone2
       - instead_of: sit_up
-        use: dead_bug
+        use: plank_hold
+      - instead_of: sit_up
+        use: plank
       - instead_of: power_clean
-        use: trap_bar_deadlift
+        use: deadlift
       - instead_of: mountain_climber
         use: side_plank
-      - instead_of: leg_raise
-        use: bird_dog
     training_phase_forced: rehab
     notes: >
       Iliopsoas or rectus femoris strain. Avoid active hip flexion under load,
@@ -302,27 +292,24 @@ injury_flags:
       - vertical_pull
     excluded_exercises:
       - barbell_row
-      - dumbbell_row
       - pull_up
       - chin_up
-      - lat_pulldown
       - kb_snatch
-      - kb_clean
       - rope_climb
       - dead_hang
-      - farmers_carry_heavy
-      - wrist_extension_loaded
+      - wk_kb_clean_single
+      - kb_clean_double
+      - farmer_carry_kb
+      - farmer_carry_db
+      - farmer_carry_barbell
+      - farmer_carry_thick_grip
+      - kb_farmer_carry
+      - kb_farmer_carry_double
     modified_exercises:
       - instead_of: pull_up
-        use: ring_row_supinated_grip
-      - instead_of: barbell_row
-        use: chest_supported_db_row_supinated
-      - instead_of: kb_snatch
-        use: kb_deadlift
-      - instead_of: farmers_carry_heavy
-        use: farmers_carry_light
-      - instead_of: rope_climb
         use: ring_row
+      - instead_of: wk_kb_snatch
+        use: kb_deadlift
     training_phase_forced: rehab
     notes: >
       Lateral epicondylitis — extensor origin tendinopathy at the lateral elbow.
@@ -341,26 +328,38 @@ injury_flags:
     excluded_exercises:
       - bench_press
       - push_up
-      - overhead_press
       - push_press
       - barbell_row
       - pull_up
-      - kb_clean
       - kb_snatch
-      - kb_swing
       - rope_climb
-      - farmers_carry_heavy
+      - wk_kb_clean_single
+      - kb_clean_double
+      - kb_swing_two_hand
+      - kb_swing_single_arm
+      - kb_swing_double
+      - wk_kb_swing_two_hand
+      - wk_kb_swing_single_arm
+      - bjj_kb_swing
+      - towel_kb_swing
+      - kb_swing_breathing_ladder
+      - farmer_carry_kb
+      - farmer_carry_db
+      - farmer_carry_barbell
+      - farmer_carry_thick_grip
+      - kb_farmer_carry
+      - kb_farmer_carry_double
     modified_exercises:
       - instead_of: bench_press
-        use: floor_press_light
-      - instead_of: overhead_press
+        use: floor_press
+      - instead_of: mf_overhead_press
         use: landmine_press
       - instead_of: pull_up
-        use: ring_row_pronated_grip
-      - instead_of: kb_swing
+        use: ring_row
+      - instead_of: wk_kb_swing_two_hand
         use: kb_deadlift
-      - instead_of: barbell_row
-        use: chest_supported_db_row_light
+      - instead_of: wk_kb_swing_single_arm
+        use: kb_deadlift
     training_phase_forced: rehab
     notes: >
       Medial epicondylitis — flexor-pronator origin tendinopathy at the medial elbow.
@@ -378,28 +377,20 @@ injury_flags:
       - loaded_carry
       - olympic_lift
     excluded_exercises:
-      - overhead_press
       - push_press
-      - jerk
       - snatch
-      - pull_up_kipping
-      - barbell_back_squat_high_bar
-      - farmers_carry_heavy
-      - overhead_carry
-      - neck_bridge
-      - headstand
-      - handstand
-      - barbell_shrug
+      - back_squat
+      - mf_back_squat
     modified_exercises:
-      - instead_of: overhead_press
+      - instead_of: mf_overhead_press
         use: landmine_press
-      - instead_of: barbell_back_squat_high_bar
-        use: safety_bar_squat
-      - instead_of: farmers_carry_heavy
-        use: farmers_carry_light
-      - instead_of: pull_up_kipping
-        use: strict_pull_up_controlled
-      - instead_of: jerk
+      - instead_of: back_squat
+        use: front_squat
+      - instead_of: mf_back_squat
+        use: mf_front_squat
+      - instead_of: kipping_pull_up
+        use: pull_up
+      - instead_of: push_jerk
         use: front_squat
     training_phase_forced: rehab
     notes: >
@@ -417,27 +408,28 @@ injury_flags:
       - locomotion
       - ballistic
     excluded_exercises:
-      - running
-      - sprinting
       - box_jump
-      - jump_squat
-      - split_jump
-      - jumping_lunge
       - broad_jump
       - depth_jump
-      - double_under
-      - single_under
     modified_exercises:
-      - instead_of: running
-        use: stationary_bike
-      - instead_of: box_jump
-        use: heel_raise_eccentric
-      - instead_of: jump_squat
-        use: goblet_squat
-      - instead_of: double_under
-        use: rowing
-      - instead_of: sprinting
-        use: swimming
+      - instead_of: run_easy
+        use: bike_easy
+      - instead_of: run_interval
+        use: bike_interval
+      - instead_of: run_interval
+        use: swim_easy
+      - instead_of: run_sprint
+        use: swim_easy
+      - instead_of: run_zone2
+        use: bike_zone2
+      - instead_of: squat_jump
+        use: kb_squat_goblet
+      - instead_of: squat_jump
+        use: squat_air
+      - instead_of: jump_rope_double_under
+        use: row_easy
+      - instead_of: jump_rope_double_under
+        use: row_erg
     training_phase_forced: rehab
     notes: >
       Mid-portion or insertional Achilles tendinopathy. Avoid compression at
@@ -456,27 +448,24 @@ injury_flags:
       - ballistic
       - locomotion
     excluded_exercises:
-      - barbell_squat
       - front_squat
       - box_jump
-      - jump_squat
-      - split_jump
-      - jumping_lunge
-      - leg_extension_machine
-      - running_downhill
-      - lunges_heavy
       - depth_jump
     modified_exercises:
-      - instead_of: barbell_squat
-        use: leg_press_45deg_limited_rom
-      - instead_of: running
-        use: stationary_bike
+      - instead_of: run_easy
+        use: bike_easy
+      - instead_of: run_interval
+        use: bike_interval
+      - instead_of: run_zone2
+        use: bike_zone2
       - instead_of: box_jump
-        use: isometric_wall_sit
-      - instead_of: lunges_heavy
-        use: step_up_controlled
+        use: wall_squat
       - instead_of: front_squat
-        use: goblet_squat_shallow_rom
+        use: wall_squat
+      - instead_of: atg_split_squat
+        use: step_up_low
+      - instead_of: bulgarian_split_squat
+        use: step_down_eccentric
     training_phase_forced: rehab
     notes: >
       Patellar tendon overuse pathology — typically aggravated by eccentric knee

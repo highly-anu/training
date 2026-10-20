@@ -1,6 +1,6 @@
 # Executable training contracts
 
-Wildman is the first opt-in package. `training_contract.yaml` is validated against
+Wildman was the first opt-in package; BJJ and Starting Strength followed. `training_contract.yaml` is validated against
 `docs/schemas/training_contract.schema.json` before it becomes part of a goal.
 Other packages retain their legacy generator while their contracts are authored.
 
@@ -36,6 +36,47 @@ load, so the analytics count that block's heart rate. A scored test is verified
 against its own protocol's minutes, which need not equal the module's weekly
 ceiling (Pentathlon's practice sets stop at four minutes, the events run six), and
 it carries the protocol's hand switch for the watches.
+
+An optional module may name modules it `never_with` shares a day: BJJ's
+competition conditioning joins a strength day with the minutes for it, never a
+class day.
+
+## Alternating sessions and load per confirmed exposure (Starting Strength)
+
+A module may declare `variants` and a `rotation`: the rotation names the variant
+each exposure runs, so Starting Strength's `rotation: [a, b]` runs A-B-A one week
+and B-A-B the next, and the Texas Method's six variants (volume, light and
+intensity days, the press and bench swapping) run over two weeks. A session
+carries its variant (`modules[].variant`), its archetype and its name ("Workout
+A"); `verify` holds the order.
+
+`progression.model: load_per_exposure` prescribes kilograms from what the athlete
+made. Each lift in `module_state[mid].lifts` keeps `next_kg` (what its next
+progressing exposure lifts), `kg` (the last made), `exposures`, `failures`,
+`resets` and `stalled`:
+
+- a made exposure adds the lift's increment (`lifts.<id>.increments_kg`: the
+  first `first_exposures` at the larger step, a step smaller after that and after
+  each reset), rounded to `round_kg`;
+- a miss repeats the weight; `stall.failures` misses in a row reset it by
+  `stall.reset_pct`; a lift that stalls again after `stall.resets` resets holds,
+  `stalled`, and its note sends it to the next track;
+- a block with `pct` (the Texas Method's Monday at 90 %) reads its lift's last
+  made weight and does not move it; a block at full weight does;
+- a lift with no weight works up on the day (`load.work_up`), unless the builder
+  sent `starting_loads_kg` (the last weight made); an athlete whose program this
+  contract did not write starts from the last logged sets (`seed_lifts`).
+
+Future sessions are forecasts that assume every lift is made (`conditional`).
+The confirmed state counts attended sessions, so the rotation moves on a missed
+lift, and moves each lift on its own outcome: the one-tap confirm takes `lifts`
+— {exercise id: {made, weightKg}} for the ones that went otherwise than written —
+and a session's logged sets say the same. `verify` recomputes every weight.
+
+A philosophy's `track_for_level` gives a request that names no track the one
+written for the athlete's level (Starting Strength: novice → Linear Progression,
+intermediate → Texas Method); a track refuses another level by naming the track
+that fits.
 
 ## Wildman's Phase II and sources
 

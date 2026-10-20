@@ -38,6 +38,7 @@ export function useFeasibility(): FeasibilitySignal[] {
       frameworks,
       selectedPhilosophyIds,
       selectedTrackId,
+      trainingLevel: constraints.training_level,
     })
     if (!exp) return []
 
@@ -46,7 +47,7 @@ export function useFeasibility(): FeasibilitySignal[] {
     // Surface a track whose frameworks do not fit the constraints as its own
     // signal so it is visible on the review step even if the user never
     // revisits step 2. Every phase's framework is checked, once.
-    const picked = builderTrack(philosophies, selectedPhilosophyIds, selectedTrackId)
+    const picked = builderTrack(philosophies, selectedPhilosophyIds, selectedTrackId, constraints.training_level)
     const seen = new Set<string>()
     const phaseFrameworks = (picked?.track.phases ?? [])
       .map((p) => frameworks.find((f) => f.id === p.framework_id))

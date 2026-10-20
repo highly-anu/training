@@ -90,7 +90,7 @@
   # Training that estimates it: the best est. 1RM of these lifts' logged sets
   # ÷ the bodyweight that day (analytics/benchmarks.py).
   derived_from:
-    exercises: [deadlift, mf_deadlift, sumo_deadlift]
+    exercises: [deadlift, mf_deadlift]
   sources:
     - starting_strength
     - horsemen_gpp

@@ -3,6 +3,8 @@ sources:
 - https://www.strengthlog.com/strength-training-for-bjj/
 - https://www.bjjee.com/articles/your-training-mix-how-to-find-your-optimum-bjj-training-strength-conditioning-weekly-ratio/
 - https://marketplace.trainheroic.com/workout-plan/team/relentless-grappler-team
+- https://vitruve.fit/blog/bjj-strength-and-conditioning-program/
+- https://jiujitsu.com/blogs/jiujitsu/jiu-jitsu-conditioning-circuits
 tracks:
   mat_support:
     training_levels:
@@ -204,3 +206,56 @@ tracks:
         slot_type: skill_practice
         duration_sec: 180
         deload_keep: 1
+    # A competitor's conditioning (Vitruve's pre-competition phase: shuttle runs
+    # and short takedown-entry bursts beside the strength work; Chad Wesley
+    # Smith's rounds: short efforts with sprints or animal movements between).
+    # Optional, never on a class day, and only where a strength day has the
+    # minutes left; the mat stays the conditioning for everyone else.
+    - id: competition_conditioning
+      name: Competition Conditioning
+      archetype_id: bjj_round_conditioning
+      modality: anaerobic_intervals
+      training_levels:
+      - intermediate
+      - advanced
+      - elite
+      exposures_per_week: 1
+      min_spacing_days: 2
+      max_rpe: 9
+      optional: true
+      may_share_day: true
+      never_with:
+      - mat_class
+      progression:
+        model: skill_hold
+      blocks:
+      - role: entries
+        exercise_id: bjj_takedown_practice
+        slot_type: skill_practice
+        duration_sec: 600
+        deload_keep: 0.5
+        notes: Penetration steps, level changes and entries with a partner, in short controlled bursts;
+          the standing exchange is where injuries happen, so the volume stays technical.
+      - role: sprawls
+        exercise_id: bjj_sprawl_interval
+        slot_type: time_domain
+        duration_sec: 480
+        intensity: high
+        deload_keep: 0
+        notes: 30 s on, 30 s off, eight times. Hips to the floor each rep, back to the feet at once —
+          the scramble's shape, with too little rest on purpose.
+      - role: shuttles
+        exercise_id: bjj_shuttle_sprint
+        slot_type: time_domain
+        duration_sec: 600
+        intensity: high
+        deload_keep: 0
+        notes: Ten 20 m shuttles with a turn at each end, 40 s rest.
+      - role: crawl
+        exercise_id: bjj_bear_crawl
+        slot_type: time_domain
+        duration_sec: 300
+        intensity: moderate
+        optional: true
+        deload_keep: 0
+        notes: Bear crawls between efforts, knees an inch off the mat, to finish.

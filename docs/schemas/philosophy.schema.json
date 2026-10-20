@@ -142,6 +142,12 @@
       "pattern": "^[a-z0-9_]+$",
       "description": "Default track. When omitted the first track is the default."
     },
+    "track_for_level": {
+      "type": "object",
+      "propertyNames": {"enum": ["novice", "intermediate", "advanced", "elite"]},
+      "additionalProperties": {"type": "string", "pattern": "^[a-z0-9_]+$"},
+      "description": "The track a request that names none gets at each level (Starting Strength: novices run Linear Progression, intermediates the Texas Method). A level not listed falls back to primary_track_id."
+    },
     "tracks": {
       "type": "array",
       "minItems": 1,
@@ -359,6 +365,34 @@
                       "minimum": 0,
                       "maximum": 1,
                       "description": "Largest share-point deviation from the framework's intensity_distribution in any bucket (default 0.15)."
+                    },
+                    "max_substituted_share": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1,
+                      "description": "Largest share of the phase's sessions that may be another modality's because nothing of their own fitted (`substituted_for`)."
+                    },
+                    "modality_outnumbers": {
+                      "type": "array",
+                      "items": {"type": "array", "items": {"type": "string", "pattern": "^[a-z0-9_]+$"}, "minItems": 2, "maxItems": 2},
+                      "description": "[[a, b], ...]: every non-deload week has more `a` sessions than `b`."
+                    },
+                    "max_archetype_share": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1,
+                      "description": "Largest share of a modality's sessions in the phase one archetype may take (checked once the modality has four or more)."
+                    },
+                    "min_distinct_archetypes": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["weeks", "count"],
+                      "properties": {
+                        "weeks": {"type": "integer", "minimum": 1},
+                        "count": {"type": "integer", "minimum": 1},
+                        "modality": {"type": "string", "pattern": "^[a-z0-9_]+$"}
+                      },
+                      "description": "Every run of `weeks` weeks has at least `count` distinct archetypes (of `modality`, when given)."
                     }
                   }
                 }

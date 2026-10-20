@@ -179,6 +179,8 @@ export interface AthleteConstraints {
   kettlebell_weights_kg?: number[]
   mastered_exercises?: string[]
   kettlebell_count?: number
+  /** A training contract's lift → the weight last made on it (Starting Strength). */
+  starting_loads_kg?: Record<string, number>
   module_progression_state?: Record<string, { completed?: number; weight_kg?: number }>
   equipment: EquipmentId[]
   equipment_profile?: EquipmentProfileId | 'custom'
@@ -365,6 +367,13 @@ export interface ExerciseLoad {
   zone_upper?: number
   /** Pack weight for rucks and loaded carries. */
   pack_load_kg?: number
+  /** A training contract's lift (`load_per_exposure`): the lift it moves on,
+   *  the kg it adds when made, and a first session that works up to a weight. */
+  lift?: string
+  increment_kg?: number
+  work_up?: boolean
+  stalled?: boolean
+  load_note?: string
 }
 
 // ─── Session ──────────────────────────────────────────────────────────────────
@@ -881,7 +890,14 @@ export interface Track {
   name: string
   description?: string
   phases: Phase[]
-  entry_requirements?: { training_levels: string[]; mastered_exercises: string[]; mastered_exercises_by_level?: Record<string, string[]>; kettlebell_count: number }
+  entry_requirements?: {
+    training_levels: string[]
+    mastered_exercises: string[]
+    mastered_exercises_by_level?: Record<string, string[]>
+    kettlebell_count: number
+    /** Lifts that may start from the weight last made (optional; else a work-up). */
+    starting_loads?: { id: string; name: string }[]
+  }
 }
 
 export interface Philosophy {
@@ -898,6 +914,8 @@ export interface Philosophy {
   notes: string
   system_connections: PhilosophyConnections
   primary_track_id?: string
+  /** The track a request that names none gets at each level. */
+  track_for_level?: Record<string, string>
   tracks: Track[]
   expectations?: GoalExpectations  // Full program expectations (for phased programs)
 }
@@ -1150,6 +1168,9 @@ export interface ExercisePerformance {
   rounds?: number
   durationSec?: number
   distanceKm?: number
+  /** A loaded lift of a training contract (Starting Strength): made or
+   *  missed at `weightKg` — what moves its weight on or repeats it. */
+  made?: boolean
 }
 
 export interface ExerciseTimelineEntry {

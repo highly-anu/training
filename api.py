@@ -505,6 +505,7 @@ def get_frameworks():
 def get_philosophies():
     philosophies = loader.load_philosophies()
     from src.training_contract import load_contract
+    exercises, _ = loader.load_all_exercises()
     for philosophy in philosophies:
         for track in philosophy.get('tracks', []):
             contract = load_contract(philosophy['id'], track['id'])
@@ -524,6 +525,13 @@ def get_philosophies():
                         - set((contract.get('level_seeds') or {}).get(level) or []))
                         for level in contract['training_levels']},
                     'kettlebell_count': 2 if contract.get('requires_kettlebell_pair') else 1,
+                    # Lifts the athlete may start from a weight they last made
+                    # (`starting_loads_kg`); left empty, the first session
+                    # works up to one. Optional — never a requirement.
+                    'starting_loads': [{'id': lift, 'name': (exercises.get(lift) or {}).get('name', lift)}
+                                       for m in contract['modules']
+                                       if m['progression']['model'] == 'load_per_exposure'
+                                       for lift in m['progression'].get('lifts') or {}],
                 }
     return jsonify(philosophies)
 
@@ -935,15 +943,16 @@ def _track_of_weeks(current: dict) -> str | None:
     return None
 
 
-def _philosophy_to_goal(phil_id: str, all_frameworks: list, track_id: str | None = None) -> dict:
+def _philosophy_to_goal(phil_id: str, all_frameworks: list, track_id: str | None = None,
+                        level: str | None = None) -> dict:
     """Build a synthetic goal dict from a philosophy. See src/goals.py."""
-    return goals.philosophy_to_goal(phil_id, all_frameworks, track_id)
+    return goals.philosophy_to_goal(phil_id, all_frameworks, track_id, level)
 
 
 def _blend_philosophy_goals(phil_ids: list, phil_weights: dict, all_frameworks: list,
-                            track_id: str | None = None) -> dict:
+                            track_id: str | None = None, level: str | None = None) -> dict:
     """Weighted-average a set of philosophy synthetic goals into one."""
-    return goals.blend_philosophy_goals(phil_ids, phil_weights, all_frameworks, track_id)
+    return goals.blend_philosophy_goals(phil_ids, phil_weights, all_frameworks, track_id, level)
 
 
 def _normalize_schedule_constraints(constraints: dict) -> dict:
@@ -1092,11 +1101,15 @@ def _generate_program_inner(body):
     constraints.pop('forced_framework', None)
 
     try:
+        # With no track named, the one written for the athlete's level
+        # (`track_for_level`: an intermediate on Starting Strength gets the
+        # Texas Method, not the novice progression).
+        level = constraints.get('training_level')
         if philosophy_id:
-            goal = _philosophy_to_goal(philosophy_id, all_frameworks, track_id)
+            goal = _philosophy_to_goal(philosophy_id, all_frameworks, track_id, level)
         else:
             goal = _blend_philosophy_goals(philosophy_ids, philosophy_weights, all_frameworks,
-                                           track_id)
+                                           track_id, level)
     except FileNotFoundError as e:
         return jsonify({'detail': str(e)}), 404
     except PhaseResolutionError as e:
@@ -1198,6 +1211,23 @@ def _generate_program_inner(body):
                     and (supplied_state is None or supplied_state == current.get('module_state'))):
                 constraints['module_progression_state'] = training_contract.confirmed_state(
                     current, health_store.get_session_logs(g.user_id), goal['training_contract'])
+            elif (supplied_state is None and current.get('weeks')
+                  and goal['training_contract']['package'] in ((current.get('goal') or {}).get('primary_sources') or [])):
+                # A program of this package the contract did not write
+                # (Starting Strength before 2026-10-20, or the novice track
+                # ahead of the Texas Method): each lift starts from what its
+                # logged sets made. Never another method's program — its heavy
+                # single is no 3×5 — and a weight the athlete typed wins.
+                loaded = [m for m in goal['training_contract']['modules']
+                          if m['progression']['model'] == 'load_per_exposure']
+                if loaded:
+                    logs = health_store.get_session_logs(g.user_id)
+                    typed = set(constraints.get('starting_loads_kg') or {})
+                    constraints['module_progression_state'] = {
+                        m['id']: {'completed': 0, 'lifts': {
+                            lift: rec for lift, rec in training_contract.seed_lifts(current, logs, m).items()
+                            if lift not in typed}}
+                        for m in loaded}
         raw = generate(
             goal_id=goal_ids[0],
             goal_dict=goal_dict_for_generate,
@@ -3995,15 +4025,28 @@ def health_confirm_session(session_key: str):
     when the program is next regenerated (`confirmed_state`); a watch-recorded
     or linked workout logs no per-exercise outcome, so none ever did.
 
+    A loaded lift (Starting Strength) is made or missed: `lifts` —
+    {exercise id: {made: bool, weightKg?: number}} — says which and at what
+    weight; `clean: true` alone means every lift was made as prescribed.
+    `clean: false` without `lifts` is 422 there, so an older client's
+    "not clean" cannot count every lift as missed and reset it.
+
     404 when the key names no session of the current program; 422 when the
     session has no modules or the answer is malformed."""
     from src import program_history, training_contract
     from src.db import get_user_program
     body = request.get_json(silent=True) or {}
-    clean, rpe = body.get('clean'), body.get('rpe')
+    clean, rpe, lifts = body.get('clean'), body.get('rpe'), body.get('lifts')
     if not isinstance(clean, bool) or (rpe is not None and (isinstance(rpe, bool) or not isinstance(rpe, int)
                                                            or not 1 <= rpe <= 10)):
         return jsonify({'detail': 'clean (true/false) and rpe (1-10) are required'}), 422
+    if lifts is not None and (not isinstance(lifts, dict) or any(
+            not isinstance(v, dict) or not isinstance(v.get('made'), bool)
+            or (v.get('weightKg') is not None and (isinstance(v['weightKg'], bool)
+                                                  or not isinstance(v['weightKg'], (int, float))
+                                                  or not v['weightKg'] > 0))
+            for v in lifts.values())):
+        return jsonify({'detail': 'lifts maps exercise ids to {made: true/false, weightKg?: kg}'}), 422
     uid = program_history.active_session_uid(g.user_id, session_key)
     planned = program_history.resolve_session(g.user_id, session_uid=uid) if uid else None
     program = program_history.unwrap(get_user_program(g.user_id) or {})
@@ -4013,15 +4056,23 @@ def health_confirm_session(session_key: str):
         return jsonify({'detail': f'{session_key!r} is no session of the current program'}), 404
     if not session.get('modules'):
         return jsonify({'detail': 'this session has no training-contract modules to confirm'}), 422
+    if not clean and not lifts and any(m.get('lifts') for m in session['modules']):
+        return jsonify({'detail': 'say which lifts were missed: lifts {exercise id: {made, weightKg}}'}), 422
     existing = _health.get_session_log(g.user_id, uid, session_key) or {}
+    outcomes = training_contract.confirmation_outcomes(session, clean, rpe, existing.get('exercises'), lifts)
+    # A work-up made with no weight would count the session and leave the
+    # lift where it was: the next one would ask for another work-up.
+    unweighed = sorted(eid for m in session['modules'] for eid in (m.get('lifts') or {})
+                       if (outcomes.get(eid) or {}).get('made') and (outcomes.get(eid) or {}).get('weightKg') is None)
+    if unweighed:
+        return jsonify({'detail': f"enter the weight you worked up to: {', '.join(unweighed)}"}), 422
     log = {'sessionKey': session_key, 'sessionUid': uid, 'source': existing.get('source') or 'web',
            'notes': existing.get('notes') or '',
-           'exercises': training_contract.confirmation_outcomes(
-               session, clean, rpe, existing.get('exercises'))}
+           'exercises': outcomes}
     if not existing.get('completedAt'):
         log['completedAt'] = _datetime.now(_timezone.utc).isoformat()
     # The answer carries what was written, so a client shows it without a reload.
-    return _save_session_log(log, {'confirmed': session_key, 'clean': clean, 'rpe': rpe,
+    return _save_session_log(log, {'confirmed': session_key, 'clean': clean, 'rpe': rpe, 'lifts': lifts,
                                    'exercises': log['exercises'],
                                    'completedAt': log.get('completedAt') or existing.get('completedAt')})
 

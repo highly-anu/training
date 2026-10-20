@@ -47,8 +47,9 @@ def declared_framework_ids(phil: dict, all_frameworks: list) -> list:
     return _ordered_unique(ids)
 
 
-def select_track(phil: dict, track_id: str | None = None) -> dict:
-    """The requested track, else the philosophy's primary track."""
+def select_track(phil: dict, track_id: str | None = None, level: str | None = None) -> dict:
+    """The requested track, else the one written for the athlete's level
+    (`track_for_level`), else the philosophy's primary track."""
     if not phases.tracks_of(phil):
         raise FrameworkResolutionError(
             f"Philosophy '{phil.get('id')}' declares no tracks. Add a `tracks` "
@@ -62,7 +63,7 @@ def select_track(phil: dict, track_id: str | None = None) -> dict:
                 f"{[t.get('id') for t in phases.tracks_of(phil)]}"
             )
         return track
-    return phases.primary_track(phil)
+    return phases.primary_track(phil, level)
 
 
 def _main_framework(track: dict) -> str | None:
@@ -111,10 +112,11 @@ def build_framework_selection(phil: dict, all_frameworks: list,
 
 
 def philosophy_to_goal(phil_id: str, all_frameworks: list,
-                       track_id: str | None = None) -> dict:
-    """Build a synthetic goal dict from one track of a philosophy."""
+                       track_id: str | None = None, level: str | None = None) -> dict:
+    """Build a synthetic goal dict from one track of a philosophy; with no
+    track named, the one written for `level` when the philosophy says."""
     phil = loader.load_philosophy(phil_id)
-    track = select_track(phil, track_id)
+    track = select_track(phil, track_id, level)
 
     framework_selection = build_framework_selection(phil, all_frameworks, track)
     main_fw_id = framework_selection['default_framework']
@@ -165,7 +167,7 @@ def _track_owner(phil_ids: list, track_id: str | None, ordered: list) -> str | N
 
 
 def blend_philosophy_goals(phil_ids: list, phil_weights: dict, all_frameworks: list,
-                           track_id: str | None = None) -> dict:
+                           track_id: str | None = None, level: str | None = None) -> dict:
     """Weighted-average a set of philosophy synthetic goals into one.
 
     Phases are not blended: a program follows one philosophy's track. That is
@@ -177,7 +179,7 @@ def blend_philosophy_goals(phil_ids: list, phil_weights: dict, all_frameworks: l
     blended_priorities: dict = {}
     ordered = sorted(phil_ids, key=lambda pid: -phil_weights.get(pid, 1.0 / len(phil_ids)))
     owner = _track_owner(phil_ids, track_id, ordered) or ordered[0]
-    primary_goal = philosophy_to_goal(owner, all_frameworks, track_id=track_id)
+    primary_goal = philosophy_to_goal(owner, all_frameworks, track_id=track_id, level=level)
 
     for pid in phil_ids:
         w = phil_weights.get(pid, 1.0 / len(phil_ids)) / total_w

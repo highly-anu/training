@@ -653,8 +653,9 @@ writes.
   (`applies: false`, `appliesIn` names the tracks that schedule it). It is left out
   of "N of M measurable" (`methodologies[].applicable`) and of the headline, which
   falls to the running framework's `progression_model` primitive, then the
-  philosophy's (`document._lead_entry`): Wildman leads with cadence in Pentathlon
-  Prep and movements earned in General Practice. "Now available" in `unlocks` is
+  philosophy's (`document._lead_entry`): Wildman leads with completed intervals in
+  its density-cycle tracks, cadence in Pentathlon Prep and technique minutes in
+  Get-Up and Loaded Mobility. "Now available" in `unlocks` is
   what practice opened beyond `selector._get_unlocked` at the athlete's level.
 - **The framework's `progression_model` never drove a prescription** —
   `generator.py` reads the modality yaml's, unless the week's framework
@@ -730,7 +731,7 @@ writes.
   (`SessionLogging`) and the same payload; `GET /health/sessions/recent`
   carries `exercises` so it can read back. A skill-practice row on both
   clients has a **Clean** toggle (`exercises[id].clean`: every rep owned); an
-  `unlocks` entry with `require_clean: true` (Ido, Wildman) earns a movement
+  `unlocks` entry with `require_clean: true` (Ido) earns a movement
   only by clean sessions and says `clean_not_logged` until one is ticked. Bodyweight
   is the benchmark series `bodyweight_kg`, which turns a logged est-1RM into
   the ×BW standards. `PUT /api/health/sessions/<key>/notes` now exists — the
@@ -1096,9 +1097,28 @@ scripts/backup_prod.sh                    # pg_dump 17 + restore-test + row-coun
 **Package fidelity** (`docs/package-fidelity/`): the method for checking and improving a
 package against its source — a source dossier per package, every rule into data, no
 invented structure, an inventions ledger — and `status.yaml`, where every package stands
-(audited / partial / not started) and which engine shape its method needs.
-`tools/check_package_status.py` holds the registry to the repository: an audited package
-has its dossier, a source test CI runs, no fidelity finding and no orphaned exercise.
+(audited / partial / not started) and which engine shape its method needs. The status is
+**earned, not chosen**: `tools/evaluate_packages.py` grades every package × track on five
+dimensions — Source, Execution, Robustness, Data, Measurement — each criterion pass,
+partial or fail (`src/package_eval.py`, the table in the README, today's grades in
+`scorecard.md`), never a blended number. It generates the fidelity profiles and its own
+(every level, a knee flag, three days, 30 minutes, one bell) in one parallel pass, runs
+`check_fidelity`'s gate on the same programs, ratchets `tools/scorecard_baseline.json`,
+and fails when `status.yaml` declares a status the grades do not earn (`audited`: every
+criterion but hygiene passes on every track not in `excluded_tracks`).
+A phase's `checks:` may now state its defining claims — `max_substituted_share`,
+`modality_outnumbers`, `max_archetype_share`, `min_distinct_archetypes`
+(`fidelity.claim_violations`) — which the gate checks and a contract's
+`verify_phase_rules` refuses to save broken. Injury flags name only catalog ids, each
+substitution pair inside one package (`validate_entities`).
+Starting Strength runs as a training contract (since 2026-10-20): Workouts A and B
+alternate by a module's `variants` + `rotation`, the Texas Method is its intermediate
+track (`track_for_level` routes a request with no track by level), and
+`load_per_exposure` prescribes kg from what each lift made — a miss repeats, two
+reset 5 %, a lift with no weight works up on the day; the one-tap confirm takes
+`lifts: {id: {made, weightKg}}` (docs/logic/training_contracts.md).
+**In a worktree under `.claude/worktrees/`, blank `DATABASE_URL` and `SUPABASE_URL`**:
+`load_dotenv()` walks up to the main checkout's production `.env`.
 
 Run these after touching engine code or package data:
 
@@ -1112,9 +1132,11 @@ SUPABASE_URL='' .venv/bin/python test_phases.py          # tracks, phase text ow
 SUPABASE_URL='' .venv/bin/python test_week_numbering.py  # a partial regenerate's tail continues the numbering
 SUPABASE_URL='' .venv/bin/python test_today_session.py   # the watch's today-session: completed flags, tomorrow, ?spec=1, progress
 .venv/bin/python test_last_time.py                       # each exercise's last time, for the watches
-.venv/bin/python tools/check_fidelity.py                 # every philosophy x track x profile against its theory; gates on tools/fidelity_baseline.json
-SUPABASE_URL='' .venv/bin/python tools/check_exercise_coverage.py  # every package's exercises reach a program; orphans may only shrink (tools/exercise_coverage_baseline.json)
-.venv/bin/python tools/check_package_status.py           # docs/package-fidelity/status.yaml against the repository
+SUPABASE_URL='' .venv/bin/python tools/evaluate_packages.py   # the scorecard + the fidelity gate; --report docs/package-fidelity/scorecard.md, --update-baseline
+.venv/bin/python test_package_eval.py                    # each scorecard grader on hand-built programs (no generation)
+.venv/bin/python tools/check_fidelity.py                 # the fidelity rules alone (evaluate_packages runs them too); --report docs/fidelity-report.md
+SUPABASE_URL='' .venv/bin/python tools/check_exercise_coverage.py  # every package's exercises reach a program (its own or a borrower's); orphans may only shrink
+.venv/bin/python tools/check_package_status.py           # status.yaml against the repository and the recorded scorecard
 .venv/bin/python tools/check_analytics.py                # every declared analytics measure applies in some track; every headline leads somewhere
 .venv/bin/python test_fidelity.py                        # each fidelity rule on hand-built weeks (no generation)
 SUPABASE_URL='' .venv/bin/python test_selection.py       # what the generator picks: SS A/B, pinned lifts, deloads, gaps, cadence

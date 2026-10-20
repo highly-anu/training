@@ -77,3 +77,9 @@ tracks:
           - "Hip explosiveness"
           - "Joint resilience"
         intensity: "Hard/easy alternation; RPE-governed S&C"
+        # Mat time first: classes outnumber the strength work and the
+        # competitor's conditioning every week (docs/package-fidelity/bjj.md).
+        checks:
+          modality_outnumbers:
+            - [combat_sport, strength_endurance]
+            - [combat_sport, anaerobic_intervals]

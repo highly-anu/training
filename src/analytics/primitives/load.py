@@ -82,7 +82,8 @@ def prescribed_reps(load: dict) -> float | None:
 
 def increment_for(ctx, exercise_id: str) -> float:
     """The exercise's own `weekly_increment_kg`, else the generator's default —
-    the same two places progression.py reads."""
+    the same two places progression.py reads. A prescription that carries
+    `increment_kg` (a training contract's lift) overrides it in `set_load`."""
     ex = ctx.exercise_def(exercise_id)
     inc = ex.get('weekly_increment_kg')
     if isinstance(inc, (int, float)) and inc > 0:
@@ -116,6 +117,10 @@ def set_load(entry, ctx) -> dict:
             # fixing one (progression._rpe_autoregulation): it is still the
             # program's word on the load.
             load_ = ea.get('load') or {}
+            # A training contract's lift carries its own step (Starting
+            # Strength: 5 kg on the squat at first, 2.5 later): it wins.
+            if isinstance(load_.get('increment_kg'), (int, float)) and not isinstance(load_['increment_kg'], bool):
+                rec['increment'] = float(load_['increment_kg'])
             prescribed = load_.get('weight_kg')
             if not isinstance(prescribed, (int, float)):
                 prescribed = load_.get('suggested_weight_kg')

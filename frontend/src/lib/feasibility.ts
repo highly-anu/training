@@ -26,11 +26,13 @@ export function blendExpectations(
     selectedTrackId?: string | null
     selectedPhilosophyIds?: string[]
     philosophies?: Philosophy[]
+    /** The athlete's level: with no track picked, the one written for it. */
+    trainingLevel?: string | null
   },
 ): GoalExpectations | null {
   // Philosophy mode: the expectations of the track the athlete will run.
   if (opts?.sourceMode === 'philosophy' && opts.philosophies && opts.frameworks) {
-    const picked = builderTrack(opts.philosophies, opts.selectedPhilosophyIds ?? [], opts.selectedTrackId)
+    const picked = builderTrack(opts.philosophies, opts.selectedPhilosophyIds ?? [], opts.selectedTrackId, opts.trainingLevel)
     const phases = picked?.track.phases
 
     // A one-phase track is its framework: use that framework's own block,

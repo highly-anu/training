@@ -1,0 +1,47 @@
+id: tm_intensity
+name: Texas Method — Intensity Day
+modality: max_strength
+category: strength
+duration_estimate_minutes: 75
+required_equipment:
+- barbell
+- rack
+- plates
+applicable_phases:
+- build
+training_levels:
+- intermediate
+sources:
+- Starting Strength
+- Rippetoe
+notes: 'Friday (Rippetoe, "The Texas Method"): a new five-rep max — or within 2 %, for
+  technique — on the squat and on Monday''s press, warmed up with doubles or singles to
+  the work set; then power cleans 5×3 across. The training contract prescribes it; these
+  slots describe the session.
+
+  '
+slots:
+- role: squat
+  slot_type: sets_reps
+  sets: 1
+  reps: 5
+  intensity: max_effort
+  rest_sec: 300
+  exercise_filter:
+    exercise_ids: [back_squat]
+- role: press
+  slot_type: sets_reps
+  sets: 1
+  reps: 5
+  intensity: max_effort
+  rest_sec: 300
+  exercise_filter:
+    exercise_ids: [strict_press, bench_press]
+- role: power_clean
+  slot_type: sets_reps
+  sets: 5
+  reps: 3
+  intensity: progressing
+  rest_sec: 180
+  exercise_filter:
+    exercise_ids: [power_clean]
