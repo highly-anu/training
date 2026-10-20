@@ -1045,13 +1045,14 @@ comparison to every athlete, and the Profile offers a regenerate only when
 adopted with `PATCH /user/program/constraints`). Before this, adding a kettlebell no
 session used asked to rebuild the plan. Left open:
 
-1. **iOS (M).** The builder still posts `persist: true` and throws the answer away — an
-   infeasible answer silently keeps the old program. Move step 4 to
-   `APIClient.generateProgramPreview` and a preview screen (Held back, the `blocked_by`
-   wording, swaps on the draft), commit through `saveProgramToServer`; make
-   `RegenerateOfferCard` ask `/programs/constraint-change` and adopt with the PATCH; ignore
-   `open_space` in `ProgramConstraintsDiff` as the web now does. Shared components per
-   design-system §1.7.
+1. **iOS (M) — done 2026-10-20** (`feat/program-preview-ios`). The builder and the
+   settings sheet's full regenerate preview a `persist: false` draft
+   (`ProgramPreviewView`, design-system §6.39: Plan · Held back, Adjust, swaps on the
+   draft) and start it through `saveProgramToServer`; `RegenerateOfferCard` asks
+   `/programs/constraint-change` and adopts or offers (§6.17); `ProgramConstraintsDiff`
+   ignores `open_space` and carries a contract's confirmations; the equipment and injury
+   toggles are one component (§6.38). Left: a replaced *session* on the draft (the web
+   has it; the phone swaps exercises only).
 2. **Week templates say which check failed (S).** `generator._fits_as_written` answers a
    boolean; a templated day nothing fits says "equipment, injuries or N minutes". Return
    the failed check so the day's note can name it (Held back already does, from the runs).

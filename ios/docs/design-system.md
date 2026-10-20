@@ -1161,24 +1161,37 @@ the prescription.
 
 ### 6.17 Regenerate Offer
 
-**A changed profile offers to rebuild the plan from this week, never
-silently.** `Views/RegenerateOfferCard.swift` sits at the top of the Athlete
-(which holds injuries), Equipment and Schedule tabs whenever `AppState.constraintDifferences`
-is non-empty — `ProgramConstraintsDiff` (the phone's copy of the web's
-`lib/programConstraintsDiff.ts`) compares the profile's level, equipment, days
-per week and injuries with the `constraints` the active program was built for,
-which the envelope carries since saves round-trip it. The card names each
-difference ("Equipment: 5 items → 1 added, 1 removed"), and one tap runs
-`AppState.regenerateFromCurrentWeek`: a non-persisting generate for the
-remaining weeks with the merged constraints (continuing the phase and
-week-in-phase), spliced onto the weeks and days already behind the athlete
-(`Regeneration.splice`, which never replaces a day before today) and saved through the revision-checked PUT, so the
-old plan stays in Program ▸ History. The Program settings sheet offers the same
-action above its destructive full regenerate.
+**A changed profile offers to rebuild the plan only when the change moves
+something.** `Views/RegenerateOfferCard.swift` sits at the top of the Athlete
+(which holds injuries), Equipment and Schedule tabs while
+`AppState.showsRegenerateOffer` — a difference from `ProgramConstraintsDiff`
+(the phone's copy of the web's `lib/programConstraintsDiff.ts`: level,
+equipment without `open_space`, days per week, injuries against the program's
+`constraints`), or the word that the last one changed nothing. The card waits
+1.5 s after the last toggle ("Checking whether this changes your program…"),
+then `AppState.checkConstraintChange` asks `POST /programs/constraint-change`,
+which builds the rest of the program with the program's constraints and the
+profile's and compares them:
 
-Rules: the comparison is the shared one, never a per-screen heuristic; the
-card appears only where a constraint is edited; a blend regenerates as a
-blend (`philosophy_ids` + weights), not as its first source.
+- **Unaffected** — the program is what the new settings would build:
+  `adoptProfileConstraints` records them on it (`PATCH /user/program/constraints`)
+  and the card says "Your program doesn't change with these settings". No offer.
+  Adding a kettlebell no session uses used to ask for a rebuild.
+- **Affected** — "These settings change 18 sessions from week 1", the
+  differences, **Preview changes** (Program ▸ Preview in regenerate mode, the
+  moved sessions marked, §6.39) and **Apply from week N**
+  (`applyRegeneratedTail`: the tail the check built, spliced onto the weeks and
+  days already behind the athlete, saved through the revision-checked PUT).
+- **Refused** — "These settings can't build the rest of your program", the
+  engine's reason and **See why** (the preview's "What would let it build").
+- **Not comparable or the check failed** — the old "built for different
+  settings" wording, and Apply regenerates as before.
+
+Rules: the comparison is the server's, never a per-screen heuristic; the card
+appears only where a constraint is edited; a blend regenerates as a blend
+(`philosophy_ids` + weights); the card is a `VStack`, not a `Group` — a Group
+hands `.task` to each child, and switching from "Checking…" to the card
+restarted the check in a loop.
 
 ---
 
@@ -1864,3 +1877,56 @@ heart-rate zones, load focus, the mix, sessions a week, load by block — take
 their About from `vocabulary.TERMS`, served by the
 static `GET /api/analytics/vocabulary` and cached in
 `AppState.analyticsTerms` (`AboutText(terms:from:)`).
+
+---
+
+### 6.38 Constraint Toggles
+
+**What a program is built for is toggled one way.** `EquipmentToggleSection`
+and `InjuryToggleSection` (`Views/ConstraintToggles.swift`) are the `Form`
+sections of equipment (`EquipmentItem.all`) and injury flags
+(`appState.injuryFlagDefs`) bound to a `[String]`. Users: the builder's
+constraints step, the Program settings sheet and the preview's Adjust — the
+first two had each written the same two loops.
+
+When not to use it: Profile ▸ Equipment is the profile's own screen, a grid of
+tiles grouped by kind; it edits what the athlete owns, not what one program is
+built for.
+
+---
+
+### 6.39 Program Preview
+
+**A generated program is a draft until it is started.**
+`Views/ProgramPreviewView.swift` (the web's `/program/preview`) shows a draft
+and saves nothing until **Start this program** / **Apply from week N**, each
+behind a confirmation that names what happens to the program it replaces (kept
+in Program ▸ History with its logs). It is pushed from the builder's last step
+(**Preview Program**, which generates with `persist: false` — the builder used
+to persist and throw the answer away, so a refusal silently kept the old
+program) and from the Program settings sheet's full regenerate, and presented
+as a sheet by the regenerate offer (§6.17) in regenerate mode.
+
+- **Plan · Held back** (`AppSubTabPicker`, §6.8). Plan lists each week's
+  sessions; a row says "N held back" (`circle.slash`, symbol and words, §1.6),
+  "In place of …" or "Scaled: written for …", and in regenerate mode
+  "Changes" on the sessions the change moves, its row tinted. A session opens
+  `PreviewSessionSheet`: each exercise with its load (`LoadFormat`), why an
+  empty slot is empty in plain words (`HeldBack.blockerText` from the
+  server's `blocked_by`: "Strict Press needs barbell, rack"), and **Swap**
+  (`SwapExerciseSheet` with its `draft` source — the draft's methodologies and
+  constraints, the pick edits the draft only).
+- **Held back** is `POST /programs/impact`: the empty slots counted, the
+  schedule findings, "What would restore it" (**Add barbell · restores 33**,
+  **Preview without …**, **Preview at …** — each previews again) and every
+  change filed under its cause; knock-on changes are one line.
+- **A refused draft** shows the validator's reason and "What would let it
+  build" with the one action that alone unblocks it; Start stays disabled.
+- **Adjust** (toolbar) edits level, equipment and injuries (§6.38) and
+  previews again; swaps on the draft are dropped with it, and it says so.
+- **Words** live in `ProgramPreviewModels.swift` (`HeldBack`, the decoders,
+  `ProgramEdits` — the index-addressed edits the active program uses too),
+  pinned by `ProgramPreviewTests`.
+- Debug builds open it on launch: `SIMCTL_CHILD_TC_PREVIEW=<philosophy id>`
+  (a draft from the profile; `TC_PREVIEW_WEEKS`, `TC_PREVIEW_TAB=heldback`)
+  with `ROUTE='trainingcompanion://program'`.

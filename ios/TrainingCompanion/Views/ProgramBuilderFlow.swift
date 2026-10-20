@@ -34,6 +34,8 @@ final class BuilderState: ObservableObject {
     @Published var isGenerating = false
     @Published var generationError: String? = nil
     @Published var didSucceed = false
+    /// The generated draft, pushed as Program ▸ Preview; started from there.
+    @Published var preview: PreviewDraft? = nil
 
     var isStep1Valid: Bool { selectedPhilosophyId != nil }
     var isStep3Valid: Bool { !constraints.equipment.isEmpty }
@@ -52,6 +54,16 @@ final class BuilderState: ObservableObject {
         lengthSetFor = track.id
         if track.phases.count > 1 { numWeeks = track.totalWeeks }
     }
+}
+
+/// A generated program not yet started, and the request that made it —
+/// what the builder and the settings sheet push as the preview.
+struct PreviewDraft: Identifiable, Hashable {
+    let id = UUID()
+    let request: GenerateProgramRequest
+    let draft: GeneratedProgram
+    static func == (a: PreviewDraft, b: PreviewDraft) -> Bool { a.id == b.id }
+    func hash(into h: inout Hasher) { h.combine(id) }
 }
 
 // MARK: - Program Builder Flow
@@ -90,6 +102,15 @@ struct ProgramBuilderFlow: View {
                             .fontWeight(.semibold)
                             .disabled(!canAdvance)
                     }
+                }
+            }
+            .navigationDestination(item: $builder.preview) { p in
+                ProgramPreviewView(mode: .new, request: p.request, draft: p.draft,
+                                   onEditSchedule: {
+                                       builder.preview = nil
+                                       step = 2
+                                   }) { started in
+                    if started { builder.didSucceed = true }
                 }
             }
         }
@@ -133,28 +154,28 @@ struct ProgramBuilderFlow: View {
         constraints.phase = nil
         constraints.trainingPhase = nil
 
+        // A draft: nothing is saved until the preview's Start. This used to
+        // post `persist: true` and throw the answer away, so a refusal kept
+        // the old program with nothing said.
         let request = GenerateProgramRequest(
             philosophyId: philosophyId,
             constraints: constraints,
             numWeeks: builder.numWeeks,
             startDate: startStr,
-            eventDate: eventStr
+            eventDate: eventStr,
+            persist: false
         )
-
+        defer { builder.isGenerating = false }
+        guard let api = appState.api else {
+            builder.generationError = "Sign in to generate a program."
+            return
+        }
         do {
-            try await appState.generateProgramViaAPI(request)
+            // A refusal is previewed too: it says what alone would let it build.
+            let draft = try await api.generateProgramPreview(request)
+            builder.preview = PreviewDraft(request: request, draft: draft)
         } catch {
             builder.generationError = "Generation failed. Please try again."
-        }
-
-        // Reload program into AppState
-        await appState.loadProgram()
-        builder.isGenerating = false
-        builder.didSucceed = appState.serverProgram != nil
-        // A generate the server answered without the program then reading
-        // back left the builder as it was, with nothing said.
-        if !builder.didSucceed && builder.generationError == nil {
-            builder.generationError = "The program was generated but didn't load. Please try again."
         }
     }
 }
@@ -439,29 +460,8 @@ struct BuilderStep3ConstraintsView: View {
                 .pickerStyle(.menu)
             }
 
-            Section("Equipment") {
-                ForEach(EquipmentItem.all) { item in
-                    Toggle(item.label, isOn: Binding(
-                        get: { builder.constraints.equipment.contains(item.id) },
-                        set: { on in
-                            if on { builder.constraints.equipment.append(item.id) }
-                            else { builder.constraints.equipment.removeAll { $0 == item.id } }
-                        }
-                    ))
-                }
-            }
-
-            Section("Active Injuries") {
-                ForEach(appState.injuryFlagDefs) { flag in
-                    Toggle(flag.name, isOn: Binding(
-                        get: { builder.constraints.injuryFlags.contains(flag.id) },
-                        set: { on in
-                            if on { builder.constraints.injuryFlags.append(flag.id) }
-                            else { builder.constraints.injuryFlags.removeAll { $0 == flag.id } }
-                        }
-                    ))
-                }
-            }
+            EquipmentToggleSection(selection: $builder.constraints.equipment)
+            InjuryToggleSection(selection: $builder.constraints.injuryFlags)
 
             if trackPhases.count > 1 {
                 Section {
@@ -620,7 +620,7 @@ struct BuilderStep4ReviewView: View {
                         if builder.isGenerating {
                             ProgressView()
                         } else {
-                            Label("Generate Program", systemImage: "sparkles")
+                            Label("Preview Program", systemImage: "eye")
                                 .fontWeight(.semibold)
                         }
                         Spacer()
@@ -638,16 +638,6 @@ struct BuilderStep4ReviewView: View {
                 }
             }
         }
-    }
-}
-
-// MARK: - AppState generation helper
-
-extension AppState {
-    /// Called by ProgramBuilderFlow to trigger program generation then reload.
-    func generateProgramViaAPI(_ request: GenerateProgramRequest) async throws {
-        guard let api else { throw APIError.unauthenticated }
-        try await api.generateProgram(request)
     }
 }
 
@@ -714,8 +704,9 @@ struct ProgramSettingsSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     @StateObject private var settings: SettingsState
-    @State private var showConfirm = false
     @State private var isRegeneratingTail = false
+    /// The rebuilt program, previewed before it replaces this one.
+    @State private var preview: PreviewDraft? = nil
 
     /// Seeded from the live program once, at construction. This replaces a
     /// placeholder state object built from an empty program and field-copied
@@ -759,6 +750,12 @@ struct ProgramSettingsSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) { Button("Cancel") { dismiss() } }
+            }
+            .navigationDestination(item: $preview) { p in
+                ProgramPreviewView(mode: .new, request: p.request, draft: p.draft,
+                                   onEditSchedule: { preview = nil }) { started in
+                    if started { settings.didSucceed = true }
+                }
             }
         }
         .task {
@@ -850,29 +847,8 @@ struct ProgramSettingsSheet: View {
                 }
             }
 
-            Section("Equipment") {
-                ForEach(EquipmentItem.all) { item in
-                    Toggle(item.label, isOn: Binding(
-                        get: { settings.constraints.equipment.contains(item.id) },
-                        set: { on in
-                            if on { settings.constraints.equipment.append(item.id) }
-                            else { settings.constraints.equipment.removeAll { $0 == item.id } }
-                        }
-                    ))
-                }
-            }
-
-            Section("Active Injuries") {
-                ForEach(appState.injuryFlagDefs) { flag in
-                    Toggle(flag.name, isOn: Binding(
-                        get: { settings.constraints.injuryFlags.contains(flag.id) },
-                        set: { on in
-                            if on { settings.constraints.injuryFlags.append(flag.id) }
-                            else { settings.constraints.injuryFlags.removeAll { $0 == flag.id } }
-                        }
-                    ))
-                }
-            }
+            EquipmentToggleSection(selection: $settings.constraints.equipment)
+            InjuryToggleSection(selection: $settings.constraints.injuryFlags)
         }
     }
 
@@ -897,14 +873,14 @@ struct ProgramSettingsSheet: View {
             .buttonStyle(.bordered)
             .disabled(settings.isGenerating || isRegeneratingTail)
             Button {
-                showConfirm = true
+                Task { await regenerate() }
             } label: {
                 HStack {
                     Spacer()
                     if settings.isGenerating {
                         ProgressView()
                     } else {
-                        Label("Regenerate Program", systemImage: "sparkles")
+                        Label("Preview a new program", systemImage: "eye")
                             .fontWeight(.semibold)
                     }
                     Spacer()
@@ -913,24 +889,10 @@ struct ProgramSettingsSheet: View {
             .buttonStyle(.borderedProminent)
             .disabled(settings.isGenerating || settings.selectedPhilosophyId.isEmpty)
         } footer: {
-            Text("This replaces your current program. Completed sessions are preserved.")
+            // The preview asks before it replaces anything; the current plan
+            // is kept in Program ▸ History with everything logged against it.
+            Text("Builds a new program with these settings and shows it first. Nothing changes until you start it.")
                 .font(.caption)
-        }
-        .confirmationDialog("Regenerate Program?",
-                             isPresented: $showConfirm,
-                             titleVisibility: .visible) {
-            Button("Regenerate", role: .destructive) {
-                Task { await regenerate() }
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            // This used to say the current program and all logged progress
-            // "will be permanently deleted", which was never true — nothing
-            // deleted the logs. They simply re-attached to whatever session
-            // landed on the same {week}-{day}-{index} slot in the new plan.
-            // Now the old plan is kept in Program → History and the logs stay
-            // attached to it, so the dialog can say what actually happens.
-            Text("A new program replaces the one you are on. The current plan is kept in Program → History, and everything you have logged stays attached to it.")
         }
     }
 
@@ -966,15 +928,15 @@ struct ProgramSettingsSheet: View {
             constraints: constraints,
             numWeeks: settings.numWeeks,
             startDate: dayFmt.string(from: settings.startDate),
-            eventDate: settings.eventDate.map { dayFmt.string(from: $0) }
+            eventDate: settings.eventDate.map { dayFmt.string(from: $0) },
+            persist: false
         )
+        defer { settings.isGenerating = false }
+        guard let api = appState.api else { return }
         do {
-            try await appState.generateProgramViaAPI(request)
-            await appState.loadProgram()
-            settings.didSucceed = true
+            preview = PreviewDraft(request: request, draft: try await api.generateProgramPreview(request))
         } catch {
             settings.generationError = "Regeneration failed. Please try again."
         }
-        settings.isGenerating = false
     }
 }

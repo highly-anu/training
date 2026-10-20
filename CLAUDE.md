@@ -181,8 +181,14 @@ program**: `RegenerateFromWeekBanner` debounces the profile, asks `/programs/con
 adopts an unaffected change (PATCH, "Your program doesn't change with these settings"), and
 for an affected one says how many sessions from which week, with Preview changes
 (`?mode=regenerate`, the changed sessions marked) and Apply (`commitRegeneratedTail`; an
-infeasible tail is refused, it used to splice `weeks: []` over the rest). iOS follows
-(roadmap item 15).
+infeasible tail is refused, it used to splice `weeks: []` over the rest). The phone
+has the same (`Views/ProgramPreviewView.swift`, design-system §6.39; the offer card §6.17):
+the builder and the settings sheet's full regenerate preview a `persist: false` draft
+(nothing in the app persists a generate any more), and `RegenerateOfferCard` asks
+`AppState.checkConstraintChange`, adopts or offers. `/constraint-change` answers
+`comparable: false` (always `affected`) when the program's own constraints no longer
+build it, so nothing is adopted unchecked. Debug builds open the preview on launch with
+`SIMCTL_CHILD_TC_PREVIEW=<philosophy id>` (+ `TC_PREVIEW_TAB=heldback`).
 
 ## Frontend (frontend/)
 

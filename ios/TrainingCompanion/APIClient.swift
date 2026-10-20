@@ -441,22 +441,92 @@ final class APIClient {
 
     // MARK: - Program Generation
 
-    /// POSTs to /programs/generate. On success the server stores the program;
-    /// call fetchProgram() afterwards to load the result into AppState.
-    func generateProgram(_ request: GenerateProgramRequest) async throws {
-        let body = try JSONEncoder().encode(request)
-        _ = try await postRaw("/programs/generate", body: body)
-    }
-
-    /// Generate without persisting and hand the result back — the tail of a
-    /// partial regenerate, which the caller splices onto the kept weeks and
-    /// saves through the revision-checked PUT.
+    /// Generate without persisting and hand the result back: a draft the
+    /// preview shows (started through the revision-checked PUT), or the tail
+    /// of a partial regenerate, spliced onto the kept weeks and saved the same
+    /// way. Nothing in the app asks the server to persist a generate any more.
     func generateProgramPreview(_ request: GenerateProgramRequest) async throws -> GeneratedProgram {
         var preview = request
         preview.persist = false
         let body = try JSONEncoder().encode(preview)
         let data = try await postRaw("/programs/generate", body: body)
         return try JSONDecoder().decode(GeneratedProgram.self, from: data)
+    }
+
+    /// The heavy comparison routes answer 429 while another run is in flight.
+    struct Busy: Error {}
+
+    /// The preview's Held back: `request` against the same program with
+    /// nothing in the way (POST /programs/impact; several generations).
+    func programImpact(_ request: GenerateProgramRequest) async throws -> ConstraintImpact {
+        var body = request
+        body.persist = false
+        let (data, status) = try await postForStatus("/programs/impact", body: try JSONEncoder().encode(body))
+        if status == 429 { throw Busy() }
+        guard (200..<300).contains(status) else {
+            throw APIError.serverErrorDetail(status, Self.detail(from: data) ?? "Could not compare the program")
+        }
+        return try JSONDecoder().decode(ConstraintImpact.self, from: data)
+    }
+
+    /// Does a profile change change the program? `request` asks for the rest
+    /// of the program with the profile's constraints; `baseline` is the same
+    /// request's constraints as the program has them
+    /// (POST /programs/constraint-change).
+    func constraintChange(_ request: GenerateProgramRequest,
+                          baseline: GenerateConstraints) async throws -> ConstraintChangeResult {
+        var body = request
+        body.persist = false
+        guard var json = try JSONSerialization.jsonObject(with: JSONEncoder().encode(body)) as? [String: Any],
+              let base = try JSONSerialization.jsonObject(with: JSONEncoder().encode(baseline)) as? [String: Any]
+        else { throw APIError.decodingError }
+        json["baseline_constraints"] = base
+        let (data, status) = try await postForStatus("/programs/constraint-change",
+                                                     body: try JSONSerialization.data(withJSONObject: json))
+        if status == 429 { throw Busy() }
+        guard (200..<300).contains(status) else {
+            throw APIError.serverErrorDetail(status, Self.detail(from: data) ?? "Could not check the program")
+        }
+        return try JSONDecoder().decode(ConstraintChangeResult.self, from: data)
+    }
+
+    struct AdoptedConstraints: Decodable {
+        let revision: String?
+        let constraints: [String: JSONValue]
+    }
+
+    /// Record the profile's constraints on the active program after the
+    /// server said they change nothing (PATCH /user/program/constraints,
+    /// revision-checked; a 409 is `StaleProgramRevision`).
+    func adoptProgramConstraints(baseRevision: String?, equipment: [String], trainingLevel: String,
+                                 injuryFlags: [String], daysPerWeek: Int?) async throws -> AdoptedConstraints {
+        struct Body: Encodable {
+            struct C: Encodable {
+                let equipment: [String]
+                let trainingLevel: String
+                let injuryFlags: [String]
+                let daysPerWeek: Int?
+                enum CodingKeys: String, CodingKey {
+                    case equipment, trainingLevel = "training_level", injuryFlags = "injury_flags"
+                    case daysPerWeek = "days_per_week"
+                }
+            }
+            let baseRevision: String?
+            let constraints: C
+        }
+        let url = URL(string: APIClient.baseURL + "/user/program/constraints")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        try await addAuth(to: &request)
+        request.httpBody = try JSONEncoder().encode(Body(
+            baseRevision: baseRevision,
+            constraints: .init(equipment: equipment, trainingLevel: trainingLevel,
+                               injuryFlags: injuryFlags, daysPerWeek: daysPerWeek)))
+        let (data, response) = try await URLSession.shared.data(for: request)
+        if (response as? HTTPURLResponse)?.statusCode == 409 { throw StaleProgramRevision() }
+        try validateStatus(response)
+        return try JSONDecoder().decode(AdoptedConstraints.self, from: data)
     }
 
     // MARK: - Workout file import

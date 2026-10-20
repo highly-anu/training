@@ -146,7 +146,7 @@ export function RegenerateFromWeekBanner() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-semibold">
-            {check.isError
+            {check.isError || result?.comparable === false
               ? 'Your program was built for different settings'
               : refused
                 ? "These settings can't build the rest of your program"

@@ -1528,11 +1528,12 @@ def _constraint_change(body: dict) -> tuple[dict, int]:
         return after, st_after
     if st_before != 200 or not before.get('weeks'):
         # Nothing to compare with: the program as it stands could not be
-        # rebuilt, so the profile's version is all there is to offer.
-        return {'affected': bool(after.get('weeks')), 'comparable': False,
-                'sessions': {'total': 0, 'changed': 0}, 'changes': [],
-                **({'program': after} if after.get('weeks') else {}),
-                'validation': after.get('validation')}, 200
+        # rebuilt. Never "unaffected" — that would record the new settings
+        # on a program nobody checked — so the profile's version, built or
+        # refused, is what the client offers.
+        return {'affected': True, 'comparable': False,
+                'sessions': {'total': 0, 'changed': 0}, 'first_week_number': None, 'changes': [],
+                'program': after, 'validation': after.get('validation')}, 200
     diff = constraint_impact.diff_programs(before, after)
     return {**diff, 'comparable': True, 'validation': after.get('validation'),
             **({'program': after} if diff['affected'] else {})}, 200

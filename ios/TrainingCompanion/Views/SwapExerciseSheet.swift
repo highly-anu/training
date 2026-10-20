@@ -12,6 +12,16 @@ struct SwapExerciseSheet: View {
     let sessionIndex: Int
     /// Index into the session's full `exercises` array, not the filtered rows.
     let exerciseIndex: Int
+    /// A program that is not the active one (the preview's draft): its own
+    /// methodologies and constraints, and the pick goes to `onPick`.
+    var draft: Draft? = nil
+
+    struct Draft {
+        let program: GeneratedProgram
+        let philosophyIds: [String]
+        let constraints: GenerateConstraints
+        let onPick: (ProgramExerciseAssignment) -> Void
+    }
 
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
@@ -22,7 +32,7 @@ struct SwapExerciseSheet: View {
     @State private var detail: ExerciseAlternative? = nil
 
     private var current: ProgramExerciseAssignment? {
-        appState.serverProgram?.currentProgram?.weeks[safe: weekIndex]?
+        (draft?.program ?? appState.serverProgram?.currentProgram)?.weeks[safe: weekIndex]?
             .schedule[dayName]?[safe: sessionIndex]?.exercises[safe: exerciseIndex]
     }
 
@@ -121,8 +131,12 @@ struct SwapExerciseSheet: View {
     }
 
     private func pick(_ alt: ExerciseAlternative) {
-        appState.replaceExercise(weekIndex: weekIndex, day: dayName, sessionIndex: sessionIndex,
-                                 exerciseIndex: exerciseIndex, assignment: alt.assignment)
+        if let draft {
+            draft.onPick(alt.assignment)
+        } else {
+            appState.replaceExercise(weekIndex: weekIndex, day: dayName, sessionIndex: sessionIndex,
+                                     exerciseIndex: exerciseIndex, assignment: alt.assignment)
+        }
         AppHaptics.success()
         dismiss()
     }
@@ -131,6 +145,14 @@ struct SwapExerciseSheet: View {
         isLoading = true
         defer { isLoading = false }
         do {
+            if let draft {
+                alternatives = try await appState.substituteAlternatives(
+                    in: draft.program, philosophyIds: draft.philosophyIds,
+                    trainingLevel: draft.constraints.trainingLevel, equipment: draft.constraints.equipment,
+                    injuryFlags: draft.constraints.injuryFlags,
+                    weekIndex: weekIndex, day: dayName, sessionIndex: sessionIndex, exerciseIndex: exerciseIndex)
+                return
+            }
             alternatives = try await appState.substituteAlternatives(
                 weekIndex: weekIndex, day: dayName,
                 sessionIndex: sessionIndex, exerciseIndex: exerciseIndex)
