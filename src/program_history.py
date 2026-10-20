@@ -41,7 +41,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import date
+from datetime import date, timedelta
 
 from src.program_keys import DAY_NAMES, normalize_program_keys, pick
 from src.workout_matcher import RULES, session_calendar_date
@@ -356,8 +356,12 @@ def divergence_date(old_rows: list[dict], new_rows: list[dict],
     between two versions, or None when they never do.
 
     A day is the same when it holds the same sessions in the same slots — by
-    modality and archetype, not by prescription, since a swapped exercise or
-    an adjusted load does not make it a different session. Rows are
+    modality, archetype and its name, not by prescription, since a swapped
+    exercise or an adjusted load does not make it a different session. The
+    name counts because a training contract's modules share an archetype id:
+    Wildman's "Nerd Math Two-Hand Swing" module and the old "KB Ballistic Power
+    Session" are both kb_ballistic_session, and were read as one session — a
+    rewritten day kept a match made on the session it replaced. Rows are
     `planned_sessions` rows (or flatten_program's), dates as DATE or ISO text.
     """
     old, new = _by_day(old_rows, from_day), _by_day(new_rows, from_day)
@@ -384,7 +388,8 @@ def _by_day(rows: list[dict], from_day: date = date.min) -> dict[date, list]:
         if d < from_day:
             continue
         days.setdefault(d, []).append((r['day_name'], r['session_index'],
-                                       r.get('modality') or '', r.get('archetype_id') or ''))
+                                       r.get('modality') or '', r.get('archetype_id') or '',
+                                       r.get('archetype_name') or ''))
     return {d: sorted(v) for d, v in days.items()}
 
 
@@ -1314,3 +1319,92 @@ def prune_versions(user_id: str, keep: int = 40) -> int:
     finally:
         conn.close()
     return removed
+
+
+# ---------------------------------------------------------------------------
+# The days behind the athlete
+# ---------------------------------------------------------------------------
+#
+# A regenerate rebuilds the weeks ahead; the days already behind the athlete
+# are theirs. The clients splice a "from tomorrow" regenerate day by day, but
+# the whole-program regenerate (iOS Program settings ▸ Regenerate, which keeps
+# the program's start date and saves through POST /programs/generate with
+# persist) replaced the elapsed days too — on 2026-10-19 it rewrote a day the
+# athlete had trained that morning, and the match followed the new session.
+
+def session_signature(sessions) -> list:
+    """What makes a day's sessions the same sessions (see `divergence_date`)."""
+    return [(s.get('modality') or '', (s.get('archetype') or {}).get('id') or '',
+             (s.get('archetype') or {}).get('name') or s.get('modality') or '')
+            for s in sessions or []]
+
+
+def in_force_on(user_id: str, d: date) -> str | None:
+    """The version whose activation owned `d`."""
+    rows = _query('''SELECT program_version_id FROM program_activations
+                      WHERE user_id = %s AND effective_from <= %s
+                        AND (effective_to IS NULL OR effective_to > %s)
+                   ORDER BY id DESC LIMIT 1''', (user_id, d, d))
+    return rows[0]['program_version_id'] if rows else None
+
+
+def trained_on(user_id: str, d: date) -> bool:
+    """Whether the athlete trained `d`'s plan: a workout matched to, or a
+    completed log of, a session the version in force that day planned for it."""
+    vid = in_force_on(user_id, d)
+    if not vid:
+        return False
+    uids = [r['session_uid'] for r in _query(
+        'SELECT session_uid FROM planned_sessions WHERE user_id = %s AND program_version_id = %s AND date = %s',
+        (user_id, vid, d))]
+    if not uids:
+        return False
+    if _query('SELECT 1 FROM workout_matches WHERE user_id::text = %s AND session_uid = ANY(%s) LIMIT 1',
+              (user_id, uids)):
+        return True
+    return bool(_query('SELECT 1 FROM session_logs WHERE user_id::text = %s AND session_uid = ANY(%s) '
+                       'AND completed_at IS NOT NULL LIMIT 1', (user_id, uids)))
+
+
+def restore_elapsed(user_id: str, envelope: dict, cutoff: date) -> tuple[dict, list]:
+    """`envelope` with every date before `cutoff` given back the sessions the
+    version in force that day planned — only a version of the same block (same
+    start date), never an earlier program's. Returns (envelope, changes), each
+    change (date, week index, day, now, was, version id)."""
+    import copy
+    from src.program_keys import DAY_NAMES
+    start = start_date_of(envelope or {})
+    if not start:
+        return envelope, []
+    start_day = date.fromisoformat(start)
+    restored = copy.deepcopy(envelope)
+    weeks = unwrap(restored).get('weeks') or []
+    versions: dict = {}
+    changed = []
+    for n in range(max(0, (cutoff - start_day).days)):
+        d = start_day + timedelta(days=n)
+        # session_calendar_date's arithmetic: the day is its offset from the
+        # start date within the week, whatever weekday that was.
+        wi, offset = divmod(n, 7)
+        if wi >= len(weeks):
+            break
+        day = DAY_NAMES[offset]
+        vid = in_force_on(user_id, d)
+        if vid not in versions:
+            versions[vid] = get_version(user_id, vid) if vid else None
+        version = versions[vid]
+        if not version or version['startDate'] != start:
+            continue
+        old_weeks = unwrap(version['program']).get('weeks') or []
+        if wi >= len(old_weeks):
+            continue
+        was = (old_weeks[wi].get('schedule') or {}).get(day) or []
+        now = (weeks[wi].get('schedule') or {}).get(day) or []
+        if session_signature(was) != session_signature(now):
+            changed.append((d, wi, day, now, was, vid))
+            schedule = weeks[wi].setdefault('schedule', {})
+            if was:
+                schedule[day] = copy.deepcopy(was)
+            else:
+                schedule.pop(day, None)
+    return restored, changed
