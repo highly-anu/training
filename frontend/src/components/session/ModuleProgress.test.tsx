@@ -66,6 +66,7 @@ describe('ModuleProgress', () => {
     post.mockResolvedValue({ exercises: { back_squat: { sets: [], made: true, weightKg: 62.5 } } })
     render(<ModuleProgress session={session([lift('back_squat', 'Back Squat', { work_up: true })])}
                            logKey="1-Monday" serverKey="1-Monday-0" />)
+    expect((screen.getByText('All made').closest('button') as HTMLButtonElement).disabled).toBe(true)
     fireEvent.change(screen.getByLabelText('Back Squat kg'), { target: { value: '62.5' } })
     fireEvent.click(screen.getByText('All made'))
     await waitFor(() => expect(screen.getByText(/62.5 kg/)).toBeTruthy())

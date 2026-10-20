@@ -689,6 +689,25 @@ def test_confirm_route_records_each_lift():
         assert saved['exercises']['back_squat']['made'] and saved['exercises']['back_squat']['weightKg'] == 65
         assert saved['exercises']['back_squat']['sets'][0]['repsActual'] == 5
         assert client.post(url, json={'clean': True, 'lifts': {'back_squat': {'made': 'yes'}}}).status_code == 422
+        assert client.post(url, json={'clean': False, 'lifts': {}}).status_code == 422, 'naming nothing missed nothing'
+    # A first session's work-up made with no weight would leave the lift where it was.
+    q, _, _ = _ss(weeks=1)
+    day, first = next((d, ss[0]) for d, ss in q['weeks'][0]['schedule'].items())
+    name = SS_DAYS[day - 1]
+    stored = {'currentProgram': {'weeks': [{'schedule': {name: [first]}}]}}
+    with patch('src.program_history.active_session_uid', return_value='v:w0'), \
+         patch('src.program_history.resolve_session',
+               return_value={'week_index': 0, 'day_name': name, 'session_index': 0}), \
+         patch('src.db.get_user_program', return_value=stored), \
+         patch.object(api._health, 'get_session_log', return_value={}), \
+         patch.object(api._health, 'upsert_session_log', side_effect=upsert), \
+         patch('src.standard_results.after_session_log', return_value=None):
+        url = f'/api/health/sessions/1-{name}-0/confirm'
+        r = client.post(url, json={'clean': True})
+        assert r.status_code == 422 and 'worked up to' in r.get_json()['detail'], r.get_json()
+        weights = {'back_squat': 60, 'strict_press': 30, 'deadlift': 80}
+        r = client.post(url, json={'clean': True, 'lifts': {k: {'made': True, 'weightKg': v} for k, v in weights.items()}})
+        assert r.status_code == 200, r.get_json()
 
 
 def test_legacy_ss_program_seeds_loads():

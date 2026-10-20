@@ -1211,16 +1211,22 @@ def _generate_program_inner(body):
                     and (supplied_state is None or supplied_state == current.get('module_state'))):
                 constraints['module_progression_state'] = training_contract.confirmed_state(
                     current, health_store.get_session_logs(g.user_id), goal['training_contract'])
-            elif supplied_state is None and current.get('weeks'):
-                # A program this contract did not write (Starting Strength
-                # before 2026-10-20, or the novice track ahead of the Texas
-                # Method): each lift starts from what its logged sets made.
+            elif (supplied_state is None and current.get('weeks')
+                  and goal['training_contract']['package'] in ((current.get('goal') or {}).get('primary_sources') or [])):
+                # A program of this package the contract did not write
+                # (Starting Strength before 2026-10-20, or the novice track
+                # ahead of the Texas Method): each lift starts from what its
+                # logged sets made. Never another method's program — its heavy
+                # single is no 3×5 — and a weight the athlete typed wins.
                 loaded = [m for m in goal['training_contract']['modules']
                           if m['progression']['model'] == 'load_per_exposure']
                 if loaded:
                     logs = health_store.get_session_logs(g.user_id)
+                    typed = set(constraints.get('starting_loads_kg') or {})
                     constraints['module_progression_state'] = {
-                        m['id']: {'completed': 0, 'lifts': training_contract.seed_lifts(current, logs, m)}
+                        m['id']: {'completed': 0, 'lifts': {
+                            lift: rec for lift, rec in training_contract.seed_lifts(current, logs, m).items()
+                            if lift not in typed}}
                         for m in loaded}
         raw = generate(
             goal_id=goal_ids[0],
@@ -4050,13 +4056,19 @@ def health_confirm_session(session_key: str):
         return jsonify({'detail': f'{session_key!r} is no session of the current program'}), 404
     if not session.get('modules'):
         return jsonify({'detail': 'this session has no training-contract modules to confirm'}), 422
-    if not clean and lifts is None and any(m.get('lifts') for m in session['modules']):
+    if not clean and not lifts and any(m.get('lifts') for m in session['modules']):
         return jsonify({'detail': 'say which lifts were missed: lifts {exercise id: {made, weightKg}}'}), 422
     existing = _health.get_session_log(g.user_id, uid, session_key) or {}
+    outcomes = training_contract.confirmation_outcomes(session, clean, rpe, existing.get('exercises'), lifts)
+    # A work-up made with no weight would count the session and leave the
+    # lift where it was: the next one would ask for another work-up.
+    unweighed = sorted(eid for m in session['modules'] for eid in (m.get('lifts') or {})
+                       if (outcomes.get(eid) or {}).get('made') and (outcomes.get(eid) or {}).get('weightKg') is None)
+    if unweighed:
+        return jsonify({'detail': f"enter the weight you worked up to: {', '.join(unweighed)}"}), 422
     log = {'sessionKey': session_key, 'sessionUid': uid, 'source': existing.get('source') or 'web',
            'notes': existing.get('notes') or '',
-           'exercises': training_contract.confirmation_outcomes(
-               session, clean, rpe, existing.get('exercises'), lifts)}
+           'exercises': outcomes}
     if not existing.get('completedAt'):
         log['completedAt'] = _datetime.now(_timezone.utc).isoformat()
     # The answer carries what was written, so a client shows it without a reload.

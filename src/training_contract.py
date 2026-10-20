@@ -569,7 +569,8 @@ def _lift_load(block: dict, module: dict, exercises: dict, state: dict, step: in
         out['increment_kg'] = increment
         if kg is not None:
             out['weight_kg'] = kg
-            out['load_note'] = f"{kg:g} kg. Make every rep and next time it is {increment:g} kg more."
+            out['load_note'] = (f"{kg:g} kg." if record.get('stalled')
+                                else f"{kg:g} kg. Make every rep and next time it is {increment:g} kg more.")
         elif not record.get('exposures'):
             out['work_up'] = True
             out['load_note'] = ('Work up from the empty bar in sets of five, in small jumps. The weight that '

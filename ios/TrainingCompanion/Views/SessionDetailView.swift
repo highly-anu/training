@@ -511,10 +511,17 @@ struct SessionDetailView: View {
                         Label("All made", systemImage: "checkmark.seal")
                     }
                     .buttonStyle(.borderedProminent)
+                    .disabled(LiftConfirmation.unweighed(loadLifts, answers: liftAnswers, allMade: true))
                     Button("Save") { confirmLifts(allMade: false) }
                         .buttonStyle(.bordered)
+                        .disabled(LiftConfirmation.unweighed(loadLifts, answers: liftAnswers, allMade: false))
                 }
                 .disabled(isConfirming)
+                if LiftConfirmation.unweighed(loadLifts, answers: liftAnswers, allMade: false) {
+                    Text("Enter the weight you worked up to on each lift you made.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
             if confirmFailed {
                 Text("Not saved — try again when online.")

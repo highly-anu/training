@@ -96,8 +96,9 @@ export function ProgramTuner() {
       philosophies,
       selectedPhilosophyIds,
       selectedTrackId,
+      trainingLevel: constraints.training_level,
     })
-  }, [frameworks, philosophies, selectedPhilosophyIds, selectedTrackId])
+  }, [frameworks, philosophies, selectedPhilosophyIds, selectedTrackId, constraints.training_level])
 
   // Framework-implied defaults for the reset button
   const fwDefaultPriorities = useMemo(() => {

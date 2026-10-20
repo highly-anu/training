@@ -48,6 +48,16 @@ enum LiftConfirmation {
         return (everyMade, sent.isEmpty ? nil : sent)
     }
 
+    /// A work-up lift answered made with no weight typed: the server refuses
+    /// it (the lift would stay where it was), so the buttons wait for it.
+    static func unweighed(_ lifts: [Lift], answers: [String: Answer], allMade: Bool) -> Bool {
+        lifts.contains { lift in
+            let answer = answers[lift.id] ?? Answer()
+            let kg = Double(answer.kg.replacingOccurrences(of: ",", with: ".")) ?? 0
+            return lift.weightKg == nil && (allMade || answer.made) && kg <= 0
+        }
+    }
+
     /// What the log says: each lift made or missed, once every lift is answered.
     static func verdict(_ lifts: [Lift], log: SessionLogEntry?) -> [String: Bool]? {
         var out: [String: Bool] = [:]

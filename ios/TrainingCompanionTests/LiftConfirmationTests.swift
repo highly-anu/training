@@ -32,6 +32,11 @@ final class LiftConfirmationTests: XCTestCase {
         let allMade = LiftConfirmation.payload(lifts, answers: [:], allMade: true)
         XCTAssertTrue(allMade.clean)
         XCTAssertNil(allMade.lifts)
+        XCTAssertTrue(LiftConfirmation.unweighed(lifts, answers: [:], allMade: true),
+                      "a work-up made needs its weight")
+        XCTAssertFalse(LiftConfirmation.unweighed(lifts, answers: ["strict_press": .init(made: false, kg: "")], allMade: false),
+                       "a missed work-up needs none")
+        XCTAssertFalse(LiftConfirmation.unweighed(lifts, answers: ["strict_press": .init(made: true, kg: "32,5")], allMade: true))
         let workUp = LiftConfirmation.payload(lifts, answers: ["strict_press": .init(made: true, kg: "32,5")], allMade: true)
         XCTAssertEqual(workUp.lifts, ["strict_press": APIClient.LiftOutcome(made: true, weightKg: 32.5)])
         let missed = LiftConfirmation.payload(lifts, answers: ["back_squat": .init(made: false, kg: "")], allMade: false)

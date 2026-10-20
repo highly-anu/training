@@ -38,6 +38,7 @@ export function useFeasibility(): FeasibilitySignal[] {
       frameworks,
       selectedPhilosophyIds,
       selectedTrackId,
+      trainingLevel: constraints.training_level,
     })
     if (!exp) return []
 

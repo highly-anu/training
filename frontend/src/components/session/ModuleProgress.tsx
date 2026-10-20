@@ -127,6 +127,11 @@ function LiftProgress({ session, logKey, serverKey }: Props) {
 
   const logged = lifts.map((ea) => log?.exercises[ea.exercise!.id])
   const answered = logged.every((p) => typeof p?.made === 'boolean') && !changing
+  // A work-up made without its weight would leave the lift where it was.
+  const unweighed = (allMade: boolean) => lifts.some((ea) => {
+    const a = answers[ea.exercise!.id]
+    return ea.load.weight_kg == null && (allMade || a.made) && !(Number(a.kg) > 0)
+  })
 
   async function save(allMade: boolean) {
     setBusy(true)
@@ -207,13 +212,16 @@ function LiftProgress({ session, logKey, serverKey }: Props) {
             })}
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button size="sm" disabled={busy} onClick={() => save(true)}>
+            <Button size="sm" disabled={busy || unweighed(true)} onClick={() => save(true)}>
               <BadgeCheck className="size-4 mr-1.5" /> All made
             </Button>
-            <Button size="sm" variant="outline" disabled={busy} onClick={() => save(false)}>
+            <Button size="sm" variant="outline" disabled={busy || unweighed(false)} onClick={() => save(false)}>
               Save
             </Button>
           </div>
+          {unweighed(false) && (
+            <p className="text-xs text-muted-foreground">Enter the weight you worked up to on each lift you made.</p>
+          )}
         </>
       )}
       {failed && <p className="text-xs text-red-600">Not saved — try again.</p>}
