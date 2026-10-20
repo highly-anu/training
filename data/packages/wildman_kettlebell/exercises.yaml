@@ -128,6 +128,30 @@ exercises:
       advanced: 32
       elite: 40
 
+  - id: wk_deck_squat
+    name: "Deck Squat"
+    category: kettlebell
+    modality:
+      - movement_skill
+      - strength_endurance
+    equipment: []
+    effort: medium
+    bilateral: true
+    movement_patterns:
+      - squat
+    requires: []
+    unlocks: []
+    contraindicated_with:
+      - lumbar_disc
+      - knee_meniscus_post_op
+    sources:
+      - Wildman
+    notes: >
+      Wildman's deck squat: squat down, roll back onto the spine with the head
+      kept off the floor, roll forward and stand straight up out of the squat.
+      Bodyweight first; a kettlebell (or sandbag, medicine ball) held at the
+      chest once the roll and the stand are clean.
+
   - id: wk_kb_swing_single_arm
     name: "Kettlebell Swing (Single-Arm)"
     category: kettlebell

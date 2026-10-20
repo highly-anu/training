@@ -51,6 +51,10 @@ tracks:
       min_spacing_days: 2
       max_rpe: 7
       deload_keep: 0.5
+      # The Nerd Math swing program's four approaches, in its order: 6 to 20
+      # swings a minute (two more each session) over a 10-minute EMOM, then a
+      # 20-minute one, then start/stop swings in ten and twenty 90-second
+      # rounds. Sixteen weeks at two sessions a week, then a heavier bell.
       progression:
         model: density_cycle
         reps_start: 6
@@ -59,6 +63,18 @@ tracks:
         rounds:
         - 10
         - 20
+        - 10
+        - 20
+        interval_sec:
+        - 60
+        - 60
+        - 90
+        - 90
+        cues:
+        - null
+        - null
+        - 'Start/stop: park the bell on the floor between every rep.'
+        - 'Start/stop: park the bell on the floor between every rep.'
       blocks:
       - role: prep
         exercise_id: kb_deadlift
@@ -69,8 +85,9 @@ tracks:
         exercise_id: wk_kb_swing_two_hand
         slot_type: emom
         loaded: true
-        notes: Two-hand swings at the top of each minute; rest for its remainder. Stop if technique or
-          breathing deteriorates.
+        notes: Swings at the top of each minute (or round); rest for its remainder. Wildman's most
+          common option alternates minutes of two-hand and hand-to-hand swings once both are clean.
+          Stop if technique or breathing deteriorates.
       - role: recovery
         exercise_id: wk_kb_halo
         slot_type: skill_practice
@@ -144,11 +161,108 @@ tracks:
         loaded: true
         notes: 'Alternate hands each minute; strict presses, no push press or jerk. Repeat
           the same bell and movement throughout the cycle.'
+    # Wildman's other Phase II programs, stacked into the week as the time
+    # allows (Tetris of Training): each twice a week on nonconsecutive days,
+    # beside the swing and clean-and-press days when the minutes fit.
+    - id: getup
+      name: Turkish Get-Up Practice
+      archetype_id: kb_getup_mobility_practice
+      modality: movement_skill
+      training_levels:
+      - intermediate
+      - advanced
+      - elite
+      exposures_per_week: 2
+      min_spacing_days: 2
+      max_rpe: 7
+      optional: true
+      may_share_day: true
+      deload_keep: 0.5
+      progression:
+        model: density_cycle
+        reps_start: 1
+        reps_step: 1
+        reps_max: 1
+        rounds:
+        - 6
+        - 8
+        - 10
+      blocks:
       - role: getup
         exercise_id: wk_kb_tgu
-        slot_type: skill_practice
-        duration_sec: 120
-        notes: Unloaded get-up positions only; no automatic advancement to a loaded get-up.
+        slot_type: emom
+        loaded: true
+        notes: One get-up at the top of each minute, alternating sides, at a bell you control through
+          every position.
+    - id: deck_squat
+      name: Deck Squat Practice
+      archetype_id: kb_squat_practice
+      modality: movement_skill
+      training_levels:
+      - novice
+      - intermediate
+      - advanced
+      - elite
+      exposures_per_week: 2
+      min_spacing_days: 2
+      max_rpe: 7
+      optional: true
+      may_share_day: true
+      deload_keep: 0.5
+      progression:
+        model: density_cycle
+        reps_start: 2
+        reps_step: 1
+        reps_max: 6
+        rounds:
+        - 10
+        - 20
+      blocks:
+      - role: squat
+        exercise_id: wk_deck_squat
+        slot_type: emom
+        progresses: true
+        alternatives:
+        - wk_kb_squat_goblet
+        notes: 'Deck squats at the top of each minute: squat, roll back with the head off the floor,
+          roll forward and stand. Bodyweight until a cycle is clean, then a light bell at the chest.'
+    - id: snatch
+      name: Nerd Math Snatch
+      archetype_id: kb_snatch_practice
+      modality: power
+      training_levels:
+      - intermediate
+      - advanced
+      - elite
+      exposures_per_week: 2
+      min_spacing_days: 2
+      max_rpe: 7
+      optional: true
+      may_share_day: true
+      when_mastered: true
+      requires_mastery:
+      - wk_kb_clean_single
+      - wk_kb_press_single
+      - wk_kb_snatch
+      deload_keep: 0.5
+      progression:
+        model: density_cycle
+        reps_start: 6
+        reps_step: 2
+        reps_max: 20
+        rounds:
+        - 10
+        - 20
+      blocks:
+      - role: snatch
+        exercise_id: wk_kb_snatch
+        slot_type: emom
+        loaded: true
+        alternatives:
+        - wk_kb_swing_single_arm
+        notes: Alternate hands each minute. Wildman's snatch goal is 200 snatches in 10 minutes —
+          the 10 x 20 that ends the first stage; then the same over 20 minutes. A heavier bell starts
+          a new cycle. Joins after Clean and Press, as he advises.
   pentathlon:
     deload_phases:
     - competition
@@ -403,7 +517,7 @@ tracks:
       proficiency or a heavier bell. '
     modules:
     - id: squat
-      name: Goblet Squat Practice
+      name: Deck Squat Practice
       archetype_id: kb_squat_practice
       modality: movement_skill
       training_levels: *id001
@@ -414,23 +528,21 @@ tracks:
       requires_mastery: []
       progression:
         model: density_cycle
-        reps_start: 1
+        reps_start: 2
         reps_step: 1
-        reps_max: 5
+        reps_max: 6
         rounds:
-        - 5
         - 10
+        - 20
       blocks:
-      - role: prep
-        exercise_id: kb_deadlift
-        slot_type: skill_practice
-        duration_sec: 180
       - role: squat
-        exercise_id: wk_kb_squat_goblet
+        exercise_id: wk_deck_squat
         slot_type: emom
-        loaded: true
-        notes: "1\u20135 controlled goblet squats at the start of each minute. Rest for\
-          \ the remainder. Repeat at the same bell; no automatic complexity increase."
+        progresses: true
+        alternatives:
+        - wk_kb_squat_goblet
+        notes: 'Deck squats at the top of each minute: squat, roll back with the head off the floor,
+          roll forward and stand. Bodyweight until a cycle is clean, then a light bell at the chest.'
       - role: recovery
         exercise_id: wk_kb_halo
         slot_type: skill_practice
@@ -444,7 +556,7 @@ tracks:
       proficiency or a heavier bell. '
     modules:
     - id: snatch
-      name: Single-Arm Swing and Snatch Practice
+      name: Nerd Math Snatch
       archetype_id: kb_snatch_practice
       modality: power
       training_levels: *id002
@@ -458,29 +570,26 @@ tracks:
       - wk_kb_snatch
       progression:
         model: density_cycle
-        reps_start: 1
-        reps_step: 1
-        reps_max: 5
+        reps_start: 6
+        reps_step: 2
+        reps_max: 20
         rounds:
-        - 5
         - 10
+        - 20
       blocks:
       - role: prep
         exercise_id: kb_deadlift
         slot_type: skill_practice
         duration_sec: 180
-      - role: swing
-        exercise_id: wk_kb_swing_single_arm
-        slot_type: skill_practice
-        duration_sec: 240
-        notes: Alternate sides, brief sets with generous rest inside this practice window. Stop before
-          grip or breathing deteriorates.
       - role: snatch
         exercise_id: wk_kb_snatch
         slot_type: emom
         loaded: true
-        notes: 'Alternate hands each minute; low-repetition
-          clean technique, then rest. A new bell requires a new cycle.'
+        alternatives:
+        - wk_kb_swing_single_arm
+        notes: Alternate hands each minute. Wildman's snatch goal is 200 snatches in 10 minutes —
+          the 10 x 20 that ends the first stage; then the same over 20 minutes. A heavier bell starts
+          a new cycle.
       - role: recovery
         exercise_id: wk_kb_halo
         slot_type: skill_practice

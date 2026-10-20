@@ -36,9 +36,10 @@ def test_source_cycle_retains_movements_and_spacing(level='intermediate'):
     tc.verify(p, g['training_contract'], c)
     loads = swings(p)
     working = [e['load'] for s in sessions(p) if not s['is_deload'] for e in s['exercises'] if e['slot_role'] == 'swing_main']
+    assert not any(s['is_deload'] for s in sessions(p)), "Wildman's sixteen weeks have no deload week"
     assert [e['reps_per_round'] for e in working[:8]] == [6, 8, 10, 12, 14, 16, 18, 20]
     assert loads[0]['target_rounds'] == 10
-    # Deloads hold the cursor; the next volume cycle is not tied to a phase date.
+    # The next stage is not tied to a phase date.
     assert any(e['target_rounds'] == 20 for e in loads)
     assert not any(e['exercise']['id'] in {'wk_kb_snatch', 'kb_jerk_single', 'kb_jerk_double'}
                    for s in sessions(p) for e in s['exercises'])
@@ -54,10 +55,15 @@ def test_real_session_budget_and_deload_are_derived_from_blocks():
     for s in sessions(p):
         minutes = sum(e['load']['elapsed_sec'] for e in s['exercises']) / 60
         assert minutes == s['archetype']['duration_estimate_minutes'] <= 30
-    normal = sessions(p)[0]
-    reduced = next(s for s in sessions(p) if s['is_deload'] and s['modules'][0]['id'] == 'swing')
-    assert all(e['load']['elapsed_sec'] < normal['exercises'][i]['load']['elapsed_sec']
-               for i, e in enumerate(reduced['exercises']))
+    # The swing module's rows, whatever shares its day (Get-up, Deck Squat).
+    swing = lambda s: [e for e in s['exercises'] if e['load']['module_id'] == 'swing']
+    normal = next(s for s in sessions(p) if not s['is_deload'] and swing(s))
+    # General Practice runs Wildman's sixteen weeks without a deload week; an
+    # overreached athlete still deloads, and keeps the block's declared share.
+    tired, _, _ = plan(session_time_minutes=30, fatigue_state='overreached')
+    reduced = next(s for s in sessions(tired) if s['is_deload'] and swing(s))
+    assert all(e['load']['elapsed_sec'] < swing(normal)[i]['load']['elapsed_sec']
+               for i, e in enumerate(swing(reduced)))
     broken = deepcopy(p)
     sessions(broken)[0]['archetype']['duration_estimate_minutes'] = 1
     with unittest.TestCase().assertRaises(tc.ContractError):
@@ -66,10 +72,38 @@ def test_real_session_budget_and_deload_are_derived_from_blocks():
 
 def test_combined_modules_fit_three_days_or_fail_explicitly():
     p, g, c = plan(days_per_week=3)
-    assert p['weeks'] and any(len(s['modules']) == 2 for s in sessions(p))
+    assert p['weeks'] and any({'swing', 'clean_press'} <= {m['id'] for m in s['modules']} for s in sessions(p))
     tc.verify(p, g['training_contract'], c)
     p, _, _ = plan(days_per_week=3, session_time_minutes=20)
     assert not p['weeks'] and p['validation_errors']
+
+
+
+def test_general_practice_runs_wildmans_phase_two():
+    # The Nerd Math swing program's four approaches in order, then a heavier
+    # bell; the other Phase II programs stack in as the session time allows;
+    # the snatch waits until it is confirmed.
+    p, g, c = plan(weeks=16, session_time_minutes=40)
+    tc.verify(p, g['training_contract'], c)
+    stages = [(e['target_rounds'], e['work_sec']) for e in swings(p)]
+    assert stages[:8] == [(10, 60)] * 8 and stages[8:16] == [(20, 60)] * 8, stages[:16]
+    assert stages[16:24] == [(10, 90)] * 8 and stages[24:] == [(20, 90)] * 8, stages[16:]
+    assert all('Start/stop' in e['focus'] for e in swings(p)[16:])
+    ids = {m['id'] for s in sessions(p) for m in s['modules']}
+    assert {'swing', 'clean_press', 'getup', 'deck_squat'} <= ids and 'snatch' not in ids, ids
+    assert any('Nerd Math Snatch joins' in line for line in p['compromises']), p['compromises']
+    # Thirty-minute sessions take Approach 3 where Approach 4 would not fit.
+    short, g, c = plan(weeks=16, session_time_minutes=30)
+    tc.verify(short, g['training_contract'], c)
+    assert {(e['target_rounds'], e['work_sec']) for e in swings(short)[24:]} == {(10, 90)}
+    # With the snatch confirmed and the days for it, it joins the week.
+    sn, g, c = plan(weeks=2, days_per_week=4, session_time_minutes=60,
+                    mastered_exercises=['wk_kb_snatch'])
+    tc.verify(sn, g['training_contract'], c)
+    assert any(m['id'] == 'snatch' for s in sessions(sn) for m in s['modules'])
+    assert tc.load_contract('wildman_kettlebell', 'general_practice')['modules']
+    reqs = constraint_requirements = __import__('src.constraint_impact', fromlist=['x']).contract_requirements
+    assert 'wk_kb_snatch' not in (reqs(g, 'intermediate').get('mastered_exercises') or [])
 
 
 def test_unearned_calendar_time_and_deload_never_advance_confirmed_state():
@@ -175,9 +209,9 @@ def test_pentathlon_runs_are_optional_and_take_only_free_days():
 
 def test_optional_modules_and_spacing_across_weeks():
     module = {'id': 'm', 'exposures_per_week': 2, 'min_spacing_days': 2}
-    assert tc._place_optional(module, 30, [4, 5], 60, {}) == [4], 'adjacent free days fit one'
-    assert tc._place_optional(module, 30, [3, 6], 60, {}) == [3, 6]
-    assert tc._place_optional(module, 90, [3, 6], 60, {}) == [], 'too long for the day'
+    assert tc._place_optional(module, 30, [4, 5], {4: 60, 5: 60}) == [4], 'adjacent free days fit one'
+    assert tc._place_optional(module, 30, [3, 6], {3: 60, 6: 60}) == [3, 6]
+    assert tc._place_optional(module, 90, [3, 6], {3: 60, 6: 60}) == [], 'too long for the day'
     placements = list(tc._placements([{'id': 'a', 'exposures_per_week': 1, 'min_spacing_days': 2}],
                                      {'a': 30}, [1, 3, 5], 60))
     assert [sorted(p) for p in placements] == [[1], [3], [5]], 'every placement, in preference order'

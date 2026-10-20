@@ -766,7 +766,12 @@ badly the default misrepresents the method and whether its policies exist:
 8. *ATG, Kelly Starrett, Ido Portal* — after assessment gating, once their
    advancement markers are sourced.
 
-**5. Wildman follow-ups (from the handoff).** Review the double-jerk block (an app
+**5. Wildman follow-ups (from the handoff).** General Practice runs Wildman's Phase II
+since 2026-10-20 (the Nerd Math swing approaches, get-up and deck squat stacked as time
+allows, the snatch once confirmed). Left: his hand-to-hand option (alternating minutes
+needs a block that alternates two movements), his get-up and deck-squat numbers (paid
+programs; the cycles here are the Nerd Math pattern), Double-Bell Practice (his double
+bells are Phase III, deliberately non-repeating). Review the double-jerk block (an app
 invention) and whether advanced and elite should differ from intermediate; test
 the new tracks in both builders and on both watches; close editing paths (moving a
 session) that can break module spacing; generalise catalog reachability

@@ -261,6 +261,11 @@
                   "default": false,
                   "description": "Main-lift slots (heavy sets x reps, or a %1RM) draw a new exercise each session. Off by default: the generator keeps each main lift on one exercise for the phase so its load can progress."
                 },
+                "former_ids": {
+                  "type": "array",
+                  "items": {"type": "string", "pattern": "^[a-z0-9_]+$"},
+                  "description": "Ids this phase replaced (a package merged or renamed phases). A regenerate from a stored week that names one starts here."
+                },
                 "week_templates": {
                   "type": "array",
                   "minItems": 1,

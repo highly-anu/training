@@ -72,8 +72,14 @@ def load_contract(package: str, track: str) -> dict | None:
         raise ContractError('Training module ids must be unique within a track.')
     for module in contract['modules']:
         p = module['progression']
-        if p['model'] == 'density_cycle' and (p['reps_start'] > p['reps_max'] or p['rounds'] != sorted(set(p['rounds']))):
-            raise ContractError('Density cycles require increasing rounds and a valid repetition range.')
+        if p['model'] == 'density_cycle':
+            stages = list(zip(p['rounds'], p.get('interval_sec') or [60] * len(p['rounds'])))
+            staged = bool(p.get('interval_sec'))
+            if p['reps_start'] > p['reps_max'] or (staged and len(set(stages)) != len(stages)) \
+                    or (not staged and p['rounds'] != sorted(set(p['rounds']))) \
+                    or len(p.get('interval_sec') or p['rounds']) != len(p['rounds']) \
+                    or len(p.get('cues') or p['rounds']) != len(p['rounds']):
+                raise ContractError('Density cycles require increasing rounds (or distinct stages) and a valid repetition range.')
         if p['model'] == 'timed_cycle' and p['duration_start_sec'] > p['duration_max_sec']:
             raise ContractError('Timed cycles must start at or below their duration ceiling.')
         if any(b['slot_type'] == 'emom' for b in module['blocks']) and p['model'] != 'density_cycle':
@@ -141,10 +147,38 @@ def confirmed_state(current: dict, logs: dict, contract: dict) -> dict:
 
 def _cycle(spec: dict, step: int) -> tuple[int, int]:
     """Density first, then volume; exhaustion holds until a new cycle is chosen."""
+    rounds, reps, _interval, _cue = _stage(spec, step)
+    return rounds, reps
+
+
+def _stage(spec: dict, step: int, budget_sec: float | None = None) -> tuple[int, int, int, str | None]:
+    """(rounds, reps, interval seconds, cue) at a step. A cycle runs the reps
+    from start to max at each stage in turn — Wildman's swing program: 6 to 20
+    a minute over 10 minutes, then over 20, then start/stop over ten and
+    twenty 90-second rounds — and holds at the last until a new cycle (a
+    heavier bell) is chosen."""
     reps = list(range(spec['reps_start'], spec['reps_max'] + 1, spec['reps_step']))
     rounds = spec['rounds']
+    intervals = spec.get('interval_sec') or [60] * len(rounds)
+    cues = spec.get('cues') or [None] * len(rounds)
     index = min(step, len(reps) * len(rounds) - 1)
-    return rounds[index // len(reps)], reps[index % len(reps)]
+    stage = index // len(reps)
+    if budget_sec is not None and rounds[stage] * intervals[stage] > budget_sec:
+        # Pressed for time, the shorter version of the stage: the longest
+        # earlier stage that fits, at the same interval first (Wildman: "if
+        # pressed for time ... do the short version", Approach 3 for 4).
+        fitting = [k for k in range(stage, -1, -1) if rounds[k] * intervals[k] <= budget_sec]
+        if fitting:
+            stage = max(fitting, key=lambda k: (intervals[k] == intervals[stage], rounds[k] * intervals[k], k))
+    return rounds[stage], reps[index % len(reps)], intervals[stage], cues[stage]
+
+
+def _interval_budget(module: dict, constraints: dict) -> float:
+    """The seconds a module's interval block may take: the session's minutes
+    less its other blocks'."""
+    other = sum(b.get('duration_sec', 0) + b.get('rest_after_sec', 0)
+                for b in module['blocks'] if b['slot_type'] != 'emom')
+    return constraints.get('session_time_minutes', 60) * 60 - other
 
 
 def _bell(module: dict, constraints: dict, state: dict) -> float | None:
@@ -232,13 +266,17 @@ def _assignment(block: dict, module: dict, exercises: dict, constraints: dict,
         seconds = math.ceil(sets * per_set / 60) * 60
         load['duration_minutes'] = seconds // 60
     elif block['slot_type'] == 'emom':
-        rounds, reps = _cycle(module['progression'], step)
+        rounds, reps, interval, cue = _stage(module['progression'], step, _interval_budget(module, constraints))
         if deload:
             rounds = max(1, math.floor(rounds * _keep(block, module)))
-        load = {'target_rounds': rounds, 'reps_per_round': reps, 'work_sec': 60,
-                'rest_sec': 0, 'time_minutes': rounds, 'format': 'EMOM',
-                'duration_minutes': rounds}
-        seconds = rounds * 60
+        # Whole minutes, as every timed block (ten 90-second rounds are 15).
+        seconds = math.ceil(rounds * interval / 60) * 60
+        load = {'target_rounds': rounds, 'reps_per_round': reps, 'work_sec': interval,
+                'rest_sec': 0, 'time_minutes': seconds // 60,
+                'format': 'EMOM' if interval == 60 else f'EVERY {interval} S',
+                'duration_minutes': seconds // 60}
+        if cue:
+            load['focus'] = cue
     else:
         seconds = block['duration_sec']
         if _progresses(block) and not block.get('standard') and module['progression']['model'] == 'timed_cycle':
@@ -279,6 +317,9 @@ def _assignment(block: dict, module: dict, exercises: dict, constraints: dict,
                               'Use the selected single bell; finish repetitions with clean mechanics, then rest.')
                              if weight is not None else
                              'Choose a bell you can control throughout. Record its weight before increasing load.')
+    if block['slot_type'] == 'emom' and load.get('focus'):
+        # The stage's cue leads the note both clients show (start/stop).
+        load['load_note'] = f"{load['focus']} {load.get('load_note') or ''}".strip()
     load.update(prescription_version=1, progression_model=module['progression']['model'],
                 module_id=module['id'], forecast_step=step,
                 advances_module=_progresses(block),
@@ -350,17 +391,19 @@ def _placements(modules: list, durations: dict, pool: list[int], cap: float):
     yield from assign(0)
 
 
-def _place_optional(module: dict, minutes: float, free: list[int], cap: float, day_caps: dict) -> list[int]:
-    """As many of an optional module's exposures as fit on days nothing else
-    uses, keeping its recovery spacing; possibly none."""
+def _place_optional(module: dict, minutes: float, free: list[int], room: dict) -> list[int]:
+    """As many of an optional module's exposures as fit on the given days
+    (`room`: each day's minutes left), keeping its recovery spacing; possibly
+    none. Days earlier in `free` are preferred."""
     for k in range(min(module['exposures_per_week'], len(free)), 0, -1):
         for days in combinations(free, k):
-            gaps = [b - a for a, b in zip(days, days[1:])] + [7 + days[0] - days[-1]]
+            ordered = sorted(days)
+            gaps = [b - a for a, b in zip(ordered, ordered[1:])] + [7 + ordered[0] - ordered[-1]]
             if min(gaps) < module.get('min_spacing_days', 2):
                 continue
-            if any(minutes > min(cap, day_caps.get(d, cap)) for d in days):
+            if any(minutes > room.get(d, 0) for d in days):
                 continue
-            return list(days)
+            return ordered
     return []
 
 
@@ -385,10 +428,13 @@ def active_modules(contract: dict, constraints: dict) -> list[dict]:
     a track asks for. The compiler and the verifier read the same list."""
     level = constraints.get('training_level', 'intermediate')
     days = constraints.get('days_per_week', 4)
+    learned = set(constraints.get('mastered_exercises') or []) | set((contract.get('level_seeds') or {}).get(level, []))
     out = []
     for m in contract['modules']:
         if level not in m['training_levels']:
             continue
+        if m.get('when_mastered') and set(m.get('requires_mastery') or []) - learned:
+            continue  # joins the week once its movements are confirmed
         by_days = m.get('exposures_by_days')
         if by_days:
             counts = {int(k): v for k, v in by_days.items()}
@@ -427,6 +473,8 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
     # used to refuse, so any schedule with a second session on a day — which
     # the web turns into the flag — could not generate a contract track.
     learned = set(constraints.get('mastered_exercises') or []) | set(contract.get('level_seeds', {}).get(level, []))
+    waiting = [m for m in contract['modules'] if m.get('when_mastered') and level in m['training_levels']
+               and set(m.get('requires_mastery') or []) - learned]
     for m in modules:
         if set(m.get('requires_mastery') or []) - learned:
             raise ContractError(f"{m['id']}: confirm mastery of {m['requires_mastery']} before using this track.")
@@ -454,7 +502,10 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
                            sorted(constraints.get('forced_rest_days') or []),
                            framework_id=first_fw['id'], phase=entries[0]['phase'],
                            week_in_phase=1, framework=first_fw)
-    program = {'weeks': [], 'compromises': [], 'module_state': state,
+    program = {'weeks': [], 'compromises': [
+                   f"{m['name']} joins the week once you confirm "
+                   f"{', '.join(sorted(set(m['requires_mastery']) - learned))}." for m in waiting],
+               'module_state': state,
                'training_contract': {'id': f"{contract['package']}/{contract['track_id']}@{contract['version']}",
                                      'version': contract['version'], 'status': 'fulfilled',
                                      'forecast': 'Future exposures assume successful clean completion; regenerate after logging outcomes.'}}
@@ -507,10 +558,19 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
             test_days = [d for d, ms in candidate.items() if any(m['id'] == contract.get('test_module') for m in ms)]
             closes = not close_with_test_module or (bool(test_days) and max(test_days) == max(candidate))
             limit = max(test_days) if close_with_test_module and test_days else 8
-            fit = {m['id']: _place_optional(m, estimates[m['id']], [
-                       d for d in pool if d not in candidate and d < limit
-                       and clear_of_last_week(m['id'], d, m.get('min_spacing_days', 2))], cap, day_caps)
-                   for m in optional}
+            room = {d: min(cap, day_caps.get(d, cap)) - sum(estimates[x['id']] for x in candidate.get(d, []))
+                    for d in pool}
+            fit = {}
+            for m in optional:
+                # Free days first; a module that may share a day (Wildman's
+                # programs stack into one session) then takes a day with the
+                # minutes left beside the essential work.
+                days = [d for d in pool if d < limit and clear_of_last_week(m['id'], d, m.get('min_spacing_days', 2))
+                        and (d not in candidate or m.get('may_share_day'))]
+                days.sort(key=lambda d: (d in candidate, -room[d], d))
+                fit[m['id']] = _place_optional(m, estimates[m['id']], days, room)
+                for d in fit[m['id']]:
+                    room[d] -= estimates[m['id']]
             return fit, closes
 
         # The first placement that closes a test week with its test and fits
@@ -544,6 +604,7 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
             if not reason and len(days_for) < m['exposures_per_week']:
                 free = [d for d in pool if d not in placed]
                 reason = ('nothing is scheduled after the event volume session' if close_with_test_module and len(free) > len(days_for)
+                          else f"no time beside the week's other work in {cap:g}-minute sessions" if m.get('may_share_day')
                           else 'no free training day for it' if not free
                           else f"not enough free days {m.get('min_spacing_days', 2)} days apart")
             for d in days_for:
@@ -773,15 +834,14 @@ def verify(program: dict, contract: dict, constraints: dict) -> None:
                             if load['elapsed_sec'] != seconds or load['duration_minutes'] * 60 != seconds:
                                 raise ContractError('An event duration does not follow its declared progression or test protocol.')
                         if ea['slot_type'] == 'emom':
-                            reps = list(range(spec['reps_start'], spec['reps_max'] + 1, spec['reps_step']))
-                            position = min(record['forecast_step'], len(reps) * len(spec['rounds']) - 1)
-                            rounds = spec['rounds'][position // len(reps)]
+                            rounds, reps, interval, _cue = _stage(spec, record['forecast_step'],
+                                                                  _interval_budget(expected[mid], constraints))
                             if week['is_deload']:
                                 block = next((b for b in blocks if ea['slot_role'] in (b['role'], f"{mid}_{b['role']}")), {})
                                 rounds = max(1, math.floor(rounds * _keep(block, expected[mid])))
-                            if load.get('target_rounds') != rounds or load.get('reps_per_round') != reps[position % len(reps)]:
+                            if load.get('target_rounds') != rounds or load.get('reps_per_round') != reps:
                                 raise ContractError('A prescription does not follow its declared progression cycle.')
-                            if load['elapsed_sec'] != rounds * 60 or load.get('work_sec') != 60:
+                            if load['elapsed_sec'] != math.ceil(rounds * interval / 60) * 60 or load.get('work_sec') != interval:
                                 raise ContractError('A minute-based module lost its interval structure.')
         if any(counts[mid] != m['exposures_per_week'] for mid, m in expected.items() if not m.get('optional')):
             raise ContractError('An essential weekly module exposure is missing.')

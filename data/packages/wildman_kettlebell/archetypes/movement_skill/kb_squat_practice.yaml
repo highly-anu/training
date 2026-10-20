@@ -1,5 +1,5 @@
 id: kb_squat_practice
-name: Goblet Squat Practice
+name: Deck Squat Practice
 modality: movement_skill
 category: kettlebell
 training_levels:
@@ -13,23 +13,15 @@ applicable_phases:
 - build
 - maintenance
 slots:
-- role: prep
-  slot_type: skill_practice
-  duration_minutes: 3
-  intensity: moderate
-  exercise_filter:
-    exercise_ids:
-    - kb_deadlift
-  notes: ''
 - role: squat
   slot_type: emom
   duration_minutes: 5
   intensity: moderate
   exercise_filter:
     exercise_ids:
-    - wk_kb_squat_goblet
-  notes: "1\u20135 controlled goblet squats at the start of each minute. Rest for the\
-    \ remainder. Repeat at the same bell; no automatic complexity increase."
+    - wk_deck_squat
+  notes: 'Deck squats at the top of each minute: squat, roll back with the head off the floor,
+    roll forward and stand. Bodyweight until a cycle is clean, then a light bell at the chest.'
 - role: recovery
   slot_type: skill_practice
   duration_minutes: 2
@@ -38,9 +30,8 @@ slots:
     exercise_ids:
     - wk_kb_halo
   notes: ''
-required_equipment:
-- kettlebell
+required_equipment: []
 sources:
 - Wildman
-notes: 'Wildman movement families on nonconsecutive Tetris scheduling. Repeat these fixed modules twice weekly. Calendar time never grants
-  proficiency or a heavier bell. '
+notes: Wildman's Deck Squat program (Phase II), twice a week on nonconsecutive days. Bodyweight first; calendar
+  time never grants a heavier load.

@@ -511,12 +511,16 @@ def get_philosophies():
             if contract:
                 track['entry_requirements'] = {
                     'training_levels': contract['training_levels'],
-                    'mastered_exercises': sorted({eid for m in contract['modules'] for eid in m.get('requires_mastery', [])}),
+                    # A module that waits for its movements (`when_mastered`:
+                    # Wildman's snatch) is no entry requirement.
+                    'mastered_exercises': sorted({eid for m in contract['modules'] if not m.get('when_mastered')
+                                                  for eid in m.get('requires_mastery', [])}),
                     # Less what the contract seeds for the level: General Practice
                     # counts an intermediate's clean and press as known, and both
                     # builders asked for them anyway.
                     'mastered_exercises_by_level': {level: sorted({eid for m in contract['modules']
-                        if level in m['training_levels'] for eid in m.get('requires_mastery', [])}
+                        if level in m['training_levels'] and not m.get('when_mastered')
+                        for eid in m.get('requires_mastery', [])}
                         - set((contract.get('level_seeds') or {}).get(level) or []))
                         for level in contract['training_levels']},
                     'kettlebell_count': 2 if contract.get('requires_kettlebell_pair') else 1,

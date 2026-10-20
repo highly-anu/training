@@ -132,7 +132,7 @@ def test_phase_exclusions() -> None:
     prog = program('wildman_kettlebell', 6, days_per_week=4, track_id='general_practice')
     banned = {'wk_kb_snatch', 'wk_kb_half_snatch', 'kb_jerk_single', 'kb_jerk_double', 'wk_kb_long_cycle_press'}
     used = {ea['exercise']['id'] for _, s in sessions(prog) for ea in s['exercises'] if ea.get('exercise')}
-    check('foundations stops before the snatch and the jerk', not used & banned, str(used & banned))
+    check('Phase II stops before the unconfirmed snatch and the jerk', not used & banned, str(used & banned))
 
 
 # ── Review fixes (2026-10-16), on synthetic libraries ─────────────────────────
@@ -247,7 +247,10 @@ def test_single_session_routes() -> None:
             'philosophy_ids': ['wildman_kettlebell'], 'phase': 'base', 'week_in_phase': 1,
             'constraints': {'equipment': ['kettlebell', 'open_space'], 'training_level': 'intermediate'},
             'limit': 10}
-    banned = {'wk_kb_snatch', 'wk_kb_half_snatch', 'kb_jerk_single', 'kb_jerk_double', 'wk_kb_long_cycle_press'}
+    # Phase II leaves out the sport lifts; the snatch joins it once confirmed
+    # (training_contract `when_mastered`). A stored week may name the phase
+    # by its former id ('foundations').
+    banned = {'wk_kb_half_snatch', 'kb_jerk_single', 'kb_jerk_double', 'wk_kb_long_cycle_press'}
     def offered(extra):
         r = client.post('/api/exercises/substitute', json={**body, **extra})
         return {a['assignment']['exercise']['id'] for a in (r.get_json() or {}).get('alternatives') or []}

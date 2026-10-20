@@ -28,10 +28,10 @@ applicable_when:
   - advanced
   days_per_week_min: 3
   days_per_week_max: 4
-deload_protocol:
-  frequency_weeks: 4
-  volume_reduction_pct: 0.5
-  intensity_change: maintain
+# No deload_protocol: Wildman's Nerd Math programs run their sixteen weeks
+# without a deload week; the lighter stretch is the next cycle, restarted at a
+# heavier bell from its first, easiest session. An overreached athlete still
+# deloads (fatigue_state).
 sources:
 - Wildman
 notes: The executable module contract owns frequency, density cycles, movement continuity,
