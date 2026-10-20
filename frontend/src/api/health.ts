@@ -8,6 +8,7 @@ import type {
   WorkoutAnalysis,
   HRZoneDistribution,
   SessionLogStandards,
+  ExercisePerformance,
 } from '@/api/types'
 import type { ReadinessResult } from '@/lib/readiness'
 import type { RecentSessionLog } from '@/lib/logSessions'
@@ -111,6 +112,20 @@ export function saveWorkouts(workouts: ImportedWorkout[]): void {
 
 export function removeWorkout(id: string): void {
   void apiClient.delete(`${BASE}/workouts/${id}`)
+}
+
+/**
+ * "Done as written" for a training-contract session: the server writes each
+ * progressing exercise's prescribed rounds with `clean` and `rpe`, merged into
+ * the log, and answers with what it wrote. A watch-recorded or linked session
+ * logs no per-exercise outcome, so this is what a regenerate counts.
+ */
+export async function confirmSession(sessionKey: string, clean: boolean, rpe: number): Promise<{
+  exercises: Record<string, ExercisePerformance>
+  completedAt?: string
+}> {
+  const res = await apiClient.post(`${BASE}/sessions/${encodeURIComponent(sessionKey)}/confirm`, { clean, rpe })
+  return res as unknown as { exercises: Record<string, ExercisePerformance>; completedAt?: string }
 }
 
 export function saveSessionLog(log: SessionPerformanceLog): void {

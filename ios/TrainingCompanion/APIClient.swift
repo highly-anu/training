@@ -339,6 +339,18 @@ final class APIClient {
         return (try? JSONDecoder().decode(Saved.self, from: data))?.standards
     }
 
+    /// "Done as written" for a training-contract session: the server writes
+    /// each progressing exercise's prescribed rounds with `clean` and `rpe`,
+    /// merged into the log (`POST /health/sessions/<key>/confirm`). A
+    /// watch-recorded or linked session logs no per-exercise outcome, so this
+    /// is what lets a regenerate count it.
+    func confirmSession(sessionKey: String, clean: Bool, rpe: Int?) async throws {
+        struct Body: Encodable { let clean: Bool; let rpe: Int? }
+        let escaped = sessionKey.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? sessionKey
+        _ = try await postRaw("/health/sessions/\(escaped)/confirm",
+                              body: try JSONEncoder().encode(Body(clean: clean, rpe: rpe)))
+    }
+
     func saveSessionNotes(sessionKey: String, notes: String, fatigueRating: Int?) async throws {
         struct Body: Encodable {
             let sessionKey: String

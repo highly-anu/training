@@ -387,6 +387,15 @@ group's name.
   against its template (`_check_template`), not `sessions_per_week`. Horsemen's 4-Month Macro
   is the one user: ~190 named workouts, the PT test on the first and last hard job-specific
   days (`test_week_template.py`).
+- **A training contract's progress is earned by confirmed sessions.** A module advances
+  (`confirmed_state`, read when the program is regenerated) only on a completed session
+  whose progressing exercises are logged clean at or below the module's RPE. A
+  watch-recorded or linked workout logs no per-exercise outcome, so both clients ask "done
+  as written?" on a finished contract session — web `session/ModuleProgress.tsx`, iOS
+  `SessionDetailView` Progress — and `POST /health/sessions/<key>/confirm` {clean, rpe}
+  writes each progressing exercise's prescribed rounds or seconds with the answer, merged
+  into the log (`training_contract.confirmation_outcomes`). Until then the plan forecasts
+  each exposure as clean; a regenerate starts every unconfirmed cycle again.
 - **Cadence, loads and recovery live in YAML.** A framework's `cadence_options`
   (keyed by days per week, several patterns rotating week to week) is the only source of
   day patterns; an exercise's `starting_load_kg` / `weekly_increment_kg` the only source of
@@ -1084,6 +1093,13 @@ Before anything that changes production structure (a migration, a backfill):
 scripts/backup_prod.sh                    # pg_dump 17 + restore-test + row-count compare; exits 1 on mismatch
 ```
 
+**Package fidelity** (`docs/package-fidelity/`): the method for checking and improving a
+package against its source — a source dossier per package, every rule into data, no
+invented structure, an inventions ledger — and `status.yaml`, where every package stands
+(audited / partial / not started) and which engine shape its method needs.
+`tools/check_package_status.py` holds the registry to the repository: an audited package
+has its dossier, a source test CI runs, no fidelity finding and no orphaned exercise.
+
 Run these after touching engine code or package data:
 
 ```bash
@@ -1097,6 +1113,8 @@ SUPABASE_URL='' .venv/bin/python test_week_numbering.py  # a partial regenerate'
 SUPABASE_URL='' .venv/bin/python test_today_session.py   # the watch's today-session: completed flags, tomorrow, ?spec=1, progress
 .venv/bin/python test_last_time.py                       # each exercise's last time, for the watches
 .venv/bin/python tools/check_fidelity.py                 # every philosophy x track x profile against its theory; gates on tools/fidelity_baseline.json
+SUPABASE_URL='' .venv/bin/python tools/check_exercise_coverage.py  # every package's exercises reach a program; orphans may only shrink (tools/exercise_coverage_baseline.json)
+.venv/bin/python tools/check_package_status.py           # docs/package-fidelity/status.yaml against the repository
 .venv/bin/python tools/check_analytics.py                # every declared analytics measure applies in some track; every headline leads somewhere
 .venv/bin/python test_fidelity.py                        # each fidelity rule on hand-built weeks (no generation)
 SUPABASE_URL='' .venv/bin/python test_selection.py       # what the generator picks: SS A/B, pinned lifts, deloads, gaps, cadence

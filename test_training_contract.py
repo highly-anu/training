@@ -106,6 +106,65 @@ def test_general_practice_runs_wildmans_phase_two():
     assert 'wk_kb_snatch' not in (reqs(g, 'intermediate').get('mastered_exercises') or [])
 
 
+
+def test_one_tap_confirmation_earns_the_exposure():
+    # A watch-recorded or linked session logs no per-exercise outcome; the
+    # athlete's "done as written" writes the prescribed rounds with clean and
+    # RPE, which is what confirmed_state counts — and a "not clean" never is.
+    p, g, _ = plan()
+    first = next(s for w in p['weeks'] for ss in w['schedule'].values() for s in ss
+                 if s['modules'][0]['id'] == 'swing')
+    logged = {'wk_kb_swing_two_hand': {'sets': [{'setIndex': 0, 'weightKg': 16}]}}
+    out = tc.confirmation_outcomes(first, True, 7, logged)
+    swing = out['wk_kb_swing_two_hand']
+    assert swing['rounds'] == 10 and swing['clean'] is True and swing['rpe'] == 7
+    assert swing['sets'] == logged['wk_kb_swing_two_hand']['sets'], 'what was logged is kept'
+    day = next(d for d, ss in p['weeks'][0]['schedule'].items() if ss[0] is first)
+    key = f"1-{['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][day - 1]}-0"
+    log = {'completedAt': '2026-10-21', 'exercises': out}
+    assert tc.confirmed_state(p, {key: log}, g['training_contract'])['swing']['completed'] == 1
+    log['exercises'] = tc.confirmation_outcomes(first, False, 7)
+    assert tc.confirmed_state(p, {key: log}, g['training_contract'])['swing']['completed'] == 0
+    log['exercises'] = tc.confirmation_outcomes(first, True, 9)
+    assert tc.confirmed_state(p, {key: log}, g['training_contract'])['swing']['completed'] == 0, 'above RPE 7'
+
+
+
+def test_confirm_route_merges_into_the_session_log():
+    import api
+    from unittest.mock import patch
+    p, _, _ = plan()
+    day, first = next((d, ss[0]) for d, ss in p['weeks'][0]['schedule'].items() if ss[0]['modules'][0]['id'] == 'swing')
+    name = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][day - 1]
+    stored = {'currentProgram': {'weeks': [{'schedule': {name: [first]}}]}}
+    saved = {}
+    def upsert(_user, log):
+        saved.update(log)
+        return {'exercises': log['exercises'], 'completed_at': log.get('completedAt'), 'session_uid': 'v:w0',
+                'session_key': log['sessionKey'], 'source': log['source']}
+    client = api.app.test_client()
+    with patch('src.program_history.active_session_uid', return_value='v:w0'), \
+         patch('src.program_history.resolve_session',
+               return_value={'week_index': 0, 'day_name': name, 'session_index': 0}), \
+         patch('src.db.get_user_program', return_value=stored), \
+         patch.object(api._health, 'get_session_log',
+                      return_value={'completedAt': '2026-10-21 05:00:00+00', 'notes': 'felt good', 'source': 'garmin',
+                                    'exercises': {'wk_kb_swing_two_hand': {'sets': [{'weightKg': 16}]}}}), \
+         patch.object(api._health, 'upsert_session_log', side_effect=upsert), \
+         patch('src.standard_results.after_session_log', return_value=None):
+        r = client.post(f'/api/health/sessions/1-{name}-0/confirm', json={'clean': True, 'rpe': 7})
+        assert r.status_code == 200, r.get_json()
+        swing = saved['exercises']['wk_kb_swing_two_hand']
+        assert swing == {'sets': [{'weightKg': 16}], 'rounds': 10, 'clean': True, 'rpe': 7}, swing
+        assert 'completedAt' not in saved, 'an existing completion is kept'
+        assert saved['notes'] == 'felt good' and saved['source'] == 'garmin'
+        assert client.post(f'/api/health/sessions/1-{name}-0/confirm', json={'clean': 'yes'}).status_code == 422
+        assert client.post(f'/api/health/sessions/1-{name}-0/confirm', json={'clean': True, 'rpe': 11}).status_code == 422
+    with patch('src.program_history.active_session_uid', return_value=None), \
+         patch('src.db.get_user_program', return_value=stored):
+        assert client.post('/api/health/sessions/9-Monday-0/confirm', json={'clean': True, 'rpe': 7}).status_code == 404
+
+
 def test_unearned_calendar_time_and_deload_never_advance_confirmed_state():
     p, g, _ = plan()
     assert tc.confirmed_state(p, {}, g['training_contract'])['swing']['completed'] == 0
