@@ -38,6 +38,7 @@
         "deload_keep": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
         "requires_mastery": {"type": "array", "items": {"type": "string"}},
         "may_share_day": {"type": "boolean", "description": "An optional module that may join a day the essential modules use when its minutes fit beside them (Wildman's programs stack into one session); free days are still taken first."},
+        "never_with": {"type": "array", "items": {"type": "string"}, "description": "Modules this optional one never shares a day with (BJJ's conditioning stays off class days)."},
         "when_mastered": {"type": "boolean", "description": "Joins the week only once `requires_mastery` is confirmed (mastered_exercises or the level's seeds); until then it is left out and the program says so, rather than the track refusing."},
         "optional": {"type": "boolean", "description": "Supplementary work the method lets the athlete skip: placed only on days no essential module uses, left out with its reason when none is free or its movement is ruled out."},
         "progression": {

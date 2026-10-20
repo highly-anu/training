@@ -55,19 +55,58 @@ back to a primary source. The engine's part was that it could only express
    earned progression needs logging that can earn it (the one-tap "done as
    written", `POST /health/sessions/<key>/confirm`).
 
+## The scorecard
+
+How far a package is from its method, graded per package × track
+(`tools/evaluate_packages.py`, the graders in `src/package_eval.py`, today's
+grades in [scorecard.md](scorecard.md)). Five dimensions, each criterion pass
+(✓), partial (◐) or fail (✗) — never a blended number, because a weighted sum
+hides the one failure that matters. A dimension reads its worst criterion that
+is not hygiene; the grades ratchet in `tools/scorecard_baseline.json` (a worse
+grade fails CI), and `status` in `status.yaml` is derived from them.
+
+| Dim | | Criterion | ✓ | ◐ | ✗ |
+|---|---|---|---|---|---|
+| Source | S1 | Dossier has Sources, Rules, Open, Inventions and Tests | all | — | one missing |
+| | S2 | `sources_kind` | primary, or a consensus of ≥3 | secondary | not stated |
+| | S3 | Rules only in prose (`debt:`) | none | some, or not stated | — |
+| | S4 | `inventions` in status.yaml = the dossier's | equal | — | differ |
+| | S5 | A source test CI runs | ≥1 | — | none |
+| Execution | E1 | Sessions delivered with every slot empty | none | — | any |
+| | E2 | Sessions another modality's for lack of their own (`substituted_for`), worst written-for profile | none | ≤25 % | more |
+| | E3 | A level the track is not written for (contract levels, else the frameworks' `training_level`) | refused | — | served |
+| | E4 | Most-used archetype's share of its modality, per phase (≥4 sessions; contracts and templated phases exempt; a phase's `max_archetype_share` is the method's own word) | ≤40 % | ≤60 % | more |
+| | E5 | Defining claims: phase `checks:`, a contract or a week template | declared, hold | none declared | broken |
+| | E6 | Fidelity findings (`check_fidelity`'s rules) | none | warnings | errors |
+| Robustness | R1 | No equipment, a kettlebell home, 45 and 30 minutes, three days, one bell, lumbar, shoulder and knee flags | method kept, or refused where one constraint lifted alone unblocks it | refused, nothing unblocks | served degraded (an empty session, >25 % substitutes, a claim broken) |
+| Data | D1 | Schema-valid, injury flags resolve | yes | — | no |
+| | D2 | Catalog exercises no program reaches (counting borrowers) | none | some | — |
+| | D3 *hygiene* | Exercise media | ≥90 % | ≥50 % | less |
+| | D4 *hygiene* | Empty movement patterns, archetypes without levels, inert `equipment_limited` | none | some | — |
+| Measurement | M1 | The analytics lead = `currency[track]` in status.yaml | yes | — | no, or not stated |
+| | M2 | The lead's fields are logged on both clients (`vocabulary.CAPTURE`) | logged or prescribed | optional, or a watch only | no lead |
+| | M3 | Each declared standard has a scheduled test, a prescribed `derived_from` lift, or `manual: true` | all | some | — |
+| | M4 | Referenced standards exist | yes | — | no |
+
+The execution criteria are the audit's findings made executable: E2 sees a
+novice Gym Jones program that is half substitutes, E4 CrossFit's one AMRAP
+template, E3 an intermediate handed Starting Strength's novice sessions, R1
+a session with every slot empty. A track `excluded_tracks` names (an invention
+awaiting the owner) is graded but does not count toward the status.
+
 ## The gates
 
 Run on every change to `src/**` or `data/**` (.github/workflows/training-contract.yml):
 
 | Gate | What it holds |
 |---|---|
-| `tools/validate_entities.py --all` | every file against its schema; template, pool and test wiring |
+| `tools/validate_entities.py --all` | every file against its schema; template, pool and test wiring; injury-flag ids resolve, each substitution pair inside one package |
 | `tools/check_provenance.py` (`--coverage`) | no package draws on another it does not declare; coverage gaps |
 | `tools/check_styles.py` | every philosophy × track × phase generates on its own framework |
-| `tools/check_fidelity.py` | every philosophy × track × profile against its package; findings may only shrink |
+| `tools/evaluate_packages.py` | the scorecard may not get worse, `status` is the one it earns, and every fidelity finding is in the baseline (`check_fidelity.py`'s gate, in the same pass) |
 | `tools/check_analytics.py` | every declared measure applies somewhere |
-| `tools/check_exercise_coverage.py` | every catalog exercise reaches a program; orphans may only shrink |
-| `tools/check_package_status.py` | `status.yaml` lists every package; an audited one has its dossier, a source test CI runs, no fidelity finding and no orphan |
+| `tools/check_exercise_coverage.py` | every catalog exercise reaches a program (its own or a borrower's); orphans may only shrink |
+| `tools/check_package_status.py` | `status.yaml` lists every package, names real files and tracks, and declares the status the recorded scorecard earns |
 | the package's **source test** | the week as the source writes it, pinned (e.g. `test_training_contract.py`'s Wildman Phase II and BJJ tests, `test_week_template.py`'s Horsemen macro) |
 
 ## Working a package
@@ -78,7 +117,9 @@ Run on every change to `src/**` or `data/**` (.github/workflows/training-contrac
    level) beside the dossier's rules, and list each difference.
 3. Fix data first, engine second; a new engine feature is generic and
    documented (CLAUDE.md, docs/logic/).
-4. Add or extend the package's source test; shrink the baselines
-   (`--update-baseline` on both tools).
+4. Add or extend the package's source test; declare the phase's defining
+   claims (`checks:`), the track's `currency`, `sources_kind` and `debt`;
+   shrink the baselines (`--update-baseline` on `evaluate_packages.py` and
+   `check_exercise_coverage.py`).
 5. Two independent reviews: the code, and the output against the dossier.
-6. Set the package's `status` in `status.yaml`.
+6. Set the package's `status` in `status.yaml` to the one the scorecard earns.

@@ -1,7 +1,7 @@
 name: Training contracts
 on:
   pull_request:
-    paths: ['src/**', 'data/**', 'docs/schemas/**', 'test_training_contract.py', 'test_selection.py', 'test_standard_tests.py', 'test_phases.py', 'test_week_template.py', 'api.py', 'tools/**', 'docs/package-fidelity/**', '.github/workflows/training-contract.yml']
+    paths: ['src/**', 'data/**', 'docs/schemas/**', 'test_training_contract.py', 'test_selection.py', 'test_standard_tests.py', 'test_phases.py', 'test_week_template.py', 'test_fidelity.py', 'test_package_eval.py', 'api.py', 'tools/**', 'docs/package-fidelity/**', '.github/workflows/training-contract.yml']
   push:
     branches: [master]
     paths: ['src/**', 'data/**', 'docs/schemas/**', 'api.py', 'tools/**', 'docs/package-fidelity/**']
@@ -21,5 +21,8 @@ jobs:
       - run: python test_phases.py
       - run: python test_week_template.py
       - run: python tools/validate_entities.py --all -q
-      - run: python tools/check_fidelity.py
+      - run: python test_fidelity.py
+      - run: python test_package_eval.py
+      - run: python tools/evaluate_packages.py
+      - run: python tools/check_analytics.py
       - run: python tools/check_package_status.py

@@ -592,7 +592,8 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
                 # programs stack into one session) then takes a day with the
                 # minutes left beside the essential work.
                 days = [d for d in pool if d < limit and clear_of_last_week(m['id'], d, m.get('min_spacing_days', 2))
-                        and (d not in candidate or m.get('may_share_day'))]
+                        and (d not in candidate or m.get('may_share_day'))
+                        and not {x['id'] for x in candidate.get(d, [])} & set(m.get('never_with') or [])]
                 days.sort(key=lambda d: (d in candidate, -room[d], d))
                 fit[m['id']] = _place_optional(m, estimates[m['id']], days, room)
                 for d in fit[m['id']]:
@@ -883,6 +884,10 @@ def verify_phase_rules(program: dict, goal: dict) -> None:
         if checks.get('intensity_split_tolerance') is not None:
             raise ContractError('This module contract does not implement heart-rate intensity split targets.')
         weeks = [w for w in program['weeks'] if w.get('phase_id') == phase['phase_id']]
+        from .fidelity import claim_violations
+        broken = claim_violations(weeks, checks)
+        if broken:
+            raise ContractError(f"The phase's defining claim is broken: {broken[0][2]}.")
         previous_work = None
         minutes = []
         for week in weeks:

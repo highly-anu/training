@@ -207,9 +207,48 @@ def test_constraints() -> None:
     check('two lifting days in a row', bool(rules(go([tight]), 'recovery_window')))
 
 
+def test_claims() -> None:
+    print("a phase's defining claims")
+    clean = [good_week(1), good_week(2)]
+
+    def claimed(weeks, **checks):
+        return [f for f in go(weeks, {'id': 'p1', 'framework_id': 'fw', 'checks': checks})
+                if f.rule in ('substituted_share', 'modality_outnumbers', 'archetype_share', 'distinct_archetypes')]
+
+    swapped = good_week(1)
+    swapped['schedule'][1][0]['substituted_for'] = 'max_strength'
+    check('substitutes over the declared share', bool(claimed([swapped], max_substituted_share=0.2)))
+    check('substitutes within the declared share', not claimed([swapped], max_substituted_share=0.25))
+    found = claimed(clean, modality_outnumbers=[['max_strength', 'aerobic_base']])
+    check('a modality that does not outnumber another', bool(found) and found[0].severity == 'error')
+    check('one that does', not claimed([good_week(1)], modality_outnumbers=[['aerobic_base', 'mobility']]))
+    check('one archetype over its share of the modality',
+          bool(claimed(clean, max_archetype_share=0.5)))
+    other = arch('lp_b', 'max_strength')
+    varied = [good_week(n) for n in (1, 2)]
+    for w in varied:
+        w['schedule'][4][0]['archetype'] = other
+    check('two archetypes each within their share',
+          not [f for f in claimed(varied, max_archetype_share=0.5) if f.subject.startswith('max_strength')])
+    check('too few archetypes in a window',
+          bool(claimed(clean, min_distinct_archetypes={'weeks': 2, 'count': 2, 'modality': 'max_strength'})))
+    check('enough archetypes in a window',
+          not claimed(varied, min_distinct_archetypes={'weeks': 2, 'count': 2, 'modality': 'max_strength'}))
+    contract = {'weeks': clean, 'training_contract': {'id': 'x'}}
+    phase = {'phase_id': 'p1', 'checks': {'modality_outnumbers': [['max_strength', 'aerobic_base']]}}
+    from src import training_contract
+    try:
+        training_contract.verify_phase_rules(contract, {'phase_sequence': [phase]})
+        refused = False
+    except training_contract.ContractError:
+        refused = True
+    check('a contract program breaking a claim is refused', refused)
+
+
 def main() -> int:
     for t in (test_clean_program, test_minutes_and_buckets, test_shape, test_intensity_and_zone_cap,
-              test_levels_and_kinds, test_fixed_lifts, test_deload, test_volume, test_constraints):
+              test_levels_and_kinds, test_fixed_lifts, test_deload, test_volume, test_constraints,
+              test_claims):
         t()
     print()
     if FAILURES:

@@ -41,6 +41,20 @@ NEEDS: dict[str, dict] = {
                    'where': 'Profile → Standards'},
 }
 
+# How each field reaches the server from an athlete who logs as both clients
+# ask: `logged` — the web and the phone ask for it with the session (or the
+# standards entry; a kettlebell in a timed slot asks its reps beside the
+# minutes on both clients, which is what cadence reads); `program` — the
+# prescription carries it; `optional` — a field the athlete may leave empty
+# (RPE defaults to "—" on both clients); `device` — only a watch or a synced
+# workout supplies it. The package scorecard (tools/evaluate_packages.py,
+# criterion M2) grades a methodology's lead measure by the weakest field it needs.
+CAPTURE: dict[str, str] = {
+    'sets': 'logged', 'rpe': 'optional', 'rpe_target': 'program', 'rounds': 'logged',
+    'minutes': 'logged', 'km': 'logged', 'hold': 'logged', 'timed_reps': 'logged',
+    'hr': 'device', 'gps_hr': 'device', 'completion': 'logged', 'prs': 'logged',
+}
+
 PRIMITIVES: dict[str, dict] = {
     'set_load': {
         'label': 'Set load',

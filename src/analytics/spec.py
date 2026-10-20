@@ -143,7 +143,8 @@ def benchmark_ids(items) -> tuple[list, dict]:
     for item in items or []:
         if isinstance(item, dict):
             ids.append(item['id'])
-            scoped[item['id']] = set(item.get('frameworks') or [])
+            if item.get('frameworks'):
+                scoped[item['id']] = set(item['frameworks'])
         else:
             ids.append(item)
     return ids, scoped
