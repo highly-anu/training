@@ -474,6 +474,31 @@ def test_bjj_substitutes_are_declared_and_supporting_blocks_say_when_they_go():
     assert not lumbar['weeks'] and 'none of' in lumbar['validation_errors'][0]['message']
 
 
+def test_bjj_conditioning_is_optional_and_never_outnumbers_the_mat():
+    # A competitor's conditioning (Vitruve's pre-competition circuits, Chad Wesley
+    # Smith's rounds): once a week beside a strength day, never on a class day,
+    # never more sessions than the mat, gone on a deload and for a novice.
+    p, g, c = _bjj(weeks=4, days_per_week=4, session_time_minutes=90)
+    tc.verify(p, g['training_contract'], c)
+    tc.verify_phase_rules(p, g)
+    for w in p['weeks']:
+        days = {d: {m['id'] for s in ss for m in s['modules']} for d, ss in w['schedule'].items()}
+        cond = [d for d, ms in days.items() if 'competition_conditioning' in ms]
+        assert all('mat_class' not in days[d] for d in cond), days
+        assert len(cond) == 1, days
+    ids = {e['exercise']['id'] for ss in p['weeks'][0]['schedule'].values() for s in ss
+           for e in s['exercises'] if e.get('exercise') and e['slot_role'].startswith('competition_conditioning')}
+    assert ids == {'bjj_takedown_practice', 'bjj_sprawl_interval', 'bjj_shuttle_sprint', 'bjj_bear_crawl'}, ids
+    deload = next(w for w in p['weeks'] if w['is_deload'])
+    kept = {e['exercise']['id'] for ss in deload['schedule'].values() for s in ss
+            for e in s['exercises'] if e.get('exercise') and e['slot_role'].startswith('competition_conditioning')}
+    assert kept <= {'bjj_takedown_practice'}, kept
+    for overrides in ({'session_time_minutes': 60}, {'training_level': 'novice', 'session_time_minutes': 90}):
+        q, _, _ = _bjj(weeks=1, days_per_week=4, **overrides)
+        assert not any(m['id'] == 'competition_conditioning' for ss in q['weeks'][0]['schedule'].values()
+                       for s in ss for m in s['modules']), overrides
+
+
 def test_review_fixes_of_pr_175():
     # The module record names what was prescribed (an alternative, not the
     # authored lift), so confirmed_state reads the logs the athlete wrote.

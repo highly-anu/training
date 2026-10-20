@@ -1,10 +1,27 @@
 # Actual practice currencies; confirmed module advancement is reported by the progression review.
+# Every practice track but the get-up's runs its programs as density cycles —
+# so many reps a minute, for so many minutes, then more — so the currency is
+# the intervals completed (Nerd Math: the swing program's EMOMs, its start/stop
+# rounds). Pentathlon Prep falls through to cadence, Get-Up and Loaded
+# Mobility to technique minutes (src/analytics/document._lead_entry).
 id: wildman_kettlebell
 progress:
+- id: interval_rounds
+  label: Completed intervals
+  primitive: rounds
+  headline: true
+  scope:
+    frameworks:
+    - kb_general_practice
+    - kb_squat_practice
+    - kb_snatch_practice
+    - kb_double_bell_practice
+    slot_types:
+    - emom
+  expected: prescribed
 - id: practice_sessions
   label: Practice consistency
   primitive: session_completion
-  headline: true
   scope:
     frameworks:
     - kb_general_practice
@@ -29,6 +46,7 @@ progress:
   scope:
     frameworks:
     - kb_general_practice
+    - kb_getup_mobility
     slot_types:
     - skill_practice
   expected: prescribed
@@ -80,6 +98,19 @@ progress:
     - run_zone2
   expected: prescribed
 benchmarks:
+# The snatch program's goal, 200 snatches in ten minutes (/snatch), is the SSST
+# count; the SSST fixes a 24 kg bell where Wildman lets the athlete choose, so a
+# result is entered by hand. The get-up's ratio likewise.
+- id: ssst_reps
+  frameworks:
+  - kb_general_practice
+  - kb_snatch_practice
+  manual: true
+- id: turkish_get_up_bw_ratio
+  frameworks:
+  - kb_general_practice
+  - kb_getup_mobility
+  manual: true
 - id: kb_pentathlon_clean_reps
   frameworks:
   - kb_pentathlon

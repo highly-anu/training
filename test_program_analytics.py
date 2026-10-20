@@ -1166,16 +1166,16 @@ def test_document() -> None:
 
 def test_headline_follows_the_track() -> None:
     """A headline that does not apply to the program gives way. Wildman's
-    cadence measures only Pentathlon Prep; in General Practice movements
-    earned leads, and the cadence entries say where they apply instead of
-    counting against "N of M measurable"."""
+    cadence measures only Pentathlon Prep; in General Practice the completed
+    intervals of its density cycles lead, and the cadence entries say where
+    they apply instead of counting against "N of M measurable"."""
     print('\ndocument: headline and applicability follow the track')
     from src import generator, goals, loader
     frameworks = list(loader.load_all_frameworks().values())
     cons = {'training_level': 'intermediate', 'days_per_week': 4, 'session_time_minutes': 60,
             'equipment': ['kettlebell', 'open_space'], 'injury_flags': [],
             'periodization_week': 1, 'fatigue_state': 'normal'}
-    for track, lead in (('general_practice', 'practice_sessions'), ('pentathlon', 'jerk_rpm')):
+    for track, lead in (('general_practice', 'interval_rounds'), ('pentathlon', 'jerk_rpm')):
         goal = goals.philosophy_to_goal('wildman_kettlebell', frameworks, track_id=track)
         cons['mastered_exercises'] = [eid for m in goal['training_contract']['modules'] for eid in m.get('requires_mastery', [])]
         prog = generator.generate(goal_id=goal['id'], goal_dict=goal, constraints=cons,
