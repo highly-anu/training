@@ -344,11 +344,20 @@ final class APIClient {
     /// merged into the log (`POST /health/sessions/<key>/confirm`). A
     /// watch-recorded or linked session logs no per-exercise outcome, so this
     /// is what lets a regenerate count it.
-    func confirmSession(sessionKey: String, clean: Bool, rpe: Int?) async throws {
-        struct Body: Encodable { let clean: Bool; let rpe: Int? }
+    /// A loaded lift's outcome for `confirmSession` (Starting Strength).
+    struct LiftOutcome: Encodable, Equatable {
+        let made: Bool
+        let weightKg: Double?
+    }
+
+    /// "Done as written": clean or not and the RPE, or — for loaded lifts —
+    /// `lifts`, the ones that went otherwise than written (the rest were made).
+    func confirmSession(sessionKey: String, clean: Bool, rpe: Int?,
+                        lifts: [String: LiftOutcome]? = nil) async throws {
+        struct Body: Encodable { let clean: Bool; let rpe: Int?; let lifts: [String: LiftOutcome]? }
         let escaped = sessionKey.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? sessionKey
         _ = try await postRaw("/health/sessions/\(escaped)/confirm",
-                              body: try JSONEncoder().encode(Body(clean: clean, rpe: rpe)))
+                              body: try JSONEncoder().encode(Body(clean: clean, rpe: rpe, lifts: lifts)))
     }
 
     func saveSessionNotes(sessionKey: String, notes: String, fatigueRating: Int?) async throws {

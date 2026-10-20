@@ -781,10 +781,11 @@ final class AppState: ObservableObject {
     /// The athlete's answer for a training-contract session (clean or not,
     /// and the RPE), then the logs read back so the session shows it. False
     /// when the server did not take it.
-    func confirmSession(sessionKey: String, clean: Bool, rpe: Int?) async -> Bool {
+    func confirmSession(sessionKey: String, clean: Bool, rpe: Int?,
+                        lifts: [String: APIClient.LiftOutcome]? = nil) async -> Bool {
         guard let api else { return false }
         do {
-            try await api.confirmSession(sessionKey: sessionKey, clean: clean, rpe: rpe)
+            try await api.confirmSession(sessionKey: sessionKey, clean: clean, rpe: rpe, lifts: lifts)
             await loadRecentSessionLogs()
             return true
         } catch {

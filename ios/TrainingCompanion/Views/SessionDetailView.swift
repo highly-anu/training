@@ -42,6 +42,7 @@ struct SessionDetailView: View {
     @State private var isConfirming = false
     @State private var confirmFailed = false
     @State private var changingVerdict = false
+    @State private var liftAnswers: [String: LiftConfirmation.Answer] = [:]
 
     private var isDone: Bool { appState.isSessionComplete(sessionKey) }
 
@@ -60,7 +61,9 @@ struct SessionDetailView: View {
                 headerSection
                 if let workout = linkedWorkout { linkedWorkoutSection(workout) }
                 exercisesSection
-                if !progressingExercises.isEmpty && (isDone || linkedWorkout != nil) { progressSection }
+                if !progressingExercises.isEmpty && (isDone || linkedWorkout != nil) {
+                    if loadLifts.isEmpty { progressSection } else { liftProgressSection }
+                }
                 if canEditProgram { actionsSection }
                 if isDone { notesSection }
             }
@@ -441,6 +444,95 @@ struct SessionDetailView: View {
         confirmFailed = false
         Task {
             let ok = await appState.confirmSession(sessionKey: sessionKey, clean: clean, rpe: confirmRpe)
+            confirmFailed = !ok
+            if ok { changingVerdict = false; AppHaptics.success() }
+            isConfirming = false
+        }
+    }
+
+    // MARK: - Progress (loaded lifts: Starting Strength)
+
+    /// Lifts that move on what was made (`load_per_exposure`).
+    private var loadLifts: [LiftConfirmation.Lift] { LiftConfirmation.lifts(of: currentSession) }
+
+    /// Each lift made or missed, at its prescribed weight or the one worked up
+    /// to. A made lift goes up next time; a miss repeats it, two reset it.
+    private var liftProgressSection: some View {
+        Section {
+            if let verdict = LiftConfirmation.verdict(loadLifts, log: appState.sessionLogs[sessionKey]),
+               !changingVerdict {
+                ForEach(loadLifts) { lift in
+                    let made = verdict[lift.id] ?? true
+                    let kg = appState.sessionLogs[sessionKey]?.exercises[lift.id]?.weightKg
+                    HStack {
+                        Label(lift.name, systemImage: made ? "checkmark.seal.fill" : "minus.circle")
+                            .foregroundStyle(made ? Color.green : Color.secondary)
+                        Spacer()
+                        Text([kg.map { "\(LoadFormat.kilograms($0)) kg" }, made ? nil : "missed, repeats"]
+                                .compactMap { $0 }.joined(separator: " · "))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                Button("Change") { changingVerdict = true }
+                    .font(.caption)
+            } else {
+                Text("Made every rep? A made lift goes up next time; a miss repeats its weight.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                ForEach(loadLifts) { lift in
+                    let answer = Binding(
+                        get: { liftAnswers[lift.id] ?? LiftConfirmation.Answer() },
+                        set: { liftAnswers[lift.id] = $0 })
+                    HStack {
+                        Text(lift.name)
+                        Spacer()
+                        if let kg = lift.weightKg {
+                            Text("\(LoadFormat.kilograms(kg)) kg")
+                                .foregroundStyle(.secondary)
+                        } else {
+                            TextField("kg", text: answer.kg)
+                                .keyboardType(.decimalPad)
+                                .multilineTextAlignment(.trailing)
+                                .frame(width: 64)
+                                .accessibilityLabel("\(lift.name) kg")
+                        }
+                        Picker(lift.name, selection: answer.made) {
+                            Text("Made").tag(true)
+                            Text("Missed").tag(false)
+                        }
+                        .pickerStyle(.segmented)
+                        .frame(width: 140)
+                        .labelsHidden()
+                    }
+                }
+                HStack {
+                    Button { confirmLifts(allMade: true) } label: {
+                        Label("All made", systemImage: "checkmark.seal")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    Button("Save") { confirmLifts(allMade: false) }
+                        .buttonStyle(.bordered)
+                }
+                .disabled(isConfirming)
+            }
+            if confirmFailed {
+                Text("Not saved — try again when online.")
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
+        } header: {
+            Text("Progress")
+        }
+    }
+
+    private func confirmLifts(allMade: Bool) {
+        isConfirming = true
+        confirmFailed = false
+        let body = LiftConfirmation.payload(loadLifts, answers: liftAnswers, allMade: allMade)
+        Task {
+            let ok = await appState.confirmSession(sessionKey: sessionKey, clean: body.clean, rpe: nil,
+                                                   lifts: body.lifts)
             confirmFailed = !ok
             if ok { changingVerdict = false; AppHaptics.success() }
             isConfirming = false
