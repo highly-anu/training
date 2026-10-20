@@ -38,6 +38,10 @@ struct SessionDetailView: View {
     }
 
     @State private var linkedTrimp: Int? = nil
+    @State private var confirmRpe: Int = 7
+    @State private var isConfirming = false
+    @State private var confirmFailed = false
+    @State private var changingVerdict = false
 
     private var isDone: Bool { appState.isSessionComplete(sessionKey) }
 
@@ -56,6 +60,7 @@ struct SessionDetailView: View {
                 headerSection
                 if let workout = linkedWorkout { linkedWorkoutSection(workout) }
                 exercisesSection
+                if !progressingExercises.isEmpty && (isDone || linkedWorkout != nil) { progressSection }
                 if canEditProgram { actionsSection }
                 if isDone { notesSection }
             }
@@ -373,6 +378,73 @@ struct SessionDetailView: View {
         }
         .padding(.vertical, 2)
         .contentShape(Rectangle())
+    }
+
+    // MARK: - Progress (training contracts)
+
+    /// The exercises a training-contract session's progress rides on
+    /// (`advances_module`): what "done as written" confirms.
+    private var progressingExercises: [String] {
+        currentSession.exercises.compactMap { ea in
+            guard case .bool(true)? = ea.load.extra["advances_module"], let id = ea.exercise?.id else { return nil }
+            return id
+        }
+    }
+
+    /// What the log says about it: clean or not, and the RPE; nil until answered.
+    private var moduleVerdict: (clean: Bool, rpe: Int?)? {
+        guard let first = progressingExercises.first,
+              let perf = appState.sessionLogs[sessionKey]?.exercises[first],
+              let clean = perf.clean else { return nil }
+        return (clean, perf.rpe)
+    }
+
+    private var progressSection: some View {
+        Section {
+            if let verdict = moduleVerdict, !changingVerdict {
+                HStack {
+                    Label(verdict.clean ? "Clean, as written\(verdict.rpe.map { " · RPE \($0)" } ?? "")"
+                                        : "Not clean — the cycle holds here",
+                          systemImage: verdict.clean ? "checkmark.seal.fill" : "minus.circle")
+                        .foregroundStyle(verdict.clean ? Color.green : Color.secondary)
+                    Spacer()
+                    Button("Change") { changingVerdict = true }
+                        .font(.caption)
+                }
+            } else {
+                Text("Done as written? A clean session at RPE 7 or below moves each module on when the program is next rebuilt.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Stepper("RPE \(confirmRpe)", value: $confirmRpe, in: 1...10)
+                HStack {
+                    Button { confirm(clean: true) } label: {
+                        Label("Clean, as written", systemImage: "checkmark.seal")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    Button("Not clean") { confirm(clean: false) }
+                        .buttonStyle(.bordered)
+                }
+                .disabled(isConfirming)
+            }
+            if confirmFailed {
+                Text("Not saved — try again when online.")
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
+        } header: {
+            Text("Progress")
+        }
+    }
+
+    private func confirm(clean: Bool) {
+        isConfirming = true
+        confirmFailed = false
+        Task {
+            let ok = await appState.confirmSession(sessionKey: sessionKey, clean: clean, rpe: confirmRpe)
+            confirmFailed = !ok
+            if ok { changingVerdict = false; AppHaptics.success() }
+            isConfirming = false
+        }
     }
 
     // MARK: - Notes Section

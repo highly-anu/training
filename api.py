@@ -3984,6 +3984,48 @@ def health_upsert_session_by_uid(session_uid: str):
     return _save_session_log(log, {'saved': session_uid, 'sessionKey': log['sessionKey']})
 
 
+@app.post('/api/health/sessions/<path:session_key>/confirm')
+@require_auth
+def health_confirm_session(session_key: str):
+    """"Done as written": {clean: bool, rpe: 1-10} for a training-contract
+    session (Wildman, BJJ). Writes each progressing exercise's prescribed
+    rounds or seconds with the answer (src/training_contract
+    .confirmation_outcomes), merged into its log, and completes the session if
+    it was not. Only a clean session at or below the module's RPE advances it
+    when the program is next regenerated (`confirmed_state`); a watch-recorded
+    or linked workout logs no per-exercise outcome, so none ever did.
+
+    404 when the key names no session of the current program; 422 when the
+    session has no modules or the answer is malformed."""
+    from src import program_history, training_contract
+    from src.db import get_user_program
+    body = request.get_json(silent=True) or {}
+    clean, rpe = body.get('clean'), body.get('rpe')
+    if not isinstance(clean, bool) or (rpe is not None and (isinstance(rpe, bool) or not isinstance(rpe, int)
+                                                           or not 1 <= rpe <= 10)):
+        return jsonify({'detail': 'clean (true/false) and rpe (1-10) are required'}), 422
+    uid = program_history.active_session_uid(g.user_id, session_key)
+    planned = program_history.resolve_session(g.user_id, session_uid=uid) if uid else None
+    program = program_history.unwrap(get_user_program(g.user_id) or {})
+    try:
+        session = program['weeks'][planned['week_index']]['schedule'][planned['day_name']][planned['session_index']]
+    except (KeyError, IndexError, TypeError):
+        return jsonify({'detail': f'{session_key!r} is no session of the current program'}), 404
+    if not session.get('modules'):
+        return jsonify({'detail': 'this session has no training-contract modules to confirm'}), 422
+    existing = _health.get_session_log(g.user_id, uid, session_key) or {}
+    log = {'sessionKey': session_key, 'sessionUid': uid, 'source': existing.get('source') or 'web',
+           'notes': existing.get('notes') or '',
+           'exercises': training_contract.confirmation_outcomes(
+               session, clean, rpe, existing.get('exercises'))}
+    if not existing.get('completedAt'):
+        log['completedAt'] = _datetime.now(_timezone.utc).isoformat()
+    # The answer carries what was written, so a client shows it without a reload.
+    return _save_session_log(log, {'confirmed': session_key, 'clean': clean, 'rpe': rpe,
+                                   'exercises': log['exercises'],
+                                   'completedAt': log.get('completedAt') or existing.get('completedAt')})
+
+
 @app.put('/api/health/sessions/<path:session_key>')
 @require_auth
 def health_upsert_session(session_key: str):

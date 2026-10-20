@@ -766,6 +766,11 @@ badly the default misrepresents the method and whether its policies exist:
 8. *ATG, Kelly Starrett, Ido Portal* — after assessment gating, once their
    advancement markers are sourced.
 
+**Package fidelity method (2026-10-20).** `docs/package-fidelity/` is how every
+package is checked and improved from here: the method, `status.yaml` (where each
+package stands and which engine shape it needs, gated by
+`tools/check_package_status.py`) and the source dossiers. The order below follows it.
+
 **5. Wildman follow-ups (from the handoff).** General Practice runs Wildman's Phase II
 since 2026-10-20 (the Nerd Math swing approaches, get-up and deck squat stacked as time
 allows, the snatch once confirmed). Left: his hand-to-hand option (alternating minutes

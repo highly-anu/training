@@ -10,6 +10,7 @@ import { SwapExerciseSheet } from '@/components/session/SwapExerciseSheet'
 import { ExerciseRow } from '@/components/session/ExerciseRow'
 import { SessionNotes } from '@/components/session/SessionNotes'
 import { WorkoutSummaryCard } from '@/components/session/WorkoutSummaryCard'
+import { ModuleProgress } from '@/components/session/ModuleProgress'
 import { useProfileStore } from '@/store/profileStore'
 import { useBioStore } from '@/store/bioStore'
 import { useProgramStore } from '@/store/programStore'
@@ -155,6 +156,14 @@ export function SessionPanel({ program, weekData, weekIndex, day, compact = fals
                   />
                 ))}
               </div>
+
+              {(complete || matchedWorkout) && (
+                <ModuleProgress
+                  session={session}
+                  logKey={getPerformanceLog(`${sessionKey}-${si}`) || si > 0 ? `${sessionKey}-${si}` : sessionKey}
+                  serverKey={`${sessionKey}-${si}`}
+                />
+              )}
 
               {session.complementary_work && session.complementary_work.length > 0 && (
                 <div className="rounded-lg border bg-muted/30 p-4 space-y-3">

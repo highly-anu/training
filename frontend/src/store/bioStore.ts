@@ -67,6 +67,8 @@ interface BioStore {
     outcome: { rounds?: number; durationSec?: number; distanceKm?: number; reps?: number; holdSec?: number; rpe?: ExercisePerformance['rpe']; weightKg?: number }) => void
   /** Tick (or untick) a skill as practised clean. */
   setExerciseClean: (sessionKey: string, exerciseId: string, clean: boolean) => void
+  /** What the server wrote for a session's "done as written" — applied here, not saved again. */
+  applyConfirmation: (sessionKey: string, exercises: Record<string, ExercisePerformance>, completedAt?: string) => void
   setSessionNotes: (sessionKey: string, notes: string, fatigueRating?: FatigueRating) => void
 
   // Daily bio
@@ -395,6 +397,17 @@ export const useBioStore = create<BioStore>()((set, get) => ({
     if (!match) return undefined
     return importedWorkouts.find((w) => w.id === match.importedWorkoutId)
   },
+
+  applyConfirmation: (sessionKey, exercises, completedAt) =>
+    set((s) => {
+      const existing = s.sessionPerformanceLogs[sessionKey] ?? emptyLog(sessionKey)
+      const updated: SessionPerformanceLog = {
+        ...existing,
+        completedAt: existing.completedAt || completedAt || new Date().toISOString(),
+        exercises: { ...existing.exercises, ...exercises },
+      }
+      return { sessionPerformanceLogs: { ...s.sessionPerformanceLogs, [sessionKey]: updated } }
+    }),
 
   getPerformanceLog: (sessionKey) => get().sessionPerformanceLogs[sessionKey],
 

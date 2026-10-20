@@ -1,54 +1,115 @@
-"""Generate every supported Wildman track/level; reject orphan catalog entries.
+"""Every package's exercises reach a generated program; orphans may only shrink.
 
-A qualified fixture declares every required skill and two matching bells. This
-checks reachability, not whether an arbitrary athlete should perform every lift.
-No logs, persistence, server, or automatic mastery inference is used.
+Generates every philosophy x track x level on two qualified profiles (every
+piece of the package's own equipment, every required skill, two bells; four
+days of 90 minutes and six of 120) and collects what is prescribed. A training
+contract's declared substitutes count (prescribed when an injury or the
+equipment rules the written movement out), and so does every movement of a
+week template's pooled named workout the athlete could be given: a 16-week run
+reaches only part of Horsemen's ~190 workouts, which rotate over a macro run
+two or three times.
+
+An exercise nothing reaches is an orphan: a movement the package describes and
+never prescribes. tools/exercise_coverage_baseline.json records today's per
+package; a new one fails, and --update-baseline records a shrunk list. This
+checks reachability, not whether an arbitrary athlete should do every lift. No
+logs, persistence or server; the generator only.
+
+    python tools/check_exercise_coverage.py [package ...] [--update-baseline]
 """
-from pathlib import Path
+import json
 import sys
+from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from src import generator, goals, loader
+from src import generator, goals, loader  # noqa: E402
+
+BASELINE = Path(__file__).with_name('exercise_coverage_baseline.json')
+PROFILES = ((4, 90), (6, 120))
 
 
-def run():
-    _, catalogs = loader.load_all_exercises()
-    catalog = catalogs['wildman_kettlebell']
-    frameworks = list(loader.load_all_frameworks().values())
-    equipment = sorted({item for e in catalog.values() for item in e.get('equipment', [])})
-    philosophy = loader.load_philosophy('wildman_kettlebell')
-    used = set()
-    print('Track | Level | Weeks | Sessions | Unique / catalog')
-    for track in philosophy['tracks']:
-        goal = goals.philosophy_to_goal(philosophy['id'], frameworks, track['id'])
-        contract = goal['training_contract']
-        for level in ('novice', 'intermediate', 'advanced', 'elite'):
-            if level not in contract['training_levels']:
-                print(f"{track['id']} | {level} | unsupported")
+def _pooled(framework: dict, archetypes: dict, level: str, equipment: set) -> set:
+    """Movements of the template pools' workouts this level and equipment
+    could be given (src/week_template.py picks them in rotation)."""
+    out = set()
+    for cat in (framework.get('categories') or {}).values():
+        for aid in cat['archetypes']:
+            arch = archetypes.get(aid) or {}
+            if arch.get('training_levels') and level not in arch['training_levels']:
                 continue
-            constraints = dict(equipment=equipment, kettlebell_count=2, training_level=level,
-                days_per_week=4, session_time_minutes=90,
-                mastered_exercises=sorted({eid for m in contract['modules'] for eid in m.get('requires_mastery', [])}))
-            weeks = sum(p['weeks'] for p in goal['phase_sequence'])
-            program = generator.generate(None, constraints, num_weeks=weeks, goal_dict=goal, output_format='dict')
-            if program.get('validation_errors') or len(program['weeks']) != weeks:
-                raise AssertionError(f"{track['id']}/{level}: {program.get('validation_errors')}")
-            sessions = [s for w in program['weeks'] for day in w['schedule'].values() for s in day]
-            ids = {ea['exercise']['id'] for s in sessions for ea in s['exercises'] if ea.get('exercise')}
-            if ids - catalog.keys():
-                raise AssertionError(f'Foreign exercises: {ids - catalog.keys()}')
-            used |= ids
-            # A declared substitute (the goblet squat for a deck squat an injury
-            # rules out) is a path too: the program prescribes it when needed.
-            placed = {m['id'] for s in sessions for m in s.get('modules') or []}
-            used |= {alt for m in contract['modules'] if m['id'] in placed
-                     for b in m['blocks'] for alt in b.get('alternatives') or []}
-            print(f"{track['id']} | {level} | {weeks} | {len(sessions)} | {len(ids)} / {len(catalog)}")
-    orphaned = catalog.keys() - used
-    print(f'Package coverage: {len(used)}/{len(catalog)}; orphaned: {sorted(orphaned)}')
-    if orphaned:
-        raise AssertionError(f'Catalog exercises have no generated program path: {sorted(orphaned)}')
-    return used
+            if not set(arch.get('required_equipment') or []) <= equipment | {'open_space'}:
+                continue
+            out |= {eid for slot in arch.get('slots') or []
+                    for eid in (slot.get('exercise_filter') or {}).get('exercise_ids') or []}
+    return out
+
+
+def reachable(philosophy: dict, catalog: dict, frameworks: dict, archetypes: dict) -> tuple[set, list[str]]:
+    used: set = set()
+    lines = []
+    equipment = sorted({item for e in catalog.values() for item in e.get('equipment', [])} | {'open_space'})
+    for track in philosophy.get('tracks') or []:
+        goal = goals.philosophy_to_goal(philosophy['id'], list(frameworks.values()), track['id'])
+        contract = goal.get('training_contract')
+        levels = contract['training_levels'] if contract else ['novice', 'intermediate', 'advanced', 'elite']
+        weeks = sum(p['weeks'] for p in goal['phase_sequence'])
+        for level in levels:
+            for days, minutes in PROFILES:
+                constraints = dict(
+                    equipment=equipment, kettlebell_count=2, training_level=level,
+                    days_per_week=days, session_time_minutes=minutes,
+                    mastered_exercises=sorted({eid for m in (contract or {}).get('modules', [])
+                                               for eid in m.get('requires_mastery', [])}))
+                program = generator.generate(None, constraints, num_weeks=weeks, goal_dict=goal, output_format='dict')
+                sessions = [s for w in program.get('weeks') or [] for day in w['schedule'].values() for s in day]
+                ids = {ea['exercise']['id'] for s in sessions for ea in s['exercises'] if ea.get('exercise')}
+                if contract:
+                    placed = {m['id'] for s in sessions for m in s.get('modules') or []}
+                    ids |= {alt for m in contract['modules'] if m['id'] in placed
+                            for b in m['blocks'] for alt in b.get('alternatives') or []}
+                for ph in goal['phase_sequence']:
+                    if ph.get('week_templates'):
+                        ids |= _pooled(frameworks.get(ph['framework_id']) or {}, archetypes, level, set(equipment))
+                used |= ids
+                lines.append(f"  {track['id']} | {level} | {days}d {minutes}m | {len(sessions)} sessions | "
+                             f"{len(ids & catalog.keys())} / {len(catalog)}")
+    return used & catalog.keys(), lines
+
+
+def run(packages: list[str] | None = None, update: bool = False) -> dict:
+    _, catalogs = loader.load_all_exercises()
+    frameworks = loader.load_all_frameworks()
+    archetypes = {a['id']: a for a in loader.load_all_archetypes()}
+    baseline = json.loads(BASELINE.read_text()) if BASELINE.exists() else {}
+    orphans: dict = {}
+    new: dict = {}
+    for philosophy in loader.load_philosophies():
+        pkg = philosophy['id']
+        if packages and pkg not in packages:
+            continue
+        catalog = catalogs.get(pkg, {})
+        used, lines = reachable(philosophy, catalog, frameworks, archetypes)
+        orphans[pkg] = sorted(catalog.keys() - used)
+        new[pkg] = sorted(set(orphans[pkg]) - set(baseline.get(pkg, [])))
+        print(f"{pkg}: {len(used)}/{len(catalog)} reachable; orphaned {orphans[pkg] or 'none'}")
+        if '-v' in sys.argv:
+            print('\n'.join(lines))
+    if update:
+        merged = {**baseline, **orphans}
+        BASELINE.write_text(json.dumps(merged, indent=2, sort_keys=True) + '\n')
+        print(f'baseline written: {sum(len(v) for v in merged.values())} orphan(s)')
+        return orphans
+    gone = {pkg: sorted(set(baseline.get(pkg, [])) - set(o)) for pkg, o in orphans.items()}
+    if any(gone.values()):
+        print('no longer orphaned (run --update-baseline to drop them):',
+              {k: v for k, v in gone.items() if v})
+    failing = {k: v for k, v in new.items() if v}
+    if failing:
+        raise AssertionError(f'Catalog exercises with no generated program path: {failing}')
+    print(f'Package coverage: {sum(len(v) for v in orphans.values())} orphan(s), all in the baseline')
+    return orphans
 
 
 if __name__ == '__main__':
-    run()
+    args = [a for a in sys.argv[1:] if not a.startswith('-')]
+    run(args or None, update='--update-baseline' in sys.argv)

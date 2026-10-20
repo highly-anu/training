@@ -778,6 +778,21 @@ final class AppState: ObservableObject {
         await loadProgramAnalytics()
     }
 
+    /// The athlete's answer for a training-contract session (clean or not,
+    /// and the RPE), then the logs read back so the session shows it. False
+    /// when the server did not take it.
+    func confirmSession(sessionKey: String, clean: Bool, rpe: Int?) async -> Bool {
+        guard let api else { return false }
+        do {
+            try await api.confirmSession(sessionKey: sessionKey, clean: clean, rpe: rpe)
+            await loadRecentSessionLogs()
+            return true
+        } catch {
+            AppLogger.logFromBackground("session confirm: failed — \(error.localizedDescription)")
+            return false
+        }
+    }
+
     /// Store what was done for one exercise of a session — sets, or the
     /// slot's currency — locally first, then through the API. A session that
     /// has no log yet gets one without a completion; completing it later

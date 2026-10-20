@@ -145,6 +145,32 @@ def confirmed_state(current: dict, logs: dict, contract: dict) -> dict:
     return state
 
 
+def confirmation_outcomes(session: dict, clean: bool, rpe: int | None,
+                          logged: dict | None = None) -> dict:
+    """What "done as written" logs for a session's modules: each progressing
+    exercise's prescribed rounds or seconds (the module record's
+    `requirements`), whether it was clean, and the RPE — merged into whatever
+    was logged for it already (sets, a bell), which wins where it says more.
+
+    The athlete's one-tap answer after a session: a watch-recorded or linked
+    workout logs no per-exercise outcome, so without it no exposure was ever
+    confirmed and every regenerate started each cycle again (2026-10-20)."""
+    logged = logged or {}
+    out: dict = {}
+    for record in session.get('modules') or []:
+        for eid, req in (record.get('requirements') or {}).items():
+            entry = dict(logged.get(eid) or {})
+            if req.get('duration_sec'):
+                entry.setdefault('durationSec', req['duration_sec'])
+            else:
+                entry['rounds'] = max(entry.get('rounds') or 0, req.get('rounds') or 1)
+            entry['clean'] = bool(clean)
+            if rpe is not None:
+                entry['rpe'] = rpe
+            out[eid] = entry
+    return out
+
+
 def _cycle(spec: dict, step: int) -> tuple[int, int]:
     """Density first, then volume; exhaustion holds until a new cycle is chosen."""
     rounds, reps, _interval, _cue = _stage(spec, step)
