@@ -709,10 +709,12 @@ Run in CI next to `check_fidelity.py`; its baseline only shrinks. Every step bel
 is judged by it.
 
 **2. Shared fixes for the ten packages still on the old generator (S–M).**
-1. *Injury data that resolves (S, content).* 55 of 63 `modified_exercises` pairs
-   and 94 of 143 `excluded_exercises` name no exercise. Point them at catalog ids
-   (or add the substitutes to the packages that need them) and validate the ids in
-   `validate_entities.py`.
+1. *Injury data that resolves (S, content)* — **done 2026-10-20.** 54 of 63
+   `modified_exercises` pairs and 78 of 143 `excluded_exercises` named no exercise
+   (the "94" first counted here predated Horsemen's full catalog). Every id now names
+   a catalog exercise, each pair is declared together in one package (a program draws
+   only on its own), names the flag's patterns already cover went, and
+   `validate_entities.py` holds both.
 2. *No silent degradation (S).* A session with no exercise left is refused or
    replaced by a declared substitute, never delivered; `EQUIPMENT_SCALED` stops
    promising scaling — the 44 archetypes' `scaling.equipment_limited` becomes

@@ -73,7 +73,16 @@ def reachable(philosophy: dict, catalog: dict, frameworks: dict, archetypes: dic
                 used |= ids
                 lines.append(f"  {track['id']} | {level} | {days}d {minutes}m | {len(sessions)} sessions | "
                              f"{len(ids & catalog.keys())} / {len(catalog)}")
-    return used & catalog.keys(), lines
+    return used, lines
+
+
+def _borrowers(philosophies: list[dict]) -> dict[str, set]:
+    """Package id -> the packages that declare `borrows_from` it."""
+    out: dict = {}
+    for p in philosophies:
+        for entry in p.get('borrows_from') or []:
+            out.setdefault(entry['package'], set()).add(p['id'])
+    return out
 
 
 def run(packages: list[str] | None = None, update: bool = False) -> dict:
@@ -83,12 +92,25 @@ def run(packages: list[str] | None = None, update: bool = False) -> dict:
     baseline = json.loads(BASELINE.read_text()) if BASELINE.exists() else {}
     orphans: dict = {}
     new: dict = {}
-    for philosophy in loader.load_philosophies():
+    philosophies = loader.load_philosophies()
+    borrowers = _borrowers(philosophies)
+    wanted = set(packages) if packages else {p['id'] for p in philosophies}
+    # A package's exercise is reached by its own programs, or by those of a
+    # package that borrows from it (Uphill's strength days prescribe Starting
+    # Strength's lifts).
+    run_for = wanted | {b for pkg in wanted for b in borrowers.get(pkg, ())}
+    reached, logs = {}, {}
+    for philosophy in philosophies:
+        if philosophy['id'] in run_for:
+            reached[philosophy['id']], logs[philosophy['id']] = reachable(
+                philosophy, catalogs.get(philosophy['id'], {}), frameworks, archetypes)
+    for philosophy in philosophies:
         pkg = philosophy['id']
-        if packages and pkg not in packages:
+        if pkg not in wanted:
             continue
         catalog = catalogs.get(pkg, {})
-        used, lines = reachable(philosophy, catalog, frameworks, archetypes)
+        used = (reached[pkg] | set().union(*(reached[b] for b in borrowers.get(pkg, ())))) & catalog.keys()
+        lines = logs[pkg]
         orphans[pkg] = sorted(catalog.keys() - used)
         new[pkg] = sorted(set(orphans[pkg]) - set(baseline.get(pkg, [])))
         print(f"{pkg}: {len(used)}/{len(catalog)} reachable; orphaned {orphans[pkg] or 'none'}")

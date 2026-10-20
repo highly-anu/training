@@ -307,7 +307,8 @@ Two data findings the audit did not have, both from the Dev Lab work:
   `injury_flags.yaml` name an exercise no package declares, so no substitute is ever
   given (Uphill with a knee flag empties its running slots instead of biking); 94 of
   the 143 `excluded_exercises` name nothing either, so protection rests on movement
-  patterns alone.
+  patterns alone. (Recounted 2026-10-20: 54 pairs and 78 excluded ids; fixed the
+  same day, roadmap 9.2.1.)
 - **Constraints degrade silently.** Starting Strength with no equipment returns
   sessions whose every slot is empty, under a warning that "equipment-limited
   scaling" will be used; an intermediate on its novice track gets other sessions

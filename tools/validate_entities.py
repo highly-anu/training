@@ -199,6 +199,42 @@ def _extra_checks(data: dict, schema_filename: str, path: str | None = None) -> 
     return errors
 
 
+def _package_catalogs() -> dict[str, set]:
+    """Each package's exercise ids, with those of the packages it borrows from."""
+    own, borrows = {}, {}
+    for pkg_dir in sorted(glob.glob(os.path.join(_ROOT, 'data', 'packages', '*'))):
+        pkg = os.path.basename(pkg_dir)
+        ex_path = os.path.join(pkg_dir, 'exercises.yaml')
+        if not os.path.exists(ex_path):
+            continue
+        with open(ex_path, encoding='utf-8') as f:
+            data = yaml.safe_load(f) or []
+        items = data if isinstance(data, list) else (data.get('exercises') or [])
+        own[pkg] = {e.get('id') for e in items}
+        with open(os.path.join(pkg_dir, 'philosophy.yaml'), encoding='utf-8') as f:
+            borrows[pkg] = [b['package'] for b in (yaml.safe_load(f) or {}).get('borrows_from') or []]
+    return {pkg: ids.union(*(own.get(b, set()) for b in borrows[pkg])) for pkg, ids in own.items()}
+
+
+def _injury_flag_errors(data: dict) -> list[str]:
+    """Every exercise an injury flag names exists, and each substitution pair
+    is declared together in one package: a program draws only on its own
+    packages, so a pair split across two could never be given."""
+    catalogs = _package_catalogs()
+    every = set().union(*catalogs.values())
+    errors = []
+    for flag in data.get('injury_flags') or []:
+        fid = flag.get('id')
+        for eid in flag.get('excluded_exercises') or []:
+            if eid not in every:
+                errors.append(f"{fid}: excluded exercise {eid!r} is in no package")
+        for mod in flag.get('modified_exercises') or []:
+            was, use = mod.get('instead_of'), mod.get('use')
+            if not any(was in ids and use in ids for ids in catalogs.values()):
+                errors.append(f"{fid}: {was!r} -> {use!r} are not declared together in any package")
+    return errors
+
+
 # ---------------------------------------------------------------------------
 # Validation logic
 # ---------------------------------------------------------------------------
@@ -216,6 +252,9 @@ def validate_file(path: str, verbose: bool = True) -> list[str]:
 
     if data is None:
         return ["File is empty"]
+
+    if os.path.basename(path) == 'injury_flags.yaml':
+        return _injury_flag_errors(data)
 
     schema_filename, is_list_file = _detect_schema(path)
     if schema_filename is None:
