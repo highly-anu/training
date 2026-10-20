@@ -1,0 +1,47 @@
+id: tm_light
+name: Texas Method — Light Day
+modality: max_strength
+category: strength
+duration_estimate_minutes: 60
+required_equipment:
+- barbell
+- rack
+- plates
+applicable_phases:
+- build
+training_levels:
+- intermediate
+sources:
+- Starting Strength
+- Rippetoe
+notes: 'Wednesday (Rippetoe, "The Texas Method"): squat 2×5 at 80 % of Monday''s work
+  weight, the press Monday did not train for three lighter sets, then chin-ups three sets
+  to failure with five minutes between. Active rest: it must not tap into recovery. The
+  training contract prescribes it; these slots describe the session.
+
+  '
+slots:
+- role: squat
+  slot_type: sets_reps
+  sets: 2
+  reps: 5
+  intensity: moderate
+  rest_sec: 180
+  exercise_filter:
+    exercise_ids: [back_squat]
+- role: press
+  slot_type: sets_reps
+  sets: 3
+  reps: 5
+  intensity: moderate
+  rest_sec: 180
+  exercise_filter:
+    exercise_ids: [bench_press, strict_press]
+- role: chin_ups
+  slot_type: sets_reps
+  sets: 3
+  reps: max
+  intensity: bodyweight
+  rest_sec: 300
+  exercise_filter:
+    exercise_ids: [chin_up]

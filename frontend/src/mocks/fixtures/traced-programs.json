@@ -1,13 +1,13 @@
 {
  "_about": "Real /programs/generate?trace=1 answers for the Dev Lab panel test. Re-record with test_devlab_trace.py --record; never edit by hand.",
  "scenarios": {
-  "starting_strength_no_equipment": {
+  "gym_jones_no_equipment": {
    "request": {
-    "philosophy_id": "starting_strength",
+    "philosophy_id": "gym_jones",
     "num_weeks": 1,
     "constraints": {
-     "days_per_week": 3,
-     "session_time_minutes": 60,
+     "days_per_week": 5,
+     "session_time_minutes": 90,
      "avoid_movements": [],
      "periodization_week": 1,
      "fatigue_state": "normal",
@@ -18,97 +18,137 @@
    },
    "response": {
     "goal": {
-     "id": "_phil_starting_strength",
-     "name": "Starting Strength / Mark Rippetoe",
+     "id": "_phil_gym_jones",
+     "name": "Gym Jones / Mark Twight",
      "priorities": {
-      "max_strength": 1.0
+      "max_strength": 0.2857142857142857,
+      "power": 0.14285714285714285,
+      "mixed_modal_conditioning": 0.2857142857142857,
+      "durability": 0.14285714285714285,
+      "aerobic_base": 0.14285714285714285
      },
      "track": {
-      "id": "linear_progression",
-      "name": "Linear Progression Program",
-      "description": "The novice barbell program: three full-body sessions a week, weight on the bar every session, until it stops going up.\n",
-      "philosophy_id": "starting_strength"
+      "id": "block_periodization",
+      "name": "Block Periodization Program",
+      "description": "Twight's sequential blocks for operator fitness: accumulate volume, convert it to intensity, then realise it. Each block is about a month; the cycle repeats.\n",
+      "philosophy_id": "gym_jones"
      },
      "phase_sequence": [
       {
-       "phase_id": "novice_lp",
-       "phase": "build",
-       "weeks": 12,
-       "framework_id": "linear_progression",
-       "name": "Novice Linear Progression",
-       "focus": "Add weight every session",
-       "description": "Squat 3×5 every session, press or bench 3×5 alternating, deadlift 1×5. Each session adds weight — about 5 lb on the squat and deadlift, 2.5 lb on the press. Conditioning stays minimal so recovery goes to the bar. The phase runs until a lift stalls for three consecutive sessions; that is the end of the novice period.\n",
+       "phase_id": "accumulation",
+       "phase": "base",
+       "weeks": 4,
+       "framework_id": "block_periodization",
+       "name": "Accumulation",
+       "focus": "High volume, moderate intensity",
+       "description": "A month of high volume at moderate intensity on the six-day week: strength, circuit and accumulation key days, recovery days between them, one long endurance day. Power-endurance and strength-endurance are the targets; maximal strength and speed are not chased.\n",
        "adaptations": [
-        "Maximal strength in the main barbell lifts",
-        "Technique under progressively heavier loads"
+        "Work capacity",
+        "Strength-endurance and power-endurance base",
+        "Aerobic support for repeat efforts"
        ],
-       "intensity": "Heavy sets of five, every session",
+       "intensity": "Hard/easy alternation at moderate intensity",
        "repeatable": true,
-       "checks": {
-        "archetypes_required": [
-         "3x5_linear",
-         "3x5_linear_b"
-        ],
-        "archetypes_forbidden": [
-         "hlm",
-         "5x5"
-        ]
-       }
+       "tests": [
+        {
+         "archetype": "gym_jones_row_2k_test",
+         "week": "first",
+         "in_place_of": [
+          "mixed_modal_conditioning",
+          "aerobic_base"
+         ]
+        }
+       ]
+      },
+      {
+       "phase_id": "transmutation",
+       "phase": "build",
+       "weeks": 4,
+       "framework_id": "block_periodization",
+       "name": "Transmutation",
+       "focus": "Moderate volume, higher intensity",
+       "description": "Volume comes down and intensity goes up, converting the accumulated capacity into usable power-endurance. Progress one lever at a time: less rest on bodyweight work or more load on barbell and kettlebell work — never both at once.\n",
+       "adaptations": [
+        "Power-endurance",
+        "Relative strength under fatigue"
+       ],
+       "intensity": "Higher; one progression lever at a time",
+       "repeatable": true
+      },
+      {
+       "phase_id": "realization",
+       "phase": "peak",
+       "weeks": 4,
+       "framework_id": "block_periodization",
+       "name": "Realization",
+       "focus": "Low volume, peak performance",
+       "description": "Low volume at peak intensity, so the qualities built in the previous blocks show up as performance. Recovery days stay in place; the mind is trained alongside the body.\n",
+       "adaptations": [
+        "Expressed performance",
+        "Mental durability under load"
+       ],
+       "intensity": "Peak intensity, low volume",
+       "repeatable": true,
+       "tests": [
+        {
+         "archetype": "gym_jones_row_2k_test",
+         "week": "last",
+         "in_place_of": [
+          "mixed_modal_conditioning",
+          "aerobic_base"
+         ]
+        }
+       ]
       }
      ],
      "framework_selection": {
-      "default_framework": "linear_progression",
+      "default_framework": "block_periodization",
       "alternatives": []
      },
      "primary_sources": [
-      "starting_strength"
+      "gym_jones"
      ],
      "minimum_prerequisites": {},
      "incompatible_with": [],
-     "notes": "Strictly a novice-to-early-intermediate barbell methodology. Not designed for concurrent training; Rippetoe explicitly argues against mixing heavy conditioning with linear progression due to recovery interference. Scope limited to strength domains — this philosophy has no conditioning prescription beyond \"don't do much.\" Novice completion benchmarks: squat 1.5× BW, deadlift 2× BW, press 0.75× BW.\n"
+     "notes": "Six-day week: 3 key sessions (strength, circuit, accumulation), 2 recovery sessions, 1 long endurance, 1 full rest. Intensity model is hard/easy alternation — not polarized (no 80/20 split), but structured hard-day/recovery-day cycling. Progression levers are deliberate: reduce rest (bodyweight work) OR increase load (barbell/KB), never both simultaneously. Excessive max strength / max speed development is explicitly de-emphasized; power-endurance and strength-endurance are the primary targets. Operator context: relative strength + aerobic capacity + mental durability. Programs are 1-month blocks, repeatable 2–3× or cycled between Operator I / Operator II.\n"
     },
     "constraints": {
-     "days_per_week": 3,
-     "session_time_minutes": 60,
+     "days_per_week": 5,
+     "session_time_minutes": 90,
      "avoid_movements": [],
      "periodization_week": 1,
      "fatigue_state": "normal",
      "injury_flags": [],
      "equipment": [],
      "training_level": "intermediate",
-     "track_id": "linear_progression"
+     "track_id": "block_periodization"
     },
     "validation": {
      "feasible": true,
      "errors": [],
      "warnings": [
       {
-       "code": "MINIMAL_DAYS",
-       "message": "Running at minimum 3 day(s)/week — lower-priority modalities will be dropped.",
+       "code": "EQUIPMENT_MISSING",
+       "message": "Archetype '2 km Row — Test' requires {'rower'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
-      },
-      {
-       "code": "LEVEL_MISMATCH",
-       "message": "Framework 'Linear Progression (SS)' is intended for novice athletes; this athlete is intermediate.",
-       "suggested_fix": "Choose a framework that lists intermediate in applicable_when."
       }
      ],
      "info": [
       {
        "code": "EQUIPMENT_SCALED",
-       "message": "'3×5 Linear Strength — Session A' will use equipment-limited scaling (missing: {'rack', 'plates', 'barbell'})."
+       "message": "'Gym Jones Accumulation Circuit (Goblet Squat / Bear Crawl / Carry)' will use equipment-limited scaling (missing: {'kettlebell'})."
       },
       {
        "code": "EQUIPMENT_SCALED",
-       "message": "'3×5 Linear Strength — Session B' will use equipment-limited scaling (missing: {'rack', 'plates', 'barbell'})."
+       "message": "'Gym Jones Operator Circuit' will use equipment-limited scaling (missing: {'pull_up_bar', 'plates', 'rower', 'barbell'})."
       },
       {
        "code": "EQUIPMENT_SCALED",
-       "message": "'5×5 Classic Strength Volume' will use equipment-limited scaling (missing: {'rack', 'plates', 'barbell'})."
+       "message": "'Barbell Power Complex (Olympic Lift Derivatives)' will use equipment-limited scaling (missing: {'barbell', 'plates'})."
       },
       {
        "code": "EQUIPMENT_SCALED",
-       "message": "'Heavy/Light/Medium (HLM)' will use equipment-limited scaling (missing: {'rack', 'plates', 'barbell'})."
+       "message": "'EMOM Strength Wave (10×1)' will use equipment-limited scaling (missing: {'rack', 'barbell', 'plates'})."
       }
      ]
     },
@@ -116,156 +156,243 @@
      {
       "week_number": 1,
       "week_in_phase": 1,
-      "phase": "build",
+      "phase": "base",
       "is_deload": false,
-      "framework": "linear_progression",
+      "framework": "block_periodization",
       "schedule": {
        "Monday": [
         {
          "modality": "max_strength",
          "archetype": {
-          "id": "5x5",
-          "name": "5×5 Classic Strength Volume",
+          "id": "gym_jones_operator_strength",
+          "name": "Gym Jones Operator Strength (SL Squat / Step-Up / FLR)",
           "modality": "max_strength",
           "category": "strength",
-          "training_levels": [
-           "intermediate",
-           "advanced"
-          ],
           "duration_estimate_minutes": 60,
           "required_equipment": [
-           "barbell",
-           "rack",
-           "plates"
+           "open_space"
           ],
           "applicable_phases": [
            "base",
            "build",
            "peak",
+           "maintenance",
+           "specific",
            "transition"
           ],
-          "sources": [
-           "Starting Strength",
-           "Gym Jones",
-           "Horsemen"
+          "training_levels": [
+           "intermediate",
+           "advanced",
+           "elite"
           ],
-          "notes": "Five sets of five at approximately 85% 1RM. A proven intermediate strength volume format that accumulates significant total tonnage while staying below true max-effort intensity. Works across the main barbell compound patterns. Rest periods are long enough to ensure quality on every set; this is not a conditioning workout.\n",
+          "sources": [
+           "Gym Jones"
+          ],
+          "notes": "Gym Jones Operator Fitness I and II primary strength session structure. Opens with a wall squat mobility drill, then progresses to the unilateral strength block: single-leg squat (box) or weighted step-up. The session closes with the Front Leaning Rest (FLR) on rings — 300 accumulated seconds of ring support hold as a shoulder and core endurance block. Principle: relative strength over absolute strength. No bilateral barbell work in this template — all primary loading is unilateral.\n",
           "slots": [
            {
-            "role": "primary_compound",
-            "slot_type": "sets_reps",
-            "sets": 5,
-            "reps": 5,
-            "intensity": "heavy",
-            "intensity_pct_1rm": 0.85,
-            "rest_sec": 300,
-            "exercise_filter": {
-             "movement_pattern": "squat",
-             "category": "barbell",
-             "bilateral": true
-            },
-            "notes": "Back squat is the default. Front squat or trap bar can substitute for equipment or injury constraints."
-           },
-           {
-            "role": "secondary_compound",
-            "slot_type": "sets_reps",
-            "sets": 5,
-            "reps": 5,
-            "intensity": "heavy",
-            "intensity_pct_1rm": 0.85,
-            "rest_sec": 240,
-            "exercise_filter": {
-             "movement_pattern": "press",
-             "category": "barbell"
-            },
-            "notes": "Bench press or overhead press. Do not combine two pressing patterns in the same session."
-           },
-           {
-            "role": "primary_pull",
-            "slot_type": "sets_reps",
-            "sets": 5,
-            "reps": 5,
-            "intensity": "heavy",
-            "intensity_pct_1rm": 0.85,
-            "rest_sec": 300,
-            "exercise_filter": {
-             "movement_pattern": "hinge",
-             "category": "barbell",
-             "bilateral": true
-            },
-            "notes": "Conventional or sumo deadlift. Can rotate to Romanian DL for volume phase variation."
-           },
-           {
-            "role": "accessory_pull",
+            "role": "warm_up_mobility",
             "slot_type": "sets_reps",
             "sets": 3,
-            "reps": "8-10",
-            "intensity": "moderate",
-            "intensity_pct_1rm": 0.65,
-            "rest_sec": 90,
+            "reps": 5,
+            "intensity": "low",
             "exercise_filter": {
-             "movement_pattern": "pull"
+             "movement_pattern": "squat",
+             "category": "mobility"
             },
-            "notes": "Rows or pull-ups. Supports posterior chain balance; drop this slot if time-limited."
+            "notes": "Wall squat mobility drill. 3×5 before any lower body session."
+           },
+           {
+            "role": "primary_strength",
+            "slot_type": "sets_reps",
+            "sets": 5,
+            "reps": 5,
+            "intensity": "heavy",
+            "exercise_filter": {
+             "movement_pattern": "squat",
+             "category": "bodyweight"
+            },
+            "notes": "Unilateral squat strength. Single-leg squat (box) 5×5 each side. Progress by lowering box height toward pistol range. If box pistols are mastered, advance to weighted step-up.\n"
+           },
+           {
+            "role": "loaded_step",
+            "slot_type": "sets_reps",
+            "sets": 5,
+            "reps": 2,
+            "intensity": "heavy",
+            "exercise_filter": {
+             "movement_pattern": "step_up"
+            },
+            "notes": "Weighted step-up 5×2 each side at heavy load (work up to 95–135 lb barbell or equivalent DB). Rest 60 sec between sets. Eliminate all trailing-leg assistance.\n"
+           },
+           {
+            "role": "shoulder_core_endurance",
+            "slot_type": "static_hold",
+            "sets": 5,
+            "hold_seconds": 60,
+            "intensity": "medium",
+            "exercise_filter": {
+             "movement_pattern": "isometric",
+             "category": "bodyweight"
+            },
+            "notes": "FLR (Front Leaning Rest) on rings — 300 accumulated seconds. 5×60 sec ring support hold, rings turned out. Rest as needed between sets. If rings are unavailable, substitute plank hold on floor.\n"
            }
           ],
           "scaling": {
            "deload": {
             "volume_multiplier": 0.6,
-            "intensity_pct": 0.9,
-            "notes": "Reduce to 3×5 at 90% of current load. Maintain all movement patterns."
+            "intensity_pct": 0.85,
+            "notes": "Reduce to 3×3 on the strength block. Hold FLR for 3×30 sec. Keep mobility drill unchanged."
            },
            "time_limited": {
             "drop_slots": [
-             "accessory_pull"
+             "loaded_step"
             ],
-            "notes": "Drop accessory work first. If further pressed, reduce primary_pull to 3 sets."
+            "notes": "Drop loaded step-up if time < 40 min. Prioritize mobility + primary unilateral strength + FLR."
            },
            "equipment_limited": {
             "substitutions": [
              {
-              "missing_equipment": "rack",
-              "substitute_approach": "Replace back squat with trap bar deadlift for lower body. Use dumbbell press in place of barbell press."
-             },
-             {
-              "missing_equipment": "barbell",
-              "substitute_approach": "Kettlebell double front squat and double press can approximate the pattern at lower loads. Use heaviest available KB."
+              "missing_equipment": "rings",
+              "substitute_approach": "Substitute plank hold (floor or push-up position) for ring support hold."
              }
             ]
            }
           },
-          "_package": "starting_strength"
+          "_package": "gym_jones"
          },
          "is_deload": false,
          "provenance": {
-          "package": "starting_strength",
+          "package": "gym_jones",
           "borrowed": false
          },
          "exercises": [
           {
-           "exercise": null,
-           "load": {},
-           "slot_role": "primary_compound",
+           "exercise": {
+            "id": "wall_squat",
+            "name": "Wall Squat (Mobility Drill)",
+            "category": "mobility",
+            "modality": [
+             "mobility"
+            ],
+            "equipment": [
+             "none"
+            ],
+            "effort": "low",
+            "bilateral": true,
+            "movement_patterns": [
+             "squat"
+            ],
+            "requires": [],
+            "unlocks": [
+             "single_leg_squat_box"
+            ],
+            "contraindicated_with": [],
+            "progressions": {
+             "depth": "increase_range_of_motion"
+            },
+            "scaling_down": [],
+            "typical_volume": {
+             "sets": 3,
+             "reps": 5
+            },
+            "sources": [
+             "Gym Jones"
+            ],
+            "notes": "Gym Jones warm-up staple used in virtually every strength and circuit session. Stand with toes touching a wall, feet wide. Drop into a squat with knees tracking toes; contact the wall with knees to enforce vertical shin position and upright torso. Hands brace against wall as needed. Builds ankle mobility, hip flexor opening, and thoracic extension. Not a strength exercise — a diagnostic and mobility drill. 2–3 sets of 5 before any lower body session.\n",
+            "_package": "gym_jones",
+            "_packages": [
+             "gym_jones"
+            ]
+           },
+           "load": {
+            "sets": 3,
+            "reps": 5
+           },
+           "slot_role": "warm_up_mobility",
            "slot_type": "sets_reps",
-           "rest_sec": 300,
+           "rest_sec": null,
            "meta": false,
            "injury_skip": false,
            "coverage_gap": false,
-           "equipment_gap": true,
-           "gap_reason": "EQUIPMENT_UNAVAILABLE",
+           "equipment_gap": false,
+           "gap_reason": null,
            "substituted_for": null,
-           "error": "No exercise fits the available equipment",
-           "load_note": null,
-           "notes": "Back squat is the default. Front squat or trap bar can substitute for equipment or injury constraints.",
+           "error": null,
+           "load_note": "Scale reps to ability.",
+           "notes": "Wall squat mobility drill. 3×5 before any lower body session.",
+           "parent_slot_role": null,
+           "skip_exercise": false
+          },
+          {
+           "exercise": {
+            "id": "squat_air",
+            "name": "Air Squat",
+            "category": "bodyweight",
+            "modality": [
+             "movement_skill",
+             "strength_endurance"
+            ],
+            "equipment": [
+             "none"
+            ],
+            "effort": "low",
+            "bilateral": true,
+            "movement_patterns": [
+             "squat"
+            ],
+            "requires": [],
+            "unlocks": [
+             "squat_jump",
+             "pistol_squat"
+            ],
+            "contraindicated_with": [
+             "knee_meniscus_post_op"
+            ],
+            "progressions": {
+             "volume": "increase_reps_per_set",
+             "complexity": "squat_jump"
+            },
+            "scaling_down": [],
+            "typical_volume": {
+             "sets": 3,
+             "reps": 20
+            },
+            "sources": [
+             "CrossFit",
+             "Gym Jones"
+            ],
+            "notes": "CrossFit fundamental movement. Rippetoe squatting standards apply: below parallel, neutral spine, heels flat. Gym Jones warm-up protocol: 2×5 wall squats then 2×10 air squats before loading. Chelsea benchmark: 15 squats per minute EMOM 30 min.\n",
+            "_package": "gym_jones",
+            "_packages": [
+             "gym_jones"
+            ]
+           },
+           "load": {
+            "sets": 5,
+            "reps": 5
+           },
+           "slot_role": "primary_strength",
+           "slot_type": "sets_reps",
+           "rest_sec": null,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": false,
+           "gap_reason": null,
+           "substituted_for": null,
+           "error": null,
+           "load_note": "Scale reps to ability.",
+           "notes": "Unilateral squat strength. Single-leg squat (box) 5×5 each side. Progress by lowering box height toward pistol range. If box pistols are mastered, advance to weighted step-up.\n",
            "parent_slot_role": null,
            "skip_exercise": false
           },
           {
            "exercise": null,
            "load": {},
-           "slot_role": "secondary_compound",
+           "slot_role": "loaded_step",
            "slot_type": "sets_reps",
-           "rest_sec": 240,
+           "rest_sec": null,
            "meta": false,
            "injury_skip": false,
            "coverage_gap": false,
@@ -274,43 +401,69 @@
            "substituted_for": null,
            "error": "No exercise fits the available equipment",
            "load_note": null,
-           "notes": "Bench press or overhead press. Do not combine two pressing patterns in the same session.",
+           "notes": "Weighted step-up 5×2 each side at heavy load (work up to 95–135 lb barbell or equivalent DB). Rest 60 sec between sets. Eliminate all trailing-leg assistance.\n",
            "parent_slot_role": null,
            "skip_exercise": false
           },
           {
-           "exercise": null,
-           "load": {},
-           "slot_role": "primary_pull",
-           "slot_type": "sets_reps",
-           "rest_sec": 300,
+           "exercise": {
+            "id": "plank_hold",
+            "name": "Plank Hold (FLR — Front Leaning Rest)",
+            "category": "bodyweight",
+            "modality": [
+             "durability",
+             "strength_endurance"
+            ],
+            "equipment": [
+             "none"
+            ],
+            "effort": "low",
+            "bilateral": true,
+            "movement_patterns": [
+             "isometric"
+            ],
+            "requires": [],
+            "unlocks": [
+             "side_plank"
+            ],
+            "contraindicated_with": [
+             "wrist_injury"
+            ],
+            "progressions": {
+             "volume": "increase_duration",
+             "load": "add_weight_vest"
+            },
+            "scaling_down": [],
+            "typical_volume": {
+             "sets": 3,
+             "duration_sec": 60
+            },
+            "sources": [
+             "Gym Jones",
+             "CrossFit"
+            ],
+            "notes": "Gym Jones programs 300-second accumulated FLR (Front Leaning Rest) as a core and shoulder endurance component. Maintain neutral spine; do not allow hip sag. Progress toward 5 continuous minutes before loading.\n",
+            "_package": "gym_jones",
+            "_packages": [
+             "gym_jones"
+            ]
+           },
+           "load": {
+            "sets": 5,
+            "hold_seconds": 60
+           },
+           "slot_role": "shoulder_core_endurance",
+           "slot_type": "static_hold",
+           "rest_sec": null,
            "meta": false,
            "injury_skip": false,
            "coverage_gap": false,
-           "equipment_gap": true,
-           "gap_reason": "EQUIPMENT_UNAVAILABLE",
+           "equipment_gap": false,
+           "gap_reason": null,
            "substituted_for": null,
-           "error": "No exercise fits the available equipment",
+           "error": null,
            "load_note": null,
-           "notes": "Conventional or sumo deadlift. Can rotate to Romanian DL for volume phase variation.",
-           "parent_slot_role": null,
-           "skip_exercise": false
-          },
-          {
-           "exercise": null,
-           "load": {},
-           "slot_role": "accessory_pull",
-           "slot_type": "sets_reps",
-           "rest_sec": 90,
-           "meta": false,
-           "injury_skip": false,
-           "coverage_gap": false,
-           "equipment_gap": true,
-           "gap_reason": "EQUIPMENT_UNAVAILABLE",
-           "substituted_for": null,
-           "error": "No exercise fits the available equipment",
-           "load_note": null,
-           "notes": "Rows or pull-ups. Supports posterior chain balance; drop this slot if time-limited.",
+           "notes": "FLR (Front Leaning Rest) on rings — 300 accumulated seconds. 5×60 sec ring support hold, rings turned out. Rest as needed between sets. If rings are unavailable, substitute plank hold on floor.\n",
            "parent_slot_role": null,
            "skip_exercise": false
           }
@@ -318,130 +471,80 @@
          "complementary_work": []
         }
        ],
-       "Tuesday": [],
-       "Wednesday": [
+       "Tuesday": [
         {
-         "modality": "max_strength",
+         "modality": "durability",
          "archetype": {
-          "id": "hlm",
-          "name": "Heavy/Light/Medium (HLM)",
-          "modality": "max_strength",
-          "category": "strength",
-          "training_levels": [
-           "intermediate",
-           "advanced"
-          ],
+          "id": "gym_jones_tgu_recovery",
+          "name": "Gym Jones TGU Recovery (100 Total Reps)",
+          "modality": "durability",
+          "category": "kettlebell",
           "duration_estimate_minutes": 60,
           "required_equipment": [
-           "barbell",
-           "rack",
-           "plates"
+           "kettlebell"
           ],
           "applicable_phases": [
            "base",
            "build",
-           "peak",
-           "transition"
+           "maintenance",
+           "transition",
+           "peak"
+          ],
+          "training_levels": [
+           "intermediate",
+           "advanced",
+           "elite"
           ],
           "sources": [
-           "Starting Strength",
-           "Rippetoe"
+           "Gym Jones"
           ],
-          "notes": "Rippetoe's Heavy/Light/Medium weekly variant. Three training sessions per week on the same movement patterns but at differentiated intensities: Heavy day (Monday) at 90%+, Light day (Wednesday) at 80%, Medium day (Friday) at 85%. This distributes stress and recovery across the week, allows continued practice of patterns at every session, and prevents the repeated-heavy-exposure fatigue of 3×5 run long-term. Particularly useful when the athlete has stalled on linear progression. The three slots below are parameterized for the Heavy day; intensity_pct_1rm values should be scaled by the day modifier at generation time:\n  heavy_day_modifier: 1.00\n  medium_day_modifier: 0.94\n  light_day_modifier: 0.89\n",
+          "notes": "Gym Jones recovery session: 100 total Turkish Get-Up reps at a sub-maximal load (typically 16 kg for advanced athletes; 12 kg for intermediate). Performed at a slow, deliberate pace — this is restorative, not conditioning. Each rep demands full shoulder stability, hip flexor mobility, and joint integrity through a complex multi-position movement. The high rep count at low load flushes the tissues without adding stress load. Twight on TGU recovery: \"Movement quality under fatigue. The fatigue reveals the compensation patterns.\" Take all the rest you need — the goal is 100 quality reps, not speed.\n",
           "slots": [
            {
-            "role": "primary_squat",
+            "role": "tgu_volume",
             "slot_type": "sets_reps",
-            "sets": 3,
+            "sets": 10,
             "reps": 5,
-            "intensity": "heavy",
-            "intensity_pct_1rm": 0.9,
-            "rest_sec": 300,
+            "intensity": "low",
             "exercise_filter": {
-             "movement_pattern": "squat",
-             "category": "barbell",
-             "bilateral": true
+             "movement_pattern": "tgu"
             },
-            "notes": "Heavy day: 3×5 at 90%+. Light day: 3×5 at 80%. Medium day: 3×5 at 85%."
-           },
-           {
-            "role": "upper_press",
-            "slot_type": "sets_reps",
-            "sets": 3,
-            "reps": 5,
-            "intensity": "heavy",
-            "intensity_pct_1rm": 0.9,
-            "rest_sec": 240,
-            "exercise_filter": {
-             "movement_pattern": "press",
-             "category": "barbell"
-            },
-            "notes": "Alternate press and bench across sessions. Intensity follows same H/L/M pattern."
-           },
-           {
-            "role": "primary_pull",
-            "slot_type": "sets_reps",
-            "sets": 1,
-            "reps": 5,
-            "intensity": "heavy",
-            "intensity_pct_1rm": 0.9,
-            "rest_sec": 300,
-            "exercise_filter": {
-             "movement_pattern": "hinge",
-             "category": "barbell",
-             "bilateral": true
-            },
-            "notes": "Single top set deadlift. On Light day deadlift may be replaced with power clean 3×3."
-           },
-           {
-            "role": "accessory_upper",
-            "slot_type": "sets_reps",
-            "sets": 3,
-            "reps": 10,
-            "intensity": "moderate",
-            "intensity_pct_1rm": 0.65,
-            "rest_sec": 90,
-            "exercise_filter": {
-             "movement_pattern": "pull"
-            },
-            "notes": "Chin-ups or rows. Present on all three days; load does not vary with H/L/M."
+            "notes": "10×5 TGU alternating sides (or 10×10 if counting per arm). Use a light bell — this is recovery, not strength. Rest 60–90 sec between sets. Focus on positional quality at each pause point: floor press, half-kneeling, standing. Reach 100 total reps.\n"
            }
           ],
           "scaling": {
            "deload": {
             "volume_multiplier": 0.6,
             "intensity_pct": 0.9,
-            "notes": "Convert all three sessions to Light-day intensity (80%) and reduce sets to 2 per lift."
+            "notes": "Reduce to 60 total reps (6×5 sets). Drop load by one KB size."
            },
            "time_limited": {
-            "drop_slots": [
-             "accessory_upper"
-            ],
-            "notes": "Drop accessory upper work. The three primary slots are non-negotiable for HLM integrity."
+            "drop_slots": [],
+            "notes": "Reduce total reps to 50 (5×5) if session time < 40 min. Maintain movement quality over volume."
            },
            "equipment_limited": {
             "substitutions": [
              {
-              "missing_equipment": "rack",
-              "substitute_approach": "Cannot perform back squat. Substitute goblet squat or trap bar DL for lower. Floor press replaces bench."
+              "missing_equipment": "kettlebell",
+              "substitute_approach": "A dumbbell can substitute for TGU. Grip is different but the movement pattern is preserved."
              }
             ]
            }
           },
-          "_package": "starting_strength"
+          "_package": "gym_jones"
          },
          "is_deload": false,
          "provenance": {
-          "package": "starting_strength",
+          "package": "gym_jones",
           "borrowed": false
          },
          "exercises": [
           {
            "exercise": null,
            "load": {},
-           "slot_role": "primary_squat",
+           "slot_role": "tgu_volume",
            "slot_type": "sets_reps",
-           "rest_sec": 300,
+           "rest_sec": null,
            "meta": false,
            "injury_skip": false,
            "coverage_gap": false,
@@ -450,16 +553,192 @@
            "substituted_for": null,
            "error": "No exercise fits the available equipment",
            "load_note": null,
-           "notes": "Heavy day: 3×5 at 90%+. Light day: 3×5 at 80%. Medium day: 3×5 at 85%.",
+           "notes": "10×5 TGU alternating sides (or 10×10 if counting per arm). Use a light bell — this is recovery, not strength. Rest 60–90 sec between sets. Focus on positional quality at each pause point: floor press, half-kneeling, standing. Reach 100 total reps.\n",
+           "parent_slot_role": null,
+           "skip_exercise": false
+          }
+         ],
+         "complementary_work": []
+        }
+       ],
+       "Wednesday": [
+        {
+         "modality": "power",
+         "archetype": {
+          "id": "barbell_power_complex",
+          "name": "Barbell Power Complex (Olympic Lift Derivatives)",
+          "modality": "power",
+          "category": "strength",
+          "duration_estimate_minutes": 55,
+          "required_equipment": [
+           "barbell",
+           "plates"
+          ],
+          "applicable_phases": [
+           "build",
+           "peak",
+           "maintenance",
+           "base"
+          ],
+          "training_levels": [
+           "intermediate",
+           "advanced",
+           "elite"
+          ],
+          "sources": [
+           "Gym Jones",
+           "Starting Strength — power clean as supplemental lift",
+           "Horsemen GPP"
+          ],
+          "notes": "Barbell power development session built around Olympic lift derivatives: power clean, hang power clean, push press, and pull. These movements develop rate of force development and neuromuscular power in a way that carries over to athletic performance and GPP. Gym Jones uses power cleans as an integral part of strength training — not for competition but for the athletic quality they develop. Load is submaximal; bar speed is the quality metric. Technique prerequisite: athletes must be competent at the hip hinge pattern before performing power cleans. At novice level, default to KB ballistic session instead. Intermediate+ athletes are cleared for barbell power work. Rest fully between power sets (3-4 min) — power drops immediately when fatigue accumulates. Do not rush warm-up sets.\n",
+          "slots": [
+           {
+            "role": "movement_prep",
+            "slot_type": "time_domain",
+            "duration_sec": 300,
+            "intensity": "light",
+            "exercise_filter": {
+             "category": "mobility"
+            },
+            "notes": "5-min targeted prep: thoracic rotation, ankle dorsiflexion, and hip hinge with dowel. Power clean requires full thoracic extension and rack position (front squat depth). Check wrist mobility for rack position.\n"
+           },
+           {
+            "role": "primary_power_pull",
+            "slot_type": "sets_reps",
+            "sets": 5,
+            "reps": 3,
+            "intensity": "heavy",
+            "intensity_pct_1rm": 0.75,
+            "rest_sec": 180,
+            "exercise_filter": {
+             "movement_pattern": "olympic_lift",
+             "category": "barbell"
+            },
+            "notes": "5 × 3 power clean or hang power clean at 70-80% of power clean max. Bar speed is the priority metric — if bar speed slows, stop the set. Selector upgrades novice athletes (hang power clean) to power clean as they accumulate sessions. Reset to the floor each rep; do not touch-and-go — this is a power session, not conditioning.\n"
+           },
+           {
+            "role": "overhead_press_power",
+            "slot_type": "sets_reps",
+            "sets": 4,
+            "reps": 5,
+            "intensity": "heavy",
+            "intensity_pct_1rm": 0.8,
+            "rest_sec": 150,
+            "exercise_filter": {
+             "movement_pattern": "press",
+             "category": "barbell"
+            },
+            "notes": "Push press 4 × 5 at working weight. Push press (leg drive) is preferred over strict press for a power session — the leg drive trains rate of force development through the kinetic chain. Load: the bar should move explosively. If you cannot use leg drive to initiate bar movement, reduce load.\n"
+           },
+           {
+            "role": "posterior_chain_accessory",
+            "slot_type": "sets_reps",
+            "sets": 3,
+            "reps": 8,
+            "intensity": "moderate",
+            "intensity_pct_1rm": 0.65,
+            "rest_sec": 90,
+            "exercise_filter": {
+             "movement_pattern": "hinge",
+             "category": "barbell"
+            },
+            "notes": "Romanian deadlift or conventional deadlift 3 × 8 at moderate load. Posterior chain reinforcement — not the primary focus of this session, so load is sub-maximal. Controlled eccentric (3 sec down).\n"
+           }
+          ],
+          "scaling": {
+           "deload": {
+            "volume_multiplier": 0.6,
+            "intensity_pct": 0.85,
+            "notes": "Reduce power clean to 3 × 2. Drop push press to 3 × 4 at 75%. Drop posterior chain accessory. Maintain bar speed as primary metric even at deload loads.\n"
+           },
+           "time_limited": {
+            "drop_slots": [
+             "posterior_chain_accessory"
+            ],
+            "notes": "Drop the accessory work. Primary + overhead press are the stimulus."
+           },
+           "equipment_limited": {
+            "substitutions": [
+             {
+              "missing_equipment": "barbell",
+              "substitute_approach": "Replace with KB ballistic session (swings, cleans, snatches). KB ballistics train the same hip-drive power quality without a barbell. Use the heaviest available bell for swing/clean work.\n"
+             }
+            ]
+           }
+          },
+          "_package": "gym_jones"
+         },
+         "is_deload": false,
+         "provenance": {
+          "package": "gym_jones",
+          "borrowed": false
+         },
+         "exercises": [
+          {
+           "exercise": {
+            "id": "wall_squat",
+            "name": "Wall Squat (Mobility Drill)",
+            "category": "mobility",
+            "modality": [
+             "mobility"
+            ],
+            "equipment": [
+             "none"
+            ],
+            "effort": "low",
+            "bilateral": true,
+            "movement_patterns": [
+             "squat"
+            ],
+            "requires": [],
+            "unlocks": [
+             "single_leg_squat_box"
+            ],
+            "contraindicated_with": [],
+            "progressions": {
+             "depth": "increase_range_of_motion"
+            },
+            "scaling_down": [],
+            "typical_volume": {
+             "sets": 3,
+             "reps": 5
+            },
+            "sources": [
+             "Gym Jones"
+            ],
+            "notes": "Gym Jones warm-up staple used in virtually every strength and circuit session. Stand with toes touching a wall, feet wide. Drop into a squat with knees tracking toes; contact the wall with knees to enforce vertical shin position and upright torso. Hands brace against wall as needed. Builds ankle mobility, hip flexor opening, and thoracic extension. Not a strength exercise — a diagnostic and mobility drill. 2–3 sets of 5 before any lower body session.\n",
+            "_package": "gym_jones",
+            "_packages": [
+             "gym_jones"
+            ]
+           },
+           "load": {
+            "duration_minutes": 5,
+            "zone_target": "Zone 1-2 (light)",
+            "zone_lower": 1,
+            "zone_upper": 2
+           },
+           "slot_role": "movement_prep",
+           "slot_type": "time_domain",
+           "rest_sec": null,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": false,
+           "gap_reason": null,
+           "substituted_for": null,
+           "error": null,
+           "load_note": null,
+           "notes": "5-min targeted prep: thoracic rotation, ankle dorsiflexion, and hip hinge with dowel. Power clean requires full thoracic extension and rack position (front squat depth). Check wrist mobility for rack position.\n",
            "parent_slot_role": null,
            "skip_exercise": false
           },
           {
            "exercise": null,
            "load": {},
-           "slot_role": "upper_press",
+           "slot_role": "primary_power_pull",
            "slot_type": "sets_reps",
-           "rest_sec": 240,
+           "rest_sec": 180,
            "meta": false,
            "injury_skip": false,
            "coverage_gap": false,
@@ -468,16 +747,16 @@
            "substituted_for": null,
            "error": "No exercise fits the available equipment",
            "load_note": null,
-           "notes": "Alternate press and bench across sessions. Intensity follows same H/L/M pattern.",
+           "notes": "5 × 3 power clean or hang power clean at 70-80% of power clean max. Bar speed is the priority metric — if bar speed slows, stop the set. Selector upgrades novice athletes (hang power clean) to power clean as they accumulate sessions. Reset to the floor each rep; do not touch-and-go — this is a power session, not conditioning.\n",
            "parent_slot_role": null,
            "skip_exercise": false
           },
           {
            "exercise": null,
            "load": {},
-           "slot_role": "primary_pull",
+           "slot_role": "overhead_press_power",
            "slot_type": "sets_reps",
-           "rest_sec": 300,
+           "rest_sec": 150,
            "meta": false,
            "injury_skip": false,
            "coverage_gap": false,
@@ -486,14 +765,14 @@
            "substituted_for": null,
            "error": "No exercise fits the available equipment",
            "load_note": null,
-           "notes": "Single top set deadlift. On Light day deadlift may be replaced with power clean 3×3.",
+           "notes": "Push press 4 × 5 at working weight. Push press (leg drive) is preferred over strict press for a power session — the leg drive trains rate of force development through the kinetic chain. Load: the bar should move explosively. If you cannot use leg drive to initiate bar movement, reduce load.\n",
            "parent_slot_role": null,
            "skip_exercise": false
           },
           {
            "exercise": null,
            "load": {},
-           "slot_role": "accessory_upper",
+           "slot_role": "posterior_chain_accessory",
            "slot_type": "sets_reps",
            "rest_sec": 90,
            "meta": false,
@@ -504,7 +783,7 @@
            "substituted_for": null,
            "error": "No exercise fits the available equipment",
            "load_note": null,
-           "notes": "Chin-ups or rows. Present on all three days; load does not vary with H/L/M.",
+           "notes": "Romanian deadlift or conventional deadlift 3 × 8 at moderate load. Posterior chain reinforcement — not the primary focus of this session, so load is sub-maximal. Controlled eccentric (3 sec down).\n",
            "parent_slot_role": null,
            "skip_exercise": false
           }
@@ -515,132 +794,113 @@
        "Thursday": [],
        "Friday": [
         {
-         "modality": "max_strength",
+         "modality": "mixed_modal_conditioning",
          "archetype": {
-          "id": "5x5",
-          "name": "5×5 Classic Strength Volume",
-          "modality": "max_strength",
-          "category": "strength",
-          "training_levels": [
-           "intermediate",
-           "advanced"
-          ],
-          "duration_estimate_minutes": 60,
+          "id": "gym_jones_accumulation",
+          "name": "Gym Jones Accumulation Circuit (Goblet Squat / Bear Crawl / Carry)",
+          "modality": "mixed_modal_conditioning",
+          "category": "conditioning",
+          "duration_estimate_minutes": 50,
           "required_equipment": [
-           "barbell",
-           "rack",
-           "plates"
+           "kettlebell",
+           "open_space"
           ],
           "applicable_phases": [
            "base",
            "build",
-           "peak",
-           "transition"
+           "maintenance"
+          ],
+          "training_levels": [
+           "intermediate",
+           "advanced",
+           "elite"
           ],
           "sources": [
-           "Starting Strength",
-           "Gym Jones",
-           "Horsemen"
+           "Gym Jones"
           ],
-          "notes": "Five sets of five at approximately 85% 1RM. A proven intermediate strength volume format that accumulates significant total tonnage while staying below true max-effort intensity. Works across the main barbell compound patterns. Rest periods are long enough to ensure quality on every set; this is not a conditioning workout.\n",
+          "notes": "Gym Jones accumulation-style circuit combining a high-rep squat movement, locomotion, and a loaded carry. Emphasis on total volume and time under load rather than maximal intensity. Used as a GPP conditioning day between heavier strength sessions. Movements cycle through lower push, locomotion, and carry patterns. Rest is minimal between movements; take 2–3 min between rounds. Target: 3–5 rounds depending on fitness level.\n",
           "slots": [
            {
-            "role": "primary_compound",
-            "slot_type": "sets_reps",
-            "sets": 5,
-            "reps": 5,
-            "intensity": "heavy",
-            "intensity_pct_1rm": 0.85,
-            "rest_sec": 300,
+            "role": "warm_up",
+            "slot_type": "time_domain",
+            "duration_sec": 480,
+            "intensity": "zone2",
             "exercise_filter": {
-             "movement_pattern": "squat",
-             "category": "barbell",
-             "bilateral": true
+             "category": "aerobic"
             },
-            "notes": "Back squat is the default. Front squat or trap bar can substitute for equipment or injury constraints."
+            "notes": "8-min easy movement prep. Light jogging or dynamic mobility."
            },
            {
-            "role": "secondary_compound",
-            "slot_type": "sets_reps",
-            "sets": 5,
-            "reps": 5,
-            "intensity": "heavy",
-            "intensity_pct_1rm": 0.85,
-            "rest_sec": 240,
-            "exercise_filter": {
-             "movement_pattern": "press",
-             "category": "barbell"
-            },
-            "notes": "Bench press or overhead press. Do not combine two pressing patterns in the same session."
-           },
-           {
-            "role": "primary_pull",
-            "slot_type": "sets_reps",
-            "sets": 5,
-            "reps": 5,
-            "intensity": "heavy",
-            "intensity_pct_1rm": 0.85,
-            "rest_sec": 300,
-            "exercise_filter": {
-             "movement_pattern": "hinge",
-             "category": "barbell",
-             "bilateral": true
-            },
-            "notes": "Conventional or sumo deadlift. Can rotate to Romanian DL for volume phase variation."
-           },
-           {
-            "role": "accessory_pull",
+            "role": "squat_volume",
             "slot_type": "sets_reps",
             "sets": 3,
-            "reps": "8-10",
-            "intensity": "moderate",
-            "intensity_pct_1rm": 0.65,
-            "rest_sec": 90,
+            "reps": 20,
+            "intensity": "medium",
             "exercise_filter": {
-             "movement_pattern": "pull"
+             "movement_pattern": "squat",
+             "category": "kettlebell"
             },
-            "notes": "Rows or pull-ups. Supports posterior chain balance; drop this slot if time-limited."
+            "notes": "High-rep goblet squat with a moderate KB (16–24 kg). 3×20. Accumulate squat volume — this is endurance, not max strength.\n"
+           },
+           {
+            "role": "locomotion_block",
+            "slot_type": "distance",
+            "distance_m": 20,
+            "sets": 3,
+            "intensity": "medium",
+            "exercise_filter": {
+             "movement_pattern": "locomotion",
+             "category": "bodyweight"
+            },
+            "notes": "Bear crawl 3×20 m. Minimal rest between lengths. Builds shoulder stability and hip flexor endurance."
+           },
+           {
+            "role": "carry_finisher",
+            "slot_type": "distance",
+            "distance_m": 40,
+            "sets": 3,
+            "intensity": "medium",
+            "exercise_filter": {
+             "movement_pattern": "farmer_carry"
+            },
+            "notes": "Farmer carry 3×40 m. Use heavy KBs or DBs — challenging but completable. Grip endurance is the limiting factor. Alternate farmer, rack, and overhead carry week to week for variety.\n"
            }
           ],
           "scaling": {
            "deload": {
             "volume_multiplier": 0.6,
-            "intensity_pct": 0.9,
-            "notes": "Reduce to 3×5 at 90% of current load. Maintain all movement patterns."
+            "intensity_pct": 0.85,
+            "notes": "Reduce to 2 rounds. Drop squat reps to 10. Reduce carry distance to 20 m."
            },
            "time_limited": {
             "drop_slots": [
-             "accessory_pull"
+             "carry_finisher"
             ],
-            "notes": "Drop accessory work first. If further pressed, reduce primary_pull to 3 sets."
+            "notes": "Drop carry if session time < 35 min. Prioritize squat volume and locomotion block."
            },
            "equipment_limited": {
             "substitutions": [
              {
-              "missing_equipment": "rack",
-              "substitute_approach": "Replace back squat with trap bar deadlift for lower body. Use dumbbell press in place of barbell press."
-             },
-             {
-              "missing_equipment": "barbell",
-              "substitute_approach": "Kettlebell double front squat and double press can approximate the pattern at lower loads. Use heaviest available KB."
+              "missing_equipment": "kettlebell",
+              "substitute_approach": "Substitute dumbbell goblet squat. Use dumbbells for farmer carry. All movements can be performed with DB."
              }
             ]
            }
           },
-          "_package": "starting_strength"
+          "_package": "gym_jones"
          },
          "is_deload": false,
          "provenance": {
-          "package": "starting_strength",
+          "package": "gym_jones",
           "borrowed": false
          },
          "exercises": [
           {
            "exercise": null,
            "load": {},
-           "slot_role": "primary_compound",
-           "slot_type": "sets_reps",
-           "rest_sec": 300,
+           "slot_role": "warm_up",
+           "slot_type": "time_domain",
+           "rest_sec": null,
            "meta": false,
            "injury_skip": false,
            "coverage_gap": false,
@@ -649,16 +909,16 @@
            "substituted_for": null,
            "error": "No exercise fits the available equipment",
            "load_note": null,
-           "notes": "Back squat is the default. Front squat or trap bar can substitute for equipment or injury constraints.",
+           "notes": "8-min easy movement prep. Light jogging or dynamic mobility.",
            "parent_slot_role": null,
            "skip_exercise": false
           },
           {
            "exercise": null,
            "load": {},
-           "slot_role": "secondary_compound",
+           "slot_role": "squat_volume",
            "slot_type": "sets_reps",
-           "rest_sec": 240,
+           "rest_sec": null,
            "meta": false,
            "injury_skip": false,
            "coverage_gap": false,
@@ -667,16 +927,82 @@
            "substituted_for": null,
            "error": "No exercise fits the available equipment",
            "load_note": null,
-           "notes": "Bench press or overhead press. Do not combine two pressing patterns in the same session.",
+           "notes": "High-rep goblet squat with a moderate KB (16–24 kg). 3×20. Accumulate squat volume — this is endurance, not max strength.\n",
+           "parent_slot_role": null,
+           "skip_exercise": false
+          },
+          {
+           "exercise": {
+            "id": "lunge",
+            "name": "Walking Lunge",
+            "category": "bodyweight",
+            "modality": [
+             "strength_endurance",
+             "movement_skill"
+            ],
+            "equipment": [
+             "none"
+            ],
+            "effort": "medium",
+            "bilateral": false,
+            "movement_patterns": [
+             "squat",
+             "locomotion"
+            ],
+            "requires": [],
+            "unlocks": [
+             "lunge_jumping",
+             "lunge_overhead"
+            ],
+            "contraindicated_with": [
+             "knee_meniscus_post_op",
+             "patellar_tendinopathy"
+            ],
+            "progressions": {
+             "volume": "increase_reps_per_set",
+             "load": "add_weight_vest",
+             "complexity": "lunge_overhead"
+            },
+            "scaling_down": [],
+            "typical_volume": {
+             "sets": 3,
+             "reps": 20
+            },
+            "sources": [
+             "CrossFit",
+             "Gym Jones"
+            ],
+            "notes": "Alternating legs, stepping forward. Knee tracks over foot, front shin near-vertical. Gym Jones programs 2×20m walking lunges in single-leg accessory work. Bodyweight version is the baseline; progress to overhead or weighted variants.\n",
+            "_package": "gym_jones",
+            "_packages": [
+             "gym_jones"
+            ]
+           },
+           "load": {
+            "distance_m": 20,
+            "intensity": "medium"
+           },
+           "slot_role": "locomotion_block",
+           "slot_type": "distance",
+           "rest_sec": null,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": false,
+           "gap_reason": null,
+           "substituted_for": null,
+           "error": null,
+           "load_note": null,
+           "notes": "Bear crawl 3×20 m. Minimal rest between lengths. Builds shoulder stability and hip flexor endurance.",
            "parent_slot_role": null,
            "skip_exercise": false
           },
           {
            "exercise": null,
            "load": {},
-           "slot_role": "primary_pull",
-           "slot_type": "sets_reps",
-           "rest_sec": 300,
+           "slot_role": "carry_finisher",
+           "slot_type": "distance",
+           "rest_sec": null,
            "meta": false,
            "injury_skip": false,
            "coverage_gap": false,
@@ -685,25 +1011,7 @@
            "substituted_for": null,
            "error": "No exercise fits the available equipment",
            "load_note": null,
-           "notes": "Conventional or sumo deadlift. Can rotate to Romanian DL for volume phase variation.",
-           "parent_slot_role": null,
-           "skip_exercise": false
-          },
-          {
-           "exercise": null,
-           "load": {},
-           "slot_role": "accessory_pull",
-           "slot_type": "sets_reps",
-           "rest_sec": 90,
-           "meta": false,
-           "injury_skip": false,
-           "coverage_gap": false,
-           "equipment_gap": true,
-           "gap_reason": "EQUIPMENT_UNAVAILABLE",
-           "substituted_for": null,
-           "error": "No exercise fits the available equipment",
-           "load_note": null,
-           "notes": "Rows or pull-ups. Supports posterior chain balance; drop this slot if time-limited.",
+           "notes": "Farmer carry 3×40 m. Use heavy KBs or DBs — challenging but completable. Grip endurance is the limiting factor. Alternate farmer, rack, and overhead carry week to week for variety.\n",
            "parent_slot_role": null,
            "skip_exercise": false
           }
@@ -712,138 +1020,414 @@
         }
        ],
        "Saturday": [],
-       "Sunday": []
+       "Sunday": [
+        {
+         "modality": "aerobic_base",
+         "archetype": {
+          "id": "gym_jones_aerobic_recovery",
+          "name": "Gym Jones Aerobic Recovery (Row / Swim / Ruck)",
+          "modality": "aerobic_base",
+          "category": "conditioning",
+          "duration_estimate_minutes": 60,
+          "required_equipment": [],
+          "applicable_phases": [
+           "base",
+           "build",
+           "peak",
+           "taper",
+           "deload",
+           "maintenance",
+           "transition"
+          ],
+          "training_levels": [
+           "novice",
+           "intermediate",
+           "advanced",
+           "elite"
+          ],
+          "sources": [
+           "Gym Jones"
+          ],
+          "notes": "Gym Jones recovery-day format: 60-120 min of easy, continuous, low-impact work at conversational pace. The purpose is circulation and aerobic development between hard sessions, not additional stress — Twight's rule is that the recovery day must actually recover, and an athlete who turns it into a third hard session loses the following week. Row is the default (Concept II is the house ergometer); swim and ruck are equally valid. Damper 4-6, 18-22 SPM.\n",
+          "slots": [
+           {
+            "role": "aerobic_main",
+            "slot_type": "time_domain",
+            "duration_sec": 3600,
+            "intensity": "zone2",
+            "exercise_filter": {
+             "category": "aerobic"
+            },
+            "notes": "60 min continuous, Zone 1-2. Conversational throughout: if you cannot hold a sentence, you are working too hard and this has stopped being a recovery session. Duration scales to the athlete's budget; intensity never does.\n"
+           },
+           {
+            "role": "mobility_finisher",
+            "slot_type": "skill_practice",
+            "duration_minutes": 10,
+            "intensity": "low",
+            "exercise_filter": {
+             "category": "mobility"
+            },
+            "notes": "10 min of unloaded hip, thoracic and shoulder work while warm.\n"
+           }
+          ],
+          "scaling": {
+           "deload": {
+            "volume_multiplier": 0.6,
+            "notes": "35-40 min. Already a low-stress session; shorten rather than soften."
+           },
+           "time_limited": {
+            "drop_slots": [
+             "mobility_finisher"
+            ],
+            "notes": "Keep the aerobic work. Under 30 min the session still has value — unlike the hard sessions, this one does not need a minimum dose to be worth doing.\n"
+           },
+           "equipment_limited": {
+            "substitutions": [
+             {
+              "missing_equipment": "rower",
+              "substitute_approach": "Swim, ruck at 15-20 kg, or bike. Low-impact is the priority since this session sits between hard days.\n"
+             }
+            ]
+           }
+          },
+          "_package": "gym_jones"
+         },
+         "is_deload": false,
+         "provenance": {
+          "package": "gym_jones",
+          "borrowed": false
+         },
+         "exercises": [
+          {
+           "exercise": null,
+           "load": {},
+           "slot_role": "aerobic_main",
+           "slot_type": "time_domain",
+           "rest_sec": null,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": true,
+           "gap_reason": "EQUIPMENT_UNAVAILABLE",
+           "substituted_for": null,
+           "error": "No exercise fits the available equipment",
+           "load_note": null,
+           "notes": "60 min continuous, Zone 1-2. Conversational throughout: if you cannot hold a sentence, you are working too hard and this has stopped being a recovery session. Duration scales to the athlete's budget; intensity never does.\n",
+           "parent_slot_role": null,
+           "skip_exercise": false
+          },
+          {
+           "exercise": {
+            "id": "wall_squat",
+            "name": "Wall Squat (Mobility Drill)",
+            "category": "mobility",
+            "modality": [
+             "mobility"
+            ],
+            "equipment": [
+             "none"
+            ],
+            "effort": "low",
+            "bilateral": true,
+            "movement_patterns": [
+             "squat"
+            ],
+            "requires": [],
+            "unlocks": [
+             "single_leg_squat_box"
+            ],
+            "contraindicated_with": [],
+            "progressions": {
+             "depth": "increase_range_of_motion"
+            },
+            "scaling_down": [],
+            "typical_volume": {
+             "sets": 3,
+             "reps": 5
+            },
+            "sources": [
+             "Gym Jones"
+            ],
+            "notes": "Gym Jones warm-up staple used in virtually every strength and circuit session. Stand with toes touching a wall, feet wide. Drop into a squat with knees tracking toes; contact the wall with knees to enforce vertical shin position and upright torso. Hands brace against wall as needed. Builds ankle mobility, hip flexor opening, and thoracic extension. Not a strength exercise — a diagnostic and mobility drill. 2–3 sets of 5 before any lower body session.\n",
+            "_package": "gym_jones",
+            "_packages": [
+             "gym_jones"
+            ]
+           },
+           "load": {
+            "duration_minutes": 10,
+            "focus": "movement quality over quantity"
+           },
+           "slot_role": "mobility_finisher",
+           "slot_type": "skill_practice",
+           "rest_sec": null,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": false,
+           "gap_reason": null,
+           "substituted_for": null,
+           "error": null,
+           "load_note": null,
+           "notes": "10 min of unloaded hip, thoracic and shoulder work while warm.\n",
+           "parent_slot_role": null,
+           "skip_exercise": false
+          }
+         ],
+         "complementary_work": []
+        }
+       ]
       },
-      "phase_id": "novice_lp",
-      "phase_name": "Novice Linear Progression",
-      "track_id": "linear_progression"
+      "phase_id": "accumulation",
+      "phase_name": "Accumulation",
+      "track_id": "block_periodization",
+      "tests_skipped": [
+       {
+        "archetypes": [
+         "gym_jones_row_2k_test"
+        ],
+        "phase_id": "accumulation",
+        "week_in_phase": 1,
+        "reason": "equipment_gap"
+       }
+      ]
      }
     ],
     "volume_summary": [
      {
       "week_number": 1,
-      "strength_sets": 0,
-      "strength_minutes": 0,
-      "cond_minutes": 0,
-      "dur_minutes": 0,
+      "strength_sets": 13,
+      "strength_minutes": 5,
+      "cond_minutes": 60,
+      "dur_minutes": 60,
       "mob_minutes": 0,
-      "total_minutes": 180
+      "total_minutes": 185
      }
     ],
     "phase_summary": [
      {
-      "phase_id": "novice_lp",
-      "name": "Novice Linear Progression",
-      "kind": "build",
-      "framework_id": "linear_progression",
+      "phase_id": "accumulation",
+      "name": "Accumulation",
+      "kind": "base",
+      "framework_id": "block_periodization",
       "week_start": 1,
       "week_end": 1,
       "weeks": 1,
       "deload_weeks": 0,
       "sessions_per_week": {
-       "max_strength": 3.0
+       "max_strength": 1.0,
+       "durability": 1.0,
+       "power": 1.0,
+       "mixed_modal_conditioning": 1.0,
+       "aerobic_base": 1.0
       },
       "minutes_per_week": {
-       "first": 180,
-       "last": 180,
-       "mean": 180
+       "first": 185,
+       "last": 185,
+       "mean": 185
       },
       "intensity": {
        "zone1_2": 0.0,
-       "zone3": 0.0,
+       "zone3": 0.649,
        "zone4_5": 0.0,
-       "max_effort": 1.0
+       "max_effort": 0.351
       },
       "archetypes": [
        {
-        "id": "5x5",
-        "name": "5×5 Classic Strength Volume",
-        "modality": "max_strength",
-        "sessions": 2,
-        "per_week": 2.0,
+        "id": "barbell_power_complex",
+        "name": "Barbell Power Complex (Olympic Lift Derivatives)",
+        "modality": "power",
+        "sessions": 1,
+        "per_week": 1.0,
         "status": null
        },
        {
-        "id": "hlm",
-        "name": "Heavy/Light/Medium (HLM)",
+        "id": "gym_jones_accumulation",
+        "name": "Gym Jones Accumulation Circuit (Goblet Squat / Bear Crawl / Carry)",
+        "modality": "mixed_modal_conditioning",
+        "sessions": 1,
+        "per_week": 1.0,
+        "status": null
+       },
+       {
+        "id": "gym_jones_aerobic_recovery",
+        "name": "Gym Jones Aerobic Recovery (Row / Swim / Ruck)",
+        "modality": "aerobic_base",
+        "sessions": 1,
+        "per_week": 1.0,
+        "status": null
+       },
+       {
+        "id": "gym_jones_operator_strength",
+        "name": "Gym Jones Operator Strength (SL Squat / Step-Up / FLR)",
         "modality": "max_strength",
+        "sessions": 1,
+        "per_week": 1.0,
+        "status": null
+       },
+       {
+        "id": "gym_jones_tgu_recovery",
+        "name": "Gym Jones TGU Recovery (100 Total Reps)",
+        "modality": "durability",
         "sessions": 1,
         "per_week": 1.0,
         "status": null
        }
       ],
-      "exercises": [],
+      "exercises": [
+       {
+        "id": "wall_squat",
+        "name": "Wall Squat (Mobility Drill)",
+        "modality": "max_strength",
+        "sessions": 3,
+        "per_week": 3.0,
+        "status": null
+       },
+       {
+        "id": "squat_air",
+        "name": "Air Squat",
+        "modality": "max_strength",
+        "sessions": 1,
+        "per_week": 1.0,
+        "status": null
+       },
+       {
+        "id": "plank_hold",
+        "name": "Plank Hold (FLR — Front Leaning Rest)",
+        "modality": "max_strength",
+        "sessions": 1,
+        "per_week": 1.0,
+        "status": null
+       },
+       {
+        "id": "lunge",
+        "name": "Walking Lunge",
+        "modality": "mixed_modal_conditioning",
+        "sessions": 1,
+        "per_week": 1.0,
+        "status": null
+       }
+      ],
       "lifts": [],
-      "tests": [],
+      "tests": [
+       {
+        "week_number": 1,
+        "week_in_phase": 1,
+        "status": "skipped",
+        "reason": "equipment_gap",
+        "archetype": {
+         "id": "gym_jones_row_2k_test",
+         "name": "2 km Row — Test"
+        }
+       }
+      ],
       "dropped": {
        "archetypes": [],
        "exercises": []
       },
-      "changes": []
+      "changes": [
+       "Test skipped: 2 km Row — Test, week 1 (equipment gap)"
+      ]
      }
     ],
     "compromises": [
-     "5×5 Classic Strength Volume: 'primary_compound' slot requires barbell exercises — add barbell to your equipment profile to fill this slot.",
-     "5×5 Classic Strength Volume: 'secondary_compound' slot requires barbell exercises — add barbell to your equipment profile to fill this slot.",
-     "5×5 Classic Strength Volume: 'primary_pull' slot requires barbell exercises — add barbell to your equipment profile to fill this slot.",
-     "5×5 Classic Strength Volume: 'accessory_pull' slot skipped — no matching exercises found for current equipment and training level.",
-     "Heavy/Light/Medium (HLM): 'primary_squat' slot requires barbell exercises — add barbell to your equipment profile to fill this slot.",
-     "Heavy/Light/Medium (HLM): 'upper_press' slot requires barbell exercises — add barbell to your equipment profile to fill this slot.",
-     "Heavy/Light/Medium (HLM): 'primary_pull' slot requires barbell exercises — add barbell to your equipment profile to fill this slot.",
-     "Heavy/Light/Medium (HLM): 'accessory_upper' slot skipped — no matching exercises found for current equipment and training level."
+     "Gym Jones Operator Strength (SL Squat / Step-Up / FLR): 'loaded_step' slot skipped — no matching exercises found for current equipment and training level.",
+     "Gym Jones TGU Recovery (100 Total Reps): 'tgu_volume' slot skipped — no matching exercises found for current equipment and training level.",
+     "Barbell Power Complex (Olympic Lift Derivatives): 'primary_power_pull' slot requires barbell exercises — add barbell to your equipment profile to fill this slot.",
+     "Barbell Power Complex (Olympic Lift Derivatives): 'overhead_press_power' slot requires barbell exercises — add barbell to your equipment profile to fill this slot.",
+     "Barbell Power Complex (Olympic Lift Derivatives): 'posterior_chain_accessory' slot requires barbell exercises — add barbell to your equipment profile to fill this slot.",
+     "Gym Jones Accumulation Circuit (Goblet Squat / Bear Crawl / Carry): 'warm_up' slot requires aerobic exercises — add aerobic to your equipment profile to fill this slot.",
+     "Gym Jones Accumulation Circuit (Goblet Squat / Bear Crawl / Carry): 'squat_volume' slot requires kettlebell exercises — add kettlebell to your equipment profile to fill this slot.",
+     "Gym Jones Accumulation Circuit (Goblet Squat / Bear Crawl / Carry): 'carry_finisher' slot skipped — no matching exercises found for current equipment and training level.",
+     "Gym Jones Aerobic Recovery (Row / Swim / Ruck): 'aerobic_main' slot requires aerobic exercises — add aerobic to your equipment profile to fill this slot."
     ],
     "coverage_report": {
-     "philosophy": "starting_strength",
+     "philosophy": "gym_jones",
      "strict": true,
      "unfilled_sessions": [],
      "unfilled_slots": [],
      "borrowed_sessions": [],
      "substituted_sessions": [],
      "placed_tests": [],
-     "skipped_tests": []
+     "skipped_tests": [
+      {
+       "week": 1,
+       "archetypes": [
+        "gym_jones_row_2k_test"
+       ],
+       "phase_id": "accumulation",
+       "week_in_phase": 1,
+       "reason": "equipment_gap"
+      }
+     ]
     },
     "generation_trace": {
      "weeks": [
       {
        "week_number": 1,
        "week_in_phase": 1,
-       "phase": "build",
+       "phase": "base",
        "is_deload": false,
        "scheduler": {
         "framework_selection": {
-         "selected_id": "linear_progression",
+         "selected_id": "block_periodization",
          "selection_reason": "phase_framework_override",
-         "phase_framework_id": "linear_progression"
+         "phase_framework_id": "block_periodization"
         },
         "allocation": {
          "phase_priorities": {
-          "max_strength": 1.0
+          "max_strength": 0.2857142857142857,
+          "power": 0.14285714285714285,
+          "mixed_modal_conditioning": 0.2857142857142857,
+          "durability": 0.14285714285714285,
+          "aerobic_base": 0.14285714285714285
          },
          "raw": {
-          "max_strength": 3.0
+          "max_strength": 1.429,
+          "power": 0.714,
+          "mixed_modal_conditioning": 1.429,
+          "durability": 0.714,
+          "aerobic_base": 0.714
          },
          "final": {
-          "max_strength": 3
+          "max_strength": 1,
+          "power": 1,
+          "mixed_modal_conditioning": 1,
+          "durability": 1,
+          "aerobic_base": 1
          }
         },
         "day_assignment": {
          "modality_order": [
-          "max_strength"
+          "max_strength",
+          "power",
+          "mixed_modal_conditioning",
+          "durability",
+          "aerobic_base"
          ],
          "day_pool": [
           1,
+          2,
           3,
-          5
+          5,
+          7
          ],
          "assignments": {
           "Mon": [
            "max_strength"
           ],
+          "Tue": [
+           "durability"
+          ],
           "Wed": [
-           "max_strength"
+           "power"
           ],
           "Fri": [
-           "max_strength"
+           "mixed_modal_conditioning"
+          ],
+          "Sun": [
+           "aerobic_base"
           ]
          }
         },
@@ -855,32 +1439,298 @@
          {
           "modality": "max_strength",
           "archetype": {
-           "selected_id": "5x5",
+           "selected_id": "gym_jones_operator_strength",
            "filter_counts": {
-            "by_modality": 4,
-            "by_phase": 4,
-            "by_level": 2,
-            "by_equipment": 2,
-            "by_duration": 2,
-            "final": 2
+            "by_modality": 2,
+            "by_phase": 1,
+            "by_level": 1,
+            "by_equipment": 1,
+            "by_duration": 1,
+            "final": 1
            },
            "candidates": [
             {
-             "id": "5x5",
-             "name": "5×5 Classic Strength Volume",
-             "score": -30,
+             "id": "gym_jones_operator_strength",
+             "name": "Gym Jones Operator Strength (SL Squat / Step-Up / FLR)",
+             "score": 6,
              "breakdown": {
-              "equipment": 0,
+              "equipment": 6,
               "source": 0,
               "recency": 0,
               "injury_penalty": 0,
-              "total": 0
+              "total": 6
              }
+            }
+           ]
+          },
+          "slots": [
+           {
+            "slot_index": 0,
+            "slot_role": "warm_up_mobility",
+            "slot_type": "sets_reps",
+            "meta": false,
+            "movement_pattern": "squat",
+            "selected_id": "wall_squat",
+            "injury_blocked": false,
+            "filter_counts": {
+             "in_pool": 50,
+             "after_package": 50,
+             "after_equip": 12,
+             "after_filter": 1,
+             "final": 1
             },
+            "candidates": [
+             {
+              "id": "wall_squat",
+              "name": "Wall Squat (Mobility Drill)",
+              "package": "gym_jones",
+              "packages": [
+               "gym_jones"
+              ],
+              "score": 1.0,
+              "breakdown": {
+               "recency_penalty": 0,
+               "unlocks_bonus": 0.5,
+               "pattern_bonus": 0.5
+              }
+             }
+            ]
+           },
+           {
+            "slot_index": 1,
+            "slot_role": "primary_strength",
+            "slot_type": "sets_reps",
+            "meta": false,
+            "movement_pattern": "squat",
+            "selected_id": "squat_air",
+            "injury_blocked": false,
+            "filter_counts": {
+             "in_pool": 50,
+             "after_package": 50,
+             "after_equip": 12,
+             "after_filter": 7,
+             "final": 7
+            },
+            "candidates": [
+             {
+              "id": "squat_air",
+              "name": "Air Squat",
+              "package": "gym_jones",
+              "packages": [
+               "gym_jones"
+              ],
+              "score": 1.0,
+              "breakdown": {
+               "recency_penalty": 0,
+               "unlocks_bonus": 0.5,
+               "pattern_bonus": 0.5
+              }
+             },
+             {
+              "id": "lunge",
+              "name": "Walking Lunge",
+              "package": "gym_jones",
+              "packages": [
+               "gym_jones"
+              ],
+              "score": 1.0,
+              "breakdown": {
+               "recency_penalty": 0,
+               "unlocks_bonus": 0.5,
+               "pattern_bonus": 0.5
+              }
+             },
+             {
+              "id": "single_leg_squat_box",
+              "name": "Single-Leg Squat (Box)",
+              "package": "gym_jones",
+              "packages": [
+               "gym_jones"
+              ],
+              "score": 1.0,
+              "breakdown": {
+               "recency_penalty": 0,
+               "unlocks_bonus": 0.5,
+               "pattern_bonus": 0.5
+              }
+             },
+             {
+              "id": "squat_jump",
+              "name": "Jump Squat",
+              "package": "gym_jones",
+              "packages": [
+               "gym_jones"
+              ],
+              "score": 0.5,
+              "breakdown": {
+               "recency_penalty": 0,
+               "unlocks_bonus": 0,
+               "pattern_bonus": 0.5
+              }
+             },
+             {
+              "id": "lunge_jumping",
+              "name": "Split Jump Lunge",
+              "package": "gym_jones",
+              "packages": [
+               "gym_jones"
+              ],
+              "score": 0.5,
+              "breakdown": {
+               "recency_penalty": 0,
+               "unlocks_bonus": 0,
+               "pattern_bonus": 0.5
+              }
+             },
+             {
+              "id": "lunge_overhead",
+              "name": "Overhead Lunge",
+              "package": "gym_jones",
+              "packages": [
+               "gym_jones"
+              ],
+              "score": 0.5,
+              "breakdown": {
+               "recency_penalty": 0,
+               "unlocks_bonus": 0,
+               "pattern_bonus": 0.5
+              }
+             },
+             {
+              "id": "burpee",
+              "name": "Burpee",
+              "package": "gym_jones",
+              "packages": [
+               "gym_jones"
+              ],
+              "score": 0.5,
+              "breakdown": {
+               "recency_penalty": 0,
+               "unlocks_bonus": 0,
+               "pattern_bonus": 0.5
+              }
+             }
+            ]
+           },
+           {
+            "slot_index": 2,
+            "slot_role": "loaded_step",
+            "slot_type": "sets_reps",
+            "meta": false,
+            "movement_pattern": "step_up",
+            "selected_id": null,
+            "injury_blocked": false,
+            "filter_counts": {
+             "in_pool": 50,
+             "after_package": 50,
+             "after_equip": 12,
+             "after_filter": 0,
+             "final": 0
+            },
+            "candidates": []
+           },
+           {
+            "slot_index": 3,
+            "slot_role": "shoulder_core_endurance",
+            "slot_type": "static_hold",
+            "meta": false,
+            "movement_pattern": "isometric",
+            "selected_id": "plank_hold",
+            "injury_blocked": false,
+            "filter_counts": {
+             "in_pool": 50,
+             "after_package": 50,
+             "after_equip": 12,
+             "after_filter": 1,
+             "final": 1
+            },
+            "candidates": [
+             {
+              "id": "plank_hold",
+              "name": "Plank Hold (FLR — Front Leaning Rest)",
+              "package": "gym_jones",
+              "packages": [
+               "gym_jones"
+              ],
+              "score": 1.0,
+              "breakdown": {
+               "recency_penalty": 0,
+               "unlocks_bonus": 0.5,
+               "pattern_bonus": 0.5
+              }
+             }
+            ]
+           }
+          ],
+          "progression": [
+           {
+            "exercise_id": "wall_squat",
+            "exercise_name": "Wall Squat (Mobility Drill)",
+            "slot_role": "warm_up_mobility",
+            "slot_type": "sets_reps",
+            "model": "linear_load",
+            "week": 1,
+            "phase": "base",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "sets": 3,
+             "reps": 5,
+             "load_note": "Scale reps to ability."
+            }
+           },
+           {
+            "exercise_id": "squat_air",
+            "exercise_name": "Air Squat",
+            "slot_role": "primary_strength",
+            "slot_type": "sets_reps",
+            "model": "linear_load",
+            "week": 1,
+            "phase": "base",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "sets": 5,
+             "reps": 5,
+             "load_note": "Scale reps to ability."
+            }
+           },
+           {
+            "exercise_id": "plank_hold",
+            "exercise_name": "Plank Hold (FLR — Front Leaning Rest)",
+            "slot_role": "shoulder_core_endurance",
+            "slot_type": "static_hold",
+            "model": "linear_load",
+            "week": 1,
+            "phase": "base",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "sets": 5,
+             "hold_seconds": 60
+            }
+           }
+          ]
+         }
+        ],
+        "Tuesday": [
+         {
+          "modality": "durability",
+          "archetype": {
+           "selected_id": "gym_jones_tgu_recovery",
+           "filter_counts": {
+            "by_modality": 1,
+            "by_phase": 1,
+            "by_level": 1,
+            "by_equipment": 1,
+            "by_duration": 1,
+            "final": 1
+           },
+           "candidates": [
             {
-             "id": "hlm",
-             "name": "Heavy/Light/Medium (HLM)",
-             "score": -30,
+             "id": "gym_jones_tgu_recovery",
+             "name": "Gym Jones TGU Recovery (100 Total Reps)",
+             "score": 0,
              "breakdown": {
               "equipment": 0,
               "source": 0,
@@ -894,67 +1744,16 @@
           "slots": [
            {
             "slot_index": 0,
-            "slot_role": "primary_compound",
+            "slot_role": "tgu_volume",
             "slot_type": "sets_reps",
             "meta": false,
-            "movement_pattern": "squat",
+            "movement_pattern": "tgu",
             "selected_id": null,
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 13,
-             "after_package": 13,
-             "after_equip": 0,
-             "after_filter": 0,
-             "final": 0
-            },
-            "candidates": []
-           },
-           {
-            "slot_index": 1,
-            "slot_role": "secondary_compound",
-            "slot_type": "sets_reps",
-            "meta": false,
-            "movement_pattern": "press",
-            "selected_id": null,
-            "injury_blocked": false,
-            "filter_counts": {
-             "in_pool": 13,
-             "after_package": 13,
-             "after_equip": 0,
-             "after_filter": 0,
-             "final": 0
-            },
-            "candidates": []
-           },
-           {
-            "slot_index": 2,
-            "slot_role": "primary_pull",
-            "slot_type": "sets_reps",
-            "meta": false,
-            "movement_pattern": "hinge",
-            "selected_id": null,
-            "injury_blocked": false,
-            "filter_counts": {
-             "in_pool": 13,
-             "after_package": 13,
-             "after_equip": 0,
-             "after_filter": 0,
-             "final": 0
-            },
-            "candidates": []
-           },
-           {
-            "slot_index": 3,
-            "slot_role": "accessory_pull",
-            "slot_type": "sets_reps",
-            "meta": false,
-            "movement_pattern": "pull",
-            "selected_id": null,
-            "injury_blocked": false,
-            "filter_counts": {
-             "in_pool": 13,
-             "after_package": 13,
-             "after_equip": 0,
+             "in_pool": 50,
+             "after_package": 50,
+             "after_equip": 12,
              "after_filter": 0,
              "final": 0
             },
@@ -964,24 +1763,23 @@
           "progression": []
          }
         ],
-        "Tuesday": [],
         "Wednesday": [
          {
-          "modality": "max_strength",
+          "modality": "power",
           "archetype": {
-           "selected_id": "hlm",
+           "selected_id": "barbell_power_complex",
            "filter_counts": {
-            "by_modality": 4,
-            "by_phase": 4,
-            "by_level": 2,
-            "by_equipment": 2,
-            "by_duration": 2,
-            "final": 2
+            "by_modality": 1,
+            "by_phase": 1,
+            "by_level": 1,
+            "by_equipment": 1,
+            "by_duration": 1,
+            "final": 1
            },
            "candidates": [
             {
-             "id": "hlm",
-             "name": "Heavy/Light/Medium (HLM)",
+             "id": "barbell_power_complex",
+             "name": "Barbell Power Complex (Olympic Lift Derivatives)",
              "score": -30,
              "breakdown": {
               "equipment": 0,
@@ -990,51 +1788,54 @@
               "injury_penalty": 0,
               "total": 0
              }
-            },
-            {
-             "id": "5x5",
-             "name": "5×5 Classic Strength Volume",
-             "score": -33,
-             "breakdown": {
-              "equipment": 0,
-              "source": 0,
-              "recency": -3,
-              "injury_penalty": 0,
-              "total": -3
-             }
             }
            ]
           },
           "slots": [
            {
             "slot_index": 0,
-            "slot_role": "primary_squat",
-            "slot_type": "sets_reps",
+            "slot_role": "movement_prep",
+            "slot_type": "time_domain",
             "meta": false,
-            "movement_pattern": "squat",
-            "selected_id": null,
+            "movement_pattern": null,
+            "selected_id": "wall_squat",
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 13,
-             "after_package": 13,
-             "after_equip": 0,
-             "after_filter": 0,
-             "final": 0
+             "in_pool": 50,
+             "after_package": 50,
+             "after_equip": 12,
+             "after_filter": 1,
+             "final": 1
             },
-            "candidates": []
+            "candidates": [
+             {
+              "id": "wall_squat",
+              "name": "Wall Squat (Mobility Drill)",
+              "package": "gym_jones",
+              "packages": [
+               "gym_jones"
+              ],
+              "score": -1.0,
+              "breakdown": {
+               "recency_penalty": -2,
+               "unlocks_bonus": 0.5,
+               "pattern_bonus": 0.5
+              }
+             }
+            ]
            },
            {
             "slot_index": 1,
-            "slot_role": "upper_press",
+            "slot_role": "primary_power_pull",
             "slot_type": "sets_reps",
             "meta": false,
-            "movement_pattern": "press",
+            "movement_pattern": "olympic_lift",
             "selected_id": null,
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 13,
-             "after_package": 13,
-             "after_equip": 0,
+             "in_pool": 50,
+             "after_package": 50,
+             "after_equip": 12,
              "after_filter": 0,
              "final": 0
             },
@@ -1042,16 +1843,16 @@
            },
            {
             "slot_index": 2,
-            "slot_role": "primary_pull",
+            "slot_role": "overhead_press_power",
             "slot_type": "sets_reps",
             "meta": false,
-            "movement_pattern": "hinge",
+            "movement_pattern": "press",
             "selected_id": null,
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 13,
-             "after_package": 13,
-             "after_equip": 0,
+             "in_pool": 50,
+             "after_package": 50,
+             "after_equip": 12,
              "after_filter": 0,
              "final": 0
             },
@@ -1059,34 +1860,52 @@
            },
            {
             "slot_index": 3,
-            "slot_role": "accessory_upper",
+            "slot_role": "posterior_chain_accessory",
             "slot_type": "sets_reps",
             "meta": false,
-            "movement_pattern": "pull",
+            "movement_pattern": "hinge",
             "selected_id": null,
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 13,
-             "after_package": 13,
-             "after_equip": 0,
+             "in_pool": 50,
+             "after_package": 50,
+             "after_equip": 12,
              "after_filter": 0,
              "final": 0
             },
             "candidates": []
            }
           ],
-          "progression": []
+          "progression": [
+           {
+            "exercise_id": "wall_squat",
+            "exercise_name": "Wall Squat (Mobility Drill)",
+            "slot_role": "movement_prep",
+            "slot_type": "time_domain",
+            "model": "linear_load",
+            "week": 1,
+            "phase": "base",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "duration_minutes": 5,
+             "zone_target": "Zone 1-2 (light)",
+             "zone_lower": 1,
+             "zone_upper": 2
+            }
+           }
+          ]
          }
         ],
         "Thursday": [],
         "Friday": [
          {
-          "modality": "max_strength",
+          "modality": "mixed_modal_conditioning",
           "archetype": {
-           "selected_id": "5x5",
+           "selected_id": "gym_jones_accumulation",
            "filter_counts": {
-            "by_modality": 4,
-            "by_phase": 4,
+            "by_modality": 2,
+            "by_phase": 2,
             "by_level": 2,
             "by_equipment": 2,
             "by_duration": 2,
@@ -1094,27 +1913,27 @@
            },
            "candidates": [
             {
-             "id": "5x5",
-             "name": "5×5 Classic Strength Volume",
-             "score": -33,
+             "id": "gym_jones_accumulation",
+             "name": "Gym Jones Accumulation Circuit (Goblet Squat / Bear Crawl / Carry)",
+             "score": -10,
              "breakdown": {
               "equipment": 0,
               "source": 0,
-              "recency": -3,
+              "recency": 0,
               "injury_penalty": 0,
-              "total": -3
+              "total": 0
              }
             },
             {
-             "id": "hlm",
-             "name": "Heavy/Light/Medium (HLM)",
-             "score": -33,
+             "id": "gym_jones_circuit",
+             "name": "Gym Jones Operator Circuit",
+             "score": -30,
              "breakdown": {
               "equipment": 0,
               "source": 0,
-              "recency": -3,
+              "recency": 0,
               "injury_penalty": 0,
-              "total": -3
+              "total": 0
              }
             }
            ]
@@ -1122,16 +1941,16 @@
           "slots": [
            {
             "slot_index": 0,
-            "slot_role": "primary_compound",
-            "slot_type": "sets_reps",
+            "slot_role": "warm_up",
+            "slot_type": "time_domain",
             "meta": false,
-            "movement_pattern": "squat",
+            "movement_pattern": null,
             "selected_id": null,
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 13,
-             "after_package": 13,
-             "after_equip": 0,
+             "in_pool": 50,
+             "after_package": 50,
+             "after_equip": 12,
              "after_filter": 0,
              "final": 0
             },
@@ -1139,16 +1958,16 @@
            },
            {
             "slot_index": 1,
-            "slot_role": "secondary_compound",
+            "slot_role": "squat_volume",
             "slot_type": "sets_reps",
             "meta": false,
-            "movement_pattern": "press",
+            "movement_pattern": "squat",
             "selected_id": null,
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 13,
-             "after_package": 13,
-             "after_equip": 0,
+             "in_pool": 50,
+             "after_package": 50,
+             "after_equip": 12,
              "after_filter": 0,
              "final": 0
             },
@@ -1156,49 +1975,233 @@
            },
            {
             "slot_index": 2,
-            "slot_role": "primary_pull",
-            "slot_type": "sets_reps",
+            "slot_role": "locomotion_block",
+            "slot_type": "distance",
             "meta": false,
-            "movement_pattern": "hinge",
-            "selected_id": null,
+            "movement_pattern": "locomotion",
+            "selected_id": "lunge",
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 13,
-             "after_package": 13,
-             "after_equip": 0,
-             "after_filter": 0,
-             "final": 0
+             "in_pool": 50,
+             "after_package": 50,
+             "after_equip": 12,
+             "after_filter": 5,
+             "final": 5
             },
-            "candidates": []
+            "candidates": [
+             {
+              "id": "lunge",
+              "name": "Walking Lunge",
+              "package": "gym_jones",
+              "packages": [
+               "gym_jones"
+              ],
+              "score": 1.0,
+              "breakdown": {
+               "recency_penalty": 0,
+               "unlocks_bonus": 0.5,
+               "pattern_bonus": 0.5
+              }
+             },
+             {
+              "id": "lunge_jumping",
+              "name": "Split Jump Lunge",
+              "package": "gym_jones",
+              "packages": [
+               "gym_jones"
+              ],
+              "score": 0.5,
+              "breakdown": {
+               "recency_penalty": 0,
+               "unlocks_bonus": 0,
+               "pattern_bonus": 0.5
+              }
+             },
+             {
+              "id": "lunge_overhead",
+              "name": "Overhead Lunge",
+              "package": "gym_jones",
+              "packages": [
+               "gym_jones"
+              ],
+              "score": 0.5,
+              "breakdown": {
+               "recency_penalty": 0,
+               "unlocks_bonus": 0,
+               "pattern_bonus": 0.5
+              }
+             },
+             {
+              "id": "burpee",
+              "name": "Burpee",
+              "package": "gym_jones",
+              "packages": [
+               "gym_jones"
+              ],
+              "score": 0.5,
+              "breakdown": {
+               "recency_penalty": 0,
+               "unlocks_bonus": 0,
+               "pattern_bonus": 0.5
+              }
+             },
+             {
+              "id": "bear_crawl",
+              "name": "Bear Crawl",
+              "package": "gym_jones",
+              "packages": [
+               "gym_jones"
+              ],
+              "score": 0.5,
+              "breakdown": {
+               "recency_penalty": 0,
+               "unlocks_bonus": 0,
+               "pattern_bonus": 0.5
+              }
+             }
+            ]
            },
            {
             "slot_index": 3,
-            "slot_role": "accessory_pull",
-            "slot_type": "sets_reps",
+            "slot_role": "carry_finisher",
+            "slot_type": "distance",
             "meta": false,
-            "movement_pattern": "pull",
+            "movement_pattern": "farmer_carry",
             "selected_id": null,
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 13,
-             "after_package": 13,
-             "after_equip": 0,
+             "in_pool": 50,
+             "after_package": 50,
+             "after_equip": 12,
              "after_filter": 0,
              "final": 0
             },
             "candidates": []
            }
           ],
-          "progression": []
+          "progression": [
+           {
+            "exercise_id": "lunge",
+            "exercise_name": "Walking Lunge",
+            "slot_role": "locomotion_block",
+            "slot_type": "distance",
+            "model": "density",
+            "week": 1,
+            "phase": "base",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "distance_m": 20,
+             "intensity": "medium"
+            }
+           }
+          ]
          }
         ],
         "Saturday": [],
-        "Sunday": []
+        "Sunday": [
+         {
+          "modality": "aerobic_base",
+          "archetype": {
+           "selected_id": "gym_jones_aerobic_recovery",
+           "filter_counts": {
+            "by_modality": 1,
+            "by_phase": 1,
+            "by_level": 1,
+            "by_equipment": 1,
+            "by_duration": 1,
+            "final": 1
+           },
+           "candidates": [
+            {
+             "id": "gym_jones_aerobic_recovery",
+             "name": "Gym Jones Aerobic Recovery (Row / Swim / Ruck)",
+             "score": 6,
+             "breakdown": {
+              "equipment": 6,
+              "source": 0,
+              "recency": 0,
+              "injury_penalty": 0,
+              "total": 6
+             }
+            }
+           ]
+          },
+          "slots": [
+           {
+            "slot_index": 0,
+            "slot_role": "aerobic_main",
+            "slot_type": "time_domain",
+            "meta": false,
+            "movement_pattern": null,
+            "selected_id": null,
+            "injury_blocked": false,
+            "filter_counts": {
+             "in_pool": 50,
+             "after_package": 50,
+             "after_equip": 12,
+             "after_filter": 0,
+             "final": 0
+            },
+            "candidates": []
+           },
+           {
+            "slot_index": 1,
+            "slot_role": "mobility_finisher",
+            "slot_type": "skill_practice",
+            "meta": false,
+            "movement_pattern": null,
+            "selected_id": "wall_squat",
+            "injury_blocked": false,
+            "filter_counts": {
+             "in_pool": 50,
+             "after_package": 50,
+             "after_equip": 12,
+             "after_filter": 1,
+             "final": 1
+            },
+            "candidates": [
+             {
+              "id": "wall_squat",
+              "name": "Wall Squat (Mobility Drill)",
+              "package": "gym_jones",
+              "packages": [
+               "gym_jones"
+              ],
+              "score": -3.0,
+              "breakdown": {
+               "recency_penalty": -4,
+               "unlocks_bonus": 0.5,
+               "pattern_bonus": 0.5
+              }
+             }
+            ]
+           }
+          ],
+          "progression": [
+           {
+            "exercise_id": "wall_squat",
+            "exercise_name": "Wall Squat (Mobility Drill)",
+            "slot_role": "mobility_finisher",
+            "slot_type": "skill_practice",
+            "model": "intensity_split_shift",
+            "week": 1,
+            "phase": "base",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "duration_minutes": 10,
+             "focus": "movement quality over quantity"
+            }
+           }
+          ]
+         }
+        ]
        }
       }
      ],
      "primary_sources": [
-      "starting_strength"
+      "gym_jones"
      ],
      "philosophy_mode": "explicit_goal"
     }
@@ -1629,32 +2632,32 @@
      "warnings": [
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype '2 Minutes' requires {'sandbag', 'box', 'cable_machine', 'tire', 'medicine_ball', 'jump_rope', 'resistance_band', 'hurdles'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype '2 Minutes' requires {'medicine_ball', 'box', 'tire', 'cable_machine', 'resistance_band', 'jump_rope', 'sandbag', 'hurdles'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Bannister' requires {'hurdles', 'tire', 'cable_machine'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Bannister' requires {'cable_machine', 'hurdles', 'tire'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Crazy 8' requires {'agility_ladder', 'box', 'medicine_ball', 'dumbbell', 'parallettes'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Crazy 8' requires {'medicine_ball', 'dumbbell', 'box', 'agility_ladder', 'parallettes'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Double/Doubles' requires {'cable_machine', 'box', 'tire', 'jump_rope', 'rope'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Double/Doubles' requires {'rope', 'box', 'tire', 'cable_machine', 'jump_rope'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Fifty' requires {'jump_rope', 'parallettes', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Fifty' requires {'parallettes', 'jump_rope', 'box'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Mirror' requires {'sandbag', 'dumbbell'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Mirror' requires {'dumbbell', 'sandbag'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -1669,12 +2672,12 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Tens' requires {'box', 'ghd', 'medicine_ball', 'dumbbell', 'parallettes'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Tens' requires {'medicine_ball', 'dumbbell', 'ghd', 'box', 'parallettes'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Triples' requires {'medicine_ball', 'sandbag', 'cable_machine', 'rope'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Triples' requires {'cable_machine', 'medicine_ball', 'rope', 'sandbag'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -1684,7 +2687,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Death to Infidels' requires {'ghd', 'box', 'rings'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Death to Infidels' requires {'rings', 'ghd', 'box'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -1724,7 +2727,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Appeal to God' requires {'ghd', 'rings'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Appeal to God' requires {'rings', 'ghd'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -1754,7 +2757,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'The Cog' requires {'rower', 'dumbbell'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'The Cog' requires {'dumbbell', 'rower'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -1859,7 +2862,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Drunken Lullaby' requires {'sandbag', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Drunken Lullaby' requires {'box', 'sandbag'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -1879,7 +2882,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Girl Farts' requires {'rower', 'dumbbell'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Girl Farts' requires {'dumbbell', 'rower'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -1889,7 +2892,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Lovely Turd' requires {'parallettes', 'sandbag', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Lovely Turd' requires {'parallettes', 'box', 'sandbag'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -1904,7 +2907,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Start Your Face' requires {'box', 'dumbbell'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Start Your Face' requires {'dumbbell', 'box'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -1939,7 +2942,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'George Washington' requires {'ghd', 'rower', 'box', 'rings'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'George Washington' requires {'rings', 'ghd', 'box', 'rower'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -1954,7 +2957,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Till U Collapse' requires {'ghd', 'medicine_ball', 'tire', 'rower'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Till U Collapse' requires {'medicine_ball', 'ghd', 'rower', 'tire'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -1979,27 +2982,27 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Act With a Purpose' requires {'box', 'tire', 'ghd', 'dumbbell', 'parallettes'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Act With a Purpose' requires {'dumbbell', 'ghd', 'box', 'tire', 'parallettes'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Ben Franklin' requires {'ghd', 'box', 'dumbbell'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Ben Franklin' requires {'dumbbell', 'ghd', 'box'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Bloody Nose' requires {'ghd', 'rings'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Bloody Nose' requires {'rings', 'ghd'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Chin Up. Soldier On.' requires {'tire', 'sandbag', 'rings', 'dumbbell'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Chin Up. Soldier On.' requires {'rings', 'dumbbell', 'sandbag', 'tire'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Family Friendly Violence' requires {'tire', 'parallettes', 'dumbbell'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Family Friendly Violence' requires {'dumbbell', 'parallettes', 'tire'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2009,7 +3012,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Honey Butter' requires {'ghd', 'sandbag', 'box', 'dumbbell'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Honey Butter' requires {'dumbbell', 'ghd', 'box', 'sandbag'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2024,12 +3027,12 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Max Out!' requires {'sandbag', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Max Out!' requires {'box', 'sandbag'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Russian Aggression' requires {'box', 'dumbbell'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Russian Aggression' requires {'dumbbell', 'box'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2059,7 +3062,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Get-ups, Burpees and Step-ups' requires {'box', 'dumbbell'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Get-ups, Burpees and Step-ups' requires {'dumbbell', 'box'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2094,7 +3097,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype '10-Minute Step-ups' requires {'box', 'dumbbell'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype '10-Minute Step-ups' requires {'dumbbell', 'box'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2253,8 +3256,8 @@
         {
          "modality": "strength_endurance",
          "archetype": {
-          "id": "hm_500m_lunge",
-          "name": "500 m Lunge",
+          "id": "hm_100_rep_challenge",
+          "name": "100 Rep Challenge",
           "modality": "strength_endurance",
           "category": "gpp_durability",
           "training_levels": [
@@ -2263,30 +3266,36 @@
            "elite"
           ],
           "pool_only": true,
-          "duration_estimate_minutes": 30,
+          "duration_estimate_minutes": 20,
           "slots": [
            {
-            "role": "lunge",
-            "slot_type": "distance",
-            "distance_m": 50,
-            "sets": 10,
+            "role": "big_lift",
+            "slot_type": "sets_reps",
+            "sets": 1,
+            "reps": 100,
             "exercise_filter": {
              "exercise_ids": [
-              "walking_lunge"
-             ],
-             "ordered": true
+              "deadlift",
+              "back_squat",
+              "front_squat",
+              "bench_press",
+              "strict_press",
+              "push_press",
+              "power_clean"
+             ]
             },
-            "notes": "10 x 50 m of walking lunges, changing how the weight is carried every 50 m — suitcase, farmer, overhead, crosswalk — and adding then subtracting weight progressively. The source gives no loads."
+            "load": "50% of 1RM",
+            "notes": "100 reps of any big lift at 50% of its 1RM; the list is the choice of lifts, not an order of preference. The source gives no time."
            }
           ],
           "required_equipment": [
-           "kettlebell",
-           "open_space"
+           "barbell",
+           "plates"
           ],
           "sources": [
            "Horsemen"
           ],
-          "notes": "500 m of walking lunges in ten 50 m legs, the carry changing every leg (suitcase, farmer, overhead and crosswalk) and the weight added then taken away progressively. The source gives no loads and no time; it leaves the weight to the athlete.",
+          "notes": "One hundred reps of any big lift at 50% of 1RM. The source names no lift and gives no time; the deadlift, squats, presses and power clean are offered.",
           "_package": "horsemen_gpp"
          },
          "is_deload": false,
@@ -2299,61 +3308,75 @@
          "pieces": [
           {
            "category": "smmf",
-           "archetype_id": "hm_500m_lunge",
-           "name": "500 m Lunge"
+           "archetype_id": "hm_100_rep_challenge",
+           "name": "100 Rep Challenge"
           }
          ],
          "exercises": [
           {
            "exercise": {
-            "id": "walking_lunge",
-            "named_only": true,
-            "name": "Walking Lunge",
-            "category": "bodyweight",
+            "id": "kb_squat_goblet",
+            "name": "Kettlebell Goblet Squat",
+            "category": "kettlebell",
             "modality": [
              "strength_endurance",
-             "durability"
+             "mobility"
             ],
             "equipment": [
-             "open_space"
+             "kettlebell"
             ],
-            "effort": "medium",
-            "bilateral": false,
+            "effort": "low",
+            "bilateral": true,
             "movement_patterns": [
-             "squat",
-             "locomotion"
+             "squat"
             ],
-            "requires": [],
-            "unlocks": [],
+            "requires": [
+             "hip_hinge"
+            ],
+            "unlocks": [
+             "kb_squat_double",
+             "kb_clean_single"
+            ],
             "contraindicated_with": [
              "knee_meniscus_post_op",
-             "patellar_tendinopathy"
+             "hip_flexor_strain"
             ],
+            "progressions": {
+             "load": "increase_bell_weight",
+             "volume": "increase_reps_per_set",
+             "complexity": "kb_squat_double"
+            },
+            "scaling_down": [],
+            "typical_volume": {
+             "sets": 3,
+             "reps": 10
+            },
             "sources": [
+             "Gym Jones",
              "Horsemen"
             ],
-            "notes": "Lunging for distance. The SMMF 500 m lunge goes 10 x 50 m, adding then subtracting weight and changing how it is carried every 50 m (suitcase, farmer, overhead, crosswalk).",
+            "notes": "Bell held at chest level with both hands, elbows track inside knees. Gym Jones uses goblet squat (25#) in strength day warm-up: 2×5. Excellent teaching tool for squat mechanics. Low technical demand; appropriate as first-session squat pattern.\n",
             "_package": "horsemen_gpp",
             "_packages": [
              "horsemen_gpp"
             ]
            },
            "load": {
-            "distance_m": 50,
-            "sets": 10
+            "sets": 1,
+            "reps": 100
            },
-           "slot_role": "lunge",
-           "slot_type": "distance",
+           "slot_role": "big_lift",
+           "slot_type": "sets_reps",
            "rest_sec": null,
            "meta": false,
            "injury_skip": false,
            "coverage_gap": false,
            "equipment_gap": false,
            "gap_reason": null,
-           "substituted_for": null,
+           "substituted_for": "back_squat",
            "error": null,
-           "load_note": null,
-           "notes": "10 x 50 m of walking lunges, changing how the weight is carried every 50 m — suitcase, farmer, overhead, crosswalk — and adding then subtracting weight progressively. The source gives no loads.",
+           "load_note": "50% of 1RM",
+           "notes": "100 reps of any big lift at 50% of its 1RM; the list is the choice of lifts, not an order of preference. The source gives no time.",
            "parent_slot_role": null,
            "skip_exercise": false
           }
@@ -2370,12 +3393,12 @@
     "volume_summary": [
      {
       "week_number": 1,
-      "strength_sets": 10,
+      "strength_sets": 1,
       "strength_minutes": 0,
       "cond_minutes": 20,
       "dur_minutes": 0,
       "mob_minutes": 0,
-      "total_minutes": 50
+      "total_minutes": 40
      }
     ],
     "phase_summary": [
@@ -2393,17 +3416,25 @@
        "strength_endurance": 1.0
       },
       "minutes_per_week": {
-       "first": 50,
-       "last": 50,
-       "mean": 50
+       "first": 40,
+       "last": 40,
+       "mean": 40
       },
       "intensity": {
        "zone1_2": 0.0,
-       "zone3": 0.4,
+       "zone3": 0.5,
        "zone4_5": 0.0,
-       "max_effort": 0.6
+       "max_effort": 0.5
       },
       "archetypes": [
+       {
+        "id": "hm_100_rep_challenge",
+        "name": "100 Rep Challenge",
+        "modality": "strength_endurance",
+        "sessions": 1,
+        "per_week": 1.0,
+        "status": null
+       },
        {
         "id": "hm_three_mile_run_all_out",
         "name": "3-Mile Run, All Out",
@@ -2411,29 +3442,21 @@
         "sessions": 1,
         "per_week": 1.0,
         "status": null
-       },
-       {
-        "id": "hm_500m_lunge",
-        "name": "500 m Lunge",
-        "modality": "strength_endurance",
-        "sessions": 1,
-        "per_week": 1.0,
-        "status": null
        }
       ],
       "exercises": [
        {
-        "id": "run_tempo_horsemen",
-        "name": "Tempo Run (Zone 3)",
-        "modality": "mixed_modal_conditioning",
+        "id": "kb_squat_goblet",
+        "name": "Kettlebell Goblet Squat",
+        "modality": "strength_endurance",
         "sessions": 1,
         "per_week": 1.0,
         "status": null
        },
        {
-        "id": "walking_lunge",
-        "name": "Walking Lunge",
-        "modality": "strength_endurance",
+        "id": "run_tempo_horsemen",
+        "name": "Tempo Run (Zone 3)",
+        "modality": "mixed_modal_conditioning",
         "sessions": 1,
         "per_week": 1.0,
         "status": null
@@ -2506,9 +3529,9 @@
             "selected_id": "run_tempo_horsemen",
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 31,
-             "after_package": 31,
-             "after_equip": 20,
+             "in_pool": 24,
+             "after_package": 24,
+             "after_equip": 16,
              "after_filter": 1,
              "final": 1
             },
@@ -2555,7 +3578,7 @@
          {
           "modality": "strength_endurance",
           "archetype": {
-           "selected_id": "hm_500m_lunge",
+           "selected_id": "hm_100_rep_challenge",
            "filter_counts": {},
            "candidates": [],
            "selection_reason": "smmf"
@@ -2563,51 +3586,37 @@
           "slots": [
            {
             "slot_index": 0,
-            "slot_role": "lunge",
-            "slot_type": "distance",
+            "slot_role": "big_lift",
+            "slot_type": "sets_reps",
             "meta": false,
             "movement_pattern": null,
-            "selected_id": "walking_lunge",
+            "selected_id": null,
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 32,
-             "after_package": 32,
-             "after_equip": 21,
-             "after_filter": 1,
-             "final": 1
+             "in_pool": 24,
+             "after_package": 24,
+             "after_equip": 16,
+             "after_filter": 0,
+             "final": 0
             },
-            "candidates": [
-             {
-              "id": "walking_lunge",
-              "name": "Walking Lunge",
-              "package": "horsemen_gpp",
-              "packages": [
-               "horsemen_gpp"
-              ],
-              "score": 0,
-              "breakdown": {
-               "recency_penalty": 0,
-               "unlocks_bonus": 0,
-               "pattern_bonus": 0.5
-              }
-             }
-            ]
+            "candidates": []
            }
           ],
           "progression": [
            {
-            "exercise_id": "walking_lunge",
-            "exercise_name": "Walking Lunge",
-            "slot_role": "lunge",
-            "slot_type": "distance",
+            "exercise_id": "kb_squat_goblet",
+            "exercise_name": "Kettlebell Goblet Squat",
+            "slot_role": "big_lift",
+            "slot_type": "sets_reps",
             "model": "as_written",
             "week": 1,
             "phase": "base",
             "level": "intermediate",
             "is_deload": false,
             "output": {
-             "distance_m": 50,
-             "sets": 10
+             "sets": 1,
+             "reps": 100,
+             "load_note": "50% of 1RM"
             }
            }
           ]
@@ -2653,26 +3662,26 @@
      "track": {
       "id": "general_practice",
       "name": "General Practice",
-      "description": "Stable swing and complementary practice modules, twice weekly each on nonconsecutive days. Progression is per successful module exposure, independent of phase names.",
+      "description": "Wildman's Phase II programs on the Tetris of Training — swing, clean and press, Turkish get-up, deck squat and, once confirmed, snatch — each twice a week on nonconsecutive days, as many as the week's time holds. Each runs its Nerd Math cycle at one bell and starts again with a heavier one; progress is per clean session, never by the calendar.",
       "philosophy_id": "wildman_kettlebell"
      },
      "phase_sequence": [
       {
-       "phase_id": "foundations",
-       "phase": "base",
-       "weeks": 6,
+       "phase_id": "build",
+       "phase": "build",
+       "weeks": 16,
        "framework_id": "kb_general_practice",
-       "name": "Foundations",
-       "focus": "Learn and repeat the fundamentals",
-       "description": "Practice the same movements at a controllable bell. Novices use unloaded get-up positions. Do not progress through movements merely because weeks have elapsed.",
+       "name": "Phase II: Build",
+       "focus": "Repeat the fundamentals; cycle each program, then a heavier bell",
+       "description": "The swing runs the Nerd Math program's four approaches: 6 to 20 swings a minute over 10 minutes, then over 20, then start/stop swings in ten and twenty 90-second rounds — sixteen weeks at two sessions a week. Clean and press, get-up and deck squat run their own cycles beside it, as the session time allows; the snatch joins after clean and press once it is confirmed. A cycle finished cleanly is repeated with a heavier bell. Wildman calls Phase II the one you are never done with.",
        "adaptations": [
-        "Repeated skill practice",
-        "Capacity at a stable bell",
-        "Density and volume progression"
+        "Posterior-chain strength and work capacity",
+        "Repeated skill practice at a stable bell",
+        "Density, then volume, then a heavier bell"
        ],
        "intensity": "Clean mechanics, RPE 7 or below; rest within every minute",
+       "repeatable": true,
        "exclude_exercises": [
-        "wk_kb_snatch",
         "wk_kb_half_snatch",
         "kb_jerk_single",
         "kb_jerk_double",
@@ -2684,52 +3693,12 @@
          "kb_double_strength",
          "kb_pentathlon_test"
         ]
-       }
-      },
-      {
-       "phase_id": "ladder",
-       "phase": "build",
-       "weeks": 6,
-       "framework_id": "kb_general_practice",
-       "name": "Density and Volume",
-       "focus": "Advance repetitions, then volume",
-       "description": "Continue each module cycle without resetting it. Forecasts assume clean completion; recorded outcomes decide the next earned prescription. A higher density or volume does not authorize a heavier bell.",
-       "adaptations": [
-        "Repeated skill practice",
-        "Capacity at a stable bell",
-        "Density and volume progression"
-       ],
-       "intensity": "Clean mechanics, RPE 7 or below; rest within every minute",
-       "checks": {
-        "archetypes_forbidden": [
-         "kb_pentathlon_training",
-         "kb_double_strength",
-         "kb_pentathlon_test"
-        ]
-       }
-      },
-      {
-       "phase_id": "practice",
-       "phase": "maintenance",
-       "weeks": 4,
-       "framework_id": "kb_general_practice",
-       "name": "Repeatable Practice",
-       "focus": "Repeat or explicitly choose the next cycle",
-       "description": "Retain movement identity. Repeat at the same bell or explicitly start a new cycle after confirming technique and available equipment. Snatches and jerks require a separate proficiency decision.",
-       "adaptations": [
-        "Repeated skill practice",
-        "Capacity at a stable bell",
-        "Density and volume progression"
-       ],
-       "intensity": "Clean mechanics, RPE 7 or below; rest within every minute",
-       "repeatable": true,
-       "checks": {
-        "archetypes_forbidden": [
-         "kb_pentathlon_training",
-         "kb_double_strength",
-         "kb_pentathlon_test"
-        ]
-       }
+       },
+       "former_ids": [
+        "foundations",
+        "ladder",
+        "practice"
+       ]
       }
      ],
      "framework_selection": {
@@ -2782,7 +3751,7 @@
         "wk_kb_press_single"
        ]
       },
-      "notes": "Repeated single-bell practice in independently progressing modules. Complete the repetitions at the start of each minute and rest for the remainder. Advance only after clean completion at RPE 7 or below. Future exposures are conditional forecasts, not earned progress. Keep the chosen bell throughout the cycle; choosing a heavier bell starts a new cycle explicitly. No snatch, jerk or double-bell progression is inferred from the calendar. Technique practice is an app adaptation.\n",
+      "notes": "Repeated single-bell practice in independently progressing modules. Complete the repetitions at the start of each minute and rest for the remainder. Advance only after clean completion at RPE 7 or below. Future exposures are conditional forecasts, not earned progress. Keep the chosen bell throughout the cycle; choosing a heavier bell starts a new cycle explicitly. No snatch, jerk or double-bell progression is inferred from the calendar.\n",
       "modules": [
        {
         "id": "swing",
@@ -2806,7 +3775,21 @@
          "reps_max": 20,
          "rounds": [
           10,
+          20,
+          10,
           20
+         ],
+         "interval_sec": [
+          60,
+          60,
+          90,
+          90
+         ],
+         "cues": [
+          null,
+          null,
+          "Start/stop: park the bell on the floor between every rep.",
+          "Start/stop: park the bell on the floor between every rep."
          ]
         },
         "blocks": [
@@ -2822,7 +3805,7 @@
           "exercise_id": "wk_kb_swing_two_hand",
           "slot_type": "emom",
           "loaded": true,
-          "notes": "Two-hand swings at the top of each minute; rest for its remainder. Stop if technique or breathing deteriorates."
+          "notes": "Swings at the top of each minute (or round); rest for its remainder. Wildman's most common option alternates minutes of two-hand and hand-to-hand swings once both are clean. Stop if technique or breathing deteriorates."
          },
          {
           "role": "recovery",
@@ -2911,21 +3894,136 @@
           "exercise_id": "wk_kb_clean_single",
           "slot_type": "emom",
           "loaded": true,
-          "notes": "App adaptation: alternate hands each minute; perform clean repetitions, then rest for the remainder. Intermediate entry assumes a proficient single-bell clean."
+          "notes": "Alternate hands each minute; perform clean repetitions, then rest for the remainder. Intermediate entry assumes a proficient single-bell clean."
          },
          {
           "role": "press",
           "exercise_id": "wk_kb_press_single",
           "slot_type": "emom",
           "loaded": true,
-          "notes": "App adaptation: alternate hands each minute; strict presses, no push press or jerk. Repeat the same bell and movement throughout the cycle."
-         },
+          "notes": "Alternate hands each minute; strict presses, no push press or jerk. Repeat the same bell and movement throughout the cycle."
+         }
+        ]
+       },
+       {
+        "id": "getup",
+        "name": "Turkish Get-Up Practice",
+        "archetype_id": "kb_getup_mobility_practice",
+        "modality": "movement_skill",
+        "training_levels": [
+         "intermediate",
+         "advanced",
+         "elite"
+        ],
+        "exposures_per_week": 2,
+        "min_spacing_days": 2,
+        "max_rpe": 7,
+        "optional": true,
+        "may_share_day": true,
+        "deload_keep": 0.5,
+        "progression": {
+         "model": "density_cycle",
+         "reps_start": 1,
+         "reps_step": 1,
+         "reps_max": 1,
+         "rounds": [
+          6,
+          8,
+          10
+         ]
+        },
+        "blocks": [
          {
           "role": "getup",
           "exercise_id": "wk_kb_tgu",
-          "slot_type": "skill_practice",
-          "duration_sec": 120,
-          "notes": "Unloaded get-up positions only; no automatic advancement to a loaded get-up."
+          "slot_type": "emom",
+          "loaded": true,
+          "notes": "One get-up at the top of each minute, alternating sides, at a bell you control through every position."
+         }
+        ]
+       },
+       {
+        "id": "deck_squat",
+        "name": "Deck Squat Practice",
+        "archetype_id": "kb_squat_practice",
+        "modality": "movement_skill",
+        "training_levels": [
+         "novice",
+         "intermediate",
+         "advanced",
+         "elite"
+        ],
+        "exposures_per_week": 2,
+        "min_spacing_days": 2,
+        "max_rpe": 7,
+        "optional": true,
+        "may_share_day": true,
+        "deload_keep": 0.5,
+        "progression": {
+         "model": "density_cycle",
+         "reps_start": 2,
+         "reps_step": 1,
+         "reps_max": 6,
+         "rounds": [
+          10,
+          20
+         ]
+        },
+        "blocks": [
+         {
+          "role": "squat",
+          "exercise_id": "wk_deck_squat",
+          "slot_type": "emom",
+          "progresses": true,
+          "alternatives": [
+           "wk_kb_squat_goblet"
+          ],
+          "notes": "Deck squats at the top of each minute: squat, roll back with the head off the floor, roll forward and stand. Bodyweight until a cycle is clean, then a light bell at the chest."
+         }
+        ]
+       },
+       {
+        "id": "snatch",
+        "name": "Nerd Math Snatch",
+        "archetype_id": "kb_snatch_practice",
+        "modality": "power",
+        "training_levels": [
+         "intermediate",
+         "advanced",
+         "elite"
+        ],
+        "exposures_per_week": 2,
+        "min_spacing_days": 2,
+        "max_rpe": 7,
+        "optional": true,
+        "may_share_day": true,
+        "when_mastered": true,
+        "requires_mastery": [
+         "wk_kb_clean_single",
+         "wk_kb_press_single",
+         "wk_kb_snatch"
+        ],
+        "deload_keep": 0.5,
+        "progression": {
+         "model": "density_cycle",
+         "reps_start": 6,
+         "reps_step": 2,
+         "reps_max": 20,
+         "rounds": [
+          10,
+          20
+         ]
+        },
+        "blocks": [
+         {
+          "role": "snatch",
+          "exercise_id": "wk_kb_snatch",
+          "slot_type": "emom",
+          "loaded": true,
+          "alternatives": [
+           "wk_kb_swing_single_arm"
+          ],
+          "notes": "Alternate hands each minute. Wildman's snatch goal is 200 snatches in 10 minutes — the 10 x 20 that ends the first stage; then the same over 20 minutes. A heavier bell starts a new cycle. Joins after Clean and Press, as he advises."
          }
         ]
        }
@@ -2935,7 +4033,7 @@
       "track_id": "general_practice"
      },
      "incompatible_with": [],
-     "notes": "Executable rules live in training_contract.yaml. General Practice repeats stable single-bell modules; density and volume advance after clean successful exposures. The calendar never earns a harder movement. Forecasts are conditional. Complementary technique and clean/press cycles are app adaptations of public principles, not a purchased Wildman plan. Pentathlon is a separate sport-specific track requiring demonstrated event proficiency."
+     "notes": "Executable rules live in training_contract.yaml. General Practice repeats stable single-bell modules; density and volume advance after clean successful exposures. The calendar never earns a harder movement. Forecasts are conditional. Pentathlon is a separate sport-specific track requiring demonstrated event proficiency."
     },
     "constraints": {
      "days_per_week": 4,
@@ -2961,7 +4059,7 @@
      {
       "week_number": 1,
       "week_in_phase": 1,
-      "phase": "base",
+      "phase": "build",
       "is_deload": false,
       "framework": "kb_general_practice",
       "schedule": {
@@ -2970,10 +4068,10 @@
          "modality": "power",
          "archetype": {
           "id": "kb_ballistic_session",
-          "name": "Nerd Math Two-Hand Swing",
+          "name": "Nerd Math Two-Hand Swing + Deck Squat Practice",
           "_package": "wildman_kettlebell",
           "modality": "power",
-          "duration_estimate_minutes": 15,
+          "duration_estimate_minutes": 25,
           "slots": [
            {
             "role": "swing_prep",
@@ -2989,7 +4087,7 @@
            {
             "role": "swing_main",
             "slot_type": "emom",
-            "notes": "Two-hand swings at the top of each minute; rest for its remainder. Stop if technique or breathing deteriorates.",
+            "notes": "Swings at the top of each minute (or round); rest for its remainder. Wildman's most common option alternates minutes of two-hand and hand-to-hand swings once both are clean. Stop if technique or breathing deteriorates.",
             "exercise_filter": {
              "exercise_ids": [
               "wk_kb_swing_two_hand"
@@ -3007,9 +4105,20 @@
              ]
             },
             "rest_sec": 0
+           },
+           {
+            "role": "deck_squat_squat",
+            "slot_type": "emom",
+            "notes": "Deck squats at the top of each minute: squat, roll back with the head off the floor, roll forward and stand. Bodyweight until a cycle is clean, then a light bell at the chest.",
+            "exercise_filter": {
+             "exercise_ids": [
+              "wk_deck_squat"
+             ]
+            },
+            "rest_sec": 0
            }
           ],
-          "notes": "Repeated single-bell practice in independently progressing modules. Complete the repetitions at the start of each minute and rest for the remainder. Advance only after clean completion at RPE 7 or below. Future exposures are conditional forecasts, not earned progress. Keep the chosen bell throughout the cycle; choosing a heavier bell starts a new cycle explicitly. No snatch, jerk or double-bell progression is inferred from the calendar. Technique practice is an app adaptation.\n",
+          "notes": "Repeated single-bell practice in independently progressing modules. Complete the repetitions at the start of each minute and rest for the remainder. Advance only after clean completion at RPE 7 or below. Future exposures are conditional forecasts, not earned progress. Keep the chosen bell throughout the cycle; choosing a heavier bell starts a new cycle explicitly. No snatch, jerk or double-bell progression is inferred from the calendar.\n",
           "training_levels": [
            "novice",
            "intermediate",
@@ -3030,6 +4139,23 @@
            "max_rpe": 7,
            "requirements": {
             "wk_kb_swing_two_hand": {
+             "rounds": 10,
+             "duration_sec": 0
+            }
+           },
+           "duration_sec": 0
+          },
+          {
+           "id": "deck_squat",
+           "forecast_step": 0,
+           "archetype_id": "kb_squat_practice",
+           "exercise_ids": [
+            "wk_deck_squat"
+           ],
+           "rounds": 10,
+           "max_rpe": 7,
+           "requirements": {
+            "wk_deck_squat": {
              "rounds": 10,
              "duration_sec": 0
             }
@@ -3207,7 +4333,7 @@
            "substituted_for": null,
            "error": null,
            "load_note": "Choose a bell you can control throughout. Record its weight before increasing load.",
-           "notes": "Two-hand swings at the top of each minute; rest for its remainder. Stop if technique or breathing deteriorates.",
+           "notes": "Swings at the top of each minute (or round); rest for its remainder. Wildman's most common option alternates minutes of two-hand and hand-to-hand swings once both are clean. Stop if technique or breathing deteriorates.",
            "parent_slot_role": null,
            "skip_exercise": false
           },
@@ -3288,6 +4414,67 @@
            "notes": "Gentle unloaded or very light shoulder circles; omit external load if fatigued.",
            "parent_slot_role": null,
            "skip_exercise": false
+          },
+          {
+           "exercise": {
+            "id": "wk_deck_squat",
+            "name": "Deck Squat",
+            "category": "kettlebell",
+            "modality": [
+             "movement_skill",
+             "strength_endurance"
+            ],
+            "equipment": [],
+            "effort": "medium",
+            "bilateral": true,
+            "movement_patterns": [
+             "squat"
+            ],
+            "requires": [],
+            "unlocks": [],
+            "contraindicated_with": [
+             "lumbar_disc",
+             "knee_meniscus_post_op"
+            ],
+            "sources": [
+             "Wildman"
+            ],
+            "notes": "Wildman's deck squat: squat down, roll back onto the spine with the head kept off the floor, roll forward and stand straight up out of the squat. Bodyweight first; a kettlebell (or sandbag, medicine ball) held at the chest once the roll and the stand are clean.\n",
+            "_package": "wildman_kettlebell",
+            "_packages": [
+             "wildman_kettlebell"
+            ]
+           },
+           "load": {
+            "target_rounds": 10,
+            "reps_per_round": 2,
+            "work_sec": 60,
+            "rest_sec": 0,
+            "time_minutes": 10,
+            "format": "EMOM",
+            "duration_minutes": 10,
+            "prescription_version": 1,
+            "progression_model": "density_cycle",
+            "module_id": "deck_squat",
+            "forecast_step": 0,
+            "advances_module": true,
+            "conditional": false,
+            "elapsed_sec": 600
+           },
+           "slot_role": "deck_squat_squat",
+           "slot_type": "emom",
+           "rest_sec": 0,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": false,
+           "gap_reason": null,
+           "substituted_for": null,
+           "error": null,
+           "load_note": null,
+           "notes": "Deck squats at the top of each minute: squat, roll back with the head off the floor, roll forward and stand. Bodyweight until a cycle is clean, then a light bell at the chest.",
+           "parent_slot_role": null,
+           "skip_exercise": false
           }
          ],
          "complementary_work": []
@@ -3298,10 +4485,10 @@
          "modality": "power",
          "archetype": {
           "id": "kb_ballistic_session",
-          "name": "Nerd Math Two-Hand Swing",
+          "name": "Nerd Math Two-Hand Swing + Deck Squat Practice",
           "_package": "wildman_kettlebell",
           "modality": "power",
-          "duration_estimate_minutes": 15,
+          "duration_estimate_minutes": 25,
           "slots": [
            {
             "role": "swing_prep",
@@ -3317,7 +4504,7 @@
            {
             "role": "swing_main",
             "slot_type": "emom",
-            "notes": "Two-hand swings at the top of each minute; rest for its remainder. Stop if technique or breathing deteriorates.",
+            "notes": "Swings at the top of each minute (or round); rest for its remainder. Wildman's most common option alternates minutes of two-hand and hand-to-hand swings once both are clean. Stop if technique or breathing deteriorates.",
             "exercise_filter": {
              "exercise_ids": [
               "wk_kb_swing_two_hand"
@@ -3335,9 +4522,20 @@
              ]
             },
             "rest_sec": 0
+           },
+           {
+            "role": "deck_squat_squat",
+            "slot_type": "emom",
+            "notes": "Deck squats at the top of each minute: squat, roll back with the head off the floor, roll forward and stand. Bodyweight until a cycle is clean, then a light bell at the chest.",
+            "exercise_filter": {
+             "exercise_ids": [
+              "wk_deck_squat"
+             ]
+            },
+            "rest_sec": 0
            }
           ],
-          "notes": "Repeated single-bell practice in independently progressing modules. Complete the repetitions at the start of each minute and rest for the remainder. Advance only after clean completion at RPE 7 or below. Future exposures are conditional forecasts, not earned progress. Keep the chosen bell throughout the cycle; choosing a heavier bell starts a new cycle explicitly. No snatch, jerk or double-bell progression is inferred from the calendar. Technique practice is an app adaptation.\n",
+          "notes": "Repeated single-bell practice in independently progressing modules. Complete the repetitions at the start of each minute and rest for the remainder. Advance only after clean completion at RPE 7 or below. Future exposures are conditional forecasts, not earned progress. Keep the chosen bell throughout the cycle; choosing a heavier bell starts a new cycle explicitly. No snatch, jerk or double-bell progression is inferred from the calendar.\n",
           "training_levels": [
            "novice",
            "intermediate",
@@ -3358,6 +4556,23 @@
            "max_rpe": 7,
            "requirements": {
             "wk_kb_swing_two_hand": {
+             "rounds": 10,
+             "duration_sec": 0
+            }
+           },
+           "duration_sec": 0
+          },
+          {
+           "id": "deck_squat",
+           "forecast_step": 1,
+           "archetype_id": "kb_squat_practice",
+           "exercise_ids": [
+            "wk_deck_squat"
+           ],
+           "rounds": 10,
+           "max_rpe": 7,
+           "requirements": {
+            "wk_deck_squat": {
              "rounds": 10,
              "duration_sec": 0
             }
@@ -3535,7 +4750,7 @@
            "substituted_for": null,
            "error": null,
            "load_note": "Choose a bell you can control throughout. Record its weight before increasing load.",
-           "notes": "Two-hand swings at the top of each minute; rest for its remainder. Stop if technique or breathing deteriorates.",
+           "notes": "Swings at the top of each minute (or round); rest for its remainder. Wildman's most common option alternates minutes of two-hand and hand-to-hand swings once both are clean. Stop if technique or breathing deteriorates.",
            "parent_slot_role": null,
            "skip_exercise": false
           },
@@ -3616,6 +4831,67 @@
            "notes": "Gentle unloaded or very light shoulder circles; omit external load if fatigued.",
            "parent_slot_role": null,
            "skip_exercise": false
+          },
+          {
+           "exercise": {
+            "id": "wk_deck_squat",
+            "name": "Deck Squat",
+            "category": "kettlebell",
+            "modality": [
+             "movement_skill",
+             "strength_endurance"
+            ],
+            "equipment": [],
+            "effort": "medium",
+            "bilateral": true,
+            "movement_patterns": [
+             "squat"
+            ],
+            "requires": [],
+            "unlocks": [],
+            "contraindicated_with": [
+             "lumbar_disc",
+             "knee_meniscus_post_op"
+            ],
+            "sources": [
+             "Wildman"
+            ],
+            "notes": "Wildman's deck squat: squat down, roll back onto the spine with the head kept off the floor, roll forward and stand straight up out of the squat. Bodyweight first; a kettlebell (or sandbag, medicine ball) held at the chest once the roll and the stand are clean.\n",
+            "_package": "wildman_kettlebell",
+            "_packages": [
+             "wildman_kettlebell"
+            ]
+           },
+           "load": {
+            "target_rounds": 10,
+            "reps_per_round": 3,
+            "work_sec": 60,
+            "rest_sec": 0,
+            "time_minutes": 10,
+            "format": "EMOM",
+            "duration_minutes": 10,
+            "prescription_version": 1,
+            "progression_model": "density_cycle",
+            "module_id": "deck_squat",
+            "forecast_step": 1,
+            "advances_module": true,
+            "conditional": true,
+            "elapsed_sec": 600
+           },
+           "slot_role": "deck_squat_squat",
+           "slot_type": "emom",
+           "rest_sec": 0,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": false,
+           "gap_reason": null,
+           "substituted_for": null,
+           "error": null,
+           "load_note": null,
+           "notes": "Deck squats at the top of each minute: squat, roll back with the head off the floor, roll forward and stand. Bodyweight until a cycle is clean, then a light bell at the chest.",
+           "parent_slot_role": null,
+           "skip_exercise": false
           }
          ],
          "complementary_work": []
@@ -3626,10 +4902,10 @@
          "modality": "movement_skill",
          "archetype": {
           "id": "kb_clean_press_practice",
-          "name": "Single-Bell Clean and Press Practice",
+          "name": "Single-Bell Clean and Press Practice + Turkish Get-Up Practice",
           "_package": "wildman_kettlebell",
           "modality": "movement_skill",
-          "duration_estimate_minutes": 15,
+          "duration_estimate_minutes": 19,
           "slots": [
            {
             "role": "clean_press_prep",
@@ -3645,7 +4921,7 @@
            {
             "role": "clean_press_clean",
             "slot_type": "emom",
-            "notes": "App adaptation: alternate hands each minute; perform clean repetitions, then rest for the remainder. Intermediate entry assumes a proficient single-bell clean.",
+            "notes": "Alternate hands each minute; perform clean repetitions, then rest for the remainder. Intermediate entry assumes a proficient single-bell clean.",
             "exercise_filter": {
              "exercise_ids": [
               "wk_kb_clean_single"
@@ -3656,7 +4932,7 @@
            {
             "role": "clean_press_press",
             "slot_type": "emom",
-            "notes": "App adaptation: alternate hands each minute; strict presses, no push press or jerk. Repeat the same bell and movement throughout the cycle.",
+            "notes": "Alternate hands each minute; strict presses, no push press or jerk. Repeat the same bell and movement throughout the cycle.",
             "exercise_filter": {
              "exercise_ids": [
               "wk_kb_press_single"
@@ -3665,9 +4941,9 @@
             "rest_sec": 0
            },
            {
-            "role": "clean_press_getup",
-            "slot_type": "skill_practice",
-            "notes": "Unloaded get-up positions only; no automatic advancement to a loaded get-up.",
+            "role": "getup_getup",
+            "slot_type": "emom",
+            "notes": "One get-up at the top of each minute, alternating sides, at a bell you control through every position.",
             "exercise_filter": {
              "exercise_ids": [
               "wk_kb_tgu"
@@ -3676,7 +4952,7 @@
             "rest_sec": 0
            }
           ],
-          "notes": "Repeated single-bell practice in independently progressing modules. Complete the repetitions at the start of each minute and rest for the remainder. Advance only after clean completion at RPE 7 or below. Future exposures are conditional forecasts, not earned progress. Keep the chosen bell throughout the cycle; choosing a heavier bell starts a new cycle explicitly. No snatch, jerk or double-bell progression is inferred from the calendar. Technique practice is an app adaptation.\n",
+          "notes": "Repeated single-bell practice in independently progressing modules. Complete the repetitions at the start of each minute and rest for the remainder. Advance only after clean completion at RPE 7 or below. Future exposures are conditional forecasts, not earned progress. Keep the chosen bell throughout the cycle; choosing a heavier bell starts a new cycle explicitly. No snatch, jerk or double-bell progression is inferred from the calendar.\n",
           "training_levels": [
            "novice",
            "intermediate",
@@ -3707,6 +4983,23 @@
             }
            },
            "duration_sec": 0
+          },
+          {
+           "id": "getup",
+           "forecast_step": 0,
+           "archetype_id": "kb_getup_mobility_practice",
+           "exercise_ids": [
+            "wk_kb_tgu"
+           ],
+           "rounds": 6,
+           "max_rpe": 7,
+           "requirements": {
+            "wk_kb_tgu": {
+             "rounds": 6,
+             "duration_sec": 0
+            }
+           },
+           "duration_sec": 0
           }
          ],
          "provenance": {
@@ -3888,7 +5181,7 @@
            "substituted_for": null,
            "error": null,
            "load_note": "Choose a bell you can control throughout. Record its weight before increasing load.",
-           "notes": "App adaptation: alternate hands each minute; perform clean repetitions, then rest for the remainder. Intermediate entry assumes a proficient single-bell clean.",
+           "notes": "Alternate hands each minute; perform clean repetitions, then rest for the remainder. Intermediate entry assumes a proficient single-bell clean.",
            "parent_slot_role": null,
            "skip_exercise": false
           },
@@ -3980,7 +5273,7 @@
            "substituted_for": null,
            "error": null,
            "load_note": "Choose a bell you can control throughout. Record its weight before increasing load.",
-           "notes": "App adaptation: alternate hands each minute; strict presses, no push press or jerk. Repeat the same bell and movement throughout the cycle.",
+           "notes": "Alternate hands each minute; strict presses, no push press or jerk. Repeat the same bell and movement throughout the cycle.",
            "parent_slot_role": null,
            "skip_exercise": false
           },
@@ -4046,18 +5339,23 @@
             ]
            },
            "load": {
-            "duration_minutes": 2,
-            "focus": "Controlled technique; stop before movement quality deteriorates.",
+            "target_rounds": 6,
+            "reps_per_round": 1,
+            "work_sec": 60,
+            "rest_sec": 0,
+            "time_minutes": 6,
+            "format": "EMOM",
+            "duration_minutes": 6,
             "prescription_version": 1,
             "progression_model": "density_cycle",
-            "module_id": "clean_press",
+            "module_id": "getup",
             "forecast_step": 0,
-            "advances_module": false,
+            "advances_module": true,
             "conditional": false,
-            "elapsed_sec": 120
+            "elapsed_sec": 360
            },
-           "slot_role": "clean_press_getup",
-           "slot_type": "skill_practice",
+           "slot_role": "getup_getup",
+           "slot_type": "emom",
            "rest_sec": 0,
            "meta": false,
            "injury_skip": false,
@@ -4066,8 +5364,8 @@
            "gap_reason": null,
            "substituted_for": null,
            "error": null,
-           "load_note": null,
-           "notes": "Unloaded get-up positions only; no automatic advancement to a loaded get-up.",
+           "load_note": "Choose a bell you can control throughout. Record its weight before increasing load.",
+           "notes": "One get-up at the top of each minute, alternating sides, at a bell you control through every position.",
            "parent_slot_role": null,
            "skip_exercise": false
           }
@@ -4080,10 +5378,10 @@
          "modality": "movement_skill",
          "archetype": {
           "id": "kb_clean_press_practice",
-          "name": "Single-Bell Clean and Press Practice",
+          "name": "Single-Bell Clean and Press Practice + Turkish Get-Up Practice",
           "_package": "wildman_kettlebell",
           "modality": "movement_skill",
-          "duration_estimate_minutes": 15,
+          "duration_estimate_minutes": 21,
           "slots": [
            {
             "role": "clean_press_prep",
@@ -4099,7 +5397,7 @@
            {
             "role": "clean_press_clean",
             "slot_type": "emom",
-            "notes": "App adaptation: alternate hands each minute; perform clean repetitions, then rest for the remainder. Intermediate entry assumes a proficient single-bell clean.",
+            "notes": "Alternate hands each minute; perform clean repetitions, then rest for the remainder. Intermediate entry assumes a proficient single-bell clean.",
             "exercise_filter": {
              "exercise_ids": [
               "wk_kb_clean_single"
@@ -4110,7 +5408,7 @@
            {
             "role": "clean_press_press",
             "slot_type": "emom",
-            "notes": "App adaptation: alternate hands each minute; strict presses, no push press or jerk. Repeat the same bell and movement throughout the cycle.",
+            "notes": "Alternate hands each minute; strict presses, no push press or jerk. Repeat the same bell and movement throughout the cycle.",
             "exercise_filter": {
              "exercise_ids": [
               "wk_kb_press_single"
@@ -4119,9 +5417,9 @@
             "rest_sec": 0
            },
            {
-            "role": "clean_press_getup",
-            "slot_type": "skill_practice",
-            "notes": "Unloaded get-up positions only; no automatic advancement to a loaded get-up.",
+            "role": "getup_getup",
+            "slot_type": "emom",
+            "notes": "One get-up at the top of each minute, alternating sides, at a bell you control through every position.",
             "exercise_filter": {
              "exercise_ids": [
               "wk_kb_tgu"
@@ -4130,7 +5428,7 @@
             "rest_sec": 0
            }
           ],
-          "notes": "Repeated single-bell practice in independently progressing modules. Complete the repetitions at the start of each minute and rest for the remainder. Advance only after clean completion at RPE 7 or below. Future exposures are conditional forecasts, not earned progress. Keep the chosen bell throughout the cycle; choosing a heavier bell starts a new cycle explicitly. No snatch, jerk or double-bell progression is inferred from the calendar. Technique practice is an app adaptation.\n",
+          "notes": "Repeated single-bell practice in independently progressing modules. Complete the repetitions at the start of each minute and rest for the remainder. Advance only after clean completion at RPE 7 or below. Future exposures are conditional forecasts, not earned progress. Keep the chosen bell throughout the cycle; choosing a heavier bell starts a new cycle explicitly. No snatch, jerk or double-bell progression is inferred from the calendar.\n",
           "training_levels": [
            "novice",
            "intermediate",
@@ -4157,6 +5455,23 @@
             },
             "wk_kb_press_single": {
              "rounds": 5,
+             "duration_sec": 0
+            }
+           },
+           "duration_sec": 0
+          },
+          {
+           "id": "getup",
+           "forecast_step": 1,
+           "archetype_id": "kb_getup_mobility_practice",
+           "exercise_ids": [
+            "wk_kb_tgu"
+           ],
+           "rounds": 8,
+           "max_rpe": 7,
+           "requirements": {
+            "wk_kb_tgu": {
+             "rounds": 8,
              "duration_sec": 0
             }
            },
@@ -4342,7 +5657,7 @@
            "substituted_for": null,
            "error": null,
            "load_note": "Choose a bell you can control throughout. Record its weight before increasing load.",
-           "notes": "App adaptation: alternate hands each minute; perform clean repetitions, then rest for the remainder. Intermediate entry assumes a proficient single-bell clean.",
+           "notes": "Alternate hands each minute; perform clean repetitions, then rest for the remainder. Intermediate entry assumes a proficient single-bell clean.",
            "parent_slot_role": null,
            "skip_exercise": false
           },
@@ -4434,7 +5749,7 @@
            "substituted_for": null,
            "error": null,
            "load_note": "Choose a bell you can control throughout. Record its weight before increasing load.",
-           "notes": "App adaptation: alternate hands each minute; strict presses, no push press or jerk. Repeat the same bell and movement throughout the cycle.",
+           "notes": "Alternate hands each minute; strict presses, no push press or jerk. Repeat the same bell and movement throughout the cycle.",
            "parent_slot_role": null,
            "skip_exercise": false
           },
@@ -4500,18 +5815,23 @@
             ]
            },
            "load": {
-            "duration_minutes": 2,
-            "focus": "Controlled technique; stop before movement quality deteriorates.",
+            "target_rounds": 8,
+            "reps_per_round": 1,
+            "work_sec": 60,
+            "rest_sec": 0,
+            "time_minutes": 8,
+            "format": "EMOM",
+            "duration_minutes": 8,
             "prescription_version": 1,
             "progression_model": "density_cycle",
-            "module_id": "clean_press",
+            "module_id": "getup",
             "forecast_step": 1,
-            "advances_module": false,
+            "advances_module": true,
             "conditional": true,
-            "elapsed_sec": 120
+            "elapsed_sec": 480
            },
-           "slot_role": "clean_press_getup",
-           "slot_type": "skill_practice",
+           "slot_role": "getup_getup",
+           "slot_type": "emom",
            "rest_sec": 0,
            "meta": false,
            "injury_skip": false,
@@ -4520,8 +5840,8 @@
            "gap_reason": null,
            "substituted_for": null,
            "error": null,
-           "load_note": null,
-           "notes": "Unloaded get-up positions only; no automatic advancement to a loaded get-up.",
+           "load_note": "Choose a bell you can control throughout. Record its weight before increasing load.",
+           "notes": "One get-up at the top of each minute, alternating sides, at a bell you control through every position.",
            "parent_slot_role": null,
            "skip_exercise": false
           }
@@ -4530,8 +5850,8 @@
         }
        ]
       },
-      "phase_id": "foundations",
-      "phase_name": "Foundations",
+      "phase_id": "build",
+      "phase_name": "Phase II: Build",
       "track_id": "general_practice"
      }
     ],
@@ -4539,18 +5859,18 @@
      {
       "week_number": 1,
       "strength_sets": 0,
-      "strength_minutes": 30,
+      "strength_minutes": 50,
       "cond_minutes": 0,
       "dur_minutes": 0,
-      "mob_minutes": 30,
-      "total_minutes": 60
+      "mob_minutes": 40,
+      "total_minutes": 90
      }
     ],
     "phase_summary": [
      {
-      "phase_id": "foundations",
-      "name": "Foundations",
-      "kind": "base",
+      "phase_id": "build",
+      "name": "Phase II: Build",
+      "kind": "build",
       "framework_id": "kb_general_practice",
       "week_start": 1,
       "week_end": 1,
@@ -4561,20 +5881,20 @@
        "movement_skill": 2.0
       },
       "minutes_per_week": {
-       "first": 60,
-       "last": 60,
-       "mean": 60
+       "first": 90,
+       "last": 90,
+       "mean": 90
       },
       "intensity": {
        "zone1_2": 0.0,
-       "zone3": 0.5,
+       "zone3": 0.444,
        "zone4_5": 0.0,
-       "max_effort": 0.5
+       "max_effort": 0.556
       },
       "archetypes": [
        {
         "id": "kb_ballistic_session",
-        "name": "Nerd Math Two-Hand Swing",
+        "name": "Nerd Math Two-Hand Swing + Deck Squat Practice",
         "modality": "power",
         "sessions": 2,
         "per_week": 2.0,
@@ -4582,7 +5902,7 @@
        },
        {
         "id": "kb_clean_press_practice",
-        "name": "Single-Bell Clean and Press Practice",
+        "name": "Single-Bell Clean and Press Practice + Turkish Get-Up Practice",
         "modality": "movement_skill",
         "sessions": 2,
         "per_week": 2.0,
@@ -4596,6 +5916,14 @@
         "modality": "power",
         "sessions": 4,
         "per_week": 4.0,
+        "status": null
+       },
+       {
+        "id": "wk_deck_squat",
+        "name": "Deck Squat",
+        "modality": "power",
+        "sessions": 2,
+        "per_week": 2.0,
         "status": null
        },
        {
@@ -4648,7 +5976,9 @@
       "changes": []
      }
     ],
-    "compromises": [],
+    "compromises": [
+     "Nerd Math Snatch joins the week once you confirm wk_kb_snatch."
+    ],
     "coverage_report": {
      "philosophy": "wildman_kettlebell",
      "strict": true,
@@ -4671,6 +6001,12 @@
      },
      "clean_press": {
       "completed": 0
+     },
+     "getup": {
+      "completed": 0
+     },
+     "deck_squat": {
+      "completed": 0
      }
     },
     "generation_trace": {
@@ -4682,7 +6018,7 @@
       {
        "week_number": 1,
        "week_in_phase": 1,
-       "phase": "base",
+       "phase": "build",
        "is_deload": false,
        "scheduler": {
         "contract": "wildman_kettlebell/general_practice@1",
@@ -4702,7 +6038,8 @@
            "candidates": []
           },
           "modules": [
-           "swing"
+           "swing",
+           "deck_squat"
           ],
           "slots": [
            {
@@ -4740,6 +6077,18 @@
             "filter_counts": {},
             "candidates": [],
             "module_id": "swing"
+           },
+           {
+            "slot_index": 3,
+            "slot_role": "deck_squat_squat",
+            "slot_type": "emom",
+            "meta": false,
+            "movement_pattern": null,
+            "selected_id": "wk_deck_squat",
+            "injury_blocked": false,
+            "filter_counts": {},
+            "candidates": [],
+            "module_id": "deck_squat"
            }
           ],
           "progression": [
@@ -4750,7 +6099,7 @@
             "slot_type": "skill_practice",
             "model": "density_cycle",
             "week": 1,
-            "phase": "base",
+            "phase": "build",
             "level": "intermediate",
             "is_deload": false,
             "output": {
@@ -4772,7 +6121,7 @@
             "slot_type": "emom",
             "model": "density_cycle",
             "week": 1,
-            "phase": "base",
+            "phase": "build",
             "level": "intermediate",
             "is_deload": false,
             "output": {
@@ -4800,7 +6149,7 @@
             "slot_type": "skill_practice",
             "model": "density_cycle",
             "week": 1,
-            "phase": "base",
+            "phase": "build",
             "level": "intermediate",
             "is_deload": false,
             "output": {
@@ -4813,6 +6162,33 @@
              "advances_module": false,
              "conditional": false,
              "elapsed_sec": 120
+            }
+           },
+           {
+            "exercise_id": "wk_deck_squat",
+            "exercise_name": "Deck Squat",
+            "slot_role": "deck_squat_squat",
+            "slot_type": "emom",
+            "model": "density_cycle",
+            "week": 1,
+            "phase": "build",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "target_rounds": 10,
+             "reps_per_round": 2,
+             "work_sec": 60,
+             "rest_sec": 0,
+             "time_minutes": 10,
+             "format": "EMOM",
+             "duration_minutes": 10,
+             "prescription_version": 1,
+             "progression_model": "density_cycle",
+             "module_id": "deck_squat",
+             "forecast_step": 0,
+             "advances_module": true,
+             "conditional": false,
+             "elapsed_sec": 600
             }
            }
           ]
@@ -4827,7 +6203,8 @@
            "candidates": []
           },
           "modules": [
-           "swing"
+           "swing",
+           "deck_squat"
           ],
           "slots": [
            {
@@ -4865,6 +6242,18 @@
             "filter_counts": {},
             "candidates": [],
             "module_id": "swing"
+           },
+           {
+            "slot_index": 3,
+            "slot_role": "deck_squat_squat",
+            "slot_type": "emom",
+            "meta": false,
+            "movement_pattern": null,
+            "selected_id": "wk_deck_squat",
+            "injury_blocked": false,
+            "filter_counts": {},
+            "candidates": [],
+            "module_id": "deck_squat"
            }
           ],
           "progression": [
@@ -4875,7 +6264,7 @@
             "slot_type": "skill_practice",
             "model": "density_cycle",
             "week": 1,
-            "phase": "base",
+            "phase": "build",
             "level": "intermediate",
             "is_deload": false,
             "output": {
@@ -4897,7 +6286,7 @@
             "slot_type": "emom",
             "model": "density_cycle",
             "week": 1,
-            "phase": "base",
+            "phase": "build",
             "level": "intermediate",
             "is_deload": false,
             "output": {
@@ -4925,7 +6314,7 @@
             "slot_type": "skill_practice",
             "model": "density_cycle",
             "week": 1,
-            "phase": "base",
+            "phase": "build",
             "level": "intermediate",
             "is_deload": false,
             "output": {
@@ -4938,6 +6327,33 @@
              "advances_module": false,
              "conditional": true,
              "elapsed_sec": 120
+            }
+           },
+           {
+            "exercise_id": "wk_deck_squat",
+            "exercise_name": "Deck Squat",
+            "slot_role": "deck_squat_squat",
+            "slot_type": "emom",
+            "model": "density_cycle",
+            "week": 1,
+            "phase": "build",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "target_rounds": 10,
+             "reps_per_round": 3,
+             "work_sec": 60,
+             "rest_sec": 0,
+             "time_minutes": 10,
+             "format": "EMOM",
+             "duration_minutes": 10,
+             "prescription_version": 1,
+             "progression_model": "density_cycle",
+             "module_id": "deck_squat",
+             "forecast_step": 1,
+             "advances_module": true,
+             "conditional": true,
+             "elapsed_sec": 600
             }
            }
           ]
@@ -4952,7 +6368,8 @@
            "candidates": []
           },
           "modules": [
-           "clean_press"
+           "clean_press",
+           "getup"
           ],
           "slots": [
            {
@@ -4993,15 +6410,15 @@
            },
            {
             "slot_index": 3,
-            "slot_role": "clean_press_getup",
-            "slot_type": "skill_practice",
+            "slot_role": "getup_getup",
+            "slot_type": "emom",
             "meta": false,
             "movement_pattern": null,
             "selected_id": "wk_kb_tgu",
             "injury_blocked": false,
             "filter_counts": {},
             "candidates": [],
-            "module_id": "clean_press"
+            "module_id": "getup"
            }
           ],
           "progression": [
@@ -5012,7 +6429,7 @@
             "slot_type": "skill_practice",
             "model": "density_cycle",
             "week": 1,
-            "phase": "base",
+            "phase": "build",
             "level": "intermediate",
             "is_deload": false,
             "output": {
@@ -5034,7 +6451,7 @@
             "slot_type": "emom",
             "model": "density_cycle",
             "week": 1,
-            "phase": "base",
+            "phase": "build",
             "level": "intermediate",
             "is_deload": false,
             "output": {
@@ -5062,7 +6479,7 @@
             "slot_type": "emom",
             "model": "density_cycle",
             "week": 1,
-            "phase": "base",
+            "phase": "build",
             "level": "intermediate",
             "is_deload": false,
             "output": {
@@ -5086,23 +6503,29 @@
            {
             "exercise_id": "wk_kb_tgu",
             "exercise_name": "Kettlebell Turkish Get-Up",
-            "slot_role": "clean_press_getup",
-            "slot_type": "skill_practice",
+            "slot_role": "getup_getup",
+            "slot_type": "emom",
             "model": "density_cycle",
             "week": 1,
-            "phase": "base",
+            "phase": "build",
             "level": "intermediate",
             "is_deload": false,
             "output": {
-             "duration_minutes": 2,
-             "focus": "Controlled technique; stop before movement quality deteriorates.",
+             "target_rounds": 6,
+             "reps_per_round": 1,
+             "work_sec": 60,
+             "rest_sec": 0,
+             "time_minutes": 6,
+             "format": "EMOM",
+             "duration_minutes": 6,
+             "load_note": "Choose a bell you can control throughout. Record its weight before increasing load.",
              "prescription_version": 1,
              "progression_model": "density_cycle",
-             "module_id": "clean_press",
+             "module_id": "getup",
              "forecast_step": 0,
-             "advances_module": false,
+             "advances_module": true,
              "conditional": false,
-             "elapsed_sec": 120
+             "elapsed_sec": 360
             }
            }
           ]
@@ -5117,7 +6540,8 @@
            "candidates": []
           },
           "modules": [
-           "clean_press"
+           "clean_press",
+           "getup"
           ],
           "slots": [
            {
@@ -5158,15 +6582,15 @@
            },
            {
             "slot_index": 3,
-            "slot_role": "clean_press_getup",
-            "slot_type": "skill_practice",
+            "slot_role": "getup_getup",
+            "slot_type": "emom",
             "meta": false,
             "movement_pattern": null,
             "selected_id": "wk_kb_tgu",
             "injury_blocked": false,
             "filter_counts": {},
             "candidates": [],
-            "module_id": "clean_press"
+            "module_id": "getup"
            }
           ],
           "progression": [
@@ -5177,7 +6601,7 @@
             "slot_type": "skill_practice",
             "model": "density_cycle",
             "week": 1,
-            "phase": "base",
+            "phase": "build",
             "level": "intermediate",
             "is_deload": false,
             "output": {
@@ -5199,7 +6623,7 @@
             "slot_type": "emom",
             "model": "density_cycle",
             "week": 1,
-            "phase": "base",
+            "phase": "build",
             "level": "intermediate",
             "is_deload": false,
             "output": {
@@ -5227,7 +6651,7 @@
             "slot_type": "emom",
             "model": "density_cycle",
             "week": 1,
-            "phase": "base",
+            "phase": "build",
             "level": "intermediate",
             "is_deload": false,
             "output": {
@@ -5251,23 +6675,29 @@
            {
             "exercise_id": "wk_kb_tgu",
             "exercise_name": "Kettlebell Turkish Get-Up",
-            "slot_role": "clean_press_getup",
-            "slot_type": "skill_practice",
+            "slot_role": "getup_getup",
+            "slot_type": "emom",
             "model": "density_cycle",
             "week": 1,
-            "phase": "base",
+            "phase": "build",
             "level": "intermediate",
             "is_deload": false,
             "output": {
-             "duration_minutes": 2,
-             "focus": "Controlled technique; stop before movement quality deteriorates.",
+             "target_rounds": 8,
+             "reps_per_round": 1,
+             "work_sec": 60,
+             "rest_sec": 0,
+             "time_minutes": 8,
+             "format": "EMOM",
+             "duration_minutes": 8,
+             "load_note": "Choose a bell you can control throughout. Record its weight before increasing load.",
              "prescription_version": 1,
              "progression_model": "density_cycle",
-             "module_id": "clean_press",
+             "module_id": "getup",
              "forecast_step": 1,
-             "advances_module": false,
+             "advances_module": true,
              "conditional": true,
-             "elapsed_sec": 120
+             "elapsed_sec": 480
             }
            }
           ]

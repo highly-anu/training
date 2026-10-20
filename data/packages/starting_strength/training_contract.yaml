@@ -1,0 +1,363 @@
+version: 1
+sources:
+- https://startingstrength.com/article/who_wants_to_be_a_novice_you_do
+- https://startingstrength.com/article/the_texas_method
+- https://startingstrength.com/article/the-reset-why-and-how
+tracks:
+  linear_progression:
+    training_levels:
+    - novice
+    notes: 'Workouts A and B alternate, three days a week: A-B-A, then B-A-B. Every lift goes up
+      every time you train it, from what you actually made — a missed lift repeats its weight, and
+      a lift missed twice in a row resets 5 % and climbs again in smaller jumps. Your first session
+      works up to each weight from the empty bar unless you enter the weights you already lift.
+      Confirm each session, or log its sets, so the next one knows what to add.
+
+      '
+    modules:
+    - id: novice_lp
+      name: Novice Linear Progression
+      archetype_id: 3x5_linear
+      modality: max_strength
+      training_levels:
+      - novice
+      exposures_per_week: 3
+      min_spacing_days: 2
+      # Not read by the load model: a lift moves on made reps, not effort.
+      max_rpe: 10
+      progression:
+        model: load_per_exposure
+        round_kg: 1.25
+        # Missed twice in a row at one weight: reset 5 % (Alter, "The Reset");
+        # stalled again after that: the lift's novice progression is over.
+        stall:
+          failures: 2
+          reset_pct: 5
+          resets: 1
+        # Rippetoe (2013), in kg: the squat 10 lb a session for two weeks, then
+        # 5; the deadlift 15 lb at first, then 5; the press, bench and clean 5
+        # lb, then 1–3. A step smaller after a reset.
+        lifts:
+          back_squat:
+            increments_kg: [5, 2.5, 1.25]
+            first_exposures: 6
+          deadlift:
+            increments_kg: [7.5, 2.5, 1.25]
+            first_exposures: 3
+          strict_press:
+            increments_kg: [2.5, 1.25]
+            first_exposures: 3
+          bench_press:
+            increments_kg: [2.5, 1.25]
+            first_exposures: 3
+          power_clean:
+            increments_kg: [2.5, 1.25]
+            first_exposures: 3
+      rotation: [a, b]
+      variants:
+      - id: a
+        name: Workout A
+        archetype_id: 3x5_linear
+        blocks:
+        - role: squat
+          exercise_id: back_squat
+          slot_type: sets_reps
+          sets: 3
+          reps: 5
+          rest_sec: 300
+          duration_sec: 1200
+          loaded: true
+          notes: Three sets of five across after the warm-up.
+        - role: press
+          exercise_id: strict_press
+          slot_type: sets_reps
+          sets: 3
+          reps: 5
+          rest_sec: 240
+          duration_sec: 900
+          loaded: true
+          notes: Three sets of five across.
+        - role: deadlift
+          exercise_id: deadlift
+          slot_type: sets_reps
+          sets: 1
+          reps: 5
+          rest_sec: 300
+          duration_sec: 600
+          loaded: true
+          notes: One heavy set of five. Sets across do not work for the deadlift.
+        - role: chin_ups
+          exercise_id: chin_up
+          slot_type: sets_reps
+          sets: 3
+          to_failure: true
+          rest_sec: 300
+          duration_sec: 900
+          optional: true
+          notes: Three sets to failure, five minutes between — the program's arm and lat work.
+      - id: b
+        name: Workout B
+        archetype_id: 3x5_linear_b
+        blocks:
+        - role: squat
+          exercise_id: back_squat
+          slot_type: sets_reps
+          sets: 3
+          reps: 5
+          rest_sec: 300
+          duration_sec: 1200
+          loaded: true
+          notes: Three sets of five across after the warm-up.
+        - role: bench
+          exercise_id: bench_press
+          slot_type: sets_reps
+          sets: 3
+          reps: 5
+          rest_sec: 240
+          duration_sec: 900
+          loaded: true
+          notes: Three sets of five across.
+        - role: power_clean
+          exercise_id: power_clean
+          slot_type: sets_reps
+          sets: 5
+          reps: 3
+          rest_sec: 180
+          duration_sec: 900
+          loaded: true
+          notes: Five sets of three across — triples, so fatigue does not spoil the technique.
+
+  texas_method:
+    training_levels:
+    - intermediate
+    notes: 'Volume on Monday, a light day on Wednesday, a new five-rep max on Friday; the press and
+      the bench take turns, so the week runs over two. Friday''s lifts and Monday''s deadlift go up
+      each week from what you made; Monday and Wednesday are shares of them. Confirm each session,
+      or log its sets, so the next week knows what to add.
+
+      '
+    modules:
+    - id: texas_method
+      name: Texas Method
+      archetype_id: tm_volume
+      modality: max_strength
+      training_levels:
+      - intermediate
+      exposures_per_week: 3
+      min_spacing_days: 2
+      max_rpe: 10
+      progression:
+        model: load_per_exposure
+        round_kg: 1.25
+        # A week's increase, made on Friday (Monday for the deadlift). The
+        # article gives none; these are the novice progression's late steps.
+        lifts:
+          back_squat:
+            increments_kg: [2.5]
+          strict_press:
+            increments_kg: [1.25]
+          bench_press:
+            increments_kg: [1.25]
+          deadlift:
+            increments_kg: [2.5]
+          power_clean:
+            increments_kg: [1.25]
+      rotation: [volume_press, light_bench, intensity_press, volume_bench, light_press, intensity_bench]
+      variants:
+      - id: volume_press
+        name: Volume Day
+        archetype_id: tm_volume
+        blocks:
+        - role: squat
+          exercise_id: back_squat
+          slot_type: sets_reps
+          sets: 5
+          reps: 5
+          rest_sec: 480
+          duration_sec: 2400
+          loaded: true
+          pct: 0.9
+          notes: Five sets of five across at about 90 % of your five-rep max; up to 8–10 minutes
+            between sets.
+        - role: press
+          exercise_id: strict_press
+          slot_type: sets_reps
+          sets: 5
+          reps: 5
+          rest_sec: 300
+          duration_sec: 1500
+          loaded: true
+          pct: 0.9
+          notes: Five sets of five across at about 90 % of your five-rep max.
+        - role: deadlift
+          exercise_id: deadlift
+          slot_type: sets_reps
+          sets: 1
+          reps: 5
+          rest_sec: 300
+          duration_sec: 600
+          loaded: true
+          notes: One heavy set of five after the squats and presses; it goes up every week.
+      - id: light_bench
+        name: Light Day
+        archetype_id: tm_light
+        blocks:
+        - role: squat
+          exercise_id: back_squat
+          slot_type: sets_reps
+          sets: 2
+          reps: 5
+          rest_sec: 180
+          duration_sec: 600
+          loaded: true
+          pct: 0.72
+          notes: Two sets of five at 80 % of Monday's weight.
+        - role: press
+          exercise_id: bench_press
+          slot_type: sets_reps
+          sets: 3
+          reps: 5
+          rest_sec: 180
+          duration_sec: 600
+          loaded: true
+          pct: 0.85
+          notes: Three sets, a little lighter than the last bench 5×5 — feel the load without
+            tapping recovery.
+        - role: chin_ups
+          exercise_id: chin_up
+          slot_type: sets_reps
+          sets: 3
+          to_failure: true
+          rest_sec: 300
+          duration_sec: 900
+          optional: true
+          notes: Three sets to failure, five minutes between.
+      - id: intensity_press
+        name: Intensity Day
+        archetype_id: tm_intensity
+        blocks:
+        - role: squat
+          exercise_id: back_squat
+          slot_type: sets_reps
+          sets: 1
+          reps: 5
+          rest_sec: 300
+          duration_sec: 900
+          loaded: true
+          notes: A new five-rep max, or within 2 %; warm up with doubles or singles to the work set.
+        - role: press
+          exercise_id: strict_press
+          slot_type: sets_reps
+          sets: 1
+          reps: 5
+          rest_sec: 300
+          duration_sec: 900
+          loaded: true
+          notes: A new five-rep max on Monday's press.
+        - role: power_clean
+          exercise_id: power_clean
+          slot_type: sets_reps
+          sets: 5
+          reps: 3
+          rest_sec: 180
+          duration_sec: 900
+          loaded: true
+          notes: Five sets of three across.
+      - id: volume_bench
+        name: Volume Day
+        archetype_id: tm_volume
+        blocks:
+        - role: squat
+          exercise_id: back_squat
+          slot_type: sets_reps
+          sets: 5
+          reps: 5
+          rest_sec: 480
+          duration_sec: 2400
+          loaded: true
+          pct: 0.9
+          notes: Five sets of five across at about 90 % of your five-rep max; up to 8–10 minutes
+            between sets.
+        - role: press
+          exercise_id: bench_press
+          slot_type: sets_reps
+          sets: 5
+          reps: 5
+          rest_sec: 300
+          duration_sec: 1500
+          loaded: true
+          pct: 0.9
+          notes: Five sets of five across at about 90 % of your five-rep max.
+        - role: deadlift
+          exercise_id: deadlift
+          slot_type: sets_reps
+          sets: 1
+          reps: 5
+          rest_sec: 300
+          duration_sec: 600
+          loaded: true
+          notes: One heavy set of five after the squats and benches; it goes up every week.
+      - id: light_press
+        name: Light Day
+        archetype_id: tm_light
+        blocks:
+        - role: squat
+          exercise_id: back_squat
+          slot_type: sets_reps
+          sets: 2
+          reps: 5
+          rest_sec: 180
+          duration_sec: 600
+          loaded: true
+          pct: 0.72
+          notes: Two sets of five at 80 % of Monday's weight.
+        - role: press
+          exercise_id: strict_press
+          slot_type: sets_reps
+          sets: 3
+          reps: 5
+          rest_sec: 180
+          duration_sec: 600
+          loaded: true
+          pct: 0.875
+          notes: Three sets, a little heavier relative to your five-rep max than the light bench.
+        - role: chin_ups
+          exercise_id: chin_up
+          slot_type: sets_reps
+          sets: 3
+          to_failure: true
+          rest_sec: 300
+          duration_sec: 900
+          optional: true
+          notes: Three sets to failure, five minutes between.
+      - id: intensity_bench
+        name: Intensity Day
+        archetype_id: tm_intensity
+        blocks:
+        - role: squat
+          exercise_id: back_squat
+          slot_type: sets_reps
+          sets: 1
+          reps: 5
+          rest_sec: 300
+          duration_sec: 900
+          loaded: true
+          notes: A new five-rep max, or within 2 %; warm up with doubles or singles to the work set.
+        - role: press
+          exercise_id: bench_press
+          slot_type: sets_reps
+          sets: 1
+          reps: 5
+          rest_sec: 300
+          duration_sec: 900
+          loaded: true
+          notes: A new five-rep max on Monday's bench.
+        - role: power_clean
+          exercise_id: power_clean
+          slot_type: sets_reps
+          sets: 5
+          reps: 3
+          rest_sec: 180
+          duration_sec: 900
+          loaded: true
+          notes: Five sets of three across.

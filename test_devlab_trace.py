@@ -34,11 +34,12 @@ _ATHLETE = {
 
 # Each one reaches a different corner of the trace; what it is for is its name.
 SCENARIOS: dict[str, dict] = {
-    # Every slot empty for equipment, and an intermediate on a novice phase
-    # gets HLM and 5x5 instead of the 3x5 sessions.
-    'starting_strength_no_equipment': {
-        'philosophy_id': 'starting_strength', 'num_weeks': 1,
-        'constraints': {**_ATHLETE, 'equipment': [], 'training_level': 'intermediate'},
+    # Slots emptied for equipment. (Starting Strength was this scenario until
+    # its training contract began refusing a program with no barbell.)
+    'gym_jones_no_equipment': {
+        'philosophy_id': 'gym_jones', 'num_weeks': 1,
+        'constraints': {**_ATHLETE, 'days_per_week': 5, 'session_time_minutes': 90,
+                        'equipment': [], 'training_level': 'intermediate'},
     },
     # Injury-blocked slots, a session swapped to another modality because
     # nothing is written for a novice, a level-locked slot and a test session.

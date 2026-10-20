@@ -64,9 +64,11 @@ def framework_ids_of(phil: dict) -> list:
     return seen
 
 
-def primary_track(phil: dict) -> dict | None:
+def primary_track(phil: dict, level: str | None = None) -> dict | None:
+    """The track a request that names none gets: the one `track_for_level`
+    gives the athlete's level, else `primary_track_id`, else the first."""
     tracks = tracks_of(phil)
-    wanted = phil.get('primary_track_id')
+    wanted = (phil.get('track_for_level') or {}).get(level) or phil.get('primary_track_id')
     if wanted:
         for t in tracks:
             if t.get('id') == wanted:
@@ -148,6 +150,9 @@ def validate_philosophy_tracks(phil: dict, framework_ids: set | None = None) -> 
     primary = phil.get('primary_track_id')
     if primary and primary not in track_ids:
         errors.append(f"{pid}: primary_track_id '{primary}' is not one of its tracks")
+    for level, tid in (phil.get('track_for_level') or {}).items():
+        if tid not in track_ids:
+            errors.append(f"{pid}: track_for_level {level} names '{tid}', not one of its tracks")
     return errors
 
 

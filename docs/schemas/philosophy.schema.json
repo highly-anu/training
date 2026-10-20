@@ -142,6 +142,12 @@
       "pattern": "^[a-z0-9_]+$",
       "description": "Default track. When omitted the first track is the default."
     },
+    "track_for_level": {
+      "type": "object",
+      "propertyNames": {"enum": ["novice", "intermediate", "advanced", "elite"]},
+      "additionalProperties": {"type": "string", "pattern": "^[a-z0-9_]+$"},
+      "description": "The track a request that names none gets at each level (Starting Strength: novices run Linear Progression, intermediates the Texas Method). A level not listed falls back to primary_track_id."
+    },
     "tracks": {
       "type": "array",
       "minItems": 1,

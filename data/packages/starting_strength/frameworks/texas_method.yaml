@@ -1,0 +1,56 @@
+id: texas_method
+name: Texas Method
+source_philosophy: starting_strength
+
+goals_served:
+  - max_strength
+
+sessions_per_week:
+  max_strength: 3
+modality_priority:
+  committed: [max_strength]
+  core: []
+  supplementary: []
+
+intensity_distribution:
+  zone1_2_pct: 0.0
+  zone3_pct: 0.0
+  zone4_5_pct: 0.0
+  max_effort_pct: 1.0
+
+progression_model: linear_load
+
+applicable_when:
+  training_level:
+    - intermediate
+  days_per_week_min: 3
+  days_per_week_max: 4
+  goal_priority_min:
+    max_strength: 0.3
+
+# No deload week: the light Wednesday is the week's recovery.
+
+cadence_options:
+  3: [[1, 3, 5], [2, 4, 6], [1, 3, 6]]
+  4: [[1, 3, 5, 7], [1, 3, 5, 6], [2, 4, 6, 7]]
+
+sources:
+  - "Mark Rippetoe, \"The Texas Method\" (startingstrength.com, 2013; T-Nation 2010)"
+  - "Practical Programming for Strength Training, Rippetoe & Baker"
+
+notes: >
+  The intermediate week that follows the novice progression (Rippetoe, "The Texas
+  Method"). Monday is volume: squat 5×5 at about 90 % of the five-rep max, the
+  press or the bench 5×5 (alternate Mondays), one heavy set of five deadlifts.
+  Wednesday is light: squat 2×5 at 80 % of Monday's weight, the other press for three
+  lighter sets, chin-ups. Friday is intensity: a new five-rep max on the squat and
+  the press, power cleans 5×3. Progress comes once a week instead of every session.
+
+expectations:
+  min_weeks: 8
+  ideal_weeks: 12
+  min_days_per_week: 3
+  ideal_days_per_week: 3
+  min_session_minutes: 75
+  ideal_session_minutes: 90
+  supports_split_days: false

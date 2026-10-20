@@ -62,9 +62,16 @@ def unlocks(entry, ctx) -> dict:
     level = str(ctx.constraints.get('training_level') or 'intermediate')
     seeds = {pkg: by_level for pkg, by_level in loader.load_level_seeds().items()
              if pkg in policy.allowed_packages or not policy.owner_packages}
-    universe, _ = loader.load_all_exercises()
-    pool = {ex_id: ex for ex_id, ex in universe.items()
-            if not policy.owner_packages or set(ex.get('_packages') or []) & policy.allowed_packages}
+    universe, by_package = loader.load_all_exercises()
+    if policy.owner_packages:
+        # The program's own packages' definitions: an id several packages
+        # declare (chin_up) carries each one's prerequisites, and the global
+        # index keeps only the first declarer's (CrossFit's dead hang).
+        pool = {}
+        for pkg in sorted(policy.allowed_packages - set(policy.owner_packages)) + sorted(policy.owner_packages):
+            pool.update(by_package.get(pkg) or {})
+    else:
+        pool = dict(universe)
     # What the generator already treats as open at this level — the same
     # resolution, concepts and seeds it selects with — and what is open once
     # the practised movements count too. A movement is "now available" when

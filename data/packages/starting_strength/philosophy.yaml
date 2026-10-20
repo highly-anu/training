@@ -22,23 +22,30 @@ required_equipment:
 intensity_model: linear_progression
 progression_philosophy: load_based
 sources:
-  - "Starting Strength: Basic Barbell Training (Rippetoe, 3rd ed.)"
-  - "data/crossfit/crossfit journal/ — Rippetoe squatting article (2006)"
+  - "Mark Rippetoe, \"Who Wants to Be a Novice? You Do\" (startingstrength.com, 2013) — the novice program"
+  - "Mark Rippetoe, \"The Texas Method\" (startingstrength.com, 2013; T-Nation 2010) — the intermediate week"
+  - "Rori Alter, \"The Reset: Why and How\" (startingstrength.com, 2018) — when a stalled lift resets"
+  - "Starting Strength: Basic Barbell Training (Rippetoe, 3rd ed.); Practical Programming for Strength Training (Rippetoe & Baker)"
 notes: >
   Strictly a novice-to-early-intermediate barbell methodology. Not designed for
   concurrent training; Rippetoe explicitly argues against mixing heavy conditioning
   with linear progression due to recovery interference. Scope limited to strength
   domains — this philosophy has no conditioning prescription beyond "don't do much."
   Novice completion benchmarks: squat 1.5× BW, deadlift 2× BW, press 0.75× BW.
+  Both tracks run as training contracts (training_contract.yaml): the load on each
+  lift follows what the athlete confirms lifting, never the calendar
+  (docs/package-fidelity/starting_strength.md).
 
 # Every modality this philosophy's frameworks prescribe has an archetype in
 # this package; generation never needs to reach into another philosophy.
 self_contained: true
 
-# One continuous phase: linear progression runs until gains stall. Phase text
-# is drafted from this package's own notes and framework notes — review before
-# relying on it.
 primary_track_id: linear_progression
+# A novice runs the novice progression; an intermediate — a lifter whose lifts
+# no longer go up every session — the Texas Method (Rippetoe 2013).
+track_for_level:
+  novice: linear_progression
+  intermediate: texas_method
 tracks:
   - id: linear_progression
     name: "Linear Progression Program"
@@ -54,17 +61,45 @@ tracks:
         framework_id: linear_progression
         focus: "Add weight every session"
         description: >
-          Squat 3×5 every session, press or bench 3×5 alternating, deadlift
-          1×5. Each session adds weight — about 5 lb on the squat and deadlift,
-          2.5 lb on the press. Conditioning stays minimal so recovery goes to
-          the bar. The phase runs until a lift stalls for three consecutive
-          sessions; that is the end of the novice period.
+          Two workouts alternate, A-B-A one week and B-A-B the next. A: squat
+          3×5, press 3×5, deadlift 1×5, chin-ups 3 sets to failure. B: squat
+          3×5, bench press 3×5, power clean 5×3. Every lift goes up every
+          time it is trained — the squat about 5 kg for two weeks, then 2.5;
+          the deadlift 7.5, then 2.5; the presses and the clean 2.5, then
+          1.25. A lift missed twice in a row at one weight resets 5 % and
+          climbs in smaller jumps; a lift that stalls again has finished its
+          novice progression. Conditioning stays out so recovery goes to the
+          bar.
         adaptations:
           - "Maximal strength in the main barbell lifts"
           - "Technique under progressively heavier loads"
         intensity: "Heavy sets of five, every session"
-        # The prose above, in a form tools/check_fidelity.py can test. HLM and
-        # 5x5 are the intermediate programs that follow the novice period.
+        # The prose above, in a form tools/check_fidelity.py can test.
         checks:
           archetypes_required: [3x5_linear, 3x5_linear_b]
-          archetypes_forbidden: [hlm, 5x5]
+  - id: texas_method
+    name: "Texas Method"
+    description: >
+      The intermediate week: volume on Monday, a light day on Wednesday and a
+      new five-rep max on Friday — progress once a week instead of every
+      session.
+    phases:
+      - id: texas_method
+        name: "Texas Method"
+        kind: build
+        weeks: 12
+        repeatable: true
+        framework_id: texas_method
+        focus: "A new five-rep max every Friday"
+        description: >
+          Monday: squat 5×5 at about 90 % of the five-rep max, the press or
+          the bench 5×5 (they alternate Mondays), one heavy set of five
+          deadlifts. Wednesday: squat 2×5 at 80 % of Monday's weight, the
+          other press for three lighter sets, chin-ups. Friday: a new five-rep
+          max on the squat and Monday's press, and power cleans 5×3. The
+          loads go up once a week.
+        adaptations:
+          - "Continued strength gains past the novice progression"
+        intensity: "Volume Monday, light Wednesday, a five-rep max Friday"
+        checks:
+          archetypes_required: [tm_volume, tm_light, tm_intensity]

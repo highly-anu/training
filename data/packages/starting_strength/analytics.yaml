@@ -1,5 +1,6 @@
 # What progress means for Starting Strength. Load-based: the bar goes up every
-# session, and the program is over when it has stopped going up.
+# session in the novice progression, every week in the Texas Method, and each
+# progression is over when it has stopped going up.
 id: starting_strength
 
 progress:
@@ -7,13 +8,26 @@ progress:
     label: Load on the bar
     primitive: set_load
     headline: true
+    # Every session's bar but the Texas Method's, whose currency is Friday's
+    # five-rep max (below); its rows are the texas_method module's.
     scope:
       modalities: [max_strength]
       slot_types: [sets_reps]
-      exclude_slot_roles: ["*warm*", "*accessory*", "*prep*"]
+      exclude_slot_roles: ["*warm*", "*accessory*", "*prep*", "*chin_ups*", "texas_method_*"]
     expected: achieved_plus_increment
-    # "Run until linear gains stall (3 consecutive sessions without progress on
-    # a lift), then transition to intermediate programming." — linear_progression.yaml
+    # A lift missed twice in a row at one weight resets (Alter, "The Reset"):
+    # three sessions at one weight is the stall the program answers.
+    stall: {sessions: 3, tolerance_pct: 1}
+
+  - id: five_rep_max
+    label: Five-rep max
+    primitive: set_load
+    # The Texas Method's currency is Friday's new five-rep max (Rippetoe).
+    scope:
+      frameworks: [texas_method]
+      archetypes: [tm_intensity]
+      slot_types: [sets_reps]
+    expected: achieved_plus_increment
     stall: {sessions: 3, tolerance_pct: 1}
 
   - id: novice_completion

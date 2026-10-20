@@ -56,12 +56,7 @@
     "ring_row",
     "side_plank_lat_activation"
   ],
-  "starting_strength": [
-    "box_squat",
-    "close_grip_bench",
-    "good_morning",
-    "sumo_deadlift"
-  ],
+  "starting_strength": [],
   "uphill_athlete": [],
   "wildman_kettlebell": []
 }

@@ -48,7 +48,9 @@ def sessions(prog: dict):
 
 def test_starting_strength() -> None:
     print('Starting Strength novice')
-    prog = program('starting_strength', 6, training_level='novice')
+    # A training contract since 2026-10-20 (test_training_contract.py pins the
+    # source's rules); this is what the selector-era checks still hold.
+    prog = program('starting_strength', 6, training_level='novice', starting_loads_kg={'back_squat': 60})
     archs = [(s.get('archetype') or {}).get('id') for _, s in sessions(prog)]
     check('only sessions A and B', set(archs) == {'3x5_linear', '3x5_linear_b'}, str(set(archs)))
     check('A and B alternate', all(a != b for a, b in zip(archs, archs[1:])), str(archs[:6]))
@@ -58,12 +60,12 @@ def test_starting_strength() -> None:
             if ea.get('exercise'):
                 lifts.setdefault((s['archetype']['id'], ea['slot_role']), set()).add(ea['exercise']['id'])
     check('the squat is the back squat, every session',
-          lifts.get(('3x5_linear', 'primary_squat')) == {'back_squat'}
-          and lifts.get(('3x5_linear_b', 'primary_squat')) == {'back_squat'}, str(lifts))
-    check('A presses and deadlifts', lifts.get(('3x5_linear', 'upper_press')) == {'strict_press'}
-          and lifts.get(('3x5_linear', 'primary_pull')) == {'deadlift'})
-    check('B benches and cleans', lifts.get(('3x5_linear_b', 'upper_press')) == {'bench_press'}
-          and lifts.get(('3x5_linear_b', 'primary_pull')) == {'power_clean'})
+          lifts.get(('3x5_linear', 'novice_lp_squat')) == {'back_squat'}
+          and lifts.get(('3x5_linear_b', 'novice_lp_squat')) == {'back_squat'}, str(lifts))
+    check('A presses and deadlifts', lifts.get(('3x5_linear', 'novice_lp_press')) == {'strict_press'}
+          and lifts.get(('3x5_linear', 'novice_lp_deadlift')) == {'deadlift'})
+    check('B benches and cleans', lifts.get(('3x5_linear_b', 'novice_lp_bench')) == {'bench_press'}
+          and lifts.get(('3x5_linear_b', 'novice_lp_power_clean')) == {'power_clean'})
     squats = [ea['load'].get('weight_kg') for _, s in sessions(prog) for ea in s['exercises']
               if (ea.get('exercise') or {}).get('id') == 'back_squat']
     check('the squat climbs week to week', squats[-1] > squats[0], str(squats))
@@ -108,16 +110,22 @@ def test_constraints() -> None:
               if s['modality'] == 'max_strength']
     check('and caps it at 45 minutes', capped and max(capped) <= 45, str(capped))
 
+    # Starting Strength without a barbell, or with the press ruled out, used to
+    # deliver sessions whose slots were empty; its contract refuses and says why.
     prog = program('starting_strength', 2, training_level='novice', equipment=['kettlebell', 'open_space'])
-    empties = [ea for _, s in sessions(prog) for ea in s['exercises'] if not ea.get('exercise')]
-    check('a slot emptied by equipment says so',
-          empties and all(ea.get('equipment_gap') and ea.get('gap_reason') == 'EQUIPMENT_UNAVAILABLE'
-                          for ea in empties))
+    check('no barbell is refused, naming the equipment',
+          not prog['weeks'] and 'equipment' in prog['validation_errors'][0]['message'])
 
     prog = program('starting_strength', 2, training_level='novice', injury_flags=['shoulder_impingement'])
-    presses = [ea for _, s in sessions(prog) for ea in s['exercises'] if ea['slot_role'] == 'upper_press']
-    check('an injury-excluded press is an injury skip, not a silent gap',
-          presses and all(ea.get('exercise') or ea.get('injury_skip') for ea in presses))
+    check('an injury that rules out an essential lift refuses with its reason',
+          not prog['weeks'] and 'injury' in prog['validation_errors'][0]['message'])
+
+    prog = program('gym_jones', 2, training_level='intermediate', days_per_week=5,
+                   equipment=['kettlebell', 'open_space'])
+    empties = [ea for _, s in sessions(prog) for ea in s['exercises'] if not ea.get('exercise') and not ea.get('meta')]
+    check('a slot emptied by equipment says so',
+          all(ea.get('equipment_gap') or ea.get('injury_skip') or ea.get('coverage_gap') or ea.get('gap_reason')
+              for ea in empties), str(empties[:1]))
 
 
 def test_cadence() -> None:
@@ -299,7 +307,7 @@ def test_a_framework_prescribes_its_own_way() -> None:
     check('a swapped Filly lift carries an RPE target, not a kg',
           alts and all('target_rpe' in a['assignment']['load'] and 'weight_kg' not in a['assignment']['load']
                        for a in alts), str([a['assignment']['load'] for a in alts[:2]]))
-    ss = program('starting_strength', 2, training_level='novice')
+    ss = program('starting_strength', 2, training_level='novice', starting_loads_kg={'back_squat': 60})
     loads = [ea['load'] for _, s in sessions(ss) for ea in s['exercises'] if ea.get('exercise')]
     check('a framework without overrides is unchanged (SS: kg, no RPE)',
           any(l.get('weight_kg') for l in loads) and not any('target_rpe' in l for l in loads))

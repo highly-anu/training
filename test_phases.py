@@ -156,6 +156,7 @@ def test_route():
 
     r = client.post('/api/programs/generate', json={
         'philosophy_id': 'starting_strength', 'constraints': dict(CONSTRAINTS, days_per_week=3,
+                                                                  training_level='novice',
                                                                   training_phase='base'),
         'num_weeks': 1})
     body = r.get_json()

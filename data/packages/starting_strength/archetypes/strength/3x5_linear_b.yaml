@@ -1,8 +1,8 @@
 id: 3x5_linear_b
-name: 3×5 Linear Strength — Session B
+name: 3×5 Linear Strength — Workout B
 modality: max_strength
 category: strength
-duration_estimate_minutes: 60
+duration_estimate_minutes: 50
 required_equipment:
 - barbell
 - rack
@@ -18,64 +18,37 @@ training_levels:
 sources:
 - Starting Strength
 - Rippetoe
-notes: 'Novice linear progression. Three barbell compound lifts per session; load
-  increases every session until the model stalls. Session A and B alternate: A = squat/press/deadlift,
-  B = squat/bench/power clean. The deadlift is a single work set; the squat and upper
-  presses are 3 work sets. Rest long enough to perform every rep.
+notes: 'Workout B of the novice program (Rippetoe, "Who Wants to Be a Novice? You Do"):
+  squat 3×5 across, bench press 3×5 across, power clean 5×3 across — triples, so fatigue
+  does not spoil the technique. Rows are not a substitute. The training contract
+  (training_contract.yaml) prescribes it; these slots describe the session.
 
   '
 slots:
-- role: primary_squat
+- role: squat
   slot_type: sets_reps
   sets: 3
   reps: 5
   intensity: progressing
-  intensity_pct_1rm: 0.8
+  rest_sec: 300
+  exercise_filter:
+    exercise_ids: [back_squat]
+  notes: Three sets of five across, after the warm-up; heavier than last time.
+- role: bench
+  slot_type: sets_reps
+  sets: 3
+  reps: 5
+  intensity: progressing
   rest_sec: 240
   exercise_filter:
-    movement_pattern: squat
-    category: barbell
-    bilateral: true
-    exercise_ids: [back_squat]
-  notes: Add 2.5–5 kg each session. If squat has stalled, reduce load 10% and reset.
-- role: upper_press
-  slot_type: sets_reps
-  sets: 3
-  reps: 5
-  intensity: progressing
-  intensity_pct_1rm: 0.8
-  rest_sec: 180
-  exercise_filter:
-    movement_pattern: press
-    category: barbell
     exercise_ids: [bench_press]
-  notes: Session B benches; session A (3x5_linear) presses overhead.
-- role: primary_pull
+  notes: Three sets of five across; workout A presses instead.
+- role: power_clean
   slot_type: sets_reps
   sets: 5
   reps: 3
   intensity: progressing
-  intensity_pct_1rm: 0.8
-  rest_sec: 300
+  rest_sec: 180
   exercise_filter:
-    movement_pattern: hinge
-    category: barbell
-    bilateral: true
     exercise_ids: [power_clean]
-  notes: Session B's pull is the power clean, five sets of three; it progresses
-    2.5 kg a session.
-scaling:
-  deload:
-    volume_multiplier: 0.6
-    intensity_pct: 0.9
-    notes: Drop to 2 sets per lift at 90% of current working weight. Maintain movement
-      quality.
-  time_limited:
-    drop_slots:
-    - upper_press
-    notes: If under 45 min, perform squat and deadlift only. Never drop the squat.
-  equipment_limited:
-    substitutions:
-    - missing_equipment: rack
-      substitute_approach: Use trap bar deadlift for lower body; floor press replaces
-        bench. Cannot replicate back squat without rack.
+  notes: Five sets of three across.

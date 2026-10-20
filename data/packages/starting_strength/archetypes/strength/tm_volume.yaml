@@ -1,0 +1,47 @@
+id: tm_volume
+name: Texas Method — Volume Day
+modality: max_strength
+category: strength
+duration_estimate_minutes: 90
+required_equipment:
+- barbell
+- rack
+- plates
+applicable_phases:
+- build
+training_levels:
+- intermediate
+sources:
+- Starting Strength
+- Rippetoe
+notes: 'Monday (Rippetoe, "The Texas Method"): squat 5×5 across at about 90 % of the
+  five-rep max, the press or the bench 5×5 at about 90 % (they alternate Mondays), then
+  one heavy set of five deadlifts that goes up every week. Up to 8–10 minutes between
+  sets. The training contract prescribes it; these slots describe the session.
+
+  '
+slots:
+- role: squat
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  intensity: heavy
+  rest_sec: 480
+  exercise_filter:
+    exercise_ids: [back_squat]
+- role: press
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  intensity: heavy
+  rest_sec: 360
+  exercise_filter:
+    exercise_ids: [strict_press, bench_press]
+- role: deadlift
+  slot_type: sets_reps
+  sets: 1
+  reps: 5
+  intensity: progressing
+  rest_sec: 300
+  exercise_filter:
+    exercise_ids: [deadlift]

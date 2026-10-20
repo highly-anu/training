@@ -54,10 +54,8 @@ incompatible_with:
     mitigation: >
       Do not combine. Run linear progression to stall, then transition to block periodization.
 
-deload_protocol:
-  frequency_weeks: 4
-  volume_reduction_pct: 0.6
-  intensity_change: maintain
+# No deload week: the novice program goes up every session until a lift
+# stalls, and a stall resets that lift alone (training_contract.yaml).
 
 # Classic alternating rest — Mon/Wed/Fri and shifted variants
 cadence_options:
@@ -70,19 +68,19 @@ sources:
   - "Practical Programming for Strength Training, Rippetoe & Kilgore"
 
 notes: >
-  The canonical novice protocol. Three full-body sessions per week (Mon/Wed/Fri or
-  equivalent). Each session adds weight to the bar — typically 5 lb/session on squat
-  and deadlift, 2.5 lb on press. The squat is performed every session. Session
-  structure: Squat 3×5, Press or Bench 3×5 (alternating), Deadlift 1×5. Run until
-  linear gains stall (3 consecutive sessions without progress on a lift), then
-  transition to intermediate programming. Conditioning is minimized or eliminated
-  during this phase to preserve recovery capacity.
+  The canonical novice protocol (Rippetoe, "Who Wants to Be a Novice? You Do",
+  2013). Three full-body sessions per week (Mon/Wed/Fri or equivalent), workouts A
+  and B alternating: A = squat 3×5, press 3×5, deadlift 1×5, chin-ups 3×failure;
+  B = squat 3×5, bench 3×5, power clean 5×3. Every lift goes up every time it is
+  trained. A lift missed twice at one weight resets 5 % (Alter, "The Reset", 2018);
+  one that stalls again moves to intermediate programming. Conditioning is
+  minimized or eliminated during this phase to preserve recovery capacity.
 
 expectations:
   min_weeks: 8
   ideal_weeks: 12
   min_days_per_week: 3
   ideal_days_per_week: 3
-  min_session_minutes: 45
+  min_session_minutes: 60
   ideal_session_minutes: 75
   supports_split_days: false

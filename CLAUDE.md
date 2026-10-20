@@ -1111,6 +1111,12 @@ A phase's `checks:` may now state its defining claims — `max_substituted_share
 (`fidelity.claim_violations`) — which the gate checks and a contract's
 `verify_phase_rules` refuses to save broken. Injury flags name only catalog ids, each
 substitution pair inside one package (`validate_entities`).
+Starting Strength runs as a training contract (since 2026-10-20): Workouts A and B
+alternate by a module's `variants` + `rotation`, the Texas Method is its intermediate
+track (`track_for_level` routes a request with no track by level), and
+`load_per_exposure` prescribes kg from what each lift made — a miss repeats, two
+reset 5 %, a lift with no weight works up on the day; the one-tap confirm takes
+`lifts: {id: {made, weightKg}}` (docs/logic/training_contracts.md).
 **In a worktree under `.claude/worktrees/`, blank `DATABASE_URL` and `SUPABASE_URL`**:
 `load_dotenv()` walks up to the main checkout's production `.env`.
 
