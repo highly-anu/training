@@ -892,6 +892,10 @@ def test_rows_from_before_the_program_stay_off_it() -> None:
     insert_workout('fit_file-wk2', wk2, 'max_strength', 60)
     health_store.upsert_match(U, {'importedWorkoutId': 'fit_file-wk2',
                                   'sessionKey': '2-Monday-0', 'matchConfidence': 'auto'})
+    # A second recording of the same session (two watch saves, 2026-10-17).
+    insert_workout('fit_file-wk2-again', wk2, 'max_strength', 5)
+    health_store.upsert_match(U, {'importedWorkoutId': 'fit_file-wk2-again',
+                                  'sessionKey': '2-Monday-0', 'matchConfidence': 'manual'})
     health_store.upsert_session_log(U, {'sessionKey': '2-Monday-0', 'exercises': {},
                                         'completedAt': wk2.isoformat() + 'T18:00:00+00:00'})
     # A stale client logging "week 7 Monday" today: stamped with this
@@ -915,7 +919,11 @@ def test_rows_from_before_the_program_stay_off_it() -> None:
           and (by_wid['fit_file-wk2'].get('sessionUid') or '').startswith(vid + ':'),
           str(by_wid.get('fit_file-wk2')))
 
-    recent = {(r['session_key'], r['session_uid']): r for r in health_store.get_recent_session_logs(U)}
+    recent_rows = health_store.get_recent_session_logs(U)
+    check('a log with two linked workouts is listed once',
+          [r['session_key'] for r in recent_rows].count('2-Monday-0') == 1,
+          str([r['session_key'] for r in recent_rows]))
+    recent = {(r['session_key'], r['session_uid']): r for r in recent_rows}
     flags = {k[0]: r['in_current_program'] for k, r in recent.items()}
     check('the phone gets the same verdicts',
           flags.get('2-Monday-0') is True and flags.get('6-Monday-0') is False

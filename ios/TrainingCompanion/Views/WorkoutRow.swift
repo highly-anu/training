@@ -2,7 +2,7 @@ import SwiftUI
 
 /// One recorded workout as a row (design-system §6.23): what the device
 /// recorded, when, for how long, its heart rate, the source, the planned
-/// session it is linked to, and the TRIMP badge. Log ▸ Workouts lists them;
+/// session it is linked to, and the TRIMP badge. Log ▸ Activity lists them;
 /// a session detail shows the one linked to it. The web's counterpart is
 /// `components/workout/WorkoutRow.tsx`.
 struct WorkoutRow: View {

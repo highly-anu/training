@@ -7,15 +7,14 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet'
 import { MatchConfirmDialog } from '@/components/bio/MatchConfirmDialog'
-import { EmptyState } from '@/components/shared/EmptyState'
-import { WorkoutList } from '@/components/workout/WorkoutList'
-import { SessionsTab } from '@/components/log/SessionsTab'
+import { ActivityTab, type MatchFilter } from '@/components/log/ActivityTab'
 import { LinkingTab } from '@/components/log/LinkingTab'
 import { useDismissedLinks } from '@/hooks/useDismissedLinks'
 import type { WorkoutMatchStatus } from '@/components/workout/WorkoutRow'
 import { parseAppleHealthXml, parseStravaJson } from '@/lib/importParsers'
 import { autoMatchWorkouts, sessionCalendarDate } from '@/lib/workoutMatcher'
 import { buildLinkingDays } from '@/lib/linking'
+import type { LogShow } from '@/lib/logSessions'
 import { parseSessionKey, sessionLabel } from '@/lib/sessionKeys'
 import { formatActivityType } from '@/lib/activityType'
 import { parseWorkoutFile, startAsyncParse, pollParseJob } from '@/api/workouts'
@@ -28,16 +27,15 @@ import type { ImportedWorkout, PendingMatch } from '@/api/types'
 /**
  * Log — the record of what happened and the decisions waiting on it.
  *
- * One list of recorded workouts (this used to be three: Import ▸ History,
- * Import ▸ Matched and Analytics ▸ Activity), Linking — each day's workouts
- * beside its planned sessions, with the matcher's suggestions for that day —
- * Import as an action rather than a page, and Sessions — what was logged
- * against planned sessions, across programs, as on the phone. Analytics
+ * Activity — recorded workouts and what was logged against planned sessions,
+ * across programs, in one list with a filter for each (Workouts and Sessions
+ * were two sub-tabs until 2026-10-20), Linking — each day's workouts beside
+ * its planned sessions, with the matcher's suggestions for that day — and
+ * Import as an action rather than a page, as on the phone. Analytics
  * interprets; this is the ledger it reads.
  */
 
-type LogTab = 'workouts' | 'linking' | 'sessions'
-type Filter = 'all' | 'matched' | 'unmatched' | 'pending'
+type LogTab = 'activity' | 'linking'
 type ParseStatus = 'idle' | 'parsing' | 'done' | 'error'
 
 const LARGE_XML_BYTES = 50 * 1024 * 1024
@@ -206,12 +204,14 @@ export function Log() {
   const [searchParams, setSearchParams] = useSearchParams()
   const linkToSession = searchParams.get('linkTo')
   const tabParam = searchParams.get('tab')
-  // 'suggestions' is the tab's old name; Home's card and older links still send it.
-  const activeTab: LogTab = tabParam === 'linking' || tabParam === 'suggestions' ? 'linking'
-    : tabParam === 'sessions' ? 'sessions' : 'workouts'
+  // 'suggestions' is Linking's old name; Home's card and older links still send it.
+  const activeTab: LogTab = tabParam === 'linking' || tabParam === 'suggestions' ? 'linking' : 'activity'
+  // ?show= picks Activity's type; the old ?tab=workouts and ?tab=sessions land on it.
+  const showParam = searchParams.get('show') ?? tabParam
+  const show: LogShow = showParam === 'workouts' || showParam === 'sessions' ? showParam : 'all'
   // ?linkTo= (from a session) and ?import=1 (from Home) open the sheet directly.
   const [importOpen, setImportOpen] = useState(() => !!linkToSession || searchParams.get('import') === '1')
-  const [filter, setFilter] = useState<Filter>('all')
+  const [match, setMatch] = useState<MatchFilter>('all')
 
   const [status, setStatus] = useState<ParseStatus>('idle')
   const [errorMsg, setErrorMsg] = useState('')
@@ -238,8 +238,21 @@ export function Log() {
     setSearchParams(
       (prev) => {
         const next = new URLSearchParams(prev)
-        if (tab === 'workouts') next.delete('tab')
+        if (tab === 'activity') next.delete('tab')
         else next.set('tab', tab)
+        return next
+      },
+      { replace: true }
+    )
+  }
+
+  function setShow(value: LogShow) {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        next.delete('tab')
+        if (value === 'all') next.delete('show')
+        else next.set('show', value)
         return next
       },
       { replace: true }
@@ -364,12 +377,6 @@ export function Log() {
     () => importedWorkouts.slice().sort((a, b) => b.date.localeCompare(a.date)),
     [importedWorkouts]
   )
-  const counts = useMemo(() => {
-    const c = { all: allImported.length, matched: 0, unmatched: 0, pending: 0 }
-    for (const w of allImported) c[statusFor(w)]++
-    return c
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allImported, workoutMatches, pendingMatches])
   // Earlier programs' planned sessions, back to the oldest recorded workout:
   // a day before that has nothing to link.
   const today = format(new Date(), 'yyyy-MM-dd')
@@ -396,18 +403,9 @@ export function Log() {
   }), [importedWorkouts, workoutMatches, pendingMatches, program, programStartDate, programVersionId, planned, today, dismissedLinks])
   const openLinkDays = linkingDays.filter((d) => d.needsAttention).length
 
-  const visible = filter === 'all' ? allImported : allImported.filter((w) => statusFor(w) === filter)
-
-  const filters: { id: Filter; label: string }[] = [
-    { id: 'all',       label: `All (${counts.all})` },
-    { id: 'matched',   label: `Matched (${counts.matched})` },
-    { id: 'unmatched', label: `Unmatched (${counts.unmatched})` },
-    ...(counts.pending > 0 ? [{ id: 'pending' as Filter, label: `Pending (${counts.pending})` }] : []),
-  ]
   const tabs: { id: LogTab; label: string }[] = [
-    { id: 'workouts',    label: 'Workouts' },
+    { id: 'activity',    label: 'Activity' },
     { id: 'linking',     label: openLinkDays > 0 ? `Linking (${openLinkDays})` : 'Linking' },
-    { id: 'sessions',    label: 'Sessions' },
   ]
 
   return (
@@ -442,49 +440,20 @@ export function Log() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
-        {activeTab === 'workouts' && (
-          allImported.length === 0 ? (
-            <div className="max-w-2xl mx-auto px-8 py-12">
-              <EmptyState
-                icon={<ArrowDownToLine className="size-8 opacity-40" />}
-                title="No workouts yet"
-                description="Connected sources import automatically. Upload a .fit, Apple Health .xml or Strava .json file to add one by hand."
-                action={{ label: 'Import a file', onClick: () => setImportOpen(true) }}
-              />
-            </div>
-          ) : (
-            <div className="max-w-2xl mx-auto px-8 py-12 space-y-6">
-              <div className="flex flex-wrap items-center gap-1">
-                {filters.map((f) => (
-                  <button
-                    key={f.id}
-                    type="button"
-                    onClick={() => setFilter(f.id)}
-                    className={cn(
-                      'px-2.5 py-1 text-[11px] rounded border transition-colors',
-                      filter === f.id
-                        ? 'bg-primary/15 border-primary/40 text-primary'
-                        : 'border-border text-muted-foreground hover:bg-muted'
-                    )}
-                  >
-                    {f.label}
-                  </button>
-                ))}
-              </div>
-              {visible.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No {filter} workouts.</p>
-              ) : (
-                <WorkoutList
-                  workouts={visible}
-                  statusFor={statusFor}
-                  sessionLabelFor={sessionLabelFor}
-                  onOpen={(w) => navigate(`/log/${encodeURIComponent(w.id)}`, { state: { workout: w } })}
-                  onMatch={(w) => setActivePending(pendingMatches.find((p) => p.importedWorkout.id === w.id) ?? null)}
-                  onRemove={(w) => removeImportedWorkout(w.id)}
-                />
-              )}
-            </div>
-          )
+        {activeTab === 'activity' && (
+          <ActivityTab
+            workouts={allImported}
+            show={show}
+            onShowChange={setShow}
+            match={match}
+            onMatchChange={setMatch}
+            statusFor={statusFor}
+            sessionLabelFor={sessionLabelFor}
+            onOpen={(w) => navigate(`/log/${encodeURIComponent(w.id)}`, { state: { workout: w } })}
+            onMatch={(w) => setActivePending(pendingMatches.find((p) => p.importedWorkout.id === w.id) ?? null)}
+            onRemove={(w) => removeImportedWorkout(w.id)}
+            onImport={() => setImportOpen(true)}
+          />
         )}
         {activeTab === 'linking' && (
           <LinkingTab
@@ -494,7 +463,6 @@ export function Log() {
             onImport={() => setImportOpen(true)}
           />
         )}
-        {activeTab === 'sessions' && <SessionsTab />}
       </div>
 
       {/* Import — an action, not a place */}

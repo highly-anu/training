@@ -66,7 +66,7 @@ web's Insight group into Train.
 | **Today** | — (web route `/`) | — |
 | **Program** | Overview · Calendar · History | Overview · Calendar · History |
 | **Analytics** | Program · Progress · Blocks · Load · Recovery | Program · Progress · Blocks · Load · Recovery |
-| **Log** | Workouts · Suggestions · Sessions | Workouts · Suggestions · Sessions |
+| **Log** | Activity · Linking | Activity · Linking |
 | **Explore** | Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards | — |
 | **Profile** | Athlete · Equipment · Injuries · Schedule · Standards | Athlete (incl. injuries) · Equipment · Schedule · Standards — Injuries folded into Athlete on 2026-10-17; `section=injuries` lands there. Benchmarks was renamed Standards the same day (`?tab=benchmarks` / `section=benchmarks` land there): *This program* · *Your results* · *All standards*, each standard's history one tap away |
 | **Settings** | Connections · Appearance · Account (· Developer) | Connections · Devices · Pair · Notifications · Appearance · Account · developer sections (pushed from Profile's gear) |
@@ -99,7 +99,7 @@ with a new **Overview** (methodology, phases, priority mix) beside it.
 | Train | **Today** | `/` | — | Program settings sheet |
 | Train | **Program** | `/program` | Overview · Calendar · History | New program · Settings (rebuild, regenerate from week, event date, injuries) |
 | Train | **Analytics** | `/analytics` | Program · Progress · Blocks · Load · Recovery | — (period selector is a control strip) |
-| Train | **Log** | `/log` | Workouts · Suggestions (count badge) · Sessions | Import (sheet) |
+| Train | **Log** | `/log` | Activity (All · Workouts · Sessions) · Linking (count badge) | Import (sheet) |
 | Library | **Explore** | `/explore` | Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards | — |
 | You | **Profile** | `/profile` | Athlete (incl. heart-rate zones) · Equipment · Injuries · Schedule · Standards | — |
 | You | **Settings** | `/settings` | Connections · Appearance · Account (· Developer in dev builds) | — |
@@ -144,7 +144,8 @@ second list of completed sessions beside Progress's Session Log); it was added o
 logs of earlier programs (`GET /api/health/sessions/recent` resolves each
 `session_uid` through `planned_sessions`). It lists what was logged against planned
 sessions — earlier programs' included — not recorded workouts, so it is not a
-fourth workout list.
+fourth workout list. On 2026-10-20 the two lists became one, Activity: workouts and
+logged sessions by date, with a filter for each type (`?show=workouts|sessions`).
 
 **Analytics** is the interpretation: Program (am I doing the plan — scorecard,
 intensity, movement, session shapes, load), Progress (is it working — the review's
@@ -156,7 +157,7 @@ activation timeline, each lift across the span with the blocks as bands and per-
 deltas, weekly load by block, the standards ladder over time), Load (weekly TRIMP, PMC,
 zones — the single load surface), Recovery (readiness, sleep, HRV, RHR, check-in and
 history — the current Bio Log). The Overview KPIs fold into Load; Activity is deleted
-in favour of Log ▸ Workouts. Tabs are URL-driven (`?tab=`) so Home cards and redirects
+in favour of Log ▸ Activity. Tabs are URL-driven (`?tab=`) so Home cards and redirects
 can land on one. Home's Adherence card (Development until 2026-10-16) stays about the
 current program and links to the tab; its Progress card shows the methodology's headline
 measure (`methodologies[].headlineSummary`) and opens Progress.
@@ -178,7 +179,7 @@ Standards), sex (a new profile key; unblocks the female standards' tables), body
 |---|---|---|---|
 | **Today** | `TodayView` | — | Renamed from "Dashboard". Empty state gets a "Generate a program" button (design system §6.3); adds a Suggestions card and a Progress card that routes to Analytics ▸ Progress. |
 | **Program** | `ProgramView` | Overview · Calendar · History | Builder picks a methodology from `/api/philosophies`; Settings sheet has its title and Cancel; Overview holds "About this methodology", the phases and the priority mix. |
-| **Log** | `LogView` | Workouts · Suggestions · Sessions | Added 2026-10-01 once the phone could log: the recorded-workout list (with the `.fit` importer) moved here from Analytics, the suggestions inbox with accept/review/dismiss, and what was logged against planned sessions across the program — earlier programs' logs included, named by the server from `planned_sessions`. |
+| **Log** | `LogView` | Activity · Linking | Added 2026-10-01 once the phone could log: the recorded-workout list (with the `.fit` importer) moved here from Analytics, the suggestions inbox with accept/review/dismiss, and what was logged against planned sessions across the program — earlier programs' logs included, named by the server from `planned_sessions`. |
 | **Analytics** | `AnalyticsView` | Program · Progress · Blocks · Load · Recovery | Progress = today's pushed `ProgressionView`; Program = the methodology scorecard; Blocks = every program (design system §6.20); Load = the old Overview. |
 | **Profile** | `ProfileView` | Athlete · Equipment · Schedule · Standards | Athlete = level, DOB, bodyweight, editable HR zones (a zone-coloured bar, §3.5), injuries. Toolbar gear pushes **Settings**: Connections (integration toggles), Devices & Sync (pair Garmin, Sync Now, last sync, sync details, debug log), Account (sign out), Appearance. |
 

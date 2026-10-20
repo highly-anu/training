@@ -170,8 +170,11 @@ a section on both clients in one change). Train — Today `/`
 (`pages/Dashboard.tsx`, no sub-tabs, side panel), Program `/program` (Overview · Calendar ·
 History via `?tab=`, Overview first since 2026-10-17; the builder is the flow `/program/new`), Analytics `/analytics`
 (Program · Progress · Blocks · Load · Recovery via `?tab=`; `development` aliases Blocks;
-before Log since 2026-10-16, which folded the old Insight group into Train), Log `/log` (Workouts ·
-Linking · Sessions, Import as a sheet; Linking is one card per day, workouts beside
+before Log since 2026-10-16, which folded the old Insight group into Train), Log `/log` (Activity ·
+Linking, Import as a sheet; Activity is recorded workouts and logged sessions in one
+list with an All · Workouts · Sessions filter (`?show=`; the old `?tab=workouts|sessions`
+land on it), Workouts and Sessions until 2026-10-20 — `components/log/ActivityTab.tsx`,
+`lib/logSessions.mergeLogEntries`, iOS `LogActivityTab` + `WorkoutListFilter.entries`; Linking is one card per day, workouts beside
 sessions, suggestions scored within the day only, drag a workout onto any session to
 link across days — `lib/linking.ts`, `components/log/LinkingTab.tsx`; `?tab=suggestions`
 aliases it. Earlier programs' days come from `GET /programs/planned-sessions` back to the
@@ -766,7 +769,7 @@ writes.
   resolves each log's `session_uid` through `planned_sessions`
   (`program_history.planned_rows_for_uids`) and adds `planned_name`,
   `planned_modality`, `planned_date`, `program_version_id`, `week_index` and
-  `day_name`. The phone's Log ▸ Sessions uses them for logs whose legacy key
+  `day_name`. The phone's Log ▸ Activity uses them for logs whose legacy key
   resolves to nothing — or to the wrong session: "3-Friday-0" exists in the
   current program too, so a planned date before the current program's start
   overrides the key lookup (`LogSessions.rows`).

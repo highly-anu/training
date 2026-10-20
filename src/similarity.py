@@ -6,6 +6,7 @@ Each pair returns a dict:
 """
 from __future__ import annotations
 
+import heapq
 import itertools
 import math
 import os
@@ -410,67 +411,74 @@ def movement_pattern_similarity(
 # Top-level: compute all similarity matrices
 # ---------------------------------------------------------------------------
 
+TOP_N = 8
+
+
+def _category(items: list[tuple[str, object]], pair, top: int) -> dict:
+    """One category, compact: every pair's score once, explained only for each
+    item's nearest ``top``.
+
+    ``ids`` is the category in order and ``scores`` the upper triangle of the
+    score matrix, row by row — (i, j) with i < j sits at
+    ``i*n - i*(i+1)//2 + (j - i - 1)`` (``lib/similarity.pairIndex`` on the web).
+    ``top[id]`` lists that item's nearest peers with the full result.
+
+    The whole matrix with an explanation per pair (``{id_a: {id_b: result}}``)
+    was 70 MB of JSON at 463 exercises, and building it took ~200 MB, which
+    killed the 256 MB production worker on every Explore visit.
+    """
+    ids = [item_id for item_id, _ in items]
+    scores: list[float] = []
+    nearest: dict[str, list] = {item_id: [] for item_id in ids}
+    for (i, (a_id, a)), (j, (b_id, b)) in itertools.combinations(enumerate(items), 2):
+        sim = pair(a, b)
+        scores.append(sim['score'])
+        for here, there, k in ((a_id, b_id, j), (b_id, a_id, i)):
+            heap = nearest[here]
+            entry = (sim['score'], -k, there, sim)
+            if len(heap) < top:
+                heapq.heappush(heap, entry)
+            elif entry[:2] > heap[0][:2]:
+                heapq.heapreplace(heap, entry)
+    return {
+        'ids': ids,
+        'scores': scores,
+        'top': {
+            item_id: [{'id': there, **sim}
+                      for _, _, there, sim in sorted(heap, key=lambda e: e[:2], reverse=True)]
+            for item_id, heap in nearest.items() if heap
+        },
+    }
+
+
 def compute_all_similarities(
     philosophies: list,
     frameworks: dict,
     modalities: dict,
     archetypes: list,
     exercises: dict,
+    top: int = TOP_N,
 ) -> dict:
-    """Return {category: {id_a: {id_b: result}}} for all pairs within each category.
+    """Return {category: {ids, scores, top}} for every category (see ``_category``).
 
-    Results are stored symmetrically: both [a][b] and [b][a] point to the same object.
+    Ties among the nearest go to the item listed first.
     """
-    aliases    = _load_pattern_aliases()
-    membership = _build_pattern_membership(aliases)
-
-    result: dict = {
-        'philosophies':      {},
-        'frameworks':        {},
-        'modalities':        {},
-        'archetypes':        {},
-        'exercises':         {},
-        'movement_patterns': {},
-    }
-
-    # --- Philosophies ---
-    for a, b in itertools.combinations(philosophies, 2):
-        sim = philosophy_similarity(a, b)
-        result['philosophies'].setdefault(a['id'], {})[b['id']] = sim
-        result['philosophies'].setdefault(b['id'], {})[a['id']] = sim
-
-    # --- Frameworks ---
-    fw_list = list(frameworks.values())
-    for a, b in itertools.combinations(fw_list, 2):
-        sim = framework_similarity(a, b)
-        result['frameworks'].setdefault(a['id'], {})[b['id']] = sim
-        result['frameworks'].setdefault(b['id'], {})[a['id']] = sim
-
-    # --- Modalities ---
-    mod_list = list(modalities.values())
-    for a, b in itertools.combinations(mod_list, 2):
-        sim = modality_similarity(a, b)
-        result['modalities'].setdefault(a['id'], {})[b['id']] = sim
-        result['modalities'].setdefault(b['id'], {})[a['id']] = sim
-
-    # --- Archetypes ---
-    for a, b in itertools.combinations(archetypes, 2):
-        sim = archetype_similarity(a, b)
-        result['archetypes'].setdefault(a['id'], {})[b['id']] = sim
-        result['archetypes'].setdefault(b['id'], {})[a['id']] = sim
-
-    # --- Exercises (~19k pairs — most expensive) ---
+    membership = _build_pattern_membership(_load_pattern_aliases())
     ex_list = list(exercises.values())
-    for a, b in itertools.combinations(ex_list, 2):
-        sim = exercise_similarity(a, b)
-        result['exercises'].setdefault(a['id'], {})[b['id']] = sim
-        result['exercises'].setdefault(b['id'], {})[a['id']] = sim
 
-    # --- Movement patterns (base patterns only, derived from alias table + exercises) ---
-    base_patterns = list(membership.keys())
-    for a_id, b_id in itertools.combinations(base_patterns, 2):
-        sim = movement_pattern_similarity(a_id, b_id, membership, exercises)
-        result['movement_patterns'].setdefault(a_id, {})[b_id] = sim
-        result['movement_patterns'].setdefault(b_id, {})[a_id] = sim
+    def keyed(objs):
+        return [(o['id'], o) for o in objs]
 
-    return result
+    return {
+        'philosophies': _category(keyed(philosophies), philosophy_similarity, top),
+        'frameworks':   _category(keyed(frameworks.values()), framework_similarity, top),
+        'modalities':   _category(keyed(modalities.values()), modality_similarity, top),
+        'archetypes':   _category(keyed(archetypes), archetype_similarity, top),
+        'exercises':    _category(keyed(ex_list), exercise_similarity, top),
+        # Base patterns only, derived from the alias table + exercises
+        'movement_patterns': _category(
+            [(pid, pid) for pid in membership],
+            lambda a, b: movement_pattern_similarity(a, b, membership, ex_list),
+            top,
+        ),
+    }
