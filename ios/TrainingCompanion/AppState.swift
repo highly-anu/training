@@ -1310,11 +1310,15 @@ final class AppState: ObservableObject {
         return (result, request, start)
     }
 
+    enum AdoptResult { case adopted, stale, failed }
+
     /// The program holds for the profile's settings: record them on it, so the
     /// profile stops offering a regenerate. Takes the new revision; no save of
-    /// our own. False when it could not (a 409 reloads the program).
-    func adoptProfileConstraints(_ c: GenerateConstraints) async -> Bool {
-        guard let api, let sp = serverProgram, let program = sp.currentProgram else { return false }
+    /// our own. `.stale` reloads the program (its new revision checks again);
+    /// `.failed` is for the caller to say and offer again — it used to read as
+    /// "nothing to offer", and the difference was silently dropped.
+    func adoptProfileConstraints(_ c: GenerateConstraints) async -> AdoptResult {
+        guard let api, let sp = serverProgram, let program = sp.currentProgram else { return .failed }
         do {
             let adopted = try await api.adoptProgramConstraints(
                 baseRevision: sp.revision, equipment: c.equipment, trainingLevel: c.trainingLevel,
@@ -1327,12 +1331,12 @@ final class AppState: ObservableObject {
                                           revision: adopted.revision ?? sp.revision,
                                           programVersionId: sp.programVersionId, extra: sp.extra)
             profileOfferOutcome = .adopted
-            return true
+            return .adopted
         } catch is APIClient.StaleProgramRevision {
             await loadProgram()
-            return false
+            return .stale
         } catch {
-            return false
+            return .failed
         }
     }
 
@@ -1352,19 +1356,29 @@ final class AppState: ObservableObject {
             throw APIError.serverErrorDetail(422, draft.validation?.errors.first?.message
                                              ?? "This program cannot be built as asked.")
         }
-        let startDate = draft.extra["program_start_date"]?.stringValue ?? request.startDate
-        serverProgram = ServerProgram(currentProgram: draft, programStartDate: startDate,
-                                      eventDate: request.eventDate, sourceGoalIds: request.sourceIds,
-                                      sourceGoalWeights: request.philosophyWeights ?? [:],
-                                      revision: serverProgram?.revision, programVersionId: nil, extra: [:])
-        writeWidgetData()
-        programSaveConflict = nil
-        try await saveProgramToServer()
-        // A stale revision reloads the program that was there and says so.
-        if let conflict = programSaveConflict {
-            throw APIError.serverErrorDetail(409, conflict)
+        guard let api else { throw APIError.unauthenticated }
+        let startDate = draft.extra["program_start_date"]?.stringValue
+            ?? request.startDate ?? serverProgram?.programStartDate
+        // Saved first, and only then the program on screen: assigned before a
+        // save that failed, the draft stood in for the program (Today, the
+        // widgets, reminders) while the server kept the old one.
+        // `keepDaysBehind`: a rebuild of the same block keeps the days already
+        // behind the athlete, as generate's persist branch did for the old
+        // phone regenerate — a session trained this morning is not rewritten.
+        let payload = UserProgramSavePayload(
+            currentProgram: draft, programStartDate: startDate, eventDate: request.eventDate,
+            sourceGoalIds: request.sourceIds, sourceGoalWeights: request.philosophyWeights ?? [:],
+            baseRevision: serverProgram?.revision, extra: ["keepDaysBehind": .bool(true)])
+        do {
+            _ = try await api.saveProgram(payload)
+        } catch is APIClient.StaleProgramRevision {
+            await loadProgram()
+            throw APIError.serverErrorDetail(409, "Your program changed elsewhere — reloaded. Nothing was started; preview again.")
         }
+        // The saved copy: its revision and version, and any elapsed days the
+        // server put back.
         await loadProgram()
+        writeWidgetData()
     }
 
     func saveProgramToServer() async throws {

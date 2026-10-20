@@ -46,6 +46,32 @@ final class ProgramPreviewTests: XCTestCase {
                        ["Running at minimum 3 day(s)/week", "Dropped mobility (tier 3) - needs 4+ training days"])
     }
 
+    func testTheServersHeldBackCountWins() throws {
+        var program = try decode(GeneratedProgram.self, programJSON)
+        XCTAssertEqual(HeldBack.summary(program).slots, 1, "without the server's count, counted here")
+        program.extra["held_back"] = .object(["slots": .int(7), "sessions": .int(3)])
+        XCTAssertEqual(HeldBack.summary(program).slots, 7)
+        XCTAssertEqual(HeldBack.summary(program).sessions, 3)
+    }
+
+    func testHeldBackAsksAboutTheDraftItself() throws {
+        let draft = try decode(GeneratedProgram.self, """
+        {"weeks": [{"week_number": 1, "week_in_phase": 3, "is_deload": false, "phase": "build",
+                    "phase_id": "uphill_specific", "track_id": "uphill_main", "schedule": {}}]}
+        """)
+        var c = GenerateConstraints()
+        c.trainingPhase = "base"
+        let request = GenerateProgramRequest(philosophyId: "uphill_athlete", constraints: c, numWeeks: nil,
+                                             startDate: "2026-10-20", eventDate: "2027-03-01")
+        let impact = request.impactRequest(for: draft)
+        XCTAssertNil(impact.eventDate, "the event date would size another program")
+        XCTAssertEqual(impact.numWeeks, 1, "the draft's own length")
+        XCTAssertEqual(impact.constraints.startPhase, "uphill_specific")
+        XCTAssertEqual(impact.constraints.trackId, "uphill_main")
+        XCTAssertEqual(impact.constraints.periodizationWeek, 3)
+        XCTAssertNil(impact.constraints.trainingPhase)
+    }
+
     func testBlockerWordsForEachCause() {
         let flag = HeldBack.Names(flag: { $0 == "knee_meniscus_post_op" ? "Knee (post-op)" : nil })
         XCTAssertEqual(HeldBack.blockerText(SlotBlocker(cause: "injury", exercise: "back_squat", needs: [],

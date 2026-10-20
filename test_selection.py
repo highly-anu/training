@@ -215,6 +215,12 @@ def test_blocked_by_names_the_constraint() -> None:
     b = blocked({'snatch': _ex('snatch', requires=['zz_unknown_skill'])}, unlocked=set(), flags=())
     check('level: what it requires that the level has not reached',
           b and b['cause'] == 'level' and b['requires'] == ['zz_unknown_skill'], str(b))
+    lib_known = {'snatch': _ex('snatch', requires=['bracing', 'zz_unknown_skill'])}
+    constraints = {'equipment': [], 'injury_flags': [], 'training_level': 'novice'}
+    b = selector._explain_unfilled(SLOT, constraints, lib_known, set(), set(), FLAGS, 'base', set(), None,
+                                   'max_strength', known=frozenset({'bracing'}))[3]
+    check('level: never a concept the level already knows',
+          b and b['requires'] == ['zz_unknown_skill'], str(b))
     b = blocked({'snatch': _ex('snatch')}, flags=(), phase_excluded=frozenset({'snatch'}))
     check('phase: the lift the phase leaves out', b == {'cause': 'phase', 'exercise': 'snatch'}, str(b))
 

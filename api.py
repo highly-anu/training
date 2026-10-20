@@ -29,6 +29,7 @@ from src import watch_spec as _watch_spec
 from src import standards as _standards_mod
 from src.analytics import benchmarks_data as _bd
 from src import goals, loader, provenance
+from src import blockers as _blockers
 from src import phases
 from src.phases import PhaseResolutionError
 from src.similarity import compute_all_similarities
@@ -454,6 +455,9 @@ def _transform_program(raw: dict, goal: dict, constraints: dict, validation) -> 
         'weeks':          weeks,
         'volume_summary': volume_summary,
         'phase_summary':  _phase_summary(weeks, goal),
+        # What the constraints held back, counted once for both clients
+        # (src/blockers.held_back); derived from the weeks, never stored.
+        'held_back':      _blockers.held_back(weeks),
         'compromises':    raw.get('compromises', []),
         'coverage_report': raw.get('coverage_report'),
         **{k: raw[k] for k in ('training_contract', 'module_state') if k in raw},
@@ -1344,43 +1348,59 @@ def dev_constraint_impact():
 
 
 # The impact and constraint-change routes run several generations each (up to
-# seven, a few seconds apiece) on a 256 MB machine serving four threads: one
-# runs at a time in the process, one per athlete, and an answer is kept for
-# the body that asked it, since the preview re-asks when a toggle goes back.
+# seven, a few seconds apiece) on a 256 MB machine serving four threads. One
+# runs at a time in the process and one per athlete; a request that finds the
+# gate taken answers 429 at once, never waiting on it — four threads parked on
+# a 20 s wait were the whole pool, and the watch's sync queued behind them
+# (test_worker_stalls.py). The clients retry a 429.
+#
+# Only impact answers are cached, small ones, for ten minutes, keyed on the
+# body and the athlete's day: a constraint-change answer carries a whole
+# generated program (~1 MB, several as dicts), and the clients already keep
+# theirs per program revision. The generator reads state the body does not
+# carry (a contract's confirmed sessions), so nothing is kept long.
 _HEAVY_GATE = threading.BoundedSemaphore(1)
 _HEAVY_USERS: set = set()
-_HEAVY_USERS_LOCK = threading.Lock()
-_HEAVY_CACHE: 'dict[str, tuple[dict, int]]' = {}
-_HEAVY_CACHE_MAX = 32
+_HEAVY_LOCK = threading.Lock()   # guards _HEAVY_USERS and _HEAVY_CACHE
+_HEAVY_CACHE: 'dict[str, tuple[float, tuple[dict, int]]]' = {}
+_HEAVY_CACHE_MAX = 8
+_HEAVY_CACHE_TTL = 600
+_HEAVY_CACHE_MAX_BYTES = 512 * 1024
 
 
-def _heavy_run(kind: str, body: dict, run):
-    """`run(body)` → (dict, status), once at a time and cached on the body.
-    Busy answers 429 `{busy: true}`, which the clients retry."""
+def _heavy_run(kind: str, body: dict, run, cache: bool = False):
+    """`run(body)` → (dict, status), one at a time; busy answers 429
+    `{busy: true}`. `cache` keeps a small 200 answer for ten minutes."""
     import hashlib
-    key = hashlib.sha256(json.dumps([kind, getattr(g, 'user_id', None), body],
-                                    sort_keys=True, default=str).encode()).hexdigest()
-    if key in _HEAVY_CACHE:
-        return _HEAVY_CACHE[key]
+    import time
     user = getattr(g, 'user_id', None)
-    with _HEAVY_USERS_LOCK:
+    key = hashlib.sha256(json.dumps([kind, user, _date.today().isoformat(), body],
+                                    sort_keys=True, default=str).encode()).hexdigest()
+    now = time.monotonic()
+    with _HEAVY_LOCK:
+        hit = _HEAVY_CACHE.get(key) if cache else None
+        if hit and now - hit[0] < _HEAVY_CACHE_TTL:
+            return hit[1]
         if user in _HEAVY_USERS:
             return {'busy': True, 'detail': 'Still working on your last request.'}, 429
         _HEAVY_USERS.add(user)
     try:
-        if not _HEAVY_GATE.acquire(timeout=20):
+        if not _HEAVY_GATE.acquire(blocking=False):
             return {'busy': True, 'detail': 'The server is busy; trying again.'}, 429
         try:
             out = run(body)
         finally:
             _HEAVY_GATE.release()
     finally:
-        with _HEAVY_USERS_LOCK:
+        with _HEAVY_LOCK:
             _HEAVY_USERS.discard(user)
-    if out[1] == 200:
-        while len(_HEAVY_CACHE) >= _HEAVY_CACHE_MAX:
-            _HEAVY_CACHE.pop(next(iter(_HEAVY_CACHE)))
-        _HEAVY_CACHE[key] = out
+    if cache and out[1] == 200 and len(json.dumps(out[0], default=str)) <= _HEAVY_CACHE_MAX_BYTES:
+        with _HEAVY_LOCK:
+            for stale in [k for k, (at, _) in _HEAVY_CACHE.items() if now - at >= _HEAVY_CACHE_TTL]:
+                _HEAVY_CACHE.pop(stale, None)
+            while len(_HEAVY_CACHE) >= _HEAVY_CACHE_MAX:
+                _HEAVY_CACHE.pop(next(iter(_HEAVY_CACHE)), None)
+            _HEAVY_CACHE[key] = (now, out)
     return out
 
 
@@ -1391,7 +1411,7 @@ def program_impact():
     level and proficiency change against a reference with nothing in the way,
     and what would restore it (src/constraint_impact.py). Generate's body."""
     body = request.get_json(silent=True) or {}
-    out, status = _heavy_run('impact', body, _constraint_impact)
+    out, status = _heavy_run('impact', body, _constraint_impact, cache=True)
     return jsonify(out), status
 
 
@@ -2821,6 +2841,11 @@ def save_user_program_endpoint():
         # instead of destroying newer work. `revision` is omitted by older
         # clients, which keep the previous (unchecked) behaviour.
         from src.db import get_program_revision
+        # A previewed program being started (both clients' Start): a rebuild of
+        # the same block keeps the days already behind the athlete, as
+        # generate's persist branch does. Only on request — an ordinary save
+        # (a move into yesterday, a swap) must not be undone.
+        keep_days_behind = bool(body.pop('keepDaysBehind', False))
         base_rev = body.pop('baseRevision', None) or body.pop('revision', None)
         if base_rev is not None:
             current_rev = get_program_revision(user_id)
@@ -2886,6 +2911,12 @@ def save_user_program_endpoint():
 
             body['currentProgram'] = current
 
+        kept_days = 0
+        if keep_days_behind:
+            stored = get_user_program(user_id)
+            body, kept_days = _keep_days_behind_counted(
+                user_id, _normalize_program_keys(stored) if stored else None, body)
+
         save_user_program(user_id, body)
         revision = get_program_revision(user_id)
         # After the save and after the 409 check: history must never claim a
@@ -2900,6 +2931,9 @@ def save_user_program_endpoint():
             # The saved weeks' summary: a client that moved, swapped or
             # spliced weeks shows phase changes for what it just saved.
             'phaseSummary':     _phase_summary(saved.get('weeks') or [], saved.get('goal')),
+            # Elapsed days put back (keepDaysBehind): the saved weeks differ
+            # from what the client sent, so it reads the program again.
+            'keptDays':         kept_days,
         })
     except Exception as e:
         app.logger.warning('save_user_program error: %s', e)
@@ -4393,22 +4427,27 @@ def _keep_days_behind(user_id: str, existing: dict | None, envelope: dict) -> di
     "from tomorrow" themselves; the whole-program regenerate saved here did
     not, and rewrote a session trained that morning (2026-10-19). With the past
     kept, record_version sees the block continue and carries its matches."""
+    return _keep_days_behind_counted(user_id, existing, envelope)[0]
+
+
+def _keep_days_behind_counted(user_id: str, existing: dict | None, envelope: dict) -> tuple[dict, int]:
+    """`_keep_days_behind`, and how many elapsed days it put back."""
     from src import program_history as ph
     try:
         start = ph.start_date_of(envelope)
         if not existing or not start or ph.start_date_of(existing) != start:
-            return envelope
+            return envelope, 0
         today = _today_for(_standards_context(user_id)[1])
         cutoff = today + _timedelta(days=1) if ph.trained_on(user_id, today) else today
         if _date.fromisoformat(start) >= cutoff:
-            return envelope
+            return envelope, 0
         restored, changed = ph.restore_elapsed(user_id, envelope, cutoff)
         if changed:
-            app.logger.info('generate: kept %d elapsed day(s) of %s', len(changed), user_id)
-        return restored
+            app.logger.info('program save: kept %d elapsed day(s) of %s', len(changed), user_id)
+        return restored, len(changed)
     except Exception as err:  # noqa: BLE001 — keeping the past must never fail the save
-        app.logger.warning('generate: could not keep the elapsed days: %s', err)
-        return envelope
+        app.logger.warning('program save: could not keep the elapsed days: %s', err)
+        return envelope, 0
 
 
 def _standards_context(user_id: str) -> tuple[str, str | None]:

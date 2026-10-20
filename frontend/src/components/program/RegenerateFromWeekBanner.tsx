@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { differenceInCalendarDays, format, parseISO } from 'date-fns'
@@ -87,17 +87,31 @@ export function RegenerateFromWeekBanner() {
 
   // Unaffected: the program is what the new settings would build, so it now
   // says it was built for them. Once per answer.
+  // Keyed with the revision: a stale adopt reloads the program, and its new
+  // revision checks and adopts again.
   const adopted = useRef<string | null>(null)
-  useEffect(() => {
-    if (!settled || check.data?.affected !== false || adopted.current === requestKey) return
-    adopted.current = requestKey
+  const [adoptFailed, setAdoptFailed] = useState(false)
+  const adoptKey = `${revision}|${requestKey}`
+  const adopt = useCallback(() => {
+    if (!settled) return
     const c = settled.params.constraints
+    setAdoptFailed(false)
     void adoptProgramConstraints(
       { equipment: c.equipment, training_level: c.training_level, injury_flags: c.injury_flags,
         ...(c.days_per_week ? { days_per_week: c.days_per_week } : {}) },
       customInjuryFlags,
-    ).then((ok) => ok && setOutcome({ adopted: true }))
-  }, [check.data, settled, requestKey, customInjuryFlags])
+    ).then((result) => {
+      if (result === 'adopted') setOutcome({ adopted: true })
+      // Never dropped silently: the banner used to go blank and never retry.
+      else if (result === 'failed') setAdoptFailed(true)
+    })
+  }, [settled, customInjuryFlags])
+  useEffect(() => {
+    if (!settled || check.data?.affected !== false || check.data?.comparable === false
+        || adopted.current === adoptKey) return
+    adopted.current = adoptKey
+    adopt()
+  }, [check.data, settled, adoptKey, adopt])
 
   // A new difference starts over (adjusted during render, not in an effect).
   const [prevDiffCount, setPrevDiffCount] = useState(diffs.length)
@@ -128,7 +142,14 @@ export function RegenerateFromWeekBanner() {
       </p>
     )
   }
-  if (result && !result.affected) return null
+  if (result && !result.affected) {
+    return adoptFailed ? (
+      <div className="mx-6 mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        <span>Your program doesn&apos;t change with these settings, but recording them on it failed.</span>
+        <Button size="sm" variant="outline" className="h-7 text-xs" onClick={adopt}>Try again</Button>
+      </div>
+    ) : null
+  }
 
   const tail = result?.program
   const refused = !!tail && isInfeasible(tail)

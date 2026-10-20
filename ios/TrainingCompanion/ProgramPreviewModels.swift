@@ -161,7 +161,18 @@ enum HeldBack {
         return out
     }
 
-    /// How much of a program its constraints held back.
+    /// How much of a program its constraints held back: the server's count
+    /// (`held_back`, src/blockers.held_back, on every generate), else — a
+    /// program stored before it, or a draft edited since — counted here.
+    static func summary(_ program: GeneratedProgram) -> (slots: Int, sessions: Int) {
+        if case .object(let o)? = program.extra["held_back"],
+           case .int(let slots)? = o["slots"], case .int(let sessions)? = o["sessions"] {
+            return (slots, sessions)
+        }
+        return counts(program)
+    }
+
+    /// The same count from the weeks, for a program without the server's.
     static func counts(_ program: GeneratedProgram) -> (slots: Int, sessions: Int) {
         var slots = 0, sessions = 0
         for week in program.weeks {
@@ -238,6 +249,24 @@ extension GenerateProgramRequest {
 
     /// The methodologies it builds from, in order.
     var sourceIds: [String] { philosophyIds ?? philosophyId.map { [$0] } ?? [] }
+
+    /// Held back's request for `draft`: the draft's own first track, phase and
+    /// week in phase and its length (the comparison runs at most 12 weeks),
+    /// never the event date. Sent as it was, the impact sized itself by
+    /// defaults — 4 weeks from the track's first phase — and described another
+    /// program than an event-dated 20-week draft.
+    func impactRequest(for draft: GeneratedProgram) -> GenerateProgramRequest {
+        var c = constraints
+        if let first = draft.weeks.first {
+            c.trackId = first.trackId ?? c.trackId
+            if let phaseId = first.phaseId { c.startPhase = phaseId; c.trainingPhase = nil }
+            c.periodizationWeek = first.weekInPhase
+        }
+        return GenerateProgramRequest(philosophyId: philosophyId, philosophyIds: philosophyIds,
+                                      philosophyWeights: philosophyWeights, constraints: c,
+                                      numWeeks: min(max(draft.weeks.count, 1), 12), weekInProgram: weekInProgram,
+                                      startDate: startDate, eventDate: nil, persist: false)
+    }
 }
 
 // MARK: - The server's comparisons

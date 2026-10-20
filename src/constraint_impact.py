@@ -370,6 +370,14 @@ class _Explainer:
 
 # ── Before and after one change ───────────────────────────────────────────────
 
+def _prescription(ea: dict | None) -> tuple:
+    """The numbers a slot is prescribed — sets, reps, kg, minutes, zones —
+    without the words beside them."""
+    load = (ea or {}).get('load') or {}
+    return tuple(sorted((k, v) for k, v in load.items()
+                        if isinstance(v, (int, float)) and not isinstance(v, bool)))
+
+
 def diff_programs(before: dict, after: dict) -> dict:
     """What one constraint change does to a program: `before` and `after` are
     the same request generated with the old and the new constraints
@@ -377,8 +385,13 @@ def diff_programs(before: dict, after: dict) -> dict:
 
     A session is changed when it appears or goes, changes modality or
     archetype, or keeps its archetype and fills a slot otherwise (another
-    exercise, or filled ↔ empty). `affected` is whether any session changed;
-    `first_week_number` is the earliest week that changes.
+    exercise, filled ↔ empty, or the same exercise prescribed otherwise —
+    `load`). `affected` is whether any session changed; `first_week_number`
+    is the earliest week that changes.
+
+    The prescription counts because a level change can keep every exercise
+    and move only the loads: compared by exercise alone it read as
+    unaffected, was adopted, and left novice loads under an intermediate.
     """
     b, a = sessions_of(before), sessions_of(after)
     week_numbers = [w.get('week_number') for w in (after.get('weeks') or before.get('weeks') or [])]
@@ -403,8 +416,10 @@ def diff_programs(before: dict, after: dict) -> dict:
         slots = []
         for i in range(max(len(olds), len(news))):
             o, n = (olds[i] if i < len(olds) else None), (news[i] if i < len(news) else None)
-            if _fill(o) != _fill(n):
+            refilled = _fill(o) != _fill(n)
+            if refilled or _prescription(o) != _prescription(n):
                 slots.append({'index': i, 'role': (n or o or {}).get('slot_role'),
+                              'kind': 'exercise' if refilled else 'load',
                               'before': _exercise_view(o), 'after': _exercise_view(n),
                               'gap_before': _gap(o or {}), 'gap_after': _gap(n or {})})
         if slots:

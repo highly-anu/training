@@ -67,7 +67,14 @@ export function sessionNotes(session: Session): string[] {
   return out
 }
 
-/** How much of a program its constraints held back, for a summary line. */
+/** How much of a program its constraints held back: the server's count
+ *  (`held_back`, src/blockers.held_back, on every generate), else — a program
+ *  stored before it, or a draft whose session was replaced — counted here. */
+export function heldBackSummary(program: GeneratedProgram): { slots: number; sessions: number } {
+  return program.held_back ?? heldBackCounts(program)
+}
+
+/** The same count from the weeks, for a program without the server's. */
 export function heldBackCounts(program: GeneratedProgram): { slots: number; sessions: number } {
   let slots = 0
   let sessions = 0

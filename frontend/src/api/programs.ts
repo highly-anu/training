@@ -3,7 +3,7 @@ import { apiClient } from './client'
 import { queryKeys } from './queryKeys'
 import { useProgramStore } from '@/store/programStore'
 import { useUiStore } from '@/store/uiStore'
-import { spliceRegenerated } from '@/lib/programSource'
+import { spliceRegenerated, tailResume } from '@/lib/programSource'
 import type { AthleteConstraints, ConstraintChangeResult, ConstraintImpact, CustomInjuryFlag, FatigueState, GeneratedProgram, ModalityId, Session, TrainingLevel, TrainingPhase, TracedProgram, ExerciseAlternative, AdjustResult, ProgressionAdjustment } from './types'
 
 function getMondayOf(date: Date): string {
@@ -109,7 +109,9 @@ export function commitProgram(
     params.eventDate ?? null,
     startMonday,
     params.philosophyIds ?? [params.philosophyId ?? ''],
-    params.philosophyWeights ?? {}
+    params.philosophyWeights ?? {},
+    // A rebuild of the same block keeps the days already behind the athlete.
+    { keepDaysBehind: true },
   )
   useUiStore.getState().setSelectedWeekIndex(0)
   return true
@@ -198,6 +200,28 @@ function retryBusy(failureCount: number, error: unknown): boolean {
 }
 
 /**
+ * Held back's request for a draft: the draft's own first track, phase and
+ * week in phase and its length (the comparison runs at most 12 weeks), never
+ * the event date. Sent as the builder's request, the impact sized itself by
+ * defaults — 4 weeks from the track's first phase — and described another
+ * program than an event-dated 20-week draft. A refused draft has no weeks:
+ * its request, without the event date, at most 12 weeks.
+ */
+export function impactParams(params: GenerateParams, draft: GeneratedProgram | null | undefined): GenerateParams {
+  const weeks = draft?.weeks ?? []
+  const base: GenerateParams = { ...params, eventDate: undefined }
+  if (weeks.length === 0) return { ...base, numWeeks: Math.min(params.numWeeks ?? 12, 12) }
+  const resume = tailResume({ weeks, constraints: params.constraints }, 0)
+  return {
+    ...base,
+    trackId: resume.trackId ?? params.trackId,
+    startPhaseId: resume.startPhaseId ?? params.startPhaseId,
+    constraints: resume.constraints,
+    numWeeks: Math.min(weeks.length, 12),
+  }
+}
+
+/**
  * The preview's "Held back": the program against a reference with nothing
  * in the way, and what each constraint changes (POST /programs/impact; up to
  * seven generations, so it loads after the draft is on screen). `params`
@@ -249,20 +273,25 @@ export function useConstraintChangeCheck(
 export async function adoptProgramConstraints(
   constraints: Partial<Pick<AthleteConstraints, 'equipment' | 'training_level' | 'injury_flags' | 'days_per_week'>>,
   customInjuryFlags?: CustomInjuryFlag[],
-): Promise<boolean> {
+): Promise<'adopted' | 'stale' | 'failed'> {
   const s = useProgramStore.getState()
-  if (!s.currentProgram) return false
+  if (!s.currentProgram) return 'failed'
   try {
     const res = await (apiClient.patch('/user/program/constraints', {
       baseRevision: s.revision,
       constraints,
       ...(customInjuryFlags ? { custom_injury_flags: customInjuryFlags } : {}),
     }) as unknown as Promise<{ saved: boolean; revision: string; constraints: AthleteConstraints }>)
-    if (!res.saved) return false
+    if (!res.saved) return 'failed'
     s.adoptConstraints(res.constraints, res.revision)
-    return true
-  } catch {
-    return false
+    return 'adopted'
+  } catch (err) {
+    // Another copy saved since: read it; its revision asks the check again.
+    if ((err as { status?: number })?.status === 409) {
+      await s.loadFromServer()
+      return 'stale'
+    }
+    return 'failed'
   }
 }
 

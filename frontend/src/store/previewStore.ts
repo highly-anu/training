@@ -47,8 +47,11 @@ export const usePreviewStore = create<PreviewStore>()((set) => ({
     params, draft, edits: 0,
     regenerate: s.regenerate ? { ...s.regenerate, changes: [] } : null,
   })),
+  // A replaced session can hold back another number of slots, so the
+  // server's `held_back` no longer counts this draft; heldBackSummary counts it.
   replaceSession: (weekIndex, day, sessionIndex, session) => set((s) => s.draft
-    ? { draft: withSessionReplaced(s.draft, weekIndex, day, sessionIndex, session), edits: s.edits + 1 }
+    ? { draft: { ...withSessionReplaced(s.draft, weekIndex, day, sessionIndex, session), held_back: undefined },
+        edits: s.edits + 1 }
     : {}),
   replaceExercise: (weekIndex, day, sessionIndex, exerciseIndex, assignment) => set((s) => s.draft
     ? { draft: withExerciseReplaced(s.draft, weekIndex, day, sessionIndex, exerciseIndex, assignment),

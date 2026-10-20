@@ -28,7 +28,7 @@ import { useProgramStore } from '@/store/programStore'
 import { useProfileStore } from '@/store/profileStore'
 import { useBuilderStore } from '@/store/builderStore'
 import { builderGenerateParams } from '@/lib/builderParams'
-import { heldBackCounts, idLabel } from '@/lib/heldBack'
+import { heldBackSummary, idLabel } from '@/lib/heldBack'
 import { cn } from '@/lib/utils'
 import type { EquipmentId, TrainingPhase } from '@/api/types'
 
@@ -92,7 +92,7 @@ export function ProgramPreview() {
   }, [draft, urlMode])
 
   const { segments, totalWeeks } = usePhaseCalendar(draft ?? undefined, 1)
-  const counts = useMemo(() => (draft ? heldBackCounts(draft) : { slots: 0, sessions: 0 }), [draft])
+  const counts = useMemo(() => (draft ? heldBackSummary(draft) : { slots: 0, sessions: 0 }), [draft])
   const changed = useMemo(() => new Set((regenerate?.changes ?? [])
     .map((c) => `${c.week_index}|${c.day}|${c.session_index}`)), [regenerate])
 

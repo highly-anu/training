@@ -26,6 +26,9 @@ struct RegenerateOfferCard: View {
         case answered(ConstraintChangeResult, GenerateProgramRequest, Int)
         /// The check failed: the offer stands as it did, without knowing what moves.
         case unknown
+        /// Nothing changes, but recording the settings on the program failed:
+        /// say so and offer it again, never drop the difference silently.
+        case adoptFailed(GenerateConstraints)
     }
 
     var body: some View {
@@ -90,6 +93,24 @@ struct RegenerateOfferCard: View {
             }
         case .unknown:
             card(diffs, result: nil, request: nil, start: startIndex)
+        case .adoptFailed(let constraints):
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Your program doesn't change with these settings, but recording them on it failed.")
+                    .font(.footnote).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button("Try again") { Task { await adopt(constraints) } }
+                    .buttonStyle(.bordered).controlSize(.small)
+            }
+            .padding(.vertical, 4)
+        }
+    }
+
+    /// Record the unchanged program's new settings; on a stale revision the
+    /// program reloads and its new revision runs the check again.
+    private func adopt(_ constraints: GenerateConstraints) async {
+        switch await appState.adoptProfileConstraints(constraints) {
+        case .adopted, .stale: state = .idle
+        case .failed: state = .adoptFailed(constraints)
         }
     }
 
@@ -186,10 +207,8 @@ struct RegenerateOfferCard: View {
             if !result.affected && result.comparable {
                 // The program is what the new settings would build: it now
                 // says it was built for them, and the offer never appears.
-                if await appState.adoptProfileConstraints(request.constraints) {
-                    state = .idle
-                    return
-                }
+                await adopt(request.constraints)
+                return
             }
             state = .answered(result, request, start)
         } catch is CancellationError {

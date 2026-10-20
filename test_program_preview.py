@@ -70,6 +70,18 @@ def test_diff_programs() -> None:
     fewer = {'Monday': week['Monday']}
     d = constraint_impact.diff_programs(_program(week), _program(fewer))
     check('a session that goes', [c['change'] for c in d['changes']] == ['removed'], d['changes'])
+    heavier = {**week, 'Monday': [_session('max_strength', 'a', 'back_squat', 'press')]}
+    heavier['Monday'][0]['exercises'][0]['load'] = {'sets': 3, 'reps': 5, 'weight_kg': 80.0}
+    lighter = {**week, 'Monday': [_session('max_strength', 'a', 'back_squat', 'press')]}
+    lighter['Monday'][0]['exercises'][0]['load'] = {'sets': 3, 'reps': 5, 'weight_kg': 60.0,
+                                                   'note': 'start light'}
+    d = constraint_impact.diff_programs(_program(lighter), _program(heavier))
+    check('the same exercise at another load is a change (a level change moves loads)',
+          d['affected'] and d['changes'][0]['slots'][0]['kind'] == 'load', d['changes'])
+    same_numbers = {**week, 'Monday': [_session('max_strength', 'a', 'back_squat', 'press')]}
+    same_numbers['Monday'][0]['exercises'][0]['load'] = {'sets': 3, 'reps': 5, 'weight_kg': 60.0}
+    check('words beside the numbers are not',
+          not constraint_impact.diff_programs(_program(lighter), _program(same_numbers))['affected'])
     d = constraint_impact.diff_programs(_program(week), {'weeks': []})
     check('a refused program changes every session', d['sessions']['changed'] == 2
           and all(c['change'] == 'removed' for c in d['changes']), d)
@@ -120,6 +132,25 @@ def test_constraint_change() -> None:
     check('adding equipment that fills slots does change it', body.get('affected') is True, body.get('sessions'))
 
 
+def test_generate_counts_what_was_held_back() -> None:
+    print('generate counts what the constraints held back, for both clients')
+    import api
+    client = api.app.test_client()
+    full = client.post('/api/programs/generate', json={
+        'philosophy_id': 'starting_strength', 'num_weeks': 2, 'constraints': ATHLETE}).get_json()
+    check('nothing held back with the kit the method asks for', full.get('held_back') == {'slots': 0, 'sessions': 0},
+          full.get('held_back'))
+    bare = client.post('/api/programs/generate', json={
+        'philosophy_id': 'gym_jones', 'num_weeks': 2,
+        'constraints': {**ATHLETE, 'training_level': 'intermediate', 'days_per_week': 4,
+                        'equipment': ['kettlebell', 'pull_up_bar']}}).get_json()
+    held = bare.get('held_back') or {}
+    empty = [ea for w in bare['weeks'] for ss in w['schedule'].values() for s in ss for ea in s['exercises']
+             if ea.get('exercise') is None and ea.get('blocked_by')]
+    check('a kettlebell kit leaves Gym Jones slots empty, each counted',
+          held.get('slots', 0) >= len(empty) > 0 and held.get('sessions', 0) > 0, (held, len(empty)))
+
+
 def test_heavy_runs_are_gated() -> None:
     print('one heavy run at a time, cached on its body')
     import api
@@ -133,12 +164,20 @@ def test_heavy_runs_are_gated() -> None:
     api._generate_program_inner = counting
     try:
         api._HEAVY_CACHE.clear()
+        impact = {'philosophy_id': 'starting_strength', 'num_weeks': 1,
+                  'constraints': {**ATHLETE, 'equipment': ['kettlebell']}}
+        client.post('/api/programs/impact', json=impact)
+        n = len(calls)
+        again = client.post('/api/programs/impact', json=impact)
+        check('the same impact body is answered from the cache', again.status_code == 200 and len(calls) == n,
+              (n, len(calls)))
         after = {**ATHLETE, 'equipment': ATHLETE['equipment'] + ['sandbag']}
         _change(client, after, weeks=1)
         n = len(calls)
-        again = _change(client, after, weeks=1)
-        check('the same body is answered from the cache', again.status_code == 200 and len(calls) == n,
-              (n, len(calls)))
+        _change(client, after, weeks=1)
+        check('a constraint-change answer (a whole program) is never kept', len(calls) == n + 2, (n, len(calls)))
+        check('nothing it answered is in the cache', len(api._HEAVY_CACHE) == 1, len(api._HEAVY_CACHE))
+
         api._HEAVY_USERS.add('local-dev-user')
         try:
             busy = _change(client, {**after, 'session_time_minutes': 60}, weeks=1)
@@ -146,6 +185,32 @@ def test_heavy_runs_are_gated() -> None:
             api._HEAVY_USERS.discard('local-dev-user')
         check('a second run for the same athlete is told to retry', busy.status_code == 429
               and busy.get_json().get('busy') is True, busy.status_code)
+
+        # Another athlete's run holds the gate: answer at once, never wait on it.
+        import time
+        api._HEAVY_GATE.acquire()
+        try:
+            t = time.monotonic()
+            busy = _change(client, {**after, 'session_time_minutes': 45}, weeks=1)
+            waited = time.monotonic() - t
+        finally:
+            api._HEAVY_GATE.release()
+        check('a taken gate answers 429 without waiting for it', busy.status_code == 429 and waited < 1,
+              (busy.status_code, waited))
+        check('and frees the athlete for the retry', 'local-dev-user' not in api._HEAVY_USERS)
+
+        # A run that raises leaves the gate and the athlete free.
+        def boom(_body):
+            raise RuntimeError('generation failed')
+        with api.app.test_request_context():
+            api.g.user_id = 'someone'
+            try:
+                api._heavy_run('impact', {'x': 1}, boom, cache=True)
+            except RuntimeError:
+                pass
+        check('a failed run releases the gate', api._HEAVY_GATE.acquire(blocking=False))
+        api._HEAVY_GATE.release()
+        check('and the athlete', 'someone' not in api._HEAVY_USERS)
     finally:
         api._generate_program_inner = real
 
@@ -204,12 +269,37 @@ def test_adopt_constraints() -> None:
         check('and nothing is written', len(saved) == 1, len(saved))
         empty = client.patch('/api/user/program/constraints', json={'constraints': {'foo': 1}})
         check('nothing to adopt is a 422', empty.status_code == 422, empty.status_code)
+
+        # Starting a previewed program asks the PUT to keep the days behind the
+        # athlete — what generate's persist branch did for the phone's old
+        # regenerate — and only then.
+        calls = []
+        real_keep = api._keep_days_behind_counted
+
+        def keep(user_id, existing, envelope):
+            calls.append(envelope)
+            return envelope, 2
+        api._keep_days_behind_counted = keep
+        try:
+            envelope = {'currentProgram': {'weeks': [], 'constraints': {}}, 'programStartDate': '2026-10-19',
+                        'sourceGoalIds': ['starting_strength'], 'sourceGoalWeights': {}}
+            res = client.put('/api/user/program', json={**envelope, 'baseRevision': str(store['rev']),
+                                                        'keepDaysBehind': True})
+            check('a Start keeps the days behind, and says how many', res.status_code == 200
+                  and res.get_json().get('keptDays') == 2 and len(calls) == 1, (res.status_code, res.get_json()))
+            check('the flag is never stored', 'keepDaysBehind' not in store['program'], list(store['program']))
+            res = client.put('/api/user/program', json={**envelope, 'baseRevision': str(store['rev'])})
+            check('an ordinary save leaves the past as sent', len(calls) == 1
+                  and res.get_json().get('keptDays') == 0, res.get_json())
+        finally:
+            api._keep_days_behind_counted = real_keep
     finally:
         db.get_user_program, db.save_user_program, db.get_program_revision = orig
 
 
 def main() -> int:
-    for t in (test_diff_programs, test_constraint_change, test_heavy_runs_are_gated,
+    for t in (test_diff_programs, test_constraint_change, test_generate_counts_what_was_held_back,
+              test_heavy_runs_are_gated,
               test_impact_for_every_athlete, test_adopt_constraints):
         t()
     if FAILURES:

@@ -706,6 +706,8 @@ export interface GeneratedProgram {
   program_start_date?: string
   compromises?: string[]
   coverage_report?: CoverageReport | null
+  /** What the constraints held back (src/blockers.held_back); derived, never stored. */
+  held_back?: { slots: number; sessions: number }
 }
 
 // ─── Generation Trace ─────────────────────────────────────────────────────────
