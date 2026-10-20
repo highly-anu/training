@@ -187,6 +187,8 @@ def phase_sequence_for(track: dict) -> list[dict]:
             entry['drop_order'] = list(ph.get('drop_order') or [])
         if ph.get('checks'):
             entry['checks'] = dict(ph['checks'])
+        if ph.get('former_ids'):
+            entry['former_ids'] = list(ph['former_ids'])
         out.append(entry)
     return out
 
@@ -209,6 +211,11 @@ def resolve_start_phase(phase_seq: list, start_phase: str | None = None,
         for e in phase_seq:
             if e.get('phase_id') == start_phase:
                 return start_phase
+        # A phase a package renamed or merged (its `former_ids`) resolves to
+        # the phase that replaced it: a stored week still names the old one.
+        for e in phase_seq:
+            if start_phase in (e.get('former_ids') or []):
+                return e['phase_id']
         # A kind passed in the id field (older clients) still resolves.
         for e in phase_seq:
             if e.get('phase') == start_phase:
@@ -246,7 +253,7 @@ def phase_rules(philosophies: list, phase_id: str | None, framework_id: str | No
     for phil in philosophies or []:
         for track in tracks_of(phil):
             for ph in track.get('phases') or []:
-                if ph.get('id') != phase_id:
+                if ph.get('id') != phase_id and phase_id not in (ph.get('former_ids') or []):
                     continue
                 if framework_id and ph.get('framework_id') != framework_id:
                     continue

@@ -37,6 +37,8 @@
         "max_rpe": {"type": "integer", "minimum": 1, "maximum": 10},
         "deload_keep": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
         "requires_mastery": {"type": "array", "items": {"type": "string"}},
+        "may_share_day": {"type": "boolean", "description": "An optional module that may join a day the essential modules use when its minutes fit beside them (Wildman's programs stack into one session); free days are still taken first."},
+        "when_mastered": {"type": "boolean", "description": "Joins the week only once `requires_mastery` is confirmed (mastered_exercises or the level's seeds); until then it is left out and the program says so, rather than the track refusing."},
         "optional": {"type": "boolean", "description": "Supplementary work the method lets the athlete skip: placed only on days no essential module uses, left out with its reason when none is free or its movement is ruled out."},
         "progression": {
           "type": "object", "additionalProperties": false, "required": ["model"],
@@ -46,6 +48,8 @@
             "reps_step": {"type": "integer", "minimum": 1},
             "reps_max": {"type": "integer", "minimum": 1},
             "rounds": {"type": "array", "minItems": 1, "items": {"type": "integer", "minimum": 1}},
+            "interval_sec": {"type": "array", "minItems": 1, "items": {"type": "integer", "minimum": 30}, "description": "Per stage of `rounds`, the interval each round takes (default 60: an EMOM). Wildman's swing program runs 60-second minutes, then 90-second start/stop rounds."},
+            "cues": {"type": "array", "items": {"type": ["string", "null"]}, "description": "Per stage of `rounds`, what changes in the movement (start/stop: park the bell between reps)."},
             "duration_start_sec": {"type": "integer", "minimum": 60},
             "duration_step_sec": {"type": "integer", "minimum": 1},
             "duration_max_sec": {"type": "integer", "minimum": 60}

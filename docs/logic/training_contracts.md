@@ -37,13 +37,22 @@ against its own protocol's minutes, which need not equal the module's weekly
 ceiling (Pentathlon's practice sets stop at four minutes, the events run six), and
 it carries the protocol's hand switch for the watches.
 
-## Wildman adaptation and sources
+## Wildman's Phase II and sources
 
-The public swing FAQ describes increasing repetitions in fixed minute intervals,
-then increasing volume at the same bell. General Practice uses that progression
-with stable single-bell practice modules. Complementary technique, the clean/press
-cycle and the pentathlon duration ramp are explicitly app adaptations. This does
-not reproduce a purchased plan or claim to replace individual coaching.
+General Practice is Wildman's Phase II on the Tetris of Training: his programs,
+each twice a week on nonconsecutive days, stacked as the session time holds. The
+swing module runs the public Nerd Math swing program's four approaches in order —
+6 to 20 swings a minute (two more a session) over a 10-minute EMOM, then a
+20-minute one, then start/stop swings in ten and twenty 90-second rounds — sixteen
+weeks at two a week, then a heavier bell. A density cycle's `interval_sec` and
+`cues` express the stages; a stage that does not fit the session falls back to the
+longest earlier one that does, at the same interval first ("if pressed for time, do
+the short version"). Clean and press stays essential; the Turkish get-up and the
+deck squat are `optional` modules that `may_share_day`, taking a day beside the
+essential work when its minutes allow; the snatch is `when_mastered`, joining only
+once confirmed (it is then no entry requirement). The program has no deload week
+and one repeatable phase, `build`; `former_ids` lets a stored week that names
+foundations, ladder or practice still regenerate.
 
 Sources are recorded in the package contract, including
 https://www.wildmanathletica.com/programming and the public swing-program FAQ.

@@ -67,8 +67,10 @@ def contract_requirements(goal: dict, level: str | None = None) -> dict:
     seeded = set((contract.get('level_seeds') or {}).get(level) or [])
     # Only the modules this level runs: a novice on General Practice is never
     # asked for the intermediate clean-and-press module's skills.
+    # A module that waits for its movements (`when_mastered`) asks nothing.
     modules = [m for m in contract.get('modules') or []
-               if level is None or level in (m.get('training_levels') or [level])]
+               if (level is None or level in (m.get('training_levels') or [level]))
+               and not m.get('when_mastered')]
     out: dict = {'mastered_exercises': sorted({e for m in modules
                                                for e in m.get('requires_mastery') or []} - seeded)}
     if contract.get('requires_kettlebell_pair'):

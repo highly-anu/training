@@ -37,6 +37,11 @@ def run():
             if ids - catalog.keys():
                 raise AssertionError(f'Foreign exercises: {ids - catalog.keys()}')
             used |= ids
+            # A declared substitute (the goblet squat for a deck squat an injury
+            # rules out) is a path too: the program prescribes it when needed.
+            placed = {m['id'] for s in sessions for m in s.get('modules') or []}
+            used |= {alt for m in contract['modules'] if m['id'] in placed
+                     for b in m['blocks'] for alt in b.get('alternatives') or []}
             print(f"{track['id']} | {level} | {weeks} | {len(sessions)} | {len(ids)} / {len(catalog)}")
     orphaned = catalog.keys() - used
     print(f'Package coverage: {len(used)}/{len(catalog)}; orphaned: {sorted(orphaned)}')

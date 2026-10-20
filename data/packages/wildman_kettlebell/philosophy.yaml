@@ -34,67 +34,41 @@ primary_track_id: general_practice
 tracks:
 - id: general_practice
   name: General Practice
-  description: Stable swing and complementary practice modules, twice weekly each on nonconsecutive days.
-    Progression is per successful module exposure, independent of phase names.
+  description: Wildman's Phase II programs on the Tetris of Training — swing, clean and press, Turkish
+    get-up, deck squat and, once confirmed, snatch — each twice a week on nonconsecutive days, as many
+    as the week's time holds. Each runs its Nerd Math cycle at one bell and starts again with a heavier
+    one; progress is per clean session, never by the calendar.
   phases:
-  - id: foundations
-    name: Foundations
-    kind: base
-    weeks: 6
+  - id: build
+    name: 'Phase II: Build'
+    kind: build
+    weeks: 16
+    repeatable: true
+    # Foundations, Density and Volume and Repeatable Practice were the same
+    # modules under three names; Wildman's structure is the cycle inside each
+    # program, not phases of the calendar.
+    former_ids:
+    - foundations
+    - ladder
+    - practice
     framework_id: kb_general_practice
-    focus: Learn and repeat the fundamentals
-    description: Practice the same movements at a controllable bell. Novices use unloaded get-up positions.
-      Do not progress through movements merely because weeks have elapsed.
+    focus: Repeat the fundamentals; cycle each program, then a heavier bell
+    description: 'The swing runs the Nerd Math program''s four approaches: 6 to 20 swings a minute over
+      10 minutes, then over 20, then start/stop swings in ten and twenty 90-second rounds — sixteen
+      weeks at two sessions a week. Clean and press, get-up and deck squat run their own cycles beside
+      it, as the session time allows; the snatch joins after clean and press once it is confirmed. A
+      cycle finished cleanly is repeated with a heavier bell. Wildman calls Phase II the one you are
+      never done with.'
     adaptations:
-    - Repeated skill practice
-    - Capacity at a stable bell
-    - Density and volume progression
+    - Posterior-chain strength and work capacity
+    - Repeated skill practice at a stable bell
+    - Density, then volume, then a heavier bell
     intensity: Clean mechanics, RPE 7 or below; rest within every minute
     exclude_exercises:
-    - wk_kb_snatch
     - wk_kb_half_snatch
     - kb_jerk_single
     - kb_jerk_double
     - wk_kb_long_cycle_press
-    checks:
-      archetypes_forbidden:
-      - kb_pentathlon_training
-      - kb_double_strength
-      - kb_pentathlon_test
-  - id: ladder
-    name: Density and Volume
-    kind: build
-    weeks: 6
-    framework_id: kb_general_practice
-    focus: Advance repetitions, then volume
-    description: Continue each module cycle without resetting it. Forecasts assume clean completion; recorded
-      outcomes decide the next earned prescription. A higher density or volume does not authorize a heavier
-      bell.
-    adaptations:
-    - Repeated skill practice
-    - Capacity at a stable bell
-    - Density and volume progression
-    intensity: Clean mechanics, RPE 7 or below; rest within every minute
-    checks:
-      archetypes_forbidden:
-      - kb_pentathlon_training
-      - kb_double_strength
-      - kb_pentathlon_test
-  - id: practice
-    name: Repeatable Practice
-    kind: maintenance
-    weeks: 4
-    repeatable: true
-    framework_id: kb_general_practice
-    focus: Repeat or explicitly choose the next cycle
-    description: Retain movement identity. Repeat at the same bell or explicitly start a new cycle after
-      confirming technique and available equipment. Snatches and jerks require a separate proficiency
-      decision.
-    adaptations:
-    - Repeated skill practice
-    - Capacity at a stable bell
-    - Density and volume progression
-    intensity: Clean mechanics, RPE 7 or below; rest within every minute
     checks:
       archetypes_forbidden:
       - kb_pentathlon_training

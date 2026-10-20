@@ -78,8 +78,10 @@ def test_no_phase_text_names_another_philosophy():
 def test_goal_carries_the_track():
     g = goals.philosophy_to_goal('wildman_kettlebell', FRAMEWORKS)
     ok(g['track']['id'] == 'general_practice', 'Wildman defaults to its primary track')
-    ok([e['phase_id'] for e in g['phase_sequence']] == ['foundations', 'ladder', 'practice'],
-       "the goal's phases are Wildman's own")
+    ok([e['phase_id'] for e in g['phase_sequence']] == ['build'],
+       "the goal's phases are Wildman's own: one repeatable Phase II")
+    ok([phases.resolve_start_phase(g['phase_sequence'], old) for old in ('foundations', 'ladder', 'practice')]
+       == ['build'] * 3, "a stored week's former phase id starts the phase that replaced it")
     ok(all(e.get('description') for e in g['phase_sequence']), 'each phase carries its own text')
     p = goals.philosophy_to_goal('wildman_kettlebell', FRAMEWORKS, track_id='pentathlon')
     ok({e['framework_id'] for e in p['phase_sequence']} == {'kb_pentathlon'},
