@@ -40,7 +40,7 @@ tracks:
     one; progress is per clean session, never by the calendar.
   phases:
   - id: build
-    name: 'Phase II: Build'
+    name: Build
     kind: build
     weeks: 16
     repeatable: true

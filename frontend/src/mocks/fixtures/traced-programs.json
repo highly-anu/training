@@ -3671,7 +3671,7 @@
        "phase": "build",
        "weeks": 16,
        "framework_id": "kb_general_practice",
-       "name": "Phase II: Build",
+       "name": "Build",
        "focus": "Repeat the fundamentals; cycle each program, then a heavier bell",
        "description": "The swing runs the Nerd Math program's four approaches: 6 to 20 swings a minute over 10 minutes, then over 20, then start/stop swings in ten and twenty 90-second rounds — sixteen weeks at two sessions a week. Clean and press, get-up and deck squat run their own cycles beside it, as the session time allows; the snatch joins after clean and press once it is confirmed. A cycle finished cleanly is repeated with a heavier bell. Wildman calls Phase II the one you are never done with.",
        "adaptations": [
@@ -5851,7 +5851,7 @@
        ]
       },
       "phase_id": "build",
-      "phase_name": "Phase II: Build",
+      "phase_name": "Build",
       "track_id": "general_practice"
      }
     ],
@@ -5869,7 +5869,7 @@
     "phase_summary": [
      {
       "phase_id": "build",
-      "name": "Phase II: Build",
+      "name": "Build",
       "kind": "build",
       "framework_id": "kb_general_practice",
       "week_start": 1,
