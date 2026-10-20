@@ -38,7 +38,10 @@ interface ProgramStore {
     eventDate: string | null,
     startDate: string | null,
     sourceGoalIds: string[],
-    sourceGoalWeights: Record<string, number>
+    sourceGoalWeights: Record<string, number>,
+    /** keepDaysBehind: a previewed program's Start — a rebuild of the same
+     *  block keeps the days already behind the athlete (server-side). */
+    options?: { keepDaysBehind?: boolean },
   ) => void
   setProgramStartDate: (date: string | null) => void
   setEventDate: (date: string | null) => void
@@ -78,6 +81,12 @@ async function persistProgram(
     // saveUserProgram advances the revision in place on success.
     revision: payload.revision ?? null,
   })
+  // The server put back days already behind the athlete (a Start with
+  // keepDaysBehind): what it stored is not what is on screen, so read it.
+  if (ok && (payload.keptDays ?? 0) > 0) {
+    await useProgramStore.getState().loadFromServer()
+    return
+  }
   // The server's summary of the weeks just saved (a move, a swap, a spliced
   // regenerate). Applied only while that copy is still the one on screen.
   const current = useProgramStore.getState().currentProgram
@@ -122,7 +131,7 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
     })
   },
 
-  setFullProgram: (program, eventDate, startDate, sourceGoalIds, sourceGoalWeights) => {
+  setFullProgram: (program, eventDate, startDate, sourceGoalIds, sourceGoalWeights, options) => {
     set({
       currentProgram:     program,
       programLoadState:   'loaded',
@@ -139,6 +148,7 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
       sourceGoalIds,
       sourceGoalWeights,
       revision: get().revision,
+      ...(options?.keepDaysBehind ? { keepDaysBehind: true } : {}),
     })
   },
 

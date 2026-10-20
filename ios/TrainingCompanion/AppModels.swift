@@ -960,16 +960,15 @@ struct GenerateProgramRequest: Encodable {
     let weekInProgram: Int?
     let startDate: String?
     let eventDate: String?
-    /// Tells the server this generate is a commit and should replace the
-    /// stored program. Unlike the web app, this app has no separate save step
-    /// after generating — it generates and then re-fetches — so it must opt in.
-    /// The server no longer persists by default, so that an exploratory or
-    /// failed generate cannot silently replace an athlete's program.
-    var persist: Bool = true
+    /// Would tell the server this generate is a commit. The app no longer
+    /// asks: every generate is a draft the preview shows and the
+    /// revision-checked PUT saves (the builder used to send true and throw
+    /// the answer away, so a refusal silently kept the old program).
+    var persist: Bool = false
 
     init(philosophyId: String? = nil, philosophyIds: [String]? = nil, philosophyWeights: [String: Double]? = nil,
          constraints: GenerateConstraints, numWeeks: Int?, weekInProgram: Int? = nil,
-         startDate: String?, eventDate: String?, persist: Bool = true) {
+         startDate: String?, eventDate: String?, persist: Bool = false) {
         self.philosophyId = philosophyId
         self.philosophyIds = philosophyIds
         self.philosophyWeights = philosophyWeights

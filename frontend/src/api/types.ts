@@ -545,7 +545,8 @@ export interface ConstraintImpact {
   lifts?: Record<string, string>
   lifted?: string[]
   reference?: { equipment?: string[]; training_level?: string; mastered_exercises?: string[]; kettlebell_count?: number }
-  sessions?: { total: number; changed: number; direct?: number }
+  /** `total`: every position either program has a session at, so `changed` ≤ `total`. */
+  sessions?: { total: number; actual?: number; reference?: number; changed: number; direct?: number }
   totals?: Record<string, { sessions?: number; slots?: number; knock_on?: number }>
   restore?: { equipment?: { id: string; changes: number }[] }
   changes?: ImpactChange[]
@@ -705,6 +706,8 @@ export interface GeneratedProgram {
   program_start_date?: string
   compromises?: string[]
   coverage_report?: CoverageReport | null
+  /** What the constraints held back (src/blockers.held_back); derived, never stored. */
+  held_back?: { slots: number; sessions: number }
 }
 
 // ─── Generation Trace ─────────────────────────────────────────────────────────

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { differenceInCalendarDays, format, parseISO } from 'date-fns'
@@ -42,8 +42,9 @@ export function RegenerateFromWeekBanner() {
   const customInjuryFlags = useProfileStore((s) => s.customInjuryFlags)
   const weeklySchedule = useProfileStore((s) => s.weeklySchedule)
   const regenerate = useRegenerateFromWeek()
-  const [done, setDone] = useState(false)
-  const [adoptedNote, setAdoptedNote] = useState(false)
+  // What the last difference came to, said once it is gone: the banner used
+  // to vanish the moment an apply removed the difference it was about.
+  const [outcome, setOutcome] = useState<{ applied: number } | { adopted: true } | null>(null)
 
   const profile = useMemo(() => ({ trainingLevel, equipment, injuryFlags, weeklySchedule }),
                           [trainingLevel, equipment, injuryFlags, weeklySchedule])
@@ -86,25 +87,50 @@ export function RegenerateFromWeekBanner() {
 
   // Unaffected: the program is what the new settings would build, so it now
   // says it was built for them. Once per answer.
+  // Keyed with the revision: a stale adopt reloads the program, and its new
+  // revision checks and adopts again.
   const adopted = useRef<string | null>(null)
-  useEffect(() => {
-    if (!settled || check.data?.affected !== false || adopted.current === requestKey) return
-    adopted.current = requestKey
+  const [adoptFailed, setAdoptFailed] = useState(false)
+  const adoptKey = `${revision}|${requestKey}`
+  const adopt = useCallback(() => {
+    if (!settled) return
     const c = settled.params.constraints
+    setAdoptFailed(false)
     void adoptProgramConstraints(
       { equipment: c.equipment, training_level: c.training_level, injury_flags: c.injury_flags,
         ...(c.days_per_week ? { days_per_week: c.days_per_week } : {}) },
       customInjuryFlags,
-    ).then((ok) => ok && setAdoptedNote(true))
-  }, [check.data, settled, requestKey, customInjuryFlags])
+    ).then((result) => {
+      if (result === 'adopted') setOutcome({ adopted: true })
+      // Never dropped silently: the banner used to go blank and never retry.
+      else if (result === 'failed') setAdoptFailed(true)
+    })
+  }, [settled, customInjuryFlags])
+  useEffect(() => {
+    if (!settled || check.data?.affected !== false || check.data?.comparable === false
+        || adopted.current === adoptKey) return
+    adopted.current = adoptKey
+    adopt()
+  }, [check.data, settled, adoptKey, adopt])
 
-  if (!program || done) return null
+  // A new difference starts over (adjusted during render, not in an effect).
+  const [prevDiffCount, setPrevDiffCount] = useState(diffs.length)
+  if (diffs.length !== prevDiffCount) {
+    setPrevDiffCount(diffs.length)
+    if (diffs.length > 0) setOutcome(null)
+  }
+
+  if (!program) return null
   if (diffs.length === 0) {
-    return adoptedNote ? (
-      <p className="mx-6 mt-4 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Check className="size-3.5" aria-hidden="true" /> Your program doesn&apos;t change with these settings.
+    if (!outcome) return null
+    return (
+      <p className="mx-6 mt-4 inline-flex items-center gap-1.5 text-xs text-muted-foreground" aria-live="polite">
+        <Check className="size-3.5" aria-hidden="true" />
+        {'applied' in outcome
+          ? `Rebuilt ${outcome.applied} week${outcome.applied === 1 ? '' : 's'} with these settings. The previous plan is in Program ▸ History.`
+          : 'Your program doesn’t change with these settings.'}
       </p>
-    ) : null
+    )
   }
   if (!request) return null
 
@@ -116,7 +142,14 @@ export function RegenerateFromWeekBanner() {
       </p>
     )
   }
-  if (result && !result.affected) return null
+  if (result && !result.affected) {
+    return adoptFailed ? (
+      <div className="mx-6 mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        <span>Your program doesn&apos;t change with these settings, but recording them on it failed.</span>
+        <Button size="sm" variant="outline" className="h-7 text-xs" onClick={adopt}>Try again</Button>
+      </div>
+    ) : null
+  }
 
   const tail = result?.program
   const refused = !!tail && isInfeasible(tail)
@@ -131,11 +164,11 @@ export function RegenerateFromWeekBanner() {
   function applyNow() {
     if (!request) return
     if (tail && !refused) {
-      if (commitRegeneratedTail(queryClient, tail, request.params)) setDone(true)
+      if (commitRegeneratedTail(queryClient, tail, request.params)) setOutcome({ applied: remaining })
       return
     }
     // The check failed: regenerate as before, without knowing what it moves.
-    regenerate.mutate(request.params, { onSuccess: () => setDone(true) })
+    regenerate.mutate(request.params, { onSuccess: () => setOutcome({ applied: remaining }) })
   }
 
   const changed = result?.sessions.changed ?? 0
@@ -146,7 +179,7 @@ export function RegenerateFromWeekBanner() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-semibold">
-            {check.isError
+            {check.isError || result?.comparable === false
               ? 'Your program was built for different settings'
               : refused
                 ? "These settings can't build the rest of your program"

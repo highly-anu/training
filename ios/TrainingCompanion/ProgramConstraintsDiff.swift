@@ -45,6 +45,12 @@ enum ProgramConstraintsDiff {
         }
     }
 
+    /// Ids that are never equipment: a web-built program carries `open_space`
+    /// and the profile has none, which read as a difference on every program.
+    static func realEquipment(_ ids: [String]) -> [String] {
+        ids.filter { $0 != "open_space" && $0 != "none" }
+    }
+
     private static func setChange(from: [String], to: [String]) -> String {
         let added = Set(to).subtracting(from).count
         let removed = Set(from).subtracting(to).count
@@ -62,11 +68,12 @@ enum ProgramConstraintsDiff {
             out.append(ConstraintDifference(field: "training_level", label: "Training level",
                                             program: level, profile: profile.trainingLevel))
         }
-        let equipment = strings(program["equipment"])
-        if !profile.equipment.isEmpty, Set(equipment) != Set(profile.equipment) {
+        let equipment = realEquipment(strings(program["equipment"]))
+        let kit = realEquipment(profile.equipment)
+        if !kit.isEmpty, Set(equipment) != Set(kit) {
             out.append(ConstraintDifference(field: "equipment", label: "Equipment",
                                             program: "\(equipment.count) items",
-                                            profile: setChange(from: equipment, to: profile.equipment)))
+                                            profile: setChange(from: equipment, to: kit)))
         }
         if let days = daysPerWeek(profile.weeklySchedule), days > 0,
            let planned = int(program["days_per_week"]), planned != days {
@@ -108,7 +115,25 @@ enum ProgramConstraintsDiff {
         c.startPhase = phaseId
         c.trackId = trackId ?? string(program["track_id"])
         c.periodizationWeek = weekInPhase
+        // What a training contract's athlete confirmed: without them a
+        // rebuild of a contract program asks again and is refused.
+        c.masteredExercises = strings(program["mastered_exercises"])
+        c.kettlebellCount = int(program["kettlebell_count"])
         return c
+    }
+
+    /// The same request with the program's own constraints and none of the
+    /// profile's — what `POST /programs/constraint-change` compares the
+    /// profile's version with.
+    static func baseline(program: [String: JSONValue], weekInPhase: Int?, phase: String?,
+                         phaseId: String? = nil, trackId: String? = nil) -> GenerateConstraints {
+        var own = UserProfile.default
+        own.trainingLevel = string(program["training_level"]) ?? ""
+        own.equipment = strings(program["equipment"])
+        own.injuryFlags = strings(program["injury_flags"])
+        own.weeklySchedule = nil
+        return merged(program: program, profile: own, weekInPhase: weekInPhase, phase: phase,
+                      phaseId: phaseId, trackId: trackId)
     }
 }
 

@@ -135,8 +135,8 @@ All prefixed `/api/`:
 | POST | `/sessions/generate` | `Session` (single session regeneration) |
 | POST | `/dev/constraint-impact` | For the Dev Lab (no screen calls it yet): generate's body run against a reference with nothing in the way (the packages' equipment, no injuries, the framework's level, a training contract's mastery and bell pair for that level) and once per constraint lifted alone (equipment, injury, level, proficiency); every changed session or slot with what was planned, its `causes`, why, `knock_on` when an earlier direct change moved the rotation, and the equipment that would restore the most changes (`src/constraint_impact.py`). A refused request (200, no weeks) answers `feasible: false` and `unblocked_by`: the one constraint, or the framework's ideal days and minutes, that alone lets it generate, else `combined`; a reference that cannot generate answers `reference_generates: false`. At most 12 weeks and seven generations; local dev or `AUTHORING_ENABLED` only |
 | POST | `/exercises/substitute` | `{alternatives: [{assignment, score, reasons}]}` — ranked swaps for one slot, selector-scored, loads for the week; 422 when nothing fits |
-| POST | `/programs/impact` | The preview's Held back: `/dev/constraint-impact`'s answer for any signed-in athlete (`api._constraint_impact`, shared); ≤ 7 generations, 12 weeks; one run in the process at a time and one per athlete (429 `busy`, the client retries), cached on the body |
-| POST | `/programs/constraint-change` | Does a profile change change the program? The regenerate body (`constraints` = the profile's) + `baseline_constraints` (the program's): both generated, diffed by `constraint_impact.diff_programs` → `{affected, sessions, first_week_number, changes, program?}` (`program`, the new tail, only when affected); same gate as impact |
+| POST | `/programs/impact` | The preview's Held back: `/dev/constraint-impact`'s answer for any signed-in athlete (`api._constraint_impact`, shared); ≤ 7 generations, 12 weeks; one run in the process at a time and one per athlete — a taken gate answers 429 `busy` at once, never waiting (the clients retry); small answers cached ten minutes per body and day. Clients send the draft's own first phase and length (`impactParams`, `impactRequest(for:)`), never its event date |
+| POST | `/programs/constraint-change` | Does a profile change change the program? The regenerate body (`constraints` = the profile's) + `baseline_constraints` (the program's): both generated, diffed by `constraint_impact.diff_programs` (exercises *and* each slot's numbers, so a level change that moves only loads is affected) → `{affected, sessions, first_week_number, changes, program?}` (`program`, the new tail, only when affected); same gate as impact, never cached on the server |
 | PATCH | `/user/program/constraints` | Adopt an unaffected change: merges `equipment`, `training_level`, `injury_flags`, `days_per_week` (+ `custom_injury_flags`) into the stored program's constraints under `baseRevision` (409 `stale_revision`); mints no version |
 | POST | `/programs/adjust` | applies one `suggest_adjustments` entry (`hold_load`, `reduce_volume_10pct`, `early_deload`, `increase_increment`) to the stored weeks from a week onward under the revision check; returns the saved envelope; `rebuild_habit` is 422 (advice) |
 | GET/POST/DELETE | `/devices`, `/devices/claim`, `/devices/<token>` | Connect IQ watch pairing: list, claim a code, revoke by the display id the list shows (web: Profile ▸ Connections ▸ Devices; iOS: Settings) |
@@ -172,7 +172,11 @@ restores 33" actions that re-preview; a refused draft shows what alone would let
 Adjust (equipment, injuries, level) re-previews; swaps and replaced sessions edit the draft
 only (the swap sheets' `onPick` / `onReplace`). "Start this program" asks before replacing an
 active program, offers the draft's extra equipment to the profile, and saves through
-`commitProgram` (the revision-checked PUT); an infeasible draft never commits. Slots say why
+`commitProgram` (the revision-checked PUT, with `keepDaysBehind`: a rebuild of the same block
+keeps the days already behind the athlete, as generate's persist branch does — the PUT answers
+`keptDays` and the client reads the program again); an infeasible draft never commits, and on
+iOS the draft becomes the program only once the save succeeded. The held-back count is the
+server's (`held_back` on every generate, `src/blockers.held_back`, never stored). Slots say why
 they are empty (`blocked_by`: `{cause, exercise, needs | flags | requires}`, from
 `selector._explain_unfilled`'s lifted run, no extra generation), sessions why they stand in
 (`substitution_cause`) or run scaled (`equipment_scaled`); `lib/heldBack.ts` words them for
@@ -181,8 +185,14 @@ program**: `RegenerateFromWeekBanner` debounces the profile, asks `/programs/con
 adopts an unaffected change (PATCH, "Your program doesn't change with these settings"), and
 for an affected one says how many sessions from which week, with Preview changes
 (`?mode=regenerate`, the changed sessions marked) and Apply (`commitRegeneratedTail`; an
-infeasible tail is refused, it used to splice `weeks: []` over the rest). iOS follows
-(roadmap item 15).
+infeasible tail is refused, it used to splice `weeks: []` over the rest). The phone
+has the same (`Views/ProgramPreviewView.swift`, design-system §6.39; the offer card §6.17):
+the builder and the settings sheet's full regenerate preview a `persist: false` draft
+(nothing in the app persists a generate any more), and `RegenerateOfferCard` asks
+`AppState.checkConstraintChange`, adopts or offers. `/constraint-change` answers
+`comparable: false` (always `affected`) when the program's own constraints no longer
+build it, so nothing is adopted unchecked. Debug builds open the preview on launch with
+`SIMCTL_CHILD_TC_PREVIEW=<philosophy id>` (+ `TC_PREVIEW_TAB=heldback`).
 
 ## Frontend (frontend/)
 

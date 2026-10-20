@@ -17,7 +17,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useProgramStore } from '@/store/programStore'
 import { useProfileStore } from '@/store/profileStore'
 import { usePreviewStore } from '@/store/previewStore'
-import { applyRegeneratedTail, commitProgram, isInfeasible } from '@/api/programs'
+import { applyRegeneratedTail, commitProgram, impactParams, isInfeasible } from '@/api/programs'
+import { heldBackSummary } from '@/lib/heldBack'
 import { spliceRegenerated } from '@/lib/programSource'
 import { RegenerateFromWeekBanner } from '@/components/program/RegenerateFromWeekBanner'
 import type { GeneratedProgram, Session, WeekData } from '@/api/types'
@@ -99,6 +100,25 @@ describe('a draft is not the program', () => {
     expect(useProgramStore.getState().currentProgram).toBe(draft)
     await waitFor(() => expect(put).toHaveBeenCalledTimes(1))
     expect(put.mock.calls[0][1].baseRevision).toBe('r1')
+    expect(put.mock.calls[0][1].keepDaysBehind, 'a rebuild of the same block keeps the days behind').toBe(true)
+  })
+
+  it('Held back asks about the draft itself, not the builder defaults', () => {
+    const draft = program([{ ...week(1), week_in_phase: 3, phase_id: 'specific', track_id: 'main' } as WeekData,
+                           ...Array.from({ length: 19 }, (_, i) => week(i + 2))])
+    const p = impactParams({ philosophyId: 'uphill_athlete', eventDate: '2027-03-01',
+                             constraints: { training_phase: 'base' } as GeneratedProgram['constraints'] }, draft)
+    expect(p.eventDate).toBeUndefined()
+    expect(p.numWeeks).toBe(12)
+    expect(p.startPhaseId).toBe('specific')
+    expect(p.trackId).toBe('main')
+    expect(p.constraints.periodization_week).toBe(3)
+  })
+
+  it('the server counts what was held back; the client only when it has not', () => {
+    const p = program([week(1)])
+    expect(heldBackSummary({ ...p, held_back: { slots: 7, sessions: 3 } })).toEqual({ slots: 7, sessions: 3 })
+    expect(heldBackSummary(p)).toEqual({ slots: 0, sessions: 0 })
   })
 })
 
@@ -156,6 +176,20 @@ describe('the profile offers a regenerate only when it changes the program', () 
     expect(useProgramStore.getState().revision).toBe('r2')
   })
 
+  it('a failed adopt says so and offers it again, never drops the difference', async () => {
+    post.mockResolvedValue({ affected: false, comparable: true, sessions: { total: 9, changed: 0 }, changes: [] })
+    patch.mockRejectedValueOnce(Object.assign(new Error('boom'), { status: 503 }))
+    renderBanner()
+    await act(async () => { vi.advanceTimersByTime(1600) })
+    const retry = await screen.findByText('Try again')
+    expect(screen.getByText(/recording them on it failed/)).toBeTruthy()
+    patch.mockResolvedValue({ saved: true, revision: 'r2',
+                              constraints: { ...program([]).constraints, equipment: ['barbell', 'rack', 'plates', 'kettlebell'] } })
+    await act(async () => { retry.click() })
+    await waitFor(() => expect(screen.getByText(/doesn.t change with these settings/)).toBeTruthy())
+    expect(patch).toHaveBeenCalledTimes(2)
+  })
+
   it('says how many sessions a change moves, and offers the preview', async () => {
     post.mockResolvedValue({
       affected: true, comparable: true, sessions: { total: 9, changed: 3 }, first_week_number: 2,
@@ -167,5 +201,25 @@ describe('the profile offers a regenerate only when it changes the program', () 
     await waitFor(() => expect(screen.getByText('These settings change 3 sessions from week 2')).toBeTruthy())
     expect(screen.getByText(/Preview changes/)).toBeTruthy()
     expect(patch).not.toHaveBeenCalled()
+  })
+
+  it('says what it rebuilt once Apply has removed the difference', async () => {
+    post.mockResolvedValue({
+      affected: true, comparable: true, sessions: { total: 9, changed: 3 }, first_week_number: 1,
+      changes: [], program: program([week(1, 'n'), week(2, 'n'), week(3, 'n')]),
+    })
+    useProfileStore.setState({ equipment: ['kettlebell'] })
+    renderBanner()
+    await act(async () => { vi.advanceTimersByTime(1600) })
+    const apply = await screen.findByText('Apply from week 1')
+    // The saved program now carries the profile's settings, as the server's would.
+    put.mockImplementation(async () => {
+      const cp = useProgramStore.getState().currentProgram!
+      useProgramStore.setState({ currentProgram: { ...cp, constraints: { ...cp.constraints, equipment: ['kettlebell'] } } })
+      return { revision: 'r2' }
+    })
+    await act(async () => { apply.click() })
+    await waitFor(() => expect(screen.getByText(/Rebuilt 3 weeks with these settings/)).toBeTruthy())
+    expect(put).toHaveBeenCalled()
   })
 })

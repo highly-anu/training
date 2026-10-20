@@ -36,6 +36,12 @@ export interface ServerProgram {
   /** Response-only: PUT answers with the saved weeks' phase summary, which
    *  saveUserProgram leaves here for the store to show. Never sent. */
   phaseSummary?: GeneratedProgram['phase_summary']
+  /** Sent with a previewed program's Start: a rebuild of the same block keeps
+   *  the days already behind the athlete (the server's _keep_days_behind). */
+  keepDaysBehind?: boolean
+  /** Response-only: how many elapsed days the server put back, so the client
+   *  reads the program again. Never sent. */
+  keptDays?: number
   programStartDate: string | null
   eventDate: string | null
   sourceGoalIds: string[]
@@ -88,16 +94,19 @@ export async function saveUserProgram(program: ServerProgram): Promise<boolean> 
   const body = { ...program, baseRevision: program.revision ?? null }
   delete (body as { revision?: unknown }).revision
   delete (body as { phaseSummary?: unknown }).phaseSummary
+  delete (body as { keptDays?: unknown }).keptDays
 
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const res = (await apiClient.put('/user/program', body)) as unknown as {
         revision?: string
         phaseSummary?: GeneratedProgram['phase_summary']
+        keptDays?: number
       }
       // Track the new revision so the next save is based on it.
       program.revision = res?.revision ?? program.revision
       program.phaseSummary = res?.phaseSummary
+      program.keptDays = res?.keptDays ?? 0
       lastProgramSaveError = null
       return true
     } catch (err) {

@@ -1056,21 +1056,11 @@ final class AppState: ObservableObject {
     // MARK: - Program Mutations
 
     func replaceSession(weekIndex: Int, day: String, sessionIndex: Int, session: ProgramSession) {
-        guard let sp = serverProgram,
-              let program = sp.currentProgram else { return }
-        var weeks = program.weeks
-        guard weekIndex < weeks.count else { return }
-        var week = weeks[weekIndex]
-        var sessions = week.schedule[day] ?? []
-        guard sessionIndex < sessions.count else { return }
-        sessions[sessionIndex] = session
-        var schedule = week.schedule
-        schedule[day] = sessions
-        week = ProgramWeek(weekNumber: week.weekNumber, weekInPhase: week.weekInPhase,
-                           isDeload: week.isDeload, phase: week.phase, schedule: schedule,
-                           extra: week.extra)
-        weeks[weekIndex] = week
-        commit(weeks: weeks, to: sp)
+        guard let sp = serverProgram, let program = sp.currentProgram,
+              program.weeks[safe: weekIndex]?.schedule[day]?[safe: sessionIndex] != nil else { return }
+        commit(weeks: ProgramEdits.replacingSession(in: program, weekIndex: weekIndex, day: day,
+                                                    sessionIndex: sessionIndex, with: session).weeks,
+               to: sp)
     }
 
     /// Swap one exercise for an alternative the server ranked for its slot —
@@ -1078,25 +1068,13 @@ final class AppState: ObservableObject {
     /// move and replace.
     func replaceExercise(weekIndex: Int, day: String, sessionIndex: Int,
                          exerciseIndex: Int, assignment: ProgramExerciseAssignment) {
-        guard let sp = serverProgram, let program = sp.currentProgram else { return }
-        var weeks = program.weeks
-        guard weekIndex < weeks.count else { return }
-        let week = weeks[weekIndex]
-        var sessions = week.schedule[day] ?? []
-        guard sessionIndex < sessions.count else { return }
-        let session = sessions[sessionIndex]
-        var exercises = session.exercises
-        guard exerciseIndex < exercises.count else { return }
-        exercises[exerciseIndex] = assignment
-        sessions[sessionIndex] = ProgramSession(modality: session.modality, archetype: session.archetype,
-                                                isDeload: session.isDeload, exercises: exercises,
-                                                extra: session.extra)
-        var schedule = week.schedule
-        schedule[day] = sessions
-        weeks[weekIndex] = ProgramWeek(weekNumber: week.weekNumber, weekInPhase: week.weekInPhase,
-                                       isDeload: week.isDeload, phase: week.phase, schedule: schedule,
-                                       extra: week.extra)
-        commit(weeks: weeks, to: sp)
+        guard let sp = serverProgram, let program = sp.currentProgram,
+              program.weeks[safe: weekIndex]?.schedule[day]?[safe: sessionIndex]?
+                .exercises[safe: exerciseIndex] != nil else { return }
+        commit(weeks: ProgramEdits.replacingExercise(in: program, weekIndex: weekIndex, day: day,
+                                                     sessionIndex: sessionIndex, exerciseIndex: exerciseIndex,
+                                                     with: assignment).weeks,
+               to: sp)
     }
 
     /// Store an edited copy of the weeks, keep the widgets and reminders in
@@ -1119,8 +1097,23 @@ final class AppState: ObservableObject {
     /// program's methodology and the athlete's current profile.
     func substituteAlternatives(weekIndex: Int, day: String, sessionIndex: Int,
                                 exerciseIndex: Int) async throws -> [ExerciseAlternative] {
+        guard let program = serverProgram?.currentProgram else {
+            throw APIError.serverErrorDetail(404, "No program to swap within.")
+        }
+        return try await substituteAlternatives(
+            in: program, philosophyIds: (serverProgram?.sourceGoalIds ?? []).filter { $0 != "_blended" },
+            trainingLevel: profile.trainingLevel, equipment: profile.equipment, injuryFlags: profile.injuryFlags,
+            weekIndex: weekIndex, day: day, sessionIndex: sessionIndex, exerciseIndex: exerciseIndex)
+    }
+
+    /// The same for any program — the preview's draft asks with its own
+    /// methodologies and constraints, not the active program's.
+    func substituteAlternatives(in program: GeneratedProgram, philosophyIds: [String],
+                                trainingLevel: String, equipment: [String], injuryFlags: [String],
+                                weekIndex: Int, day: String, sessionIndex: Int,
+                                exerciseIndex: Int) async throws -> [ExerciseAlternative] {
         guard let api else { throw APIError.unauthenticated }
-        guard let week = serverProgram?.currentProgram?.weeks[safe: weekIndex],
+        guard let week = program.weeks[safe: weekIndex],
               let session = week.schedule[day]?[safe: sessionIndex],
               let archetype = session.archetype,
               let current = session.exercises[safe: exerciseIndex],
@@ -1134,11 +1127,11 @@ final class AppState: ObservableObject {
             exerciseId: exercise.id,
             modality: session.modality,
             constraints: SubstituteRequest.Constraints(
-                trainingLevel: profile.trainingLevel,
-                equipment: profile.equipment,
-                injuryFlags: profile.injuryFlags,
+                trainingLevel: trainingLevel,
+                equipment: equipment,
+                injuryFlags: injuryFlags,
                 sessionTimeMinutes: archetype.durationEstimateMinutes ?? 60),
-            philosophyIds: (serverProgram?.sourceGoalIds ?? []).filter { $0 != "_blended" },
+            philosophyIds: philosophyIds,
             phase: week.phase,
             weekInPhase: week.weekInPhase ?? (weekIndex + 1),
             isDeload: week.isDeload,
@@ -1219,17 +1212,41 @@ final class AppState: ObservableObject {
         ProgramConstraintsDiff.differences(program: programConstraints, profile: profile)
     }
 
+    /// What the last profile difference came to, once it is gone: the program
+    /// took the new settings because they change nothing
+    /// (`adoptProfileConstraints`), or its remaining weeks were rebuilt with
+    /// them. The offer card says so instead of vanishing with the difference.
+    enum ProfileOfferOutcome: Equatable {
+        case adopted
+        case applied(weeks: Int)
+    }
+    @Published var profileOfferOutcome: ProfileOfferOutcome? = nil
+
+    /// Whether the profile tabs show the regenerate offer card (§6.17): a
+    /// difference to check, or what the last one came to.
+    var showsRegenerateOffer: Bool { !constraintDifferences.isEmpty || profileOfferOutcome != nil }
+
     /// Rebuild the remaining weeks from the current calendar week with the
     /// profile's current settings, keeping the weeks already behind the
     /// athlete; saved through the revision-checked PUT, so the old plan stays
     /// in history. Returns how many weeks were regenerated.
     @discardableResult
     func regenerateFromCurrentWeek() async throws -> Int {
-        guard let api, let sp = serverProgram, let program = sp.currentProgram, !program.weeks.isEmpty else {
+        guard let api else { throw APIError.unauthenticated }
+        let (request, start, _) = try regenerateRequest()
+        let generated = try await api.generateProgramPreview(request)
+        return try applyRegeneratedTail(generated, from: start)
+    }
+
+    /// The regenerate the profile asks for — the rest of the program from the
+    /// current calendar week, continuing its track and phase, with the
+    /// profile's constraints — and `baseline`, the same request with the
+    /// program's own, which `POST /programs/constraint-change` compares it with.
+    func regenerateRequest() throws -> (request: GenerateProgramRequest, start: Int, baseline: GenerateConstraints) {
+        guard let sp = serverProgram, let program = sp.currentProgram, !program.weeks.isEmpty else {
             throw APIError.serverErrorDetail(400, "No program to regenerate")
         }
         let start = min(currentWeekIndex ?? 0, program.weeks.count - 1)
-        let remaining = program.weeks.count - start
         let ids = sp.sourceGoalIds.filter { $0 != "_blended" }
         guard !ids.isEmpty else {
             throw APIError.serverErrorDetail(400, "This program has no methodology to regenerate from")
@@ -1238,13 +1255,30 @@ final class AppState: ObservableObject {
         let constraints = ProgramConstraintsDiff.merged(program: programConstraints, profile: profile,
                                                         weekInPhase: week.weekInPhase, phase: week.phase,
                                                         phaseId: week.phaseId, trackId: week.trackId)
+        let baseline = ProgramConstraintsDiff.baseline(program: programConstraints,
+                                                       weekInPhase: week.weekInPhase, phase: week.phase,
+                                                       phaseId: week.phaseId, trackId: week.trackId)
         let request = GenerateProgramRequest(
             philosophyId: ids.count == 1 ? ids[0] : nil,
             philosophyIds: ids.count > 1 ? ids : nil,
             philosophyWeights: ids.count > 1 ? sp.sourceGoalWeights : nil,
-            constraints: constraints, numWeeks: remaining, weekInProgram: start + 1,
+            constraints: constraints, numWeeks: program.weeks.count - start, weekInProgram: start + 1,
             startDate: nil, eventDate: sp.eventDate, persist: false)
-        let generated = try await api.generateProgramPreview(request)
+        return (request, start, baseline)
+    }
+
+    /// Splice a regenerated tail onto the weeks and days already behind the
+    /// athlete and save it. An infeasible tail is refused: splicing its empty
+    /// weeks would drop the rest of the program. Returns the weeks replaced.
+    @discardableResult
+    func applyRegeneratedTail(_ generated: GeneratedProgram, from start: Int) throws -> Int {
+        guard let sp = serverProgram, let program = sp.currentProgram else {
+            throw APIError.serverErrorDetail(400, "No program to regenerate")
+        }
+        if generated.isInfeasible {
+            throw APIError.serverErrorDetail(422, generated.validation?.errors.first?.message
+                                             ?? "These settings cannot build the rest of the program.")
+        }
         let today = DateFormatter()
         today.locale = Locale(identifier: "en_US_POSIX")
         today.dateFormat = "yyyy-MM-dd"
@@ -1253,7 +1287,98 @@ final class AppState: ObservableObject {
                                           programStartDate: sp.programStartDate,
                                           keepBefore: today.string(from: Date()))
         commit(weeks: spliced.weeks, to: sp, extra: spliced.extra)
-        return remaining
+        return program.weeks.count - start
+    }
+
+    /// Ask a heavy comparison route again while it answers busy (one run at
+    /// a time on the server).
+    private func retryingBusy<T>(_ call: () async throws -> T) async throws -> T {
+        for _ in 0..<8 {
+            do { return try await call() } catch is APIClient.Busy {
+                try await Task.sleep(nanoseconds: 3_000_000_000)
+            }
+        }
+        return try await call()
+    }
+
+    /// Does the profile's change change the program? The server builds the
+    /// rest of the program both ways and compares (constraint_impact.diff_programs).
+    func checkConstraintChange() async throws -> (result: ConstraintChangeResult, request: GenerateProgramRequest, start: Int) {
+        guard let api else { throw APIError.unauthenticated }
+        let (request, start, baseline) = try regenerateRequest()
+        let result = try await retryingBusy { try await api.constraintChange(request, baseline: baseline) }
+        return (result, request, start)
+    }
+
+    enum AdoptResult { case adopted, stale, failed }
+
+    /// The program holds for the profile's settings: record them on it, so the
+    /// profile stops offering a regenerate. Takes the new revision; no save of
+    /// our own. `.stale` reloads the program (its new revision checks again);
+    /// `.failed` is for the caller to say and offer again — it used to read as
+    /// "nothing to offer", and the difference was silently dropped.
+    func adoptProfileConstraints(_ c: GenerateConstraints) async -> AdoptResult {
+        guard let api, let sp = serverProgram, let program = sp.currentProgram else { return .failed }
+        do {
+            let adopted = try await api.adoptProgramConstraints(
+                baseRevision: sp.revision, equipment: c.equipment, trainingLevel: c.trainingLevel,
+                injuryFlags: c.injuryFlags, daysPerWeek: c.daysPerWeek)
+            var extra = program.extra
+            extra["constraints"] = .object(adopted.constraints)
+            serverProgram = ServerProgram(currentProgram: GeneratedProgram(weeks: program.weeks, extra: extra),
+                                          programStartDate: sp.programStartDate, eventDate: sp.eventDate,
+                                          sourceGoalIds: sp.sourceGoalIds, sourceGoalWeights: sp.sourceGoalWeights,
+                                          revision: adopted.revision ?? sp.revision,
+                                          programVersionId: sp.programVersionId, extra: sp.extra)
+            profileOfferOutcome = .adopted
+            return .adopted
+        } catch is APIClient.StaleProgramRevision {
+            await loadProgram()
+            return .stale
+        } catch {
+            return .failed
+        }
+    }
+
+    /// The preview's Held back for `request` (POST /programs/impact).
+    func programImpact(_ request: GenerateProgramRequest) async throws -> ConstraintImpact {
+        guard let api else { throw APIError.unauthenticated }
+        return try await retryingBusy { try await api.programImpact(request) }
+    }
+
+    /// A previewed draft from the builder becomes the program: saved through
+    /// the revision-checked PUT (the program it replaces stays in History),
+    /// then read back for its revision and version. An infeasible draft is
+    /// never saved — the builder used to post `persist: true` and, on a
+    /// refusal, silently keep the old program.
+    func startProgram(_ draft: GeneratedProgram, request: GenerateProgramRequest) async throws {
+        guard !draft.isInfeasible else {
+            throw APIError.serverErrorDetail(422, draft.validation?.errors.first?.message
+                                             ?? "This program cannot be built as asked.")
+        }
+        guard let api else { throw APIError.unauthenticated }
+        let startDate = draft.extra["program_start_date"]?.stringValue
+            ?? request.startDate ?? serverProgram?.programStartDate
+        // Saved first, and only then the program on screen: assigned before a
+        // save that failed, the draft stood in for the program (Today, the
+        // widgets, reminders) while the server kept the old one.
+        // `keepDaysBehind`: a rebuild of the same block keeps the days already
+        // behind the athlete, as generate's persist branch did for the old
+        // phone regenerate — a session trained this morning is not rewritten.
+        let payload = UserProgramSavePayload(
+            currentProgram: draft, programStartDate: startDate, eventDate: request.eventDate,
+            sourceGoalIds: request.sourceIds, sourceGoalWeights: request.philosophyWeights ?? [:],
+            baseRevision: serverProgram?.revision, extra: ["keepDaysBehind": .bool(true)])
+        do {
+            _ = try await api.saveProgram(payload)
+        } catch is APIClient.StaleProgramRevision {
+            await loadProgram()
+            throw APIError.serverErrorDetail(409, "Your program changed elsewhere — reloaded. Nothing was started; preview again.")
+        }
+        // The saved copy: its revision and version, and any elapsed days the
+        // server put back.
+        await loadProgram()
+        writeWidgetData()
     }
 
     func saveProgramToServer() async throws {

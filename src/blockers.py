@@ -14,6 +14,27 @@ def missing_equipment(required, available) -> list[str]:
     return sorted(set(required or []) - set(available or []) - NOT_EQUIPMENT)
 
 
+def held_back(weeks: list) -> dict:
+    """How much of a program (the API's weeks: day name → sessions) its
+    constraints held back: the slots left empty for a reason — `blocked_by`
+    or the older flags — and the sessions with any, or standing in for
+    another modality, or scaled for missing equipment, or with no archetype.
+    Served with every generate, so both clients show the server's count."""
+    slots = sessions = 0
+    for week in weeks or []:
+        for day_sessions in (week.get('schedule') or {}).values():
+            for s in day_sessions or []:
+                n = sum(1 for ea in s.get('exercises') or []
+                        if ea.get('exercise') is None and not ea.get('meta') and not ea.get('skip_exercise')
+                        and (ea.get('blocked_by') or ea.get('injury_skip') or ea.get('equipment_gap')
+                             or ea.get('coverage_gap')))
+                slots += n
+                if n or s.get('substituted_for') or s.get('equipment_scaled') \
+                        or (not s.get('archetype') and s.get('error')):
+                    sessions += 1
+    return {'slots': slots, 'sessions': sessions}
+
+
 def flag_hits(ex: dict, flags, flag_data: dict) -> list[tuple[str, list[str]]]:
     """Each of `flags` that rules `ex` out, with the excluded patterns it hits
     (empty when the flag names the exercise itself)."""

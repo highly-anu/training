@@ -174,7 +174,15 @@ def test_order_and_added_sessions():
     check('HLM was open to the athlete: a knock-on', out['changes'][1]['knock_on'] is True
           and out['changes'][1]['why'][0]['cause'] == 'knock_on', out['changes'][1]['why'])
     check('an added session is not', out['changes'][0]['knock_on'] is False)
-    check('the counts', out['sessions'] == {'total': 4, 'changed': 2, 'direct': 1}, out['sessions'])
+    check('the counts', out['sessions'] == {'total': 4, 'actual': 4, 'reference': 3, 'changed': 2, 'direct': 1},
+          out['sessions'])
+    # The other way round: the reference has a session the athlete's program
+    # lost. It is a change, so it is in the total (it used to count only the
+    # athlete's sessions, and a program could read more changed than total).
+    lost = analyse(ref, act, {}, athlete)
+    check('a session only the reference has is in the total',
+          lost['sessions']['total'] == 4 and lost['sessions']['actual'] == 3
+          and lost['sessions']['changed'] <= lost['sessions']['total'], lost['sessions'])
 
 
 def test_knock_on_and_level_locked():

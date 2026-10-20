@@ -668,7 +668,8 @@ def _slot_unfillable_in_policy(slot: dict, exercises: dict, policy, modality: st
 
 def _explain_unfilled(slot, constraints, exercises, unlocked, excl_ids, injury_flags_data,
                       phase, primary_sources, policy, modality,
-                      phase_excluded=frozenset()) -> tuple[str | None, dict | None, str | None, dict | None]:
+                      phase_excluded=frozenset(),
+                      known=frozenset()) -> tuple[str | None, dict | None, str | None, dict | None]:
     """Why a slot found no exercise, and the injury flag's substitute if one fits.
 
     Returns (reason, substitute, instead_of, blocked_by), cheapest test first:
@@ -734,9 +735,12 @@ def _explain_unfilled(slot, constraints, exercises, unlocked, excl_ids, injury_f
     found = select_exercise(slot, constraints, exercises, every_level - set(phase_excluded),
                             set(), excl_ids, [], phase, **common)
     if found:
+        # A requirement is met by an unlocked exercise or by a concept the
+        # level knows (`known`, as _get_unlocked resolves them); only the rest
+        # is missing — "needs bracing" for a novice who arrives bracing was wrong.
         return 'level', None, None, {
             'cause': 'level', 'exercise': found['id'], 'level': constraints.get('training_level'),
-            'requires': [r for r in found.get('requires') or [] if r not in unlocked]}
+            'requires': [r for r in found.get('requires') or [] if r not in unlocked and r not in known]}
     if phase_excluded:
         found = select_exercise(slot, constraints, exercises, every_level,
                                 set(), excl_ids, [], phase, **common)
@@ -804,6 +808,7 @@ def populate_session(
     excl_patterns, excl_ids = _injury_exclusions(constraints, injury_flags_data)
     training_level = constraints.get('training_level', 'intermediate')
     unlocked = _get_unlocked(training_level, exercises, level_seeds) - excl_ids
+    known_seeds = level_seeds   # the seeds `unlocked` was resolved with (narrowed per package below)
     if exclude_exercise_ids:
         unlocked -= set(exclude_exercise_ids)
     primary_sources = set(goal.get('primary_sources', []))
@@ -863,6 +868,7 @@ def populate_session(
                     and provenance.allows_exercise(ex, session_policy, modality)}
         exercises = {**borrowed, **own}
         package_seeds = {arch_package: (level_seeds or {}).get(arch_package, {})}
+        known_seeds = package_seeds
         unlocked = _get_unlocked(training_level, exercises, package_seeds) - excl_ids
         unlocked -= set(exclude_exercise_ids or ())
 
@@ -976,7 +982,8 @@ def populate_session(
                 reason, sub, instead_of, blocked_by = _explain_unfilled(
                     slot, constraints, exercises, unlocked, excl_ids, injury_flags_data,
                     phase, primary_sources, policy, modality,
-                    phase_excluded=frozenset(exclude_exercise_ids or ()))
+                    phase_excluded=frozenset(exclude_exercise_ids or ()),
+                    known=_level_known(training_level, known_seeds))
                 if unfilled_cache is not None:
                     unfilled_cache[cache_key] = (reason, sub['id'] if sub else None, instead_of, blocked_by)
             if sub is not None and sub['id'] not in session_used_ids:

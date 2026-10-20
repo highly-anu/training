@@ -29,6 +29,8 @@ struct ProgramView: View {
 
     @State private var showBuilder = false
     @State private var showSettings = false
+    /// Debug builds: a draft opened by `TC_PREVIEW` (ProgramPreviewDebugLaunch).
+    @State private var debugPreview: PreviewDraft? = nil
     @State private var selectedDay: DaySelection? = nil
     @State private var section: ProgramTab = .overview
 
@@ -92,6 +94,15 @@ struct ProgramView: View {
             .task {
                 if appState.allWeeks.isEmpty { await appState.loadProgram() }
                 weekIndex = appState.currentWeekIndex ?? 0
+                #if DEBUG
+                debugPreview = await ProgramPreviewDebugLaunch.draft(appState: appState)
+                #endif
+            }
+            .sheet(item: $debugPreview) { p in
+                NavigationStack {
+                    ProgramPreviewView(mode: .new, request: p.request, draft: p.draft) { _ in debugPreview = nil }
+                }
+                .environmentObject(appState)
             }
         }
     }

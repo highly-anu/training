@@ -2,8 +2,8 @@ import { useMemo, useState } from 'react'
 import { CalendarDays, ChevronDown, ChevronRight, CircleSlash, Dumbbell, GraduationCap, Loader2, Plus, ShieldAlert } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useProgramImpact, type GenerateParams } from '@/api/programs'
-import { heldBackCounts, idLabel } from '@/lib/heldBack'
+import { impactParams, useProgramImpact, type GenerateParams } from '@/api/programs'
+import { heldBackSummary, idLabel } from '@/lib/heldBack'
 import { cn } from '@/lib/utils'
 import type { ConstraintImpact, GeneratedProgram, ImpactChange, ValidationResult } from '@/api/types'
 
@@ -73,8 +73,8 @@ function changeLine(change: ImpactChange): { title: string; detail: string[] } {
  * it. Loads after the draft is on screen; up to seven generations.
  */
 export function HeldBackPanel({ params, draft, actions, busy }: HeldBackPanelProps) {
-  const impact = useProgramImpact(params)
-  const recorded = useMemo(() => heldBackCounts(draft), [draft])
+  const impact = useProgramImpact(impactParams(params, draft))
+  const recorded = useMemo(() => heldBackSummary(draft), [draft])
   const schedule = scheduleFindings(draft.validation, draft.compromises)
 
   return (
@@ -118,12 +118,17 @@ export function HeldBackPanel({ params, draft, actions, busy }: HeldBackPanelPro
           Could not compare against the unconstrained program: {(impact.error as Error).message}
         </p>
       )}
-      {impact.data && <ImpactSections impact={impact.data} actions={actions} busy={busy} />}
+      {impact.data && <ImpactSections impact={impact.data} actions={actions} busy={busy}
+                                      weeksCompared={draft.weeks.length > 12 ? 12 : undefined} />}
     </div>
   )
 }
 
-function ImpactSections({ impact, actions, busy }: { impact: ConstraintImpact; actions: HeldBackActions; busy?: boolean }) {
+function ImpactSections({ impact, actions, busy, weeksCompared }: {
+  impact: ConstraintImpact; actions: HeldBackActions; busy?: boolean
+  /** The comparison runs at most 12 weeks; set when the draft is longer. */
+  weeksCompared?: number
+}) {
   const [showKnockOn, setShowKnockOn] = useState(false)
   const changes = impact.changes ?? []
   const direct = changes.filter((c) => !c.knock_on)
@@ -148,9 +153,7 @@ function ImpactSections({ impact, actions, busy }: { impact: ConstraintImpact; a
         <p className="text-sm text-muted-foreground">
           Against the same program with nothing in the way ({lifts.equipment ? `${lifts.equipment}, ` : ''}
           {impact.reference?.training_level ?? ''}{lifts.injury ? `, ${lifts.injury}` : ''}),{' '}
-          {/* Not "of total": total counts this program's sessions, and a
-              change can be a reference session it no longer has. */}
-          {direct.length} session{direct.length === 1 ? '' : 's'} change.
+          {direct.length} of {impact.sessions?.total ?? '?'} sessions change{weeksCompared ? `, over its first ${weeksCompared} weeks` : ''}.
         </p>
       )}
 
@@ -231,7 +234,7 @@ function ImpactSections({ impact, actions, busy }: { impact: ConstraintImpact; a
 
 /** A refused draft: the one change that alone lets it generate. */
 export function RefusedPanel({ params, actions }: { params: GenerateParams; actions: HeldBackActions }) {
-  const impact = useProgramImpact(params)
+  const impact = useProgramImpact(impactParams(params, null))
   if (impact.isPending) {
     return <p className="inline-flex items-center gap-2 text-sm text-muted-foreground">
       <Loader2 className="size-4 animate-spin" aria-hidden="true" /> Finding what would let it build…
