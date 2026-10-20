@@ -1,10 +1,10 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from './client'
 import { queryKeys } from './queryKeys'
 import { useProgramStore } from '@/store/programStore'
 import { useUiStore } from '@/store/uiStore'
 import { spliceRegenerated } from '@/lib/programSource'
-import type { AthleteConstraints, CustomInjuryFlag, FatigueState, GeneratedProgram, ModalityId, Session, TrainingLevel, TrainingPhase, TracedProgram, ExerciseAlternative, AdjustResult, ProgressionAdjustment } from './types'
+import type { AthleteConstraints, ConstraintChangeResult, ConstraintImpact, CustomInjuryFlag, FatigueState, GeneratedProgram, ModalityId, Session, TrainingLevel, TrainingPhase, TracedProgram, ExerciseAlternative, AdjustResult, ProgressionAdjustment } from './types'
 
 function getMondayOf(date: Date): string {
   const d = new Date(date)
@@ -17,7 +17,7 @@ function getMondayOf(date: Date): string {
   return `${y}-${m}-${dd}`
 }
 
-interface GenerateParams {
+export interface GenerateParams {
   // Philosophy-based program generation
   philosophyId?: string
   philosophyIds?: string[]
@@ -73,82 +73,197 @@ export function buildPostBody(params: GenerateParams) {
   }
 }
 
-export function useGenerateProgram() {
-  const queryClient = useQueryClient()
+/** A generate the server could not build: the validator's refusal, or a
+ *  training contract that cannot run as written. Shown, never saved. */
+export function isInfeasible(program: GeneratedProgram | null | undefined): boolean {
+  return !program || program.validation?.feasible === false || !(program.weeks?.length)
+}
 
+/**
+ * Generate a draft: posts and returns, and writes nothing. The builder's
+ * preview holds it until the athlete starts it (`commitProgram`).
+ *
+ * The builder used to save in this mutation's onSuccess, so a program
+ * replaced the active one the moment it existed — and an infeasible answer
+ * (200, no weeks) was PUT over it too.
+ */
+export function useGenerateDraft() {
   return useMutation({
     mutationFn: (params: GenerateParams) =>
       apiClient.post('/programs/generate', buildPostBody(params)) as unknown as Promise<GeneratedProgram>,
-    onSuccess: (data, params) => {
-      queryClient.setQueryData(queryKeys.programs.current, data)
-      const startMonday = data.program_start_date ?? getMondayOf(new Date())
-      // Single atomic update + server persist
-      useProgramStore.getState().setFullProgram(
-        data,
-        params.eventDate ?? null,
-        startMonday,
-        params.philosophyIds ?? [params.philosophyId ?? ''],
-        params.philosophyWeights ?? {}
-      )
-      // Note: reset() is NOT called here — ReviewGenerate calls it after navigation
-      // so infeasible results don't silently bounce the user back to step 1.
-      useUiStore.getState().setSelectedWeekIndex(0)
-    },
   })
+}
+
+/** Make a previewed draft the active program and save it (revision-checked PUT). */
+export function commitProgram(
+  queryClient: ReturnType<typeof useQueryClient>,
+  draft: GeneratedProgram,
+  params: Pick<GenerateParams, 'eventDate' | 'philosophyId' | 'philosophyIds' | 'philosophyWeights'>,
+): boolean {
+  if (isInfeasible(draft)) return false
+  queryClient.setQueryData(queryKeys.programs.current, draft)
+  const startMonday = draft.program_start_date ?? getMondayOf(new Date())
+  // Single atomic update + server persist
+  useProgramStore.getState().setFullProgram(
+    draft,
+    params.eventDate ?? null,
+    startMonday,
+    params.philosophyIds ?? [params.philosophyId ?? ''],
+    params.philosophyWeights ?? {}
+  )
+  useUiStore.getState().setSelectedWeekIndex(0)
+  return true
+}
+
+/**
+ * The active program with a regenerated tail in place: the kept head, then
+ * the tail, never a day before `keepBefore` (`spliceRegenerated`). Null when
+ * the tail is infeasible — splicing an empty answer used to drop every week
+ * after the kept head.
+ */
+export function applyRegeneratedTail(
+  current: GeneratedProgram | null,
+  tail: GeneratedProgram,
+  params: Pick<GenerateParams, 'numWeeks' | 'keepBefore'>,
+  programStartDate: string | null,
+): GeneratedProgram | null {
+  if (isInfeasible(tail)) return null
+  // Only replace the whole program when there is nothing to keep.
+  if (!current) return tail
+  // Without numWeeks the split point is unknown, so keep the existing weeks
+  // the new run does not cover rather than dropping them — saving the bare
+  // tail is how a program ended up as 16 weeks numbered 16...31.
+  if (params.numWeeks === undefined) {
+    const keep = Math.max(0, current.weeks.length - tail.weeks.length)
+    return {
+      ...tail,
+      // The response summarised the tail alone; the save answers with the
+      // summary of the spliced weeks.
+      phase_summary: undefined,
+      weeks: [...current.weeks.slice(0, keep), ...tail.weeks],
+      volume_summary: [
+        ...(current.volume_summary ?? []).slice(0, keep),
+        ...(tail.volume_summary ?? []),
+      ],
+    }
+  }
+  const keepCount = Math.max(0, current.weeks.length - params.numWeeks)
+  return {
+    ...tail,
+    phase_summary: undefined,  // the tail's alone; the save answers with the whole
+    weeks: spliceRegenerated(current.weeks, tail.weeks, keepCount, programStartDate, params.keepBefore),
+    volume_summary: [
+      ...(current.volume_summary ?? []).slice(0, keepCount),
+      ...(tail.volume_summary ?? []),
+    ],
+  }
+}
+
+/** Splice a regenerated tail into the active program and save it. False when it could not apply. */
+export function commitRegeneratedTail(
+  queryClient: ReturnType<typeof useQueryClient>,
+  tail: GeneratedProgram,
+  params: Pick<GenerateParams, 'numWeeks' | 'keepBefore'>,
+): boolean {
+  const s = useProgramStore.getState()
+  const spliced = applyRegeneratedTail(s.currentProgram, tail, params, s.programStartDate)
+  if (!spliced) return false
+  queryClient.setQueryData(queryKeys.programs.current, spliced)
+  s.setCurrentProgram(spliced)
+  return true
 }
 
 export function useRegenerateFromWeek() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (params: GenerateParams) =>
-      apiClient.post('/programs/generate', buildPostBody(params)) as unknown as Promise<GeneratedProgram>,
-    onSuccess: (newPartial, params) => {
-      const current = useProgramStore.getState().currentProgram
-      // Only replace the whole program when there is nothing to keep.
-      //
-      // This used to also fall through when numWeeks was undefined, saving just
-      // the regenerated TAIL and discarding every earlier week — which is how a
-      // program ends up stored as 16 weeks numbered 16...31 with no weeks 1-15.
-      // Without numWeeks we cannot know the split point, so keep the existing
-      // weeks the new run does not cover rather than dropping them.
-      if (!current) {
-        queryClient.setQueryData(queryKeys.programs.current, newPartial)
-        useProgramStore.getState().setCurrentProgram(newPartial)
-        return
+    mutationFn: async (params: GenerateParams) => {
+      const tail = await (apiClient.post('/programs/generate', buildPostBody(params)) as unknown as Promise<GeneratedProgram>)
+      if (isInfeasible(tail)) {
+        throw new Error(tail.validation?.errors?.[0]?.message ?? 'These settings cannot build the rest of the program.')
       }
-      if (params.numWeeks === undefined) {
-        const keep = Math.max(0, current.weeks.length - newPartial.weeks.length)
-        const merged: GeneratedProgram = {
-          ...newPartial,
-          // The response summarised the tail alone; the save answers with
-          // the summary of the spliced weeks.
-          phase_summary: undefined,
-          weeks: [...current.weeks.slice(0, keep), ...newPartial.weeks],
-          volume_summary: [
-            ...(current.volume_summary ?? []).slice(0, keep),
-            ...(newPartial.volume_summary ?? []),
-          ],
-        }
-        queryClient.setQueryData(queryKeys.programs.current, merged)
-        useProgramStore.getState().setCurrentProgram(merged)
-        return
-      }
-      const keepCount = Math.max(0, current.weeks.length - params.numWeeks)
-      const spliced: GeneratedProgram = {
-        ...newPartial,
-        phase_summary: undefined,  // the tail's alone; the save answers with the whole
-        weeks: spliceRegenerated(current.weeks, newPartial.weeks, keepCount,
-                                 useProgramStore.getState().programStartDate, params.keepBefore),
-        volume_summary: [
-          ...(current.volume_summary ?? []).slice(0, keepCount),
-          ...(newPartial.volume_summary ?? []),
-        ],
-      }
-      queryClient.setQueryData(queryKeys.programs.current, spliced)
-      useProgramStore.getState().setCurrentProgram(spliced)
+      return tail
+    },
+    onSuccess: (tail, params) => {
+      commitRegeneratedTail(queryClient, tail, params)
     },
   })
+}
+
+// ── Preview: what the constraints hold back, and whether a change matters ────
+
+/** The heavy routes answer 429 while another run is in flight; wait and ask again. */
+function retryBusy(failureCount: number, error: unknown): boolean {
+  return (error as { status?: number })?.status === 429 && failureCount < 8
+}
+
+/**
+ * The preview's "Held back": the program against a reference with nothing
+ * in the way, and what each constraint changes (POST /programs/impact; up to
+ * seven generations, so it loads after the draft is on screen). `params`
+ * null disables the query.
+ */
+export function useProgramImpact(params: GenerateParams | null) {
+  const body = params ? buildPostBody(params) : null
+  return useQuery({
+    queryKey: ['programs', 'impact', body],
+    enabled: !!body,
+    staleTime: Infinity,
+    retry: retryBusy,
+    retryDelay: 3000,
+    queryFn: () =>
+      apiClient.post('/programs/impact', body, { timeout: 120_000 }) as unknown as Promise<ConstraintImpact>,
+  })
+}
+
+/**
+ * Does a profile change change the program? Generates the remaining weeks
+ * with the program's constraints and with the profile's, and compares
+ * (POST /programs/constraint-change). `params` is the regenerate the profile
+ * would ask for; `baseline` the program's own constraints for it.
+ */
+export function useConstraintChangeCheck(
+  params: GenerateParams | null,
+  baseline: AthleteConstraints | null,
+  revision: string | null,
+) {
+  const body = params && baseline
+    ? { ...buildPostBody(params), baseline_constraints: baseline }
+    : null
+  return useQuery({
+    queryKey: ['programs', 'constraint-change', revision, body],
+    enabled: !!body,
+    staleTime: Infinity,
+    retry: retryBusy,
+    retryDelay: 3000,
+    queryFn: () =>
+      apiClient.post('/programs/constraint-change', body, { timeout: 120_000 }) as unknown as Promise<ConstraintChangeResult>,
+  })
+}
+
+/**
+ * The program holds for the profile's new constraints: record them on it so
+ * the profile stops offering a regenerate (PATCH /user/program/constraints,
+ * revision-checked). Updates the loaded copy without another PUT.
+ */
+export async function adoptProgramConstraints(
+  constraints: Partial<Pick<AthleteConstraints, 'equipment' | 'training_level' | 'injury_flags' | 'days_per_week'>>,
+  customInjuryFlags?: CustomInjuryFlag[],
+): Promise<boolean> {
+  const s = useProgramStore.getState()
+  if (!s.currentProgram) return false
+  try {
+    const res = await (apiClient.patch('/user/program/constraints', {
+      baseRevision: s.revision,
+      constraints,
+      ...(customInjuryFlags ? { custom_injury_flags: customInjuryFlags } : {}),
+    }) as unknown as Promise<{ saved: boolean; revision: string; constraints: AthleteConstraints }>)
+    if (!res.saved) return false
+    s.adoptConstraints(res.constraints, res.revision)
+    return true
+  } catch {
+    return false
+  }
 }
 
 export function useCurrentProgram(): GeneratedProgram | undefined {

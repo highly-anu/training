@@ -35,6 +35,13 @@ export function daysPerWeekOf(schedule: Record<Day, DaySchedule> | null | undefi
   return days
 }
 
+/** Ids that are never equipment: the builder adds `open_space` to every program
+ *  and the profile has none, which read as a difference on every program. */
+const NOT_EQUIPMENT = new Set(['open_space', 'none'])
+function realEquipment(ids: readonly string[] = []): string[] {
+  return ids.filter((id) => !NOT_EQUIPMENT.has(id))
+}
+
 function sameSet(a: readonly string[] = [], b: readonly string[] = []): boolean {
   if (a.length !== b.length) return false
   const sa = new Set(a)
@@ -62,10 +69,12 @@ export function constraintDifferences(
     out.push({ field: 'training_level', label: 'Training level',
                program: constraints.training_level, profile: profile.trainingLevel })
   }
-  if (profile.equipment.length > 0 && !sameSet(constraints.equipment ?? [], profile.equipment)) {
+  const programKit = realEquipment(constraints.equipment)
+  const profileKit = realEquipment(profile.equipment)
+  if (profileKit.length > 0 && !sameSet(programKit, profileKit)) {
     out.push({ field: 'equipment', label: 'Equipment',
-               program: `${(constraints.equipment ?? []).length} items`,
-               profile: setChange(constraints.equipment ?? [], profile.equipment) })
+               program: `${programKit.length} items`,
+               profile: setChange(programKit, profileKit) })
   }
   const days = daysPerWeekOf(profile.weeklySchedule)
   if (days != null && days > 0 && constraints.days_per_week && days !== constraints.days_per_week) {

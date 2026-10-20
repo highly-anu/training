@@ -23,6 +23,8 @@ apiClient.interceptors.response.use(
   (err) => {
     const message =
       (err.response?.data as { detail?: string } | undefined)?.detail ?? err.message
-    return Promise.reject(new Error(message))
+    // The status rides along, so a caller can retry a 429 (the server's
+    // heavy routes answer it while another run is in flight).
+    return Promise.reject(Object.assign(new Error(message), { status: err.response?.status as number | undefined }))
   }
 )

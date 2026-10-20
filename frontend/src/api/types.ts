@@ -398,6 +398,10 @@ export interface ExerciseAssignment {
   gap_reason?: string | null
   /** The exercise an injury flag's `modified_exercises` replaced with this one. */
   substituted_for?: string
+  /** The injury flag whose substitute this is. */
+  substituted_by_flag?: string
+  /** What emptied the slot, named (selector._explain_unfilled); absent on a filled slot. */
+  blocked_by?: SlotBlocker
   /** Links an `amrap_movement` component to the `amrap` slot it belongs to. */
   parent_slot_role?: string
   /** Structural slot with no exercise (BJJ rounds, circuit round wrappers). */
@@ -437,6 +441,117 @@ export interface Session {
   provenance?: SessionProvenance | null
   /** A test of the phase's standards, put in place of a session (src/generator._plan_week_tests). */
   test?: SessionTest
+  /** The modality this session was scheduled in place of (no archetype for it). */
+  substituted_for?: string
+  /** Why: no archetype of that modality for the athlete's level, or for this phase. */
+  substitution_cause?: 'level' | 'phase'
+  /** The equipment its archetype asks for that the athlete lacks; it runs scaled. */
+  equipment_scaled?: string[]
+  /** A session no archetype could fill says why. */
+  error?: string
+}
+
+/** Why a slot is empty, read from the exercise the lifted constraint would give. */
+export interface SlotBlocker {
+  cause: 'equipment' | 'injury' | 'level' | 'phase' | 'coverage'
+  /** The exercise that would be there. */
+  exercise?: string
+  /** equipment: the items it needs that the athlete lacks. */
+  needs?: string[]
+  /** injury: the flags that rule it out. */
+  flags?: string[]
+  /** level: what it requires that the athlete's level has not reached. */
+  requires?: string[]
+  level?: string
+  /** An injury substitute: the flag it came via. */
+  via?: string
+}
+
+/** One session a constraint change moves (constraint_impact.diff_programs). */
+export interface ConstraintChangeEntry {
+  week_index: number
+  week_number: number
+  day: string
+  session_index: number
+  change: 'added' | 'removed' | 'modality' | 'archetype' | 'slots'
+  before: ImpactSessionView | null
+  after: ImpactSessionView | null
+  slots?: {
+    index: number
+    role?: string
+    before: { id: string; name: string } | null
+    after: { id: string; name: string } | null
+    gap_before?: string | null
+    gap_after?: string | null
+  }[]
+}
+
+export interface ImpactSessionView {
+  modality: string
+  archetype: { id: string; name: string } | null
+  test: boolean
+  substituted_for?: string | null
+}
+
+/** POST /programs/constraint-change */
+export interface ConstraintChangeResult {
+  affected: boolean
+  comparable: boolean
+  sessions: { total: number; changed: number }
+  first_week_number?: number | null
+  changes: ConstraintChangeEntry[]
+  validation?: ValidationResult
+  /** The tail with the new constraints, when affected. */
+  program?: GeneratedProgram
+}
+
+export interface ImpactWhy {
+  /** equipment | injury | level | proficiency | combined | knock_on */
+  cause: string
+  text: string
+}
+
+/** One change in the Held back comparison (constraint_impact.analyse). */
+export interface ImpactChange {
+  week_index: number
+  week_number: number
+  day: string
+  session_index: number
+  change: 'added' | 'removed' | 'modality' | 'archetype' | 'slots'
+  reference: ImpactSessionView | null
+  actual: ImpactSessionView | null
+  /** A whole-session change: the constraints that, lifted alone, restore it. */
+  causes?: string[]
+  why?: ImpactWhy[]
+  knock_on?: boolean
+  slots?: {
+    index: number
+    role?: string
+    kind: 'emptied' | 'filled' | 'swapped'
+    from: { id: string; name: string } | null
+    to: { id: string; name: string } | null
+    gap_reason?: string | null
+    causes: string[]
+    why: ImpactWhy[]
+    knock_on: boolean
+  }[]
+}
+
+/** POST /programs/impact */
+export interface ConstraintImpact {
+  feasible: boolean
+  reference_generates?: boolean
+  detail?: string
+  lifts?: Record<string, string>
+  lifted?: string[]
+  reference?: { equipment?: string[]; training_level?: string; mastered_exercises?: string[]; kettlebell_count?: number }
+  sessions?: { total: number; changed: number; direct?: number }
+  totals?: Record<string, { sessions?: number; slots?: number; knock_on?: number }>
+  restore?: { equipment?: { id: string; changes: number }[] }
+  changes?: ImpactChange[]
+  /** A refused request: the one constraint that alone lets it generate. */
+  unblocked_by?: { cause: string; text: string }[]
+  refused?: { detail?: string; validation?: ValidationResult }
 }
 
 export interface SessionTest {
@@ -463,6 +578,15 @@ export interface CoverageReport {
     from_package: string
     label?: string
     reason?: string
+  }[]
+  /** Sessions scheduled as another modality (NO_ARCHETYPE_FOR_LEVEL | _PHASE). */
+  substituted_sessions?: {
+    week: number
+    day: string
+    modality: string
+    substituted_for: string
+    archetype?: string | null
+    reason: string
   }[]
 }
 
@@ -493,6 +617,8 @@ export interface WeekData {
   is_deload: boolean
   schedule: Record<string, Session[]>
   framework?: string
+  /** A test the phase called for that the week could not run, and why (generator._plan_week_tests). */
+  tests_skipped?: { archetypes?: string[]; phase_id?: string; week_in_phase?: number; reason: string }[]
 }
 
 export interface ValidationMessage {

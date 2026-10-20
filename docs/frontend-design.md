@@ -2402,6 +2402,7 @@ Status as of 2026-10-01, after the information-architecture restructure
 | **Profile** | `User` | "Profile" | None | Athlete (incl. heart rate) · Equipment · Injuries · Schedule · Standards | None | ✅ |
 | **Settings** | `Settings` | "Settings" | None | Connections · Account · Appearance (· Developer, dev builds) (`?tab=`) | None | ✅ — the OAuth callbacks land on `?tab=connections` |
 | **Program Builder** | `Wand2` | Dynamic step title | None | None | "Step N of 4" (right) | ✅ wizard variant, at `/program/new` |
+| **Program Preview** | Back-nav + `ScanEye` | "Preview" / "Preview changes" | Methodology name | Overview · Calendar · Held back (`?tab=`) | Adjust · Start this program / Apply from week N | ✅ two-row like Program (the `PhaseBar` strip); `/program/preview`, the builder's last step and the profile's regenerate offer (`?mode=regenerate`) |
 | **Dev Lab** | `Terminal` | "Dev Lab" | None | Pipeline Trace · Object Browser · Ontology · Model Interactions | None | ✅ — dev builds only |
 | **Login** | — | "Training" | — | — | — | Exempt — pre-auth, centered card, outside app shell; returns to the page that sent it there (`lib/returnPath.ts`) |
 | **Pair a watch** | `Watch` | "Pair a watch" | None | None | None | ✅ — `/pair?code=…`, the watch QR's target; not in the sidebar |

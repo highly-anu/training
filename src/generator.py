@@ -1,7 +1,7 @@
 """Main program generator — orchestrates all modules."""
 from __future__ import annotations
 
-from . import loader, phases, provenance, standard_tests, week_template
+from . import blockers, loader, phases, provenance, standard_tests, week_template
 from .scheduler import schedule_week, select_framework
 from .selector import populate_session, select_archetype
 from .progression import calculate_load
@@ -361,7 +361,8 @@ def _build_coverage_report(program: dict, policy) -> dict:
                         'modality': session.get('modality'),
                         'substituted_for': session['substituted_for'],
                         'archetype': (arch or {}).get('id'),
-                        'reason': 'NO_ARCHETYPE_FOR_PHASE_OR_LEVEL',
+                        'reason': {'level': 'NO_ARCHETYPE_FOR_LEVEL', 'phase': 'NO_ARCHETYPE_FOR_PHASE'}.get(
+                            session.get('substitution_cause'), 'NO_ARCHETYPE_FOR_PHASE_OR_LEVEL'),
                     })
                 if not arch:
                     unfilled_sessions.append({
@@ -805,6 +806,16 @@ def generate(
                 # has no archetype for this one in this phase at this level
                 # (_resolve_session pass 3). Say so on the session, once in the
                 # compromises, and in the coverage report.
+                # Picked with the equipment filter relaxed (pass 2): the
+                # archetype's equipment the athlete lacks, so the session can
+                # say it runs scaled instead of only the compromise line.
+                if is_commons_fallback and test is None:
+                    lacking = blockers.missing_equipment(
+                        (populated.get('archetype') or {}).get('required_equipment'),
+                        constraints.get('equipment'))
+                    if lacking:
+                        populated['equipment_scaled'] = lacking
+
                 if substituted_for:
                     populated['substituted_for'] = substituted_for
                     level = constraints.get('training_level', 'intermediate')
@@ -814,6 +825,7 @@ def generate(
                     own = [a for a in archetypes if a.get('modality') == substituted_for]
                     level_gap = bool(own) and all(a.get('training_levels') and level not in a['training_levels']
                                                   for a in own)
+                    populated['substitution_cause'] = 'level' if level_gap else 'phase'
                     why = f"for a {level} athlete" if level_gap else f"for the {phase} phase"
                     msg = (f"No {substituted_for.replace('_', ' ')} session in {policy.describe()} {why} — "
                            f"scheduled as {session['modality'].replace('_', ' ')} instead.")

@@ -51,6 +51,7 @@ deferred is under *Later*.
 | 12 | Standards: the Garmin unit tests, a test day on both watches | P2 | S | API, watch |
 | 13 | Heart rate from the programming: ship the watches' exercise times, fidelity, pauses | P2 | M | watch, engine |
 | 14 | Watch parity: the Apple Watch on the server's contract and vocabulary | P2 | M | watch, iOS, API |
+| 15 | Program preview on the phone; the regenerate offer that asks the server first (*IA*) | P2 | M | iOS, web |
 
 ---
 
@@ -1033,6 +1034,33 @@ branch:
 
    `garmin/VERSION` (1.7.0) is read by `build.sh --release` and `--demo`, which print the
    version for the store form and the `ciq-v<VERSION>` tag.
+
+### 15. Program preview: the phone, and what is left — P2 · M
+
+The web and the server landed on 2026-10-20 (`feat/program-preview`): a generated program
+is a draft until started (Program ▸ Preview: Overview · Calendar · Held back, Adjust, swaps
+on the draft), slots carry `blocked_by`, `POST /programs/impact` opens the Dev Lab's
+comparison to every athlete, and the Profile offers a regenerate only when
+`POST /programs/constraint-change` says the change moves a session (an unaffected one is
+adopted with `PATCH /user/program/constraints`). Before this, adding a kettlebell no
+session used asked to rebuild the plan. Left open:
+
+1. **iOS (M).** The builder still posts `persist: true` and throws the answer away — an
+   infeasible answer silently keeps the old program. Move step 4 to
+   `APIClient.generateProgramPreview` and a preview screen (Held back, the `blocked_by`
+   wording, swaps on the draft), commit through `saveProgramToServer`; make
+   `RegenerateOfferCard` ask `/programs/constraint-change` and adopt with the PATCH; ignore
+   `open_space` in `ProgramConstraintsDiff` as the web now does. Shared components per
+   design-system §1.7.
+2. **Week templates say which check failed (S).** `generator._fits_as_written` answers a
+   boolean; a templated day nothing fits says "equipment, injuries or N minutes". Return
+   the failed check so the day's note can name it (Held back already does, from the runs).
+3. **Held back is slow (S).** 7–10 s for 12 weeks (seven generations; 79 MB peak RSS
+   measured). Cached per body in the process; a deploy or a second machine starts cold.
+   Consider running the relaxed generations only for the constraints the athlete has
+   (already so) and fewer weeks for the comparison.
+4. **The Program page's injuries sheet and "From tomorrow onwards"** still regenerate
+   without a preview; route both through the regenerate preview.
 
 ## Later
 

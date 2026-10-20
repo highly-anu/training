@@ -35,6 +35,8 @@ from __future__ import annotations
 
 from collections import Counter
 
+from src import blockers
+
 DIMENSIONS = ('equipment', 'injury', 'level', 'proficiency')
 LEVELS = ('novice', 'intermediate', 'advanced', 'elite')
 DAY_ORDER = ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
@@ -271,20 +273,14 @@ def _slot_list(session: dict | None) -> list[dict]:
 
 # ── Why ───────────────────────────────────────────────────────────────────────
 
-def _missing(required, available) -> list[str]:
-    return sorted(set(required or []) - set(available or []) - _NOT_EQUIPMENT)
+_missing = blockers.missing_equipment
 
 
 def _blocking_flags(ex: dict, flags: list, flag_data: dict) -> list[str]:
     names = []
-    patterns = set(ex.get('movement_patterns') or [])
-    for fid in flags:
-        flag = flag_data.get(fid) or {}
-        hit = sorted(patterns & set(flag.get('excluded_movement_patterns') or []))
-        if ex.get('id') in (flag.get('excluded_exercises') or []) or fid in (ex.get('contraindicated_with') or []):
-            names.append(flag.get('name', fid))
-        elif hit:
-            names.append(f"{flag.get('name', fid)} ({', '.join(hit)})")
+    for fid, hit in blockers.flag_hits(ex, flags, flag_data):
+        name = (flag_data.get(fid) or {}).get('name', fid)
+        names.append(f"{name} ({', '.join(hit)})" if hit else name)
     return names
 
 
@@ -370,6 +366,56 @@ class _Explainer:
         if cause == 'level':
             return f"at {self.ref['training_level']} the reference picks {name}", []
         return f"lifting {cause} alone restores {name}", []
+
+
+# ── Before and after one change ───────────────────────────────────────────────
+
+def diff_programs(before: dict, after: dict) -> dict:
+    """What one constraint change does to a program: `before` and `after` are
+    the same request generated with the old and the new constraints
+    (POST /programs/constraint-change), lined up session by session.
+
+    A session is changed when it appears or goes, changes modality or
+    archetype, or keeps its archetype and fills a slot otherwise (another
+    exercise, or filled ↔ empty). `affected` is whether any session changed;
+    `first_week_number` is the earliest week that changes.
+    """
+    b, a = sessions_of(before), sessions_of(after)
+    week_numbers = [w.get('week_number') for w in (after.get('weeks') or before.get('weeks') or [])]
+    changes: list[dict] = []
+    for key in sorted(set(a) | set(b), key=_order):
+        old, new = b.get(key), a.get(key)
+        wi, day, si = key
+        entry = {
+            'week_index': wi,
+            'week_number': week_numbers[wi] if wi < len(week_numbers) else wi + 1,
+            'day': day, 'session_index': si,
+            'before': _session_view(old), 'after': _session_view(new),
+        }
+        if old is None or new is None:
+            changes.append({**entry, 'change': 'added' if old is None else 'removed'})
+            continue
+        if _shape(old) != _shape(new):
+            changes.append({**entry, 'change': 'modality' if old.get('modality') != new.get('modality')
+                            else 'archetype'})
+            continue
+        olds, news = _exercises(old), _exercises(new)
+        slots = []
+        for i in range(max(len(olds), len(news))):
+            o, n = (olds[i] if i < len(olds) else None), (news[i] if i < len(news) else None)
+            if _fill(o) != _fill(n):
+                slots.append({'index': i, 'role': (n or o or {}).get('slot_role'),
+                              'before': _exercise_view(o), 'after': _exercise_view(n),
+                              'gap_before': _gap(o or {}), 'gap_after': _gap(n or {})})
+        if slots:
+            changes.append({**entry, 'change': 'slots', 'slots': slots})
+    total = len(set(a) | set(b))
+    return {
+        'affected': bool(changes),
+        'sessions': {'total': total, 'changed': len(changes)},
+        'first_week_number': changes[0]['week_number'] if changes else None,
+        'changes': changes,
+    }
 
 
 # ── The comparison ────────────────────────────────────────────────────────────

@@ -30,6 +30,8 @@ interface ReplaceSessionSheetProps {
   day: string
   sessionIndex: number
   program: GeneratedProgram
+  /** A draft program (the preview): the new session goes here instead of the active program. */
+  onReplace?: (session: Session) => void
 }
 
 export function ReplaceSessionSheet({
@@ -41,8 +43,11 @@ export function ReplaceSessionSheet({
   day,
   sessionIndex,
   program,
+  onReplace,
 }: ReplaceSessionSheetProps) {
-  const replaceSession = useProgramStore((s) => s.replaceSession)
+  const storeReplaceSession = useProgramStore((s) => s.replaceSession)
+  const replaceSession = (w: number, d: string, i: number, s: Session) =>
+    onReplace ? onReplace(s) : storeReplaceSession(w, d, i, s)
   const generateSession = useGenerateSession()
   const { data: archetypes } = useArchetypes()
 
