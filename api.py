@@ -7,6 +7,7 @@ import os
 import re
 import sys
 import tempfile
+import threading
 from datetime import date as _date, datetime as _datetime, timedelta as _timedelta, timezone as _timezone
 
 import yaml
@@ -188,6 +189,10 @@ def _load_yaml(path: str) -> dict:
         return yaml.safe_load(f)
 
 
+_EXERCISE_LIST_KEYS = ('modality', 'equipment', 'movement_patterns', 'requires', 'unlocks',
+                       'contraindicated_with', 'sources')
+
+
 def _all_exercises() -> list[dict]:
     global_index, _ = loader.load_all_exercises()
     media = loader.load_exercise_media()
@@ -196,6 +201,14 @@ def _all_exercises() -> list[dict]:
         ex = dict(ex)
         if isinstance(ex.get('sources'), str):
             ex['sources'] = [ex['sources']]
+        # The clients read these as always present; 155 exercises (most of
+        # Horsemen's named-workout movements) declare no progressions, and the
+        # web's Explore crashed on Object.keys(null).
+        for key in _EXERCISE_LIST_KEYS:
+            if ex.get(key) is None:
+                ex[key] = []
+        if ex.get('progressions') is None:
+            ex['progressions'] = {}
         if ex['id'] in media:
             ex.update(media[ex['id']])
         result.append(ex)
@@ -210,20 +223,23 @@ def _equipment_profiles() -> list[dict]:
     return loader.load_equipment_profiles()
 
 
-# Similarity cache — computed once at first request (lazy, not blocking startup)
+# Similarity cache — computed once at first request (lazy, not blocking startup),
+# by one thread: the four serving threads would otherwise each build it.
 _similarity_cache: dict | None = None
+_similarity_lock = threading.Lock()
 
 def _get_similarity() -> dict:
     global _similarity_cache
-    if _similarity_cache is None:
-        philosophies = loader.load_philosophies()
-        frameworks   = loader.load_all_frameworks()
-        modalities   = loader.load_all_modalities()
-        archetypes   = loader.load_all_archetypes()
-        exercises, _ = loader.load_all_exercises()
-        _similarity_cache = compute_all_similarities(
-            philosophies, frameworks, modalities, archetypes, exercises
-        )
+    with _similarity_lock:
+        if _similarity_cache is None:
+            philosophies = loader.load_philosophies()
+            frameworks   = loader.load_all_frameworks()
+            modalities   = loader.load_all_modalities()
+            archetypes   = loader.load_all_archetypes()
+            exercises, _ = loader.load_all_exercises()
+            _similarity_cache = compute_all_similarities(
+                philosophies, frameworks, modalities, archetypes, exercises
+            )
     return _similarity_cache
 
 
@@ -616,8 +632,9 @@ def get_ontology():
 def get_similarity():
     """Pairwise likeness scores for all ontology categories.
 
-    Returns {category: {id_a: {id_b: {score, primary, secondary}}}}
-    Scores are symmetric and pre-computed on first call.
+    Returns {category: {ids, scores, top}}: every pair's score once (the upper
+    triangle, ``similarity._category``) and each item's nearest peers with
+    {score, primary, secondary}. Pre-computed on first call.
     """
     return jsonify(_get_similarity())
 

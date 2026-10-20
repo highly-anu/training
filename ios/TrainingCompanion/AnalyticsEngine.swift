@@ -313,10 +313,10 @@ nonisolated enum AnalyticsEngine {
 
     // MARK: - Period Filtering
 
-    static func filter(_ workouts: [ImportedWorkout], withinDays days: Int?) -> [ImportedWorkout] {
+    static func filter(_ workouts: [ImportedWorkout], withinDays days: Int?, now: Date = Date()) -> [ImportedWorkout] {
         guard let days else { return workouts }
         let fmt = DateFormatter(); fmt.dateFormat = "yyyy-MM-dd"
-        let cutoff = Calendar.current.date(byAdding: .day, value: -days, to: Date()) ?? Date()
+        let cutoff = Calendar.current.date(byAdding: .day, value: -days, to: now) ?? now
         return workouts.filter { (fmt.date(from: $0.date) ?? .distantPast) >= cutoff }
     }
 

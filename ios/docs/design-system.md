@@ -589,7 +589,7 @@ AppSubTabScreen(selection: $selectedTab) { tab in
   view and left four tabs' titles pinned while Today's collapsed. Sections
   are no longer swiped between; the selector is the way to move. And a
   section puts anything above its rows *inside* its list or scroll view (a
-  header), never in a `VStack` above it — Log ▸ Workouts' scope line is the
+  header), never in a `VStack` above it — Log ▸ Activity's scope line is the
   list's section header. A section chosen in `onAppear` (a deep link) swaps
   the scroll view while the screen is still appearing and left the title
   blurred, so screens apply a requested section in `.task`, after the first
@@ -823,7 +823,7 @@ answer.
 | **Today** | `TodayView` | — (cards: sessions, readiness, suggestions, development, progression) |
 | **Program** | `ProgramView` | Overview · Calendar · History |
 | **Analytics** | `AnalyticsView` | Program · Progress · Blocks · Load · Recovery |
-| **Log** | `LogView` | Workouts · Suggestions · Sessions |
+| **Log** | `LogView` | Activity · Linking |
 | **Profile** | `ProfileView` | Athlete (incl. injuries and HR zones) · Equipment · Schedule · Standards |
 
 The section names and their order are the web's, item for item
@@ -1206,13 +1206,18 @@ selection; the sheet is the one methodology reference on the phone.
 ### 6.19 Log Tab
 
 **The record and the decision queue, apart from the interpretation.**
-`Views/LogView.swift`, the third tab, three sections:
+`Views/LogView.swift`, the third tab, two sections:
 
-- *Workouts* (`LogWorkoutsTab`, the list that was Analytics ▸ Workouts until
-  2026-10-01): recorded activities (`WorkoutRow`, §6.23) with
-  swipe-to-delete and the TRIMP badge; the period, sort and activity filter
-  are the toolbar's filter menu (§6.24) beside the `.fit` importer; a row
-  pushes `WorkoutDetailView`.
+- *Activity* (`LogActivityTab`): recorded activities (`WorkoutRow`, §6.23)
+  and what was logged against planned sessions, in one list by date
+  (`WorkoutListFilter.entries`). They were the Workouts and Sessions
+  sections until 2026-10-20 (and Workouts was Analytics ▸ Workouts until
+  2026-10-01). Show (All · Workouts · Sessions), period, sort and activity
+  are the toolbar's filter menu (§6.24) beside the `.fit` importer; another
+  sort than date leads with the workouts in that order, an activity keeps
+  workouts only. A workout swipes to delete, carries the TRIMP badge and
+  pushes `WorkoutDetailView`; a session row reads as `LogSessions.rows`
+  builds it (below) and opens the session detail when it resolves.
 - *Linking* (`LogLinkingTab`): one section per day, the workouts recorded
   that day beside the sessions planned for it — the current program's and
   every earlier program's, the header naming the program and marking an
@@ -1230,9 +1235,8 @@ selection; the sheet is the one methodology reference on the phone.
   never disabled while it runs — doing so froze scrolling and every button
   until the reload landed, which read as a hung screen. Today
   still shows the server's own suggestions (`SuggestionRowView`).
-- *Sessions* (`LogSessionsTab`): what was logged against planned sessions
-  across the program, newest completion first — `LogSessions.rows` builds
-  the rows from the server's session logs: the session's name when the key
+- A session row of Activity: what was logged against a planned session —
+  `LogSessions.rows` builds the rows from the server's session logs: the session's name when the key
   resolves in the current program, the date and source, and one line per
   exercise with content ("Back Squat — 3 sets · 3×5 @ 80 kg"). A row that
   resolves opens the session detail.
@@ -1373,7 +1377,7 @@ shows no start picker.
 **A recorded workout looks the same wherever it is listed.**
 `Views/WorkoutRow.swift` is one recorded workout: the activity icon (§6.12),
 what the device recorded, date, time and duration, distance and average HR,
-the source chip, the linked-session chip and the TRIMP badge. Log ▸ Workouts
+the source chip, the linked-session chip and the TRIMP badge. Log ▸ Activity
 lists them; the session detail's *Recorded Workout* section shows the one
 linked to that session (with `showsSession: false`, since the row already
 sits on its session, and `showsChevron: false` inside a `NavigationLink`)
@@ -1392,13 +1396,13 @@ active program (`inCurrentProgram: false` on the snapshot) never links —
 ### 6.24 Filter Menu
 
 **Several filters on one list are one toolbar button, not rows of pills.**
-`Views/WorkoutFilterMenu.swift`. Log ▸ Workouts used to stack three bands
+`Views/WorkoutFilterMenu.swift`. Log ▸ Workouts (now Activity) used to stack three bands
 under the title — the section picker, the period pills and a scroller of
 sort and activity chips — so the list started a third of the way down the
 screen. The system's own apps (Mail, Files, Photos) put filtering behind
 one `line.3.horizontal.decrease.circle` button.
 
-- **One value.** `WorkoutListFilter` (period, sort, activity) is held by the
+- **One value.** `WorkoutListFilter` (show, period, sort, activity) is held by the
   screen and passed as a binding to the menu and the list, so they cannot
   disagree. `isDefault` and `apply(to:)` live on it (`WorkoutListFilterTests`).
 - **Submenus that name their value.** Each dimension is a `Picker` with

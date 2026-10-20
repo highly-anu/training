@@ -3,28 +3,27 @@ import UniformTypeIdentifiers
 
 /// The Log tab's sections. Internal so `AppRouter` can name one.
 enum LogTab: Int, AppSubTab {
-    case workouts, linking, sessions
+    case activity, linking
 
     var label: String {
         switch self {
-        case .workouts: return "Workouts"
+        case .activity: return "Activity"
         case .linking: return "Linking"
-        case .sessions: return "Sessions"
         }
     }
 }
 
 /// The record and the decision queue — the phone's counterpart to the web's
-/// Log area (design-system §6.19). Workouts is the recorded-activity list
-/// that used to be a section of Analytics, with the `.fit` importer;
+/// Log area (design-system §6.19). Activity is recorded workouts and what
+/// was logged against planned sessions in one list, with the `.fit`
+/// importer (`LogActivityTab`; Workouts and Sessions until 2026-10-20);
 /// Linking is one section per day, workouts beside planned sessions, with
-/// same-day suggestions and links across days (`LogLinkingTab`);
-/// Sessions is what was logged against planned sessions, across the program.
+/// same-day suggestions and links across days (`LogLinkingTab`).
 struct LogView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var router: AppRouter
 
-    @State private var selectedSegment: LogTab = .workouts
+    @State private var selectedSegment: LogTab = .activity
     @State private var workoutFilter = WorkoutListFilter()
     @State private var selectedWorkout: ImportedWorkout? = nil
     @State private var selectedSession: AppState.LocatedSession? = nil
@@ -34,14 +33,12 @@ struct LogView: View {
         NavigationStack {
             AppSubTabScreen(selection: $selectedSegment) { tab in
                 switch tab {
-                case .workouts:
-                    LogWorkoutsTab(filter: $workoutFilter, selectedWorkout: $selectedWorkout)
+                case .activity:
+                    LogActivityTab(filter: $workoutFilter, selectedWorkout: $selectedWorkout,
+                                   selectedSession: $selectedSession)
                         .environmentObject(appState)
                 case .linking:
                     LogLinkingTab(reviewWorkout: $selectedWorkout)
-                        .environmentObject(appState)
-                case .sessions:
-                    LogSessionsTab(selectedSession: $selectedSession)
                         .environmentObject(appState)
                 }
             }
@@ -52,7 +49,7 @@ struct LogView: View {
             .toolbar {
                 // Filtering is a toolbar menu, not rows of pills above the
                 // list (§6.24): the section picker stays the only band.
-                if selectedSegment == .workouts {
+                if selectedSegment == .activity {
                     ToolbarItemGroup(placement: .topBarTrailing) {
                         WorkoutFilterMenu(filter: $workoutFilter,
                                           activities: workoutFilter.activities(in: appState.importedWorkouts))
@@ -91,80 +88,10 @@ struct LogView: View {
 
     private func applyRequestedSection() {
         guard let requested = router.logSection else { return }
+        if let show = router.logShow { workoutFilter.show = show }
         if selectedSegment != requested {
             withAnimation(AppAnimation.springStandard) { selectedSegment = requested }
         }
         router.clearLogSection()
-    }
-}
-
-// MARK: - Sessions
-
-struct LogSessionsTab: View {
-    @EnvironmentObject var appState: AppState
-    @Binding var selectedSession: AppState.LocatedSession?
-
-    private var rows: [LogSessionRow] {
-        LogSessions.rows(logs: Array(appState.sessionLogs.values) + appState.earlierSessionLogs,
-                         locate: { appState.locateSession(key: $0) },
-                         exerciseNames: appState.exerciseCatalog.mapValues(\.name),
-                         currentProgramStart: LogSessions.parseServerDate(appState.serverProgram?.programStartDate))
-    }
-
-    var body: some View {
-        let rows = rows
-        Group {
-            if rows.isEmpty {
-                VStack(spacing: 16) {
-                    Spacer()
-                    Image(systemName: "square.and.pencil")
-                        .font(.system(size: 48)).foregroundStyle(.secondary)
-                    Text("Nothing logged yet").font(.headline)
-                    Text("Open a session and swipe right on an exercise to log what you did. Completed sessions appear here too.")
-                        .font(.subheadline).foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center).padding(.horizontal, 24)
-                    Spacer()
-                }
-                .frame(maxWidth: .infinity)
-            } else {
-                List {
-                    ForEach(rows) { row in
-                        Button {
-                            guard let found = appState.locateSession(key: row.key) else { return }
-                            AppHaptics.selection()
-                            selectedSession = found
-                        } label: {
-                            VStack(alignment: .leading, spacing: 4) {
-                                HStack {
-                                    Text(row.title).font(.subheadline).fontWeight(.medium)
-                                    Spacer()
-                                    if row.isComplete {
-                                        Image(systemName: "checkmark.circle.fill").foregroundStyle(.green).font(.caption)
-                                    }
-                                    if row.isLocatable {
-                                        Image(systemName: "chevron.right").font(.caption2).foregroundStyle(.tertiary)
-                                    }
-                                }
-                                if !row.subtitle.isEmpty {
-                                    Text(row.subtitle).font(.caption).foregroundStyle(.secondary)
-                                }
-                                ForEach(row.lines, id: \.self) { line in
-                                    Text(line).font(.caption).foregroundStyle(.primary).monospacedDigit()
-                                }
-                            }
-                            .padding(.vertical, 2)
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(!row.isLocatable)
-                    }
-                }
-                .listStyle(.insetGrouped)
-            }
-        }
-        .task { await appState.loadExercisesIfNeeded() }
-        .refreshable {
-            await AppRefresh.perform { await appState.loadRecentSessionLogs() }
-        }
     }
 }

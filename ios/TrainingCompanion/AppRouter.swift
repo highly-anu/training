@@ -82,16 +82,20 @@ final class AppRouter: ObservableObject {
         pendingAnalyticsDetail = nil
     }
 
-    /// A Log section asked for from outside, cleared once applied.
+    /// A Log section asked for from outside, cleared once applied, and for
+    /// Activity, which type it shows (nil leaves the filter as it is).
     @Published var logSection: LogTab? = nil
+    private(set) var logShow: LogEntryKind? = nil
 
-    func showLog(_ section: LogTab) {
+    func showLog(_ section: LogTab, show kind: LogEntryKind? = nil) {
+        logShow = kind
         logSection = section
         show(.log)
     }
 
     func clearLogSection() {
         logSection = nil
+        logShow = nil
     }
 
     /// A Program section asked for from outside, cleared once applied.

@@ -28,8 +28,11 @@ enum DeepLink: Equatable {
     /// `profile?section=standards&standard=<id>` — one standard's sheet
     /// (`bodyweight_kg` opens the bodyweight series).
     case standard(String)
-    /// `log?section=workouts|linking|sessions` (`suggestions`, the old name, still works).
+    /// `log?section=activity|linking` (`suggestions`, Linking's old name, still works).
     case log(LogTab)
+    /// `log?section=workouts|sessions` — Log ▸ Activity showing that type (both were
+    /// sections until 2026-10-20).
+    case logActivity(LogEntryKind)
     /// `program?section=overview|calendar|history`.
     case program(ProgramTab)
     /// `program?section=overview&phase=<n>|compare` — Overview pushes the n-th
@@ -74,10 +77,14 @@ enum DeepLink: Equatable {
             }
             return .tab(.program)
         case "log":
-            // "suggestions" is the section's old name.
-            if let wanted = query.first(where: { $0.name == "section" })?.value?.lowercased()
-                .replacingOccurrences(of: "suggestions", with: "linking"),
-               let section = LogTab.allCases.first(where: { $0.label.lowercased() == wanted }) {
+            // "suggestions" is Linking's old name; Workouts and Sessions were
+            // sections until 2026-10-20 and now pick Activity's type.
+            let wanted = query.first(where: { $0.name == "section" })?.value?.lowercased()
+                .replacingOccurrences(of: "suggestions", with: "linking")
+            if let kind = LogEntryKind.allCases.first(where: { $0 != .all && $0.rawValue.lowercased() == wanted }) {
+                return .logActivity(kind)
+            }
+            if let wanted, let section = LogTab.allCases.first(where: { $0.label.lowercased() == wanted }) {
                 return .log(section)
             }
             return .tab(.log)
@@ -138,6 +145,7 @@ extension AppRouter {
         case .profile(let section): showProfile(section)
         case .standard(let id): openStandard(id)
         case .log(let section): showLog(section)
+        case .logActivity(let kind): showLog(.activity, show: kind)
         case .program(let section): showProgram(section)
         case .programPhase(let phase): openProgramPhase(phase)
         case .workoutComplete(let id): showWorkoutComplete(id)

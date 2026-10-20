@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { House, Wand2, ChevronRight, Flag, CloudOff } from 'lucide-react'
+import { House, Wand2, ChevronRight, CheckCircle2, Flag, CloudOff } from 'lucide-react'
 import { differenceInCalendarDays, differenceInWeeks, parseISO, format } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { useCurrentProgram } from '@/api/programs'
@@ -84,39 +84,37 @@ function WeekTab({
         )}
       </div>
 
-      {/* Week selector */}
+      {/* Week selector, and the week done on the same row */}
       {currentWeek && (
-        <WeekSelector
-          week={weekIndex + 1}
-          totalWeeks={program.weeks.length}
-          phase={currentWeek.phase}
-          phaseLabel={currentWeek.phase_name}
-          isDeload={currentWeek.is_deload}
-          onPrev={() => handleWeekChange(-1)}
-          onNext={() => handleWeekChange(1)}
-          prevDisabled={weekIndex <= 0}
-          nextDisabled={weekIndex >= program.weeks.length - 1}
-        />
-      )}
-
-      {/* Week complete banner */}
-      {canAdvance && (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className={cn('flex items-center justify-between gap-3 rounded-xl border px-4 py-3', COMPLETION.border, COMPLETION.bgStrong)}
-        >
-          <p className={cn('text-sm font-medium', COMPLETION.text)}>
-            Week {weekIndex + 1} complete
-          </p>
-          <button
-            type="button"
-            onClick={() => handleWeekChange(1)}
-            className={cn('flex items-center gap-1 text-xs font-semibold transition-colors hover:opacity-80', COMPLETION.text)}
-          >
-            Week {weekIndex + 2} <ChevronRight className="size-3.5" />
-          </button>
-        </motion.div>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <WeekSelector
+            week={weekIndex + 1}
+            totalWeeks={program.weeks.length}
+            phase={currentWeek.phase}
+            phaseLabel={currentWeek.phase_name}
+            isDeload={currentWeek.is_deload}
+            onPrev={() => handleWeekChange(-1)}
+            onNext={() => handleWeekChange(1)}
+            prevDisabled={weekIndex <= 0}
+            nextDisabled={weekIndex >= program.weeks.length - 1}
+          />
+          {canAdvance && (
+            <motion.button
+              type="button"
+              initial={{ opacity: 0, x: 8 }}
+              animate={{ opacity: 1, x: 0 }}
+              onClick={() => handleWeekChange(1)}
+              aria-label={`Week ${weekIndex + 1} done — go to week ${weekIndex + 2}`}
+              className={cn('ml-auto flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-opacity hover:opacity-80',
+                            COMPLETION.border, COMPLETION.bgStrong, COMPLETION.text)}
+            >
+              <CheckCircle2 className="size-3.5" />
+              Week done
+              <span className="opacity-70">· Next</span>
+              <ChevronRight className="size-3.5" />
+            </motion.button>
+          )}
+        </div>
       )}
 
       {/* Current week overview */}

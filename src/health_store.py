@@ -711,21 +711,28 @@ def get_recent_session_logs(user_id: str) -> list[dict]:
                               sl.avg_hr, sl.peak_hr, sl.exercises,
                               wm.imported_workout_id AS matched_workout_id
                        FROM session_logs sl
-                       LEFT JOIN workout_matches wm
-                           ON wm.user_id = sl.user_id
-                          AND wm.match_confidence <> 'rejected'
-                          -- By uid when both have one; by key only when neither
-                          -- does. A scoped log joined to an unscoped match by
-                          -- key picked up another program's workout.
-                          AND CASE
-                                WHEN sl.session_uid IS NOT NULL
-                                 AND wm.session_uid IS NOT NULL
-                                THEN wm.session_uid = sl.session_uid
-                                WHEN sl.session_uid IS NULL
-                                 AND wm.session_uid IS NULL
-                                THEN wm.session_key = sl.session_key
-                                ELSE FALSE
-                              END
+                       -- One matched workout per log, the first linked: a plain
+                       -- join listed a session with two workouts twice.
+                       LEFT JOIN LATERAL (
+                           SELECT m.imported_workout_id
+                           FROM workout_matches m
+                           WHERE m.user_id = sl.user_id
+                             AND m.match_confidence <> 'rejected'
+                             -- By uid when both have one; by key only when neither
+                             -- does. A scoped log joined to an unscoped match by
+                             -- key picked up another program's workout.
+                             AND CASE
+                                   WHEN sl.session_uid IS NOT NULL
+                                    AND m.session_uid IS NOT NULL
+                                   THEN m.session_uid = sl.session_uid
+                                   WHEN sl.session_uid IS NULL
+                                    AND m.session_uid IS NULL
+                                   THEN m.session_key = sl.session_key
+                                   ELSE FALSE
+                                 END
+                           ORDER BY m.matched_at NULLS LAST, m.imported_workout_id
+                           LIMIT 1
+                       ) wm ON TRUE
                        WHERE sl.user_id = %s
                        ORDER BY sl.completed_at DESC NULLS LAST''',
                     (user_id,),

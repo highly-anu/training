@@ -156,9 +156,11 @@ export function ProgramView() {
     >
       {/* Header */}
       <div className="border-b px-6 py-4 space-y-3 shrink-0">
-        <div className="flex items-center gap-2">
+        {/* Wraps rather than overflows: a long title, the tabs, the actions and
+            the week selector do not fit one row of a narrow window. */}
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-3">
           <CalendarDays className="size-5 text-primary shrink-0" />
-          <h1 className="text-lg font-semibold">{programTitle}</h1>
+          <h1 className="text-lg font-semibold shrink-0 max-w-full">{programTitle}</h1>
           <div className="ml-4 flex items-center gap-2">
             <div className="w-px h-4 bg-border/60 shrink-0" />
             <div className="flex items-center gap-1">
@@ -178,7 +180,7 @@ export function ProgramView() {
               ))}
             </div>
           </div>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
             <button
               type="button"
               onClick={() => navigate('/program/new')}

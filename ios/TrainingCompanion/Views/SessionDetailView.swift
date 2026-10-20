@@ -216,7 +216,7 @@ struct SessionDetailView: View {
 
     private var linkedWorkout: ImportedWorkout? { appState.linkedWorkout(forSessionKey: sessionKey) }
 
-    /// What was recorded for this session — the same row Log ▸ Workouts
+    /// What was recorded for this session — the same row Log ▸ Activity
     /// shows, pushing the full workout. Without the session chip: the row
     /// already sits on its session.
     private func linkedWorkoutSection(_ workout: ImportedWorkout) -> some View {

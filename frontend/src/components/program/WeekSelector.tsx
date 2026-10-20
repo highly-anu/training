@@ -18,16 +18,25 @@ interface WeekSelectorProps {
   phaseLabel?: string
 }
 
+/**
+ * The arrows hold only the week number, so they stay put while the phase pill
+ * beside them changes width from one phase name to the next.
+ */
 export function WeekSelector({ week, totalWeeks, phase, phaseLabel, isDeload, onPrev, onNext, prevDisabled, nextDisabled }: WeekSelectorProps) {
   return (
     <div className="flex items-center gap-3">
-      <Button variant="outline" size="icon" onClick={onPrev} disabled={prevDisabled ?? week <= 1} className="size-8" aria-label="Previous week">
-        <ChevronLeft className="size-4" />
-      </Button>
-      <div className="flex items-center gap-2 min-w-32 justify-center">
-        <span className="text-sm font-semibold text-foreground">
+      <div className="flex items-center gap-1.5">
+        <Button variant="outline" size="icon" onClick={onPrev} disabled={prevDisabled ?? week <= 1} className="size-8" aria-label="Previous week">
+          <ChevronLeft className="size-4" />
+        </Button>
+        <span className="min-w-24 text-center text-sm font-semibold text-foreground tabular-nums">
           Week {week} <span className="text-muted-foreground font-normal">/ {totalWeeks}</span>
         </span>
+        <Button variant="outline" size="icon" onClick={onNext} disabled={nextDisabled ?? week >= totalWeeks} className="size-8" aria-label="Next week">
+          <ChevronRight className="size-4" />
+        </Button>
+      </div>
+      <div className="flex items-center gap-1.5">
         <PhaseBadge phase={phase} label={phaseLabel} />
         {isDeload && (
           <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-500/30">
@@ -35,9 +44,6 @@ export function WeekSelector({ week, totalWeeks, phase, phaseLabel, isDeload, on
           </span>
         )}
       </div>
-      <Button variant="outline" size="icon" onClick={onNext} disabled={nextDisabled ?? week >= totalWeeks} className="size-8" aria-label="Next week">
-        <ChevronRight className="size-4" />
-      </Button>
     </div>
   )
 }

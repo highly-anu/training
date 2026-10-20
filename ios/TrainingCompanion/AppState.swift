@@ -42,7 +42,7 @@ final class AppState: ObservableObject {
     /// the active program (`inCurrentProgram`), because a key like "6-Monday-0"
     /// exists in every program the athlete has had.
     @Published var sessionLogs: [String: SessionLogEntry] = [:]
-    /// Earlier programs' logs, for Log ▸ Sessions only.
+    /// Earlier programs' logs, for Log ▸ Activity only.
     @Published var earlierSessionLogs: [SessionLogEntry] = []
 
     // MARK: - FIT File Import

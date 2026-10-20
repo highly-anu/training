@@ -33,7 +33,7 @@ export async function fetchHealthSnapshot(): Promise<HealthSnapshot> {
 }
 
 /** Every session log, each named by the server from the plan it was logged
- *  against — Log ▸ Sessions, as on the phone. */
+ *  against — Log ▸ Activity's sessions, as on the phone. */
 export async function fetchRecentSessionLogs(): Promise<RecentSessionLog[]> {
   return apiClient.get(`${BASE}/sessions/recent`) as unknown as Promise<RecentSessionLog[]>
 }

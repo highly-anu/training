@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildLogSessionRows, performanceSummary, type RecentSessionLog } from './logSessions'
+import { buildLogSessionRows, mergeLogEntries, performanceSummary, type LogSessionRow, type RecentSessionLog } from './logSessions'
 import type { GeneratedProgram } from '@/api/types'
 
 const squat = { id: 'back_squat', name: 'Back Squat' }
@@ -70,5 +70,27 @@ describe('buildLogSessionRows', () => {
     const rows = buildLogSessionRows(logs, null, null)
     expect(rows.map((r) => r.key)).toEqual(['1-Wednesday-0', '1-Tuesday-0', '1-Thursday-0'])
     expect(rows[2].subtitle).toBe('not completed')
+  })
+})
+
+describe('mergeLogEntries', () => {
+  const row = (key: string, completedAt: string | null): LogSessionRow => ({
+    key, title: key, subtitle: '', lines: [], isComplete: completedAt != null,
+    completedAt: completedAt ? new Date(completedAt) : null, href: null,
+  })
+  const workouts = [
+    { id: 'run', date: '2026-10-19', startTime: '2026-10-19T06:00:00Z' },
+    { id: 'ride', date: '2026-10-17' },
+  ]
+  const rows = [row('squat', '2026-10-19T18:00:00Z'), row('open', null), row('swing', '2026-10-18T07:00:00Z')]
+
+  it('puts workouts and logged sessions in one list, newest first, the undated last', () => {
+    const ids = mergeLogEntries(workouts, rows).map((e) => (e.kind === 'workout' ? e.workout.id : e.row.key))
+    expect(ids).toEqual(['squat', 'run', 'swing', 'ride', 'open'])
+  })
+
+  it('keeps one type when asked', () => {
+    expect(mergeLogEntries(workouts, rows, 'workouts').map((e) => e.kind)).toEqual(['workout', 'workout'])
+    expect(mergeLogEntries(workouts, rows, 'sessions').map((e) => e.kind)).toEqual(['session', 'session', 'session'])
   })
 })

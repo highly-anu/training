@@ -20,7 +20,7 @@ type ExerciseFilter = 'data' | 'soFar' | 'all'
  * methodology's own measures and the standards (from the program analytics
  * document; they sat on the Program tab until 2026-10-16), then the
  * exercises. Adherence — how closely the plan is followed — is the Program
- * tab. Completed sessions are Log ▸ Sessions; this tab carried a second copy
+ * tab. Completed sessions are in Log ▸ Activity; this tab carried a second copy
  * of that list until the same day.
  */
 export function ProgressionTab() {
@@ -166,7 +166,7 @@ export function ProgressionTab() {
 
       <p className="text-[11px] text-muted-foreground">
         Every completed session, linked or not, is in{' '}
-        <Link to="/log?tab=sessions" className="underline underline-offset-2 hover:text-foreground">Log ▸ Sessions</Link>
+        <Link to="/log?show=sessions" className="underline underline-offset-2 hover:text-foreground">Log ▸ Activity</Link>
         {' '}and{' '}
         <Link to="/log?tab=linking" className="underline underline-offset-2 hover:text-foreground">Linking</Link>.
       </p>

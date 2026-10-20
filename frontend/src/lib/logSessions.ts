@@ -3,7 +3,7 @@ import type { ExercisePerformance, GeneratedProgram, Session } from '@/api/types
 import { outcomeFieldsFor } from '@/lib/outcomeFields'
 
 /**
- * Log ▸ Sessions: what was logged against planned sessions, across programs.
+ * Log ▸ Activity's sessions: what was logged against planned sessions, across programs.
  * Pure — rows are built from the server's session logs and the current
  * program, so a test pins order and wording without a page. The web port of
  * the phone's `LogSessions.rows` (ios/TrainingCompanion/LogSessions.swift);
@@ -174,5 +174,41 @@ export function buildLogSessionRows(
     if (a.completedAt && b.completedAt) return b.completedAt.getTime() - a.completedAt.getTime()
     if (!a.completedAt && !b.completedAt) return a.key.localeCompare(b.key)
     return a.completedAt ? -1 : 1
+  })
+}
+
+/** Log ▸ Activity's type filter (the phone's `LogEntryKind`). */
+export type LogShow = 'all' | 'workouts' | 'sessions'
+
+export type LogEntry<W> =
+  | { kind: 'workout'; at: number | null; workout: W }
+  | { kind: 'session'; at: number | null; row: LogSessionRow }
+
+/**
+ * Log ▸ Activity: recorded workouts and session logs in one list, newest
+ * first — a workout by its start, a log by its completion — and what has no
+ * time last. `show` keeps one type. Workouts and Sessions were two sub-tabs
+ * until 2026-10-20; the phone's `LogActivity.entries` merges the same way.
+ */
+export function mergeLogEntries<W extends { id: string; date: string; startTime?: string | null }>(
+  workouts: W[],
+  rows: LogSessionRow[],
+  show: LogShow = 'all',
+): LogEntry<W>[] {
+  const time = (value: string | null | undefined) => {
+    const t = value ? Date.parse(value) : NaN
+    return Number.isNaN(t) ? null : t
+  }
+  const entries: LogEntry<W>[] = [
+    ...(show === 'sessions' ? [] : workouts.map((workout) => ({
+      kind: 'workout' as const, at: time(workout.startTime) ?? time(workout.date), workout }))),
+    ...(show === 'workouts' ? [] : rows.map((row) => ({
+      kind: 'session' as const, at: row.completedAt?.getTime() ?? null, row }))),
+  ]
+  // A stable sort keeps each type's own order among equal or missing times.
+  return entries.sort((a, b) => {
+    if (a.at != null && b.at != null) return b.at - a.at
+    if (a.at == null && b.at == null) return 0
+    return a.at != null ? -1 : 1
   })
 }

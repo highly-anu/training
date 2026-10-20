@@ -23,7 +23,7 @@ import { useBuilderStore } from '@/store/builderStore'
 import { Button } from '@/components/ui/button'
 import { HeatmapPanel } from '@/components/devlab/heatmap/HeatmapPanel'
 import { SimilarItems } from '@/components/shared/SimilarItems'
-import { useSimilarity } from '@/api/similarity'
+import { useSimilarity, likenessScorer, type SimilarityCategory } from '@/api/similarity'
 import { useAnalyticsSpecs } from '@/api/analyticsSpecs'
 import { ZONES } from '@/lib/hrZones'
 import { Section, StatCell } from '@/components/explore/ExploreSection'
@@ -75,11 +75,10 @@ function RecoveryCostBadge({ cost }: { cost: 'low' | 'medium' | 'high' }) {
 
 function sortByLikeness<T extends { id: string }>(
   items: T[],
-  scores: Record<string, Record<string, { score: number }>> | undefined,
+  category: SimilarityCategory | undefined,
 ): T[] {
-  if (!scores || items.length === 0) return items
-  const getScore = (a: string, b: string) =>
-    scores[a]?.[b]?.score ?? scores[b]?.[a]?.score ?? 0
+  const getScore = likenessScorer(category)
+  if (!getScore || items.length === 0) return items
   const remaining = new Set(items.map(i => i.id))
   const order: string[] = []
   let current = items[0].id
@@ -935,7 +934,7 @@ function ExercisePanel({
         )}
 
         {/* Progressions */}
-        {Object.keys(exercise.progressions).length > 0 && (
+        {exercise.progressions && Object.keys(exercise.progressions).length > 0 && (
           <div className="space-y-1.5">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">Progressions</p>
             <div className="space-y-1 text-xs text-muted-foreground">
