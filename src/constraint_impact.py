@@ -607,7 +607,12 @@ def analyse(actual: dict, reference: dict, relaxed: dict[str, dict], *,
             'equipment', 'training_level', 'injury_flags', 'mastered_exercises', 'kettlebell_count')
             if k in reference_constraints},
         'lifted': [dim for dim in DIMENSIONS if dim in relaxed],
-        'sessions': {'total': len(act), 'changed': len(changes),
+        # `total` is every position either program has a session at, the set
+        # `changed` is drawn from: counted over the athlete's program alone, a
+        # reference session the program no longer has was a change outside
+        # the total (Horsemen read 48 changed of 26).
+        'sessions': {'total': len(set(act) | set(ref)), 'actual': len(act), 'reference': len(ref),
+                     'changed': len(changes),
                      'direct': sum(1 for c in changes if not c['knock_on'])},
         'totals': {cause: dict(c) for cause, c in totals.items()},
         'restore': {'equipment': [{'id': e, 'changes': n} for e, n in restore.most_common()]},

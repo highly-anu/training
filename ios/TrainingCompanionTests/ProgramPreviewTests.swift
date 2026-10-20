@@ -121,6 +121,7 @@ final class ProgramPreviewTests: XCTestCase {
            "causes": ["equipment"], "why": [], "knock_on": true}]}
         """)
         XCTAssertEqual(impact.restore.first?.id, "barbell")
+        XCTAssertEqual(impact.sessionsTotal, 6, "the total the changes are drawn from")
         XCTAssertEqual(impact.direct.count, 1)
         XCTAssertEqual(impact.knockOn.count, 1)
         XCTAssertEqual(impact.direct[0].primaryCause, "equipment")

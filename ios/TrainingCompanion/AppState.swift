@@ -1212,14 +1212,19 @@ final class AppState: ObservableObject {
         ProgramConstraintsDiff.differences(program: programConstraints, profile: profile)
     }
 
-    /// The last profile change was checked and changes nothing; the program
-    /// took the new settings (`adoptProfileConstraints`). The offer card says
-    /// so once instead of vanishing.
-    @Published var adoptedProfileConstraints = false
+    /// What the last profile difference came to, once it is gone: the program
+    /// took the new settings because they change nothing
+    /// (`adoptProfileConstraints`), or its remaining weeks were rebuilt with
+    /// them. The offer card says so instead of vanishing with the difference.
+    enum ProfileOfferOutcome: Equatable {
+        case adopted
+        case applied(weeks: Int)
+    }
+    @Published var profileOfferOutcome: ProfileOfferOutcome? = nil
 
     /// Whether the profile tabs show the regenerate offer card (§6.17): a
-    /// difference to check, or the word that the last one changed nothing.
-    var showsRegenerateOffer: Bool { !constraintDifferences.isEmpty || adoptedProfileConstraints }
+    /// difference to check, or what the last one came to.
+    var showsRegenerateOffer: Bool { !constraintDifferences.isEmpty || profileOfferOutcome != nil }
 
     /// Rebuild the remaining weeks from the current calendar week with the
     /// profile's current settings, keeping the weeks already behind the
@@ -1321,7 +1326,7 @@ final class AppState: ObservableObject {
                                           sourceGoalIds: sp.sourceGoalIds, sourceGoalWeights: sp.sourceGoalWeights,
                                           revision: adopted.revision ?? sp.revision,
                                           programVersionId: sp.programVersionId, extra: sp.extra)
-            adoptedProfileConstraints = true
+            profileOfferOutcome = .adopted
             return true
         } catch is APIClient.StaleProgramRevision {
             await loadProgram()

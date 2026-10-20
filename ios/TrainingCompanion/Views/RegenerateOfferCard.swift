@@ -16,7 +16,6 @@ struct RegenerateOfferCard: View {
     @State private var state: CheckState = .idle
     @State private var isRunning = false
     @State private var error: String? = nil
-    @State private var regenerated: Int? = nil
     @State private var preview: PreviewDraft? = nil
     @State private var previewStart = 0
     @State private var previewChanged: Set<String> = []
@@ -35,18 +34,24 @@ struct RegenerateOfferCard: View {
         // so switching from "Checking…" to the card started the check again,
         // in a loop.
         VStack(alignment: .leading, spacing: 0) {
-            if let regenerated {
-                Label("Regenerated \(regenerated) week\(regenerated == 1 ? "" : "s") with your current settings.",
-                      systemImage: "checkmark.circle.fill")
-                    .font(.footnote).foregroundStyle(.green)
-            } else if diffs.isEmpty {
-                if appState.adoptedProfileConstraints {
+            if !diffs.isEmpty {
+                offer(diffs)
+            } else {
+                // What the last difference came to — kept in AppState, so it
+                // outlives the difference this card was mounted for.
+                switch appState.profileOfferOutcome {
+                case .applied(let weeks):
+                    Label("Rebuilt \(weeks) week\(weeks == 1 ? "" : "s") with these settings. The previous plan is in Program ▸ History.",
+                          systemImage: "checkmark.circle.fill")
+                        .labelStyle(.inline)
+                        .font(.footnote).foregroundStyle(.green)
+                case .adopted:
                     Label("Your program doesn't change with these settings.", systemImage: "checkmark")
                         .labelStyle(.inline)
                         .font(.footnote).foregroundStyle(.secondary)
+                case nil:
+                    EmptyView()
                 }
-            } else {
-                offer(diffs)
             }
         }
         // Toggling several items in a row asks once, after the last.
@@ -59,7 +64,7 @@ struct RegenerateOfferCard: View {
                 ProgramPreviewView(mode: .regenerate(start: previewStart, changed: previewChanged),
                                    request: p.request, draft: p.draft) { applied in
                     preview = nil
-                    if applied { regenerated = (appState.serverProgram?.currentProgram?.weeks.count ?? 0) - previewStart }
+                    if applied { appState.profileOfferOutcome = .applied(weeks: remaining(from: previewStart)) }
                 }
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) { Button("Cancel") { preview = nil } }
@@ -173,7 +178,7 @@ struct RegenerateOfferCard: View {
 
     private func check(_ diffs: [ConstraintDifference]) async {
         guard !diffs.isEmpty else { state = .idle; return }
-        appState.adoptedProfileConstraints = false
+        appState.profileOfferOutcome = nil   // a new difference starts over
         state = .checking
         do {
             try await Task.sleep(nanoseconds: 1_500_000_000)
@@ -199,11 +204,15 @@ struct RegenerateOfferCard: View {
         isRunning = true
         error = nil
         do {
+            let weeks: Int
             if let tail {
-                regenerated = try appState.applyRegeneratedTail(tail, from: start)
+                weeks = try appState.applyRegeneratedTail(tail, from: start)
             } else {
-                regenerated = try await appState.regenerateFromCurrentWeek()
+                weeks = try await appState.regenerateFromCurrentWeek()
             }
+            // Set in the same turn as the save, so the card is still there
+            // to say it when the difference it was mounted for is gone.
+            appState.profileOfferOutcome = .applied(weeks: weeks)
             AppHaptics.success()
         } catch {
             self.error = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription

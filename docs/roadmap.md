@@ -1061,7 +1061,29 @@ session used asked to rebuild the plan. Left open:
    Consider running the relaxed generations only for the constraints the athlete has
    (already so) and fewer weeks for the comparison.
 4. **The Program page's injuries sheet and "From tomorrow onwards"** still regenerate
-   without a preview; route both through the regenerate preview.
+   without a preview; route both through the regenerate preview. On the phone, Program
+   settings' "Regenerate from this week" does the same.
+5. **The regenerate offer said nothing after Apply — fixed 2026-10-20.** Apply removes the
+   difference the banner (web) and card (iOS) were shown for, so they vanished. Both now
+   say "Rebuilt N weeks with these settings" until a new difference appears (web
+   `RegenerateFromWeekBanner`'s `outcome`, iOS `AppState.profileOfferOutcome`, which also
+   carries "doesn't change"; `preview.test.tsx`).
+6. **Programs stored before `blocked_by` (S).** Their empty slots read the older generic
+   words ("Nothing fits your equipment") until they are regenerated. Leave it, or fill
+   `blocked_by` on read for the current program's empty slots (one selector call per slot).
+7. **The impact comparison's totals — fixed 2026-10-20.** `analyse` counted `total` over
+   the athlete's sessions while `changed` also counted reference sessions the program no
+   longer had, so Horsemen read 48 changed of 26. `total` is now every position either
+   program has a session at (`actual` and `reference` beside it), and both clients say
+   "N of M sessions change" again (`test_constraint_impact.py`).
+8. **The validator's minimum-days warning misleads single-modality methods (S).**
+   `MINIMAL_DAYS` says "lower-priority modalities will be dropped" for Starting Strength,
+   where nothing is; the preview's Schedule section repeats it. Word it from what the
+   scheduler actually dropped (its compromises), or say nothing when one modality runs.
+9. **Vite in a worktree under `.claude/` misses file changes (dev tooling, S).** The
+   watcher served the first transform of each file until Vite was restarted. Try
+   `server.watch.usePolling` or an explicit `server.watch` path when the root is under a
+   dot directory; meanwhile restart Vite (`--force`) after edits in a worktree.
 
 ## Later
 

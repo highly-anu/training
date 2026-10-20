@@ -168,4 +168,24 @@ describe('the profile offers a regenerate only when it changes the program', () 
     expect(screen.getByText(/Preview changes/)).toBeTruthy()
     expect(patch).not.toHaveBeenCalled()
   })
+
+  it('says what it rebuilt once Apply has removed the difference', async () => {
+    post.mockResolvedValue({
+      affected: true, comparable: true, sessions: { total: 9, changed: 3 }, first_week_number: 1,
+      changes: [], program: program([week(1, 'n'), week(2, 'n'), week(3, 'n')]),
+    })
+    useProfileStore.setState({ equipment: ['kettlebell'] })
+    renderBanner()
+    await act(async () => { vi.advanceTimersByTime(1600) })
+    const apply = await screen.findByText('Apply from week 1')
+    // The saved program now carries the profile's settings, as the server's would.
+    put.mockImplementation(async () => {
+      const cp = useProgramStore.getState().currentProgram!
+      useProgramStore.setState({ currentProgram: { ...cp, constraints: { ...cp.constraints, equipment: ['kettlebell'] } } })
+      return { revision: 'r2' }
+    })
+    await act(async () => { apply.click() })
+    await waitFor(() => expect(screen.getByText(/Rebuilt 3 weeks with these settings/)).toBeTruthy())
+    expect(put).toHaveBeenCalled()
+  })
 })

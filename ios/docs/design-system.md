@@ -1187,6 +1187,11 @@ profile's and compares them:
 - **Not comparable or the check failed** — the old "built for different
   settings" wording, and Apply regenerates as before.
 
+After Apply the difference is gone, and with it the reason the card was shown;
+`AppState.profileOfferOutcome` (`.applied(weeks:)` / `.adopted`) keeps the
+card on screen to say "Rebuilt N weeks with these settings" or "doesn't
+change", until a new difference starts over.
+
 Rules: the comparison is the server's, never a per-screen heuristic; the card
 appears only where a constraint is edited; a blend regenerates as a blend
 (`philosophy_ids` + weights); the card is a `VStack`, not a `Group` — a Group

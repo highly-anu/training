@@ -148,9 +148,7 @@ function ImpactSections({ impact, actions, busy }: { impact: ConstraintImpact; a
         <p className="text-sm text-muted-foreground">
           Against the same program with nothing in the way ({lifts.equipment ? `${lifts.equipment}, ` : ''}
           {impact.reference?.training_level ?? ''}{lifts.injury ? `, ${lifts.injury}` : ''}),{' '}
-          {/* Not "of total": total counts this program's sessions, and a
-              change can be a reference session it no longer has. */}
-          {direct.length} session{direct.length === 1 ? '' : 's'} change.
+          {direct.length} of {impact.sessions?.total ?? '?'} sessions change.
         </p>
       )}
 

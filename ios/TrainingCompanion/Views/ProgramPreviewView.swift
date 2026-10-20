@@ -316,7 +316,7 @@ struct ProgramPreviewView: View {
             } header: {
                 Text("What would restore it")
             } footer: {
-                Text("\(result.direct.count) session\(result.direct.count == 1 ? "" : "s") change against the same program with nothing in the way. Each action previews again; your profile changes only if you start the program and keep the switch on.")
+                Text("\(result.direct.count)\(result.sessionsTotal.map { " of \($0)" } ?? "") session\(result.direct.count == 1 && result.sessionsTotal == nil ? "" : "s") change against the same program with nothing in the way. Each action previews again; your profile changes only if you start the program and keep the switch on.")
             }
             ForEach(["equipment", "injury", "level", "proficiency", "combined"], id: \.self) { cause in
                 let group = result.direct.filter { $0.primaryCause == cause }

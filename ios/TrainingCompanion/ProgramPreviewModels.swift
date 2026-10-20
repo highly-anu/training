@@ -385,12 +385,15 @@ struct ConstraintImpact: Decodable {
     let restore: [Restore]
     /// A refused request: the one constraint that alone lets it generate.
     let unblockedBy: [Why]
+    /// Every position either program has a session at — what `changes` is drawn from.
+    let sessionsTotal: Int?
 
     enum CodingKeys: String, CodingKey {
-        case feasible, detail, lifts, lifted, reference, changes, restore
+        case feasible, detail, lifts, lifted, reference, changes, restore, sessions
         case referenceGenerates = "reference_generates", unblockedBy = "unblocked_by"
     }
     private struct RestoreBox: Decodable { let equipment: [Restore]? }
+    private struct SessionsBox: Decodable { let total: Int? }
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -403,6 +406,7 @@ struct ConstraintImpact: Decodable {
         changes = (try? c.decodeIfPresent([Change].self, forKey: .changes)) ?? []
         restore = (try? c.decodeIfPresent(RestoreBox.self, forKey: .restore))?.equipment ?? []
         unblockedBy = try c.decodeIfPresent([Why].self, forKey: .unblockedBy) ?? []
+        sessionsTotal = (try? c.decodeIfPresent(SessionsBox.self, forKey: .sessions))?.total
     }
 
     var direct: [Change] { changes.filter { !$0.knockOn } }
