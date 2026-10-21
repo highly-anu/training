@@ -19,12 +19,17 @@ Usage:
   .venv/bin/python tools/evaluate_packages.py --package bjj
   .venv/bin/python tools/evaluate_packages.py --report docs/package-fidelity/scorecard.md
   .venv/bin/python tools/evaluate_packages.py --update-baseline
+  .venv/bin/python tools/evaluate_packages.py --update-baseline --accept-worse   # a stricter grader
 
 Exits 1 when a grade is worse than tools/scorecard_baseline.json records, a
 package x track x criterion is new, a fidelity finding is not in
-tools/fidelity_baseline.json (this run replaces tools/check_fidelity.py's
-gate), or status.yaml declares a status the grades do not earn.
---update-baseline records better grades and refuses worse ones.
+tools/fidelity_baseline.json (tools/check_fidelity.gate, run here), an
+exercise is newly orphaned (tools/check_exercise_coverage, run here; D2 reads
+it), status.yaml declares a status the grades do not earn — or a baseline is
+stale: a better grade, a finding that stopped firing or an exercise no longer
+orphaned is recorded in the change that earns it, or the next change may lose
+it unnoticed. --update-baseline records better grades and refuses worse ones;
+--accept-worse records them too, for a grader made stricter.
 """
 from __future__ import annotations
 
@@ -46,7 +51,7 @@ from src import constraint_impact, loader, package_eval as pe  # noqa: E402
 from src.analytics import spec as spec_mod, vocabulary  # noqa: E402
 from src.generator import generate  # noqa: E402
 from src.validator import validate  # noqa: E402
-from tools import check_fidelity as cf  # noqa: E402
+from tools import check_exercise_coverage as coverage, check_fidelity as cf  # noqa: E402
 
 BASELINE = os.path.join(ROOT, 'tools', 'scorecard_baseline.json')
 STATUS = os.path.join(ROOT, 'docs', 'package-fidelity', 'status.yaml')
@@ -196,7 +201,7 @@ def grade_track(pkg: str, track: dict, recs: dict, fid_rows: list, status: dict)
     grades['E4'] = pe.grade_e4(concentration)
     broken = [b for prog in qualified.values() for b in pe.claims_broken(prog, track)]
     broken += [f"{r['profile']}: {r['finding']['detail']}" for r in fid_rows
-               if r['finding']['rule'] in pe.CLAIM_RULES and r['finding']['severity'] == 'error']
+               if r['finding']['rule'] in pe.CLAIM_RULES and r['finding']['severity'] in ('error', 'warn')]
     grades['E5'] = pe.grade_e5(pe.declares_claims(track, contract), broken)
     grades['E6'] = pe.grade_e6([r['finding'] for r in fid_rows if r['finding']['severity'] in ('error', 'warn')])
 
@@ -250,8 +255,9 @@ def _load_status() -> dict:
         return yaml.safe_load(fh)['packages']
 
 
-def package_grades(pkg: str, status: dict) -> dict:
-    """Source and data: the same for every track of the package."""
+def package_grades(pkg: str, status: dict, orphans: list[str]) -> dict:
+    """Source and data: the same for every track of the package. `orphans`:
+    its catalog exercises no program reaches, computed in this run."""
     from tools import validate_entities as ve
     entry = status.get(pkg) or {}
     sections = None
@@ -274,8 +280,7 @@ def package_grades(pkg: str, status: dict) -> dict:
     errors += [f"injury_flags.yaml: {e}" for e in ve.validate_file(
         os.path.join(ROOT, 'data', 'commons', 'constraints', 'injury_flags.yaml'), verbose=False)]
     grades['D1'] = pe.grade_d1(errors)
-    with open(os.path.join(ROOT, 'tools', 'exercise_coverage_baseline.json')) as fh:
-        grades['D2'] = pe.grade_d2(json.load(fh).get(pkg) or [])
+    grades['D2'] = pe.grade_d2(orphans)
     _, catalogs = loader.load_all_exercises()
     catalog = catalogs.get(pkg) or {}
     media_path = os.path.join(pkg_dir, 'exercise_media.yaml')
@@ -304,18 +309,24 @@ def _package_archetypes(pkg_dir: str) -> list:
 
 # ── The run ──────────────────────────────────────────────────────────────────
 
-def run(packages: list[str]) -> tuple[dict, list]:
+def run(packages: list[str]) -> tuple[dict, list, dict]:
+    """(scorecard, fidelity rows, package -> orphaned exercises)."""
     status = _load_status()
     scorecard: dict = {}
     fid_rows: list = []
+    reach_for = sorted(coverage.borrowers_of(packages))
     with ProcessPoolExecutor() as pool:
-        results = dict(zip(packages, pool.map(evaluate_package, packages)))
+        evaluated = pool.map(evaluate_package, packages)
+        reaches = pool.map(coverage.reach_of, reach_for)
+        results = dict(zip(packages, evaluated))
+        reached = dict(zip(reach_for, reaches))
+    orphans = {pkg: coverage.orphans_of(pkg, reached) for pkg in packages}
     for pkg in packages:
-        shared = package_grades(pkg, status)
+        shared = package_grades(pkg, status, orphans[pkg])
         res = results[pkg]
         fid_rows += res['fidelity_rows']
         scorecard[pkg] = {tid: {**shared, **g} for tid, g in res['tracks'].items()}
-    return scorecard, fid_rows
+    return scorecard, fid_rows, orphans
 
 
 def derive(pkg: str, tracks: dict, status: dict) -> str:
@@ -371,13 +382,15 @@ def main() -> int:
     ap.add_argument('--package', action='append')
     ap.add_argument('--report')
     ap.add_argument('--update-baseline', action='store_true')
+    ap.add_argument('--accept-worse', action='store_true',
+                    help='with --update-baseline: record worse grades too (a stricter grader, never a worse package)')
     ap.add_argument('--json', help='write the scorecard as JSON to this path')
     args = ap.parse_args()
 
     status = _load_status()
     every = sorted(p['id'] for p in loader.load_philosophies())
     packages = args.package or every
-    scorecard, fid_rows = run(packages)
+    scorecard, fid_rows, orphans = run(packages)
     if args.report:
         write_report(scorecard, status, args.report)
         print(f'report: {args.report}')
@@ -396,33 +409,41 @@ def main() -> int:
     worse = sorted(k for k, g in current.items() if k in baseline and pe.RANK[g] > pe.RANK[baseline[k]])
     new = sorted(k for k in current if k not in baseline)
     better = sorted(k for k, g in current.items() if k in baseline and pe.RANK[g] < pe.RANK[baseline[k]])
+    gone = sorted(k for k in baseline if k not in current)
 
-    gated = sorted({cf._gate_key(r) for r in fid_rows if r['finding']['severity'] in ('error', 'warn')})
-    with open(cf.BASELINE) as fh:
-        known_fid = set(json.load(fh))
-    if args.package:
-        known_fid = {k for k in known_fid if k.split('/')[0] in packages}
-    new_fid = [k for k in gated if k not in known_fid]
-    fixed_fid = sorted(known_fid - set(gated))
+    gated, new_fid, fixed_fid = cf.gate(fid_rows, packages if args.package else None)
+
+    with open(coverage.BASELINE) as fh:
+        known_orphans = json.load(fh)
+    new_orphans = {p: sorted(set(o) - set(known_orphans.get(p, []))) for p, o in orphans.items()}
+    reached_orphans = {p: sorted(set(known_orphans.get(p, [])) - set(o)) for p, o in orphans.items()}
+    new_orphans = {p: o for p, o in new_orphans.items() if o}
+    reached_orphans = {p: o for p, o in reached_orphans.items() if o}
 
     if args.update_baseline:
         if args.package:
             print('--update-baseline needs the whole run (no --package)')
             return 2
-        if worse or new_fid:
-            print('Refusing to record a worse scorecard or a new fidelity finding:')
+        if (worse and not args.accept_worse) or new_fid or new_orphans:
+            print('Refusing to record a worse scorecard, a new fidelity finding or a new orphan:')
             for k in worse:
                 print(f'  - {k}: {baseline[k]} -> {current[k]}')
             for k in new_fid:
                 print(f'  - {k}')
+            for p, o in new_orphans.items():
+                print(f'  - {p}: orphaned {", ".join(o)}')
+            if worse and not new_fid and not new_orphans:
+                print('A stricter grader regrades packages it did not change: --accept-worse records it.')
             return 1
+        for k in worse:
+            print(f'  accepted worse: {k}: {baseline[k]} -> {current[k]}')
         with open(BASELINE, 'w') as fh:
             json.dump(dict(sorted(current.items())), fh, indent=1)
             fh.write('\n')
-        with open(cf.BASELINE, 'w') as fh:
-            json.dump(gated, fh, indent=1)
-            fh.write('\n')
-        print(f'baselines written: {len(current)} grades, {len(gated)} fidelity findings')
+        cf.write_baseline(gated)
+        coverage.BASELINE.write_text(json.dumps(dict(sorted(orphans.items())), indent=2, sort_keys=True) + '\n')
+        print(f'baselines written: {len(current)} grades, {len(gated)} fidelity findings, '
+              f'{sum(len(o) for o in orphans.values())} orphans')
         return 0
 
     failed = False
@@ -437,17 +458,28 @@ def main() -> int:
         counts[g] += 1
     print(f"{counts['pass']} pass, {counts['partial']} partial, {counts['fail']} fail "
           f"over {len(scorecard)} package(s); {len(gated)} fidelity findings")
-    if better:
-        print(f'{len(better)} grade(s) better than the baseline — run --update-baseline to record them')
-    if fixed_fid:
-        print(f'{len(fixed_fid)} fidelity finding(s) no longer fire — run --update-baseline to drop them')
+    # A gain not recorded is a gain the next change may quietly lose: the
+    # baseline moves in the change that earns it.
+    for k in better:
+        print(f'  better, not recorded: {k}: {baseline[k]} -> {current[k]}')
+    for k in gone:
+        print(f'  in the baseline, no longer graded: {k}')
+    for k in fixed_fid:
+        print(f'  fidelity finding no longer fires: {k}')
+    for p, o in reached_orphans.items():
+        print(f'  {p}: no longer orphaned: {", ".join(o)}')
+    if better or gone or fixed_fid or reached_orphans:
+        print('The baselines are stale: run --update-baseline and commit them with this change.')
     for k in worse:
         print(f'  worse: {k}: {baseline[k]} -> {current[k]}')
     for k in new:
         print(f'  new: {k} ({current[k]})')
     for k in new_fid:
         print(f'  new fidelity finding: {k}')
-    return 1 if (failed or worse or new or new_fid) else 0
+    for p, o in new_orphans.items():
+        print(f'  {p}: newly orphaned: {", ".join(o)}')
+    stale = better or gone or fixed_fid or reached_orphans
+    return 1 if (failed or worse or new or new_fid or new_orphans or stale) else 0
 
 
 if __name__ == '__main__':

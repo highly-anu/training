@@ -85,6 +85,33 @@ def _borrowers(philosophies: list[dict]) -> dict[str, set]:
     return out
 
 
+def borrowers_of(packages: list[str]) -> set:
+    """The packages whose programs can reach `packages`' exercises: themselves
+    and every package that borrows from one of them."""
+    borrowers = _borrowers(loader.load_philosophies())
+    return set(packages) | {b for pkg in packages for b in borrowers.get(pkg, ())}
+
+
+def reach_of(pkg: str) -> set:
+    """Every exercise id the package's own programs prescribe (any package's).
+    Loads its own data, so a process pool can run one package per worker."""
+    _, catalogs = loader.load_all_exercises()
+    frameworks = loader.load_all_frameworks()
+    archetypes = {a['id']: a for a in loader.load_all_archetypes()}
+    philosophy = next(p for p in loader.load_philosophies() if p['id'] == pkg)
+    return reachable(philosophy, catalogs.get(pkg, {}), frameworks, archetypes)[0]
+
+
+def orphans_of(pkg: str, reached: dict) -> list[str]:
+    """`pkg`'s catalog exercises no program reaches, given `reached`
+    (package -> reach_of) for the package and every borrower of it."""
+    _, catalogs = loader.load_all_exercises()
+    catalog = catalogs.get(pkg, {})
+    borrowers = _borrowers(loader.load_philosophies())
+    used = set(reached.get(pkg, set())).union(*(reached.get(b, set()) for b in borrowers.get(pkg, ())))
+    return sorted(catalog.keys() - used)
+
+
 def run(packages: list[str] | None = None, update: bool = False) -> dict:
     _, catalogs = loader.load_all_exercises()
     frameworks = loader.load_all_frameworks()

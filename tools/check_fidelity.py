@@ -22,8 +22,10 @@ Usage:
   .venv/bin/python tools/check_fidelity.py --update-baseline
 
 Exits 1 when an error or warning appears that tools/fidelity_baseline.json
-does not list. The baseline only shrinks: fix the cause, rerun with
---update-baseline, and commit the smaller file.
+does not list, or one it lists no longer fires. The baseline only shrinks,
+and in the change that shrinks it: fix the cause, rerun with
+--update-baseline, and commit the smaller file. tools/evaluate_packages.py
+runs the same gate (`gate`) in its own pass; CI runs that one.
 """
 from __future__ import annotations
 
@@ -188,6 +190,33 @@ def _gate_key(row: dict) -> str:
     return f"{row['label']}|{row['profile']}|{row['finding']['key']}"
 
 
+def gate(rows: list[dict], packages: list[str] | None = None) -> tuple[list, list, list]:
+    """(gated keys, keys the baseline lacks, baseline keys that no longer fire)
+    for the run's errors and warnings. The one gate: tools/evaluate_packages.py
+    runs it over the same rows."""
+    gated = sorted({_gate_key(r) for r in rows if r['finding']['severity'] in ('error', 'warn')})
+    known = set()
+    if os.path.exists(BASELINE):
+        with open(BASELINE) as fh:
+            known = set(json.load(fh))
+    if packages:
+        known = {k for k in known if k.split('/')[0] in packages}
+    return gated, [k for k in gated if k not in known], sorted(known - set(gated))
+
+
+def write_baseline(gated: list) -> list:
+    """Record the gated findings; refuses (and returns) any the baseline lacks."""
+    if os.path.exists(BASELINE):
+        with open(BASELINE) as fh:
+            additions = sorted(set(gated) - set(json.load(fh)))
+        if additions:
+            return additions
+    with open(BASELINE, 'w') as fh:
+        json.dump(gated, fh, indent=1)
+        fh.write('\n')
+    return []
+
+
 def write_report(rows: list[dict], path: str) -> None:
     by_pkg: dict[str, list] = defaultdict(list)
     for r in rows:
@@ -234,7 +263,7 @@ def main() -> int:
     args = ap.parse_args()
 
     rows = run(args.package)
-    gated = sorted({_gate_key(r) for r in rows if r['finding']['severity'] in ('error', 'warn')})
+    gated, new, fixed = gate(rows, [args.package] if args.package else None)
 
     if args.report:
         write_report(rows, args.report)
@@ -247,42 +276,25 @@ def main() -> int:
         if args.package:
             print('--update-baseline needs the whole run (no --package)')
             return 2
-        if os.path.exists(BASELINE):
-            with open(BASELINE) as fh:
-                previous = set(json.load(fh))
-            additions = sorted(set(gated) - previous)
-            if additions:
-                print('Refusing to grow the fidelity baseline; fix the new findings:')
-                for key in additions:
-                    print(f'  - {key}')
-                return 1
-        with open(BASELINE, 'w') as fh:
-            json.dump(gated, fh, indent=1)
-            fh.write('\n')
+        additions = write_baseline(gated)
+        if additions:
+            print('Refusing to grow the fidelity baseline; fix the new findings:')
+            for key in additions:
+                print(f'  - {key}')
+            return 1
         print(f'baseline: {len(gated)} known findings written')
         return 0
 
-    known = set()
-    if os.path.exists(BASELINE):
-        with open(BASELINE) as fh:
-            known = set(json.load(fh))
-    if args.package:
-        known = {k for k in known if k.startswith(args.package + '/')}
-    new = [k for k in gated if k not in known]
-    fixed = sorted(known - set(gated))
     sev = defaultdict(int)
     for r in rows:
         sev[r['finding']['severity']] += 1
     print(f"{sev['error']} errors, {sev['warn']} warnings, {sev['info']} info; "
-          f"{len(known)} in the baseline")
-    if fixed:
-        print(f'{len(fixed)} baseline finding(s) no longer fire — run --update-baseline to drop them')
-    if new:
-        print(f'{len(new)} new finding(s):')
-        for k in new:
-            print(f'  - {k}')
-        return 1
-    return 0
+          f"{len(gated) - len(new)} in the baseline")
+    for k in fixed:
+        print(f'  no longer fires (run --update-baseline to drop it): {k}')
+    for k in new:
+        print(f'  new finding: {k}')
+    return 1 if (new or fixed) else 0
 
 
 if __name__ == '__main__':

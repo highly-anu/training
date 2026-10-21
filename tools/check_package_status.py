@@ -12,6 +12,7 @@ outlive the grades that earned it. See docs/package-fidelity/README.md.
     python tools/check_package_status.py
 """
 import json
+import re
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -32,6 +33,19 @@ def _tracks(pkg: str) -> set:
     return {t['id'] for t in phil.get('tracks') or []}
 
 
+def gate_problems() -> list[str]:
+    """Every command README's gate table names runs in the CI workflow."""
+    readme = (ROOT / 'docs/package-fidelity/README.md').read_text()
+    workflow = (ROOT / '.github/workflows/training-contract.yml').read_text()
+    section = readme.split('## The gates', 1)[1].split('\n## ', 1)[0]
+    out = []
+    for line in section.splitlines():
+        m = re.match(r'^\|\s*`([^`]+\.py[^`]*)`', line)
+        if m and f'python {m.group(1)}' not in workflow:
+            out.append(f'README gate `{m.group(1)}` does not run in .github/workflows/training-contract.yml')
+    return out
+
+
 def problems() -> list[str]:
     status = yaml.safe_load((ROOT / 'docs/package-fidelity/status.yaml').read_text())['packages']
     packages = {p.name for p in (ROOT / 'data/packages').iterdir() if (p / 'philosophy.yaml').exists()}
@@ -41,7 +55,7 @@ def problems() -> list[str]:
         where, criterion = key.split('|')
         pkg, track = where.split('/')
         grades[pkg][track][criterion] = (grade, '')
-    out = []
+    out = gate_problems()
     for pkg in sorted(packages - status.keys()):
         out.append(f'{pkg}: not listed')
     for pkg in sorted(status.keys() - packages):

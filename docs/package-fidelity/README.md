@@ -4,8 +4,8 @@ The goal of every package is a program the method's author would recognise:
 the package's own contents, built into weeks as the method prescribes them,
 under the athlete's days, minutes, equipment, injuries and level. This is the
 method for getting a package there and keeping it there. It came out of
-rebuilding Wildman, BJJ and Horsemen (October 2026); `status.yaml` says where
-every package stands.
+rebuilding Wildman, BJJ, Horsemen and Starting Strength (October 2026);
+`status.yaml` says where every package stands.
 
 ## What went wrong before
 
@@ -32,7 +32,7 @@ back to a primary source. The engine's part was that it could only express
      (Horsemen) → week templates and category pools (`week_templates`,
      `categories`, `as_written`; src/week_template.py);
    - load added session to session (Starting Strength) → a contract with load
-     per confirmed exposure (not built yet);
+     per confirmed exposure (`load_per_exposure`);
    - skills earned by assessment (Ido Portal, ATG, Kelly Starrett) →
      assessment gating (not built yet);
    - otherwise the modality scheduler, with the framework's
@@ -96,17 +96,22 @@ awaiting the owner) is graded but does not count toward the status.
 
 ## The gates
 
-Run on every change to `src/**` or `data/**` (.github/workflows/training-contract.yml):
+Run on every change to the engine, the data, the schemas, the tools, the tests or
+the watch code (.github/workflows/training-contract.yml). Every command in the
+first column runs there; `tools/check_package_status.py` fails when the table
+and the workflow part.
 
 | Gate | What it holds |
 |---|---|
 | `tools/validate_entities.py --all` | every file against its schema; template, pool and test wiring; injury-flag ids resolve, each substitution pair inside one package |
-| `tools/check_provenance.py` (`--coverage`) | no package draws on another it does not declare; coverage gaps |
+| `tools/check_provenance.py` | no package draws on another it does not declare |
+| `tools/check_provenance.py --coverage` | coverage gaps and authoring problems, watch specs included |
 | `tools/check_styles.py` | every philosophy × track × phase generates on its own framework |
-| `tools/evaluate_packages.py` | the scorecard may not get worse, `status` is the one it earns, and every fidelity finding is in the baseline (`check_fidelity.py`'s gate, in the same pass) |
+| `tools/evaluate_packages.py` | the scorecard may not get worse, `status` is the one it earns, every fidelity finding is in the baseline (`check_fidelity.gate`, in the same pass) and every catalog exercise reaches a program (`check_exercise_coverage`, in the same pass); a baseline that a change has made stale fails until it is updated in that change |
 | `tools/check_analytics.py` | every declared measure applies somewhere |
-| `tools/check_exercise_coverage.py` | every catalog exercise reaches a program (its own or a borrower's); orphans may only shrink |
-| `tools/check_package_status.py` | `status.yaml` lists every package, names real files and tracks, and declares the status the recorded scorecard earns |
+| `tools/check_package_status.py` | `status.yaml` lists every package, names real files and tracks, and declares the status the recorded scorecard earns; this table matches the workflow |
+| `test_watch_spec.py` | a package's `watch.yaml` resolves; the watches' generated tables are current; `garmin/core` names no package |
+| `test_program_analytics.py` | a package's analytics, including one written to disk as a throwaway package, need no engine change |
 | the package's **source test** | the week as the source writes it, pinned (e.g. `test_training_contract.py`'s Wildman Phase II and BJJ tests, `test_week_template.py`'s Horsemen macro) |
 
 ## Working a package

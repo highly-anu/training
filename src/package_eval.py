@@ -1,8 +1,8 @@
 """The package scorecard: how far a package is from what its method prescribes.
 
 The fidelity gate (src/fidelity.py) reads one program against what its
-package declares. It cannot see that a declaration is thin: 145 of its 178
-baselined findings were intensity splits, while a novice Gym Jones program
+package declares. It cannot see that a declaration is thin: when the
+scorecard was written most of its findings were intensity splits, while a novice Gym Jones program
 was half substitutes, CrossFit ran one AMRAP template, and Starting Strength
 with no barbell handed out sessions whose every slot was empty. The scorecard
 grades each package × track on five dimensions — Source, Execution,
@@ -17,7 +17,7 @@ tools/evaluate_packages.py; `test_package_eval.py` pins each grader.
 from __future__ import annotations
 
 import re
-from collections import Counter, defaultdict
+from collections import Counter
 
 from src import fidelity
 
@@ -60,10 +60,12 @@ SUBSTITUTE_PARTIAL = 0.25
 SHARE_PASS, SHARE_PARTIAL = 0.40, 0.60
 LEVELS = ('novice', 'intermediate', 'advanced', 'elite')
 DOSSIER_SECTIONS = ('Sources', 'Rules', 'Open', 'Inventions', 'Tests')
-# Fidelity rules that are a declared claim of the method breaking.
+# Fidelity rules that are a declared claim of the method breaking, at any
+# gated severity: the volume bands fire only where a phase declares them.
 CLAIM_RULES = {'substituted_share', 'modality_outnumbers', 'archetype_share', 'distinct_archetypes',
                'archetype_required', 'modality_required', 'archetype_forbidden', 'zone_above_cap',
-               'training_contract', 'contract_unfulfilled', 'template_foreign_day'}
+               'training_contract', 'contract_unfulfilled', 'template_foreign_day',
+               'volume_ramp', 'volume_vs_previous_phase'}
 CLAIM_KEYS = {'archetypes_required', 'archetypes_forbidden', 'modalities_required', 'max_zone',
               'volume_change_per_week', 'volume_vs_previous_phase', 'max_substituted_share',
               'modality_outnumbers', 'max_archetype_share', 'min_distinct_archetypes'}
@@ -91,13 +93,28 @@ def refused(program: dict | None, validation=None) -> bool:
     return not program or bool(program.get('validation_errors')) or not program.get('weeks')
 
 
+def _where(w: dict, s: dict) -> str:
+    return f"week {w.get('week_number')} {(s.get('archetype') or {}).get('id') or s.get('modality')}"
+
+
 def empty_sessions(program: dict | None) -> list[str]:
     """Sessions with work slots, every one of them empty: delivered, nothing in it."""
     out = []
     for w, s in sessions(program):
         work = fidelity._work(s)
         if work and not any(ea.get('exercise') for ea in work):
-            out.append(f"week {w.get('week_number')} {(s.get('archetype') or {}).get('id') or s.get('modality')}")
+            out.append(_where(w, s))
+    return out
+
+
+def gapped_sessions(program: dict | None) -> list[str]:
+    """Sessions delivered with some work slots empty, but not all."""
+    out = []
+    for w, s in sessions(program):
+        work = fidelity._work(s)
+        filled = sum(1 for ea in work if ea.get('exercise'))
+        if 0 < filled < len(work):
+            out.append(_where(w, s))
     return out
 
 
@@ -150,16 +167,7 @@ def concentration(program: dict | None, track: dict, archetypes: list, level: st
         if phase.get('week_templates'):
             continue
         kind = pweeks[0].get('phase')
-        counts: dict = defaultdict(Counter)
-        for w in pweeks:
-            for _, s in fidelity._sessions(w):
-                if not s.get('test'):
-                    counts[s.get('modality')][(s.get('archetype') or {}).get('id')] += 1
-        for mod, c in counts.items():
-            total = sum(c.values())
-            if total < 4:
-                continue
-            aid, top = c.most_common(1)[0]
+        for mod, aid, top, total in fidelity.archetype_shares(pweeks):
             out.append((phase_id, mod, aid, top / total, (phase.get('checks') or {}).get('max_archetype_share'),
                         len(eligible_archetypes(archetypes, mod, kind, level, equipment))))
     return out
@@ -184,10 +192,14 @@ def grade_e1(qualified: dict) -> tuple[str, str]:
     """`qualified`: profile -> program, for athletes the track is written for."""
     found = {p: empty_sessions(prog) for p, prog in qualified.items()}
     bad = {p: e for p, e in found.items() if e}
-    if not bad:
-        return PASS, ''
-    p, e = next(iter(sorted(bad.items())))
-    return FAIL, f"{p}: {len(e)} session(s) with every slot empty, e.g. {e[0]}"
+    if bad:
+        p, e = next(iter(sorted(bad.items())))
+        return FAIL, f"{p}: {len(e)} session(s) with every slot empty, e.g. {e[0]}"
+    gapped = {p: g for p, prog in qualified.items() if (g := gapped_sessions(prog))}
+    if gapped:
+        p, g = next(iter(sorted(gapped.items())))
+        return PARTIAL, f"{p}: {len(g)} session(s) with a slot empty, e.g. {g[0]}"
+    return PASS, ''
 
 
 def grade_e2(qualified: dict) -> tuple[str, str]:

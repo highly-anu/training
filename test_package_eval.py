@@ -52,6 +52,9 @@ def test_execution() -> None:
     check('meta-only rows are not an empty session',
           pe.grade_e1({'ideal': program([s(rows=[{'meta': True}])])})[0] == pe.PASS)
     check('no empties passes E1', pe.grade_e1({'ideal': good})[0] == pe.PASS)
+    gapped = program([s(rows=[ex(), empty()]), s()])
+    check('a session with one slot of two empty is partial E1', pe.grade_e1({'ideal': gapped})[0] == pe.PARTIAL)
+    check('the volume bands are claims', {'volume_ramp', 'volume_vs_previous_phase'} <= pe.CLAIM_RULES)
     some = program([s(substituted_for='x'), s(), s(), s(), s()])
     most = program([s(substituted_for='x'), s(substituted_for='x'), s()])
     check('a fifth substituted is partial', pe.grade_e2({'ideal': some})[0] == pe.PARTIAL)

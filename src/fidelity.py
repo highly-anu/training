@@ -251,6 +251,10 @@ def check_program(program: dict, philosophy: dict, track: dict, constraints: dic
     phase_by_id = {p['id']: p for p in track.get('phases') or []}
     for phase_id, pweeks in _phase_groups(program.get('weeks') or []):
         _check_claims(out, phase_id, pweeks, (phase_by_id.get(phase_id) or {}).get('checks') or {})
+    equipment = set(constraints.get('equipment') or [])
+    injury_flags = library.get('injury_flags') or {}
+    excl_patterns, excl_ids = _injury_exclusions(constraints, injury_flags)
+    flagged = set(constraints.get('injury_flags') or [])
     if program.get('training_contract'):
         from . import training_contract
         try:
@@ -261,14 +265,19 @@ def check_program(program: dict, philosophy: dict, track: dict, constraints: dic
             training_contract.verify_phase_rules(program, {'phase_sequence': phases_mod.phase_sequence_for(track)})
         except training_contract.ContractError as exc:
             out.add('training_contract', 'error', None, track['id'], str(exc))
+        # The contract agrees with itself; the athlete's equipment and
+        # injuries are still the athlete's.
+        for phase_id, pweeks in _phase_groups(program.get('weeks') or []):
+            for w in pweeks:
+                for _, s in _sessions(w):
+                    for ea in _work(s):
+                        if ea.get('exercise'):
+                            _check_compliance(out, phase_id, w.get('week_number'), ea, equipment,
+                                              excl_patterns, excl_ids, flagged)
         return out.findings()
     weeks = program.get('weeks') or []
     modalities = library.get('modalities') or {}
     level = constraints.get('training_level', 'intermediate')
-    equipment = set(constraints.get('equipment') or [])
-    injury_flags = library.get('injury_flags') or {}
-    excl_patterns, excl_ids = _injury_exclusions(constraints, injury_flags)
-    flagged = set(constraints.get('injury_flags') or [])
 
     prev_phase_tail_minutes = None
     for phase_id, pweeks in _phase_groups(weeks):
@@ -372,14 +381,7 @@ def _check_week(out, w, phase_id, kind, fw, level, equipment, excl_patterns, exc
             if eid in forbidden_ex:
                 out.add('exercise_forbidden', 'error', phase_id, eid,
                         f"{eid} is ruled out for this phase", wn)
-            if not _equipment_ok(ex, equipment):
-                out.add('equipment_violation', 'error', phase_id, eid,
-                        f"{eid} needs {sorted(set(ex.get('equipment', [])) - equipment - {'open_space', 'none'})}", wn)
-            if not ea.get('substituted_for') and (
-                    eid in excl_ids or set(ex.get('movement_patterns') or []) & excl_patterns
-                    or set(ex.get('contraindicated_with') or []) & flagged):
-                out.add('injury_violation', 'error', phase_id, eid,
-                        f"{eid} is excluded or contraindicated by {sorted(flagged)}", wn)
+            _check_compliance(out, phase_id, wn, ea, equipment, excl_patterns, excl_ids, flagged)
             if max_zone and not is_strength(mod):
                 hi = (ea.get('load') or {}).get('zone_upper')
                 if isinstance(hi, (int, float)) and hi > max_zone:
@@ -389,6 +391,20 @@ def _check_week(out, w, phase_id, kind, fw, level, equipment, excl_patterns, exc
     if not templated:
         # A templated week's day order is the source's own.
         _check_recovery(out, phase_id, wn, placed, modalities, allowed)
+
+
+def _check_compliance(out, phase_id, wn, ea, equipment, excl_patterns, excl_ids, flagged):
+    """A prescribed exercise the athlete's equipment or injuries rule out."""
+    ex = ea['exercise']
+    eid = ex.get('id')
+    if not _equipment_ok(ex, equipment):
+        out.add('equipment_violation', 'error', phase_id, eid,
+                f"{eid} needs {sorted(set(ex.get('equipment', [])) - equipment - {'open_space', 'none'})}", wn)
+    if not ea.get('substituted_for') and (
+            eid in excl_ids or set(ex.get('movement_patterns') or []) & excl_patterns
+            or set(ex.get('contraindicated_with') or []) & flagged):
+        out.add('injury_violation', 'error', phase_id, eid,
+                f"{eid} is excluded or contraindicated by {sorted(flagged)}", wn)
 
 
 def _check_template(out, phase_id, phase, fw, pweeks, constraints):
@@ -614,13 +630,8 @@ def claim_violations(pweeks: list, checks: dict) -> list[tuple[str, str, str, in
                             f"{mods.count(a)} {a} against {mods.count(b)} {b}", w.get('week_number')))
     cap = checks.get('max_archetype_share')
     if cap is not None:
-        by_mod: dict = defaultdict(Counter)
-        for _, s in sessions:
-            by_mod[s.get('modality')][(s.get('archetype') or {}).get('id')] += 1
-        for mod, counts in by_mod.items():
-            total = sum(counts.values())
-            aid, top = counts.most_common(1)[0]
-            if total >= 4 and top / total > cap + 1e-9:
+        for mod, aid, top, total in archetype_shares(pweeks):
+            if top / total > cap + 1e-9:
                 out.append(('archetype_share', f"{mod}:{aid}",
                             f"{aid} is {top} of {total} {mod} sessions (at most {cap:.0%})", None))
     spec = checks.get('min_distinct_archetypes')
@@ -634,6 +645,24 @@ def claim_violations(pweeks: list, checks: dict) -> list[tuple[str, str, str, in
                 out.append(('distinct_archetypes', spec.get('modality') or 'sessions',
                             f"{len(ids)} distinct archetypes in {size} weeks (at least {spec['count']})",
                             window[0].get('week_number')))
+    return out
+
+
+def archetype_shares(pweeks: list, min_sessions: int = 4) -> list[tuple[str, str, int, int]]:
+    """(modality, its most used archetype, that archetype's sessions, the
+    modality's sessions) for each modality with `min_sessions` or more in the
+    phase, tests aside. `max_archetype_share` and the scorecard's E4 read it."""
+    by_mod: dict = defaultdict(Counter)
+    for w in pweeks:
+        for _, s in _sessions(w):
+            if not s.get('test'):
+                by_mod[s.get('modality')][(s.get('archetype') or {}).get('id')] += 1
+    out = []
+    for mod, counts in by_mod.items():
+        total = sum(counts.values())
+        if total >= min_sessions:
+            aid, top = counts.most_common(1)[0]
+            out.append((mod, aid, top, total))
     return out
 
 
