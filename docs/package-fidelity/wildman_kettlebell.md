@@ -33,13 +33,9 @@ ids. The status is the scorecard's (status.yaml).
 | R8 | Deck squat: bodyweight first, then a kettlebell (/deck-squat) | `deck_squat` block `progresses` without a bell; goblet squat its declared substitute |
 | R9 | No deload week in the programs; "lighter" is the next cycle at a heavier bell (PDF, /phases) | `kb_general_practice` has no `deload_protocol` |
 | R10 | Self-paced; progress is each workout completed, tracked by date (PDF) | `confirmed_state`; the one-tap `POST /health/sessions/<key>/confirm` |
+| R11 | Repeat workouts when training is interrupted for more than a week (PDF, "Tracking your progress") | the swing module's `advice`, said in every swing session's note and never enforced (I5) |
 | R12 | The pentathlon's five events, six minutes each with five between, and the rep caps (IKMF) | the `pentathlon_events` module; the test protocol |
 | R13 | The get-up's goal is a bodyweight ratio no session tests (/tgu) | the `turkish_get_up_bw_ratio` standard, entered by hand |
-
-## Debt (rules nothing enforces yet)
-
-- R11: repeat workouts when training is interrupted for more than a week (PDF,
-  "Tracking your progress"). Needs the log's dates; the contract carries on.
 
 ## Open (the source does not say, or it is paid)
 
@@ -57,6 +53,8 @@ ids. The status is the scorecard's (status.yaml).
   deliberately non-repeating.
 - I4: clean and press, get-up and deck-squat cycles follow the Nerd Math pattern; his
   own numbers are in the paid programs.
+- I5: the repeat after a layoff (R11) is recommended, not enforced — decided by the
+  owner on 2026-10-21: the athlete decides and takes responsibility.
 
 ## Measurement
 

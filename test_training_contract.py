@@ -49,6 +49,17 @@ def test_source_cycle_retains_movements_and_spacing(level='intermediate'):
     assert p['module_state']['swing']['completed'] == 0
 
 
+def test_swing_recommends_repeating_after_a_layoff_and_never_enforces_it():
+    # Nerd Math PDF, "Tracking your progress": repeat workouts after more than a
+    # week away. The owner's decision (2026-10-21): recommend, never enforce.
+    p, g, c = plan(weeks=2)
+    advice = next(m for m in g['training_contract']['modules'] if m['id'] == 'swing')['advice']
+    assert all(advice in e['load_note'] for e in swings(p)), 'every swing session says it'
+    prep = [e['load'] for s in sessions(p) for e in s['exercises'] if e['slot_role'] == 'swing_prep']
+    assert prep and not any(advice in (e.get('load_note') or '') for e in prep), 'only the block that advances'
+    assert [e['reps_per_round'] for e in swings(p)] == [6, 8, 10, 12], 'the cursor is the same with or without it'
+
+
 def test_real_session_budget_and_deload_are_derived_from_blocks():
     p, g, c = plan(session_time_minutes=30)
     assert p['weeks']

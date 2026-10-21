@@ -51,6 +51,10 @@ tracks:
       min_spacing_days: 2
       max_rpe: 7
       deload_keep: 0.5
+      # Nerd Math PDF, "Tracking your progress": repeat workouts after more than
+      # a week away. Recommended, not enforced (owner, 2026-10-21): the athlete
+      # decides and takes responsibility; the cursor never reads the calendar.
+      advice: Away more than a week? Wildman repeats the last workouts before moving on — repeat them if you need to; the program carries on either way.
       # The Nerd Math swing program's four approaches, in its order: 6 to 20
       # swings a minute (two more each session) over a 10-minute EMOM, then a
       # 20-minute one, then start/stop swings in ten and twenty 90-second

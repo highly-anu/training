@@ -112,6 +112,9 @@ rules:
   - id: R11
     text: Repeat workouts when training is interrupted for more than a week.
     cites: [{source: nerd_math_pdf, at: Tracking your progress}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.general_practice.modules.swing.advice
+      - test:test_training_contract.py::test_swing_recommends_repeating_after_a_layoff_and_never_enforces_it
   - id: R12
     text: "The pentathlon: clean, long-cycle press, jerk, half snatch and strict push press, six minutes each with five minutes between; reps past 120, 60, 120, 108 and 120 score nothing."
     cites: [{source: ikmf_pentathlon}]
@@ -149,6 +152,10 @@ inventions:
       - data:training_contract.yaml#tracks.general_practice.modules.clean_press.progression
       - data:training_contract.yaml#tracks.general_practice.modules.getup.progression
       - data:training_contract.yaml#tracks.general_practice.modules.deck_squat.progression
+  - id: I5
+    text: "The repeat after a layoff (R11) is recommended in every swing session's note, never enforced: the athlete decides and takes responsibility (owner, 2026-10-21)."
+    implemented_by:
+      - data:training_contract.yaml#tracks.general_practice.modules.swing.advice
 
 currency:
   general_practice: {entry: interval_rounds, rule: R10}
@@ -158,4 +165,4 @@ currency:
   pentathlon: {entry: jerk_rpm, rule: R12}
   getup_mobility: {entry: technique_time, rule: I2}
 
-next: Repeating workouts after a layoff (R11) needs the log's dates; the hand-to-hand option needs an alternating block; decide the two Codex tracks (I2, I3).
+next: The hand-to-hand option needs an alternating block; decide the two Codex tracks (I2, I3).

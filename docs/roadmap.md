@@ -796,13 +796,13 @@ enforces each, inventions; `source_weeks.yaml`: the source's own weeks, generate
 compared), `status.yaml` is generated, a claim or lead measure counts only when a rule
 cites it, CI runs every gate the README names, and a stale baseline fails (README,
 CLAUDE.md). Re-reading the sources: Horsemen's sixteen weeks, Wildman's 32 swing
-sessions and Starting Strength's weeks reproduce; **owner decisions now waiting**:
-- *BJJ* (partial): at six days the package gives four classes where BJJEE's week has
-  five (Saturday a class and S&C); StrengthLog deloads strength after six weeks at
-  50–60 % × 10 × 2 (R4), the package every fourth week, dropping rolling (I3); no source
-  prescribes strength by RPE (I2) — StrengthLog and Vitruve write reps and %1RM.
-- *Wildman* (partial): the Nerd Math PDF says to repeat workouts after a week off (R11);
-  needs the log's dates in the contract, as Starting Strength's layoff resets (R16) do.
+sessions and Starting Strength's weeks reproduce. Decided by the owner the same day:
+BJJ's four classes at six days stand (I7, where BJJEE's week has five); Wildman's
+"repeat workouts after a week off" (R11) is recommended in every swing session's note
+and never enforced (the contract's module `advice`, I5). **Still waiting** — *BJJ*
+(partial): StrengthLog deloads strength after six weeks at 50–60 % × 10 × 2 (R4, debt),
+the package every fourth week, dropping rolling (I3); no source prescribes strength by
+RPE (I2) — StrengthLog and Vitruve write reps and %1RM.
 
 Next branch (the plan's parts 4–6): R1 against the ideal program (fidelity rules on the
 scorecard's own constrained profiles, `explain_refusal` naming the unblocking

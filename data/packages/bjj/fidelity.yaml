@@ -107,8 +107,12 @@ inventions:
     text: Competition conditioning is offered from intermediate up; the sources write it for competitors.
     implemented_by:
       - data:training_contract.yaml#tracks.mat_support.modules.competition_conditioning.training_levels
+  - id: I7
+    text: "At six training days, four classes, each on a day of its own, beside two S&C sessions; BJJEE's week has five, Saturday a class and the second S&C session (owner, 2026-10-21: four is fine)."
+    implemented_by:
+      - data:training_contract.yaml#tracks.mat_support.modules.mat_class.exposures_by_days
 
 currency:
   mat_support: {entry: mat_time, rule: R1}
 
-next: "Decide against the sources: the six-day week's fifth class (BJJEE's source week), the strength prescription (I2) and the deload (R4, I3); a competition camp if the owner wants one."
+next: "Decide against StrengthLog: the strength prescription (I2) and the deload (R4, I3); a competition camp if the owner wants one."

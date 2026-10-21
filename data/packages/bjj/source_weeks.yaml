@@ -7,8 +7,9 @@
     Huni (BJJEE, 2017), the mix that "works the best for me": BJJ Monday and
     Tuesday, a hard S&C session Wednesday, BJJ Thursday to Saturday, a medium
     S&C session Saturday afternoon or evening, Sunday rest — five classes and
-    two S&C sessions on six days. Compared by count, the weekdays being the
-    author's: the class is combat_sport, the package's S&C strength_endurance.
+    two S&C sessions on six days. The package keeps the two S&C sessions; its
+    four classes, each on a day of its own, are I7 (the owner's decision), so
+    the class count is not compared. The weekdays are the author's.
   profile: {days_per_week: 6, session_time_minutes: 90, training_level: intermediate, equipment: all}
   weeks:
-    - modalities: {combat_sport: 5, strength_endurance: 2}
+    - modalities: {strength_endurance: 2}

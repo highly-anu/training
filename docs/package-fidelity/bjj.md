@@ -65,14 +65,15 @@ sources share.
   sources' two need five days.
 - I6: competition conditioning is offered from intermediate up; the sources write it
   for competitors.
+- I7: at six training days, four classes, each on a day of its own, beside two S&C
+  sessions, where BJJEE's week has five (Saturday a class and the second S&C
+  session) — the owner's decision, 2026-10-21.
 
 ## Tests
 
-Source weeks (`data/packages/bjj/source_weeks.yaml`): BJJEE's six-day week, five
-classes and two S&C sessions (R1). It does not reproduce: at six days the package's
-table (`exposures_by_days`) gives four classes, each on a day of its own, where Huni's
-Saturday has a class and the second S&C session — a decision for the owner, with R4
-and I2.
+Source weeks (`data/packages/bjj/source_weeks.yaml`): BJJEE's six-day week (R1), its
+two S&C sessions compared; its five classes are not — the package's four (I7) are
+the owner's decision.
 
 test_training_contract.py — `test_bjj_mat_time_leads_the_week`,
 `test_bjj_deload_drops_rolling_and_keeps_drilling` (I3),
