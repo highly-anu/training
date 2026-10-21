@@ -41,7 +41,7 @@ sys.path.insert(0, ROOT)
 from src import fidelity, goals, loader, phases, provenance  # noqa: E402
 from src.generator import generate  # noqa: E402
 from src.validator import validate  # noqa: E402
-from tools.check_styles import ALL_EQUIPMENT  # noqa: E402
+from src.package_eval import ALL_EQUIPMENT, contract_entry  # noqa: E402
 
 BASELINE = os.path.join(ROOT, 'tools', 'fidelity_baseline.json')
 LEVEL_ORDER = ['novice', 'intermediate', 'advanced', 'elite']
@@ -94,16 +94,6 @@ def profiles_for(track: dict, fw_by_id: dict) -> list[tuple[str, dict]]:
         ('shoulder', c(injury_flags=['shoulder_impingement'])),
     ]
     return out
-
-
-def contract_entry(constraints: dict, contract: dict | None) -> dict:
-    """A contract athlete who qualifies: two bells and the level's mastery."""
-    if not contract:
-        return constraints
-    return {**constraints, 'kettlebell_count': constraints.get('kettlebell_count', 2),
-            'mastered_exercises': sorted({eid for m in contract['modules']
-                                          if constraints['training_level'] in m['training_levels']
-                                          for eid in m.get('requires_mastery', [])})}
 
 
 def iter_programs(package: str | None = None, extra_profiles=None):

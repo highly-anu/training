@@ -67,7 +67,9 @@ goal (R7, 200 in ten minutes) is the SSST count and the get-up's bodyweight rati
 ## Tests
 
 Source weeks (`data/packages/wildman_kettlebell/source_weeks.yaml`): one bell's
-32 swing sessions from the PDF's progression table — reps, rounds and minutes (R4).
+32 swing sessions from the PDF's progression table — reps, rounds and minutes (R4);
+the deck squat and snatch programs twice a week (R3). The invented tracks (I1–I3)
+have no source week: there is no source to reproduce.
 
 test_training_contract.py — `test_general_practice_runs_wildmans_phase_two`,
 `test_source_cycle_retains_movements_and_spacing`,

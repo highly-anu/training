@@ -84,7 +84,9 @@ def test_series_and_plates() -> None:
     st, nu = sw.compare(PROGRAM, entry(round_kg=2.5,
                                        series=[{'exercise': 'squat', 'field': 'weight_kg', 'values': [64, 69, 64]}]))
     check("a source's kilograms on the contract's plates", not st and not nu, str(st + nu))
-    check('half rounds up', sw._expected('weight_kg', 72, 1.25) == 72.5)
+    check('to the nearest plate', sw._expected('weight_kg', 72, 1.25) == 72.5)
+    from src.training_contract import _round_kg
+    check('a tie rounds as the contract loads it', sw._expected('weight_kg', 70.625, 1.25) == _round_kg(70.625, 1.25))
     check('reps are never rounded', sw._expected('reps', 7, 5) == 7)
 
 
@@ -95,6 +97,14 @@ def test_grade() -> None:
     check('structure fails', pe.grade_s5(2, ['x'], [], 3)[0] == pe.FAIL)
     check('no source week, a source test CI runs: partial', pe.grade_s5(0, [], [], 1)[0] == pe.PARTIAL)
     check('neither fails', pe.grade_s5(0, [], [], 0)[0] == pe.FAIL)
+    check('a track that is an invention has no source to reproduce', pe.grade_s5(0, [], [], 0, 'I1')[0] == pe.PASS)
+    check('an entry for a track the package lacks is structure, not an exception',
+          sw.check_entry('x', {'id': 'e', 'track': 'nope'}, {'t'})[0])
+    st, _ = sw.check_entry('no_such_package', {'id': 'e', 'track': 't', 'profile': {}}, {'t'})
+    check('an entry that cannot generate is structure, not an exception', st and 'does not generate' in st[0], str(st))
+    weekly = {'weeks': [week({1: A}), week({1: B})]}
+    st, nu = sw.compare(weekly, entry(from_week=2, series=[{'exercise': 'squat', 'field': 'weight_kg', 'values': [70]}]))
+    check('a series starts at the week the entry does', not st and not nu, str(st + nu))
 
 
 def main() -> int:

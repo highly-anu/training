@@ -29,22 +29,20 @@ Pure apart from generation: `check(pkg)` loads, generates and compares.
 """
 from __future__ import annotations
 
-import math
 import os
 
 import yaml
 
-from src import goals, loader, provenance
+from src import fidelity, goals, loader, provenance
 from src.generator import generate
+from src.package_eval import ALL_EQUIPMENT, contract_entry
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FILE = 'source_weeks.yaml'
-_DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 _SESSION_KEYS = ('archetype', 'category', 'modality')
 
 
 def load(pkg: str) -> list[dict]:
-    path = os.path.join(ROOT, 'data', 'packages', pkg, FILE)
+    path = os.path.join(loader._PACKAGES_DIR, pkg, FILE)
     if not os.path.exists(path):
         return []
     with open(path, encoding='utf-8') as fh:
@@ -56,8 +54,6 @@ def load(pkg: str) -> list[dict]:
 def constraints_for(entry: dict, contract: dict | None) -> dict:
     """The entry's profile over the defaults a fidelity profile has; a
     contract athlete qualifies (two bells, the level's mastery)."""
-    from tools.check_fidelity import contract_entry
-    from tools.check_styles import ALL_EQUIPMENT
     c = {'days_per_week': 3, 'session_time_minutes': 60, 'training_level': 'intermediate',
          'equipment': list(ALL_EQUIPMENT), 'injury_flags': [], 'fatigue_state': 'normal',
          'periodization_week': 1}
@@ -84,20 +80,13 @@ def program_for(pkg: str, entry: dict) -> dict | None:
 
 # ── Comparing ────────────────────────────────────────────────────────────────
 
-def _day_num(day) -> int:
-    if isinstance(day, int):
-        return day
-    if isinstance(day, str) and day.isdigit():
-        return int(day)
-    return _DAY_NAMES.index(day) + 1 if day in _DAY_NAMES else 0
-
-
 def _days(week: dict) -> dict[int, list]:
-    return {_day_num(d): ss for d, ss in (week.get('schedule') or {}).items() if ss}
+    """Day number -> its sessions, read as the fidelity gate reads a week."""
+    return {fidelity._day_num(d): ss for d, ss in (week.get('schedule') or {}).items() if ss}
 
 
 def _work(session: dict) -> list:
-    return [ea for ea in session.get('exercises') or [] if not ea.get('meta') and ea.get('exercise')]
+    return [ea for ea in fidelity._work(session) if ea.get('exercise')]
 
 
 def _field(ea: dict, name: str):
@@ -118,9 +107,11 @@ def _session_value(s: dict, key: str):
 
 
 def _expected(name: str, value, round_kg: float | None):
-    """A source's kilograms, on the plates the contract loads (`round_kg`)."""
+    """A source's kilograms, on the plates the contract loads (`round_kg`),
+    rounded as the contract rounds them (training_contract._round_kg)."""
     if round_kg and name.endswith('_kg') and isinstance(value, (int, float)):
-        return math.floor(value / round_kg + 0.5) * round_kg
+        from src.training_contract import _round_kg
+        return _round_kg(value, round_kg)
     return value
 
 
@@ -213,7 +204,8 @@ def compare(program: dict | None, entry: dict) -> tuple[list[str], list[str]]:
                 structure += st
                 numbers += nu
     for s in entry.get('series') or []:
-        got = [_field(ea, s['field']) for w in weeks for d in sorted(_days(w)) for sess in _days(w)[d]
+        # From the week the entry starts at, as its `weeks` do.
+        got = [_field(ea, s['field']) for w in weeks[first:] for d in sorted(_days(w)) for sess in _days(w)[d]
                for ea in _work(sess) if ea['exercise']['id'] == s['exercise']][:len(s['values'])]
         where = f"{eid} series {s['exercise']}.{s['field']}"
         want = [_expected(s['field'], v, entry.get('round_kg')) for v in s['values']]
@@ -224,12 +216,33 @@ def compare(program: dict | None, entry: dict) -> tuple[list[str], list[str]]:
     return structure, numbers
 
 
+def check_entry(pkg: str, entry: dict, tracks: set) -> tuple[list[str], list[str]]:
+    """One entry, generated and compared. An entry that cannot be generated —
+    a track the package does not have, a goal that will not build — is its
+    structure mismatch, never an exception that ends the scorecard's run."""
+    if entry.get('track') not in tracks:
+        return [f"{entry['id']}: no track {entry.get('track')!r} in the package"], []
+    try:
+        program = program_for(pkg, entry)
+    except Exception as exc:  # the whole entry is one finding
+        return [f"{entry['id']}: does not generate ({type(exc).__name__}: {exc})"], []
+    return compare(program, entry)
+
+
+def check_by_track(pkg: str) -> dict[str, tuple[int, list[str], list[str]]]:
+    """Track -> (entries, structure mismatches, number mismatches)."""
+    phil = next((p for p in loader.load_philosophies() if p['id'] == pkg), {})
+    tracks = {t['id'] for t in phil.get('tracks') or []}
+    out: dict = {}
+    for entry in load(pkg):
+        n, structure, numbers = out.get(entry.get('track'), (0, [], []))
+        st, nu = check_entry(pkg, entry, tracks)
+        out[entry.get('track')] = (n + 1, structure + st, numbers + nu)
+    return out
+
+
 def check(pkg: str) -> tuple[int, list[str], list[str]]:
-    """(entries, structure mismatches, number mismatches) for a package."""
-    entries = load(pkg)
-    structure, numbers = [], []
-    for entry in entries:
-        st, nu = compare(program_for(pkg, entry), entry)
-        structure += st
-        numbers += nu
-    return len(entries), structure, numbers
+    """(entries, structure mismatches, number mismatches) over every track."""
+    by_track = check_by_track(pkg).values()
+    return (sum(n for n, _, _ in by_track), [m for _, st, _ in by_track for m in st],
+            [m for _, _, nu in by_track for m in nu])

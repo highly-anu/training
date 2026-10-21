@@ -251,19 +251,24 @@ def evaluate_package(pkg: str) -> dict:
         if rec['fidelity']:
             rows_by_track[tid] += cf.fidelity_rows(rec)
         by_track[tid][rec['profile']] = rec
-    out = {'fidelity_rows': [r for rows in rows_by_track.values() for r in rows], 'tracks': {},
-           'source_weeks': source_weeks.check(pkg)}
+    out = {'fidelity_rows': [r for rows in rows_by_track.values() for r in rows], 'tracks': {}}
+    # S5 per track, from the source weeks written for it: one track's week
+    # reproducing says nothing of another's.
+    weeks = source_weeks.check_by_track(pkg)
+    in_ci = pf.tests_in_ci(pkg, record)
     for tid, recs in by_track.items():
         out['tracks'][tid] = grade_track(pkg, tracks[tid], recs, rows_by_track[tid], record)
+        out['tracks'][tid]['S5'] = list(pe.grade_s5(*weeks.get(tid, (0, [], [])), in_ci,
+                                                    pf.invented_track(record, tid)))
     return out
 
 
 # ── Per package ──────────────────────────────────────────────────────────────
 
-def package_grades(pkg: str, orphans: list[str], weeks: tuple) -> dict:
-    """Source and data: the same for every track of the package. `orphans`:
-    its catalog exercises no program reaches; `weeks`: its source weeks
-    (entries, structure and number mismatches) — both computed in this run."""
+def package_grades(pkg: str, orphans: list[str]) -> dict:
+    """Source and data: the same for every track of the package (S5 is the
+    track's). `orphans`: its catalog exercises no program reaches, computed in
+    this run."""
     from tools import validate_entities as ve
     record = pf.load(pkg)
     text = pf.dossier(pkg)
@@ -272,9 +277,8 @@ def package_grades(pkg: str, orphans: list[str], weeks: tuple) -> dict:
         'S2': pe.grade_s2(pf.sources_kind(record), record),
         'S3': pe.grade_s3(record, pf.debt(record), pf.ref_errors(pkg, record)),
         'S4': pe.grade_s4(record, pf.citation_errors(pkg, record, text)),
-        'S5': pe.grade_s5(*weeks, pf.tests_in_ci(pkg, record)),
     }
-    pkg_dir = os.path.join(ROOT, 'data', 'packages', pkg)
+    pkg_dir = os.path.join(loader._PACKAGES_DIR, pkg)
     errors = [f"{os.path.relpath(p, ROOT)}: {e}" for p, errs in ve.validate_path(pkg_dir, verbose=False).items()
               for e in errs or []]
     errors += [f"injury_flags.yaml: {e}" for e in ve.validate_file(
@@ -319,10 +323,12 @@ def run(packages: list[str]) -> tuple[dict, list, dict]:
         reaches = pool.map(coverage.reach_of, reach_for)
         results = dict(zip(packages, evaluated))
         reached = dict(zip(reach_for, reaches))
-    orphans = {pkg: coverage.orphans_of(pkg, reached) for pkg in packages}
+    _, catalogs = loader.load_all_exercises()
+    borrowers = coverage._borrowers(loader.load_philosophies())
+    orphans = {pkg: coverage.orphans_of(pkg, reached, catalogs, borrowers) for pkg in packages}
     for pkg in packages:
         res = results[pkg]
-        shared = package_grades(pkg, orphans[pkg], res['source_weeks'])
+        shared = package_grades(pkg, orphans[pkg])
         fid_rows += res['fidelity_rows']
         scorecard[pkg] = {tid: {**shared, **g} for tid, g in res['tracks'].items()}
     return scorecard, fid_rows, orphans
@@ -361,7 +367,7 @@ def write_report(scorecard: dict, path: str) -> None:
     for pkg in sorted(scorecard):
         lines.append(f'### {pkg}')
         lines.append('')
-        shared = {c for c in scorecard[pkg][next(iter(scorecard[pkg]))] if c[0] in 'SD'}
+        shared = {c for c in scorecard[pkg][next(iter(scorecard[pkg]))] if c[0] in 'SD' and c != 'S5'}
         listed = False
         first = next(iter(sorted(scorecard[pkg])))
         for c in sorted(shared):

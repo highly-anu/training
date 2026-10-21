@@ -86,6 +86,9 @@ def test_execution() -> None:
     claimed = {**TRACK, 'phases': [{'id': 'p1', 'checks': {'max_zone': 5}}]}
     check('an uncited claim key declares nothing', not pe.declares_claims(claimed, None, set()))
     check('a cited claim key declares the phase', pe.declares_claims(claimed, None, {'checks:t/p1.max_zone'}))
+    check("another track's citation is not this one's (t is not t_b)",
+          not pe.declares_claims(TRACK, {'modules': []}, {'data:training_contract.yaml#tracks.t_b.modules'}))
+    check('the track itself counts', pe.declares_claims(TRACK, {'modules': []}, {'data:training_contract.yaml#tracks.t'}))
     check('a broken claim fails', pe.grade_e5(True, ['p1: x'])[0] == pe.FAIL)
     check('warnings only are partial E6', pe.grade_e6([{'severity': 'warn', 'rule': 'r'}])[0] == pe.PARTIAL)
     check('levels from the frameworks', pe.written_levels(
@@ -179,6 +182,13 @@ def test_source_and_status() -> None:
     check('a manual standard counts only when a rule cites it',
           pf.manual_cited(_record(rules=[{**rec['rules'][0], 'enforced_by': ['data:analytics.yaml#benchmarks.ssst']}]),
                           'ssst') and not pf.manual_cited(rec, 'ssst'))
+    invented = _record(inventions=[{'id': 'I1', 'text': 'x', 'implemented_by': ['data:training_contract.yaml#tracks.t']},
+                                   {'id': 'I2', 'text': 'y', 'implemented_by': ['data:training_contract.yaml#tracks.u.modules']}],
+                       currency={'t': {'entry': 'm', 'rule': 'I1'}, 'u': {'entry': 'm', 'rule': 'I2'}})
+    check('an invented track is the invention that names the whole track',
+          pf.invented_track(invented, 't') == 'I1' and pf.invented_track(invented, 'u') is None)
+    check("an invention is the currency's rule only on the track it is",
+          pf.currency(invented, 't') == ('m', 'I1') and pf.currency(invented, 'u') == ('m', None))
     inv = _record(inventions=[{'id': 'I1', 'text': 'x', 'implemented_by': ['data:training_contract.yaml#tracks.t']}])
     check("an invention's implementation declares its track's claims, as the owner's word",
           pe.declares_claims(TRACK, {'modules': []}, pf.refs(inv)))

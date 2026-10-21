@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from collections import Counter
 
-from src import fidelity
+from src import fidelity, package_fidelity as pf
 
 PASS, PARTIAL, FAIL = 'pass', 'partial', 'fail'
 RANK = {PASS: 0, PARTIAL: 1, FAIL: 2}
@@ -67,6 +67,26 @@ CLAIM_RULES = {'substituted_share', 'modality_outnumbers', 'archetype_share', 'd
 CLAIM_KEYS = {'archetypes_required', 'archetypes_forbidden', 'modalities_required', 'max_zone',
               'volume_change_per_week', 'volume_vs_previous_phase', 'max_substituted_share',
               'modality_outnumbers', 'max_archetype_share', 'min_distinct_archetypes'}
+
+
+# Every implement, so equipment is never why a profile that has it all fails
+# (the fidelity and style checks' ideal athlete, the source weeks' `all`).
+ALL_EQUIPMENT = [
+    'barbell', 'rack', 'plates', 'kettlebell', 'pull_up_bar', 'ruck_pack',
+    'open_space', 'sandbag', 'rower', 'box', 'medicine_ball', 'sled', 'tire',
+    'rope', 'dumbbell', 'bench', 'gymnastics_rings', 'jump_rope', 'bike',
+    'treadmill', 'trap_bar', 'ghd', 'parallettes', 'sled_harness',
+]
+
+
+def contract_entry(constraints: dict, contract: dict | None) -> dict:
+    """A contract athlete who qualifies: two bells and the level's mastery."""
+    if not contract:
+        return constraints
+    return {**constraints, 'kettlebell_count': constraints.get('kettlebell_count', 2),
+            'mastered_exercises': sorted({eid for m in contract['modules']
+                                          if constraints['training_level'] in m['training_levels']
+                                          for eid in m.get('requires_mastery', [])})}
 
 
 def worst(grades) -> str:
@@ -148,11 +168,6 @@ def eligible_archetypes(archetypes: list, modality: str, kind: str, level: str, 
     return out
 
 
-def claim_ref(track: dict, phase_id: str, key: str) -> str:
-    """How a rule in the package's fidelity record cites a phase claim."""
-    return f"checks:{track['id']}/{phase_id}.{key}"
-
-
 def concentration(program: dict | None, track: dict, archetypes: list, level: str,
                   equipment: set, refs: set) -> list[tuple[str, str, str, float, float | None, int]]:
     """(phase, modality, archetype, share, declared cap, archetypes on offer) for
@@ -172,7 +187,7 @@ def concentration(program: dict | None, track: dict, archetypes: list, level: st
             continue
         kind = pweeks[0].get('phase')
         cap = (phase.get('checks') or {}).get('max_archetype_share')
-        if claim_ref(track, phase_id, 'max_archetype_share') not in refs:
+        if not pf.claim_cited(refs, track['id'], phase_id, 'max_archetype_share'):
             cap = None
         for mod, aid, top, total in fidelity.archetype_shares(pweeks):
             out.append((phase_id, mod, aid, top / total, cap,
@@ -252,12 +267,11 @@ def declares_claims(track: dict, contract: dict | None, refs: set) -> bool:
     no source states is a number, not the method."""
     tid = track['id']
     if contract:
-        return any(r.startswith(f'data:training_contract.yaml#tracks.{tid}') for r in refs)
+        return pf.contract_cited(refs, tid)
     for ph in track.get('phases') or []:
-        if ph.get('week_templates') and any(
-                r.startswith(f"data:philosophy.yaml#tracks.{tid}.phases.{ph['id']}.week_templates") for r in refs):
+        if ph.get('week_templates') and pf.template_cited(refs, tid, ph['id']):
             return True
-        if any(claim_ref(track, ph['id'], k) in refs for k in CLAIM_KEYS & set(ph.get('checks') or {})):
+        if any(pf.claim_cited(refs, tid, ph['id'], k) for k in CLAIM_KEYS & set(ph.get('checks') or {})):
             return True
     return False
 
@@ -341,7 +355,9 @@ def grade_d4(no_patterns: int, no_levels: int, inert_scaling: int) -> tuple[str,
 
 def grade_m1(declared: str | None, lead: str | None, rule: str | None) -> tuple[str, str]:
     """`declared`: the record's currency for the track; `rule`: the rule it
-    rests on (None when it cites none) — the method's word, not the author's."""
+    rests on (None when it cites none) — the method's word, not the author's;
+    on a track that is itself an invention, that invention
+    (package_fidelity.currency)."""
     if not declared:
         return FAIL, f"no currency declared for the track (leads with {lead or 'nothing'})"
     if not rule:
@@ -422,11 +438,16 @@ def _first(found: list[str]) -> str:
     return found[0] + (f" (+{len(found) - 1})" if len(found) > 1 else '')
 
 
-def grade_s5(weeks: int, structure: list[str], numbers: list[str], tests_in_ci: int) -> tuple[str, str]:
-    """The source's own weeks (src/source_weeks.py), generated and compared:
-    `weeks` entries, their structure and number mismatches. Without any, a
+def grade_s5(weeks: int, structure: list[str], numbers: list[str], tests_in_ci: int,
+             invented: str | None = None) -> tuple[str, str]:
+    """The track's own source weeks (src/source_weeks.py), generated and
+    compared: `weeks` entries, their structure and number mismatches. A track
+    that is itself an invention (`invented`, the owner's decision in the
+    ledger) has no source to reproduce. Otherwise, without a source week, a
     source test CI runs is partial — it pins what its author chose to pin,
     which the scorecard cannot read."""
+    if not weeks and invented:
+        return PASS, ''
     if weeks:
         if structure:
             return FAIL, _first(structure)

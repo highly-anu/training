@@ -101,7 +101,7 @@ grade fails CI, and so does a better one left unrecorded), and
 | | S2 | The sources, as read | a primary read in full, or ≥3 read | fewer read | none read |
 | | S3 | Rules nothing enforces (debt, computed); every `enforced_by` resolves | none | some debt | a reference to nothing, or no rules |
 | | S4 | Every rule rests on a source read; every currency and excluded track names a rule or invention; the dossier names every id | all | — | any not, or no rules |
-| | S5 | The source's own weeks (`source_weeks.yaml`), generated and compared | all reproduce | only numbers differ; or none, but a source test CI runs | the structure differs, or neither |
+| | S5 | The track's own source weeks (`source_weeks.yaml` entries for it), generated and compared; a track that is itself an invention has none to reproduce | all reproduce | only numbers differ; or none, but a source test CI runs | the structure differs, or neither |
 | Execution | E1 | Sessions delivered with slots empty | none | some slots | every slot |
 | | E2 | Sessions another modality's for lack of their own (`substituted_for`), worst written-for profile | none | ≤25 % | more |
 | | E3 | A level the track is not written for (contract levels, else the frameworks' `training_level`) | refused | — | served |
