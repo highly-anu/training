@@ -37,6 +37,16 @@
         "min_spacing_days": {"type": "integer", "minimum": 1, "maximum": 7},
         "max_rpe": {"type": "integer", "minimum": 1, "maximum": 10},
         "deload_keep": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+        "deload": {
+          "type": "object", "additionalProperties": false, "required": ["every_weeks"],
+          "description": "The module's own deload, in place of the framework's: every `every_weeks`-th program week (7: six weeks, then the deload). Its sets × reps blocks run `sets` of `reps` with `note` in place of the effort target; other blocks keep their `deload_keep` share. Fatigue or a deload phase still deloads it.",
+          "properties": {
+            "every_weeks": {"type": "integer", "minimum": 2},
+            "sets": {"type": "integer", "minimum": 1},
+            "reps": {"type": "integer", "minimum": 1},
+            "note": {"type": "string"}
+          }
+        },
         "requires_mastery": {"type": "array", "items": {"type": "string"}},
         "may_share_day": {"type": "boolean", "description": "An optional module that may join a day the essential modules use when its minutes fit beside them (Wildman's programs stack into one session); free days are still taken first."},
         "never_with": {"type": "array", "items": {"type": "string"}, "description": "Modules this optional one never shares a day with (BJJ's conditioning stays off class days)."},

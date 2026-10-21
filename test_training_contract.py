@@ -450,15 +450,33 @@ def test_bjj_mat_time_leads_the_week():
         f'strength days are not back to back: {order}'
 
 
-def test_bjj_deload_drops_rolling_and_keeps_drilling():
-    p, g, c = _bjj(weeks=4)
+def test_bjj_strength_deloads_on_the_seventh_week_and_the_mat_carries_on():
+    # StrengthLog (R4): a deload week between two six-week halves, at 50–60 % of
+    # the weight, about ten reps, two sets. No source deloads the mat (I3).
+    p, g, c = _bjj(weeks=8)
     tc.verify(p, g['training_contract'], c)
-    normal, deload = p['weeks'][0], p['weeks'][3]
-    assert deload['is_deload'] and not normal['is_deload']
     ids = lambda s: [e['exercise']['id'] for e in s['exercises'] if e.get('exercise')]
-    assert ids(_by_archetype(normal)['bjj_class'][0]) == ['bjj_shrimp_drill', 'bjj_drilling', 'bjj_positional_sparring', 'bjj_live_rolling']
-    light = _by_archetype(deload)['bjj_class'][0]
-    assert ids(light) == ['bjj_shrimp_drill', 'bjj_drilling', 'bjj_positional_sparring']
+    full_class = ['bjj_shrimp_drill', 'bjj_drilling', 'bjj_positional_sparring', 'bjj_live_rolling']
+    for w in p['weeks']:
+        week = _by_archetype(w)
+        assert not w['is_deload'], 'the week is not a deload: the classes carry on'
+        assert all(ids(s) == full_class and not s['is_deload'] for s in week['bjj_class']), w['week_number']
+        strength = week['grappling_sc'] + week['bjj_grip_isometric']
+        assert all(s['is_deload'] == (w['week_number'] == 7) for s in strength), w['week_number']
+    seventh = _by_archetype(p['weeks'][6])['grappling_sc'][0]
+    pull = next(e for e in seventh['exercises'] if e['slot_role'] == 'grappling_strength_pull')
+    assert (pull['load']['sets'], pull['load']['reps']) == (2, 10) and 'target_rpe' not in pull['load']
+    assert '50–60 %' in pull['load']['load_note']
+    trunk = next(e for e in seventh['exercises'] if e['slot_role'] == 'grappling_strength_trunk')
+    assert trunk['load']['sets'] == 1, 'a hold keeps its share (3 × 0.6)'
+    # A deload week advances nothing: the strength forecast steps over it.
+    steps = [s['modules'][0]['forecast_step'] for w in p['weeks'] for s in _by_archetype(w)['grappling_sc']]
+    assert steps == [0, 1, 2, 3, 4, 5, 6, 6], steps
+    # Fatigue deloads everything: the class drops live rolling and keeps the drilling.
+    tired, g, c = _bjj(weeks=1, fatigue_state='overreached')
+    tc.verify(tired, g['training_contract'], c)
+    light = _by_archetype(tired['weeks'][0])['bjj_class'][0]
+    assert tired['weeks'][0]['is_deload'] and ids(light) == full_class[:3]
     drill = next(e for e in light['exercises'] if (e.get('exercise') or {}).get('id') == 'bjj_drilling')
     assert drill['load']['duration_minutes'] == 20, 'drilling is not cut on a deload'
 
@@ -489,7 +507,7 @@ def test_bjj_conditioning_is_optional_and_never_outnumbers_the_mat():
     # A competitor's conditioning (Vitruve's pre-competition circuits, Chad Wesley
     # Smith's rounds): once a week beside a strength day, never on a class day,
     # never more sessions than the mat, gone on a deload and for a novice.
-    p, g, c = _bjj(weeks=4, days_per_week=4, session_time_minutes=90)
+    p, g, c = _bjj(weeks=7, days_per_week=4, session_time_minutes=90)
     tc.verify(p, g['training_contract'], c)
     tc.verify_phase_rules(p, g)
     for w in p['weeks']:
@@ -500,7 +518,7 @@ def test_bjj_conditioning_is_optional_and_never_outnumbers_the_mat():
     ids = {e['exercise']['id'] for ss in p['weeks'][0]['schedule'].values() for s in ss
            for e in s['exercises'] if e.get('exercise') and e['slot_role'].startswith('competition_conditioning')}
     assert ids == {'bjj_takedown_practice', 'bjj_sprawl_interval', 'bjj_shuttle_sprint', 'bjj_bear_crawl'}, ids
-    deload = next(w for w in p['weeks'] if w['is_deload'])
+    deload = p['weeks'][6]
     kept = {e['exercise']['id'] for ss in deload['schedule'].values() for s in ss
             for e in s['exercises'] if e.get('exercise') and e['slot_role'].startswith('competition_conditioning')}
     assert kept <= {'bjj_takedown_practice'}, kept

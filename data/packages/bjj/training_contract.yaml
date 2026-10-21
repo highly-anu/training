@@ -17,7 +17,8 @@ tracks:
       one short session up to four days, two from five, never more than the mat. The class is your
       gym''s; its minutes here are the shape of a typical class, not instructions to the coach. Strength
       work is prescribed by effort: choose the load you finish at the target RPE and let a hard week
-      on the mat lower it. Deload weeks drop live rolling and keep the drilling.
+      on the mat lower it. Every seventh week the strength and conditioning deload — two easy sets
+      of about ten at half to 60 % of your weight — and the classes carry on as your gym runs them.
 
       '
     modules:
@@ -81,6 +82,14 @@ tracks:
       min_spacing_days: 2
       max_rpe: 8
       deload_keep: 0.6
+      # StrengthLog: a deload week between the two six-week halves of a
+      # strength block, at 50–60 % of the weight, about ten reps, two sets (R4).
+      deload:
+        every_weeks: 7
+        sets: 2
+        reps: 10
+        note: Deload week — two easy sets of about ten at 50–60 % of the weight you have been using;
+          pulling with a band or an easier variant that leaves every rep easy.
       progression:
         model: skill_hold
       blocks:
@@ -154,6 +163,14 @@ tracks:
       min_spacing_days: 2
       max_rpe: 8
       deload_keep: 0.6
+      # StrengthLog: a deload week between the two six-week halves of a
+      # strength block, at 50–60 % of the weight, about ten reps, two sets (R4).
+      deload:
+        every_weeks: 7
+        sets: 2
+        reps: 10
+        note: Deload week — two easy sets of about ten at 50–60 % of the weight you have been using;
+          pulling with a band or an easier variant that leaves every rep easy.
       progression:
         model: skill_hold
       blocks:
@@ -224,6 +241,9 @@ tracks:
       max_rpe: 9
       optional: true
       may_share_day: true
+      # Deloads with the strength work it shares a day with (I3).
+      deload:
+        every_weeks: 7
       never_with:
       - mat_class
       progression:

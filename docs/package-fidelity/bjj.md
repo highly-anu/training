@@ -36,13 +36,12 @@ sources share.
 | R1 | Mat time first; classes outnumber S&C at every week size (Vitruve, BJJEE, StrengthLog) | `mat_class` `exposures_by_days` (2 at 3 days … 5 at 7); the phase's `checks: modality_outnumbers` |
 | R2 | Strength supports the mat: two or three sessions a week, two beside four or five BJJ sessions, one at peak (StrengthLog) | `grappling_strength` and `grip_endurance` exposures — one up to four days, two from five (I5) |
 | R3 | Low volume: about three sets of three to six reps on compound lifts (StrengthLog, Vitruve) | the strength blocks' sets and reps |
+| R4 | A deload week between the two six-week halves of a strength block: 50–60 % of the weight, about ten reps, two sets (StrengthLog) | the strength modules' `deload`: every seventh week, two sets of ten with the weight in the note; source week `strengthlog_deload` |
 | R5 | A competitor's conditioning: ten-minute rounds of short efforts; shuttle runs and takedown-entry drills in bursts (Juggernaut, Vitruve) | optional `competition_conditioning`: `may_share_day` with a strength day, `never_with: [mat_class]`, dropped on a deload |
 
 ## Debt (rules nothing enforces yet)
 
-- R4: StrengthLog's deload — a week between the two six-week halves of a twelve-week
-  strength block, at 50–60 % of the weight, about ten reps, two sets. The package
-  deloads every fourth week instead (I3).
+None.
 
 ## Open
 
@@ -56,9 +55,11 @@ sources share.
   shape of a typical class, not the coach's plan.
 - I2: strength is prescribed by effort (an RPE target); the sources write reps and
   percentages of a one-rep max and add weight when the reps are made.
-- I3: every fourth week deloads the program, dropping live rolling and keeping the
-  drilling; no source deloads the mat, and StrengthLog's strength deload (R4) comes
-  after six weeks.
+- I3: R4's deload repeats every seventh week, not only once inside a twelve-week
+  block, and the competition conditioning deloads with the strength work beside it.
+  The mat never deloads on a schedule — no source deloads it; an athlete who reports
+  being overreached deloads everything, and the class then drops live rolling and
+  keeps the drilling (the owner's decision, 2026-10-21).
 - I4: declared substitutes for an injured athlete (positional or drilling for rolling,
   inverted rows for pull-ups), and supporting blocks named when left out.
 - I5: up to four training days, one strength session beside the classes — the
@@ -73,9 +74,10 @@ sources share.
 
 Source weeks (`data/packages/bjj/source_weeks.yaml`): BJJEE's six-day week (R1), its
 two S&C sessions compared; its five classes are not — the package's four (I7) are
-the owner's decision.
+the owner's decision. StrengthLog's deload (R4): the pull-up's sets and reps over
+eight weekly strength sessions, two of ten on the seventh.
 
 test_training_contract.py — `test_bjj_mat_time_leads_the_week`,
-`test_bjj_deload_drops_rolling_and_keeps_drilling` (I3),
+`test_bjj_strength_deloads_on_the_seventh_week_and_the_mat_carries_on` (R4, I3),
 `test_bjj_substitutes_are_declared_and_supporting_blocks_say_when_they_go` (I4),
 `test_bjj_conditioning_is_optional_and_never_outnumbers_the_mat`.

@@ -37,10 +37,9 @@ applicable_when:
   goal_priority_min:
     combat_sport: 0.3
 
-deload_protocol:
-  frequency_weeks: 4
-  volume_reduction_pct: 0.40
-  intensity_change: reduce_slightly
+# No deload_protocol: no source deloads the mat. The strength and
+# conditioning modules deload on their own cadence (training_contract.yaml
+# `deload`, StrengthLog's seventh week); the classes are the gym's.
 
 # Hard/easy alternation — prevent stacking hard S&C sessions back-to-back
 cadence_options:

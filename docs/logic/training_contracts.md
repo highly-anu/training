@@ -113,6 +113,16 @@ completed sessions with all required outcomes, clean mechanics and RPE at or bel
 the module ceiling advance confirmed state. Missing, failed, out-of-order, deload
 and scored-test sessions do not. Existing active-program log scoping is reused.
 
+A deload is the framework's (`deload_protocol`), the athlete's (`fatigue_state:
+overreached`) or a deload phase's, and cuts each block to its `deload_keep` share
+(0 drops it). A module may keep its own cadence instead of the framework's:
+`deload: {every_weeks, sets, reps, note}` deloads it every `every_weeks`-th program
+week, its sets × reps blocks running `sets` of `reps` with the note in place of
+the effort target (`module_deload`). BJJ's strength and conditioning deload on
+StrengthLog's seventh week that way while the classes carry on; fatigue still
+deloads every module. Each session's module record says whether it deloaded
+(`deload`), which `confirmed_state` and `verify` read per module.
+
 An API regeneration automatically recovers that state from the current program
 and its logs when the contract identity/version matches. An explicit
 `constraints.module_progression_state` starts or resumes a chosen cycle. A new bell
