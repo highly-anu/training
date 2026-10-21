@@ -122,13 +122,20 @@ and scored-test sessions do not. Existing active-program log scoping is reused.
 
 A deload is the framework's (`deload_protocol`), the athlete's (`fatigue_state:
 overreached`) or a deload phase's, and cuts each block to its `deload_keep` share
-(0 drops it). A module may keep its own cadence instead of the framework's:
-`deload: {every_weeks, sets, reps, note}` deloads it every `every_weeks`-th program
-week, its sets × reps blocks running `sets` of `reps` with the note in place of
-the effort target (`module_deload`). BJJ's strength and conditioning deload on
-StrengthLog's seventh week that way while the classes carry on; fatigue still
-deloads every module. Each session's module record says whether it deloaded
-(`deload`), which `confirmed_state` and `verify` read per module.
+(0 drops it). A module may run its own cycle instead of the framework's cadence:
+`periods` — each so many program weeks, repeating — may name a rotation of the
+module's variants and say `deload` (`period_of`, `module_deload`). A deload period
+with its own rotation runs those workouts as written, cut by nothing; without one,
+the blocks keep their `deload_keep` share. BJJ's strength is StrengthLog's program
+that way: Workout 1 and 2 of the strength block for six weeks, the deload week's own
+two workouts, the power block's for five, again; its competition conditioning deloads
+in the same week, and the classes carry on. Fatigue still deloads every module. A
+deload holds the cursor, so the week's sessions take the next variants by their
+order in it. Each session's module record says whether it deloaded (`deload`),
+which `confirmed_state` and `verify` read per module. A module whose variants have
+nothing to earn (BJJ's workouts: the weights are the athlete's, each block's
+`load_note` says how to choose them) moves its rotation on attendance; a block's
+`reps` may be written as the source writes them ("6-8", "20 m", "8/side").
 
 An API regeneration automatically recovers that state from the current program
 and its logs when the contract identity/version matches. An explicit

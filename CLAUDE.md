@@ -378,9 +378,10 @@ group's name.
   deloads on schedule) or when `fatigue_state: overreached`; `volume_reduction_pct` is the
   share of volume the week **keeps**. In a kind that is itself the deload (taper) it is the
   total, not a second cut on top of the kind's multiplier. A training contract's module
-  may keep its own cadence instead (`deload: {every_weeks, sets, reps, note}`,
-  `training_contract.module_deload`): BJJ's strength and conditioning deload every
-  seventh week (StrengthLog) and the classes never do on a schedule.
+  may run its own cycle instead (`periods`: weeks, a rotation of its variants, `deload`;
+  `training_contract.period_of`, `module_deload`): BJJ's strength is StrengthLog's
+  program — six weeks of strength, a deload week of its own workouts run as written, five
+  of power, repeating — and the classes never deload on a schedule.
 - **Theory fidelity** (`src/fidelity.py`, `tools/check_fidelity.py`): a generated program
   is read against its package — `sessions_per_week`, `intensity_distribution`,
   `deload_protocol`, archetype level and phase, recovery windows, equipment and injuries,

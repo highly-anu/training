@@ -340,7 +340,6 @@ injury_flags:
       - kb_swing_double
       - wk_kb_swing_two_hand
       - wk_kb_swing_single_arm
-      - bjj_kb_swing
       - towel_kb_swing
       - kb_swing_breathing_ladder
       - farmer_carry_kb

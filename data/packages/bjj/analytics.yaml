@@ -1,7 +1,6 @@
 # What progress means for BJJ mat support. Time-based: the mat is the sport,
-# so the first number is time on it; around it, the rounds a conditioning
-# block holds, how long the grip and trunk hold under tension, and the
-# pulling strength a grappler's grip is built on.
+# so the first number is time on it; around it, the loads of StrengthLog's
+# lifts and how long the grip and trunk hold.
 id: bjj
 
 progress:
@@ -15,13 +14,13 @@ progress:
   - id: grip_holds
     label: Grip and trunk holds
     primitive: hold_seconds
-    scope: {archetypes: [bjj_grip_isometric, grappling_sc], slot_types: [static_hold]}
+    scope: {archetypes: [grappling_sc], slot_types: [static_hold]}
     expected: {load_field: hold_seconds}
 
-  - id: pulling_strength
-    label: Pulling strength
+  - id: lift_loads
+    label: Strength
     primitive: set_load
     scope:
-      archetypes: [grappling_sc, bjj_grip_isometric]
-      slot_roles: ["*_pull"]
+      archetypes: [grappling_sc]
+      slot_types: [sets_reps]
     expected: prescribed

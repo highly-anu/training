@@ -752,10 +752,10 @@ badly the default misrepresents the method and whether its policies exist:
    `advice`, never applied (I4, the owner's Wildman rule). Left: a stalled Texas Method
    Friday (no source rule), exercise media.
 2. *BJJ* — **done 2026-10-19** (`data/packages/bjj/training_contract.yaml`): classes
-   grow with the week and always outnumber strength; strength by effort with joint
-   maintenance inside; deloads drop rolling; declared substitutes and optional
-   blocks. The compiler gained sets × reps and hold blocks, exposures by days,
-   per-block deloads, alternatives and optional blocks.
+   grow with the week and always outnumber strength; deloads drop rolling; declared
+   substitutes and optional blocks. The compiler gained sets × reps and hold blocks,
+   exposures by days, per-block deloads, alternatives and optional blocks. Since
+   2026-10-21 the strength is StrengthLog's program as written (module `periods`).
 3. *Uphill* — a novice track on its published beginner plan; the weekly ramp;
    declared borrowing kept.
 4. *Marcus Filly* — a novice track on Base Camp's shape (warm-up, strength by
@@ -803,13 +803,13 @@ CLAUDE.md). Re-reading the sources: Horsemen's sixteen weeks, Wildman's 32 swing
 sessions and Starting Strength's weeks reproduce. Decided by the owner the same day:
 BJJ's four classes at six days stand (I7, where BJJEE's week has five); Wildman's
 "repeat workouts after a week off" (R11) is recommended in every swing session's note
-and never enforced (the contract's module `advice`, I5). BJJ's deload (owner, the same
-day; branch `bjj-strength-deload`): StrengthLog's — strength and grip every seventh
-week at 2 × 10 and 50–60 % of the weight (R4) — through a module's own `deload`
-cadence; the mat never deloads on a schedule (I3). BJJ is audited. **Still waiting**
-— *BJJ*: no source prescribes strength by RPE (I2) — StrengthLog and Vitruve write
-reps and %1RM; and StrengthLog's volume is about three sets of three to six (R3),
-where the pull is five of five.
+and never enforced (the contract's module `advice`, I5). BJJ follows StrengthLog (owner,
+the same day; branch `bjj-strength-deload`): its strength is StrengthLog's program as the
+article prints it — two full-body workouts, six weeks of strength and hypertrophy, the
+deload week's own two workouts, five weeks of power, repeating (R4, R6–R9; module
+`periods`) — with the athlete's own weights and StrengthLog's rule for adding them (I2);
+the grip and joint-maintenance session and the RPE targets are gone. The mat never
+deloads on a schedule (I3). BJJ is audited.
 
 **Packages without code (2026-10-21, branch `package-portability`).** R1 reads the
 fidelity rules on the scorecard's own constrained profiles too. A Portability dimension:

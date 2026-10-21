@@ -27,7 +27,7 @@
     "module": {
       "type": "object", "additionalProperties": false,
       "required": ["id", "name", "archetype_id", "modality", "training_levels", "exposures_per_week", "min_spacing_days", "max_rpe", "progression"],
-      "anyOf": [{"required": ["blocks"]}, {"required": ["variants", "rotation"]}],
+      "anyOf": [{"required": ["blocks"]}, {"required": ["variants", "rotation"]}, {"required": ["variants", "periods"]}],
       "properties": {
         "id": {"type": "string"}, "name": {"type": "string"},
         "archetype_id": {"type": "string"}, "modality": {"type": "string"},
@@ -37,15 +37,14 @@
         "min_spacing_days": {"type": "integer", "minimum": 1, "maximum": 7},
         "max_rpe": {"type": "integer", "minimum": 1, "maximum": 10},
         "deload_keep": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
-        "deload": {
-          "type": "object", "additionalProperties": false, "required": ["every_weeks"],
-          "description": "The module's own deload, in place of the framework's: every `every_weeks`-th program week (7: six weeks, then the deload). Its sets × reps blocks run `sets` of `reps` with `note` in place of the effort target; other blocks keep their `deload_keep` share. Fatigue or a deload phase still deloads it.",
-          "properties": {
-            "every_weeks": {"type": "integer", "minimum": 2},
-            "sets": {"type": "integer", "minimum": 1},
-            "reps": {"type": "integer", "minimum": 1},
-            "note": {"type": "string"}
-          }
+        "periods": {
+          "type": "array", "minItems": 2,
+          "description": "The module's weeks in a repeating cycle of periods, counted in program weeks (BJJ: StrengthLog's six weeks of strength, a deload week, five of power). A period may name its own rotation of variants; a deload period deloads the module in place of the framework's cadence, and one with its own rotation runs those workouts as written. Fatigue or a deload phase still deloads it.",
+          "items": {"type": "object", "additionalProperties": false, "required": ["weeks"],
+                    "properties": {"weeks": {"type": "integer", "minimum": 1},
+                                   "rotation": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+                                   "deload": {"type": "boolean"},
+                                   "name": {"type": "string"}}}
         },
         "requires_mastery": {"type": "array", "items": {"type": "string"}},
         "may_share_day": {"type": "boolean", "description": "An optional module that may join a day the essential modules use when its minutes fit beside them (Wildman's programs stack into one session); free days are still taken first."},
@@ -112,7 +111,9 @@
             "slot_type": {"enum": ["emom", "time_domain", "skill_practice", "sets_reps", "static_hold"]},
             "alternatives": {"type": "array", "items": {"type": "string"}, "description": "Substitutes the method accepts, in order: the first the athlete's equipment and injuries allow is prescribed."},
             "sets": {"type": "integer", "minimum": 1},
-            "reps": {"type": "integer", "minimum": 1},
+            "reps": {"oneOf": [{"type": "integer", "minimum": 1}, {"type": "string", "minLength": 1}],
+                     "description": "Reps per set, or as the source writes them: a range (\"6-8\"), a distance (\"20 m\"), per side (\"8/side\")."},
+            "load_note": {"type": "string", "description": "How the athlete chooses the load (StrengthLog: add weight once every set makes its reps), in place of an RPE target."},
             "hold_sec": {"type": "integer", "minimum": 5},
             "rest_sec": {"type": "integer", "minimum": 0},
             "rpe_target": {"type": "number", "minimum": 1, "maximum": 10},

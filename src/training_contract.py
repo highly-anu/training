@@ -78,7 +78,9 @@ def load_contract(package: str, track: str) -> dict | None:
             # variant's blocks once each, for what reads a module whole (the
             # catalog-coverage tool, the optional-module blocker).
             by_id = {v['id']: v for v in module['variants']}
-            if not module.get('rotation') or set(module['rotation']) - by_id.keys():
+            rotations = [module.get('rotation')] if not module.get('periods') else \
+                [p.get('rotation') or module.get('rotation') for p in module['periods']]
+            if any(not r or set(r) - by_id.keys() for r in rotations):
                 raise ContractError(f"{module['id']}: its rotation must name its variants.")
             seen, merged = set(), []
             for v in module['variants']:
@@ -107,16 +109,38 @@ def load_contract(package: str, track: str) -> dict | None:
     return {**deepcopy(contract), 'version': document['version'], 'package': package, 'track_id': track}
 
 
-def at_step(module: dict, step: int) -> dict:
+def period_of(module: dict, week_number: int | None) -> dict | None:
+    """The period a program week falls in, for a module whose weeks repeat in
+    a cycle (BJJ's StrengthLog block: six weeks of strength, a deload week,
+    five of power, then again); None for a module without periods."""
+    periods = module.get('periods')
+    if not periods or week_number is None:
+        return None
+    left = (week_number - 1) % sum(p['weeks'] for p in periods)
+    for p in periods:
+        if left < p['weeks']:
+            return p
+        left -= p['weeks']
+
+
+def at_step(module: dict, step: int, week_number: int | None = None, offset: int = 0) -> dict:
     """The module as it runs at an exposure: a module with variants takes the
-    one its rotation names (A, B, A, B … — so a week is A-B-A, the next B-A-B)."""
-    if not module.get('variants'):
+    one its rotation names (A, B, A, B … — so a week is A-B-A, the next B-A-B),
+    the rotation of the week's period when it has periods. A deload advances
+    no exposure, so its sessions take the next variants by `offset`, their
+    order in the week. A deload period that names its own rotation runs those
+    workouts as written (`written_deload`): StrengthLog's deload week has its
+    own exercises, sets and reps, cut by nothing."""
+    period = period_of(module, week_number)
+    rotation = (period or {}).get('rotation') or module.get('rotation')
+    if not module.get('variants') or not rotation:
         return module
-    vid = module['rotation'][step % len(module['rotation'])]
+    vid = rotation[(step + offset) % len(rotation)]
     variant = next(v for v in module['variants'] if v['id'] == vid)
     return {**module, 'blocks': variant['blocks'], 'variant': vid,
             'name': variant.get('name', module['name']),
-            'archetype_id': variant.get('archetype_id', module['archetype_id'])}
+            'archetype_id': variant.get('archetype_id', module['archetype_id']),
+            'written_deload': bool(period and period.get('deload') and period.get('rotation'))}
 
 
 # ── Load per confirmed exposure (Starting Strength) ──────────────────────────
@@ -302,8 +326,8 @@ def confirmed_state(current: dict, logs: dict, contract: dict) -> dict:
                 if not log.get('completedAt'):
                     continue
                 for module in session.get('modules') or []:
-                    # A deload advances nothing; a module with its own cadence
-                    # says so itself (older programs: the session does).
+                    # A deload advances nothing; each module record says
+                    # whether it deloaded (older programs: the session does).
                     if module.get('deload', session.get('is_deload')):
                         continue
                     mid = module['id']
@@ -323,7 +347,13 @@ def confirmed_state(current: dict, logs: dict, contract: dict) -> dict:
                             lift = record.setdefault('lifts', {}).setdefault(prescribed.get('lift', eid), {})
                             apply_lift_outcome(spec, prescribed.get('lift', eid), lift, made, kg)
                         continue
-                    outcomes = [log.get('exercises', {}).get(eid, {}) for eid in module['exercise_ids']]
+                    if spec.get('variants') and not module['exercise_ids']:
+                        # Workouts that alternate with nothing to earn (BJJ's
+                        # StrengthLog sessions, weights the athlete's own):
+                        # attending moves the rotation on.
+                        record['completed'] += 1
+                        continue
+                    outcomes =[log.get('exercises', {}).get(eid, {}) for eid in module['exercise_ids']]
                     if not outcomes or not all(isinstance(o, dict) and o.get('clean') is True and not isinstance(o.get('rpe'), bool) and isinstance(o.get('rpe'), (int, float))
                                                and 0 < o['rpe'] <= module['max_rpe'] for o in outcomes):
                         continue
@@ -495,14 +525,20 @@ def _keep(block: dict, module: dict) -> float:
 
 
 def module_deload(module: dict, week_number: int, forced: bool, week_deload: bool) -> bool:
-    """Whether a module deloads this program week. A module that declares its
-    own `deload` cadence keeps it in place of the framework's (BJJ's strength
-    deloads on StrengthLog's seventh week while the mat carries on); fatigue or
-    a deload phase (`forced`) deloads every module."""
-    every = (module.get('deload') or {}).get('every_weeks')
+    """Whether a module deloads this program week. A module with `periods`
+    deloads in its deload period in place of the framework's cadence (BJJ's
+    strength in StrengthLog's seventh week, while the mat carries on); fatigue
+    or a deload phase (`forced`) deloads every module."""
     if forced:
         return True
-    return week_number % every == 0 if every else week_deload
+    period = period_of(module, week_number)
+    return bool(period.get('deload')) if period is not None else week_deload
+
+
+def _cuts(module: dict, deload: bool) -> bool:
+    """Whether a deload cuts the module's blocks to their `deload_keep` share;
+    a deload period's own workouts run as written."""
+    return deload and not module.get('written_deload')
 
 
 def _assignment(block: dict, module: dict, exercises: dict, constraints: dict,
@@ -510,7 +546,10 @@ def _assignment(block: dict, module: dict, exercises: dict, constraints: dict,
     eid = _choose(block, module, exercises, constraints, blocked)
     ex = exercises[eid]
     if not _equipment_ok(ex, set(constraints.get('equipment') or [])):
-        raise ContractError(f"{module['id']}: equipment for {eid} is unavailable.")
+        have = set(constraints.get('equipment') or [])
+        missing = [item for item in ex.get('equipment') or [] if item not in have]
+        raise ContractError(f"{module['id']}: {ex.get('name', eid)} needs {', '.join(missing) or 'equipment'}, "
+                            'which is not in your equipment.')
     slot = {'role': f"{module['id']}_{block['role']}", 'slot_type': block['slot_type'],
             'notes': block.get('notes', ''), 'exercise_filter': {'exercise_ids': [eid]}}
     if 'standard' in block:
@@ -518,27 +557,26 @@ def _assignment(block: dict, module: dict, exercises: dict, constraints: dict,
     if block.get('switch_at_sec'):
         # The scored protocol's hand switch (the watch cue), carried with the test.
         slot['switch_at_sec'] = block['switch_at_sec']
+    cut = _cuts(module, deload)
     if block['slot_type'] in ('sets_reps', 'static_hold'):
-        # Strength and holds at a prescribed effort: the athlete chooses the
-        # load that meets the RPE and records it (RPE autoregulation); a deload
-        # keeps its share of the sets. The block's minutes include its rests.
+        # Strength and holds: at a prescribed effort the athlete chooses the
+        # load that meets the RPE and records it (RPE autoregulation); a block
+        # may instead say how the load is chosen (`load_note`). A deload keeps
+        # its share of the sets. The block's minutes include its rests.
         sets = block['sets']
-        # A module's own deload may write its lifts' week (StrengthLog: two
-        # sets of about ten at 50–60 % of the weight) in place of the share.
-        written = (module.get('deload') or {}) if deload and block['slot_type'] == 'sets_reps' else {}
-        if deload:
-            sets = written.get('sets') or max(1, math.floor(sets * _keep(block, module)))
+        if cut:
+            sets = max(1, math.floor(sets * _keep(block, module)))
         rest = block.get('rest_sec', 60)
         if block['slot_type'] == 'sets_reps':
-            # Chin-ups "to failure, each set" (Rippetoe) are sets of `max`.
-            load = {'sets': sets, 'reps': written.get('reps') or ('max' if block.get('to_failure') else block['reps']),
-                    'rest_sec': rest}
+            # Chin-ups "to failure, each set" (Rippetoe) are sets of `max`; a
+            # range or a distance is written as the source writes it ("6-8", "20 m").
+            load = {'sets': sets, 'reps': 'max' if block.get('to_failure') else block['reps'], 'rest_sec': rest}
             per_set = block['duration_sec'] / block['sets']
         else:
             load = {'sets': sets, 'hold_seconds': block['hold_sec'], 'rest_sec': rest}
             per_set = block['hold_sec'] + rest
-        if written.get('note'):
-            load['load_note'] = written['note']
+        if block.get('load_note'):
+            load['load_note'] = block['load_note']
         elif block.get('rpe_target') is not None:
             load['target_rpe'] = block['rpe_target']
             load['load_note'] = f"Choose the load you finish at RPE {block['rpe_target']:g}, and record it."
@@ -546,7 +584,7 @@ def _assignment(block: dict, module: dict, exercises: dict, constraints: dict,
         load['duration_minutes'] = seconds // 60
     elif block['slot_type'] == 'emom':
         rounds, reps, interval, cue = _stage(module['progression'], step, _interval_budget(module, constraints))
-        if deload:
+        if cut:
             rounds = max(1, math.floor(rounds * _keep(block, module)))
         # Whole minutes, as every timed block (ten 90-second rounds are 15).
         seconds = math.ceil(rounds * interval / 60) * 60
@@ -561,7 +599,7 @@ def _assignment(block: dict, module: dict, exercises: dict, constraints: dict,
         if _progresses(block) and not block.get('standard') and module['progression']['model'] == 'timed_cycle':
             p = module['progression']
             seconds = min(p['duration_max_sec'], p['duration_start_sec'] + step * p['duration_step_sec'])
-        if deload and not block.get('standard'):
+        if cut and not block.get('standard'):
             seconds = max(60, int(seconds * _keep(block, module)))
         # Existing phone/watch clients use integral-minute timed blocks. Round
         # the actual work up, then budget that work; never just round its label.
@@ -664,7 +702,7 @@ def _module_rows(module, exercises, constraints, state, step, deload, blocked=No
     and named in `left_out`; an essential one still refuses."""
     rows = []
     for block in module['blocks']:
-        if deload and not block.get('standard') and _keep(block, module) == 0:
+        if _cuts(module, deload) and not block.get('standard') and _keep(block, module) == 0:
             continue
         if block.get('optional') and all(
                 eid in exercises and _ruled_out(exercises[eid], constraints, blocked) for eid in block_options(block)):
@@ -879,8 +917,8 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
         frequency = (fw.get('deload_protocol') or {}).get('frequency_weeks')
         forced = (constraints.get('fatigue_state') == 'overreached'
                   or entry.get('phase_id') in contract.get('deload_phases', []))
-        # The week's deload is the framework's; a module with its own cadence
-        # follows that instead (module_deload).
+        # The week's deload is the framework's; a module with periods
+        # deloads in its own deload period instead (module_deload).
         deload = forced or bool(frequency and entry['week_in_program'] % frequency == 0)
         deloads = {m['id']: module_deload(m, entry['week_in_program'], forced, deload) for m in modules}
         # The phase's `exclude_exercises` rule a movement out as an injury
@@ -889,7 +927,8 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
         # The week's longest exposure: a cycle's last step, or the longer of
         # alternating variants (Workout A runs longer than B).
         estimates = {m['id']: max(sum(r['load']['elapsed_sec'] for r in _module_rows(
-                        with_stall(at_step(m, cursor[m['id']] + k), state[m['id']], cursor[m['id']] + k,
+                        with_stall(at_step(m, cursor[m['id']] + k, entry['week_in_program']),
+                                   state[m['id']], cursor[m['id']] + k,
                                    k + 1 if m.get('variants') else m['exposures_per_week']),
                         data['exercises_by_package'][contract['package']],
                         constraints, state[m['id']], cursor[m['id']] + k, deloads[m['id']], week_blocked))
@@ -1007,8 +1046,10 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
             resolved = []
             for m in day_modules:
                 position[m['id']] = position.get(m['id'], 0) + 1
-                m = with_stall(at_step(m, cursor[m['id']]), state[m['id']], cursor[m['id']],
-                               position[m['id']], light_steps[m['id']])
+                # A deload holds the cursor, so the week's sessions alternate by their order.
+                offset = position[m['id']] - 1 if deloads[m['id']] else 0
+                m = with_stall(at_step(m, cursor[m['id']], entry['week_in_program'], offset),
+                               state[m['id']], cursor[m['id']], position[m['id']], light_steps[m['id']])
                 if m.get('light_day'):
                     light_steps[m['id']].add(cursor[m['id']])
                 resolved.append(m)
@@ -1197,10 +1238,11 @@ def verify(program: dict, contract: dict, constraints: dict) -> None:
                         raise ContractError('Required recovery spacing was lost.')
                     last_day[mid] = absolute
                     actual = [e['exercise']['id'] for e in session['exercises'] if e['load']['module_id'] == mid and e.get('exercise')]
-                    dropping = deload and not session.get('test')
                     lift_state = (program.get('module_state') or {}).get(mid) or {}
-                    module_now = with_stall(at_step(expected[mid], record['forecast_step']), lift_state,
-                                            record['forecast_step'], counts[mid], light_seen[mid])
+                    module_now = with_stall(at_step(expected[mid], record['forecast_step'], week['week_number'],
+                                                    counts[mid] - 1 if deload else 0),
+                                            lift_state, record['forecast_step'], counts[mid], light_seen[mid])
+                    dropping = _cuts(module_now, deload) and not session.get('test')
                     if module_now.get('variant') != record.get('variant'):
                         raise ContractError('A module ran a variant out of its rotation.')
                     if module_now.get('light_day') != record.get('light_day'):
