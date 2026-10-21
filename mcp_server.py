@@ -343,7 +343,7 @@ exercises:
   - id: {slug}_example
     name: "Example Exercise"
     category: mobility   # barbell | kettlebell | bodyweight | aerobic | loaded_carry |
-                         # carries | sandbag | mobility | skill | rehab | gym_jones
+                         # carries | sandbag | mobility | skill | rehab | accessory
     modality:
       - mobility         # one or more valid modality IDs
     equipment:

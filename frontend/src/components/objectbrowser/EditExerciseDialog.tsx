@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 import { useUpdateExercise } from '@/api/exercises'
 import type { Exercise, ModalityId, EquipmentId, EffortLevel } from '@/api/types'
 
-const CATEGORIES = ['barbell', 'kettlebell', 'bodyweight', 'aerobic', 'carries', 'sandbag', 'mobility', 'skill', 'rehab', 'gym_jones']
+const CATEGORIES = ['barbell', 'kettlebell', 'bodyweight', 'aerobic', 'carries', 'sandbag', 'mobility', 'skill', 'rehab']
 const EFFORTS = ['low', 'medium', 'high', 'max']
 const MODALITIES: ModalityId[] = ['max_strength', 'relative_strength', 'strength_endurance', 'power', 'aerobic_base', 'anaerobic_intervals', 'mixed_modal_conditioning', 'durability', 'mobility', 'movement_skill', 'combat_sport', 'rehab']
 const EQUIPMENT_OPTIONS: EquipmentId[] = ['barbell', 'rack', 'plates', 'kettlebell', 'dumbbell', 'pull_up_bar', 'ruck_pack', 'open_space', 'rings', 'sandbag', 'bike', 'rower', 'ghd', 'box', 'resistance_band', 'medicine_ball']

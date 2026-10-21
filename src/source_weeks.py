@@ -37,14 +37,13 @@ import yaml
 from src import goals, loader, provenance
 from src.generator import generate
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FILE = 'source_weeks.yaml'
 _DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 _SESSION_KEYS = ('archetype', 'category', 'modality')
 
 
 def load(pkg: str) -> list[dict]:
-    path = os.path.join(ROOT, 'data', 'packages', pkg, FILE)
+    path = os.path.join(loader._PACKAGES_DIR, pkg, FILE)
     if not os.path.exists(path):
         return []
     with open(path, encoding='utf-8') as fh:

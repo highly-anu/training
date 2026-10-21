@@ -12,6 +12,7 @@
 #   excluded_tracks: track -> the invention it is
 #   source_tests: the tests a rule names as what enforces it
 #   inventions: what the app adds that the sources do not contain
+#   last_review: kind -> the date of the latest recorded review (S6)
 
 packages:
   horsemen_gpp:

@@ -1,0 +1,79 @@
+# What every athlete of a level is assumed to arrive with, whatever the package
+# (src/selector._LEVEL_CONCEPTS; a package adds its own in level_seeds.yaml).
+# A requirement is met by a concept the level knows or an exercise that is itself
+# unlocked, transitively.
+#
+# Novice: basic movement literacy, not a progression to be earned. Every beginner
+# program teaches bracing and hinging in the first session — granting a novice
+# the empty set meant a novice unlocked nothing in Starting Strength, the method
+# written for novices. Exercise-id prerequisites (pull_up, front_squat,
+# power_clean) stay gated: those are genuine progressions.
+#
+# The exercise ids here are named by several packages' prerequisites (Gym Jones
+# and Horsemen require run_easy, run_tempo and kb_swing_single_arm, which only
+# CrossFit's and Horsemen's catalogs hold), so they live in the commons rather
+# than in any one package's seeds — and never in the engine's code.
+novice:
+  - bracing_mechanics
+  - bracing
+  - hip_hinge
+  - hip_hinge_pattern
+  - squat_pattern
+  - push_pattern
+  - pull_pattern
+  - open_space
+intermediate:
+  - hip_hinge
+  - bracing_mechanics
+  - bracing
+  - squat_pattern
+  - push_pattern
+  - pull_pattern
+  - hanging
+  - shoulder_stability
+  # Exercise ids assumed known at intermediate
+  - deadlift
+  - back_squat
+  - front_squat
+  - strict_press
+  - bench_press
+  - pull_up
+  - pull_up_strict
+  - dip_strict
+  - kb_swing_two_hand
+  - kb_clean
+  - kb_goblet_squat
+  # Carries — seeded directly to avoid a multi-hop prerequisite chain
+  - farmer_carry_kb
+  - rack_carry_kb
+  - overhead_carry_kb
+  - run_easy
+  - open_space
+advanced:
+  - hip_hinge
+  - bracing_mechanics
+  - bracing
+  - squat_pattern
+  - push_pattern
+  - pull_pattern
+  - hanging
+  - deadlift
+  - back_squat
+  - front_squat
+  - strict_press
+  - bench_press
+  - pull_up
+  - pull_up_strict
+  - dip_strict
+  - muscle_up
+  - power_clean
+  - hang_power_clean
+  - kb_swing_two_hand
+  - kb_swing_single_arm
+  - kb_clean
+  - kb_snatch
+  - handstand_hold
+  - handstand_push_up
+  - run_easy
+  - run_tempo
+  - open_space

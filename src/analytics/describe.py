@@ -15,8 +15,7 @@ import os
 from src import loader
 from src.analytics import benchmarks_data, spec, vocabulary
 
-_PACKAGES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-                             'data', 'packages')
+_PACKAGES_DIR = loader._PACKAGES_DIR
 
 
 def describe_all() -> dict:

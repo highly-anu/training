@@ -36,7 +36,6 @@
         "mobility",
         "skill",
         "rehab",
-        "gym_jones",
         "accessory"
       ],
       "description": "Which exercise library file this lives in."

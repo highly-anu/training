@@ -444,6 +444,11 @@
     "notes": {
       "type": "string"
     },
+    "complements": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "The modalities this session best follows on a split day: a day that adds a second (mobility) session after one of these prefers this archetype (scheduler._add_split_sessions, generator). Grappling mobility complements combat_sport; strength mobility the strength modalities."
+    },
     "pool_only": {
       "type": "boolean",
       "description": "A named workout picked only from a framework day category's pool (a phase's week_templates, src/week_template.py), never by modality: it is prescribed as written and means nothing under another progression model."

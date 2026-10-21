@@ -21,7 +21,6 @@ const CATEGORY_COLORS: Record<string, string> = {
   mobility: 'text-teal-700 dark:text-teal-300',
   skill: 'text-violet-700 dark:text-violet-300',
   rehab: 'text-lime-700 dark:text-lime-300',
-  gym_jones: 'text-pink-700 dark:text-pink-300',
 }
 
 interface ExerciseCardProps {

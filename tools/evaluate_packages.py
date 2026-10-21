@@ -9,7 +9,7 @@ knee flag, three days, 30 minutes and one bell, eight weeks each. A refused
 constrained profile is probed with each constraint lifted alone
 (src/constraint_impact), two weeks each, to say whether one would unblock it.
 
-Each package x track is graded on five dimensions, every criterion pass,
+Each package x track is graded on six dimensions, every criterion pass,
 partial or fail (src/package_eval.py; docs/package-fidelity/README.md has
 the table), and `audited` is derived: every criterion that is not hygiene
 passes on every track the package does not exclude. The Source criteria
@@ -55,7 +55,7 @@ from src import constraint_impact, loader, package_eval as pe, package_fidelity 
 from src.analytics import spec as spec_mod, vocabulary  # noqa: E402
 from src.generator import generate  # noqa: E402
 from src.validator import validate  # noqa: E402
-from tools import check_exercise_coverage as coverage, check_fidelity as cf  # noqa: E402
+from tools import check_code_neutral as neutral, check_exercise_coverage as coverage, check_fidelity as cf  # noqa: E402
 
 BASELINE = os.path.join(ROOT, 'tools', 'scorecard_baseline.json')
 STATUS = os.path.join(ROOT, 'docs', 'package-fidelity', 'status.yaml')
@@ -216,8 +216,14 @@ def grade_track(pkg: str, track: dict, recs: dict, fid_rows: list, record: dict 
         rec = recs.get(name)
         if rec is None:
             continue
-        unblocked = _unblocked(rec) if pe.refused(rec['program'], rec['validation']) else None
-        outcomes[name] = pe.robustness_outcome(rec['program'], rec['validation'], track, unblocked)
+        served = not pe.refused(rec['program'], rec['validation'])
+        unblocked = None if served else _unblocked(rec)
+        # The fidelity rules on this athlete — the scorecard's own profiles
+        # are not in the fidelity gate's run, so they are read here.
+        rows = [r for r in fid_rows if r['profile'] == name] if rec['fidelity'] else \
+            (cf.fidelity_rows(rec) if served else [])
+        errors = [r['finding'] for r in rows if r['finding']['severity'] == 'error']
+        outcomes[name] = pe.robustness_outcome(rec['program'], rec['validation'], track, unblocked, errors)
     grades['R1'] = pe.grade_r1(outcomes)
 
     lead, prim = (None, None) if pe.refused(ideal['program'], ideal['validation']) else _lead(ideal)
@@ -236,7 +242,27 @@ def grade_track(pkg: str, track: dict, recs: dict, fid_rows: list, record: dict 
     estimated = {b for b in declared if derived.get(b, set()) & prescribed}
     grades['M3'] = pe.grade_m3(declared, tested, estimated, manual)
     grades['M4'] = pe.grade_m4(set(declared) | tested, known)
+    grades['X2'] = pe.grade_x2(*_watch_screens(ideal['program']))
     return {c: list(g) for c, g in grades.items()}
+
+
+def _watch_screens(program: dict | None) -> tuple[list[str], list[str]]:
+    """(screen errors, generic-screen steps) of every step of a program, each
+    resolved as the watches' payload resolves it (api.encode_watch_session)."""
+    from src import watch_spec
+    known = set(watch_spec.vocabulary()['defaults']['slot_types'])
+    errors, fallbacks = [], []
+    for _, s in pe.sessions(program):
+        aid = (s.get('archetype') or {}).get('id')
+        slots = [(ea.get('slot_role'), ea.get('slot_type')) for ea in s.get('exercises') or []
+                 if ea.get('exercise') and not ea.get('meta')]
+        table, keys = watch_spec.session_screens(watch_spec.session_package(s), aid, slots)
+        for (role, slot_type), k in zip(slots, keys):
+            errors += [e for e in watch_spec.resolved_errors(table[k], f'{aid}:{role}') if e not in errors]
+            where = f'{slot_type} ({aid}:{role})'
+            if slot_type not in known and not any(f.startswith(f'{slot_type} ') for f in fallbacks):
+                fallbacks.append(where)
+    return errors, fallbacks
 
 
 def evaluate_package(pkg: str) -> dict:
@@ -260,10 +286,11 @@ def evaluate_package(pkg: str) -> dict:
 
 # ── Per package ──────────────────────────────────────────────────────────────
 
-def package_grades(pkg: str, orphans: list[str], weeks: tuple) -> dict:
-    """Source and data: the same for every track of the package. `orphans`:
+def package_grades(pkg: str, orphans: list[str], weeks: tuple, named: list[str]) -> dict:
+    """Source, data and X1: the same for every track of the package. `orphans`:
     its catalog exercises no program reaches; `weeks`: its source weeks
-    (entries, structure and number mismatches) — both computed in this run."""
+    (entries, structure and number mismatches); `named`: code literals that
+    name it — all computed in this run."""
     from tools import validate_entities as ve
     record = pf.load(pkg)
     text = pf.dossier(pkg)
@@ -273,6 +300,7 @@ def package_grades(pkg: str, orphans: list[str], weeks: tuple) -> dict:
         'S3': pe.grade_s3(record, pf.debt(record), pf.ref_errors(pkg, record)),
         'S4': pe.grade_s4(record, pf.citation_errors(pkg, record, text)),
         'S5': pe.grade_s5(*weeks, pf.tests_in_ci(pkg, record)),
+        'S6': pe.grade_s6(record),
     }
     pkg_dir = os.path.join(ROOT, 'data', 'packages', pkg)
     errors = [f"{os.path.relpath(p, ROOT)}: {e}" for p, errs in ve.validate_path(pkg_dir, verbose=False).items()
@@ -281,6 +309,7 @@ def package_grades(pkg: str, orphans: list[str], weeks: tuple) -> dict:
         os.path.join(ROOT, 'data', 'commons', 'constraints', 'injury_flags.yaml'), verbose=False)]
     grades['D1'] = pe.grade_d1(errors)
     grades['D2'] = pe.grade_d2(orphans)
+    grades['X1'] = pe.grade_x1(named)
     _, catalogs = loader.load_all_exercises()
     catalog = catalogs.get(pkg) or {}
     media_path = os.path.join(pkg_dir, 'exercise_media.yaml')
@@ -320,9 +349,10 @@ def run(packages: list[str]) -> tuple[dict, list, dict]:
         results = dict(zip(packages, evaluated))
         reached = dict(zip(reach_for, reaches))
     orphans = {pkg: coverage.orphans_of(pkg, reached) for pkg in packages}
+    named = neutral.by_package(neutral.scan())
     for pkg in packages:
         res = results[pkg]
-        shared = package_grades(pkg, orphans[pkg], res['source_weeks'])
+        shared = package_grades(pkg, orphans[pkg], res['source_weeks'], named.get(pkg, []))
         fid_rows += res['fidelity_rows']
         scorecard[pkg] = {tid: {**shared, **g} for tid, g in res['tracks'].items()}
     return scorecard, fid_rows, orphans
@@ -344,12 +374,12 @@ def status_text(scorecard: dict) -> str:
 def write_report(scorecard: dict, path: str) -> None:
     icon = {pe.PASS: '✓', pe.PARTIAL: '◐', pe.FAIL: '✗'}
     lines = ['# Package scorecard', '',
-             'Generated by `tools/evaluate_packages.py --report`. Every package × track graded on five '
+             'Generated by `tools/evaluate_packages.py --report`. Every package × track graded on six '
              'dimensions — ✓ pass, ◐ partial, ✗ fail — against the criteria in '
              '[README.md](README.md#the-scorecard). A dimension is its worst criterion; *hygiene* '
              'criteria (D3, D4) never keep a package from `audited`.', '',
-             '| Package | Track | Status | Source | Execution | Robustness | Data | Measurement |',
-             '|---|---|---|---|---|---|---|---|']
+             '| Package | Track | Status | ' + ' | '.join(d.title() for d in pe.DIMENSIONS) + ' |',
+             '|---|---|---|' + '---|' * len(pe.DIMENSIONS)]
     for pkg in sorted(scorecard):
         excluded = set((pf.load(pkg) or {}).get('excluded_tracks') or {})
         for tid in sorted(scorecard[pkg]):
@@ -361,7 +391,7 @@ def write_report(scorecard: dict, path: str) -> None:
     for pkg in sorted(scorecard):
         lines.append(f'### {pkg}')
         lines.append('')
-        shared = {c for c in scorecard[pkg][next(iter(scorecard[pkg]))] if c[0] in 'SD'}
+        shared = {c for c in scorecard[pkg][next(iter(scorecard[pkg]))] if c[0] in 'SD' or c == 'X1'}
         listed = False
         first = next(iter(sorted(scorecard[pkg])))
         for c in sorted(shared):

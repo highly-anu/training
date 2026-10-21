@@ -16,6 +16,16 @@ final class TrainingContractTests: XCTestCase {
         XCTAssertEqual(object["mastered_exercises"] as? [String], ["kb_clean_double"])
         XCTAssertEqual(object["kettlebell_count"] as? Int, 2)
     }
+    func testTrackReadinessNamesMovementsFromTheServer() throws {
+        // The builder's toggle reads the server's name; it used to strip one
+        // package's id prefix (`wk_kb_`), which a new package's ids never had.
+        let data = Data(#"{"id":"doubles","name":"Doubles","phases":[],"entry_requirements":{"training_levels":["intermediate"],"mastered_exercises":["kb_clean_double"],"exercise_names":{"kb_clean_double":"Double Kettlebell Clean"},"kettlebell_count":2}}"#.utf8)
+        let track = try JSONDecoder().decode(PhilosophyTrack.self, from: data)
+        XCTAssertEqual(track.entryRequirements?.exerciseNames?["kb_clean_double"], "Double Kettlebell Clean")
+        let older = Data(#"{"training_levels":["novice"],"mastered_exercises":[],"kettlebell_count":1}"#.utf8)
+        XCTAssertNil(try JSONDecoder().decode(TrackEntryRequirements.self, from: older).exerciseNames,
+                     "a server before the names decodes as before")
+    }
     func testModulePrescriptionSurvivesRoundTripAndShowsRepetitions() throws {
         let data = Data(#"""
         {"exercise":{"id":"swing","name":"Swing","category":"kettlebell"},

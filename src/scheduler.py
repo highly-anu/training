@@ -642,39 +642,6 @@ def _order_day(modality_list: list, modalities: dict) -> list:
     )
 
 
-def _select_complementary_mobility(
-    primary_modality: str,
-    primary_sources: list,
-) -> str:
-    """
-    Select mobility archetype type complementary to primary session modality.
-
-    Mapping strategy:
-    - Strength modalities → strength_mobility
-    - Endurance modalities → endurance_mobility
-    - Combat/BJJ → grappling_mobility
-    - Default → joint_prep_circuit
-
-    Returns archetype ID preference (actual archetype selected in selector.py)
-    """
-    MOBILITY_MAPPING = {
-        'max_strength': 'strength_mobility',
-        'power': 'strength_mobility',
-        'relative_strength': 'strength_mobility',
-        'strength_endurance': 'strength_mobility',
-        'aerobic_base': 'endurance_mobility',
-        'anaerobic_intervals': 'endurance_mobility',
-        'mixed_modal_conditioning': 'endurance_mobility',
-        'durability': 'endurance_mobility',
-    }
-
-    # Check if primary sources include BJJ/combat philosophies
-    if any('bjj' in s.lower() for s in primary_sources):
-        return 'grappling_mobility'
-
-    return MOBILITY_MAPPING.get(primary_modality, 'joint_prep_circuit')
-
-
 def _add_split_sessions(raw: Dict[int, List[str]], modalities: dict,
                         constraints: dict) -> None:
     """Append a secondary mobility/skill session to primary training days.
@@ -690,8 +657,6 @@ def _add_split_sessions(raw: Dict[int, List[str]], modalities: dict,
 
     # Enhanced path: Use day_configs if available (from weekly_schedule)
     if day_configs:
-        primary_sources = constraints.get('primary_sources', [])
-
         for day_idx, cfg in day_configs.items():
             # Convert string keys to int if needed
             day = int(day_idx) if isinstance(day_idx, str) else day_idx
@@ -712,14 +677,10 @@ def _add_split_sessions(raw: Dict[int, List[str]], modalities: dict,
                 # Add mobility modality
                 raw[day] = existing + ['mobility']
 
-                # Store hint for complementary mobility archetype selection
+                # The generator prefers a mobility archetype that declares it
+                # `complements` the day's primary modality.
                 if primary:
-                    mobility_pref = _select_complementary_mobility(
-                        primary,
-                        primary_sources
-                    )
-                    # Store in day_configs for generator.py to use
-                    cfg['mobility_archetype_hint'] = mobility_pref
+                    cfg['mobility_complements'] = primary
         return
 
     # Fallback path: Legacy behavior for backwards compatibility

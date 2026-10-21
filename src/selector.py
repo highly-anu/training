@@ -23,37 +23,12 @@ _PATTERN_ALIASES: dict[str, tuple] = {
 # ---------------------------------------------------------------------------
 # Training-level prerequisite seeding
 # ---------------------------------------------------------------------------
+# What every athlete of a level arrives with, whatever the package: commons
+# data (data/commons/level_concepts.yaml, which says why each is there), so the
+# engine names no package's exercises.
+_lc_path = _os.path.join(_os.path.dirname(__file__), '..', 'data', 'commons', 'level_concepts.yaml')
 _LEVEL_CONCEPTS: dict[str, set] = {
-    # Basic movement literacy, not a progression to be earned. Every beginner
-    # program teaches bracing and hinging in the first session — granting a novice
-    # the empty set meant a novice unlocked nothing in Starting Strength, the
-    # method written for novices. Exercise-ID prerequisites (pull_up, front_squat,
-    # power_clean) stay gated below: those are genuine progressions.
-    'novice': {
-        'bracing_mechanics', 'bracing', 'hip_hinge', 'hip_hinge_pattern',
-        'squat_pattern', 'push_pattern', 'pull_pattern', 'open_space',
-    },
-    'intermediate': {
-        'hip_hinge', 'bracing_mechanics', 'bracing', 'squat_pattern',
-        'push_pattern', 'pull_pattern', 'hanging', 'shoulder_stability',
-        # Exercise IDs assumed known at intermediate
-        'deadlift', 'back_squat', 'front_squat', 'strict_press', 'bench_press',
-        'pull_up', 'pull_up_strict', 'dip_strict',
-        'kb_swing_two_hand', 'kb_clean', 'kb_goblet_squat',
-        # Carries — seeded directly to avoid multi-hop prerequisite chain limitation
-        'farmer_carry_kb', 'rack_carry_kb', 'overhead_carry_kb',
-        'run_easy', 'open_space',
-    },
-    'advanced': {
-        'hip_hinge', 'bracing_mechanics', 'bracing', 'squat_pattern',
-        'push_pattern', 'pull_pattern', 'hanging',
-        'deadlift', 'back_squat', 'front_squat', 'strict_press', 'bench_press',
-        'pull_up', 'pull_up_strict', 'dip_strict', 'muscle_up',
-        'power_clean', 'hang_power_clean',
-        'kb_swing_two_hand', 'kb_swing_single_arm', 'kb_clean', 'kb_snatch',
-        'handstand_hold', 'handstand_push_up',
-        'run_easy', 'run_tempo', 'open_space',
-    },
+    level: set(ids) for level, ids in _yaml.safe_load(open(_lc_path)).items()
 }
 
 

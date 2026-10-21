@@ -87,7 +87,7 @@ back to a primary source. The engine's part was that it could only express
 
 How far a package is from its method, graded per package × track
 (`tools/evaluate_packages.py`, the graders in `src/package_eval.py`, today's
-grades in [scorecard.md](scorecard.md)). Five dimensions, each criterion pass
+grades in [scorecard.md](scorecard.md)). Six dimensions, each criterion pass
 (✓), partial (◐) or fail (✗) — never a blended number, because a weighted sum
 hides the one failure that matters. A dimension reads its worst criterion that
 is not hygiene; the grades ratchet in `tools/scorecard_baseline.json` (a worse
@@ -102,13 +102,14 @@ grade fails CI, and so does a better one left unrecorded), and
 | | S3 | Rules nothing enforces (debt, computed); every `enforced_by` resolves | none | some debt | a reference to nothing, or no rules |
 | | S4 | Every rule rests on a source read; every currency and excluded track names a rule or invention; the dossier names every id | all | — | any not, or no rules |
 | | S5 | The source's own weeks (`source_weeks.yaml`), generated and compared | all reproduce | only numbers differ; or none, but a source test CI runs | the structure differs, or neither |
+| | S6 *hygiene* | A review of the output against the dossier (`tools/print_package.py`) in `reviews` | recorded | none | — |
 | Execution | E1 | Sessions delivered with slots empty | none | some slots | every slot |
 | | E2 | Sessions another modality's for lack of their own (`substituted_for`), worst written-for profile | none | ≤25 % | more |
 | | E3 | A level the track is not written for (contract levels, else the frameworks' `training_level`) | refused | — | served |
 | | E4 | Most-used archetype's share of its modality, per phase (≥4 sessions; contracts and templated phases exempt; a phase's `max_archetype_share` is the method's own word when a rule cites it) | ≤40 % | ≤60 % | more |
 | | E5 | Defining claims a rule (or invention) cites: phase `checks:`, a contract or a week template | declared, hold | none cited | broken (a declared volume band too) |
 | | E6 | Fidelity findings (`check_fidelity`'s rules; a contract's equipment and injuries too) | none | warnings | errors |
-| Robustness | R1 | No equipment, a kettlebell home, 45 and 30 minutes, three days, one bell, lumbar, shoulder and knee flags | method kept, or refused where one constraint lifted alone unblocks it | refused, nothing unblocks | served degraded (an empty session, >25 % substitutes, a claim broken) |
+| Robustness | R1 | No equipment, a kettlebell home, 45 and 30 minutes, three days, one bell, lumbar, shoulder and knee flags | method kept, or refused where one constraint lifted alone unblocks it (what the preview's Held back shows) | refused, nothing unblocks | served degraded (an empty session, >25 % substitutes, a claim broken, a fidelity error on that athlete — an exercise their equipment or injury rules out) |
 | Data | D1 | Schema-valid, injury flags resolve | yes | — | no |
 | | D2 | Catalog exercises no program reaches (counting borrowers), computed in the run | none | some | — |
 | | D3 *hygiene* | Exercise media | ≥90 % | ≥50 % | less |
@@ -117,12 +118,22 @@ grade fails CI, and so does a better one left unrecorded), and
 | | M2 | The lead's fields are logged on both clients (`vocabulary.CAPTURE`) | logged or prescribed | optional, or a watch only | no lead |
 | | M3 | Each declared standard has a scheduled test, a prescribed `derived_from` lift, or `manual: true` a rule cites | all | some | — |
 | | M4 | Referenced standards exist | yes | — | no |
+| Portability | X1 | String literals in `src/`, `api.py`, the web, the iOS and Apple Watch apps and the Garmin core that name the package (`tools/check_code_neutral.py`) | none | — | any |
+| | X2 | Every step of the ideal program resolved to a watch screen, as the watches' payload resolves it (`src/watch_spec.py`) | the package's own | the generic screen for an unclaimed slot type | one the vocabulary cannot draw |
 
 The execution criteria are the audit's findings made executable: E2 sees a
 novice Gym Jones program that is half substitutes, E4 CrossFit's one AMRAP
 template, E3 an intermediate handed Starting Strength's novice sessions, R1
 a session with every slot empty. A track `excluded_tracks` names (an invention
 awaiting the owner) is graded but does not count toward the status.
+
+Portability is the second goal of every package: one the owner adds by
+writing a folder, with no change to the server, the clients or the watches.
+X1 and X2 grade it per package; `test_package_dropin.py` proves it end to end
+— three packages copied under ids no code has seen, into a packages folder of
+their own (`TRAINING_PACKAGES_DIR`), validated, generated, served by the API,
+encoded for the watches with their screens, read by the analytics and the
+scorecard, with nothing in the repository changed.
 
 ## The gates
 
@@ -143,6 +154,8 @@ and the workflow part.
 | `test_watch_spec.py` | a package's `watch.yaml` resolves; the watches' generated tables are current; `garmin/core` names no package |
 | `test_program_analytics.py` | a package's analytics, including one written to disk as a throwaway package, need no engine change |
 | `test_source_weeks.py` | a source week against hand-built programs: what is structure, what is a number, what is never compared |
+| `tools/check_code_neutral.py` | no string literal in the server, the web, the iOS and Apple Watch apps or the Garmin core names a package (X1, without a baseline) |
+| `test_package_dropin.py` | three packages dropped in under new ids need no code change, end to end |
 | the package's **source weeks** | the weeks as the source writes them, generated and compared in `evaluate_packages.py`'s pass (S5); a package's own tests (`test_training_contract.py`, `test_week_template.py`) pin what data cannot say, such as the log that earns a step |
 
 ## Working a package
@@ -152,15 +165,19 @@ and the workflow part.
    transcribe what the source shows into `source_weeks.yaml` before looking
    at what the package generates.
 2. Print the program the package generates today under realistic profiles
-   (3–6 days, 30–90 minutes, home and gym equipment, a common injury, each
-   level) beside the rules, and list each difference.
+   (`tools/print_package.py <package>`: the rules with what enforces each, the
+   source weeks, then each track under the fidelity profiles — the ideal
+   athlete, the lowest and highest days, a kettlebell home, bodyweight, 45
+   minutes, two injuries) and list each difference.
 3. Fix data first, engine second; a new engine feature is generic and
    documented (CLAUDE.md, docs/logic/).
 4. Give each rule its `enforced_by` — the data, the cited phase claims
    (`checks:`), the source's own weeks, a test; set the track's `currency` on
    its rule; record what the app adds as inventions with their
    `implemented_by`.
-5. Two independent reviews: the code, and the output against the dossier.
+5. Two independent reviews: the code, and the output against the dossier
+   (step 2's printout) — each recorded in the record's `reviews` (kind, date,
+   scope, what it found and where each finding went; S6).
 6. `tools/evaluate_packages.py --update-baseline --report
    docs/package-fidelity/scorecard.md`: the grades, the orphans, the fidelity
    findings and `status.yaml` are written together, from what the package

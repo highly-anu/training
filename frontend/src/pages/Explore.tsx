@@ -710,7 +710,6 @@ const EX_CATEGORY_COLORS: Record<string, string> = {
   mobility:    '#14b8a6',
   skill:       '#8b5cf6',
   rehab:       '#84cc16',
-  gym_jones:   '#ec4899',
 }
 
 const EX_EFFORT_COLORS: Record<string, string> = {
