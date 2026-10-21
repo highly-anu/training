@@ -1,66 +1,60 @@
 id: uphill_base_phase
 name: "Base Phase (Uphill Athlete)"
 source_philosophy: uphill_athlete
+
 goals_served:
   - aerobic_base
   - max_strength
-  - strength_endurance
-  - durability
-  - mobility
+
 sessions_per_week:
   aerobic_base: 4
   max_strength: 2
-  strength_endurance: 1
-  durability: 1
-  # mobility omitted — split-session logic handles it via _add_split_sessions
-allocation_mode: exclusive
 modality_priority:
   committed: [aerobic_base]
-  core: [max_strength, durability, strength_endurance]
+  core: [max_strength]
   supplementary: []
+
 intensity_distribution:
-  zone1_2_pct: 0.90
-  zone3_pct: 0.10
+  zone1_2_pct: 0.75
+  zone3_pct: 0.0
   zone4_5_pct: 0.0
-  max_effort_pct: 0.0
+  max_effort_pct: 0.25
+
+allocation_mode: exclusive
 progression_model: volume_block
 applicable_when:
   training_level:
     - intermediate
     - advanced
     - elite
-  days_per_week_min: 5
+  days_per_week_min: 6
   days_per_week_max: 7
+# Six days a week, the day off first (Training for Mountaineering: "Most
+# athletes take these on Monday").
 cadence_options:
-  # Large recovery gaps between hard sessions; the weekend pair carries the
-  # long days. Lived in the scheduler's Python table as `polarized_80_20`.
-  3: [[1, 4, 7], [2, 5, 7], [1, 3, 6]]
-  4: [[1, 3, 5, 7], [1, 2, 5, 7], [2, 4, 6, 7]]
-  5: [[1, 2, 4, 6, 7], [1, 3, 4, 6, 7], [1, 2, 3, 5, 7]]
-  6: [[1, 2, 3, 5, 6, 7], [1, 2, 4, 5, 6, 7]]
+  6: [[2, 3, 4, 5, 6, 7]]
+  7: [[1, 2, 3, 4, 5, 6, 7]]
+
+# Build three weeks, then a recovery week at half the hardest (the
+# contract's weekly_volume ramp); strength keeps half its sets.
 deload_protocol:
   frequency_weeks: 4
-  volume_reduction_pct: 0.6
+  volume_reduction_pct: 0.5
   intensity_change: maintain
+
 sources:
-  - "Training for the New Alpinism, Ch. 7 — Base Period"
-  - "Training for the Uphill Athlete, Ch. 6 — Building the Aerobic Base"
+  - "Uphill Athlete, Training for Mountaineering (Steve House, 2021)"
+
 notes: |
-  8–16 weeks (longer for less developed athletes). The defining phase. Goal
-  is to maximize aerobic capacity and capillarization through high volumes
-  of low-intensity work. Volume ramps ~10%/week for 3 weeks, then deload.
-  Long aerobic day grows progressively (start at current long day +25%, build
-  to mountain-objective duration). Muscular endurance is introduced once
-  AeT is solid: weighted step-ups become the signature session. Strength
-  shifts from general to mountain-specific. Total weekly volume 12–20
-  hours typical for serious mountain athletes; elites may exceed.
+  The aerobic minutes build about 10 % a week for three weeks, then recover;
+  max strength twice a week, three or four reps at 90–95 % of the one-rep max.
 
 expectations:
-  min_weeks: 12
-  ideal_weeks: 16
-  min_days_per_week: 5
+  min_weeks: 4
+  ideal_weeks: 4
+  min_days_per_week: 6
   ideal_days_per_week: 6
   min_session_minutes: 60
-  ideal_session_minutes: 90
-  ideal_long_session_minutes: 240
-  supports_split_days: true
+  ideal_session_minutes: 360
+  ideal_long_session_minutes: 360
+  supports_split_days: false

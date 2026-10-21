@@ -171,9 +171,9 @@
        "screen": "s2"
       }
      ],
-     "packageId": "uphill_athlete",
+     "packageId": null,
      "watch": {
-      "label": "Uphill Athlete — Steve House & Scott Johnston",
+      "label": null,
       "accent": null,
       "summary": {
        "pages": [
@@ -366,9 +366,9 @@
        "screen": "s0"
       }
      ],
-     "packageId": "uphill_athlete",
+     "packageId": null,
      "watch": {
-      "label": "Uphill Athlete — Steve House & Scott Johnston",
+      "label": null,
       "accent": null,
       "summary": {
        "pages": [
@@ -559,9 +559,9 @@
        "screen": "s0"
       }
      ],
-     "packageId": "uphill_athlete",
+     "packageId": null,
      "watch": {
-      "label": "Uphill Athlete — Steve House & Scott Johnston",
+      "label": null,
       "accent": null,
       "summary": {
        "pages": [
@@ -585,12 +585,12 @@
         "load",
         "pack"
        ],
-       "a": "distance_km",
-       "b": "elapsed",
+       "a": "distance",
+       "b": "distance_target",
        "lines": "next_step",
        "lap": "log_round",
        "template": "distance",
-       "gauge": "distance_km"
+       "gauge": "distance"
       }
      }
     }
@@ -758,9 +758,9 @@
        "screen": "s0"
       }
      ],
-     "packageId": "uphill_athlete",
+     "packageId": null,
      "watch": {
-      "label": "Uphill Athlete — Steve House & Scott Johnston",
+      "label": null,
       "accent": null,
       "summary": {
        "pages": [

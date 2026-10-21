@@ -381,7 +381,9 @@ group's name.
   may run its own cycle instead (`periods`: weeks, a rotation of its variants, `deload`;
   `training_contract.period_of`, `module_deload`): BJJ's strength is StrengthLog's
   program — six weeks of strength, a deload week of its own workouts run as written, five
-  of power, repeating — and the classes never deload on a schedule.
+  of power, repeating — and the classes never deload on a schedule. Uphill's aerobic
+  modules ramp by `weekly_volume` (three build weeks of 10 %, a recovery week at half, the
+  ramp holding from Specific on); its modules run in named `phases`.
 - **Theory fidelity** (`src/fidelity.py`, `tools/check_fidelity.py`): a generated program
   is read against its package — `sessions_per_week`, `intensity_distribution`,
   `deload_protocol`, archetype level and phase, recovery windows, equipment and injuries,

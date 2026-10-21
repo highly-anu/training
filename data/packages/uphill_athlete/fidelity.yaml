@@ -1,3 +1,318 @@
-# Uphill Athlete — not yet worked against its sources (docs/package-fidelity/README.md).
+# Uphill Athlete — the machine half of docs/package-fidelity/uphill_athlete.md
+# (docs/schemas/fidelity.schema.json; docs/package-fidelity/README.md).
+# The books could not be read; the package rests on Uphill Athlete's own
+# public articles, PDFs and podcasts, read 2026-10-21.
 shape: contract
-next: The weekly volume ramp and the published novice plan; keep declared borrowing.
+
+sources:
+  - id: mtn
+    kind: primary
+    author: Steve House (Uphill Athlete)
+    title: Training for Mountaineering
+    where: https://uphillathlete.com/mountaineering/training-for-mountaineering/
+    published: '2021-03-14'
+    read: full
+    accessed: '2026-10-21'
+  - id: gs_pdf
+    kind: primary
+    author: Uphill Athlete (from Training for the New Alpinism)
+    title: The General Strength Routine
+    where: https://www.uphillathlete.com/wp-content/uploads/2020/02/TftNA-General-Strength-routine-V2.-.pdf
+    published: '2020-02'
+    read: full
+    accessed: '2026-10-21'
+  - id: me_pdf
+    kind: primary
+    author: Uphill Athlete
+    title: Uphill Athlete Muscular Endurance Workout
+    where: https://www.uphillathlete.com/wp-content/uploads/2020/04/ME-Uphill-Athlete-Workout-.pdf
+    published: '2020-04'
+    read: full
+    accessed: '2026-10-21'
+  - id: ten
+    kind: primary
+    author: Uphill Athlete
+    title: "When and How to Add High-Intensity Training: The 10 Percent Test"
+    where: https://uphillathlete.com/aerobic-training/when-to-add-intensity-training/
+    read: full
+    accessed: '2026-10-21'
+  - id: ads
+    kind: primary
+    author: Uphill Athlete
+    title: "Aerobic Deficiency (Why is my Zone 2 so slow?)"
+    where: https://uphillathlete.com/aerobic-training/aerobic-deficiency-syndrome/
+    published: '2018-02-02'
+    read: full
+    accessed: '2026-10-21'
+  - id: drift
+    kind: primary
+    author: Steve House (Uphill Athlete)
+    title: Heart Rate Drift Test
+    where: https://uphillathlete.com/aerobic-training/heart-rate-drift/
+    read: full
+    accessed: '2026-10-21'
+  - id: pod_base
+    kind: primary
+    author: Steve House, Sam Clark, Chantel Robitaille (Uphill Athlete podcast)
+    title: "Training for Mountaineering: Base Training"
+    where: https://uphillathlete.com/podcast/
+    published: '2023-02-13'
+    read: partial
+    accessed: '2026-10-21'
+    note: Transcript, the passages on the 24-week plan's first intensity.
+  - id: pod_spec
+    kind: primary
+    author: Steve House, Sam Clark (Uphill Athlete podcast)
+    title: "Training for Mountaineering: Climbing Specific Period"
+    where: https://uphillathlete.com/podcast/
+    published: '2023-02-24'
+    read: partial
+    accessed: '2026-10-21'
+    note: Transcript, the passages on the base and specific periods' length and the specific week.
+  - id: pod_str
+    kind: primary
+    author: Steve House, Sam Clark, Chris Antin (Uphill Athlete podcast)
+    title: "Training for Mountaineering: Strength"
+    where: https://uphillathlete.com/podcast/
+    published: '2023-02-27'
+    read: partial
+    accessed: '2026-10-21'
+    note: Transcript, the max-strength passages.
+  - id: plan_use
+    kind: primary
+    author: Uphill Athlete
+    title: Making the Most of Your Uphill Athlete Training Plan
+    where: https://uphillathlete.com/
+    read: partial
+    accessed: '2026-10-21'
+  - id: plan_16
+    kind: primary
+    author: Uphill Athlete
+    title: 16-Week Mountaineering Training Plan (plan page)
+    where: https://uphillathlete.com/training-plans/
+    read: partial
+    accessed: '2026-10-21'
+    note: The product page; the plan itself is sold through TrainingPeaks.
+  - id: me16
+    kind: primary
+    author: Uphill Athlete
+    title: Muscular Endurance Training for Mountain Athletes
+    where: https://uphillathlete.com/aerobic-training/
+    published: '2016-11-27'
+    read: partial
+    accessed: '2026-10-21'
+  - id: tftua
+    kind: primary
+    author: Steve House, Scott Johnston, Kilian Jornet
+    title: Training for the Uphill Athlete (2019)
+    where: Patagonia Books
+    read: unavailable
+    note: No text was found to read; nothing rests on it.
+  - id: tftna
+    kind: primary
+    author: Steve House, Scott Johnston
+    title: Training for the New Alpinism (2014)
+    where: Patagonia Books
+    read: unavailable
+    note: No text was found to read beyond the General Strength Routine its PDF reproduces.
+
+rules:
+  - id: R1
+    text: A plan runs Transition, Base, Specific and Taper; the minimum effective plan is eight weeks.
+    cites:
+      - {source: plan_16, at: '"transition, base, mountaineering-specific, and taper periods"'}
+      - {source: mtn, at: '"The minimum effective training plan is 8 weeks."'}
+    enforced_by:
+      - data:philosophy.yaml#tracks.full_program.phases
+      - data:philosophy.yaml#expectations.min_weeks
+  - id: R2
+    text: "Six days a week: four aerobic, two strength, one day off."
+    cites: [{source: mtn, at: '"four of those days are aerobic training, 2 are strength training, and one is a full day off"'}]
+    enforced_by:
+      - data:frameworks/uphill_transition_phase.yaml#cadence_options
+      - data:training_contract.yaml#tracks.full_program.modules.aerobic.exposures_per_week
+      - week:uphill_week
+  - id: R3
+    text: The long day is half the week's aerobic training time.
+    cites: [{source: mtn, at: '"the longest duration workout should make up 50% of the total weekly aerobic training volume"'}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.full_program.modules.long_day.progression.share
+      - test:test_training_contract.py::test_uphill_volume_ramps_recovers_and_holds
+  - id: R4
+    text: Build three weeks, then an easy week at about half the time of the hardest; every third or fourth week.
+    cites: [{source: mtn, at: '"we progress training load for 3 weeks in a row"; "an easy week that is typically 50% of the training volume (time) of the most difficult week"'}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.full_program.modules.aerobic.progression.build_weeks
+      - data:training_contract.yaml#tracks.full_program.modules.aerobic.progression.recovery_pct
+      - data:frameworks/uphill_base_phase.yaml#deload_protocol
+      - test:test_training_contract.py::test_uphill_volume_ramps_recovers_and_holds
+  - id: R5
+    text: The weekly aerobic time rises about 10 % a week.
+    cites: [{source: plan_use, at: '"about 10 percent per week"'}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.full_program.modules.aerobic.progression.ramp_pct
+      - checks:full_program/base.volume_change_per_week
+      - checks:full_program/base_intensity.volume_change_per_week
+      - test:test_training_contract.py::test_uphill_volume_ramps_recovers_and_holds
+  - id: R6
+    text: "The first week's time, strength included: about 5 hours over six days untrained, 7 lean and active, 8–10 for someone who can jog 10 miles."
+    cites: [{source: mtn, at: '"typically start with 5 hours"; "can start with 7 hours"; "8-10 hours per week"'}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.full_program.modules.aerobic.progression.start_minutes
+  - id: R7
+    text: "No pack for the first four weeks; then 5 % of bodyweight, 10 % from week 7, 15 % from week 9; no heavy pack on the long day."
+    cites: [{source: mtn, at: pack weight table; '"We do not recommend doing your heavy pack carries on your longer hikes."'}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.full_program.modules.aerobic.progression.pack_pct
+      - data:training_contract.yaml#tracks.full_program.modules.long_day.blocks.long.notes
+      - test:test_training_contract.py::test_uphill_volume_ramps_recovers_and_holds
+  - id: R8
+    text: No high intensity in the first eight to twelve weeks; the first such workout in week 13 of the 24-week plan.
+    cites:
+      - {source: mtn, at: '"avoid high-intensity in the initial training period (8-12 weeks for most non-elite athletes)"'}
+      - {source: pod_base, at: the first high-intensity workout in week 13}
+    enforced_by:
+      - checks:full_program/transition.max_zone
+      - checks:full_program/base.max_zone
+      - data:training_contract.yaml#tracks.full_program.modules.zone_3.phases
+  - id: R9
+    text: "Zone 3 only once the aerobic threshold is within 10 % of the anaerobic (AnT heart rate ÷ AeT); with a wider gap — aerobic deficiency — intensity slows or reverses the gain."
+    cites:
+      - {source: ads, at: '"spread between AeT and AnT is greater than 10 percent"'}
+      - {source: ten, at: the 10 Percent Test}
+    enforced_by:
+      - data:training_contract.yaml#tracks.full_program.modules.zone_3.blocks.zone_3.notes
+  - id: R10
+    text: Zone 3 starts at about 5 % of the week's aerobic time, one session a week, then a second; hard sessions 48 hours apart.
+    cites: [{source: ten, at: adding intensity}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.full_program.modules.zone_3.progression.share
+      - data:training_contract.yaml#tracks.full_program.modules.zone_3.exposures_by_phase
+      - data:training_contract.yaml#tracks.full_program.modules.zone_3.min_spacing_days
+  - id: R11
+    text: "The General Strength routine: a circuit twice a week — Turkish get-up, push-up, split bench squat, dip, box step-up, pull-up, squat, hanging leg raise — one lap the first two weeks, two the next two, up to four in the eighth; three minutes between laps; harder past ten reps; never to failure."
+    cites: [{source: gs_pdf}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.full_program.modules.general_strength.periods
+      - data:training_contract.yaml#tracks.full_program.modules.general_strength.variants
+      - week:general_strength_laps
+  - id: R12
+    text: Strength goes general, then max, then muscular endurance.
+    cites: [{source: pod_str, at: strength phases}, {source: me16, at: '"late base… into the sport-specific"'}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.full_program.modules.general_strength.phases
+      - data:training_contract.yaml#tracks.full_program.modules.max_strength.phases
+      - data:training_contract.yaml#tracks.full_program.modules.muscular_endurance.phases
+      - test:test_training_contract.py::test_uphill_strength_goes_general_max_then_muscular_endurance
+  - id: R13
+    text: Max strength is three or four reps at 90–95 % of the one-rep max, never past twice bodyweight in the squat or deadlift.
+    cites:
+      - {source: pod_str, at: '"3 to 4 reps" at "90%, 95%"'}
+      - {source: mtn, at: '"we never train athletes to lift more than 2x body weight in the back squat or deadlift."'}
+    enforced_by:
+      - data:training_contract.yaml#tracks.full_program.modules.max_strength.variants.squat.blocks.lift.load_note
+  - id: R14
+    text: "The muscular-endurance workout: split jump squats, squat jumps, box step-ups (a box 75 % of knee height) and front lunges, ten reps a set, each exercise's sets before the next; bodyweight for the first workouts, then a vest of up to 10 % of bodyweight at workout 4, rising to 20 % by workout 10, the sets and rests the progression writes, goblet squat to press and swings added from workout 4."
+    cites: [{source: me_pdf}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.full_program.modules.muscular_endurance.variants
+      - data:training_contract.yaml#tracks.full_program.modules.muscular_endurance.rotation_holds
+      - week:me_progression
+  - id: R15
+    text: The muscular-endurance workout once a week when the rest of the training load is high.
+    cites: [{source: me_pdf, at: '"1 time/week to see significant gains if the remaining training load is high"'}, {source: me16, at: '"One ME session per week"'}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.full_program.modules.muscular_endurance.exposures_per_week
+  - id: R16
+    text: Muscular endurance comes in the last weeks before the objective — about week 16 of a 24-week plan — six to ten workouts over six to eight weeks.
+    cites: [{source: mtn, at: '"adding Muscular Endurance Training, on average, during Week 16 of your training in a 24 week plan"'}, {source: me16, at: '"6 to 10 workouts spanning roughly six to eight weeks"'}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.full_program.modules.muscular_endurance.phases
+      - data:philosophy.yaml#tracks.full_program.phases.specific.weeks
+  - id: R17
+    text: "The Specific week: two Zone 3 workouts, maintenance strength once or twice, and the volume does not keep rising as intensity does."
+    cites: [{source: pod_spec, at: '"two zone 3 workouts"; "maintenance strength one to two days a week"'}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.full_program.modules.zone_3.exposures_by_phase
+      - data:training_contract.yaml#tracks.full_program.modules.max_strength.exposures_by_phase
+      - data:training_contract.yaml#tracks.full_program.modules.aerobic.progression.ramp_phases
+      - checks:full_program/specific.modalities_required
+      - week:specific_week
+      - test:test_training_contract.py::test_uphill_volume_ramps_recovers_and_holds
+  - id: R18
+    text: Base runs at least twelve weeks; Specific two to eight.
+    cites: [{source: pod_spec, at: '"at least twelve weeks and probably sixteen weeks of base"; "it can range from 2 to 8 weeks"'}]
+    enforced_by:
+      - data:philosophy.yaml#tracks.full_program.phases.base.weeks
+      - data:philosophy.yaml#tracks.full_program.phases.base_intensity.weeks
+      - data:philosophy.yaml#tracks.full_program.phases.specific.weeks
+  - id: R19
+    text: For a climb of two or three days, a one-week taper that halves the training time.
+    cites: [{source: mtn, at: '"For a climb of 2-3 days, a one week taper is enough."; "cutting the total training time by 50% in a taper week"'}]
+    enforced_by:
+      - data:philosophy.yaml#tracks.full_program.phases.taper.weeks
+      - data:training_contract.yaml#tracks.full_program.deload_phases
+      - test:test_training_contract.py::test_uphill_volume_ramps_recovers_and_holds
+
+open:
+  - "The books (Training for the Uphill Athlete, Training for the New Alpinism) could not be read; every rule rests on Uphill Athlete's public articles, PDFs and podcasts."
+  - "Hill muscular endurance (water carried up and dumped at the top, me16) is not programmed; the gym workout is."
+  - "The heart-rate drift test (drift) that finds the aerobic threshold is not scheduled; the zones are the app's heart-rate zones."
+  - "Back-to-back long days in Specific (60/40, pod_spec) are not placed next to each other."
+  - "Pack weight past 15 % of bodyweight (up to 25 % on aerobic hikes, mtn) does not progress."
+  - "More transition weeks for an aerobically deficient athlete (plan_use) are not modelled."
+  - "A novice track (Beginner Mountain Fitness is sold, not published): the next step."
+
+inventions:
+  - id: I1
+    text: "A 29-week plan: eight weeks of Transition (the 24-week plan's eight), Base split into four weeks without intensity and eight with one Zone 3 session (so the first is in week 13), eight of Specific and one of Taper. The sources give ranges."
+    implemented_by:
+      - data:philosophy.yaml#tracks.full_program.phases
+  - id: I2
+    text: "Each build block starts one step above the last; the ramp stops at the end of Base and holds through Specific and Taper (R17), its recovery weeks still at half. The published plans peak near 11 hours; this one peaks near 11.4."
+    implemented_by:
+      - data:training_contract.yaml#tracks.full_program.modules.aerobic.progression
+      - test:test_training_contract.py::test_uphill_volume_ramps_recovers_and_holds
+  - id: I3
+    text: "The first week's aerobic minutes by level, from R6's hours less about 1.5 hours of strength: intermediate 5.5 hours (lean and active), advanced 7 (can jog 10 miles), elite 8.5. No novice: that track comes separately."
+    implemented_by:
+      - data:training_contract.yaml#tracks.full_program.modules.aerobic.progression.start_minutes
+  - id: I4
+    text: A session longer than the athlete's longest day is capped there, and the program says so; the sources set the long day by the week's time, not by the athlete's days.
+    implemented_by:
+      - test:test_training_contract.py::test_uphill_caps_the_long_day_and_refuses_what_it_is_not_for
+  - id: I5
+    text: "The max-strength session: four sets of the squat or the deadlift (alternating), four of weighted pull-ups, and the core routine (two sets of four to six, from the ME workout's core). The sources give the reps and the intensity, not the sets or the session."
+    implemented_by:
+      - data:training_contract.yaml#tracks.full_program.modules.max_strength.variants
+  - id: I6
+    text: "The General Strength circuit's reps are \"up to ten\" (the PDF's progression threshold) and its minutes about 80 seconds an exercise a lap; the ME workouts' minutes are estimated from ten reps at one to two seconds; from workout 5 the goblet squat to press and the swing take the workout's set count (workout 4 gives them five)."
+    implemented_by:
+      - data:training_contract.yaml#tracks.full_program.modules.general_strength.variants
+      - data:training_contract.yaml#tracks.full_program.modules.muscular_endurance.variants
+  - id: I7
+    text: "In a recovery week the General Strength circuit runs as written (its laps follow the weeks), max strength and the ME workout keep half their sets, and the ME workout repeats the following week."
+    implemented_by:
+      - data:training_contract.yaml#tracks.full_program.modules.max_strength.deload_keep
+      - data:training_contract.yaml#tracks.full_program.modules.muscular_endurance.deload_keep
+  - id: I8
+    text: In Specific the one easy aerobic day takes what the long day and the Zone 3 leave — about two fifths of the week — as the second of back-to-back long days.
+    implemented_by:
+      - data:training_contract.yaml#tracks.full_program.modules.aerobic.exposures_by_phase
+  - id: I9
+    text: A Zone 3 session opens with fifteen minutes and closes with ten in Zones 1–2.
+    implemented_by:
+      - data:training_contract.yaml#tracks.full_program.modules.zone_3.blocks
+  - id: I10
+    text: The aerobic-deficiency gate (R9) is said in the Zone 3 and ME notes, never enforced — the athlete measures their thresholds (the owner's rule for Wildman, 2026-10-21).
+    implemented_by:
+      - data:training_contract.yaml#tracks.full_program.modules.zone_3.blocks.zone_3.notes
+  - id: I11
+    text: Six training days are required (R2 writes six); at seven the same six sessions run.
+    implemented_by:
+      - data:frameworks/uphill_base_phase.yaml#applicable_when.days_per_week_min
+
+currency:
+  full_program: {entry: aerobic_volume, rule: R5}
+
+next: "A novice track on the mountaineering article's numbers (5 hours over six days, hikes, the General Strength circuit); exercise media; the output review."

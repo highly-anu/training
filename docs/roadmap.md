@@ -756,8 +756,13 @@ badly the default misrepresents the method and whether its policies exist:
    substitutes and optional blocks. The compiler gained sets × reps and hold blocks,
    exposures by days, per-block deloads, alternatives and optional blocks. Since
    2026-10-21 the strength is StrengthLog's program as written (module `periods`).
-3. *Uphill* — a novice track on its published beginner plan; the weekly ramp;
-   declared borrowing kept.
+3. *Uphill* — **done 2026-10-21** (branch `uphill-review`): a contract from Uphill
+   Athlete's public articles, PDFs and podcasts (the books could not be read) — six days,
+   the long day half the aerobic time, the `weekly_volume` ramp (three build weeks of 10 %,
+   a recovery week at half, holding from Specific on), the General Strength circuit, max
+   strength, the ME PDF's ten workouts, Zone 3 from week 13, a one-week taper; modules in
+   named `phases`. It borrows nothing now. Left: a novice track (the beginner plan is sold,
+   so on the mountaineering article's numbers), hill ME, exercise media.
 4. *Marcus Filly* — a novice track on Base Camp's shape (warm-up, strength by
    pattern, conditioning); RPE targets from the framework.
 5. *Horsemen* — **done 2026-10-19.** Stage 1 corrected the package against the source;

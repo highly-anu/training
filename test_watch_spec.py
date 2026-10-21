@@ -97,10 +97,6 @@ def test_declared_overrides():
            [('warm_up', 'time_domain'), ('technique_drilling', 'skill_practice')]]
     check('a BJJ class is a round timer on every block, with its fields',
           all(s['template'] == 'round_timer' and s['a'] == 'block_left' for s in bjj))
-    ruck = r('uphill_athlete', 'weighted_ruck_z2', 'main_aerobic', 'time_domain')
-    warm = r('uphill_athlete', 'weighted_ruck_z2', 'warmup', 'time_domain')
-    check('the weighted ruck leads with km on its main block only',
-          ruck['a'] == 'distance_km' and warm['a'] == 'time_left')
     tgu = r('wildman_kettlebell', 'tgu_practice', 'main', 'skill_practice')
     check('the Wildman get-up block switches sides on LAP and shows the side',
           tgu['template'] == 'timed' and tgu['lap'] == 'next_side' and 'side' in tgu['title'])

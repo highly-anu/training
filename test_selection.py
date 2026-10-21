@@ -96,9 +96,9 @@ def test_deloads() -> None:
     prog = program('crossfit', 8, days_per_week=4)
     check('no deload where the framework declares none',
           not any(w['is_deload'] for w in prog['weeks']))
-    prog = program('uphill_athlete', 8, days_per_week=5)
+    prog = program('uphill_athlete', 8, days_per_week=6, session_time_minutes=360)
     flagged = [w['week_number'] for w in prog['weeks'] if w['is_deload']]
-    check('Uphill transition deloads on its 4th week', 4 in flagged, str(flagged))
+    check('Uphill transition recovers on its 4th week', flagged == [4, 8], str(flagged))
 
 
 def test_constraints() -> None:

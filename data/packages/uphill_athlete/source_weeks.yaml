@@ -1,0 +1,49 @@
+# Uphill Athlete — the sources' own weeks (docs/schemas/source_weeks.schema.json).
+# Read 2026-10-21. Which weekday each session falls on is the package's, so
+# only counts and each exercise's numbers in order are compared.
+- id: uphill_week
+  rule: R2
+  track: full_program
+  note: >
+    Training for Mountaineering: "training 6 days a week, four of those days
+    are aerobic training, 2 are strength training, and one is a full day off".
+    The first week of Transition.
+  profile: {days_per_week: 6, session_time_minutes: 360, training_level: intermediate, equipment: all}
+  weeks:
+    - modalities: {aerobic_base: 4, relative_strength: 2}
+- id: general_strength_laps
+  rule: R11
+  track: full_program
+  note: >
+    The General Strength Routine: "Go one time through during the first two
+    weeks, do two circuits during the third and fourth week, and so on up to
+    four circuits in the eighth week", twice a week. The push-up's laps over
+    Transition's sixteen sessions.
+  profile: {days_per_week: 6, session_time_minutes: 360, training_level: intermediate, equipment: all}
+  num_weeks: 8
+  series:
+    - {exercise: push_up, field: sets, values: [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4]}
+- id: me_progression
+  rule: R14
+  track: full_program
+  note: >
+    The ME workout's first three: six sets of ten at 60 s rest a set,
+    bodyweight (workouts 1 and 2); seven sets at 45 s (workout 3) — the split
+    jump squat, the first of Specific's weekly workouts.
+  profile: {days_per_week: 6, session_time_minutes: 360, training_level: intermediate, equipment: all}
+  from_week: 21
+  num_weeks: 23
+  series:
+    - {exercise: split_jump_squat, field: sets, values: [6, 6, 7]}
+    - {exercise: split_jump_squat, field: rest_sec, values: [60, 60, 45]}
+- id: specific_week
+  rule: R17
+  track: full_program
+  note: >
+    The Specific period (podcast, 2023): two Zone 3 workouts, maintenance
+    strength, the muscular-endurance workout once a week, and the long day.
+  profile: {days_per_week: 6, session_time_minutes: 360, training_level: intermediate, equipment: all}
+  from_week: 21
+  num_weeks: 21
+  weeks:
+    - modalities: {aerobic_base: 2, anaerobic_intervals: 2, strength_endurance: 1, max_strength: 1}

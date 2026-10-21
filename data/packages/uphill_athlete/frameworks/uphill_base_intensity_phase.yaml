@@ -1,0 +1,62 @@
+id: uphill_base_intensity_phase
+name: "Base with Zone 3 (Uphill Athlete)"
+source_philosophy: uphill_athlete
+
+goals_served:
+  - aerobic_base
+  - anaerobic_intervals
+  - max_strength
+
+sessions_per_week:
+  aerobic_base: 3
+  anaerobic_intervals: 1
+  max_strength: 2
+modality_priority:
+  committed: [aerobic_base]
+  core: [max_strength, anaerobic_intervals]
+  supplementary: []
+
+intensity_distribution:
+  zone1_2_pct: 0.7
+  zone3_pct: 0.05
+  zone4_5_pct: 0.0
+  max_effort_pct: 0.25
+
+allocation_mode: exclusive
+progression_model: volume_block
+applicable_when:
+  training_level:
+    - intermediate
+    - advanced
+    - elite
+  days_per_week_min: 6
+  days_per_week_max: 7
+# Six days a week, the day off first (Training for Mountaineering: "Most
+# athletes take these on Monday").
+cadence_options:
+  6: [[2, 3, 4, 5, 6, 7]]
+  7: [[1, 2, 3, 4, 5, 6, 7]]
+
+# Build three weeks, then a recovery week at half the hardest (the
+# contract's weekly_volume ramp); strength keeps half its sets.
+deload_protocol:
+  frequency_weeks: 4
+  volume_reduction_pct: 0.5
+  intensity_change: maintain
+
+sources:
+  - "Uphill Athlete, Training for Mountaineering (Steve House, 2021)"
+
+notes: |
+  As Base, with one Zone 3 session a week (about 5 % of the aerobic time),
+  once the aerobic threshold is within 10 % of the anaerobic.
+
+expectations:
+  min_weeks: 4
+  ideal_weeks: 8
+  min_days_per_week: 6
+  ideal_days_per_week: 6
+  min_session_minutes: 60
+  ideal_session_minutes: 360
+  ideal_long_session_minutes: 360
+  supports_split_days: false

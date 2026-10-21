@@ -69,7 +69,10 @@ def run(only: str | None = None) -> int:
                 cons['kettlebell_count'] = 2
                 cons['mastered_exercises'] = sorted({eid for m in goal['training_contract']['modules'] for eid in m.get('requires_mastery', [])})
             prog = generator.generate(goal_id=goal['id'], goal_dict=goal, constraints=cons,
-                                      num_weeks=WEEKS, output_format='dict')
+                                      # The whole track, at least WEEKS: a measure of a late phase
+                                      # (Uphill's Specific) applies there.
+                                      num_weeks=max(WEEKS, sum(int(ph.get('weeks') or 1) for ph in track.get('phases') or [])),
+                                      output_format='dict')
             if prog.get('validation_errors'):
                 problems.append(f"{pid}/{track['id']}: {prog['validation_errors']}")
                 continue

@@ -1,59 +1,61 @@
 id: uphill_transition_phase
 name: "Transition Phase (Uphill Athlete)"
 source_philosophy: uphill_athlete
+
 goals_served:
   - aerobic_base
-  - max_strength
-  - mobility
+  - relative_strength
+
 sessions_per_week:
   aerobic_base: 4
-  max_strength: 2
-allocation_mode: exclusive
+  relative_strength: 2
 modality_priority:
-  committed: [aerobic_base, max_strength]
-  core: []
+  committed: [aerobic_base]
+  core: [relative_strength]
   supplementary: []
+
 intensity_distribution:
-  zone1_2_pct: 0.90
-  zone3_pct: 0.10
+  zone1_2_pct: 0.75
+  zone3_pct: 0.0
   zone4_5_pct: 0.0
-  max_effort_pct: 0.0
+  max_effort_pct: 0.25
+
+allocation_mode: exclusive
 progression_model: volume_block
 applicable_when:
   training_level:
-    - novice
     - intermediate
     - advanced
     - elite
-  days_per_week_min: 4
-  days_per_week_max: 6
+  days_per_week_min: 6
+  days_per_week_max: 7
+# Six days a week, the day off first (Training for Mountaineering: "Most
+# athletes take these on Monday").
 cadence_options:
-  # Large recovery gaps between hard sessions; the weekend pair carries the
-  # long days. Lived in the scheduler's Python table as `polarized_80_20`.
-  3: [[1, 4, 7], [2, 5, 7], [1, 3, 6]]
-  4: [[1, 3, 5, 7], [1, 2, 5, 7], [2, 4, 6, 7]]
-  5: [[1, 2, 4, 6, 7], [1, 3, 4, 6, 7], [1, 2, 3, 5, 7]]
-  6: [[1, 2, 3, 5, 6, 7], [1, 2, 4, 5, 6, 7]]
+  6: [[2, 3, 4, 5, 6, 7]]
+  7: [[1, 2, 3, 4, 5, 6, 7]]
+
+# Build three weeks, then a recovery week at half the hardest (the
+# contract's weekly_volume ramp); strength keeps half its sets.
 deload_protocol:
   frequency_weeks: 4
-  volume_reduction_pct: 0.6
+  volume_reduction_pct: 0.5
   intensity_change: maintain
+
 sources:
-  - "Training for the New Alpinism, Ch. 7 — Transition Period"
+  - "Uphill Athlete, Training for Mountaineering (Steve House, 2021)"
+
 notes: |
-  4–8 weeks. Purpose: rebuild from off-season, reintroduce structured load
-  without intensity, raise general work capacity, restore movement quality.
-  Aerobic sessions stay strictly Z1–Z2 (nose-breathing). Strength is general
-  (squat, deadlift, pull-up, push-up) and progressed linearly within the
-  block. No anaerobic work. Mobility is daily-ish; two formal sessions
-  scheduled. Total weekly volume target 8–12 hours for serious athletes.
+  Four aerobic days below the aerobic threshold, the long day half the week's
+  aerobic time, and the General Strength circuit twice a week, one lap more every
+  two weeks. No pack for four weeks; no intensity.
 
 expectations:
   min_weeks: 4
-  ideal_weeks: 6
-  min_days_per_week: 4
-  ideal_days_per_week: 5
+  ideal_weeks: 8
+  min_days_per_week: 6
+  ideal_days_per_week: 6
   min_session_minutes: 60
-  ideal_session_minutes: 75
-  ideal_long_session_minutes: 150
+  ideal_session_minutes: 360
+  ideal_long_session_minutes: 360
   supports_split_days: false

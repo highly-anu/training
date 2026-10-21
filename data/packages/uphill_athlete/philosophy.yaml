@@ -3,174 +3,149 @@ name: "Uphill Athlete — Steve House & Scott Johnston"
 core_principles:
   - aerobic_base_is_foundation
   - continuity_over_intensity
-  - polarized_intensity_distribution
-  - sport_specificity_funnel
+  - build_three_weeks_then_recover
   - individualization_via_aet_ant_testing
-  - durability_before_performance
-  - recovery_is_training
-  - long_term_athlete_development
-  - general_to_specific_progression
-  - modulate_by_fatigue
   - aerobic_deficiency_must_be_fixed_first
+  - general_then_max_then_muscular_endurance_strength
   - muscular_endurance_is_the_mountain_specific_quality
+  - recovery_is_training
 scope:
   - aerobic_base
   - anaerobic_intervals
+  - relative_strength
   - max_strength
   - strength_endurance
-  - durability
-  - mobility
 bias:
   - aerobic_base
-  - durability
   - strength_endurance
 avoid_with:
   - mixed_modal_conditioning
 required_equipment:
-  - ruck_pack
   - box
   - barbell
+  - rack
+  - plates
   - kettlebell
   - pull_up_bar
   - open_space
 intensity_model: polarized_80_20_uphill
 progression_philosophy: volume_based
 sources:
-  - "Training for the New Alpinism — House & Johnston (2014)"
-  - "Training for the Uphill Athlete — House, Johnston & Jornet (2019)"
-  - "uphillathlete.com training articles and podcasts"
+  - "Uphill Athlete, Training for Mountaineering (Steve House, 2021)"
+  - "Uphill Athlete, The General Strength Routine and the Muscular Endurance Workout (PDFs)"
+  - "Uphill Athlete, Aerobic Deficiency; When and How to Add High-Intensity Training; Heart Rate Drift Test"
+  - "Uphill Athlete podcasts on mountaineering training (2023)"
 notes: |
-  Mountain endurance methodology built on a large aerobic base, polarized
-  intensity distribution, sport-specific muscular endurance, and durability.
-  AeT (aerobic threshold, nose-breathing test) and AnT (anaerobic threshold,
-  ~1hr time-trial HR) testing individualize zones. The AeT–AnT gap is the
-  primary diagnostic: a gap >10% of max HR indicates aerobic deficiency
-  syndrome (ADS) and the athlete must spend months only in Z1–Z2 until AeT
-  rises. Athletes progress Transition → Base → Specific → Taper. Volume,
-  not intensity, is the primary progression lever. Recovery (sleep,
-  nutrition, easy days) is treated as part of training, not separate from it.
+  Mountain endurance built on a large aerobic base. Most of the training is
+  below the aerobic threshold (AeT); the long day is half the week's aerobic
+  time; volume builds for three weeks and then recovers at about half.
+  The aerobic threshold is found with the heart-rate drift test, and the gap
+  to the anaerobic threshold (AnT ÷ AeT heart rate) decides when intensity
+  may enter: with a gap over 10 % — aerobic deficiency — the athlete stays in
+  Zones 1–2 until it closes. Strength goes from general to max to muscular
+  endurance, which is what mountains ask of the legs.
 
-# Every modality this philosophy schedules has an archetype in this package,
-# so generation never needs to reach into another philosophy.
+# Every exercise of the training contract is the package's own
+# (training_contract.yaml); it borrows nothing.
 self_contained: true
 
-# The max-strength gym sessions prescribe standard barbell lifts, which this
-# package does not own and has no reason to duplicate — House and Johnston send
-# the athlete to the same squat, deadlift and press everyone else uses. Declared
-# rather than silently borrowed, and labelled in the UI.
-borrows_from:
-  - package: starting_strength
-    label: "Starting Strength"
-    reason: >
-      Uphill Athlete's max strength block prescribes the standard barbell lifts
-      without redefining them; Rippetoe's package owns those movements.
-    modalities:
-      - max_strength
-    # Movements only. The session design stays Uphill's — a max strength gym
-    # session here is theirs, it just uses Rippetoe's barbell lifts to fill it.
-    kinds:
-      - exercises
-
-# Full program expectations (sum of all phases)
 expectations:
-  min_weeks: 20
-  ideal_weeks: 31  # 4 transition + 16 base + 8 specific + 3 taper
-  min_days_per_week: 5
+  min_weeks: 8
+  ideal_weeks: 29  # 8 transition + 4 + 8 base + 8 specific + 1 taper
+  min_days_per_week: 6
   ideal_days_per_week: 6
   min_session_minutes: 60
-  ideal_session_minutes: 90
-  supports_split_days: true
+  ideal_session_minutes: 360
+  supports_split_days: false
 
-# One track: the four Uphill phases run in order, each on its own framework.
-# Phase text is drafted from this package's own notes and framework notes —
-# review before relying on it.
+# One track: Transition, Base, Specific, Taper, written as a training
+# contract (training_contract.yaml): the weekly ramp, the long day, the
+# strength sequence and the muscular-endurance progression.
 primary_track_id: full_program
 tracks:
   - id: full_program
-    name: "Full Alpine Training Program"
+    name: "Mountain Objective"
     description: >
-      The complete House & Johnston progression toward a mountain objective:
-      Transition, Base, Specific, Taper. Give it an event date and the phases
-      are counted back from the objective.
+      The progression toward a mountain objective: Transition, Base, Specific,
+      Taper, six days a week. Give it an event date and the phases are counted
+      back from the objective.
     phases:
       - id: transition
         name: "Transition"
         kind: transition
-        weeks: 4
+        weeks: 8
         framework_id: uphill_transition_phase
-        focus: "Recovery and movement prep"
+        focus: "Aerobic re-entry and general strength"
         description: >
-          Rebuild from the off-season. Structured load returns without
-          intensity: aerobic work stays strictly in Zones 1–2 (nose-breathing),
-          strength is general and progressed linearly, mobility is near daily.
-          The point is general work capacity and clean movement before volume
-          climbs.
+          Four aerobic days below the aerobic threshold, the long day half of
+          them, and the General Strength circuit twice a week: one lap for two
+          weeks, two for the next two, up to four. No pack for the first four
+          weeks. No intensity.
         adaptations:
-          - "General work capacity"
-          - "Movement quality and tissue tolerance"
-          - "Aerobic re-entry below AeT"
-        intensity: "Zones 1–2 only; no anaerobic work"
+          - "Aerobic base below AeT"
+          - "General strength"
+        intensity: "Zones 1–2 only"
         checks:
           max_zone: 2
       - id: base
         name: "Base"
         kind: base
-        weeks: 16
+        weeks: 4
         framework_id: uphill_base_phase
-        focus: "Aerobic base building"
+        focus: "Aerobic volume and max strength"
         description: >
-          The defining phase. High volumes of low-intensity work raise aerobic
-          capacity and capillarization, ramping about 10% a week for three
-          weeks and then unloading. The long aerobic day grows toward the
-          objective's duration. Once AeT is solid, muscular endurance enters
-          and weighted step-ups become the signature session; strength shifts
-          from general to mountain-specific.
+          The aerobic minutes keep building — about 10 % a week for three weeks,
+          then a recovery week at half — and strength turns heavy: three or four
+          reps at 90–95 % of the one-rep max, twice a week.
         adaptations:
-          - "Aerobic capacity and capillarization"
-          - "A rising aerobic threshold (closing the AeT–AnT gap)"
-          - "Muscular endurance introduced once AeT is solid"
-        intensity: "Polarized — about 90% Zones 1–2"
+          - "Aerobic capacity"
+          - "Max strength"
+        intensity: "Zones 1–2"
         checks:
-          max_zone: 3
-          volume_change_per_week: [0.0, 0.15]
-          intensity_split_tolerance: 0.10
+          max_zone: 2
+          volume_change_per_week: [0.0, 0.10]
+      - id: base_intensity
+        name: "Base with Zone 3"
+        kind: base
+        weeks: 8
+        framework_id: uphill_base_intensity_phase
+        focus: "Aerobic volume, a first Zone 3 session"
+        description: >
+          After twelve weeks without intensity, one Zone 3 session a week
+          (about 5 % of the aerobic time) — once the aerobic threshold is
+          within 10 % of the anaerobic. The rest as in Base.
+        adaptations:
+          - "Aerobic capacity"
+          - "A rising aerobic threshold"
+          - "Max strength"
+        intensity: "Mostly Zones 1–2; one Zone 3 session"
+        checks:
+          volume_change_per_week: [0.0, 0.10]
       - id: specific
         name: "Specific"
         kind: specific
         weeks: 8
         framework_id: uphill_specific_phase
-        focus: "Sport-specific muscular endurance"
+        focus: "Muscular endurance and Zone 3"
         description: >
-          Training converges on the objective: vertical gain, pack weight,
-          terrain and long-day duration approach what the climb demands.
-          Muscular endurance is the central quality — weighted carries and box
-          step-ups to deep local fatigue. AnT intervals replace some general
-          aerobic time, max strength drops to maintenance, and long days run
-          back to back. Progress comes from specificity and the intensity
-          split, not from adding hours.
+          Two Zone 3 sessions a week, the muscular-endurance workout once a week
+          (ten workouts from bodyweight to a vest of 20 % of bodyweight), max
+          strength kept once a week, and the long day.
         adaptations:
           - "Mountain-specific muscular endurance"
-          - "Threshold (AnT) durability"
-          - "Back-to-back long-day tolerance"
-        intensity: "About 80/15/5 — AnT intervals enter"
+          - "Zone 3 durability"
+        intensity: "Mostly Zones 1–2; two Zone 3 sessions"
         checks:
           modalities_required: [anaerobic_intervals, strength_endurance]
-          intensity_split_tolerance: 0.10
       - id: taper
         name: "Taper"
         kind: taper
-        weeks: 3
+        weeks: 1
         framework_id: uphill_taper_phase
-        focus: "Peak and recover for event"
+        focus: "Arrive rested"
         description: >
-          The last one to three weeks before the objective. Volume drops 40–60%
-          from the Specific peak while the short, sharp pieces stay to keep
-          neuromuscular sharpness. No new stimuli and no long days in the final
-          7–10 days; sleep, nutrition and mobility come first. The taper is the
-          deload.
+          One week before a climb of two or three days: half the training time
+          of the hardest week, the Zone 3 kept.
         adaptations:
           - "Fatigue dissipates while fitness is kept"
-          - "Neuromuscular sharpness preserved"
-        intensity: "Low volume; short intensity kept"
-        checks:
-          volume_vs_previous_phase: [-0.6, -0.4]
+        intensity: "Half the time; Zone 3 kept"

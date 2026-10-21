@@ -90,6 +90,27 @@ written for the athlete's level (Starting Strength: novice → Linear Progressio
 intermediate → Texas Method); a track refuses another level by naming the track
 that fits.
 
+## Phases and weekly volume (Uphill Athlete)
+
+A module may run only in some of the track's phases (`phases`) and take its weekly
+exposures per phase (`exposures_by_phase`): Uphill's General Strength runs in
+Transition, max strength in Base (twice) and Specific (once), the muscular-endurance
+workout in Specific, Zone 3 from the second Base phase on. A phase-scoped module counts
+its periods by the phase's weeks, so the General Strength circuit's laps follow
+Transition's weeks; a rotation that `rotation_holds` stays on its last variant (the
+tenth ME workout). `verify` reads each week's phase for the modules it expects.
+
+`progression.model: weekly_volume` writes the minutes of a module's `volume` block from
+the week's aerobic time: `start_minutes` by level, `ramp_pct` a build week for
+`build_weeks` weeks, then a recovery week at `recovery_pct` of the last build week, the
+next block one step above the last (`weekly_minutes`, `ramp_level`). Outside
+`ramp_phases` the minutes hold where the ramp stopped, a recovery week or a deload phase
+(the taper) at half of that. Each session takes its `share` of the week — the long day
+0.5, Zone 3 0.05 — and `share: rest` takes what the others leave; `pack_pct` names the
+pack by program week. A session longer than the athlete's longest day is capped there
+and a compromise says so; placement puts each module on days whose own minutes
+(`day_configs`) hold it, so the long day lands on the long day.
+
 ## Wildman's Phase II and sources
 
 General Practice is Wildman's Phase II on the Tetris of Training: his programs,
