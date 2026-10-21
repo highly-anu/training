@@ -5,6 +5,7 @@ import yaml as _yaml
 from typing import Optional
 from src.progression import zone_band as _zone_band
 from . import blockers, phases, provenance, standard_tests
+from . import loader as _loader
 
 # ---------------------------------------------------------------------------
 # Movement pattern aliases — loaded from data/movement_patterns.yaml
@@ -26,9 +27,9 @@ _PATTERN_ALIASES: dict[str, tuple] = {
 # What every athlete of a level arrives with, whatever the package: commons
 # data (data/commons/level_concepts.yaml, which says why each is there), so the
 # engine names no package's exercises.
-_lc_path = _os.path.join(_os.path.dirname(__file__), '..', 'data', 'commons', 'level_concepts.yaml')
 _LEVEL_CONCEPTS: dict[str, set] = {
-    level: set(ids) for level, ids in _yaml.safe_load(open(_lc_path)).items()
+    level: set(ids or [])   # a level listed with nothing yet is the empty set
+    for level, ids in (_loader._load_yaml(_loader._data_path('commons', 'level_concepts.yaml')) or {}).items()
 }
 
 
@@ -232,14 +233,16 @@ def select_archetype(
     recent_ids: list | None = None,
     excl_patterns: set | None = None,
     return_trace: bool = False,
-    preferred_archetype_id: str | None = None,
+    preferred_archetype_id: str | frozenset | None = None,
     day_session_types: list | None = None,
     relax_equipment: bool = False,
 ) -> Optional[dict]:
     """Pick the best archetype for a session slot.
 
     When return_trace=True returns (archetype, trace_dict) instead of just archetype.
-    When preferred_archetype_id is provided, that archetype gets a strong scoring bonus.
+    When preferred_archetype_id is provided — one id, or a set of them (the
+    mobility archetypes that complement a split day's modality) — those
+    archetypes get a strong scoring bonus among the candidates that remain.
     """
     available_equip = set(constraints.get('equipment', []))
     session_time = constraints.get('session_time_minutes', 75)
@@ -322,7 +325,8 @@ def select_archetype(
     def _score_arch(arch: dict) -> tuple:
         score = 0
         # Strong preference for complementary mobility archetype
-        if preferred_archetype_id and arch['id'] == preferred_archetype_id:
+        if preferred_archetype_id and (arch['id'] == preferred_archetype_id if isinstance(preferred_archetype_id, str)
+                                       else arch['id'] in preferred_archetype_id):
             score += 10  # Higher than equipment bonus to take precedence
         # Prefer archetypes whose equipment is fully satisfied over equipment_limited fallbacks.
         # Bonus must exceed the max recency penalty (-3) so a recently-used fully-equipped
@@ -738,7 +742,7 @@ def populate_session(
     collect_trace: bool = False,
     forced_archetype: dict | None = None,
     exercises_by_package: dict | None = None,
-    preferred_archetype_id: str | None = None,
+    preferred_archetype_id: str | frozenset | None = None,
     day_session_types: list | None = None,
     relax_equipment: bool = False,
     policy=None,

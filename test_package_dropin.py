@@ -151,6 +151,12 @@ def child(folder: str) -> int:
     graded = ep.evaluate_package('dropin_scheduler')
     check('the scorecard grades a dropped-in package', graded['tracks']
           and all('E1' in g and 'X2' in g for g in graded['tracks'].values()), str(graded['tracks'])[:200])
+    from tools import check_code_neutral as neutral
+    check("the neutrality check knows the dropped-in package's ids", 'dropin_scheduler' in neutral.owned_ids())
+    shared = ep.package_grades('dropin_scheduler', [], [])
+    archetypes = ep._package_archetypes(os.path.join(folder, 'dropin_scheduler'))
+    check('its data grades read its own folder', shared['D1'][0] == 'pass' and archetypes
+          and 'no archetypes' not in shared['D4'][1], str({k: shared[k] for k in ('D1', 'D3', 'D4')}))
     print()
     if FAILURES:
         print(f'{len(FAILURES)} failure(s)')
@@ -164,6 +170,13 @@ def child(folder: str) -> int:
 def main() -> int:
     if len(sys.argv) > 2 and sys.argv[1] == '--child':
         return child(sys.argv[2])
+    print('the neutrality check reads literals inside interpolations')
+    sys.path.insert(0, ROOT)
+    from tools.check_code_neutral import _c_literals
+    lits = {s for _, s in _c_literals("const a = `${pkg === 'wildman_kettlebell' ? x : 'y'} tail`\n"
+                                       'let t = "\\(id == "wk_kb_" ? x : y) end"\n// "bjj"\n')}
+    check('a TS ${…} and a Swift \\(…) are code; a comment is not', {'wildman_kettlebell', 'wk_kb_'} <= lits
+          and 'bjj' not in lits, str(lits))
     before = _status()
     with tempfile.TemporaryDirectory() as tmp:
         folder = os.path.join(tmp, 'packages')

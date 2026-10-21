@@ -52,11 +52,7 @@ def _weeks_check(pkg: str) -> list[str]:
 def render(pkg: str, weeks: int, track: str | None, profile: str | None) -> str:
     out = [f'# {pkg}: what it generates, beside its rules', '']
     out += ['## Rules', ''] + _rules(pf.load(pkg)) + _weeks_check(pkg)
-    for rec in cf.iter_programs(pkg):
-        if track and rec['track']['id'] != track:
-            continue
-        if profile and not rec['profile'].startswith(profile):
-            continue
+    for rec in cf.iter_programs(pkg, track_id=track, profile_prefix=profile, max_weeks=weeks):
         out += [f"## {rec['track']['id']} — {rec['profile']}", '']
         c = rec['constraints']
         out += [f"{c['days_per_week']} days, {c['session_time_minutes']} min, {c['training_level']}, "

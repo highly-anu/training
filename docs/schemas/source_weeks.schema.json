@@ -19,7 +19,7 @@
       },
       "from_week": { "type": "integer", "minimum": 1, "description": "The program week the first entry of `weeks` is (default 1)." },
       "round_kg": { "type": "number", "exclusiveMinimum": 0,
-                    "description": "The plates the contract loads: a source's kilograms (any *_kg field) are compared rounded to this, half up — 80 % of 90 kg is 72, loaded as 72.5." },
+                    "description": "The plates the contract loads: a source's kilograms (any *_kg field) are compared rounded to this as the contract rounds its loads (training_contract._round_kg) — 80 % of 90 kg is 72, loaded as 72.5." },
       "num_weeks": { "type": "integer", "minimum": 1, "description": "Weeks to generate (default: as many as `weeks` reaches)." },
       "weeks": {
         "type": "array",

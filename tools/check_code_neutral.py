@@ -109,7 +109,8 @@ def _enums(node) -> set:
 
 def owned_ids() -> dict[str, dict[str, str]]:
     """package -> {id: what it is}, for ids only that package owns."""
-    packages = os.path.join(ROOT, 'data', 'packages')
+    from src import loader
+    packages = loader._PACKAGES_DIR   # TRAINING_PACKAGES_DIR, when a test drops packages in
     owned: dict = defaultdict(dict)
     exercises: dict = defaultdict(set)
     for pkg_dir in sorted(glob.glob(os.path.join(packages, '*'))):
@@ -178,11 +179,29 @@ def _py_literals(text: str):
             yield node.lineno, node.value
 
 
-def _c_literals(text: str):
-    """String literals of a C-family file (TS, Swift, Monkey C), comments skipped."""
-    i, line, n = 0, 1, len(text)
+_OPENER = {'}': '{', ')': '('}
+
+
+def _c_literals(text: str) -> list[tuple[int, str]]:
+    """String literals of a C-family file (TS, Swift, Monkey C), comments
+    skipped. An interpolation — TS `${…}`, Swift `\\(…)` — is code, scanned
+    for its own literals, never part of the string around it."""
+    out: list = []
+    _scan_code(text, 0, 1, out, None)
+    return out
+
+
+def _scan_code(text: str, i: int, line: int, out: list, stop: str | None) -> tuple[int, int]:
+    """Code from `i` to the `stop` that closes an interpolation (or the end)."""
+    n, depth = len(text), 0
     while i < n:
         c = text[i]
+        if stop and c == stop and depth == 0:
+            return i + 1, line
+        if stop and c == _OPENER[stop]:
+            depth += 1
+        elif stop and c == stop:
+            depth -= 1
         if c == '\n':
             line += 1
             i += 1
@@ -195,21 +214,35 @@ def _c_literals(text: str):
             line += text.count('\n', i, j)
             i = j
         elif c in '"\'`':
-            j, buf = i + 1, []
-            while j < n and text[j] != c:
-                if text[j] == '\\' and j + 1 < n:
-                    buf.append(text[j + 1])
-                    j += 2
-                    continue
-                if text[j] == '\n' and c != '`':
-                    break
-                buf.append(text[j])
-                j += 1
-            yield line, ''.join(buf)
-            line += text.count('\n', i, j)
-            i = j + 1
+            i, line = _scan_string(text, i, line, out, c)
         else:
             i += 1
+    return i, line
+
+
+def _scan_string(text: str, i: int, line: int, out: list, quote: str) -> tuple[int, int]:
+    """A literal from its opening quote; each stretch between interpolations
+    is a literal of its own."""
+    n, j, buf, start = len(text), i + 1, [], line
+    while j < n and text[j] != quote:
+        interpolates = (quote == '`' and text.startswith('${', j)) or (quote == '"' and text.startswith('\\(', j))
+        if interpolates:
+            out.append((start, ''.join(buf)))
+            buf, start = [], line
+            j, line = _scan_code(text, j + 2, line, out, '}' if quote == '`' else ')')
+            continue
+        if text[j] == '\\' and j + 1 < n:
+            buf.append(text[j + 1])
+            j += 2
+            continue
+        if text[j] == '\n':
+            if quote != '`':
+                break   # an apostrophe in prose, not a literal: stop at the line
+            line += 1
+        buf.append(text[j])
+        j += 1
+    out.append((start, ''.join(buf)))
+    return j + 1, line
 
 
 def files() -> list[tuple[str, str]]:

@@ -671,8 +671,10 @@ def generate(
             # it `complements` the day's primary modality (scheduler pairing).
             day_cfg = constraints.get('day_configs', {}).get(day, {})
             complements = day_cfg.get('mobility_complements')
-            mobility_hint = next((a['id'] for a in archetypes if a.get('modality') == 'mobility'
-                                  and complements in (a.get('complements') or [])), None) if complements else None
+            # Every one that does; the selector filters them (level, equipment,
+            # phase) before the preference applies.
+            mobility_hint = frozenset(a['id'] for a in archetypes if a.get('modality') == 'mobility'
+                                      and complements in (a.get('complements') or [])) if complements else None
             day_session_types = day_cfg.get('session_types')
 
             for idx, session in enumerate(resolved_by_day[day]):

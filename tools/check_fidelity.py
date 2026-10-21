@@ -41,7 +41,7 @@ sys.path.insert(0, ROOT)
 from src import fidelity, goals, loader, phases, provenance  # noqa: E402
 from src.generator import generate  # noqa: E402
 from src.validator import validate  # noqa: E402
-from tools.check_styles import ALL_EQUIPMENT  # noqa: E402
+from src.package_eval import ALL_EQUIPMENT, contract_entry  # noqa: E402
 
 BASELINE = os.path.join(ROOT, 'tools', 'fidelity_baseline.json')
 LEVEL_ORDER = ['novice', 'intermediate', 'advanced', 'elite']
@@ -96,17 +96,8 @@ def profiles_for(track: dict, fw_by_id: dict) -> list[tuple[str, dict]]:
     return out
 
 
-def contract_entry(constraints: dict, contract: dict | None) -> dict:
-    """A contract athlete who qualifies: two bells and the level's mastery."""
-    if not contract:
-        return constraints
-    return {**constraints, 'kettlebell_count': constraints.get('kettlebell_count', 2),
-            'mastered_exercises': sorted({eid for m in contract['modules']
-                                          if constraints['training_level'] in m['training_levels']
-                                          for eid in m.get('requires_mastery', [])})}
-
-
-def iter_programs(package: str | None = None, extra_profiles=None):
+def iter_programs(package: str | None = None, extra_profiles=None, *, track_id: str | None = None,
+                  profile_prefix: str | None = None, max_weeks: int | None = None):
     """One record per philosophy x track x profile: what was asked and what came back.
 
     Each record carries `phil`, `track`, `goal`, `policy`, `lib`, `frameworks`,
@@ -115,7 +106,9 @@ def iter_programs(package: str | None = None, extra_profiles=None):
     fidelity rules read it). `extra_profiles(phil, track, goal, base)` may add
     `(name, constraints, {'weeks': n, 'fidelity': False})` rows: the package
     scorecard's level and constraint profiles (tools/evaluate_packages.py),
-    generated in the same pass as the fidelity ones.
+    generated in the same pass as the fidelity ones. `track_id`,
+    `profile_prefix` and `max_weeks` narrow what is generated, before it is
+    (tools/print_package.py prints a few weeks of one profile).
     """
     frameworks = loader.load_all_frameworks()
     fw_list = list(frameworks.values())
@@ -125,6 +118,8 @@ def iter_programs(package: str | None = None, extra_profiles=None):
         if package and phil['id'] != package:
             continue
         for track in phases.tracks_of(phil):
+            if track_id and track['id'] != track_id:
+                continue
             goal = goals.philosophy_to_goal(phil['id'], fw_list, track_id=track['id'])
             policy = provenance.resolve_source_policy(goal)
             lib = provenance.scope(data, policy)
@@ -139,6 +134,10 @@ def iter_programs(package: str | None = None, extra_profiles=None):
             if extra_profiles:
                 profiles += extra_profiles(phil, track, goal, profiles[0][1])
             for profile, constraints, opts in profiles:
+                if profile_prefix and not profile.startswith(profile_prefix):
+                    continue
+                if max_weeks:
+                    opts = {**opts, 'weeks': min(opts['weeks'], max_weeks)}
                 constraints = contract_entry(constraints, contract)
                 result = validate(goal, constraints, lib['archetypes'], lib['modalities'],
                                   lib['injury_flags'], policy=policy)

@@ -69,6 +69,8 @@ rules:
       - data:training_contract.yaml#tracks.general_practice.modules.swing.min_spacing_days
       - data:training_contract.yaml#tracks.squat_practice.modules.squat.min_spacing_days
       - data:training_contract.yaml#tracks.snatch_practice.modules.snatch.min_spacing_days
+      - week:deck_squat_program_week
+      - week:snatch_program_week
       - test:test_training_contract.py::test_source_cycle_retains_movements_and_spacing
   - id: R4
     text: "The swing: a 10-minute EMOM from 6 to 20 reps, two more each session; then a 20-minute EMOM; then start/stop swings in 10 and 20 rounds of 90 seconds; sixteen weeks to a bell, then a heavier one."

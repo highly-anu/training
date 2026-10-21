@@ -6,7 +6,7 @@ import json
 from datetime import datetime, timezone
 
 from src import phases
-from src.analytics.families import family_of
+from src.workout_matcher import modality_family
 from src.progression import calculate_load
 
 
@@ -241,9 +241,11 @@ def compute_matched_sessions(
         inferred = workout.get('inferredModalityId') or ''
         if inferred == modality:
             modality_match = 'exact'
-        # The canonical grouping (data/commons/modality_families.json); this
-        # file kept its own copy, keyed partly by ids that are no modality.
-        elif family_of(inferred) != 'other' and family_of(inferred) == family_of(modality):
+        # The matcher's similarity families (data/matching_rules.json), the
+        # grouping that linked this workout to the session — not the display
+        # rollup. This file kept its own copy, keyed partly by ids that are
+        # no modality.
+        elif modality_family(inferred) != 'other' and modality_family(inferred) == modality_family(modality):
             modality_match = 'family'
         else:
             modality_match = 'other'

@@ -58,6 +58,11 @@ def problems() -> list[str]:
         for field in ('currency', 'excluded_tracks'):
             for tid in sorted(set((record or {}).get(field) or {}) - tracks):
                 out.append(f'{pkg}: {field} names {tid}, which is not one of its tracks')
+        weeks_file = ROOT / 'data/packages' / pkg / 'source_weeks.yaml'
+        for entry in (yaml.safe_load(weeks_file.read_text()) or []) if weeks_file.exists() else []:
+            if entry.get('track') not in tracks:
+                out.append(f"{pkg}: source week {entry.get('id')} names {entry.get('track')}, "
+                           'which is not one of its tracks')
         if not grades.get(pkg):
             out.append(f'{pkg}: no grades in tools/scorecard_baseline.json (run tools/evaluate_packages.py --update-baseline)')
             continue

@@ -102,14 +102,17 @@ def reach_of(pkg: str) -> set:
     return reachable(philosophy, catalogs.get(pkg, {}), frameworks, archetypes)[0]
 
 
-def orphans_of(pkg: str, reached: dict) -> list[str]:
+def orphans_of(pkg: str, reached: dict, catalogs: dict | None = None, borrowers: dict | None = None) -> list[str]:
     """`pkg`'s catalog exercises no program reaches, given `reached`
-    (package -> reach_of) for the package and every borrower of it."""
-    _, catalogs = loader.load_all_exercises()
-    catalog = catalogs.get(pkg, {})
-    borrowers = _borrowers(loader.load_philosophies())
+    (package -> its programs' exercise ids) for the package and every
+    borrower of it. Pass `catalogs` and `borrowers` when calling it per
+    package, so they are read once."""
+    if catalogs is None:
+        _, catalogs = loader.load_all_exercises()
+    if borrowers is None:
+        borrowers = _borrowers(loader.load_philosophies())
     used = set(reached.get(pkg, set())).union(*(reached.get(b, set()) for b in borrowers.get(pkg, ())))
-    return sorted(catalog.keys() - used)
+    return sorted((catalogs.get(pkg) or {}).keys() - used)
 
 
 def run(packages: list[str] | None = None, update: bool = False) -> dict:
@@ -136,9 +139,9 @@ def run(packages: list[str] | None = None, update: bool = False) -> dict:
         if pkg not in wanted:
             continue
         catalog = catalogs.get(pkg, {})
-        used = (reached[pkg] | set().union(*(reached[b] for b in borrowers.get(pkg, ())))) & catalog.keys()
+        orphans[pkg] = orphans_of(pkg, reached, catalogs, borrowers)
+        used = catalog.keys() - set(orphans[pkg])
         lines = logs[pkg]
-        orphans[pkg] = sorted(catalog.keys() - used)
         new[pkg] = sorted(set(orphans[pkg]) - set(baseline.get(pkg, [])))
         print(f"{pkg}: {len(used)}/{len(catalog)} reachable; orphaned {orphans[pkg] or 'none'}")
         if '-v' in sys.argv:

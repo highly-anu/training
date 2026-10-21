@@ -208,29 +208,53 @@ def tests_in_ci(pkg: str, rec: dict | None) -> int:
     return sum(1 for t in source_tests(rec) if not ref_error(pkg, f'test:{t}', workflow))
 
 
-def contract_cited(rec: dict | None, track: str) -> bool:
-    return any(r.startswith(f'data:training_contract.yaml#tracks.{track}') for r in refs(rec))
+# How a reference names what it cites — the one spelling, for the graders
+# (src/package_eval.py) as for the record. `refs` is refs(record).
+
+def _under(refs: set, prefix: str) -> bool:
+    """A reference to `prefix` or to something inside it (`tracks.a` is not
+    inside `tracks.a_b`)."""
+    return any(r == prefix or r.startswith(prefix + '.') for r in refs)
 
 
-def template_cited(rec: dict | None, track: str, phase: str) -> bool:
-    return any(r.startswith(f'data:philosophy.yaml#tracks.{track}.phases.{phase}.week_templates')
-               for r in refs(rec))
+def contract_cited(refs: set, track: str) -> bool:
+    return _under(refs, f'data:training_contract.yaml#tracks.{track}')
 
 
-def claim_cited(rec: dict | None, track: str, phase: str, key: str) -> bool:
-    return f'checks:{track}/{phase}.{key}' in refs(rec)
+def template_cited(refs: set, track: str, phase: str) -> bool:
+    return _under(refs, f'data:philosophy.yaml#tracks.{track}.phases.{phase}.week_templates')
+
+
+def claim_ref(track: str, phase: str, key: str) -> str:
+    return f'checks:{track}/{phase}.{key}'
+
+
+def claim_cited(refs: set, track: str, phase: str, key: str) -> bool:
+    return claim_ref(track, phase, key) in refs
 
 
 def manual_cited(rec: dict | None, standard: str) -> bool:
     return f'data:analytics.yaml#benchmarks.{standard}' in refs(rec)
 
 
+def invented_track(rec: dict | None, track: str) -> str | None:
+    """The invention a whole track is (its `implemented_by` names the track
+    itself), or None: such a track has no source to be read against."""
+    whole = {f'data:training_contract.yaml#tracks.{track}', f'data:philosophy.yaml#tracks.{track}'}
+    return next((i['id'] for i in (rec or {}).get('inventions') or []
+                 if whole & set(i.get('implemented_by') or [])), None)
+
+
 def currency(rec: dict | None, track: str) -> tuple[str | None, str | None]:
-    """(the entry, the rule or invention it rests on) — only if it is one of the record's."""
+    """(the entry, the rule it rests on). An invention stands in for the rule
+    only on a track that is itself that invention — elsewhere the currency is
+    the method's word or nothing."""
     cur = ((rec or {}).get('currency') or {}).get(track) or {}
-    rule_ids = {r['id'] for r in (rec or {}).get('rules') or []} | \
-               {i['id'] for i in (rec or {}).get('inventions') or []}
-    return cur.get('entry'), (cur.get('rule') if cur.get('rule') in rule_ids else None)
+    rule_ids = {r['id'] for r in (rec or {}).get('rules') or []}
+    rule = cur.get('rule')
+    if rule in rule_ids or (rule and rule == invented_track(rec, track)):
+        return cur.get('entry'), rule
+    return cur.get('entry'), None
 
 
 # ── status.yaml ──────────────────────────────────────────────────────────────
