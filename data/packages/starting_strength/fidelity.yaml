@@ -44,6 +44,7 @@ rules:
     cites: [{source: rippetoe_novice_2013}]
     enforced_by:
       - data:training_contract.yaml#tracks.linear_progression.modules.novice_lp.rotation
+      - week:novice_ab_weeks
       - test:test_training_contract.py::test_ss_alternates_a_and_b_across_weeks
   - id: R2
     text: "Workout A: squat 3×5 across, press 3×5 across, deadlift 1×5, chin-ups 3 sets to failure, 5 minutes between."
@@ -78,6 +79,7 @@ rules:
     cites: [{source: rippetoe_novice_2013}, {source: rippetoe_tm_2013}]
     enforced_by:
       - data:training_contract.yaml#tracks.linear_progression.modules.novice_lp.progression.lifts
+      - week:novice_squat_jumps
   - id: R8
     text: "Missed reps once: repeat the weight; missed at one weight twice in a row: reset 5 % and climb in smaller jumps."
     cites: [{source: alter_reset_2018}]
@@ -101,6 +103,7 @@ rules:
     enforced_by:
       - data:training_contract.yaml#tracks.texas_method.modules.texas_method.variants.volume_press
       - data:training_contract.yaml#tracks.texas_method.modules.texas_method.variants.volume_bench
+      - week:texas_method_week
       - test:test_training_contract.py::test_texas_method_volume_light_intensity_week
   - id: R12
     text: "Texas Method Wednesday: squat 2×5 at 80 % of Monday; the other press for three lighter sets; chin-ups 3 × failure."
@@ -108,6 +111,7 @@ rules:
     enforced_by:
       - data:training_contract.yaml#tracks.texas_method.modules.texas_method.variants.light_bench
       - data:training_contract.yaml#tracks.texas_method.modules.texas_method.variants.light_press
+      - week:texas_method_week
   - id: R13
     text: "Texas Method Friday: a new five-rep max (within 2 %) on the squat and the press; power cleans 5×3."
     cites: [{source: rippetoe_tm_2013}]

@@ -1,0 +1,89 @@
+# Starting Strength — the source's own weeks (docs/schemas/source_weeks.schema.json).
+# From the dossier's reading of Rippetoe's two articles (startingstrength.com
+# refuses scripted fetches; read through the Wayback Machine, 2026-10-20).
+# Weights the articles give in pounds are written in the kilograms the
+# contract loads (10 lb ≈ 5 kg, 5 lb ≈ 2.5 kg); a field the article does not
+# give is left out.
+- id: novice_ab_weeks
+  rule: R1
+  track: linear_progression
+  note: Two weeks of the novice program, A-B-A then B-A-B, with each workout's sets and reps.
+  profile:
+    days_per_week: 3
+    session_time_minutes: 90
+    training_level: novice
+    equipment: [barbell, rack, plates, bench, pull_up_bar, open_space]
+    starting_loads_kg: {back_squat: 60, deadlift: 80, strict_press: 35, bench_press: 50, power_clean: 40}
+  weeks:
+    - days: &aba
+        - &a
+          archetype: 3x5_linear
+          exercises:
+            - {id: back_squat, sets: 3, reps: 5}
+            - {id: strict_press, sets: 3, reps: 5}
+            - {id: deadlift, sets: 1, reps: 5}
+            - {id: chin_up, sets: 3, reps: max, rest_sec: 300}
+        - &b
+          archetype: 3x5_linear_b
+          exercises:
+            - {id: back_squat, sets: 3, reps: 5}
+            - {id: bench_press, sets: 3, reps: 5}
+            - {id: power_clean, sets: 5, reps: 3}
+        - *a
+    - days: [*b, *a, *b]
+- id: novice_squat_jumps
+  rule: R7
+  track: linear_progression
+  note: "The squat: 10 lb a session for the first two weeks, then 5 — from 60 kg made, 65 … 90, then 92.5 …"
+  profile:
+    days_per_week: 3
+    session_time_minutes: 90
+    training_level: novice
+    equipment: [barbell, rack, plates, bench, pull_up_bar, open_space]
+    starting_loads_kg: {back_squat: 60, deadlift: 80, strict_press: 35, bench_press: 50, power_clean: 40}
+  num_weeks: 3
+  series:
+    - exercise: back_squat
+      field: weight_kg
+      values: [65, 70, 75, 80, 85, 90, 92.5, 95, 97.5]
+- id: texas_method_week
+  rule: R11
+  track: texas_method
+  note: >
+    Monday: squat 5×5 at about 90 % of the five-rep max, the press 5×5 at about
+    90 %, one heavy set of five deadlifts. Wednesday: squat 2×5 at 80 % of
+    Monday's. Friday: a new five-rep max on the squat and the press; power
+    cleans 5×3. The next Monday is the bench's. Five-rep maxes 100 / 50 / 80 /
+    140 / 70 kg.
+  profile:
+    days_per_week: 3
+    session_time_minutes: 90
+    training_level: intermediate
+    equipment: [barbell, rack, plates, bench, pull_up_bar, open_space]
+    starting_loads_kg: {back_squat: 100, strict_press: 50, bench_press: 80, deadlift: 140, power_clean: 70}
+  num_weeks: 2
+  round_kg: 1.25
+  weeks:
+    - days:
+        - archetype: tm_volume
+          includes:
+            - {id: back_squat, sets: 5, reps: 5, weight_kg: 90}
+            - {id: strict_press, sets: 5, reps: 5, weight_kg: 45}
+            - {id: deadlift, sets: 1, reps: 5}
+        - archetype: tm_light
+          includes:
+            - {id: back_squat, sets: 2, reps: 5, weight_kg: 72}
+            - bench_press
+            - {id: chin_up, sets: 3, reps: max}
+        - archetype: tm_intensity
+          includes:
+            - {id: back_squat, reps: 5}
+            - {id: strict_press, reps: 5}
+            - {id: power_clean, sets: 5, reps: 3}
+    - days:
+        - archetype: tm_volume
+          includes: [bench_press]
+        - archetype: tm_light
+          includes: [strict_press]
+        - archetype: tm_intensity
+          includes: [bench_press]

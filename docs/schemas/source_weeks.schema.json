@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "source_weeks.schema.json",
+  "title": "A package's source weeks",
+  "description": "data/packages/<id>/source_weeks.yaml: the source's own example weeks and progressions, transcribed, each generated under the profile the source assumes and compared field by field (src/source_weeks.py; scorecard S5). A field left out is the source's silence and is never compared. Read by the scorecard, never at runtime.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["id", "rule", "track", "profile"],
+    "additionalProperties": false,
+    "properties": {
+      "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+      "rule": { "type": "string", "pattern": "^R[0-9]+$", "description": "The rule of fidelity.yaml this pins." },
+      "track": { "type": "string" },
+      "note": { "type": "string", "description": "Where in the source, and how it was transcribed." },
+      "profile": {
+        "type": "object",
+        "description": "Constraints over the fidelity defaults (three days, 60 minutes, intermediate, all equipment); `equipment: all` is every implement. Contract inputs (starting_loads_kg, five_rep_max_kg …) go here too."
+      },
+      "from_week": { "type": "integer", "minimum": 1, "description": "The program week the first entry of `weeks` is (default 1)." },
+      "round_kg": { "type": "number", "exclusiveMinimum": 0,
+                    "description": "The plates the contract loads: a source's kilograms (any *_kg field) are compared rounded to this, half up — 80 % of 90 kg is 72, loaded as 72.5." },
+      "num_weeks": { "type": "integer", "minimum": 1, "description": "Weeks to generate (default: as many as `weeks` reaches)." },
+      "weeks": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "anyOf": [{ "required": ["days"] }, { "required": ["modalities"] }],
+          "additionalProperties": false,
+          "properties": {
+            "modalities": {
+              "type": "object",
+              "additionalProperties": { "type": "integer", "minimum": 0 },
+              "description": "Sessions in the week per modality, where the source counts them rather than placing them (tests aside)."
+            },
+            "days": {
+              "type": "array",
+              "description": "The training days in order; with any `rest` entry, the week's seven days from Monday.",
+              "items": {
+                "oneOf": [
+                  { "const": "rest" },
+                  { "$ref": "#/$defs/session" },
+                  { "type": "array", "items": { "$ref": "#/$defs/session" } }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "series": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["exercise", "field", "values"],
+          "additionalProperties": false,
+          "properties": {
+            "exercise": { "type": "string" },
+            "field": { "type": "string", "description": "A field of the assignment's load (weight_kg, reps_per_round, target_rounds …)." },
+            "values": { "type": "array", "minItems": 1 }
+          }
+        },
+        "description": "One field of one exercise over the successive sessions that carry it."
+      }
+    }
+  },
+  "$defs": {
+    "session": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "archetype": { "type": "string" },
+        "category": { "type": "string" },
+        "modality": { "type": "string" },
+        "exercises": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              { "type": "string" },
+              { "type": "object", "required": ["id"], "properties": { "id": { "type": "string" } } }
+            ]
+          },
+          "description": "The work exercises in order; an object adds the numbers the source gives (sets, reps, weight_kg, rest_sec …), read from the assignment's load."
+        },
+        "includes": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              { "type": "string" },
+              { "type": "object", "required": ["id"], "properties": { "id": { "type": "string" } } }
+            ]
+          },
+          "description": "Exercises the session has, in any order, with the numbers the source gives — for a source that names some of a session, not all of it."
+        }
+      }
+    }
+  }
+}

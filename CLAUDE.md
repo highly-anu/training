@@ -1132,17 +1132,30 @@ scripts/backup_prod.sh                    # pg_dump 17 + restore-test + row-coun
 ```
 
 **Package fidelity** (`docs/package-fidelity/`): the method for checking and improving a
-package against its source — a source dossier per package, every rule into data, no
-invented structure, an inventions ledger — and `status.yaml`, where every package stands
-(audited / partial / not started) and which engine shape its method needs. The status is
+package against its source — every rule into data, no invented structure, an inventions
+ledger. Each package keeps its **record** in its own folder (since 2026-10-21):
+`data/packages/<id>/fidelity.yaml` (sources with how much was read and when; rules `R1…`
+with what they `cite` and what they are `enforced_by` — `data:<file>#<path>`,
+`checks:<track>/<phase>.<key>`, `week:<id>`, `test:<file>::<fn>`; inventions `I1…`
+with where they are `implemented_by`; `currency`; `excluded_tracks`; the shape) and
+`source_weeks.yaml` (the source's own example weeks and progressions, transcribed;
+`src/source_weeks.py` generates and compares only the fields written), beside the
+prose dossier `docs/package-fidelity/<id>.md`, which names every id. The status is
 **earned, not chosen**: `tools/evaluate_packages.py` grades every package × track on five
 dimensions — Source, Execution, Robustness, Data, Measurement — each criterion pass,
 partial or fail (`src/package_eval.py`, the table in the README, today's grades in
-`scorecard.md`), never a blended number. It generates the fidelity profiles and its own
-(every level, a knee flag, three days, 30 minutes, one bell) in one parallel pass, runs
-`check_fidelity`'s gate on the same programs, ratchets `tools/scorecard_baseline.json`,
-and fails when `status.yaml` declares a status the grades do not earn (`audited`: every
-criterion but hygiene passes on every track not in `excluded_tracks`).
+`scorecard.md`), never a blended number. Source is computed from the record
+(`src/package_fidelity.py`: debt is a rule nothing enforces; a claim, contract, template,
+hand-entered standard or lead measure counts only when a rule or invention names it; S5
+is the source weeks reproducing), never declared. It generates the fidelity profiles and
+its own (every level, a knee flag, three days, 30 minutes, one bell) in one parallel pass
+with the exercise reach (D2) and the source weeks, runs `check_fidelity.gate` on the same
+programs, ratchets `tools/scorecard_baseline.json` — a worse grade fails, and so does a
+better one left unrecorded (`--update-baseline`; `--accept-worse` for a stricter grader)
+— and writes `status.yaml` from the records and the grades: never edit it by hand
+(`audited`: every criterion but hygiene passes on every track not in `excluded_tracks`).
+CI (`.github/workflows/training-contract.yml`) runs every gate the README's table names;
+`check_package_status.py` fails when the two part.
 A phase's `checks:` may now state its defining claims — `max_substituted_share`,
 `modality_outnumbers`, `max_archetype_share`, `min_distinct_archetypes`
 (`fidelity.claim_violations`) — which the gate checks and a contract's
@@ -1169,11 +1182,12 @@ SUPABASE_URL='' .venv/bin/python test_phases.py          # tracks, phase text ow
 SUPABASE_URL='' .venv/bin/python test_week_numbering.py  # a partial regenerate's tail continues the numbering
 SUPABASE_URL='' .venv/bin/python test_today_session.py   # the watch's today-session: completed flags, tomorrow, ?spec=1, progress
 .venv/bin/python test_last_time.py                       # each exercise's last time, for the watches
-SUPABASE_URL='' .venv/bin/python tools/evaluate_packages.py   # the scorecard + the fidelity gate; --report docs/package-fidelity/scorecard.md, --update-baseline
-.venv/bin/python test_package_eval.py                    # each scorecard grader on hand-built programs (no generation)
-.venv/bin/python tools/check_fidelity.py                 # the fidelity rules alone (evaluate_packages runs them too); --report docs/fidelity-report.md
-SUPABASE_URL='' .venv/bin/python tools/check_exercise_coverage.py  # every package's exercises reach a program (its own or a borrower's); orphans may only shrink
-.venv/bin/python tools/check_package_status.py           # status.yaml against the repository and the recorded scorecard
+SUPABASE_URL='' .venv/bin/python tools/evaluate_packages.py   # the scorecard, the fidelity gate, orphans, source weeks; --report docs/package-fidelity/scorecard.md, --update-baseline (writes status.yaml)
+.venv/bin/python test_package_eval.py                    # each scorecard grader on hand-built programs and records (no generation)
+.venv/bin/python test_source_weeks.py                    # a source week against hand-built programs: structure, numbers, silence
+.venv/bin/python tools/check_fidelity.py                 # the fidelity rules alone (evaluate_packages runs the same gate); --report docs/fidelity-report.md
+SUPABASE_URL='' .venv/bin/python tools/check_exercise_coverage.py -v  # each package's reach by track and level (evaluate_packages gates the orphans)
+.venv/bin/python tools/check_package_status.py           # records name their own tracks; status.yaml is what records + recorded grades write; README gates = CI
 .venv/bin/python tools/check_analytics.py                # every declared analytics measure applies in some track; every headline leads somewhere
 .venv/bin/python test_fidelity.py                        # each fidelity rule on hand-built weeks (no generation)
 SUPABASE_URL='' .venv/bin/python test_selection.py       # what the generator picks: SS A/B, pinned lifts, deloads, gaps, cadence

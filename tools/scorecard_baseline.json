@@ -38,7 +38,7 @@
  "bjj/mat_support|S2": "pass",
  "bjj/mat_support|S3": "partial",
  "bjj/mat_support|S4": "pass",
- "bjj/mat_support|S5": "pass",
+ "bjj/mat_support|S5": "fail",
  "crossfit/constantly_varied|D1": "pass",
  "crossfit/constantly_varied|D2": "partial",
  "crossfit/constantly_varied|D3": "partial",

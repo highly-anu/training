@@ -26,6 +26,7 @@ jobs:
       - run: python test_week_template.py
       - run: python test_fidelity.py
       - run: python test_package_eval.py
+      - run: python test_source_weeks.py
       - run: python test_similarity.py
       - run: python test_program_analytics.py
       - run: python test_watch_spec.py

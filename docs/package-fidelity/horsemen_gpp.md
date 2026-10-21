@@ -46,6 +46,9 @@ placed where it fits the method (I2).
 
 ## Tests
 
+Source weeks (`data/packages/horsemen_gpp/source_weeks.yaml`): the sixteen example
+weeks of pp. 2–8, every day's category, transcribed from the PDF on 2026-10-21 (R1).
+
 test_week_template.py — `test_horsemen_runs_the_source_weeks_as_written`,
 `test_horsemen_without_the_equipment_passes_workouts_over`,
 `test_a_regenerate_from_mid_track_carries_on_the_rotation`, the route tests.

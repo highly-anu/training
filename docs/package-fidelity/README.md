@@ -45,7 +45,18 @@ back to a primary source. The engine's part was that it could only express
      assessment gating (not built yet);
    - otherwise the modality scheduler, with the framework's
      `sessions_per_week`, `cadence_options` and the phase `checks:`.
-3. **Every rule into data.** Each rule is enforced by something the engine
+3. **The source's own weeks, as data.** What the source *shows* — an example
+   week, a progression table — goes into `data/packages/<package>/source_weeks.yaml`
+   (docs/schemas/source_weeks.schema.json, src/source_weeks.py): the profile
+   the source assumes, then its weeks day by day (`archetype`, `category`,
+   `modality`, the exercises with the sets, reps and loads it gives), a week's
+   sessions per modality where it counts rather than places them, or one
+   field over successive sessions (`series`: Wildman's 6 → 20 swings, a
+   squat's kilograms). The scorecard generates each and compares only what
+   the entry writes: a field left out is the source's silence. Horsemen's
+   sixteen example weeks, Wildman's 32 swing sessions, Starting Strength's
+   A/B weeks, squat jumps and Texas Method week are written this way.
+4. **Every rule into data.** Each rule is enforced by something the engine
    executes (a contract module, a template day, a phase key, a slot's load
    text), a fidelity `checks:` claim tools/check_fidelity.py tests, a source
    week the scorecard reproduces, or a test CI runs — its `enforced_by`:
@@ -56,18 +67,18 @@ back to a primary source. The engine's part was that it could only express
    (`data:analytics.yaml#benchmarks.<id>`) or the lead measure counts only
    when a rule (or, for what the app adds, an invention) names it: a
    `max_archetype_share: 1.0` no source states is a number, not the method.
-4. **No invented structure.** No phase the source does not name (one
+5. **No invented structure.** No phase the source does not name (one
    repeatable phase is the honest default), no ramp, RPE, deload or test it
    does not prescribe, loads as written. Where the athlete's constraints bend
    the program, the source's own answer is used (Wildman: the shorter version;
    Horsemen: which days go first) and the program says what changed.
-5. **Inventions are a ledger, not a habit.** Anything the app adds that the
+6. **Inventions are a ledger, not a habit.** Anything the app adds that the
    source does not contain is an invention in the record (and so in the
    generated `status.yaml`), decided by the owner case by case — Pentathlon
    Prep is built from kettlebell-sport practice because Wildman publishes
    none. A track that is itself an invention awaiting a decision is named in
    `excluded_tracks` by its invention id.
-6. **Protect the athlete's history.** A package change reaches athletes through
+7. **Protect the athlete's history.** A package change reaches athletes through
    a regenerate, which keeps every trained day (program_history.restore_elapsed);
    earned progression needs logging that can earn it (the one-tap "done as
    written", `POST /health/sessions/<key>/confirm`).
@@ -90,7 +101,7 @@ grade fails CI, and so does a better one left unrecorded), and
 | | S2 | The sources, as read | a primary read in full, or ≥3 read | fewer read | none read |
 | | S3 | Rules nothing enforces (debt, computed); every `enforced_by` resolves | none | some debt | a reference to nothing, or no rules |
 | | S4 | Every rule rests on a source read; every currency and excluded track names a rule or invention; the dossier names every id | all | — | any not, or no rules |
-| | S5 | A source test CI runs | ≥1 | — | none |
+| | S5 | The source's own weeks (`source_weeks.yaml`), generated and compared | all reproduce | only numbers differ; or none, but a source test CI runs | the structure differs, or neither |
 | Execution | E1 | Sessions delivered with slots empty | none | some slots | every slot |
 | | E2 | Sessions another modality's for lack of their own (`substituted_for`), worst written-for profile | none | ≤25 % | more |
 | | E3 | A level the track is not written for (contract levels, else the frameworks' `training_level`) | refused | — | served |
@@ -131,12 +142,15 @@ and the workflow part.
 | `tools/check_package_status.py` | each record names its own tracks; `status.yaml` is what the records and the recorded scorecard write; this table matches the workflow |
 | `test_watch_spec.py` | a package's `watch.yaml` resolves; the watches' generated tables are current; `garmin/core` names no package |
 | `test_program_analytics.py` | a package's analytics, including one written to disk as a throwaway package, need no engine change |
-| the package's **source test** | the week as the source writes it, pinned (e.g. `test_training_contract.py`'s Wildman Phase II and BJJ tests, `test_week_template.py`'s Horsemen macro) |
+| `test_source_weeks.py` | a source week against hand-built programs: what is structure, what is a number, what is never compared |
+| the package's **source weeks** | the weeks as the source writes them, generated and compared in `evaluate_packages.py`'s pass (S5); a package's own tests (`test_training_contract.py`, `test_week_template.py`) pin what data cannot say, such as the log that earns a step |
 
 ## Working a package
 
 1. Get the sources first; write the record (`fidelity.yaml`: sources, how much
-   of each was read and when, every rule with what it cites) and the dossier.
+   of each was read and when, every rule with what it cites) and the dossier;
+   transcribe what the source shows into `source_weeks.yaml` before looking
+   at what the package generates.
 2. Print the program the package generates today under realistic profiles
    (3–6 days, 30–90 minutes, home and gym equipment, a common injury, each
    level) beside the rules, and list each difference.

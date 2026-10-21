@@ -68,6 +68,9 @@ goal (R7, 200 in ten minutes) is the SSST count and the get-up's bodyweight rati
 
 ## Tests
 
+Source weeks (`data/packages/wildman_kettlebell/source_weeks.yaml`): one bell's
+32 swing sessions from the PDF's progression table — reps, rounds and minutes (R4).
+
 test_training_contract.py — `test_general_practice_runs_wildmans_phase_two`,
 `test_source_cycle_retains_movements_and_spacing`,
 `test_one_tap_confirmation_earns_the_exposure`, the pentathlon tests.

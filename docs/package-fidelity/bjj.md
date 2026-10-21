@@ -68,6 +68,12 @@ sources share.
 
 ## Tests
 
+Source weeks (`data/packages/bjj/source_weeks.yaml`): BJJEE's six-day week, five
+classes and two S&C sessions (R1). It does not reproduce: at six days the package's
+table (`exposures_by_days`) gives four classes, each on a day of its own, where Huni's
+Saturday has a class and the second S&C session — a decision for the owner, with R4
+and I2.
+
 test_training_contract.py — `test_bjj_mat_time_leads_the_week`,
 `test_bjj_deload_drops_rolling_and_keeps_drilling` (I3),
 `test_bjj_substitutes_are_declared_and_supporting_blocks_say_when_they_go` (I4),

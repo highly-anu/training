@@ -62,6 +62,8 @@ def _detect_schema(path: str) -> tuple[str | None, bool]:
         return 'watch.schema.json', False
     if basename == 'fidelity.yaml':
         return 'fidelity.schema.json', False
+    if basename == 'source_weeks.yaml':
+        return 'source_weeks.schema.json', False
     # The standards' list files (benchmarks_data.BENCHMARK_FILES); The Cell's
     # file keeps its own nested format and stays unvalidated.
     if '/data/benchmarks/' in norm and basename.endswith('.yaml') and basename != 'cell_standards.yaml':

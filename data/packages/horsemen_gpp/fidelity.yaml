@@ -21,6 +21,7 @@ rules:
       - data:philosophy.yaml#tracks.four_month_macro.phases.power_endurance.week_templates
       - data:philosophy.yaml#tracks.four_month_macro.phases.job_specific.week_templates
       - data:philosophy.yaml#tracks.four_month_macro.phases.maintenance.week_templates
+      - week:four_month_macro
       - test:test_week_template.py::test_horsemen_runs_the_source_weeks_as_written
   - id: R2
     text: Six training days and a rest day; recovery days at no more than 65 % of max heart rate.

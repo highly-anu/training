@@ -75,6 +75,7 @@ rules:
     cites: [{source: nerd_math_pdf, at: Approaches 1–4 and the progression table}]
     enforced_by:
       - data:training_contract.yaml#tracks.general_practice.modules.swing.progression
+      - week:nerd_math_swing_bell
       - test:test_training_contract.py::test_source_cycle_retains_movements_and_spacing
   - id: R5
     text: '"If pressed for time ... do the short version": a session too short for a stage takes the longest earlier stage that fits.'

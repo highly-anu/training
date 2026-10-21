@@ -180,6 +180,9 @@ def citation_errors(pkg: str, rec: dict | None, text: str | None) -> list[str]:
     for track, inv in (rec.get('excluded_tracks') or {}).items():
         if inv not in inventions:
             out.append(f'excluded track {track} names {inv}, which is not an invention')
+    for week in _yaml(pkg, SOURCE_WEEKS) or []:
+        if week.get('rule') not in rule_ids:
+            out.append(f"source week {week.get('id')} pins {week.get('rule')}, which is not a rule")
     for track, cur in (rec.get('currency') or {}).items():
         if cur['rule'] not in rule_ids | inventions:
             out.append(f"currency of {track} cites {cur['rule']}, which is neither a rule nor an invention")

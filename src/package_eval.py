@@ -35,7 +35,7 @@ CRITERIA = {
     'S2': 'A primary source read in full, or a consensus of three or more read',
     'S3': 'Every rule enforced by something that exists',
     'S4': 'Every rule rests on a source read; ids cited and named in the dossier',
-    'S5': 'A source test that CI runs',
+    'S5': "The source's own weeks reproduce",
     'E1': 'No session with every slot empty',
     'E2': 'Sessions are their own modality, not substitutes',
     'E3': 'A level the track is not written for is refused',
@@ -418,8 +418,24 @@ def grade_s4(record: dict | None, errors: list[str]) -> tuple[str, str]:
     return PASS, ''
 
 
-def grade_s5(tests_in_ci: int) -> tuple[str, str]:
-    return (PASS, '') if tests_in_ci else (FAIL, 'no source test that CI runs')
+def _first(found: list[str]) -> str:
+    return found[0] + (f" (+{len(found) - 1})" if len(found) > 1 else '')
+
+
+def grade_s5(weeks: int, structure: list[str], numbers: list[str], tests_in_ci: int) -> tuple[str, str]:
+    """The source's own weeks (src/source_weeks.py), generated and compared:
+    `weeks` entries, their structure and number mismatches. Without any, a
+    source test CI runs is partial — it pins what its author chose to pin,
+    which the scorecard cannot read."""
+    if weeks:
+        if structure:
+            return FAIL, _first(structure)
+        if numbers:
+            return PARTIAL, _first(numbers)
+        return PASS, ''
+    if tests_in_ci:
+        return PARTIAL, f'no source week; {tests_in_ci} source test(s) CI runs'
+    return FAIL, 'no source week, and no source test CI runs'
 
 
 # ── Status ───────────────────────────────────────────────────────────────────

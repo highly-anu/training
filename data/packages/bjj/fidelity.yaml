@@ -54,6 +54,7 @@ rules:
     enforced_by:
       - checks:mat_support/mat_support.modality_outnumbers
       - data:training_contract.yaml#tracks.mat_support.modules.mat_class.exposures_by_days
+      - week:bjjee_training_mix
       - test:test_training_contract.py::test_bjj_mat_time_leads_the_week
   - id: R2
     text: Strength supports the mat — two or three sessions a week for most, two beside four or five BJJ sessions, one at peak.
@@ -110,4 +111,4 @@ inventions:
 currency:
   mat_support: {entry: mat_time, rule: R1}
 
-next: Decide the strength prescription (I2) and the deload (R4, I3) against StrengthLog; a competition camp if the owner wants one.
+next: "Decide against the sources: the six-day week's fifth class (BJJEE's source week), the strength prescription (I2) and the deload (R4, I3); a competition camp if the owner wants one."

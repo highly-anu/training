@@ -1,0 +1,14 @@
+# BJJ — the sources' own weeks (docs/schemas/source_weeks.schema.json).
+# The one week a source writes out day by day, re-read 2026-10-21.
+- id: bjjee_training_mix
+  rule: R1
+  track: mat_support
+  note: >
+    Huni (BJJEE, 2017), the mix that "works the best for me": BJJ Monday and
+    Tuesday, a hard S&C session Wednesday, BJJ Thursday to Saturday, a medium
+    S&C session Saturday afternoon or evening, Sunday rest — five classes and
+    two S&C sessions on six days. Compared by count, the weekdays being the
+    author's: the class is combat_sport, the package's S&C strength_endurance.
+  profile: {days_per_week: 6, session_time_minutes: 90, training_level: intermediate, equipment: all}
+  weeks:
+    - modalities: {combat_sport: 5, strength_endurance: 2}

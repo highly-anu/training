@@ -74,6 +74,10 @@ The status is the scorecard's (status.yaml).
 
 ## Tests
 
+Source weeks (`data/packages/starting_strength/source_weeks.yaml`): two novice weeks,
+A-B-A and B-A-B with each workout's sets and reps (R1); the squat's jumps over nine
+sessions (R7); a Texas Method week from given five-rep maxes (R11).
+
 test_training_contract.py — `test_ss_alternates_a_and_b_across_weeks`,
 `test_ss_adds_weight_each_confirmed_session`, `test_ss_stall_repeats_then_resets`,
 `test_ss_first_session_works_up`, `test_ss_refuses_with_the_unblocking_constraint`,

@@ -1,0 +1,34 @@
+# Mark Wildman Kettlebell — the source's own weeks (docs/schemas/source_weeks.schema.json).
+# Transcribed from the Nerd Math swing PDF (r1.4), the progression table on
+# p. 17 and Approaches 1–4 on p. 12, 2026-10-21.
+- id: nerd_math_swing_bell
+  rule: R4
+  track: general_practice
+  note: >
+    One bell's sixteen weeks, two sessions a week: 10 × 6 … 10 × 20 two-hand
+    swings (Approach 1, a 10-minute EMOM), 20 × 6 … 20 × 20 (Approach 2, 20
+    minutes), then the start/stop swing over 10 rounds of 90 s (Approach 3, 15
+    minutes) and 20 rounds (Approach 4, 30 minutes) — "10x6 2HS" is ten
+    minutes (or rounds) of six.
+  profile: {days_per_week: 4, session_time_minutes: 60, training_level: intermediate,
+            equipment: [kettlebell, open_space]}
+  num_weeks: 16
+  series:
+    - exercise: wk_kb_swing_two_hand
+      field: reps_per_round
+      values: [6, 8, 10, 12, 14, 16, 18, 20,
+               6, 8, 10, 12, 14, 16, 18, 20,
+               6, 8, 10, 12, 14, 16, 18, 20,
+               6, 8, 10, 12, 14, 16, 18, 20]
+    - exercise: wk_kb_swing_two_hand
+      field: target_rounds
+      values: [10, 10, 10, 10, 10, 10, 10, 10,
+               20, 20, 20, 20, 20, 20, 20, 20,
+               10, 10, 10, 10, 10, 10, 10, 10,
+               20, 20, 20, 20, 20, 20, 20, 20]
+    - exercise: wk_kb_swing_two_hand
+      field: time_minutes
+      values: [10, 10, 10, 10, 10, 10, 10, 10,
+               20, 20, 20, 20, 20, 20, 20, 20,
+               15, 15, 15, 15, 15, 15, 15, 15,
+               30, 30, 30, 30, 30, 30, 30, 30]
