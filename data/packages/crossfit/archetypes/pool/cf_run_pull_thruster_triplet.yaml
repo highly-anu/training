@@ -1,0 +1,44 @@
+id: cf_run_pull_thruster_triplet
+name: "Run / Pull-Ups / Thruster, 20 min"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 20
+pool_only: true
+
+slots:
+  - role: triplet
+    slot_type: amrap
+    duration_sec: 1200
+    exercise_filter:
+      exercise_ids: [run_interval]
+      ordered: true
+    notes: "20 minutes for rotations."
+
+  - role: triplet_2
+    slot_type: amrap_movement
+    parent_slot_role: triplet
+    reps_per_round: 10
+    exercise_filter:
+      exercise_ids: [pull_up]
+      ordered: true
+
+  - role: triplet_3
+    slot_type: amrap_movement
+    parent_slot_role: triplet
+    reps_per_round: 15
+    exercise_filter:
+      exercise_ids: [thruster]
+      ordered: true
+    load: "50 % of bodyweight"
+
+required_equipment:
+- open_space
+- barbell
+- rack
+- plates
+- pull_up_bar
+sources:
+- "Glassman, A Theoretical Template for CrossFit's Programming (2003), Table 4"
+notes: >
+  As many rounds as possible in 20 minutes: run 400 m, 10 pull-ups, 15 thrusters at 50 % of bodyweight.

@@ -1,0 +1,22 @@
+id: cf_run_10k
+name: "Run 10K"
+modality: aerobic_base
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 60
+pool_only: true
+
+slots:
+  - role: run
+    slot_type: distance
+    distance_m: 10000
+    exercise_filter:
+      exercise_ids: [run_easy, row_easy, bike_easy]
+      ordered: true
+
+required_equipment:
+- open_space
+sources:
+- "Glassman, A Theoretical Template for CrossFit's Programming (2003), Table 4"
+notes: >
+  Run 10 km. Post time.

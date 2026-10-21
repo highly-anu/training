@@ -1,0 +1,60 @@
+id: cf_murph
+name: "Murph"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 60
+pool_only: true
+# A benchmark: its logged result suggests a standard result.
+test: {selectable: true}
+
+slots:
+  - role: murph
+    slot_type: for_time
+    rounds: 1
+    distance_m: 1609
+    exercise_filter:
+      exercise_ids: [run_interval]
+      ordered: true
+    standard: wod_murph_minutes
+    notes: "Partition the pull-ups, push-ups and squats as needed. Post time."
+
+  - role: murph_2
+    slot_type: amrap_movement
+    parent_slot_role: murph
+    reps_per_round: 100
+    exercise_filter:
+      exercise_ids: [pull_up]
+      ordered: true
+
+  - role: murph_3
+    slot_type: amrap_movement
+    parent_slot_role: murph
+    reps_per_round: 200
+    exercise_filter:
+      exercise_ids: [push_up]
+      ordered: true
+
+  - role: murph_4
+    slot_type: amrap_movement
+    parent_slot_role: murph
+    reps_per_round: 300
+    exercise_filter:
+      exercise_ids: [squat_air]
+      ordered: true
+
+  - role: murph_5
+    slot_type: amrap_movement
+    parent_slot_role: murph
+    distance_m: 1609
+    exercise_filter:
+      exercise_ids: [run_interval]
+      ordered: true
+
+required_equipment:
+- open_space
+- pull_up_bar
+sources:
+- "crossfit.com Workout of the Day, 2005 (2005-08-18)"
+notes: >
+  For time: 1 mile run, 100 pull-ups, 200 push-ups, 300 squats, 1 mile run.

@@ -1,0 +1,35 @@
+id: cf_clean_jerk_pull_ups
+name: "Clean & Jerk / Max Pull-Ups x 7"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 30
+pool_only: true
+
+slots:
+  - role: clean_and_jerk
+    slot_type: sets_reps
+    sets: 7
+    reps: 1
+    exercise_filter:
+      exercise_ids: [clean_and_jerk]
+      ordered: true
+    load: "Heavy; post loads"
+
+  - role: pull_ups
+    slot_type: sets_reps
+    sets: 7
+    reps: max
+    exercise_filter:
+      exercise_ids: [pull_up]
+      ordered: true
+    notes: "After each clean and jerk."
+
+required_equipment:
+- barbell
+- plates
+- pull_up_bar
+sources:
+- "crossfit.com Workout of the Day, 2005 (2005-07-27)"
+notes: >
+  Seven rounds of 1 clean and jerk and max pull-ups. Post loads and reps.

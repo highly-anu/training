@@ -1,21 +1,7 @@
 {
   "atg": [],
   "bjj": [],
-  "crossfit": [
-    "bike_interval",
-    "farmer_carry_db",
-    "farmer_carry_kb",
-    "jump_rope_double_under",
-    "l_sit",
-    "plank_hold",
-    "rack_carry_barbell",
-    "rack_carry_kb",
-    "row_500m_test",
-    "run_sprint",
-    "side_plank",
-    "sit_up",
-    "ski_erg_interval"
-  ],
+  "crossfit": [],
   "gym_jones": [
     "bear_crawl",
     "box_jump",

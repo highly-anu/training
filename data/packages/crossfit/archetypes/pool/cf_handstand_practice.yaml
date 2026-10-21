@@ -1,0 +1,21 @@
+id: cf_handstand_practice
+name: "Handstand Practice"
+modality: movement_skill
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 45
+pool_only: true
+
+slots:
+  - role: handstands
+    slot_type: skill_practice
+    duration_sec: 2700
+    exercise_filter:
+      exercise_ids: [handstand_hold]
+      ordered: true
+
+required_equipment: []
+sources:
+- "Glassman, A Theoretical Template for CrossFit's Programming (2003), Table 4"
+notes: >
+  Practice handstands for 45 minutes.

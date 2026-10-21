@@ -1,0 +1,43 @@
+id: cf_lunge_press_row_triplet
+name: "Lunges / Push Press / Row, 20 min"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 20
+pool_only: true
+
+slots:
+  - role: triplet
+    slot_type: amrap
+    duration_sec: 1200
+    exercise_filter:
+      exercise_ids: [lunge]
+      ordered: true
+    notes: "20 minutes for rotations."
+
+  - role: triplet_2
+    slot_type: amrap_movement
+    parent_slot_role: triplet
+    reps_per_round: 15
+    exercise_filter:
+      exercise_ids: [push_press]
+      ordered: true
+    load: "50 % of bodyweight"
+
+  - role: triplet_3
+    slot_type: amrap_movement
+    parent_slot_role: triplet
+    distance_m: 500
+    exercise_filter:
+      exercise_ids: [row_threshold]
+      ordered: true
+
+required_equipment:
+- barbell
+- rack
+- plates
+- rower
+sources:
+- "Glassman, A Theoretical Template for CrossFit's Programming (2003), Table 4"
+notes: >
+  As many rounds as possible in 20 minutes: lunges 100 ft, 15 push presses at 50 % of bodyweight, row 500 m.

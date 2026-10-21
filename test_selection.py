@@ -82,13 +82,20 @@ def test_main_lift_pinning() -> None:
     rotating = {k: v for k, v in by_slot.items() if len(v) > 1}
     check('no main-lift slot rotates its lift', bool(by_slot) and not rotating, str(rotating))
 
-    prog = program('crossfit', 4, days_per_week=4)
+    # No shipped phase rotates its main lifts since CrossFit runs as written;
+    # a phase given the flag still does.
+    goal = goals.philosophy_to_goal('gym_jones', FRAMEWORKS)
+    goal['phase_sequence'] = [{**ph, 'rotate_main_lifts': True} for ph in goal['phase_sequence']]
+    prog = generate(goal_id=goal['id'], goal_dict=goal, num_weeks=4, output_format='dict',
+                    constraints={'days_per_week': 5, 'session_time_minutes': 90, 'training_level': 'intermediate',
+                                 'equipment': list(ALL_EQUIPMENT), 'injury_flags': [], 'fatigue_state': 'normal',
+                                 'periodization_week': 1})
     lifts = set()
     for _, s in sessions(prog):
         for ea in s['exercises']:
-            if ea.get('exercise') and (ea.get('slot') or {}).get('intensity') == 'heavy':
+            if ea.get('exercise') and is_main_lift_slot(ea.get('slot') or {}):
                 lifts.add(ea['exercise']['id'])
-    check('CrossFit still varies (rotate_main_lifts)', len(lifts) > 1, str(lifts))
+    check('a phase that rotates its main lifts still varies them (rotate_main_lifts)', len(lifts) > 1, str(lifts))
 
 
 def test_deloads() -> None:

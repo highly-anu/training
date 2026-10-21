@@ -781,7 +781,14 @@ badly the default misrepresents the method and whether its policies exist:
    need a slot-scoped key; elliptical, stair master, climbing, paddling and skiing have no
    equipment id; "400 m Rob Shauls" is undefined in the source; GPP Circuits remains an app
    track on its own archetypes.
-6. *CrossFit* — after the variation policy.
+6. *CrossFit* — **done 2026-10-21** (branch `filly-review`): Glassman's template as week
+   templates — three on, one off (and five on, two off), the day types (one element, a
+   couplet for time, a triplet for 20 minutes) as pools of named workouts as written:
+   Table 4, the Girls, Murph, Michael, J.T. and the 2005 days read; the Girls are
+   selectable tests of their standards, recurring irregularly. The single 20-minute AMRAP,
+   the every-fourth-week test and `avoid_with: [max_strength, aerobic_base]` are gone.
+   Partial: M3 (the scorecard's equipment has no `rings`; fixing that moves Gym Jones).
+   Left: a scaled novice track, more of the archive.
 7. *Gym Jones* — refuse novices (its Foundation assumes training history); variation.
 8. *ATG, Kelly Starrett, Ido Portal* — after assessment gating, once their
    advancement markers are sourced.

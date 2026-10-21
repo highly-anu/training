@@ -46,7 +46,7 @@ incompatible_with:
       Embed 10-15 min of movement practice as pre-session warm-up within existing
       concurrent training sessions rather than scheduling standalone daily sessions.
       Reserve full skill sessions for lower-volume training phases.
-  - framework_id: emom_amrap
+  - framework_id: crossfit_template
     reason: >
       High-output conditioning sessions generate muscular fatigue that directly
       impairs the motor control precision required for skill acquisition. Scheduling

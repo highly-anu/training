@@ -1,0 +1,39 @@
+id: cf_mary
+name: "Mary"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 20
+pool_only: true
+
+slots:
+  - role: mary
+    slot_type: amrap
+    duration_sec: 1200
+    exercise_filter:
+      exercise_ids: [handstand_push_up]
+      ordered: true
+    notes: "20-minute AMRAP. Post rounds."
+
+  - role: mary_2
+    slot_type: amrap_movement
+    parent_slot_role: mary
+    reps_per_round: 10
+    exercise_filter:
+      exercise_ids: [pistol_squat]
+      ordered: true
+
+  - role: mary_3
+    slot_type: amrap_movement
+    parent_slot_role: mary
+    reps_per_round: 15
+    exercise_filter:
+      exercise_ids: [pull_up]
+      ordered: true
+
+required_equipment:
+- pull_up_bar
+sources:
+- "CrossFit, Benchmark Workouts (2003) / The New Girls (2004) / crossfit.com/benchmark"
+notes: >
+  As many rounds as possible in 20 minutes of 5 handstand push-ups, 10 pistols (alternating), 15 pull-ups.

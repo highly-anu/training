@@ -1,0 +1,47 @@
+id: cf_angie
+name: "Angie"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 30
+pool_only: true
+
+slots:
+  - role: angie
+    slot_type: for_time
+    rounds: 1
+    exercise_filter:
+      exercise_ids: [pull_up]
+      ordered: true
+    notes: "Complete all reps of each before moving on. Post time."
+
+  - role: angie_2
+    slot_type: amrap_movement
+    parent_slot_role: angie
+    reps_per_round: 100
+    exercise_filter:
+      exercise_ids: [push_up]
+      ordered: true
+
+  - role: angie_3
+    slot_type: amrap_movement
+    parent_slot_role: angie
+    reps_per_round: 100
+    exercise_filter:
+      exercise_ids: [sit_up]
+      ordered: true
+
+  - role: angie_4
+    slot_type: amrap_movement
+    parent_slot_role: angie
+    reps_per_round: 100
+    exercise_filter:
+      exercise_ids: [squat_air]
+      ordered: true
+
+required_equipment:
+- pull_up_bar
+sources:
+- "CrossFit, Benchmark Workouts (2003) / The New Girls (2004) / crossfit.com/benchmark"
+notes: >
+  For time: 100 pull-ups, 100 push-ups, 100 sit-ups, 100 squats.

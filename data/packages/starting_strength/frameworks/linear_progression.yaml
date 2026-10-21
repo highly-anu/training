@@ -37,7 +37,7 @@ incompatible_with:
     mitigation: >
       Cap conditioning at 2 sessions/week, Zone 1-2 only. Schedule aerobic sessions on
       off-days or post-strength as cool-down. Do not run concurrent polarized volume phases.
-  - framework_id: emom_amrap
+  - framework_id: crossfit_template
     reason: >
       EMOM/AMRAP conditioning elevates systemic fatigue and undermines session-to-session
       load progression that linear progression depends on.

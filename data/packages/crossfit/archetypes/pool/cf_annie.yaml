@@ -1,0 +1,34 @@
+id: cf_annie
+name: "Annie"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 15
+pool_only: true
+# A benchmark: its logged result suggests a standard result.
+test: {selectable: true}
+
+slots:
+  - role: annie
+    slot_type: for_time
+    rounds: 5
+    exercise_filter:
+      exercise_ids: [jump_rope_double_under]
+      ordered: true
+    standard: wod_annie_minutes
+    notes: "50-40-30-20-10 reps of each, for time. Post time."
+
+  - role: annie_2
+    slot_type: amrap_movement
+    parent_slot_role: annie
+    reps_per_round: 30
+    exercise_filter:
+      exercise_ids: [sit_up]
+      ordered: true
+
+required_equipment:
+- jump_rope
+sources:
+- "CrossFit, Benchmark Workouts (2003) / The New Girls (2004) / crossfit.com/benchmark"
+notes: >
+  50-40-30-20-10 reps, for time, of double-unders and sit-ups.

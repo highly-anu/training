@@ -1,0 +1,44 @@
+id: cf_jackie
+name: "Jackie"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 15
+pool_only: true
+
+slots:
+  - role: jackie
+    slot_type: for_time
+    rounds: 1
+    distance_m: 1000
+    exercise_filter:
+      exercise_ids: [row_threshold]
+      ordered: true
+    notes: "For time. Post time."
+
+  - role: jackie_2
+    slot_type: amrap_movement
+    parent_slot_role: jackie
+    reps_per_round: 50
+    exercise_filter:
+      exercise_ids: [thruster]
+      ordered: true
+    load: "45 lb (20 kg); women 35 lb"
+
+  - role: jackie_3
+    slot_type: amrap_movement
+    parent_slot_role: jackie
+    reps_per_round: 30
+    exercise_filter:
+      exercise_ids: [pull_up]
+      ordered: true
+
+required_equipment:
+- rower
+- barbell
+- plates
+- pull_up_bar
+sources:
+- "CrossFit, Benchmark Workouts (2003) / The New Girls (2004) / crossfit.com/benchmark"
+notes: >
+  For time: 1000 m row, 50 thrusters at 45 lb, 30 pull-ups.

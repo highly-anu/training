@@ -1,0 +1,35 @@
+id: cf_snatch_rope_couplet
+name: "Snatch / Rope Climb x 3"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 20
+pool_only: true
+
+slots:
+  - role: couplet
+    slot_type: for_time
+    rounds: 3
+    exercise_filter:
+      exercise_ids: [snatch]
+      ordered: true
+    load: "95 lb (43 kg)"
+    notes: "3 rounds for time. Post time."
+
+  - role: couplet_2
+    slot_type: amrap_movement
+    parent_slot_role: couplet
+    reps_per_round: 2
+    exercise_filter:
+      exercise_ids: [rope_climb]
+      ordered: true
+    notes: "15 ft, without legs, from a seated start."
+
+required_equipment:
+- barbell
+- plates
+- rope
+sources:
+- "crossfit.com Workout of the Day, 2005 (2005-07-13)"
+notes: >
+  3 rounds for time: 21 snatches at 95 lb, 2 rope climbs of 15 ft, legless from seated.

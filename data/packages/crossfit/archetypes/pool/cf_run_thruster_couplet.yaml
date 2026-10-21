@@ -1,0 +1,70 @@
+id: cf_run_thruster_couplet
+name: "Run / 115 lb Thruster"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 25
+pool_only: true
+
+slots:
+  - role: couplet
+    slot_type: for_time
+    rounds: 1
+    distance_m: 1600
+    exercise_filter:
+      exercise_ids: [run_interval]
+      ordered: true
+    notes: "For time, in order. Post time."
+
+  - role: couplet_2
+    slot_type: amrap_movement
+    parent_slot_role: couplet
+    reps_per_round: 9
+    exercise_filter:
+      exercise_ids: [thruster]
+      ordered: true
+    load: "115 lb (52 kg)"
+
+  - role: couplet_3
+    slot_type: amrap_movement
+    parent_slot_role: couplet
+    distance_m: 800
+    exercise_filter:
+      exercise_ids: [run_interval]
+      ordered: true
+
+  - role: couplet_4
+    slot_type: amrap_movement
+    parent_slot_role: couplet
+    reps_per_round: 15
+    exercise_filter:
+      exercise_ids: [thruster]
+      ordered: true
+    load: "115 lb (52 kg)"
+
+  - role: couplet_5
+    slot_type: amrap_movement
+    parent_slot_role: couplet
+    distance_m: 400
+    exercise_filter:
+      exercise_ids: [run_interval]
+      ordered: true
+
+  - role: couplet_6
+    slot_type: amrap_movement
+    parent_slot_role: couplet
+    reps_per_round: 21
+    exercise_filter:
+      exercise_ids: [thruster]
+      ordered: true
+    load: "115 lb (52 kg)"
+
+required_equipment:
+- open_space
+- barbell
+- rack
+- plates
+sources:
+- "crossfit.com Workout of the Day, 2005 (2005-07-29)"
+notes: >
+  For time: run 1600 m, 9 thrusters, run 800 m, 15 thrusters, run 400 m, 21 thrusters, at 115 lb.

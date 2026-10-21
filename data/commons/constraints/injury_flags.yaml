@@ -172,8 +172,6 @@ injury_flags:
         use: bike_easy
       - instead_of: run_interval
         use: bike_interval
-      - instead_of: run_sprint
-        use: bike_interval
       - instead_of: run_interval
         use: swim_easy
       - instead_of: run_sprint
@@ -216,8 +214,6 @@ injury_flags:
         use: back_squat
       - instead_of: wk_kb_clean_single
         use: kb_deadlift
-      - instead_of: plank_hold
-        use: side_plank
       - instead_of: plank
         use: side_plank
     training_phase_forced: rehab

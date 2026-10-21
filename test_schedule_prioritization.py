@@ -12,19 +12,20 @@ sys.stdout.reconfigure(encoding='utf-8') if hasattr(sys.stdout, 'reconfigure') e
 print('=== TEST 1: Priority Tier Dropping (2 days only) ===')
 print()
 
-# Simulate user with limited availability (3 days should trigger tier dropping)
+# Simulate user with limited availability (fewer days than the framework's
+# seven sessions should trigger tier dropping)
 constraints_limited = {
-    'equipment': ['kettlebell'],
-    'days_per_week': 3,  # Limited but valid
+    'equipment': ['barbell', 'rack', 'plates', 'kettlebell', 'pull_up_bar', 'rower', 'box', 'open_space'],
+    'days_per_week': 4,  # Gym Jones' least; it writes five days
     'session_time_minutes': 60,
     'training_level': 'intermediate',
     'training_phase': 'base',
 }
 
-# A philosophy on the general scheduler: Wildman, the old choice, is built by
-# its training contract now, which refuses a program without kettlebells
-# rather than exercising the priority tiers and duration matching tested here.
-phil_id = 'crossfit'
+# A philosophy on the general scheduler: Wildman and CrossFit, the old
+# choices, are a training contract and week templates now, which do not
+# exercise the priority tiers and duration matching tested here.
+phil_id = 'gym_jones'
 phil = loader.load_philosophy(phil_id)
 all_frameworks = loader.load_all_frameworks()
 
@@ -94,18 +95,18 @@ weekly_schedule = {
     'Wednesday': {'session1': 'short', 'session2': 'rest', 'session3': 'rest', 'session4': 'rest'},
     'Thursday': {'session1': 'rest', 'session2': 'rest', 'session3': 'rest', 'session4': 'rest'},
     'Friday': {'session1': 'long', 'session2': 'rest', 'session3': 'rest', 'session4': 'rest'},
-    'Saturday': {'session1': 'rest', 'session2': 'rest', 'session3': 'rest', 'session4': 'rest'},
+    'Saturday': {'session1': 'long', 'session2': 'rest', 'session3': 'rest', 'session4': 'rest'},
     'Sunday': {'session1': 'rest', 'session2': 'rest', 'session3': 'rest', 'session4': 'rest'},
 }
 
 constraints_scheduled = {
-    'equipment': ['barbell', 'pull_up_bar', 'rower'],
+    'equipment': ['barbell', 'rack', 'plates', 'pull_up_bar', 'rower', 'kettlebell', 'box', 'open_space'],
     'weekly_schedule': weekly_schedule,
     'training_level': 'intermediate',
     'training_phase': 'base',
 }
 
-print('User schedule: Mon=Long (75min), Wed=Short (40min), Fri=Long (75min)')
+print('User schedule: Mon=Long (75min), Wed=Short (40min), Fri=Long (75min), Sat=Long (75min)')
 print()
 
 # api.py derives days_per_week / day_configs from weekly_schedule before

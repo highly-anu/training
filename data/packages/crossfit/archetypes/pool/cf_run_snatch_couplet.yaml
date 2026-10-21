@@ -1,0 +1,35 @@
+id: cf_run_snatch_couplet
+name: "400 m Run / Snatch x 5"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 25
+pool_only: true
+
+slots:
+  - role: couplet
+    slot_type: for_time
+    rounds: 5
+    distance_m: 400
+    exercise_filter:
+      exercise_ids: [run_interval]
+      ordered: true
+    notes: "5 rounds for time. Post time."
+
+  - role: couplet_2
+    slot_type: amrap_movement
+    parent_slot_role: couplet
+    reps_per_round: 15
+    exercise_filter:
+      exercise_ids: [snatch]
+      ordered: true
+    load: "95 lb (43 kg); full squat snatches"
+
+required_equipment:
+- open_space
+- barbell
+- plates
+sources:
+- "crossfit.com Workout of the Day, 2005 (2005-07-05)"
+notes: >
+  5 rounds for time: run 400 m, 15 snatches at 95 lb (no power snatches).

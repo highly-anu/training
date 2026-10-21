@@ -1,0 +1,22 @@
+id: cf_run_5k
+name: "Run 5K"
+modality: aerobic_base
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 30
+pool_only: true
+
+slots:
+  - role: run
+    slot_type: distance
+    distance_m: 5000
+    exercise_filter:
+      exercise_ids: [run_easy, row_easy, bike_easy]
+      ordered: true
+
+required_equipment:
+- open_space
+sources:
+- "crossfit.com Workout of the Day, 2005 (2005-07-11)"
+notes: >
+  Run 5 km. Post time.

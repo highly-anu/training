@@ -1,0 +1,34 @@
+id: cf_lunge_burpee_couplet
+name: "Overhead Lunges / Burpees x 5"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 20
+pool_only: true
+
+slots:
+  - role: couplet
+    slot_type: for_time
+    rounds: 5
+    exercise_filter:
+      exercise_ids: [lunge_overhead]
+      ordered: true
+    load: "45 lb (20 kg) bar, 50 ft (15 m)"
+    notes: "5 rounds for time; let the trailing knee kiss the ground. Post time."
+
+  - role: couplet_2
+    slot_type: amrap_movement
+    parent_slot_role: couplet
+    reps_per_round: 21
+    exercise_filter:
+      exercise_ids: [burpee]
+      ordered: true
+
+required_equipment:
+- barbell
+- plates
+- open_space
+sources:
+- "crossfit.com Workout of the Day, 2005 (2005-07-21)"
+notes: >
+  5 rounds for time: 50 ft of overhead walking lunges with a 45 lb bar, 21 burpees.

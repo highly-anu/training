@@ -1,0 +1,34 @@
+id: cf_run_box_jump_couplet
+name: "Run 200 m / Box Jump x 5"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 15
+pool_only: true
+
+slots:
+  - role: couplet
+    slot_type: for_time
+    rounds: 5
+    distance_m: 200
+    exercise_filter:
+      exercise_ids: [run_interval]
+      ordered: true
+    notes: "5 rounds for time."
+
+  - role: couplet_2
+    slot_type: amrap_movement
+    parent_slot_role: couplet
+    reps_per_round: 10
+    exercise_filter:
+      exercise_ids: [box_jump]
+      ordered: true
+    load: "30 in (76 cm) box"
+
+required_equipment:
+- open_space
+- box
+sources:
+- "Glassman, A Theoretical Template for CrossFit's Programming (2003), Table 4"
+notes: >
+  5 rounds for time: run 200 m, 10 box jumps at 30 inches.

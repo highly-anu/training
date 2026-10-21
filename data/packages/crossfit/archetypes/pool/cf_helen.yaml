@@ -1,0 +1,46 @@
+id: cf_helen
+name: "Helen"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 15
+pool_only: true
+# A benchmark: its logged result suggests a standard result.
+test: {selectable: true}
+
+slots:
+  - role: helen
+    slot_type: for_time
+    rounds: 3
+    distance_m: 400
+    exercise_filter:
+      exercise_ids: [run_interval]
+      ordered: true
+    standard: wod_helen_minutes
+    notes: "3 rounds for time. Post time."
+
+  - role: helen_2
+    slot_type: amrap_movement
+    parent_slot_role: helen
+    reps_per_round: 21
+    exercise_filter:
+      exercise_ids: [kb_swing_two_hand]
+      ordered: true
+    load: "1.5 pood (24 kg)"
+
+  - role: helen_3
+    slot_type: amrap_movement
+    parent_slot_role: helen
+    reps_per_round: 12
+    exercise_filter:
+      exercise_ids: [pull_up]
+      ordered: true
+
+required_equipment:
+- open_space
+- kettlebell
+- pull_up_bar
+sources:
+- "CrossFit, Benchmark Workouts (2003) / The New Girls (2004) / crossfit.com/benchmark"
+notes: >
+  3 rounds for time of a 400 m run, 21 kettlebell swings at 1.5 pood, 12 pull-ups.

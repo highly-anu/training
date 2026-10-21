@@ -82,7 +82,8 @@ ALL_EQUIPMENT = [
     'rope', 'dumbbell', 'bench', 'gymnastics_rings', 'jump_rope', 'bike',
     'treadmill', 'trap_bar', 'ghd', 'parallettes', 'sled_harness',
     # The cable machine and bands Filly's sample weeks name (the rest of the
-    # exercise schema's implements move other packages' selection; not yet).
+    # exercise schema's implements, rings among them, move other packages'
+    # selection; not yet — gymnastics_rings above is no exercise's id).
     'resistance_band', 'cable_machine',
 ]
 

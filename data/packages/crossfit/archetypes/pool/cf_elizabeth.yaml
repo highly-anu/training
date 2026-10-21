@@ -1,0 +1,37 @@
+id: cf_elizabeth
+name: "Elizabeth"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 15
+pool_only: true
+# A benchmark: its logged result suggests a standard result.
+test: {selectable: true}
+
+slots:
+  - role: elizabeth
+    slot_type: for_time
+    rounds: 3
+    exercise_filter:
+      exercise_ids: [clean]
+      ordered: true
+    load: "135 lb (61 kg); women 95 lb (43 kg)"
+    standard: wod_elizabeth_minutes
+    notes: "21-15-9 reps of each, for time. Post time."
+
+  - role: elizabeth_2
+    slot_type: amrap_movement
+    parent_slot_role: elizabeth
+    reps_per_round: 15
+    exercise_filter:
+      exercise_ids: [dip_ring]
+      ordered: true
+
+required_equipment:
+- barbell
+- plates
+- rings
+sources:
+- "CrossFit, Benchmark Workouts (2003) / The New Girls (2004) / crossfit.com/benchmark"
+notes: >
+  21-15-9 reps, for time, of cleans at 135/95 lb and ring dips.

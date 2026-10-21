@@ -317,8 +317,10 @@ group's name.
   archetype. Sessions carry `test`, scored assignments `standard` (outside `slot`, so it
   survives storage); the skeleton hash ignores both. Tests today: Wildman's pentathlon
   (competition, last week), Gym Jones' 2 km row (first week of accumulation, last of
-  realization), Horsemen's PT test (start of strength, end of maintenance), CrossFit's
-  Cindy → Fran → Helen every fourth week. A standard's `derived_from` (its YAML) names the
+  realization), Horsemen's PT test (start of strength, end of maintenance). CrossFit's
+  Girls are `test: {selectable: true}` workouts in its template pools: picked as any
+  other day's workout, their scored slot still carries its standard, and a test's
+  written `load` reaches its prescription (`protocol_load`). A standard's `derived_from` (its YAML) names the
   lifts whose sets estimate it. Both clients badge a test session, list its standards with
   the number to beat, and Today says "Test today".
 - **Sessions suggest results; the athlete confirms** (`src/standard_results.py`). Both
@@ -429,8 +431,10 @@ group's name.
   it; `POST /sessions/generate` on a templated framework picks another workout of the day's
   category (`category`, else inferred from the modality; `regenerate_day`). Fidelity reads a templated phase
   against its template (`_check_template`), not `sessions_per_week`. Horsemen's 4-Month Macro
-  is the one user: ~190 named workouts, the PT test on the first and last hard job-specific
-  days (`test_week_template.py`).
+  uses it (~190 named workouts, the PT test on the first and last hard job-specific days), and
+  CrossFit (since 2026-10-21): Glassman's three-on, one-off cycle laid on twelve weeks, its day
+  types (one element, couplets, triplets) as pools of Table 4's workouts, the Girls and the 2005
+  workouts read (`test_week_template.py`).
 - **A training contract's progress is earned by confirmed sessions.** A module advances
   (`confirmed_state`, read when the program is regenerated) only on a completed session
   whose progressing exercises are logged clean at or below the module's RPE. A
