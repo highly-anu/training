@@ -1,0 +1,66 @@
+id: gj_sos_d10
+name: "Soldier of Steel — Day 10: Workout"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [novice, intermediate]
+duration_estimate_minutes: 55
+pool_only: true
+
+slots:
+  - role: warm_up
+    slot_type: time_domain
+    duration_minutes: 10
+    exercise_filter:
+      exercise_ids: [easy_aerobic]
+      ordered: true
+    notes: "Run, row or ride 10 minutes at an easy pace."
+
+  - role: rounds
+    slot_type: for_time
+    rounds: 5
+    exercise_filter:
+      exercise_ids: [push_up]
+      ordered: true
+    notes: "Five rounds: 5 proper push-ups, 10 air squats."
+
+  - role: rounds_squats
+    slot_type: amrap_movement
+    parent_slot_role: rounds
+    reps_per_round: 10
+    exercise_filter:
+      exercise_ids: [squat_air]
+      ordered: true
+
+  - role: row
+    slot_type: time_domain
+    duration_minutes: 6
+    exercise_filter:
+      exercise_ids: [row_interval]
+      ordered: true
+    notes: "6 x 30 s all out / 30 s super easy (a treadmill or elliptical without a rower)."
+
+  - role: box
+    slot_type: time_domain
+    duration_minutes: 6
+    exercise_filter:
+      exercise_ids: [box_jump]
+      ordered: true
+    notes: "6 x 30 s box jumps onto 20 in / 30 s step-ups on the same box, easy."
+
+  - role: press_carry
+    slot_type: time_domain
+    duration_minutes: 6
+    exercise_filter:
+      exercise_ids: [db_push_press]
+      ordered: true
+    notes: "6 x 30 s dumbbell push press / 30 s farmer carry, heavier dumbbells for the carry."
+
+required_equipment:
+- box
+- dumbbell
+- open_space
+- rower
+sources:
+- "Gym Jones, Soldier of Steel (Army National Guard, 2013)"
+notes: >
+  Push-ups and squats, then 6 x 30/30 rows, box jumps and push presses with carries.

@@ -1,9 +1,9 @@
 {
  "_about": "Real /programs/generate?trace=1 answers for the Dev Lab panel test. Re-record with test_devlab_trace.py --record; never edit by hand.",
  "scenarios": {
-  "gym_jones_no_equipment": {
+  "block_fixture_no_equipment": {
    "request": {
-    "philosophy_id": "gym_jones",
+    "philosophy_id": "block_fixture",
     "num_weeks": 1,
     "constraints": {
      "days_per_week": 5,
@@ -18,8 +18,8 @@
    },
    "response": {
     "goal": {
-     "id": "_phil_gym_jones",
-     "name": "Gym Jones / Mark Twight",
+     "id": "_phil_block_fixture",
+     "name": "Block fixture (test)",
      "priorities": {
       "max_strength": 0.2857142857142857,
       "power": 0.14285714285714285,
@@ -31,7 +31,7 @@
       "id": "block_periodization",
       "name": "Block Periodization Program",
       "description": "Twight's sequential blocks for operator fitness: accumulate volume, convert it to intensity, then realise it. Each block is about a month; the cycle repeats.\n",
-      "philosophy_id": "gym_jones"
+      "philosophy_id": "block_fixture"
      },
      "phase_sequence": [
       {
@@ -106,7 +106,7 @@
       "alternatives": []
      },
      "primary_sources": [
-      "gym_jones"
+      "block_fixture"
      ],
      "minimum_prerequisites": {},
      "incompatible_with": [],
@@ -140,7 +140,7 @@
       },
       {
        "code": "EQUIPMENT_SCALED",
-       "message": "'Gym Jones Operator Circuit' will use equipment-limited scaling (missing: {'pull_up_bar', 'plates', 'rower', 'barbell'})."
+       "message": "'Gym Jones Operator Circuit' will use equipment-limited scaling (missing: {'barbell', 'pull_up_bar', 'rower', 'plates'})."
       },
       {
        "code": "EQUIPMENT_SCALED",
@@ -148,7 +148,7 @@
       },
       {
        "code": "EQUIPMENT_SCALED",
-       "message": "'EMOM Strength Wave (10×1)' will use equipment-limited scaling (missing: {'rack', 'barbell', 'plates'})."
+       "message": "'EMOM Strength Wave (10×1)' will use equipment-limited scaling (missing: {'barbell', 'plates', 'rack'})."
       }
      ]
     },
@@ -259,11 +259,11 @@
             ]
            }
           },
-          "_package": "gym_jones"
+          "_package": "block_fixture"
          },
          "is_deload": false,
          "provenance": {
-          "package": "gym_jones",
+          "package": "block_fixture",
           "borrowed": false
          },
          "exercises": [
@@ -300,9 +300,9 @@
              "Gym Jones"
             ],
             "notes": "Gym Jones warm-up staple used in virtually every strength and circuit session. Stand with toes touching a wall, feet wide. Drop into a squat with knees tracking toes; contact the wall with knees to enforce vertical shin position and upright torso. Hands brace against wall as needed. Builds ankle mobility, hip flexor opening, and thoracic extension. Not a strength exercise — a diagnostic and mobility drill. 2–3 sets of 5 before any lower body session.\n",
-            "_package": "gym_jones",
+            "_package": "block_fixture",
             "_packages": [
-             "gym_jones"
+             "block_fixture"
             ]
            },
            "load": {
@@ -363,9 +363,9 @@
              "Gym Jones"
             ],
             "notes": "CrossFit fundamental movement. Rippetoe squatting standards apply: below parallel, neutral spine, heels flat. Gym Jones warm-up protocol: 2×5 wall squats then 2×10 air squats before loading. Chelsea benchmark: 15 squats per minute EMOM 30 min.\n",
-            "_package": "gym_jones",
+            "_package": "block_fixture",
             "_packages": [
-             "gym_jones"
+             "block_fixture"
             ]
            },
            "load": {
@@ -398,6 +398,13 @@
            "coverage_gap": false,
            "equipment_gap": true,
            "gap_reason": "EQUIPMENT_UNAVAILABLE",
+           "blocked_by": {
+            "cause": "equipment",
+            "exercise": "kb_step_up",
+            "needs": [
+             "kettlebell"
+            ]
+           },
            "substituted_for": null,
            "error": "No exercise fits the available equipment",
            "load_note": null,
@@ -443,9 +450,9 @@
              "CrossFit"
             ],
             "notes": "Gym Jones programs 300-second accumulated FLR (Front Leaning Rest) as a core and shoulder endurance component. Maintain neutral spine; do not allow hip sag. Progress toward 5 continuous minutes before loading.\n",
-            "_package": "gym_jones",
+            "_package": "block_fixture",
             "_packages": [
-             "gym_jones"
+             "block_fixture"
             ]
            },
            "load": {
@@ -531,11 +538,11 @@
             ]
            }
           },
-          "_package": "gym_jones"
+          "_package": "block_fixture"
          },
          "is_deload": false,
          "provenance": {
-          "package": "gym_jones",
+          "package": "block_fixture",
           "borrowed": false
          },
          "exercises": [
@@ -550,6 +557,13 @@
            "coverage_gap": false,
            "equipment_gap": true,
            "gap_reason": "EQUIPMENT_UNAVAILABLE",
+           "blocked_by": {
+            "cause": "equipment",
+            "exercise": "kb_tgu",
+            "needs": [
+             "kettlebell"
+            ]
+           },
            "substituted_for": null,
            "error": "No exercise fits the available equipment",
            "load_note": null,
@@ -666,11 +680,11 @@
             ]
            }
           },
-          "_package": "gym_jones"
+          "_package": "block_fixture"
          },
          "is_deload": false,
          "provenance": {
-          "package": "gym_jones",
+          "package": "block_fixture",
           "borrowed": false
          },
          "exercises": [
@@ -707,9 +721,9 @@
              "Gym Jones"
             ],
             "notes": "Gym Jones warm-up staple used in virtually every strength and circuit session. Stand with toes touching a wall, feet wide. Drop into a squat with knees tracking toes; contact the wall with knees to enforce vertical shin position and upright torso. Hands brace against wall as needed. Builds ankle mobility, hip flexor opening, and thoracic extension. Not a strength exercise — a diagnostic and mobility drill. 2–3 sets of 5 before any lower body session.\n",
-            "_package": "gym_jones",
+            "_package": "block_fixture",
             "_packages": [
-             "gym_jones"
+             "block_fixture"
             ]
            },
            "load": {
@@ -744,6 +758,15 @@
            "coverage_gap": false,
            "equipment_gap": true,
            "gap_reason": "EQUIPMENT_UNAVAILABLE",
+           "blocked_by": {
+            "cause": "equipment",
+            "exercise": "push_jerk",
+            "needs": [
+             "barbell",
+             "plates",
+             "rack"
+            ]
+           },
            "substituted_for": null,
            "error": "No exercise fits the available equipment",
            "load_note": null,
@@ -762,6 +785,14 @@
            "coverage_gap": false,
            "equipment_gap": true,
            "gap_reason": "EQUIPMENT_UNAVAILABLE",
+           "blocked_by": {
+            "cause": "equipment",
+            "exercise": "overhead_squat",
+            "needs": [
+             "barbell",
+             "plates"
+            ]
+           },
            "substituted_for": null,
            "error": "No exercise fits the available equipment",
            "load_note": null,
@@ -780,6 +811,15 @@
            "coverage_gap": false,
            "equipment_gap": true,
            "gap_reason": "EQUIPMENT_UNAVAILABLE",
+           "blocked_by": {
+            "cause": "equipment",
+            "exercise": "back_squat",
+            "needs": [
+             "barbell",
+             "plates",
+             "rack"
+            ]
+           },
            "substituted_for": null,
            "error": "No exercise fits the available equipment",
            "load_note": null,
@@ -887,11 +927,11 @@
             ]
            }
           },
-          "_package": "gym_jones"
+          "_package": "block_fixture"
          },
          "is_deload": false,
          "provenance": {
-          "package": "gym_jones",
+          "package": "block_fixture",
           "borrowed": false
          },
          "exercises": [
@@ -906,6 +946,13 @@
            "coverage_gap": false,
            "equipment_gap": true,
            "gap_reason": "EQUIPMENT_UNAVAILABLE",
+           "blocked_by": {
+            "cause": "equipment",
+            "exercise": "row_easy",
+            "needs": [
+             "rower"
+            ]
+           },
            "substituted_for": null,
            "error": "No exercise fits the available equipment",
            "load_note": null,
@@ -924,6 +971,13 @@
            "coverage_gap": false,
            "equipment_gap": true,
            "gap_reason": "EQUIPMENT_UNAVAILABLE",
+           "blocked_by": {
+            "cause": "equipment",
+            "exercise": "kb_squat_goblet",
+            "needs": [
+             "kettlebell"
+            ]
+           },
            "substituted_for": null,
            "error": "No exercise fits the available equipment",
            "load_note": null,
@@ -973,9 +1027,9 @@
              "Gym Jones"
             ],
             "notes": "Alternating legs, stepping forward. Knee tracks over foot, front shin near-vertical. Gym Jones programs 2×20m walking lunges in single-leg accessory work. Bodyweight version is the baseline; progress to overhead or weighted variants.\n",
-            "_package": "gym_jones",
+            "_package": "block_fixture",
             "_packages": [
-             "gym_jones"
+             "block_fixture"
             ]
            },
            "load": {
@@ -1008,6 +1062,14 @@
            "coverage_gap": false,
            "equipment_gap": true,
            "gap_reason": "EQUIPMENT_UNAVAILABLE",
+           "blocked_by": {
+            "cause": "equipment",
+            "exercise": "farmer_carry_barbell",
+            "needs": [
+             "barbell",
+             "plates"
+            ]
+           },
            "substituted_for": null,
            "error": "No exercise fits the available equipment",
            "load_note": null,
@@ -1091,11 +1153,11 @@
             ]
            }
           },
-          "_package": "gym_jones"
+          "_package": "block_fixture"
          },
          "is_deload": false,
          "provenance": {
-          "package": "gym_jones",
+          "package": "block_fixture",
           "borrowed": false
          },
          "exercises": [
@@ -1110,6 +1172,13 @@
            "coverage_gap": false,
            "equipment_gap": true,
            "gap_reason": "EQUIPMENT_UNAVAILABLE",
+           "blocked_by": {
+            "cause": "equipment",
+            "exercise": "row_easy",
+            "needs": [
+             "rower"
+            ]
+           },
            "substituted_for": null,
            "error": "No exercise fits the available equipment",
            "load_note": null,
@@ -1150,9 +1219,9 @@
              "Gym Jones"
             ],
             "notes": "Gym Jones warm-up staple used in virtually every strength and circuit session. Stand with toes touching a wall, feet wide. Drop into a squat with knees tracking toes; contact the wall with knees to enforce vertical shin position and upright torso. Hands brace against wall as needed. Builds ankle mobility, hip flexor opening, and thoracic extension. Not a strength exercise — a diagnostic and mobility drill. 2–3 sets of 5 before any lower body session.\n",
-            "_package": "gym_jones",
+            "_package": "block_fixture",
             "_packages": [
-             "gym_jones"
+             "block_fixture"
             ]
            },
            "load": {
@@ -1331,6 +1400,10 @@
       ]
      }
     ],
+    "held_back": {
+     "slots": 9,
+     "sessions": 5
+    },
     "compromises": [
      "Gym Jones Operator Strength (SL Squat / Step-Up / FLR): 'loaded_step' slot skipped — no matching exercises found for current equipment and training level.",
      "Gym Jones TGU Recovery (100 Total Reps): 'tgu_volume' slot skipped — no matching exercises found for current equipment and training level.",
@@ -1343,7 +1416,7 @@
      "Gym Jones Aerobic Recovery (Row / Swim / Ruck): 'aerobic_main' slot requires aerobic exercises — add aerobic to your equipment profile to fill this slot."
     ],
     "coverage_report": {
-     "philosophy": "gym_jones",
+     "philosophy": "block_fixture",
      "strict": true,
      "unfilled_sessions": [],
      "unfilled_slots": [],
@@ -1483,9 +1556,9 @@
              {
               "id": "wall_squat",
               "name": "Wall Squat (Mobility Drill)",
-              "package": "gym_jones",
+              "package": "block_fixture",
               "packages": [
-               "gym_jones"
+               "block_fixture"
               ],
               "score": 1.0,
               "breakdown": {
@@ -1515,9 +1588,9 @@
              {
               "id": "squat_air",
               "name": "Air Squat",
-              "package": "gym_jones",
+              "package": "block_fixture",
               "packages": [
-               "gym_jones"
+               "block_fixture"
               ],
               "score": 1.0,
               "breakdown": {
@@ -1529,9 +1602,9 @@
              {
               "id": "lunge",
               "name": "Walking Lunge",
-              "package": "gym_jones",
+              "package": "block_fixture",
               "packages": [
-               "gym_jones"
+               "block_fixture"
               ],
               "score": 1.0,
               "breakdown": {
@@ -1543,9 +1616,9 @@
              {
               "id": "single_leg_squat_box",
               "name": "Single-Leg Squat (Box)",
-              "package": "gym_jones",
+              "package": "block_fixture",
               "packages": [
-               "gym_jones"
+               "block_fixture"
               ],
               "score": 1.0,
               "breakdown": {
@@ -1557,9 +1630,9 @@
              {
               "id": "squat_jump",
               "name": "Jump Squat",
-              "package": "gym_jones",
+              "package": "block_fixture",
               "packages": [
-               "gym_jones"
+               "block_fixture"
               ],
               "score": 0.5,
               "breakdown": {
@@ -1571,9 +1644,9 @@
              {
               "id": "lunge_jumping",
               "name": "Split Jump Lunge",
-              "package": "gym_jones",
+              "package": "block_fixture",
               "packages": [
-               "gym_jones"
+               "block_fixture"
               ],
               "score": 0.5,
               "breakdown": {
@@ -1585,9 +1658,9 @@
              {
               "id": "lunge_overhead",
               "name": "Overhead Lunge",
-              "package": "gym_jones",
+              "package": "block_fixture",
               "packages": [
-               "gym_jones"
+               "block_fixture"
               ],
               "score": 0.5,
               "breakdown": {
@@ -1599,9 +1672,9 @@
              {
               "id": "burpee",
               "name": "Burpee",
-              "package": "gym_jones",
+              "package": "block_fixture",
               "packages": [
-               "gym_jones"
+               "block_fixture"
               ],
               "score": 0.5,
               "breakdown": {
@@ -1648,9 +1721,9 @@
              {
               "id": "plank_hold",
               "name": "Plank Hold (FLR — Front Leaning Rest)",
-              "package": "gym_jones",
+              "package": "block_fixture",
               "packages": [
-               "gym_jones"
+               "block_fixture"
               ],
               "score": 1.0,
               "breakdown": {
@@ -1811,9 +1884,9 @@
              {
               "id": "wall_squat",
               "name": "Wall Squat (Mobility Drill)",
-              "package": "gym_jones",
+              "package": "block_fixture",
               "packages": [
-               "gym_jones"
+               "block_fixture"
               ],
               "score": -1.0,
               "breakdown": {
@@ -1992,9 +2065,9 @@
              {
               "id": "lunge",
               "name": "Walking Lunge",
-              "package": "gym_jones",
+              "package": "block_fixture",
               "packages": [
-               "gym_jones"
+               "block_fixture"
               ],
               "score": 1.0,
               "breakdown": {
@@ -2006,9 +2079,9 @@
              {
               "id": "lunge_jumping",
               "name": "Split Jump Lunge",
-              "package": "gym_jones",
+              "package": "block_fixture",
               "packages": [
-               "gym_jones"
+               "block_fixture"
               ],
               "score": 0.5,
               "breakdown": {
@@ -2020,9 +2093,9 @@
              {
               "id": "lunge_overhead",
               "name": "Overhead Lunge",
-              "package": "gym_jones",
+              "package": "block_fixture",
               "packages": [
-               "gym_jones"
+               "block_fixture"
               ],
               "score": 0.5,
               "breakdown": {
@@ -2034,9 +2107,9 @@
              {
               "id": "burpee",
               "name": "Burpee",
-              "package": "gym_jones",
+              "package": "block_fixture",
               "packages": [
-               "gym_jones"
+               "block_fixture"
               ],
               "score": 0.5,
               "breakdown": {
@@ -2048,9 +2121,9 @@
              {
               "id": "bear_crawl",
               "name": "Bear Crawl",
-              "package": "gym_jones",
+              "package": "block_fixture",
               "packages": [
-               "gym_jones"
+               "block_fixture"
               ],
               "score": 0.5,
               "breakdown": {
@@ -2164,9 +2237,9 @@
              {
               "id": "wall_squat",
               "name": "Wall Squat (Mobility Drill)",
-              "package": "gym_jones",
+              "package": "block_fixture",
               "packages": [
-               "gym_jones"
+               "block_fixture"
               ],
               "score": -3.0,
               "breakdown": {
@@ -2201,7 +2274,7 @@
       }
      ],
      "primary_sources": [
-      "gym_jones"
+      "block_fixture"
      ],
      "philosophy_mode": "explicit_goal"
     }
@@ -2632,32 +2705,32 @@
      "warnings": [
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype '2 Minutes' requires {'medicine_ball', 'box', 'tire', 'cable_machine', 'resistance_band', 'jump_rope', 'sandbag', 'hurdles'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype '2 Minutes' requires {'medicine_ball', 'hurdles', 'box', 'cable_machine', 'sandbag', 'resistance_band', 'tire', 'jump_rope'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Bannister' requires {'cable_machine', 'hurdles', 'tire'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Bannister' requires {'tire', 'hurdles', 'cable_machine'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Crazy 8' requires {'medicine_ball', 'dumbbell', 'box', 'agility_ladder', 'parallettes'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Crazy 8' requires {'medicine_ball', 'agility_ladder', 'box', 'parallettes', 'dumbbell'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Double/Doubles' requires {'rope', 'box', 'tire', 'cable_machine', 'jump_rope'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Double/Doubles' requires {'box', 'rope', 'cable_machine', 'tire', 'jump_rope'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Fifty' requires {'parallettes', 'jump_rope', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Fifty' requires {'jump_rope', 'parallettes', 'box'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Mirror' requires {'dumbbell', 'sandbag'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Mirror' requires {'sandbag', 'dumbbell'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2672,12 +2745,12 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Tens' requires {'medicine_ball', 'dumbbell', 'ghd', 'box', 'parallettes'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Tens' requires {'medicine_ball', 'box', 'ghd', 'parallettes', 'dumbbell'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Triples' requires {'cable_machine', 'medicine_ball', 'rope', 'sandbag'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Triples' requires {'medicine_ball', 'sandbag', 'rope', 'cable_machine'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2687,7 +2760,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Death to Infidels' requires {'rings', 'ghd', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Death to Infidels' requires {'box', 'rings', 'ghd'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2757,7 +2830,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'The Cog' requires {'dumbbell', 'rower'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'The Cog' requires {'rower', 'dumbbell'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2857,12 +2930,12 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'D-Day' requires {'ghd', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'D-Day' requires {'box', 'ghd'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Drunken Lullaby' requires {'box', 'sandbag'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Drunken Lullaby' requires {'sandbag', 'box'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2882,7 +2955,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Girl Farts' requires {'dumbbell', 'rower'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Girl Farts' requires {'rower', 'dumbbell'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2892,7 +2965,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Lovely Turd' requires {'parallettes', 'box', 'sandbag'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Lovely Turd' requires {'sandbag', 'parallettes', 'box'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2907,7 +2980,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Start Your Face' requires {'dumbbell', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Start Your Face' requires {'box', 'dumbbell'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2942,7 +3015,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'George Washington' requires {'rings', 'ghd', 'box', 'rower'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'George Washington' requires {'rower', 'box', 'rings', 'ghd'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2957,7 +3030,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Till U Collapse' requires {'medicine_ball', 'ghd', 'rower', 'tire'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Till U Collapse' requires {'medicine_ball', 'tire', 'rower', 'ghd'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2977,17 +3050,17 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Winter in August' requires {'parallettes', 'rower'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Winter in August' requires {'rower', 'parallettes'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Act With a Purpose' requires {'dumbbell', 'ghd', 'box', 'tire', 'parallettes'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Act With a Purpose' requires {'box', 'ghd', 'parallettes', 'tire', 'dumbbell'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Ben Franklin' requires {'dumbbell', 'ghd', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Ben Franklin' requires {'dumbbell', 'box', 'ghd'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2997,12 +3070,12 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Chin Up. Soldier On.' requires {'rings', 'dumbbell', 'sandbag', 'tire'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Chin Up. Soldier On.' requires {'sandbag', 'tire', 'rings', 'dumbbell'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Family Friendly Violence' requires {'dumbbell', 'parallettes', 'tire'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Family Friendly Violence' requires {'tire', 'parallettes', 'dumbbell'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3012,7 +3085,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Honey Butter' requires {'dumbbell', 'ghd', 'box', 'sandbag'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Honey Butter' requires {'sandbag', 'dumbbell', 'box', 'ghd'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3027,17 +3100,17 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Max Out!' requires {'box', 'sandbag'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Max Out!' requires {'sandbag', 'box'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Russian Aggression' requires {'dumbbell', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Russian Aggression' requires {'box', 'dumbbell'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Soviet Capitalists' requires {'ghd', 'parallettes', 'sandbag'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Soviet Capitalists' requires {'sandbag', 'parallettes', 'ghd'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3062,7 +3135,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Get-ups, Burpees and Step-ups' requires {'dumbbell', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Get-ups, Burpees and Step-ups' requires {'box', 'dumbbell'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3097,7 +3170,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype '10-Minute Step-ups' requires {'dumbbell', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype '10-Minute Step-ups' requires {'box', 'dumbbell'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3374,6 +3447,7 @@
            "equipment_gap": false,
            "gap_reason": null,
            "substituted_for": "back_squat",
+           "substituted_by_flag": "lumbar_disc",
            "error": null,
            "load_note": "50% of 1RM",
            "notes": "100 reps of any big lift at 50% of its 1RM; the list is the choice of lifts, not an order of preference. The source gives no time.",
@@ -3471,6 +3545,10 @@
       "changes": []
      }
     ],
+    "held_back": {
+     "slots": 0,
+     "sessions": 0
+    },
     "compromises": [
      "With 5 training days the week leaves out: Recovery (the source trains 6 days).",
      "No Strength workout fits as written (equipment, injuries or 60 minutes); the day is left out.",
@@ -3768,6 +3846,7 @@
         "min_spacing_days": 2,
         "max_rpe": 7,
         "deload_keep": 0.5,
+        "advice": "Away more than a week? Wildman repeats the last workouts before moving on — repeat them if you need to; the program carries on either way.",
         "progression": {
          "model": "density_cycle",
          "reps_start": 6,
@@ -4131,6 +4210,7 @@
           {
            "id": "swing",
            "forecast_step": 0,
+           "deload": false,
            "archetype_id": "kb_ballistic_session",
            "exercise_ids": [
             "wk_kb_swing_two_hand"
@@ -4148,6 +4228,7 @@
           {
            "id": "deck_squat",
            "forecast_step": 0,
+           "deload": false,
            "archetype_id": "kb_squat_practice",
            "exercise_ids": [
             "wk_deck_squat"
@@ -4332,7 +4413,7 @@
            "gap_reason": null,
            "substituted_for": null,
            "error": null,
-           "load_note": "Choose a bell you can control throughout. Record its weight before increasing load.",
+           "load_note": "Choose a bell you can control throughout. Record its weight before increasing load. Away more than a week? Wildman repeats the last workouts before moving on — repeat them if you need to; the program carries on either way.",
            "notes": "Swings at the top of each minute (or round); rest for its remainder. Wildman's most common option alternates minutes of two-hand and hand-to-hand swings once both are clean. Stop if technique or breathing deteriorates.",
            "parent_slot_role": null,
            "skip_exercise": false
@@ -4548,6 +4629,7 @@
           {
            "id": "swing",
            "forecast_step": 1,
+           "deload": false,
            "archetype_id": "kb_ballistic_session",
            "exercise_ids": [
             "wk_kb_swing_two_hand"
@@ -4565,6 +4647,7 @@
           {
            "id": "deck_squat",
            "forecast_step": 1,
+           "deload": false,
            "archetype_id": "kb_squat_practice",
            "exercise_ids": [
             "wk_deck_squat"
@@ -4749,7 +4832,7 @@
            "gap_reason": null,
            "substituted_for": null,
            "error": null,
-           "load_note": "Choose a bell you can control throughout. Record its weight before increasing load.",
+           "load_note": "Choose a bell you can control throughout. Record its weight before increasing load. Away more than a week? Wildman repeats the last workouts before moving on — repeat them if you need to; the program carries on either way.",
            "notes": "Swings at the top of each minute (or round); rest for its remainder. Wildman's most common option alternates minutes of two-hand and hand-to-hand swings once both are clean. Stop if technique or breathing deteriorates.",
            "parent_slot_role": null,
            "skip_exercise": false
@@ -4965,6 +5048,7 @@
           {
            "id": "clean_press",
            "forecast_step": 0,
+           "deload": false,
            "archetype_id": "kb_clean_press_practice",
            "exercise_ids": [
             "wk_kb_clean_single",
@@ -4987,6 +5071,7 @@
           {
            "id": "getup",
            "forecast_step": 0,
+           "deload": false,
            "archetype_id": "kb_getup_mobility_practice",
            "exercise_ids": [
             "wk_kb_tgu"
@@ -5441,6 +5526,7 @@
           {
            "id": "clean_press",
            "forecast_step": 1,
+           "deload": false,
            "archetype_id": "kb_clean_press_practice",
            "exercise_ids": [
             "wk_kb_clean_single",
@@ -5463,6 +5549,7 @@
           {
            "id": "getup",
            "forecast_step": 1,
+           "deload": false,
            "archetype_id": "kb_getup_mobility_practice",
            "exercise_ids": [
             "wk_kb_tgu"
@@ -5976,6 +6063,10 @@
       "changes": []
      }
     ],
+    "held_back": {
+     "slots": 0,
+     "sessions": 0
+    },
     "compromises": [
      "Nerd Math Snatch joins the week once you confirm wk_kb_snatch."
     ],
@@ -5993,7 +6084,8 @@
      "id": "wildman_kettlebell/general_practice@1",
      "version": 1,
      "status": "fulfilled",
-     "forecast": "Future exposures assume successful clean completion; regenerate after logging outcomes."
+     "forecast": "Future exposures assume successful clean completion; regenerate after logging outcomes.",
+     "longest_minutes": 60
     },
     "module_state": {
      "swing": {
@@ -6132,7 +6224,7 @@
              "time_minutes": 10,
              "format": "EMOM",
              "duration_minutes": 10,
-             "load_note": "Choose a bell you can control throughout. Record its weight before increasing load.",
+             "load_note": "Choose a bell you can control throughout. Record its weight before increasing load. Away more than a week? Wildman repeats the last workouts before moving on — repeat them if you need to; the program carries on either way.",
              "prescription_version": 1,
              "progression_model": "density_cycle",
              "module_id": "swing",
@@ -6297,7 +6389,7 @@
              "time_minutes": 10,
              "format": "EMOM",
              "duration_minutes": 10,
-             "load_note": "Choose a bell you can control throughout. Record its weight before increasing load.",
+             "load_note": "Choose a bell you can control throughout. Record its weight before increasing load. Away more than a week? Wildman repeats the last workouts before moving on — repeat them if you need to; the program carries on either way.",
              "prescription_version": 1,
              "progression_model": "density_cycle",
              "module_id": "swing",

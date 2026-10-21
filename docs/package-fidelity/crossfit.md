@@ -52,8 +52,9 @@ None.
 ## Inventions
 
 - I1: workouts are filed by their elements; every workout of three or more as a triplet.
-- I2: the pools' order (Table 4 first, then the Girls and the 2005 days); the next one
-  the athlete can do, passing over one used in the last week.
+- I2: the pools' order (Table 4 first, then the Girls and the 2005 days, the tracked
+  benchmarks, Murph among them, before the rest so each comes round within twelve weeks
+  of either track); the next one the athlete can do, passing over one used in the last week.
 - I3: another couplet or triplet when none of the day's type fits.
 - I4: the drop order at five days.
 - I5: intermediate and up; novices refused.

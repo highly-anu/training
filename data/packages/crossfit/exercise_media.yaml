@@ -10,13 +10,16 @@ back_extension:
   - Extend to straight, not past
   description: A hip extension on a GHD or back-extension bench.
   muscle_diagram:
-    highlight_primary: &id001
+    highlight_primary:
     - erector_spinae
     - glutes
-    highlight_secondary: &id002
+    highlight_secondary:
     - hamstrings
-  muscles_primary: *id001
-  muscles_secondary: *id002
+  muscles_primary:
+  - erector_spinae
+  - glutes
+  muscles_secondary:
+  - hamstrings
 back_squat:
   animation:
     type: none
@@ -265,15 +268,20 @@ clean:
   - Pull under and catch in the front squat
   description: From the floor to the front rack, received in a squat.
   muscle_diagram:
-    highlight_primary: &id003
+    highlight_primary:
     - glutes
     - hamstrings
     - quadriceps
-    highlight_secondary: &id004
+    highlight_secondary:
     - upper_back
     - erector_spinae
-  muscles_primary: *id003
-  muscles_secondary: *id004
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - quadriceps
+  muscles_secondary:
+  - upper_back
+  - erector_spinae
 clean_and_jerk:
   animation:
     type: none
@@ -286,15 +294,20 @@ clean_and_jerk:
   - Lock out overhead
   description: A clean to the shoulders, then a jerk overhead.
   muscle_diagram:
-    highlight_primary: &id005
+    highlight_primary:
     - glutes
     - quadriceps
     - shoulders
-    highlight_secondary: &id006
+    highlight_secondary:
     - triceps
     - upper_back
-  muscles_primary: *id005
-  muscles_secondary: *id006
+  muscles_primary:
+  - glutes
+  - quadriceps
+  - shoulders
+  muscles_secondary:
+  - triceps
+  - upper_back
 db_snatch:
   animation:
     type: none
@@ -307,15 +320,20 @@ db_snatch:
   - Punch to lockout overhead
   description: A one-arm dumbbell (or kettlebell) snatch.
   muscle_diagram:
-    highlight_primary: &id007
+    highlight_primary:
     - glutes
     - hamstrings
     - shoulders
-    highlight_secondary: &id008
+    highlight_secondary:
     - upper_back
     - core
-  muscles_primary: *id007
-  muscles_secondary: *id008
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - shoulders
+  muscles_secondary:
+  - upper_back
+  - core
 deadlift:
   animation:
     external_id: Axle_Deadlift
@@ -647,14 +665,18 @@ l_pull_up:
   - Lower under control
   description: A strict pull-up with the legs held straight out in an L.
   muscle_diagram:
-    highlight_primary: &id009
+    highlight_primary:
     - lats
     - core
-    highlight_secondary: &id010
+    highlight_secondary:
     - biceps
     - hip_flexors
-  muscles_primary: *id009
-  muscles_secondary: *id010
+  muscles_primary:
+  - lats
+  - core
+  muscles_secondary:
+  - biceps
+  - hip_flexors
 lunge:
   animation:
     external_id: Barbell_Walking_Lunge
@@ -1361,12 +1383,17 @@ wall_ball:
   - Catch into the next squat
   description: A squat with a medicine ball, then a throw to a 10 ft target.
   muscle_diagram:
-    highlight_primary: &id011
+    highlight_primary:
     - quadriceps
     - glutes
     - shoulders
-    highlight_secondary: &id012
+    highlight_secondary:
     - core
     - triceps
-  muscles_primary: *id011
-  muscles_secondary: *id012
+  muscles_primary:
+  - quadriceps
+  - glutes
+  - shoulders
+  muscles_secondary:
+  - core
+  - triceps

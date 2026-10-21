@@ -1,0 +1,53 @@
+id: gj_of_d15
+name: "Operator Fitness — Day 15: Strength"
+modality: max_strength
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 70
+pool_only: true
+
+slots:
+  - role: kb_complex
+    slot_type: sets_reps
+    sets: 1
+    reps: 10
+    exercise_filter:
+      exercise_ids: [kb_complex]
+      ordered: true
+    load: "a light kettlebell"
+    notes: "10 one-arm swings a side, 10 one-arm jerk or push press a side, 10 figure 8 each way, 10 goblet squats, 10 snatches, 10 one-arm OHS a side, 10 get-ups a side."
+
+  - role: front_squat
+    slot_type: sets_reps
+    sets: 10
+    reps: 2
+    exercise_filter:
+      exercise_ids: [front_squat]
+      ordered: true
+    load: "80 % of 1RM, after working up to it"
+    notes: "Rest 1 minute."
+
+  - role: row_2000
+    slot_type: for_time
+    rounds: 1
+    distance_m: 2000
+    exercise_filter:
+      exercise_ids: [row_2km_test]
+      ordered: true
+    notes: "2000 m row for time."
+
+required_equipment:
+- barbell
+- box
+- dumbbell
+- kettlebell
+- medicine_ball
+- open_space
+- plates
+- pull_up_bar
+- rack
+- rower
+sources:
+- "Gym Jones, Operator Fitness (Rob MacDonald)"
+notes: >
+  A kettlebell complex warm-up, front squats 10x2 at 80 %, then 2000 m row for time.

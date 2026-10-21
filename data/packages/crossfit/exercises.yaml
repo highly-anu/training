@@ -241,7 +241,8 @@ exercises:
   movement_patterns:
   - vertical_push
   requires:
-  - dip
+  - push_pattern
+  - shoulder_stability
   unlocks:
   - muscle_up_ring
   contraindicated_with:

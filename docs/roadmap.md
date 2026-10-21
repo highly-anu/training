@@ -787,11 +787,27 @@ badly the default misrepresents the method and whether its policies exist:
    Table 4, the Girls, Murph, Michael, J.T. and the 2005 days read; the Girls are
    selectable tests of their standards, recurring irregularly. The single 20-minute AMRAP,
    the every-fourth-week test and `avoid_with: [max_strength, aerobic_base]` are gone.
-   Partial: M3 (the scorecard's equipment has no `rings`; fixing that moves Gym Jones).
-   Left: a scaled novice track, more of the archive.
-7. *Gym Jones* — refuse novices (its Foundation assumes training history); variation.
+   Audited on 2026-10-22, once the scorecard's equipment had `rings` (the Gym Jones
+   review), the ring dip no longer required a removed `dip`, and Murph came round within
+   twelve weeks. Left: a scaled novice track, more of the archive.
+7. *Gym Jones* — **done 2026-10-21** (branch `filly-review`): the two plans the
+   repository holds, as written, day by day — Operator Fitness (six days: strength,
+   recovery, progression, circuit, the pack hike, power endurance, intervals, the
+   breathing ladder, accumulation) and Soldier of Steel (hard day, recovery day, one rest
+   day; a novice with no track named gets it) — as week templates of one-workout pools.
+   The three-block periodization, its deloads, the 2 km row block test and the generic
+   strength/EMOM/complex sessions are gone; the old package is the modality scheduler's
+   test fixture (`test_packages/block_fixture`). Left: Operator Fitness II (the copy ends
+   at day 17).
 8. *ATG, Kelly Starrett, Ido Portal* — after assessment gating, once their
-   advancement markers are sourced.
+   advancement markers are sourced. Their `requires` name exercises their packages do
+   not have (ATG `tire_drag_forward`; Ido `push_up`, `wrist_prep`, `dip_ring`, `sit_up`,
+   `squat_air`, `single_leg_balance`, `handstand_wall_drill`), which locks those
+   movements below elite. Horsemen had five such (`kb_clean_single`, `kb_halo`,
+   `sb_clean`, `sb_squat`), which kept its snatch test, snatch ladder and 12-minute
+   complex from ever being placed; fixed 2026-10-22, and the reach check
+   (`check_exercise_coverage._pooled`) now counts a pool workout only when the level
+   has unlocked every slot.
 
 **Package fidelity method (2026-10-20).** `docs/package-fidelity/` is how every
 package is checked and improved from here: the method, `status.yaml` (where each

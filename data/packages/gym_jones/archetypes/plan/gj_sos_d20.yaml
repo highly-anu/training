@@ -1,0 +1,32 @@
+id: gj_sos_d20
+name: "Soldier of Steel — Day 20: Recovery"
+modality: aerobic_base
+category: conditioning
+training_levels: [novice, intermediate]
+duration_estimate_minutes: 45
+pool_only: true
+
+slots:
+  - role: pull_ups
+    slot_type: sets_reps
+    sets: 3
+    reps: '1-6 ladder'
+    exercise_filter:
+      exercise_ids: [pull_up]
+      ordered: true
+    notes: "Or 50 pull-ups, broken as needed (1-4 ladders or 10 x 5)."
+
+  - role: easy
+    slot_type: time_domain
+    duration_minutes: 35
+    exercise_filter:
+      exercise_ids: [easy_aerobic]
+      ordered: true
+    notes: "30-45 minutes bike, row or swim at an easy pace."
+
+required_equipment:
+- pull_up_bar
+sources:
+- "Gym Jones, Soldier of Steel (Army National Guard, 2013)"
+notes: >
+  Three 1-6 pull-up ladders or 50 pull-ups as needed, then 30-45 minutes easy bike, row or swim.

@@ -45,5 +45,9 @@ docs/*
 data/packages/*/fidelity.yaml
 data/packages/*/source_weeks.yaml
 
+# The modality scheduler's test fixture package (fixture_packages.py).
+test_packages/
+fixture_packages.py
+
 # Logs / temp
 data/api_errors.txt

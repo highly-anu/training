@@ -4,11 +4,11 @@ name: Training contracts
 # two lists part.
 on:
   pull_request:
-    paths: ['src/**', 'data/**', 'docs/schemas/**', 'test_*.py', 'api.py', 'mcp_server.py', 'tools/**', 'garmin/**',
+    paths: ['src/**', 'data/**', 'docs/schemas/**', 'test_*.py', 'test_packages/**', 'fixture_packages.py', 'api.py', 'mcp_server.py', 'tools/**', 'garmin/**',
             'frontend/src/**', 'ios/**', 'docs/package-fidelity/**', '.github/workflows/training-contract.yml']
   push:
     branches: [master]
-    paths: ['src/**', 'data/**', 'docs/schemas/**', 'test_*.py', 'api.py', 'mcp_server.py', 'tools/**', 'garmin/**',
+    paths: ['src/**', 'data/**', 'docs/schemas/**', 'test_*.py', 'test_packages/**', 'fixture_packages.py', 'api.py', 'mcp_server.py', 'tools/**', 'garmin/**',
             'frontend/src/**', 'ios/**', 'docs/package-fidelity/**', '.github/workflows/training-contract.yml']
 jobs:
   verify:

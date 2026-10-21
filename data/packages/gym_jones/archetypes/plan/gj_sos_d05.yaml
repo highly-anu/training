@@ -1,0 +1,49 @@
+id: gj_sos_d05
+name: "Soldier of Steel — Day 5: Workout"
+modality: anaerobic_intervals
+category: conditioning
+training_levels: [novice, intermediate]
+duration_estimate_minutes: 55
+pool_only: true
+
+slots:
+  - role: warm_up
+    slot_type: time_domain
+    duration_minutes: 10
+    exercise_filter:
+      exercise_ids: [run_easy]
+      ordered: true
+    notes: "Run 10 minutes at an easy pace."
+
+  - role: build_ups
+    slot_type: sets_reps
+    sets: 5
+    reps: '1-2 min'
+    exercise_filter:
+      exercise_ids: [run_interval]
+      ordered: true
+    notes: "Progressively faster, working up to max output."
+
+  - role: sprints
+    slot_type: sets_reps
+    sets: 5
+    reps: '1 min'
+    exercise_filter:
+      exercise_ids: [run_sprint]
+      ordered: true
+    notes: "All out; 4 minutes active rest (walk, stretch) between."
+
+  - role: cool_down
+    slot_type: time_domain
+    duration_minutes: 20
+    exercise_filter:
+      exercise_ids: [run_easy]
+      ordered: true
+    notes: "15-30 minutes run or walk at an easy pace."
+
+required_equipment:
+- open_space
+sources:
+- "Gym Jones, Soldier of Steel (Army National Guard, 2013)"
+notes: >
+  Five progressively faster runs, then 5 x 1 min all-out sprints with 4 minutes active rest.

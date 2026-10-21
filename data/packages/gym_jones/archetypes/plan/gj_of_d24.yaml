@@ -1,0 +1,93 @@
+id: gj_of_d24
+name: "Operator Fitness — Day 24: Circuit (Comp)"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 60
+pool_only: true
+
+slots:
+  - role: wall_squat
+    slot_type: sets_reps
+    sets: 2
+    reps: 5
+    exercise_filter:
+      exercise_ids: [wall_squat]
+      ordered: true
+
+  - role: air_squat
+    slot_type: sets_reps
+    sets: 2
+    reps: 10
+    exercise_filter:
+      exercise_ids: [squat_air]
+      ordered: true
+
+  - role: goblet_squat
+    slot_type: sets_reps
+    sets: 2
+    reps: 5
+    exercise_filter:
+      exercise_ids: [kb_squat_goblet]
+      ordered: true
+
+  - role: clean_triplets
+    slot_type: time_domain
+    duration_minutes: 10
+    exercise_filter:
+      exercise_ids: [power_clean]
+      ordered: true
+    load: "75-135 lb (34-61 kg)"
+    notes: "Clean + front squat + hang clean: one triplet every 30 seconds for 10 minutes (20 triplets)."
+
+  - role: louder_than_10
+    slot_type: for_time
+    rounds: 11
+    exercise_filter:
+      exercise_ids: [ball_slam]
+      ordered: true
+    load: "20 lb (9 kg) ball"
+    notes: "Louder than 10: 5 ball slams, 10 push-ups, 15 KB swings at 53 lb; eleven rounds."
+
+  - role: ltt_push_ups
+    slot_type: amrap_movement
+    parent_slot_role: louder_than_10
+    reps_per_round: 10
+    exercise_filter:
+      exercise_ids: [push_up]
+      ordered: true
+
+  - role: ltt_swings
+    slot_type: amrap_movement
+    parent_slot_role: louder_than_10
+    reps_per_round: 15
+    exercise_filter:
+      exercise_ids: [kb_swing_two_hand]
+      ordered: true
+    load: "53 lb (24 kg)"
+
+  - role: flr
+    slot_type: static_hold
+    sets: 1
+    hold_seconds: 300
+    exercise_filter:
+      exercise_ids: [ring_front_leaning_rest]
+      ordered: true
+    notes: "300 seconds on rings, broken as needed."
+
+required_equipment:
+- barbell
+- box
+- dumbbell
+- kettlebell
+- medicine_ball
+- open_space
+- plates
+- pull_up_bar
+- rack
+- rings
+- rower
+sources:
+- "Gym Jones, Operator Fitness (Rob MacDonald)"
+notes: >
+  Squat warm-up, clean triplets every 30 s for 10 min, "Louder than 10", then 300 s front leaning rest on rings.

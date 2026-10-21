@@ -171,7 +171,7 @@ inventions:
     implemented_by:
       - data:frameworks/crossfit_template.yaml#categories
   - id: I2
-    text: "The pools hold Table 4's workouts first, then the Girls and the 2005 days read, each as written; the day takes the next one the athlete can do, passing over one used in the last week."
+    text: "The pools hold Table 4's workouts first, then the Girls and the 2005 days read, each as written, the benchmarks the analytics track (Murph among them) before the rest so each comes round within twelve weeks of either track; the day takes the next one the athlete can do, passing over one used in the last week."
     implemented_by:
       - data:frameworks/crossfit_template.yaml#categories
   - id: I3

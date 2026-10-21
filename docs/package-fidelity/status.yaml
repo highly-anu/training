@@ -54,6 +54,60 @@ packages:
       carries a plate, the farmer''s carry is with dumbbells (or kettlebells); the deload notes add an
       easier pull-up and a lower box.'
     next: Exercise media (D3), the output review (S6), and a competition camp if the owner wants one.
+  crossfit:
+    status: audited
+    shape: templates
+    dossier: docs/package-fidelity/crossfit.md
+    sources_kind: primary
+    debt: []
+    currency:
+      constantly_varied: benchmark_wods
+      five_on_two_off: benchmark_wods
+    source_tests:
+    - test_standard_tests.py::test_crossfit_benchmarks_recur_in_its_pools
+    - test_week_template.py::test_crossfit_runs_glassmans_cycle_and_the_girls_as_written
+    inventions:
+    - 'I1: A couplet or triplet is filed by how many elements it has; a couplet by which two (GW, WM,
+      MG), every workout of three or more elements as a triplet (Cindy''s three gymnastics movements among
+      them). The template is descriptive, the workouts its examples.'
+    - 'I2: The pools hold Table 4''s workouts first, then the Girls and the 2005 days read, each as written,
+      the benchmarks the analytics track (Murph among them) before the rest so each comes round within
+      twelve weeks of either track; the day takes the next one the athlete can do, passing over one used
+      in the last week.'
+    - 'I3: When no workout of a day''s type fits the athlete, a couplet or triplet of another pairing
+      takes its place, and the week says so.'
+    - 'I4: At five training days a six-day week drops, in order, the skill day, the long-distance day,
+      the heavy day, then the couplets; the sources do not say.'
+    - 'I5: The tracks are for intermediate athletes and up; novices are refused until a scaled track is
+      built.'
+    - 'I6: Each workout''s minutes are an estimate; loads are given in pounds as written with kilograms
+      beside them.'
+    next: A scaled novice track (the Level 1 guide's scaling, the benchmarks' beginner versions); more
+      of the 2005 archive; exercise media; the output review.
+  gym_jones:
+    status: audited
+    shape: templates
+    dossier: docs/package-fidelity/gym_jones.md
+    sources_kind: primary
+    debt: []
+    currency:
+      operator_fitness: plan_completion
+      soldier_of_steel: plan_completion
+    source_tests:
+    - test_week_template.py::test_gym_jones_runs_its_two_months_as_written
+    inventions:
+    - 'I1: The plans'' days start on a Monday: Operator Fitness numbers its days 1 to 28 without weekdays;
+      Soldier of Steel''s are Monday to Sunday.'
+    - 'I2: A range is read at its middle — 60-90 minutes as 75, 90-120 as 105, 3-4 sets as 4 (the note
+      keeps the range) — and each day''s minutes are estimated.'
+    - 'I3: A section is logged by its main movement (clean + front squat + hang clean as power cleans,
+      the Six-Way complex as the barbell complex), its note carrying the source''s words.'
+    - 'I4: Six training days are required (both plans write six); there is no drop order for fewer.'
+    - 'I5: The pull-up''s scapular-control prerequisite is met from novice (level_seeds): both plans prescribe
+      pull-ups from the first week, Soldier of Steel with plank pulls until one is possible.'
+    - 'I6: Operator Fitness is for intermediate athletes and up, Soldier of Steel for novices and intermediates;
+      the plans name their audiences (operators, the newly training), not levels.'
+    next: Operator Fitness II once a complete copy is read; exercise media; the output review.
   horsemen_gpp:
     status: audited
     shape: templates
@@ -202,42 +256,10 @@ packages:
     - 'I5: The repeat after a layoff (R11) is recommended in every swing session''s note, never enforced:
       the athlete decides and takes responsibility (owner, 2026-10-21).'
     next: The hand-to-hand option needs an alternating block; decide the two Codex tracks (I2, I3).
-  crossfit:
-    status: partial
-    shape: templates
-    dossier: docs/package-fidelity/crossfit.md
-    sources_kind: primary
-    debt: []
-    currency:
-      constantly_varied: benchmark_wods
-      five_on_two_off: benchmark_wods
-    source_tests:
-    - test_standard_tests.py::test_crossfit_benchmarks_recur_in_its_pools
-    - test_week_template.py::test_crossfit_runs_glassmans_cycle_and_the_girls_as_written
-    inventions:
-    - 'I1: A couplet or triplet is filed by how many elements it has; a couplet by which two (GW, WM,
-      MG), every workout of three or more elements as a triplet (Cindy''s three gymnastics movements among
-      them). The template is descriptive, the workouts its examples.'
-    - 'I2: The pools hold Table 4''s workouts first, then the Girls and the 2005 days read, each as written;
-      the day takes the next one the athlete can do, passing over one used in the last week.'
-    - 'I3: When no workout of a day''s type fits the athlete, a couplet or triplet of another pairing
-      takes its place, and the week says so.'
-    - 'I4: At five training days a six-day week drops, in order, the skill day, the long-distance day,
-      the heavy day, then the couplets; the sources do not say.'
-    - 'I5: The tracks are for intermediate athletes and up; novices are refused until a scaled track is
-      built.'
-    - 'I6: Each workout''s minutes are an estimate; loads are given in pounds as written with kilograms
-      beside them.'
-    next: A scaled novice track (the Level 1 guide's scaling, the benchmarks' beginner versions); more
-      of the 2005 archive; exercise media; the output review.
   atg:
     status: not_started
     shape: scheduler
     next: Assessment gating — measurable range and regression gates.
-  gym_jones:
-    status: not_started
-    shape: templates
-    next: Refuse novices (its foundation assumes training history); the published operator templates.
   ido_portal:
     status: not_started
     shape: scheduler

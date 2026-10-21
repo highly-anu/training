@@ -1,0 +1,39 @@
+id: gj_of_d10
+name: "Operator Fitness — Day 10: Interval"
+modality: anaerobic_intervals
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 60
+pool_only: true
+
+slots:
+  - role: warm_up
+    slot_type: time_domain
+    duration_minutes: 10
+    exercise_filter:
+      exercise_ids: [row_easy]
+      ordered: true
+
+  - role: intervals
+    slot_type: sets_reps
+    sets: 6
+    reps: '500 m'
+    exercise_filter:
+      exercise_ids: [row_interval]
+      ordered: true
+    notes: "About 15 s slower than your best 500 m pace, 3 minutes active rest (1:2); every interval as fast as the first or faster."
+
+  - role: cool_down
+    slot_type: time_domain
+    duration_minutes: 15
+    exercise_filter:
+      exercise_ids: [row_easy]
+      ordered: true
+    notes: "10-20 minutes easy."
+
+required_equipment:
+- rower
+sources:
+- "Gym Jones, Operator Fitness (Rob MacDonald)"
+notes: >
+  10 minutes easy, 6 x 500 m about 15 s slower than your 500 m best with 3 minutes active rest, 10-20 minutes easy.

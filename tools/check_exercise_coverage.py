@@ -22,15 +22,19 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from src import generator, goals, loader  # noqa: E402
+from src import generator, goals, loader, selector  # noqa: E402
 
 BASELINE = Path(__file__).with_name('exercise_coverage_baseline.json')
 PROFILES = ((4, 90), (6, 120))
 
 
-def _pooled(framework: dict, archetypes: dict, level: str, equipment: set) -> set:
+def _pooled(framework: dict, archetypes: dict, level: str, equipment: set, unlocked: set) -> set:
     """Movements of the template pools' workouts this level and equipment
-    could be given (src/week_template.py picks them in rotation)."""
+    could be given (src/week_template.py picks them in rotation): each slot's
+    unlocked movements (the written one and its declared substitutes), and
+    none of a workout with a slot the level has unlocked nothing for — it is
+    never placed. Counting every listed movement hid Horsemen's snatch
+    workouts, locked by prerequisites no package had."""
     out = set()
     for cat in (framework.get('categories') or {}).values():
         for aid in cat['archetypes']:
@@ -39,14 +43,17 @@ def _pooled(framework: dict, archetypes: dict, level: str, equipment: set) -> se
                 continue
             if not set(arch.get('required_equipment') or []) <= equipment | {'open_space'}:
                 continue
-            out |= {eid for slot in arch.get('slots') or []
-                    for eid in (slot.get('exercise_filter') or {}).get('exercise_ids') or []}
+            picks = [set(ids) & unlocked for ids in ((slot.get('exercise_filter') or {}).get('exercise_ids')
+                                                     for slot in arch.get('slots') or []) if ids]
+            if all(picks):
+                out |= set().union(*picks)
     return out
 
 
 def reachable(philosophy: dict, catalog: dict, frameworks: dict, archetypes: dict) -> tuple[set, list[str]]:
     used: set = set()
     lines = []
+    seeds = loader.load_level_seeds().get(philosophy['id'], {})
     equipment = sorted({item for e in catalog.values() for item in e.get('equipment', [])} | {'open_space'})
     for track in philosophy.get('tracks') or []:
         goal = goals.philosophy_to_goal(philosophy['id'], list(frameworks.values()), track['id'])
@@ -69,7 +76,9 @@ def reachable(philosophy: dict, catalog: dict, frameworks: dict, archetypes: dic
                             for b in m['blocks'] for alt in b.get('alternatives') or []}
                 for ph in goal['phase_sequence']:
                     if ph.get('week_templates'):
-                        ids |= _pooled(frameworks.get(ph['framework_id']) or {}, archetypes, level, set(equipment))
+                        unlocked = selector._get_unlocked(level, catalog, {philosophy['id']: seeds})
+                        ids |= _pooled(frameworks.get(ph['framework_id']) or {}, archetypes, level, set(equipment),
+                                       unlocked)
                 used |= ids
                 lines.append(f"  {track['id']} | {level} | {days}d {minutes}m | {len(sessions)} sessions | "
                              f"{len(ids & catalog.keys())} / {len(catalog)}")

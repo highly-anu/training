@@ -1,0 +1,24 @@
+id: gj_of_d25
+name: "Operator Fitness — Day 25: Recovery"
+modality: strength_endurance
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 60
+pool_only: true
+
+slots:
+  - role: get_ups
+    slot_type: sets_reps
+    sets: 1
+    reps: 100
+    exercise_filter:
+      exercise_ids: [kb_tgu]
+      ordered: true
+    load: "15 lb (7 kg) dumbbell"
+
+required_equipment:
+- dumbbell
+sources:
+- "Gym Jones, Operator Fitness (Rob MacDonald)"
+notes: >
+  100 Turkish get-ups with a 15 lb dumbbell.

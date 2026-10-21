@@ -1,6 +1,6 @@
 id: block_periodization
 name: Block Periodization
-source_philosophy: gym_jones
+source_philosophy: block_fixture
 
 goals_served:
   - max_strength

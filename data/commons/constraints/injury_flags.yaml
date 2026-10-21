@@ -39,8 +39,6 @@ injury_flags:
         use: bike_easy
       - instead_of: run_interval
         use: bike_interval
-      - instead_of: run_interval
-        use: swim_easy
       - instead_of: run_zone2
         use: bike_zone2
     training_phase_forced: post_op
@@ -172,10 +170,6 @@ injury_flags:
         use: bike_easy
       - instead_of: run_interval
         use: bike_interval
-      - instead_of: run_interval
-        use: swim_easy
-      - instead_of: run_sprint
-        use: swim_easy
       - instead_of: run_zone2
         use: bike_zone2
       - instead_of: pistol_squat
@@ -279,7 +273,6 @@ injury_flags:
       - wk_kb_clean_single
       - kb_clean_double
       - farmer_carry_kb
-      - farmer_carry_db
       - farmer_carry_barbell
       - farmer_carry_thick_grip
       - kb_farmer_carry
@@ -320,7 +313,6 @@ injury_flags:
       - towel_kb_swing
       - kb_swing_breathing_ladder
       - farmer_carry_kb
-      - farmer_carry_db
       - farmer_carry_barbell
       - farmer_carry_thick_grip
       - kb_farmer_carry
@@ -384,10 +376,6 @@ injury_flags:
         use: bike_easy
       - instead_of: run_interval
         use: bike_interval
-      - instead_of: run_interval
-        use: swim_easy
-      - instead_of: run_sprint
-        use: swim_easy
       - instead_of: run_zone2
         use: bike_zone2
       - instead_of: squat_jump

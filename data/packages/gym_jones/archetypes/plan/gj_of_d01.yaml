@@ -1,0 +1,86 @@
+id: gj_of_d01
+name: "Operator Fitness — Day 1: Strength"
+modality: max_strength
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 80
+pool_only: true
+
+slots:
+  - role: wall_squat
+    slot_type: sets_reps
+    sets: 2
+    reps: 5
+    exercise_filter:
+      exercise_ids: [wall_squat]
+      ordered: true
+
+  - role: air_squat
+    slot_type: sets_reps
+    sets: 2
+    reps: 10
+    exercise_filter:
+      exercise_ids: [squat_air]
+      ordered: true
+
+  - role: goblet_squat
+    slot_type: sets_reps
+    sets: 2
+    reps: 5
+    exercise_filter:
+      exercise_ids: [kb_squat_goblet]
+      ordered: true
+
+  - role: sl_squat
+    slot_type: sets_reps
+    sets: 5
+    reps: 5
+    exercise_filter:
+      exercise_ids: [single_leg_squat_box]
+      ordered: true
+    notes: "Single-leg squat to a 20 in (51 cm) box."
+
+  - role: six_way_complex
+    slot_type: sets_reps
+    sets: 4
+    reps: 6
+    exercise_filter:
+      exercise_ids: [barbell_complex]
+      ordered: true
+    load: "75, 85, 95, 105 lb (34-48 kg), heavier each set"
+    notes: "Six-Way Barbell Complex: 6 deadlift, 6 bent-over row (back parallel to the floor), 6 hang clean, 6 front squat, 6 push press, 6 back squat, 6 push-up, without letting go of the bar. 3-4 sets; rest 1-2 minutes."
+
+  - role: deadlift
+    slot_type: sets_reps
+    sets: 5
+    reps: 3
+    exercise_filter:
+      exercise_ids: [deadlift]
+      ordered: true
+    load: "80 % of 1RM, after working up to it"
+    notes: "Rest 3-4 minutes between sets."
+
+  - role: row_1000
+    slot_type: for_time
+    rounds: 1
+    distance_m: 1000
+    exercise_filter:
+      exercise_ids: [row_threshold]
+      ordered: true
+    notes: "1000 m row for time."
+
+required_equipment:
+- barbell
+- box
+- dumbbell
+- kettlebell
+- medicine_ball
+- open_space
+- plates
+- pull_up_bar
+- rack
+- rower
+sources:
+- "Gym Jones, Operator Fitness (Rob MacDonald)"
+notes: >
+  Squat warm-up, the Six-Way Barbell Complex, a work-up to 80 % and 5x3 deadlifts, then 1000 m row for time.

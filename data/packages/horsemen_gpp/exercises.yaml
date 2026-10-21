@@ -1435,7 +1435,6 @@ exercises:
   - vertical_push
   requires:
   - kb_swing_single_arm
-  - kb_clean_single
   unlocks: []
   contraindicated_with:
   - lumbar_disc
@@ -1719,7 +1718,6 @@ exercises:
   - isometric
   - locomotion
   requires:
-  - kb_clean_single
   - kb_tgu
   unlocks:
   - kb_overhead_carry
@@ -1764,10 +1762,8 @@ exercises:
   requires:
   - kb_swing_two_hand
   - kb_swing_single_arm
-  - kb_clean_single
   - kb_press_single
   - kb_figure_eight
-  - kb_halo
   - kb_snatch
   unlocks: []
   contraindicated_with:
@@ -2139,7 +2135,7 @@ exercises:
   - vertical_push
   - olympic_lift
   requires:
-  - sb_clean
+  - hip_hinge
   - vertical_push_pattern
   unlocks:
   - sb_complex
@@ -2354,7 +2350,6 @@ exercises:
   requires:
   - squat_pattern
   - bracing_mechanics
-  - sb_squat
   unlocks:
   - sb_complex
   contraindicated_with:

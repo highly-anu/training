@@ -10,7 +10,7 @@ core_principles:
   - general_fitness_before_sport_specific
   - no_shortcuts
   - power_endurance_and_strength_endurance_over_max_strength
-  - reduce_rest_periods_or_increase_weight_not_both_simultaneously
+  - progress_by_less_rest_or_more_weight_form_range_and_speed
 scope:
   - max_strength
   - strength_endurance
@@ -23,106 +23,69 @@ bias:
   - strength_endurance
   - mixed_modal_conditioning
   - durability
-avoid_with:
-  - max_strength
-  - aerobic_base
-required_equipment:
-  - barbell
-  - plates
-  - kettlebell
-  - dumbbell
-  - pull_up_bar
-  - rower
-  - box
-  - medicine_ball
-intensity_model: hard_easy_alternation
-progression_philosophy: volume_based
-sources:
-  - "data/gym jones/operator fitness I.pdf"
-  - "data/gym jones/operator fitness II.pdf"
-  - "data/gym jones/soldier of steel.pdf"
-notes: >
-  Six-day week: 3 key sessions (strength, circuit, accumulation), 2 recovery
-  sessions, 1 long endurance, 1 full rest. Intensity model is hard/easy alternation
-  — not polarized (no 80/20 split), but structured hard-day/recovery-day cycling.
-  Progression levers are deliberate: reduce rest (bodyweight work) OR increase load
-  (barbell/KB), never both simultaneously. Excessive max strength / max speed
-  development is explicitly de-emphasized; power-endurance and strength-endurance
-  are the primary targets. Operator context: relative strength + aerobic capacity +
-  mental durability. Programs are 1-month blocks, repeatable 2–3× or cycled
-  between Operator I / Operator II.
+avoid_with: []
 
-# Every modality this philosophy's frameworks prescribe has an archetype in
-# this package; generation never needs to reach into another philosophy.
-self_contained: true
-
-# One track of three one-month blocks, repeatable. Phase text is drafted from
-# this package's own notes and framework notes — review before relying on it.
-primary_track_id: block_periodization
+primary_track_id: operator_fitness
+# Novices take Soldier of Steel, the plan Gym Jones wrote for the newly
+# training; everyone else Operator Fitness.
+track_for_level:
+  novice: soldier_of_steel
+  intermediate: operator_fitness
+  advanced: operator_fitness
+  elite: operator_fitness
 tracks:
-  - id: block_periodization
-    name: "Block Periodization Program"
+  - id: operator_fitness
+    name: "Operator Fitness"
     description: >
-      Twight's sequential blocks for operator fitness: accumulate volume,
-      convert it to intensity, then realise it. Each block is about a month;
-      the cycle repeats.
+      Gym Jones' one-month Foundation plan, day by day, six days a week:
+      strength, circuits and accumulation, recovery days and a long hike with
+      a pack. Done once, or repeated a few times in a row.
     phases:
-      - id: accumulation
-        name: "Accumulation"
+      - id: foundation
+        name: "Foundation"
         kind: base
         weeks: 4
         repeatable: true
-        framework_id: block_periodization
-        focus: "High volume, moderate intensity"
+        former_ids: [accumulation, transmutation, realization]
+        framework_id: operator_fitness
+        focus: "Fit for whatever comes next"
         description: >
-          A month of high volume at moderate intensity on the six-day week:
-          strength, circuit and accumulation key days, recovery days between
-          them, one long endurance day. Power-endurance and strength-endurance
-          are the targets; maximal strength and speed are not chased.
+          Twenty-eight days as written: strength, progression, circuit,
+          accumulation, power endurance and interval days, each followed by a
+          recovery day, a 90-120 minute hike with a light pack, a rest day.
         adaptations:
-          - "Work capacity"
-          - "Strength-endurance and power-endurance base"
-          - "Aerobic support for repeat efforts"
-        intensity: "Hard/easy alternation at moderate intensity"
-        # The block's baseline: the 2 km row in its first week, in place of a
-        # conditioning day (the framework schedules no interval day of its own).
-        tests:
-          - archetype: gym_jones_row_2k_test
-            week: first
-            in_place_of: [mixed_modal_conditioning, aerobic_base]
-      - id: transmutation
-        name: "Transmutation"
-        kind: build
+          - "Strength, power endurance and endurance, evenly"
+          - "Single-leg and core strength"
+        intensity: "Hard days and recovery days"
+        week_templates:
+          - [strength, recovery, progression, recovery, circuit, endurance, rest]
+          - [power_endurance, recovery, interval, recovery, strength, endurance, rest]
+          - [strength, recovery, breathing_ladder, recovery, accumulation, endurance, rest]
+          - [progression, recovery, circuit, recovery, strength, endurance, rest]
+  - id: soldier_of_steel
+    name: "Soldier of Steel"
+    description: >
+      Gym Jones' month for the newly training, day by day: a workout, a
+      recovery day, a workout, a recovery day, a workout, a recovery day, rest.
+      Repeat it, or make it harder by less rest or more weight.
+    phases:
+      - id: soldier_of_steel
+        name: "Soldier of Steel"
+        kind: base
         weeks: 4
         repeatable: true
-        framework_id: block_periodization
-        focus: "Moderate volume, higher intensity"
+        framework_id: soldier_of_steel
+        focus: "Fundamental movements and the habit of daily exercise"
         description: >
-          Volume comes down and intensity goes up, converting the accumulated
-          capacity into usable power-endurance. Progress one lever at a time:
-          less rest on bodyweight work or more load on barbell and kettlebell
-          work — never both at once.
+          Twenty-eight days as written, most needing only open space; the
+          beginner versions printed on the days.
         adaptations:
-          - "Power-endurance"
-          - "Relative strength under fatigue"
-        intensity: "Higher; one progression lever at a time"
-      - id: realization
-        name: "Realization"
-        kind: peak
-        weeks: 4
-        repeatable: true
-        framework_id: block_periodization
-        focus: "Low volume, peak performance"
-        description: >
-          Low volume at peak intensity, so the qualities built in the previous
-          blocks show up as performance. Recovery days stay in place; the
-          mind is trained alongside the body.
-        adaptations:
-          - "Expressed performance"
-          - "Mental durability under load"
-        intensity: "Peak intensity, low volume"
-        # What the block built: the 2 km row again in its last week.
-        tests:
-          - archetype: gym_jones_row_2k_test
-            week: last
-            in_place_of: [mixed_modal_conditioning, aerobic_base]
+          - "Work tolerance"
+          - "Power endurance and strength endurance"
+          - "General endurance"
+        intensity: "Hard days and recovery days"
+        week_templates:
+          - [sos_workout, sos_recovery, sos_workout, sos_recovery, sos_workout, sos_recovery, rest]
+          - [sos_workout, sos_recovery, sos_workout, sos_recovery, sos_workout, sos_recovery, rest]
+          - [sos_workout, sos_recovery, sos_workout, sos_recovery, sos_workout, sos_recovery, rest]
+          - [sos_workout, sos_recovery, sos_workout, sos_recovery, sos_workout, sos_recovery, rest]

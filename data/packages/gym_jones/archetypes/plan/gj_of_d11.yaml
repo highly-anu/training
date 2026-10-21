@@ -1,0 +1,22 @@
+id: gj_of_d11
+name: "Operator Fitness — Day 11: Recovery"
+modality: aerobic_base
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 75
+pool_only: true
+
+slots:
+  - role: easy
+    slot_type: time_domain
+    duration_minutes: 75
+    exercise_filter:
+      exercise_ids: [easy_aerobic]
+      ordered: true
+    notes: "60-90 minute row, run, swim or hike at an easy pace."
+
+required_equipment: []
+sources:
+- "Gym Jones, Operator Fitness (Rob MacDonald)"
+notes: >
+  60-90 minute row, run, swim or hike at an easy pace.

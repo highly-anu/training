@@ -1,0 +1,143 @@
+id: gj_of_d03
+name: "Operator Fitness — Day 3: Progression"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 80
+pool_only: true
+
+slots:
+  - role: wall_squat
+    slot_type: sets_reps
+    sets: 2
+    reps: 5
+    exercise_filter:
+      exercise_ids: [wall_squat]
+      ordered: true
+
+  - role: air_squat
+    slot_type: sets_reps
+    sets: 2
+    reps: 10
+    exercise_filter:
+      exercise_ids: [squat_air]
+      ordered: true
+
+  - role: goblet_squat
+    slot_type: sets_reps
+    sets: 2
+    reps: 5
+    exercise_filter:
+      exercise_ids: [kb_squat_goblet]
+      ordered: true
+    load: "25 lb (11 kg)"
+
+  - role: clean_triplets
+    slot_type: time_domain
+    duration_minutes: 10
+    exercise_filter:
+      exercise_ids: [power_clean]
+      ordered: true
+    load: "75-135 lb (34-61 kg)"
+    notes: "Clean + front squat + hang clean: one triplet every 30 seconds for 10 minutes (20 triplets)."
+
+  - role: those_burpees_suck
+    slot_type: for_time
+    rounds: 1
+    exercise_filter:
+      exercise_ids: [pull_up]
+      ordered: true
+    notes: "Those Burpees Suck: 10 pull-ups, 20 KB swings at 53 lb, 30 box jumps to 24 in, 40 push-ups, 50 sit-ups, 60 burpees, 10 pull-ups."
+
+  - role: tbs_swings
+    slot_type: amrap_movement
+    parent_slot_role: those_burpees_suck
+    reps_per_round: 20
+    exercise_filter:
+      exercise_ids: [kb_swing_two_hand]
+      ordered: true
+    load: "53 lb (24 kg)"
+
+  - role: tbs_box_jumps
+    slot_type: amrap_movement
+    parent_slot_role: those_burpees_suck
+    reps_per_round: 30
+    exercise_filter:
+      exercise_ids: [box_jump]
+      ordered: true
+    load: "24 in (61 cm) box"
+
+  - role: tbs_push_ups
+    slot_type: amrap_movement
+    parent_slot_role: those_burpees_suck
+    reps_per_round: 40
+    exercise_filter:
+      exercise_ids: [push_up]
+      ordered: true
+
+  - role: tbs_sit_ups
+    slot_type: amrap_movement
+    parent_slot_role: those_burpees_suck
+    reps_per_round: 50
+    exercise_filter:
+      exercise_ids: [sit_up]
+      ordered: true
+
+  - role: tbs_burpees
+    slot_type: amrap_movement
+    parent_slot_role: those_burpees_suck
+    reps_per_round: 60
+    exercise_filter:
+      exercise_ids: [burpee]
+      ordered: true
+
+  - role: tbs_pull_ups
+    slot_type: amrap_movement
+    parent_slot_role: those_burpees_suck
+    reps_per_round: 10
+    exercise_filter:
+      exercise_ids: [pull_up]
+      ordered: true
+
+  - role: db_push_press
+    slot_type: time_domain
+    duration_minutes: 4
+    exercise_filter:
+      exercise_ids: [db_push_press]
+      ordered: true
+    load: "2 x 25 lb (11 kg) dumbbells"
+    notes: "4 x (30 s work / 30 s rest), the rest held overhead; aim for 25 reps a round."
+
+  - role: straight_leg_deadlift
+    slot_type: sets_reps
+    sets: 3
+    reps: 10
+    exercise_filter:
+      exercise_ids: [romanian_deadlift]
+      ordered: true
+    load: "95-135 lb (43-61 kg)"
+
+  - role: single_leg_deadlift
+    slot_type: sets_reps
+    sets: 5
+    reps: '2/side'
+    exercise_filter:
+      exercise_ids: [single_leg_deadlift]
+      ordered: true
+    load: "95-135 lb (43-61 kg)"
+
+required_equipment:
+- barbell
+- box
+- dumbbell
+- kettlebell
+- medicine_ball
+- open_space
+- plates
+- pull_up_bar
+- rack
+- rower
+sources:
+- "Gym Jones, Operator Fitness (Rob MacDonald)"
+notes: >
+  Squat warm-up, clean + front squat + hang clean every 30 s for 10 min, "Those Burpees Suck", DB push press 30/30, straight-leg and single-leg deadlifts.

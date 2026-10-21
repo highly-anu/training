@@ -1,0 +1,68 @@
+id: gj_of_d26
+name: "Operator Fitness — Day 26: Strength"
+modality: max_strength
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 60
+pool_only: true
+
+slots:
+  - role: wall_squat
+    slot_type: sets_reps
+    sets: 2
+    reps: 5
+    exercise_filter:
+      exercise_ids: [wall_squat]
+      ordered: true
+
+  - role: air_squat
+    slot_type: sets_reps
+    sets: 2
+    reps: 10
+    exercise_filter:
+      exercise_ids: [squat_air]
+      ordered: true
+
+  - role: goblet_squat
+    slot_type: sets_reps
+    sets: 2
+    reps: 5
+    exercise_filter:
+      exercise_ids: [kb_squat_goblet]
+      ordered: true
+    load: "25 lb (11 kg)"
+
+  - role: sl_squat
+    slot_type: sets_reps
+    sets: 5
+    reps: 5
+    exercise_filter:
+      exercise_ids: [single_leg_squat_box]
+      ordered: true
+    notes: "Single-leg squat to a 20 in (51 cm) box."
+
+  - role: deadlift
+    slot_type: sets_reps
+    sets: 100
+    reps: 1
+    exercise_filter:
+      exercise_ids: [deadlift]
+      ordered: true
+    load: "50 % of 1RM"
+    notes: "Treat each rep as a single; about 30 minutes."
+
+required_equipment:
+- barbell
+- box
+- dumbbell
+- kettlebell
+- medicine_ball
+- open_space
+- plates
+- pull_up_bar
+- rack
+- rower
+sources:
+- "Gym Jones, Operator Fitness (Rob MacDonald)"
+notes: >
+  Squat warm-up, then 100 deadlifts at 50 %, each a single, in about 30 minutes.

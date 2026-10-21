@@ -1,0 +1,71 @@
+id: gj_sos_d24
+name: "Soldier of Steel — Day 24: Workout"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [novice, intermediate]
+duration_estimate_minutes: 55
+pool_only: true
+
+slots:
+  - role: air_squat
+    slot_type: sets_reps
+    sets: 2
+    reps: 20
+    exercise_filter:
+      exercise_ids: [squat_air]
+      ordered: true
+
+  - role: push_up
+    slot_type: sets_reps
+    sets: 4
+    reps: 10
+    exercise_filter:
+      exercise_ids: [push_up]
+      ordered: true
+
+  - role: burpee
+    slot_type: sets_reps
+    sets: 3
+    reps: 10
+    exercise_filter:
+      exercise_ids: [burpee]
+      ordered: true
+
+  - role: lunge
+    slot_type: sets_reps
+    sets: 4
+    reps: 10
+    exercise_filter:
+      exercise_ids: [lunge]
+      ordered: true
+
+  - role: frog_hops
+    slot_type: time_domain
+    duration_minutes: 24
+    exercise_filter:
+      exercise_ids: [frog_hop]
+      ordered: true
+    notes: "6 x 30/30 frog hops up stairs or uphill; four rounds, 3 minutes between rounds."
+
+  - role: push_up_intervals
+    slot_type: time_domain
+    duration_minutes: 8
+    exercise_filter:
+      exercise_ids: [push_up]
+      ordered: true
+    notes: "15 x 10 s work / 20 s rest (it will seem easy at first)."
+
+  - role: cool_down
+    slot_type: time_domain
+    duration_minutes: 10
+    exercise_filter:
+      exercise_ids: [run_easy]
+      ordered: true
+    notes: "Cool down with 10 minutes run or walk at an easy pace."
+
+required_equipment:
+- open_space
+sources:
+- "Gym Jones, Soldier of Steel (Army National Guard, 2013)"
+notes: >
+  Squats, push-ups, burpees and lunges, then frog hops up stairs or a hill, then 15 x 10/20 push-ups.

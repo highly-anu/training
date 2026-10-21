@@ -10,13 +10,16 @@ back_supported_db_strict_press:
   - Press to lockout overhead
   description: A seated, back-supported dumbbell press with the palms forward.
   muscle_diagram:
-    highlight_primary: &id001
+    highlight_primary:
     - shoulders
-    highlight_secondary: &id002
+    highlight_secondary:
     - triceps
     - upper_back
-  muscles_primary: *id001
-  muscles_secondary: *id002
+  muscles_primary:
+  - shoulders
+  muscles_secondary:
+  - triceps
+  - upper_back
 banded_reverse_crunch:
   animation:
     type: none
@@ -29,13 +32,16 @@ banded_reverse_crunch:
   - Lower slowly
   description: A reverse crunch against a band.
   muscle_diagram:
-    highlight_primary: &id003
+    highlight_primary:
     - core
-    highlight_secondary: &id004
+    highlight_secondary:
     - hip_flexors
     - obliques
-  muscles_primary: *id003
-  muscles_secondary: *id004
+  muscles_primary:
+  - core
+  muscles_secondary:
+  - hip_flexors
+  - obliques
 barbell_bicep_curl:
   animation:
     type: none
@@ -47,12 +53,14 @@ barbell_bicep_curl:
   - Curl to the shoulders
   description: A barbell curl, the barbell option for the cable curl.
   muscle_diagram:
-    highlight_primary: &id005
+    highlight_primary:
     - biceps
-    highlight_secondary: &id006
+    highlight_secondary:
     - forearms
-  muscles_primary: *id005
-  muscles_secondary: *id006
+  muscles_primary:
+  - biceps
+  muscles_secondary:
+  - forearms
 barbell_skull_crusher:
   animation:
     type: none
@@ -65,12 +73,14 @@ barbell_skull_crusher:
   - Extend to straight arms
   description: A lying barbell triceps extension, the barbell option for the pushdown.
   muscle_diagram:
-    highlight_primary: &id007
+    highlight_primary:
     - triceps
-    highlight_secondary: &id008
+    highlight_secondary:
     - chest
-  muscles_primary: *id007
-  muscles_secondary: *id008
+  muscles_primary:
+  - triceps
+  muscles_secondary:
+  - chest
 bc_gliding_hamstring_curl:
   animation:
     type: none
@@ -83,13 +93,16 @@ bc_gliding_hamstring_curl:
   - Slide out slowly
   description: A hamstring curl lying on the back with the heels on sliders.
   muscle_diagram:
-    highlight_primary: &id009
+    highlight_primary:
     - hamstrings
-    highlight_secondary: &id010
+    highlight_secondary:
     - glutes
     - core
-  muscles_primary: *id009
-  muscles_secondary: *id010
+  muscles_primary:
+  - hamstrings
+  muscles_secondary:
+  - glutes
+  - core
 cable_bicep_curl:
   animation:
     type: none
@@ -102,12 +115,14 @@ cable_bicep_curl:
   - Lower under control
   description: A straight-bar cable curl.
   muscle_diagram:
-    highlight_primary: &id011
+    highlight_primary:
     - biceps
-    highlight_secondary: &id012
+    highlight_secondary:
     - forearms
-  muscles_primary: *id011
-  muscles_secondary: *id012
+  muscles_primary:
+  - biceps
+  muscles_secondary:
+  - forearms
 cable_tricep_pushdown:
   animation:
     type: none
@@ -120,12 +135,14 @@ cable_tricep_pushdown:
   - Return under control
   description: A straight-bar cable pushdown.
   muscle_diagram:
-    highlight_primary: &id013
+    highlight_primary:
     - triceps
-    highlight_secondary: &id014
+    highlight_secondary:
     - forearms
-  muscles_primary: *id013
-  muscles_secondary: *id014
+  muscles_primary:
+  - triceps
+  muscles_secondary:
+  - forearms
 db_front_raise:
   animation:
     type: none
@@ -138,12 +155,14 @@ db_front_raise:
   - Lower slowly
   description: A dumbbell front raise to shoulder height.
   muscle_diagram:
-    highlight_primary: &id015
+    highlight_primary:
     - shoulders
-    highlight_secondary: &id016
+    highlight_secondary:
     - upper_back
-  muscles_primary: *id015
-  muscles_secondary: *id016
+  muscles_primary:
+  - shoulders
+  muscles_secondary:
+  - upper_back
 db_full_raise:
   animation:
     type: none
@@ -156,13 +175,16 @@ db_full_raise:
   - Lower slowly
   description: A dumbbell raise from the front all the way overhead.
   muscle_diagram:
-    highlight_primary: &id017
+    highlight_primary:
     - shoulders
-    highlight_secondary: &id018
+    highlight_secondary:
     - upper_back
     - serratus_anterior
-  muscles_primary: *id017
-  muscles_secondary: *id018
+  muscles_primary:
+  - shoulders
+  muscles_secondary:
+  - upper_back
+  - serratus_anterior
 db_incline_press:
   animation:
     external_id: Hammer_Grip_Incline_DB_Bench_Press
@@ -251,14 +273,18 @@ db_suitcase_drop_lunge:
   - Alternate legs
   description: A reverse lunge with a dumbbell in each hand at the sides, alternating legs.
   muscle_diagram:
-    highlight_primary: &id019
+    highlight_primary:
     - quadriceps
     - glutes
-    highlight_secondary: &id020
+    highlight_secondary:
     - hamstrings
     - core
-  muscles_primary: *id019
-  muscles_secondary: *id020
+  muscles_primary:
+  - quadriceps
+  - glutes
+  muscles_secondary:
+  - hamstrings
+  - core
 dip:
   animation:
     external_id: Parallel_Bar_Dip
@@ -314,14 +340,18 @@ fbb_conditioning:
   - Hold the named effort
   description: The day's conditioning piece, as the sample writes it, at the effort it names.
   muscle_diagram:
-    highlight_primary: &id021
+    highlight_primary:
     - quadriceps
     - glutes
-    highlight_secondary: &id022
+    highlight_secondary:
     - shoulders
     - core
-  muscles_primary: *id021
-  muscles_secondary: *id022
+  muscles_primary:
+  - quadriceps
+  - glutes
+  muscles_secondary:
+  - shoulders
+  - core
 fbb_cooldown:
   animation:
     type: none
@@ -333,14 +363,18 @@ fbb_cooldown:
   - Both sides where it says per side
   description: The day's stretches, as the sample writes them.
   muscle_diagram:
-    highlight_primary: &id023
+    highlight_primary:
     - hamstrings
     - hip_flexors
-    highlight_secondary: &id024
+    highlight_secondary:
     - shoulders
     - chest
-  muscles_primary: *id023
-  muscles_secondary: *id024
+  muscles_primary:
+  - hamstrings
+  - hip_flexors
+  muscles_secondary:
+  - shoulders
+  - chest
 fbb_warm_up:
   animation:
     type: none
@@ -352,13 +386,16 @@ fbb_warm_up:
   - Then the day's movements, at their tempo
   description: 'The day''s warm-up, as the sample writes it: easy cardio, then the movements of the day.'
   muscle_diagram:
-    highlight_primary: &id025
+    highlight_primary:
     - core
-    highlight_secondary: &id026
+    highlight_secondary:
     - glutes
     - shoulders
-  muscles_primary: *id025
-  muscles_secondary: *id026
+  muscles_primary:
+  - core
+  muscles_secondary:
+  - glutes
+  - shoulders
 incline_bench_press:
   animation:
     type: none
@@ -373,13 +410,16 @@ incline_bench_press:
   description: A barbell bench press on a 45-degree incline, the strength intensity press of Pump Lift
     day 1.
   muscle_diagram:
-    highlight_primary: &id027
+    highlight_primary:
     - chest
     - shoulders
-    highlight_secondary: &id028
+    highlight_secondary:
     - triceps
-  muscles_primary: *id027
-  muscles_secondary: *id028
+  muscles_primary:
+  - chest
+  - shoulders
+  muscles_secondary:
+  - triceps
 incline_db_prone_row:
   animation:
     type: none
@@ -392,13 +432,16 @@ incline_db_prone_row:
   - Lower at the tempo
   description: A dumbbell row lying chest-down on an incline bench.
   muscle_diagram:
-    highlight_primary: &id029
+    highlight_primary:
     - upper_back
-    highlight_secondary: &id030
+    highlight_secondary:
     - lats
     - biceps
-  muscles_primary: *id029
-  muscles_secondary: *id030
+  muscles_primary:
+  - upper_back
+  muscles_secondary:
+  - lats
+  - biceps
 landmine_single_leg_hip_thrust:
   animation:
     type: none
@@ -411,13 +454,16 @@ landmine_single_leg_hip_thrust:
   - Drive up on one leg
   description: A single-leg hip thrust with a landmine across the hips.
   muscle_diagram:
-    highlight_primary: &id031
+    highlight_primary:
     - glutes
-    highlight_secondary: &id032
+    highlight_secondary:
     - hamstrings
     - core
-  muscles_primary: *id031
-  muscles_secondary: *id032
+  muscles_primary:
+  - glutes
+  muscles_secondary:
+  - hamstrings
+  - core
 lat_pulldown:
   animation:
     type: none
@@ -429,13 +475,16 @@ lat_pulldown:
   - Chest up, bar to the top of the chest
   description: A pronated, shoulder-width lat pulldown, the cable option for the strict pull-up.
   muscle_diagram:
-    highlight_primary: &id033
+    highlight_primary:
     - lats
-    highlight_secondary: &id034
+    highlight_secondary:
     - biceps
     - upper_back
-  muscles_primary: *id033
-  muscles_secondary: *id034
+  muscles_primary:
+  - lats
+  muscles_secondary:
+  - biceps
+  - upper_back
 mf_back_squat:
   animation:
     type: none
@@ -523,14 +572,18 @@ stiff_leg_deadlift:
   - Flat back throughout
   description: A barbell deadlift with the legs nearly straight, hinging from the hips.
   muscle_diagram:
-    highlight_primary: &id035
+    highlight_primary:
     - hamstrings
     - glutes
-    highlight_secondary: &id036
+    highlight_secondary:
     - erector_spinae
     - forearms
-  muscles_primary: *id035
-  muscles_secondary: *id036
+  muscles_primary:
+  - hamstrings
+  - glutes
+  muscles_secondary:
+  - erector_spinae
+  - forearms
 suitcase_curtsy_squat:
   animation:
     type: none
@@ -543,14 +596,18 @@ suitcase_curtsy_squat:
   - All reps one leg, then the other
   description: A curtsy squat with a dumbbell at the side, one leg at a time.
   muscle_diagram:
-    highlight_primary: &id037
+    highlight_primary:
     - glutes
     - quadriceps
-    highlight_secondary: &id038
+    highlight_secondary:
     - adductors
     - core
-  muscles_primary: *id037
-  muscles_secondary: *id038
+  muscles_primary:
+  - glutes
+  - quadriceps
+  muscles_secondary:
+  - adductors
+  - core
 suitcase_ffe_split_squat:
   animation:
     type: none
@@ -563,14 +620,18 @@ suitcase_ffe_split_squat:
   - All reps one side, then the other
   description: A split squat with the front foot raised and a dumbbell in each hand.
   muscle_diagram:
-    highlight_primary: &id039
+    highlight_primary:
     - quadriceps
     - glutes
-    highlight_secondary: &id040
+    highlight_secondary:
     - adductors
     - core
-  muscles_primary: *id039
-  muscles_secondary: *id040
+  muscles_primary:
+  - quadriceps
+  - glutes
+  muscles_secondary:
+  - adductors
+  - core
 tib_raise:
   animation:
     type: none
@@ -583,11 +644,12 @@ tib_raise:
   - Lower slowly
   description: A raise of the toes toward the shins, back against a wall or on a tib bar.
   muscle_diagram:
-    highlight_primary: &id041
+    highlight_primary:
     - calves
-    highlight_secondary: &id042 []
-  muscles_primary: *id041
-  muscles_secondary: *id042
+    highlight_secondary: []
+  muscles_primary:
+  - calves
+  muscles_secondary: []
 tripod_row:
   animation:
     type: none
@@ -600,14 +662,18 @@ tripod_row:
   - All the reps one arm, then the other
   description: A one-arm dumbbell row with a hand braced on a bench.
   muscle_diagram:
-    highlight_primary: &id043
+    highlight_primary:
     - lats
     - upper_back
-    highlight_secondary: &id044
+    highlight_secondary:
     - biceps
     - core
-  muscles_primary: *id043
-  muscles_secondary: *id044
+  muscles_primary:
+  - lats
+  - upper_back
+  muscles_secondary:
+  - biceps
+  - core
 wide_grip_cable_row:
   animation:
     type: none
@@ -620,11 +686,15 @@ wide_grip_cable_row:
   - Pull to the ribs
   description: A wide-grip seated cable row, the Pump Lift day 1 finisher.
   muscle_diagram:
-    highlight_primary: &id045
+    highlight_primary:
     - upper_back
     - lats
-    highlight_secondary: &id046
+    highlight_secondary:
     - biceps
     - rotator_cuff
-  muscles_primary: *id045
-  muscles_secondary: *id046
+  muscles_primary:
+  - upper_back
+  - lats
+  muscles_secondary:
+  - biceps
+  - rotator_cuff

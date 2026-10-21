@@ -1,0 +1,101 @@
+id: gj_sos_d17
+name: "Soldier of Steel — Day 17: Workout"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [novice, intermediate]
+duration_estimate_minutes: 60
+pool_only: true
+
+slots:
+  - role: warm_up
+    slot_type: time_domain
+    duration_minutes: 10
+    exercise_filter:
+      exercise_ids: [easy_aerobic]
+      ordered: true
+    notes: "Run, row or ride 10 minutes at an easy pace."
+
+  - role: air_squat
+    slot_type: sets_reps
+    sets: 3
+    reps: 20
+    exercise_filter:
+      exercise_ids: [squat_air]
+      ordered: true
+
+  - role: push_up
+    slot_type: sets_reps
+    sets: 3
+    reps: 10
+    exercise_filter:
+      exercise_ids: [push_up]
+      ordered: true
+
+  - role: pull_up_ladder
+    slot_type: sets_reps
+    sets: 2
+    reps: '1-6 ladder'
+    exercise_filter:
+      exercise_ids: [pull_up]
+      ordered: true
+
+  - role: ladder
+    slot_type: for_time
+    rounds: 10
+    exercise_filter:
+      exercise_ids: [floor_press]
+      ordered: true
+    load: "95 lb (43 kg); beginners 2 x 30 lb dumbbells"
+    notes: "10-9-8-7-6-5-4-3-2-1 reps of each: bench press, goblet squat, pull-up, box jump, deadlift."
+
+  - role: ladder_goblet
+    slot_type: amrap_movement
+    parent_slot_role: ladder
+    exercise_filter:
+      exercise_ids: [kb_squat_goblet]
+      ordered: true
+    load: "50-60 lb (23-27 kg); beginners 40-50 lb"
+
+  - role: ladder_pull_up
+    slot_type: amrap_movement
+    parent_slot_role: ladder
+    exercise_filter:
+      exercise_ids: [pull_up]
+      ordered: true
+    notes: "Beginners assisted or plank pulls."
+
+  - role: ladder_box_jump
+    slot_type: amrap_movement
+    parent_slot_role: ladder
+    exercise_filter:
+      exercise_ids: [box_jump]
+      ordered: true
+    load: "24 in (61 cm); beginners 18-20 in"
+
+  - role: ladder_deadlift
+    slot_type: amrap_movement
+    parent_slot_role: ladder
+    exercise_filter:
+      exercise_ids: [deadlift]
+      ordered: true
+    load: "135 lb (61 kg); beginners 95-115 lb"
+
+  - role: cool_down
+    slot_type: time_domain
+    duration_minutes: 10
+    exercise_filter:
+      exercise_ids: [run_easy]
+      ordered: true
+    notes: "Cool down with 10 minutes run or walk at an easy pace."
+
+required_equipment:
+- barbell
+- box
+- kettlebell
+- open_space
+- plates
+- pull_up_bar
+sources:
+- "Gym Jones, Soldier of Steel (Army National Guard, 2013)"
+notes: >
+  Squats, push-ups and pull-up ladders, then 10-to-1 of bench press, goblet squat, pull-up, box jump and deadlift.

@@ -13,6 +13,9 @@ import sys
 
 os.environ.setdefault('SUPABASE_URL', '')
 
+import fixture_packages  # noqa: E402
+fixture_packages.use()
+
 from src import constraint_impact as ci
 
 FAILURES: list[str] = []
@@ -234,7 +237,7 @@ def test_route():
           and {'barbell', 'plates', 'rack'} <= set(body['reference']['equipment']), body['reference'])
 
     res = client.post('/api/dev/constraint-impact', json={
-        'philosophy_id': 'gym_jones', 'num_weeks': 1,
+        'philosophy_id': 'block_fixture', 'num_weeks': 1,
         'constraints': {**athlete, 'days_per_week': 5, 'session_time_minutes': 90}})
     body = res.get_json()
     check('equipment is lifted, injuries are not', body['lifted'] == ['equipment'], body['lifted'])
@@ -247,7 +250,7 @@ def test_route():
           body['restore'])
 
     infeasible = client.post('/api/dev/constraint-impact', json={
-        'philosophy_id': 'gym_jones', 'num_weeks': 1, 'constraints': {**athlete, 'days_per_week': 1}}).get_json()
+        'philosophy_id': 'block_fixture', 'num_weeks': 1, 'constraints': {**athlete, 'days_per_week': 1}}).get_json()
     check('an infeasible schedule is refused, and the framework\'s days would generate',
           infeasible.get('feasible') is False and 'days/week' in infeasible['refused']['detail']
           and [u['cause'] for u in infeasible['unblocked_by']] == ['schedule']
@@ -377,7 +380,7 @@ def test_review_fixes():
               for d in ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')}
     weekly['Monday']['session1'] = 'long'
     gj = client.post('/api/dev/constraint-impact', json={
-        'philosophy_id': 'gym_jones', 'num_weeks': 1,
+        'philosophy_id': 'block_fixture', 'num_weeks': 1,
         'constraints': {**base, 'training_level': 'intermediate', 'weekly_schedule': weekly}}).get_json()
     check('a weekly schedule does not hide what would unblock it',
           [u['cause'] for u in gj.get('unblocked_by', [])] == ['schedule'], gj.get('unblocked_by'))

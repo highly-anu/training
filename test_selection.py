@@ -13,6 +13,9 @@ from __future__ import annotations
 
 import sys
 
+import fixture_packages  # noqa: E402
+fixture_packages.use()
+
 from src import goals, loader, progression, scheduler, selector
 from src.selector import is_main_lift_slot
 from src.generator import generate
@@ -84,7 +87,7 @@ def test_main_lift_pinning() -> None:
 
     # No shipped phase rotates its main lifts since CrossFit runs as written;
     # a phase given the flag still does.
-    goal = goals.philosophy_to_goal('gym_jones', FRAMEWORKS)
+    goal = goals.philosophy_to_goal('block_fixture', FRAMEWORKS)
     goal['phase_sequence'] = [{**ph, 'rotate_main_lifts': True} for ph in goal['phase_sequence']]
     prog = generate(goal_id=goal['id'], goal_dict=goal, num_weeks=4, output_format='dict',
                     constraints={'days_per_week': 5, 'session_time_minutes': 90, 'training_level': 'intermediate',
@@ -127,7 +130,7 @@ def test_constraints() -> None:
     check('an injury that rules out an essential lift refuses with its reason',
           not prog['weeks'] and 'injury' in prog['validation_errors'][0]['message'])
 
-    prog = program('gym_jones', 2, training_level='intermediate', days_per_week=5,
+    prog = program('block_fixture', 2, training_level='intermediate', days_per_week=5,
                    equipment=['kettlebell', 'open_space'])
     empties = [ea for _, s in sessions(prog) for ea in s['exercises'] if not ea.get('exercise') and not ea.get('meta')]
     check('a slot emptied by equipment says so',
@@ -336,7 +339,7 @@ def test_a_framework_prescribes_its_own_way() -> None:
         return {**fw, **override} if fid == 'block_periodization' else fw
     loader.load_all_frameworks, loader.load_framework = with_override, one_with_override
     try:
-        prog = program('gym_jones', 10, days_per_week=5)
+        prog = program('block_fixture', 10, days_per_week=5)
         strength = [(w, ea) for w, s in sessions(prog) if s['modality'] == 'max_strength'
                     for ea in s['exercises'] if ea.get('exercise') and ea.get('slot_type') == 'sets_reps']
         check('overridden strength sets carry a target RPE, not a fixed kg',
@@ -357,7 +360,7 @@ def test_a_framework_prescribes_its_own_way() -> None:
         row = next(ea for ea in session['exercises'] if ea.get('exercise') and ea.get('slot_type') == 'sets_reps')
         r = api.app.test_client().post('/api/exercises/substitute', json={
             'archetype_id': session['archetype']['id'], 'slot_role': row['slot_role'],
-            'philosophy_ids': ['gym_jones'], 'phase': session.get('phase') or 'base', 'week_in_phase': 1,
+            'philosophy_ids': ['block_fixture'], 'phase': session.get('phase') or 'base', 'week_in_phase': 1,
             'framework_id': 'block_periodization',
             'constraints': {'equipment': list(ALL_EQUIPMENT), 'training_level': 'intermediate'}, 'limit': 5})
         alts = (r.get_json() or {}).get('alternatives') or []
@@ -411,10 +414,10 @@ def test_substitution_is_recorded() -> None:
                          archetypes, policy, result)
     check('no warning when the level is covered (the swap had another cause)', not result.warnings)
 
-    # Gym Jones max strength: emom_strength names no levels (open to all) but
+    # The block fixture's max strength: emom_strength names no levels (open to all) but
     # is not for the base phase; the others start at intermediate. A novice's
     # base-phase swap is the phase's doing, not the level's.
-    gj = goals.philosophy_to_goal('gym_jones', FRAMEWORKS)
+    gj = goals.philosophy_to_goal('block_fixture', FRAMEWORKS)
     gj_policy = provenance.resolve_source_policy(gj)
     gj_arch = provenance.scope(loader.load_all_data(), gj_policy)['archetypes']
     result = ValidationResult()

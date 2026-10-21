@@ -1,0 +1,74 @@
+id: gj_sos_d26
+name: "Soldier of Steel — Day 26: Workout"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [novice, intermediate]
+duration_estimate_minutes: 50
+pool_only: true
+
+slots:
+  - role: warm_up
+    slot_type: time_domain
+    duration_minutes: 10
+    exercise_filter:
+      exercise_ids: [run_easy]
+      ordered: true
+    notes: "Run 10 minutes at an easy pace."
+
+  - role: air_squat
+    slot_type: sets_reps
+    sets: 3
+    reps: 20
+    exercise_filter:
+      exercise_ids: [squat_air]
+      ordered: true
+
+  - role: push_up
+    slot_type: sets_reps
+    sets: 3
+    reps: 10
+    exercise_filter:
+      exercise_ids: [push_up]
+      ordered: true
+
+  - role: pull_up
+    slot_type: sets_reps
+    sets: 3
+    reps: 5
+    exercise_filter:
+      exercise_ids: [pull_up]
+      ordered: true
+
+  - role: mountain_climber
+    slot_type: sets_reps
+    sets: 4
+    reps: 60
+    exercise_filter:
+      exercise_ids: [mountain_climber]
+      ordered: true
+    notes: "Each toe touch counts as one rep."
+
+  - role: burpees
+    slot_type: sets_reps
+    sets: 10
+    reps: '10-9-8-7-6-5-4-3-2-1'
+    exercise_filter:
+      exercise_ids: [burpee]
+      ordered: true
+
+  - role: cool_down
+    slot_type: time_domain
+    duration_minutes: 10
+    exercise_filter:
+      exercise_ids: [run_easy]
+      ordered: true
+    notes: "Cool down with 10 minutes run or walk at an easy pace."
+
+required_equipment:
+- dumbbell
+- open_space
+- pull_up_bar
+sources:
+- "Gym Jones, Soldier of Steel (Army National Guard, 2013)"
+notes: >
+  Squats, push-ups, pull-ups and mountain climbers, then burpees 10 down to 1.

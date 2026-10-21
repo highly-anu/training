@@ -1,0 +1,84 @@
+# Gym Jones — the sources' own weeks (docs/schemas/source_weeks.schema.json).
+# Both plans the repository holds, read in full 2026-10-21: every day of the
+# month, the workout each day names.
+- id: operator_fitness_month
+  rule: R4
+  track: operator_fitness
+  note: >
+    Operator Fitness (Rob MacDonald, Gym Jones): 28 days, six a week — strength,
+    recovery, progression, recovery, circuit, endurance, rest; then power
+    endurance, interval, breathing ladder, accumulation in their weeks.
+  profile: {days_per_week: 6, session_time_minutes: 120, training_level: intermediate, equipment: all}
+  weeks:
+    - days:
+        - {archetype: gj_of_d01}
+        - {archetype: gj_of_d02}
+        - {archetype: gj_of_d03}
+        - {archetype: gj_of_d04}
+        - {archetype: gj_of_d05}
+        - {archetype: gj_of_d06}
+        - rest
+    - days:
+        - {archetype: gj_of_d08}
+        - {archetype: gj_of_d09}
+        - {archetype: gj_of_d10}
+        - {archetype: gj_of_d11}
+        - {archetype: gj_of_d12}
+        - {archetype: gj_of_d13}
+        - rest
+    - days:
+        - {archetype: gj_of_d15}
+        - {archetype: gj_of_d16}
+        - {archetype: gj_of_d17}
+        - {archetype: gj_of_d18}
+        - {archetype: gj_of_d19}
+        - {archetype: gj_of_d20}
+        - rest
+    - days:
+        - {archetype: gj_of_d22}
+        - {archetype: gj_of_d23}
+        - {archetype: gj_of_d24}
+        - {archetype: gj_of_d25}
+        - {archetype: gj_of_d26}
+        - {archetype: gj_of_d27}
+        - rest
+- id: soldier_of_steel_month
+  rule: R9
+  track: soldier_of_steel
+  note: >
+    Soldier of Steel (Gym Jones, 2013): 28 days, Monday to Sunday — workout,
+    recovery, workout, recovery, workout, recovery, rest.
+  profile: {days_per_week: 6, session_time_minutes: 120, training_level: novice, equipment: all}
+  weeks:
+    - days:
+        - {archetype: gj_sos_d01}
+        - {archetype: gj_sos_d02}
+        - {archetype: gj_sos_d03}
+        - {archetype: gj_sos_d04}
+        - {archetype: gj_sos_d05}
+        - {archetype: gj_sos_d06}
+        - rest
+    - days:
+        - {archetype: gj_sos_d08}
+        - {archetype: gj_sos_d09}
+        - {archetype: gj_sos_d10}
+        - {archetype: gj_sos_d11}
+        - {archetype: gj_sos_d12}
+        - {archetype: gj_sos_d13}
+        - rest
+    - days:
+        - {archetype: gj_sos_d15}
+        - {archetype: gj_sos_d16}
+        - {archetype: gj_sos_d17}
+        - {archetype: gj_sos_d18}
+        - {archetype: gj_sos_d19}
+        - {archetype: gj_sos_d20}
+        - rest
+    - days:
+        - {archetype: gj_sos_d22}
+        - {archetype: gj_sos_d23}
+        - {archetype: gj_sos_d24}
+        - {archetype: gj_sos_d25}
+        - {archetype: gj_sos_d26}
+        - {archetype: gj_sos_d27}
+        - rest

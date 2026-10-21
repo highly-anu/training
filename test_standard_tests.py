@@ -10,6 +10,9 @@ import os
 
 os.environ.setdefault('SUPABASE_URL', '')
 
+import fixture_packages  # noqa: E402
+fixture_packages.use()
+
 from src import goals, loader, phases, program_history, standard_tests
 from src.generator import generate
 from src.selector import select_archetype
@@ -106,9 +109,9 @@ def test_a_test_replaces_one_session_and_nothing_else():
 
 
 def test_a_test_is_prescribed_as_written():
-    raw = _gen('gym_jones', weeks=4, start_phase='realization')
+    raw = _gen('block_fixture', weeks=4, start_phase='realization')
     last = raw['weeks'][3]
-    assert last['is_deload'], 'Gym Jones deloads the last week of a block'
+    assert last['is_deload'], 'the fixture deloads the last week of a block'
     test = _tests(last)[0]
     row = next(e for e in test['exercises'] if e.get('standard'))
     assert row['standard'] == {'id': 'row_2km_minutes', 'result': 'duration'}
@@ -141,7 +144,7 @@ def test_crossfit_benchmarks_recur_in_its_pools():
 def test_skips_say_why_and_leave_the_week_as_scheduled():
     def skipped(raw, week):
         return [t['reason'] for t in raw['weeks'][week].get('tests_skipped') or []]
-    assert skipped(_gen('gym_jones', weeks=1, start_phase='accumulation', equipment=['barbell', 'plates', 'kettlebell']), 0) \
+    assert skipped(_gen('block_fixture', weeks=1, start_phase='accumulation', equipment=['barbell', 'plates', 'kettlebell']), 0) \
         == ['equipment_gap'], 'no rower'
     for overrides in ({'training_level': 'novice'}, {'session_time_minutes': 40}):
         rejected = _gen('wildman_kettlebell', 'pentathlon', weeks=2, start_phase='competition', **overrides)
@@ -151,12 +154,12 @@ def test_skips_say_why_and_leave_the_week_as_scheduled():
 
 
 def test_a_test_exercise_stays_in_its_test():
-    raw = _gen('gym_jones', weeks=16, days_per_week=4)
+    raw = _gen('block_fixture', weeks=16, days_per_week=4)
     outside = [(w['week_number'], s.get('archetype', {}).get('id')) for w in raw['weeks'] for _, _, s in _sessions(w)
                if not s.get('test') and any((ea.get('exercise') or {}).get('id') == 'row_2km_test'
                                             for ea in s.get('exercises', []))]
     assert not outside, f'the time trial was picked for an ordinary session: {outside}'
-    lumbar = _gen('gym_jones', weeks=1, start_phase='accumulation', injury_flags=['lumbar_disc'])
+    lumbar = _gen('block_fixture', weeks=1, start_phase='accumulation', injury_flags=['lumbar_disc'])
     assert [t['reason'] for t in lumbar['weeks'][0].get('tests_skipped') or []] == ['injury_skip'], \
         'the row test is contraindicated with a lumbar disc (the flag id is lumbar_disc)'
     report = lumbar['coverage_report']
@@ -226,7 +229,7 @@ def test_the_program_carries_tests_and_standards():
 
 def test_adjustments_leave_a_test_alone():
     import api
-    goal = goals.philosophy_to_goal('gym_jones', FRAMEWORKS)
+    goal = goals.philosophy_to_goal('block_fixture', FRAMEWORKS)
     raw = _gen(None, goal=goal, weeks=1, start_phase='accumulation')
 
     class V:
