@@ -1182,7 +1182,9 @@ Starting Strength runs as a training contract (since 2026-10-20): Workouts A and
 alternate by a module's `variants` + `rotation`, the Texas Method is its intermediate
 track (`track_for_level` routes a request with no track by level), and
 `load_per_exposure` prescribes kg from what each lift made — a miss repeats, two
-reset 5 %, a lift with no weight works up on the day; the one-tap confirm takes
+reset 5 % (after the first reset the week's second squat is a light day, after the
+second the squat, bench and press run 5×3; a third stall finishes the lift), a lift
+with no weight works up on the day; layoff resets are the module's `advice`; the one-tap confirm takes
 `lifts: {id: {made, weightKg}}` (docs/logic/training_contracts.md).
 **In a worktree under `.claude/worktrees/`, blank `DATABASE_URL` and `SUPABASE_URL`**:
 `load_dotenv()` walks up to the main checkout's production `.env`.

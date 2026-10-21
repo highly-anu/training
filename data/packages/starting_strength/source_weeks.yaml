@@ -87,3 +87,42 @@
           includes: [strict_press]
         - archetype: tm_intensity
           includes: [bench_press]
+- id: alter_light_day
+  rule: R15
+  track: linear_progression
+  note: >
+    Alter, "The Reset": after a first stall, reset 5 % and make day 2 a light
+    squat day — 80 % of day 1's load, 2×5. A squat reset once to 95 kg; two
+    weeks (A-B-A, B-A-B), each made. The light day's 80 % is the source's,
+    loaded to the contract's plates.
+  profile:
+    days_per_week: 3
+    session_time_minutes: 90
+    training_level: novice
+    module_progression_state:
+      novice_lp: {completed: 0, lifts: {back_squat: {next_kg: 95, exposures: 11, resets: 1}}}
+  round_kg: 1.25
+  num_weeks: 2
+  series:
+    - {exercise: back_squat, field: sets, values: [3, 2, 3, 3, 2, 3]}
+    - {exercise: back_squat, field: reps, values: [5, 5, 5, 5, 5, 5]}
+    - {exercise: back_squat, field: weight_kg, values: [95, 76, 96.25, 97.5, 78, 98.75]}
+- id: alter_triples
+  rule: R15
+  track: linear_progression
+  note: >
+    Alter, "The Reset": stalled again after the light day, the squat, bench
+    and press switch to five sets of three; the light day stays.
+  profile:
+    days_per_week: 3
+    session_time_minutes: 90
+    training_level: novice
+    module_progression_state:
+      novice_lp: {completed: 0, lifts: {back_squat: {next_kg: 91.25, exposures: 12, resets: 2},
+                                         bench_press: {next_kg: 60, exposures: 12, resets: 2}}}
+  num_weeks: 1
+  series:
+    - {exercise: back_squat, field: sets, values: [5, 2, 5]}
+    - {exercise: back_squat, field: reps, values: [3, 5, 3]}
+    - {exercise: bench_press, field: sets, values: [5]}
+    - {exercise: bench_press, field: reps, values: [3]}

@@ -741,12 +741,16 @@ time domains (CrossFit, Gym Jones, Filly conditioning); assessment-gated selecti
 
 **4. Move packages onto contracts (M–L each, content + engine)**, ordered by how
 badly the default misrepresents the method and whether its policies exist:
-1. *Starting Strength* — **done 2026-10-20** (partial: debt below). A contract from
+1. *Starting Strength* — **done 2026-10-20**, audited 2026-10-21. A contract from
    Rippetoe's 2013 articles and Alter's "The Reset": A/B variants alternating A-B-A /
    B-A-B, `load_per_exposure` (a made lift goes up, a miss repeats, two reset 5 %, a lift
    with no weight works up), the Texas Method as the intermediate track
-   (`track_for_level`), confirm by lift on both clients. Left: the light squat day and
-   5×3 after a stall, layoff resets, a stalled Texas Method Friday, exercise media.
+   (`track_for_level`), confirm by lift on both clients. Since 2026-10-21 (branch
+   `bjj-strength-deload`) the stall ladder is Alter's: after one reset the week's second
+   squat is a light day (80 % of the first, 2×5), after two the squat, bench and press run
+   5×3 (`stall.light_day`, `stall.scheme`, `with_stall`); layoff resets are the module's
+   `advice`, never applied (I4, the owner's Wildman rule). Left: a stalled Texas Method
+   Friday (no source rule), exercise media.
 2. *BJJ* — **done 2026-10-19** (`data/packages/bjj/training_contract.yaml`): classes
    grow with the week and always outnumber strength; strength by effort with joint
    maintenance inside; deloads drop rolling; declared substitutes and optional
@@ -781,7 +785,7 @@ package stands and which engine shape it needs, gated by
 **The scorecard (2026-10-20)** is step 1 above made concrete: `tools/evaluate_packages.py`
 grades every package × track on Source, Execution, Robustness, Data and Measurement
 (`docs/package-fidelity/scorecard.md`), ratchets in CI, and derives `audited`. Audited:
-Wildman, BJJ, Horsemen (4-Month Macro); partial: Starting Strength. What the not-started
+Wildman, BJJ, Horsemen (4-Month Macro), Starting Strength (2026-10-21). What the not-started
 packages fail, in order of the audit's concern: E3 (Gym Jones, Filly, Uphill serve
 novices their frameworks are not written for — 9.2.4), E4 (Uphill's transition is one
 archetype; CrossFit's variation needs claims), R1 (Gym Jones and Uphill hand out empty
@@ -799,10 +803,13 @@ CLAUDE.md). Re-reading the sources: Horsemen's sixteen weeks, Wildman's 32 swing
 sessions and Starting Strength's weeks reproduce. Decided by the owner the same day:
 BJJ's four classes at six days stand (I7, where BJJEE's week has five); Wildman's
 "repeat workouts after a week off" (R11) is recommended in every swing session's note
-and never enforced (the contract's module `advice`, I5). **Still waiting** — *BJJ*
-(partial): StrengthLog deloads strength after six weeks at 50–60 % × 10 × 2 (R4, debt),
-the package every fourth week, dropping rolling (I3); no source prescribes strength by
-RPE (I2) — StrengthLog and Vitruve write reps and %1RM.
+and never enforced (the contract's module `advice`, I5). BJJ's deload (owner, the same
+day; branch `bjj-strength-deload`): StrengthLog's — strength and grip every seventh
+week at 2 × 10 and 50–60 % of the weight (R4) — through a module's own `deload`
+cadence; the mat never deloads on a schedule (I3). BJJ is audited. **Still waiting**
+— *BJJ*: no source prescribes strength by RPE (I2) — StrengthLog and Vitruve write
+reps and %1RM; and StrengthLog's volume is about three sets of three to six (R3),
+where the pull is five of five.
 
 **Packages without code (2026-10-21, branch `package-portability`).** R1 reads the
 fidelity rules on the scorecard's own constrained profiles too. A Portability dimension:

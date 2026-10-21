@@ -597,21 +597,56 @@ def test_ss_adds_weight_each_confirmed_session():
     assert _lifts(nxt)['back_squat']['weight_kg'] == 70 and _lifts(nxt)['strict_press']['weight_kg'] == 40
 
 
-def test_ss_stall_repeats_then_resets():
+def test_ss_stall_resets_lightens_the_squat_then_triples():
     # Alter, "The Reset": missed at one weight twice in a row, reset 5 % and
-    # climb in smaller jumps; stalled again after that, the novice progression
-    # of that lift is over.
+    # climb in smaller jumps, and the week's second squat becomes a light day
+    # (80 % of the first day's, 2×5); stalled again, reset and the squat, bench
+    # and press run 5×3; stalled after that, the lift's novice progression is over.
     module = tc.load_contract('starting_strength', 'linear_progression')['modules'][0]
     lift = {'next_kg': 100, 'exposures': 10}
     tc.apply_lift_outcome(module, 'back_squat', lift, False, 100)
     assert lift['next_kg'] == 100 and lift['failures'] == 1
     tc.apply_lift_outcome(module, 'back_squat', lift, False, 100)
     assert lift['next_kg'] == 95 and lift['resets'] == 1 and lift['failures'] == 0
+    once = deepcopy(lift)
+
+    # After the first reset: the week's second squat is light and moves nothing.
+    p, g, c = _ss(weeks=2, module_progression_state={'novice_lp': {'completed': 0, 'lifts': {'back_squat': once}}})
+    tc.verify(p, g['training_contract'], c)
+    squats = [_lifts(s)['back_squat'] for _, s in _ss_sessions(p)]
+    assert [q['weight_kg'] for q in squats] == [95, 76.25, 96.25, 97.5, 77.5, 98.75], [q['weight_kg'] for q in squats]
+    light = squats[1]
+    assert (light['sets'], light['reps'], light['advances_module']) == (2, 5, False)
+    assert [(q['sets'], q['reps']) for q in squats[::3]] == [(3, 5), (3, 5)]
+    assert [s['modules'][0].get('light_day') for _, s in _ss_sessions(p)] == [None, 'back_squat', None] * 2
+    logs = {k: {'completedAt': '2026-10-19', 'exercises': tc.confirmation_outcomes(s, True, None)}
+            for k, s in _ss_sessions(p)[:2]}
+    state = tc.confirmed_state(p, logs, g['training_contract'])['novice_lp']
+    assert state['completed'] == 2 and state['lifts']['back_squat']['next_kg'] == 96.25, \
+        'the light day is attended, not progressed'
+
     tc.apply_lift_outcome(module, 'back_squat', lift, True, 95)
     assert lift['next_kg'] == 96.25, 'a step smaller after a reset'
     for _ in range(2):
         tc.apply_lift_outcome(module, 'back_squat', lift, False, 96.25)
-    assert lift.get('stalled') and lift['next_kg'] == 96.25
+    assert lift['resets'] == 2 and lift['next_kg'] == 91.25
+
+    # After the second: the squat, bench and press run 5×3; the light day stays.
+    bench = {'next_kg': 60, 'exposures': 12, 'resets': 2}
+    deadlift = {'next_kg': 120, 'exposures': 12, 'resets': 2}
+    p, g, c = _ss(weeks=1, module_progression_state={'novice_lp': {'completed': 0, 'lifts': {
+        'back_squat': deepcopy(lift), 'bench_press': bench, 'deadlift': deadlift}}})
+    tc.verify(p, g['training_contract'], c)
+    (_, a1), (_, b1), (_, a2) = _ss_sessions(p)
+    assert (_lifts(a1)['back_squat']['sets'], _lifts(a1)['back_squat']['reps']) == (5, 3)
+    assert (_lifts(b1)['back_squat']['sets'], _lifts(b1)['back_squat']['reps']) == (2, 5)
+    assert (_lifts(b1)['bench_press']['sets'], _lifts(b1)['bench_press']['reps']) == (5, 3)
+    assert (_lifts(a1)['deadlift']['sets'], _lifts(a1)['deadlift']['reps']) == (1, 5), 'not the deadlift'
+    assert _lifts(a1)['back_squat']['duration_minutes'] == 20, 'the same minutes'
+
+    for _ in range(2):
+        tc.apply_lift_outcome(module, 'back_squat', lift, False, 91.25)
+    assert lift.get('stalled') and lift['next_kg'] == 91.25
     p, _, _ = _ss(weeks=1, module_progression_state={'novice_lp': {'completed': 0, 'lifts': {'back_squat': lift}}})
     squat = _lifts(_ss_sessions(p)[0][1])['back_squat']
     assert squat['stalled'] and 'Texas Method' in squat['load_note']

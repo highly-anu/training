@@ -66,6 +66,13 @@ progressing exposure lifts), `kg` (the last made), `exposures`, `failures`,
 - a miss repeats the weight; `stall.failures` misses in a row reset it by
   `stall.reset_pct`; a lift that stalls again after `stall.resets` resets holds,
   `stalled`, and its note sends it to the next track;
+- each reset may change how the lift runs (`with_stall`, Alter's "The Reset"):
+  from `stall.light_day.after_resets` the week's `exposure`-th session lifts it
+  light (`pct` of the last weight made, its own sets and reps, not advancing it;
+  the session's module record names it as `light_day`, and the forecast steps over
+  it), and from `stall.scheme.after_resets` the named lifts run the scheme's sets
+  and reps in the same minutes (Starting Strength: a light squat day after one
+  reset, 5×3 for the squat, bench and press after two);
 - a block with `pct` (the Texas Method's Monday at 90 %) reads its lift's last
   made weight and does not move it; a block at full weight does;
 - a lift with no weight works up on the day (`load.work_up`), unless the builder
