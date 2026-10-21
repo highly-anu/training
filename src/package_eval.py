@@ -1,8 +1,8 @@
 """The package scorecard: how far a package is from what its method prescribes.
 
 The fidelity gate (src/fidelity.py) reads one program against what its
-package declares. It cannot see that a declaration is thin: 145 of its 178
-baselined findings were intensity splits, while a novice Gym Jones program
+package declares. It cannot see that a declaration is thin: when the
+scorecard was written most of its findings were intensity splits, while a novice Gym Jones program
 was half substitutes, CrossFit ran one AMRAP template, and Starting Strength
 with no barbell handed out sessions whose every slot was empty. The scorecard
 grades each package × track on five dimensions — Source, Execution,
@@ -16,10 +16,9 @@ tools/evaluate_packages.py; `test_package_eval.py` pins each grader.
 """
 from __future__ import annotations
 
-import re
-from collections import Counter, defaultdict
+from collections import Counter
 
-from src import fidelity
+from src import fidelity, package_fidelity as pf
 
 PASS, PARTIAL, FAIL = 'pass', 'partial', 'fail'
 RANK = {PASS: 0, PARTIAL: 1, FAIL: 2}
@@ -32,11 +31,11 @@ DIMENSIONS = {
     'measurement': ('M1', 'M2', 'M3', 'M4'),
 }
 CRITERIA = {
-    'S1': 'Dossier has Sources, Rules, Open, Inventions and Tests',
-    'S2': 'Sources are primary, or a consensus of three or more',
-    'S3': 'No rule left only in prose',
-    'S4': "status.yaml's inventions match the dossier's",
-    'S5': 'A source test that CI runs',
+    'S1': 'A fidelity record with sources and rules, and a dossier',
+    'S2': 'A primary source read in full, or a consensus of three or more read',
+    'S3': 'Every rule enforced by something that exists',
+    'S4': 'Every rule rests on a source read; ids cited and named in the dossier',
+    'S5': "The source's own weeks reproduce",
     'E1': 'No session with every slot empty',
     'E2': 'Sessions are their own modality, not substitutes',
     'E3': 'A level the track is not written for is refused',
@@ -59,14 +58,35 @@ HYGIENE = {'D3', 'D4'}
 SUBSTITUTE_PARTIAL = 0.25
 SHARE_PASS, SHARE_PARTIAL = 0.40, 0.60
 LEVELS = ('novice', 'intermediate', 'advanced', 'elite')
-DOSSIER_SECTIONS = ('Sources', 'Rules', 'Open', 'Inventions', 'Tests')
-# Fidelity rules that are a declared claim of the method breaking.
+# Fidelity rules that are a declared claim of the method breaking, at any
+# gated severity: the volume bands fire only where a phase declares them.
 CLAIM_RULES = {'substituted_share', 'modality_outnumbers', 'archetype_share', 'distinct_archetypes',
                'archetype_required', 'modality_required', 'archetype_forbidden', 'zone_above_cap',
-               'training_contract', 'contract_unfulfilled', 'template_foreign_day'}
+               'training_contract', 'contract_unfulfilled', 'template_foreign_day',
+               'volume_ramp', 'volume_vs_previous_phase'}
 CLAIM_KEYS = {'archetypes_required', 'archetypes_forbidden', 'modalities_required', 'max_zone',
               'volume_change_per_week', 'volume_vs_previous_phase', 'max_substituted_share',
               'modality_outnumbers', 'max_archetype_share', 'min_distinct_archetypes'}
+
+
+# Every implement, so equipment is never why a profile that has it all fails
+# (the fidelity and style checks' ideal athlete, the source weeks' `all`).
+ALL_EQUIPMENT = [
+    'barbell', 'rack', 'plates', 'kettlebell', 'pull_up_bar', 'ruck_pack',
+    'open_space', 'sandbag', 'rower', 'box', 'medicine_ball', 'sled', 'tire',
+    'rope', 'dumbbell', 'bench', 'gymnastics_rings', 'jump_rope', 'bike',
+    'treadmill', 'trap_bar', 'ghd', 'parallettes', 'sled_harness',
+]
+
+
+def contract_entry(constraints: dict, contract: dict | None) -> dict:
+    """A contract athlete who qualifies: two bells and the level's mastery."""
+    if not contract:
+        return constraints
+    return {**constraints, 'kettlebell_count': constraints.get('kettlebell_count', 2),
+            'mastered_exercises': sorted({eid for m in contract['modules']
+                                          if constraints['training_level'] in m['training_levels']
+                                          for eid in m.get('requires_mastery', [])})}
 
 
 def worst(grades) -> str:
@@ -91,13 +111,28 @@ def refused(program: dict | None, validation=None) -> bool:
     return not program or bool(program.get('validation_errors')) or not program.get('weeks')
 
 
+def _where(w: dict, s: dict) -> str:
+    return f"week {w.get('week_number')} {(s.get('archetype') or {}).get('id') or s.get('modality')}"
+
+
 def empty_sessions(program: dict | None) -> list[str]:
     """Sessions with work slots, every one of them empty: delivered, nothing in it."""
     out = []
     for w, s in sessions(program):
         work = fidelity._work(s)
         if work and not any(ea.get('exercise') for ea in work):
-            out.append(f"week {w.get('week_number')} {(s.get('archetype') or {}).get('id') or s.get('modality')}")
+            out.append(_where(w, s))
+    return out
+
+
+def gapped_sessions(program: dict | None) -> list[str]:
+    """Sessions delivered with some work slots empty, but not all."""
+    out = []
+    for w, s in sessions(program):
+        work = fidelity._work(s)
+        filled = sum(1 for ea in work if ea.get('exercise'))
+        if 0 < filled < len(work):
+            out.append(_where(w, s))
     return out
 
 
@@ -134,12 +169,13 @@ def eligible_archetypes(archetypes: list, modality: str, kind: str, level: str, 
 
 
 def concentration(program: dict | None, track: dict, archetypes: list, level: str,
-                  equipment: set) -> list[tuple[str, str, str, float, float | None, int]]:
+                  equipment: set, refs: set) -> list[tuple[str, str, str, float, float | None, int]]:
     """(phase, modality, archetype, share, declared cap, archetypes on offer) for
     the most used archetype of each modality with four or more sessions in a
     phase. A package that offers one template for a modality (CrossFit's AMRAP)
     concentrates as surely as a selector that keeps picking one; a method whose
-    repetition is the point says so with the phase's `max_archetype_share`.
+    repetition is the point says so with the phase's `max_archetype_share`,
+    which counts only when a rule of the package's record cites it (`refs`).
     Templated phases and contracts are exempt: their repetition is the source's."""
     by_id = {p['id']: p for p in track.get('phases') or []}
     out = []
@@ -150,17 +186,11 @@ def concentration(program: dict | None, track: dict, archetypes: list, level: st
         if phase.get('week_templates'):
             continue
         kind = pweeks[0].get('phase')
-        counts: dict = defaultdict(Counter)
-        for w in pweeks:
-            for _, s in fidelity._sessions(w):
-                if not s.get('test'):
-                    counts[s.get('modality')][(s.get('archetype') or {}).get('id')] += 1
-        for mod, c in counts.items():
-            total = sum(c.values())
-            if total < 4:
-                continue
-            aid, top = c.most_common(1)[0]
-            out.append((phase_id, mod, aid, top / total, (phase.get('checks') or {}).get('max_archetype_share'),
+        cap = (phase.get('checks') or {}).get('max_archetype_share')
+        if not pf.claim_cited(refs, track['id'], phase_id, 'max_archetype_share'):
+            cap = None
+        for mod, aid, top, total in fidelity.archetype_shares(pweeks):
+            out.append((phase_id, mod, aid, top / total, cap,
                         len(eligible_archetypes(archetypes, mod, kind, level, equipment))))
     return out
 
@@ -184,10 +214,14 @@ def grade_e1(qualified: dict) -> tuple[str, str]:
     """`qualified`: profile -> program, for athletes the track is written for."""
     found = {p: empty_sessions(prog) for p, prog in qualified.items()}
     bad = {p: e for p, e in found.items() if e}
-    if not bad:
-        return PASS, ''
-    p, e = next(iter(sorted(bad.items())))
-    return FAIL, f"{p}: {len(e)} session(s) with every slot empty, e.g. {e[0]}"
+    if bad:
+        p, e = next(iter(sorted(bad.items())))
+        return FAIL, f"{p}: {len(e)} session(s) with every slot empty, e.g. {e[0]}"
+    gapped = {p: g for p, prog in qualified.items() if (g := gapped_sessions(prog))}
+    if gapped:
+        p, g = next(iter(sorted(gapped.items())))
+        return PARTIAL, f"{p}: {len(g)} session(s) with a slot empty, e.g. {g[0]}"
+    return PASS, ''
 
 
 def grade_e2(qualified: dict) -> tuple[str, str]:
@@ -226,20 +260,27 @@ def grade_e4(found: list) -> tuple[str, str]:
     return (PASS, '') if g == PASS else next(x for x in graded if x[0] == g)
 
 
-def declares_claims(track: dict, contract: dict | None) -> bool:
+def declares_claims(track: dict, contract: dict | None, refs: set) -> bool:
     """A contract and a source week template are the method's claims made
-    executable; otherwise a phase's `checks:` declares them."""
+    executable; otherwise a phase's `checks:` declares them. Each counts only
+    when a rule of the package's fidelity record cites it (`refs`): a claim
+    no source states is a number, not the method."""
+    tid = track['id']
     if contract:
-        return True
-    return any(ph.get('week_templates') or (CLAIM_KEYS & set(ph.get('checks') or {}))
-               for ph in track.get('phases') or [])
+        return pf.contract_cited(refs, tid)
+    for ph in track.get('phases') or []:
+        if ph.get('week_templates') and pf.template_cited(refs, tid, ph['id']):
+            return True
+        if any(pf.claim_cited(refs, tid, ph['id'], k) for k in CLAIM_KEYS & set(ph.get('checks') or {})):
+            return True
+    return False
 
 
 def grade_e5(declared: bool, broken: list[str]) -> tuple[str, str]:
     if broken:
         return FAIL, broken[0]
     if not declared:
-        return PARTIAL, 'no defining claim declared (checks:, a contract or a week template)'
+        return PARTIAL, 'no defining claim a rule cites (checks:, a contract or a week template)'
     return PASS, ''
 
 
@@ -312,11 +353,17 @@ def grade_d4(no_patterns: int, no_levels: int, inert_scaling: int) -> tuple[str,
 
 # ── Measurement ──────────────────────────────────────────────────────────────
 
-def grade_m1(declared: str | None, lead: str | None) -> tuple[str, str]:
+def grade_m1(declared: str | None, lead: str | None, rule: str | None) -> tuple[str, str]:
+    """`declared`: the record's currency for the track; `rule`: the rule it
+    rests on (None when it cites none) — the method's word, not the author's;
+    on a track that is itself an invention, that invention
+    (package_fidelity.currency)."""
     if not declared:
         return FAIL, f"no currency declared for the track (leads with {lead or 'nothing'})"
+    if not rule:
+        return FAIL, f"the currency {declared} cites no rule of the record"
     if declared != lead:
-        return FAIL, f"leads with {lead or 'nothing'}, the method's currency is {declared}"
+        return FAIL, f"leads with {lead or 'nothing'}, the method's currency is {declared} ({rule})"
     return PASS, ''
 
 
@@ -344,57 +391,72 @@ def grade_m4(referenced: set, known: set) -> tuple[str, str]:
 
 # ── Source ───────────────────────────────────────────────────────────────────
 
-def dossier_sections(text: str) -> dict[str, list[str]]:
-    """`## Heading` -> its bullet items (top-level `- ` lines)."""
-    out: dict[str, list[str]] = {}
-    current = None
-    for line in text.splitlines():
-        m = re.match(r'^##\s+(.*)', line)
-        if m:
-            current = m.group(1).strip()
-            out[current] = []
-        elif current is not None and line.startswith('- '):
-            out[current].append(line[2:].strip())
-    return out
+# Computed from the package's record (data/packages/<id>/fidelity.yaml,
+# src/package_fidelity.py), never declared: a heading, a count or a word in
+# a status file once passed these.
+
+def grade_s1(record: dict | None, has_dossier: bool) -> tuple[str, str]:
+    """A record and a dossier, with sources and rules in the record."""
+    missing = [what for what, ok in (('no fidelity.yaml', record is not None), ('no dossier', has_dossier),
+                                     ('no sources', bool((record or {}).get('sources'))),
+                                     ('no rules', bool((record or {}).get('rules')))) if not ok]
+    return (PASS, '') if not missing else (FAIL, '; '.join(missing))
 
 
-def _section(sections: dict, name: str) -> list[str] | None:
-    return next((v for k, v in sections.items() if k.split()[0].rstrip(':') == name), None)
-
-
-def grade_s1(sections: dict | None) -> tuple[str, str]:
-    if sections is None:
-        return FAIL, 'no dossier'
-    missing = [s for s in DOSSIER_SECTIONS if _section(sections, s) is None]
-    return (PASS, '') if not missing else (FAIL, f"missing sections: {', '.join(missing)}")
-
-
-def grade_s2(kind: str | None, sections: dict | None) -> tuple[str, str]:
-    sources = len(_section(sections or {}, 'Sources') or [])
-    if kind == 'primary' or (kind == 'consensus' and sources >= 3):
+def grade_s2(kind: str | None, record: dict | None) -> tuple[str, str]:
+    """`kind` is computed from the record's sources (package_fidelity.sources_kind)."""
+    if kind in ('primary', 'consensus'):
         return PASS, ''
-    if kind in ('secondary', 'consensus'):
-        return PARTIAL, f"{kind} sources ({sources})"
-    return FAIL, 'sources_kind not stated'
+    n = sum(1 for s in (record or {}).get('sources') or [] if s['read'] in ('full', 'partial'))
+    if kind == 'secondary':
+        return PARTIAL, f"{n} secondary source(s) read; a consensus needs three, or one primary read in full"
+    return FAIL, 'no source read'
 
 
-def grade_s3(debt: list | None) -> tuple[str, str]:
-    if debt is None:
-        return PARTIAL, 'debt not stated'
-    return (PASS, '') if not debt else (PARTIAL, f"{len(debt)} rule(s) only in prose")
-
-
-def grade_s4(status_inventions: list, sections: dict | None) -> tuple[str, str]:
-    if sections is None:
-        return FAIL, 'no dossier'
-    listed = _section(sections, 'Inventions') or []
-    if len(listed) != len(status_inventions or []):
-        return FAIL, f"dossier lists {len(listed)} invention(s), status.yaml {len(status_inventions or [])}"
+def grade_s3(record: dict | None, debt: list[str], ref_errors: list[str]) -> tuple[str, str]:
+    """`debt`: rules nothing enforces; `ref_errors`: enforcement that names
+    nothing. No rules is not no debt: nothing is enforced."""
+    if not (record or {}).get('rules'):
+        return FAIL, 'no rules recorded'
+    if ref_errors:
+        return FAIL, ref_errors[0] + (f" (+{len(ref_errors) - 1})" if len(ref_errors) > 1 else '')
+    if debt:
+        return PARTIAL, f"{len(debt)} rule(s) only in prose: {', '.join(debt)}"
     return PASS, ''
 
 
-def grade_s5(tests_in_ci: int) -> tuple[str, str]:
-    return (PASS, '') if tests_in_ci else (FAIL, 'no source test that CI runs')
+def grade_s4(record: dict | None, errors: list[str]) -> tuple[str, str]:
+    """`errors`: package_fidelity.citation_errors."""
+    if not (record or {}).get('rules'):
+        return FAIL, 'no rules recorded'
+    if errors:
+        return FAIL, errors[0] + (f" (+{len(errors) - 1})" if len(errors) > 1 else '')
+    return PASS, ''
+
+
+def _first(found: list[str]) -> str:
+    return found[0] + (f" (+{len(found) - 1})" if len(found) > 1 else '')
+
+
+def grade_s5(weeks: int, structure: list[str], numbers: list[str], tests_in_ci: int,
+             invented: str | None = None) -> tuple[str, str]:
+    """The track's own source weeks (src/source_weeks.py), generated and
+    compared: `weeks` entries, their structure and number mismatches. A track
+    that is itself an invention (`invented`, the owner's decision in the
+    ledger) has no source to reproduce. Otherwise, without a source week, a
+    source test CI runs is partial — it pins what its author chose to pin,
+    which the scorecard cannot read."""
+    if not weeks and invented:
+        return PASS, ''
+    if weeks:
+        if structure:
+            return FAIL, _first(structure)
+        if numbers:
+            return PARTIAL, _first(numbers)
+        return PASS, ''
+    if tests_in_ci:
+        return PARTIAL, f'no source week; {tests_in_ci} source test(s) CI runs'
+    return FAIL, 'no source week, and no source test CI runs'
 
 
 # ── Status ───────────────────────────────────────────────────────────────────
@@ -408,7 +470,9 @@ def dimension_grades(grades: dict) -> dict:
 
 def derived_status(tracks: dict, excluded: set, has_dossier: bool) -> str:
     """`audited` when every criterion that is not hygiene passes on every
-    track not excluded; `partial` once a dossier exists; else `not_started`."""
+    track not excluded; `partial` once a dossier exists (and the fidelity
+    record beside it — the caller passes both as `has_dossier`); else
+    `not_started`."""
     counted = {t: g for t, g in tracks.items() if t not in excluded}
     if has_dossier and counted and all(g[c][0] == PASS for g in counted.values()
                                        for c in g if c not in HYGIENE):

@@ -1,0 +1,152 @@
+# Starting Strength — the machine half of docs/package-fidelity/starting_strength.md
+# (docs/schemas/fidelity.schema.json; docs/package-fidelity/README.md).
+shape: contract
+
+sources:
+  - id: rippetoe_novice_2013
+    kind: primary
+    author: Mark Rippetoe
+    title: "Who Wants to Be a Novice? You Do"
+    where: https://startingstrength.com/article/who_wants_to_be_a_novice_you_do
+    published: '2013-05-02'
+    read: full
+    accessed: '2026-10-20'
+    note: Read through the Wayback Machine; the site refuses scripted fetches.
+  - id: rippetoe_tm_2013
+    kind: primary
+    author: Mark Rippetoe
+    title: The Texas Method
+    where: https://startingstrength.com/article/the_texas_method
+    published: '2013-05-01'
+    read: full
+    accessed: '2026-10-20'
+    note: First published on T-Nation, 2010.
+  - id: alter_reset_2018
+    kind: secondary
+    author: Rori Alter, DPT, SSC
+    title: "The Reset: Why and How"
+    where: https://startingstrength.com/article/the-reset-why-and-how
+    published: '2018-10-03'
+    read: full
+    accessed: '2026-10-20'
+    note: A Starting Strength coach, citing the two books below.
+  - id: ss_books
+    kind: primary
+    author: Mark Rippetoe
+    title: "Starting Strength: Basic Barbell Training (3rd ed.); Practical Programming for Strength Training"
+    where: Aasgaard Company
+    read: not_read
+    note: The books the articles summarise; no rule rests on them alone.
+
+rules:
+  - id: R1
+    text: Two workouts alternate, A-B-A one week and B-A-B the next.
+    cites: [{source: rippetoe_novice_2013}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.linear_progression.modules.novice_lp.rotation
+      - week:novice_ab_weeks
+      - test:test_training_contract.py::test_ss_alternates_a_and_b_across_weeks
+  - id: R2
+    text: "Workout A: squat 3×5 across, press 3×5 across, deadlift 1×5, chin-ups 3 sets to failure, 5 minutes between."
+    cites: [{source: rippetoe_novice_2013}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.linear_progression.modules.novice_lp.variants.a.blocks
+  - id: R3
+    text: "Workout B: squat 3×5, bench 3×5, power clean 5×3 across; rows are not a substitute."
+    cites: [{source: rippetoe_novice_2013}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.linear_progression.modules.novice_lp.variants.b.blocks
+  - id: R4
+    text: Three days a week, 48–72 hours apart; fewer days are not the program.
+    cites: [{source: rippetoe_novice_2013}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.linear_progression.modules.novice_lp.exposures_per_week
+      - data:training_contract.yaml#tracks.linear_progression.modules.novice_lp.min_spacing_days
+      - test:test_training_contract.py::test_ss_refuses_with_the_unblocking_constraint
+  - id: R5
+    text: Every lift goes up every workout.
+    cites: [{source: rippetoe_novice_2013}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.linear_progression.modules.novice_lp.progression.model
+      - test:test_training_contract.py::test_ss_adds_weight_each_confirmed_session
+  - id: R6
+    text: "First session: the empty bar, sets of five, small jumps to a heavy weight that keeps form, two more sets there."
+    cites: [{source: rippetoe_novice_2013}]
+    enforced_by:
+      - test:test_training_contract.py::test_ss_first_session_works_up
+  - id: R7
+    text: "Squat +10 lb for two weeks, then +5; deadlift +15 at first, then +5; press, bench and clean +5, then 1–3."
+    cites: [{source: rippetoe_novice_2013}, {source: rippetoe_tm_2013}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.linear_progression.modules.novice_lp.progression.lifts
+      - week:novice_squat_jumps
+  - id: R8
+    text: "Missed reps once: repeat the weight; missed at one weight twice in a row: reset 5 % and climb in smaller jumps."
+    cites: [{source: alter_reset_2018}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.linear_progression.modules.novice_lp.progression.stall
+      - test:test_training_contract.py::test_ss_stall_repeats_then_resets
+  - id: R9
+    text: Stalled again after the adjustments, that lift is intermediate; the others carry on.
+    cites: [{source: alter_reset_2018}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.linear_progression.modules.novice_lp.progression.stall.resets
+  - id: R10
+    text: The novice program ends when progress stops session to session; an intermediate progresses weekly.
+    cites: [{source: rippetoe_novice_2013}]
+    enforced_by:
+      - data:philosophy.yaml#track_for_level
+      - test:test_training_contract.py::test_ss_intermediate_routes_to_texas_method
+  - id: R11
+    text: "Texas Method Monday: squat 5×5 across at about 90 % of the five-rep max (up to 8–10 minutes' rest); press or bench 5×5 at about 90 %, alternating Mondays; one heavy set of five deadlifts, up every week."
+    cites: [{source: rippetoe_tm_2013}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.texas_method.modules.texas_method.variants.volume_press
+      - data:training_contract.yaml#tracks.texas_method.modules.texas_method.variants.volume_bench
+      - week:texas_method_week
+      - test:test_training_contract.py::test_texas_method_volume_light_intensity_week
+  - id: R12
+    text: "Texas Method Wednesday: squat 2×5 at 80 % of Monday; the other press for three lighter sets; chin-ups 3 × failure."
+    cites: [{source: rippetoe_tm_2013}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.texas_method.modules.texas_method.variants.light_bench
+      - data:training_contract.yaml#tracks.texas_method.modules.texas_method.variants.light_press
+      - week:texas_method_week
+  - id: R13
+    text: "Texas Method Friday: a new five-rep max (within 2 %) on the squat and the press; power cleans 5×3."
+    cites: [{source: rippetoe_tm_2013}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.texas_method.modules.texas_method.variants.intensity_press
+      - data:training_contract.yaml#tracks.texas_method.modules.texas_method.variants.intensity_bench
+  - id: R14
+    text: No deload week, and no conditioning beyond "don't do much".
+    cites: [{source: rippetoe_novice_2013}, {source: rippetoe_tm_2013}]
+    enforced_by:
+      - test:test_training_contract.py::test_ss_alternates_a_and_b_across_weeks
+  - id: R15
+    text: "After a first stall a light squat day (80 % of the first day's squat, 2×5) joins the week; after a second, the lift switches to 5×3."
+    cites: [{source: alter_reset_2018}]
+  - id: R16
+    text: "Layoffs: a week off repeats the last workout; longer resets 5 % under 40, 10 % over; three to four weeks resets 10 %."
+    cites: [{source: alter_reset_2018}]
+
+open:
+  - "Which press Friday intensifies: the article says \"the squat and the press or bench\"; the contract reads it as Monday's press (Monday's volume becomes Friday's max)."
+  - The book's earlier novice phase (deadlifts on both days before the power clean); the 2013 article programs the clean from the start, and so does the contract.
+  - Two-day weeks and sessions under an hour; no source writes a shorter version, so the contract refuses them.
+  - Curls ("if you must", on B) and the Texas Method's optional back extensions are not programmed.
+  - A Texas Method Friday that stalls has no rule in the article; the contract repeats the weight.
+
+inventions:
+  - id: I1
+    text: Chin-ups are left out, and said so, when there is no pull-up bar; the article lists them in Workout A.
+  - id: I2
+    text: The Texas Method's weekly increments (2.5 kg squat and deadlift, 1.25 kg presses and clean); the article gives none.
+  - id: I3
+    text: The light day's press shares (bench 85 %, press 87.5 % of the five-rep max); the article says only "a little lighter".
+
+currency:
+  linear_progression: {entry: bar_load, rule: R5}
+  texas_method: {entry: five_rep_max, rule: R13}
+
+next: The stall adjustments and layoff resets (R15, R16) need the log dates and the athlete's age; exercise media for the six lifts.

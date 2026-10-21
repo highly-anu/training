@@ -1,0 +1,47 @@
+# Horsemen GPP — the source's own weeks (docs/schemas/source_weeks.schema.json).
+# Transcribed from data/horsemen/horsemen.pdf pp. 2–8 (the four months'
+# "EXAMPLE:" weeks), 2026-10-21. Each day is its category; a day the source
+# writes as two ("PROGRESSION + LESS THAN 30 BREATHING LADDER") is compared on
+# its first. "JOB SPECIFIC (FUCK!!!)" is job_specific_hard.
+- id: four_month_macro
+  rule: R1
+  track: four_month_macro
+  note: Every day of the sixteen example weeks, an athlete with everything and six days of two hours.
+  profile: {days_per_week: 6, session_time_minutes: 120, training_level: intermediate, equipment: all}
+  weeks:
+    # Month 1 — Strength
+    - days: [{category: strength}, {category: job_specific_long}, {category: power_endurance},
+             {category: smmf}, {category: strength}, {category: recovery}, rest]
+    - days: [{category: strength}, {category: power_explosive}, {category: job_specific_hard},
+             {category: power_endurance}, {category: strength}, {category: recovery}, rest]
+    - days: [{category: strength}, {category: power_cardio}, {category: job_specific_short},
+             {category: progression}, {category: strength}, {category: recovery}, rest]
+    - days: [{category: strength}, {category: power_endurance}, {category: job_specific_long},
+             {category: circuit_complementary}, {category: strength}, {category: recovery}, rest]
+    # Month 2 — Power Endurance
+    - days: [{category: power_endurance}, {category: job_specific_short}, {category: strength_maintenance},
+             {category: power_endurance}, {category: endurance_long}, {category: recovery}, rest]
+    - days: [{category: power_endurance}, {category: circuit_focus}, {category: job_specific_long},
+             {category: power_endurance}, {category: strength_maintenance}, {category: olympic}, rest]
+    - days: [{category: power_endurance}, {category: strength_maintenance}, {category: job_specific_hard},
+             {category: endurance_long}, {category: power_endurance}, {category: recovery}, rest]
+    - days: [{category: power_endurance}, {category: job_specific_long}, {category: strength_maintenance},
+             {category: progression}, {category: power_endurance}, {category: smmf}, rest]
+    # Month 3 — Job Specific
+    - days: [{category: job_specific_long}, {category: strength}, {category: job_specific_short},
+             {category: power_endurance}, {category: job_specific_long}, {category: recovery}, rest]
+    - days: [{category: job_specific_hard}, {category: circuit_short}, {category: job_specific_long},
+             {category: job_specific_short}, {category: density}, {category: recovery}, rest]
+    - days: [{category: job_specific_long}, {category: power_endurance}, {category: job_specific_short},
+             {category: smmf}, {category: job_specific_long}, {category: recovery}, rest]
+    - days: [{category: job_specific_hard}, {category: endurance}, {category: job_specific_short},
+             {category: strength}, {category: job_specific_long}, {category: recovery}, rest]
+    # Month 4 — Maintenance
+    - days: [{category: circuit_short}, {category: strength}, {category: recovery},
+             {category: job_specific_hard}, {category: progression}, {category: recovery}, rest]
+    - days: [{category: circuit_complementary}, {category: strength}, {category: recovery},
+             {category: job_specific_hard}, {category: smmf}, {category: recovery}, rest]
+    - days: [{category: circuit_focus}, {category: job_specific_hard}, {category: recovery},
+             {category: strength}, {category: accumulation}, {category: recovery}, rest]
+    - days: [{category: endurance_long}, {category: job_specific_hard}, {category: recovery},
+             {category: strength}, {category: circuit_short}, {category: recovery}, rest]

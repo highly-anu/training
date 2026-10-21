@@ -26,12 +26,7 @@ from src.generator import generate  # noqa: E402
 from src.validator import validate  # noqa: E402
 
 # Everything, so equipment is never the reason a style fails here.
-ALL_EQUIPMENT = [
-    'barbell', 'rack', 'plates', 'kettlebell', 'pull_up_bar', 'ruck_pack',
-    'open_space', 'sandbag', 'rower', 'box', 'medicine_ball', 'sled', 'tire',
-    'rope', 'dumbbell', 'bench', 'gymnastics_rings', 'jump_rope', 'bike',
-    'treadmill', 'trap_bar', 'ghd', 'parallettes', 'sled_harness',
-]
+from src.package_eval import ALL_EQUIPMENT  # noqa: E402
 
 
 def _days_for(track: dict, fw_by_id: dict) -> int:

@@ -1,0 +1,170 @@
+# Mark Wildman Kettlebell — the machine half of docs/package-fidelity/wildman_kettlebell.md
+# (docs/schemas/fidelity.schema.json; docs/package-fidelity/README.md).
+shape: contract
+
+sources:
+  - id: nerd_math_pdf
+    kind: primary
+    author: Mark Wildman
+    title: Nerd Math Kettlebell Swing Program (r1.4)
+    where: https://s3.amazonaws.com/kajabi-storefronts-production/sites/2147529643/themes/2148964886/downloads/wm1OoAfESN6SsE7bdmR9_NerdMath_SwingProgram_211011_r1.4.pdf
+    published: '2021-10-11'
+    read: full
+    accessed: '2026-10-21'
+    note: Read in full for the October 2026 rebuild; the rules below re-checked against r1.4's text on 2026-10-21.
+  - id: wildman_programming
+    kind: primary
+    author: Mark Wildman
+    title: Programming (Nerd Math, the Tetris of Training)
+    where: https://www.wildmanathletica.com/programming
+    read: partial
+    accessed: '2026-10-21'
+    note: The frequency and stacking passages, quoted.
+  - id: wildman_phases
+    kind: primary
+    author: Mark Wildman
+    title: Phases (I Restore, II Build, III Explore)
+    where: https://www.wildmanathletica.com/phases
+    read: partial
+    accessed: '2026-10-21'
+    note: The three phases and "you are never done with Phase II", quoted.
+  - id: wildman_programs
+    kind: primary
+    author: Mark Wildman
+    title: Kettlebell programs, snatch, get-up and deck squat pages
+    where: https://programs.wildmanathletica.com/kettlebell-programs (and /snatch, /tgu, /deck-squat, /swings)
+    read: partial
+    note: Read for the October 2026 rebuild; the pages give each paid program's structure, not its workouts. The host did not resolve on 2026-10-21.
+  - id: wildman_paid_programs
+    kind: primary
+    author: Mark Wildman
+    title: Clean & Press, Turkish Get-up, Snatch and Deck Squat programs
+    where: wildmanathletica.com (paid)
+    read: paywalled
+  - id: ikmf_pentathlon
+    kind: secondary
+    author: IKMF (the pentathlon is Valery Fedorenko's)
+    title: IKMF Pentathlon
+    where: https://ikmf-world.com/disciplines/ikmf-pentathlon
+    read: full
+    accessed: '2026-10-21'
+
+rules:
+  - id: R1
+    text: The phases are I Restore, II Build, III Explore, and Phase II is the one "you are never done with".
+    cites: [{source: wildman_phases}]
+    enforced_by:
+      - data:philosophy.yaml#tracks.general_practice.phases.build.repeatable
+  - id: R2
+    text: "Phase II's programs: the swing, clean & press, Turkish get-up, deck squat and snatch."
+    cites: [{source: wildman_programs, at: /kettlebell-programs}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.general_practice.modules
+      - test:test_training_contract.py::test_general_practice_runs_wildmans_phase_two
+  - id: R3
+    text: Each program twice a week (two or three days, in the swing PDF), never on consecutive days, stacked into the week as time allows.
+    cites: [{source: wildman_programming, at: "Most of our programs work best if done 2x per week"}, {source: nerd_math_pdf, at: How to use}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.general_practice.modules.swing.exposures_per_week
+      - data:training_contract.yaml#tracks.general_practice.modules.swing.min_spacing_days
+      - data:training_contract.yaml#tracks.squat_practice.modules.squat.min_spacing_days
+      - data:training_contract.yaml#tracks.snatch_practice.modules.snatch.min_spacing_days
+      - week:deck_squat_program_week
+      - week:snatch_program_week
+      - test:test_training_contract.py::test_source_cycle_retains_movements_and_spacing
+  - id: R4
+    text: "The swing: a 10-minute EMOM from 6 to 20 reps, two more each session; then a 20-minute EMOM; then start/stop swings in 10 and 20 rounds of 90 seconds; sixteen weeks to a bell, then a heavier one."
+    cites: [{source: nerd_math_pdf, at: Approaches 1–4 and the progression table}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.general_practice.modules.swing.progression
+      - week:nerd_math_swing_bell
+      - test:test_training_contract.py::test_source_cycle_retains_movements_and_spacing
+  - id: R5
+    text: '"If pressed for time ... do the short version": a session too short for a stage takes the longest earlier stage that fits.'
+    cites: [{source: nerd_math_pdf, at: Training session}]
+    enforced_by:
+      - test:test_training_contract.py::test_general_practice_runs_wildmans_phase_two
+  - id: R6
+    text: Clean and press before the snatch.
+    cites: [{source: wildman_programs, at: /snatch FAQ}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.general_practice.modules.snatch.requires_mastery
+      - data:training_contract.yaml#tracks.snatch_practice.modules.snatch.requires_mastery
+  - id: R7
+    text: "The snatch goal: 200 snatches in ten minutes, the Classic protocol."
+    cites: [{source: wildman_programs, at: /snatch}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.general_practice.modules.snatch.progression
+      - data:analytics.yaml#benchmarks.ssst_reps
+  - id: R8
+    text: "Deck squat: bodyweight first, then a kettlebell."
+    cites: [{source: wildman_programs, at: /deck-squat}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.general_practice.modules.deck_squat.blocks
+  - id: R9
+    text: No deload week; "lighter" is the next cycle with a heavier bell.
+    cites: [{source: nerd_math_pdf}, {source: wildman_phases}]
+    enforced_by:
+      - test:test_training_contract.py::test_source_cycle_retains_movements_and_spacing
+  - id: R10
+    text: The program is self-paced; progress is each workout completed, tracked by date.
+    cites: [{source: nerd_math_pdf, at: Program contents; Tracking your progress}]
+    enforced_by:
+      - test:test_training_contract.py::test_one_tap_confirmation_earns_the_exposure
+  - id: R11
+    text: Repeat workouts when training is interrupted for more than a week.
+    cites: [{source: nerd_math_pdf, at: Tracking your progress}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.general_practice.modules.swing.advice
+      - test:test_training_contract.py::test_swing_recommends_repeating_after_a_layoff_and_never_enforces_it
+  - id: R12
+    text: "The pentathlon: clean, long-cycle press, jerk, half snatch and strict push press, six minutes each with five minutes between; reps past 120, 60, 120, 108 and 120 score nothing."
+    cites: [{source: ikmf_pentathlon}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.pentathlon.modules.pentathlon_events
+      - test:test_training_contract.py::test_pentathlon_keeps_the_five_events_and_test_protocol
+  - id: R13
+    text: "The get-up's goal is a bodyweight ratio; no session tests it."
+    cites: [{source: wildman_programs, at: /tgu}]
+    enforced_by:
+      - data:analytics.yaml#benchmarks.turkish_get_up_bw_ratio
+
+open:
+  - "The hand-to-hand option (\"Option C: alternating minutes of 2HS and H2H\", the PDF's most common) needs a block that alternates two movements minute by minute."
+  - "Clean & press, get-up and deck-squat numbers: his own are in the paid programs."
+  - Bell sizes; the athlete chooses, and the contract never infers a weight.
+  - The swing PDF allows two or three days a week; the contract runs his website's twice.
+
+inventions:
+  - id: I1
+    text: Pentathlon Prep is built from kettlebell-sport (IKMF) practice; Wildman publishes no pentathlon program.
+    implemented_by:
+      - data:training_contract.yaml#tracks.pentathlon
+  - id: I2
+    text: The Get-Up and Loaded Mobility track (Codex).
+    implemented_by:
+      - data:training_contract.yaml#tracks.getup_mobility
+  - id: I3
+    text: The Double-Bell Practice track (Codex); his double bells are Phase III, deliberately non-repeating.
+    implemented_by:
+      - data:training_contract.yaml#tracks.double_bell_practice
+  - id: I4
+    text: Clean and press, get-up and deck-squat cycles follow the Nerd Math pattern; his own numbers are in paid programs.
+    implemented_by:
+      - data:training_contract.yaml#tracks.general_practice.modules.clean_press.progression
+      - data:training_contract.yaml#tracks.general_practice.modules.getup.progression
+      - data:training_contract.yaml#tracks.general_practice.modules.deck_squat.progression
+  - id: I5
+    text: "The repeat after a layoff (R11) is recommended in every swing session's note, never enforced: the athlete decides and takes responsibility (owner, 2026-10-21)."
+    implemented_by:
+      - data:training_contract.yaml#tracks.general_practice.modules.swing.advice
+
+currency:
+  general_practice: {entry: interval_rounds, rule: R10}
+  squat_practice: {entry: interval_rounds, rule: R10}
+  snatch_practice: {entry: interval_rounds, rule: R10}
+  double_bell_practice: {entry: interval_rounds, rule: I3}
+  pentathlon: {entry: jerk_rpm, rule: R12}
+  getup_mobility: {entry: technique_time, rule: I2}
+
+next: The hand-to-hand option needs an alternating block; decide the two Codex tracks (I2, I3).

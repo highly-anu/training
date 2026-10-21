@@ -551,6 +551,10 @@ def _assignment(block: dict, module: dict, exercises: dict, constraints: dict,
                 module_id=module['id'], forecast_step=step,
                 advances_module=_advancing(block) if by_load else _progresses(block),
                 conditional=step != state.get('completed', 0), elapsed_sec=seconds)
+    if module.get('advice') and load['advances_module']:
+        # The method's recommendation, left to the athlete: said where the
+        # block is read, never acted on by the cursor.
+        load['load_note'] = f"{load.get('load_note') or ''} {module['advice']}".strip()
     return {'slot_role': slot['role'], 'slot_type': slot['slot_type'], 'slot': slot,
             'exercise': ex, 'load': load, **({'standard': block['standard']} if block.get('standard') else {})}
 

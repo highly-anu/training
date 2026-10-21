@@ -1,10 +1,15 @@
 name: Training contracts
+# The package gates (docs/package-fidelity/README.md, "The gates"): every gate
+# the README names runs here, and tools/check_package_status.py fails when the
+# two lists part.
 on:
   pull_request:
-    paths: ['src/**', 'data/**', 'docs/schemas/**', 'test_training_contract.py', 'test_selection.py', 'test_standard_tests.py', 'test_phases.py', 'test_week_template.py', 'test_fidelity.py', 'test_package_eval.py', 'test_similarity.py', 'api.py', 'tools/**', 'docs/package-fidelity/**', '.github/workflows/training-contract.yml']
+    paths: ['src/**', 'data/**', 'docs/schemas/**', 'test_*.py', 'api.py', 'tools/**', 'garmin/**',
+            'docs/package-fidelity/**', '.github/workflows/training-contract.yml']
   push:
     branches: [master]
-    paths: ['src/**', 'data/**', 'docs/schemas/**', 'api.py', 'tools/**', 'docs/package-fidelity/**']
+    paths: ['src/**', 'data/**', 'docs/schemas/**', 'test_*.py', 'api.py', 'tools/**', 'garmin/**',
+            'docs/package-fidelity/**', '.github/workflows/training-contract.yml']
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -13,17 +18,21 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
       - run: pip install -r requirements.txt
-      - run: python tools/validate_entities.py data/packages/wildman_kettlebell/
+      - run: python tools/validate_entities.py --all -q
       - run: python test_training_contract.py
-      - run: python tools/check_exercise_coverage.py
       - run: python test_selection.py
       - run: python test_standard_tests.py
       - run: python test_phases.py
       - run: python test_week_template.py
-      - run: python tools/validate_entities.py --all -q
       - run: python test_fidelity.py
       - run: python test_package_eval.py
+      - run: python test_source_weeks.py
       - run: python test_similarity.py
+      - run: python test_program_analytics.py
+      - run: python test_watch_spec.py
+      - run: python tools/check_provenance.py
+      - run: python tools/check_provenance.py --coverage
+      - run: python tools/check_styles.py
       - run: python tools/evaluate_packages.py
       - run: python tools/check_analytics.py
       - run: python tools/check_package_status.py

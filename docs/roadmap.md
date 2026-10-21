@@ -788,6 +788,35 @@ archetype; CrossFit's variation needs claims), R1 (Gym Jones and Uphill hand out
 sessions under injuries), E5 (no defining claims declared outside the contracts), and
 M1 (no package but the audited ones declares its currency).
 
+**The review, reviewed (2026-10-21, branch `package-review`).** The Source grades were
+declarations — five headings, a count of inventions, `sources_kind: primary`, `debt: []`
+— and nothing compared a program with the source's numbers. Now each package keeps a
+record in its folder (`fidelity.yaml`: sources with how much was read, rules with what
+enforces each, inventions; `source_weeks.yaml`: the source's own weeks, generated and
+compared), `status.yaml` is generated, a claim or lead measure counts only when a rule
+cites it, CI runs every gate the README names, and a stale baseline fails (README,
+CLAUDE.md). Re-reading the sources: Horsemen's sixteen weeks, Wildman's 32 swing
+sessions and Starting Strength's weeks reproduce. Decided by the owner the same day:
+BJJ's four classes at six days stand (I7, where BJJEE's week has five); Wildman's
+"repeat workouts after a week off" (R11) is recommended in every swing session's note
+and never enforced (the contract's module `advice`, I5). **Still waiting** — *BJJ*
+(partial): StrengthLog deloads strength after six weeks at 50–60 % × 10 × 2 (R4, debt),
+the package every fourth week, dropping rolling (I3); no source prescribes strength by
+RPE (I2) — StrengthLog and Vitruve write reps and %1RM.
+
+Next branch (the plan's parts 4–6): R1 against the ideal program (fidelity rules on the
+scorecard's own constrained profiles, `explain_refusal` naming the unblocking
+constraint, no "lift everything" unblock); a Portability dimension — a neutrality check
+over `src/`, `api.py`, `frontend/src`, `ios/` and `garmin/core` (today `scheduler.py`'s
+`'bjj'` mobility branch, `progression._SESSIONS_PER_WEEK`, `selector._LEVEL_CONCEPTS`,
+`similarity._INTENSITY_GROUPS`, the `BENCHMARK_FILES` whitelist and Cell loader, the
+kettlebell-only contract wording, both builders' `wk_kb_` stripping, slot-type logging
+rules in both clients, the unguarded `ModalityDonut` lookup), watch templates that
+declare what they capture (`vocabulary.CAPTURE` from data), and a drop-in test: a data
+root override and three throwaway packages, one per shape, through generate, the
+philosophies, today-session `?spec=1`, analytics and the scorecard with nothing outside
+`data/` touched; `tools/print_package.py` and recorded reviews.
+
 **5. Wildman follow-ups (from the handoff).** General Practice runs Wildman's Phase II
 since 2026-10-20 (the Nerd Math swing approaches, get-up and deck squat stacked as time
 allows, the snatch once confirmed). Left: his hand-to-hand option (alternating minutes

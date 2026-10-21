@@ -42,6 +42,7 @@
         "never_with": {"type": "array", "items": {"type": "string"}, "description": "Modules this optional one never shares a day with (BJJ's conditioning stays off class days)."},
         "when_mastered": {"type": "boolean", "description": "Joins the week only once `requires_mastery` is confirmed (mastered_exercises or the level's seeds); until then it is left out and the program says so, rather than the track refusing."},
         "optional": {"type": "boolean", "description": "Supplementary work the method lets the athlete skip: placed only on days no essential module uses, left out with its reason when none is free or its movement is ruled out."},
+        "advice": {"type": "string", "description": "What the method recommends and the app leaves to the athlete — said, never enforced (Wildman: repeat the workouts after more than a week away). It ends the note of every block that advances the module."},
         "progression": {
           "type": "object", "additionalProperties": false, "required": ["model"],
           "properties": {

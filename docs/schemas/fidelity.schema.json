@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "fidelity.schema.json",
+  "title": "Package fidelity record",
+  "description": "data/packages/<id>/fidelity.yaml: the machine half of a package's source dossier (docs/package-fidelity/<id>.md). What the package's method is read from, every rule the sources state with what enforces it, what the sources leave open, and what the app adds. Read by the package scorecard (tools/evaluate_packages.py, src/package_fidelity.py), never at runtime; docs/package-fidelity/status.yaml is generated from it.",
+  "type": "object",
+  "required": ["shape"],
+  "additionalProperties": false,
+  "properties": {
+    "shape": {
+      "enum": ["contract", "templates", "scheduler"],
+      "description": "The engine shape the method needs (docs/package-fidelity/README.md, 'The method' step 2) — for a package not yet worked, the one it will move to."
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "title", "where", "read"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+          "kind": { "enum": ["primary", "secondary"],
+                    "description": "primary: the method's author (or the program as its author publishes it); secondary: anyone else." },
+          "author": { "type": "string" },
+          "title": { "type": "string" },
+          "where": { "type": "string", "description": "A URL, an edition, or a repository path." },
+          "published": { "type": "string" },
+          "read": { "enum": ["full", "partial", "not_read", "paywalled", "unavailable"],
+                    "description": "How much of it the dossier rests on having read. A rule may not rest on a source that was not read." },
+          "accessed": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+          "copy": { "type": "string", "description": "A repository path to a kept copy." },
+          "note": { "type": "string" }
+        }
+      }
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "text", "cites"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^R[0-9]+$" },
+          "text": { "type": "string" },
+          "cites": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["source"],
+              "additionalProperties": false,
+              "properties": {
+                "source": { "type": "string" },
+                "at": { "type": "string", "description": "Where in the source: a section, page or quoted phrase." }
+              }
+            }
+          },
+          "enforced_by": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^(data:[^#]+#.+|checks:[a-z0-9_]+/[a-z0-9_]+\\.[a-z_]+|test:[^:]+::[A-Za-z0-9_]+|week:[a-z0-9_]+)$" },
+            "description": "What makes the rule executable: data:<file in the package>#<key path> (a list item by its id or index), checks:<track>/<phase>.<key> (a philosophy.yaml claim), test:<file>::<function> (a test CI runs), week:<source_weeks.yaml id>. None: the rule is debt — it lives only in prose."
+          }
+        }
+      }
+    },
+    "open": { "type": "array", "items": { "type": "string" },
+              "description": "What the sources leave open, or what could not be read; never filled in." },
+    "inventions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "text"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^I[0-9]+$" },
+          "text": { "type": "string" },
+          "implemented_by": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^(data:[^#]+#.+|checks:[a-z0-9_]+/[a-z0-9_]+\\.[a-z_]+|test:[^:]+::[A-Za-z0-9_]+|week:[a-z0-9_]+)$" },
+            "description": "Where the invention lives, in the references rules use. A claim, contract or template it names counts as declared (scorecard E5), as the owner's decision rather than the source's."
+          }
+        }
+      },
+      "description": "What the app adds that the sources do not contain, each decided by the owner."
+    },
+    "currency": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["entry", "rule"],
+        "additionalProperties": false,
+        "properties": {
+          "entry": { "type": "string", "description": "The analytics.yaml progress entry the program leads with." },
+          "rule": { "type": "string", "pattern": "^[RI][0-9]+$",
+                    "description": "The rule that says this is what the method counts progress in — or, for an invented track, the invention." }
+        }
+      },
+      "description": "Track -> the measure the method counts progress in (scorecard M1)."
+    },
+    "excluded_tracks": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "pattern": "^I[0-9]+$" },
+      "description": "Track -> the invention it is; graded, not counted toward the status, until the owner decides."
+    },
+    "next": { "type": "string" }
+  }
+}

@@ -41,6 +41,11 @@ An optional module may name modules it `never_with` shares a day: BJJ's
 competition conditioning joins a strength day with the minutes for it, never a
 class day.
 
+A module's `advice` is what the method recommends and the app leaves to the
+athlete: it ends the note of every block that advances the module, and nothing
+acts on it. Wildman's swing says to repeat the workouts after more than a week
+away; the cursor still moves only on confirmed sessions, never on the calendar.
+
 ## Alternating sessions and load per confirmed exposure (Starting Strength)
 
 A module may declare `variants` and a `rotation`: the rotation names the variant
