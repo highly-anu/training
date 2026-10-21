@@ -1,6 +1,8 @@
 id: endurance_mobility
 name: Endurance Mobility (Foot/Ankle & Hip Flexor Focus)
 modality: mobility
+# The session that follows an endurance or conditioning day on a split day.
+complements: [aerobic_base, anaerobic_intervals, mixed_modal_conditioning, durability]
 category: movement_skill
 duration_estimate_minutes: 20
 required_equipment:

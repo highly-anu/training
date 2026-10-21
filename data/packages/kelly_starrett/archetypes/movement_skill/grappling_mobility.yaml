@@ -1,6 +1,8 @@
 id: grappling_mobility
 name: Grappling Mobility (Hip Rotation, Shoulder & Wrist Focus)
 modality: mobility
+# The session that follows a grappling day on a split day (hips, shoulders, wrists).
+complements: [combat_sport]
 category: movement_skill
 duration_estimate_minutes: 20
 required_equipment:

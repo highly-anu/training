@@ -101,6 +101,23 @@
       "additionalProperties": { "type": "string", "pattern": "^I[0-9]+$" },
       "description": "Track -> the invention it is; graded, not counted toward the status, until the owner decides."
     },
+    "reviews": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "date", "result"],
+        "additionalProperties": false,
+        "properties": {
+          "kind": { "enum": ["code", "output_vs_dossier"],
+                    "description": "The two independent reviews of README 'Working a package' step 5: the code, and what the package generates (tools/print_package.py) read against the dossier." },
+          "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+          "by": { "type": "string" },
+          "scope": { "type": "string", "description": "Tracks, profiles or the change reviewed." },
+          "result": { "type": "string", "description": "What it found, and where each finding went." }
+        }
+      },
+      "description": "Reviews of the package, recorded (scorecard S6, hygiene)."
+    },
     "next": { "type": "string" }
   }
 }

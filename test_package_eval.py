@@ -106,6 +106,10 @@ def test_robustness() -> None:
     check('served hollow is degraded',
           pe.robustness_outcome(program([s(rows=[empty()])]), yes, TRACK, None)[0] == pe.FAIL)
     check('served as written passes', pe.robustness_outcome(program([s()]), yes, TRACK, None)[0] == pe.PASS)
+    violation = [{'rule': 'equipment_violation', 'detail': 'squat needs [barbell]', 'severity': 'error'}]
+    check('served breaking the athlete\'s equipment is degraded',
+          pe.robustness_outcome(program([s()]), yes, TRACK, None, violation)
+          == (pe.FAIL, 'equipment_violation: squat needs [barbell]'))
     outcomes = {'a': (pe.PASS, ''), 'b': (pe.FAIL, 'hollow')}
     check('R1 is the worst profile', pe.grade_r1(outcomes) == (pe.FAIL, 'b: hollow'))
 
@@ -175,6 +179,16 @@ def test_source_and_status() -> None:
           any('never names I1' in e for e in pf.citation_errors('x', rec, 'R1 only')))
     check('a clean record passes S4', pe.grade_s4(rec, pf.citation_errors('x', rec, 'R1, I1'))[0] == pe.PASS)
     check('no record fails S4', pe.grade_s4(None, [])[0] == pe.FAIL)
+    check('no output review recorded is partial S6, and hygiene', pe.grade_s6(rec)[0] == pe.PARTIAL
+          and 'S6' in pe.HYGIENE)
+    check('a recorded output review passes S6', pe.grade_s6(_record(reviews=[
+        {'kind': 'output_vs_dossier', 'date': '2026-10-21', 'result': 'x'}]))[0] == pe.PASS)
+    check('a code review alone is not the output review', pe.grade_s6(_record(reviews=[
+        {'kind': 'code', 'date': '2026-10-21', 'result': 'x'}]))[0] == pe.PARTIAL)
+    check('no code names it passes X1; a literal fails', pe.grade_x1([])[0] == pe.PASS
+          and pe.grade_x1(["src/x.py:1 'bjj' (package)"])[0] == pe.FAIL)
+    check('a screen the vocabulary cannot draw fails X2; the generic one is partial',
+          pe.grade_x2(['a:b: unknown template'], [])[0] == pe.FAIL and pe.grade_x2([], ['x (a:b)'])[0] == pe.PARTIAL)
     check('a data reference resolves through list ids and slot roles',
           pf._walk({'slots': [{'role': 'rope', 'f': {'ordered': True}}]}, 'slots.rope.f.ordered')[1] is None)
     check('a reference to a missing key names the step',

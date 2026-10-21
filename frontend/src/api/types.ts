@@ -1023,6 +1023,8 @@ export interface Track {
     training_levels: string[]
     mastered_exercises: string[]
     mastered_exercises_by_level?: Record<string, string[]>
+    /** Each required movement's name, by exercise id. */
+    exercise_names?: Record<string, string>
     kettlebell_count: number
     /** Lifts that may start from the weight last made (optional; else a work-up). */
     starting_loads?: { id: string; name: string }[]

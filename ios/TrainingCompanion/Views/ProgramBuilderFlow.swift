@@ -569,7 +569,7 @@ struct BuilderStep4ReviewView: View {
                         Text("This track supports \(r.trainingLevels.joined(separator: ", ")) athletes.")
                     }
                     ForEach(requiredSkills, id: \.self) { id in
-                        Toggle("Controlled technique: " + id.replacingOccurrences(of: "wk_kb_", with: "").replacingOccurrences(of: "kb_", with: "").replacingOccurrences(of: "_", with: " "), isOn: Binding(
+                        Toggle("Controlled technique: " + (r.exerciseNames?[id] ?? id.replacingOccurrences(of: "_", with: " ")), isOn: Binding(
                             get: { builder.constraints.masteredExercises.contains(id) },
                             set: { checked in
                                 builder.constraints.masteredExercises.removeAll { $0 == id }

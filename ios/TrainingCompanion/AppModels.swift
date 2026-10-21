@@ -252,6 +252,8 @@ struct TrackEntryRequirements: Codable, Hashable {
     let trainingLevels: [String]
     let masteredExercises: [String]
     var masteredExercisesByLevel: [String: [String]]? = nil
+    /// Each required movement's name, by exercise id.
+    var exerciseNames: [String: String]? = nil
     let kettlebellCount: Int
     /// Lifts that may start from the weight last made (optional; else the
     /// first session works up to one).
@@ -266,6 +268,7 @@ struct TrackEntryRequirements: Codable, Hashable {
         case trainingLevels = "training_levels"
         case masteredExercises = "mastered_exercises"
         case masteredExercisesByLevel = "mastered_exercises_by_level"
+        case exerciseNames = "exercise_names"
         case kettlebellCount = "kettlebell_count"
         case startingLoads = "starting_loads"
     }

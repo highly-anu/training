@@ -1,6 +1,9 @@
 id: joint_prep_circuit
 name: Joint Prep Circuit (Pre-Session Mobility)
 modality: mobility
+# The session that follows a skill, mobility or rehab day on a split day — the
+# days no strength, endurance or grappling mobility complements.
+complements: [movement_skill, mobility, rehab]
 category: movement_skill
 duration_estimate_minutes: 15
 required_equipment:

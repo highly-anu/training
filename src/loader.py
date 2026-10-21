@@ -8,7 +8,10 @@ _log = logging.getLogger(__name__)
 
 _DATA_DIR     = os.path.join(os.path.dirname(__file__), '..', 'data')
 _COMMONS_DIR  = os.path.join(_DATA_DIR, 'commons')
-_PACKAGES_DIR = os.path.join(_DATA_DIR, 'packages')
+# Every package is a folder here, found by globbing, never by name. A test may
+# point it elsewhere (TRAINING_PACKAGES_DIR) to add a package without touching
+# the repository: test_package_dropin.py proves one needs no code change.
+_PACKAGES_DIR = os.environ.get('TRAINING_PACKAGES_DIR') or os.path.join(_DATA_DIR, 'packages')
 
 
 def _load_yaml(path: str) -> dict:
@@ -108,12 +111,7 @@ def load_all_archetypes() -> list:
         arch_id = arch.get('id')
         if arch_id not in seen_ids:
             seen_ids.add(arch_id)
-            parts = path.replace('\\', '/').split('/')
-            try:
-                pkg_idx = parts.index('packages') + 1
-                arch['_package'] = parts[pkg_idx]
-            except ValueError:
-                arch['_package'] = None
+            arch['_package'] = os.path.relpath(path, _PACKAGES_DIR).replace('\\', '/').split('/')[0]
             result.append(arch)
     return result
 

@@ -559,6 +559,10 @@ def get_philosophies():
                         for eid in m.get('requires_mastery', [])}
                         - set((contract.get('level_seeds') or {}).get(level) or []))
                         for level in contract['training_levels']},
+                    # Each required movement's name, for the builders' "I can
+                    # perform …" (they once stripped one package's id prefix).
+                    'exercise_names': {eid: (exercises.get(eid) or {}).get('name', eid)
+                                       for m in contract['modules'] for eid in m.get('requires_mastery', [])},
                     'kettlebell_count': 2 if contract.get('requires_kettlebell_pair') else 1,
                     # Lifts the athlete may start from a weight they last made
                     # (`starting_loads_kg`); left empty, the first session

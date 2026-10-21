@@ -1,6 +1,8 @@
 id: strength_mobility
 name: Strength Mobility (Hip Flexor, Thoracic & Shoulder Focus)
 modality: mobility
+# The session that follows a strength day on a split day.
+complements: [max_strength, power, relative_strength, strength_endurance]
 category: movement_skill
 duration_estimate_minutes: 20
 required_equipment:

@@ -1141,8 +1141,8 @@ with where they are `implemented_by`; `currency`; `excluded_tracks`; the shape) 
 `source_weeks.yaml` (the source's own example weeks and progressions, transcribed;
 `src/source_weeks.py` generates and compares only the fields written), beside the
 prose dossier `docs/package-fidelity/<id>.md`, which names every id. The status is
-**earned, not chosen**: `tools/evaluate_packages.py` grades every package × track on five
-dimensions — Source, Execution, Robustness, Data, Measurement — each criterion pass,
+**earned, not chosen**: `tools/evaluate_packages.py` grades every package × track on six
+dimensions — Source, Execution, Robustness, Data, Measurement, Portability — each criterion pass,
 partial or fail (`src/package_eval.py`, the table in the README, today's grades in
 `scorecard.md`), never a blended number. Source is computed from the record
 (`src/package_fidelity.py`: debt is a rule nothing enforces; a claim, contract, template,
@@ -1156,6 +1156,20 @@ better one left unrecorded (`--update-baseline`; `--accept-worse` for a stricter
 (`audited`: every criterion but hygiene passes on every track not in `excluded_tracks`).
 CI (`.github/workflows/training-contract.yml`) runs every gate the README's table names;
 `check_package_status.py` fails when the two part.
+**No code names a package** (Portability, X1/X2): `tools/check_code_neutral.py` fails on
+any string literal in `src/`, `api.py`, `mcp_server.py`, `frontend/src`, the iOS, Apple
+Watch and widget sources or `garmin/core/source` that is an id one package owns (or a
+two-part prefix of its ids) — no baseline, there are none left. What used to: the level
+concepts are commons data (`data/commons/level_concepts.yaml`), a split day's mobility
+session prefers an archetype that declares it `complements` the day's modality, both
+builders name required movements from `entry_requirements.exercise_names`. A contract
+module's `advice` is the method's recommendation, said in the advancing blocks' notes and
+never enforced (Wildman's repeat after a week off). `test_package_dropin.py` copies three
+packages (contract, templates, scheduler) under new ids into `TRAINING_PACKAGES_DIR`
+(`loader._PACKAGES_DIR`; every module finds packages through it) and runs them through
+validation, generation, the API, the watch payload, analytics and the scorecard with the
+repository unchanged. `tools/print_package.py <id>` prints a package's programs beside its
+rules for the output review, recorded in the record's `reviews` (S6, hygiene).
 A phase's `checks:` may now state its defining claims — `max_substituted_share`,
 `modality_outnumbers`, `max_archetype_share`, `min_distinct_archetypes`
 (`fidelity.claim_violations`) — which the gate checks and a contract's
@@ -1185,6 +1199,9 @@ SUPABASE_URL='' .venv/bin/python test_today_session.py   # the watch's today-ses
 SUPABASE_URL='' .venv/bin/python tools/evaluate_packages.py   # the scorecard, the fidelity gate, orphans, source weeks; --report docs/package-fidelity/scorecard.md, --update-baseline (writes status.yaml)
 .venv/bin/python test_package_eval.py                    # each scorecard grader on hand-built programs and records (no generation)
 .venv/bin/python test_source_weeks.py                    # a source week against hand-built programs: structure, numbers, silence
+.venv/bin/python tools/check_code_neutral.py             # no code (server, web, iOS, watches) names a package
+.venv/bin/python test_package_dropin.py                  # three packages under new ids need no code change, end to end
+SUPABASE_URL='' .venv/bin/python tools/print_package.py <id> [--profile ideal]  # its programs beside its rules, for the output review
 .venv/bin/python tools/check_fidelity.py                 # the fidelity rules alone (evaluate_packages runs the same gate); --report docs/fidelity-report.md
 SUPABASE_URL='' .venv/bin/python tools/check_exercise_coverage.py -v  # each package's reach by track and level (evaluate_packages gates the orphans)
 .venv/bin/python tools/check_package_status.py           # records name their own tracks; status.yaml is what records + recorded grades write; README gates = CI

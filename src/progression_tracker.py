@@ -6,6 +6,7 @@ import json
 from datetime import datetime, timezone
 
 from src import phases
+from src.workout_matcher import modality_family
 from src.progression import calculate_load
 
 
@@ -97,26 +98,6 @@ def _to_km(distance_field: dict | None) -> float | None:
     unit = distance_field.get('unit', 'km')
     return round(val if unit == 'km' else val / 1000, 3)
 
-
-# Modality family groupings for match-quality computation
-_MODALITY_FAMILIES: dict[str, str] = {
-    'aerobic_base':               'aerobic',
-    'long_zone_2':                'aerobic',
-    'threshold_intervals':        'aerobic',
-    'durability':                 'aerobic',
-    'max_strength':               'strength',
-    'strength_endurance':         'strength',
-    'power':                      'strength',
-    'olympic_lifting':            'strength',
-    'mixed_modal_conditioning':   'conditioning',
-    'mixed_modal':                'conditioning',
-    'metabolic_conditioning':     'conditioning',
-    'mobility':                   'mobility',
-    'rehab':                      'mobility',
-    'skill':                      'mobility',
-    'kettlebell_strength':        'kettlebell',
-    'kettlebell_conditioning':    'kettlebell',
-}
 
 # Ordered metric keys per dominant philosophy priority
 _PHILOSOPHY_METRICS: dict[str, list[str]] = {
@@ -260,7 +241,11 @@ def compute_matched_sessions(
         inferred = workout.get('inferredModalityId') or ''
         if inferred == modality:
             modality_match = 'exact'
-        elif _MODALITY_FAMILIES.get(inferred) == _MODALITY_FAMILIES.get(modality):
+        # The matcher's similarity families (data/matching_rules.json), the
+        # grouping that linked this workout to the session — not the display
+        # rollup. This file kept its own copy, keyed partly by ids that are
+        # no modality.
+        elif modality_family(inferred) != 'other' and modality_family(inferred) == modality_family(modality):
             modality_match = 'family'
         else:
             modality_match = 'other'

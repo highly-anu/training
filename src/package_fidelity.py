@@ -20,8 +20,10 @@ import re
 
 import yaml
 
+from src import loader
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PACKAGES = os.path.join(ROOT, 'data', 'packages')
+PACKAGES = loader._PACKAGES_DIR
 DOSSIERS = os.path.join(ROOT, 'docs', 'package-fidelity')
 WORKFLOW = os.path.join(ROOT, '.github', 'workflows', 'training-contract.yml')
 FILE = 'fidelity.yaml'
@@ -272,6 +274,7 @@ STATUS_HEADER = """\
 #   excluded_tracks: track -> the invention it is
 #   source_tests: the tests a rule names as what enforces it
 #   inventions: what the app adds that the sources do not contain
+#   last_review: kind -> the date of the latest recorded review (S6)
 
 """
 
@@ -296,6 +299,9 @@ def status_entry(pkg: str, rec: dict | None, earned: str) -> dict:
         entry['source_tests'] = source_tests(rec)
     if rec.get('inventions'):
         entry['inventions'] = [f"{i['id']}: {i['text']}" for i in rec['inventions']]
+    reviews = sorted(rec.get('reviews') or [], key=lambda r: r['date'])
+    if reviews:
+        entry['last_review'] = {r['kind']: r['date'] for r in reviews}
     if rec.get('next'):
         entry['next'] = rec['next']
     return entry

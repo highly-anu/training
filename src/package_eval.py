@@ -2,13 +2,14 @@
 
 The fidelity gate (src/fidelity.py) reads one program against what its
 package declares. It cannot see that a declaration is thin: when the
-scorecard was written most of its findings were intensity splits, while a novice Gym Jones program
-was half substitutes, CrossFit ran one AMRAP template, and Starting Strength
-with no barbell handed out sessions whose every slot was empty. The scorecard
-grades each package × track on five dimensions — Source, Execution,
-Robustness, Data, Measurement — each pass, partial or fail against named
-criteria, never a blended number (docs/package-fidelity/README.md has the
-table). `audited` in docs/package-fidelity/status.yaml is derived from it.
+scorecard was written most of its findings were intensity splits, while a
+novice Gym Jones program was half substitutes, CrossFit ran one AMRAP
+template, and Starting Strength with no barbell handed out sessions whose
+every slot was empty. The scorecard grades each package × track on six
+dimensions — Source, Execution, Robustness, Data, Measurement, Portability —
+each pass, partial or fail against named criteria, never a blended number
+(docs/package-fidelity/README.md has the table). `audited` in
+docs/package-fidelity/status.yaml is derived from it.
 
 This module is pure: it grades programs and files already read. Generation,
 the matrix of athlete profiles and the ratchet live in
@@ -24,11 +25,12 @@ PASS, PARTIAL, FAIL = 'pass', 'partial', 'fail'
 RANK = {PASS: 0, PARTIAL: 1, FAIL: 2}
 
 DIMENSIONS = {
-    'source': ('S1', 'S2', 'S3', 'S4', 'S5'),
+    'source': ('S1', 'S2', 'S3', 'S4', 'S5', 'S6'),
     'execution': ('E1', 'E2', 'E3', 'E4', 'E5', 'E6'),
     'robustness': ('R1',),
     'data': ('D1', 'D2', 'D3', 'D4'),
     'measurement': ('M1', 'M2', 'M3', 'M4'),
+    'portability': ('X1', 'X2'),
 }
 CRITERIA = {
     'S1': 'A fidelity record with sources and rules, and a dossier',
@@ -36,6 +38,7 @@ CRITERIA = {
     'S3': 'Every rule enforced by something that exists',
     'S4': 'Every rule rests on a source read; ids cited and named in the dossier',
     'S5': "The source's own weeks reproduce",
+    'S6': 'A review of the output against the dossier is recorded',
     'E1': 'No session with every slot empty',
     'E2': 'Sessions are their own modality, not substitutes',
     'E3': 'A level the track is not written for is refused',
@@ -51,9 +54,11 @@ CRITERIA = {
     'M2': 'The lead measure is captured by logging on both clients',
     'M3': 'Every declared standard has a test, a lift that estimates it, or a manual entry',
     'M4': 'Every referenced standard exists',
+    'X1': 'No code names the package',
+    'X2': "Every step shows on the watches as the package's own screen",
 }
 # Hygiene: reported, but never what keeps a package from `audited`.
-HYGIENE = {'D3', 'D4'}
+HYGIENE = {'D3', 'D4', 'S6'}
 
 SUBSTITUTE_PARTIAL = 0.25
 SHARE_PASS, SHARE_PARTIAL = 0.40, 0.60
@@ -294,10 +299,13 @@ def grade_e6(findings: list[dict]) -> tuple[str, str]:
     return (FAIL if errors else PARTIAL), detail
 
 
-def robustness_outcome(program, validation, track: dict, unblocked: bool | None) -> tuple[str, str]:
+def robustness_outcome(program, validation, track: dict, unblocked: bool | None,
+                       errors: list[dict] | None = None) -> tuple[str, str]:
     """One constrained profile: method kept, refused (with or without a way
-    out), or degraded — served with empty sessions, mostly substitutes, or a
-    defining claim broken."""
+    out), or degraded — served with empty sessions, mostly substitutes, a
+    defining claim broken, or a fidelity error on this athlete (`errors`:
+    the profile's error findings — an exercise their equipment or injury rules
+    out, a slot left empty with no reason, a level the archetype is not for)."""
     if refused(program, validation):
         return (PASS, 'refused; one constraint lifted unblocks it') if unblocked else \
                (PARTIAL, 'refused, and no one constraint lifted unblocks it')
@@ -310,6 +318,9 @@ def robustness_outcome(program, validation, track: dict, unblocked: bool | None)
         return FAIL, f"{n} of {total} sessions substituted"
     if broken:
         return FAIL, broken[0]
+    if errors:
+        f = errors[0]
+        return FAIL, f"{f['rule']}: {f['detail']}" + (f" (+{len(errors) - 1})" if len(errors) > 1 else '')
     return PASS, ''
 
 
@@ -457,6 +468,35 @@ def grade_s5(weeks: int, structure: list[str], numbers: list[str], tests_in_ci: 
     if tests_in_ci:
         return PARTIAL, f'no source week; {tests_in_ci} source test(s) CI runs'
     return FAIL, 'no source week, and no source test CI runs'
+
+
+def grade_s6(record: dict | None) -> tuple[str, str]:
+    """Hygiene: the README's second review — what the package generates read
+    against the dossier (tools/print_package.py) — recorded in `reviews`."""
+    reviews = [r for r in (record or {}).get('reviews') or [] if r.get('kind') == 'output_vs_dossier']
+    if reviews:
+        return PASS, ''
+    return PARTIAL, 'no review of the output against the dossier recorded'
+
+
+# ── Portability ──────────────────────────────────────────────────────────────
+
+def grade_x1(hits: list[str]) -> tuple[str, str]:
+    """`hits`: literals in the server, web, iOS or watch code that name this
+    package (tools/check_code_neutral.py) — what a new package would need too."""
+    return (PASS, '') if not hits else (FAIL, _first(hits))
+
+
+def grade_x2(errors: list[str], fallbacks: list[str]) -> tuple[str, str]:
+    """Each step of the ideal program resolved to a watch screen
+    (src/watch_spec.py, as the watches' payload does): `errors`, specs the
+    vocabulary cannot draw; `fallbacks`, steps whose slot type no template
+    claims, drawn by the generic one."""
+    if errors:
+        return FAIL, _first(errors)
+    if fallbacks:
+        return PARTIAL, 'the generic screen for ' + _first(fallbacks)
+    return PASS, ''
 
 
 # ── Status ───────────────────────────────────────────────────────────────────

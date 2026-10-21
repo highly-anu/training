@@ -326,7 +326,7 @@ export function ReviewGenerate() {
                 onChange={(event) => useBuilderStore.getState().updateConstraints({ mastered_exercises: event.target.checked
                   ? [...(constraints.mastered_exercises ?? []), id]
                   : (constraints.mastered_exercises ?? []).filter((value) => value !== id) })} />
-              I can perform {id.replace(/^(wk_)?kb_/, '').replaceAll('_', ' ')} with controlled technique.
+              I can perform {requirements.exercise_names?.[id] ?? id.replaceAll('_', ' ')} with controlled technique.
             </label>
           ))}
           {requirements.kettlebell_count >= 2 && <label className="flex items-center gap-2">

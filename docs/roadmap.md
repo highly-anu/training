@@ -804,18 +804,26 @@ and never enforced (the contract's module `advice`, I5). **Still waiting** — *
 the package every fourth week, dropping rolling (I3); no source prescribes strength by
 RPE (I2) — StrengthLog and Vitruve write reps and %1RM.
 
-Next branch (the plan's parts 4–6): R1 against the ideal program (fidelity rules on the
-scorecard's own constrained profiles, `explain_refusal` naming the unblocking
-constraint, no "lift everything" unblock); a Portability dimension — a neutrality check
-over `src/`, `api.py`, `frontend/src`, `ios/` and `garmin/core` (today `scheduler.py`'s
-`'bjj'` mobility branch, `progression._SESSIONS_PER_WEEK`, `selector._LEVEL_CONCEPTS`,
-`similarity._INTENSITY_GROUPS`, the `BENCHMARK_FILES` whitelist and Cell loader, the
-kettlebell-only contract wording, both builders' `wk_kb_` stripping, slot-type logging
-rules in both clients, the unguarded `ModalityDonut` lookup), watch templates that
-declare what they capture (`vocabulary.CAPTURE` from data), and a drop-in test: a data
-root override and three throwaway packages, one per shape, through generate, the
-philosophies, today-session `?spec=1`, analytics and the scorecard with nothing outside
-`data/` touched; `tools/print_package.py` and recorded reviews.
+**Packages without code (2026-10-21, branch `package-portability`).** R1 reads the
+fidelity rules on the scorecard's own constrained profiles too. A Portability dimension:
+X1, no code names the package (`tools/check_code_neutral.py`, no baseline — the last
+literals went: the scheduler's `'bjj'` mobility branch and Kelly Starrett's archetype ids
+became an archetype's `complements`, the selector's level concepts commons data, the
+tracker's stale family copy the canonical one, the dead `gym_jones` exercise category,
+both builders' `wk_kb_` stripping the server's `exercise_names`); X2, every step resolves
+to a watch screen. `test_package_dropin.py` drops three packages in under new ids
+(`TRAINING_PACKAGES_DIR`) and runs them end to end with the repository unchanged.
+`tools/print_package.py` and the record's `reviews` (S6) are the output review.
+Left — what a package still cannot bring in its folder, none of it naming a package:
+- its own standards (`benchmarks_data.BENCHMARK_FILES` lists `data/benchmarks/` files;
+  The Cell has its own loader);
+- per-exercise constants in code (`progression._SESSIONS_PER_WEEK` keys shared lifts);
+- a non-kettlebell implement in a contract (the wording and `requires_kettlebell_pair`);
+- a new slot type, modality, phase kind or equipment id (each client keeps its own
+  table: `outcomeFields.ts` / `SessionLogging.swift`, the colour maps — `ModalityDonut`
+  reads `MODALITY_COLORS[m].label` unguarded);
+- what each watch template captures, declared in `watch_vocabulary.json` so a package's
+  lead measure can be checked as recorded on the wrist (X2 checks only the screens).
 
 **5. Wildman follow-ups (from the handoff).** General Practice runs Wildman's Phase II
 since 2026-10-20 (the Nerd Math swing approaches, get-up and deck squat stacked as time

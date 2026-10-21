@@ -667,9 +667,14 @@ def generate(
             day_name = _GEN_DAY_NAMES[day - 1] if 1 <= day <= 7 else f'Day {day}'
             day_session_traces: list[dict] = []
 
-            # Check for mobility archetype hint from smart pairing
+            # A split day's mobility session prefers an archetype that declares
+            # it `complements` the day's primary modality (scheduler pairing).
             day_cfg = constraints.get('day_configs', {}).get(day, {})
-            mobility_hint = day_cfg.get('mobility_archetype_hint')
+            complements = day_cfg.get('mobility_complements')
+            # Every one that does; the selector filters them (level, equipment,
+            # phase) before the preference applies.
+            mobility_hint = frozenset(a['id'] for a in archetypes if a.get('modality') == 'mobility'
+                                      and complements in (a.get('complements') or [])) if complements else None
             day_session_types = day_cfg.get('session_types')
 
             for idx, session in enumerate(resolved_by_day[day]):

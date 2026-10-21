@@ -5,6 +5,7 @@ import yaml as _yaml
 from typing import Optional
 from src.progression import zone_band as _zone_band
 from . import blockers, phases, provenance, standard_tests
+from . import loader as _loader
 
 # ---------------------------------------------------------------------------
 # Movement pattern aliases — loaded from data/movement_patterns.yaml
@@ -23,37 +24,12 @@ _PATTERN_ALIASES: dict[str, tuple] = {
 # ---------------------------------------------------------------------------
 # Training-level prerequisite seeding
 # ---------------------------------------------------------------------------
+# What every athlete of a level arrives with, whatever the package: commons
+# data (data/commons/level_concepts.yaml, which says why each is there), so the
+# engine names no package's exercises.
 _LEVEL_CONCEPTS: dict[str, set] = {
-    # Basic movement literacy, not a progression to be earned. Every beginner
-    # program teaches bracing and hinging in the first session — granting a novice
-    # the empty set meant a novice unlocked nothing in Starting Strength, the
-    # method written for novices. Exercise-ID prerequisites (pull_up, front_squat,
-    # power_clean) stay gated below: those are genuine progressions.
-    'novice': {
-        'bracing_mechanics', 'bracing', 'hip_hinge', 'hip_hinge_pattern',
-        'squat_pattern', 'push_pattern', 'pull_pattern', 'open_space',
-    },
-    'intermediate': {
-        'hip_hinge', 'bracing_mechanics', 'bracing', 'squat_pattern',
-        'push_pattern', 'pull_pattern', 'hanging', 'shoulder_stability',
-        # Exercise IDs assumed known at intermediate
-        'deadlift', 'back_squat', 'front_squat', 'strict_press', 'bench_press',
-        'pull_up', 'pull_up_strict', 'dip_strict',
-        'kb_swing_two_hand', 'kb_clean', 'kb_goblet_squat',
-        # Carries — seeded directly to avoid multi-hop prerequisite chain limitation
-        'farmer_carry_kb', 'rack_carry_kb', 'overhead_carry_kb',
-        'run_easy', 'open_space',
-    },
-    'advanced': {
-        'hip_hinge', 'bracing_mechanics', 'bracing', 'squat_pattern',
-        'push_pattern', 'pull_pattern', 'hanging',
-        'deadlift', 'back_squat', 'front_squat', 'strict_press', 'bench_press',
-        'pull_up', 'pull_up_strict', 'dip_strict', 'muscle_up',
-        'power_clean', 'hang_power_clean',
-        'kb_swing_two_hand', 'kb_swing_single_arm', 'kb_clean', 'kb_snatch',
-        'handstand_hold', 'handstand_push_up',
-        'run_easy', 'run_tempo', 'open_space',
-    },
+    level: set(ids or [])   # a level listed with nothing yet is the empty set
+    for level, ids in (_loader._load_yaml(_loader._data_path('commons', 'level_concepts.yaml')) or {}).items()
 }
 
 
@@ -257,14 +233,16 @@ def select_archetype(
     recent_ids: list | None = None,
     excl_patterns: set | None = None,
     return_trace: bool = False,
-    preferred_archetype_id: str | None = None,
+    preferred_archetype_id: str | frozenset | None = None,
     day_session_types: list | None = None,
     relax_equipment: bool = False,
 ) -> Optional[dict]:
     """Pick the best archetype for a session slot.
 
     When return_trace=True returns (archetype, trace_dict) instead of just archetype.
-    When preferred_archetype_id is provided, that archetype gets a strong scoring bonus.
+    When preferred_archetype_id is provided — one id, or a set of them (the
+    mobility archetypes that complement a split day's modality) — those
+    archetypes get a strong scoring bonus among the candidates that remain.
     """
     available_equip = set(constraints.get('equipment', []))
     session_time = constraints.get('session_time_minutes', 75)
@@ -347,7 +325,8 @@ def select_archetype(
     def _score_arch(arch: dict) -> tuple:
         score = 0
         # Strong preference for complementary mobility archetype
-        if preferred_archetype_id and arch['id'] == preferred_archetype_id:
+        if preferred_archetype_id and (arch['id'] == preferred_archetype_id if isinstance(preferred_archetype_id, str)
+                                       else arch['id'] in preferred_archetype_id):
             score += 10  # Higher than equipment bonus to take precedence
         # Prefer archetypes whose equipment is fully satisfied over equipment_limited fallbacks.
         # Bonus must exceed the max recency penalty (-3) so a recently-used fully-equipped
@@ -763,7 +742,7 @@ def populate_session(
     collect_trace: bool = False,
     forced_archetype: dict | None = None,
     exercises_by_package: dict | None = None,
-    preferred_archetype_id: str | None = None,
+    preferred_archetype_id: str | frozenset | None = None,
     day_session_types: list | None = None,
     relax_equipment: bool = False,
     policy=None,

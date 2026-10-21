@@ -4,12 +4,12 @@ name: Training contracts
 # two lists part.
 on:
   pull_request:
-    paths: ['src/**', 'data/**', 'docs/schemas/**', 'test_*.py', 'api.py', 'tools/**', 'garmin/**',
-            'docs/package-fidelity/**', '.github/workflows/training-contract.yml']
+    paths: ['src/**', 'data/**', 'docs/schemas/**', 'test_*.py', 'api.py', 'mcp_server.py', 'tools/**', 'garmin/**',
+            'frontend/src/**', 'ios/**', 'docs/package-fidelity/**', '.github/workflows/training-contract.yml']
   push:
     branches: [master]
-    paths: ['src/**', 'data/**', 'docs/schemas/**', 'test_*.py', 'api.py', 'tools/**', 'garmin/**',
-            'docs/package-fidelity/**', '.github/workflows/training-contract.yml']
+    paths: ['src/**', 'data/**', 'docs/schemas/**', 'test_*.py', 'api.py', 'mcp_server.py', 'tools/**', 'garmin/**',
+            'frontend/src/**', 'ios/**', 'docs/package-fidelity/**', '.github/workflows/training-contract.yml']
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -30,6 +30,8 @@ jobs:
       - run: python test_similarity.py
       - run: python test_program_analytics.py
       - run: python test_watch_spec.py
+      - run: python tools/check_code_neutral.py
+      - run: python test_package_dropin.py
       - run: python tools/check_provenance.py
       - run: python tools/check_provenance.py --coverage
       - run: python tools/check_styles.py
