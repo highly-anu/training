@@ -763,8 +763,12 @@ badly the default misrepresents the method and whether its policies exist:
    strength, the ME PDF's ten workouts, Zone 3 from week 13, a one-week taper; modules in
    named `phases`. It borrows nothing now. Left: a novice track (the beginner plan is sold,
    so on the mountaineering article's numbers), hill ME, exercise media.
-4. *Marcus Filly* — a novice track on Base Camp's shape (warm-up, strength by
-   pattern, conditioning); RPE targets from the framework.
+4. *Marcus Filly* — **done 2026-10-21** (branch `filly-review`): a contract running
+   Persist's two published 3x sample weeks as printed (Pump Condition, Pump Lift: warm-up,
+   strength intensity, strength balance, conditioning or a finisher, cooldown; tempo and
+   RPE per block), two six-week cycles and a Bridge week at RPE 6–7. The shoulder rehab,
+   bodyweight and mobility sessions (no source) are gone. Left: the 4x/5x tracks and a
+   novice track on Base Camp (neither public), the within-cycle progression.
 5. *Horsemen* — **done 2026-10-19.** Stage 1 corrected the package against the source;
    stage 2 runs the 4-Month Macro as written: each month's example weeks day by day
    (`week_templates`), every named workout of the source (and its API section) an archetype in

@@ -72,6 +72,34 @@ packages:
     - 'I2: The PT test''s placement: the macro''s first and last hard job-specific days (the source never
       schedules it).'
     next: Decide GPP Circuits (I1) — rebuild it on the source's circuits, or drop it.
+  marcus_filly:
+    status: audited
+    shape: contract
+    dossier: docs/package-fidelity/marcus_filly.md
+    sources_kind: primary
+    debt: []
+    currency:
+      functional_bodybuilding: working_load
+      pump_lift: working_load
+    source_tests:
+    - test_training_contract.py::test_filly_runs_the_sample_weeks_in_cycles_and_a_bridge_week
+    inventions:
+    - 'I1: The published week repeats every cycle; Persist changes the days each cycle, but only one week
+      of each 3x track is public.'
+    - 'I2: Where the sample leaves the reps to the program ("Every 4:00 x 3 sets"), the prescription says
+      so: a working set finished a rep or two in reserve, recorded.'
+    - 'I3: A section''s minutes are shared evenly by its exercises, and the rest inside an interval is
+      estimated.'
+    - 'I4: The warm-up, the cooldown and the conditioning are one entry each whose note writes the day''s
+      content; the conditioning''s movements are not separate exercises.'
+    - 'I5: The sample''s "or" options are alternatives in its order (a cable machine first, the barbell
+      after; the pull-up, then the lat pulldown); the leg press is not offered.'
+    - 'I6: The tracks are for intermediate lifters and up; novices are refused until Base Camp''s sessions
+      can be read.'
+    - 'I7: At four or five training days the three sessions run on three of them (the 3x tracks; the 4x
+      and 5x weeks are not public).'
+    next: The 4x and 5x tracks if their weeks become readable; the within-cycle progression; a novice
+      track on Base Camp; exercise media; the output review.
   starting_strength:
     status: audited
     shape: contract
@@ -192,8 +220,3 @@ packages:
     status: not_started
     shape: scheduler
     next: Assessment-driven prescription and retesting.
-  marcus_filly:
-    status: not_started
-    shape: templates
-    next: Base Camp's session shape (warm-up, strength by pattern, conditioning); RPE targets from the
-      framework.

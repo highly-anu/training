@@ -1,0 +1,48 @@
+id: fbb_pump_condition_day_3
+name: "Pump Condition — Day 3"
+modality: max_strength
+category: strength
+training_levels:
+- intermediate
+- advanced
+- elite
+duration_estimate_minutes: 56
+applicable_phases:
+- build
+- deload
+sources:
+- "Functional Bodybuilding, Persist sample weeks (Help Center, 2025-12-31)"
+notes: >
+  Day 3 of Functional Bodybuilding's published Pump Condition 3x sample week, as printed.
+slots:
+- role: warm_up
+  slot_type: skill_practice
+  duration_minutes: 12
+  exercise_filter:
+    exercise_ids: [fbb_warm_up]
+- role: stiff_leg_deadlift
+  slot_type: sets_reps
+  sets: 8
+  exercise_filter:
+    exercise_ids: [stiff_leg_deadlift]
+- role: triceps
+  slot_type: sets_reps
+  sets: 3
+  exercise_filter:
+    exercise_ids: [cable_tricep_pushdown]
+- role: biceps
+  slot_type: sets_reps
+  sets: 3
+  exercise_filter:
+    exercise_ids: [cable_bicep_curl]
+- role: conditioning
+  slot_type: time_domain
+  sets: 10
+  duration_minutes: 15
+  exercise_filter:
+    exercise_ids: [fbb_conditioning]
+- role: cooldown
+  slot_type: skill_practice
+  duration_minutes: 5
+  exercise_filter:
+    exercise_ids: [fbb_cooldown]

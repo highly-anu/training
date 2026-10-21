@@ -1,0 +1,82 @@
+# Marcus Filly — the sources' own weeks (docs/schemas/source_weeks.schema.json).
+# The two Persist 3x sample weeks (Functional Bodybuilding Help Center,
+# 2025-12-31), read from their images 2026-10-21: each day's sections in
+# order with the sets and reps they print. Reps the sample leaves to the
+# program are not compared.
+- id: pump_condition_3x
+  rule: R6
+  track: functional_bodybuilding
+  note: >
+    Full Body Pump Condition 3x. Day 1: dip and incline DB press every 4:00 x 3;
+    tripod rows and suitcase drop lunges every 75 s x 9 (3 each); a 15-minute
+    AMRAP. Day 2: back squat every 3:00 x 4; pull-ups (10) and DB strict press
+    (12) every 90 s x 6; 12 minutes of row sprints. Day 3: stiff-leg deadlift
+    every 75 s x 8; triceps and biceps, 3 sets; 15 minutes of bike and jumps.
+  profile: {days_per_week: 3, session_time_minutes: 60, training_level: intermediate, equipment: all}
+  weeks:
+    - days:
+        - exercises:
+            - fbb_warm_up
+            - {id: dip, sets: 3}
+            - {id: db_incline_press, sets: 3}
+            - {id: tripod_row, sets: 6, reps: '10'}
+            - {id: db_suitcase_drop_lunge, sets: 3, reps: 16 (8/side)}
+            - {id: fbb_conditioning, duration_minutes: 15}
+            - fbb_cooldown
+        - exercises:
+            - fbb_warm_up
+            - {id: mf_back_squat, sets: 4}
+            - {id: pull_up, sets: 3, reps: '10'}
+            - {id: back_supported_db_strict_press, sets: 3, reps: '12'}
+            - {id: fbb_conditioning, duration_minutes: 12}
+            - fbb_cooldown
+        - exercises:
+            - fbb_warm_up
+            - {id: stiff_leg_deadlift, sets: 8}
+            - {id: cable_tricep_pushdown, sets: 3}
+            - {id: cable_bicep_curl, sets: 3}
+            - {id: fbb_conditioning, duration_minutes: 15}
+            - fbb_cooldown
+- id: pump_lift_3x
+  rule: R6
+  track: pump_lift
+  note: >
+    Full Body Pump Lift 3x: the same days with a finisher in place of the
+    conditioning. Day 1: dip and incline bench every 4:00 x 3; stiff-leg
+    deadlift every 75 s x 8; curtsy squats and reverse crunches every 75 s x 9;
+    the row finisher. Day 2: back squat every 75 s x 6; pull-ups and front
+    raises every 3:00 x 3; DB strict press every 2:30 x 3; hamstring curls and
+    raises, 2 sets. Day 3: single-leg hip thrust every 75 s x 6; front-foot-
+    elevated split squat every 90 s x 6; triceps and biceps; prone rows and tib
+    raises, 3 sets.
+  profile: {days_per_week: 3, session_time_minutes: 60, training_level: intermediate, equipment: all}
+  weeks:
+    - days:
+        - exercises:
+            - fbb_warm_up
+            - {id: dip, sets: 3}
+            - {id: incline_bench_press, sets: 3}
+            - {id: stiff_leg_deadlift, sets: 8}
+            - {id: suitcase_curtsy_squat, sets: 6, reps: '10'}
+            - {id: banded_reverse_crunch, sets: 3, reps: '20'}
+            - {id: wide_grip_cable_row, sets: 3}
+            - fbb_cooldown
+        - exercises:
+            - fbb_warm_up
+            - {id: mf_back_squat, sets: 6}
+            - {id: pull_up, sets: 3}
+            - {id: db_front_raise, sets: 3, reps: '15'}
+            - {id: back_supported_db_strict_press, sets: 3}
+            - {id: bc_gliding_hamstring_curl, sets: 2, reps: '15'}
+            - {id: db_full_raise, sets: 2, reps: '10'}
+            - {id: db_lateral_raise, sets: 2, reps: '10'}
+            - fbb_cooldown
+        - exercises:
+            - fbb_warm_up
+            - {id: landmine_single_leg_hip_thrust, sets: 6}
+            - {id: suitcase_ffe_split_squat, sets: 6}
+            - {id: cable_tricep_pushdown, sets: 3}
+            - {id: cable_bicep_curl, sets: 3}
+            - {id: incline_db_prone_row, sets: 3, reps: '15'}
+            - {id: tib_raise, sets: 3, reps: 10-15}
+            - fbb_cooldown

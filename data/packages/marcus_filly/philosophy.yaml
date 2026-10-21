@@ -1,78 +1,86 @@
 id: marcus_filly
 name: "Marcus Filly / Functional Bodybuilding"
 core_principles:
-  - rpe_based_autoregulation_prevents_overtraining
-  - aesthetics_and_function_are_compatible_goals
-  - shoulder_and_joint_health_require_dedicated_maintenance
-  - controlled_eccentrics_and_isometrics_build_tissue_resilience
-  - sustainable_training_over_max_intensity
+  - full_body_sessions_by_movement_pattern
   - tempo_and_intent_matter_as_much_as_load
-  - concurrent_training_managed_through_fatigue_awareness
+  - loads_chosen_by_reps_and_rpe
+  - strength_balance_beside_strength_intensity
+  - quality_first_conditioning
+  - six_week_cycles_and_a_bridge_week
 scope:
   - max_strength
-  - relative_strength
-  - mixed_modal_conditioning
-  - rehab
-bias:
   - strength_endurance
-  - durability
-  - rehab
+  - mixed_modal_conditioning
+bias:
+  - max_strength
 avoid_with: []
 required_equipment:
   - barbell
+  - rack
+  - plates
   - dumbbell
   - pull_up_bar
-  - rings
   - resistance_band
 intensity_model: autoregulation_rpe
 progression_philosophy: feel_based
 sources:
-  - "Marcus Filly — Functional Bodybuilding methodology and programming"
-  - "plan.md section 10 (Rehab Protocol: Shoulder)"
+  - "Functional Bodybuilding Help Center: How to Read Tempo, RPE, Choosing Loads, Persist Track Summary, the Persist sample weeks"
+  - "Marcus Filly, Workout Tempo; Deload Week; 5 Ways To Build Functional Muscle (functional-bodybuilding.com)"
 notes: >
-  RPE governs load selection session-to-session; athlete rates perceived effort
-  and adjusts accordingly rather than following fixed percentages. Tempo prescriptions
-  (e.g. 3-1-1, slow eccentric) are a hallmark — they increase time under tension
-  without requiring heavier loads, making the method compatible with joint-sensitive
-  populations. Rehab integration is first-class: isometric holds, eccentric
-  push-ups, landmine presses, face pulls, and band pull-aparts are programmed
-  alongside performance work. Shoulder protocol: dip support holds, side plank with
-  lat activation, landmine press, eccentric push-up on parallettes, face pull
-  (thumbs-up, elbows high), elbow-out rows, DB external rotation, band pull-aparts.
-  Useful for injury rehab → return to sport transitions.
+  Functional Bodybuilding trains movement patterns rather than body parts, in
+  full-body sessions: a warm-up, strength intensity, strength balance (the
+  unilateral and smaller work), conditioning or a finisher, and a cooldown.
+  Tempo is written down, hold, up, pause (20X1). Loads are the athlete's: work
+  to the top of the reps, then add a little; RPE 7 leaves three reps in
+  reserve. Persist runs six-week cycles, and after two a Bridge week deloads
+  everything to RPE 6–7.
 
-# Every modality this philosophy's frameworks prescribe has an archetype in
-# this package; generation never needs to reach into another philosophy.
+# Every exercise of the training contract is the package's own.
 self_contained: true
 
-# One repeating phase: Functional Bodybuilding autoregulates week to week
-# rather than by fixed blocks. Phase text is drafted from this package's own
-# notes and framework notes — review before relying on it.
+# Two tracks, Persist's two 3x tracks as their sample weeks print them
+# (training_contract.yaml).
 primary_track_id: functional_bodybuilding
 tracks:
   - id: functional_bodybuilding
-    name: "Functional Bodybuilding"
+    name: "Pump Condition (3x)"
     description: >
-      Strength and muscle with joint health built in: RPE sets the load,
-      tempo sets the time under tension, and rehab work sits alongside the
-      performance work.
+      Persist's Full Body Pump Condition, three days a week: strength,
+      strength balance and a conditioning piece each day.
     phases:
-      - id: autoregulated_block
-        name: "Autoregulated Block"
+      - id: persist
+        name: "Persist Cycles"
         kind: build
-        weeks: 12
+        weeks: 13
         repeatable: true
+        former_ids: [autoregulated_block]
         framework_id: rpe_autoregulation
-        focus: "RPE-led strength with tempo"
+        focus: "Strength, balance and conditioning in every session"
         description: >
-          Load is chosen by RPE each session instead of fixed percentages, so
-          an under-recovered day self-adjusts downward. Tempo prescriptions and
-          controlled eccentrics add time under tension without heavier loads.
-          When several sessions in a row come in at RPE 9–10 at weights that
-          used to feel like 7–8, deload then rather than waiting for the
-          calendar.
+          Two six-week cycles of the same three days — tempo on the strength
+          work, loads chosen by reps and RPE — then the Bridge week at RPE 6–7.
         adaptations:
           - "Strength and muscle"
-          - "Tissue resilience from eccentrics and isometrics"
-          - "Shoulder and joint health"
-        intensity: "RPE 7–9, tempo-controlled"
+          - "Structural balance"
+          - "Conditioning"
+        intensity: "RPE 7–9; conditioning at a named effort"
+  - id: pump_lift
+    name: "Pump Lift (3x)"
+    description: >
+      Persist's Full Body Pump Lift, three days a week: lifting and muscle
+      pumps, no conditioning — a finisher closes each day.
+    phases:
+      - id: persist_lift
+        name: "Persist Cycles"
+        kind: build
+        weeks: 13
+        repeatable: true
+        framework_id: rpe_autoregulation
+        focus: "Strength and muscle, no conditioning"
+        description: >
+          Two six-week cycles of the same three days, a finisher in place of
+          conditioning, then the Bridge week at RPE 6–7.
+        adaptations:
+          - "Strength and muscle"
+          - "Structural balance"
+        intensity: "RPE 7–10 on the finishers"

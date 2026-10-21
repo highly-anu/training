@@ -275,7 +275,7 @@ def test_taper_keeps_the_framework_share_for_sets() -> None:
 
 def test_declared_deloads() -> None:
     print('deload protocols')
-    for phil, weeks in (('marcus_filly', 10), ('horsemen_gpp', 8), ('ido_portal', 12)):
+    for phil, weeks in (('marcus_filly', 13), ('horsemen_gpp', 8), ('ido_portal', 12)):
         kw = {'track_id': 'gpp_circuits'} if phil == 'horsemen_gpp' else {}
         prog = program(phil, weeks, days_per_week=5, **kw)
         check(f'{phil} deloads on schedule', any(w['is_deload'] for w in prog['weeks']))
@@ -312,37 +312,53 @@ def test_single_session_routes() -> None:
 
 
 def test_a_framework_prescribes_its_own_way() -> None:
-    print('Progression overrides: Filly prescribes RPE, Starting Strength kg')
-    prog = program('marcus_filly', 4, days_per_week=5)
-    strength = [ea['load'] for _, s in sessions(prog) if s['modality'] == 'max_strength'
-                for ea in s['exercises'] if ea.get('exercise') and ea.get('slot_type') == 'sets_reps']
-    check('Filly strength sets carry a target RPE, not a fixed kg',
-          strength and all(l.get('target_rpe') in (6, 8) and 'weight_kg' not in l for l in strength),
-          str(strength[:2]))
-    check('with a suggested starting weight where the lift has one',
-          any(l.get('suggested_weight_kg') for l in strength))
-    # A deload cuts the sets as well as the RPE (it kept the full four).
-    long = program('marcus_filly', 10, days_per_week=5)
-    by_week = {}
-    for w, s in sessions(long):
-        for ea in s['exercises']:
-            if ea.get('exercise', {}) and (ea.get('exercise') or {}).get('id') == 'mf_back_squat':
-                by_week.setdefault(bool(w.get('is_deload')), set()).add(ea['load'].get('sets'))
-    check('an RPE deload week has fewer sets than a working week',
-          by_week.get(True) and by_week.get(False) and max(by_week[True]) < min(by_week[False]), str(by_week))
-    # A swap in a Filly week is prescribed the same way as the week around it.
-    import os
-    os.environ.setdefault('SUPABASE_URL', '')
-    import api
-    r = api.app.test_client().post('/api/exercises/substitute', json={
-        'archetype_id': 'functional_bodybuilding_strength', 'slot_role': 'primary_compound',
-        'philosophy_ids': ['marcus_filly'], 'phase': 'build', 'week_in_phase': 1,
-        'framework_id': 'rpe_autoregulation',
-        'constraints': {'equipment': list(ALL_EQUIPMENT), 'training_level': 'intermediate'}, 'limit': 5})
-    alts = (r.get_json() or {}).get('alternatives') or []
-    check('a swapped Filly lift carries an RPE target, not a kg',
-          alts and all('target_rpe' in a['assignment']['load'] and 'weight_kg' not in a['assignment']['load']
-                       for a in alts), str([a['assignment']['load'] for a in alts[:2]]))
+    # No shipped framework declares `progression_overrides` since Marcus
+    # Filly's package became a contract; the mechanism is generic, so a
+    # framework given one here prescribes its strength as RPE targets.
+    print('Progression overrides: a framework can prescribe RPE, Starting Strength kg')
+    real, real_one = loader.load_all_frameworks, loader.load_framework
+    override = {'progression_overrides': {'max_strength': 'rpe_autoregulation'}}
+
+    def with_override():
+        out = real()
+        out['block_periodization'] = {**out['block_periodization'], **override}
+        return out
+
+    def one_with_override(fid):
+        fw = real_one(fid)
+        return {**fw, **override} if fid == 'block_periodization' else fw
+    loader.load_all_frameworks, loader.load_framework = with_override, one_with_override
+    try:
+        prog = program('gym_jones', 10, days_per_week=5)
+        strength = [(w, ea) for w, s in sessions(prog) if s['modality'] == 'max_strength'
+                    for ea in s['exercises'] if ea.get('exercise') and ea.get('slot_type') == 'sets_reps']
+        check('overridden strength sets carry a target RPE, not a fixed kg',
+              strength and all(ea['load'].get('target_rpe') and 'weight_kg' not in ea['load'] for _, ea in strength),
+              str([ea['load'] for _, ea in strength[:2]]))
+        # Each slot's deload sets against its own working sets.
+        by_slot: dict = {}
+        for w, ea in strength:
+            by_slot.setdefault(ea['slot_role'], {}).setdefault(bool(w.get('is_deload')), set()).add(ea['load'].get('sets'))
+        both = {role: d for role, d in by_slot.items() if d.get(True) and d.get(False)}
+        check('an RPE deload week has fewer sets than a working week',
+              both and all(max(d[True]) < min(d[False]) for d in both.values()), str(both))
+        # A swap in that week is prescribed the same way as the week around it.
+        import os
+        os.environ.setdefault('SUPABASE_URL', '')
+        import api
+        session = next(s for w, s in sessions(prog) if s['modality'] == 'max_strength')
+        row = next(ea for ea in session['exercises'] if ea.get('exercise') and ea.get('slot_type') == 'sets_reps')
+        r = api.app.test_client().post('/api/exercises/substitute', json={
+            'archetype_id': session['archetype']['id'], 'slot_role': row['slot_role'],
+            'philosophy_ids': ['gym_jones'], 'phase': session.get('phase') or 'base', 'week_in_phase': 1,
+            'framework_id': 'block_periodization',
+            'constraints': {'equipment': list(ALL_EQUIPMENT), 'training_level': 'intermediate'}, 'limit': 5})
+        alts = (r.get_json() or {}).get('alternatives') or []
+        check('a swapped lift carries an RPE target, not a kg',
+              alts and all('target_rpe' in a['assignment']['load'] and 'weight_kg' not in a['assignment']['load']
+                           for a in alts), str([a['assignment']['load'] for a in alts[:2]]))
+    finally:
+        loader.load_all_frameworks, loader.load_framework = real, real_one
     ss = program('starting_strength', 2, training_level='novice', starting_loads_kg={'back_squat': 60})
     loads = [ea['load'] for _, s in sessions(ss) for ea in s['exercises'] if ea.get('exercise')]
     check('a framework without overrides is unchanged (SS: kg, no RPE)',

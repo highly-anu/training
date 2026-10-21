@@ -1,0 +1,49 @@
+id: fbb_pump_condition_day_2
+name: "Pump Condition — Day 2"
+modality: max_strength
+category: strength
+training_levels:
+- intermediate
+- advanced
+- elite
+duration_estimate_minutes: 51
+applicable_phases:
+- build
+- deload
+sources:
+- "Functional Bodybuilding, Persist sample weeks (Help Center, 2025-12-31)"
+notes: >
+  Day 2 of Functional Bodybuilding's published Pump Condition 3x sample week, as printed.
+slots:
+- role: warm_up
+  slot_type: skill_practice
+  sets: 20
+  duration_minutes: 10
+  exercise_filter:
+    exercise_ids: [fbb_warm_up]
+- role: squat
+  slot_type: sets_reps
+  sets: 4
+  exercise_filter:
+    exercise_ids: [mf_back_squat]
+- role: pull_up
+  slot_type: sets_reps
+  sets: 3
+  exercise_filter:
+    exercise_ids: [pull_up]
+- role: strict_press
+  slot_type: sets_reps
+  sets: 3
+  exercise_filter:
+    exercise_ids: [back_supported_db_strict_press]
+- role: conditioning
+  slot_type: time_domain
+  sets: 1
+  duration_minutes: 12
+  exercise_filter:
+    exercise_ids: [fbb_conditioning]
+- role: cooldown
+  slot_type: skill_practice
+  duration_minutes: 5
+  exercise_filter:
+    exercise_ids: [fbb_cooldown]

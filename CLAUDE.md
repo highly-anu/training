@@ -383,7 +383,8 @@ group's name.
   program — six weeks of strength, a deload week of its own workouts run as written, five
   of power, repeating — and the classes never deload on a schedule. Uphill's aerobic
   modules ramp by `weekly_volume` (three build weeks of 10 %, a recovery week at half, the
-  ramp holding from Specific on); its modules run in named `phases`.
+  ramp holding from Specific on); its modules run in named `phases`. A period's `note`
+  leads every block's note in its weeks (Persist's Bridge week: RPE 6–7, the work kept).
 - **Theory fidelity** (`src/fidelity.py`, `tools/check_fidelity.py`): a generated program
   is read against its package — `sessions_per_week`, `intensity_distribution`,
   `deload_protocol`, archetype level and phase, recovery windows, equipment and injuries,
@@ -702,9 +703,9 @@ writes.
   what practice opened beyond `selector._get_unlocked` at the athlete's level.
 - **The framework's `progression_model` never drove a prescription** —
   `generator.py` reads the modality yaml's, unless the week's framework
-  declares `progression_overrides` (modality → model): Marcus Filly's strength
-  work is prescribed as RPE targets that way (since 2026-10-16), and his spec
-  leads with load at the target RPE. Default primitives key on
+  declares `progression_overrides` (modality → model; no shipped framework does since
+  Marcus Filly's package became a training contract on 2026-10-21, its RPE targets
+  written per block). Default primitives key on
   `(modality.progression_model, slot_type)`; the framework's model informs
   only the intensity section.
 - **Slot roles are free-form (144 strings).** Never scope by guessing a role

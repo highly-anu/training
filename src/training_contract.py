@@ -152,6 +152,9 @@ def at_step(module: dict, step: int, week_number: int | None = None, offset: int
     stays on its last variant once it gets there (the tenth workout of
     Uphill's muscular-endurance progression)."""
     period = period_of(module, week_number)
+    if (period or {}).get('note'):
+        # What the period asks of every block (Persist's Bridge week: RPE 6–7).
+        module = {**module, 'period_note': period['note']}
     rotation = (period or {}).get('rotation') or module.get('rotation')
     if not module.get('variants') or not rotation:
         return module
@@ -760,6 +763,8 @@ def _assignment(block: dict, module: dict, exercises: dict, constraints: dict,
                 module_id=module['id'], forecast_step=step,
                 advances_module=_advancing(block) if by_load else _progresses(block),
                 conditional=step != state.get('completed', 0), elapsed_sec=seconds)
+    if module.get('period_note') and not block.get('standard'):
+        load['load_note'] = f"{module['period_note']} {load.get('load_note') or ''}".strip()
     if module.get('advice') and load['advances_module']:
         # The method's recommendation, left to the athlete: said where the
         # block is read, never acted on by the cursor.
@@ -1278,7 +1283,10 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
         program['weeks'].append({'week_number': entry['week_in_program'], 'week_in_phase': entry['week_in_phase'],
                                  'phase': entry['phase'], 'phase_id': entry.get('phase_id'),
                                  'phase_name': entry.get('phase_name'), 'track_id': contract['track_id'],
-                                 'framework': fw['id'], 'is_deload': deload, 'schedule': schedule,
+                                 # Every module deloading (Persist's Bridge week) is a deload
+                                 # week too; one module's own (BJJ's strength) is not.
+                                 'framework': fw['id'], 'schedule': schedule,
+                                 'is_deload': deload or bool(deloads and all(deloads.values())),
                                  **({'modules_skipped': skipped} if skipped else {})})
         for item in skipped:
             line = f"{item['name']}: {item['placed']} of {item['of']} weekly sessions — {item['reason']}."
