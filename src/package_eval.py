@@ -16,7 +16,6 @@ tools/evaluate_packages.py; `test_package_eval.py` pins each grader.
 """
 from __future__ import annotations
 
-import re
 from collections import Counter
 
 from src import fidelity
@@ -32,10 +31,10 @@ DIMENSIONS = {
     'measurement': ('M1', 'M2', 'M3', 'M4'),
 }
 CRITERIA = {
-    'S1': 'Dossier has Sources, Rules, Open, Inventions and Tests',
-    'S2': 'Sources are primary, or a consensus of three or more',
-    'S3': 'No rule left only in prose',
-    'S4': "status.yaml's inventions match the dossier's",
+    'S1': 'A fidelity record with sources and rules, and a dossier',
+    'S2': 'A primary source read in full, or a consensus of three or more read',
+    'S3': 'Every rule enforced by something that exists',
+    'S4': 'Every rule rests on a source read; ids cited and named in the dossier',
     'S5': 'A source test that CI runs',
     'E1': 'No session with every slot empty',
     'E2': 'Sessions are their own modality, not substitutes',
@@ -59,7 +58,6 @@ HYGIENE = {'D3', 'D4'}
 SUBSTITUTE_PARTIAL = 0.25
 SHARE_PASS, SHARE_PARTIAL = 0.40, 0.60
 LEVELS = ('novice', 'intermediate', 'advanced', 'elite')
-DOSSIER_SECTIONS = ('Sources', 'Rules', 'Open', 'Inventions', 'Tests')
 # Fidelity rules that are a declared claim of the method breaking, at any
 # gated severity: the volume bands fire only where a phase declares them.
 CLAIM_RULES = {'substituted_share', 'modality_outnumbers', 'archetype_share', 'distinct_archetypes',
@@ -150,13 +148,19 @@ def eligible_archetypes(archetypes: list, modality: str, kind: str, level: str, 
     return out
 
 
+def claim_ref(track: dict, phase_id: str, key: str) -> str:
+    """How a rule in the package's fidelity record cites a phase claim."""
+    return f"checks:{track['id']}/{phase_id}.{key}"
+
+
 def concentration(program: dict | None, track: dict, archetypes: list, level: str,
-                  equipment: set) -> list[tuple[str, str, str, float, float | None, int]]:
+                  equipment: set, refs: set) -> list[tuple[str, str, str, float, float | None, int]]:
     """(phase, modality, archetype, share, declared cap, archetypes on offer) for
     the most used archetype of each modality with four or more sessions in a
     phase. A package that offers one template for a modality (CrossFit's AMRAP)
     concentrates as surely as a selector that keeps picking one; a method whose
-    repetition is the point says so with the phase's `max_archetype_share`.
+    repetition is the point says so with the phase's `max_archetype_share`,
+    which counts only when a rule of the package's record cites it (`refs`).
     Templated phases and contracts are exempt: their repetition is the source's."""
     by_id = {p['id']: p for p in track.get('phases') or []}
     out = []
@@ -167,8 +171,11 @@ def concentration(program: dict | None, track: dict, archetypes: list, level: st
         if phase.get('week_templates'):
             continue
         kind = pweeks[0].get('phase')
+        cap = (phase.get('checks') or {}).get('max_archetype_share')
+        if claim_ref(track, phase_id, 'max_archetype_share') not in refs:
+            cap = None
         for mod, aid, top, total in fidelity.archetype_shares(pweeks):
-            out.append((phase_id, mod, aid, top / total, (phase.get('checks') or {}).get('max_archetype_share'),
+            out.append((phase_id, mod, aid, top / total, cap,
                         len(eligible_archetypes(archetypes, mod, kind, level, equipment))))
     return out
 
@@ -238,20 +245,28 @@ def grade_e4(found: list) -> tuple[str, str]:
     return (PASS, '') if g == PASS else next(x for x in graded if x[0] == g)
 
 
-def declares_claims(track: dict, contract: dict | None) -> bool:
+def declares_claims(track: dict, contract: dict | None, refs: set) -> bool:
     """A contract and a source week template are the method's claims made
-    executable; otherwise a phase's `checks:` declares them."""
+    executable; otherwise a phase's `checks:` declares them. Each counts only
+    when a rule of the package's fidelity record cites it (`refs`): a claim
+    no source states is a number, not the method."""
+    tid = track['id']
     if contract:
-        return True
-    return any(ph.get('week_templates') or (CLAIM_KEYS & set(ph.get('checks') or {}))
-               for ph in track.get('phases') or [])
+        return any(r.startswith(f'data:training_contract.yaml#tracks.{tid}') for r in refs)
+    for ph in track.get('phases') or []:
+        if ph.get('week_templates') and any(
+                r.startswith(f"data:philosophy.yaml#tracks.{tid}.phases.{ph['id']}.week_templates") for r in refs):
+            return True
+        if any(claim_ref(track, ph['id'], k) in refs for k in CLAIM_KEYS & set(ph.get('checks') or {})):
+            return True
+    return False
 
 
 def grade_e5(declared: bool, broken: list[str]) -> tuple[str, str]:
     if broken:
         return FAIL, broken[0]
     if not declared:
-        return PARTIAL, 'no defining claim declared (checks:, a contract or a week template)'
+        return PARTIAL, 'no defining claim a rule cites (checks:, a contract or a week template)'
     return PASS, ''
 
 
@@ -324,11 +339,15 @@ def grade_d4(no_patterns: int, no_levels: int, inert_scaling: int) -> tuple[str,
 
 # ── Measurement ──────────────────────────────────────────────────────────────
 
-def grade_m1(declared: str | None, lead: str | None) -> tuple[str, str]:
+def grade_m1(declared: str | None, lead: str | None, rule: str | None) -> tuple[str, str]:
+    """`declared`: the record's currency for the track; `rule`: the rule it
+    rests on (None when it cites none) — the method's word, not the author's."""
     if not declared:
         return FAIL, f"no currency declared for the track (leads with {lead or 'nothing'})"
+    if not rule:
+        return FAIL, f"the currency {declared} cites no rule of the record"
     if declared != lead:
-        return FAIL, f"leads with {lead or 'nothing'}, the method's currency is {declared}"
+        return FAIL, f"leads with {lead or 'nothing'}, the method's currency is {declared} ({rule})"
     return PASS, ''
 
 
@@ -356,52 +375,46 @@ def grade_m4(referenced: set, known: set) -> tuple[str, str]:
 
 # ── Source ───────────────────────────────────────────────────────────────────
 
-def dossier_sections(text: str) -> dict[str, list[str]]:
-    """`## Heading` -> its bullet items (top-level `- ` lines)."""
-    out: dict[str, list[str]] = {}
-    current = None
-    for line in text.splitlines():
-        m = re.match(r'^##\s+(.*)', line)
-        if m:
-            current = m.group(1).strip()
-            out[current] = []
-        elif current is not None and line.startswith('- '):
-            out[current].append(line[2:].strip())
-    return out
+# Computed from the package's record (data/packages/<id>/fidelity.yaml,
+# src/package_fidelity.py), never declared: a heading, a count or a word in
+# a status file once passed these.
+
+def grade_s1(record: dict | None, has_dossier: bool) -> tuple[str, str]:
+    """A record and a dossier, with sources and rules in the record."""
+    missing = [what for what, ok in (('no fidelity.yaml', record is not None), ('no dossier', has_dossier),
+                                     ('no sources', bool((record or {}).get('sources'))),
+                                     ('no rules', bool((record or {}).get('rules')))) if not ok]
+    return (PASS, '') if not missing else (FAIL, '; '.join(missing))
 
 
-def _section(sections: dict, name: str) -> list[str] | None:
-    return next((v for k, v in sections.items() if k.split()[0].rstrip(':') == name), None)
-
-
-def grade_s1(sections: dict | None) -> tuple[str, str]:
-    if sections is None:
-        return FAIL, 'no dossier'
-    missing = [s for s in DOSSIER_SECTIONS if _section(sections, s) is None]
-    return (PASS, '') if not missing else (FAIL, f"missing sections: {', '.join(missing)}")
-
-
-def grade_s2(kind: str | None, sections: dict | None) -> tuple[str, str]:
-    sources = len(_section(sections or {}, 'Sources') or [])
-    if kind == 'primary' or (kind == 'consensus' and sources >= 3):
+def grade_s2(kind: str | None, record: dict | None) -> tuple[str, str]:
+    """`kind` is computed from the record's sources (package_fidelity.sources_kind)."""
+    if kind in ('primary', 'consensus'):
         return PASS, ''
-    if kind in ('secondary', 'consensus'):
-        return PARTIAL, f"{kind} sources ({sources})"
-    return FAIL, 'sources_kind not stated'
+    n = sum(1 for s in (record or {}).get('sources') or [] if s['read'] in ('full', 'partial'))
+    if kind == 'secondary':
+        return PARTIAL, f"{n} secondary source(s) read; a consensus needs three, or one primary read in full"
+    return FAIL, 'no source read'
 
 
-def grade_s3(debt: list | None) -> tuple[str, str]:
-    if debt is None:
-        return PARTIAL, 'debt not stated'
-    return (PASS, '') if not debt else (PARTIAL, f"{len(debt)} rule(s) only in prose")
+def grade_s3(record: dict | None, debt: list[str], ref_errors: list[str]) -> tuple[str, str]:
+    """`debt`: rules nothing enforces; `ref_errors`: enforcement that names
+    nothing. No rules is not no debt: nothing is enforced."""
+    if not (record or {}).get('rules'):
+        return FAIL, 'no rules recorded'
+    if ref_errors:
+        return FAIL, ref_errors[0] + (f" (+{len(ref_errors) - 1})" if len(ref_errors) > 1 else '')
+    if debt:
+        return PARTIAL, f"{len(debt)} rule(s) only in prose: {', '.join(debt)}"
+    return PASS, ''
 
 
-def grade_s4(status_inventions: list, sections: dict | None) -> tuple[str, str]:
-    if sections is None:
-        return FAIL, 'no dossier'
-    listed = _section(sections, 'Inventions') or []
-    if len(listed) != len(status_inventions or []):
-        return FAIL, f"dossier lists {len(listed)} invention(s), status.yaml {len(status_inventions or [])}"
+def grade_s4(record: dict | None, errors: list[str]) -> tuple[str, str]:
+    """`errors`: package_fidelity.citation_errors."""
+    if not (record or {}).get('rules'):
+        return FAIL, 'no rules recorded'
+    if errors:
+        return FAIL, errors[0] + (f" (+{len(errors) - 1})" if len(errors) > 1 else '')
     return PASS, ''
 
 
@@ -420,7 +433,9 @@ def dimension_grades(grades: dict) -> dict:
 
 def derived_status(tracks: dict, excluded: set, has_dossier: bool) -> str:
     """`audited` when every criterion that is not hygiene passes on every
-    track not excluded; `partial` once a dossier exists; else `not_started`."""
+    track not excluded; `partial` once a dossier exists (and the fidelity
+    record beside it — the caller passes both as `has_dossier`); else
+    `not_started`."""
     counted = {t: g for t, g in tracks.items() if t not in excluded}
     if has_dossier and counted and all(g[c][0] == PASS for g in counted.values()
                                        for c in g if c not in HYGIENE):

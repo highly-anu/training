@@ -1,10 +1,12 @@
 # Starting Strength — source dossier
 
-Status: **partial** (2026-10-20): both tracks run as the sources write them, and
-the load follows what the athlete confirms lifting. Three stall-and-layoff rules
-are still prose (see Debt). Engine shape: training contract
+Both tracks run as the sources write them, and the load follows what the athlete
+confirms lifting. Engine shape: training contract
 (`data/packages/starting_strength/training_contract.yaml`) with the
 `load_per_exposure` model and alternating variants (docs/logic/training_contracts.md).
+The record — sources, rules with what enforces each, inventions — is
+`data/packages/starting_strength/fidelity.yaml`; this page is its prose, by the same ids.
+The status is the scorecard's (status.yaml).
 
 ## Sources
 
@@ -22,22 +24,22 @@ are still prose (see Debt). Engine shape: training contract
 
 ## Rules → where they live
 
-| Rule (source) | Encoded as |
-|---|---|
-| Two workouts alternate, A-B-A one week and B-A-B the next (Rippetoe 2013) | `novice_lp` `variants` a, b and `rotation: [a, b]`; the cursor counts attended sessions |
-| A: squat 3×5 across, press 3×5 across, deadlift 1×5, chin-ups 3 sets to failure, 5 min between (Rippetoe 2013) | variant `a` blocks; chin-ups `to_failure` |
-| B: squat 3×5, bench 3×5, power clean 5×3 across; rows are not a substitute (Rippetoe 2013) | variant `b` blocks; no alternatives declared |
-| Three days, 48–72 hours apart (Rippetoe 2013) | `exposures_per_week: 3`, `min_spacing_days: 2`; fewer days refuse |
-| Every lift goes up every workout (Rippetoe 2013) | `load_per_exposure`: a made exposure adds the lift's increment |
-| First session: empty bar, sets of five, small jumps to a heavy weight that keeps form, two more sets there (Rippetoe 2013) | `work_up` prescription for a lift with no weight; the logged weight becomes its start |
-| Squat +10 lb for two weeks, then +5; deadlift +15 at first, then 5; press, bench, clean +5, then 1–3 (Rippetoe 2013, 2013 TM) | `lifts.*.increments_kg` / `first_exposures`, in kg rounded to 1.25 kg plates |
-| Missed reps once: repeat the weight; missed at one weight twice in a row: reset 5 % and climb in smaller jumps (Alter 2018) | `stall: {failures: 2, reset_pct: 5}`; a step down `increments_kg` after a reset |
-| Stalled again after the adjustments: that lift is intermediate; the others carry on (Alter 2018) | `stall.resets: 1`: the lift holds, `stalled`, and its note sends it to the Texas Method |
-| Novice ends when progress stops session to session; intermediates progress weekly (Rippetoe 2013) | `track_for_level`: novice → Linear Progression, intermediate → Texas Method; the novice track refuses an intermediate, naming the Texas Method |
-| Monday: squat 5×5 across at ~90 % of 5RM (up to 8–10 min rest); press or bench 5×5 at ~90 %, alternating Mondays; one heavy set of five deadlifts, up every week (Rippetoe, TM) | `texas_method` variants `volume_press` / `volume_bench`; `pct: 0.9`; the deadlift advances |
-| Wednesday: squat 2×5 at 80 % of Monday; the other press for three lighter sets; chin-ups 3×failure (Rippetoe, TM) | `light_*` variants, squat `pct: 0.72` (80 % of 90 %) |
-| Friday: a new 5RM (within 2 %) on the squat and the press; power cleans 5×3 (Rippetoe, TM) | `intensity_*` variants; the advancing blocks |
-| No conditioning beyond "don't do much"; no deload week | no conditioning module; `linear_progression` and `texas_method` declare no `deload_protocol` |
+| | Rule (source) | Encoded as |
+|---|---|---|
+| R1 | Two workouts alternate, A-B-A one week and B-A-B the next (Rippetoe 2013) | `novice_lp` `variants` a, b and `rotation: [a, b]`; the cursor counts attended sessions |
+| R2 | A: squat 3×5 across, press 3×5 across, deadlift 1×5, chin-ups 3 sets to failure, 5 min between (Rippetoe 2013) | variant `a` blocks; chin-ups `to_failure` |
+| R3 | B: squat 3×5, bench 3×5, power clean 5×3 across; rows are not a substitute (Rippetoe 2013) | variant `b` blocks; no alternatives declared |
+| R4 | Three days, 48–72 hours apart (Rippetoe 2013) | `exposures_per_week: 3`, `min_spacing_days: 2`; fewer days refuse |
+| R5 | Every lift goes up every workout (Rippetoe 2013) | `load_per_exposure`: a made exposure adds the lift's increment |
+| R6 | First session: empty bar, sets of five, small jumps to a heavy weight that keeps form, two more sets there (Rippetoe 2013) | `work_up` prescription for a lift with no weight; the logged weight becomes its start |
+| R7 | Squat +10 lb for two weeks, then +5; deadlift +15 at first, then 5; press, bench, clean +5, then 1–3 (Rippetoe 2013, 2013 TM) | `lifts.*.increments_kg` / `first_exposures`, in kg rounded to 1.25 kg plates |
+| R8 | Missed reps once: repeat the weight; missed at one weight twice in a row: reset 5 % and climb in smaller jumps (Alter 2018) | `stall: {failures: 2, reset_pct: 5}`; a step down `increments_kg` after a reset |
+| R9 | Stalled again after the adjustments: that lift is intermediate; the others carry on (Alter 2018) | `stall.resets: 1`: the lift holds, `stalled`, and its note sends it to the Texas Method |
+| R10 | Novice ends when progress stops session to session; intermediates progress weekly (Rippetoe 2013) | `track_for_level`: novice → Linear Progression, intermediate → Texas Method; the novice track refuses an intermediate, naming the Texas Method |
+| R11 | Monday: squat 5×5 across at ~90 % of 5RM (up to 8–10 min rest); press or bench 5×5 at ~90 %, alternating Mondays; one heavy set of five deadlifts, up every week (Rippetoe, TM) | `texas_method` variants `volume_press` / `volume_bench`; `pct: 0.9`; the deadlift advances |
+| R12 | Wednesday: squat 2×5 at 80 % of Monday; the other press for three lighter sets; chin-ups 3×failure (Rippetoe, TM) | `light_*` variants, squat `pct: 0.72` (80 % of 90 %) |
+| R13 | Friday: a new 5RM (within 2 %) on the squat and the press; power cleans 5×3 (Rippetoe, TM) | `intensity_*` variants; the advancing blocks |
+| R14 | No conditioning beyond "don't do much"; no deload week | no conditioning module; `linear_progression` and `texas_method` declare no `deload_protocol` |
 
 ## Open
 
@@ -49,24 +51,24 @@ are still prose (see Debt). Engine shape: training contract
   the contract refuses them (a 45-minute day names the 60 minutes Workout A needs).
 - Curls (Rippetoe: "if you must", on B) and the Texas Method's back extensions
   (optional in the article) are not programmed.
-
-## Debt (rules only in prose — status.yaml `debt`)
-
-- After a first stall, a light squat day (80 % of the first day's squat, 2×5) joins
-  the week; after a second, the lift switches to 5×3 (Alter 2018). The contract
-  resets 5 % and steps the increment down, then flags the lift.
-- Layoffs: a week off repeats the last workout; longer resets 5 % under 40, 10 % over;
-  three to four weeks resets 10 % (Alter 2018).
 - A Texas Method Friday that stalls has no rule in the article; the contract repeats
   the weight.
 
-## Inventions (see status.yaml)
+## Debt (rules nothing enforces yet)
 
-- Chin-ups are left out, and said so, when there is no pull-up bar; the article lists
-  them in Workout A.
-- The Texas Method's weekly increments (2.5 kg squat and deadlift, 1.25 kg presses and
-  clean): the article gives none.
-- The light day's press shares (bench 85 %, press 87.5 % of the five-rep max): the
+- R15: after a first stall, a light squat day (80 % of the first day's squat, 2×5)
+  joins the week; after a second, the lift switches to 5×3 (Alter 2018). The contract
+  resets 5 % and steps the increment down, then flags the lift.
+- R16: layoffs — a week off repeats the last workout; longer resets 5 % under 40, 10 %
+  over; three to four weeks resets 10 % (Alter 2018).
+
+## Inventions
+
+- I1: chin-ups are left out, and said so, when there is no pull-up bar; the article
+  lists them in Workout A.
+- I2: the Texas Method's weekly increments (2.5 kg squat and deadlift, 1.25 kg presses
+  and clean): the article gives none.
+- I3: the light day's press shares (bench 85 %, press 87.5 % of the five-rep max): the
   article says "a little lighter than the last 5×5" and "a little heavier relative to
   5RM" for the press.
 

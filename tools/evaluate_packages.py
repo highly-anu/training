@@ -12,7 +12,10 @@ constrained profile is probed with each constraint lifted alone
 Each package x track is graded on five dimensions, every criterion pass,
 partial or fail (src/package_eval.py; docs/package-fidelity/README.md has
 the table), and `audited` is derived: every criterion that is not hygiene
-passes on every track the package does not exclude.
+passes on every track the package does not exclude. The Source criteria
+read each package's record (data/packages/<id>/fidelity.yaml,
+src/package_fidelity.py), and docs/package-fidelity/status.yaml is written
+from the records and the grades (--update-baseline), never by hand.
 
 Usage:
   .venv/bin/python tools/evaluate_packages.py                       # gate
@@ -25,11 +28,12 @@ Exits 1 when a grade is worse than tools/scorecard_baseline.json records, a
 package x track x criterion is new, a fidelity finding is not in
 tools/fidelity_baseline.json (tools/check_fidelity.gate, run here), an
 exercise is newly orphaned (tools/check_exercise_coverage, run here; D2 reads
-it), status.yaml declares a status the grades do not earn — or a baseline is
-stale: a better grade, a finding that stopped firing or an exercise no longer
-orphaned is recorded in the change that earns it, or the next change may lose
-it unnoticed. --update-baseline records better grades and refuses worse ones;
---accept-worse records them too, for a grader made stricter.
+it), status.yaml is not what the records and the grades write — or a
+baseline is stale: a better grade, a finding that stopped firing or an
+exercise no longer orphaned is recorded in the change that earns it, or the
+next change may lose it unnoticed. --update-baseline records better grades
+(and writes status.yaml) and refuses worse ones; --accept-worse records them
+too, for a grader made stricter.
 """
 from __future__ import annotations
 
@@ -47,7 +51,7 @@ os.environ.setdefault('SUPABASE_URL', '')
 
 import yaml  # noqa: E402
 
-from src import constraint_impact, loader, package_eval as pe  # noqa: E402
+from src import constraint_impact, loader, package_eval as pe, package_fidelity as pf  # noqa: E402
 from src.analytics import spec as spec_mod, vocabulary  # noqa: E402
 from src.generator import generate  # noqa: E402
 from src.validator import validate  # noqa: E402
@@ -55,7 +59,6 @@ from tools import check_exercise_coverage as coverage, check_fidelity as cf  # n
 
 BASELINE = os.path.join(ROOT, 'tools', 'scorecard_baseline.json')
 STATUS = os.path.join(ROOT, 'docs', 'package-fidelity', 'status.yaml')
-WORKFLOW = os.path.join(ROOT, '.github', 'workflows', 'training-contract.yml')
 EVAL_WEEKS = 8
 PROBE_WEEKS = 2
 # The fidelity profiles that constrain the athlete, and the scorecard's own.
@@ -169,7 +172,9 @@ def _declared_standards(pkg: str, track: dict) -> tuple[list, set]:
     return ids, manual
 
 
-def grade_track(pkg: str, track: dict, recs: dict, fid_rows: list, status: dict) -> dict:
+def grade_track(pkg: str, track: dict, recs: dict, fid_rows: list, record: dict | None) -> dict:
+    """`record`: the package's fidelity.yaml (None without one)."""
+    refs = pf.refs(record)
     ideal_name = next(p for p in recs if p.startswith('ideal-'))
     ideal = recs[ideal_name]
     goal, frameworks = ideal['goal'], ideal['frameworks']
@@ -197,12 +202,13 @@ def grade_track(pkg: str, track: dict, recs: dict, fid_rows: list, status: dict)
     grades['E2'] = pe.grade_e2(qualified)
     grades['E3'] = pe.grade_e3(other_levels)
     concentration = [] if pe.refused(ideal['program'], ideal['validation']) else pe.concentration(
-        ideal['program'], track, ideal['lib']['archetypes'], base_level, set(ideal['constraints']['equipment']))
+        ideal['program'], track, ideal['lib']['archetypes'], base_level, set(ideal['constraints']['equipment']),
+        refs)
     grades['E4'] = pe.grade_e4(concentration)
     broken = [b for prog in qualified.values() for b in pe.claims_broken(prog, track)]
     broken += [f"{r['profile']}: {r['finding']['detail']}" for r in fid_rows
                if r['finding']['rule'] in pe.CLAIM_RULES and r['finding']['severity'] in ('error', 'warn')]
-    grades['E5'] = pe.grade_e5(pe.declares_claims(track, contract), broken)
+    grades['E5'] = pe.grade_e5(pe.declares_claims(track, contract, refs), broken)
     grades['E6'] = pe.grade_e6([r['finding'] for r in fid_rows if r['finding']['severity'] in ('error', 'warn')])
 
     outcomes = {}
@@ -215,10 +221,13 @@ def grade_track(pkg: str, track: dict, recs: dict, fid_rows: list, status: dict)
     grades['R1'] = pe.grade_r1(outcomes)
 
     lead, prim = (None, None) if pe.refused(ideal['program'], ideal['validation']) else _lead(ideal)
-    grades['M1'] = pe.grade_m1((status.get('currency') or {}).get(track['id']), lead)
+    currency, currency_rule = pf.currency(record, track['id'])
+    grades['M1'] = pe.grade_m1(currency, lead, currency_rule)
     grades['M2'] = pe.grade_m2(prim, vocabulary.PRIMITIVES, vocabulary.CAPTURE)
     known, derived = _standards_known()
     declared, manual = _declared_standards(pkg, track)
+    # Entered by hand only where a rule says the source gives no session for it.
+    manual = {b for b in manual if pf.manual_cited(record, b)}
     prescribed = {ea['exercise']['id'] for _, s in pe.sessions(ideal['program']) for ea in s.get('exercises') or []
                   if ea.get('exercise')}
     tested = {ea['standard']['id'] for w in (ideal['program'] or {}).get('weeks') or []
@@ -232,7 +241,7 @@ def grade_track(pkg: str, track: dict, recs: dict, fid_rows: list, status: dict)
 
 def evaluate_package(pkg: str) -> dict:
     """Fidelity rows and the per-track execution, robustness and measurement grades."""
-    status = (_load_status().get(pkg) or {})
+    record = pf.load(pkg)
     by_track: dict = defaultdict(dict)
     rows_by_track: dict = defaultdict(list)
     tracks = {}
@@ -244,35 +253,24 @@ def evaluate_package(pkg: str) -> dict:
         by_track[tid][rec['profile']] = rec
     out = {'fidelity_rows': [r for rows in rows_by_track.values() for r in rows], 'tracks': {}}
     for tid, recs in by_track.items():
-        out['tracks'][tid] = grade_track(pkg, tracks[tid], recs, rows_by_track[tid], status)
+        out['tracks'][tid] = grade_track(pkg, tracks[tid], recs, rows_by_track[tid], record)
     return out
 
 
 # ── Per package ──────────────────────────────────────────────────────────────
 
-def _load_status() -> dict:
-    with open(STATUS) as fh:
-        return yaml.safe_load(fh)['packages']
-
-
-def package_grades(pkg: str, status: dict, orphans: list[str]) -> dict:
+def package_grades(pkg: str, orphans: list[str]) -> dict:
     """Source and data: the same for every track of the package. `orphans`:
     its catalog exercises no program reaches, computed in this run."""
     from tools import validate_entities as ve
-    entry = status.get(pkg) or {}
-    sections = None
-    if entry.get('dossier') and os.path.exists(os.path.join(ROOT, entry['dossier'])):
-        with open(os.path.join(ROOT, entry['dossier'])) as fh:
-            sections = pe.dossier_sections(fh.read())
-    with open(WORKFLOW) as fh:
-        workflow = fh.read()
-    in_ci = sum(1 for ref in entry.get('source_tests') or [] if f"python {ref.partition('::')[0]}" in workflow)
+    record = pf.load(pkg)
+    text = pf.dossier(pkg)
     grades = {
-        'S1': pe.grade_s1(sections),
-        'S2': pe.grade_s2(entry.get('sources_kind'), sections),
-        'S3': pe.grade_s3(entry.get('debt')),
-        'S4': pe.grade_s4(entry.get('inventions') or [], sections),
-        'S5': pe.grade_s5(in_ci),
+        'S1': pe.grade_s1(record, text is not None),
+        'S2': pe.grade_s2(pf.sources_kind(record), record),
+        'S3': pe.grade_s3(record, pf.debt(record), pf.ref_errors(pkg, record)),
+        'S4': pe.grade_s4(record, pf.citation_errors(pkg, record, text)),
+        'S5': pe.grade_s5(pf.tests_in_ci(pkg, record)),
     }
     pkg_dir = os.path.join(ROOT, 'data', 'packages', pkg)
     errors = [f"{os.path.relpath(p, ROOT)}: {e}" for p, errs in ve.validate_path(pkg_dir, verbose=False).items()
@@ -311,7 +309,6 @@ def _package_archetypes(pkg_dir: str) -> list:
 
 def run(packages: list[str]) -> tuple[dict, list, dict]:
     """(scorecard, fidelity rows, package -> orphaned exercises)."""
-    status = _load_status()
     scorecard: dict = {}
     fid_rows: list = []
     reach_for = sorted(coverage.borrowers_of(packages))
@@ -322,21 +319,27 @@ def run(packages: list[str]) -> tuple[dict, list, dict]:
         reached = dict(zip(reach_for, reaches))
     orphans = {pkg: coverage.orphans_of(pkg, reached) for pkg in packages}
     for pkg in packages:
-        shared = package_grades(pkg, status, orphans[pkg])
+        shared = package_grades(pkg, orphans[pkg])
         res = results[pkg]
         fid_rows += res['fidelity_rows']
         scorecard[pkg] = {tid: {**shared, **g} for tid, g in res['tracks'].items()}
     return scorecard, fid_rows, orphans
 
 
-def derive(pkg: str, tracks: dict, status: dict) -> str:
-    entry = status.get(pkg) or {}
-    has_dossier = bool(entry.get('dossier')) and os.path.exists(os.path.join(ROOT, entry['dossier']))
+def derive(pkg: str, tracks: dict) -> str:
+    record = pf.load(pkg)
+    has_dossier = record is not None and pf.dossier(pkg) is not None
     return pe.derived_status({t: {c: tuple(g) for c, g in crit.items()} for t, crit in tracks.items()},
-                             set(entry.get('excluded_tracks') or {}), has_dossier)
+                             set((record or {}).get('excluded_tracks') or {}), has_dossier)
 
 
-def write_report(scorecard: dict, status: dict, path: str) -> None:
+def status_text(scorecard: dict) -> str:
+    """docs/package-fidelity/status.yaml as this run's grades write it."""
+    return pf.status_document({pkg: pf.status_entry(pkg, pf.load(pkg), derive(pkg, scorecard[pkg]))
+                               for pkg in scorecard})
+
+
+def write_report(scorecard: dict, path: str) -> None:
     icon = {pe.PASS: '✓', pe.PARTIAL: '◐', pe.FAIL: '✗'}
     lines = ['# Package scorecard', '',
              'Generated by `tools/evaluate_packages.py --report`. Every package × track graded on five '
@@ -346,11 +349,11 @@ def write_report(scorecard: dict, status: dict, path: str) -> None:
              '| Package | Track | Status | Source | Execution | Robustness | Data | Measurement |',
              '|---|---|---|---|---|---|---|---|']
     for pkg in sorted(scorecard):
-        excluded = set((status.get(pkg) or {}).get('excluded_tracks') or {})
+        excluded = set((pf.load(pkg) or {}).get('excluded_tracks') or {})
         for tid in sorted(scorecard[pkg]):
             dims = pe.dimension_grades({c: tuple(g) for c, g in scorecard[pkg][tid].items()})
             mark = ' (excluded)' if tid in excluded else ''
-            lines.append(f"| {pkg} | {tid}{mark} | {derive(pkg, scorecard[pkg], status)} | "
+            lines.append(f"| {pkg} | {tid}{mark} | {derive(pkg, scorecard[pkg])} | "
                          + ' | '.join(icon[dims[d]] for d in pe.DIMENSIONS) + ' |')
     lines += ['', '## What is not passing', '']
     for pkg in sorted(scorecard):
@@ -387,12 +390,11 @@ def main() -> int:
     ap.add_argument('--json', help='write the scorecard as JSON to this path')
     args = ap.parse_args()
 
-    status = _load_status()
     every = sorted(p['id'] for p in loader.load_philosophies())
     packages = args.package or every
     scorecard, fid_rows, orphans = run(packages)
     if args.report:
-        write_report(scorecard, status, args.report)
+        write_report(scorecard, args.report)
         print(f'report: {args.report}')
     if args.json:
         with open(args.json, 'w') as fh:
@@ -442,17 +444,19 @@ def main() -> int:
             fh.write('\n')
         cf.write_baseline(gated)
         coverage.BASELINE.write_text(json.dumps(dict(sorted(orphans.items())), indent=2, sort_keys=True) + '\n')
+        with open(STATUS, 'w', encoding='utf-8') as fh:
+            fh.write(status_text(scorecard))
         print(f'baselines written: {len(current)} grades, {len(gated)} fidelity findings, '
-              f'{sum(len(o) for o in orphans.values())} orphans')
+              f'{sum(len(o) for o in orphans.values())} orphans; {os.path.relpath(STATUS, ROOT)}')
         return 0
 
     failed = False
-    for pkg in packages:
-        declared = (status.get(pkg) or {}).get('status')
-        earned = derive(pkg, scorecard[pkg], status)
-        if declared != earned:
-            print(f'{pkg}: status.yaml says {declared}, the scorecard earns {earned}')
-            failed = True
+    if not args.package:
+        with open(STATUS, encoding='utf-8') as fh:
+            if fh.read() != status_text(scorecard):
+                print(f'{os.path.relpath(STATUS, ROOT)} is not what the records and these grades write '
+                      '(run --update-baseline)')
+                failed = True
     counts = defaultdict(int)
     for g in current.values():
         counts[g] += 1

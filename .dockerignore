@@ -40,5 +40,10 @@ docs/*
 .idea/
 .vscode/
 
+# A package's fidelity record and source weeks are read by the scorecard
+# (tools/evaluate_packages.py), never at runtime.
+data/packages/*/fidelity.yaml
+data/packages/*/source_weeks.yaml
+
 # Logs / temp
 data/api_errors.txt

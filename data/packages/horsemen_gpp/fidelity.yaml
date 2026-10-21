@@ -1,0 +1,96 @@
+# Horsemen GPP — the machine half of docs/package-fidelity/horsemen_gpp.md
+# (docs/schemas/fidelity.schema.json; docs/package-fidelity/README.md).
+shape: templates
+
+sources:
+  - id: horsemen_2008
+    kind: primary
+    author: Horsemen
+    title: Horsemen Training Program (2008)
+    where: data/horsemen/horsemen.pdf
+    read: full
+    copy: data/horsemen/horsemen.pdf
+    note: Also data/horsemen/horsemen.docx; docs/extracted/horsemen.md summarises it.
+
+rules:
+  - id: R1
+    text: "Four 28-day months — strength, power endurance, job specific, maintenance — each with an example week sequence, the macro run two or three times."
+    cites: [{source: horsemen_2008}]
+    enforced_by:
+      - data:philosophy.yaml#tracks.four_month_macro.phases.strength.week_templates
+      - data:philosophy.yaml#tracks.four_month_macro.phases.power_endurance.week_templates
+      - data:philosophy.yaml#tracks.four_month_macro.phases.job_specific.week_templates
+      - data:philosophy.yaml#tracks.four_month_macro.phases.maintenance.week_templates
+      - test:test_week_template.py::test_horsemen_runs_the_source_weeks_as_written
+  - id: R2
+    text: Six training days and a rest day; recovery days at no more than 65 % of max heart rate.
+    cites: [{source: horsemen_2008}]
+    enforced_by:
+      - data:archetypes/source/recovery/hm_recovery_walk.yaml#slots
+  - id: R3
+    text: Each day is a category, and the day's workout comes from that category's list of named workouts.
+    cites: [{source: horsemen_2008}]
+    enforced_by:
+      - data:frameworks/concurrent_training.yaml#categories
+      - test:test_week_template.py::test_a_regenerate_from_mid_track_carries_on_the_rotation
+  - id: R4
+    text: Every day opens with a warm-up from its list.
+    cites: [{source: horsemen_2008}]
+    enforced_by:
+      - data:frameworks/concurrent_training.yaml#warm_up_category
+  - id: R5
+    text: "Loads as written: a one-rep max worked up to on the day, percentages of it, fixed weights, multiples of bodyweight; no RPE and no deload."
+    cites: [{source: horsemen_2008}]
+    enforced_by:
+      - data:frameworks/concurrent_training.yaml#progression_model
+      - data:archetypes/source/power_explosive/hm_explosive_power_1rm_jerk.yaml#slots
+  - id: R6
+    text: "The source's own substitutes: no rope, ten pull-ups; no sled, jingle jangles; a kettlebell for a dumbbell and back."
+    cites: [{source: horsemen_2008}]
+    enforced_by:
+      - data:archetypes/source/circuit_short/hm_bad_bush.yaml#slots.rope_climb.exercise_filter.ordered
+      - test:test_week_template.py::test_horsemen_without_the_equipment_passes_workouts_over
+  - id: R7
+    text: '"Light, work on form" days.'
+    cites: [{source: horsemen_2008}]
+    enforced_by:
+      - data:philosophy.yaml#tracks.four_month_macro.phases.strength.week_templates
+  - id: R8
+    text: "The goals within four months: deadlift 2.5 × bodyweight, front squat 1.5 ×, bench 1.5 ×, press 1 ×, three miles under 20:00, 200 SSST snatches; strength read from the day's worked-up max."
+    cites: [{source: horsemen_2008}]
+    enforced_by:
+      - data:analytics.yaml#benchmarks.ssst_reps
+      - data:analytics.yaml#progress.strength
+  - id: R9
+    text: "The PT test's 800 m swim, the five-mile run, bodyweight bench reps and pull-ups with 25 lb are goals no session tests: entered by hand."
+    cites: [{source: horsemen_2008}]
+    enforced_by:
+      - data:analytics.yaml#benchmarks.swim_800m_minutes
+      - data:analytics.yaml#benchmarks.run_5mile_minutes
+      - data:analytics.yaml#benchmarks.bench_press_bodyweight_reps
+      - data:analytics.yaml#benchmarks.pull_ups_weighted_25lb_reps
+
+open:
+  - Workouts the source leaves undefined ("400 m Rob Shauls"); movements it names without defining (cauldron, corkscrew, arm haulers …) are read as noted in the catalog.
+  - No equipment id for an elliptical, a stair master, climbing, paddling or skiing.
+  - "Decided by the owner (2026-10-19): every workout is kept, each listing its equipment and passed over when the athlete lacks it; names with profanity or a slur are cleaned."
+
+inventions:
+  - id: I1
+    text: The GPP Circuits track and its archetypes (not in the source).
+    implemented_by:
+      - data:philosophy.yaml#tracks.gpp_circuits
+  - id: I2
+    text: "The PT test's placement: the macro's first and last hard job-specific days (the source never schedules it)."
+    implemented_by:
+      - data:philosophy.yaml#tracks.four_month_macro.phases.strength.tests
+      - data:philosophy.yaml#tracks.four_month_macro.phases.maintenance.tests
+
+currency:
+  four_month_macro: {entry: strength, rule: R8}
+  gpp_circuits: {entry: strength, rule: I1}
+
+excluded_tracks:
+  gpp_circuits: I1
+
+next: Decide GPP Circuits (I1) — rebuild it on the source's circuits, or drop it.

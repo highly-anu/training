@@ -1,0 +1,113 @@
+# BJJ — the machine half of docs/package-fidelity/bjj.md
+# (docs/schemas/fidelity.schema.json; docs/package-fidelity/README.md).
+# There is no single-author method: the package encodes what these sources share.
+shape: contract
+
+sources:
+  - id: strengthlog
+    kind: secondary
+    author: Andreas Abelsson (StrengthLog)
+    title: Strength Training for BJJ
+    where: https://www.strengthlog.com/strength-training-for-bjj/
+    published: '2025-01'
+    read: partial
+    accessed: '2026-10-21'
+    note: Frequency, volume, progression and deload passages, quoted.
+  - id: bjjee_mix
+    kind: secondary
+    author: Guillaume Huni (BJJEE)
+    title: "Your Training Mix: How to Find Your Optimum BJJ Training / Strength & Conditioning Weekly Ratio"
+    where: https://www.bjjee.com/articles/your-training-mix-how-to-find-your-optimum-bjj-training-strength-conditioning-weekly-ratio/
+    published: '2017-06-20'
+    read: partial
+    accessed: '2026-10-21'
+  - id: vitruve
+    kind: secondary
+    author: Iker Zubizarreta (Vitruve)
+    title: BJJ Strength and Conditioning Program
+    where: https://vitruve.fit/blog/bjj-strength-and-conditioning-program/
+    published: '2025-05-26'
+    read: partial
+    accessed: '2026-10-21'
+  - id: juggernaut_circuits
+    kind: secondary
+    author: Chad Wesley Smith (Juggernaut), on jiujitsu.com
+    title: Jiu Jitsu Conditioning Circuits
+    where: https://jiujitsu.com/blogs/jiujitsu/jiu-jitsu-conditioning-circuits
+    published: '2015-10-28'
+    read: partial
+    accessed: '2026-10-21'
+  - id: trainheroic_relentless
+    kind: secondary
+    title: Relentless Grappler team plan (TrainHeroic)
+    where: https://marketplace.trainheroic.com/workout-plan/team/relentless-grappler-team
+    read: unavailable
+    note: The page answered 404 on 2026-10-21; no rule rests on it.
+
+rules:
+  - id: R1
+    text: Mat time first; classes outnumber the strength and conditioning work at every week size.
+    cites:
+      - {source: vitruve, at: '"BJJ technique is priority number one"'}
+      - {source: bjjee_mix, at: '"Training BJJ 5 x a week, and having 2 strength & conditioning sessions"'}
+      - {source: strengthlog, at: '"Multiple weekly BJJ sessions already put a lot of strain on your body"'}
+    enforced_by:
+      - checks:mat_support/mat_support.modality_outnumbers
+      - data:training_contract.yaml#tracks.mat_support.modules.mat_class.exposures_by_days
+      - test:test_training_contract.py::test_bjj_mat_time_leads_the_week
+  - id: R2
+    text: Strength supports the mat — two or three sessions a week for most, two beside four or five BJJ sessions, one at peak.
+    cites: [{source: strengthlog, at: frequency}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.exposures_per_week
+      - data:training_contract.yaml#tracks.mat_support.modules.grip_endurance.exposures_by_days
+  - id: R3
+    text: Low strength volume — about three sets of three to six reps on the compound lifts.
+    cites: [{source: strengthlog, at: '"3 sets per exercise, 3–6 reps per set for compound exercises"'}, {source: vitruve, at: Phase 3 maintenance strength}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.blocks
+  - id: R4
+    text: "A deload week between the two six-week halves of a twelve-week strength block: 50–60 % of the weight, about ten reps, two sets."
+    cites: [{source: strengthlog, at: deload}]
+  - id: R5
+    text: "A competitor's conditioning: ten-minute rounds of 15–30-second efforts with sprints or animal movements between; shuttle runs of 30–40 m and partner drills for takedown entries in short bursts."
+    cites: [{source: juggernaut_circuits}, {source: vitruve, at: Phase 2 functional circuits}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.mat_support.modules.competition_conditioning
+      - test:test_training_contract.py::test_bjj_conditioning_is_optional_and_never_outnumbers_the_mat
+
+open:
+  - "Competition preparation: a camp's weeks and the taper (\"reducing volume about 1–2 weeks out\", Vitruve) are not modelled; the conditioning module is what a competitor adds in a normal week."
+  - How a class divides its minutes; the sources leave the class to the gym.
+
+inventions:
+  - id: I1
+    text: "The class's blocks and minutes (warm-up, drilling, positional, rolling) are the shape of a typical class, not the coach's plan."
+    implemented_by:
+      - data:training_contract.yaml#tracks.mat_support.modules.mat_class.blocks
+  - id: I2
+    text: Strength is prescribed by effort (an RPE target); the sources write reps and percentages of a one-rep max and add weight when the reps are made.
+    implemented_by:
+      - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.blocks
+  - id: I3
+    text: Every fourth week deloads the whole program, dropping live rolling and keeping the drilling; no source deloads the mat, and StrengthLog's strength deload (R4) comes after six weeks.
+    implemented_by:
+      - data:frameworks/bjj_performance.yaml#deload_protocol
+      - test:test_training_contract.py::test_bjj_deload_drops_rolling_and_keeps_drilling
+  - id: I4
+    text: Declared substitutes for an injured athlete (positional or drilling for rolling, inverted rows for pull-ups), and supporting blocks named when they are left out.
+    implemented_by:
+      - test:test_training_contract.py::test_bjj_substitutes_are_declared_and_supporting_blocks_say_when_they_go
+  - id: I5
+    text: "Up to four training days, one strength session beside the classes: the sources' two need five days."
+    implemented_by:
+      - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.exposures_per_week
+  - id: I6
+    text: Competition conditioning is offered from intermediate up; the sources write it for competitors.
+    implemented_by:
+      - data:training_contract.yaml#tracks.mat_support.modules.competition_conditioning.training_levels
+
+currency:
+  mat_support: {entry: mat_time, rule: R1}
+
+next: Decide the strength prescription (I2) and the deload (R4, I3) against StrengthLog; a competition camp if the owner wants one.
