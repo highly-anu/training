@@ -133,8 +133,9 @@ inventions:
       - data:training_contract.yaml#tracks.mat_support.modules.mat_class.blocks
       - test:test_training_contract.py::test_bjj_strength_runs_strengthlogs_cycle_and_the_mat_carries_on
   - id: I4
-    text: "Declared substitutes: positional work or drilling for rolling under an injury; inverted rows for pull-ups and the barbell row, Bulgarian split squats for the front squat, a dead hang for the plate pinch, a hollow hold for the plank. A lift with no substitute refuses, naming what it needs."
+    text: "Declared substitutes: positional work or drilling for rolling under an injury; inverted rows for pull-ups and the barbell row, Bulgarian split squats for the front squat, a dead hang for the plate pinch, a hollow hold for the plank. A lift an injury rules out with no substitute is left out and said, the rest of the workout kept (owner, 2026-10-21); a lift missing its equipment refuses, naming it."
     implemented_by:
+      - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.drop_when_injured
       - test:test_training_contract.py::test_bjj_substitutes_are_declared_and_refusals_name_the_way_out
   - id: I5
     text: "Up to four training days, one of the two workouts a week beside the classes, alternating week to week: StrengthLog's two need five days."

@@ -82,6 +82,9 @@ tracks:
       name: Strength
       archetype_id: grappling_sc
       modality: max_strength
+      # A lift an injury rules out is left out, the rest of the workout kept
+      # (owner, 2026-10-21; I4).
+      drop_when_injured: true
       training_levels:
       - novice
       - intermediate

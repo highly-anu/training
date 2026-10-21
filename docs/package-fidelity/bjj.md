@@ -71,8 +71,9 @@ None.
   and keeps the drilling (the owner's decision, 2026-10-21).
 - I4: declared substitutes — positional work or drilling for rolling under an injury,
   inverted rows for pull-ups and the barbell row, Bulgarian split squats for the front
-  squat, a dead hang for the plate pinch, a hollow hold for the plank. A lift with no
-  substitute refuses, naming what it needs.
+  squat, a dead hang for the plate pinch, a hollow hold for the plank. A lift an injury
+  rules out with no substitute is left out and said, the rest of the workout kept (the
+  owner's decision, 2026-10-21); a lift missing its equipment refuses, naming it.
 - I5: up to four training days, one of the two workouts a week, alternating week to
   week — StrengthLog's two need five days.
 - I6: competition conditioning is offered from intermediate up; the sources write it

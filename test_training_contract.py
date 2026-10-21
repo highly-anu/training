@@ -529,11 +529,18 @@ def test_bjj_substitutes_are_declared_and_refusals_name_the_way_out():
                            ('pinch', 'plate_pinch', 'dead_hang')):
         block = next(b for b in module['blocks'] if b['role'] == role)
         assert tc._choose(block, module, catalog, c, ({out}, set())) == sub, role
-    # StrengthLog's lifts are essential: an injury one has no substitute for
-    # refuses, naming it (the box jump under a knee flag, the presses under a shoulder's).
-    for flag in ('patellar_tendinopathy', 'shoulder_instability'):
-        hurt, _, _ = _bjj(weeks=1, injury_flags=[flag])
-        assert not hurt['weeks'], flag
+    # A lift an injury rules out, with no substitute, is left out and said; the
+    # rest of the workout runs (the owner's call, 2026-10-21).
+    hurt, g, c = _bjj(weeks=1, injury_flags=['shoulder_instability'])
+    tc.verify(hurt, g['training_contract'], c)
+    left = [line for line in hurt['compromises'] if 'your injury rules it out' in line]
+    assert all(any(name in line for line in left) for name in ('Bench Press', 'Overhead Press', 'Hanging Leg Raise')), left
+    lifts = {e['exercise']['id'] for ss in hurt['weeks'][0]['schedule'].values() for s in ss for e in s['exercises']
+             if e.get('exercise') and e['slot_role'].startswith('grappling_strength')}
+    assert 'trap_bar_deadlift' in lifts and not lifts & {'bench_press', 'overhead_press', 'hanging_leg_raise'}, lifts
+    # Rolling, positional work and drilling all ruled out leave no class: refused.
+    knee, _, _ = _bjj(weeks=1, injury_flags=['patellar_tendinopathy'])
+    assert not knee['weeks'] and 'mat_class' in knee['validation_errors'][0]['message']
     lumbar, _, _ = _bjj(weeks=1, injury_flags=['lumbar_disc'])
     assert not lumbar['weeks'] and 'none of' in lumbar['validation_errors'][0]['message']
 

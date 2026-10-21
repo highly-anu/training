@@ -37,6 +37,11 @@ against its own protocol's minutes, which need not equal the module's weekly
 ceiling (Pentathlon's practice sets stop at four minutes, the events run six), and
 it carries the protocol's hand switch for the watches.
 
+A module that is `drop_when_injured` leaves out a block whose every option the
+athlete's injuries rule out, and says so, instead of refusing (BJJ's StrengthLog lifts:
+the bench and presses go under a shoulder flag, the rest of the workout stays); missing
+equipment still refuses, naming the implement.
+
 An optional module may name modules it `never_with` shares a day: BJJ's
 competition conditioning joins a strength day with the minutes for it, never a
 class day.

@@ -623,6 +623,12 @@ def _ruled_out(ex: dict, constraints: dict, blocked: tuple | None) -> bool:
             or bool(set(ex.get('contraindicated_with') or []) & set(constraints.get('injury_flags') or [])))
 
 
+def _injured(ex: dict, constraints: dict, blocked: tuple | None) -> bool:
+    """Whether the athlete's injuries (or avoided movements) alone rule the
+    exercise out, whatever the equipment."""
+    return blocked is not None and _ruled_out(ex, {**constraints, 'equipment': list(ex.get('equipment') or [])}, blocked)
+
+
 def _choose(block: dict, module: dict, exercises: dict, constraints: dict, blocked: tuple | None) -> str:
     """The first declared option the athlete can do. With none, a block that
     declares alternatives refuses naming them all; a single-exercise block
@@ -830,6 +836,14 @@ def _module_rows(module, exercises, constraints, state, step, deload, blocked=No
             if left_out is not None:
                 left_out.append(f"{module['name']}: {exercises.get(block['exercise_id'], {}).get('name', block['exercise_id'])} "
                                 'left out — no option fits the equipment or injuries')
+            continue
+        if module.get('drop_when_injured') and all(
+                eid in exercises and _injured(exercises[eid], constraints, blocked) for eid in block_options(block)):
+            # The athlete's call (BJJ): a lift the injury rules out goes, the
+            # rest of the workout stays; missing equipment still refuses.
+            if left_out is not None:
+                left_out.append(f"{module['name']}: {exercises.get(block['exercise_id'], {}).get('name', block['exercise_id'])} "
+                                'left out — your injury rules it out')
             continue
         row = _assignment(block, module, exercises, constraints, state, step, deload, blocked)
         rows.append(row)
@@ -1412,6 +1426,10 @@ def verify(program: dict, contract: dict, constraints: dict) -> None:
                         light_seen[mid].add(record['forecast_step'])
                     blocks = [b for b in module_now['blocks']
                               if not (dropping and not b.get('standard') and _keep(b, expected[mid]) == 0)]
+                    if expected[mid].get('drop_when_injured') and (constraints.get('injury_flags')
+                                                                   or constraints.get('avoid_movements')):
+                        # A lift the injury rules out may be missing (_module_rows).
+                        blocks = [{**b, 'optional': True} for b in blocks]
                     if not _sequence_matches(actual, blocks):
                         raise ContractError('A module lost its fixed movement sequence.')
                     if expected[mid]['progression']['model'] == 'load_per_exposure':
