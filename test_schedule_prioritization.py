@@ -2,6 +2,10 @@
 """Test priority-based modality dropping and duration matching."""
 import json
 import sys
+
+import fixture_packages
+fixture_packages.use()
+
 from src.generator import generate
 from src import goals, loader
 from api import _normalize_schedule_constraints
@@ -22,10 +26,11 @@ constraints_limited = {
     'training_level': 'intermediate',
 }
 
-# A philosophy on the general scheduler: Wildman, CrossFit and Gym Jones, the
-# old choices, are a training contract and week templates now, which do not
-# exercise the priority tiers and duration matching tested here.
-phil_id = 'kelly_starrett'
+# A philosophy on the general scheduler: every shipped package runs as a
+# training contract or as week templates now, which do not exercise the
+# priority tiers and duration matching tested here, so it is the test fixture
+# (test_packages/block_fixture, staged by fixture_packages).
+phil_id = 'block_fixture'
 phil = loader.load_philosophy(phil_id)
 all_frameworks = loader.load_all_frameworks()
 
