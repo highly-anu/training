@@ -1,0 +1,88 @@
+id: atg_pro_tue
+name: Knee Ability Pro — Tuesday
+modality: mobility
+category: gpp_durability
+training_levels:
+- intermediate
+- advanced
+- elite
+duration_estimate_minutes: 45
+pool_only: true
+slots:
+- role: pigeon_push_up
+  slot_type: sets_reps
+  sets: 2
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - pigeon_push_up
+    ordered: true
+  notes: Pigeon push-up, 2 x 20.
+- role: pancake
+  slot_type: sets_reps
+  sets: 2
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - standing_pancake_pulse
+    ordered: true
+  notes: Standing pancake pulse, 2 x 20.
+- role: couch_stretch
+  slot_type: sets_reps
+  sets: 2
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - couch_stretch
+    ordered: true
+  notes: Couch stretch pulse, 2 x 20.
+- role: slant_toe_touch
+  slot_type: sets_reps
+  sets: 2
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - slant_toe_touch
+    ordered: true
+  notes: Slant toe touch, 2 x 20.
+- role: garhammer_raise
+  slot_type: sets_reps
+  sets: 2
+  reps: max
+  exercise_filter:
+    exercise_ids:
+    - garhammer_raise
+    ordered: true
+  notes: Garhammer raise, 2 x burnout.
+- role: row
+  slot_type: sets_reps
+  sets: 2
+  reps: max
+  exercise_filter:
+    exercise_ids:
+    - bodyweight_row
+    ordered: true
+  notes: Bodyweight row, 2 x burnout.
+- role: shoulder_press
+  slot_type: sets_reps
+  sets: 2
+  reps: 8
+  exercise_filter:
+    exercise_ids:
+    - atg_shoulder_press
+    ordered: true
+  notes: ATG shoulder press, 2 x 8.
+- role: ql
+  slot_type: sets_reps
+  sets: 2
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - ql_extension
+    ordered: true
+  notes: QL, 2 x 10.
+required_equipment: []
+sources:
+- 'Ben Patrick, ATG: Knee Ability Series 3 of 10 (2025-02-11)'
+notes: 'Flexibility pulses, then the trunk and upper body: Garhammer raises, rows, the ATG shoulder press
+  and QLs.'

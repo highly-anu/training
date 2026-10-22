@@ -15,6 +15,36 @@
 #   last_review: kind -> the date of the latest recorded review (S6)
 
 packages:
+  atg:
+    status: audited
+    shape: templates
+    dossier: docs/package-fidelity/atg.md
+    sources_kind: primary
+    debt: []
+    currency:
+      zero: plan_completion
+      program: plan_completion
+      knee_ability_pro: plan_completion
+    source_tests:
+    - test_week_template.py::test_atg_runs_its_programs_as_written
+    inventions:
+    - 'I1: With no track named, the level picks one: novice ATG Zero (where Patrick starts everyone),
+      intermediate Program #2, advanced and elite Knee Ability Pro. The sources route by age and goal,
+      not level.'
+    - 'I2: Knee Ability Pro is for intermediate athletes and up; Zero and Program'
+    - 'I3: Zero''s three days fall on Monday, Wednesday and Friday, Program #2''s two on Monday and Thursday:
+      the sources ask only for days between.'
+    - 'I4: Four-week blocks, repeated: the sources give no length.'
+    - 'I5: Readings: yards in metres (50 yd as 46 m, 100 as 91), each way as a set; "burnout" and "exhaustion"
+      as max reps, the L-sit''s burnout as a 30-second hold; "up to" as the top of the range; a slant
+      written as a box for the step-ups; each workout''s minutes estimated.'
+    - 'I6: Names merged: ATG Zero''s piriformis push-up is the pigeon push-up; the wall tibialis raise
+      and Knee Ability Pro''s tibialis raise are one exercise; Zero''s external rotation takes any light
+      weight, so it needs no equipment.'
+    - 'I7: Each track needs its own training days (Zero 3, Program #2 2, Knee Ability Pro 4); there is
+      no drop order for fewer.'
+    last_review:
+      output_vs_dossier: '2026-10-22'
   bjj:
     status: audited
     shape: contract
@@ -256,10 +286,6 @@ packages:
     - 'I5: The repeat after a layoff (R11) is recommended in every swing session''s note, never enforced:
       the athlete decides and takes responsibility (owner, 2026-10-21).'
     next: The hand-to-hand option needs an alternating block; decide the two Codex tracks (I2, I3).
-  atg:
-    status: not_started
-    shape: scheduler
-    next: Assessment gating — measurable range and regression gates.
   ido_portal:
     status: not_started
     shape: scheduler

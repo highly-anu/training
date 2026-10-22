@@ -1,0 +1,51 @@
+# ATG — the sources' own weeks (docs/schemas/source_weeks.schema.json).
+# Ben Patrick's published workouts, read 2026-10-22: each week the workouts
+# it names, on the days it names them (Zero's and Program #2's days between
+# are the sources' "days in between"; their weekdays are I3).
+- id: zero_week
+  rule: R1
+  track: zero
+  note: >
+    ATG Zero (ATG newsletter, 2023-08-06): the ten movements three days a week,
+    no equipment.
+  profile: {days_per_week: 3, session_time_minutes: 30, training_level: novice, equipment: []}
+  weeks:
+    - days:
+        - {archetype: atg_zero}
+        - rest
+        - {archetype: atg_zero}
+        - rest
+        - {archetype: atg_zero}
+        - rest
+        - rest
+- id: program_week
+  rule: R2
+  track: program
+  note: >
+    ATG Program #2: Workout 1 and Workout 2, each once a week.
+  profile: {days_per_week: 2, session_time_minutes: 60, training_level: intermediate, equipment: all}
+  weeks:
+    - days:
+        - {archetype: atg_p2_w1}
+        - rest
+        - rest
+        - {archetype: atg_p2_w2}
+        - rest
+        - rest
+        - rest
+- id: pro_week
+  rule: R3
+  track: knee_ability_pro
+  note: >
+    Knee Ability Pro (Knee Ability Series 3 of 10, 2025-02-11): Monday,
+    Tuesday, Thursday, Friday.
+  profile: {days_per_week: 4, session_time_minutes: 60, training_level: advanced, equipment: all}
+  weeks:
+    - days:
+        - {archetype: atg_pro_mon}
+        - {archetype: atg_pro_tue}
+        - rest
+        - {archetype: atg_pro_thu}
+        - {archetype: atg_pro_fri}
+        - rest
+        - rest

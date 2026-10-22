@@ -27,14 +27,6 @@ injury_flags:
       - depth_jump
       - broad_jump
     modified_exercises:
-      - instead_of: atg_split_squat
-        use: quad_set
-      - instead_of: bulgarian_split_squat_light
-        use: straight_leg_raise
-      - instead_of: step_up_low
-        use: heel_slide
-      - instead_of: leg_press_single_light
-        use: terminal_knee_extension_band
       - instead_of: run_easy
         use: bike_easy
       - instead_of: run_interval
@@ -418,8 +410,6 @@ injury_flags:
         use: wall_squat
       - instead_of: front_squat
         use: wall_squat
-      - instead_of: atg_split_squat
-        use: step_up_low
     training_phase_forced: rehab
     notes: >
       Patellar tendon overuse pathology — typically aggravated by eccentric knee

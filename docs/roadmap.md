@@ -799,9 +799,15 @@ badly the default misrepresents the method and whether its policies exist:
    strength/EMOM/complex sessions are gone; the old package is the modality scheduler's
    test fixture (`test_packages/block_fixture`). Left: Operator Fitness II (the copy ends
    at day 17).
-8. *ATG, Kelly Starrett, Ido Portal* — after assessment gating, once their
-   advancement markers are sourced. Their `requires` name exercises their packages do
-   not have (ATG `tire_drag_forward`; Ido `push_up`, `wrist_prep`, `dip_ring`, `sit_up`,
+8. *ATG, Kelly Starrett, Ido Portal* — audited ahead of assessment gating (the owner's
+   call, 2026-10-22), each recording the gating as open. *ATG* — **done 2026-10-22**:
+   Ben Patrick's own published workouts as week templates of one-workout pools — ATG
+   Zero (ten movements, no equipment, three days), Program #2 (two workouts, once each a
+   week) and his Knee Ability Pro week (four days); every movement at its pain-free step
+   of its ladder, which the engine does not track (Patrick writes no pass marks). The
+   Range → Load → Maintain phases, their deload and the post-operative rehab ladder from
+   the design document are gone. Ido's `requires` name exercises its package does
+   not have (`push_up`, `wrist_prep`, `dip_ring`, `sit_up`,
    `squat_air`, `single_leg_balance`, `handstand_wall_drill`), which locks those
    movements below elite. Horsemen had five such (`kb_clean_single`, `kb_halo`,
    `sb_clean`, `sb_squat`), which kept its snatch test, snatch ladder and 12-minute

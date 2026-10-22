@@ -1,0 +1,81 @@
+id: atg_pro_mon
+name: Knee Ability Pro — Monday
+modality: durability
+category: gpp_durability
+training_levels:
+- intermediate
+- advanced
+- elite
+duration_estimate_minutes: 60
+pool_only: true
+slots:
+- role: sled
+  slot_type: distance
+  sets: 2
+  distance_m: 46
+  exercise_filter:
+    exercise_ids:
+    - sled_forward_backward
+    - backward_walk
+    ordered: true
+  notes: 'Heavy: 50 yards backward, then 50 forward (46 m each way). No sled: a resisted treadmill or
+    walking backward — "You don''t have to sled!"'
+- role: tibialis_raise
+  slot_type: sets_reps
+  sets: 2
+  reps: 15
+  exercise_filter:
+    exercise_ids:
+    - tibialis_raise
+    ordered: true
+  notes: Tibialis raise, 2 x up to 15.
+- role: calf_raise
+  slot_type: sets_reps
+  sets: 2
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - single_leg_calf_raise
+    ordered: true
+  notes: Single-leg standing calf raise, 2 x up to 10.
+- role: seated_calf_raise
+  slot_type: sets_reps
+  sets: 2
+  reps: 15
+  exercise_filter:
+    exercise_ids:
+    - seated_calf_raise
+    ordered: true
+  notes: Seated calf raise, 2 x up to 15.
+- role: squat
+  slot_type: sets_reps
+  sets: 10
+  reps: 1
+  exercise_filter:
+    exercise_ids:
+    - low_slow_squat
+    ordered: true
+  notes: Low and slow squat, 10 x 1 — 10 seconds down on each rep.
+- role: step_up
+  slot_type: sets_reps
+  sets: 3
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - reverse_slant_step_up
+    ordered: true
+  notes: Reverse slant step-up, 3 x 20.
+- role: nordic
+  slot_type: sets_reps
+  sets: 3
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - nordic
+    ordered: true
+  notes: Eccentric Nordic, 3 x 5.
+required_equipment: []
+sources:
+- 'Ben Patrick, ATG: Knee Ability Series 3 of 10 (2025-02-11)'
+notes: 'Heavy sled, the lower legs, then the bottom of the squat: low and slow squats, reverse slant step-ups
+  and eccentric Nordics.'

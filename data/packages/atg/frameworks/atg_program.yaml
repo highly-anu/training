@@ -1,0 +1,56 @@
+id: atg_program
+name: "ATG Program #2 (Ben Patrick)"
+source_philosophy: atg
+
+goals_served:
+  - durability
+  - mobility
+
+sessions_per_week:
+  durability: 2
+modality_priority:
+  committed: [durability]
+  core: []
+  supplementary: []
+
+prescription_policy: framework
+progression_model: as_written
+
+applicable_when:
+  training_level:
+    - novice
+    - intermediate
+    - advanced
+    - elite
+  days_per_week_min: 2
+  days_per_week_max: 7
+
+# No deload_protocol (see atg_zero.yaml).
+
+categories:
+  workout_1:
+    name: "Workout 1"
+    modality: durability
+    archetypes:
+      - atg_p2_w1
+  workout_2:
+    name: "Workout 2"
+    modality: durability
+    archetypes:
+      - atg_p2_w2
+
+sources:
+  - "Ben Patrick, ATG Program #1 & 2 (ATG Online articles)"
+
+notes: >
+  The second program Patrick teaches: two workouts, each once a week —
+  "3 days of sport and 2 days of ATG, not 5 days of sport."
+
+expectations:
+  min_weeks: 4
+  ideal_weeks: 12
+  min_days_per_week: 2
+  ideal_days_per_week: 2
+  min_session_minutes: 60
+  ideal_session_minutes: 60
+  supports_split_days: false

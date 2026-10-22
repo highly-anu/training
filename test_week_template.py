@@ -240,6 +240,43 @@ def test_gym_jones_runs_its_two_months_as_written():
     assert not p['weeks'], 'Operator Fitness is not written for the newly training'
 
 
+def test_atg_runs_its_programs_as_written():
+    # R1-R3: each program's workouts on their days, every week the same; R1:
+    # Zero needs no equipment; R4, R5: the sled leads, the upper body comes
+    # last, and walking backward stands in for the sled; R7: no deload.
+    from src import goals, loader
+    from src.generator import generate
+    from src.package_eval import ALL_EQUIPMENT
+    frameworks = list(loader.load_all_frameworks().values())
+
+    def block(level, track, days, equipment=ALL_EQUIPMENT, minutes=60):
+        goal = goals.philosophy_to_goal('atg', frameworks, track, level)
+        c = dict(equipment=list(equipment), days_per_week=days, session_time_minutes=minutes, training_level=level)
+        return generate(None, c, num_weeks=4, goal_dict=goal, output_format='dict'), goal
+
+    def week_ids(w):
+        return {d: [s['archetype']['id'] for s in w['schedule'].get(d, [])] for d in range(1, 8) if w['schedule'].get(d)}
+
+    for level, track, days, equipment, want in (
+            ('novice', None, 3, (), {1: ['atg_zero'], 3: ['atg_zero'], 5: ['atg_zero']}),
+            ('intermediate', None, 2, ALL_EQUIPMENT, {1: ['atg_p2_w1'], 4: ['atg_p2_w2']}),
+            ('advanced', None, 4, ALL_EQUIPMENT,
+             {1: ['atg_pro_mon'], 2: ['atg_pro_tue'], 4: ['atg_pro_thu'], 5: ['atg_pro_fri']})):
+        p, goal = block(level, track, days, equipment)
+        assert len(p['weeks']) == 4, (goal['track']['id'], p.get('validation'))
+        assert all(week_ids(w) == want for w in p['weeks']), [week_ids(w) for w in p['weeks']]
+        assert not any(w['is_deload'] for w in p['weeks'])
+    p, _ = block('intermediate', 'program', 2)
+    roles = [ea['slot']['role'] for ea in p['weeks'][0]['schedule'][1][0]['exercises']]
+    assert roles[0] == 'sled' and roles[-1] == 'shoulder_press', roles
+    sled = p['weeks'][0]['schedule'][1][0]['exercises'][0]
+    assert sled['exercise']['id'] == 'sled_forward_backward', sled['exercise']['id']
+    p, _ = block('intermediate', 'program', 2, [e for e in ALL_EQUIPMENT if e != 'sled'])
+    assert p['weeks'][0]['schedule'][1][0]['exercises'][0]['exercise']['id'] == 'backward_walk'
+    p, _ = block('novice', 'knee_ability_pro', 4)
+    assert not p['weeks'], 'Knee Ability Pro is written for trained athletes'
+
+
 if __name__ == '__main__':
     failed = 0
     for name, fn in list(globals().items()):

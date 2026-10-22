@@ -1,94 +1,121 @@
 id: atg
 name: "ATG / Knees Over Toes Guy (Ben Patrick)"
 core_principles:
-  - posterior_chain_health_is_foundation_of_durability
-  - reverse_movements_accelerate_recovery_and_joint_health
-  - progressive_range_of_motion_is_as_important_as_progressive_load
-  - full_range_terminal_extension_work_is_key_to_knee_health
-  - knee_health_is_achievable_through_targeted_progressive_loading
-  - pain_free_range_before_loaded_range
-  - tibialis_and_soleus_strength_underpin_lower_body_durability
+  - train_from_the_ground_up
+  - backward_before_forward
+  - every_exercise_scales_to_a_pain_free_level
+  - never_work_through_a_level_or_range_that_does_not_feel_good
+  - knee_over_toes_progressively
+  - range_first_then_load
+  - the_bottom_of_the_squat_is_trained_low_and_slow
+  - balanced_ability
 scope:
   - durability
   - mobility
-  - rehab
 bias:
-  - rehab
   - durability
   - mobility
 avoid_with: []
-required_equipment:
-  - sled
-  - resistance_band
+required_equipment: []
 intensity_model: autoregulation_rpe
 progression_philosophy: range_based
 sources:
-  - "ATG (Athletic Truth Group) — Ben Patrick published methodology and programs"
+  - "Ben Patrick, ATG Zero (ATG newsletter, 2023-08-06)"
+  - "Ben Patrick, ATG Program #1 & 2; Minimalistic Full-Body Program; The ATG Longevity System (ATG Online articles)"
+  - "Ben Patrick, ATG: Knee Ability Series 1-4 (2025)"
 notes: >
-  Core movement vehicles: backward sled drag (reverse sled), Nordic curl, reverse
-  tib raises, tibialis raises, calf raises (full ROM), split squats progressing
-  to ATG split squat, and step-ups. Reverse sled is considered the foundational
-  entry movement — zero eccentric load, builds knee tolerance from scratch. Range
-  of motion progression precedes load progression: athlete must demonstrate pain-free
-  full ROM before adding resistance. Progressive range is the primary adaptation
-  target, not 1RM. Sled (for reverse dragging) and resistance bands (tibialis work)
-  are the minimum viable equipment. The system is compatible with concurrent
-  strength training but mandates its own lower-body prep work regardless of other
-  modalities in the program.
+  Ben Patrick's "pain-free ability": a fixed workout trained from the ground up
+  — backward and forward on the sled, the tibialis and calves, the knee over
+  the toes (step-ups, ATG split squats, the bottom of the squat), the
+  hamstrings and hips, then the core, and the upper body last ("All this
+  'earns' the right to train the upper body!"). Two or three days a week, the
+  days between for other exercise or sport. Every exercise scales to
+  remarkably gentle levels — by assistance, height, slope, range — and the
+  athlete works at the level that is pain-free: "Never work through a level or
+  range that doesn't feel good for you." No phases, no deloads, no tests: the
+  same workouts, each movement progressed as ability grows.
 
 # Every modality this philosophy's frameworks prescribe has an archetype in
 # this package; generation never needs to reach into another philosophy.
 self_contained: true
 
-# One track: range before load, then maintenance. Phase text is drafted from
-# this package's own notes and framework notes — review before relying on it.
-primary_track_id: joint_health
+# Three of Patrick's published programs, each a week the source writes day by
+# day (docs/package-fidelity/atg.md). With no track named, the level picks one
+# (I1): Zero is where he starts everyone.
+primary_track_id: zero
+track_for_level:
+  novice: zero
+  intermediate: program
+  advanced: knee_ability_pro
+  elite: knee_ability_pro
 tracks:
-  - id: joint_health
-    name: "ATG Joint Health"
+  - id: zero
+    name: "ATG Zero"
     description: >
-      Ben Patrick's progression: earn pain-free full range first, then load
-      it, then keep it.
+      Ten movements, no equipment, three days a week: backward walking,
+      tibialis and calf raises, the ATG split squat, the seated good morning,
+      hip and hamstring work, the couch stretch and two for the shoulders.
     phases:
-      - id: range
-        name: "Range"
+      - id: zero
+        name: "Zero"
         kind: base
-        weeks: 8
-        framework_id: atg_joint_health
-        focus: "Pain-free full range"
-        description: >
-          Start from zero eccentric load: the reverse sled, tibialis raises
-          and full-range calf work rebuild knee tolerance. Split squats and
-          step-ups progress toward the ATG split squat only as range comes
-          back pain-free — range is the target, not load.
-        adaptations:
-          - "Knee tolerance"
-          - "Pain-free range of motion"
-        intensity: "Unloaded to light"
-      - id: load
-        name: "Load"
-        kind: build
-        weeks: 8
-        framework_id: atg_joint_health
-        focus: "Resistance through the earned range"
-        description: >
-          Once full range is pain-free, resistance is added through it:
-          loaded ATG split squats, Nordic curls and step-ups, with the sled and
-          tibialis work kept as the entry to every session.
-        adaptations:
-          - "Strength at end range"
-          - "Posterior-chain resilience"
-        intensity: "Moderate, range first"
-      - id: maintain
-        name: "Maintain"
-        kind: maintenance
         weeks: 4
         repeatable: true
-        framework_id: atg_joint_health
-        focus: "Keep the lower-body prep"
+        framework_id: atg_zero
+        focus: "Pain-free ability from zero"
         description: >
-          The lower-body prep stays in place alongside any other training,
-          keeping the range and the joint tolerance that were built.
+          The same ten movements three days a week, each at the level that
+          feels good, with other exercise or sport on the days between.
         adaptations:
-          - "Retained range and tolerance"
-        intensity: "Low"
+          - "Knee, ankle and hip ability"
+          - "Lower-leg strength"
+        intensity: "At your pain-free level"
+        week_templates:
+          - [zero, rest, zero, rest, zero, rest, rest]
+  - id: program
+    name: "ATG Program #2"
+    description: >
+      Two full-body workouts, each once a week: the sled, the lower legs, the
+      knee and hamstrings, the hips, the L-sit and the upper body.
+    phases:
+      - id: program
+        name: "Program #2"
+        kind: base
+        weeks: 4
+        repeatable: true
+        framework_id: atg_program
+        focus: "Two days of ATG beside your sport"
+        description: >
+          Workout 1 and Workout 2 once each a week — "3 days of sport and 2
+          days of ATG" — every movement at its pain-free level.
+        adaptations:
+          - "Knee and lower-leg ability"
+          - "Flexibility through full range"
+          - "Upper-body balance"
+        intensity: "At your pain-free level"
+        week_templates:
+          - [workout_1, rest, rest, workout_2, rest, rest, rest]
+  - id: knee_ability_pro
+    name: "Knee Ability Pro"
+    description: >
+      Patrick's four-day week for jumping higher while making the knees more
+      injury-resistant: heavy sled and the bottom of the squat twice, then
+      flexibility and the upper body twice.
+    phases:
+      - id: knee_ability_pro
+        name: "Knee Ability Pro"
+        kind: base
+        weeks: 4
+        repeatable: true
+        framework_id: knee_ability_pro
+        focus: "Maximum intent at the bottom"
+        description: >
+          Monday and Thursday the heavy sled, the lower legs and the last
+          quarter of the squat; Tuesday and Friday flexibility pulses and the
+          upper body.
+        adaptations:
+          - "Strength at the bottom of the squat"
+          - "Knee resilience"
+        intensity: "Heavy sled; low and slow"
+        week_templates:
+          - [pro_monday, pro_tuesday, rest, pro_thursday, pro_friday, rest, rest]

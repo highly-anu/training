@@ -1,0 +1,69 @@
+id: knee_ability_pro
+name: "Knee Ability Pro (Ben Patrick)"
+source_philosophy: atg
+
+goals_served:
+  - durability
+  - mobility
+
+sessions_per_week:
+  durability: 2
+  mobility: 2
+modality_priority:
+  committed: [durability]
+  core: [mobility]
+  supplementary: []
+
+prescription_policy: framework
+progression_model: as_written
+
+applicable_when:
+  training_level:
+    - intermediate
+    - advanced
+    - elite
+  days_per_week_min: 4
+  days_per_week_max: 7
+
+# No deload_protocol (see atg_zero.yaml).
+
+categories:
+  pro_monday:
+    name: "Monday"
+    modality: durability
+    archetypes:
+      - atg_pro_mon
+  pro_tuesday:
+    name: "Tuesday"
+    modality: mobility
+    archetypes:
+      - atg_pro_tue
+  pro_thursday:
+    name: "Thursday"
+    modality: durability
+    archetypes:
+      - atg_pro_thu
+  pro_friday:
+    name: "Friday"
+    modality: mobility
+    archetypes:
+      - atg_pro_fri
+
+sources:
+  - "Ben Patrick, ATG: Knee Ability Series 3 of 10 (2025-02-11)"
+
+notes: >
+  Patrick's Knee Ability Pro week, for his highest jump while making the knees
+  more injury-resistant: "maximum intent at the TOP (the jumping)" balanced by
+  "maximum intent at the BOTTOM (the squat protocol)". Monday and Thursday the
+  sled, lower legs and the bottom of the squat; Tuesday and Friday flexibility
+  and the upper body.
+
+expectations:
+  min_weeks: 4
+  ideal_weeks: 12
+  min_days_per_week: 4
+  ideal_days_per_week: 4
+  min_session_minutes: 60
+  ideal_session_minutes: 60
+  supports_split_days: false
