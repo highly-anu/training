@@ -2,7 +2,6 @@ id: kb_getup_mobility_practice
 name: Get-Up and Loaded Mobility Practice
 modality: movement_skill
 category: kettlebell
-icon: kettlebell.getup
 training_levels:
 - intermediate
 - advanced

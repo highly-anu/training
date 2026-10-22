@@ -29,25 +29,16 @@ def ea(eid, role, slot_type='emom', **extra):
 def test_vocabulary() -> None:
     print('the vocabulary')
     ids = session_icon.icon_ids()
-    check('lists the pilot icons', {'kettlebell', 'kettlebell.swing', 'kettlebell.snatch',
-                                    'kettlebell.clean.press', 'kettlebell.getup',
-                                    'kettlebell.squat'} <= ids, str(ids))
+    check('lists the kettlebell', 'kettlebell' in ids, str(ids))
     vocab = session_icon.vocabulary()
     check('every fallback is an icon', all(i['fallback'] in ids for i in vocab['icons'] if i['fallback']))
-    check('every category default is an icon', set(vocab['category_defaults'].values()) <= ids)
+    check('every category default is an icon',
+          set(vocab['exercise_category_defaults'].values()) | set(vocab['archetype_category_defaults'].values()) <= ids)
 
 
 def test_resolution() -> None:
-    print('resolution order')
-    # 1. The archetype's own icon beats its lead exercise (the novice technique
-    #    session leads with the deadlift but is the get-up's).
-    technique = {'modality': 'movement_skill', 'archetype': {'id': 'kb_movement_skill_session'},
-                 'exercises': [ea('wk_kb_halo', 'prep', 'skill_practice'),
-                               ea('kb_deadlift', 'hinge', 'skill_practice'),
-                               ea('wk_kb_tgu', 'getup', 'skill_practice')]}
-    check('archetype icon first', session_icon.session_icon(technique) == 'kettlebell.getup',
-          str(session_icon.session_icon(technique)))
-    # 2. A contract day of two modules is led by the first module.
+    print('resolution: the main exercise decides')
+    # A contract day of two modules is led by the first module's first exercise.
     day = {'modality': 'power', 'archetype': {'id': 'kb_ballistic_session'},
            'modules': [{'id': 'swing', 'archetype_id': 'kb_ballistic_session',
                         'exercise_ids': ['wk_kb_swing_two_hand']},
@@ -55,31 +46,31 @@ def test_resolution() -> None:
                         'exercise_ids': ['wk_deck_squat']}],
            'exercises': [ea('kb_deadlift', 'swing_prep'), ea('wk_kb_swing_two_hand', 'swing_main'),
                          ea('wk_kb_halo', 'swing_recovery'), ea('wk_deck_squat', 'deck_squat_squat')]}
-    check('Swing + Deck Squat → swing', session_icon.session_icon(day) == 'kettlebell.swing')
-    press = {'modality': 'movement_skill', 'archetype': {'id': 'kb_clean_press_practice'},
-             'modules': [{'id': 'clean_press', 'archetype_id': 'kb_clean_press_practice',
-                          'exercise_ids': ['wk_kb_clean_single', 'wk_kb_press_single']},
-                         {'id': 'getup', 'archetype_id': 'kb_getup_mobility_practice',
-                          'exercise_ids': ['wk_kb_tgu']}]}
-    check('Clean and Press + Get-Up → clean.press', session_icon.session_icon(press) == 'kettlebell.clean.press')
-    # 3. No archetype icon: the lead exercise's, skipping preparation.
-    unknown = {'modality': 'power', 'archetype': {'id': 'not_an_archetype', 'category': 'conditioning'},
-               'exercises': [ea('wk_kb_halo', 'warm_up'), ea('wk_kb_snatch', 'main')]}
-    check('lead exercise past the warm-up', session_icon.session_icon(unknown) == 'kettlebell.snatch',
-          str(session_icon.session_icon(unknown)))
+    check('Swing + Deck Squat → kettlebell', session_icon.session_icon(day) == 'kettlebell')
+    # No modules: the first slot that is not preparation.
+    after_warmup = {'modality': 'strength_endurance', 'archetype': {'id': 'not_an_archetype'},
+                    'exercises': [ea('back_squat', 'warm_up'), ea('wk_kb_snatch', 'main')]}
+    check('lead exercise past the warm-up', session_icon.session_icon(after_warmup) == 'kettlebell',
+          str(session_icon.session_icon(after_warmup)))
     camel = {'modality': 'power', 'archetype': {'id': 'not_an_archetype'},
-             'exercises': [{'exercise': {'id': 'wk_kb_halo'}, 'slotRole': 'prep'},
+             'exercises': [{'exercise': {'id': 'back_squat'}, 'slotRole': 'prep'},
                            {'exercise': {'id': 'wk_kb_squat_goblet'}, 'slotRole': 'main'}]}
-    check('camelCase rows (iOS saves)', session_icon.session_icon(camel) == 'kettlebell.squat')
-    # 4. The category's default, then nothing.
-    cat = {'modality': 'power', 'archetype': {'id': 'not_an_archetype', 'category': 'kettlebell'},
-           'exercises': [ea('not_an_exercise', 'main')]}
-    check('category default', session_icon.session_icon(cat) == 'kettlebell')
+    check('camelCase rows (iOS saves)', session_icon.session_icon(camel) == 'kettlebell')
+    # A kettlebell warm-up before a barbell lift is not a kettlebell session,
+    # whatever the archetype's category.
+    barbell = {'modality': 'max_strength', 'archetype': {'id': 'not_an_archetype', 'category': 'kettlebell'},
+               'exercises': [ea('wk_kb_halo', 'warm_up'), ea('back_squat', 'main', 'sets_reps')]}
+    check('barbell main lift → no icon', session_icon.session_icon(barbell) is None,
+          str(session_icon.session_icon(barbell)))
+    # No exercise to read: the archetype's category.
+    empty = {'modality': 'power', 'archetype': {'id': 'not_an_archetype', 'category': 'kettlebell'},
+             'exercises': []}
+    check('no exercises → archetype category', session_icon.session_icon(empty) == 'kettlebell')
     plain = {'modality': 'aerobic_base', 'archetype': {'id': 'not_an_archetype', 'category': 'conditioning'},
-             'exercises': [ea('not_an_exercise', 'main')]}
+             'exercises': []}
     check('none → the client draws the modality', session_icon.session_icon(plain) is None)
     check('archetype id alone (history rows)',
-          session_icon.for_archetype('kb_snatch_practice') == 'kettlebell.snatch'
+          session_icon.for_archetype('kb_snatch_practice') == 'kettlebell'
           and session_icon.for_archetype(None) is None)
 
 
@@ -89,7 +80,7 @@ def test_with_icons_and_strip() -> None:
         {'modality': 'power', 'archetype': {'id': 'kb_snatch_practice'}, 'icon': 'stale', 'exercises': []}],
         'Tuesday': []}}]
     out = session_icon.with_icons(weeks)
-    check('with_icons replaces a stale icon', out[0]['schedule']['Monday'][0]['icon'] == 'kettlebell.snatch')
+    check('with_icons replaces a stale icon', out[0]['schedule']['Monday'][0]['icon'] == 'kettlebell')
     check('with_icons leaves its input alone', weeks[0]['schedule']['Monday'][0]['icon'] == 'stale')
     stripped = session_icon.strip({'weeks': out})
     check('strip removes every icon', 'icon' not in stripped['weeks'][0]['schedule']['Monday'][0])
@@ -121,14 +112,20 @@ def test_api() -> None:
     data = resp.get_json() or {}
     icons = _icons(data)
     check('General Practice generates', resp.status_code == 200 and icons, f"{resp.status_code}")
-    check('every General Practice session has its icon',
-          icons and all(i for _, i in icons), str(icons))
-    check('intermediate days: swing and clean & press',
-          {i for _, i in icons} == {'kettlebell.swing', 'kettlebell.clean.press'}, str(set(icons)))
+    check('every General Practice session is a kettlebell session',
+          icons and {i for _, i in icons} == {'kettlebell'}, str(set(icons)))
+    check('in both its modalities', {s.get('modality') for w in data['weeks']
+                                     for ss in w['schedule'].values() for s in ss} == {'power', 'movement_skill'})
     novice = client.post('/api/programs/generate', json={
         **GP_BODY, 'constraints': {**GP_BODY['constraints'], 'training_level': 'novice'}}).get_json() or {}
-    check('a novice technique day takes the get-up',
-          ('kb_movement_skill_session', 'kettlebell.getup') in _icons(novice), str(set(_icons(novice))))
+    check('a novice technique day too',
+          ('kb_movement_skill_session', 'kettlebell') in _icons(novice), str(set(_icons(novice))))
+    barbell = client.post('/api/programs/generate', json={
+        'philosophy_id': 'starting_strength', 'num_weeks': 1,
+        'constraints': {'days_per_week': 3, 'session_time_minutes': 75, 'training_level': 'novice',
+                        'equipment': ['barbell', 'rack', 'plates', 'bench'], 'injury_flags': []}}).get_json() or {}
+    check('a barbell program has none', _icons(barbell) and not any(i for _, i in _icons(barbell)),
+          str(_icons(barbell)[:3]))
 
     stored: dict = {}
     real = {k: getattr(db, k) for k in ('_get_pg_conn',)}

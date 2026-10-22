@@ -2,7 +2,6 @@ id: kb_clean_press_practice
 name: Single-Bell Clean and Press Practice
 modality: movement_skill
 category: kettlebell
-icon: kettlebell.clean.press
 duration_estimate_minutes: 15
 required_equipment:
 - kettlebell

@@ -2,7 +2,6 @@ id: kb_movement_skill_session
 name: Hinge and Get-Up Technique
 modality: movement_skill
 category: kettlebell
-icon: kettlebell.getup
 duration_estimate_minutes: 14
 required_equipment:
 - kettlebell

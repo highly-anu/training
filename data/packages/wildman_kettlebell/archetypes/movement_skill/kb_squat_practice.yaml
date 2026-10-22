@@ -2,7 +2,6 @@ id: kb_squat_practice
 name: Deck Squat Practice
 modality: movement_skill
 category: kettlebell
-icon: kettlebell.squat
 training_levels:
 - novice
 - intermediate

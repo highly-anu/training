@@ -4,11 +4,14 @@ One icon per session, for its main exercise, drawn the same on every client
 and tinted with the session's modality colour (data/commons/workout_icons.json).
 The first that names one wins:
 
-  1. the lead archetype's `icon` — a contract day of several modules is led by
-     its first, whose archetype and modality the session already carries;
-  2. the lead exercise's `icon` — the first module's first exercise, else the
-     first slot that is not preparation (analytics' PREPARATORY_ROLE_GLOBS);
-  3. the archetype category's default (`category_defaults`).
+  1. the lead archetype's own `icon` — a contract day of several modules is led
+     by its first, whose archetype and modality the session already carries;
+  2. the lead exercise's own `icon`, else its category's default
+     (`exercise_category_defaults`: a kettlebell exercise → `kettlebell`). The
+     lead exercise is the first module's first, else the first slot that is
+     not preparation (analytics' PREPARATORY_ROLE_GLOBS) or recovery;
+  3. only when there is no exercise to read, the archetype category's default
+     (`archetype_category_defaults`).
 
 None of them → no icon, and each client draws its modality icon as before.
 
@@ -48,39 +51,59 @@ def _archetypes() -> dict:
 
 
 @lru_cache(maxsize=1)
-def _exercise_icons() -> dict:
-    """exercise id → icon; any package's copy that names one (sorted order)."""
-    _, by_package = loader.load_all_exercises()
-    out: dict = {}
+def _exercises() -> dict:
+    """exercise id → (icon, category); the library's structural copy, with
+    any package's `icon` for that id (sorted order)."""
+    index, by_package = loader.load_all_exercises()
+    icons: dict = {}
     for pkg in sorted(by_package):
         for ex_id, ex in by_package[pkg].items():
-            if ex.get('icon') and ex_id not in out:
-                out[ex_id] = ex['icon']
-    return out
+            if ex.get('icon') and ex_id not in icons:
+                icons[ex_id] = ex['icon']
+    return {ex_id: (icons.get(ex_id), ex.get('category')) for ex_id, ex in index.items()}
 
 
 def clear_cache() -> None:
     """For tests that swap the package directory."""
     vocabulary.cache_clear()
     _archetypes.cache_clear()
-    _exercise_icons.cache_clear()
+    _exercises.cache_clear()
 
 
 def _known(icon) -> str | None:
     return icon if isinstance(icon, str) and icon in icon_ids() else None
 
 
-def for_archetype(archetype_id: str | None) -> str | None:
-    """The icon an archetype id alone gives: its own, else its category's.
+def _for_exercise(ex_id: str | None) -> str | None:
+    icon, category = _exercises().get(ex_id, (None, None)) if ex_id else (None, None)
+    return _known(icon) or _known((vocabulary().get('exercise_category_defaults') or {}).get(category))
 
-    What a history row (planned_sessions.archetype_id) or a watch's tomorrow
-    line resolves with, where the session's exercises are not at hand.
+
+def _for_archetype_category(arch: dict) -> str | None:
+    return _known((vocabulary().get('archetype_category_defaults') or {}).get(arch.get('category')))
+
+
+def _preparatory(role) -> bool:
+    return any(fnmatch.fnmatch(str(role or ''), pat) for pat in _PREPARATORY)
+
+
+def for_archetype(archetype_id: str | None) -> str | None:
+    """The icon an archetype id alone gives: its own, else its lead slot's
+    first named exercise's, else its category's.
+
+    What a history row (planned_sessions.archetype_id) resolves with, where
+    the session's exercises are not at hand.
     """
     arch = _archetypes().get(archetype_id) if archetype_id else None
     if not arch:
         return None
-    return _known(arch.get('icon')) or _known(
-        (vocabulary().get('category_defaults') or {}).get(arch.get('category')))
+    if _known(arch.get('icon')):
+        return arch['icon']
+    for slot in arch.get('slots') or []:
+        ids = (slot.get('exercise_filter') or {}).get('exercise_ids') or []
+        if ids and not _preparatory(slot.get('role')):
+            return _for_exercise(ids[0])
+    return _for_archetype_category(arch)
 
 
 def _exercise_id(ea: dict) -> str | None:
@@ -98,9 +121,7 @@ def _lead_exercise(session: dict) -> str | None:
         if not isinstance(ea, dict) or any(ea.get(k) for k in (
                 'injury_skip', 'injurySkip', 'coverage_gap', 'coverageGap')):
             continue
-        role = str(ea.get('slot_role') or ea.get('slotRole')
-                   or (ea.get('slot') or {}).get('role') or '')
-        if any(fnmatch.fnmatch(role, pat) for pat in _PREPARATORY):
+        if _preparatory(ea.get('slot_role') or ea.get('slotRole') or (ea.get('slot') or {}).get('role')):
             continue
         ex_id = _exercise_id(ea)
         if ex_id:
@@ -119,11 +140,14 @@ def _archetype_id(session: dict) -> str | None:
 def session_icon(session: dict) -> str | None:
     if not isinstance(session, dict):
         return None
-    arch_id = _archetype_id(session)
-    arch = _archetypes().get(arch_id) or (session.get('archetype') if isinstance(session.get('archetype'), dict) else {}) or {}
-    return (_known(arch.get('icon'))
-            or _known(_exercise_icons().get(_lead_exercise(session)))
-            or _known((vocabulary().get('category_defaults') or {}).get(arch.get('category'))))
+    own = session.get('archetype') if isinstance(session.get('archetype'), dict) else {}
+    arch = _archetypes().get(_archetype_id(session)) or own or {}
+    if _known(arch.get('icon')):
+        return arch['icon']
+    lead = _lead_exercise(session)
+    if lead:
+        return _for_exercise(lead)
+    return _for_archetype_category(arch)
 
 
 def _sessions(weeks: list):
