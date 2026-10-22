@@ -32,6 +32,11 @@ categories:
   floreio:
     name: "Floreio routine"
     modality: movement_skill
+    # Moving up a version is the athlete's call: recommended, not enforced
+    # (owner, 2026-10-22; I6). Advanced is the last version.
+    advice:
+      novice: "When you own your level's version of each routine, every movement as written, set your level to Intermediate in your profile and the program gives you the intermediate versions. The PDF leaves the call to you (\"the variation you are capable of\")."
+      intermediate: "When you own your level's version of each routine, every movement as written, set your level to Advanced in your profile and the program gives you the advanced versions. The PDF leaves the call to you (\"the variation you are capable of\")."
     # The PDF's order. Each routine is written per level; an athlete takes the
     # next one written for theirs.
     archetypes:

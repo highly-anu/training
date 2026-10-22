@@ -41,11 +41,11 @@ None. R6 is said, not scheduled: the engine plans sessions, not a whole day.
 
 ## Open
 
-- **Assessment gating.** The ten tests are practised and logged, not scored. Every day's
+- **Scoring the tests.** The ten tests are practised and logged, not scored. Every day's
   page sends the reader to the book for what a result means ("Refer to pp. 33-34 of Built to
-  Move"), and the book was not read. With its bands, each test could become a standard that
-  is retested and steers the practice it belongs to. Some of the bands are known
-  second-hand (btm_reviews).
+  Move"), and the book was not read. With its bands, each test could become a standard.
+  Some of the bands are known second-hand (btm_reviews). Retesting is recommended meanwhile
+  (I6).
 - The follow-along mobilizations are unnamed videos. Each day's session links its page and
   counts them (I2).
 - Becoming a Supple Leopard and Ready to Run were not read, and their mobility prescriptions
@@ -66,6 +66,11 @@ None. R6 is said, not scheduled: the engine plans sessions, not a whole day.
 - I4: after day 21, day 21 runs every day: its practices and its three mobilizations, the
   challenge's last stack.
 - I5: seven days a week are required, and the challenge starts on a Monday.
+- I6: assessment gating is advice, not a gate (the owner's call, 2026-10-22, as for Wildman's
+  layoff). Every everyday-practice session (after day 21) says to retest the ten vital signs
+  now and then and to keep at the practice of any found hard, the method's "test, practise,
+  retest". It is never scheduled or scored, and how often is not written on the challenge's
+  pages. The text is the `habits` category's `advice`.
 
 ## Removed in this review
 

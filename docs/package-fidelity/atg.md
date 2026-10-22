@@ -40,14 +40,10 @@ Read on 2026-10-22, all by Ben Patrick:
 ## Debt (rules nothing enforces yet)
 
 None. R6 is enforced only as far as the athlete reads it: the engine does not know which
-step of a ladder the athlete is on (see Open).
+step of a ladder the athlete is on, and moving up is advice (I8).
 
 ## Open
 
-- **Assessment gating.** Which step of each ladder the athlete owns is not tracked. Patrick
-  writes no pass marks ("no test or numeric standard"); his one check is his own "10 full
-  pull-ups every week". The work the roadmap calls assessment gating is, for ATG, a
-  per-exercise level the athlete sets and moves up as it becomes pain-free.
 - Knee Ability Zero (the 2021 book) and the ATG app's programs were not read.
 - Knee Ability Pro's two-session version (Monday and Tuesday back to back, Thursday and
   Friday back to back) is not built, so the track needs four days.
@@ -77,6 +73,12 @@ step of a ladder the athlete is on (see Open).
   takes any light weight, so it needs no equipment.
 - I7: each track needs its own training days (Zero 3, Program #2 2, Knee Ability Pro 4).
   There is no drop order for fewer.
+- I8: assessment gating is advice, not a gate (the owner's call, 2026-10-22, as for Wildman's
+  layoff). Each workout's first movement says to work at the step of each ladder owned
+  without pain and to move up when ready; the call is the athlete's, and the step is not
+  tracked. Patrick writes no pass marks ("no test or numeric standard"); his one check is
+  his own "10 full pull-ups every week". The text is each category's `advice` in the
+  frameworks.
 
 ## Removed in this review
 
