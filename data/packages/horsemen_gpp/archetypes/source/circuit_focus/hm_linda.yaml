@@ -9,7 +9,7 @@ pool_only: true
 slots:
   - role: deadlifts
     slot_type: rounds_for_time
-    reps_per_round: 10
+    rep_scheme: [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
     rounds: 10
     duration_sec: 1800
     intensity: max_effort
@@ -22,7 +22,7 @@ slots:
 
   - role: bench_press
     slot_type: amrap_movement
-    reps_per_round: 10
+    rep_scheme: [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
     parent_slot_role: deadlifts
     load: "1x bodyweight"
     exercise_filter:
@@ -31,7 +31,7 @@ slots:
 
   - role: cleans
     slot_type: amrap_movement
-    reps_per_round: 10
+    rep_scheme: [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
     parent_slot_role: deadlifts
     load: "0.75x bodyweight"
     exercise_filter:

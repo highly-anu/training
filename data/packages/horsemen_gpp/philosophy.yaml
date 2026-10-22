@@ -67,17 +67,19 @@ notes: >
   whose equipment the athlete lacks is passed over for the next one; names
   carrying profanity or a slur are cleaned.
 
-# Every modality concurrent_training and gpp_circuits prescribe now has an
-# archetype in this package. Borrowing, where it happens, is declared below.
+# Every modality concurrent_training prescribes has an archetype in this
+# package. Borrowing, where it happens, is declared below.
 self_contained: true
 
-# Two tracks: the source's four-month macro, and GPP circuits — an app
-# adaptation with no counterpart in the source — as a repeating block. Phase
-# text follows the source's month templates (Training Program pp.3-6).
+# One track, the source's four-month macro; phase text follows its month
+# templates (Training Program pp.3-6). GPP Circuits, an app adaptation with no
+# counterpart in the source, was dropped on 2026-10-22: a stored program that
+# names it regenerates as the macro, from its first month.
 primary_track_id: four_month_macro
 tracks:
   - id: four_month_macro
     name: "4-Month Macro"
+    former_ids: [gpp_circuits]
     description: >
       The source's four months — strength, power endurance, job specific,
       maintenance — each a 28-day template started on the 1st of the month,
@@ -88,6 +90,7 @@ tracks:
     phases:
       - id: strength
         name: "Strength"
+        former_ids: [gpp_block]
         kind: base
         weeks: 4
         framework_id: concurrent_training
@@ -205,25 +208,3 @@ tracks:
           - archetype: horsemen_pt_test
             week: last
             in_place_of: [job_specific_hard, job_specific_long, job_specific_short]
-  - id: gpp_circuits
-    name: "GPP Circuits"
-    description: >
-      An app adaptation, not in the Horsemen source: broad work capacity and
-      durability through circuits, carries and fixed tasks, repeated as a
-      block.
-    phases:
-      - id: gpp_block
-        name: "GPP Block"
-        kind: build
-        weeks: 8
-        repeatable: true
-        framework_id: gpp_circuits
-        focus: "Work capacity and durability"
-        description: >
-          An app adaptation, not in the Horsemen source. Sandbag, loaded-carry
-          and bodyweight circuits progressed by time-to-task: the same circuit
-          faster, heavier or with less rest.
-        adaptations:
-          - "General work capacity"
-          - "Durability under load"
-        intensity: "Time-to-task"

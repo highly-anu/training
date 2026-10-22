@@ -9,7 +9,7 @@ pool_only: true
 slots:
   - role: burpee_pull_ups
     slot_type: rounds_for_time
-    reps_per_round: 20
+    rep_scheme: [20, 20, 10, 10]
     rounds: 4
     duration_sec: 900
     intensity: max_effort
@@ -21,7 +21,7 @@ slots:
 
   - role: push_presses
     slot_type: amrap_movement
-    reps_per_round: 20
+    rep_scheme: [20, 20, 10, 10]
     parent_slot_role: burpee_pull_ups
     load: "75% of bodyweight"
     exercise_filter:

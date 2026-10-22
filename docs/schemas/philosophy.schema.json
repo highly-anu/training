@@ -173,6 +173,11 @@
             "type": "string",
             "description": "What this track is for and when to choose it."
           },
+          "former_ids": {
+            "type": "array",
+            "items": {"type": "string", "pattern": "^[a-z0-9_]+$"},
+            "description": "Ids of tracks this one replaced (a package dropped or renamed a track). A regenerate of a stored program that names one runs this track."
+          },
           "phases": {
             "type": "array",
             "minItems": 1,

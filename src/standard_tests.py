@@ -13,7 +13,7 @@ Pure: no Flask, no DB.
 """
 from __future__ import annotations
 
-from src.progression import paced_rpm, watch_cues, zone_band
+from src.progression import paced_rpm, round_count, watch_cues, zone_band
 
 # What a logged result can be, which standard metrics it fits, and the slot
 # types it is the natural reading of. The validator, the protocol and (phase 5)
@@ -155,16 +155,14 @@ def protocol_load(exercise: dict, slot: dict) -> dict:
             out['time_minutes'] = max(1, round(cap / 60))
         if slot.get('rounds'):
             out['target_rounds'] = slot['rounds']
-        if slot.get('reps_per_round'):
-            out['reps_per_round'] = slot['reps_per_round']
+        out.update(round_count(slot))
     elif st == 'amrap':
         out = {'time_minutes': max(1, round((slot.get('duration_sec') or 1200) / 60)), 'format': 'AMRAP'}
-        if slot.get('reps_per_round'):
-            out['reps_per_round'] = slot['reps_per_round']
+        out.update(round_count(slot))
         if slot.get('distance_m'):
             out['distance_km'] = round(slot['distance_m'] / 1000, 2)
     elif st == 'amrap_movement':
-        out = {'reps_per_round': slot['reps_per_round']} if slot.get('reps_per_round') else {}
+        out = round_count(slot)
     elif st == 'static_hold':
         out = {'sets': slot.get('sets', 1)}
         if slot.get('hold_seconds') or slot.get('duration_sec'):

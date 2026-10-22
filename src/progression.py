@@ -358,8 +358,7 @@ def _as_written(slot: dict) -> dict:
         cycle = slot['work_sec'] + (slot.get('rest_sec') or 0)
         out = {'target_rounds': rounds, 'work_sec': slot['work_sec'], 'rest_sec': slot.get('rest_sec') or 0,
                'time_minutes': max(1, math.ceil(rounds * cycle / 60)), 'format': slot_type.upper()}
-        if slot.get('reps_per_round'):
-            out['reps_per_round'] = slot['reps_per_round']
+        out.update(round_count(slot))
     elif slot_type in ('amrap', 'emom'):
         out = {'time_minutes': minutes or 10, 'format': slot_type.upper()}
         out.update(_parent_count(slot))
@@ -371,15 +370,14 @@ def _as_written(slot: dict) -> dict:
         out.update(_parent_count(slot))
     elif slot_type == 'amrap_movement' and slot.get('distance_m'):
         # A chipper's row or run is metres, not reps (Till U Collapse's 250 m).
-        out = {'distance_m': slot['distance_m'],
-               **({'reps_per_round': slot['reps_per_round']} if slot.get('reps_per_round') else {})}
-    elif slot_type == 'amrap_movement' and slot.get('duration_sec') and not slot.get('reps_per_round'):
+        out = {'distance_m': slot['distance_m'], **round_count(slot)}
+    elif slot_type == 'amrap_movement' and slot.get('duration_sec') and not round_count(slot):
         out = ({'duration_minutes': round(slot['duration_sec'] / 60)} if slot['duration_sec'] >= 60
                else {'work_sec': slot['duration_sec'], 'target_rounds': 1})
     elif slot_type == 'amrap_movement':
         # No count is the source's (Nicole's max pull-ups, Linda's ladder): its
         # note says how many, never an invented one a round.
-        out = {'reps_per_round': slot['reps_per_round']} if slot.get('reps_per_round') else {}
+        out = round_count(slot)
     else:
         out = {'sets': slot.get('sets', 1), 'reps': slot.get('reps', 1)}
     lo, hi, label = zone_band(slot.get('intensity'))
@@ -393,12 +391,26 @@ def _as_written(slot: dict) -> dict:
 
 
 
+def round_count(slot: dict) -> dict:
+    """A movement's reps a round: the same every round (`reps_per_round`), or
+    round by round (`rep_scheme`, Fran's 21-15-9); nothing when the source
+    gives none."""
+    if slot.get('rep_scheme'):
+        return {'rep_scheme': list(slot['rep_scheme'])}
+    if slot.get('reps_per_round'):
+        return {'reps_per_round': slot['reps_per_round']}
+    return {}
+
+
+def rep_scheme_text(scheme: list) -> str:
+    """[21, 15, 9] → "21-15-9", as the sources write it."""
+    return '-'.join(str(n) for n in scheme)
+
+
 def _parent_count(slot: dict) -> dict:
     """What a round's own first movement is (Cindy's 5 pull-ups, a 400 m run):
     the slot that carries the rounds or the minutes is a movement too."""
-    out: dict = {}
-    if slot.get('reps_per_round'):
-        out['reps_per_round'] = slot['reps_per_round']
+    out: dict = round_count(slot)
     if slot.get('distance_m'):
         out['distance_km'] = round(slot['distance_m'] / 1000, 2)
     return out
@@ -500,7 +512,7 @@ def _calculate_load(
 
     elif slot_type == 'amrap_movement':
         # Component movement within an AMRAP — show reps per round only
-        return {'reps_per_round': slot.get('reps_per_round', 10)}
+        return round_count(slot) or {'reps_per_round': 10}
 
     elif slot_type == 'for_time':
         if 'distance_m' in slot:

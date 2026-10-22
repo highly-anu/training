@@ -19,7 +19,7 @@ slots:
 
   - role: slams_step_ups
     slot_type: for_time
-    reps_per_round: 20
+    rep_scheme: [30, 20, 10]
     rounds: 3
     exercise_filter:
       exercise_ids: [ball_slam]
@@ -30,7 +30,7 @@ slots:
   - role: kb_step_ups
     slot_type: amrap_movement
     parent_slot_role: slams_step_ups
-    reps_per_round: 20
+    rep_scheme: [30, 20, 10]
     exercise_filter:
       exercise_ids: [kb_step_up]
       ordered: true

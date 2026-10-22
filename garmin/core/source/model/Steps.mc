@@ -92,6 +92,12 @@ module Steps {
             return ((tm != null) ? (tm.toString() + " min ") : "") + "AMRAP";
         }
         if (ex.isTemplate("for_time")) {
+            var rs = ex.repScheme();
+            if (rs instanceof Lang.Array && rs.size() > 0) {
+                var s = "";
+                for (var i = 0; i < rs.size(); i += 1) { s += ((i > 0) ? "-" : "") + rs[i].toString(); }
+                return s + " for time";
+            }
             var tr = ex.targetRounds();
             return ((tr != null) ? (tr.toString() + " Rounds ") : "") + "for time";
         }

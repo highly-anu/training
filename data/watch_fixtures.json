@@ -114,6 +114,20 @@
                  "lines": ["Next: Finish", null], "lap": "log_round", "outcome": "log_round_and_next"}
     },
     {
+      "name": "a rep scheme shows this round's reps, the step's own movement first",
+      "exercise": {"exerciseId": "thruster", "name": "Thruster", "slotType": "for_time", "targetRounds": 3, "repScheme": [21, 15, 9]},
+      "state": {"rounds": 1, "elapsedSec": 130, "components": [{"name": "Pull-up", "repScheme": [21, 15, 9]}]},
+      "expect": {"title": "Thruster", "a": ["ROUNDS", "1/3"], "b": ["TIME", "2:10"], "gauge": ["ROUNDS", "1/3"],
+                 "lines": ["15 Thruster  15 Pull-up", "Next: Finish"], "lap": "log_round", "outcome": "log_round"}
+    },
+    {
+      "name": "an AMRAP whose first movement carries the rounds",
+      "exercise": {"exerciseId": "pull_up", "name": "Pull-up", "slotType": "amrap", "timeMinutes": 20, "repsPerRound": 5},
+      "state": {"rounds": 3, "capLeftSec": 600, "components": [{"name": "Push-up", "repsPerRound": 10}, {"name": "Air Squat", "repsPerRound": 15}]},
+      "expect": {"title": "Pull-up", "a": ["ROUNDS", "3"], "b": ["LEFT", "10:00"], "gauge": ["ROUNDS", "3"],
+                 "lines": ["5 Pull-up  10 Push-up  15 Air Squat", "Next: Finish"], "lap": "log_round", "outcome": "log_round"}
+    },
+    {
       "name": "a row test: the best to beat, and LAP stops the clock",
       "exercise": {"exerciseId": "rower", "name": "Rowing", "slotType": "for_time", "distanceM": 2000,
                    "standard": {"id": "row_2km_minutes", "name": "2km Row", "result": "duration", "best": "7:48", "target": "7:00 for advanced"}},

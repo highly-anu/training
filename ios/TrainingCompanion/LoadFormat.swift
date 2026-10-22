@@ -32,6 +32,7 @@ enum LoadFormat {
         case "emom":           return "EMOM"
         case "amrap":          return "AMRAP"
         case "for_time":       return "For Time"
+        case "amrap_movement": return "Each Round"
         case "distance":       return "Distance"
         case "static_hold":    return "Static Hold"
         case "skill_practice": return "Skill"
@@ -65,9 +66,17 @@ enum LoadFormat {
             }
             return load.format ?? "EMOM"
         case "amrap":
-            return load.timeMinutes.map { "AMRAP \($0) min" } ?? "AMRAP"
+            let amrap = load.timeMinutes.map { "AMRAP \($0) min" } ?? "AMRAP"
+            return ([amrap] + [roundCount(load)].compactMap { $0 }).joined(separator: " · ")
         case "for_time":
-            return load.targetRounds.map { "\($0) rounds for time" } ?? "For time"
+            // A scheme says its rounds (21-15-9 is three); a count is each round's.
+            if let scheme = repScheme(load) { return "\(scheme) reps for time" }
+            guard let rounds = load.targetRounds else { return "For time" }
+            let each = roundCount(load).map { " × \($0)" } ?? ""
+            return "\(rounds) round\(rounds == 1 ? "" : "s")\(each) for time"
+        case "amrap_movement":
+            // A movement of an AMRAP's or a for-time piece's round.
+            return roundCount(load) ?? ""
         case "distance":
             return load.distanceKm.map { "\(kilograms($0)) km" } ?? "Distance"
         case "static_hold":
@@ -77,6 +86,28 @@ enum LoadFormat {
         default:
             return ""
         }
+    }
+
+    /// Reps round by round as the sources write them: [21, 15, 9] → "21-15-9".
+    nonisolated static func repScheme(_ load: ProgramLoad) -> String? {
+        guard case .array(let items)? = load.extra["rep_scheme"] else { return nil }
+        let counts = items.compactMap { item -> Int? in
+            if case .int(let n) = item { return n }
+            return nil
+        }
+        return counts.isEmpty ? nil : counts.map(String.init).joined(separator: "-")
+    }
+
+    /// One round's own count: "21-15-9 reps", "5 reps", or a run's "0.4 km";
+    /// nil when the source gives none (Nicole's max pull-ups).
+    nonisolated static func roundCount(_ load: ProgramLoad) -> String? {
+        if let scheme = repScheme(load) { return "\(scheme) reps" }
+        if case .int(let n)? = load.extra["reps_per_round"] { return "\(n) reps" }
+        if let km = load.distanceKm {
+            return (km.truncatingRemainder(dividingBy: 1) == 0 ? String(Int(km)) : String(km)) + " km"
+        }
+        if case .int(let m)? = load.extra["distance_m"] { return "\(m) m" }
+        return nil
     }
 
     /// 80 → "80", 82.5 → "82.5": a whole number never shows a ".0".

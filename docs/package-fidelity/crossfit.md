@@ -77,9 +77,11 @@ had no count, because the slot that carries the rounds or the minutes is a movem
 data and passed into the load (`progression._parent_count`); a movement the source does
 not count (Nicole's max pull-ups) said "1 rep a round"; a for-time test that opens with a
 run (Helen) lost its rounds; Fran's test day read "FOR_TIME"; one-round workouts read "1
-rounds" on the web; and `print_package` failed on a for-time load with no time cap. Open:
-descending schemes carry their per-round average (Fran's 15), Linda none; the phone's
-AMRAP and for-time rows do not show a round's own count yet.
+rounds" on the web; and `print_package` failed on a for-time load with no time cap.
+Since (same day): a descending scheme is the slot's `rep_scheme` (Fran's [21, 15, 9],
+Annie's, Amanda's, Diane's, Elizabeth's, J.T.'s, Linda's 10 down to 1), shown as the
+source writes it on the web, the phone and both watches, which show each round's own
+count; it used to carry the per-round average (Fran's 15), Linda none.
 
 ## Tests
 

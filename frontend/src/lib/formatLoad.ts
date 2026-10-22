@@ -49,6 +49,9 @@ export function formatLoad(load: ExerciseLoad): string {
     // e.g. "8 × 20s/10s" (Tabata) or "10 × 60s" (EMOM strength)
     const span = load.rest_sec ? `${load.work_sec}s/${load.rest_sec}s` : `${load.work_sec}s`
     parts.push(`${load.target_rounds} × ${span}`)
+  } else if (load.rep_scheme?.length) {
+    // Reps round by round (Fran's 21-15-9): the scheme says the rounds too.
+    parts.push(`${load.rep_scheme.join('-')} reps`)
   } else if (load.target_rounds && load.reps_per_round) {
     parts.push(`${rounds(load.target_rounds)} × ${load.reps_per_round} reps`)
   } else if (load.target_rounds) {

@@ -81,8 +81,9 @@ Both months run day for day as written (R1, R4, R8, R9). Fixed: the first moveme
 for-time piece had no count (Those Burpees Suck's 10 pull-ups, the chipper's 100 squats) —
 written into the data and passed into the load; Soldier of Steel's day 17 ladder pressed
 from the floor where the PDF writes "BENCH PRESS AT 95#" — the package now has the bench
-press, the floor press after it for an athlete without a rack and bench. Open: the day 17
-ladder (10 down to 1) carries no count a round.
+press, the floor press after it for an athlete without a rack and bench. Since (same
+day): the day 17 ladder (10 down to 1) and Operator Fitness day 5's 30-20-10 are each
+movement's `rep_scheme`, shown round by round.
 
 ## Tests
 

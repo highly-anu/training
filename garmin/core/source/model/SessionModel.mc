@@ -106,6 +106,17 @@ class WorkoutExercise {
 
     function distanceM()       { return g("distanceM"); }
     function repsPerRound()    { return g("repsPerRound"); }
+    // Reps round by round (Fran's [21, 15, 9]), in place of repsPerRound.
+    function repScheme()       { return g("repScheme"); }
+
+    // This round's reps: the scheme's entry for the rounds logged (its last
+    // once past it), else the one count.
+    function repsInRound(logged) {
+        var s = repScheme();
+        if (s == null || !(s instanceof Lang.Array) || s.size() == 0) { return repsPerRound(); }
+        var i = (logged < 0) ? 0 : logged;
+        return s[(i < s.size()) ? i : (s.size() - 1)];
+    }
     function packLoadKg()      { return g("packLoadKg"); }
     function focus()           { return g("focus"); }
     // What was done last time ("24kg × 10"), from the server's session logs

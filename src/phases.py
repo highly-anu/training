@@ -79,7 +79,11 @@ def primary_track(phil: dict, level: str | None = None) -> dict | None:
 def find_track(phil: dict, track_id: str | None) -> dict | None:
     if not track_id:
         return None
-    return next((t for t in tracks_of(phil) if t.get('id') == track_id), None)
+    tracks = tracks_of(phil)
+    # A track a package dropped or renamed (its successor's `former_ids`)
+    # resolves to the track that replaced it: a stored program still names it.
+    return (next((t for t in tracks if t.get('id') == track_id), None)
+            or next((t for t in tracks if track_id in (t.get('former_ids') or [])), None))
 
 
 def track_for_framework(phil: dict, framework_id: str | None) -> tuple[dict, dict] | None:
@@ -147,6 +151,10 @@ def validate_philosophy_tracks(phil: dict, framework_ids: set | None = None) -> 
                 errors.append(f"{pid}/{tid}/{phid}: no framework_id")
             elif framework_ids is not None and fid not in framework_ids:
                 errors.append(f"{pid}/{tid}/{phid}: framework '{fid}' is not in this package")
+    former = [f for t in tracks for f in t.get('former_ids') or []]
+    for f in set(former):
+        if f in track_ids or former.count(f) > 1:
+            errors.append(f"{pid}: former track id '{f}' is a track or names two")
     primary = phil.get('primary_track_id')
     if primary and primary not in track_ids:
         errors.append(f"{pid}: primary_track_id '{primary}' is not one of its tracks")

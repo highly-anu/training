@@ -9,6 +9,7 @@ pool_only: true
 slots:
   - role: linda
     slot_type: for_time
+    rep_scheme: [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
     rounds: 10
     exercise_filter:
       exercise_ids: [deadlift]
@@ -18,6 +19,7 @@ slots:
 
   - role: linda_2
     slot_type: amrap_movement
+    rep_scheme: [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
     parent_slot_role: linda
     exercise_filter:
       exercise_ids: [bench_press]
@@ -26,6 +28,7 @@ slots:
 
   - role: linda_3
     slot_type: amrap_movement
+    rep_scheme: [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
     parent_slot_role: linda
     exercise_filter:
       exercise_ids: [clean]

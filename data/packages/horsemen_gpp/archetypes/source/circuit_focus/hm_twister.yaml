@@ -9,7 +9,7 @@ pool_only: true
 slots:
   - role: bench_press
     slot_type: rounds_for_time
-    reps_per_round: 20
+    rep_scheme: [20, 15, 10, 5]
     rounds: 4
     duration_sec: 900
     intensity: max_effort
@@ -21,7 +21,7 @@ slots:
 
   - role: dips
     slot_type: amrap_movement
-    reps_per_round: 20
+    rep_scheme: [20, 15, 10, 5]
     parent_slot_role: bench_press
     exercise_filter:
       exercise_ids: [dip]
@@ -29,7 +29,7 @@ slots:
 
   - role: pull_ups
     slot_type: amrap_movement
-    reps_per_round: 20
+    rep_scheme: [20, 15, 10, 5]
     parent_slot_role: bench_press
     exercise_filter:
       exercise_ids: [pull_up]
@@ -37,7 +37,7 @@ slots:
 
   - role: box_jumps
     slot_type: amrap_movement
-    reps_per_round: 20
+    rep_scheme: [20, 15, 10, 5]
     parent_slot_role: bench_press
     exercise_filter:
       exercise_ids: [box_jump]

@@ -207,6 +207,12 @@ def test_crossfit_runs_glassmans_cycle_and_the_girls_as_written():
     head = next(e for e in fran['exercises'] if e.get('standard'))
     assert head['exercise']['id'] == 'thruster' and head['standard']['id'] == 'wod_fran_minutes'
     assert '95 lb' in head['load']['load_note'] and head['load']['target_rounds'] == 3
+    # 21-15-9 as written, on both movements: never a single count a round.
+    pull = next(e for e in fran['exercises'] if e['exercise']['id'] == 'pull_up')
+    for e in (head, pull):
+        assert e['load'].get('rep_scheme') == [21, 15, 9] and 'reps_per_round' not in e['load'], e['load']
+    cindy = next(s for _, _, s in days if s['archetype']['id'] == 'cf_cindy')
+    assert cindy['exercises'][0]['load'].get('reps_per_round') == 5, cindy['exercises'][0]['load']
     deadlift = next(s for _, _, s in days if s['archetype']['id'] == 'cf_deadlift_5_3_3_2')
     assert deadlift['exercises'][0]['load']['reps'] == '5-3-3-2-2-2-1-1-1'
     assert not any(w['is_deload'] for w in p['weeks']), 'no deload: the rest day is the rest (R14)'

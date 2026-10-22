@@ -102,7 +102,7 @@ nonisolated enum WatchVocab {
         .hold: Defaults(title: [.name, .side, .load], a: .hold, b: .set, gauge: .hold, lines: .holdPrompt, lap: .toggleHold),
         .interval: Defaults(title: [.name, .wavePct, .switchSide, .zoneOrLoad], a: .interval, b: .intervalLeft, gauge: .intervalRound, lines: .intervalNext, lap: .skip),
         .rounds: Defaults(title: [.name, .load], a: .rounds, b: .capLeft, gauge: .rounds, lines: .components, lap: .logRound),
-        .forTime: Defaults(title: [.name, .load], a: .roundsOfTarget, b: .elapsed, gauge: .roundsOfTarget, lines: .nextStep, lap: .logRound),
+        .forTime: Defaults(title: [.name, .load], a: .roundsOfTarget, b: .elapsed, gauge: .roundsOfTarget, lines: .components, lap: .logRound),
         .distance: Defaults(title: [.name, .load, .pack], a: .distance, b: .distanceTarget, gauge: .distance, lines: .nextStep, lap: .logRound),
         .timed: Defaults(title: [.name, .switchSide, .load], a: .timeLeft, b: .zoneOrTime, gauge: .timeLeft, lines: .focus, lap: .skip),
         .roundTimer: Defaults(title: [.name], a: .blockLeft, b: .rounds, gauge: .blockLeft, lines: .nextStep, lap: .logRound),

@@ -1,6 +1,7 @@
 """Format a generated program as human-readable markdown."""
 from __future__ import annotations
 
+from .progression import rep_scheme_text
 from .summary import format_volume_summary
 
 _DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
@@ -45,8 +46,9 @@ def _fmt_load(load: dict) -> str:
             s += f" ({intensity})"
         parts.append(s)
 
-    if 'reps_per_round' in load:
-        parts.append(f"{load['reps_per_round']} reps/round")
+    if 'reps_per_round' in load or 'rep_scheme' in load:
+        parts.append(f"{rep_scheme_text(load['rep_scheme'])} reps" if 'rep_scheme' in load
+                     else f"{load['reps_per_round']} reps/round")
         if load.get('weight_kg') is not None:
             parts.append(f"{load['weight_kg']:g} kg")
 
@@ -56,8 +58,11 @@ def _fmt_load(load: dict) -> str:
         rounds = f"{n} round{'' if n == 1 else 's'}"
         if 'time_minutes' in load:
             parts.append(f"{load['time_minutes']} min {fmt} — target {rounds}")
+        elif 'rep_scheme' in load:
+            # The scheme already says the rounds (21-15-9 is three).
+            parts.append(fmt)
         else:
-            # Rounds for time with no cap (Fran, a couplet's five rounds).
+            # Rounds for time with no cap (a couplet's five rounds).
             parts.append(f"{rounds} {fmt}")
     elif 'time_minutes' in load:
         # An AMRAP's minutes (Cindy's 20).

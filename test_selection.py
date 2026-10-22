@@ -285,9 +285,8 @@ def test_taper_keeps_the_framework_share_for_sets() -> None:
 
 def test_declared_deloads() -> None:
     print('deload protocols')
-    for phil, weeks in (('marcus_filly', 13), ('horsemen_gpp', 8), ('block_fixture', 12)):
-        kw = {'track_id': 'gpp_circuits'} if phil == 'horsemen_gpp' else {}
-        prog = program(phil, weeks, days_per_week=5, **kw)
+    for phil, weeks in (('marcus_filly', 13), ('block_fixture', 12)):
+        prog = program(phil, weeks, days_per_week=5)
         check(f'{phil} deloads on schedule', any(w['is_deload'] for w in prog['weeks']))
 
 

@@ -9,7 +9,7 @@ pool_only: true
 slots:
   - role: amanda
     slot_type: for_time
-    reps_per_round: 7
+    rep_scheme: [9, 7, 5]
     rounds: 3
     exercise_filter:
       exercise_ids: [muscle_up_ring]
@@ -19,7 +19,7 @@ slots:
   - role: amanda_2
     slot_type: amrap_movement
     parent_slot_role: amanda
-    reps_per_round: 7
+    rep_scheme: [9, 7, 5]
     exercise_filter:
       exercise_ids: [snatch]
       ordered: true

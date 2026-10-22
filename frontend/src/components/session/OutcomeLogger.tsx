@@ -38,7 +38,8 @@ function prescribed(load: ExerciseLoad, field: Field): string | undefined {
     case 'time':    return 'm:ss'
     case 'km':      return load.distance_km != null ? String(load.distance_km)
                          : load.distance_m != null ? String(load.distance_m / 1000) : undefined
-    case 'reps':    return load.reps_per_round != null ? String(load.reps_per_round) : undefined
+    case 'reps':    return load.rep_scheme?.length ? String(load.rep_scheme.reduce((a, b) => a + b, 0))
+                         : load.reps_per_round != null ? String(load.reps_per_round) : undefined
     case 'seconds': return load.hold_seconds != null ? String(load.hold_seconds) : undefined
   }
 }

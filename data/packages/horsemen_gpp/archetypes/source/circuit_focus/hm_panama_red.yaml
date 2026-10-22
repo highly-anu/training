@@ -9,7 +9,7 @@ pool_only: true
 slots:
   - role: bench_press
     slot_type: rounds_for_time
-    reps_per_round: 10
+    rep_scheme: [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
     rounds: 10
     duration_sec: 900
     intensity: max_effort
@@ -23,7 +23,7 @@ slots:
 
   - role: burpees
     slot_type: amrap_movement
-    reps_per_round: 1
+    rep_scheme: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     parent_slot_role: bench_press
     exercise_filter:
       exercise_ids: [burpee]

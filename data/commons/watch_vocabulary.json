@@ -39,7 +39,7 @@
     "for_time": {
       "doc": "Rounds against the clock; the last round moves on.",
       "actions": ["log_round", "skip"],
-      "defaults": { "title": ["name", "load"], "a": "rounds_of_target", "b": "elapsed", "lines": "next_step", "lap": "log_round" }
+      "defaults": { "title": ["name", "load"], "a": "rounds_of_target", "b": "elapsed", "lines": "components", "lap": "log_round" }
     },
     "distance": {
       "doc": "Distance: live km against the target, or laps of a short carry.",
@@ -94,7 +94,7 @@
     "next_step": "Next: the step after this one.",
     "last_then_next": "Last time (the exercise's `last`, e.g. 24kg × 10) until its first set is done, then next_step.",
     "focus": "The prescription's focus, else next_step.",
-    "components": "The movements of one round, else next_step.",
+    "components": "The movements of one round, each with this round's reps (a rep scheme's entry for the rounds logged); the step's own movement leads when it has a count. Else next_step.",
     "ladder_total": "Reps so far on the ladder, then next_step.",
     "hold_prompt": "Start / end-early prompt for a hold.",
     "interval_next": "The coming work or rest phase.",

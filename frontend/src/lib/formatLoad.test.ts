@@ -11,4 +11,10 @@ describe('formatLoad rounds', () => {
     expect(formatLoad({ target_rounds: 5, reps_per_round: 5, format: 'FOR TIME' } as ExerciseLoad))
       .toBe('5 rounds × 5 reps · FOR TIME')
   })
+
+  it('writes a rep scheme as the source does (Fran)', () => {
+    expect(formatLoad({ target_rounds: 3, rep_scheme: [21, 15, 9], format: 'FOR TIME' } as ExerciseLoad))
+      .toBe('21-15-9 reps · FOR TIME')
+    expect(formatLoad({ rep_scheme: [21, 15, 9] } as ExerciseLoad)).toBe('21-15-9 reps')
+  })
 })

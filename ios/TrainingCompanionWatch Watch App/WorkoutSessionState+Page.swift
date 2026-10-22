@@ -112,7 +112,7 @@ extension WorkoutSessionState {
             s.nextTitle = next.title
             s.nextValue = next.value
             s.components = WatchSteps.components(of: session, at: index)
-                .map { .init(name: $0.name, repsPerRound: $0.repsPerRound) }
+                .map { .init(name: $0.name, repsPerRound: $0.repsPerRound, repScheme: $0.repScheme) }
         }
         return s
     }

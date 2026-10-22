@@ -36,6 +36,35 @@ final class LoadFormatTests: XCTestCase {
         """)), "10 min · 10 rounds")
     }
 
+    /// A round's own count: the server's `reps_per_round`, or a `rep_scheme`
+    /// written as the source writes it (Fran's 21-15-9).
+    func testRoundCountsAndRepSchemes() throws {
+        XCTAssertEqual(LoadFormat.describe(try assignment("""
+        {"exercise": {"id": "t", "name": "Thruster"}, "slot_type": "for_time", "load": {"target_rounds": 3, "rep_scheme": [21, 15, 9], "format": "FOR TIME"}}
+        """)), "21-15-9 reps for time")
+        XCTAssertEqual(LoadFormat.describe(try assignment("""
+        {"exercise": {"id": "p", "name": "Pull-up"}, "slot_type": "amrap_movement", "load": {"rep_scheme": [21, 15, 9]}}
+        """)), "21-15-9 reps")
+        XCTAssertEqual(LoadFormat.describe(try assignment("""
+        {"exercise": {"id": "c", "name": "Clean"}, "slot_type": "for_time", "load": {"target_rounds": 5, "reps_per_round": 5, "format": "FOR TIME"}}
+        """)), "5 rounds × 5 reps for time")
+        XCTAssertEqual(LoadFormat.describe(try assignment("""
+        {"exercise": {"id": "m", "name": "Murph"}, "slot_type": "for_time", "load": {"target_rounds": 1, "format": "FOR TIME"}}
+        """)), "1 round for time")
+        XCTAssertEqual(LoadFormat.describe(try assignment("""
+        {"exercise": {"id": "p", "name": "Pull-up"}, "slot_type": "amrap", "load": {"time_minutes": 20, "reps_per_round": 5, "format": "AMRAP"}}
+        """)), "AMRAP 20 min · 5 reps", "Cindy's first movement")
+        XCTAssertEqual(LoadFormat.describe(try assignment("""
+        {"exercise": {"id": "s", "name": "Squat"}, "slot_type": "amrap_movement", "load": {"reps_per_round": 15}}
+        """)), "15 reps")
+        XCTAssertEqual(LoadFormat.describe(try assignment("""
+        {"exercise": {"id": "r", "name": "Run"}, "slot_type": "for_time", "load": {"target_rounds": 5, "distance_km": 0.4, "format": "FOR TIME"}}
+        """)), "5 rounds × 0.4 km for time", "Nicole's run")
+        XCTAssertEqual(LoadFormat.describe(try assignment("""
+        {"exercise": {"id": "p", "name": "Pull-up"}, "slot_type": "amrap_movement", "load": {}}
+        """)), "", "no count where the source gives none")
+    }
+
     func testSlotTypeIsInferredWhenAnArchetypeOmitsIt() throws {
         let distance = try assignment("""
         {"exercise": {"id": "d", "name": "D"}, "load": {"distance_km": 5.0}}
@@ -52,6 +81,7 @@ final class LoadFormatTests: XCTestCase {
     func testSlotTypeLabels() {
         XCTAssertEqual(LoadFormat.slotTypeLabel("sets_reps"), "Sets × Reps")
         XCTAssertEqual(LoadFormat.slotTypeLabel("for_time"), "For Time")
+        XCTAssertEqual(LoadFormat.slotTypeLabel("amrap_movement"), "Each Round")
         XCTAssertEqual(LoadFormat.slotTypeLabel("something_new"), "something_new")
     }
 }

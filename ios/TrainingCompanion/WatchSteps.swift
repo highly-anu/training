@@ -35,6 +35,9 @@ enum WatchSteps {
         case .rounds where ex.parentSlotRole == nil:
             return (ex.timeMinutes.map { "\($0) min " } ?? "") + "AMRAP"
         case .forTime:
+            if let scheme = ex.repScheme, !scheme.isEmpty {
+                return scheme.map(String.init).joined(separator: "-") + " for time"
+            }
             return (ex.targetRounds.map { "\($0) Rounds " } ?? "") + "for time"
         default:
             break
@@ -65,14 +68,16 @@ enum WatchSteps {
 
     // MARK: - An AMRAP's movements
 
-    /// The movements of the AMRAP at `index`: the `amrap_movement` steps that
-    /// name it as their parent — or, from a payload before `parentSlotRole`,
-    /// those after it. They arrive as siblings of the AMRAP; drawn as steps of
-    /// their own they turned one 20-minute AMRAP into unrelated blocks.
+    /// The movements of the AMRAP or for-time piece at `index`: the
+    /// `amrap_movement` steps that name it as their parent — or, from a payload
+    /// before `parentSlotRole`, those after it. They arrive as siblings of the
+    /// piece; drawn as steps of their own they turned one 20-minute AMRAP into
+    /// unrelated blocks, and Fran's pull-ups into a step after every thruster
+    /// (the Garmin always folded them).
     static func components(of session: WatchSession, at index: Int) -> [WatchExercise] {
         let list = session.exercises
         guard index < list.count, !list[index].slotRole.isEmpty,
-              session.screen(for: list[index]).template == .rounds,
+              [.rounds, .forTime].contains(session.screen(for: list[index]).template),
               list[index].slotType != "amrap_movement" else { return [] }
         let role = list[index].slotRole
         return list.enumerated().compactMap { i, c in

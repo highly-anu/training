@@ -9,7 +9,7 @@ pool_only: true
 slots:
   - role: jt
     slot_type: for_time
-    reps_per_round: 15
+    rep_scheme: [21, 15, 9]
     rounds: 3
     exercise_filter:
       exercise_ids: [handstand_push_up]
@@ -19,7 +19,7 @@ slots:
   - role: jt_2
     slot_type: amrap_movement
     parent_slot_role: jt
-    reps_per_round: 15
+    rep_scheme: [21, 15, 9]
     exercise_filter:
       exercise_ids: [dip_ring]
       ordered: true
@@ -27,7 +27,7 @@ slots:
   - role: jt_3
     slot_type: amrap_movement
     parent_slot_role: jt
-    reps_per_round: 15
+    rep_scheme: [21, 15, 9]
     exercise_filter:
       exercise_ids: [push_up]
       ordered: true

@@ -91,6 +91,17 @@ def test_goal_carries_the_track():
         raise AssertionError('an unknown track must raise')
     except phases.PhaseResolutionError:
         ok(True, 'an unknown track is an error')
+    # A dropped track (Horsemen's GPP Circuits) is its successor's former id:
+    # a stored program's regenerate runs the macro from its first month.
+    h = goals.philosophy_to_goal('horsemen_gpp', FRAMEWORKS, track_id='gpp_circuits')
+    ok(h['track']['id'] == 'four_month_macro', 'a former track id runs the track that replaced it')
+    ok(phases.resolve_start_phase(h['phase_sequence'], 'gpp_block') == 'strength',
+       "and the dropped track's phase starts its first phase")
+    bad = {'id': 'x', 'tracks': [{'id': 'a', 'name': 'A', 'phases': [{'id': 'p', 'kind': 'base', 'framework_id': 'f'}]},
+                                 {'id': 'b', 'name': 'B', 'former_ids': ['a'],
+                                  'phases': [{'id': 'q', 'kind': 'base', 'framework_id': 'f'}]}]}
+    ok(any('former track id' in e for e in phases.validate_philosophy_tracks(bad)),
+       "a former id that is still a track is refused")
 
 
 # Uphill's track runs six days a week with long days (its contract).

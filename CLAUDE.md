@@ -428,7 +428,9 @@ group's name.
   text ("75% of today's 1RM", "24 kg (53 lb)", "1.25x bodyweight"), no ramp, level, phase or
   deload scaling. The slot that carries a for-time or AMRAP piece's rounds or minutes is a
   movement too: its own `reps_per_round` or `distance_m` reaches the load
-  (`progression._parent_count`; Cindy's 5 pull-ups). A slot's `exercise_filter.ordered` takes the written movement first and the
+  (`progression._parent_count`; Cindy's 5 pull-ups); a count that changes round by round
+  is the slot's `rep_scheme` (Fran's [21, 15, 9], `progression.round_count`), shown as the
+  source writes it by every client and round by round on both watches. A slot's `exercise_filter.ordered` takes the written movement first and the
   source's declared substitutes after it; a workout's movements are `named_only` exercises,
   so adding them never changes what an open slot picks. Rotation resumes where a regenerate's
   first week stands (the elapsed template weeks are replayed, `prior_entries`); a test may

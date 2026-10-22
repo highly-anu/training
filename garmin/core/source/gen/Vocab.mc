@@ -25,7 +25,7 @@ module Vocab {
         } else if ("rounds".equals(t)) {
             return { "title" => ["name", "load"], "a" => "rounds", "b" => "cap_left", "lines" => "components", "lap" => "log_round", "template" => "rounds", "gauge" => "rounds" };
         } else if ("for_time".equals(t)) {
-            return { "title" => ["name", "load"], "a" => "rounds_of_target", "b" => "elapsed", "lines" => "next_step", "lap" => "log_round", "template" => "for_time", "gauge" => "rounds_of_target" };
+            return { "title" => ["name", "load"], "a" => "rounds_of_target", "b" => "elapsed", "lines" => "components", "lap" => "log_round", "template" => "for_time", "gauge" => "rounds_of_target" };
         } else if ("distance".equals(t)) {
             return { "title" => ["name", "load", "pack"], "a" => "distance", "b" => "distance_target", "lines" => "next_step", "lap" => "log_round", "template" => "distance", "gauge" => "distance" };
         } else if ("timed".equals(t)) {
