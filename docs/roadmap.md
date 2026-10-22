@@ -45,7 +45,7 @@ deferred is under *Later*.
 | 6 | Watch: package-owned screens — verify and finish | P2 | M | watch, API |
 | 7 | Phases and tracks: review the drafted phase text; verify the iOS track picker and phase names (*IA*) | P2 | S | content, iOS |
 | 8 | Web ↔ iOS parity: what the 2026-10-13 consolidation left open (*IA*) | P2 | M | iOS, web, API |
-| 9 | Generation fidelity: every package built as its method prescribes (absorbs the fidelity baseline) | P1 | L | engine, content |
+| 9 | Generation fidelity: every package built as its method prescribes — all eleven audited 2026-10-22; assessment gating and hygiene left | P1 | L | engine, content |
 | 10 | Progress tracking: what phases A–E left open, and the watches | P2 | M | API, web, iOS, watch |
 | 11 | Apple accounts: switch on, verify on a phone and the web; email code and passkeys later | P2 | S | iOS, web, API |
 | 12 | Standards: the Garmin unit tests, a test day on both watches | P2 | S | API, watch |
@@ -678,6 +678,31 @@ the ten root causes and matrix A–I), its Wildman contract
 2026-10-19 re-measurement and research appended to the audit. It absorbs this
 item's earlier contents (the fidelity baseline, kept below as 2.1–2.6).
 
+**Where it stands (2026-10-22): every package is audited.** All eleven grade
+`audited` on every track (`docs/package-fidelity/scorecard.md`); the one track
+graded out is Horsemen's GPP Circuits (`excluded_tracks`, an app track on its own
+archetypes). Each runs its author's published program as written — five as training
+contracts (Wildman, Starting Strength, BJJ, Uphill, Marcus Filly), six as week
+templates (Horsemen, CrossFit, Gym Jones, ATG, Kelly Starrett, Ido Portal) — and no
+shipped package runs on the modality scheduler any more (its tests use
+`test_packages/block_fixture`). Not merged: #192 (`bjj-strength-deload`) and the
+stack on it, `uphill-review` then `filly-review` (Uphill, Filly, CrossFit, Gym Jones,
+ATG, Kelly Starrett, Ido Portal), unpushed. What is left, in order:
+1. *Ship the stack* — review, then merge #192, push and review the two branches on it.
+2. *Assessment gating (M, engine)* — step 3's last policy, open in three records: a
+   level the athlete moves up (ATG's ladders, Ido's beginner → intermediate →
+   advanced versions; neither source writes a pass mark), and Built to Move's ten
+   tests scored against the book's bands (needs a copy of the book).
+3. *Hygiene (S each, content)* — the output review (S6) recorded for BJJ, CrossFit,
+   Gym Jones, Horsemen, Marcus Filly and Starting Strength; exercise media (D3) for
+   BJJ (0 of 24), Starting Strength (0 of 6) and Horsemen (28 of 237); Horsemen's and
+   BJJ's inert `equipment_limited` scalings and Horsemen's unpatterned exercises (D4).
+4. *GPP Circuits* — rebuild it from the source or drop the track.
+5. *Each package's "Left"* (step 4 below) — mostly material that is not public:
+   Uphill's novice plan, Filly's 4x/5x tracks and Base Camp, CrossFit's scaled
+   novice track, Operator Fitness II, the Starrett books; then Wildman's follow-ups
+   (step 5), the portability leftovers and the Dev Lab (step 6).
+
 The finding behind it: the contract fixed Wildman, and nothing else moved. Novice
 Gym Jones, Horsemen, Filly and Uphill programs are half to three-quarters
 substitutes, CrossFit is one AMRAP template, BJJ trains the mat once a week in
@@ -709,7 +734,9 @@ package's defining claims as failing rules — not intensity splits:
 Run in CI next to `check_fidelity.py`; its baseline only shrinks. Every step below
 is judged by it.
 
-**2. Shared fixes for the ten packages still on the old generator (S–M).**
+**2. Shared fixes for the ten packages still on the old generator (S–M).** Since
+2026-10-22 none is: what follows binds only a package written for the modality
+scheduler (and Horsemen's excluded GPP Circuits).
 1. *Injury data that resolves (S, content)* — **done 2026-10-20.** 54 of 63
    `modified_exercises` pairs and 78 of 143 `excluded_exercises` named no exercise
    (the "94" first counted here predated Horsemen's full catalog). Every id now names
@@ -737,7 +764,7 @@ load per confirmed exposure (Starting Strength, Horsemen strength); a weekly ram
 that restarts after a deload (Uphill, Gym Jones); protected external sessions —
 attendance, not exercises (BJJ classes); variation within declared families and
 time domains (CrossFit, Gym Jones, Filly conditioning); assessment-gated selection
-(Kelly Starrett, ATG). Optional modules on free days exist (2026-10-19).
+(Kelly Starrett, ATG, Ido Portal; the one not built, 2026-10-22). Optional modules on free days exist (2026-10-19).
 
 **4. Move packages onto contracts (M–L each, content + engine)**, ordered by how
 badly the default misrepresents the method and whether its policies exist:
@@ -817,8 +844,9 @@ badly the default misrepresents the method and whether its policies exist:
    six days a week in the PDF's order. The Isolation → Integration → Expression phases and
    the `requires` that locked movements behind exercises the package did not have are
    gone. Next for all three: assessment gating — a level (ATG's ladders, Ido's
-   versions) the athlete moves up, and Built to Move's tests scored against its bands. Horsemen had five such (`kb_clean_single`, `kb_halo`,
-   `sb_clean`, `sb_squat`), which kept its snatch test, snatch ladder and 12-minute
+   versions) the athlete moves up, and Built to Move's tests scored against its bands.
+   A `requires` naming an exercise the package lacks locks that movement below elite;
+   Horsemen's did too (`kb_clean_single`, `kb_halo`, `sb_clean`, `sb_squat`), which kept its snatch test, snatch ladder and 12-minute
    complex from ever being placed; fixed 2026-10-22, and the reach check
    (`check_exercise_coverage._pooled`) now counts a pool workout only when the level
    has unlocked every slot.
@@ -831,12 +859,12 @@ package stands and which engine shape it needs, gated by
 **The scorecard (2026-10-20)** is step 1 above made concrete: `tools/evaluate_packages.py`
 grades every package × track on Source, Execution, Robustness, Data and Measurement
 (`docs/package-fidelity/scorecard.md`), ratchets in CI, and derives `audited`. Audited:
-Wildman, BJJ, Horsemen (4-Month Macro), Starting Strength (2026-10-21). What the not-started
-packages fail, in order of the audit's concern: E3 (Gym Jones, Filly, Uphill serve
-novices their frameworks are not written for — 9.2.4), E4 (Uphill's transition is one
-archetype; CrossFit's variation needs claims), R1 (Gym Jones and Uphill hand out empty
-sessions under injuries), E5 (no defining claims declared outside the contracts), and
-M1 (no package but the audited ones declares its currency).
+Wildman, BJJ, Horsemen (4-Month Macro), Starting Strength (2026-10-21); Uphill, Marcus
+Filly, CrossFit and Gym Jones (2026-10-21/22); ATG, Kelly Starrett and Ido Portal
+(2026-10-22) — every package. What the rest failed when the scorecard landed (E3 novices
+served frameworks not written for them, E4 one archetype per modality, R1 empty sessions
+under injuries, E5 no defining claims, M1 no currency) went with the rebuilds; what
+still grades partial is hygiene (S6, D3, D4) and the excluded GPP Circuits.
 
 **The review, reviewed (2026-10-21, branch `package-review`).** The Source grades were
 declarations — five headings, a count of inventions, `sources_kind: primary`, `debt: []`
