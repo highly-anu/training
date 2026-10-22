@@ -93,10 +93,14 @@ def test_goal_carries_the_track():
         ok(True, 'an unknown track is an error')
 
 
+# Uphill's track runs six days a week with long days (its contract).
+UPHILL = dict(CONSTRAINTS, days_per_week=6, session_time_minutes=360)
+
+
 def test_uphill_starts_at_transition():
     g = goals.philosophy_to_goal('uphill_athlete', FRAMEWORKS)
-    weeks = _gen(g, dict(CONSTRAINTS), 6)['weeks']
-    ok([w['phase_id'] for w in weeks[:5]] == ['transition'] * 4 + ['base'],
+    weeks = _gen(g, dict(UPHILL), 10)['weeks']
+    ok([w['phase_id'] for w in weeks[:9]] == ['transition'] * 8 + ['base'],
        'with no start given Uphill runs Transition first')
     ok(weeks[0]['framework'] == 'uphill_transition_phase', 'on the transition framework')
 
@@ -107,10 +111,10 @@ def test_event_date_keeps_phase_frameworks():
     cal = compute_phase_from_date(g, today + timedelta(weeks=12), today=today)
     sched = build_remaining_schedule(cal)
     by_phase = {e['phase_id']: e['framework_id'] for e in sched}
-    ok(by_phase == {'base': 'uphill_base_phase', 'specific': 'uphill_specific_phase',
+    ok(by_phase == {'base_intensity': 'uphill_base_intensity_phase', 'specific': 'uphill_specific_phase',
                     'taper': 'uphill_taper_phase'},
        'every week to the event carries its own phase framework')
-    c = dict(CONSTRAINTS, start_phase=cal['phase_id'], periodization_week=cal['week_in_phase'])
+    c = dict(UPHILL, start_phase=cal['phase_id'], periodization_week=cal['week_in_phase'])
     weeks = generator.generate(goal_id=g['id'], goal_dict=g, constraints=c, num_weeks=0,
                                phase_schedule=sched, output_format='dict')['weeks']
     ok({w['phase_id']: w['framework'] for w in weeks} == by_phase,
@@ -140,7 +144,7 @@ def test_route():
     client = api.app.test_client()
     r = client.post('/api/programs/generate', json={
         'philosophy_id': 'uphill_athlete', 'framework_id': 'uphill_specific_phase',
-        'constraints': dict(CONSTRAINTS), 'num_weeks': 2})
+        'constraints': dict(UPHILL), 'num_weeks': 2})
     weeks = r.get_json()['weeks']
     ok([w['framework'] for w in weeks] == ['uphill_specific_phase'] * 2,
        'an explicit framework pick is honoured, not overridden')

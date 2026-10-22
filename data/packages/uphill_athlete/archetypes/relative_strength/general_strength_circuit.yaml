@@ -1,0 +1,71 @@
+id: general_strength_circuit
+name: General Strength
+modality: relative_strength
+category: strength
+training_levels:
+- intermediate
+- advanced
+- elite
+duration_estimate_minutes: 22
+required_equipment:
+- kettlebell
+- box
+- pull_up_bar
+applicable_phases:
+- transition
+slots:
+- role: get_up
+  slot_type: sets_reps
+  sets: 2
+  reps: 5
+  exercise_filter:
+    exercise_ids: [turkish_get_up]
+- role: push_up
+  slot_type: sets_reps
+  sets: 2
+  reps: 10
+  exercise_filter:
+    exercise_ids: [push_up]
+- role: split_squat
+  slot_type: sets_reps
+  sets: 2
+  reps: 10
+  exercise_filter:
+    exercise_ids: [split_bench_squat]
+- role: dip
+  slot_type: sets_reps
+  sets: 2
+  reps: 10
+  exercise_filter:
+    exercise_ids: [dip]
+- role: step_up
+  slot_type: sets_reps
+  sets: 2
+  reps: 10
+  exercise_filter:
+    exercise_ids: [box_step_up]
+- role: pull_up
+  slot_type: sets_reps
+  sets: 2
+  reps: 10
+  exercise_filter:
+    exercise_ids: [pull_up]
+- role: squat
+  slot_type: sets_reps
+  sets: 2
+  reps: 10
+  exercise_filter:
+    exercise_ids: [front_squat]
+- role: leg_raise
+  slot_type: sets_reps
+  sets: 2
+  reps: 10
+  exercise_filter:
+    exercise_ids: [hanging_leg_raise]
+sources:
+- "Uphill Athlete, The General Strength Routine (Training for the New Alpinism)"
+notes: >
+  A circuit alternating upper and lower body: one exercise straight to the
+  next, three minutes between laps. One lap for two weeks, two for the next
+  two, up to four in the eighth; twice a week. Harder whenever you can do
+  more than ten; never to failure.

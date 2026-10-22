@@ -1,6 +1,10 @@
+# Uphill Athlete's exercises: the aerobic work, the General Strength routine,
+# the max-strength lifts and the muscular-endurance workout, as the sources
+# name them (docs/package-fidelity/uphill_athlete.md).
 exercises:
+  # ── Aerobic ─────────────────────────────────────────────────────────────────
   - id: zone2_hike
-    name: "Zone 2 Hike"
+    name: "Zone 1–2 Hike or Run"
     category: aerobic
     modality:
       - aerobic_base
@@ -13,112 +17,209 @@ exercises:
       - locomotion
       - aerobic_monostructural
     typical_volume:
-      duration_sec: 7200
-    notes: "Sustained uphill hiking at HR below AeT. Nose-breathing pace."
-
-  - id: recovery_jog_easy
-    name: "Easy Recovery Jog"
-    category: aerobic
-    modality:
-      - aerobic_base
-    equipment:
-      - open_space
-    effort: low
-    bilateral: true
-    movement_patterns:
-      - locomotion
-      - aerobic_monostructural
-    typical_volume:
-      duration_sec: 2400
-    notes: "Strict Z1, well below AeT. Walking permitted."
-
-  - id: weighted_ruck_walk
-    name: "Weighted Ruck Walk"
-    category: loaded_carry
-    modality:
-      - aerobic_base
-      - strength_endurance
-      - durability
-    equipment:
-      - ruck_pack
-      - open_space
-    effort: medium
-    bilateral: true
-    movement_patterns:
-      - loaded_carry
-      - locomotion
-    typical_volume:
-      duration_sec: 6000
-    notes: "Pack 10–30% bodyweight depending on phase. Uphill terrain preferred."
+      duration_sec: 3600
+    notes: "Below your aerobic threshold (AeT): hiking, running or skiing, as hilly as you can find. Zone 1 is 10–20 % under AeT, Zone 2 the last 10 % up to it."
 
   - id: uphill_run
-    name: "Uphill Run"
+    name: "Zone 3 Uphill"
     category: aerobic
     modality:
       - aerobic_base
       - anaerobic_intervals
     equipment:
       - open_space
+    effort: high
+    bilateral: true
+    movement_patterns:
+      - locomotion
+      - aerobic_monostructural
+    typical_volume:
+      duration_sec: 1200
+    notes: "Uphill between your aerobic and anaerobic thresholds (Zone 3): hiking or running, continuous or in intervals."
+
+  # ── General Strength routine ─────────────────────────────────────────────────
+  - id: turkish_get_up
+    name: "Turkish Get-Up"
+    category: kettlebell
+    modality:
+      - relative_strength
+      - mobility
+    equipment:
+      - kettlebell
+    effort: medium
+    bilateral: false
+    movement_patterns:
+      - get_up
+      - core_stability
+    typical_volume:
+      reps: 5
+    notes: "Shoulder and hip mobility and core more than leg strength. Too light a weight lets you cheat the form. Five each hand, then heavier."
+
+  - id: push_up
+    name: "Push-Up"
+    category: bodyweight
+    modality:
+      - relative_strength
+    equipment: []
     effort: medium
     bilateral: true
     movement_patterns:
-      - locomotion
-      - aerobic_monostructural
+      - horizontal_push
+    contraindicated_with:
+      - wrist_injury
     typical_volume:
-      duration_sec: 1800
-    notes: "Used for Z2 progressions and AnT intervals on grade."
+      reps: 10
+    notes: "Hands to feet in one line. At ten, raise one foot; then a vest or a ball under the feet."
 
-  - id: hill_repeat
-    name: "Steep Hill Repeat"
-    category: aerobic
+  - id: split_bench_squat
+    name: "Split Bench Squat"
+    category: bodyweight
     modality:
-      - anaerobic_intervals
-    equipment:
-      - open_space
-    effort: high
+      - relative_strength
+    equipment: []
+    effort: medium
+    bilateral: false
+    movement_patterns:
+      - squat
+      - lunge
+    contraindicated_with:
+      - knee_meniscus_post_op
+    typical_volume:
+      reps: 10
+    notes: "Split stance, hips pulled up over the front leg, the back leg only for balance. At ten, rear foot on a bench, then a pack or vest."
+
+  - id: dip
+    name: "Dip"
+    category: bodyweight
+    modality:
+      - relative_strength
+    equipment: []
+    effort: medium
     bilateral: true
     movement_patterns:
-      - locomotion
-      - aerobic_monostructural
+      - vertical_push
+    contraindicated_with:
+      - shoulder_impingement
+      - shoulder_instability
     typical_volume:
-      duration_sec: 180
-    notes: "2–4 min hard uphill rep, walk down recovery."
+      reps: 10
+    notes: "Full range, down to a stretch in the chest; a bench or box makes it easier, parallel bars harder. At ten, add resistance."
 
-  - id: weighted_box_step_up
-    name: "Weighted Box Step-Up"
-    category: loaded_carry
+  - id: box_step_up
+    name: "Box Step-Up"
+    category: bodyweight
     modality:
+      - relative_strength
       - strength_endurance
     equipment:
-      - ruck_pack
       - box
-    effort: high
+    effort: medium
     bilateral: false
     movement_patterns:
       - step_up
       - knee_extension
-      - hip_flexion
+    contraindicated_with:
+      - knee_meniscus_post_op
+      - patellar_tendinopathy
     typical_volume:
-      duration_sec: 1800
-    notes: "16–20 in box. Pack 20–35% bodyweight. Continuous, alternating legs. The signature ME workout."
+      reps: 10
+    notes: "A box 75 % of the height of your knee. Step up and balance fully on the loaded leg before stepping down. At ten, a pack or a vest."
 
-  - id: uphill_weighted_carry_ex
-    name: "Uphill Weighted Carry"
-    category: loaded_carry
+  - id: pull_up
+    name: "Pull-Up"
+    category: bodyweight
     modality:
-      - strength_endurance
-      - durability
+      - relative_strength
     equipment:
-      - ruck_pack
-      - open_space
+      - pull_up_bar
+    effort: medium
+    bilateral: true
+    movement_patterns:
+      - vertical_pull
+    contraindicated_with:
+      - tennis_elbow
+      - golfers_elbow
+    typical_volume:
+      reps: 10
+    notes: "Full hang to chin over the bar. At fifteen, a variation or weight."
+
+  - id: front_squat
+    name: "Front Squat"
+    category: barbell
+    modality:
+      - relative_strength
+      - max_strength
+    equipment:
+      - barbell
+      - rack
+      - plates
+    effort: medium
+    bilateral: true
+    movement_patterns:
+      - squat
+    contraindicated_with:
+      - knee_meniscus_post_op
+      - lumbar_disc
+    typical_volume:
+      reps: 10
+    notes: "Start with a broomstick across the front of the shoulders and a neutral lower back; the barbell once that holds. At ten, more weight."
+
+  - id: hanging_leg_raise
+    name: "Hanging Leg Raise"
+    category: bodyweight
+    modality:
+      - relative_strength
+    equipment:
+      - pull_up_bar
+    effort: medium
+    bilateral: true
+    movement_patterns:
+      - hip_flexion
+      - core_flexion
+    contraindicated_with:
+      - shoulder_instability
+    typical_volume:
+      reps: 10
+    notes: "No swinging. Bent knees first; work to straight legs under control. At ten straight, shoes, then boots."
+
+  # ── Max strength and core ───────────────────────────────────────────────────
+  - id: back_squat
+    name: "Back Squat"
+    category: barbell
+    modality:
+      - max_strength
+    equipment:
+      - barbell
+      - rack
+      - plates
     effort: high
     bilateral: true
     movement_patterns:
-      - loaded_carry
-      - locomotion
+      - squat
+    contraindicated_with:
+      - knee_meniscus_post_op
+      - lumbar_disc
     typical_volume:
-      duration_sec: 5400
-    notes: "Outdoor analog of step-ups. Sustained steep grade, objective pack weight."
+      reps: 4
+    notes: "Heavy and few: three or four reps at 90–95 % of your one-rep max. Never past twice your bodyweight."
+
+  - id: deadlift
+    name: "Deadlift"
+    category: barbell
+    modality:
+      - max_strength
+    equipment:
+      - barbell
+      - plates
+    effort: high
+    bilateral: true
+    movement_patterns:
+      - hip_hinge
+    contraindicated_with:
+      - lumbar_disc
+    typical_volume:
+      reps: 4
+    notes: "Heavy and few: three or four reps at 90–95 % of your one-rep max. Never past twice your bodyweight."
 
   - id: weighted_pull_up
     name: "Weighted Pull-Up"
@@ -132,98 +233,135 @@ exercises:
     bilateral: true
     movement_patterns:
       - vertical_pull
+    contraindicated_with:
+      - tennis_elbow
+      - golfers_elbow
     typical_volume:
-      reps: 5
-    notes: "Upper body pulling strength for ice tools, scrambling."
+      reps: 4
+    notes: "Upper-body pulling strength for ice tools and scrambling."
 
-  - id: plank
-    name: "Front Plank"
+  - id: core_routine
+    name: "Core Routine"
     category: bodyweight
     modality:
-      - max_strength
-    equipment:
-      - none
-    effort: medium
+      - relative_strength
+    equipment: []
+    effort: high
     bilateral: true
     movement_patterns:
-      - isometric
+      - core_stability
+      - core_flexion
     typical_volume:
-      duration_sec: 60
-    notes: "Anti-extension core."
+      reps: 6
+    notes: "Four or five of your hardest core exercises (Uphill Athlete's Killer Core), with enough resistance that four to six reps are all you can do."
 
-  - id: single_leg_rdl
-    name: "Single-Leg RDL"
+  # ── Muscular endurance (the gym workout) ────────────────────────────────────
+  - id: split_jump_squat
+    name: "Split Jump Squat"
     category: bodyweight
     modality:
-      - durability
-      - mobility
-    equipment:
-      - none
-    effort: low
+      - strength_endurance
+      - power
+    equipment: []
+    effort: high
     bilateral: false
+    movement_patterns:
+      - lunge
+      - jump
+    contraindicated_with:
+      - knee_meniscus_post_op
+      - patellar_tendinopathy
+      - achilles_tendinopathy
+    typical_volume:
+      reps: 10
+    notes: "Ten each leg. If unsure, start with a short 30 cm split; deepen it as you get stronger."
+
+  - id: squat_jump
+    name: "Squat Jump"
+    category: bodyweight
+    modality:
+      - strength_endurance
+      - power
+    equipment: []
+    effort: high
+    bilateral: true
+    movement_patterns:
+      - squat
+      - jump
+    contraindicated_with:
+      - knee_meniscus_post_op
+      - patellar_tendinopathy
+      - achilles_tendinopathy
+    typical_volume:
+      reps: 10
+    notes: "Squat and jump; one rep every one to two seconds, never rushed."
+
+  - id: front_lunge
+    name: "Front Lunge"
+    category: bodyweight
+    modality:
+      - strength_endurance
+    equipment: []
+    effort: medium
+    bilateral: false
+    movement_patterns:
+      - lunge
+    contraindicated_with:
+      - knee_meniscus_post_op
+    typical_volume:
+      reps: 10
+    notes: "Ten each leg, all the right then all the left. New to lunges: the static lunge for two or three workouts, then stepping."
+
+  - id: goblet_squat_press
+    name: "Goblet Squat to Overhead Press"
+    category: kettlebell
+    modality:
+      - strength_endurance
+    equipment:
+      - kettlebell
+    effort: high
+    bilateral: true
+    movement_patterns:
+      - squat
+      - vertical_push
+    contraindicated_with:
+      - knee_meniscus_post_op
+      - shoulder_impingement
+    typical_volume:
+      reps: 10
+    notes: "A goblet squat, then press the bell overhead."
+
+  - id: kb_swing
+    name: "Two-Hand Kettlebell Swing"
+    category: kettlebell
+    modality:
+      - strength_endurance
+      - power
+    equipment:
+      - kettlebell
+    effort: high
+    bilateral: true
     movement_patterns:
       - hip_hinge
+      - ballistic
+    contraindicated_with:
+      - lumbar_disc
     typical_volume:
       reps: 10
-    notes: "Posterior chain, balance, hip stability — pre-hab staple."
+    notes: "Hip snap, not a squat; the bell floats to chest height."
 
-  - id: eccentric_step_down
-    name: "Eccentric Step-Down"
+  - id: me_warm_up
+    name: "Warm-Up: Dynamic Stretch, Air Squats, Get-Ups, Burpees"
     category: bodyweight
     modality:
-      - durability
-      - rehab
-    equipment:
-      - box
-    effort: low
-    bilateral: false
-    movement_patterns:
-      - knee_extension
-      - step_up
-    typical_volume:
-      reps: 10
-    notes: "Slow eccentric (3–5 sec) off a box. Knee/quad durability for descents."
-
-  - id: hip_flexor_mobilization
-    name: "Half-Kneeling Hip Flexor Mobilization"
-    category: mobility
-    modality:
       - mobility
-    equipment:
-      - none
-    effort: low
-    bilateral: false
-    movement_patterns:
-      - isometric
-    typical_volume:
-      duration_sec: 90
-
-  - id: thoracic_extension
-    name: "Thoracic Extension over Foam Roller"
-    category: mobility
-    modality:
-      - mobility
-    equipment:
-      - none
+    equipment: []
     effort: low
     bilateral: true
     movement_patterns:
-      - isometric
+      - squat
+      - get_up
+    contraindicated_with: []
     typical_volume:
-      duration_sec: 120
-    notes: "Counters pack-induced kyphosis."
-
-  - id: ankle_dorsiflexion_drill
-    name: "Ankle Dorsiflexion Drill"
-    category: mobility
-    modality:
-      - mobility
-    equipment:
-      - none
-    effort: low
-    bilateral: false
-    movement_patterns:
-      - isometric
-    typical_volume:
-      duration_sec: 60
-    notes: "Critical for steep uphill and downhill loading."
+      duration_sec: 600
+    notes: "Five minutes of dynamic stretching, then 20 air squats, 10 Turkish get-ups and 10 burpees."

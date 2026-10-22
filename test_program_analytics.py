@@ -1324,11 +1324,12 @@ def test_describe() -> None:
     check('needs are unioned per field', [n['field'] for n in ss['needs']] == ['sets', 'prs'])
 
     up = doc['philosophies']['uphill_athlete']
-    me = next(e for e in up['progress'] if e['id'] == 'muscular_endurance')
+    strength = next(e for e in up['progress'] if e['id'] == 'strength_base')
     check('framework scope resolves to two phase names',
-          [f['id'] for f in me['scope']['frameworks']] == ['uphill_base_phase', 'uphill_specific_phase']
-          and all(f['name'].startswith(('Base', 'Specific')) for f in me['scope']['frameworks']))
-    check('load_field expectation', me['expected'] == {'kind': 'load_field', 'field': 'duration_minutes'})
+          [f['id'] for f in strength['scope']['frameworks']] == ['uphill_base_phase', 'uphill_base_intensity_phase']
+          and all(f['name'].startswith('Base') for f in strength['scope']['frameworks']))
+    long_day = next(e for e in up['progress'] if e['id'] == 'long_day')
+    check('load_field expectation', long_day['expected'] == {'kind': 'load_field', 'field': 'duration_minutes'})
     split = next(e for e in up['progress'] if e['id'] == 'intensity_split')
     check('framework_field expectation', split['expected'] == {'kind': 'framework_field', 'field': 'intensity_distribution'})
 

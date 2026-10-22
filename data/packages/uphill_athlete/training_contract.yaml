@@ -1,0 +1,1182 @@
+version: 1
+sources:
+- https://uphillathlete.com/mountaineering/training-for-mountaineering/
+- https://www.uphillathlete.com/wp-content/uploads/2020/02/TftNA-General-Strength-routine-V2.-.pdf
+- https://www.uphillathlete.com/wp-content/uploads/2020/04/ME-Uphill-Athlete-Workout-.pdf
+- https://uphillathlete.com/aerobic-training/when-to-add-intensity-training/
+- https://uphillathlete.com/aerobic-training/aerobic-deficiency-syndrome/
+tracks:
+  full_program:
+    training_levels:
+    - intermediate
+    - advanced
+    - elite
+    deload_phases:
+    - taper
+    notes: 'Six days a week: four aerobic, two strength, one off. The aerobic minutes build about 10 % a week
+      for three weeks, then a recovery week at half the hardest; the long day is half the week''s aerobic
+      time. Stay below your aerobic threshold (AeT) except in the Zone 3 sessions, and add those only once
+      your AeT is within 10 % of your anaerobic threshold (AnT). Strength goes from the General Strength
+      circuit to heavy lifting to the muscular-endurance workout, once a week in Specific. The taper week
+      halves everything and keeps the Zone 3.
+
+      '
+    modules:
+    # The long day: half the week's aerobic minutes (Training for Mountaineering).
+    - id: long_day
+      name: Long Day
+      archetype_id: long_zone_2
+      modality: aerobic_base
+      training_levels: [intermediate, advanced, elite]
+      exposures_per_week: 1
+      min_spacing_days: 1
+      max_rpe: 6
+      progression:
+        model: weekly_volume
+        start_minutes: {intermediate: 330, advanced: 420, elite: 510}
+        ramp_pct: 10
+        build_weeks: 3
+        recovery_pct: 50
+        ramp_phases: [transition, base, base_intensity]
+        share: 0.5
+      blocks:
+      - role: long
+        exercise_id: zone2_hike
+        slot_type: time_domain
+        duration_sec: 3600
+        volume: true
+        intensity: zone2
+        notes: Below your aerobic threshold, as hilly as you can find; no heavy pack on the long day.
+    # The other aerobic days share what the long day and the Zone 3 leave; the
+    # pack goes on after four weeks (Training for Mountaineering).
+    - id: aerobic
+      name: Aerobic
+      archetype_id: recovery_jog
+      modality: aerobic_base
+      training_levels: [intermediate, advanced, elite]
+      exposures_per_week: 3
+      exposures_by_phase:
+        base_intensity: 2
+        specific: 1
+        taper: 2
+      min_spacing_days: 1
+      max_rpe: 6
+      progression:
+        model: weekly_volume
+        start_minutes: {intermediate: 330, advanced: 420, elite: 510}
+        ramp_pct: 10
+        build_weeks: 3
+        recovery_pct: 50
+        ramp_phases: [transition, base, base_intensity]
+        share: rest
+        pack_pct: [[1, 0], [5, 5], [7, 10], [9, 15]]
+      blocks:
+      - role: aerobic
+        exercise_id: zone2_hike
+        slot_type: time_domain
+        duration_sec: 3600
+        volume: true
+        intensity: zone2
+        notes: Below your aerobic threshold.
+    # Zone 3 once the aerobic base allows it: about 5 % of the week's aerobic
+    # time a session, one a week, then two (the 10 Percent Test).
+    - id: zone_3
+      name: Zone 3
+      archetype_id: ant_threshold_intervals
+      modality: anaerobic_intervals
+      training_levels: [intermediate, advanced, elite]
+      phases: [base_intensity, specific, taper]
+      exposures_per_week: 1
+      exposures_by_phase:
+        specific: 2
+      min_spacing_days: 2
+      max_rpe: 8
+      progression:
+        model: weekly_volume
+        start_minutes: {intermediate: 330, advanced: 420, elite: 510}
+        ramp_pct: 10
+        build_weeks: 3
+        recovery_pct: 50
+        ramp_phases: [transition, base, base_intensity]
+        share: 0.05
+      blocks:
+      - role: warm_up
+        exercise_id: zone2_hike
+        slot_type: time_domain
+        duration_sec: 900
+        intensity: zone2
+      - role: zone_3
+        exercise_id: uphill_run
+        slot_type: time_domain
+        duration_sec: 1200
+        volume: true
+        intensity: moderate
+        notes: Uphill between your aerobic and anaerobic thresholds, continuous or in intervals. Only once your
+          aerobic threshold is within 10 % of your anaerobic threshold (AnT ÷ AeT heart rate); until then, Zone 2.
+      - role: cool_down
+        exercise_id: zone2_hike
+        slot_type: time_domain
+        duration_sec: 600
+        intensity: zone1
+    # The General Strength routine: a circuit twice a week, one lap for two
+    # weeks, two for the next two, up to four in the eighth.
+    - id: general_strength
+      name: General Strength
+      archetype_id: general_strength_circuit
+      modality: relative_strength
+      training_levels: [intermediate, advanced, elite]
+      phases: [transition]
+      exposures_per_week: 2
+      min_spacing_days: 2
+      max_rpe: 8
+      progression:
+        model: skill_hold
+      periods:
+      - weeks: 2
+        rotation: [gs_1]
+      - weeks: 2
+        rotation: [gs_2]
+      - weeks: 2
+        rotation: [gs_3]
+      - weeks: 2
+        rotation: [gs_4]
+      variants:
+      - id: gs_1
+        name: General Strength — 1 lap
+        blocks:
+        - role: get_up
+          exercise_id: turkish_get_up
+          slot_type: sets_reps
+          sets: 1
+          reps: 5/hand
+          rest_sec: 20
+          duration_sec: 80
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+          notes: Change hands while lying down; five each hand, then heavier.
+        - role: push_up
+          exercise_id: push_up
+          slot_type: sets_reps
+          sets: 1
+          reps: up to 10
+          rest_sec: 20
+          duration_sec: 80
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+        - role: split_squat
+          exercise_id: split_bench_squat
+          slot_type: sets_reps
+          sets: 1
+          reps: up to 10/leg
+          rest_sec: 20
+          duration_sec: 80
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+        - role: dip
+          exercise_id: dip
+          slot_type: sets_reps
+          sets: 1
+          reps: up to 10
+          rest_sec: 20
+          duration_sec: 80
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+        - role: step_up
+          exercise_id: box_step_up
+          slot_type: sets_reps
+          sets: 1
+          reps: up to 10/leg
+          rest_sec: 20
+          duration_sec: 80
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+          notes: A box 75 % of knee height; balance on the top before stepping down.
+        - role: pull_up
+          exercise_id: pull_up
+          slot_type: sets_reps
+          sets: 1
+          reps: up to 10
+          rest_sec: 20
+          duration_sec: 80
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+        - role: squat
+          exercise_id: front_squat
+          slot_type: sets_reps
+          sets: 1
+          reps: up to 10
+          rest_sec: 20
+          duration_sec: 80
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+          notes: A broomstick first, then the bar, back neutral.
+        - role: leg_raise
+          exercise_id: hanging_leg_raise
+          slot_type: sets_reps
+          sets: 1
+          reps: up to 10
+          rest_sec: 20
+          duration_sec: 80
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+          notes: No swinging; bent knees first.
+      - id: gs_2
+        name: General Strength — 2 laps
+        blocks:
+        - role: get_up
+          exercise_id: turkish_get_up
+          slot_type: sets_reps
+          sets: 2
+          reps: 5/hand
+          rest_sec: 20
+          duration_sec: 160
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+          notes: Change hands while lying down; five each hand, then heavier.
+        - role: push_up
+          exercise_id: push_up
+          slot_type: sets_reps
+          sets: 2
+          reps: up to 10
+          rest_sec: 20
+          duration_sec: 160
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+        - role: split_squat
+          exercise_id: split_bench_squat
+          slot_type: sets_reps
+          sets: 2
+          reps: up to 10/leg
+          rest_sec: 20
+          duration_sec: 160
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+        - role: dip
+          exercise_id: dip
+          slot_type: sets_reps
+          sets: 2
+          reps: up to 10
+          rest_sec: 20
+          duration_sec: 160
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+        - role: step_up
+          exercise_id: box_step_up
+          slot_type: sets_reps
+          sets: 2
+          reps: up to 10/leg
+          rest_sec: 20
+          duration_sec: 160
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+          notes: A box 75 % of knee height; balance on the top before stepping down.
+        - role: pull_up
+          exercise_id: pull_up
+          slot_type: sets_reps
+          sets: 2
+          reps: up to 10
+          rest_sec: 20
+          duration_sec: 160
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+        - role: squat
+          exercise_id: front_squat
+          slot_type: sets_reps
+          sets: 2
+          reps: up to 10
+          rest_sec: 20
+          duration_sec: 160
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+          notes: A broomstick first, then the bar, back neutral.
+        - role: leg_raise
+          exercise_id: hanging_leg_raise
+          slot_type: sets_reps
+          sets: 2
+          reps: up to 10
+          rest_sec: 20
+          duration_sec: 160
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+          notes: No swinging; bent knees first.
+      - id: gs_3
+        name: General Strength — 3 laps
+        blocks:
+        - role: get_up
+          exercise_id: turkish_get_up
+          slot_type: sets_reps
+          sets: 3
+          reps: 5/hand
+          rest_sec: 20
+          duration_sec: 240
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+          notes: Change hands while lying down; five each hand, then heavier.
+        - role: push_up
+          exercise_id: push_up
+          slot_type: sets_reps
+          sets: 3
+          reps: up to 10
+          rest_sec: 20
+          duration_sec: 240
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+        - role: split_squat
+          exercise_id: split_bench_squat
+          slot_type: sets_reps
+          sets: 3
+          reps: up to 10/leg
+          rest_sec: 20
+          duration_sec: 240
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+        - role: dip
+          exercise_id: dip
+          slot_type: sets_reps
+          sets: 3
+          reps: up to 10
+          rest_sec: 20
+          duration_sec: 240
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+        - role: step_up
+          exercise_id: box_step_up
+          slot_type: sets_reps
+          sets: 3
+          reps: up to 10/leg
+          rest_sec: 20
+          duration_sec: 240
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+          notes: A box 75 % of knee height; balance on the top before stepping down.
+        - role: pull_up
+          exercise_id: pull_up
+          slot_type: sets_reps
+          sets: 3
+          reps: up to 10
+          rest_sec: 20
+          duration_sec: 240
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+        - role: squat
+          exercise_id: front_squat
+          slot_type: sets_reps
+          sets: 3
+          reps: up to 10
+          rest_sec: 20
+          duration_sec: 240
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+          notes: A broomstick first, then the bar, back neutral.
+        - role: leg_raise
+          exercise_id: hanging_leg_raise
+          slot_type: sets_reps
+          sets: 3
+          reps: up to 10
+          rest_sec: 20
+          duration_sec: 240
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+          notes: No swinging; bent knees first.
+      - id: gs_4
+        name: General Strength — 4 laps
+        blocks:
+        - role: get_up
+          exercise_id: turkish_get_up
+          slot_type: sets_reps
+          sets: 4
+          reps: 5/hand
+          rest_sec: 20
+          duration_sec: 320
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+          notes: Change hands while lying down; five each hand, then heavier.
+        - role: push_up
+          exercise_id: push_up
+          slot_type: sets_reps
+          sets: 4
+          reps: up to 10
+          rest_sec: 20
+          duration_sec: 320
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+        - role: split_squat
+          exercise_id: split_bench_squat
+          slot_type: sets_reps
+          sets: 4
+          reps: up to 10/leg
+          rest_sec: 20
+          duration_sec: 320
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+        - role: dip
+          exercise_id: dip
+          slot_type: sets_reps
+          sets: 4
+          reps: up to 10
+          rest_sec: 20
+          duration_sec: 320
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+        - role: step_up
+          exercise_id: box_step_up
+          slot_type: sets_reps
+          sets: 4
+          reps: up to 10/leg
+          rest_sec: 20
+          duration_sec: 320
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+          notes: A box 75 % of knee height; balance on the top before stepping down.
+        - role: pull_up
+          exercise_id: pull_up
+          slot_type: sets_reps
+          sets: 4
+          reps: up to 10
+          rest_sec: 20
+          duration_sec: 320
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+        - role: squat
+          exercise_id: front_squat
+          slot_type: sets_reps
+          sets: 4
+          reps: up to 10
+          rest_sec: 20
+          duration_sec: 320
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+          notes: A broomstick first, then the bar, back neutral.
+        - role: leg_raise
+          exercise_id: hanging_leg_raise
+          slot_type: sets_reps
+          sets: 4
+          reps: up to 10
+          rest_sec: 20
+          duration_sec: 320
+          load_note: Make it harder whenever you can do more than ten; never to failure.
+          notes: No swinging; bent knees first.
+    # Max strength after the general: heavy, three or four reps, twice a week
+    # in Base, maintained once a week in Specific.
+    - id: max_strength
+      name: Max Strength
+      archetype_id: me_max_strength_gym
+      modality: max_strength
+      training_levels: [intermediate, advanced, elite]
+      phases: [base, base_intensity, specific, taper]
+      exposures_per_week: 2
+      exposures_by_phase:
+        specific: 1
+        taper: 1
+      min_spacing_days: 2
+      max_rpe: 9
+      deload_keep: 0.5
+      progression:
+        model: skill_hold
+      rotation: [squat, deadlift]
+      variants:
+      - id: squat
+        name: Max Strength — Squat
+        blocks:
+        - role: lift
+          exercise_id: back_squat
+          slot_type: sets_reps
+          sets: 4
+          reps: 3-4
+          rest_sec: 180
+          duration_sec: 840
+          load_note: &heavy 90–95 % of your one-rep max, three or four reps; never more than twice your bodyweight.
+        - role: pull
+          exercise_id: weighted_pull_up
+          slot_type: sets_reps
+          sets: 4
+          reps: 3-4
+          rest_sec: 180
+          duration_sec: 840
+          load_note: Heavy enough that four reps are all you can do.
+        - role: core
+          exercise_id: core_routine
+          slot_type: sets_reps
+          sets: 2
+          reps: 4-6
+          rest_sec: 60
+          duration_sec: 600
+          notes: Four or five of your hardest core exercises, four to six reps each.
+      - id: deadlift
+        name: Max Strength — Deadlift
+        blocks:
+        - role: lift
+          exercise_id: deadlift
+          slot_type: sets_reps
+          sets: 4
+          reps: 3-4
+          rest_sec: 180
+          duration_sec: 840
+          load_note: *heavy
+        - role: pull
+          exercise_id: weighted_pull_up
+          slot_type: sets_reps
+          sets: 4
+          reps: 3-4
+          rest_sec: 180
+          duration_sec: 840
+          load_note: Heavy enough that four reps are all you can do.
+        - role: core
+          exercise_id: core_routine
+          slot_type: sets_reps
+          sets: 2
+          reps: 4-6
+          rest_sec: 60
+          duration_sec: 600
+          notes: Four or five of your hardest core exercises, four to six reps each.
+    # The muscular-endurance workout, once a week in Specific, its ten
+    # workouts in order, then the tenth again (the ME PDF).
+    - id: muscular_endurance
+      name: Muscular Endurance
+      archetype_id: me_weighted_box_step_ups
+      modality: strength_endurance
+      training_levels: [intermediate, advanced, elite]
+      phases: [specific]
+      exposures_per_week: 1
+      min_spacing_days: 3
+      max_rpe: 9
+      deload_keep: 0.5
+      progression:
+        model: skill_hold
+      rotation: [me_1, me_2, me_3, me_4, me_5, me_6, me_7, me_8, me_9, me_10]
+      rotation_holds: true
+      variants:
+      - id: me_1
+        name: Muscular Endurance — Workout 1
+        blocks:
+        - role: warm_up
+          exercise_id: me_warm_up
+          slot_type: skill_practice
+          duration_sec: 600
+          notes: Only once your aerobic threshold is within 10 % of your anaerobic threshold. Expect two stiff days after; keep them easy.
+        - role: core
+          exercise_id: core_routine
+          slot_type: sets_reps
+          sets: 2
+          reps: 4-6
+          rest_sec: 60
+          duration_sec: 480
+          notes: Four or five of your hardest core exercises, each with enough resistance that four to six reps are all you can do.
+        - role: split_jump_squat
+          exercise_id: split_jump_squat
+          slot_type: sets_reps
+          sets: 6
+          reps: 10/leg
+          rest_sec: 60
+          duration_sec: 720
+          load_note: Bodyweight only, to learn the movements.
+        - role: squat_jump
+          exercise_id: squat_jump
+          slot_type: sets_reps
+          sets: 6
+          reps: 10
+          rest_sec: 60
+          duration_sec: 600
+          load_note: Bodyweight only, to learn the movements.
+        - role: box_step_up
+          exercise_id: box_step_up
+          slot_type: sets_reps
+          sets: 6
+          reps: 10/leg
+          rest_sec: 30
+          duration_sec: 780
+          load_note: Bodyweight only, to learn the movements.
+          notes: All the sets on the right leg, then the left; minimal push from the back leg.
+        - role: front_lunge
+          exercise_id: front_lunge
+          slot_type: sets_reps
+          sets: 6
+          reps: 10/leg
+          rest_sec: 30
+          duration_sec: 780
+          load_note: Bodyweight only, to learn the movements.
+          notes: All the sets on the right leg, then the left.
+        - role: cool_down
+          exercise_id: zone2_hike
+          slot_type: time_domain
+          duration_sec: 600
+          intensity: zone1
+          notes: Ten minutes of easy aerobic exercise.
+      - id: me_2
+        name: Muscular Endurance — Workout 2
+        blocks:
+        - role: warm_up
+          exercise_id: me_warm_up
+          slot_type: skill_practice
+          duration_sec: 600
+          notes: Only once your aerobic threshold is within 10 % of your anaerobic threshold. Expect two stiff days after; keep them easy.
+        - role: core
+          exercise_id: core_routine
+          slot_type: sets_reps
+          sets: 2
+          reps: 4-6
+          rest_sec: 60
+          duration_sec: 480
+          notes: Four or five of your hardest core exercises, each with enough resistance that four to six reps are all you can do.
+        - role: split_jump_squat
+          exercise_id: split_jump_squat
+          slot_type: sets_reps
+          sets: 6
+          reps: 10/leg
+          rest_sec: 60
+          duration_sec: 720
+          load_note: Bodyweight only, to learn the movements.
+        - role: squat_jump
+          exercise_id: squat_jump
+          slot_type: sets_reps
+          sets: 6
+          reps: 10
+          rest_sec: 60
+          duration_sec: 600
+          load_note: Bodyweight only, to learn the movements.
+        - role: box_step_up
+          exercise_id: box_step_up
+          slot_type: sets_reps
+          sets: 6
+          reps: 10/leg
+          rest_sec: 30
+          duration_sec: 780
+          load_note: Bodyweight only, to learn the movements.
+          notes: All the sets on the right leg, then the left; minimal push from the back leg.
+        - role: front_lunge
+          exercise_id: front_lunge
+          slot_type: sets_reps
+          sets: 6
+          reps: 10/leg
+          rest_sec: 30
+          duration_sec: 780
+          load_note: Bodyweight only, to learn the movements.
+          notes: All the sets on the right leg, then the left.
+        - role: cool_down
+          exercise_id: zone2_hike
+          slot_type: time_domain
+          duration_sec: 600
+          intensity: zone1
+          notes: Ten minutes of easy aerobic exercise.
+      - id: me_3
+        name: Muscular Endurance — Workout 3
+        blocks:
+        - role: warm_up
+          exercise_id: me_warm_up
+          slot_type: skill_practice
+          duration_sec: 600
+          notes: Only once your aerobic threshold is within 10 % of your anaerobic threshold. Expect two stiff days after; keep them easy.
+        - role: core
+          exercise_id: core_routine
+          slot_type: sets_reps
+          sets: 2
+          reps: 4-6
+          rest_sec: 60
+          duration_sec: 480
+          notes: Four or five of your hardest core exercises, each with enough resistance that four to six reps are all you can do.
+        - role: split_jump_squat
+          exercise_id: split_jump_squat
+          slot_type: sets_reps
+          sets: 7
+          reps: 10/leg
+          rest_sec: 45
+          duration_sec: 685
+          load_note: Bodyweight only.
+        - role: squat_jump
+          exercise_id: squat_jump
+          slot_type: sets_reps
+          sets: 7
+          reps: 10
+          rest_sec: 45
+          duration_sec: 545
+          load_note: Bodyweight only.
+        - role: box_step_up
+          exercise_id: box_step_up
+          slot_type: sets_reps
+          sets: 7
+          reps: 10/leg
+          rest_sec: 30
+          duration_sec: 860
+          load_note: Bodyweight only.
+          notes: All the sets on the right leg, then the left; minimal push from the back leg.
+        - role: front_lunge
+          exercise_id: front_lunge
+          slot_type: sets_reps
+          sets: 7
+          reps: 10/leg
+          rest_sec: 30
+          duration_sec: 860
+          load_note: Bodyweight only.
+          notes: All the sets on the right leg, then the left.
+        - role: cool_down
+          exercise_id: zone2_hike
+          slot_type: time_domain
+          duration_sec: 600
+          intensity: zone1
+          notes: Ten minutes of easy aerobic exercise.
+      - id: me_4
+        name: Muscular Endurance — Workout 4
+        blocks:
+        - role: warm_up
+          exercise_id: me_warm_up
+          slot_type: skill_practice
+          duration_sec: 600
+          notes: Only once your aerobic threshold is within 10 % of your anaerobic threshold. Expect two stiff days after; keep them easy.
+        - role: core
+          exercise_id: core_routine
+          slot_type: sets_reps
+          sets: 2
+          reps: 4-6
+          rest_sec: 60
+          duration_sec: 480
+          notes: Four or five of your hardest core exercises, each with enough resistance that four to six reps are all you can do.
+        - role: split_jump_squat
+          exercise_id: split_jump_squat
+          slot_type: sets_reps
+          sets: 5
+          reps: 10/leg
+          rest_sec: 45
+          duration_sec: 545
+          load_note: Add weight — a vest (or a pack) of no more than 10 % of your bodyweight.
+        - role: squat_jump
+          exercise_id: squat_jump
+          slot_type: sets_reps
+          sets: 5
+          reps: 10
+          rest_sec: 45
+          duration_sec: 445
+          load_note: Add weight — a vest (or a pack) of no more than 10 % of your bodyweight.
+        - role: box_step_up
+          exercise_id: box_step_up
+          slot_type: sets_reps
+          sets: 5
+          reps: 10/leg
+          rest_sec: 30
+          duration_sec: 670
+          load_note: Add weight — a vest (or a pack) of no more than 10 % of your bodyweight.
+          notes: All the sets on the right leg, then the left; minimal push from the back leg.
+        - role: front_lunge
+          exercise_id: front_lunge
+          slot_type: sets_reps
+          sets: 5
+          reps: 10/leg
+          rest_sec: 30
+          duration_sec: 670
+          load_note: Add weight — a vest (or a pack) of no more than 10 % of your bodyweight.
+          notes: All the sets on the right leg, then the left.
+        - role: goblet_squat_press
+          exercise_id: goblet_squat_press
+          slot_type: sets_reps
+          sets: 5
+          reps: 10
+          rest_sec: 45
+          duration_sec: 495
+          load_note: A bell you can press for all ten.
+        - role: kb_swing
+          exercise_id: kb_swing
+          slot_type: sets_reps
+          sets: 5
+          reps: 10
+          rest_sec: 45
+          duration_sec: 445
+        - role: cool_down
+          exercise_id: zone2_hike
+          slot_type: time_domain
+          duration_sec: 600
+          intensity: zone1
+          notes: Ten minutes of easy aerobic exercise.
+      - id: me_5
+        name: Muscular Endurance — Workout 5
+        blocks:
+        - role: warm_up
+          exercise_id: me_warm_up
+          slot_type: skill_practice
+          duration_sec: 600
+          notes: Only once your aerobic threshold is within 10 % of your anaerobic threshold. Expect two stiff days after; keep them easy.
+        - role: core
+          exercise_id: core_routine
+          slot_type: sets_reps
+          sets: 2
+          reps: 4-6
+          rest_sec: 60
+          duration_sec: 480
+          notes: Four or five of your hardest core exercises, each with enough resistance that four to six reps are all you can do.
+        - role: split_jump_squat
+          exercise_id: split_jump_squat
+          slot_type: sets_reps
+          sets: 6
+          reps: 10/leg
+          rest_sec: 40
+          duration_sec: 570
+          load_note: +10 % of your bodyweight.
+        - role: squat_jump
+          exercise_id: squat_jump
+          slot_type: sets_reps
+          sets: 6
+          reps: 10
+          rest_sec: 40
+          duration_sec: 450
+          load_note: +10 % of your bodyweight.
+        - role: box_step_up
+          exercise_id: box_step_up
+          slot_type: sets_reps
+          sets: 6
+          reps: 10/leg
+          rest_sec: 30
+          duration_sec: 750
+          load_note: +10 % of your bodyweight.
+          notes: All the sets on the right leg, then the left; minimal push from the back leg.
+        - role: front_lunge
+          exercise_id: front_lunge
+          slot_type: sets_reps
+          sets: 6
+          reps: 10/leg
+          rest_sec: 30
+          duration_sec: 750
+          load_note: +10 % of your bodyweight.
+          notes: All the sets on the right leg, then the left.
+        - role: goblet_squat_press
+          exercise_id: goblet_squat_press
+          slot_type: sets_reps
+          sets: 6
+          reps: 10
+          rest_sec: 40
+          duration_sec: 510
+          load_note: A bell you can press for all ten.
+        - role: kb_swing
+          exercise_id: kb_swing
+          slot_type: sets_reps
+          sets: 6
+          reps: 10
+          rest_sec: 40
+          duration_sec: 450
+        - role: cool_down
+          exercise_id: zone2_hike
+          slot_type: time_domain
+          duration_sec: 600
+          intensity: zone1
+          notes: Ten minutes of easy aerobic exercise.
+      - id: me_6
+        name: Muscular Endurance — Workout 6
+        blocks:
+        - role: warm_up
+          exercise_id: me_warm_up
+          slot_type: skill_practice
+          duration_sec: 600
+          notes: Only once your aerobic threshold is within 10 % of your anaerobic threshold. Expect two stiff days after; keep them easy.
+        - role: core
+          exercise_id: core_routine
+          slot_type: sets_reps
+          sets: 2
+          reps: 4-6
+          rest_sec: 60
+          duration_sec: 480
+          notes: Four or five of your hardest core exercises, each with enough resistance that four to six reps are all you can do.
+        - role: split_jump_squat
+          exercise_id: split_jump_squat
+          slot_type: sets_reps
+          sets: 8
+          reps: 10/leg
+          rest_sec: 40
+          duration_sec: 730
+          load_note: +10 % of your bodyweight.
+        - role: squat_jump
+          exercise_id: squat_jump
+          slot_type: sets_reps
+          sets: 8
+          reps: 10
+          rest_sec: 40
+          duration_sec: 570
+          load_note: +10 % of your bodyweight.
+        - role: box_step_up
+          exercise_id: box_step_up
+          slot_type: sets_reps
+          sets: 8
+          reps: 10/leg
+          rest_sec: 30
+          duration_sec: 970
+          load_note: +10 % of your bodyweight.
+          notes: All the sets on the right leg, then the left; minimal push from the back leg.
+        - role: front_lunge
+          exercise_id: front_lunge
+          slot_type: sets_reps
+          sets: 8
+          reps: 10/leg
+          rest_sec: 30
+          duration_sec: 970
+          load_note: +10 % of your bodyweight.
+          notes: All the sets on the right leg, then the left.
+        - role: goblet_squat_press
+          exercise_id: goblet_squat_press
+          slot_type: sets_reps
+          sets: 8
+          reps: 10
+          rest_sec: 40
+          duration_sec: 650
+          load_note: A bell you can press for all ten.
+        - role: kb_swing
+          exercise_id: kb_swing
+          slot_type: sets_reps
+          sets: 8
+          reps: 10
+          rest_sec: 40
+          duration_sec: 570
+        - role: cool_down
+          exercise_id: zone2_hike
+          slot_type: time_domain
+          duration_sec: 600
+          intensity: zone1
+          notes: Ten minutes of easy aerobic exercise.
+      - id: me_7
+        name: Muscular Endurance — Workout 7
+        blocks:
+        - role: warm_up
+          exercise_id: me_warm_up
+          slot_type: skill_practice
+          duration_sec: 600
+          notes: Only once your aerobic threshold is within 10 % of your anaerobic threshold. Expect two stiff days after; keep them easy.
+        - role: core
+          exercise_id: core_routine
+          slot_type: sets_reps
+          sets: 2
+          reps: 4-6
+          rest_sec: 60
+          duration_sec: 480
+          notes: Four or five of your hardest core exercises, each with enough resistance that four to six reps are all you can do.
+        - role: split_jump_squat
+          exercise_id: split_jump_squat
+          slot_type: sets_reps
+          sets: 9
+          reps: 10/leg
+          rest_sec: 40
+          duration_sec: 780
+          load_note: +15 % of your bodyweight.
+        - role: squat_jump
+          exercise_id: squat_jump
+          slot_type: sets_reps
+          sets: 9
+          reps: 10
+          rest_sec: 40
+          duration_sec: 600
+          load_note: +15 % of your bodyweight.
+        - role: box_step_up
+          exercise_id: box_step_up
+          slot_type: sets_reps
+          sets: 9
+          reps: 10/leg
+          rest_sec: 30
+          duration_sec: 1050
+          load_note: +15 % of your bodyweight.
+          notes: All the sets on the right leg, then the left; minimal push from the back leg.
+        - role: front_lunge
+          exercise_id: front_lunge
+          slot_type: sets_reps
+          sets: 9
+          reps: 10/leg
+          rest_sec: 30
+          duration_sec: 1050
+          load_note: +15 % of your bodyweight.
+          notes: All the sets on the right leg, then the left.
+        - role: goblet_squat_press
+          exercise_id: goblet_squat_press
+          slot_type: sets_reps
+          sets: 9
+          reps: 10
+          rest_sec: 40
+          duration_sec: 690
+          load_note: A bell you can press for all ten.
+        - role: kb_swing
+          exercise_id: kb_swing
+          slot_type: sets_reps
+          sets: 9
+          reps: 10
+          rest_sec: 40
+          duration_sec: 600
+        - role: cool_down
+          exercise_id: zone2_hike
+          slot_type: time_domain
+          duration_sec: 600
+          intensity: zone1
+          notes: Ten minutes of easy aerobic exercise.
+      - id: me_8
+        name: Muscular Endurance — Workout 8
+        blocks:
+        - role: warm_up
+          exercise_id: me_warm_up
+          slot_type: skill_practice
+          duration_sec: 600
+          notes: Only once your aerobic threshold is within 10 % of your anaerobic threshold. Expect two stiff days after; keep them easy.
+        - role: core
+          exercise_id: core_routine
+          slot_type: sets_reps
+          sets: 2
+          reps: 4-6
+          rest_sec: 60
+          duration_sec: 480
+          notes: Four or five of your hardest core exercises, each with enough resistance that four to six reps are all you can do.
+        - role: split_jump_squat
+          exercise_id: split_jump_squat
+          slot_type: sets_reps
+          sets: 8
+          reps: 10/leg
+          rest_sec: 35
+          duration_sec: 660
+          load_note: +15 % of your bodyweight.
+        - role: squat_jump
+          exercise_id: squat_jump
+          slot_type: sets_reps
+          sets: 8
+          reps: 10
+          rest_sec: 35
+          duration_sec: 500
+          load_note: +15 % of your bodyweight.
+        - role: box_step_up
+          exercise_id: box_step_up
+          slot_type: sets_reps
+          sets: 8
+          reps: 10/leg
+          rest_sec: 35
+          duration_sec: 1020
+          load_note: +15 % of your bodyweight.
+          notes: All the sets on the right leg, then the left; minimal push from the back leg.
+        - role: front_lunge
+          exercise_id: front_lunge
+          slot_type: sets_reps
+          sets: 8
+          reps: 10/leg
+          rest_sec: 35
+          duration_sec: 1020
+          load_note: +15 % of your bodyweight.
+          notes: All the sets on the right leg, then the left.
+        - role: goblet_squat_press
+          exercise_id: goblet_squat_press
+          slot_type: sets_reps
+          sets: 8
+          reps: 10
+          rest_sec: 35
+          duration_sec: 580
+          load_note: A bell you can press for all ten.
+        - role: kb_swing
+          exercise_id: kb_swing
+          slot_type: sets_reps
+          sets: 8
+          reps: 10
+          rest_sec: 35
+          duration_sec: 500
+        - role: cool_down
+          exercise_id: zone2_hike
+          slot_type: time_domain
+          duration_sec: 600
+          intensity: zone1
+          notes: Ten minutes of easy aerobic exercise.
+      - id: me_9
+        name: Muscular Endurance — Workout 9
+        blocks:
+        - role: warm_up
+          exercise_id: me_warm_up
+          slot_type: skill_practice
+          duration_sec: 600
+          notes: Only once your aerobic threshold is within 10 % of your anaerobic threshold. Expect two stiff days after; keep them easy.
+        - role: core
+          exercise_id: core_routine
+          slot_type: sets_reps
+          sets: 2
+          reps: 4-6
+          rest_sec: 60
+          duration_sec: 480
+          notes: Four or five of your hardest core exercises, each with enough resistance that four to six reps are all you can do.
+        - role: split_jump_squat
+          exercise_id: split_jump_squat
+          slot_type: sets_reps
+          sets: 7
+          reps: 10/leg
+          rest_sec: 45
+          duration_sec: 640
+          load_note: +20 % of your bodyweight.
+        - role: squat_jump
+          exercise_id: squat_jump
+          slot_type: sets_reps
+          sets: 7
+          reps: 10
+          rest_sec: 45
+          duration_sec: 500
+          load_note: +20 % of your bodyweight.
+        - role: box_step_up
+          exercise_id: box_step_up
+          slot_type: sets_reps
+          sets: 7
+          reps: 10/leg
+          rest_sec: 30
+          duration_sec: 815
+          load_note: +20 % of your bodyweight.
+          notes: All the sets on the right leg, then the left; minimal push from the back leg.
+        - role: front_lunge
+          exercise_id: front_lunge
+          slot_type: sets_reps
+          sets: 7
+          reps: 10/leg
+          rest_sec: 30
+          duration_sec: 815
+          load_note: +20 % of your bodyweight.
+          notes: All the sets on the right leg, then the left.
+        - role: goblet_squat_press
+          exercise_id: goblet_squat_press
+          slot_type: sets_reps
+          sets: 7
+          reps: 10
+          rest_sec: 45
+          duration_sec: 570
+          load_note: A bell you can press for all ten.
+        - role: kb_swing
+          exercise_id: kb_swing
+          slot_type: sets_reps
+          sets: 7
+          reps: 10
+          rest_sec: 45
+          duration_sec: 500
+        - role: cool_down
+          exercise_id: zone2_hike
+          slot_type: time_domain
+          duration_sec: 600
+          intensity: zone1
+          notes: Ten minutes of easy aerobic exercise.
+      - id: me_10
+        name: Muscular Endurance — Workout 10
+        blocks:
+        - role: warm_up
+          exercise_id: me_warm_up
+          slot_type: skill_practice
+          duration_sec: 600
+          notes: Only once your aerobic threshold is within 10 % of your anaerobic threshold. Expect two stiff days after; keep them easy.
+        - role: core
+          exercise_id: core_routine
+          slot_type: sets_reps
+          sets: 2
+          reps: 4-6
+          rest_sec: 60
+          duration_sec: 480
+          notes: Four or five of your hardest core exercises, each with enough resistance that four to six reps are all you can do.
+        - role: split_jump_squat
+          exercise_id: split_jump_squat
+          slot_type: sets_reps
+          sets: 8
+          reps: 10/leg
+          rest_sec: 35
+          duration_sec: 630
+          load_note: +20 % of your bodyweight.
+        - role: squat_jump
+          exercise_id: squat_jump
+          slot_type: sets_reps
+          sets: 8
+          reps: 10
+          rest_sec: 35
+          duration_sec: 470
+          load_note: +20 % of your bodyweight.
+        - role: box_step_up
+          exercise_id: box_step_up
+          slot_type: sets_reps
+          sets: 8
+          reps: 10/leg
+          rest_sec: 30
+          duration_sec: 910
+          load_note: +20 % of your bodyweight.
+          notes: All the sets on the right leg, then the left; minimal push from the back leg.
+        - role: front_lunge
+          exercise_id: front_lunge
+          slot_type: sets_reps
+          sets: 8
+          reps: 10/leg
+          rest_sec: 30
+          duration_sec: 910
+          load_note: +20 % of your bodyweight.
+          notes: All the sets on the right leg, then the left.
+        - role: goblet_squat_press
+          exercise_id: goblet_squat_press
+          slot_type: sets_reps
+          sets: 8
+          reps: 10
+          rest_sec: 35
+          duration_sec: 550
+          load_note: A bell you can press for all ten.
+        - role: kb_swing
+          exercise_id: kb_swing
+          slot_type: sets_reps
+          sets: 8
+          reps: 10
+          rest_sec: 35
+          duration_sec: 470
+        - role: cool_down
+          exercise_id: zone2_hike
+          slot_type: time_domain
+          duration_sec: 600
+          intensity: zone1
+          notes: Ten minutes of easy aerobic exercise.

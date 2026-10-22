@@ -1,54 +1,46 @@
 id: me_max_strength_gym
-name: Max Strength Gym Session
+name: Max Strength
 modality: max_strength
 category: strength
 training_levels:
 - intermediate
 - advanced
 - elite
-duration_estimate_minutes: 60
+duration_estimate_minutes: 38
+required_equipment:
+- barbell
+- rack
+- plates
+- pull_up_bar
 applicable_phases:
 - base
-- build
-- peak
 - specific
-- transition
+- taper
 slots:
-- role: warmup
-  slot_type: time_domain
-  duration_minutes: 10
-  intensity: low
-  exercise_filter:
-    category: mobility
-- role: main_strength
+- role: lift
   slot_type: sets_reps
-  sets: 5
-  reps: 5
-  intensity: heavy
+  sets: 4
+  reps: 3-4
   rest_sec: 180
   exercise_filter:
-    category: barbell
-- role: accessory
+    exercise_ids: [back_squat, deadlift]
+- role: pull
   slot_type: sets_reps
-  sets: 3
-  reps: 10
-  intensity: submaximal
+  sets: 4
+  reps: 3-4
+  rest_sec: 180
   exercise_filter:
-    category: bodyweight
+    exercise_ids: [weighted_pull_up]
+- role: core
+  slot_type: sets_reps
+  sets: 2
+  reps: 4-6
+  exercise_filter:
+    exercise_ids: [core_routine]
 sources:
-- Training for the New Alpinism, Ch. 8 — Strength Training for Climbers
-notes: 'Max strength, Uphill-style: low reps, heavy load, long rest. 4–6 sets
-
-  × 4–6 reps at ~85–90% 1RM on a primary compound (back squat, deadlift,
-
-  front squat, weighted pull-up). Rest 3 min between heavy sets. Goal is
-
-  neural — increase force production without adding muscle mass that
-
-  would cost on the mountain. Twice weekly in Base, once in Specific
-
-  (maintenance), zero in Taper. Always pair with the next-day recovery
-
-  jog rule.
-
-  '
+- "Uphill Athlete podcast, Training for Mountaineering: Strength (2023)"
+- "Uphill Athlete, Training for Mountaineering (Steve House, 2021)"
+notes: >
+  After the general strength: three or four reps at 90–95 % of the one-rep
+  max, never past twice bodyweight in the squat or deadlift, and the core
+  routine. Twice a week in Base, maintained once a week in Specific.

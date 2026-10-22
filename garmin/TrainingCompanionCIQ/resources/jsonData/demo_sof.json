@@ -738,9 +738,9 @@
        "screen": "s0"
       }
      ],
-     "packageId": "uphill_athlete",
+     "packageId": null,
      "watch": {
-      "label": "Uphill Athlete — Steve House & Scott Johnston",
+      "label": null,
       "accent": null,
       "summary": {
        "pages": [

@@ -1,64 +1,57 @@
-ankle_dorsiflexion_drill:
+back_squat:
   animation:
     type: none
-  coaching_focus: Quality of the end range is the training target -- the goal is to
-    reach further into dorsiflexion each session, not to perform more repetitions
-    at the same depth.
+  coaching_focus: Think hip hinge loaded onto your back, not a knee bend — sit back and down, not just
+    down.
   common_errors:
-  - 'Only training on training days: ankle dorsiflexion adaptation requires daily
-    stimulus -- do it every morning if it is a limiting factor'
-  - 'Neglecting the downhill demand: dorsiflexion under eccentric knee load (the downhill
-    pattern) should be trained with weighted split squats as well'
-  - 'Expecting fast progress: ankle mobility responds slowly -- weeks of consistent
-    work, not days'
+  - 'Morning star: hips shoot up and chest drops forward — fix with box squat and intentional hip-drive
+    cuing'
+  - Knees caving medially — cue external rotation, use band above knees as feedback
+  - Excessive forward lean — usually ankle dorsiflexion restriction or bar position too high
+  - 'Half reps: hip crease above parallel — use a box or depth marker until the habit is built'
   cue_points:
-  - Knee-to-wall test position, foot progressively further from the wall as range
-    improves
-  - 'Each rep: drive the knee forward actively, breathe into the end range, release
-    back'
-  - Pair with calf stretching and banded distraction in a complete ankle prep sequence
-  - Track the maximum heel-to-wall distance weekly as a progress metric
-  - 'Priority movement for mountain athletes: schedule it daily, not just on training
-    days'
-  description: The ankle dorsiflexion drill (Uphill Athlete) trains the range of motion
-    critical for steep uphill and downhill terrain -- the single most important ankle
-    quality for mountain athletes. Limited dorsiflexion forces the athlete into a
-    toe-strike pattern on uphills and creates excessive knee valgus on downhills.
-    Uphill Athlete includes it in every preparatory phase.
+  - 'Brace hard before unracking: 360-degree air pressure through your belt, not just your belly'
+  - Break at the hips and knees simultaneously — do not initiate with the knees
+  - Push knees out in the direction of your toes throughout the descent
+  - Hip crease must pass below the top of the patella at depth
+  - Drive the floor away on the ascent — spread the floor, not raise the bar
+  - Keep the bar over mid-foot; weight shifts forward or heels rise when this fails
+  description: The back squat is the foundational bilateral lower-body strength movement — a loaded hip
+    hinge and knee flexion pattern that demands coordinated engagement of the entire posterior chain and
+    trunk. Horsemen set the benchmark at 2x bodyweight; Starting Strength builds to this from a 3x5 novice
+    progression.
   muscle_diagram:
-    highlight_primary: []
-    highlight_secondary: []
-  muscles_primary: []
-  muscles_secondary: []
-eccentric_step_down:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    - erector_spinae
+    highlight_secondary:
+    - hamstrings
+    - adductors
+    - core
+  muscles_primary:
+  - quadriceps
+  - glutes
+  - erector_spinae
+  muscles_secondary:
+  - hamstrings
+  - adductors
+  - core
+box_step_up:
   animation:
     type: none
-  coaching_focus: Take the full 3-5 seconds to lower -- the entire value of this exercise
-    is the slow eccentric; rushing to touch the floor turns it into a step-down, not
-    an eccentric step-down.
+  coaching_focus: Step up and balance fully on the loaded leg before stepping down -- the lifting of the
+    foot onto the box is part of the exercise.
   common_errors:
-  - Lowering too fast -- the slow descent is the training stimulus; anything faster
-    than 3 seconds is not an eccentric step-down
-  - Knee caving inward -- cue external rotation and push the knee over the second
-    toe throughout
-  - Using a box too high -- 6-8 inches is appropriate initially; height is a progression
-    variable, not a starting point
+  - Pushing off the back leg -- minimal rear-leg assist
+  - A box too high or too low -- 75 % of the height of the knee
   cue_points:
-  - Stand on a box (6-12 inch) on the working leg with the non-working leg hanging
-    in the air
-  - Lower the non-working heel toward the floor over 3-5 seconds -- control every
-    degree of descent
-  - Keep the working knee tracking over the second toe throughout the descent -- no
-    valgus
-  - Touch the heel lightly to the floor before pressing back up through the working
-    leg
-  - The emphasis is eccentric (lowering) -- the concentric (press up) is simply reset
-    for the next rep
-  description: The eccentric step-down is a slow, controlled single-leg descent off
-    a box -- the working leg lowers the full bodyweight over 3-5 seconds. It is the
-    primary knee and quad durability drill for mountain athletes and runners, training
-    the eccentric quad control required for descents under load. It is both a rehabilitation
-    tool and a durability standard.
+  - Box at 75 % of knee height
+  - Stand all the way up and balance on the top before stepping down
+  - Imagine punching steps up a steep snow slope
+  - When ten reps are easy, add a pack or vest
+  description: The uphill propulsion exercise of the General Strength routine and the muscular-endurance
+    workout -- step-ups on a knee-high box, all reps on one leg, then the other.
   muscle_diagram:
     highlight_primary:
     - quadriceps
@@ -68,268 +61,571 @@ eccentric_step_down:
     - calves
   muscles_primary:
   - quadriceps
-  - vmo
   - glutes
   muscles_secondary:
   - hamstrings
   - calves
   - core
-hill_repeat:
+core_routine:
   animation:
     type: none
-  coaching_focus: Commit fully to the uphill effort -- a hill repeat done at 85% is
-    a tempo run, not a hill repeat; the effort must reach Zone 4-5 to provide the
-    anaerobic threshold stimulus.
+  coaching_focus: Pick four or five of your hardest core exercises and load them so four to six reps are
+    all you can do.
   common_errors:
-  - Going out too hard on rep 1 -- pace reps 1-2 at 90% and build; blowing up on rep
-    2 wastes the rest of the session
-  - Jogging the descent -- the rest must be complete; active recovery between reps
-    is a different workout
-  - Too many reps at insufficient intensity -- fewer hard reps beat more moderate
-    reps every time
+  - Choosing easy exercises and doing many reps
+  - Swinging through hanging exercises instead of controlling them
   cue_points:
-  - Select a hill of 8-15% grade with 2-4 minutes of sustained climbing available
-  - Sprint (or run hard) uphill at Zone 4-5 intensity for the full repeat duration
-  - Walk the descent completely -- the rest period is the walk down; do not jog it
-  - Begin the next repeat once heart rate returns to approximately 120-130 bpm
-  - 'Total volume: 4-8 repeats; quality of each effort matters more than quantity'
-  description: Steep hill repeats are 2-4 minute hard uphill efforts followed by walking
-    descent recovery. They develop anaerobic threshold capacity, running-specific
-    leg power, and neuromuscular recruitment on grade. The steep gradient limits stride
-    length and maximizes hip extension recruitment while the descent provides passive
-    recovery with low cardiovascular demand.
+  - Two sets of each exercise
+  - Add resistance until four to six reps are a struggle
+  - Hanging leg raises, weighted sit-ups, planks with load, rotations
+  description: Uphill Athlete's core work (the Killer Core routine) -- a handful of hard core exercises,
+    two sets of four to six, in each strength session.
   muscle_diagram:
     highlight_primary:
-    - calves
-    - quadriceps
-    - glutes
+    - core
+    - obliques
     highlight_secondary:
     - hip_flexors
-    - hamstrings
-  muscles_primary:
-  - calves
-  - quadriceps
-  - glutes
-  - hip_flexors
-  muscles_secondary:
-  - hamstrings
-  - core
-  - tibialis_anterior
-hip_flexor_mobilization:
-  animation:
-    external_id: Kneeling_Hip_Flexor
-    gif_alt: Half-Kneeling Hip Flexor Mobilization
-    gif_source: free_exercise_db
-    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Kneeling_Hip_Flexor/0.jpg
-    type: gif
-  coaching_focus: This is remediation for a specific postural pattern -- the sustained
-    forward lean of uphills; treat it as a reset of the hip position, not just a stretch.
-  common_errors:
-  - 'Skipping it on high-volume training days: those are exactly the days the hip
-    flexors need the most work'
-  - 'Static hold only: the oscillating drive into end range is more effective for
-    the active hip flexors than passive holding'
-  - 'Front knee caving: maintain knee alignment throughout the mobilization'
-  cue_points:
-  - 'Half-kneeling: rear knee on floor, front foot forward at 90 degrees'
-  - Posterior pelvic tilt before driving the hip toward the front foot
-  - Oscillate gently at end range -- 10 small drives into the stretch with each breath
-  - Keep the torso upright and the front knee over the front foot
-  - Perform immediately after long uphill sessions before the hip flexors set into
-    their shortened position
-  description: The half-kneeling hip flexor mobilization (Uphill Athlete) addresses
-    the hip flexor restriction created by sustained uphill hiking posture -- the forward
-    lean of uphill movement progressively shortens the hip flexors and limits the
-    hip extension needed for efficient stride length and metabolic economy. Uphill
-    Athlete programs it in every preparatory phase to prevent the cumulative hip flexor
-    shortening that occurs during high-volume mountain training.
-  muscle_diagram:
-    highlight_primary: []
-    highlight_secondary: []
-  muscles_primary: []
-  muscles_secondary: []
-plank:
-  animation:
-    external_id: Plank
-    gif_alt: Front Plank
-    gif_source: free_exercise_db
-    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Plank/0.jpg
-    type: gif
-  coaching_focus: Treat the plank as active full-body tension, not a passive rest
-    -- squeeze everything and make every second count.
-  common_errors:
-  - 'Treating it as a rest: the plank is an active strength exercise, not a recovery
-    position; tension throughout or stop'
-  - 'Hip sag under fatigue: the set ends when the hips drop -- record actual clean
-    time, not total time with compromised form'
-  - 'Head dropping: neutral cervical spine throughout; neck should be an extension
-    of the spine'
-  cue_points:
-  - Hands or forearms, body in a rigid plank from heels to crown
-  - 'Neutral spine: no hip sag and no hip pike'
-  - Active glutes, braced core, packed shoulders throughout
-  - Breathe shallowly and normally -- do not hold the breath
-  - If the position degrades, rest and reset rather than grinding through a sag
-  description: The front plank is the Uphill Athlete version of the anti-extension
-    core hold used in the training program. Functionally identical to the plank_hold
-    (FLR), it develops the anti-extension core endurance required for sustained uphill
-    carrying loads and efficient running mechanics. Uphill Athlete programs it as
-    a baseline core exercise in the general physical preparation phase.
-  muscle_diagram:
-    highlight_primary:
-    - core
-    highlight_secondary:
-    - deltoids
-    - glutes
-    - upper_back
-  muscles_primary:
-  - core
-  muscles_secondary:
-  - deltoids
-  - glutes
-  - upper_back
-recovery_jog_easy:
-  animation:
-    type: none
-  coaching_focus: Walk the moment the effort increases -- this is not a jog with walk
-    breaks; it is a walk that becomes a jog when the terrain allows it without raising
-    HR.
-  common_errors:
-  - Running at a pace faster than true Z1 -- ego prevents recovery; the pace is always
-    slower than expected
-  - Skipping the session because it feels too easy -- the recovery stimulus requires
-    movement, not just rest
-  - Turning it into a longer aerobic session -- recovery jog duration is capped; more
-    is not better on a recovery day
-  cue_points:
-  - Keep heart rate at the very low end of Z1 -- below 120 bpm for most athletes
-  - Walk without guilt on any grade or surface that would raise HR above Z1
-  - Duration is 20-40 minutes -- long enough to create circulation benefit, short
-    enough not to add training load
-  - This is nose-breathing pace -- if nasal breathing becomes uncomfortable, walk
-  - 'Use this day to assess recovery: if any Z1 effort feels hard, it signals incomplete
-    recovery from prior sessions'
-  description: The easy recovery jog is a strict Zone 1 movement -- well below the
-    aerobic threshold, with walking permitted whenever pace would push HR higher.
-    It functions as active recovery, promoting blood flow, clearing metabolic byproducts,
-    and maintaining aerobic stimulus without adding training stress. Uphill Athlete
-    uses it as a between-session recovery modality rather than a training session.
-  muscle_diagram:
-    highlight_primary:
-    - calves
-    - quadriceps
-    highlight_secondary:
-    - glutes
-    - hamstrings
-  muscles_primary:
-  - calves
-  - quadriceps
-  - hamstrings
-  muscles_secondary:
-  - glutes
-  - hip_flexors
-  - core
-single_leg_rdl:
-  animation:
-    type: none
-  coaching_focus: Hinge from the hip with a flat back -- the goal is hamstring length
-    and hip hinge control, not touching the floor; stop at the point where the back
-    stays flat.
-  common_errors:
-  - Rounding the lower back -- reduce the range of motion until the back stays flat
-  - 'Hip hiking on the trailing leg -- both hips must stay level; external cue: "keep
-    the ASIS facing down"'
-  - Wobbling excessively -- focus on a fixed point on the floor 2-3 feet ahead; reduce
-    range if stability cannot be maintained
-  cue_points:
-  - Stand on the working leg with a slight knee bend -- not a locked-out stiff leg
-  - Hinge at the hip by reaching the trailing leg back as the torso tips forward in
-    one plane
-  - Keep the back flat and the hips square -- do not allow the hip to hike as the
-    leg rises
-  - Lower until the torso approaches horizontal or the hamstring stretch is felt strongly
-  - Drive the hip forward to return to standing -- think "hip extension to stand"
-    rather than "lift the torso"
-  description: The single-leg Romanian deadlift is a bodyweight posterior chain and
-    balance exercise -- standing on one leg, the body hinges forward at the hip as
-    the trailing leg extends behind for counterbalance. It develops hamstring length,
-    hip stability, and proprioceptive control simultaneously. Used as a prehab staple
-    for runners and mountain athletes to address posterior chain and hip stability
-    deficits.
-  muscle_diagram:
-    highlight_primary:
-    - hamstrings
-    - glutes
-    highlight_secondary:
     - erector_spinae
+  muscles_primary:
+  - core
+  - obliques
+  muscles_secondary:
+  - hip_flexors
+  - erector_spinae
+deadlift:
+  animation:
+    external_id: Axle_Deadlift
+    gif_alt: Deadlift
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Axle_Deadlift/0.jpg
+    type: gif
+  coaching_focus: 'Set the back before you pull: establish your lumbar arch and brace, then leg-press
+    the floor away — the back does not initiate the pull.'
+  common_errors:
+  - 'Hips shooting up first: back rounds as hips rise faster than the bar — corrected by pause deadlifts
+    at submaximal load'
+  - Bar drifting forward away from the legs — increases moment arm dramatically; keep it dragging up the
+    shins
+  - Jerking the bar off the floor — causes spinal flexion under rapid load; take slack out first
+  - Hyperextending at lockout — squeeze glutes and stand tall, do not lever the lower back
+  cue_points:
+  - Bar over mid-foot at setup — roughly 1 inch from shins, directly below the scapulae
+  - 'Hip hinge to the bar: push the floor away with the legs to find the pull, do not bend and grip'
+  - 'Establish the arch before pulling: chest up, shoulders slightly in front of the bar, hips above knees'
+  - 'Take the slack out before pulling: tension the bar against the floor — no jerking'
+  - Bar stays in contact with the legs on the way up — a bar path away from the body is a mechanical disadvantage
+  - Lock out by squeezing glutes and pushing hips forward, not by hyperextending the lower back
+  description: The deadlift is the master posterior-chain loading movement and the king of absolute strength
+    — the bar is lifted from the floor to hip extension using the legs, hips, and back working in concert.
+    Horsemen benchmark is 2.5x bodyweight; Starting Strength programs 1x5 as the novice primary; Gym Jones
+    builds all Olympic lifting percentages from the tested deadlift 1RM.
+  muscle_diagram:
+    highlight_primary:
+    - erector_spinae
+    - glutes
+    - hamstrings
+    highlight_secondary:
+    - quadriceps
+    - adductors
+    - core
+    - forearms
+  muscles_primary:
+  - erector_spinae
+  - glutes
+  - hamstrings
+  muscles_secondary:
+  - quadriceps
+  - adductors
+  - core
+  - forearms
+dip:
+  animation:
+    external_id: Parallel_Bar_Dip
+    gif_alt: Dip (Bar / Parallel Bars)
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Parallel_Bar_Dip/0.jpg
+    type: gif
+  coaching_focus: At the bottom, the upper arms must reach parallel -- any shallower and you are training
+    a fraction of the movement and missing the strength stimulus.
+  common_errors:
+  - 'Shallow dips: upper arms never reach parallel -- build false strength that fails when the full range
+    is tested'
+  - 'Excessive forward lean: leaning too far forward shifts too much load to the anterior shoulder capsule;
+    moderate lean is correct'
+  - 'Swinging the body: initiating with a hip kick or torso swing; dips should be initiated from the shoulder,
+    not the hips'
+  cue_points:
+  - Mount the bars with arms straight, scapulae depressed and retracted -- establish the support position
+    before descending
+  - Bend the knees slightly and cross the feet to reduce swinging
+  - Descend with elbows tracking back -- not flaring excessively wide
+  - Reach the bottom with upper arms parallel to the floor; a slight forward lean increases the pec demand
+  - Press to full lockout, not 95% -- the last 5% of extension is where the triceps and lockout strength
+    develop
+  description: The parallel bar dip is a fundamental vertical pressing movement -- lowering the body between
+    two bars until the upper arms are parallel to the floor, then pressing to full lockout. A slight forward
+    lean shifts emphasis to the pectorals; a more upright torso emphasizes the triceps. Marcus Filly treats
+    dips as one of the two primary bodyweight push movements alongside push-up variants. Full range of
+    motion requires significant shoulder mobility.
+  muscle_diagram:
+    highlight_primary:
+    - pec
+    - triceps
+    - deltoids
+    highlight_secondary:
+    - core
+    - serratus
+  muscles_primary:
+  - pec
+  - triceps
+  - deltoids
+  muscles_secondary:
+  - core
+  - serratus
+front_lunge:
+  animation:
+    external_id: Barbell_Walking_Lunge
+    gif_alt: Walking Lunge
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Walking_Lunge/0.jpg
+    type: gif
+  coaching_focus: The front shin stays near-vertical at the bottom -- if the knee shoots forward past
+    the toes, the quad is overloading and the hip is not working.
+  common_errors:
+  - 'Knee-forward position: the front knee tracking over or past the toes means the stride was too short
+    and the front heel is lifting'
+  - 'Torso pitching forward: either a balance issue or a hip flexor tightness issue on the trailing side
+    -- address both'
+  - 'Back knee slamming the floor: the eccentric descent of the back knee should be controlled throughout'
+  cue_points:
+  - Step forward with enough stride length that the front shin can stay vertical at the bottom
+  - Back knee descends toward but does not slam the floor -- controlled descent, soft tap if any contact
+  - 'Torso upright throughout: no forward lean; the chest stays tall'
+  - Drive through the front heel to stand and step through into the next lunge
+  - Arms can swing naturally for balance or be held at sides; add load by holding dumbbells at the sides
+  description: The walking lunge is an alternating-leg unilateral lower-body movement stepping forward
+    into a lunge position with the back knee approaching the floor. Gym Jones programs 2x20m walking lunges
+    as single-leg accessory work. It develops unilateral hip extension strength, single-leg stability,
+    and the hip flexor length required for efficient bipedal locomotion. It transfers directly to trail
+    running, step-ups, and split jerks.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - hamstrings
+    - adductors
     - core
   muscles_primary:
-  - hamstrings
+  - quadriceps
   - glutes
   muscles_secondary:
-  - erector_spinae
+  - hamstrings
+  - adductors
   - core
-  - calves
-thoracic_extension:
+front_squat:
+  animation:
+    external_id: Front_Barbell_Squat
+    gif_alt: Front Squat
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Front_Barbell_Squat/0.jpg
+    type: gif
+  coaching_focus: Elbows up — if they drop, the bar rolls and the lift is over; everything else flows
+    from keeping them high.
+  common_errors:
+  - Elbows dropping during descent — this tips the bar forward and dumps the lift; wrist and lat stretch
+    are usually the root cause
+  - 'Good morning out of the hole: hips rise faster than the bar — means the load exceeds current front-rack
+    strength'
+  - Bar sits on hands rather than shoulders — causes wrist strain and an unstable rack
+  cue_points:
+  - 'Clean grip or crossed-arm: fingertips only on the bar, no wrapping — elbows must travel high and
+    forward'
+  - Keep elbows parallel to the floor throughout; they should point forward, not toward the floor
+  - Torso stays upright — a vertical shin is less important here than a vertical torso
+  - Push knees out just as in the back squat; the front rack does not change that demand
+  - Stand tall on the way up — do not dump the elbows as fatigue sets in
+  description: The front squat holds the barbell in a front-rack position across the anterior deltoids,
+    forcing a more upright torso than the back squat and placing greater demand on the quadriceps and
+    thoracic spine. Gym Jones programs it as a primary strength movement (10x2 at 1-min rest); Horsemen
+    benchmark is 1.5x bodyweight.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - core
+    - erector_spinae
+    highlight_secondary:
+    - glutes
+    - adductors
+    - deltoids
+  muscles_primary:
+  - quadriceps
+  - core
+  - erector_spinae
+  muscles_secondary:
+  - glutes
+  - adductors
+  - deltoids
+goblet_squat_press:
   animation:
     type: none
-  coaching_focus: The roller should be perpendicular to the spine -- if it is parallel,
-    it rolls the spine rather than extending it.
+  coaching_focus: Squat holding the bell at your chest, stand, and press it overhead -- one smooth rep.
   common_errors:
-  - 'Rolling the lumbar spine: contraindicated -- the lumbar facets are not oriented
-    for the extension-over-roller position; stay in the thoracic region'
-  - 'Going too fast: spend 5-10 seconds at each segment to allow the capsular tissues
-    to respond to the pressure'
-  - 'Using the roller parallel to the spine: it should be perpendicular to extend
-    the spine over it, not parallel to roll along it'
+  - Knees caving in at the bottom of the squat
+  - Leaning back to press instead of keeping the ribs down
   cue_points:
-  - Place the foam roller perpendicular to the spine at mid-thoracic level (around
-    T6-T8)
-  - Hands behind the head, gently allow the thoracic spine to extend over the roller
-  - 'Segment-by-segment: move the roller up and down the thoracic spine, 5-10 seconds
-    at each level'
-  - Do not extend the lumbar spine over the roller -- keep the roller in the thoracic
-    region (between the bottom of the neck and the bottom of the rib cage)
-  - Perform immediately after ruck or pack carry sessions while the thoracic muscles
-    are still warm
-  description: Thoracic extension over a foam roller (Uphill Athlete) counteracts
-    the pack-induced kyphosis that develops during long ruck and mountain carry sessions
-    -- the sustained forward lean of carrying a pack progressively compresses the
-    thoracic spine into flexion. Uphill Athlete programs thoracic extension as a daily
-    intervention to maintain the upright posture needed for efficient breathing mechanics
-    and shoulder range under load.
+  - Bell at the chest, elbows in
+  - Sit between the heels, chest tall
+  - Stand and press to lockout overhead
+  description: Added to the muscular-endurance workout from its fourth workout -- a goblet squat into
+    an overhead press, ten reps a set.
   muscle_diagram:
-    highlight_primary: []
-    highlight_secondary: []
-  muscles_primary: []
-  muscles_secondary: []
+    highlight_primary:
+    - quadriceps
+    - glutes
+    - shoulders
+    highlight_secondary:
+    - triceps
+    - core
+  muscles_primary:
+  - quadriceps
+  - glutes
+  - shoulders
+  muscles_secondary:
+  - triceps
+  - core
+  - upper_back
+hanging_leg_raise:
+  animation:
+    type: none
+  coaching_focus: Do not swing -- lift and lower the legs under complete control.
+  common_errors:
+  - Swinging to get the legs up
+  - Dropping the legs instead of lowering them
+  cue_points:
+  - Start with bent knees pulled to the chest
+  - Work toward straight legs, lifted and lowered slowly
+  - Shoes off at first; at ten straight-leg reps, shoes, then boots
+  description: The General Strength routine's core exercise -- a hanging leg raise from a bar, straight
+    or bent arms.
+  muscle_diagram:
+    highlight_primary:
+    - core
+    - hip_flexors
+    highlight_secondary:
+    - forearms
+    - lats
+  muscles_primary:
+  - core
+  - hip_flexors
+  muscles_secondary:
+  - forearms
+  - lats
+  - obliques
+kb_swing:
+  animation:
+    type: none
+  coaching_focus: The arms are ropes attached to the bell — they do not lift it; the hips snap and the
+    bell floats.
+  common_errors:
+  - 'Squatting the swing: hips drop and the torso stays upright — the bell lifts rather than floats; this
+    is a quad exercise, not a ballistic'
+  - 'Arms lifting the bell: early shoulder elevation kills the hip drive connection'
+  - 'Lower back rounding on the backswing: the hinge must be maintained through the entire downswing'
+  - 'Soft glutes at the top: the lockout should be aggressive — squeezed glutes are the braking force'
+  cue_points:
+  - 'Hike the bell back aggressively between the legs: the hinge happens first, not a squat'
+  - Snap the hips forward explosively — glutes fire hard at the top, not the lower back
+  - 'At the top the body is a rigid plank: glutes, abs, and quads all contracted simultaneously'
+  - Let the bell float to shoulder height; do not muscle it up with the arms
+  - 'On the backswing: hinge back and let the bell pull you into the next rep — catch the load with the
+    hamstrings'
+  - 'Breath: exhale sharply at the top of the swing with a hiss — the exhale protects the spine'
+  description: The two-hand kettlebell swing is the foundational ballistic — a hip-hinge-driven movement
+    where the bell is projected to shoulder height by explosive hip extension, not a squat-and-lift. It
+    simultaneously develops posterior-chain power, aerobic capacity, and trunk stiffness under load. Horsemen
+    include it in every warm-up; Gym Jones programs the breathing ladder format with 24 kg.
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    - erector_spinae
+    highlight_secondary:
+    - core
+    - quadriceps
+    - deltoids
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - erector_spinae
+  muscles_secondary:
+  - core
+  - quadriceps
+  - deltoids
+me_warm_up:
+  animation:
+    type: none
+  coaching_focus: Warm up the whole body before the jumps -- five minutes of dynamic stretching, then
+    air squats, get-ups and burpees.
+  common_errors:
+  - Skipping the warm-up before the first jumping sets
+  cue_points:
+  - Five minutes of dynamic stretching
+  - 20 air squats
+  - 10 Turkish get-ups
+  - 10 burpees
+  description: The muscular-endurance workout's warm-up, as the Uphill Athlete PDF writes it.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    - shoulders
+    highlight_secondary:
+    - core
+    - hamstrings
+  muscles_primary:
+  - quadriceps
+  - glutes
+  - shoulders
+  muscles_secondary:
+  - core
+  - hamstrings
+pull_up:
+  animation:
+    type: none
+  coaching_focus: Dead hang fully at the bottom -- if you do not reach full elbow extension, you are doing
+    a partial ROM exercise, not a pull-up.
+  common_errors:
+  - 'Half reps: not reaching full extension at the bottom caps strength development and creates poor movement
+    habits'
+  - 'Kipping under a strict prescription: kipping is a separate skill; mixing them unknowingly trains
+    neither'
+  - 'Chin in front of, not over, the bar: the standard is chin over -- partial top-range reps do not count'
+  cue_points:
+  - 'Start from a dead hang: shoulders fully elevated (passive) or actively depressed before initiating'
+  - Drive the elbows down and back -- think of pulling the bar to the sternum, not the hands up
+  - Chin clears the bar at the top; do not tuck the chin or crane the neck forward
+  - Return to full dead hang at the bottom -- partial descents reduce the strength stimulus and build
+    a false ceiling
+  - Squeeze glutes and brace the core throughout -- no swinging or kipping in the strict variant
+  description: The strict pull-up is the foundational upper-body vertical pulling test -- a dead-hang
+    start with full elbow extension at the bottom, chin clearing the bar at the top. Marcus Filly treats
+    it as the primary pulling strength metric; Gym Jones programs it at high volume in Murph-style sessions.
+    Relative strength in this movement reliably predicts overall athletic capacity.
+  muscle_diagram:
+    highlight_primary:
+    - upper_back
+    - lats
+    - biceps
+    highlight_secondary:
+    - core
+    - forearms
+    - deltoids
+  muscles_primary:
+  - upper_back
+  - lats
+  - biceps
+  muscles_secondary:
+  - core
+  - forearms
+  - deltoids
+push_up:
+  animation:
+    type: none
+  coaching_focus: The push-up is a moving plank -- if the hips sag or pike at any point in the set, the
+    rep does not count and the set is over.
+  common_errors:
+  - 'Hip sag: the most common fault; the core gives out before the chest does -- when hips drop, the set
+    ends'
+  - 'Elbow flare: elbows at 90 degrees loads the anterior shoulder capsule in a stressful position --
+    keep them at 45 degrees'
+  - 'Partial ROM at the bottom: hovering above the floor eliminates the pec stretch and reduces the training
+    stimulus significantly'
+  cue_points:
+  - Hands slightly wider than shoulder-width; elbows track at 45 degrees from the torso -- not 90 degrees
+    out
+  - Body forms a rigid plank from heel to crown; squeeze glutes and brace the core before the first rep
+  - Chest touches the floor at the bottom -- no hovering an inch above; this is a full ROM exercise
+  - Full lockout at the top; the arms extend completely and the scapulae protract at lockout
+  - 'Breathe: inhale on the way down, exhale at the top -- do not hold the breath across reps'
+  description: The push-up is the foundational horizontal pressing movement -- a full plank position pressing
+    from chest-to-floor to full lockout. Gym Jones programs 200+ reps in Murph-style sessions; CrossFit
+    uses it as a primary conditioning tool. It simultaneously trains the horizontal press, scapular stability,
+    and anti-extension core. The push-up is the most scalable pressing exercise and the foundation for
+    all ring and parallette progressions.
+  muscle_diagram:
+    highlight_primary:
+    - pec
+    - triceps
+    - deltoids
+    highlight_secondary:
+    - core
+    - serratus
+  muscles_primary:
+  - pec
+  - triceps
+  - deltoids
+  muscles_secondary:
+  - core
+  - serratus
+split_bench_squat:
+  animation:
+    type: none
+  coaching_focus: Drive through the front heel -- if the front heel rises, the foot placement is too close
+    to the bench; step the front foot further forward.
+  common_errors:
+  - 'Front foot too close to the bench: the heel rises and the knee drives forward -- step forward more'
+  - 'Rear foot on the ball instead of the top: creates ankle extension and makes the position unstable'
+  - 'Forward torso lean: loading the trunk forward turns it into a hip-dominant movement; keep the torso
+    upright for balanced quad and glute demand'
+  cue_points:
+  - Front foot far enough forward that the front shin stays near-vertical at the bottom; test by checking
+    heel contact
+  - Rear foot rests on top of the bench across the top of the foot, not the ball of the foot
+  - Descend vertically -- do not lean the torso forward; the back knee drops straight down
+  - Front knee tracks over the toes throughout; no inward collapse
+  - Drive through the front heel to stand -- feel the glute of the front leg contracting at the top
+  description: The Bulgarian split squat (rear-foot-elevated split squat) places the rear foot on a bench
+    and performs a single-leg squat through a full range of motion. Marcus Filly programs it as the primary
+    unilateral lower-body strength movement at 8 reps per side. The elevated rear foot increases the front-leg
+    demand and the hip flexor stretch on the trailing side, making it a comprehensive lower-body strength
+    and mobility exercise.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - hamstrings
+    - adductors
+    - core
+  muscles_primary:
+  - quadriceps
+  - glutes
+  muscles_secondary:
+  - hamstrings
+  - adductors
+  - core
+split_jump_squat:
+  animation:
+    type: none
+  coaching_focus: Jump and switch legs in the air, landing softly in a split squat -- ten each leg, never
+    rushed.
+  common_errors:
+  - A split too deep before the legs are strong enough
+  - Landing stiff-legged
+  cue_points:
+  - If unsure, start with a short split of about 30 cm
+  - Deepen the split as you gain strength
+  - One rep every one to two seconds
+  description: The first exercise of Uphill Athlete's muscular-endurance workout -- alternating split
+    jump squats, ten each leg a set.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    highlight_secondary:
+    - calves
+    - hamstrings
+  muscles_primary:
+  - quadriceps
+  - glutes
+  muscles_secondary:
+  - calves
+  - hamstrings
+  - core
+squat_jump:
+  animation:
+    external_id: Freehand_Jump_Squat
+    gif_alt: Jump Squat
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Freehand_Jump_Squat/0.jpg
+    type: gif
+  coaching_focus: The landing absorbs the energy -- land with soft knees in a partial squat position;
+    a stiff landing is an injury, not just poor technique.
+  common_errors:
+  - 'Stiff-legged landing: the knees and hips must absorb the landing; a straight-leg landing sends all
+    the force into the knees and spine'
+  - 'Not reaching full squat depth before jumping: the elastic energy storage happens at depth -- a half-squat
+    jump is a less effective movement'
+  - 'Landing with feet together or crossed: the landing stance should match the take-off stance'
+  cue_points:
+  - Begin from a full squat (hip crease below parallel) for maximum elastic energy storage
+  - Drive through the entire foot -- heels stay down as long as possible before the push-off
+  - 'At peak height, the body should be fully extended: hips, knees, and ankles all locked'
+  - Land on the balls of the feet first, then heels, absorbing through the ankles, knees, and hips in
+    sequence
+  - Land in the same stance you jumped from -- narrow landings with wide take-offs indicate leg strength
+    asymmetry
+  description: The jump squat descends to a full squat depth and explodes vertically, landing softly and
+    reabsorbing through the hip-knee-ankle triple flexion. It develops lower-body power output and rate
+    of force development in the squat pattern. Gym Jones programs tuck jumps and split jumps as power-endurance
+    variants in conditioning circuits. The landing mechanics are as important as the jump height for long-term
+    joint health.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - glutes
+    - calves
+    highlight_secondary:
+    - hamstrings
+    - core
+  muscles_primary:
+  - quadriceps
+  - glutes
+  - calves
+  muscles_secondary:
+  - hamstrings
+  - core
+turkish_get_up:
+  animation:
+    type: none
+  coaching_focus: Get up from lying to standing with the weight held overhead, and back down -- shoulder
+    and hip mobility and core, more than leg strength.
+  common_errors:
+  - A weight so light it lets you cheat the form
+  - Taking the eyes off the weight
+  cue_points:
+  - Change hands while lying on your back
+  - Five each hand, then a heavier weight
+  - Advanced -- a long barbell
+  description: The first exercise of the General Strength routine.
+  muscle_diagram:
+    highlight_primary:
+    - shoulders
+    - core
+    highlight_secondary:
+    - glutes
+    - hip_flexors
+  muscles_primary:
+  - shoulders
+  - core
+  muscles_secondary:
+  - glutes
+  - hip_flexors
+  - triceps
 uphill_run:
   animation:
     type: none
-  coaching_focus: Shorten the stride and increase cadence on the grade -- reaching
-    for a longer stride on uphill burns more energy per step without increasing speed
-    proportionally.
+  coaching_focus: Shorten the stride and increase cadence on the grade -- reaching for a longer stride
+    on uphill burns more energy per step without increasing speed proportionally.
   common_errors:
-  - Leaning forward from the waist -- this compresses the hip flexors and reduces
-    stride efficiency; the lean originates from the ankles
-  - Slowing cadence on steeper sections -- more steps at lower force per step is more
-    efficient than slow powerful strides on grade
-  - Overstriding -- reaching the foot too far forward creates a braking force; foot
-    strikes should land close to the center of mass
+  - Leaning forward from the waist -- this compresses the hip flexors and reduces stride efficiency; the
+    lean originates from the ankles
+  - Slowing cadence on steeper sections -- more steps at lower force per step is more efficient than slow
+    powerful strides on grade
+  - Overstriding -- reaching the foot too far forward creates a braking force; foot strikes should land
+    close to the center of mass
   cue_points:
-  - Lean into the hill from the ankles, not the waist -- the body angle matches the
-    hill angle
+  - Lean into the hill from the ankles, not the waist -- the body angle matches the hill angle
   - Use a short, quick stride -- cadence increases on grade while stride length decreases
   - Drive the knees forward rather than up on steep grades
-  - Arms pump efficiently -- elbows at 90 degrees, driving back rather than crossing
-    the midline
-  - 'On threshold intervals: use a measured hill of known grade and time to track
-    pace progression'
-  description: Uphill running is the primary Uphill Athlete aerobic development tool
-    for mountain athletes -- the grade increases metabolic demand while reducing impact
-    forces compared to flat running, allowing more aerobic stimulus with less musculoskeletal
-    stress. It is used for both Zone 2 aerobic base building and Zone 4 anaerobic
-    threshold intervals depending on the phase of training.
+  - Arms pump efficiently -- elbows at 90 degrees, driving back rather than crossing the midline
+  - 'On threshold intervals: use a measured hill of known grade and time to track pace progression'
+  description: Uphill running is the primary Uphill Athlete aerobic development tool for mountain athletes
+    -- the grade increases metabolic demand while reducing impact forces compared to flat running, allowing
+    more aerobic stimulus with less musculoskeletal stress. It is used for both Zone 2 aerobic base building
+    and Zone 4 anaerobic threshold intervals depending on the phase of training.
   muscle_diagram:
     highlight_primary:
     - calves
@@ -346,182 +642,70 @@ uphill_run:
   - hip_flexors
   - hamstrings
   - core
-uphill_weighted_carry_ex:
+weighted_pull_up:
   animation:
     type: none
-  coaching_focus: This is objective preparation -- the load and grade should match
-    what the target mountain approach will demand; train specifically for the event.
+  coaching_focus: The added load must not change the mechanics -- if the range of motion or dead hang
+    position degrades, reduce the load.
   common_errors:
-  - 'Training on flat terrain with extra load: the hip angle, calf demand, and balance
-    challenge of uphill cannot be replicated on flat ground'
-  - 'Ignoring the descent: the downhill phase is a different and important training
-    stimulus -- do not drive down'
-  - 'Only doing this exercise in the final weeks before an objective: the specific
-    phase must be built on a base phase of step-up and ruck volume'
+  - 'Loading before bodyweight pull-up mechanics are solid: added weight amplifies every existing fault'
+  - 'Partial descents under load: the eccentric is when the connective tissue adaptations occur -- do
+    not skip it'
+  - 'Kipping to complete reps: once form breaks, the set is over; log the clean reps only'
   cue_points:
-  - 'Use terrain that matches the target objective: if the approach is 1000m elevation
-    at 35% grade, train on similar grade'
-  - 'Pack weight at objective load: do not train significantly lighter or heavier
-    than the actual mission requires'
-  - Trekking poles are part of the tool -- include them in training if they will be
-    used on the objective
-  - 'Pace: sustainable and nasal throughout; the uphill carry is not a race'
-  - Include rest stops at natural waypoints to practice the recovery mechanics used
-    on real approaches
-  description: The Uphill Athlete uphill weighted carry is the outdoor analog of the
-    loaded step-up -- sustained steep grade carrying an objective pack weight. It
-    directly trains the movement pattern, metabolic demand, and postural requirements
-    of mountain approaches and summit bids. In the Uphill Athlete specific phase,
-    this replaces or supplements step-ups when outdoor terrain is available.
+  - All strict pull-up cues apply -- dead hang, elbows back, chin over bar
+  - Use a dip belt with a weight plate for loads over 5 kg; dumbbell-between-knees creates asymmetry at
+    higher loads
+  - The descent is slower under load -- control the eccentric to extract the full stimulus
+  - 'RPE 7-8 target: the load should allow perfect form across the full set with 2 reps in reserve'
+  - If the last rep at the bottom cannot reach full extension, the load is too heavy for that rep count
+  description: The weighted pull-up adds load via a dip belt, weight vest, or dumbbell between the feet
+    and follows identical mechanics to the strict pull-up. Marcus Filly treats it as the primary pulling
+    strength progression once five clean bodyweight pull-ups are achievable with two reps in reserve.
+    Gym Jones references added load as the primary pull-up progression path.
   muscle_diagram:
     highlight_primary:
-    - glutes
-    - hamstrings
-    - quadriceps
-    highlight_secondary:
-    - calves
-    - core
-    - erector_spinae
-  muscles_primary:
-  - glutes
-  - hamstrings
-  - quadriceps
-  muscles_secondary:
-  - calves
-  - core
-  - erector_spinae
-weighted_box_step_up:
-  animation:
-    type: none
-  coaching_focus: This is a muscular endurance exercise, not a strength exercise --
-    the pace should be sustainable for the full duration; if you cannot maintain form
-    for 30 minutes, reduce the pack weight.
-  common_errors:
-  - 'Treating it as a strength step-up: the ME step-up uses sub-maximal load for duration,
-    not heavy load for sets'
-  - 'Trailing leg push-off: both legs must work independently; push-off from the floor
-    negates the single-leg demand'
-  - 'Too heavy a pack for the duration: if the pace slows to a grinding halt within
-    15 minutes, reduce the load'
-  cue_points:
-  - 'Box height: 16-20 inches; the step should challenge the hip but not require a
-    maximal effort on each rep'
-  - 'Pack: 20-35% bodyweight; lighter in early phases, heavier as the specific phase
-    approaches'
-  - Alternate legs with each step; do not complete all reps on one side
-  - Drive through the heel of the working leg; the trailing leg should not push off
-    the ground
-  - 'Continuous pace: the ME step-up should be unbroken -- if you need to stop, the
-    load is too heavy for the duration'
-  description: The Uphill Athlete weighted box step-up carries a loaded pack and steps
-    onto a 16-20 inch box with alternating legs continuously for a sustained duration
-    -- the signature Uphill Athlete muscular endurance (ME) workout. Unlike a strength
-    step-up, the ME step-up is performed for 30-60 minutes at a low-intensity pace
-    with a pack at 20-35% bodyweight. It is the primary lower-body specific endurance
-    builder in the Uphill Athlete protocol.
-  muscle_diagram:
-    highlight_primary:
-    - quadriceps
-    - glutes
-    highlight_secondary:
-    - hamstrings
-    - calves
-    - core
-  muscles_primary:
-  - quadriceps
-  - glutes
-  muscles_secondary:
-  - hamstrings
-  - calves
-  - core
-weighted_ruck_walk:
-  animation:
-    type: none
-  coaching_focus: Uphill terrain is the priority, not speed -- a steep grade at a
-    comfortable pace provides more training stimulus than flat fast walking for mountain
-    athletes.
-  common_errors:
-  - 'Flat terrain substitution: flat ruck walking does not prepare the hip extensors
-    and calf for the angle demands of uphill terrain'
-  - 'Too heavy a pack too early: Uphill Athlete periodizes pack weight; starting at
-    30% in the base phase causes joint overload'
-  - 'Ignoring the descent: the downhill return loads the quads eccentrically; do not
-    rush it and do not skip it'
-  cue_points:
-  - 'Use uphill terrain where possible: 15-30% grade is ideal for the Uphill Athlete
-    training prescription'
-  - 'Pace: nasal breathing throughout; if the grade forces mouth-breathing, slow down
-    or reduce grade'
-  - 'Trekking poles: acceptable and encouraged on steep terrain; they reduce lower-limb
-    fatigue and allow longer training duration'
-  - 'Pack weight: lighter in base phase; heavier in specific phase as objective demands
-    require'
-  - Track vertical gain and distance, not just time -- mountain fitness is expressed
-    in vertical meters per hour
-  description: 'The Uphill Athlete weighted ruck walk carries a pack at 10-30% bodyweight
-    on uphill terrain as the primary aerobic endurance builder in mountain and alpine
-    training. Uphill Athlete programs it as a lower-impact alternative to running
-    that mimics the demands of mountain approaches with a load. Pack weight is periodized
-    with volume: base phase uses 10-15%, specific phase up to 30% for objective pack
-    weight.'
-  muscle_diagram:
-    highlight_primary:
-    - glutes
-    - hamstrings
-    - quadriceps
-    highlight_secondary:
-    - calves
-    - core
     - upper_back
+    - lats
+    - biceps
+    highlight_secondary:
+    - core
+    - forearms
+    - deltoids
   muscles_primary:
-  - glutes
-  - hamstrings
-  - quadriceps
-  muscles_secondary:
-  - calves
-  - core
   - upper_back
+  - lats
+  - biceps
+  muscles_secondary:
+  - core
+  - forearms
+  - deltoids
 zone2_hike:
   animation:
     type: none
-  coaching_focus: Nose breathing is the intensity governor -- if you must open the
-    mouth to breathe, slow down; the pace is always secondary to the metabolic zone.
+  coaching_focus: Stay below your aerobic threshold the whole way -- if you cannot breathe through your
+    nose or talk in full sentences, slow down, even to a walk on the hills.
   common_errors:
-  - Going too hard -- any conversation difficulty or mouth-breathing means the intensity
-    is above Z2; slow down without negotiation
-  - Treating it as conditioning -- Z2 hike is base-building, not training; the monotony
-    is the point
-  - Skipping the vert -- flat walking at Z2 has less transfer to mountain sport than
-    actual uphill; find the elevation
+  - Drifting above the aerobic threshold on climbs -- the hill sets the pace, not your legs
+  - Running the flats to make up time, which turns an easy day into a moderate one
   cue_points:
-  - Use nasal breathing as your intensity governor -- breathe in and out through the
-    nose only
-  - Walk sections that would force mouth breathing -- hiking poles are permitted and
-    encouraged on sustained grades
-  - Heart rate should stay at or below your AeT (aerobic threshold) -- typically 125-140
-    bpm depending on the athlete
-  - Vertical gain is the training variable, not speed -- focus on elevation per session
-    rather than pace
-  - Backpack at training load (10-20% bodyweight) increases metabolic demand without
-    raising HR above Z2
-  description: Zone 2 hiking is the Uphill Athlete foundation aerobic modality --
-    sustained uphill movement at a heart rate below the aerobic threshold (AeT), typically
-    maintained with nose breathing. It builds aerobic base, trains the fat-oxidation
-    metabolic pathway, and develops the musculotendinous structures of the lower leg
-    for mountain performance. Two hours at this intensity twice per week is the Uphill
-    Athlete base-phase standard.
+  - Hike or run as hilly a route as you can find
+  - Walk the steep sections and keep the heart rate under your AeT
+  - Eat and drink on anything over ninety minutes
+  description: Uphill Athlete's aerobic base work -- hiking, running or skiing below the aerobic threshold
+    (Zones 1-2), the bulk of every week.
   muscle_diagram:
     highlight_primary:
-    - calves
     - quadriceps
     - glutes
+    - calves
     highlight_secondary:
     - hamstrings
     - hip_flexors
   muscles_primary:
-  - calves
   - quadriceps
   - glutes
+  - calves
   muscles_secondary:
   - hamstrings
   - hip_flexors
