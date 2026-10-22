@@ -179,6 +179,10 @@ def content_hash(envelope: dict) -> str:
         # Derived from the weeks (src/phase_summary.py, src/blockers.held_back);
         # a client that echoes one back must not make the snapshot look stale.
         trimmed['currentProgram'] = {k: v for k, v in cp.items() if k not in derived}
+    if isinstance(trimmed.get('currentProgram'), dict):
+        # So is each session's `icon` (src/session_icon.py).
+        from src import session_icon
+        trimmed['currentProgram'] = session_icon.strip(trimmed['currentProgram'])
     canonical = json.dumps(trimmed, sort_keys=True, separators=(',', ':'),
                            default=str)
     return hashlib.sha256(canonical.encode()).hexdigest()
@@ -1143,6 +1147,8 @@ def annotate_logs(logs: list[dict], planned: dict[str, dict]) -> list[dict]:
             continue
         log['planned_name'] = row.get('archetype_name')
         log['planned_modality'] = row.get('modality')
+        from src import session_icon
+        log['planned_icon'] = session_icon.for_archetype(row.get('archetype_id'))
         log['planned_date'] = row.get('date')
         log['program_version_id'] = row.get('program_version_id')
         log['week_index'] = row.get('week_index')

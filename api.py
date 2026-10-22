@@ -30,6 +30,7 @@ from src import standards as _standards_mod
 from src.analytics import benchmarks_data as _bd
 from src import goals, loader, provenance
 from src import blockers as _blockers
+from src import session_icon as _session_icon
 from src import phases
 from src.phases import PhaseResolutionError
 from src.similarity import compute_all_similarities
@@ -452,7 +453,9 @@ def _transform_program(raw: dict, goal: dict, constraints: dict, validation) -> 
             'warnings': validation.warnings,
             'info':     validation.info,
         },
-        'weeks':          weeks,
+        # Each session's workout icon (src/session_icon.py); derived on read,
+        # never stored.
+        'weeks':          _session_icon.with_icons(weeks),
         'volume_summary': volume_summary,
         'phase_summary':  _phase_summary(weeks, goal),
         # What the constraints held back, counted once for both clients
@@ -1734,9 +1737,11 @@ def _generate_session_inner(body):
         )
 
     arch = populated.get('archetype', {})
+    icon = _session_icon.session_icon(populated)
     return jsonify({
         'modality':  modality,
         'archetype': arch,
+        **({'icon': icon} if icon else {}),
         'is_deload': is_deload,
         **{k: populated[k] for k in ('category', 'category_name', 'pieces', 'warm_up') if populated.get(k)},
         'duration_min': arch.get('duration_estimate_minutes') if arch else None,
@@ -2800,7 +2805,8 @@ def get_user_program_endpoint():
             current = program.get('currentProgram')
             if isinstance(current, dict) and current.get('weeks'):
                 program['currentProgram'] = {
-                    **current, 'phase_summary': _phase_summary(current['weeks'], current.get('goal'))}
+                    **current, 'weeks': _session_icon.with_icons(current['weeks']),
+                    'phase_summary': _phase_summary(current['weeks'], current.get('goal'))}
         return jsonify(program)
     except Exception as e:
         app.logger.warning('get_user_program error: %s', e)
@@ -3224,7 +3230,8 @@ def adjust_program():
     revision = get_program_revision(user_id)
     history = _record_program_history(user_id, envelope, 'adjust', revision)
     program = {**envelope, 'revision': revision, 'programVersionId': history.get('versionId'),
-               'currentProgram': {**current, 'phase_summary': _phase_summary(weeks, current.get('goal'))}}
+               'currentProgram': {**current, 'weeks': _session_icon.with_icons(weeks),
+                                  'phase_summary': _phase_summary(weeks, current.get('goal'))}}
     return jsonify({'saved': True, 'revision': revision,
                     'programVersionId': history.get('versionId'),
                     'applied': applied, 'program': program})
@@ -3294,6 +3301,7 @@ def programs_history_version(version_id: str):
             'modality':       row['modality'],
             'archetypeId':    row['archetype_id'],
             'archetypeName':  row['archetype_name'],
+            'icon':           _session_icon.for_archetype(row['archetype_id']),
             'durationMinutes': row['duration_min'],
             'phase':          row['phase'],
             'isDeload':       row['is_deload'],
@@ -3337,6 +3345,8 @@ def _planned_sessions_json(user_id: str, from_date: str, to_date: str,
             'modality':        row['modality'],
             'archetypeId':     row['archetype_id'],
             'archetypeName':   row['archetype_name'],
+            # The archive keeps the archetype, not the exercises: its icon.
+            'icon':            _session_icon.for_archetype(row['archetype_id']),
             'durationMinutes': row['duration_min'],
             'phase':           row['phase'],
             'isDeload':        row['is_deload'],
@@ -3728,6 +3738,11 @@ def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
         'isDeload': bool(_pick(s, 'is_deload', 'isDeload')),
         'exercises': exercises,
     }
+    # The session's workout icon (src/session_icon.py); an older build ignores
+    # it, a session without one draws its modality icon.
+    icon = _session_icon.session_icon(s)
+    if icon:
+        out['icon'] = icon
     if spec_level >= 1:
         package_id = _watch_spec.session_package(s)
         table, keys = _watch_spec.session_screens(
@@ -3969,6 +3984,9 @@ def get_today_session():
                 'archetypeName': t_arch.get('name') or first.get('modality') or '',
                 'estimatedMinutes': _pick(t_arch, 'duration_estimate_minutes', 'durationEstimateMinutes') or 45,
             }
+            t_icon = _session_icon.session_icon(first)
+            if t_icon:
+                tomorrow['icon'] = t_icon
         else:
             tomorrow = {'dayName': t_day, 'sessionCount': 0}
 

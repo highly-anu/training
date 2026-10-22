@@ -2,6 +2,7 @@ id: kb_snatch_practice
 name: Nerd Math Snatch
 modality: power
 category: kettlebell
+icon: kettlebell.snatch
 training_levels:
 - intermediate
 - advanced

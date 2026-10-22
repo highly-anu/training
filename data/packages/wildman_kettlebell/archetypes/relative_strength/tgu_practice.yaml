@@ -2,6 +2,7 @@ id: tgu_practice
 name: "Turkish Get-Up Practice (Wildman)"
 modality: relative_strength
 category: kettlebell
+icon: kettlebell.getup
 training_levels:
   - novice
   - intermediate

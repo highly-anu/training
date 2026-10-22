@@ -83,6 +83,7 @@ exercises:
   - id: wk_kb_swing_two_hand
     name: "Kettlebell Swing (Two-Hand)"
     category: kettlebell
+    icon: kettlebell.swing
     modality:
       - power
       - aerobic_base
@@ -131,6 +132,7 @@ exercises:
   - id: wk_deck_squat
     name: "Deck Squat"
     category: kettlebell
+    icon: kettlebell.squat
     modality:
       - movement_skill
       - strength_endurance
@@ -155,6 +157,7 @@ exercises:
   - id: wk_kb_swing_single_arm
     name: "Kettlebell Swing (Single-Arm)"
     category: kettlebell
+    icon: kettlebell.swing
     modality:
       - power
       - strength_endurance
@@ -201,6 +204,7 @@ exercises:
   - id: wk_kb_clean_single
     name: "Kettlebell Clean (Single-Arm)"
     category: kettlebell
+    icon: kettlebell.clean.press
     modality:
       - power
       - strength_endurance
@@ -305,6 +309,7 @@ exercises:
   - id: wk_kb_press_single
     name: "Kettlebell Press (Single-Arm)"
     category: kettlebell
+    icon: kettlebell.clean.press
     modality:
       - max_strength
       - relative_strength
@@ -552,6 +557,7 @@ exercises:
   - id: wk_kb_snatch
     name: "Kettlebell Snatch"
     category: kettlebell
+    icon: kettlebell.snatch
     modality:
       - power
       - strength_endurance
@@ -708,6 +714,7 @@ exercises:
   - id: wk_kb_squat_goblet
     name: "Kettlebell Goblet Squat"
     category: kettlebell
+    icon: kettlebell.squat
     modality:
       - max_strength
       - movement_skill
@@ -789,6 +796,7 @@ exercises:
   - id: wk_kb_tgu
     name: "Kettlebell Turkish Get-Up"
     category: kettlebell
+    icon: kettlebell.getup
     modality:
       - movement_skill
       - durability

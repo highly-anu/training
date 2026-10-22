@@ -88,6 +88,13 @@ def _extra_checks(data: dict, schema_filename: str, path: str | None = None) -> 
     """Return a list of error strings for checks not covered by JSON Schema."""
     errors = []
 
+    if schema_filename in ('archetype.schema.json', 'exercise.schema.json') and data.get('icon'):
+        # A workout icon is one the commons vocabulary lists (src/session_icon.py).
+        sys.path.insert(0, _ROOT)
+        from src import session_icon
+        if data['icon'] not in session_icon.icon_ids():
+            errors.append(f"icon '{data['icon']}' is not in data/commons/workout_icons.json")
+
     if schema_filename == 'philosophy.schema.json' and path:
         # Track and phase ids unique; every phase's framework is this package's.
         sys.path.insert(0, _ROOT)

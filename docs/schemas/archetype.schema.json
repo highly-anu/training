@@ -55,6 +55,11 @@
       ],
       "description": "Broad session category used for scheduling and tagging."
     },
+    "icon": {
+      "type": "string",
+      "pattern": "^[a-z]+(\\.[a-z]+)*$",
+      "description": "The session's workout icon when this archetype leads it: an id from data/commons/workout_icons.json (src/session_icon.py). Without one, the lead exercise's icon, then the category's default."
+    },
     "duration_estimate_minutes": {
       "type": "integer",
       "minimum": 5,

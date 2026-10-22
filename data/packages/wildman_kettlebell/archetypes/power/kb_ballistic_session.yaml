@@ -2,6 +2,7 @@ id: kb_ballistic_session
 name: Nerd Math Two-Hand Swing
 modality: power
 category: kettlebell
+icon: kettlebell.swing
 duration_estimate_minutes: 15
 required_equipment:
 - kettlebell
