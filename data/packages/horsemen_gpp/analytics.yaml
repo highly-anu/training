@@ -2,10 +2,8 @@
 # 1RM worked up to on the day, then percentages of it — and its goals for four
 # months are bodyweight multiples (deadlift 2.5, front squat 1.5, bench 1.5,
 # military press 1.0), 3 miles under 20:00 and 200 on the Secret Service
-# Snatch Test; its PT tests are job-specific options. So strength leads, in
-# both tracks. Aerobic volume reads the endurance and recovery days. The ruck
-# entry reads the app's ruck session, an adaptation (the source's only ruck
-# is a 3-mile ruck run); it is not a source benchmark.
+# Snatch Test; its PT tests are job-specific options. So strength leads.
+# Aerobic volume reads the endurance and recovery days.
 id: horsemen_gpp
 
 progress:
@@ -14,8 +12,7 @@ progress:
     primitive: set_load
     headline: true
     # The 4-Month Macro's strength days work up to a 1RM before anything else
-    # (`work_up_1rm*`, prescribed as written): that max is the measure. GPP
-    # Circuits keeps its strength block's main lifts.
+    # (`work_up_1rm*`, prescribed as written): that max is the measure.
     scope:
       modalities: [max_strength]
       slot_roles: [main_lift, secondary_compound, "work_up_1rm*"]
@@ -26,11 +23,6 @@ progress:
     primitive: duration
     scope: {modalities: [aerobic_base]}
     expected: {load_field: duration_minutes}
-
-  - id: ruck
-    label: Ruck distance
-    primitive: distance
-    scope: {archetypes: [ruck_session], slot_types: [distance]}
 
 # The source's goals, then PT test I and PT test II. There is no commons
 # front-squat ratio standard yet. The macro's PT test measures the pull-ups,

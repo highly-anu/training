@@ -11,7 +11,7 @@ test: {selectable: true}
 slots:
   - role: fran
     slot_type: for_time
-    reps_per_round: 15
+    rep_scheme: [21, 15, 9]
     rounds: 3
     exercise_filter:
       exercise_ids: [thruster]
@@ -23,7 +23,7 @@ slots:
   - role: fran_2
     slot_type: amrap_movement
     parent_slot_role: fran
-    reps_per_round: 15
+    rep_scheme: [21, 15, 9]
     exercise_filter:
       exercise_ids: [pull_up]
       ordered: true

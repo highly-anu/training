@@ -21,6 +21,11 @@ from zoneinfo import ZoneInfo
 
 os.environ.setdefault('SUPABASE_URL', '')
 
+# The 2 km row test is the old Gym Jones's (test_packages/block_fixture): the
+# shipped Gym Jones runs its plans as written and schedules no block test.
+import fixture_packages  # noqa: E402
+fixture_packages.use()
+
 FAILED = []
 
 

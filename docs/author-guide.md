@@ -111,10 +111,14 @@ anaerobic_intervals   relative_strength     combat_sport
 
 ### Framework IDs (current — your new framework will extend this list)
 ```
-linear_progression    concurrent_training   rpe_autoregulation
-block_periodization   emom_amrap            gpp_circuits
-high_frequency_skill  kb_pentathlon         kelly_starrett_mobility
-polarized_80_20       atg_joint_health      bjj_performance
+atg_program                     atg_zero                        bjj_performance
+built_to_move                   concurrent_training             crossfit_template
+floreio_routines                kb_double_bell_practice         kb_general_practice
+kb_getup_mobility               kb_pentathlon                   kb_snatch_practice
+kb_squat_practice               knee_ability_pro                linear_progression
+operator_fitness                rpe_autoregulation              soldier_of_steel
+texas_method                    uphill_base_intensity_phase     uphill_base_phase
+uphill_specific_phase           uphill_taper_phase              uphill_transition_phase
 ```
 
 ### Philosophy IDs (current — your new philosophy will extend this list)

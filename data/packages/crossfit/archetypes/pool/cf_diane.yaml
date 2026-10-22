@@ -11,7 +11,7 @@ test: {selectable: true}
 slots:
   - role: diane
     slot_type: for_time
-    reps_per_round: 15
+    rep_scheme: [21, 15, 9]
     rounds: 3
     exercise_filter:
       exercise_ids: [deadlift]
@@ -23,7 +23,7 @@ slots:
   - role: diane_2
     slot_type: amrap_movement
     parent_slot_role: diane
-    reps_per_round: 15
+    rep_scheme: [21, 15, 9]
     exercise_filter:
       exercise_ids: [handstand_push_up]
       ordered: true

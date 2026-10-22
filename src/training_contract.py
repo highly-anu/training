@@ -475,7 +475,7 @@ def confirmed_state(current: dict, logs: dict, contract: dict) -> dict:
                         # attending moves the rotation on.
                         record['completed'] += 1
                         continue
-                    outcomes =[log.get('exercises', {}).get(eid, {}) for eid in module['exercise_ids']]
+                    outcomes = [log.get('exercises', {}).get(eid, {}) for eid in module['exercise_ids']]
                     if not outcomes or not all(isinstance(o, dict) and o.get('clean') is True and not isinstance(o.get('rpe'), bool) and isinstance(o.get('rpe'), (int, float))
                                                and 0 < o['rpe'] <= module['max_rpe'] for o in outcomes):
                         continue

@@ -9,7 +9,7 @@ pool_only: true
 slots:
   - role: ball_slams
     slot_type: rounds_for_time
-    reps_per_round: 30
+    rep_scheme: [30, 20, 10]
     rounds: 3
     duration_sec: 600
     intensity: max_effort
@@ -22,7 +22,7 @@ slots:
 
   - role: kb_step_ups
     slot_type: amrap_movement
-    reps_per_round: 30
+    rep_scheme: [30, 20, 10]
     parent_slot_role: ball_slams
     load: "2 x 16 kg (2 x 35 lb)"
     exercise_filter:

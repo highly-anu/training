@@ -575,7 +575,7 @@
           "b": "elapsed",
           "gauge": "rounds_of_target",
           "lap": "log_round",
-          "lines": "next_step",
+          "lines": "components",
           "template": "for_time",
           "title": [
             "name",

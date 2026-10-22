@@ -163,6 +163,15 @@ struct WatchStepState: Codable, Equatable {
     struct Component: Codable, Equatable {
         var name: String
         var repsPerRound: Int? = nil
+        /// Reps round by round (Fran's [21, 15, 9]): the round's own is shown.
+        var repScheme: [Int]? = nil
+
+        /// This round's reps: the scheme's entry for the rounds logged (its
+        /// last once past it), else the one count.
+        func reps(inRound logged: Int) -> Int? {
+            guard let scheme = repScheme, !scheme.isEmpty else { return repsPerRound }
+            return scheme[min(max(logged, 0), scheme.count - 1)]
+        }
     }
 
     init() {}
@@ -356,9 +365,14 @@ enum WatchSpecText {
             if let last = ex.lastTime, st.setsDone == 0, !st.resting { return ("Last time", last) }
             return byDefault
         case .components:
-            guard !st.components.isEmpty else { return byDefault }
-            let round = st.components.prefix(3)
-                .map { ($0.repsPerRound.map { "\($0) " } ?? "") + $0.name }
+            // The step's own movement leads when it has a count (Fran's
+            // thrusters, Cindy's pull-ups), then the movements folded into it.
+            let own = WatchStepState.Component(name: ex.name, repsPerRound: ex.repsPerRound,
+                                               repScheme: ex.repScheme)
+            let all = (own.reps(inRound: 0) != nil ? [own] : []) + st.components
+            guard !st.components.isEmpty || own.reps(inRound: 0) != nil else { return byDefault }
+            let round = all.prefix(3)
+                .map { c in (c.reps(inRound: st.rounds).map { "\($0) " } ?? "") + c.name }
                 .joined(separator: "  ")
             return (round, next)
         case .ladderTotal:

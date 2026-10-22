@@ -45,7 +45,7 @@ deferred is under *Later*.
 | 6 | Watch: package-owned screens — verify and finish | P2 | M | watch, API |
 | 7 | Phases and tracks: review the drafted phase text; verify the iOS track picker and phase names (*IA*) | P2 | S | content, iOS |
 | 8 | Web ↔ iOS parity: what the 2026-10-13 consolidation left open (*IA*) | P2 | M | iOS, web, API |
-| 9 | Generation fidelity: every package built as its method prescribes — all eleven audited 2026-10-22; assessment gating and hygiene left | P1 | L | engine, content |
+| 9 | Generation fidelity: every package built as its method prescribes — all eleven audited 2026-10-22; assessment gating, Horsemen's media and unpublished material left | P1 | L | engine, content |
 | 10 | Progress tracking: what phases A–E left open, and the watches | P2 | M | API, web, iOS, watch |
 | 11 | Apple accounts: switch on, verify on a phone and the web; email code and passkeys later | P2 | S | iOS, web, API |
 | 12 | Standards: the Garmin unit tests, a test day on both watches | P2 | S | API, watch |
@@ -679,16 +679,16 @@ the ten root causes and matrix A–I), its Wildman contract
 item's earlier contents (the fidelity baseline, kept below as 2.1–2.6).
 
 **Where it stands (2026-10-22): every package is audited.** All eleven grade
-`audited` on every track (`docs/package-fidelity/scorecard.md`); the one track
-graded out is Horsemen's GPP Circuits (`excluded_tracks`, an app track on its own
-archetypes). Each runs its author's published program as written — five as training
+`audited` on every track (`docs/package-fidelity/scorecard.md`), none graded out
+since Horsemen's GPP Circuits was dropped. Each runs its author's published program as written — five as training
 contracts (Wildman, Starting Strength, BJJ, Uphill, Marcus Filly), six as week
 templates (Horsemen, CrossFit, Gym Jones, ATG, Kelly Starrett, Ido Portal) — and no
 shipped package runs on the modality scheduler any more (its tests use
 `test_packages/block_fixture`). Not merged: #192 (`bjj-strength-deload`) and the
 stack on it, `uphill-review` then `filly-review` (Uphill, Filly, CrossFit, Gym Jones,
-ATG, Kelly Starrett, Ido Portal), unpushed. What is left, in order:
-1. *Ship the stack* — review, then merge #192, push and review the two branches on it.
+ATG, Kelly Starrett, Ido Portal), then `horsemen-circuits-rep-schemes` (steps 3–5
+below), unpushed. What is left, in order:
+1. *Ship the stack* — review, then merge #192, push and review the three branches on it.
 2. *Assessment gating (M, engine)* — step 3's last policy, open in three records: a
    level the athlete moves up (ATG's ladders, Ido's beginner → intermediate →
    advanced versions; neither source writes a pass mark), and Built to Move's ten
@@ -703,14 +703,22 @@ ATG, Kelly Starrett, Ido Portal), unpushed. What is left, in order:
    Specific long days were apart (R20, `adjacent_to_by_phase`); Gym Jones's day 17
    pressed from the floor where the PDF writes a bench press; Wildman's shortfall notes
    lacked their weeks; `print_package` failed on CrossFit. Media (D3) and D4 now pass
-   everywhere but Horsemen. Left: Horsemen's exercise media (28 of 237; content, item
-   3's kind of work) and its D4 items, all in GPP Circuits but one undefined movement.
-4. *GPP Circuits* — rebuild it from the source or drop the track.
-5. *Rep schemes and the phone (S–M)* — a descending scheme (21-15-9) has no structured
-   field: CrossFit's movements carry the per-round average, Horsemen's the first
-   round, each workout's note the scheme; one `rep_scheme` on the load, shown by the
-   web, the phone and both watches, would end both. The phone's AMRAP and for-time rows
-   do not show a round's own count yet (`LoadFormat.swift`; the web and watches do).
+   everywhere but Horsemen. Horsemen's D4 passes too (the plate shuffle read as a
+   plank moving a plate; the rest went with GPP Circuits). Left: Horsemen's exercise
+   media (15 of 217; content, item 3's kind of work, to be done on its own).
+4. *GPP Circuits* — **dropped 2026-10-22** (the owner's choice): the source has no
+   circuits program, only a circuit day in the macro, which itself repeats. The track,
+   its framework, seven archetypes and the twenty exercises only they used are gone; a
+   stored program that names it regenerates as the 4-Month Macro from its first month
+   (a track's `former_ids`, `phases.find_track`).
+5. *Rep schemes and the phone* — **done 2026-10-22**: a slot's `rep_scheme`
+   (`progression.round_count`) carries Fran's [21, 15, 9] and 24 other workouts' schemes
+   in CrossFit, Gym Jones and Horsemen, in place of the per-round average or first
+   round; the web, the phone (`LoadFormat`, which now also shows an AMRAP's and a
+   for-time piece's own count) and both watches show it, the watches each round's own
+   count. A for-time piece's movements fold into its round on the Apple Watch, as they
+   did on the Garmin, and its step lists them (`for_time` lines `components`). Needs
+   the Garmin store release and a TestFlight build to reach the devices.
 6. *Each package's "Left"* (step 4 below) — mostly material that is not public:
    Uphill's novice plan, Filly's 4x/5x tracks and Base Camp, CrossFit's scaled
    novice track, Operator Fitness II, the Starrett books; then Wildman's follow-ups

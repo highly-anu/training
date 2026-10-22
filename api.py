@@ -35,7 +35,7 @@ from src.phases import PhaseResolutionError
 from src.similarity import compute_all_similarities
 from src.generator import generate
 from src.phase_calendar import compute_phase_from_date
-from src.progression import calculate_load
+from src.progression import calculate_load, rep_scheme_text
 from src.training_contract import ContractError
 from src.selector import populate_session
 from src.validator import check_level_coverage, validate
@@ -3535,6 +3535,9 @@ def _fmt_watch_load(slot_type: str, load: dict, rest_until_hr: int | None = None
         return f'AMRAP {mins} min' if mins is not None else 'AMRAP'
     if slot_type == 'for_time':
         rounds = _pick(load, 'target_rounds', 'targetRounds')
+        scheme = _pick(load, 'rep_scheme', 'repScheme')
+        if scheme:
+            return f'{rep_scheme_text(scheme)} for time'
         return f'{rounds} rounds for time' if rounds is not None else 'For time'
     if slot_type == 'distance':
         km = _pick(load, 'distance_km', 'distanceKm')
@@ -3547,6 +3550,9 @@ def _fmt_watch_load(slot_type: str, load: dict, rest_until_hr: int | None = None
             return (f'{sets}x{m} m' if sets is not None else f'{m} m')
         return 'Distance'
     if slot_type == 'amrap_movement':
+        scheme = _pick(load, 'rep_scheme', 'repScheme')
+        if scheme:
+            return f'{rep_scheme_text(scheme)} reps'
         rpr = _pick(load, 'reps_per_round', 'repsPerRound')
         return f'{rpr} reps / round' if rpr is not None else 'Per round'
     if slot_type == 'static_hold':
@@ -3678,6 +3684,10 @@ def _encode_watch_exercise(ea: dict, modality: str, max_hr: int | None = None) -
         out['switchAtSec'] = sw
     if gate:
         out['restUntilHr'] = gate
+    # Reps round by round (Fran's [21, 15, 9]), in place of repsPerRound.
+    scheme = _pick(load, 'rep_scheme', 'repScheme')
+    if scheme:
+        out['repScheme'] = list(scheme)
     return out
 
 

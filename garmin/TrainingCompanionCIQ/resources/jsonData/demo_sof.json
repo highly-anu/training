@@ -449,9 +449,9 @@
        "screen": "s0"
       }
      ],
-     "packageId": "horsemen_gpp",
+     "packageId": null,
      "watch": {
-      "label": "Horsemen GPP / SOF-Style Training",
+      "label": null,
       "accent": null,
       "summary": {
        "pages": [
@@ -632,7 +632,7 @@
        ],
        "a": "rounds_of_target",
        "b": "elapsed",
-       "lines": "next_step",
+       "lines": "components",
        "lap": "log_round",
        "template": "for_time",
        "gauge": "rounds_of_target"

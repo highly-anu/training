@@ -192,7 +192,6 @@ injury_flags:
       - plank
       - handstand_push_up
       - front_squat
-      - rack_carry_barbell
     modified_exercises:
       - instead_of: front_squat
         use: back_squat
@@ -263,9 +262,7 @@ injury_flags:
       - wk_kb_clean_single
       - kb_clean_double
       - farmer_carry_kb
-      - farmer_carry_barbell
       - farmer_carry_thick_grip
-      - kb_farmer_carry
       - kb_farmer_carry_double
     modified_exercises:
       - instead_of: wk_kb_snatch
@@ -303,9 +300,7 @@ injury_flags:
       - towel_kb_swing
       - kb_swing_breathing_ladder
       - farmer_carry_kb
-      - farmer_carry_barbell
       - farmer_carry_thick_grip
-      - kb_farmer_carry
       - kb_farmer_carry_double
     modified_exercises:
       - instead_of: bench_press

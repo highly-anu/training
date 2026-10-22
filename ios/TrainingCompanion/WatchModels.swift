@@ -765,6 +765,8 @@ struct WatchExercise: Codable, Hashable {
     var intervalRestSec: Int? = nil
     var distanceM: Int? = nil
     var repsPerRound: Int? = nil
+    /// Reps round by round (Fran's [21, 15, 9]), in place of repsPerRound.
+    var repScheme: [Int]? = nil
     var packLoadKg: Double? = nil
     var focus: String? = nil
     var parentSlotRole: String? = nil
@@ -783,7 +785,7 @@ struct WatchExercise: Codable, Hashable {
         case emomFormat, holdSeconds, distanceKm, restSeconds, prescribedZoneLower, prescribedZoneUpper
         case lastTime = "last", standard
         case category, movementPattern, bilateral, targetRpm, workSec, intervalRestSec, distanceM
-        case repsPerRound, packLoadKg, focus, parentSlotRole, bells, switchAtSec, restUntilHr, screen
+        case repsPerRound, repScheme, packLoadKg, focus, parentSlotRole, bells, switchAtSec, restUntilHr, screen
     }
 }
 
@@ -827,6 +829,7 @@ extension WatchExercise {
         intervalRestSec = c.lenientInt(.intervalRestSec)
         distanceM = c.lenientInt(.distanceM)
         repsPerRound = c.lenientInt(.repsPerRound)
+        repScheme = try? c.decodeIfPresent([Int].self, forKey: .repScheme)
         packLoadKg = try? c.decodeIfPresent(Double.self, forKey: .packLoadKg)
         focus = try? c.decodeIfPresent(String.self, forKey: .focus)
         parentSlotRole = try? c.decodeIfPresent(String.self, forKey: .parentSlotRole)

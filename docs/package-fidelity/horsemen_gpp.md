@@ -1,7 +1,6 @@
 # Horsemen GPP — source dossier
 
-The 4-Month Macro runs as written; the GPP Circuits track is an invention (I1)
-awaiting the owner's decision and is excluded from the status. Engine shape: week
+The 4-Month Macro runs as written, and is the package's only track. Engine shape: week
 templates and category pools (philosophy.yaml `week_templates`,
 frameworks/concurrent_training.yaml `categories`, src/week_template.py). The record —
 sources, rules with what enforces each, inventions — is
@@ -35,13 +34,18 @@ placed where it fits the method (I2).
 ## Open
 
 - Workouts the source leaves undefined ("400 m Rob Shauls"); movements it names
-  without defining (cauldron, corkscrew, arm haulers …) are read as noted in the catalog.
+  without defining (cauldron, corkscrew, arm haulers …) are read as noted in the catalog;
+  the plate shuffle as a plank moving a plate from side to side.
 - No equipment id for elliptical, stair master, climbing, paddling or skiing.
 
 ## Inventions
 
-- I1: the GPP Circuits track and its archetypes (all of the package's fidelity
-  findings are its).
+- I1 (dropped 2026-10-22): the GPP Circuits track, an app adaptation with no
+  counterpart in the source. The owner chose to drop it rather than rebuild it: the
+  source's circuits are one day category of the macro, which itself repeats. Its
+  framework, seven archetypes and the twenty exercises only they used went with it;
+  a stored program that names the track regenerates as the macro from its first
+  month (the macro's `former_ids`).
 - I2: the PT test's placement — the macro's first and last hard job-specific days.
 
 ## Output review (2026-10-22)
@@ -52,8 +56,10 @@ each opening with a warm-up from its list (R4), loads as written (R5), the sourc
 substitutes said where they apply (R6), the PT test on the first and last hard
 job-specific days (I2). Fixed: the first movement of 23 for-time and AMRAP pieces had no
 count (Fran's 21 thrusters, Dead Storage's 100) — now in the data and the load; a second
-workout on one day labelled its uncounted movements with a bare "Meritorious:". Open: a
-descending scheme carries its first round's count (CrossFit carries the average).
+workout on one day labelled its uncounted movements with a bare "Meritorious:". Since
+(same day): the fourteen descending or ascending schemes (Fran, Annie, Elizabeth, Linda,
+Horse's Tail, Jonesworthy's three, Panama Red's bench down and burpees up …) are each
+slot's `rep_scheme`, in place of the first round's count.
 
 ## Tests
 

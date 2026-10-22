@@ -9,7 +9,7 @@ pool_only: true
 slots:
   - role: squats
     slot_type: rounds_for_time
-    reps_per_round: 80
+    rep_scheme: [80, 64, 48, 32, 24, 12]
     rounds: 6
     duration_sec: 1380
     intensity: max_effort
@@ -22,7 +22,7 @@ slots:
 
   - role: kb_swings
     slot_type: amrap_movement
-    reps_per_round: 40
+    rep_scheme: [40, 32, 24, 16, 12, 6]
     parent_slot_role: squats
     exercise_filter:
       exercise_ids: [kb_swing_two_hand]
@@ -32,7 +32,7 @@ slots:
 
   - role: pull_ups
     slot_type: amrap_movement
-    reps_per_round: 20
+    rep_scheme: [20, 16, 12, 8, 6, 3]
     parent_slot_role: squats
     exercise_filter:
       exercise_ids: [pull_up]

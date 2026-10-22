@@ -25,7 +25,7 @@ slots:
 - role: turkish_get_ups
   slot_type: amrap_movement
   parent_slot_role: run_400m
-  reps_per_round: 10
+  rep_scheme: [10, 7, 5, 3]
   exercise_filter:
     exercise_ids:
     - kb_tgu
@@ -37,7 +37,7 @@ slots:
 - role: jumping_lunges
   slot_type: amrap_movement
   parent_slot_role: run_400m
-  reps_per_round: 40
+  rep_scheme: [40, 30, 20, 10]
   exercise_filter:
     exercise_ids:
     - lunge_jumping

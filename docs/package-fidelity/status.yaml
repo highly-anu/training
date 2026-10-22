@@ -152,20 +152,16 @@ packages:
     debt: []
     currency:
       four_month_macro: strength
-      gpp_circuits: strength
-    excluded_tracks:
-      gpp_circuits: 'I1: The GPP Circuits track and its archetypes (not in the source).'
     source_tests:
     - test_week_template.py::test_a_regenerate_from_mid_track_carries_on_the_rotation
     - test_week_template.py::test_horsemen_runs_the_source_weeks_as_written
     - test_week_template.py::test_horsemen_without_the_equipment_passes_workouts_over
     inventions:
-    - 'I1: The GPP Circuits track and its archetypes (not in the source).'
     - 'I2: The PT test''s placement: the macro''s first and last hard job-specific days (the source never
       schedules it).'
     last_review:
       output_vs_dossier: '2026-10-22'
-    next: Decide GPP Circuits (I1) — rebuild it on the source's circuits, or drop it.
+    next: Exercise media (28 of 237 written).
   ido_portal:
     status: audited
     shape: templates

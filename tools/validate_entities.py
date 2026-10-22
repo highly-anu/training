@@ -177,6 +177,18 @@ def _extra_checks(data: dict, schema_filename: str, path: str | None = None) -> 
                 errors.append(f"slot '{slot.get('role')}' measures {ref['id']} but names no exercise_ids")
         if 'test' in data and not scored:
             errors.append("a test archetype with no slot that measures a standard")
+        # A rep scheme is one count a round: as long as its piece's rounds, and
+        # never beside a single count.
+        rounds_of = {s.get('role'): s.get('rounds') for s in data.get('slots') or []}
+        for slot in data.get('slots') or []:
+            scheme = slot.get('rep_scheme')
+            if not scheme:
+                continue
+            if slot.get('reps_per_round'):
+                errors.append(f"slot '{slot.get('role')}': rep_scheme and reps_per_round both given")
+            rounds = slot.get('rounds') or rounds_of.get(slot.get('parent_slot_role'))
+            if rounds and rounds != len(scheme):
+                errors.append(f"slot '{slot.get('role')}': rep_scheme {scheme} in {rounds} rounds")
 
     if schema_filename == 'framework.schema.json':
         # intensity_distribution must sum to 1.0

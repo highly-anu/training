@@ -206,6 +206,12 @@
             "type": "integer",
             "minimum": 1
           },
+          "rep_scheme": {
+            "type": "array",
+            "items": {"type": "integer", "minimum": 1},
+            "minItems": 2,
+            "description": "Reps round by round where they change (Fran's [21, 15, 9], Annie's [50, 40, 30, 20, 10]), in place of reps_per_round; one entry a round, so a slot's `rounds` (or its parent's) is its length."
+          },
           "skip_exercise": {
             "type": "boolean",
             "description": "If true, selector skips exercise lookup for this slot."

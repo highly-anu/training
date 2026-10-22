@@ -36,6 +36,9 @@ track_for_level:
 tracks:
   - id: operator_fitness
     name: "Operator Fitness"
+    # The three-block periodization track, dropped on 2026-10-21: a stored
+    # program that names it regenerates as Operator Fitness.
+    former_ids: [block_periodization]
     description: >
       Gym Jones' one-month Foundation plan, day by day, six days a week:
       strength, circuits and accumulation, recovery days and a long hike with

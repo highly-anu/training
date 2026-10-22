@@ -137,7 +137,7 @@ def _prescribed_minutes(ctx: Context, hit: dict) -> float:
     if mins > 0:
         return mins
     est = float((session.get('archetype') or {}).get('duration_estimate_minutes') or 0)
-    return est * (0.7 if ctx.is_deload_week(hit['week']) else 1.0)
+    return est * (0.7 if ctx.is_deload_session(hit) else 1.0)
 
 
 def _dose(weekly: float, lo, hi) -> str:

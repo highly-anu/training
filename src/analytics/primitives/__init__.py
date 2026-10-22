@@ -49,7 +49,7 @@ def scoped_hits(entry: spec_mod.Entry, ctx: Context) -> list[dict]:
         h.update({
             'date': d, 'ordinal': ordinal,
             'week_number': h['week'].get('week_number', h['week_index'] + 1),
-            'is_deload': ctx.is_deload_week(h['week']),
+            'is_deload': ctx.is_deload_session(h),
             'log': ctx.log_for(h), 'workout': ctx.workout_for(h),
         })
         h['completed'] = bool((h['log'] or {}).get('completedAt')) or h['workout'] is not None

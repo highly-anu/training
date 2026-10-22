@@ -9,7 +9,7 @@ pool_only: true
 slots:
   - role: thrusters
     slot_type: rounds_for_time
-    reps_per_round: 21
+    rep_scheme: [21, 15, 9]
     rounds: 3
     duration_sec: 480
     intensity: max_effort
@@ -21,7 +21,7 @@ slots:
 
   - role: kipping_pull_ups
     slot_type: amrap_movement
-    reps_per_round: 21
+    rep_scheme: [21, 15, 9]
     parent_slot_role: thrusters
     exercise_filter:
       exercise_ids: [kipping_pull_up]
@@ -31,7 +31,7 @@ slots:
 
   - role: deadlifts
     slot_type: rounds_for_time
-    reps_per_round: 30
+    rep_scheme: [30, 20, 10]
     rounds: 3
     duration_sec: 600
     intensity: max_effort
@@ -44,7 +44,7 @@ slots:
 
   - role: push_presses
     slot_type: amrap_movement
-    reps_per_round: 30
+    rep_scheme: [30, 20, 10]
     parent_slot_role: deadlifts
     exercise_filter:
       exercise_ids: [push_press]

@@ -9,7 +9,7 @@ pool_only: true
 slots:
   - role: overhead_squats
     slot_type: rounds_for_time
-    reps_per_round: 30
+    rep_scheme: [30, 20, 10]
     rounds: 3
     duration_sec: 720
     intensity: max_effort
@@ -22,7 +22,7 @@ slots:
 
   - role: ring_push_ups
     slot_type: amrap_movement
-    reps_per_round: 30
+    rep_scheme: [30, 20, 10]
     parent_slot_role: overhead_squats
     exercise_filter:
       exercise_ids: [push_up_ring]

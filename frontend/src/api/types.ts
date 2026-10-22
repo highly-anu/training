@@ -353,6 +353,8 @@ export interface ExerciseLoad {
   distance_km?: number
   distance_m?: number
   reps_per_round?: number
+  /** Reps round by round where they change (Fran's [21, 15, 9]), in place of reps_per_round. */
+  rep_scheme?: number[]
   target_rounds?: number
   time_minutes?: number
   format?: string

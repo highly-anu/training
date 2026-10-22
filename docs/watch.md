@@ -71,6 +71,7 @@ As of 2026-10-18. *Server* is the payload key; *—* means the server has no par
 | Summary pages | `watch.summary.pages` | yes | summary, heart rate (zones), exercises; training effect is the Garmin's own |
 | Hand switch | `switchAtSec` (slot `switch_at_sec`: the pentathlon test's five events at 3:00) | in a timed block (1.7.0) and an interval's work: Left/Right, a Switch hands alert | the same, with the turn haptic for the new hand |
 | Rest that ends on heart rate | `restUntilHr` in bpm (slot `rest_until_hr_pct` × max HR: Wildman's anti-glycolytic sets, Uphill's hill repeats) | the interval's rest ends 5 s under it; HR TO and the time so far | the same (`WatchCues.RestGate`); the rest screen's "still recovering" guess is gone |
+| A round's movements and their reps, a rep scheme | `repsPerRound`, `repScheme` (slot `rep_scheme`: Fran's [21, 15, 9]) | the round line: the step's own movement, then the folded ones, each with this round's reps; "21-15-9 for time" in the step lists | the same; a for-time piece's movements fold into its round, as the Garmin's always did |
 | Double bells | `bells` (exercises.yaml) | 2x24 and both bells in the volume | the same; neither watch reads it off the id any more |
 | Upload: sets by id, rounds, clock, distance | — | `Wire.mc` | `WatchUpload` |
 | **Native, not shared** | | glance (64 KB), wellness posting, pairing QR | HealthKit workout and route, complication, overtime prompt |

@@ -182,12 +182,18 @@ class SpecRenderer extends Renderer {
             return Renderer.lines(ctl, ex);
         }
         if (id.equals("components")) {
+            // The step's own movement leads when it has a count (Fran's
+            // thrusters, Cindy's pull-ups), then the movements folded into it;
+            // each shows this round's reps (a scheme's entry for the round).
             var comps = ctl.componentsForCurrent();
-            if (comps == null || comps.size() == 0) { return Renderer.lines(ctl, ex); }
+            var all = (ex.repsInRound(0) != null) ? [ex] : [];
+            if (comps != null) { all.addAll(comps); }
+            if (all.size() == 0) { return Renderer.lines(ctl, ex); }
+            var round = ctl.amrapRounds();
             var a = "";
-            for (var i = 0; i < comps.size() && i < 3; i += 1) {
-                var c = comps[i];
-                var rpr = c.repsPerRound();
+            for (var i = 0; i < all.size() && i < 3; i += 1) {
+                var c = all[i];
+                var rpr = c.repsInRound(round);
                 if (i > 0) { a += "  "; }
                 a += ((rpr != null) ? (rpr.toString() + " ") : "") + c.name();
             }

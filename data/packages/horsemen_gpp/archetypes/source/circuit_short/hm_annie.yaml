@@ -9,7 +9,7 @@ pool_only: true
 slots:
   - role: double_unders
     slot_type: rounds_for_time
-    reps_per_round: 50
+    rep_scheme: [50, 40, 30, 20, 10]
     rounds: 5
     duration_sec: 600
     intensity: max_effort
@@ -21,7 +21,7 @@ slots:
 
   - role: sit_ups
     slot_type: amrap_movement
-    reps_per_round: 50
+    rep_scheme: [50, 40, 30, 20, 10]
     parent_slot_role: double_unders
     exercise_filter:
       exercise_ids: [sit_up]
