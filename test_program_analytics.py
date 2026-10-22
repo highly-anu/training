@@ -597,6 +597,17 @@ def test_set_load() -> None:
     check('three flat sessions after the first → stalled', r2['exercises'][0]['stalled']
           and r2['status'] == 'stalled', str(r2['exercises'][0]['status']))
 
+    # A training contract's module may deload on its own while the week carries
+    # on (BJJ's strength in StrengthLog's seventh week): the session says so.
+    own = fixture_program(weeks=4, deload_week=99)
+    for day in ('Monday', 'Wednesday'):
+        own['weeks'][2]['schedule'][day][0]['is_deload'] = True
+    sq3 = run_primitive(e, _ctx(own, logs))['exercises'][0]
+    check("a session's own deload is flagged though its week is not",
+          sq3['series'][4]['isDeload'] and sq3['series'][5]['isDeload'] and not sq3['series'][3]['isDeload'])
+    check('and the trend fits around it', sq3['trend']['pointsUsed'] == 4
+          and sq3['trend']['direction'] == 'improving', str(sq3['trend']))
+
     # A lift with no kg prescribed or logged is measured in reps (Gym Jones'
     # air squats, BJJ's pull-ups): logging its reps read "no sets logged".
     bw = fixture_program(weeks=2, deload_week=99)

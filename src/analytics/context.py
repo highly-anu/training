@@ -113,6 +113,12 @@ class Context:
     def is_deload_week(self, week: dict) -> bool:
         return bool(week.get('is_deload')) or (week.get('phase') in DELOAD_PHASES)
 
+    def is_deload_session(self, hit: dict) -> bool:
+        """A session deloads with its week, or on its own: a training contract's
+        module may deload in its own cycle while the week carries on (BJJ's
+        strength in StrengthLog's seventh week, the classes as usual)."""
+        return self.is_deload_week(hit['week']) or bool((hit.get('session') or {}).get('is_deload'))
+
     def tier_of(self, modality: str, week: dict) -> str:
         fw = self.framework_for_week(week) or {}
         tiers = fw.get('modality_priority') or {}
@@ -187,7 +193,7 @@ class Context:
         if prescribed > 0:
             return prescribed, 'prescribed'
         est = float((session.get('archetype') or {}).get('duration_estimate_minutes') or 0)
-        if self.is_deload_week(hit['week']):
+        if self.is_deload_session(hit):
             est *= DELOAD_DURATION_SCALE
         return est, 'estimate'
 
