@@ -185,6 +185,9 @@ class WorkoutSession {
     }
 
     function archetypeCategory() { return s("archetypeCategory"); }
+    // The session's workout icon (data/commons/workout_icons.json): what its
+    // main exercise is. Absent from older servers and from sessions with none.
+    function icon()            { return s("icon"); }
     function estimatedMinutes(){ return d["estimatedMinutes"]; }
     function isDeload()        { return d["isDeload"] == true; }
     // Done today: saved on this watch, or reported done by the server (a session

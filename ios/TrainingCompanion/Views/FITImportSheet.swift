@@ -295,7 +295,7 @@ struct FITImportSheet: View {
                     .font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
-            Image(systemName: ModalityStyle.icon(for: item.session.modality))
+            Image(symbol: SessionIcon.symbol(icon: item.session.icon, modality: item.session.modality))
                 .foregroundStyle(ModalityStyle.color(for: item.session.modality))
         }
         .padding(.vertical, 4)
@@ -313,7 +313,7 @@ struct FITImportSheet: View {
                     .font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
-            Image(systemName: ModalityStyle.icon(for: item.session.modality))
+            Image(symbol: SessionIcon.symbol(icon: item.session.icon, modality: item.session.modality))
                 .foregroundStyle(ModalityStyle.color(for: item.session.modality))
         }
         .padding(.vertical, 4)

@@ -76,6 +76,16 @@ module Icons {
         return Rez.Drawables.IcUiGeneric;
     }
 
+    // A session's hero icon: its workout icon — the one the phone and the Apple
+    // Watch draw for it — else its archetype category's. Tinted by the caller
+    // with the session's accent (its modality's colour).
+    function forSession(s) {
+        if (s == null) { return Rez.Drawables.IcUiGeneric; }
+        var icon = s.icon();
+        if (icon != null && icon.equals("kettlebell")) { return Rez.Drawables.IcCatKettlebell; }
+        return categoryKey(s.archetypeCategory());
+    }
+
     // The hero icon for one exercise: its movement pattern if the backend sent
     // one, otherwise the slot-type icon, otherwise a neutral mark. Never null —
     // an un-upgraded backend must degrade, not crash.

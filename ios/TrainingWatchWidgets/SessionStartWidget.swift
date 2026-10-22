@@ -101,7 +101,7 @@ struct SessionStartWidgetView: View {
             Gauge(value: Double(min(w.done, w.sessions)), in: 0...Double(w.sessions)) {
                 EmptyView()
             } currentValueLabel: {
-                Image(systemName: allDone ? "checkmark" : first.map { watchIcon($0.modalityId) } ?? "battery.100.bolt")
+                Image(symbol: allDone ? "checkmark" : first.map { sessionIcon($0) } ?? "battery.100.bolt")
                     .foregroundStyle(allDone ? .green : first.map { modalityColor($0.modalityId) } ?? .green)
             }
             .gaugeStyle(.accessoryCircularCapacity)
@@ -117,9 +117,9 @@ struct SessionStartWidgetView: View {
                 Circle()
                     .fill(modalityColor(s.modalityId).opacity(0.2))
                 VStack(spacing: 1) {
-                    Image(systemName: sessions.count > 1
+                    Image(symbol: sessions.count > 1
                           ? "play.circle.fill"
-                          : watchIcon(s.modalityId))
+                          : sessionIcon(s))
                         .font(.title3)
                         .foregroundStyle(modalityColor(s.modalityId))
                     if sessions.count > 1 {
@@ -152,7 +152,7 @@ struct SessionStartWidgetView: View {
                     .font(.caption2).foregroundStyle(.secondary)
             } else if let s = first {
                 HStack(spacing: 4) {
-                    Image(systemName: watchIcon(s.modalityId))
+                    Image(symbol: sessionIcon(s))
                         .font(.caption2)
                         .foregroundStyle(modalityColor(s.modalityId))
                     Text(sessions.count > 1
@@ -191,7 +191,7 @@ struct SessionStartWidgetView: View {
     // MARK: Corner — icon + session name label
 
     private var cornerView: some View {
-        Image(systemName: first.map { watchIcon($0.modalityId) } ?? "battery.100.bolt")
+        Image(symbol: first.map { sessionIcon($0) } ?? "battery.100.bolt")
             .foregroundStyle(first.map { modalityColor($0.modalityId) } ?? .green)
             .widgetLabel {
                 Text(first.map { sessions.count > 1 ? "\(sessions.count) sessions" : $0.archetypeName } ?? "Rest")
@@ -234,6 +234,13 @@ struct SessionStartWidgetView: View {
         case "rehab":                               return .green
         default:                                    return .blue
         }
+    }
+
+    /// A session's workout icon, else its modality's. The inline complication
+    /// keeps the modality's: it renders system symbols beside its text.
+    private func sessionIcon(_ s: WidgetSession) -> String {
+        if let icon = s.icon, AppSymbol.custom.contains(icon) { return icon }
+        return watchIcon(s.modalityId)
     }
 
     private func watchIcon(_ id: String) -> String {

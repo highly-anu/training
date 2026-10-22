@@ -52,3 +52,13 @@ struct ModalityStyle {
         }
     }
 }
+
+/// What a session leads with: its workout icon (the server's `icon`, the same
+/// the phone and the Garmin draw), else its modality icon; tinted with the
+/// modality colour either way.
+enum SessionIcon {
+    static func symbol(icon: String?, modality: String) -> String {
+        if let icon, AppSymbol.custom.contains(icon) { return icon }
+        return ModalityStyle.icon(for: modality)
+    }
+}

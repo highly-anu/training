@@ -803,14 +803,16 @@ Image(systemName: ActivityIcon.forWorkout(activityType: workout.activityType,
 - **Colour still comes from the modality.** The icon says what you did; the
   colour says where it sits in the training palette. Keeping the colour on
   `ModalityStyle` is what lets a list stay readable when every row is a bike.
-- **A planned session uses `ModalityStyle.icon(for:)`** — there is no recorded
-  activity yet, and the modality is the whole truth about it.
+- **A planned session leads with its workout icon** — the third question,
+  *what is in it* (§6.40): `SessionIcon.symbol(icon:modality:)`, which is the
+  server's `icon` for its main exercise, else `ModalityStyle.icon(for:)`. A
+  workout linked to a session takes that session's icon in Log ▸ Linking, so
+  the pair reads as one.
 
 **When NOT to use it**
 
-Not for programme sessions, archetypes or anything in the Program tab: those
-have a modality and no activity, so the modality icon is the correct and only
-answer.
+Not for archetypes, philosophies or the builder's modality lists: those have a
+modality and no session, so the modality icon is the correct and only answer.
 
 ---
 
@@ -1935,3 +1937,33 @@ as a sheet by the regenerate offer (§6.17) in regenerate mode.
 - Debug builds open it on launch: `SIMCTL_CHILD_TC_PREVIEW=<philosophy id>`
   (a draft from the profile; `TC_PREVIEW_WEEKS`, `TC_PREVIEW_TAB=heldback`)
   with `ROUTE='trainingcompanion://program'`.
+
+### 6.40 Session Icon
+
+**A session leads with what is in it; its colour says what kind it is.** The
+server gives every planned session an `icon` for its main exercise
+(`src/session_icon.py`, from `data/commons/workout_icons.json`), derived on
+every read and never stored. Today there is one: `kettlebell`, for a session
+whose main exercise is a kettlebell exercise — every Wildman day, a kettlebell
+day in any other package. A session without one keeps its modality icon.
+
+```swift
+Image(symbol: SessionIcon.symbol(icon: session.icon, modality: session.modality))
+    .foregroundStyle(ModalityStyle.color(for: session.modality))
+```
+
+- **Same icon everywhere.** The phone, the widgets (`WidgetSession.icon`), the
+  Apple Watch (`WatchSession.icon`, `SessionListView`), the Garmin
+  (`Icons.forSession`, its `cat_kettlebell` bitmap) and the web
+  (`WorkoutIcon`) draw the same glyph for the same session, so a recorded
+  workout is easy to put beside the session it was.
+- **The modality stays on the card** — the capsule on Today, the caption on the
+  session header — but not as the header's icon.
+- **Always through `Image(symbol:)`**: the icon is a custom symbol in each
+  target's catalog (`ios/tools/make_kettlebell_symbol.py` writes all four).
+  An id this build has no glyph for falls back to the modality icon, never to
+  nothing (`SessionIconTests`).
+- **Where:** Today's card (before the name), Program ▸ Calendar and the day
+  sheet, the session header, the preview, the session pickers (import,
+  workout detail, Workout complete), Log ▸ Linking. The inline watch
+  complication keeps the modality's system symbol.

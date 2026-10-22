@@ -433,7 +433,7 @@ struct WorkoutCompleteSheet: View {
                                             @ViewBuilder trailing: () -> Trailing) -> some View {
         let color = ModalityStyle.color(for: s.modality)
         return HStack(spacing: 12) {
-            Image(systemName: ModalityStyle.icon(for: s.modality))
+            Image(symbol: SessionIcon.symbol(icon: s.icon, modality: s.modality))
                 .font(.title3)
                 .foregroundStyle(color)
                 .frame(width: 28)

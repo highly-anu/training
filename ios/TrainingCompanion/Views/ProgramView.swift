@@ -316,8 +316,8 @@ struct ProgramView: View {
                                 weekNumber: week.weekNumber, dayName: day, index: i)
                             let done = appState.isSessionComplete(key)
                             HStack(spacing: 6) {
-                                Image(systemName: done ? "checkmark.circle.fill"
-                                                       : ModalityStyle.icon(for: session.modality))
+                                Image(symbol: done ? "checkmark.circle.fill"
+                                                   : SessionIcon.symbol(icon: session.icon, modality: session.modality))
                                     .foregroundStyle(done ? .green
                                                           : ModalityStyle.color(for: session.modality))
                                     .font(.caption)
@@ -415,7 +415,7 @@ private struct DaySessionsSheet: View {
     private func sessionRow(_ session: ProgramSession, key: String) -> some View {
         let done = appState.isSessionComplete(key)
         return HStack(spacing: 12) {
-            Image(systemName: done ? "checkmark.circle.fill" : ModalityStyle.icon(for: session.modality))
+            Image(symbol: done ? "checkmark.circle.fill" : SessionIcon.symbol(icon: session.icon, modality: session.modality))
                 .foregroundStyle(done ? .green : ModalityStyle.color(for: session.modality))
                 .font(.title3)
             VStack(alignment: .leading, spacing: 3) {

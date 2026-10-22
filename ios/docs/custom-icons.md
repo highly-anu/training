@@ -133,11 +133,22 @@ name Apple already uses.
 
 **Other targets.** Asset catalogs are per target. The watch app, widgets and
 watch widgets have their own `Assets.xcassets` and their own `ModalityStyle`;
-to use an icon there, write the symbolset into that catalog too (`write_symbolset(…, assets=<that catalog>)`) and add the same `Image(symbol:)`
-routing to that target.
+to use an icon there, write the symbolset into that catalog too
+(`write_symbolset(…, assets=<that catalog>)`, as `make_kettlebell_symbol.py`
+does for all four). `AppSymbol` and `Image(symbol:)` live in
+`Shared/WidgetSharedModels.swift`, which every target compiles.
 
 ## 4. Inventory
 
 | Symbol | Shows | Used for | Script |
 |---|---|---|---|
-| `kettlebell` | A kettlebell: wide handle, large window, round ball, short flat base | Recorded workouts whose activity names a kettlebell (`kb`, `kettlebell`) — `ActivityIcon.forActivityType` | `ios/tools/make_kettlebell_symbol.py` |
+| `kettlebell` | A kettlebell: wide handle, large window, round ball, short flat base | Recorded workouts whose activity names a kettlebell (`kb`, `kettlebell`) — `ActivityIcon.forActivityType`; and a session's workout icon (design-system §6.40) on the phone, the widgets and the Apple Watch — the script writes it into all four catalogs | `ios/tools/make_kettlebell_symbol.py` |
+
+**Session workout icons.** `data/commons/workout_icons.json` lists the icons a
+session can lead with; `AppSymbol` (now in `Shared/WidgetSharedModels.swift`,
+so every target has the same set and `Image(symbol:)`) must name each one. The
+web draws them from `tools/icons/workout_glyphs.py` (which reuses this
+kettlebell); that file also holds drafts of per-lift variants — the bell plus a
+motion mark for the swing, snatch, clean and press, get-up and squat — kept out
+of the vocabulary until they are approved (`tools/icons/gen_workout_icons.py
+--preview` renders them).

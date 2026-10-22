@@ -88,14 +88,19 @@ function SessionCard({
       />
 
       <div className="p-2 space-y-1.5 flex-1 flex flex-col">
-        {/* Workout icon + archetype name, workout indicator */}
-        <div className="flex items-start justify-between gap-1">
-          <p className="flex items-start gap-1 text-xs font-medium leading-snug text-foreground">
-            <WorkoutIcon icon={session.icon} modality={session.modality} className="size-3.5 mt-px" />
-            {session.archetype?.name ?? session.modality.replace(/_/g, ' ')}
-          </p>
-          {hasWorkout && <Activity className="size-3 text-blue-700 dark:text-blue-300 shrink-0 mt-0.5" />}
-        </div>
+        {/* Workout icon and workout indicator on their own row: the columns
+            are narrow, and the name needs their whole width */}
+        {(session.icon || hasWorkout) && (
+          <div className="flex items-center justify-between gap-1">
+            <WorkoutIcon icon={session.icon} modality={session.modality} className="size-4" />
+            {hasWorkout && <Activity className="size-3 text-blue-700 dark:text-blue-300 shrink-0 ml-auto" />}
+          </div>
+        )}
+
+        {/* Archetype name */}
+        <p className="text-xs font-medium leading-snug text-foreground">
+          {session.archetype?.name ?? session.modality.replace(/_/g, ' ')}
+        </p>
 
         {/* Modality, beside the name rather than over it */}
         <p
@@ -305,8 +310,8 @@ function DragGhost({ session }: { session: Session }) {
     <div className="rounded-lg border border-primary/40 bg-card shadow-2xl overflow-hidden w-[130px] rotate-2 opacity-95">
       <div className="h-0.5 w-full" style={{ backgroundColor: colors?.hex ?? 'var(--primary)' }} />
       <div className="p-2 space-y-1">
-        <p className="flex items-start gap-1 text-xs font-medium leading-snug">
-          <WorkoutIcon icon={session.icon} modality={session.modality} className="size-3.5 mt-px" />
+        <WorkoutIcon icon={session.icon} modality={session.modality} className="size-4" />
+        <p className="text-xs font-medium leading-snug">
           {session.archetype?.name ?? session.modality.replace(/_/g, ' ')}
         </p>
         <p

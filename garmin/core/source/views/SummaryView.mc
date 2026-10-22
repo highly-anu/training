@@ -45,7 +45,7 @@ class SummaryView extends Ui.View {
     }
 
     function onShow() {
-        Icons.prefetch(Icons.categoryKey(_ctl.session().archetypeCategory()));
+        Icons.prefetch(Icons.forSession(_ctl.session()));
     }
 
     function onHide() { Icons.release(); Native.releaseHints(); }
@@ -89,7 +89,7 @@ class SummaryView extends Ui.View {
         var g = _g;
         var s = _ctl.session();
         Icons.drawCentered(dc, g.cx, (g.h * 13) / 100, g.iconChip,
-                           Icons.categoryKey(s.archetypeCategory()), Theme.sessionAccent(s));
+                           Icons.forSession(s), Theme.sessionAccent(s));
         Native.fitted(dc, g.cx, (g.h * 225) / 1000, Text.lineBold(), s.archetypeName(),
                       Gfx.COLOR_WHITE, (g.w * 66) / 100);
         Native.text(dc, g.cx, (g.h * 385) / 1000, Text.bigNum(), Text.mmss(_ctl.elapsedSec()),

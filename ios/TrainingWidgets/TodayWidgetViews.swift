@@ -57,7 +57,7 @@ struct SmallTodayView: View {
         Link(destination: URL(string: "trainingcompanion://session?key=\(s.id)")!) {
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
-                    Image(systemName: WidgetModalityStyle.icon(for: s.modalityId))
+                    Image(symbol: WidgetModalityStyle.symbol(for: s))
                         .foregroundStyle(WidgetModalityStyle.color(for: s.modalityId))
                     Spacer()
                     Text(todayShortLabel)
@@ -220,7 +220,7 @@ struct SessionRowView: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: WidgetModalityStyle.icon(for: session.modalityId))
+            Image(symbol: WidgetModalityStyle.symbol(for: session))
                 .foregroundStyle(WidgetModalityStyle.color(for: session.modalityId))
                 .frame(width: 22)
             VStack(alignment: .leading, spacing: 1) {
@@ -246,7 +246,7 @@ struct LargeSessionRowView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 8) {
-                Image(systemName: WidgetModalityStyle.icon(for: session.modalityId))
+                Image(symbol: WidgetModalityStyle.symbol(for: session))
                     .foregroundStyle(WidgetModalityStyle.color(for: session.modalityId))
                 Text(session.archetypeName)
                     .font(.subheadline)
@@ -333,6 +333,12 @@ enum WidgetModalityStyle {
         case "rehab":                    return "Rehab"
         default:                         return id.replacingOccurrences(of: "_", with: " ").capitalized
         }
+    }
+
+    /// A session's workout icon (design-system §6.40), else its modality's.
+    static func symbol(for session: WidgetSession) -> String {
+        if let icon = session.icon, AppSymbol.custom.contains(icon) { return icon }
+        return icon(for: session.modalityId)
     }
 
     static func icon(for id: String) -> String {

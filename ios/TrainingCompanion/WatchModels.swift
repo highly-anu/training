@@ -187,6 +187,10 @@ struct ProgramSession: Codable {
         case exercises
     }
 
+    /// Its workout icon, for its main exercise (src/session_icon.py): derived
+    /// by the server on every read and never stored, so it rides in `extra`.
+    var icon: String? { extra["icon"]?.stringValue }
+
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         modality = try c.decode(String.self, forKey: .modality)
@@ -664,10 +668,13 @@ struct WatchSession: Codable, Identifiable, Hashable {
     /// The package's watch settings (`watch_spec.session_identity`): its
     /// summary pages, the order the end of a session shows them in.
     var watch: WatchIdentity? = nil
+    /// Its workout icon (src/session_icon.py), tinted with the modality colour;
+    /// nil → the modality icon.
+    var icon: String? = nil
 
     enum CodingKeys: String, CodingKey {
         case sessionId, modalityId, archetypeName, estimatedMinutes, isDeload, exercises, completed
-        case packageId, screens, watch
+        case packageId, screens, watch, icon
     }
 }
 
@@ -686,6 +693,7 @@ extension WatchSession {
         // type's), never the session.
         screens = try? c.decodeIfPresent([String: WatchScreenSpec].self, forKey: .screens)
         watch = try? c.decodeIfPresent(WatchIdentity.self, forKey: .watch)
+        icon = try? c.decodeIfPresent(String.self, forKey: .icon)
     }
 
     /// The screen an exercise is drawn with (`WatchScreen.forExercise`).
