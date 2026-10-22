@@ -33,6 +33,8 @@ categories:
   zero:
     name: "ATG Zero"
     modality: durability
+    # Recommended, not enforced (owner, 2026-10-22; I8).
+    advice: "Each progression is a ladder: work at the step you own without pain, and take the next one when you are ready. Patrick writes no pass mark, so the call is yours; the program does not track your step."
     archetypes:
       - atg_zero
 

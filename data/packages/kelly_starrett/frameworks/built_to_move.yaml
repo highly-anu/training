@@ -58,6 +58,8 @@ categories:
   habits:
     name: "Everyday Practices"
     modality: mobility
+    # Retesting is recommended, not scheduled or scored (owner, 2026-10-22; I6).
+    advice: "Test, practise, retest: now and then take the ten tests of days 1-10 again, and keep at the practice of any you found hard. The bands that say where each result stands are in the book (pp. 33-34); the program does not score them."
     archetypes:
       - btm_d21
 

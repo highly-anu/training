@@ -45,7 +45,7 @@ deferred is under *Later*.
 | 6 | Watch: package-owned screens — verify and finish | P2 | M | watch, API |
 | 7 | Phases and tracks: review the drafted phase text; verify the iOS track picker and phase names (*IA*) | P2 | S | content, iOS |
 | 8 | Web ↔ iOS parity: what the 2026-10-13 consolidation left open (*IA*) | P2 | M | iOS, web, API |
-| 9 | Generation fidelity: every package built as its method prescribes — all eleven audited 2026-10-22; assessment gating, Horsemen's media and unpublished material left | P1 | L | engine, content |
+| 9 | Generation fidelity: every package built as its method prescribes — all eleven audited and merged 2026-10-22; Horsemen's media and unpublished material left | P1 | L | engine, content |
 | 10 | Progress tracking: what phases A–E left open, and the watches | P2 | M | API, web, iOS, watch |
 | 11 | Apple accounts: switch on, verify on a phone and the web; email code and passkeys later | P2 | S | iOS, web, API |
 | 12 | Standards: the Garmin unit tests, a test day on both watches | P2 | S | API, watch |
@@ -684,15 +684,20 @@ since Horsemen's GPP Circuits was dropped. Each runs its author's published prog
 contracts (Wildman, Starting Strength, BJJ, Uphill, Marcus Filly), six as week
 templates (Horsemen, CrossFit, Gym Jones, ATG, Kelly Starrett, Ido Portal) — and no
 shipped package runs on the modality scheduler any more (its tests use
-`test_packages/block_fixture`). Not merged: #192 (`bjj-strength-deload`) and the
-stack on it, `uphill-review` then `filly-review` (Uphill, Filly, CrossFit, Gym Jones,
-ATG, Kelly Starrett, Ido Portal), then `horsemen-circuits-rep-schemes` (steps 3–5
-below), unpushed. What is left, in order:
-1. *Ship the stack* — review, then merge #192, push and review the three branches on it.
-2. *Assessment gating (M, engine)* — step 3's last policy, open in three records: a
-   level the athlete moves up (ATG's ladders, Ido's beginner → intermediate →
-   advanced versions; neither source writes a pass mark), and Built to Move's ten
-   tests scored against the book's bands (needs a copy of the book).
+`test_packages/block_fixture`). What is left, in order:
+1. *Ship the stack* — **done 2026-10-22**: #192–#195 merged, each reviewed first; the
+   reviews found BJJ's module-only deload week read as ordinary by the analytics
+   (`Context.is_deload_session`) and four dropped tracks with no successor, whose stored
+   programs answered 422 on a regenerate (`former_ids`). iOS 1.28.0 (build 671) and
+   Garmin 1.8.0 carry the rep schemes to the devices.
+2. *Assessment gating* — **done 2026-10-22, as advice** (the owner's call, the rule of
+   Wildman's layoff: recommended, never enforced). No source writes a pass mark, so a
+   framework category's `advice` (`week_template.advice_for`, per level when it differs)
+   says the method's recommendation once in each session, at its first movement: ATG's
+   ladders (move up a step when it is yours without pain), Ido's versions (set the next
+   level in the profile once yours is owned), Built to Move's retests (after day 21).
+   The engine never moves a level. Left: Built to Move's tests scored against the
+   book's bands (needs a copy of the book).
 3. *Hygiene* — **output reviews done 2026-10-22**: every package's programs were read
    against its record (S6, recorded in each `fidelity.yaml` `reviews` and dossier),
    and what they found fixed — the first movement of a for-time or AMRAP piece had no
@@ -864,8 +869,8 @@ badly the default misrepresents the method and whether its policies exist:
    PDF, all thirteen routines at the athlete's level (beginner, intermediate, advanced),
    six days a week in the PDF's order. The Isolation → Integration → Expression phases and
    the `requires` that locked movements behind exercises the package did not have are
-   gone. Next for all three: assessment gating — a level (ATG's ladders, Ido's
-   versions) the athlete moves up, and Built to Move's tests scored against its bands.
+   gone. Assessment gating for all three is advice since 2026-10-22 (step 2 above);
+   Built to Move's tests scored against its bands are left.
    A `requires` naming an exercise the package lacks locks that movement below elite;
    Horsemen's did too (`kb_clean_single`, `kb_halo`, `sb_clean`, `sb_squat`), which kept its snatch test, snatch ladder and 12-minute
    complex from ever being placed; fixed 2026-10-22, and the reach check

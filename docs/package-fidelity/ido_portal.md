@@ -36,9 +36,6 @@ None.
 
 ## Open
 
-- **Assessment gating.** When to move from a routine's beginner version to its intermediate
-  one is the athlete's call. The PDF gives no criterion beyond "if you can already" and "the
-  variation you are capable of", and the level is set in the profile.
 - The routines the sessions name (wrists, squat clinic, shoulder ROM and stabilization,
   scapula mobilization) and every movement are linked videos and posts that were not read.
   The exercise notes describe the movements, not Ido's cues.
@@ -60,6 +57,11 @@ None.
   repeat as two. Each routine's minutes are estimated.
 - I5: the second "Explosive Leg Workout – beginner/intermediate" (p. 15: front and back flips,
   the advanced shrimp) is read as the advanced version.
+- I6: assessment gating is advice, not a gate (the owner's call, 2026-10-22, as for Wildman's
+  layoff). Each session's first movement says, at beginner and intermediate, to set the next
+  level in the profile once the athlete owns their version of the routines; the engine never
+  moves the level. The PDF gives no criterion beyond "if you can already" and "the variation
+  you are capable of". The text is the category's `advice`, per level.
 
 ## Removed in this review
 

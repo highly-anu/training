@@ -81,6 +81,41 @@ def test_compose_prefixes_roles_and_marks_light_days():
     assert set(arch['required_equipment']) == {'tire'}
 
 
+def test_category_advice_said_once_by_level():
+    # A category's advice is the method's recommendation, left to the athlete
+    # (ATG's ladders, Ido's versions, Built to Move's retests; owner, as
+    # Wildman's layoff): said at each piece's first movement, never acted on.
+    cats = {**CATS, 'str': {**CATS['str'], 'advice': {'novice': 'Move up when ready.'}},
+            'pe': {**CATS['pe'], 'advice': 'Retest now and then.'}}
+    arch = wt.compose([('str', ARCH['s1']), ('pe', ARCH['p1'])], ARCH['w1'], False, cats, 'novice')
+    notes = [s.get('notes') or '' for s in arch['slots']]
+    assert notes[2].endswith('Move up when ready.') and notes[4].endswith('Retest now and then.'), notes
+    assert sum('Move up' in n for n in notes) == 1 and not any('Move up' in n for n in notes[:2]), notes
+    advanced = wt.compose([('str', ARCH['s1'])], None, False, cats, 'advanced')
+    assert not any('Move up' in (s.get('notes') or '') for s in advanced['slots']), 'no advice past the last level'
+
+    from src import goals, loader
+    from src.generator import generate
+    from src.package_eval import ALL_EQUIPMENT
+    frameworks = list(loader.load_all_frameworks().values())
+
+    def said(pid, level, text, weeks=1, days=6, minutes=90):
+        goal = goals.philosophy_to_goal(pid, frameworks, None, level)
+        p = generate(None, dict(equipment=list(ALL_EQUIPMENT), days_per_week=days, session_time_minutes=minutes,
+                                training_level=level), num_weeks=weeks, goal_dict=goal, output_format='dict')
+        sessions = [s for w in p['weeks'] for d in range(1, 8) for s in w['schedule'].get(d, [])]
+        assert sessions, (pid, level)
+        return [sum(text in ((ea.get('slot') or {}).get('notes') or '') for ea in s['exercises']) for s in sessions]
+
+    assert set(said('ido_portal', 'novice', 'set your level to Intermediate')) == {1}
+    assert set(said('ido_portal', 'intermediate', 'set your level to Advanced')) == {1}
+    assert set(said('ido_portal', 'advanced', 'set your level to')) == {0}, 'advanced is the last version'
+    assert set(said('atg', 'intermediate', 'Patrick writes no pass mark', days=2, minutes=60)) == {1}
+    # Built to Move: the retest is the everyday practices' (after day 21), not the challenge's.
+    kelly = said('kelly_starrett', 'novice', 'Test, practise, retest', weeks=4, days=7, minutes=30)
+    assert kelly == [0] * 21 + [1] * 7, kelly
+
+
 _EQUIPMENT = ['barbell', 'rack', 'plates', 'kettlebell', 'dumbbell', 'pull_up_bar', 'rings', 'box',
               'sandbag', 'medicine_ball', 'rower', 'ghd', 'rope', 'sled', 'tire', 'jump_rope', 'open_space']
 

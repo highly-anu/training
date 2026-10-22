@@ -31,11 +31,15 @@ categories:
   workout_1:
     name: "Workout 1"
     modality: durability
+    # Recommended, not enforced (owner, 2026-10-22; I8).
+    advice: "Each progression is a ladder: work at the step you own without pain, and take the next one when you are ready. Patrick writes no pass mark, so the call is yours; the program does not track your step."
     archetypes:
       - atg_p2_w1
   workout_2:
     name: "Workout 2"
     modality: durability
+    # Recommended, not enforced (owner, 2026-10-22; I8).
+    advice: "Each progression is a ladder: work at the step you own without pain, and take the next one when you are ready. Patrick writes no pass mark, so the call is yours; the program does not track your step."
     archetypes:
       - atg_p2_w2
 

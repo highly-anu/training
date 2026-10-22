@@ -31,21 +31,29 @@ categories:
   pro_monday:
     name: "Monday"
     modality: durability
+    # Recommended, not enforced (owner, 2026-10-22; I8).
+    advice: "Each progression is a ladder: work at the step you own without pain, and take the next one when you are ready. Patrick writes no pass mark, so the call is yours; the program does not track your step."
     archetypes:
       - atg_pro_mon
   pro_tuesday:
     name: "Tuesday"
     modality: mobility
+    # Recommended, not enforced (owner, 2026-10-22; I8).
+    advice: "Each progression is a ladder: work at the step you own without pain, and take the next one when you are ready. Patrick writes no pass mark, so the call is yours; the program does not track your step."
     archetypes:
       - atg_pro_tue
   pro_thursday:
     name: "Thursday"
     modality: durability
+    # Recommended, not enforced (owner, 2026-10-22; I8).
+    advice: "Each progression is a ladder: work at the step you own without pain, and take the next one when you are ready. Patrick writes no pass mark, so the call is yours; the program does not track your step."
     archetypes:
       - atg_pro_thu
   pro_friday:
     name: "Friday"
     modality: mobility
+    # Recommended, not enforced (owner, 2026-10-22; I8).
+    advice: "Each progression is a ladder: work at the step you own without pain, and take the next one when you are ready. Patrick writes no pass mark, so the call is yours; the program does not track your step."
     archetypes:
       - atg_pro_fri
 

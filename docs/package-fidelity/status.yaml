@@ -43,6 +43,10 @@ packages:
       weight, so it needs no equipment.'
     - 'I7: Each track needs its own training days (Zero 3, Program #2 2, Knee Ability Pro 4); there is
       no drop order for fewer.'
+    - 'I8: Assessment gating is advice, not a gate (owner, 2026-10-22, as Wildman''s layoff): each workout
+      says to work at the step of each ladder owned without pain and to move up when ready, the athlete''s
+      call. Which step the athlete owns is not tracked; Patrick writes no pass marks ("no test or numeric
+      standard"), only his own check of "10 full pull-ups every week".'
     last_review:
       output_vs_dossier: '2026-10-22'
   bjj:
@@ -184,6 +188,10 @@ packages:
       minutes estimated.'
     - 'I5: The second "Explosive Leg Workout - beginner/intermidiate" (p. 15: front and back flips, the
       advanced shrimp) is read as the advanced version.'
+    - 'I6: Assessment gating is advice, not a gate (owner, 2026-10-22, as Wildman''s layoff): each session
+      says to set the next level in the profile once the athlete owns their version of the routines, the
+      athlete''s call. The PDF gives no criterion beyond "if you can already" and "the variation you are
+      capable of"; the engine never moves the level.'
     last_review:
       output_vs_dossier: '2026-10-22'
   kelly_starrett:
@@ -205,6 +213,10 @@ packages:
     - 'I4: After day 21, day 21 every day: its practices and its three mobilizations, the challenge''s
       last stack.'
     - 'I5: Seven days a week are required, and the challenge starts on a Monday.'
+    - 'I6: Assessment gating is advice, not a gate (owner, 2026-10-22, as Wildman''s layoff): every everyday-practice
+      session says to retest the ten vital signs now and then and keep at the practice of any found hard
+      (the method''s "test, practise, retest"), never scheduled or scored. How often is not written on
+      the challenge''s pages.'
     last_review:
       output_vs_dossier: '2026-10-22'
   marcus_filly:

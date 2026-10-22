@@ -435,7 +435,10 @@ group's name.
   so adding them never changes what an open slot picks. Rotation resumes where a regenerate's
   first week stands (the elapsed template weeks are replayed, `prior_entries`); a test may
   take a templated day nothing fitted; a program in which nothing fits is `TEMPLATE_UNFILLED`.
-  Long-day categories (`long_day`) take the athlete's longest days. A composed slot's role
+  Long-day categories (`long_day`) take the athlete's longest days. A category's `advice`
+  (per level when it differs, `advice_for`) closes each piece's first movement's note: the
+  method's recommendation where the source writes no pass mark — ATG's ladders, Ido's next
+  version, Built to Move's retests — never acted on, as a contract module's `advice`. A composed slot's role
   names its source (`warm_up__<id>__<role>`, `<id>__<role>`; `source_slot`) so a swap finds
   it; `POST /sessions/generate` on a templated framework picks another workout of the day's
   category (`category`, else inferred from the modality; `regenerate_day`). Fidelity reads a templated phase

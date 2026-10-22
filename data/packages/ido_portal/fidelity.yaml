@@ -64,7 +64,6 @@ rules:
       - test:test_week_template.py::test_ido_portal_runs_the_floreio_routines_at_each_level
 
 open:
-  - "Assessment gating: when to move from the beginner to the intermediate version of a routine is the athlete's call; the PDF gives no criterion beyond \"if you can already\" and \"the variation you are capable of\"."
   - "The routines the sessions name (the wrists routine, the squat clinic, the shoulder ROM and stabilization routine, the scapula mobilization) and every movement are linked videos and posts, not read; the exercise notes describe the movements, not Ido's cues."
   - "Ido's wider method (the camps, the online coaching, the handstand and rings programs) was not read; only these routines are built."
   - "A routine that opens with the jump rope has no written alternative, so without a rope it is passed over."
@@ -90,6 +89,11 @@ inventions:
     text: "The second \"Explosive Leg Workout - beginner/intermidiate\" (p. 15: front and back flips, the advanced shrimp) is read as the advanced version."
     implemented_by:
       - data:archetypes/plan/ido_legs_a.yaml#training_levels
+  - id: I6
+    text: "Assessment gating is advice, not a gate (owner, 2026-10-22, as Wildman's layoff): each session says to set the next level in the profile once the athlete owns their version of the routines, the athlete's call. The PDF gives no criterion beyond \"if you can already\" and \"the variation you are capable of\"; the engine never moves the level."
+    implemented_by:
+      - data:frameworks/floreio_routines.yaml#categories.floreio.advice
+      - test:test_week_template.py::test_category_advice_said_once_by_level
 
 reviews:
   - kind: output_vs_dossier

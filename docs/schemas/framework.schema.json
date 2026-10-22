@@ -126,6 +126,11 @@
           "long_day": {"type": "boolean", "default": false, "description": "Its workouts need time: when the athlete's days differ in length, these days take the longest."},
           "fallback": {"type": "array", "items": {"type": "string", "pattern": "^[a-z0-9_]+$"},
                        "description": "Categories tried in order when no workout of this one fits the athlete; the week says so."},
+          "advice": {"oneOf": [{"type": "string", "minLength": 1},
+                               {"type": "object", "minProperties": 1, "additionalProperties": false,
+                                "properties": {"novice": {"type": "string"}, "intermediate": {"type": "string"},
+                                               "advanced": {"type": "string"}, "elite": {"type": "string"}}}],
+                     "description": "The method's recommendation, left to the athlete: said once in each of the category's sessions, at its first movement, never acted on (when to move up a ladder or a version). Per training level when it differs (Ido's beginner and intermediate versions)."},
           "notes": {"type": "string"}
         }
       }
