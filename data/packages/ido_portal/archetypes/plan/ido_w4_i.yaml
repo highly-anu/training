@@ -1,0 +1,116 @@
+id: ido_w4_i
+name: Floreio Workout Number 4 — Intermediate
+modality: movement_skill
+category: movement_skill
+training_levels:
+- intermediate
+duration_estimate_minutes: 55
+pool_only: true
+slots:
+- role: joint_mobility
+  slot_type: time_domain
+  duration_minutes: 5
+  exercise_filter:
+    exercise_ids:
+    - joint_mobility
+    ordered: true
+  notes: 5 min of total body joint mobility.
+- role: wrists
+  slot_type: skill_practice
+  sets: 1
+  duration_minutes: 3
+  exercise_filter:
+    exercise_ids:
+    - wrists_routine
+    ordered: true
+  notes: Wrists Routine X 1 set.
+- role: squat_clinic
+  slot_type: skill_practice
+  sets: 1
+  duration_minutes: 3
+  exercise_filter:
+    exercise_ids:
+    - squat_clinic
+    ordered: true
+  notes: Ido's Squat Clinic Routine X 1 set.
+- role: shoulder_rom
+  slot_type: skill_practice
+  sets: 1
+  duration_minutes: 3
+  exercise_filter:
+    exercise_ids:
+    - shoulder_rom_stabilization
+    ordered: true
+  notes: Shoulder ROM and Stabilization routine X 1 set.
+- role: shoulder_stretch
+  slot_type: skill_practice
+  sets: 1
+  duration_minutes: 3
+  exercise_filter:
+    exercise_ids:
+    - shoulder_rom_stabilization
+    ordered: true
+  notes: A5. The assisted stretching part of the Shoulder ROM and Stabilization routine only, 1 more set.
+    Rest 2 min.
+- role: handstand
+  slot_type: static_hold
+  sets: 4
+  hold_seconds: 20
+  rest_sec: 50
+  exercise_filter:
+    exercise_ids:
+    - handstand_wall_drill
+    ordered: true
+  notes: Handstand Body Line Wall Drill X 20 sec X 4 sets / 45-60 sec rest. Rest 2 min.
+- role: straighten
+  slot_type: static_hold
+  sets: 2
+  hold_seconds: 30
+  rest_sec: 90
+  exercise_filter:
+    exercise_ids:
+    - handstand_straighten_into_line
+    ordered: true
+  notes: Handstand Straighten Into Line X 30 sec of total work X 2 sets / 90 sec; use the body line from
+    B1. Rest 3 min.
+- role: gatherings
+  slot_type: sets_reps
+  sets: 5
+  reps: 10/8/6/6/6
+  exercise_filter:
+    exercise_ids:
+    - gatherings_intermediate
+    ordered: true
+  notes: C1. Gatherings Intermediate Variations.
+- role: low_bridge
+  slot_type: sets_reps
+  sets: 5
+  reps: 10/8/6/6/6
+  exercise_filter:
+    exercise_ids:
+    - rotations_into_low_bridge
+    ordered: true
+  notes: C2. Rotations Into Low Bridge.
+- role: qdr_push_up
+  slot_type: sets_reps
+  sets: 5
+  reps: 10/8/6/6/6
+  rest_sec: 52
+  exercise_filter:
+    exercise_ids:
+    - qdr_push_up
+    ordered: true
+  notes: C3. QDR Rotational Push Ups. 10, 8, 6, 6, 6 reps per exercise, resting after C3 for 60, 60, 45,
+    45 sec.
+- role: role
+  slot_type: time_domain
+  duration_minutes: 5
+  exercise_filter:
+    exercise_ids:
+    - role_basic
+    ordered: true
+  notes: Role work, in random, as little rest as you can for 5 minutes straight. Flow around the floor.
+required_equipment: []
+sources:
+- Ido Portal, Floreio Routines (data/portal/Ido Portal Floreio Routines.pdf), p. 5
+notes: Handstand wall drill and straighten into line, a 10-8-6-6-6 tri-set, five minutes of role work.

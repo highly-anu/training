@@ -1,0 +1,34 @@
+id: cf_hspu_deadlift_couplet
+name: "5 Handstand Push-Ups / Deadlift x 5"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 20
+pool_only: true
+
+slots:
+  - role: couplet
+    slot_type: for_time
+    reps_per_round: 5
+    rounds: 5
+    exercise_filter:
+      exercise_ids: [handstand_push_up]
+      ordered: true
+    notes: "5 rounds for time."
+
+  - role: couplet_2
+    slot_type: amrap_movement
+    parent_slot_role: couplet
+    reps_per_round: 5
+    exercise_filter:
+      exercise_ids: [deadlift]
+      ordered: true
+    load: "225 lb (102 kg), +20 lb (9 kg) a round"
+
+required_equipment:
+- barbell
+- plates
+sources:
+- "Glassman, A Theoretical Template for CrossFit's Programming (2003), Table 4"
+notes: >
+  5 rounds for time: 5 handstand push-ups, 5 deadlifts at 225 lb, adding 20 lb a round.

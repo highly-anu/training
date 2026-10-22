@@ -1,0 +1,43 @@
+id: cf_eva
+name: "Eva"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 50
+pool_only: true
+
+slots:
+  - role: eva
+    slot_type: for_time
+    rounds: 5
+    distance_m: 800
+    exercise_filter:
+      exercise_ids: [run_interval]
+      ordered: true
+    notes: "5 rounds for time. Post time."
+
+  - role: eva_2
+    slot_type: amrap_movement
+    parent_slot_role: eva
+    reps_per_round: 30
+    exercise_filter:
+      exercise_ids: [kb_swing_two_hand]
+      ordered: true
+    load: "2 pood (32 kg); women 1.5 pood"
+
+  - role: eva_3
+    slot_type: amrap_movement
+    parent_slot_role: eva
+    reps_per_round: 30
+    exercise_filter:
+      exercise_ids: [pull_up]
+      ordered: true
+
+required_equipment:
+- open_space
+- kettlebell
+- pull_up_bar
+sources:
+- "CrossFit, Benchmark Workouts (2003) / The New Girls (2004) / crossfit.com/benchmark"
+notes: >
+  5 rounds for time of an 800 m run, 30 kettlebell swings at 2 pood, 30 pull-ups.

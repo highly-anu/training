@@ -1,3 +1,206 @@
-# CrossFit — not yet worked against its sources (docs/package-fidelity/README.md).
+# CrossFit — the machine half of docs/package-fidelity/crossfit.md
+# (docs/schemas/fidelity.schema.json; docs/package-fidelity/README.md).
+# Read 2026-10-21: Glassman's CrossFit Journal articles, the Level 1 guide,
+# the benchmark pages and the crossfit.com workouts of July-December 2005.
 shape: templates
-next: The variation policy and the 3-on/1-off pattern with pools of benchmark and mainsite-style workouts.
+
+sources:
+  - id: tmpl03
+    kind: primary
+    author: Greg Glassman
+    title: A Theoretical Template for CrossFit's Programming (CrossFit Journal 6)
+    where: https://library.crossfit.com/free/pdf/06_03_CF_Template.pdf
+    published: '2003-02'
+    read: full
+    accessed: '2026-10-21'
+  - id: wif02
+    kind: primary
+    author: Greg Glassman
+    title: What Is Fitness?
+    where: https://library.crossfit.com/free/pdf/CFJ-trial.pdf
+    published: '2002-10'
+    read: full
+    accessed: '2026-10-21'
+  - id: found02
+    kind: primary
+    author: Greg Glassman
+    title: Foundations
+    where: https://library.crossfit.com/free/pdf/Foundations.pdf
+    published: '2002'
+    read: full
+    accessed: '2026-10-21'
+  - id: bench03
+    kind: primary
+    author: Greg Glassman
+    title: Benchmark Workouts (CrossFit Journal 13)
+    where: https://library.crossfit.com/free/pdf/13_03_Benchmark_Workouts.pdf
+    published: '2003-09'
+    read: full
+    accessed: '2026-10-21'
+  - id: newgirls04
+    kind: primary
+    author: CrossFit Journal
+    title: The New Girls (CrossFit Journal 27)
+    where: https://library.crossfit.com/free/pdf/27_04_new_girls.pdf
+    published: '2004-11'
+    read: full
+    accessed: '2026-10-21'
+  - id: bm
+    kind: primary
+    author: CrossFit
+    title: The benchmark workouts (crossfit.com/benchmark)
+    where: https://www.crossfit.com/benchmark/fran
+    read: full
+    accessed: '2026-10-21'
+  - id: wod05
+    kind: primary
+    author: CrossFit
+    title: crossfit.com Workout of the Day archive, July-December 2005
+    where: https://www.crossfit.com/workout/2005/07/01
+    published: '2005'
+    read: full
+    accessed: '2026-10-21'
+  - id: l1
+    kind: primary
+    author: CrossFit
+    title: CrossFit Level 1 Training Guide
+    where: https://library.crossfit.com/free/pdf/CFJ_English_Level1_TrainingGuide.pdf
+    published: '2020'
+    read: partial
+    accessed: '2026-10-21'
+    note: Understanding CrossFit, What Is Fitness, the template reprint, Scaling, Responsible Training, the nine foundational movements.
+
+rules:
+  - id: R1
+    text: Three days on, one day off.
+    cites: [{source: tmpl03, at: '"a three-day-on, one-day-off pattern"'}, {source: wif02}, {source: wod05, at: a rest day every fourth day}]
+    enforced_by:
+      - data:philosophy.yaml#tracks.constantly_varied.phases.constantly_varied.week_templates
+      - week:table4_cycle
+      - test:test_week_template.py::test_crossfit_runs_glassmans_cycle_and_the_girls_as_written
+  - id: R2
+    text: Five days on, two off, for fixed weekdays.
+    cites: [{source: tmpl03, at: '"a five-days-on, two-days-off regimen that has worked very well"'}]
+    enforced_by:
+      - data:philosophy.yaml#tracks.five_on_two_off.phases.five_on_two_off.week_templates
+      - week:five_two_week
+  - id: R3
+    text: "The days cycle M | GW | MGW | off | G | WM | GWM | off | W | MG | WMG | off (5/2: M, GW, MGW, MG, W; G, WM, GWM, GW, M; W, MG, WMG, WM, G)."
+    cites: [{source: tmpl03, at: Table 1}, {source: l1, at: the template reprint}]
+    enforced_by:
+      - data:philosophy.yaml#tracks.constantly_varied.phases.constantly_varied.week_templates
+      - data:philosophy.yaml#tracks.five_on_two_off.phases.five_on_two_off.week_templates
+      - week:table4_cycle
+      - week:five_two_week
+  - id: R4
+    text: "M is running, rowing, cycling, jumping rope; G the bodyweight movements (squats, pull-ups, push-ups, dips, handstand push-ups, rope climbs, muscle-ups, sit-ups, jumps, lunges); W the lifts (deadlifts, cleans, presses, snatches, clean and jerks, medicine-ball drills, kettlebell swings)."
+    cites: [{source: tmpl03, at: Table 2}]
+    enforced_by:
+      - data:frameworks/crossfit_template.yaml#categories
+  - id: R5
+    text: "One-element days: M a long, slow distance; G the practice of a single skill; W a single heavy lift at low reps, the rest long and deliberate."
+    cites: [{source: tmpl03, at: '"a long, slow distance effort"; "practice of a single skill"; "a single lift … high weight and low rep"'}]
+    enforced_by:
+      - data:frameworks/crossfit_template.yaml#categories.m
+      - data:frameworks/crossfit_template.yaml#categories.g
+      - data:frameworks/crossfit_template.yaml#categories.w
+  - id: R6
+    text: Two-element days are a couplet repeated three to five times for time.
+    cites: [{source: tmpl03, at: '"Couplet repeated 3-5 times for time"'}]
+    enforced_by:
+      - data:frameworks/crossfit_template.yaml#categories.gw
+      - data:frameworks/crossfit_template.yaml#categories.wm
+      - data:frameworks/crossfit_template.yaml#categories.mg
+  - id: R7
+    text: Three-element days are a triplet repeated for twenty minutes, scored by rounds.
+    cites: [{source: tmpl03, at: '"Triplet repeated for 20 minutes for rotations"'}]
+    enforced_by:
+      - data:frameworks/crossfit_template.yaml#categories.triplet
+  - id: R8
+    text: "Table 4's twelve days as written: Run 10K; 5 HSPU and 5 deadlifts at 225 lb (+20 lb a round) x 5; run 400 m, 10 pull-ups, 15 thrusters at 50 % BW for 20 minutes; off; handstand practice 45 minutes; bench press 75 % BW x 10 and row 500 m x 5; lunges 100 ft, push press 50 % BW x 15, row 500 m for 20 minutes; off; deadlift 5-3-3-2-2-2-1-1-1; run 200 m and 10 box jumps at 30 in x 5; 20 cleans at 50 % BW, bike 1 mile, 15 push-ups for 20 minutes; off."
+    cites: [{source: tmpl03, at: Table 4}]
+    enforced_by:
+      - week:table4_cycle
+      - test:test_week_template.py::test_crossfit_runs_glassmans_cycle_and_the_girls_as_written
+  - id: R9
+    text: Exercises, loads, reps, rest and time domains vary; no set routine.
+    cites: [{source: wif02, at: '"disinvest in any set notions of sets, rest periods, reps, exercises, order of exercises, routines, periodization"'}, {source: found02}]
+    enforced_by:
+      - data:frameworks/crossfit_template.yaml#categories
+      - test:test_week_template.py::test_crossfit_runs_glassmans_cycle_and_the_girls_as_written
+  - id: R10
+    text: The benchmark workouts recur at irregular intervals, so progress can be measured.
+    cites: [{source: bench03, at: '"repeated, irregular, appearances"; "Only by repeating workouts can we confidently measure our progress."'}, {source: wod05, at: a Girl about every five training days}]
+    enforced_by:
+      - data:frameworks/crossfit_template.yaml#categories.triplet
+      - test:test_standard_tests.py::test_crossfit_benchmarks_recur_in_its_pools
+  - id: R11
+    text: The Girls as written, with their prescribed loads (Fran 21-15-9 thrusters at 95/65 lb and pull-ups; Helen; Cindy; Diane; Elizabeth; Annie; Amanda; Nancy; Kelly; Eva; Jackie; Chelsea; Angie; Barbara; Linda; Mary; Lynne; Nicole), the Heroes read (Murph, Michael, J.T.).
+    cites: [{source: bench03}, {source: newgirls04}, {source: bm}, {source: wod05}]
+    enforced_by:
+      - data:frameworks/crossfit_template.yaml#categories.gw
+      - data:frameworks/crossfit_template.yaml#categories.triplet
+      - test:test_week_template.py::test_crossfit_runs_glassmans_cycle_and_the_girls_as_written
+  - id: R12
+    text: Heavy days run descending or repeated singles, doubles and triples (5-3-3-2-2-2-1-1-1, 3-2-2-2-1-1-1-1-1, ten singles).
+    cites: [{source: tmpl03, at: Table 4 day 9}, {source: wod05, at: the heavy days}]
+    enforced_by:
+      - data:frameworks/crossfit_template.yaml#categories.w
+  - id: R13
+    text: No deload; the off day is the rest.
+    cites: [{source: tmpl03}, {source: wif02, at: '"three days on and one day off allows for a maximum sustainability at maximum intensities"'}]
+    enforced_by:
+      - data:frameworks/crossfit_template.yaml#categories
+      - test:test_week_template.py::test_crossfit_runs_glassmans_cycle_and_the_girls_as_written
+  - id: R14
+    text: About an hour a session.
+    cites: [{source: found02, at: '"not sustainable past forty-five minutes to an hour"'}]
+    enforced_by:
+      - data:frameworks/crossfit_template.yaml#expectations.ideal_session_minutes
+
+open:
+  - "Grace, Isabel and Karen (one element at high reps, for time) fit none of the template's day types and are not placed."
+  - "The novice: the Level 1 guide scales load first, intensity and volume by half for two weeks or more, a month at least of significant scaling, with no set protocol for restoring it; a scaled track is not built."
+  - "Of the 2005 archive's 138 training days, the workouts transcribed are those named in this record; the rest are not."
+  - "Today's crossfit.com is not strictly three on, one off (October 2026 rests on irregular days)."
+  - "A descending scheme (Fran's 21-15-9, Annie's 50-40-30-20-10) has no structured field: each movement carries its per-round average (15, 30), which keeps the volume, and the workout's note the scheme. Linda's 10-down-to-1 averages no whole number, so its movements carry none."
+  - "The phone's AMRAP and for-time rows do not show a round's own count yet (the web and the watches do)."
+
+inventions:
+  - id: I1
+    text: "A couplet or triplet is filed by how many elements it has; a couplet by which two (GW, WM, MG), every workout of three or more elements as a triplet (Cindy's three gymnastics movements among them). The template is descriptive, the workouts its examples."
+    implemented_by:
+      - data:frameworks/crossfit_template.yaml#categories
+  - id: I2
+    text: "The pools hold Table 4's workouts first, then the Girls and the 2005 days read, each as written, the benchmarks the analytics track (Murph among them) before the rest so each comes round within twelve weeks of either track; the day takes the next one the athlete can do, passing over one used in the last week."
+    implemented_by:
+      - data:frameworks/crossfit_template.yaml#categories
+  - id: I3
+    text: When no workout of a day's type fits the athlete, a couplet or triplet of another pairing takes its place, and the week says so.
+    implemented_by:
+      - data:frameworks/crossfit_template.yaml#categories.mg
+  - id: I4
+    text: "At five training days a six-day week drops, in order, the skill day, the long-distance day, the heavy day, then the couplets; the sources do not say."
+    implemented_by:
+      - data:philosophy.yaml#tracks.constantly_varied.phases.constantly_varied.drop_order
+  - id: I5
+    text: The tracks are for intermediate athletes and up; novices are refused until a scaled track is built.
+    implemented_by:
+      - data:frameworks/crossfit_template.yaml#applicable_when.training_level
+  - id: I6
+    text: Each workout's minutes are an estimate; loads are given in pounds as written with kilograms beside them.
+    implemented_by:
+      - data:frameworks/crossfit_template.yaml#categories
+
+currency:
+  constantly_varied: {entry: benchmark_wods, rule: R10}
+  five_on_two_off: {entry: benchmark_wods, rule: R10}
+
+reviews:
+  - kind: output_vs_dossier
+    date: '2026-10-22'
+    by: Claude (package audit)
+    scope: "tools/print_package.py crossfit --profile ideal --weeks 4, both tracks"
+    result: "Three on, one off and five on, two off run Glassman's cycle day for day (R1-R3), Table 4's twelve days first (R8), then the Girls and the 2005 workouts, each day type from its own pool. Fixed: the first movement of every couplet, triplet and Girl had no count — the slot that carries the rounds or the minutes is a movement too (Cindy's 5 pull-ups, the 400 m run of a triplet, the bench press x 10): written into the data and passed into the load; a movement the source does not count (Nicole's max pull-ups) said \"1 rep a round\" and now says nothing beyond its note; a for-time test that opens with a run (Helen) lost its rounds; Fran's test day read \"FOR_TIME\"; one-round workouts read \"1 rounds\" on the web; the review tool itself failed on a for-time load with no time cap."
+
+next: "A scaled novice track (the Level 1 guide's scaling, the benchmarks' beginner versions); more of the 2005 archive; exercise media."

@@ -1,0 +1,40 @@
+id: cf_michael
+name: "Michael"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 35
+pool_only: true
+
+slots:
+  - role: michael
+    slot_type: for_time
+    rounds: 3
+    distance_m: 800
+    exercise_filter:
+      exercise_ids: [run_interval]
+      ordered: true
+    notes: "3 rounds for time. Post time."
+
+  - role: michael_2
+    slot_type: amrap_movement
+    parent_slot_role: michael
+    reps_per_round: 50
+    exercise_filter:
+      exercise_ids: [back_extension]
+      ordered: true
+
+  - role: michael_3
+    slot_type: amrap_movement
+    parent_slot_role: michael
+    reps_per_round: 50
+    exercise_filter:
+      exercise_ids: [sit_up]
+      ordered: true
+
+required_equipment:
+- open_space
+sources:
+- "crossfit.com Workout of the Day, 2005 (2005-07-15)"
+notes: >
+  3 rounds for time of an 800 m run, 50 back extensions, 50 sit-ups.

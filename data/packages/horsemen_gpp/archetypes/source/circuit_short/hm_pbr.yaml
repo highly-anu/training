@@ -9,6 +9,7 @@ pool_only: true
 slots:
   - role: front_squats
     slot_type: amrap
+    reps_per_round: 10
     duration_sec: 1200
     exercise_filter:
       exercise_ids: [front_squat]

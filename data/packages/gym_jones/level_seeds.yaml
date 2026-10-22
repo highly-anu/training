@@ -1,0 +1,9 @@
+# What a Gym Jones athlete is assumed to arrive with, per level
+# (loader.load_level_seeds; package-scoped, cascading upward).
+#
+# Both plans prescribe pull-ups from the first week — Soldier of Steel to the
+# newly training, with plank pulls "until pull-up is possible" — so the
+# pull-up's scapular-control prerequisite is met at every level here.
+seeds:
+  novice:
+    - scapular_control

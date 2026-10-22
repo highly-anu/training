@@ -1,0 +1,23 @@
+id: cf_30_muscle_ups
+name: "30 Muscle-Ups"
+modality: movement_skill
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 20
+pool_only: true
+
+slots:
+  - role: muscle_ups
+    slot_type: for_time
+    rounds: 1
+    exercise_filter:
+      exercise_ids: [muscle_up_ring]
+      ordered: true
+    notes: "30 muscle-ups for time."
+
+required_equipment:
+- rings
+sources:
+- "crossfit.com Workout of the Day, 2005 (2005-07-30, 2005-09-05)"
+notes: >
+  30 muscle-ups for time. Post time.

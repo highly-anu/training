@@ -1,0 +1,54 @@
+id: atg_zero
+name: "ATG Zero (Ben Patrick)"
+source_philosophy: atg
+
+goals_served:
+  - durability
+  - mobility
+
+sessions_per_week:
+  durability: 3
+modality_priority:
+  committed: [durability]
+  core: []
+  supplementary: []
+
+prescription_policy: framework
+# Every movement as the newsletter writes it (its reps and seconds).
+progression_model: as_written
+
+applicable_when:
+  training_level:
+    - novice
+    - intermediate
+    - advanced
+    - elite
+  days_per_week_min: 3
+  days_per_week_max: 7
+
+# No deload_protocol: no ATG source writes a deload or a phase; the same
+# workouts repeat, each movement progressed at its own pain-free level.
+
+categories:
+  zero:
+    name: "ATG Zero"
+    modality: durability
+    archetypes:
+      - atg_zero
+
+sources:
+  - "Ben Patrick, ATG Zero (ATG newsletter, 2023-08-06)"
+
+notes: >
+  ATG Zero, a hybrid of Knee Ability Zero and Back Ability Zero: ten movements
+  from the ground up, no equipment, three days a week with other exercise or
+  sport between.
+
+expectations:
+  min_weeks: 4
+  ideal_weeks: 12
+  min_days_per_week: 3
+  ideal_days_per_week: 3
+  min_session_minutes: 30
+  ideal_session_minutes: 30
+  supports_split_days: false

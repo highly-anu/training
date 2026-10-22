@@ -1,0 +1,54 @@
+id: btm_d14
+name: Built to Move — Day 14
+modality: mobility
+category: recovery
+training_levels:
+- novice
+- intermediate
+- advanced
+- elite
+duration_estimate_minutes: 25
+pool_only: true
+slots:
+- role: floor_sitting
+  slot_type: skill_practice
+  duration_minutes: 5
+  exercise_filter:
+    exercise_ids:
+    - floor_sitting
+    ordered: true
+  notes: 'Floor-sitting positions: cross-legged, 90/90, long sitting, one-leg-up — here, and throughout
+    your day.'
+- role: sit_stands
+  slot_type: sets_reps
+  sets: 1
+  reps: 14
+  exercise_filter:
+    exercise_ids:
+    - sit_stand
+    ordered: true
+  notes: 14 sit-stands.
+- role: balance
+  slot_type: skill_practice
+  duration_minutes: 3
+  exercise_filter:
+    exercise_ids:
+    - y_balance
+    ordered: true
+  notes: Practise the Y-Balance mobilization.
+- role: mobilizations
+  slot_type: skill_practice
+  duration_minutes: 12
+  sets: 4
+  exercise_filter:
+    exercise_ids:
+    - follow_along_mobilization
+    ordered: true
+  notes: 'Day #14''s 4 follow-along mobilizations (no equipment): https://thereadystate.com/built-to-move-21-day-challenge-day-14/'
+required_equipment: []
+sources:
+- 'Kelly & Juliet Starrett, Built to Move 21-Day Challenge (The Ready State), Day #14; Built to Move,
+  Making It All Work'
+notes: 'Through the day: floor sitting; walk 8,000-10,000 steps, breathing through the nose; eat 800 g
+  of fruits and vegetables and your protein; accumulate 1 h 20 min of standing or dynamic sitting while
+  working; follow the sleep hygiene practices.'

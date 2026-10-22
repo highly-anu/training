@@ -9,6 +9,7 @@ pool_only: true
 slots:
   - role: pull_ups
     slot_type: for_time
+    reps_per_round: 100
     rounds: 1
     duration_sec: 3600
     intensity: max_effort

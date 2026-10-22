@@ -1,95 +1,85 @@
 id: kelly_starrett
-name: "Kelly Starrett / Supple Leopard"
+name: "Kelly Starrett / Built to Move"
 core_principles:
-  - movement_quality_is_testable_and_correctable
-  - tissue_prep_before_training_reduces_injury_risk
-  - global_and_local_joint_mobility_have_distinct_protocols
-  - breathing_and_bracing_are_mechanical_skills_not_assumptions
-  - upstream_and_downstream_joints_affect_target_joint_function
-  - mobilization_is_not_stretching_it_is_position_restoration
-  - motor_control_must_be_established_before_adding_load
+  - ten_vital_signs_each_with_a_test_and_a_physical_practice
+  - test_then_practice_then_retest
+  - mobility_is_daily_practice_not_a_workout
+  - moving_enough_is_not_working_out
+  - get_up_and_down_off_the_floor
+  - if_you_cannot_breathe_in_a_position_you_do_not_own_it
+  - restore_hip_extension
+  - habits_stacked_until_they_stick
 scope:
   - mobility
-  - rehab
 bias:
   - mobility
-  - rehab
 avoid_with: []
-required_equipment:
-  - resistance_band
+required_equipment: []
 intensity_model: skill_based
 progression_philosophy: range_based
 sources:
-  - "Becoming a Supple Leopard (Starrett & Cordoza, 2013)"
-  - "Ready to Run (Starrett, 2014)"
-  - "Deskbound (Starrett, 2016)"
+  - "Kelly & Juliet Starrett, Built to Move 21-Day Challenge (The Ready State, 2023)"
+  - "Kelly & Juliet Starrett, Built to Move (Knopf, 2023) — not read"
 notes: >
-  Not a standalone training program — functions as a mobility and movement quality
-  layer applied on top of any other methodology. Primary tools: banded joint
-  distraction, soft tissue work (lacrosse ball / foam roller), contract-relax
-  mobilizations, and positional assessments. Ten physical archetypes (hip extension,
-  internal rotation, ankle, thoracic spine, etc.) each have a testing standard and
-  a prescribed mobilization sequence. Breathing and bracing sequence (360 degrees
-  of air, IAP) is a prerequisite for any loaded movement. Tissue prep is prescribed
-  before sessions (2 min minimum per target joint); mobilization is also effective
-  post-session and throughout the day. Resistance bands are the core tool for joint
-  distraction work; no heavy equipment required.
+  Kelly and Juliet Starrett's Built to Move: ten vital signs — getting up and
+  down off the floor, breathing, hip extension, walking, neck and shoulders,
+  eating, squatting, balance, a movement-rich environment, sleep — each with a
+  test and a physical practice ("10 tests + 10 physical practices = 10 ways to
+  make your body work better"), and daily follow-along mobilizations "to help
+  you recover from the day's activities so you can go again tomorrow". Their
+  21-Day Challenge takes one vital sign a day for ten days, then stacks the
+  practices for eleven more into habits "to be mixed into each day for the rest
+  of your days". It sits beside any other training: working out is not the
+  same as moving enough.
 
 # Every modality this philosophy's frameworks prescribe has an archetype in
 # this package; generation never needs to reach into another philosophy.
 self_contained: true
 
-# One track from passive to loaded range, then maintenance. Phase text is
-# drafted from this package's own notes and framework notes — review before
-# relying on it.
-primary_track_id: supple_leopard
+# One track: the challenge as written, day by day, then its last day's
+# practices every day (docs/package-fidelity/kelly_starrett.md).
+primary_track_id: built_to_move
 tracks:
-  - id: supple_leopard
-    name: "Supple Leopard Mobility"
+  - id: built_to_move
+    name: "Built to Move"
     description: >
-      A mobility and movement-quality layer: restore positions, own them
-      under load, then keep them. Built to sit on top of any other training.
+      The Starretts' 21-Day Challenge, day by day — a vital sign a day for ten
+      days, its test, its practice and the day's mobilizations, then eleven
+      days stacking the practices — and the habits after it, every day.
     phases:
-      - id: restore
-        name: "Restore"
+      - id: challenge
+        name: "21-Day Challenge"
         kind: base
-        weeks: 6
-        framework_id: kelly_starrett_mobility
-        focus: "Screen and restore positions"
+        weeks: 3
+        framework_id: built_to_move
+        focus: "Ten vital signs, then the habits stacked"
         description: >
-          Test each target position against its standard, then restore it:
-          tissue prep (two minutes minimum per region), banded joint
-          distraction and contract-relax mobilizations. Breathing and bracing
-          — 360 degrees of air — is established before anything is loaded.
+          Days 1-10: the sit-and-rise, breath-hold, couch, steps, shoulder,
+          food, squat, balance, sitting and sleep tests, each with its physical
+          practice. Days 11-21: the practices stacked — floor sitting, 8,000 to
+          10,000 steps, sit-stands one more each day, balance, standing at work,
+          sleep — with each day's follow-along mobilizations.
         adaptations:
-          - "Passive range in the limiting positions"
-          - "Breathing and bracing"
-        intensity: "Low; position-driven"
-      - id: load_the_range
-        name: "Load the Range"
-        kind: build
-        weeks: 6
-        framework_id: kelly_starrett_mobility
-        focus: "Active range under light load"
-        description: >
-          Progress from passive range to active range under light load, so the
-          restored positions hold when they are asked to work.
-        adaptations:
-          - "Active control at end range"
-          - "Positions that hold under load"
-        intensity: "Light load"
-      - id: maintain
-        name: "Maintain"
+          - "Hip, shoulder and ankle range for everyday positions"
+          - "Balance"
+          - "Daily movement habits"
+        intensity: "Low; every day"
+        week_templates:
+          - [challenge, challenge, challenge, challenge, challenge, challenge, challenge]
+      - id: habits
+        name: "Everyday Practices"
         kind: maintenance
         weeks: 4
         repeatable: true
-        framework_id: kelly_starrett_mobility
-        focus: "Daily maintenance"
+        framework_id: built_to_move
+        focus: "Mixed into each day for the rest of your days"
         description: >
-          Keep the positions with tissue prep before and after sessions and
-          short mobilizations through the day, alongside whatever else is
-          being trained.
+          The practices the challenge built, every day: floor sitting, 21
+          sit-stands, the Y balance and the follow-along mobilizations, beside
+          the steps, food, standing and sleep habits.
         adaptations:
-          - "Retained range"
-          - "Tissue health"
-        intensity: "Low, frequent"
+          - "Retained range and balance"
+          - "Movement habits that stick"
+        intensity: "Low; every day"
+        week_templates:
+          - [habits, habits, habits, habits, habits, habits, habits]

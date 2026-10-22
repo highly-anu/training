@@ -1,0 +1,27 @@
+id: cf_overhead_squat_3_2
+name: "Overhead Squat"
+modality: max_strength
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 48
+pool_only: true
+
+slots:
+  - role: lift
+    slot_type: sets_reps
+    sets: 9
+    reps: '3-2-2-2-1-1-1-1-1'
+    rest_sec: 180
+    exercise_filter:
+      exercise_ids: [overhead_squat]
+      ordered: true
+    load: "Heavy: as much as each set allows, rest long and deliberate. Post loads."
+
+required_equipment:
+- barbell
+- rack
+- plates
+sources:
+- "crossfit.com Workout of the Day, 2005 (2005-07-31)"
+notes: >
+  Overhead Squat 3-2-2-2-1-1-1-1-1 reps. Post loads.

@@ -133,8 +133,9 @@ inventions:
       - data:training_contract.yaml#tracks.mat_support.modules.mat_class.blocks
       - test:test_training_contract.py::test_bjj_strength_runs_strengthlogs_cycle_and_the_mat_carries_on
   - id: I4
-    text: "Declared substitutes: positional work or drilling for rolling under an injury; inverted rows for pull-ups and the barbell row, Bulgarian split squats for the front squat, a dead hang for the plate pinch, a hollow hold for the plank. A lift with no substitute refuses, naming what it needs."
+    text: "Declared substitutes: positional work or drilling for rolling under an injury; inverted rows for pull-ups and the barbell row, Bulgarian split squats for the front squat, a dead hang for the plate pinch, a hollow hold for the plank. A lift an injury rules out with no substitute is left out and said, the rest of the workout kept (owner, 2026-10-21); a lift missing its equipment refuses, naming it."
     implemented_by:
+      - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.drop_when_injured
       - test:test_training_contract.py::test_bjj_substitutes_are_declared_and_refusals_name_the_way_out
   - id: I5
     text: "Up to four training days, one of the two workouts a week beside the classes, alternating week to week: StrengthLog's two need five days."
@@ -157,4 +158,11 @@ inventions:
 currency:
   mat_support: {entry: mat_time, rule: R1}
 
-next: "Exercise media (D3), the output review (S6), and a competition camp if the owner wants one."
+reviews:
+  - kind: output_vs_dossier
+    date: '2026-10-22'
+    by: Claude (package audit)
+    scope: "tools/print_package.py bjj --profile ideal --weeks 8: the strength block, the deload week and the first power week beside three classes"
+    result: "Three classes and two StrengthLog workouts at five days (R1, R2); every lift's sets, reps and holds in the strength, deload and power workouts as R4 and R6 write them, the deload's leg raise at the source's 2×12; the mat never deloads (I3). Fixed: the competitor's conditioning, with no room beside 60-minute strength days in the build weeks, appeared in the deload week alone because the lighter workouts freed the time — optional work is now offered by the last build week's minutes, so a deload never adds a session; the track's note summarised the strength block as \"sets of five to eight\" where R3 runs five to fifteen."
+
+next: "Exercise media (D3), and a competition camp if the owner wants one."

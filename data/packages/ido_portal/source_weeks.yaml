@@ -1,0 +1,30 @@
+# Ido Portal — the source's routines, laid on weeks
+# (docs/schemas/source_weeks.schema.json). The Floreio Routines PDF, read
+# 2026-10-22: a beginner's first fortnight takes its routines written for
+# beginners, in the PDF's order (I1, I2).
+- id: floreio_weeks
+  rule: R2
+  track: floreio
+  note: >
+    A beginner, six days a week: Floreio Basic, Workouts Number 1 to 5,
+    Locomotion, Static QDR, the Workout of the Day, the Bridge Workout, Another
+    Workout and the Explosive Leg Workout, each the version written for
+    beginners.
+  profile: {days_per_week: 6, session_time_minutes: 90, training_level: novice, equipment: all}
+  weeks:
+    - days:
+        - {archetype: ido_basic_b}
+        - {archetype: ido_w1_b}
+        - {archetype: ido_w2_bi}
+        - {archetype: ido_w3}
+        - {archetype: ido_w4_b}
+        - {archetype: ido_w5_b}
+        - rest
+    - days:
+        - {archetype: ido_loco_b}
+        - {archetype: ido_qdr_b}
+        - {archetype: ido_wotd_b}
+        - {archetype: ido_bridge_b}
+        - {archetype: ido_another_b}
+        - {archetype: ido_legs_bi}
+        - rest

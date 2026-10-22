@@ -1,3 +1,244 @@
-# Marcus Filly — not yet worked against its sources (docs/package-fidelity/README.md).
-shape: templates
-next: Base Camp's session shape (warm-up, strength by pattern, conditioning); RPE targets from the framework.
+# Marcus Filly — the machine half of docs/package-fidelity/marcus_filly.md
+# (docs/schemas/fidelity.schema.json; docs/package-fidelity/README.md).
+# Read 2026-10-21: Functional Bodybuilding's Help Center (its support staff,
+# for the method) and Filly's own blog posts; the Persist sample weeks read
+# from their images.
+shape: contract
+
+sources:
+  - id: pc3
+    kind: primary
+    author: Functional Bodybuilding (Help Center)
+    title: "Persist Training Sample: Full Body PUMP CONDITION 3x/wk"
+    where: https://intercom.help/functional-bodybuilding/en/articles/8813247
+    published: '2025-12-31'
+    read: full
+    accessed: '2026-10-21'
+  - id: pl3
+    kind: primary
+    author: Functional Bodybuilding (Help Center)
+    title: "Persist Training Sample: Full Body PUMP LIFT 3x/wk"
+    where: https://intercom.help/functional-bodybuilding/en/articles/8813137
+    published: '2025-12-31'
+    read: full
+    accessed: '2026-10-21'
+  - id: tracks_hc
+    kind: primary
+    author: Shanna Guzman (Functional Bodybuilding)
+    title: "Persist: Track Summary"
+    where: https://intercom.help/functional-bodybuilding/en/articles/5808568
+    read: full
+    accessed: '2026-10-21'
+  - id: tempo_hc
+    kind: primary
+    author: Shanna Guzman (Functional Bodybuilding)
+    title: How to Read TEMPO
+    where: https://intercom.help/functional-bodybuilding/en/articles/5690334
+    published: '2023-04-28'
+    read: full
+    accessed: '2026-10-21'
+  - id: rpe_hc
+    kind: primary
+    author: Shanna Guzman (Functional Bodybuilding)
+    title: "RPE: What does this mean?"
+    where: https://intercom.help/functional-bodybuilding/en/articles/6910086
+    published: '2023-05-01'
+    read: full
+    accessed: '2026-10-21'
+  - id: loads_hc
+    kind: primary
+    author: Shanna Guzman (Functional Bodybuilding)
+    title: Choosing Loads
+    where: https://intercom.help/functional-bodybuilding/en/articles/5698089
+    published: '2023-04-28'
+    read: full
+    accessed: '2026-10-21'
+  - id: start_hc
+    kind: primary
+    author: Shanna Guzman (Functional Bodybuilding)
+    title: Why does my program not start with Week 1, Day 1?
+    where: https://intercom.help/functional-bodybuilding/en/articles/6191351
+    read: full
+    accessed: '2026-10-21'
+  - id: days_hc
+    kind: primary
+    author: Shanna Guzman (Functional Bodybuilding)
+    title: What if I only have 3 or 4 days to train?
+    where: https://intercom.help/functional-bodybuilding/en/articles/5924827
+    published: '2025-03-18'
+    read: full
+    accessed: '2026-10-21'
+  - id: equip_hc
+    kind: primary
+    author: Functional Bodybuilding (Help Center)
+    title: What Equipment is Needed for Persist?
+    where: https://intercom.help/functional-bodybuilding/en/articles/5849300
+    read: full
+    accessed: '2026-10-21'
+  - id: deload_blog
+    kind: primary
+    author: Marcus Filly
+    title: Deload Week
+    where: https://functional-bodybuilding.com/blogs/articles/deload-week
+    read: full
+    accessed: '2026-10-21'
+  - id: deload_pdf
+    kind: primary
+    author: Functional Bodybuilding
+    title: Persist Deload (September 2022)
+    where: https://cdn.shopify.com/ (persistdeload-sample.pdf)
+    published: '2022-09'
+    read: full
+    accessed: '2026-10-21'
+  - id: tempo_blog
+    kind: primary
+    author: Marcus Filly
+    title: Workout Tempo
+    where: https://functional-bodybuilding.com/blogs/articles/workout-tempo
+    read: full
+    accessed: '2026-10-21'
+  - id: fmuscle_blog
+    kind: primary
+    author: Marcus Filly
+    title: 5 Ways To Build Functional Muscle
+    where: https://functional-bodybuilding.com/blogs/articles/5-ways-to-build-functional-muscle
+    read: full
+    accessed: '2026-10-21'
+  - id: basecamp
+    kind: primary
+    author: Functional Bodybuilding
+    title: Base Camp (product page)
+    where: https://functional-bodybuilding.com/pages/base-camp
+    read: full
+    accessed: '2026-10-21'
+    note: The page; the eBook itself is sold, not read.
+
+rules:
+  - id: R1
+    text: The 3x tracks train three days a week.
+    cites: [{source: tracks_hc, at: '"3, 4, or 5 days/week"'}, {source: pc3, at: Day 1–3}]
+    enforced_by:
+      - data:frameworks/rpe_autoregulation.yaml#sessions_per_week
+      - data:training_contract.yaml#tracks.functional_bodybuilding.modules.persist_session.exposures_per_week
+      - week:pump_condition_3x
+  - id: R2
+    text: About an hour a session.
+    cites: [{source: pc3, at: the sections' minutes}, {source: basecamp, at: '"60-minute sessions"'}]
+    enforced_by:
+      - data:frameworks/rpe_autoregulation.yaml#expectations.ideal_session_minutes
+      - test:test_training_contract.py::test_filly_runs_the_sample_weeks_in_cycles_and_a_bridge_week
+  - id: R3
+    text: Each session is a warm-up, strength intensity, strength balance, conditioning or a finisher, and a cooldown.
+    cites: [{source: pc3}, {source: pl3}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.functional_bodybuilding.modules.persist_session.variants
+      - data:training_contract.yaml#tracks.pump_lift.modules.persist_session.variants
+      - week:pump_condition_3x
+      - week:pump_lift_3x
+  - id: R4
+    text: Pump Lift has no conditioning; a finisher closes each day.
+    cites: [{source: tracks_hc, at: '"Focus on lifting and muscle pumps with no conditioning"'}, {source: pl3}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.pump_lift.modules.persist_session.variants
+      - week:pump_lift_3x
+  - id: R5
+    text: "Tempo is written down, hold, up, pause — X explosive — on the strength work, with lowering phases of two to five seconds."
+    cites: [{source: tempo_hc}, {source: tempo_blog, at: '"longer lowering phases in the 2-5 second range"'}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.functional_bodybuilding.notes
+      - data:training_contract.yaml#tracks.functional_bodybuilding.modules.persist_session.variants.day_1.blocks.tripod_row.notes
+  - id: R6
+    text: The 3x sample weeks, as printed — each day's exercises, sets, reps, tempo and intervals.
+    cites: [{source: pc3}, {source: pl3}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.functional_bodybuilding.modules.persist_session.variants
+      - data:training_contract.yaml#tracks.pump_lift.modules.persist_session.variants
+      - week:pump_condition_3x
+      - week:pump_lift_3x
+      - test:test_training_contract.py::test_filly_runs_the_sample_weeks_in_cycles_and_a_bridge_week
+  - id: R7
+    text: "Loads are the athlete's: work to the top of the reps, then add a little; RPE 7 leaves three reps in reserve."
+    cites: [{source: loads_hc}, {source: rpe_hc}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.functional_bodybuilding.notes
+      - data:training_contract.yaml#tracks.functional_bodybuilding.modules.persist_session.variants.day_1.blocks.tripod_row.rpe_target
+  - id: R8
+    text: Persist runs six-week cycles, the days the same week to week within one.
+    cites: [{source: start_hc, at: '"Persist runs as a live, continuous program in 6-week cycles"'}, {source: days_hc}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.functional_bodybuilding.modules.persist_session.rotation
+      - data:training_contract.yaml#tracks.functional_bodybuilding.modules.persist_session.periods
+  - id: R9
+    text: After every two six-week cycles, a Bridge week deloads every section to RPE 6–7.
+    cites: [{source: deload_blog, at: '"After every two 6-week training cycles in Persist, we have a Bridge week to deload"'}, {source: deload_pdf, at: '"reduce loading and effort on all sections to 6-7/10 RPE"'}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.functional_bodybuilding.modules.persist_session.periods.1
+      - data:training_contract.yaml#tracks.pump_lift.modules.persist_session.periods.1
+      - test:test_training_contract.py::test_filly_runs_the_sample_weeks_in_cycles_and_a_bridge_week
+  - id: R10
+    text: "In the first week: a set or two fewer and loads 10–20 lb lighter."
+    cites: [{source: start_hc, at: '"Lower your set count by 1-2 sets"; "Lower your loads … by 10-20 pounds"'}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.functional_bodybuilding.notes
+      - data:training_contract.yaml#tracks.pump_lift.notes
+  - id: R11
+    text: Movement patterns rather than body parts, with unilateral work every session.
+    cites: [{source: basecamp, at: '"bend, push, pull, squat"'}, {source: fmuscle_blog, at: '"Work Unilateral Strength"'}]
+    enforced_by:
+      - week:pump_condition_3x
+      - week:pump_lift_3x
+  - id: R12
+    text: "The equipment: a barbell and plates, dumbbells, a pull-up bar, a bench, bands; a bike or rower for the conditioning."
+    cites: [{source: equip_hc}]
+    enforced_by:
+      - data:philosophy.yaml#required_equipment
+
+open:
+  - "The 4x and 5x tracks: only one day of each is public, not a week."
+  - "The progression within a cycle (more sets in weeks 4–6, deload_pdf; fewer reps in weeks 3 and 5 in the 4x sample) is not written as numbers, so the days repeat as printed."
+  - "The Benchmark Week between cycles is not programmed."
+  - "A novice track: Base Camp's sessions are sold, not published."
+  - "Podcasts, the Revival Strength site and the Healthy Shoulder Guide (email-gated) were not read."
+
+inventions:
+  - id: I1
+    text: The published week repeats every cycle; Persist changes the days each cycle, but only one week of each 3x track is public.
+    implemented_by:
+      - data:training_contract.yaml#tracks.functional_bodybuilding.modules.persist_session.rotation
+  - id: I2
+    text: "Where the sample leaves the reps to the program (\"Every 4:00 x 3 sets\"), the prescription says so: a working set finished a rep or two in reserve, recorded."
+    implemented_by:
+      - data:training_contract.yaml#tracks.functional_bodybuilding.modules.persist_session.variants.day_1.blocks.dip.load_note
+  - id: I3
+    text: A section's minutes are shared evenly by its exercises, and the rest inside an interval is estimated.
+    implemented_by:
+      - data:training_contract.yaml#tracks.functional_bodybuilding.modules.persist_session.variants
+  - id: I4
+    text: The warm-up, the cooldown and the conditioning are one entry each whose note writes the day's content; the conditioning's movements are not separate exercises.
+    implemented_by:
+      - data:exercises.yaml#exercises.fbb_conditioning
+  - id: I5
+    text: The sample's "or" options are alternatives in its order (a cable machine first, the barbell after; the pull-up, then the lat pulldown); the leg press is not offered.
+    implemented_by:
+      - data:training_contract.yaml#tracks.pump_lift.modules.persist_session.variants.day_1.blocks.incline_press.alternatives
+  - id: I6
+    text: The tracks are for intermediate lifters and up; novices are refused until Base Camp's sessions can be read.
+    implemented_by:
+      - data:training_contract.yaml#tracks.functional_bodybuilding.training_levels
+  - id: I7
+    text: At four or five training days the three sessions run on three of them (the 3x tracks; the 4x and 5x weeks are not public).
+    implemented_by:
+      - data:frameworks/rpe_autoregulation.yaml#cadence_options
+
+currency:
+  functional_bodybuilding: {entry: working_load, rule: R7}
+  pump_lift: {entry: working_load, rule: R7}
+
+reviews:
+  - kind: output_vs_dossier
+    date: '2026-10-22'
+    by: Claude (package audit)
+    scope: "tools/print_package.py marcus_filly --profile ideal: both 3x tracks' first fortnight, and the Bridge week (week 13) of Functional Bodybuilding"
+    result: "Each day's warm-up, strength intensity, strength balance, conditioning or finisher and cooldown as the sample weeks print them (R3, R4, R6): every exercise, set, rep, tempo, interval and pairing, the tripod row's three rounds of right, left and the lunge read as six sets and three; the week repeats within a cycle (R8, I1); the Bridge week puts every section at RPE 6–7 and keeps the work (R9). Nothing to fix. Noted: the first-week advice (R10) stands in the track's note every week, since a note has no week of its own."
+
+next: "The 4x and 5x tracks if their weeks become readable; the within-cycle progression; a novice track on Base Camp; exercise media."

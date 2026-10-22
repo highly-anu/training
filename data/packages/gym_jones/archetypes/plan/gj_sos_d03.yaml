@@ -1,0 +1,67 @@
+id: gj_sos_d03
+name: "Soldier of Steel — Day 3: Workout"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [novice, intermediate]
+duration_estimate_minutes: 50
+pool_only: true
+
+slots:
+  - role: warm_up
+    slot_type: time_domain
+    duration_minutes: 10
+    exercise_filter:
+      exercise_ids: [run_easy]
+      ordered: true
+    notes: "Run 10 minutes at an easy pace."
+
+  - role: rounds
+    slot_type: for_time
+    reps_per_round: 5
+    rounds: 5
+    exercise_filter:
+      exercise_ids: [push_up]
+      ordered: true
+    notes: "Five rounds: 5 proper push-ups, 10 air squats. Beginners may do push-ups on their knees."
+
+  - role: rounds_squats
+    slot_type: amrap_movement
+    parent_slot_role: rounds
+    reps_per_round: 10
+    exercise_filter:
+      exercise_ids: [squat_air]
+      ordered: true
+
+  - role: pull_ups
+    slot_type: sets_reps
+    sets: 1
+    reps: 25
+    exercise_filter:
+      exercise_ids: [pull_up, plank_pull]
+      ordered: true
+    notes: "25 pull-ups, or plank pulls until a pull-up is possible."
+
+  - role: burpee_pyramid
+    slot_type: sets_reps
+    sets: 1
+    reps: '1-10-1 pyramid'
+    exercise_filter:
+      exercise_ids: [burpee]
+      ordered: true
+    notes: "100 burpees; rest as needed between sets, longer after the higher reps."
+
+  - role: cool_down
+    slot_type: time_domain
+    duration_minutes: 10
+    exercise_filter:
+      exercise_ids: [run_easy]
+      ordered: true
+    notes: "Cool down with 10 minutes run or walk at an easy pace."
+
+required_equipment:
+- open_space
+- pull_up_bar
+sources:
+- "Gym Jones, Soldier of Steel (Army National Guard, 2013)"
+notes: >
+  Push-ups and squats, 25 pull-ups, the 1-10-1 burpee pyramid.

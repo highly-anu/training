@@ -49,6 +49,7 @@ is Uphill Athlete's own public material:
 | R17 | Specific: two Zone 3, maintenance strength, volume not rising (podcast) | `exposures_by_phase`; `ramp_phases` stops the ramp at the end of Base; source week `specific_week` |
 | R18 | Base at least twelve weeks; Specific two to eight (podcast) | Base 4 + 8 weeks, Specific 8 |
 | R19 | A one-week taper halving the time, for a two- or three-day climb (mtn) | Taper, one week, a deload phase: half the held volume |
+| R20 | In Specific the long day's time is split over back-to-back days (pod_spec) | the easy aerobic day's `adjacent_to_by_phase: {specific: long_day}` |
 
 ## Debt (rules nothing enforces yet)
 
@@ -60,7 +61,6 @@ None.
 - Hill muscular endurance (water carried up, dumped at the top) is not programmed; the
   gym workout is.
 - The heart-rate drift test is not scheduled; the zones are the app's heart-rate zones.
-- Back-to-back long days in Specific are not placed next to each other.
 - Pack weight past 15 % of bodyweight does not progress (up to 25 % on aerobic hikes).
 - More Transition for an aerobically deficient athlete is not modelled.
 - A novice track: Beginner Mountain Fitness is sold, not published; the next step.
@@ -85,6 +85,16 @@ None.
 - I9: a Zone 3 session's 15-minute warm-up and 10-minute cool-down.
 - I10: the aerobic-deficiency gate is said, never enforced (the owner's rule for Wildman).
 - I11: six training days required; at seven, the same six sessions.
+
+## Output review (2026-10-22)
+
+All 29 weeks printed (`tools/print_package.py uphill_athlete --profile ideal --weeks 29`).
+The weeks read as R2–R5, R8, R10–R17 and R19 write them: four aerobic and two strength
+days, the long day half the aerobic time, the ramp and its half-time recovery weeks, the
+first Zone 3 in week 13, the Specific hold with two Zone 3 sessions 48 hours apart, the
+taper at half. Fixed: Specific's back-to-back long days were placed apart (an open item);
+a contract module may now sit beside another in a phase (`adjacent_to_by_phase`), R20.
+Noted: the second long day carries the week's pack, the long day none.
 
 ## Tests
 

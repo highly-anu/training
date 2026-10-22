@@ -1,0 +1,71 @@
+id: gj_of_d22
+name: "Operator Fitness — Day 22: Progression"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 70
+pool_only: true
+
+slots:
+  - role: six_way_complex
+    slot_type: sets_reps
+    sets: 4
+    reps: 6
+    exercise_filter:
+      exercise_ids: [barbell_complex]
+      ordered: true
+    load: "75, 85, 95, 105 lb (34-48 kg), heavier each set"
+    notes: "Six-Way Barbell Complex: 6 deadlift, 6 bent-over row (back parallel to the floor), 6 hang clean, 6 front squat, 6 push press, 6 back squat, 6 push-up, without letting go of the bar. 3-4 sets; rest 1-2 minutes."
+
+  - role: hundreds
+    slot_type: for_time
+    reps_per_round: 100
+    rounds: 1
+    exercise_filter:
+      exercise_ids: [thruster]
+      ordered: true
+    load: "45 lb (20 kg) bar"
+    notes: "100 front squat push presses at 45 lb, 100 wall balls with a 20 lb ball, 100 ball slams with a 20 lb ball."
+
+  - role: wall_balls
+    slot_type: amrap_movement
+    parent_slot_role: hundreds
+    reps_per_round: 100
+    exercise_filter:
+      exercise_ids: [wall_ball]
+      ordered: true
+    load: "20 lb (9 kg) ball"
+
+  - role: ball_slams
+    slot_type: amrap_movement
+    parent_slot_role: hundreds
+    reps_per_round: 100
+    exercise_filter:
+      exercise_ids: [ball_slam]
+      ordered: true
+    load: "20 lb (9 kg) ball"
+
+  - role: row_500
+    slot_type: for_time
+    rounds: 1
+    distance_m: 500
+    exercise_filter:
+      exercise_ids: [row_500m_test]
+      ordered: true
+    notes: "500 m row for time."
+
+required_equipment:
+- barbell
+- box
+- dumbbell
+- kettlebell
+- medicine_ball
+- open_space
+- plates
+- pull_up_bar
+- rack
+- rower
+sources:
+- "Gym Jones, Operator Fitness (Rob MacDonald)"
+notes: >
+  The Six-Way Barbell Complex, 100 front squat push presses, 100 wall balls and 100 ball slams, then 500 m row for time.

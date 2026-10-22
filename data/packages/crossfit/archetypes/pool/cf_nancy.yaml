@@ -1,0 +1,36 @@
+id: cf_nancy
+name: "Nancy"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 25
+pool_only: true
+
+slots:
+  - role: nancy
+    slot_type: for_time
+    rounds: 5
+    distance_m: 400
+    exercise_filter:
+      exercise_ids: [run_interval]
+      ordered: true
+    notes: "5 rounds for time. Post time."
+
+  - role: nancy_2
+    slot_type: amrap_movement
+    parent_slot_role: nancy
+    reps_per_round: 15
+    exercise_filter:
+      exercise_ids: [overhead_squat]
+      ordered: true
+    load: "95 lb (43 kg); women 65 lb (30 kg)"
+
+required_equipment:
+- open_space
+- barbell
+- rack
+- plates
+sources:
+- "CrossFit, Benchmark Workouts (2003) / The New Girls (2004) / crossfit.com/benchmark"
+notes: >
+  5 rounds for time of a 400 m run and 15 overhead squats at 95/65 lb.

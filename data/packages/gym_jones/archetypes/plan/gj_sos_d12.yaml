@@ -1,0 +1,107 @@
+id: gj_sos_d12
+name: "Soldier of Steel — Day 12: Workout"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [novice, intermediate]
+duration_estimate_minutes: 60
+pool_only: true
+
+slots:
+  - role: warm_up
+    slot_type: time_domain
+    duration_minutes: 10
+    exercise_filter:
+      exercise_ids: [easy_aerobic]
+      ordered: true
+    notes: "Run, row or ride 10 minutes at an easy pace."
+
+  - role: air_squat
+    slot_type: sets_reps
+    sets: 2
+    reps: 20
+    exercise_filter:
+      exercise_ids: [squat_air]
+      ordered: true
+
+  - role: sit_up
+    slot_type: sets_reps
+    sets: 2
+    reps: 20
+    exercise_filter:
+      exercise_ids: [sit_up]
+      ordered: true
+
+  - role: push_up
+    slot_type: sets_reps
+    sets: 4
+    reps: 10
+    exercise_filter:
+      exercise_ids: [push_up]
+      ordered: true
+
+  - role: deck_squat
+    slot_type: sets_reps
+    sets: 3
+    reps: 10
+    exercise_filter:
+      exercise_ids: [deck_squat]
+      ordered: true
+    load: "25 lb (11 kg) dumbbell"
+
+  - role: chipper
+    slot_type: for_time
+    reps_per_round: 100
+    rounds: 1
+    exercise_filter:
+      exercise_ids: [squat_air]
+      ordered: true
+    notes: "100 squats, 90 push-ups, 80 sit-ups, 70 burpees, 60 deck squats, 50 pull-ups, with 90 s front leaning rest after each."
+
+  - role: chipper_push_ups
+    slot_type: amrap_movement
+    parent_slot_role: chipper
+    reps_per_round: 90
+    exercise_filter:
+      exercise_ids: [push_up]
+      ordered: true
+
+  - role: chipper_sit_ups
+    slot_type: amrap_movement
+    parent_slot_role: chipper
+    reps_per_round: 80
+    exercise_filter:
+      exercise_ids: [sit_up]
+      ordered: true
+
+  - role: chipper_burpees
+    slot_type: amrap_movement
+    parent_slot_role: chipper
+    reps_per_round: 70
+    exercise_filter:
+      exercise_ids: [burpee]
+      ordered: true
+
+  - role: chipper_deck_squats
+    slot_type: amrap_movement
+    parent_slot_role: chipper
+    reps_per_round: 60
+    exercise_filter:
+      exercise_ids: [deck_squat]
+      ordered: true
+
+  - role: chipper_pull_ups
+    slot_type: amrap_movement
+    parent_slot_role: chipper
+    reps_per_round: 50
+    exercise_filter:
+      exercise_ids: [pull_up]
+      ordered: true
+
+required_equipment:
+- dumbbell
+- open_space
+- pull_up_bar
+sources:
+- "Gym Jones, Soldier of Steel (Army National Guard, 2013)"
+notes: >
+  A warm-up, then the descending chipper: 100 squats, 90 push-ups, 80 sit-ups, 70 burpees, 60 deck squats, 50 pull-ups, 90 s front leaning rest after each.

@@ -1,0 +1,55 @@
+id: btm_d07
+name: 'Built to Move — Day 7: Squat!'
+modality: mobility
+category: recovery
+training_levels:
+- novice
+- intermediate
+- advanced
+- elite
+duration_estimate_minutes: 20
+pool_only: true
+slots:
+- role: test_squat
+  slot_type: skill_practice
+  duration_minutes: 4
+  exercise_filter:
+    exercise_ids:
+    - squat_test
+    ordered: true
+  notes: 'Squat Test: feet hip width or wider; hold the deepest squat position you can reach for five
+    breaths.'
+- role: floor_sitting
+  slot_type: skill_practice
+  duration_minutes: 5
+  exercise_filter:
+    exercise_ids:
+    - floor_sitting
+    ordered: true
+  notes: 'Floor-sitting positions: cross-legged, 90/90, long sitting, one-leg-up — here, and throughout
+    your day.'
+- role: sit_stands
+  slot_type: sets_reps
+  sets: 1
+  reps: 7
+  exercise_filter:
+    exercise_ids:
+    - sit_stand
+    ordered: true
+  notes: 7 sit-stands.
+- role: mobilizations
+  slot_type: skill_practice
+  duration_minutes: 6
+  sets: 2
+  exercise_filter:
+    exercise_ids:
+    - follow_along_mobilization
+    ordered: true
+  notes: 'Day #7''s 2 follow-along mobilizations (no equipment): https://thereadystate.com/built-to-move-21-day-challenge-day-7/'
+required_equipment: []
+sources:
+- 'Kelly & Juliet Starrett, Built to Move 21-Day Challenge (The Ready State), Day #7; Built to Move, Vital
+  Sign 7: Squat!'
+notes: 'Squat test, then sit-stands from a chair. Through the day: floor sitting; nose-only breathing;
+  walk 8,000-10,000 steps (try three post-meal walks); eat 800 g of fruits and vegetables and your protein.
+  Extra credit: Tabata squats.'

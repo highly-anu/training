@@ -1,0 +1,127 @@
+id: atg_p2_w2
+name: 'ATG Program #2 — Workout 2'
+modality: durability
+category: gpp_durability
+training_levels:
+- novice
+- intermediate
+- advanced
+- elite
+duration_estimate_minutes: 60
+pool_only: true
+slots:
+- role: sled
+  slot_type: distance
+  sets: 2
+  distance_m: 91
+  exercise_filter:
+    exercise_ids:
+    - sled_forward_backward
+    - backward_walk
+    ordered: true
+  notes: '100 yards backward, then 100 forward (91 m each way). No sled: a resisted treadmill or walking
+    backward — "You don''t have to sled!"'
+- role: tibialis_raise
+  slot_type: sets_reps
+  sets: 1
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - tibialis_raise
+    ordered: true
+  notes: Wall tibialis raise, 1 x 20.
+- role: calf_raise
+  slot_type: sets_reps
+  sets: 1
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - wall_calf_raise
+    ordered: true
+  notes: Wall calf raise, 1 x 20.
+- role: squat
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - low_slow_squat
+    ordered: true
+  notes: Low & slow squat, 3 x 10.
+- role: step_up
+  slot_type: sets_reps
+  sets: 2
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - poliquin_step_up
+    ordered: true
+  notes: Poliquin step-up, 2 x 20.
+- role: nordic
+  slot_type: sets_reps
+  sets: 2
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - nordic
+    ordered: true
+  notes: Nordic progression, 2 x 5 — at your pain-free step of the ladder.
+- role: l_sit
+  slot_type: static_hold
+  sets: 1
+  hold_seconds: 20
+  exercise_filter:
+    exercise_ids:
+    - l_sit
+    ordered: true
+  notes: L-sit progression, 1 x 20 seconds.
+- role: slant_toe_touch
+  slot_type: sets_reps
+  sets: 1
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - slant_toe_touch
+    ordered: true
+  notes: Slant toe touch, 1 x 20.
+- role: couch_stretch
+  slot_type: static_hold
+  sets: 1
+  hold_seconds: 60
+  exercise_filter:
+    exercise_ids:
+    - couch_stretch
+    ordered: true
+  notes: Couch stretch, 1 x 60 seconds.
+- role: pancake
+  slot_type: sets_reps
+  sets: 1
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - standing_pancake_pulse
+    ordered: true
+  notes: Standing pancake pulse, 1 x 20.
+- role: pull_up
+  slot_type: sets_reps
+  sets: 2
+  reps: max
+  exercise_filter:
+    exercise_ids:
+    - pull_up
+    ordered: true
+  notes: Pull-up progression, 2 x to exhaustion.
+- role: push_up
+  slot_type: sets_reps
+  sets: 2
+  reps: max
+  exercise_filter:
+    exercise_ids:
+    - push_up
+    ordered: true
+  notes: Full push-up progression, 2 x to exhaustion.
+required_equipment: []
+sources:
+- 'Ben Patrick, ATG Program #1 & 2 (ATG Online articles)'
+notes: Sled, tibialis and calf raises, low and slow squats, Poliquin step-ups, Nordics, L-sit, flexibility,
+  then pull-ups and push-ups.

@@ -8,6 +8,7 @@ duration_estimate_minutes: 30
 slots:
 - role: meritorious
   slot_type: for_time
+  reps_per_round: 30
   rounds: 1
   duration_sec: 1500
   intensity: max_effort

@@ -1,0 +1,127 @@
+id: atg_p2_w1
+name: 'ATG Program #2 — Workout 1'
+modality: durability
+category: gpp_durability
+training_levels:
+- novice
+- intermediate
+- advanced
+- elite
+duration_estimate_minutes: 60
+pool_only: true
+slots:
+- role: sled
+  slot_type: distance
+  sets: 2
+  distance_m: 91
+  exercise_filter:
+    exercise_ids:
+    - sled_forward_backward
+    - backward_walk
+    ordered: true
+  notes: '100 yards backward, then 100 forward (91 m each way). No sled: a resisted treadmill or walking
+    backward — "You don''t have to sled!"'
+- role: tibialis_raise
+  slot_type: sets_reps
+  sets: 1
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - tibialis_raise
+    ordered: true
+  notes: Wall tibialis raise, 1 x 20.
+- role: calf_raise
+  slot_type: sets_reps
+  sets: 1
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - kot_calf_raise
+    ordered: true
+  notes: KOT calf raise, 1 x 20.
+- role: split_squat
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - atg_split_squat
+    ordered: true
+  notes: ATG split squat, 3 x 10.
+- role: single_leg_squat
+  slot_type: sets_reps
+  sets: 3
+  reps: 5
+  exercise_filter:
+    exercise_ids:
+    - single_leg_atg_squat
+    ordered: true
+  notes: Single-leg ATG squat progression, 3 x 5.
+- role: rdl
+  slot_type: sets_reps
+  sets: 2
+  reps: 15
+  exercise_filter:
+    exercise_ids:
+    - full_stretch_rdl
+    ordered: true
+  notes: Full-stretch dumbbell RDL, 2 x 15.
+- role: l_sit
+  slot_type: static_hold
+  sets: 1
+  hold_seconds: 20
+  exercise_filter:
+    exercise_ids:
+    - l_sit
+    ordered: true
+  notes: L-sit, 1 x 20 seconds.
+- role: slant_toe_touch
+  slot_type: sets_reps
+  sets: 1
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - slant_toe_touch
+    ordered: true
+  notes: Slant toe touch, 1 x 20.
+- role: couch_stretch
+  slot_type: static_hold
+  sets: 1
+  hold_seconds: 60
+  exercise_filter:
+    exercise_ids:
+    - couch_stretch
+    ordered: true
+  notes: Couch stretch, 1 x 60 seconds.
+- role: pancake
+  slot_type: sets_reps
+  sets: 1
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - standing_pancake_pulse
+    ordered: true
+  notes: Standing pancake pulse, 1 x 20.
+- role: pull_apart
+  slot_type: sets_reps
+  sets: 2
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - band_pull_apart
+    ordered: true
+  notes: Band pull-apart, 2 x 20.
+- role: shoulder_press
+  slot_type: sets_reps
+  sets: 2
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - atg_shoulder_press
+    ordered: true
+  notes: ATG dumbbell shoulder press, 2 x 10.
+required_equipment: []
+sources:
+- 'Ben Patrick, ATG Program #1 & 2 (ATG Online articles)'
+notes: Sled, tibialis and KOT calf raises, ATG split squats and single-leg squats, full-stretch RDLs,
+  L-sit, flexibility, then the shoulders.

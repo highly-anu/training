@@ -1,35 +1,22 @@
-# What progress means for Functional Bodybuilding. Feel-based: the load
-# moves when the reps feel crisp, never on a fixed increment. The strength
-# work is prescribed as RPE targets (the framework's progression_overrides),
-# so the headline is the load lifted at the target RPE; the working load
-# beside it is read against the suggested starting weight.
+# What progress means for Functional Bodybuilding: the loads the athlete
+# chooses for the reps (Choosing Loads: to the top of the reps, then a little
+# more), and the load at the target RPE where the day writes one.
 id: marcus_filly
 
 progress:
-  - id: load_at_rpe
-    label: Load at target RPE
-    primitive: load_at_rpe
-    headline: true
-    scope:
-      modalities: [max_strength]
-      slot_roles: ["primary_*", "secondary_*", "weighted_*"]
-    expected: prescribed
-
   - id: working_load
     label: Working load
     primitive: set_load
+    headline: true
     scope:
       modalities: [max_strength]
-      slot_roles: ["primary_*", "secondary_*", "weighted_*"]
+      slot_types: [sets_reps]
     expected: prescribed
 
-  - id: positional_holds
-    label: Positional holds
-    primitive: hold_seconds
-    scope: {archetypes: [fb_positional_mobility], slot_types: [static_hold]}
-    expected: {load_field: hold_seconds}
-
-  - id: bodyweight_strength
-    label: Bodyweight strength sessions
-    primitive: session_completion
-    scope: {modalities: [relative_strength]}
+  - id: load_at_rpe
+    label: Load at target RPE
+    primitive: load_at_rpe
+    scope:
+      modalities: [max_strength]
+      slot_types: [sets_reps]
+    expected: prescribed

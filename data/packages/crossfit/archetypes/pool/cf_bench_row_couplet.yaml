@@ -1,0 +1,36 @@
+id: cf_bench_row_couplet
+name: "Bench Press / Row 500 m x 5"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 25
+pool_only: true
+
+slots:
+  - role: couplet
+    slot_type: for_time
+    reps_per_round: 10
+    rounds: 5
+    exercise_filter:
+      exercise_ids: [bench_press]
+      ordered: true
+    load: "75 % of bodyweight"
+    notes: "5 rounds for time."
+
+  - role: couplet_2
+    slot_type: amrap_movement
+    parent_slot_role: couplet
+    distance_m: 500
+    exercise_filter:
+      exercise_ids: [row_threshold]
+      ordered: true
+
+required_equipment:
+- barbell
+- rack
+- plates
+- rower
+sources:
+- "Glassman, A Theoretical Template for CrossFit's Programming (2003), Table 4"
+notes: >
+  5 rounds for time: bench press 75 % of bodyweight x 10, row 500 m.

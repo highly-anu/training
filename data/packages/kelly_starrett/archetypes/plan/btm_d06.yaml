@@ -1,0 +1,37 @@
+id: btm_d06
+name: 'Built to Move — Day 6: Eat Like You''re Going to Live Forever'
+modality: mobility
+category: recovery
+training_levels:
+- novice
+- intermediate
+- advanced
+- elite
+duration_estimate_minutes: 15
+pool_only: true
+slots:
+- role: floor_sitting
+  slot_type: skill_practice
+  duration_minutes: 5
+  exercise_filter:
+    exercise_ids:
+    - floor_sitting
+    ordered: true
+  notes: 'Floor-sitting positions: cross-legged, 90/90, long sitting, one-leg-up — here, and throughout
+    your day.'
+- role: mobilizations
+  slot_type: skill_practice
+  duration_minutes: 6
+  sets: 2
+  exercise_filter:
+    exercise_ids:
+    - follow_along_mobilization
+    ordered: true
+  notes: 'Day #6''s 2 follow-along mobilizations (a ball or roller): https://thereadystate.com/built-to-move-21-day-challenge-day-6/'
+required_equipment: []
+sources:
+- 'Kelly & Juliet Starrett, Built to Move 21-Day Challenge (The Ready State), Day #6; Built to Move, Vital
+  Sign 6: Eat Like You''re Going to Live Forever'
+notes: 'Eat 800 g of fruits and vegetables and 0.7-1 g of protein per pound of bodyweight a day: weigh
+  and count today. Through the day: floor sitting; walk 8,000-10,000 steps, breathing through the nose.
+  Extra credit: rucking or the barefoot walking technique.'

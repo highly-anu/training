@@ -1,0 +1,80 @@
+id: gj_sos_d15
+name: "Soldier of Steel — Day 15: Workout"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [novice, intermediate]
+duration_estimate_minutes: 50
+pool_only: true
+
+slots:
+  - role: warm_up
+    slot_type: time_domain
+    duration_minutes: 10
+    exercise_filter:
+      exercise_ids: [run_easy]
+      ordered: true
+    notes: "Run 10 minutes at an easy pace."
+
+  - role: twenties
+    slot_type: for_time
+    reps_per_round: 20
+    rounds: 1
+    exercise_filter:
+      exercise_ids: [squat_air]
+      ordered: true
+    notes: "20 air squats, 20 sit-ups, 20 push-ups, 20 deck squats, 20 burpees."
+
+  - role: t_sit_ups
+    slot_type: amrap_movement
+    parent_slot_role: twenties
+    reps_per_round: 20
+    exercise_filter:
+      exercise_ids: [sit_up]
+      ordered: true
+
+  - role: t_push_ups
+    slot_type: amrap_movement
+    parent_slot_role: twenties
+    reps_per_round: 20
+    exercise_filter:
+      exercise_ids: [push_up]
+      ordered: true
+
+  - role: t_deck_squats
+    slot_type: amrap_movement
+    parent_slot_role: twenties
+    reps_per_round: 20
+    exercise_filter:
+      exercise_ids: [deck_squat]
+      ordered: true
+
+  - role: t_burpees
+    slot_type: amrap_movement
+    parent_slot_role: twenties
+    reps_per_round: 20
+    exercise_filter:
+      exercise_ids: [burpee]
+      ordered: true
+
+  - role: blocks
+    slot_type: time_domain
+    duration_minutes: 24
+    exercise_filter:
+      exercise_ids: [squat_air]
+      ordered: true
+    notes: "4 x 30/30 each of air squat, push-up, sit-up, deck squat, burpee; 1 minute between each 4-minute block. Beginners: push-ups on the knees, deck squats with the hips slightly raised."
+
+  - role: cool_down
+    slot_type: time_domain
+    duration_minutes: 10
+    exercise_filter:
+      exercise_ids: [run_easy]
+      ordered: true
+    notes: "Cool down with 10 minutes run or walk at an easy pace."
+
+required_equipment:
+- open_space
+sources:
+- "Gym Jones, Soldier of Steel (Army National Guard, 2013)"
+notes: >
+  20 each of squats, sit-ups, push-ups, deck squats and burpees, then 4 x 30/30 of each, 1 minute between blocks.

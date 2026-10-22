@@ -1,0 +1,109 @@
+id: gj_sos_d08
+name: "Soldier of Steel — Day 8: Workout"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [novice, intermediate]
+duration_estimate_minutes: 60
+pool_only: true
+
+slots:
+  - role: warm_up
+    slot_type: time_domain
+    duration_minutes: 10
+    exercise_filter:
+      exercise_ids: [run_easy]
+      ordered: true
+    notes: "Run 10 minutes at an easy pace."
+
+  - role: air_squat
+    slot_type: sets_reps
+    sets: 3
+    reps: 20
+    exercise_filter:
+      exercise_ids: [squat_air]
+      ordered: true
+
+  - role: jump_squat
+    slot_type: sets_reps
+    sets: 3
+    reps: 10
+    exercise_filter:
+      exercise_ids: [squat_jump]
+      ordered: true
+
+  - role: lunge
+    slot_type: sets_reps
+    sets: 4
+    reps: 20
+    exercise_filter:
+      exercise_ids: [lunge]
+      ordered: true
+    notes: "Walking lunges: 2 sets forward, 2 backward."
+
+  - role: split_jumps
+    slot_type: for_time
+    reps_per_round: 20
+    rounds: 5
+    exercise_filter:
+      exercise_ids: [lunge_jumping]
+      ordered: true
+    notes: "Five rounds: 20 split jumps (10 a side), 50 yd bear crawl; rest 2 minutes."
+
+  - role: split_jumps_crawl
+    slot_type: amrap_movement
+    parent_slot_role: split_jumps
+    distance_m: 46
+    exercise_filter:
+      exercise_ids: [bear_crawl]
+      ordered: true
+
+  - role: frog_hops
+    slot_type: for_time
+    reps_per_round: 20
+    rounds: 4
+    exercise_filter:
+      exercise_ids: [frog_hop]
+      ordered: true
+    notes: "Four rounds: 20 frog hops, 40 yd bear crawl; rest 2 minutes."
+
+  - role: frog_hops_crawl
+    slot_type: amrap_movement
+    parent_slot_role: frog_hops
+    distance_m: 37
+    exercise_filter:
+      exercise_ids: [bear_crawl]
+      ordered: true
+
+  - role: burpees
+    slot_type: for_time
+    reps_per_round: 20
+    rounds: 3
+    exercise_filter:
+      exercise_ids: [burpee]
+      ordered: true
+    notes: "Three rounds: 20 burpees, 30 yd weighted bear crawl with 15-25 lb dumbbells; rest 2 minutes. Beginners may use 10-15 lb."
+
+  - role: burpees_crawl
+    slot_type: amrap_movement
+    parent_slot_role: burpees
+    distance_m: 27
+    exercise_filter:
+      exercise_ids: [bear_crawl]
+      ordered: true
+    load: "15-25 lb (7-11 kg) in each hand"
+
+  - role: cool_down
+    slot_type: time_domain
+    duration_minutes: 10
+    exercise_filter:
+      exercise_ids: [run_easy]
+      ordered: true
+    notes: "Cool down with 10 minutes run or walk at an easy pace."
+
+required_equipment:
+- dumbbell
+- open_space
+sources:
+- "Gym Jones, Soldier of Steel (Army National Guard, 2013)"
+notes: >
+  Squats and lunges, then split jumps, frog hops and burpees with bear crawls.

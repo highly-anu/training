@@ -86,6 +86,3 @@ scaling:
       60-min class: reduce free_rolling to 20 min (1500s → 1200s). The warm-up
       and technique block are non-negotiable — do not shorten them.
       90-min class: extend free_rolling to 2100s (~35 min) to fill the extra time.
-  equipment_limited:
-    substitutions: []
-    notes: "No equipment required beyond an open mat surface. No substitutions needed."

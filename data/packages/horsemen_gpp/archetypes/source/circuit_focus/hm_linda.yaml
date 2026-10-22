@@ -9,6 +9,7 @@ pool_only: true
 slots:
   - role: deadlifts
     slot_type: rounds_for_time
+    reps_per_round: 10
     rounds: 10
     duration_sec: 1800
     intensity: max_effort

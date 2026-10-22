@@ -1,5 +1,8 @@
 import type { ExerciseLoad } from '@/api/types'
 
+/** "1 round", "5 rounds" — Murph and Angie are one round for time. */
+const rounds = (n: number) => `${n} round${n === 1 ? '' : 's'}`
+
 /**
  * TypeScript port of Python's _fmt_load() from src/output.py.
  * Formats an ExerciseLoad object into a human-readable string.
@@ -47,9 +50,9 @@ export function formatLoad(load: ExerciseLoad): string {
     const span = load.rest_sec ? `${load.work_sec}s/${load.rest_sec}s` : `${load.work_sec}s`
     parts.push(`${load.target_rounds} × ${span}`)
   } else if (load.target_rounds && load.reps_per_round) {
-    parts.push(`${load.target_rounds} rounds × ${load.reps_per_round} reps`)
+    parts.push(`${rounds(load.target_rounds)} × ${load.reps_per_round} reps`)
   } else if (load.target_rounds) {
-    parts.push(`${load.target_rounds} rounds`)
+    parts.push(rounds(load.target_rounds))
   } else if (load.reps_per_round) {
     parts.push(`${load.reps_per_round} reps / round`)
   }

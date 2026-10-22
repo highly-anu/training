@@ -1,0 +1,49 @@
+id: gj_sos_d19
+name: "Soldier of Steel — Day 19: Workout"
+modality: anaerobic_intervals
+category: conditioning
+training_levels: [novice, intermediate]
+duration_estimate_minutes: 60
+pool_only: true
+
+slots:
+  - role: warm_up
+    slot_type: time_domain
+    duration_minutes: 10
+    exercise_filter:
+      exercise_ids: [run_easy]
+      ordered: true
+    notes: "Run 10 minutes at an easy pace."
+
+  - role: build_ups
+    slot_type: sets_reps
+    sets: 4
+    reps: '400 yd'
+    exercise_filter:
+      exercise_ids: [run_interval]
+      ordered: true
+    notes: "Progressively faster; the fourth all out."
+
+  - role: intervals
+    slot_type: sets_reps
+    sets: 4
+    reps: '800 yd'
+    exercise_filter:
+      exercise_ids: [run_interval]
+      ordered: true
+    notes: "10 % faster than your best 2-mile pace; rest as long as each interval took."
+
+  - role: cool_down
+    slot_type: time_domain
+    duration_minutes: 10
+    exercise_filter:
+      exercise_ids: [run_easy]
+      ordered: true
+    notes: "Cool down with 10 minutes run or walk at an easy pace."
+
+required_equipment:
+- open_space
+sources:
+- "Gym Jones, Soldier of Steel (Army National Guard, 2013)"
+notes: >
+  Four progressively faster 400 yd runs, then 4 x 800 yd 10 % faster than your 2-mile pace, rest equal to work.

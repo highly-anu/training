@@ -11,8 +11,7 @@ exercises:
   movement_patterns:
   - aerobic_monostructural
   - locomotion
-  requires:
-  - run_tempo
+  requires: []
   unlocks:
   - run_sprint
   contraindicated_with:
@@ -22,8 +21,7 @@ exercises:
   - knee_meniscus_post_op
   progressions:
     volume: add_sets
-  scaling_down:
-  - run_tempo
+  scaling_down: []
   typical_volume:
     sets: 6
     distance_m: 400
@@ -239,84 +237,6 @@ exercises:
     equipment.
 
     '
-- id: swim_easy
-  name: Easy Swim (Zone 1–2)
-  category: aerobic
-  modality:
-  - aerobic_base
-  equipment:
-  - pool
-  effort: low
-  bilateral: true
-  movement_patterns:
-  - aerobic_monostructural
-  requires: []
-  unlocks: []
-  contraindicated_with: []
-  progressions:
-    volume: increase_distance
-  scaling_down: []
-  typical_volume:
-    duration_sec: 2400
-    distance_m: 1500
-  sources:
-  - Gym Jones
-  notes: 'Gym Jones recovery day format A includes swimming at conversational pace.
-    Zero-impact; excellent when lower-limb injuries are present. Requires pool access.
-    Technique-intensive; freestyle recommended for conditioning efficiency.
-
-    '
-- id: back_squat
-  name: Back Squat
-  category: barbell
-  modality:
-  - max_strength
-  - relative_strength
-  equipment:
-  - barbell
-  - rack
-  - plates
-  effort: high
-  bilateral: true
-  movement_patterns:
-  - squat
-  - hip_hinge
-  requires:
-  - hip_hinge
-  - bracing_mechanics
-  unlocks:
-  - front_squat
-  - box_squat
-  - overhead_squat
-  - barbell_complex
-  contraindicated_with:
-  - knee_meniscus_post_op
-  - hip_flexor_strain
-  - lumbar_disc
-  progressions:
-    load: add_2.5_5kg_per_session_novice
-    volume: progress_3x5_to_5x5
-    complexity: front_squat
-  scaling_down:
-  - box_squat
-  - goblet_squat
-  typical_volume:
-    sets: 3
-    reps: 5
-  sources:
-  - Starting Strength
-  - Horsemen
-  - Gym Jones
-  notes: 'Foundational lower-body strength movement. Horsemen standard: 2×BW squat.
-    Starting Strength uses 3×5 linear progression as primary novice driver.
-
-    '
-  starting_load_kg:
-    novice: 60
-    intermediate: 90
-    advanced: 120
-    elite: 150
-  weekly_increment_kg: 2.5
 - id: front_squat
   name: Front Squat
   category: barbell
@@ -332,12 +252,8 @@ exercises:
   movement_patterns:
   - squat
   requires:
-  - back_squat
   - bracing_mechanics
   unlocks:
-  - overhead_squat
-  - squat_clean
-  - hang_squat_clean
   - thruster
   contraindicated_with:
   - knee_meniscus_post_op
@@ -350,7 +266,6 @@ exercises:
     complexity: overhead_squat
   scaling_down:
   - back_squat
-  - box_squat
   typical_volume:
     sets: 5
     reps: 2
@@ -369,49 +284,6 @@ exercises:
     advanced: 80
     elite: 110
   weekly_increment_kg: 2.5
-- id: overhead_squat
-  name: Overhead Squat
-  category: barbell
-  modality:
-  - max_strength
-  - mobility
-  - movement_skill
-  equipment:
-  - barbell
-  - plates
-  effort: high
-  bilateral: true
-  movement_patterns:
-  - squat
-  - vertical_push
-  requires:
-  - front_squat
-  - bracing_mechanics
-  unlocks:
-  - snatch
-  contraindicated_with:
-  - shoulder_impingement
-  - shoulder_instability
-  - wrist_injury
-  - knee_meniscus_post_op
-  - lumbar_disc
-  progressions:
-    load: add_2.5kg_per_session
-    volume: progress_3x3_to_5x3
-  scaling_down:
-  - front_squat
-  - kb_squat_goblet
-  typical_volume:
-    sets: 5
-    reps: 3
-  sources:
-  - Gym Jones
-  - Horsemen
-  notes: 'Gym Jones uses OHS 5×3 as primary strength movement and tests 1RM. Demands
-    significant shoulder mobility, thoracic extension, and ankle dorsiflexion. Referenced
-    in Gym Jones SOTS press variant.
-
-    '
 - id: deadlift
   name: Deadlift
   category: barbell
@@ -429,11 +301,7 @@ exercises:
   - bracing_mechanics
   unlocks:
   - romanian_deadlift
-  - sumo_deadlift
   - power_clean
-  - barbell_row
-  - pendlay_row
-  - good_morning
   contraindicated_with:
   - lumbar_disc
   - hip_flexor_strain
@@ -442,7 +310,6 @@ exercises:
     volume: progress_1x5_to_3x3
     complexity: sumo_deadlift
   scaling_down:
-  - kb_deadlift
   - romanian_deadlift
   typical_volume:
     sets: 1
@@ -478,16 +345,14 @@ exercises:
   - hip_hinge
   requires:
   - deadlift
-  unlocks:
-  - good_morning
+  unlocks: []
   contraindicated_with:
   - lumbar_disc
   - hip_flexor_strain
   progressions:
     load: add_5kg_per_session
     volume: add_sets
-  scaling_down:
-  - kb_deadlift
+  scaling_down: []
   typical_volume:
     sets: 3
     reps: 8
@@ -505,6 +370,32 @@ exercises:
     advanced: 110
     elite: 140
   weekly_increment_kg: 2.5
+- id: bench_press
+  name: Bench Press
+  category: barbell
+  modality:
+  - max_strength
+  - strength_endurance
+  equipment:
+  - barbell
+  - rack
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - horizontal_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  sources:
+  - Gym Jones
+  notes: 'On a bench, the bar to the chest and pressed to lockout. Soldier of Steel''s
+    day 17 ladder at 95 lb; without a rack and bench, the floor press.
+
+    '
+
 - id: floor_press
   name: Floor Press
   category: barbell
@@ -518,8 +409,7 @@ exercises:
   bilateral: true
   movement_patterns:
   - horizontal_push
-  requires:
-  - bench_press
+  requires: []
   unlocks: []
   contraindicated_with:
   - shoulder_instability
@@ -529,8 +419,7 @@ exercises:
   progressions:
     load: add_2.5kg_per_session
     volume: add_sets
-  scaling_down:
-  - bench_press
+  scaling_down: []
   typical_volume:
     sets: 3
     reps: 5
@@ -547,134 +436,6 @@ exercises:
     advanced: 75
     elite: 100
   weekly_increment_kg: 2.5
-- id: push_press
-  name: Push Press
-  category: barbell
-  modality:
-  - max_strength
-  - power
-  equipment:
-  - barbell
-  - rack
-  - plates
-  effort: high
-  bilateral: true
-  movement_patterns:
-  - vertical_push
-  - ballistic
-  requires:
-  - strict_press
-  unlocks:
-  - push_jerk
-  - split_jerk
-  contraindicated_with:
-  - shoulder_impingement
-  - shoulder_instability
-  - knee_meniscus_post_op
-  - wrist_injury
-  progressions:
-    load: add_2.5_5kg_per_session
-    volume: add_sets
-    complexity: push_jerk
-  scaling_down:
-  - strict_press
-  typical_volume:
-    sets: 4
-    reps: 4
-  sources:
-  - Gym Jones
-  - Horsemen
-  notes: 'Hip dip and drive transfers leg power into the bar; arms lockout overhead.
-    Used in Gym Jones Six-Way Barbell Complex and Horsemen power-endurance workouts
-    (e.g. 5 push press while holding 45# bar for 400m).
-
-    '
-- id: push_jerk
-  name: Push Jerk
-  category: barbell
-  modality:
-  - power
-  - max_strength
-  equipment:
-  - barbell
-  - rack
-  - plates
-  effort: high
-  bilateral: true
-  movement_patterns:
-  - vertical_push
-  - ballistic
-  - olympic_lift
-  requires:
-  - push_press
-  unlocks:
-  - split_jerk
-  contraindicated_with:
-  - shoulder_impingement
-  - shoulder_instability
-  - knee_meniscus_post_op
-  - ankle_sprain
-  - wrist_injury
-  progressions:
-    load: add_2.5_5kg_per_session
-    volume: add_sets
-    complexity: split_jerk
-  scaling_down:
-  - push_press
-  - strict_press
-  typical_volume:
-    sets: 5
-    reps: 2
-  sources:
-  - Horsemen
-  - Gym Jones
-  notes: 'Drive bar overhead then dip under into quarter squat to catch. Horsemen
-    Olympic Day features jerk in wave patterns (3r/2r/1r) at 80–90%. Tests 1RM in
-    Horsemen power benchmarks.
-
-    '
-- id: barbell_row
-  name: Barbell Row (Bent Over)
-  category: barbell
-  modality:
-  - max_strength
-  - strength_endurance
-  equipment:
-  - barbell
-  - plates
-  effort: medium
-  bilateral: true
-  movement_patterns:
-  - horizontal_pull
-  - hip_hinge
-  requires:
-  - deadlift
-  - bracing_mechanics
-  unlocks:
-  - pendlay_row
-  contraindicated_with:
-  - lumbar_disc
-  - hip_flexor_strain
-  - tennis_elbow
-  - golfers_elbow
-  progressions:
-    load: add_2.5_5kg_per_session
-    volume: progress_3x5_to_5x5
-    complexity: pendlay_row
-  scaling_down:
-  - kb_row_single
-  typical_volume:
-    sets: 3
-    reps: 5
-  sources:
-  - Starting Strength
-  - Gym Jones
-  - Horsemen
-  notes: 'Featured in the Gym Jones / Horsemen Six-Way Barbell Complex (6 reps). Starting
-    Strength uses as the primary horizontal pull for novice programming. Hip-hinged
-    torso roughly parallel to floor; bar pulled into lower chest.
-
-    '
 - id: power_clean
   name: Power Clean
   category: barbell
@@ -694,9 +455,6 @@ exercises:
   - hip_hinge
   - deadlift
   unlocks:
-  - hang_power_clean
-  - squat_clean
-  - hang_squat_clean
   - barbell_complex
   contraindicated_with:
   - lumbar_disc
@@ -728,234 +486,6 @@ exercises:
     advanced: 85
     elite: 110
   weekly_increment_kg: 2.5
-- id: hang_power_clean
-  name: Hang Power Clean
-  category: barbell
-  modality:
-  - power
-  - strength_endurance
-  equipment:
-  - barbell
-  - plates
-  effort: high
-  bilateral: true
-  movement_patterns:
-  - hip_hinge
-  - olympic_lift
-  - ballistic
-  requires:
-  - power_clean
-  unlocks:
-  - hang_squat_clean
-  contraindicated_with:
-  - lumbar_disc
-  - wrist_injury
-  - shoulder_instability
-  progressions:
-    load: add_2.5kg_per_session
-    volume: add_sets
-    complexity: hang_squat_clean
-  scaling_down:
-  - power_clean
-  typical_volume:
-    sets: 5
-    reps: 3
-  sources:
-  - Gym Jones
-  - Horsemen
-  notes: 'Pull initiates from hang position (above knee). Removes the first pull from
-    the floor, emphasizing the hip snap and turnover. Featured in Horsemen "Purple
-    Church" EMOM (3 power clean + 3 hang squat clean + 3 push press).
-
-    '
-  starting_load_kg:
-    novice: 25
-    intermediate: 45
-    advanced: 70
-    elite: 95
-  weekly_increment_kg: 2.5
-- id: squat_clean
-  name: Squat Clean
-  category: barbell
-  modality:
-  - power
-  - max_strength
-  equipment:
-  - barbell
-  - plates
-  effort: max
-  bilateral: true
-  movement_patterns:
-  - hip_hinge
-  - squat
-  - olympic_lift
-  - ballistic
-  requires:
-  - power_clean
-  - front_squat
-  unlocks:
-  - hang_squat_clean
-  contraindicated_with:
-  - knee_meniscus_post_op
-  - lumbar_disc
-  - wrist_injury
-  - shoulder_instability
-  - hip_flexor_strain
-  - ankle_sprain
-  progressions:
-    load: add_2.5kg_per_session
-    volume: progress_3x2_to_5x2
-  scaling_down:
-  - power_clean
-  - front_squat
-  typical_volume:
-    sets: 5
-    reps: 2
-  sources:
-  - Horsemen
-  - Gym Jones
-  notes: 'Full clean receiving the bar in a full squat. Highest expression of the
-    clean movement. Demands front rack mobility, squat depth, and fast footwork. Horsemen
-    Olympic Day programs at 80–90% in wave patterns.
-
-    '
-- id: power_snatch
-  name: Power Snatch
-  category: barbell
-  modality:
-  - power
-  - max_strength
-  equipment:
-  - barbell
-  - plates
-  effort: high
-  bilateral: true
-  movement_patterns:
-  - hip_hinge
-  - olympic_lift
-  - ballistic
-  - vertical_push
-  requires:
-  - power_clean
-  - bracing_mechanics
-  unlocks:
-  - hang_power_snatch
-  - snatch
-  - overhead_squat
-  contraindicated_with:
-  - shoulder_impingement
-  - shoulder_instability
-  - lumbar_disc
-  - wrist_injury
-  - hip_flexor_strain
-  progressions:
-    load: add_2.5kg_per_session
-    volume: progress_3x2_to_5x2
-    complexity: snatch
-  scaling_down:
-  - power_clean
-  - overhead_squat
-  typical_volume:
-    sets: 5
-    reps: 2
-  sources:
-  - Gym Jones
-  - Horsemen
-  notes: 'Bar pulled from floor to overhead lockout, receiving above parallel. Horsemen
-    Olympic Day ("Snatch Your Face") programs snatch at 80–90% in waves. Prerequisite
-    to full snatch; builds the hip-to-overhead pathway.
-
-    '
-- id: hang_power_snatch
-  name: Hang Power Snatch
-  category: barbell
-  modality:
-  - power
-  - strength_endurance
-  equipment:
-  - barbell
-  - plates
-  effort: high
-  bilateral: true
-  movement_patterns:
-  - hip_hinge
-  - olympic_lift
-  - ballistic
-  - vertical_push
-  requires:
-  - power_snatch
-  unlocks:
-  - snatch
-  contraindicated_with:
-  - shoulder_impingement
-  - shoulder_instability
-  - lumbar_disc
-  - wrist_injury
-  progressions:
-    load: add_2.5kg_per_session
-    volume: add_sets
-    complexity: snatch
-  scaling_down:
-  - power_snatch
-  typical_volume:
-    sets: 5
-    reps: 2
-  sources:
-  - Horsemen
-  - Gym Jones
-  notes: 'Initiates from hang position above the knee. Removes the floor pull and
-    isolates the second pull and turnover. Useful for coaching overhead position and
-    hip extension timing without the complexity of the full first pull.
-
-    '
-- id: snatch
-  name: Snatch
-  category: barbell
-  modality:
-  - power
-  - max_strength
-  - movement_skill
-  equipment:
-  - barbell
-  - plates
-  effort: max
-  bilateral: true
-  movement_patterns:
-  - hip_hinge
-  - squat
-  - olympic_lift
-  - ballistic
-  - vertical_push
-  requires:
-  - power_snatch
-  - overhead_squat
-  unlocks: []
-  contraindicated_with:
-  - shoulder_impingement
-  - shoulder_instability
-  - knee_meniscus_post_op
-  - lumbar_disc
-  - wrist_injury
-  - hip_flexor_strain
-  - ankle_sprain
-  progressions:
-    load: add_2.5kg_per_session
-    volume: progress_3x2_to_5x2
-  scaling_down:
-  - power_snatch
-  - hang_power_snatch
-  - overhead_squat
-  typical_volume:
-    sets: 5
-    reps: 2
-  sources:
-  - Horsemen
-  - Gym Jones
-  notes: 'Full Olympic snatch: bar from floor to overhead in one movement, receiving
-    in a full squat. Most technically demanding barbell movement. Horsemen programs
-    at 80–90% in wave patterns. Tests 1RM for power benchmarks.
-
-    '
 - id: barbell_complex
   name: Barbell Complex (Six-Way)
   category: barbell
@@ -976,12 +506,8 @@ exercises:
   - vertical_push
   - ballistic
   requires:
-  - deadlift
-  - barbell_row
-  - power_clean
-  - front_squat
-  - push_press
-  - back_squat
+  - bracing_mechanics
+  - hip_hinge
   unlocks: []
   contraindicated_with:
   - lumbar_disc
@@ -1027,8 +553,7 @@ exercises:
   - vertical_push
   - ballistic
   requires:
-  - front_squat
-  - push_press
+  - bracing_mechanics
   unlocks: []
   contraindicated_with:
   - knee_meniscus_post_op
@@ -1068,10 +593,7 @@ exercises:
   movement_patterns:
   - horizontal_push
   requires: []
-  unlocks:
-  - push_up_ring
-  - push_up_clapping
-  - push_up_archer
+  unlocks: []
   contraindicated_with:
   - wrist_injury
   - shoulder_impingement
@@ -1105,10 +627,7 @@ exercises:
   requires:
   - dead_hang
   - scapular_control
-  unlocks:
-  - pull_up_weighted
-  - muscle_up_bar
-  - pull_up_ring
+  unlocks: []
   contraindicated_with:
   - shoulder_instability
   - shoulder_impingement
@@ -1130,150 +649,6 @@ exercises:
     pulling.
 
     '
-- id: chin_up
-  name: Chin-Up (Supinated)
-  category: bodyweight
-  modality:
-  - relative_strength
-  - strength_endurance
-  equipment:
-  - pull_up_bar
-  effort: medium
-  bilateral: true
-  movement_patterns:
-  - vertical_pull
-  requires:
-  - dead_hang
-  - scapular_control
-  unlocks:
-  - pull_up_weighted
-  contraindicated_with:
-  - shoulder_instability
-  - elbow_tendinopathy
-  progressions:
-    volume: increase_reps_per_set
-    load: add_weight_vest
-    complexity: pull_up_weighted
-  scaling_down:
-  - dead_hang
-  typical_volume:
-    sets: 4
-    reps: 6
-  sources:
-  - CrossFit
-  - Gym Jones
-  notes: 'Supinated grip increases biceps contribution; generally accessible for beginners
-    due to stronger elbow flexor line. Useful substitute when pronated pull-up volume
-    is high to reduce elbow fatigue.
-
-    '
-- id: pull_up_weighted
-  name: Pull-Up (Weighted)
-  category: bodyweight
-  modality:
-  - max_strength
-  - relative_strength
-  equipment:
-  - pull_up_bar
-  effort: high
-  bilateral: true
-  movement_patterns:
-  - vertical_pull
-  requires:
-  - pull_up
-  unlocks:
-  - muscle_up_bar
-  contraindicated_with:
-  - shoulder_instability
-  - shoulder_impingement
-  progressions:
-    load: add_5kg_per_cycle
-    volume: add_sets
-  scaling_down:
-  - pull_up
-  typical_volume:
-    sets: 5
-    reps: 3
-  sources:
-  - Gym Jones
-  notes: 'Belt, vest, or dumbbell between knees. Primary strength developer for vertical
-    pull. Gym Jones references adding load as the primary progression for the pull
-    (reduce rest periods secondary).
-
-    '
-- id: dip
-  name: Dip (Bar / Parallel Bars)
-  category: bodyweight
-  modality:
-  - relative_strength
-  - strength_endurance
-  equipment:
-  - parallettes
-  effort: medium
-  bilateral: true
-  movement_patterns:
-  - vertical_push
-  requires: []
-  unlocks:
-  - dip_ring
-  - muscle_up_bar
-  contraindicated_with:
-  - shoulder_impingement
-  - shoulder_instability
-  - wrist_injury
-  progressions:
-    volume: increase_reps_per_set
-    load: add_weight_vest
-    complexity: dip_ring
-  scaling_down: []
-  typical_volume:
-    sets: 4
-    reps: 10
-  sources:
-  - CrossFit
-  - Gym Jones
-  notes: 'Shoulder-width grip on bars or parallel bars. Slight forward lean loads
-    chest; upright torso emphasises triceps. Full range: shoulder below elbow at bottom.
-    CrossFit benchmark Elizabeth uses ring dips.
-
-    '
-- id: handstand_push_up
-  name: Handstand Push-Up (Wall)
-  category: bodyweight
-  modality:
-  - relative_strength
-  - max_strength
-  equipment:
-  - none
-  effort: high
-  bilateral: true
-  movement_patterns:
-  - vertical_push
-  requires:
-  - handstand_hold
-  unlocks:
-  - handstand_push_up_ring
-  contraindicated_with:
-  - wrist_injury
-  - shoulder_impingement
-  - shoulder_instability
-  progressions:
-    volume: increase_reps_per_set
-    complexity: handstand_push_up_ring
-  scaling_down:
-  - handstand_hold
-  typical_volume:
-    sets: 4
-    reps: 5
-  sources:
-  - CrossFit
-  - Gym Jones
-  notes: 'Chest-to-wall kick-up. Head to floor at bottom; full lockout at top. Deficit
-    HSPU (hands on parallettes) increases range of motion and difficulty. Kipping
-    variant increases volume capacity for metabolic conditioning; strict variant is
-    primary strength developer.
-
-    '
 - id: plank_hold
   name: Plank Hold (FLR — Front Leaning Rest)
   category: bodyweight
@@ -1287,8 +662,7 @@ exercises:
   movement_patterns:
   - isometric
   requires: []
-  unlocks:
-  - side_plank
+  unlocks: []
   contraindicated_with:
   - wrist_injury
   progressions:
@@ -1306,6 +680,34 @@ exercises:
     sag. Progress toward 5 continuous minutes before loading.
 
     '
+- id: ring_front_leaning_rest
+  name: Front Leaning Rest on Rings
+  category: bodyweight
+  modality:
+  - durability
+  - strength_endurance
+  equipment:
+  - rings
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - wrist_injury
+  - shoulder_instability
+  progressions:
+    volume: increase_duration
+  scaling_down:
+  - plank_hold
+  typical_volume:
+    sets: 1
+    duration_sec: 300
+  sources:
+  - Gym Jones
+  notes: 'Operator Fitness: 300 seconds on rings, broken as needed, the rings turned
+    out and the body straight from heels to head.'
 - id: sit_up
   name: Sit-Up (Abmat)
   category: bodyweight
@@ -1318,8 +720,7 @@ exercises:
   movement_patterns:
   - hip_flexion
   requires: []
-  unlocks:
-  - l_sit
+  unlocks: []
   contraindicated_with:
   - lumbar_disc_pathology
   progressions:
@@ -1352,7 +753,6 @@ exercises:
   requires: []
   unlocks:
   - squat_jump
-  - pistol_squat
   contraindicated_with:
   - knee_meniscus_post_op
   progressions:
@@ -1423,7 +823,6 @@ exercises:
   requires: []
   unlocks:
   - lunge_jumping
-  - lunge_overhead
   contraindicated_with:
   - knee_meniscus_post_op
   - patellar_tendinopathy
@@ -1478,44 +877,6 @@ exercises:
     lower body power circuits.
 
     '
-- id: lunge_overhead
-  name: Overhead Lunge
-  category: bodyweight
-  modality:
-  - relative_strength
-  - durability
-  equipment:
-  - none
-  effort: medium
-  bilateral: false
-  movement_patterns:
-  - squat
-  - vertical_push
-  - locomotion
-  requires:
-  - lunge
-  - shoulder_stability
-  unlocks: []
-  contraindicated_with:
-  - knee_meniscus_post_op
-  - shoulder_impingement
-  - wrist_injury
-  progressions:
-    load: add_weight_overhead
-    volume: increase_reps_per_set
-  scaling_down:
-  - lunge
-  typical_volume:
-    sets: 3
-    reps: 12
-  sources:
-  - CrossFit
-  - Gym Jones
-  notes: 'Arms locked overhead with weight or simply arms raised. Gymn Jones programs
-    45lb bar overhead during 400m lunge walks as a power-endurance challenge. Without
-    load this is a mobility and stability developer.
-
-    '
 - id: burpee
   name: Burpee
   category: bodyweight
@@ -1567,7 +928,6 @@ exercises:
   requires: []
   unlocks:
   - pull_up
-  - chin_up
   contraindicated_with:
   - shoulder_instability
   progressions:
@@ -1660,161 +1020,6 @@ exercises:
     bodyweight version removes push-up row but retains squat + press.
 
     '
-- id: farmer_carry_barbell
-  name: Farmer Carry (Barbell)
-  category: loaded_carry
-  modality:
-  - durability
-  - strength_endurance
-  equipment:
-  - barbell
-  - plates
-  - open_space
-  effort: medium
-  bilateral: true
-  movement_patterns:
-  - loaded_carry
-  - isometric
-  - farmer_carry
-  requires:
-  - bracing_mechanics
-  unlocks:
-  - rack_carry_barbell
-  - overhead_carry_barbell
-  contraindicated_with:
-  - lumbar_disc_pathology
-  progressions:
-    load: add_5kg_per_session
-    volume: increase_distance
-  scaling_down:
-  - farmer_carry_db
-  typical_volume:
-    sets: 4
-    distance_m: 40
-  sources:
-  - Horsemen
-  - Gym Jones
-  notes: 'Barbell held at thigh in each hand (trap-bar if available) or one barbell
-    in each hand. Higher load ceiling than KB or DB variant; useful for max-load carries.
-    Maintain neutral spine; no lateral lean. Gym Jones programs farmer carry as a
-    loaded carry accessory.
-
-    '
-- id: farmer_carry_db
-  name: Farmer Carry (Dumbbell)
-  category: loaded_carry
-  modality:
-  - durability
-  - strength_endurance
-  equipment:
-  - dumbbell
-  - open_space
-  effort: medium
-  bilateral: true
-  movement_patterns:
-  - loaded_carry
-  - isometric
-  - farmer_carry
-  requires:
-  - bracing_mechanics
-  unlocks:
-  - farmer_carry_kb
-  contraindicated_with:
-  - lumbar_disc_pathology
-  progressions:
-    load: increase_dumbbell_weight
-    volume: increase_distance
-  scaling_down: []
-  typical_volume:
-    sets: 3
-    distance_m: 30
-  sources:
-  - Gym Jones
-  - CrossFit
-  notes: 'Entry-level farmer carry using dumbbells. Lower load ceiling than KB or
-    barbell but accessible with standard gym equipment. Technique and breathing mechanics
-    same as KB variant. Gym Jones uses DB carries in circuit and accumulation days.
-
-    '
-- id: overhead_carry_barbell
-  name: Overhead Carry (Barbell)
-  category: loaded_carry
-  modality:
-  - durability
-  - strength_endurance
-  equipment:
-  - barbell
-  - plates
-  - open_space
-  effort: high
-  bilateral: true
-  movement_patterns:
-  - loaded_carry
-  - vertical_push
-  - isometric
-  requires:
-  - rack_carry_barbell
-  - overhead_squat
-  - shoulder_stability
-  unlocks: []
-  contraindicated_with:
-  - shoulder_impingement
-  - shoulder_instability
-  - wrist_injury
-  progressions:
-    load: add_5kg_per_session
-    volume: increase_distance
-  scaling_down:
-  - overhead_carry_kb
-  typical_volume:
-    sets: 3
-    distance_m: 20
-  sources:
-  - Gym Jones
-  - Horsemen
-  notes: 'Barbell locked out overhead while walking. Gym Jones programs overhead hold
-    static (300-sec accumulated) as a core/shoulder endurance component; overhead
-    carry is the ambulatory progression. High scapular and rotator cuff demand. Requires
-    solid overhead squat mechanics before loading.
-
-    '
-- id: suitcase_carry
-  name: Suitcase Carry (Unilateral)
-  category: loaded_carry
-  modality:
-  - durability
-  - strength_endurance
-  equipment:
-  - kettlebell
-  - open_space
-  effort: medium
-  bilateral: false
-  movement_patterns:
-  - loaded_carry
-  - isometric
-  requires:
-  - bracing_mechanics
-  unlocks: []
-  contraindicated_with:
-  - lumbar_disc_pathology
-  - lumbar_spondylolysis
-  progressions:
-    load: increase_bell_weight
-    volume: increase_distance
-  scaling_down:
-  - farmer_carry_kb
-  typical_volume:
-    sets: 4
-    distance_m: 30
-  sources:
-  - Gym Jones
-  - Horsemen
-  notes: 'Single implement (KB, DB, or heavy object) carried on one side while maintaining
-    a vertical torso. Primary anti-lateral-flexion demand on the contralateral oblique/quadratus
-    lumborum. Gym Jones references suitcase carry in loaded carry accessory work.
-    Alternate sides each set.
-
-    '
 - id: wall_squat
   name: Wall Squat (Mobility Drill)
   category: mobility
@@ -1858,10 +1063,8 @@ exercises:
   bilateral: false
   movement_patterns:
   - squat
-  requires:
-  - squat_pattern
-  unlocks:
-  - pistol_squat
+  requires: []
+  unlocks: []
   contraindicated_with:
   - knee_meniscus_post_op
   - patellar_tendinopathy
@@ -1899,7 +1102,6 @@ exercises:
   - squat
   - step_up
   requires:
-  - squat_pattern
   - bracing_mechanics
   unlocks: []
   contraindicated_with:
@@ -1958,44 +1160,6 @@ exercises:
     version: push DBs forward, hop feet up in plank position. Distance-based or time-based.
 
     '
-- id: ring_support_hold
-  name: Ring Support Hold (FLR on Rings)
-  category: bodyweight
-  modality:
-  - relative_strength
-  - durability
-  equipment:
-  - rings
-  effort: medium
-  bilateral: true
-  movement_patterns:
-  - isometric
-  - vertical_push
-  requires:
-  - push_pattern
-  unlocks: []
-  contraindicated_with:
-  - shoulder_impingement
-  - shoulder_instability
-  - wrist_injury
-  progressions:
-    volume: increase_duration
-    complexity: turn_rings_out
-  scaling_down:
-  - plank_hold
-  typical_volume:
-    sets: 5
-    duration_sec: 60
-  sources:
-  - Gym Jones
-  notes: 'Arms straight, rings turned out at bottom of dip position, body held in
-    a tight plank. The ring instability dramatically increases rotator cuff and serratus
-    anterior demand vs. fixed bar support. Gym Jones uses "300 seconds of FLR (Front
-    Leaning Rest)" accumulated across sets as a core and shoulder endurance block.
-    Target: 60 seconds per set × 5 sets. Turn rings out progressively to increase
-    scapular stability demand.
-
-    '
 - id: kb_swing_breathing_ladder
   name: KB Swing Breathing Ladder (1-20-1)
   category: kettlebell
@@ -2052,9 +1216,7 @@ exercises:
   requires:
   - hip_hinge
   - bracing_mechanics
-  unlocks:
-  - kb_swing_single_arm
-  - kb_deadlift
+  unlocks: []
   contraindicated_with:
   - lumbar_disc
   - hip_flexor_strain
@@ -2062,8 +1224,7 @@ exercises:
     load: increase_bell_weight
     volume: increase_duration_or_reps
     complexity: kb_swing_single_arm
-  scaling_down:
-  - kb_deadlift
+  scaling_down: []
   typical_volume:
     sets: 3
     reps: 20
@@ -2092,9 +1253,7 @@ exercises:
   - squat
   requires:
   - hip_hinge
-  unlocks:
-  - kb_squat_double
-  - kb_clean_single
+  unlocks: []
   contraindicated_with:
   - knee_meniscus_post_op
   - hip_flexor_strain
@@ -2132,9 +1291,7 @@ exercises:
   - isometric
   requires:
   - bracing_mechanics
-  unlocks:
-  - kb_overhead_carry
-  - kb_rack_carry
+  unlocks: []
   contraindicated_with:
   - shoulder_impingement
   - shoulder_instability
@@ -2143,8 +1300,7 @@ exercises:
   progressions:
     load: increase_bell_weight
     volume: increase_reps_per_side
-  scaling_down:
-  - kb_halo
+  scaling_down: []
   typical_volume:
     sets: 5
     reps: 2
@@ -2172,8 +1328,7 @@ exercises:
   movement_patterns:
   - step_up
   - squat
-  requires:
-  - squat_pattern
+  requires: []
   unlocks:
   - weighted_step_up
   contraindicated_with:
@@ -2196,155 +1351,6 @@ exercises:
     leg. 5×2 each side at a heavy bell. KB step-up approximates the Gym Jones loaded
     step-up protocol when a barbell is unavailable. Box height governs difficulty
     — a higher box increases unilateral demand.
-
-    '
-- id: kb_row_single
-  name: Kettlebell Row (Single-Arm)
-  category: kettlebell
-  modality:
-  - max_strength
-  - strength_endurance
-  equipment:
-  - kettlebell
-  effort: medium
-  bilateral: false
-  movement_patterns:
-  - horizontal_pull
-  - hip_hinge
-  requires:
-  - kb_deadlift
-  unlocks: []
-  contraindicated_with:
-  - lumbar_disc
-  - tennis_elbow
-  - golfers_elbow
-  progressions:
-    load: increase_bell_weight
-    volume: increase_reps_per_set
-  scaling_down:
-  - kb_deadlift
-  typical_volume:
-    sets: 3
-    reps: 10
-  sources:
-  - Gym Jones
-  notes: 'Hip-hinged torso; opposite hand braced on knee or bench. Bell pulled to
-    hip. Gym Jones programs one-arm row in circuit days. Anti-rotation demand develops
-    lateral core stability absent from bilateral barbell rows.
-
-    '
-- id: kb_farmer_carry
-  name: Kettlebell Farmer Carry (Single)
-  category: kettlebell
-  modality:
-  - durability
-  - strength_endurance
-  equipment:
-  - kettlebell
-  - open_space
-  effort: medium
-  bilateral: false
-  movement_patterns:
-  - loaded_carry
-  - isometric
-  - locomotion
-  requires:
-  - kb_deadlift
-  unlocks:
-  - kb_farmer_carry_double
-  - kb_suitcase_carry
-  contraindicated_with:
-  - hip_flexor_strain
-  progressions:
-    load: increase_bell_weight
-    volume: increase_distance_m
-  scaling_down:
-  - kb_deadlift
-  typical_volume:
-    sets: 4
-    distance_m: 40
-  sources:
-  - Gym Jones
-  - Horsemen
-  notes: 'Single kettlebell carried in one hand at side for distance or time. Asymmetric
-    load demands lateral core stability. Gym Jones programs farmer carry in loaded
-    carry circuits. Foundation for all loaded carry variants.
-
-    '
-- id: kb_farmer_carry_double
-  name: Kettlebell Farmer Carry (Double)
-  category: kettlebell
-  bells: 2
-  modality:
-  - durability
-  - strength_endurance
-  equipment:
-  - kettlebell
-  - open_space
-  effort: high
-  bilateral: true
-  movement_patterns:
-  - loaded_carry
-  - isometric
-  - locomotion
-  requires:
-  - kb_farmer_carry
-  unlocks: []
-  contraindicated_with:
-  - hip_flexor_strain
-  - lumbar_disc
-  progressions:
-    load: increase_bell_weight
-    volume: increase_distance_m
-  scaling_down:
-  - kb_farmer_carry
-  typical_volume:
-    sets: 4
-    distance_m: 40
-  sources:
-  - Gym Jones
-  - Horsemen
-  notes: 'Two kettlebells carried bilaterally for distance or time. Featured in AMRAP
-    kettlebell workouts (20m farmer''s walk between sets). Develops grip endurance,
-    trapezius, and lateral core under bilateral load.
-
-    '
-- id: kb_suitcase_carry
-  name: Kettlebell Suitcase Carry
-  category: kettlebell
-  modality:
-  - durability
-  - strength_endurance
-  equipment:
-  - kettlebell
-  - open_space
-  effort: medium
-  bilateral: false
-  movement_patterns:
-  - loaded_carry
-  - isometric
-  - locomotion
-  requires:
-  - kb_farmer_carry
-  unlocks: []
-  contraindicated_with:
-  - lumbar_disc
-  - hip_flexor_strain
-  progressions:
-    load: increase_bell_weight
-    volume: increase_distance_m
-  scaling_down:
-  - kb_farmer_carry
-  typical_volume:
-    sets: 4
-    distance_m: 40
-  sources:
-  - Gym Jones
-  - Horsemen
-  notes: 'Identical to farmer carry but emphasizes anti-lateral-flexion: the athlete
-    resists the bell pulling the torso sideways. Gym Jones programs suitcase carry
-    in loaded carry circuits. Trains the quadratus lumborum and lateral core in a
-    functional walking pattern.
 
     '
 - id: row_2km_test
@@ -2379,3 +1385,251 @@ exercises:
     a steady first 1500 m and everything left in the last 500 m.
 
     '
+
+# ── The plans' other movements (Operator Fitness, Soldier of Steel) ─────────
+- id: easy_aerobic
+  name: Easy Aerobic (Row, Run, Bike, Swim or Hike)
+  category: aerobic
+  modality:
+  - aerobic_base
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - aerobic_monostructural
+  - locomotion
+  contraindicated_with: []
+  sources:
+  - Gym Jones
+  notes: 'Any of them at an easy pace: recovery, not training.'
+
+- id: run_easy
+  name: Easy Run
+  category: aerobic
+  modality:
+  - aerobic_base
+  equipment:
+  - open_space
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - aerobic_monostructural
+  - locomotion
+  contraindicated_with:
+  - ankle_sprain
+  - achilles_tendinopathy
+  sources:
+  - Gym Jones
+  notes: 'At an easy, conversational pace.'
+
+- id: single_leg_deadlift
+  name: Single-Leg Deadlift
+  category: barbell
+  modality:
+  - strength_endurance
+  equipment:
+  - barbell
+  - plates
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - single_leg
+  contraindicated_with:
+  - lumbar_disc
+  sources:
+  - Gym Jones
+  notes: 'A straight-leg deadlift on one leg, the other reaching back.'
+
+- id: db_complex
+  name: Dumbbell Complex
+  category: accessory
+  modality:
+  - strength_endurance
+  equipment:
+  - dumbbell
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - squat
+  - vertical_push
+  - horizontal_pull
+  contraindicated_with:
+  - lumbar_disc
+  sources:
+  - Gym Jones
+  notes: 'Each movement of the complex in turn without setting the dumbbells down.'
+
+- id: ball_slam
+  name: Ball Slam
+  category: accessory
+  modality:
+  - power
+  equipment:
+  - medicine_ball
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - ballistic
+  contraindicated_with:
+  - lumbar_disc
+  sources:
+  - Gym Jones
+  notes: 'The ball overhead, then slammed into the floor as hard as you can.'
+
+- id: tuck_jump
+  name: Tuck Jump
+  category: bodyweight
+  modality:
+  - power
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - jump
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - patellar_tendinopathy
+  sources:
+  - Gym Jones
+  notes: 'Jump and pull the knees to the chest.'
+
+- id: kb_complex
+  name: Kettlebell Complex
+  category: kettlebell
+  modality:
+  - strength_endurance
+  equipment:
+  - kettlebell
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - hip_hinge
+  - squat
+  - vertical_push
+  - get_up
+  contraindicated_with:
+  - lumbar_disc
+  sources:
+  - Gym Jones
+  notes: 'Each movement of the complex with a light kettlebell.'
+
+- id: wall_ball
+  name: Wall Ball
+  category: accessory
+  modality:
+  - mixed_modal_conditioning
+  equipment:
+  - medicine_ball
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - squat
+  - vertical_push
+  contraindicated_with:
+  - knee_meniscus_post_op
+  sources:
+  - Gym Jones
+  notes: 'A squat, then the ball thrown to a target on the wall.'
+
+- id: frog_hop
+  name: Frog Hop
+  category: bodyweight
+  modality:
+  - power
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - jump
+  contraindicated_with:
+  - knee_meniscus_post_op
+  - patellar_tendinopathy
+  sources:
+  - Gym Jones
+  notes: 'Hands behind the head, feet shoulder width, jump as high as you can.'
+
+- id: plank_pull
+  name: Plank Pull
+  category: bodyweight
+  modality:
+  - strength_endurance
+  equipment:
+  - rack
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - horizontal_pull
+  contraindicated_with: []
+  sources:
+  - Gym Jones
+  notes: 'Hang under a bar in a reverse plank and pull the chest up to it.'
+
+- id: overhead_hold
+  name: Overhead Hold
+  category: bodyweight
+  modality:
+  - strength_endurance
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - isometric
+  - vertical_push
+  contraindicated_with:
+  - shoulder_impingement
+  sources:
+  - Gym Jones
+  notes: 'Arms locked overhead (a weight if you have one), held.'
+
+- id: db_push_press
+  name: Dumbbell Push Press
+  category: accessory
+  modality:
+  - power
+  equipment:
+  - dumbbell
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - vertical_push
+  contraindicated_with:
+  - shoulder_impingement
+  sources:
+  - Gym Jones
+  notes: 'Dip, then drive the dumbbells overhead.'
+
+- id: deck_squat
+  name: Deck Squat
+  category: bodyweight
+  modality:
+  - strength_endurance
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - squat
+  contraindicated_with:
+  - lumbar_disc
+  sources:
+  - Gym Jones
+  notes: 'Roll back on the floor, then throw the hands forward and stand up into the squat.'
+
+- id: mountain_climber
+  name: Mountain Climber
+  category: bodyweight
+  modality:
+  - mixed_modal_conditioning
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - core_stability
+  contraindicated_with:
+  - wrist_injury
+  sources:
+  - Gym Jones
+  notes: 'In the front leaning rest, drive one knee forward, then the other.'
+

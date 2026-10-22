@@ -1,0 +1,88 @@
+id: gj_sos_d01
+name: "Soldier of Steel — Day 1: Workout"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [novice, intermediate]
+duration_estimate_minutes: 60
+pool_only: true
+
+slots:
+  - role: warm_up
+    slot_type: time_domain
+    duration_minutes: 10
+    exercise_filter:
+      exercise_ids: [run_easy]
+      ordered: true
+    notes: "Run 10 minutes at an easy pace."
+
+  - role: wall_squat
+    slot_type: sets_reps
+    sets: 3
+    reps: 5
+    exercise_filter:
+      exercise_ids: [wall_squat]
+      ordered: true
+
+  - role: air_squat
+    slot_type: sets_reps
+    sets: 3
+    reps: 20
+    exercise_filter:
+      exercise_ids: [squat_air]
+      ordered: true
+
+  - role: jump_squat
+    slot_type: sets_reps
+    sets: 3
+    reps: 10
+    exercise_filter:
+      exercise_ids: [squat_jump]
+      ordered: true
+
+  - role: lunge
+    slot_type: sets_reps
+    sets: 3
+    reps: 20
+    exercise_filter:
+      exercise_ids: [lunge]
+      ordered: true
+    notes: "Walking lunges."
+
+  - role: frog_hop
+    slot_type: time_domain
+    duration_minutes: 4
+    exercise_filter:
+      exercise_ids: [frog_hop]
+      ordered: true
+    notes: "4 x 30 s on / 30 s off; rest 2 minutes."
+
+  - role: split_jump
+    slot_type: time_domain
+    duration_minutes: 4
+    exercise_filter:
+      exercise_ids: [lunge_jumping]
+      ordered: true
+    notes: "4 x 30 s on / 30 s off; rest 2 minutes."
+
+  - role: burpee
+    slot_type: time_domain
+    duration_minutes: 4
+    exercise_filter:
+      exercise_ids: [burpee]
+      ordered: true
+    notes: "4 x 30 s on / 30 s off. Beginners may do the push-up on their knees."
+
+  - role: cool_down
+    slot_type: time_domain
+    duration_minutes: 10
+    exercise_filter:
+      exercise_ids: [run_easy]
+      ordered: true
+    notes: "Cool down with 10 minutes run or walk at an easy pace."
+
+required_equipment:
+- open_space
+sources:
+- "Gym Jones, Soldier of Steel (Army National Guard, 2013)"
+notes: >
+  Squats and lunges, then 30/30 frog hops, split jumps and burpees.

@@ -44,12 +44,16 @@
                     "properties": {"weeks": {"type": "integer", "minimum": 1},
                                    "rotation": {"type": "array", "minItems": 1, "items": {"type": "string"}},
                                    "deload": {"type": "boolean"},
-                                   "name": {"type": "string"}}}
+                                   "name": {"type": "string"},
+                                   "note": {"type": "string", "description": "What the period asks of every block, leading its note (Persist's Bridge week: everything at RPE 6–7)."}}}
         },
         "phases": {"type": "array", "minItems": 1, "items": {"type": "string"},
                    "description": "The track's phases this module runs in (Uphill's General Strength in Transition, its muscular endurance in Specific); without it, every phase. Its periods count the phase's weeks."},
         "exposures_by_phase": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0, "maximum": 6},
                                "description": "Weekly exposures in a named phase, over exposures_per_week (Uphill's Zone 3: one a week in Base, two in Specific)."},
+        "adjacent_to_by_phase": {"type": "object", "additionalProperties": {"type": "string"},
+                                 "description": "In a named phase, the module (listed earlier) whose day each exposure sits beside (Uphill's Specific: the easy day the second of back-to-back long days)."},
+        "drop_when_injured": {"type": "boolean", "description": "A block whose every option the athlete's injuries rule out is left out, and the program says so, instead of the track refusing (BJJ's StrengthLog lifts, the owner's call); missing equipment still refuses."},
         "rotation_holds": {"type": "boolean", "description": "The rotation stays on its last variant once it gets there, instead of starting again (Uphill's ten muscular-endurance workouts, then the tenth)."},
         "requires_mastery": {"type": "array", "items": {"type": "string"}},
         "may_share_day": {"type": "boolean", "description": "An optional module that may join a day the essential modules use when its minutes fit beside them (Wildman's programs stack into one session); free days are still taken first."},

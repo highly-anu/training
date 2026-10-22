@@ -1,0 +1,44 @@
+id: cf_kelly
+name: "Kelly"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 35
+pool_only: true
+
+slots:
+  - role: kelly
+    slot_type: for_time
+    rounds: 5
+    distance_m: 400
+    exercise_filter:
+      exercise_ids: [run_interval]
+      ordered: true
+    notes: "5 rounds for time. Post time."
+
+  - role: kelly_2
+    slot_type: amrap_movement
+    parent_slot_role: kelly
+    reps_per_round: 30
+    exercise_filter:
+      exercise_ids: [box_jump]
+      ordered: true
+    load: "24 in (61 cm); women 20 in"
+
+  - role: kelly_3
+    slot_type: amrap_movement
+    parent_slot_role: kelly
+    reps_per_round: 30
+    exercise_filter:
+      exercise_ids: [wall_ball]
+      ordered: true
+    load: "20 lb (9 kg); women 14 lb"
+
+required_equipment:
+- open_space
+- box
+- medicine_ball
+sources:
+- "CrossFit, Benchmark Workouts (2003) / The New Girls (2004) / crossfit.com/benchmark"
+notes: >
+  5 rounds for time of a 400 m run, 30 box jumps at 24 in, 30 wall-ball shots with a 20 lb ball.

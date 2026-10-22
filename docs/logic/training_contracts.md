@@ -37,6 +37,11 @@ against its own protocol's minutes, which need not equal the module's weekly
 ceiling (Pentathlon's practice sets stop at four minutes, the events run six), and
 it carries the protocol's hand switch for the watches.
 
+A module that is `drop_when_injured` leaves out a block whose every option the
+athlete's injuries rule out, and says so, instead of refusing (BJJ's StrengthLog lifts:
+the bench and presses go under a shoulder flag, the rest of the workout stays); missing
+equipment still refuses, naming the implement.
+
 An optional module may name modules it `never_with` shares a day: BJJ's
 competition conditioning joins a strength day with the minutes for it, never a
 class day.
@@ -149,7 +154,9 @@ module's variants and say `deload` (`period_of`, `module_deload`). A deload peri
 with its own rotation runs those workouts as written, cut by nothing; without one,
 the blocks keep their `deload_keep` share. BJJ's strength is StrengthLog's program
 that way: Workout 1 and 2 of the strength block for six weeks, the deload week's own
-two workouts, the power block's for five, again; its competition conditioning deloads
+two workouts, the power block's for five, again. A period's `note` leads every block's
+note in its weeks: Marcus Filly's Bridge week keeps the work (`deload_keep: 1`) and asks
+for RPE 6–7; its competition conditioning deloads
 in the same week, and the classes carry on. Fatigue still deloads every module. A
 deload holds the cursor, so the week's sessions take the next variants by their
 order in it. Each session's module record says whether it deloaded (`deload`),

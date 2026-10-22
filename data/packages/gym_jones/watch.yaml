@@ -5,25 +5,28 @@
 id: gym_jones
 spec_version: 1
 archetypes:
-  gym_jones_tgu_recovery:
+  # Operator Fitness' recovery days 4, 16 and 25: "100 get-ups", not one set
+  # of 100 — the number the athlete tracks is the running total, per side.
+  gj_of_d04:
     slots:
-      # "100 get-ups", not "10 sets of 5": the number the athlete tracks is the
-      # running total, per side.
-      tgu_volume:
+      get_ups: &get_ups
         a: cumulative
         lines: phases
         phases: [roll, post, bridge, sweep, lunge, stand]
         behaviours: { side_tracked: true, cumulative_target: 100 }
-  gym_jones_breathing_ladder:
+  gj_of_d16:
     slots:
-      # About 400 swings climbing 1..20 and back; a flat round counter says
-      # nothing. The warm-up swings stay plain sets.
-      breathing_ladder:
+      get_ups: *get_ups
+  gj_of_d25:
+    slots:
+      get_ups: *get_ups
+  gj_of_d17:
+    slots:
+      # About 400 swings climbing 1..20 and back; a flat clock says nothing,
+      # so LAP logs each rung against the clock. The practice swings before
+      # it stay plain sets.
+      ladder:
+        template: for_time
         a: rung
         lines: ladder_total
         behaviours: { ladder: { peak: 20 } }
-  emom_strength:
-    slots:
-      # Where in the wave this minute's load sits, rather than recalled from notes.
-      primary_emom_lift:
-        behaviours: { load_wave: [85, 87, 90, 92, 95, 92, 90, 90, 87, 85] }

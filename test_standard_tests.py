@@ -10,6 +10,9 @@ import os
 
 os.environ.setdefault('SUPABASE_URL', '')
 
+import fixture_packages  # noqa: E402
+fixture_packages.use()
+
 from src import goals, loader, phases, program_history, standard_tests
 from src.generator import generate
 from src.selector import select_archetype
@@ -106,9 +109,9 @@ def test_a_test_replaces_one_session_and_nothing_else():
 
 
 def test_a_test_is_prescribed_as_written():
-    raw = _gen('gym_jones', weeks=4, start_phase='realization')
+    raw = _gen('block_fixture', weeks=4, start_phase='realization')
     last = raw['weeks'][3]
-    assert last['is_deload'], 'Gym Jones deloads the last week of a block'
+    assert last['is_deload'], 'the fixture deloads the last week of a block'
     test = _tests(last)[0]
     row = next(e for e in test['exercises'] if e.get('standard'))
     assert row['standard'] == {'id': 'row_2km_minutes', 'result': 'duration'}
@@ -120,14 +123,20 @@ def test_a_test_is_prescribed_as_written():
     assert pent['archetype']['duration_estimate_minutes'] == 60, 'the test runs its full length'
 
 
-def test_crossfit_rotates_its_benchmarks():
-    raw = _gen('crossfit', weeks=12)
-    got = [(w['week_number'], _tests(w)[0]['archetype']['id']) for w in raw['weeks'] if _tests(w)]
-    assert got == [(4, 'cf_benchmark_cindy'), (8, 'cf_benchmark_fran'), (12, 'cf_benchmark_helen')], got
-    no_barbell = _gen('crossfit', weeks=8, equipment=['pull_up_bar', 'kettlebell', 'open_space', 'rower', 'jump_rope'])
-    week8 = _tests(no_barbell['weeks'][7])
-    assert week8 and week8[0]['archetype']['id'] == 'cf_benchmark_helen', \
-        "Fran's turn without a barbell falls to the next benchmark the athlete can do"
+def test_crossfit_benchmarks_recur_in_its_pools():
+    # The Girls recur irregularly among the day's workouts (Benchmark Workouts,
+    # 2003), each a selectable test of its standard; one the athlete cannot do
+    # as written is passed over.
+    raw = _gen('crossfit', weeks=12, days_per_week=6, session_time_minutes=60)
+    girls = {s['archetype']['id']: s for w in raw['weeks'] for _, _, s in _sessions(w)
+             if any(ea.get('standard') for ea in s['exercises'])}
+    assert {'cf_fran', 'cf_cindy', 'cf_helen'} <= girls.keys(), sorted(girls)
+    archetypes = {a['id']: a for a in loader.load_all_archetypes()}
+    assert all(standard_tests.is_test(archetypes[aid]) for aid in girls), 'each a selectable test of its standard'
+    no_barbell = _gen('crossfit', weeks=12, days_per_week=6, session_time_minutes=60,
+                      equipment=['pull_up_bar', 'kettlebell', 'open_space', 'rower', 'jump_rope', 'box'])
+    ids = {s['archetype']['id'] for w in no_barbell['weeks'] for _, _, s in _sessions(w)}
+    assert 'cf_fran' not in ids and {'cf_cindy', 'cf_helen'} <= ids, ids
 
 
 # ── when it is skipped ───────────────────────────────────────────────────────
@@ -135,29 +144,26 @@ def test_crossfit_rotates_its_benchmarks():
 def test_skips_say_why_and_leave_the_week_as_scheduled():
     def skipped(raw, week):
         return [t['reason'] for t in raw['weeks'][week].get('tests_skipped') or []]
-    assert skipped(_gen('gym_jones', weeks=1, start_phase='accumulation', equipment=['barbell', 'plates', 'kettlebell']), 0) \
+    assert skipped(_gen('block_fixture', weeks=1, start_phase='accumulation', equipment=['barbell', 'plates', 'kettlebell']), 0) \
         == ['equipment_gap'], 'no rower'
     for overrides in ({'training_level': 'novice'}, {'session_time_minutes': 40}):
         rejected = _gen('wildman_kettlebell', 'pentathlon', weeks=2, start_phase='competition', **overrides)
         assert not rejected['weeks'] and rejected.get('validation_errors'), 'a contract cannot silently lose essential event work'
     assert skipped(_gen('wildman_kettlebell', 'pentathlon', weeks=2, start_phase='competition',
                         fatigue_state='overreached'), 1) == ['overreached']
-    shoulder = _gen('crossfit', weeks=4, injury_flags=['shoulder_impingement'])
-    assert skipped(shoulder, 3) == ['injury_skip'], 'every benchmark has pull-ups'
-    assert not _tests(shoulder['weeks'][3])
-    report = shoulder['coverage_report']
-    assert report['skipped_tests'][0]['reason'] == 'injury_skip' and report['placed_tests'] == []
 
 
 def test_a_test_exercise_stays_in_its_test():
-    raw = _gen('gym_jones', weeks=16, days_per_week=4)
+    raw = _gen('block_fixture', weeks=16, days_per_week=4)
     outside = [(w['week_number'], s.get('archetype', {}).get('id')) for w in raw['weeks'] for _, _, s in _sessions(w)
                if not s.get('test') and any((ea.get('exercise') or {}).get('id') == 'row_2km_test'
                                             for ea in s.get('exercises', []))]
     assert not outside, f'the time trial was picked for an ordinary session: {outside}'
-    lumbar = _gen('gym_jones', weeks=1, start_phase='accumulation', injury_flags=['lumbar_disc'])
+    lumbar = _gen('block_fixture', weeks=1, start_phase='accumulation', injury_flags=['lumbar_disc'])
     assert [t['reason'] for t in lumbar['weeks'][0].get('tests_skipped') or []] == ['injury_skip'], \
         'the row test is contraindicated with a lumbar disc (the flag id is lumbar_disc)'
+    report = lumbar['coverage_report']
+    assert report['skipped_tests'][0]['reason'] == 'injury_skip' and report['placed_tests'] == []
 
 
 def test_a_test_that_can_never_fire_is_refused():
@@ -176,12 +182,16 @@ def test_a_tail_regenerate_tests_in_its_own_week():
 
 
 def test_selection_never_picks_a_test():
+    from src.standard_tests import is_test_only
     data = loader.load_all_data()
-    archs = [a for a in data['archetypes'] if a.get('_package') == 'crossfit']
-    for i in range(20):
-        a = select_archetype('mixed_modal_conditioning', _constraints(), 'base', False, {}, archs,
-                             recent_ids=[x['id'] for x in archs][:i % 3])
-        assert a and not a['id'].startswith('cf_benchmark'), a and a['id']
+    tests = [a for a in data['archetypes'] if is_test_only(a)]
+    assert tests
+    for test in tests:
+        archs = [a for a in data['archetypes'] if a.get('_package') == test.get('_package')]
+        for i in range(10):
+            a = select_archetype(test['modality'], _constraints(), 'base', False, {}, archs,
+                                 recent_ids=[x['id'] for x in archs][:i % 3])
+            assert not (a and is_test_only(a)), (test['id'], a and a['id'])
 
 
 # ── what it carries ──────────────────────────────────────────────────────────
@@ -219,7 +229,7 @@ def test_the_program_carries_tests_and_standards():
 
 def test_adjustments_leave_a_test_alone():
     import api
-    goal = goals.philosophy_to_goal('gym_jones', FRAMEWORKS)
+    goal = goals.philosophy_to_goal('block_fixture', FRAMEWORKS)
     raw = _gen(None, goal=goal, weeks=1, start_phase='accumulation')
 
     class V:

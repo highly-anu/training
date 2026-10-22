@@ -1,0 +1,35 @@
+id: cf_amanda
+name: "Amanda"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 15
+pool_only: true
+
+slots:
+  - role: amanda
+    slot_type: for_time
+    reps_per_round: 7
+    rounds: 3
+    exercise_filter:
+      exercise_ids: [muscle_up_ring]
+      ordered: true
+    notes: "9-7-5 reps of each, for time. Post time."
+
+  - role: amanda_2
+    slot_type: amrap_movement
+    parent_slot_role: amanda
+    reps_per_round: 7
+    exercise_filter:
+      exercise_ids: [snatch]
+      ordered: true
+    load: "135 lb (61 kg); women 95 lb (43 kg)"
+
+required_equipment:
+- barbell
+- plates
+- rings
+sources:
+- "CrossFit, Benchmark Workouts (2003) / The New Girls (2004) / crossfit.com/benchmark"
+notes: >
+  9-7-5 reps, for time, of muscle-ups and squat snatches at 135/95 lb.

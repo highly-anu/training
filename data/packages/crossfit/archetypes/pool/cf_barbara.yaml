@@ -1,0 +1,48 @@
+id: cf_barbara
+name: "Barbara"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 45
+pool_only: true
+
+slots:
+  - role: barbara
+    slot_type: for_time
+    reps_per_round: 20
+    rounds: 5
+    exercise_filter:
+      exercise_ids: [pull_up]
+      ordered: true
+    notes: "5 rounds, 3 minutes rest between. Post each round time."
+
+  - role: barbara_2
+    slot_type: amrap_movement
+    parent_slot_role: barbara
+    reps_per_round: 30
+    exercise_filter:
+      exercise_ids: [push_up]
+      ordered: true
+
+  - role: barbara_3
+    slot_type: amrap_movement
+    parent_slot_role: barbara
+    reps_per_round: 40
+    exercise_filter:
+      exercise_ids: [sit_up]
+      ordered: true
+
+  - role: barbara_4
+    slot_type: amrap_movement
+    parent_slot_role: barbara
+    reps_per_round: 50
+    exercise_filter:
+      exercise_ids: [squat_air]
+      ordered: true
+
+required_equipment:
+- pull_up_bar
+sources:
+- "CrossFit, Benchmark Workouts (2003) / The New Girls (2004) / crossfit.com/benchmark"
+notes: >
+  5 rounds, timed, of 20 pull-ups, 30 push-ups, 40 sit-ups, 50 squats, with 3 minutes rest between rounds.

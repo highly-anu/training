@@ -1,0 +1,88 @@
+id: gj_of_d19
+name: "Operator Fitness — Day 19: Accumulation"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 60
+pool_only: true
+
+slots:
+  - role: wall_squat
+    slot_type: sets_reps
+    sets: 2
+    reps: 5
+    exercise_filter:
+      exercise_ids: [wall_squat]
+      ordered: true
+
+  - role: air_squat
+    slot_type: sets_reps
+    sets: 2
+    reps: 10
+    exercise_filter:
+      exercise_ids: [squat_air]
+      ordered: true
+
+  - role: jump_squat
+    slot_type: sets_reps
+    sets: 2
+    reps: 5
+    exercise_filter:
+      exercise_ids: [squat_jump]
+      ordered: true
+
+  - role: tuck_jump
+    slot_type: sets_reps
+    sets: 2
+    reps: 5
+    exercise_filter:
+      exercise_ids: [tuck_jump]
+      ordered: true
+
+  - role: round_1
+    slot_type: sets_reps
+    sets: 1
+    reps: 20
+    exercise_filter:
+      exercise_ids: [kb_squat_goblet]
+      ordered: true
+    load: "53 lb (24 kg)"
+    notes: "Then 100 m sprint; 3 minutes rest."
+
+  - role: round_2
+    slot_type: sets_reps
+    sets: 1
+    reps: 20
+    exercise_filter:
+      exercise_ids: [kb_swing_two_hand]
+      ordered: true
+    load: "53 lb (24 kg)"
+    notes: "Then 100 m sprint, 100 m farmer carry with 2 x 53 lb; 3 minutes rest."
+
+  - role: round_3
+    slot_type: sets_reps
+    sets: 1
+    reps: 20
+    exercise_filter:
+      exercise_ids: [kb_squat_goblet]
+      ordered: true
+    load: "53 lb (24 kg)"
+    notes: "Then 100 m sprint, 100 m suitcase carry with 1 x 53 lb; 3 minutes rest."
+
+  - role: flr
+    slot_type: static_hold
+    sets: 1
+    hold_seconds: 300
+    exercise_filter:
+      exercise_ids: [ring_front_leaning_rest]
+      ordered: true
+    notes: "300 seconds on rings, broken as needed."
+
+required_equipment:
+- kettlebell
+- open_space
+- rings
+sources:
+- "Gym Jones, Operator Fitness (Rob MacDonald)"
+notes: >
+  Jumping warm-up, three rounds of goblet squats or swings, sprints and carries with 3 minutes rest, then 300 s front leaning rest on rings.

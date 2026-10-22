@@ -316,9 +316,13 @@ group's name.
   `load.test`); adjust and swap leave it alone; selection never picks a test-only
   archetype. Sessions carry `test`, scored assignments `standard` (outside `slot`, so it
   survives storage); the skeleton hash ignores both. Tests today: Wildman's pentathlon
-  (competition, last week), Gym Jones' 2 km row (first week of accumulation, last of
-  realization), Horsemen's PT test (start of strength, end of maintenance), CrossFit's
-  Cindy → Fran → Helen every fourth week. A standard's `derived_from` (its YAML) names the
+  (competition, last week), Horsemen's PT test (start of strength, end of maintenance);
+  the phase `tests:` path on the modality scheduler is tested on `block_fixture` (old
+  Gym Jones, `test_packages/`, staged by `fixture_packages.use()`, never shipped), whose
+  2 km row tests the first week of accumulation and the last of realization. CrossFit's
+  Girls are `test: {selectable: true}` workouts in its template pools: picked as any
+  other day's workout, their scored slot still carries its standard, and a test's
+  written `load` reaches its prescription (`protocol_load`). A standard's `derived_from` (its YAML) names the
   lifts whose sets estimate it. Both clients badge a test session, list its standards with
   the number to beat, and Today says "Test today".
 - **Sessions suggest results; the athlete confirms** (`src/standard_results.py`). Both
@@ -371,7 +375,7 @@ group's name.
 - **Session time cap**: `_time_to_task` progression is capped at `session_time_minutes` — Zone 2 duration never exceeds the athlete's session limit even in build phase.
 - **Package provenance**: a program may only use its philosophy's own package, plus any package that philosophy declares in `borrows_from` (`src/provenance.py`). Enforcement is per philosophy via `self_contained: true` — all 11 are on. `api.py` and `generator.py` share one `SourcePolicy`, so validation and generation can never check different libraries. Borrowed sessions carry a `provenance` tag and are badged "via X" in the UI.
 - **Coverage gaps, not substitutions**: when a package cannot fill a slot, the slot is left empty and marked `coverage_gap` (the same way `injury_skip` marks an injury-blocked slot) rather than filled from another philosophy. Programs carry a `coverage_report` listing unfilled sessions, unfilled slots and borrowed sessions; `validate()` warns `PACKAGE_COVERAGE_GAP` per uncovered modality and only errors when every top-2 priority is uncoverable.
-- **Archetype fallback**: sessions whose modality has no valid archetype for the phase fall back within the allowed packages (equipment filter relaxed first, then `aerobic_base` → `durability` → `mobility`). A cross-modality swap is recorded (since 2026-10-16; it used to change the modality and leave no trace): the session carries `substituted_for`, the compromises say it once per modality, `coverage_report.substituted_sessions` lists each, and when the athlete's level is the cause (no archetype for it written for that level) generate adds a `LEVEL_COVERAGE_GAP` warning naming the substitute (`validator.check_level_coverage`, run on what was actually substituted). `check_provenance.py --coverage` lists the static level/phase gaps (reported, not failed): all novice — Gym Jones, Horsemen, Marcus Filly, Uphill, Wildman.
+- **Archetype fallback**: sessions whose modality has no valid archetype for the phase fall back within the allowed packages (equipment filter relaxed first, then `aerobic_base` → `durability` → `mobility`). A cross-modality swap is recorded (since 2026-10-16; it used to change the modality and leave no trace): the session carries `substituted_for`, the compromises say it once per modality, `coverage_report.substituted_sessions` lists each, and when the athlete's level is the cause (no archetype for it written for that level) generate adds a `LEVEL_COVERAGE_GAP` warning naming the substitute (`validator.check_level_coverage`, run on what was actually substituted). `check_provenance.py --coverage` lists the static level/phase gaps (reported, not failed): all novice — Horsemen, Marcus Filly, Uphill, Wildman.
 - **Prerequisites**: `requires` is resolved transitively — a requirement is met if it is a concept the training level knows or an exercise that is itself unlocked. A package may declare `level_seeds.yaml` for concepts its own athletes arrive with.
 - **Exercise scoring**: prefers exercises with defined movement_patterns (+0.5) and forward-unlocking exercises (+0.5); penalizes recently used (-2 per recent use). AMRAP/for_time slots exclude `mobility` and `rehab` category exercises.
 - **Deload**: every `deload_protocol.frequency_weeks` (a framework without a protocol never
@@ -383,7 +387,11 @@ group's name.
   program — six weeks of strength, a deload week of its own workouts run as written, five
   of power, repeating — and the classes never deload on a schedule. Uphill's aerobic
   modules ramp by `weekly_volume` (three build weeks of 10 %, a recovery week at half, the
-  ramp holding from Specific on); its modules run in named `phases`.
+  ramp holding from Specific on); its modules run in named `phases`, and in a phase a
+  module may sit beside another (`adjacent_to_by_phase`: Specific's back-to-back long
+  days). A period's `note` leads every block's note in its weeks (Persist's Bridge week:
+  RPE 6–7, the work kept). Optional modules are offered by the last build week's minutes,
+  so a deload never adds a session (BJJ's conditioning once appeared in week 7 alone).
 - **Theory fidelity** (`src/fidelity.py`, `tools/check_fidelity.py`): a generated program
   is read against its package — `sessions_per_week`, `intensity_distribution`,
   `deload_protocol`, archetype level and phase, recovery windows, equipment and injuries,
@@ -418,7 +426,9 @@ group's name.
   the session). Days keep their template positions (the source's rest day), honouring
   preferred and forced-rest days. Loads are `progression_model: as_written`: the slot's `load`
   text ("75% of today's 1RM", "24 kg (53 lb)", "1.25x bodyweight"), no ramp, level, phase or
-  deload scaling. A slot's `exercise_filter.ordered` takes the written movement first and the
+  deload scaling. The slot that carries a for-time or AMRAP piece's rounds or minutes is a
+  movement too: its own `reps_per_round` or `distance_m` reaches the load
+  (`progression._parent_count`; Cindy's 5 pull-ups). A slot's `exercise_filter.ordered` takes the written movement first and the
   source's declared substitutes after it; a workout's movements are `named_only` exercises,
   so adding them never changes what an open slot picks. Rotation resumes where a regenerate's
   first week stands (the elapsed template weeks are replayed, `prior_entries`); a test may
@@ -428,8 +438,16 @@ group's name.
   it; `POST /sessions/generate` on a templated framework picks another workout of the day's
   category (`category`, else inferred from the modality; `regenerate_day`). Fidelity reads a templated phase
   against its template (`_check_template`), not `sessions_per_week`. Horsemen's 4-Month Macro
-  is the one user: ~190 named workouts, the PT test on the first and last hard job-specific
-  days (`test_week_template.py`).
+  uses it (~190 named workouts, the PT test on the first and last hard job-specific days), and
+  CrossFit (since 2026-10-21): Glassman's three-on, one-off cycle laid on twelve weeks, its day
+  types (one element, couplets, triplets) as pools of Table 4's workouts, the Girls and the 2005
+  workouts read; Gym Jones (same day): Operator Fitness and Soldier of Steel, months the
+  source writes day by day, each day a one-workout pool; ATG (2026-10-22): Ben Patrick's
+  ATG Zero, Program #2 and Knee Ability Pro weeks, each workout its own pool; Kelly
+  Starrett (same day): the Built to Move 21-Day Challenge, its days one pool taken in order;
+  and Ido Portal (same day): the Floreio Routines, one pool whose versions the athlete's
+  level picks (`training_levels`). No shipped package runs on the modality scheduler any
+  more; its tests use `test_packages/block_fixture` (`test_week_template.py`).
 - **A training contract's progress is earned by confirmed sessions.** A module advances
   (`confirmed_state`, read when the program is regenerated) only on a completed session
   whose progressing exercises are logged clean at or below the module's RPE. A
@@ -702,9 +720,9 @@ writes.
   what practice opened beyond `selector._get_unlocked` at the athlete's level.
 - **The framework's `progression_model` never drove a prescription** —
   `generator.py` reads the modality yaml's, unless the week's framework
-  declares `progression_overrides` (modality → model): Marcus Filly's strength
-  work is prescribed as RPE targets that way (since 2026-10-16), and his spec
-  leads with load at the target RPE. Default primitives key on
+  declares `progression_overrides` (modality → model; no shipped framework does since
+  Marcus Filly's package became a training contract on 2026-10-21, its RPE targets
+  written per block). Default primitives key on
   `(modality.progression_model, slot_type)`; the framework's model informs
   only the intensity section.
 - **Slot roles are free-form (144 strings).** Never scope by guessing a role

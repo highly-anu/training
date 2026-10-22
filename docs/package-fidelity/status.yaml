@@ -15,6 +15,36 @@
 #   last_review: kind -> the date of the latest recorded review (S6)
 
 packages:
+  atg:
+    status: audited
+    shape: templates
+    dossier: docs/package-fidelity/atg.md
+    sources_kind: primary
+    debt: []
+    currency:
+      zero: plan_completion
+      program: plan_completion
+      knee_ability_pro: plan_completion
+    source_tests:
+    - test_week_template.py::test_atg_runs_its_programs_as_written
+    inventions:
+    - 'I1: With no track named, the level picks one: novice ATG Zero (where Patrick starts everyone),
+      intermediate Program #2, advanced and elite Knee Ability Pro. The sources route by age and goal,
+      not level.'
+    - 'I2: Knee Ability Pro is for intermediate athletes and up; Zero and Program'
+    - 'I3: Zero''s three days fall on Monday, Wednesday and Friday, Program #2''s two on Monday and Thursday:
+      the sources ask only for days between.'
+    - 'I4: Four-week blocks, repeated: the sources give no length.'
+    - 'I5: Readings: yards in metres (50 yd as 46 m, 100 as 91), each way as a set; "burnout" and "exhaustion"
+      as max reps, the L-sit''s burnout as a 30-second hold; "up to" as the top of the range; a slant
+      written as a box for the step-ups; each workout''s minutes estimated.'
+    - 'I6: Names merged: ATG Zero''s piriformis push-up is the pigeon push-up; the wall tibialis raise
+      and Knee Ability Pro''s tibialis raise are one exercise; Zero''s external rotation takes any light
+      weight, so it needs no equipment.'
+    - 'I7: Each track needs its own training days (Zero 3, Program #2 2, Knee Ability Pro 4); there is
+      no drop order for fewer.'
+    last_review:
+      output_vs_dossier: '2026-10-22'
   bjj:
     status: audited
     shape: contract
@@ -40,7 +70,9 @@ packages:
       workouts keep alternating (owner, 2026-10-21).'
     - 'I4: Declared substitutes: positional work or drilling for rolling under an injury; inverted rows
       for pull-ups and the barbell row, Bulgarian split squats for the front squat, a dead hang for the
-      plate pinch, a hollow hold for the plank. A lift with no substitute refuses, naming what it needs.'
+      plate pinch, a hollow hold for the plank. A lift an injury rules out with no substitute is left
+      out and said, the rest of the workout kept (owner, 2026-10-21); a lift missing its equipment refuses,
+      naming it.'
     - 'I5: Up to four training days, one of the two workouts a week beside the classes, alternating week
       to week: StrengthLog''s two need five days.'
     - 'I6: Competition conditioning is offered from intermediate up; the sources write it for competitors.'
@@ -51,7 +83,67 @@ packages:
       reps" pull-ups are sets to failure, a 20–30-second pinch is a 30-second hold, the weighted plank
       carries a plate, the farmer''s carry is with dumbbells (or kettlebells); the deload notes add an
       easier pull-up and a lower box.'
-    next: Exercise media (D3), the output review (S6), and a competition camp if the owner wants one.
+    last_review:
+      output_vs_dossier: '2026-10-22'
+    next: Exercise media (D3), and a competition camp if the owner wants one.
+  crossfit:
+    status: audited
+    shape: templates
+    dossier: docs/package-fidelity/crossfit.md
+    sources_kind: primary
+    debt: []
+    currency:
+      constantly_varied: benchmark_wods
+      five_on_two_off: benchmark_wods
+    source_tests:
+    - test_standard_tests.py::test_crossfit_benchmarks_recur_in_its_pools
+    - test_week_template.py::test_crossfit_runs_glassmans_cycle_and_the_girls_as_written
+    inventions:
+    - 'I1: A couplet or triplet is filed by how many elements it has; a couplet by which two (GW, WM,
+      MG), every workout of three or more elements as a triplet (Cindy''s three gymnastics movements among
+      them). The template is descriptive, the workouts its examples.'
+    - 'I2: The pools hold Table 4''s workouts first, then the Girls and the 2005 days read, each as written,
+      the benchmarks the analytics track (Murph among them) before the rest so each comes round within
+      twelve weeks of either track; the day takes the next one the athlete can do, passing over one used
+      in the last week.'
+    - 'I3: When no workout of a day''s type fits the athlete, a couplet or triplet of another pairing
+      takes its place, and the week says so.'
+    - 'I4: At five training days a six-day week drops, in order, the skill day, the long-distance day,
+      the heavy day, then the couplets; the sources do not say.'
+    - 'I5: The tracks are for intermediate athletes and up; novices are refused until a scaled track is
+      built.'
+    - 'I6: Each workout''s minutes are an estimate; loads are given in pounds as written with kilograms
+      beside them.'
+    last_review:
+      output_vs_dossier: '2026-10-22'
+    next: A scaled novice track (the Level 1 guide's scaling, the benchmarks' beginner versions); more
+      of the 2005 archive; exercise media.
+  gym_jones:
+    status: audited
+    shape: templates
+    dossier: docs/package-fidelity/gym_jones.md
+    sources_kind: primary
+    debt: []
+    currency:
+      operator_fitness: plan_completion
+      soldier_of_steel: plan_completion
+    source_tests:
+    - test_week_template.py::test_gym_jones_runs_its_two_months_as_written
+    inventions:
+    - 'I1: The plans'' days start on a Monday: Operator Fitness numbers its days 1 to 28 without weekdays;
+      Soldier of Steel''s are Monday to Sunday.'
+    - 'I2: A range is read at its middle — 60-90 minutes as 75, 90-120 as 105, 3-4 sets as 4 (the note
+      keeps the range) — and each day''s minutes are estimated.'
+    - 'I3: A section is logged by its main movement (clean + front squat + hang clean as power cleans,
+      the Six-Way complex as the barbell complex), its note carrying the source''s words.'
+    - 'I4: Six training days are required (both plans write six); there is no drop order for fewer.'
+    - 'I5: The pull-up''s scapular-control prerequisite is met from novice (level_seeds): both plans prescribe
+      pull-ups from the first week, Soldier of Steel with plank pulls until one is possible.'
+    - 'I6: Operator Fitness is for intermediate athletes and up, Soldier of Steel for novices and intermediates;
+      the plans name their audiences (operators, the newly training), not levels.'
+    last_review:
+      output_vs_dossier: '2026-10-22'
+    next: Operator Fitness II once a complete copy is read; exercise media.
   horsemen_gpp:
     status: audited
     shape: templates
@@ -71,7 +163,84 @@ packages:
     - 'I1: The GPP Circuits track and its archetypes (not in the source).'
     - 'I2: The PT test''s placement: the macro''s first and last hard job-specific days (the source never
       schedules it).'
+    last_review:
+      output_vs_dossier: '2026-10-22'
     next: Decide GPP Circuits (I1) — rebuild it on the source's circuits, or drop it.
+  ido_portal:
+    status: audited
+    shape: templates
+    dossier: docs/package-fidelity/ido_portal.md
+    sources_kind: primary
+    debt: []
+    currency:
+      floreio: plan_completion
+    source_tests:
+    - test_week_template.py::test_ido_portal_runs_the_floreio_routines_at_each_level
+    inventions:
+    - 'I1: Six training days a week, Sunday a rest day, fewer days dropping from the end of the week:
+      the PDF names no frequency (only a "Preparations For Our Daily Training" post).'
+    - 'I2: The routines run in the PDF''s order, each training day the next one written for the athlete''s
+      level.'
+    - 'I3: Levels: the PDF''s beginner is novice, intermediate intermediate, advanced advanced and elite.'
+    - 'I4: Readings: a range at its middle (3-5 sets as 4, 10-30 sec as 20, 10-14 reps as 12, 45-90 sec
+      rest as 68), the note keeping it; a pyramid as "10/8/6" reps; a circuit or tri-set as each exercise''s
+      sets, the circuit in the notes; a routine''s first pass three minutes and a repeat two; each routine''s
+      minutes estimated.'
+    - 'I5: The second "Explosive Leg Workout - beginner/intermidiate" (p. 15: front and back flips, the
+      advanced shrimp) is read as the advanced version.'
+    last_review:
+      output_vs_dossier: '2026-10-22'
+  kelly_starrett:
+    status: audited
+    shape: templates
+    dossier: docs/package-fidelity/kelly_starrett.md
+    sources_kind: primary
+    debt: []
+    currency:
+      built_to_move: plan_completion
+    source_tests:
+    - test_week_template.py::test_kelly_starrett_runs_the_21_day_challenge_as_written
+    inventions:
+    - 'I1: Floor sitting is five minutes in the session; the challenge asks for it "throughout your day".'
+    - 'I2: Each follow-along mobilization counts as three minutes, a test as four, a balance practice
+      as three, so a day runs 15-30 minutes; the pages give no times.'
+    - 'I3: Day 7, which introduces the sit-stands without a number, does seven: day 8 does eight, one
+      more a day.'
+    - 'I4: After day 21, day 21 every day: its practices and its three mobilizations, the challenge''s
+      last stack.'
+    - 'I5: Seven days a week are required, and the challenge starts on a Monday.'
+    last_review:
+      output_vs_dossier: '2026-10-22'
+  marcus_filly:
+    status: audited
+    shape: contract
+    dossier: docs/package-fidelity/marcus_filly.md
+    sources_kind: primary
+    debt: []
+    currency:
+      functional_bodybuilding: working_load
+      pump_lift: working_load
+    source_tests:
+    - test_training_contract.py::test_filly_runs_the_sample_weeks_in_cycles_and_a_bridge_week
+    inventions:
+    - 'I1: The published week repeats every cycle; Persist changes the days each cycle, but only one week
+      of each 3x track is public.'
+    - 'I2: Where the sample leaves the reps to the program ("Every 4:00 x 3 sets"), the prescription says
+      so: a working set finished a rep or two in reserve, recorded.'
+    - 'I3: A section''s minutes are shared evenly by its exercises, and the rest inside an interval is
+      estimated.'
+    - 'I4: The warm-up, the cooldown and the conditioning are one entry each whose note writes the day''s
+      content; the conditioning''s movements are not separate exercises.'
+    - 'I5: The sample''s "or" options are alternatives in its order (a cable machine first, the barbell
+      after; the pull-up, then the lat pulldown); the leg press is not offered.'
+    - 'I6: The tracks are for intermediate lifters and up; novices are refused until Base Camp''s sessions
+      can be read.'
+    - 'I7: At four or five training days the three sessions run on three of them (the 3x tracks; the 4x
+      and 5x weeks are not public).'
+    last_review:
+      output_vs_dossier: '2026-10-22'
+    next: The 4x and 5x tracks if their weeks become readable; the within-cycle progression; a novice
+      track on Base Camp; exercise media.
   starting_strength:
     status: audited
     shape: contract
@@ -102,7 +271,9 @@ packages:
     - 'I5: Every stall resets 5 % (R8), the one that brings 5×3 too; the deadlift and power clean, which
       the 5×3 switch does not name, reset a second time instead; and after a third stall the lift is finished
       (R9). The article was re-read through a summary on 2026-10-21 (the page answers 403).'
-    next: Exercise media for the six lifts; the output review (print_package) recorded in `reviews`.
+    last_review:
+      output_vs_dossier: '2026-10-22'
+    next: Exercise media for the six lifts.
   uphill_athlete:
     status: audited
     shape: contract
@@ -141,8 +312,10 @@ packages:
     - 'I10: The aerobic-deficiency gate (R9) is said in the Zone 3 and ME notes, never enforced — the
       athlete measures their thresholds (the owner''s rule for Wildman, 2026-10-21).'
     - 'I11: Six training days are required (R2 writes six); at seven the same six sessions run.'
+    last_review:
+      output_vs_dossier: '2026-10-22'
     next: A novice track on the mountaineering article's numbers (5 hours over six days, hikes, the General
-      Strength circuit); exercise media; the output review.
+      Strength circuit); exercise media.
   wildman_kettlebell:
     status: audited
     shape: contract
@@ -171,29 +344,6 @@ packages:
       are in paid programs.'
     - 'I5: The repeat after a layoff (R11) is recommended in every swing session''s note, never enforced:
       the athlete decides and takes responsibility (owner, 2026-10-21).'
+    last_review:
+      output_vs_dossier: '2026-10-22'
     next: The hand-to-hand option needs an alternating block; decide the two Codex tracks (I2, I3).
-  atg:
-    status: not_started
-    shape: scheduler
-    next: Assessment gating — measurable range and regression gates.
-  crossfit:
-    status: not_started
-    shape: templates
-    next: The variation policy and the 3-on/1-off pattern with pools of benchmark and mainsite-style workouts.
-  gym_jones:
-    status: not_started
-    shape: templates
-    next: Refuse novices (its foundation assumes training history); the published operator templates.
-  ido_portal:
-    status: not_started
-    shape: scheduler
-    next: Assessment gating — advancement markers sourced before anything else.
-  kelly_starrett:
-    status: not_started
-    shape: scheduler
-    next: Assessment-driven prescription and retesting.
-  marcus_filly:
-    status: not_started
-    shape: templates
-    next: Base Camp's session shape (warm-up, strength by pattern, conditioning); RPE targets from the
-      framework.

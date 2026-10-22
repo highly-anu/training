@@ -27,20 +27,10 @@ injury_flags:
       - depth_jump
       - broad_jump
     modified_exercises:
-      - instead_of: atg_split_squat
-        use: quad_set
-      - instead_of: bulgarian_split_squat_light
-        use: straight_leg_raise
-      - instead_of: step_up_low
-        use: heel_slide
-      - instead_of: leg_press_single_light
-        use: terminal_knee_extension_band
       - instead_of: run_easy
         use: bike_easy
       - instead_of: run_interval
         use: bike_interval
-      - instead_of: run_interval
-        use: swim_easy
       - instead_of: run_zone2
         use: bike_zone2
     training_phase_forced: post_op
@@ -67,16 +57,12 @@ injury_flags:
       - handstand_push_up
       - ring_dip
     modified_exercises:
-      - instead_of: mf_overhead_press
-        use: landmine_press
       - instead_of: strict_press
         use: floor_press
       - instead_of: push_press
         use: floor_press
       - instead_of: kipping_pull_up
         use: pull_up
-      - instead_of: ring_dip
-        use: dip_support_hold
       - instead_of: handstand_push_up
         use: push_up
       - instead_of: overhead_squat
@@ -104,12 +90,8 @@ injury_flags:
       - kipping_pull_up
       - kb_snatch
     modified_exercises:
-      - instead_of: mf_overhead_press
-        use: landmine_press
       - instead_of: wk_kb_snatch
         use: kb_deadlift
-      - instead_of: ring_dip
-        use: dip_support_hold
     training_phase_forced: rehab
     notes: >
       Instability (labrum, hypermobility, or post-dislocation) requires avoiding
@@ -140,13 +122,10 @@ injury_flags:
       - russian_twist
       - back_extension
       - front_squat
-      - mf_front_squat
       - overhead_squat
     modified_exercises:
       - instead_of: back_squat
         use: kb_squat_goblet
-      - instead_of: mf_back_squat
-        use: bulgarian_split_squat
       - instead_of: barbell_row
         use: db_row_single_arm
       - instead_of: kb_swing_two_hand
@@ -177,25 +156,16 @@ injury_flags:
       - broad_jump
       - depth_jump
       - pistol_squat
-      - box_pistol_squat
       - single_leg_squat_box
     modified_exercises:
       - instead_of: run_easy
         use: bike_easy
       - instead_of: run_interval
         use: bike_interval
-      - instead_of: run_sprint
-        use: bike_interval
-      - instead_of: run_interval
-        use: swim_easy
-      - instead_of: run_sprint
-        use: swim_easy
       - instead_of: run_zone2
         use: bike_zone2
       - instead_of: pistol_squat
         use: squat_air
-      - instead_of: pistol_squat
-        use: squat_clinic
       - instead_of: single_leg_squat_box
         use: squat_air
     training_phase_forced: rehab
@@ -222,21 +192,14 @@ injury_flags:
       - plank
       - handstand_push_up
       - front_squat
-      - mf_front_squat
       - rack_carry_barbell
     modified_exercises:
       - instead_of: front_squat
         use: back_squat
-      - instead_of: mf_front_squat
-        use: mf_back_squat
       - instead_of: wk_kb_clean_single
         use: kb_deadlift
-      - instead_of: plank_hold
-        use: side_plank
       - instead_of: plank
         use: side_plank
-      - instead_of: mf_overhead_press
-        use: landmine_press
     training_phase_forced: rehab
     notes: >
       Covers TFCC tears, scaphoid stress, distal radius fractures, and general
@@ -300,14 +263,11 @@ injury_flags:
       - wk_kb_clean_single
       - kb_clean_double
       - farmer_carry_kb
-      - farmer_carry_db
       - farmer_carry_barbell
       - farmer_carry_thick_grip
       - kb_farmer_carry
       - kb_farmer_carry_double
     modified_exercises:
-      - instead_of: pull_up
-        use: ring_row
       - instead_of: wk_kb_snatch
         use: kb_deadlift
     training_phase_forced: rehab
@@ -343,7 +303,6 @@ injury_flags:
       - towel_kb_swing
       - kb_swing_breathing_ladder
       - farmer_carry_kb
-      - farmer_carry_db
       - farmer_carry_barbell
       - farmer_carry_thick_grip
       - kb_farmer_carry
@@ -351,10 +310,6 @@ injury_flags:
     modified_exercises:
       - instead_of: bench_press
         use: floor_press
-      - instead_of: mf_overhead_press
-        use: landmine_press
-      - instead_of: pull_up
-        use: ring_row
       - instead_of: wk_kb_swing_two_hand
         use: kb_deadlift
       - instead_of: wk_kb_swing_single_arm
@@ -381,12 +336,8 @@ injury_flags:
       - back_squat
       - mf_back_squat
     modified_exercises:
-      - instead_of: mf_overhead_press
-        use: landmine_press
       - instead_of: back_squat
         use: front_squat
-      - instead_of: mf_back_squat
-        use: mf_front_squat
       - instead_of: kipping_pull_up
         use: pull_up
       - instead_of: push_jerk
@@ -415,10 +366,6 @@ injury_flags:
         use: bike_easy
       - instead_of: run_interval
         use: bike_interval
-      - instead_of: run_interval
-        use: swim_easy
-      - instead_of: run_sprint
-        use: swim_easy
       - instead_of: run_zone2
         use: bike_zone2
       - instead_of: squat_jump
@@ -461,10 +408,6 @@ injury_flags:
         use: wall_squat
       - instead_of: front_squat
         use: wall_squat
-      - instead_of: atg_split_squat
-        use: step_up_low
-      - instead_of: bulgarian_split_squat
-        use: step_down_eccentric
     training_phase_forced: rehab
     notes: >
       Patellar tendon overuse pathology — typically aggravated by eccentric knee

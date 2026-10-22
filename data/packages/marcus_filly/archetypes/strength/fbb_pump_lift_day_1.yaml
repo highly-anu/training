@@ -1,0 +1,58 @@
+id: fbb_pump_lift_day_1
+name: "Pump Lift — Day 1"
+modality: max_strength
+category: strength
+training_levels:
+- intermediate
+- advanced
+- elite
+duration_estimate_minutes: 60
+applicable_phases:
+- build
+- deload
+sources:
+- "Functional Bodybuilding, Persist sample weeks (Help Center, 2025-12-31)"
+notes: >
+  Day 1 of Functional Bodybuilding's published Pump Lift 3x sample week, as printed.
+slots:
+- role: warm_up
+  slot_type: skill_practice
+  sets: 15
+  duration_minutes: 8
+  exercise_filter:
+    exercise_ids: [fbb_warm_up]
+- role: dip
+  slot_type: sets_reps
+  sets: 3
+  exercise_filter:
+    exercise_ids: [dip]
+- role: incline_press
+  slot_type: sets_reps
+  sets: 3
+  exercise_filter:
+    exercise_ids: [incline_bench_press]
+- role: stiff_leg_deadlift
+  slot_type: sets_reps
+  sets: 8
+  exercise_filter:
+    exercise_ids: [stiff_leg_deadlift]
+- role: curtsy_squat
+  slot_type: sets_reps
+  sets: 6
+  exercise_filter:
+    exercise_ids: [suitcase_curtsy_squat]
+- role: reverse_crunch
+  slot_type: sets_reps
+  sets: 3
+  exercise_filter:
+    exercise_ids: [banded_reverse_crunch]
+- role: row
+  slot_type: sets_reps
+  sets: 3
+  exercise_filter:
+    exercise_ids: [wide_grip_cable_row]
+- role: cooldown
+  slot_type: skill_practice
+  duration_minutes: 5
+  exercise_filter:
+    exercise_ids: [fbb_cooldown]

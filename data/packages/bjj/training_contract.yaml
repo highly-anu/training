@@ -17,7 +17,7 @@ tracks:
       program, one workout a week up to four days and both from five, never more than the mat. The
       class is your gym''s; its minutes here are the shape of a typical class, not instructions to
       the coach. Strength runs in a twelve-week cycle: six weeks of strength (three or four sets of
-      five to eight), a deload week, five weeks of power (up to 75 % of your one-rep max, every rep
+      five to fifteen), a deload week, five weeks of power (up to 75 % of your one-rep max, every rep
       fast), and again. The weights are yours: add weight once every set makes its reps. Rest two
       minutes between sets of the big lifts — up to four if you have the time — and one minute on
       the rest. The classes never deload on a schedule; a competitor''s conditioning deloads with
@@ -82,6 +82,9 @@ tracks:
       name: Strength
       archetype_id: grappling_sc
       modality: max_strength
+      # A lift an injury rules out is left out, the rest of the workout kept
+      # (owner, 2026-10-21; I4).
+      drop_when_injured: true
       training_levels:
       - novice
       - intermediate

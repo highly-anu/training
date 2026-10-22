@@ -1,0 +1,77 @@
+id: cf_run_thruster_burpee_chipper
+name: "400 m Runs with Thrusters, Burpees, Hang Squat Cleans"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 35
+pool_only: true
+
+slots:
+  - role: chipper
+    slot_type: for_time
+    rounds: 1
+    distance_m: 400
+    exercise_filter:
+      exercise_ids: [run_interval]
+      ordered: true
+    notes: "For time, in order. Post time."
+
+  - role: chipper_2
+    slot_type: amrap_movement
+    parent_slot_role: chipper
+    reps_per_round: 50
+    exercise_filter:
+      exercise_ids: [thruster]
+      ordered: true
+    load: "45 lb (20 kg)"
+
+  - role: chipper_3
+    slot_type: amrap_movement
+    parent_slot_role: chipper
+    distance_m: 400
+    exercise_filter:
+      exercise_ids: [run_interval]
+      ordered: true
+
+  - role: chipper_4
+    slot_type: amrap_movement
+    parent_slot_role: chipper
+    reps_per_round: 50
+    exercise_filter:
+      exercise_ids: [burpee]
+      ordered: true
+
+  - role: chipper_5
+    slot_type: amrap_movement
+    parent_slot_role: chipper
+    distance_m: 400
+    exercise_filter:
+      exercise_ids: [run_interval]
+      ordered: true
+
+  - role: chipper_6
+    slot_type: amrap_movement
+    parent_slot_role: chipper
+    reps_per_round: 50
+    exercise_filter:
+      exercise_ids: [hang_squat_clean]
+      ordered: true
+    load: "45 lb (20 kg)"
+
+  - role: chipper_7
+    slot_type: amrap_movement
+    parent_slot_role: chipper
+    distance_m: 400
+    exercise_filter:
+      exercise_ids: [run_interval]
+      ordered: true
+
+required_equipment:
+- open_space
+- barbell
+- rack
+- plates
+sources:
+- "crossfit.com Workout of the Day, 2005 (2005-09-04)"
+notes: >
+  For time: run 400 m, 50 thrusters at 45 lb, run 400 m, 50 burpees, run 400 m, 50 hang squat cleans at 45 lb, run 400 m.

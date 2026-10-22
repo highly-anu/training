@@ -64,6 +64,16 @@ cadence (R12), Get-Up and Loaded Mobility with technique minutes (I2). The snatc
 goal (R7, 200 in ten minutes) is the SSST count and the get-up's bodyweight ratio
 (R13) a standard, both entered by hand (`manual: true`): no session tests them.
 
+## Output review (2026-10-22)
+
+All six tracks printed for three weeks (`tools/print_package.py wildman_kettlebell
+--profile ideal`). General Practice runs Phase II's programs twice a week, never on
+consecutive days, stacked as the days allow (R2, R3), the swing two reps up a session from
+6 (R4), the snatch after clean and press (R6), the layoff repeat said and never enforced
+(R11, I5); Pentathlon Prep's sessions as its contract writes them (I1). Fixed: a program
+left short was named once for the whole program, so "0 of 2 weekly sessions" (before the
+snatch joins) stood beside "1 of 2" (week 3) — each line now says its weeks.
+
 ## Tests
 
 Source weeks (`data/packages/wildman_kettlebell/source_weeks.yaml`): one bell's

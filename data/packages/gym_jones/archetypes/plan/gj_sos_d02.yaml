@@ -1,0 +1,32 @@
+id: gj_sos_d02
+name: "Soldier of Steel — Day 2: Recovery"
+modality: aerobic_base
+category: conditioning
+training_levels: [novice, intermediate]
+duration_estimate_minutes: 56
+pool_only: true
+
+slots:
+  - role: easy
+    slot_type: time_domain
+    duration_minutes: 50
+    exercise_filter:
+      exercise_ids: [easy_aerobic]
+      ordered: true
+    notes: "Run or walk at an easy pace."
+
+  - role: hold
+    slot_type: static_hold
+    sets: 1
+    hold_seconds: 300
+    exercise_filter:
+      exercise_ids: [plank_hold]
+      ordered: true
+    notes: "Accumulate 300 seconds, broken into sets as needed."
+
+required_equipment:
+- open_space
+sources:
+- "Gym Jones, Soldier of Steel (Army National Guard, 2013)"
+notes: >
+  50 minutes run or walk at an easy pace, then 300 s in the front leaning rest.

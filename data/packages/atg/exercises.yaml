@@ -1,996 +1,758 @@
+# ATG (Ben Patrick) — the movements his published workouts name
+# (docs/package-fidelity/atg.md). Every one "scales to remarkably gentle
+# levels" (Patrick): the notes give the ladder he writes, easiest first, and
+# the athlete works at the level that is pain-free. Nothing is locked behind
+# another exercise — which step of a ladder the athlete is on is theirs (the
+# record's open item on assessment gating).
 exercises:
-- id: tire_drag_backward
-  name: Tire Drag (Backward)
+
+# ── Backward and forward ─────────────────────────────────────────────────────
+- id: sled_forward_backward
+  name: Forward & Backward Sled
   category: loaded_carry
-  modality:
-  - durability
-  - strength_endurance
-  - rehab
-  equipment:
-  - tire
-  - open_space
+  modality: [durability]
+  equipment: [sled, open_space]
   effort: medium
   bilateral: true
-  movement_patterns:
-  - loaded_carry
-  - locomotion
-  - knee_extension
-  requires:
-  - tire_drag_forward
+  movement_patterns: [locomotion, loaded_carry, knee_extension]
+  requires: []
   unlocks: []
-  contraindicated_with:
-  - knee_meniscus_post_op
-  - achilles_tendinopathy
+  contraindicated_with: []
   progressions:
-    load: add_weight_to_tire
+    load: add_weight_to_the_sled
     volume: increase_distance
-  scaling_down:
-  - tire_drag_forward
+  scaling_down: [backward_walk]
   typical_volume:
-    sets: 4
-    distance_m: 30
-  sources:
-  - Horsemen
-  - ATG
-  notes: 'Backward walking with tire in tow. ATG / Knees Over Toes principle: backward
-    sled and tire drag loads the VMO and quad through terminal extension range without
-    compressive load on the knee. Used in Horsemen GPP and as a knee prehab modality.
-    Primary quad-focused carry variant.
+    sets: 2
+    distance_m: 46
+  sources: ["Ben Patrick, ATG Program #1 & 2; Knee Ability Series 3 of 10"]
+  notes: >
+    Drag the sled walking backward, then push or drag it forward. Backward is
+    "the first knee-over-toes exercise I teach": it loads the knee with no
+    eccentric strain and gets circulation into it. A resisted treadmill
+    ("hill from home") or plain backward walking replaces it — "You don't have
+    to sled!"
 
-    '
-- id: quad_set
-  name: Quad Set (Isometric Quad Contraction)
-  category: rehab
-  modality:
-  - rehab
-  equipment:
-  - none
-  effort: low
-  bilateral: false
-  movement_patterns:
-  - knee_extension
-  - isometric
-  requires: []
-  unlocks:
-  - straight_leg_raise
-  - terminal_knee_extension_band
-  contraindicated_with: []
-  progressions:
-    volume: increase_reps_per_set
-  scaling_down: []
-  typical_volume:
-    sets: 3
-    reps: 15
-  sources:
-  - plan.md section 10
-  notes: Early-phase knee rehab. Lying flat — roll towel under knee, contract quad
-    to press knee down, hold 5-10 sec. No joint movement. Programs within days of
-    surgery or acute injury. Does not require cleared ROM. Activate VMO focus.
-- id: straight_leg_raise
-  name: Straight Leg Raise (SLR)
-  category: rehab
-  modality:
-  - rehab
-  equipment:
-  - none
-  effort: low
-  bilateral: false
-  movement_patterns:
-  - hip_flexion
-  - knee_extension
-  - isometric
-  requires:
-  - quad_set
-  unlocks:
-  - heel_slide
-  - step_up_low
-  contraindicated_with: []
-  progressions:
-    load: add_ankle_weight
-    volume: increase_reps_per_set
-  scaling_down:
-  - quad_set
-  typical_volume:
-    sets: 3
-    reps: 15
-  sources:
-  - plan.md section 10
-  notes: Supine — contract quad fully on affected leg, keep knee locked, lift to
-    45 degrees and hold 2 sec. Early phase knee rehab. Progresses to ankle weight
-    (0.5kg increments). Program bilateral to maintain quad symmetry on unaffected
-    side.
-- id: heel_slide
-  name: Heel Slide
-  category: rehab
-  modality:
-  - rehab
-  equipment:
-  - none
-  effort: low
-  bilateral: false
-  movement_patterns:
-  - hip_flexion
-  - knee_extension
-  requires:
-  - quad_set
-  unlocks:
-  - stationary_bike_easy
-  contraindicated_with: []
-  progressions:
-    volume: increase_reps_per_set
-  scaling_down:
-  - quad_set
-  typical_volume:
-    sets: 3
-    reps: 15
-  sources:
-  - plan.md section 10
-  notes: Supine — slide heel toward glute to increase knee flexion ROM, hold at
-    max range 5 sec, return. Early phase knee rehab for restoring flexion ROM. Active
-    or assisted. Track ROM progress toward 90 degrees then full range milestones.
-- id: ankle_pump
-  name: Ankle Pump
-  category: rehab
-  modality:
-  - rehab
-  equipment:
-  - none
-  effort: low
-  bilateral: false
-  movement_patterns: []
-  requires: []
-  unlocks: []
-  contraindicated_with: []
-  progressions:
-    volume: increase_reps_per_set
-  scaling_down: []
-  typical_volume:
-    sets: 3
-    reps: 20
-  sources:
-  - plan.md section 10
-  notes: Immediate post-op or injury — repeated ankle dorsiflexion/plantarflexion
-    while leg is elevated. Promotes venous return and reduces swelling. Can be performed
-    in bed or chair. High frequency (every 1-2 hours) in acute phase. No contraindications.
-- id: step_up_low
-  name: Step-Up Low (Rehab, 4-6 inch)
-  category: rehab
-  modality:
-  - rehab
-  equipment:
-  - box
-  effort: low
-  bilateral: false
-  movement_patterns:
-  - squat
-  - knee_extension
-  requires:
-  - straight_leg_raise
-  - quad_set
-  unlocks:
-  - bulgarian_split_squat_light
-  - leg_press_single_light
-  contraindicated_with: []
-  progressions:
-    complexity: step_up_standard
-    volume: increase_reps_per_set
-  scaling_down:
-  - straight_leg_raise
-  typical_volume:
-    sets: 3
-    reps: 10
-  sources:
-  - plan.md section 10
-  notes: Rehab step-up on 4-6 inch platform only. Controlled eccentric down. Focus
-    on single-leg control and avoiding knee valgus. Mid-phase knee rehab milestone.
-    Progression to higher box only when 10 reps pain-free at current height. Use bodyweight
-    only — no added load.
-- id: terminal_knee_extension_band
-  name: Terminal Knee Extension (Band)
-  category: rehab
-  modality:
-  - rehab
-  equipment:
-  - resistance_band
-  effort: low
-  bilateral: false
-  movement_patterns:
-  - knee_extension
-  - isometric
-  requires:
-  - quad_set
-  unlocks:
-  - reverse_nordic
-  contraindicated_with: []
-  progressions:
-    load: increase_band_resistance
-    volume: increase_reps_per_set
-  scaling_down:
-  - quad_set
-  typical_volume:
-    sets: 3
-    reps: 15
-  sources:
-  - plan.md section 10
-  notes: Band looped behind knee, standing. Drive knee to full extension against band
-    resistance. Targets VMO and terminal knee extension mechanics — critical for
-    patellofemoral function and post-op quad recruitment. ATG-style application. Program
-    early to mid phase.
-- id: leg_press_single_light
-  name: Single-Leg Press (Light, Rehab)
-  category: rehab
-  modality:
-  - rehab
-  equipment:
-  - none
-  effort: low
-  bilateral: false
-  movement_patterns:
-  - squat
-  - knee_extension
-  requires:
-  - step_up_low
-  - straight_leg_raise
-  unlocks:
-  - bulgarian_split_squat_light
-  contraindicated_with: []
-  progressions:
-    load: add_weight_in_small_increments
-    volume: increase_reps_per_set
-  scaling_down:
-  - step_up_low
-  typical_volume:
-    sets: 3
-    reps: 12
-  sources:
-  - plan.md section 10
-  notes: 'Machine leg press — single leg, very light load, controlled ROM. Mid-phase
-    knee rehab for tissue loading with joint protection. Progress ROM from partial
-    to full as tolerated. Bilateral press as stepping-stone if single-leg is too demanding.
-    Note in programming: requires active knee rehab flag.'
-- id: bulgarian_split_squat_light
-  name: Bulgarian Split Squat (Light, Rehab)
-  category: rehab
-  modality:
-  - rehab
-  equipment:
-  - none
-  effort: low
-  bilateral: false
-  movement_patterns:
-  - squat
-  - knee_extension
-  - hip_flexion
-  requires:
-  - step_up_low
-  - leg_press_single_light
-  unlocks:
-  - single_leg_deadlift_light
-  contraindicated_with: []
-  progressions:
-    load: add_dumbbells
-    volume: increase_reps_per_set
-  scaling_down:
-  - step_up_low
-  - leg_press_single_light
-  typical_volume:
-    sets: 3
-    reps: 10
-  sources:
-  - plan.md section 10
-  notes: 'Rear foot elevated split squat, bodyweight only initially. Mid-phase knee
-    rehab. Controls single-leg depth while rear foot provides stability assist. Progress
-    load only when pain-free through full ROM. Note: requires active knee rehab flag
-    to program.'
-- id: single_leg_deadlift_light
-  name: Single-Leg Deadlift (Light, Rehab)
-  category: rehab
-  modality:
-  - rehab
-  equipment:
-  - none
-  effort: low
-  bilateral: false
-  movement_patterns:
-  - hip_hinge
-  requires:
-  - step_up_low
-  - straight_leg_raise
-  unlocks: []
-  contraindicated_with: []
-  progressions:
-    load: add_light_dumbbell
-    volume: increase_reps_per_set
-  scaling_down:
-  - step_up_low
-  typical_volume:
-    sets: 3
-    reps: 10
-  sources:
-  - plan.md section 10
-  notes: Single-leg Romanian deadlift with bodyweight or very light load. Mid-phase
-    knee rehab — builds posterior chain without high knee compression. Emphasizes
-    hip hinge and proprioceptive knee control. Requires active knee rehab flag to
-    program.
-- id: stationary_bike_easy
-  name: Stationary Bike (Easy, Rehab)
-  category: rehab
-  modality:
-  - rehab
-  equipment:
-  - bike
+- id: backward_walk
+  name: Backward Walk
+  category: aerobic
+  modality: [durability]
+  equipment: []
   effort: low
   bilateral: true
-  movement_patterns:
-  - aerobic_monostructural
-  requires:
-  - heel_slide
+  movement_patterns: [locomotion, knee_extension]
+  requires: []
   unlocks: []
   contraindicated_with: []
   progressions:
     volume: increase_duration
-    load: add_slight_resistance
-  scaling_down:
-  - ankle_pump
-  - heel_slide
-  typical_volume:
-    sets: 1
-    duration_sec: 1200
-  sources:
-  - plan.md section 10
-  notes: Low-resistance cycling as rehab modality. Use when sufficient knee flexion
-    ROM restored (typically 90+ degrees). No-impact cardiovascular maintenance during
-    knee rehab phase. Progress from 10 min to 20-30 min. Seat height set high initially
-    to minimize flexion demand.
-- id: external_rotation_db
-  name: DB External Rotation (Elbow on Knee)
-  category: rehab
-  modality:
-  - rehab
-  equipment:
-  - dumbbell
-  effort: low
-  bilateral: false
-  movement_patterns:
-  - isometric
-  requires: []
-  unlocks:
-  - band_pull_apart_rehab
-  - tgu_light
-  contraindicated_with: []
-  progressions:
-    load: add_light_dumbbell_weight
-    volume: increase_reps_per_set
+    load: drag_a_sled
   scaling_down: []
   typical_volume:
-    sets: 3
-    reps: 15
-  sources:
-  - plan.md section 10
-  notes: Seated — elbow resting on knee, forearm hanging. Rotate forearm upward
-    against light dumbbell resistance. Targets infraspinatus and teres minor. Cornerstone
-    rotator cuff rehab exercise. Start with 1-2 kg. Slow controlled tempo — 3 sec
-    up, 3 sec down.
-- id: band_pull_apart_rehab
-  name: Band Pull-Apart (Rehab variant)
-  category: rehab
-  modality:
-  - rehab
-  equipment:
-  - resistance_band
-  effort: low
-  bilateral: true
-  movement_patterns:
-  - horizontal_pull
-  requires: []
-  unlocks:
-  - face_pull_rehab
-  contraindicated_with: []
-  progressions:
-    load: increase_band_resistance
-    volume: increase_reps_per_set
-  scaling_down: []
-  typical_volume:
-    sets: 3
-    reps: 20
-  sources:
-  - plan.md section 10
-  notes: 'Light resistance band horizontal pull-apart at chest height. Shoulder rehab
-    variant — use lightest band available initially. Multiple directions: horizontal,
-    diagonal, overhead. High frequency safe — can program daily. Addresses posterior
-    deltoid and lower trapezius weakness contributing to impingement.'
-- id: face_pull_rehab
-  name: Face Pull (Rehab variant)
-  category: rehab
-  modality:
-  - rehab
-  equipment:
-  - resistance_band
-  effort: low
-  bilateral: true
-  movement_patterns:
-  - horizontal_pull
-  requires:
-  - band_pull_apart_rehab
-  unlocks:
-  - side_plank_lat_activation
-  - dip_support_hold
-  contraindicated_with: []
-  progressions:
-    load: increase_band_resistance
-    volume: increase_reps_per_set
-  scaling_down:
-  - band_pull_apart_rehab
-  typical_volume:
-    sets: 3
-    reps: 15
-  sources:
-  - plan.md section 10
-  notes: Rehab-weight face pull — thumbs-up grip, elbows high, full external rotation
-    at end range. Used in shoulder impingement and instability protocols per Marcus
-    Filly approach. Cue external rotation at end range — do not let elbows drop.
-    Contraindication-free; safe in virtually all shoulder pathologies.
-- id: landmine_press
-  name: Landmine Press
-  category: rehab
-  modality:
-  - rehab
-  equipment:
-  - barbell
-  effort: low
-  bilateral: false
-  movement_patterns:
-  - horizontal_push
-  - vertical_push
-  requires:
-  - face_pull_rehab
-  - band_pull_apart_rehab
-  unlocks:
-  - eccentric_push_up
-  contraindicated_with: []
-  progressions:
-    load: add_weight_to_barbell
-    volume: increase_reps_per_set
-  scaling_down:
-  - band_pull_apart_rehab
-  typical_volume:
-    sets: 3
-    reps: 10
-  sources:
-  - plan.md section 10
-  notes: Single-arm press into barbell fixed in corner at angle. Path is angled rather
-    than vertical — reduces subacromial impingement compared to overhead press.
-    Shoulder rehab pushing pattern per Marcus Filly protocol. No contraindications
-    in typical shoulder rehab scenarios.
-- id: eccentric_push_up
-  name: Eccentric Push-Up (Rehab, on parallettes)
-  category: rehab
-  modality:
-  - rehab
-  equipment:
-  - parallettes
-  effort: low
-  bilateral: true
-  movement_patterns:
-  - horizontal_push
-  requires:
-  - landmine_press
-  unlocks: []
-  contraindicated_with: []
-  progressions:
-    volume: increase_reps_per_set
-    complexity: standard_push_up
-  scaling_down:
-  - landmine_press
-  typical_volume:
-    sets: 3
-    reps: 8
-  sources:
-  - plan.md section 10
-  notes: Push-up on parallettes with slow 5-sec eccentric (lowering phase) and assisted
-    or step-up concentric. Reduces wrist deviation compared to floor push-up. Shoulder
-    rehab pushing pattern — eccentric loading for tendon remodeling. Marcus Filly
-    protocol. Parallettes allow greater ROM and neutral wrist position.
-- id: dip_support_hold
-  name: Dip Support Hold (Isometric)
-  category: rehab
-  modality:
-  - rehab
-  equipment:
-  - parallettes
-  effort: low
-  bilateral: true
-  movement_patterns:
-  - isometric
-  - vertical_push
-  requires:
-  - face_pull_rehab
-  unlocks:
-  - side_plank_lat_activation
-  contraindicated_with: []
-  progressions:
-    volume: increase_duration
-  scaling_down:
-  - landmine_press
-  typical_volume:
-    sets: 3
-    duration_sec: 30
-  sources:
-  - plan.md section 10
-  notes: Supported on dip bars or parallettes, arms locked, hold isometric top position.
-    Shoulder rehab isometric per Marcus Filly — builds scapular depression and lat
-    engagement without joint movement. Cue scapular depression throughout hold. Progress
-    duration before adding dynamic dip range.
-- id: side_plank_lat_activation
-  name: Side Plank with Lat Activation
-  category: rehab
-  modality:
-  - rehab
-  equipment:
-  - none
-  effort: low
-  bilateral: false
-  movement_patterns:
-  - isometric
-  requires: []
-  unlocks:
-  - tgu_light
-  contraindicated_with: []
-  progressions:
-    volume: increase_duration
-    complexity: side_plank_with_rotation
-  scaling_down: []
-  typical_volume:
-    sets: 3
-    duration_sec: 30
-  sources:
-  - plan.md section 10
-  notes: Standard side plank with deliberate lat/serratus activation — cue pulling
-    shoulder blade down and away from ear. Shoulder rehabilitation isometric. Programs
-    alongside dip support hold in shoulder protocol. Addresses serratus anterior weakness
-    common in impingement presentations.
-- id: tgu_light
-  name: Turkish Get-Up (Rehab weight)
-  category: rehab
-  modality:
-  - rehab
-  equipment:
-  - kettlebell
-  effort: low
-  bilateral: false
-  movement_patterns:
-  - hip_hinge
-  - squat
-  - isometric
-  - vertical_push
-  requires:
-  - side_plank_lat_activation
-  - external_rotation_db
-  unlocks: []
-  contraindicated_with: []
-  progressions:
-    load: increase_bell_weight
-    complexity: kb_tgu
-  scaling_down:
-  - side_plank_lat_activation
-  - dip_support_hold
-  typical_volume:
-    sets: 3
-    reps: 5
-  sources:
-  - plan.md section 10
-  notes: TGU with very light KB (4-8 kg) as progressive carry and shoulder stability
-    rehab. Marcus Filly progressive carry protocol. Entire TGU movement pattern challenges
-    shoulder in multiple planes through full ROM — ideal late-stage shoulder rehab.
-    Progress load incrementally once full pain-free TGU is achieved.
-- id: dead_bug
-  name: Dead Bug
-  category: rehab
-  modality:
-  - rehab
-  equipment:
-  - none
-  effort: low
-  bilateral: false
-  movement_patterns:
-  - isometric
-  - hip_flexion
-  requires: []
-  unlocks:
-  - bird_dog
-  contraindicated_with: []
-  progressions:
-    complexity: dead_bug_with_band
-    volume: increase_reps_per_set
-  scaling_down: []
-  typical_volume:
-    sets: 3
-    reps: 10
-  sources:
-  - plan.md section 10
-  notes: Supine — opposite arm and leg extend slowly while lumbar spine presses
-    into floor. Core anti-extension rehab. Lumbar spine position — not neutral —
-    pressed flat throughout. Foundational spinal stability exercise for any back,
-    hip, or knee rehab phase.
-- id: bird_dog
-  name: Bird Dog
-  category: rehab
-  modality:
-  - rehab
-  equipment:
-  - none
-  effort: low
-  bilateral: false
-  movement_patterns:
-  - isometric
-  - hip_hinge
-  requires:
-  - dead_bug
-  unlocks:
-  - glute_bridge
-  contraindicated_with: []
-  progressions:
-    volume: increase_reps_per_set
-    complexity: bird_dog_with_pause
-  scaling_down:
-  - dead_bug
-  typical_volume:
-    sets: 3
-    reps: 10
-  sources:
-  - plan.md section 10
-  notes: Quadruped — extend opposite arm and leg simultaneously, hold 3-5 sec, return.
-    Core stability and anti-rotation. Follows dead bug in rehab progressions. Essential
-    for lumbar, hip, and shoulder rehab as stabilizer recruitment baseline.
-- id: glute_bridge
-  name: Glute Bridge
-  category: rehab
-  modality:
-  - rehab
-  equipment:
-  - none
-  effort: low
-  bilateral: true
-  movement_patterns:
-  - hip_hinge
-  - isometric
-  requires: []
-  unlocks:
-  - single_leg_glute_bridge
-  contraindicated_with: []
-  progressions:
-    complexity: single_leg_glute_bridge
-    volume: increase_duration
-  scaling_down:
-  - dead_bug
-  typical_volume:
-    sets: 3
-    reps: 15
-  sources:
-  - plan.md section 10
-  notes: Supine, feet flat, drive hips to full extension and hold 2 sec. Bilateral
-    glute activation for knee and hip rehab. Targets glute max and posterior chain
-    without knee loading. Programs in all lower extremity rehab phases — often combined
-    with quad set early phase.
-- id: single_leg_glute_bridge
-  name: Single-Leg Glute Bridge
-  category: rehab
-  modality:
-  - rehab
-  equipment:
-  - none
-  effort: low
-  bilateral: false
-  movement_patterns:
-  - hip_hinge
-  - isometric
-  requires:
-  - glute_bridge
-  unlocks:
-  - nordic_hamstring_curl
-  contraindicated_with: []
-  progressions:
-    volume: increase_reps_per_set
-    load: add_band_resistance
-  scaling_down:
-  - glute_bridge
-  typical_volume:
-    sets: 3
-    reps: 12
-  sources:
-  - plan.md section 10
-  notes: Single-leg glute bridge — non-working leg either extended in air or crossed
-    over. Identifies and addresses bilateral glute strength asymmetry. Mid-phase rehab
-    progression from bilateral glute bridge. Excellent for hip and knee rehab without
-    significant joint load.
-- id: nordic_hamstring_curl
-  name: Nordic Hamstring Curl (ATG)
-  category: rehab
-  modality:
-  - rehab
-  equipment:
-  - none
-  effort: low
-  bilateral: true
-  movement_patterns:
-  - knee_extension
-  - hip_hinge
-  requires:
-  - single_leg_glute_bridge
-  unlocks:
-  - reverse_nordic
-  contraindicated_with:
-  - proximal_hamstring_tendinopathy_acute
-  progressions:
-    volume: increase_reps_per_set
-    complexity: nordic_hamstring_unassisted
-  scaling_down:
-  - single_leg_glute_bridge
-  - glute_bridge
-  typical_volume:
-    sets: 3
-    reps: 5
-  sources:
-  - plan.md section 10
-  notes: ATG Nordic hamstring curl — feet anchored, lower body toward floor under
-    eccentric hamstring control. Highest-evidence exercise for hamstring strain prevention
-    and rehab. Begin with hands available to catch descent. Progress to full unassisted
-    lowering. Contraindicated with acute proximal hamstring tendinopathy.
-- id: reverse_nordic
-  name: Reverse Nordic Curl (ATG Terminal Knee Extension)
-  category: rehab
-  modality:
-  - rehab
-  equipment:
-  - none
-  effort: low
-  bilateral: true
-  movement_patterns:
-  - knee_extension
-  requires:
-  - terminal_knee_extension_band
-  - quad_set
-  unlocks: []
-  contraindicated_with: []
-  progressions:
-    volume: increase_reps_per_set
-    complexity: reverse_nordic_full
-  scaling_down:
-  - terminal_knee_extension_band
-  - quad_set
-  typical_volume:
-    sets: 3
-    reps: 8
-  sources:
-  - plan.md section 10
-  notes: ATG reverse Nordic curl — kneel on soft surface, lean body backward under
-    eccentric quad control. Directly targets rectus femoris and VMO through full knee
-    extension range. ATG approach to terminal knee extension and patellofemoral rehab.
-    Requires adequate knee flexion tolerance. Begin with partial range and progress
-    to full lean.
+    duration_sec: 300
+  sources: ["Ben Patrick, ATG Zero (ATG newsletter, 2023-08-06)"]
+  notes: >
+    Walk backward: outdoors, on a treadmill that is switched off (push the
+    belt), or dragging a sled. Balances "a lifetime of forward-focused
+    movement"; the first step of ATG Zero.
 
-# ── Signature ATG movements ──────────────────────────────────────────────────
-# The philosophy names reverse sled, tibialis raises, ATG split squats and
-# full-ROM calf raises as its core vehicles, but the library held none of them —
-# so durability and mobility sessions had to be filled from other packages.
-- id: reverse_sled_drag
-  name: Backward Sled Drag (Reverse Sled)
-  category: loaded_carry
-  modality:
-  - durability
-  - rehab
-  equipment:
-  - sled
-  - open_space
-  effort: low
-  bilateral: true
-  movement_patterns:
-  - locomotion
-  - knee_extension
-  - loaded_carry
-  requires: []
-  unlocks:
-  - atg_split_squat
-  contraindicated_with: []
-  progressions:
-    load: add_plate_per_week
-    volume: increase_distance
-  scaling_down:
-  - tire_drag_backward
-  typical_volume:
-    sets: 3
-    distance_m: 50
-  sources:
-  - "ATG — Ben Patrick"
-  notes: 'The entry movement of the whole system and the one Patrick starts nearly
-    everyone on. Walking backwards dragging a sled loads the knee with no eccentric
-    component at all, which is why it can be tolerated by knees that tolerate very
-    little else. Short steps, upright torso, full knee extension at the end of each
-    step. Start light enough to walk smoothly; load progresses only once the range
-    is comfortable.'
-
+# ── Lower legs ───────────────────────────────────────────────────────────────
 - id: tibialis_raise
   name: Tibialis Raise
   category: rehab
-  modality:
-  - durability
-  - rehab
+  modality: [durability]
   equipment: []
   effort: low
   bilateral: true
-  movement_patterns:
-  - knee_extension
+  movement_patterns: [ankle_dorsiflexion]
   requires: []
-  unlocks:
-  - reverse_sled_drag
+  unlocks: []
   contraindicated_with: []
   progressions:
-    load: add_band_resistance
-    volume: add_reps_per_set
-  scaling_down:
-  - ankle_pump
+    intensity: feet_farther_from_the_wall
+    load: tib_bar
+  scaling_down: []
   typical_volume:
-    sets: 3
-    reps: 25
-  sources:
-  - "ATG — Ben Patrick"
-  notes: 'Back against a wall, heels out, toes lifted through full range. Patrick
-    treats the tibialis as the most neglected muscle in lower-body durability: it
-    decelerates the shin and protects the knee, and it responds quickly. High reps,
-    daily-tolerable. Band or tib bar for resistance once bodyweight is easy.'
+    sets: 1
+    reps: 20
+  sources: ["Ben Patrick, ATG Zero; Knee Ability Series 4"]
+  notes: >
+    Back against a wall, heels forward, lift the toes through full range.
+    Closer stance is easier, farther harder, one foot at a time easier still;
+    a tib bar loads it once the wall is easy.
 
+- id: wall_calf_raise
+  name: Wall Calf Raise
+  category: rehab
+  modality: [durability]
+  equipment: []
+  effort: low
+  bilateral: false
+  movement_patterns: [ankle_plantarflexion]
+  requires: []
+  unlocks: []
+  contraindicated_with: [achilles_tendinopathy]
+  progressions:
+    intensity: two_legs_to_one
+  scaling_down: []
+  typical_volume:
+    sets: 1
+    reps: 20
+  sources: ["Ben Patrick, ATG Zero; Knee Ability Series 4"]
+  notes: >
+    Hands on a wall, heels to the floor and up to full height. "Two legs is
+    easier. One leg is tougher."
+
+- id: kot_calf_raise
+  name: KOT Calf Raise
+  category: rehab
+  modality: [durability]
+  equipment: []
+  effort: low
+  bilateral: false
+  movement_patterns: [ankle_plantarflexion, knee_flexion]
+  requires: []
+  unlocks: []
+  contraindicated_with: [achilles_tendinopathy]
+  progressions:
+    intensity: two_legs_to_one
+    load: hold_a_dumbbell
+  scaling_down: []
+  typical_volume:
+    sets: 1
+    reps: 20
+  sources: ["Ben Patrick, ATG Program #1 & 2; KOT Calf Raise: Boring but Valuable"]
+  notes: >
+    A calf raise with the knee bent and travelling over the toes, heel lifted
+    through full range — the calf at the angle the knee works in.
+
+- id: single_leg_calf_raise
+  name: Single-Leg Standing Calf Raise
+  category: rehab
+  modality: [durability]
+  equipment: [dumbbell]
+  effort: low
+  bilateral: false
+  movement_patterns: [ankle_plantarflexion]
+  requires: []
+  unlocks: []
+  contraindicated_with: [achilles_tendinopathy]
+  progressions:
+    load: heavier_dumbbell
+  scaling_down: [wall_calf_raise]
+  typical_volume:
+    sets: 2
+    reps: 10
+  sources: ["Ben Patrick, Knee Ability Series 3 of 10; Knee Ability Series 4"]
+  notes: >
+    One leg, full range, a dumbbell in the free hand — the single-leg weighted
+    calf raise that "will service most goals".
+
+- id: seated_calf_raise
+  name: Seated Calf Raise
+  category: rehab
+  modality: [durability]
+  equipment: [dumbbell]
+  effort: low
+  bilateral: true
+  movement_patterns: [ankle_plantarflexion]
+  requires: []
+  unlocks: []
+  contraindicated_with: [achilles_tendinopathy]
+  progressions:
+    load: heavier_weight
+  scaling_down: [wall_calf_raise]
+  typical_volume:
+    sets: 2
+    reps: 15
+  sources: ["Ben Patrick, Knee Ability Series 3 of 10"]
+  notes: >
+    Seated, weight on the knees (dumbbells or a machine), heels to the floor
+    and up: the soleus, with the knee bent.
+
+# ── Knee ─────────────────────────────────────────────────────────────────────
 - id: atg_split_squat
-  name: ATG Split Squat (Full ROM)
+  name: ATG Split Squat
   category: mobility
-  modality:
-  - mobility
-  - relative_strength
+  modality: [mobility, durability]
   equipment: []
   effort: medium
   bilateral: false
-  movement_patterns:
-  - squat
-  - knee_extension
-  - hip_flexion
-  requires:
-  - bulgarian_split_squat_light
+  movement_patterns: [squat, knee_extension, hip_flexion]
+  requires: []
   unlocks: []
-  contraindicated_with:
-  - knee_meniscus_acute
-  - knee_meniscus_post_op
+  contraindicated_with: []
   progressions:
-    load: add_dumbbell_load
-    volume: increase_range_of_motion
-  scaling_down:
-  - bulgarian_split_squat_light
-  - step_up_low
+    intensity: lower_front_foot
+    load: hold_dumbbells
+  scaling_down: []
   typical_volume:
     sets: 3
-    reps: 8
-  sources:
-  - "ATG — Ben Patrick"
-  notes: 'Front knee travels well past the toes, hamstring covering calf at the
-    bottom, rear knee approaching the floor. Range comes before load, always: the
-    standard is a pain-free full-depth rep, and only then is a dumbbell added.
-    Elevate the front foot to reduce range while the position is still being earned.'
+    reps: 10
+  sources: ["Ben Patrick, ATG Zero; ATG Program #1 & 2; Knee Ability Series 3 of 10"]
+  notes: >
+    Front knee travels past the toes, hamstring to calf at the bottom, back
+    knee straight. Scales from assisted to unassisted to loaded, and from a
+    higher front foot (a stair or chair) to a lower one; leverage makes it
+    harder the deeper you go.
 
-- id: calf_raise_full_rom
-  name: Full-ROM Calf Raise
-  category: rehab
-  modality:
-  - durability
-  - rehab
-  equipment:
-  - box
-  effort: low
+- id: single_leg_atg_squat
+  name: Single-Leg ATG Squat
+  category: bodyweight
+  modality: [durability, relative_strength]
+  equipment: []
+  effort: medium
   bilateral: false
-  movement_patterns:
-  - knee_extension
+  movement_patterns: [squat, knee_extension]
   requires: []
   unlocks: []
-  contraindicated_with:
-  - achilles_tendinopathy
+  contraindicated_with: []
   progressions:
-    load: add_dumbbell_load
-    volume: add_reps_per_set
-  scaling_down:
-  - ankle_pump
-  typical_volume:
-    sets: 3
-    reps: 20
-  sources:
-  - "ATG — Ben Patrick"
-  notes: 'Off a step, heel dropped to full stretch and driven to full plantarflexion.
-    Partial-range calf work is what Patrick blames for stiff ankles; the bottom half
-    of the range is the half that matters. Single leg, slow, no bouncing.'
-
-- id: jefferson_curl
-  name: Jefferson Curl
-  category: mobility
-  modality:
-  - mobility
-  equipment:
-  - dumbbell
-  effort: low
-  bilateral: true
-  movement_patterns:
-  - hip_hinge
-  - rotation
-  requires: []
-  unlocks: []
-  contraindicated_with:
-  - lumbar_disc
-  - lumbar_disc_pathology
-  progressions:
-    load: add_1_2kg_per_session
-    volume: increase_range_of_motion
-  scaling_down:
-  - single_leg_deadlift_light
+    intensity: less_assistance_lower_box
+  scaling_down: [atg_split_squat]
   typical_volume:
     sets: 3
     reps: 5
-  sources:
-  - "ATG — Ben Patrick"
-  notes: 'Standing on a box, rolling down one vertebra at a time with a light
-    weight, then reversing. Loaded spinal flexion through full range, done light and
-    slow — this is range work, not a hinge. Start with an empty hand and add a
-    kilogram at a time. Not for anyone with an active disc issue.'
+  sources: ["Ben Patrick, ATG Program #1 & 2"]
+  notes: >
+    A single-leg squat to full depth, knee over the toes; assisted (holding
+    on, or to a box) until it can be owned unassisted.
 
-- id: elephant_walk
-  name: Elephant Walk
+- id: low_slow_squat
+  name: Low & Slow Squat
+  category: bodyweight
+  modality: [durability]
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns: [squat, knee_extension]
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    intensity: assisted_bodyweight_loaded
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    reps: 10
+  sources: ["Ben Patrick, Knee Ability Series 3 of 10; ATG Program #1 & 2"]
+  notes: >
+    A full squat slowed through the last quarter — "deliberately SLOWING down
+    in the last quarter of a squat". Assisted, then bodyweight, then loaded;
+    heels elevated as much as feels good.
+
+- id: kot_squat
+  name: KOT Squat
+  category: bodyweight
+  modality: [durability]
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns: [squat, knee_extension]
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    load: weight_held_in_front
+  scaling_down: [low_slow_squat]
+  typical_volume:
+    sets: 3
+    reps: 10
+  sources: ["Ben Patrick, Knee Ability Series 3 of 10; Slant Squat Breakdown"]
+  notes: >
+    The knees-over-toes squat: heels elevated (a slant or plates), torso
+    upright, knees travelling forward to full depth; a weight held out in
+    front counterbalances it.
+
+- id: poliquin_step_up
+  name: Poliquin Step-Up
+  category: bodyweight
+  modality: [durability]
+  equipment: [box]
+  effort: low
+  bilateral: false
+  movement_patterns: [step_up, knee_extension]
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    intensity: higher_step
+    load: hold_dumbbells
+  scaling_down: [reverse_slant_step_up]
+  typical_volume:
+    sets: 2
+    reps: 20
+  sources: ["Ben Patrick, ATG Program #1 & 2; Simplified Step-ups for Knee Health"]
+  notes: >
+    A low step-up, heel raised, driving the knee over the toes to full
+    extension. Regress by slope, by the size of the step and with assistance.
+
+- id: reverse_slant_step_up
+  name: Reverse Slant Step-Up
+  category: bodyweight
+  modality: [durability]
+  equipment: [box]
+  effort: low
+  bilateral: false
+  movement_patterns: [step_up, knee_extension]
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    intensity: less_assistance
+  scaling_down: []
+  typical_volume:
+    sets: 3
+    reps: 20
+  sources: ["Ben Patrick, Knee Ability Series 3 of 10; Pain-Free Ability; Every Regression Counts"]
+  notes: >
+    Stepping backward up onto a low step or slant — "Step 2" of direct knee
+    training after the reverse sled. Begin holding something for assistance,
+    "LESS than your own bodyweight"; slow down, fast up.
+
+# ── Hamstrings, hips and spine ──────────────────────────────────────────────
+- id: nordic
+  name: Nordic Progression
+  category: bodyweight
+  modality: [durability]
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns: [knee_flexion]
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    intensity: ham_curl_ladder_to_nordic_negative
+  scaling_down: []
+  typical_volume:
+    sets: 2
+    reps: 5
+  sources: ["Ben Patrick, ATG Program #1 & 2; Updated ATG Ham Curl / Nordic System"]
+  notes: >
+    The ladder: ham curl on two legs (sliders, cardboard or a roller), two up
+    one down, one leg, then the Nordic negative — lower the body under
+    control and push back up. Reach sets the Nordic: "closer is easier and
+    farther is harder."
+
+- id: full_stretch_rdl
+  name: Full-Stretch Dumbbell RDL
+  category: accessory
+  modality: [durability]
+  equipment: [dumbbell]
+  effort: medium
+  bilateral: true
+  movement_patterns: [hip_hinge]
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    load: heavier_dumbbells
+  scaling_down: [seated_good_morning]
+  typical_volume:
+    sets: 2
+    reps: 15
+  sources: ["Ben Patrick, ATG Program #1 & 2; Knee Ability Series 3 of 10"]
+  notes: >
+    A Romanian deadlift standing on a step so the dumbbells go below the feet:
+    the hamstrings at full stretch.
+
+- id: seated_good_morning
+  name: ATG Seated Good Morning
   category: mobility
-  modality:
-  - mobility
+  modality: [mobility]
   equipment: []
   effort: low
   bilateral: true
-  movement_patterns:
-  - hip_hinge
-  - locomotion
+  movement_patterns: [hip_hinge, spinal_flexion]
   requires: []
-  unlocks:
-  - jefferson_curl
+  unlocks: []
   contraindicated_with: []
   progressions:
-    volume: add_reps_per_set
+    load: bodyweight_dumbbells_barbell
+  scaling_down: []
+  typical_volume:
+    sets: 1
+    reps: 15
+  sources: ["Ben Patrick, ATG Zero"]
+  notes: >
+    Seated, legs wide, folding forward between them and back up. Progress
+    slowly from bodyweight to dumbbells to a barbell.
+
+- id: pigeon_push_up
+  name: Pigeon Push-Up
+  category: mobility
+  modality: [mobility]
+  equipment: []
+  effort: low
+  bilateral: false
+  movement_patterns: [hip_external_rotation]
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    intensity: deeper_range
+  scaling_down: []
+  typical_volume:
+    sets: 1
+    reps: 15
+  sources: ["Ben Patrick, ATG Zero (\"piriformis push-up\"); Knee Ability Series 3 of 10"]
+  notes: >
+    In pigeon — front shin across, back leg long — push the torso down
+    toward the front shin and back up: the piriformis and hip rotators through
+    range. ATG Zero calls it the piriformis push-up.
+
+- id: single_leg_pike
+  name: Single-Leg Pike
+  category: mobility
+  modality: [mobility]
+  equipment: []
+  effort: low
+  bilateral: false
+  movement_patterns: [hip_hinge]
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    intensity: palms_to_floor
+  scaling_down: []
+  typical_volume:
+    sets: 1
+    reps: 15
+  sources: ["Ben Patrick, ATG Zero"]
+  notes: >
+    One leg forward and straight, fold over it and come back up. Only to a
+    level that feels good; the long-term goal is palms to the floor.
+
+- id: slant_toe_touch
+  name: Slant Toe Touch
+  category: mobility
+  modality: [mobility]
+  equipment: []
+  effort: low
+  bilateral: true
+  movement_patterns: [hip_hinge]
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    intensity: steeper_slant
+  scaling_down: []
+  typical_volume:
+    sets: 1
+    reps: 20
+  sources: ["Ben Patrick, ATG Program #1 & 2; Knee Ability Series 3 of 10"]
+  notes: >
+    Toes up on a slant (or a plate), knees straight, reach down toward the
+    toes and back up: the hamstrings and calves together.
+
+- id: couch_stretch
+  name: Couch Stretch
+  category: mobility
+  modality: [mobility]
+  equipment: []
+  effort: low
+  bilateral: false
+  movement_patterns: [hip_extension]
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    intensity: torso_upright
+  scaling_down: []
+  typical_volume:
+    sets: 1
+    duration_sec: 60
+  sources: ["Ben Patrick, ATG Zero; ATG Program #1 & 2"]
+  notes: >
+    Back knee down, shin up the couch (or wall), front foot planted; tall
+    torso, squeeze the glute. An actual couch is gentler than a wall. Held, or
+    pulsed in and out of the end range.
+
+- id: standing_pancake_pulse
+  name: Standing Pancake Pulse
+  category: mobility
+  modality: [mobility]
+  equipment: []
+  effort: low
+  bilateral: true
+  movement_patterns: [hip_hinge, hip_abduction]
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    intensity: wider_and_deeper
+  scaling_down: []
+  typical_volume:
+    sets: 1
+    reps: 20
+  sources: ["Ben Patrick, ATG Program #1 & 2; Knee Ability Series 3 of 10"]
+  notes: >
+    Feet wide, legs straight, fold forward and pulse at the bottom. A box or
+    block under the hands assists and shortens the range.
+
+- id: ql_extension
+  name: QL Extension
+  category: accessory
+  modality: [durability]
+  equipment: [ghd]
+  effort: low
+  bilateral: false
+  movement_patterns: [lateral_flexion]
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    load: hold_a_weight
+  scaling_down: []
+  typical_volume:
+    sets: 2
+    reps: 10
+  sources: ["Ben Patrick, Knee Ability Series 3 of 10; ATG Lower Body Basics on a Budget"]
+  notes: >
+    Side-on in a back-extension machine, lowering sideways and back up: the
+    quadratus lumborum, with gentle progression.
+
+# ── Core ─────────────────────────────────────────────────────────────────────
+- id: l_sit
+  name: L-Sit Progression
+  category: bodyweight
+  modality: [durability]
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns: [hip_flexion, isometric]
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    intensity: bent_legs_to_straight
+  scaling_down: []
+  typical_volume:
+    sets: 1
+    duration_sec: 20
+  sources: ["Ben Patrick, ATG Program #1 & 2; ATG Lower Body Basics on a Budget"]
+  notes: >
+    Hands on two blocks, parallettes or the floor, lift the body and hold the
+    legs out in front — bent legs first, then straight.
+
+- id: garhammer_raise
+  name: Garhammer Raise
+  category: bodyweight
+  modality: [durability]
+  equipment: [pull_up_bar]
+  effort: medium
+  bilateral: true
+  movement_patterns: [hip_flexion]
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    volume: more_reps
+  scaling_down: [l_sit]
+  typical_volume:
+    sets: 2
+    reps: max
+  sources: ["Ben Patrick, Knee Ability Series 3 of 10"]
+  notes: >
+    Hanging from a bar, knees driven up to the chest and the hips curled up
+    under them, lowered under control.
+
+# ── Upper body ───────────────────────────────────────────────────────────────
+- id: pullover
+  name: Pullover
+  category: mobility
+  modality: [mobility]
+  equipment: []
+  effort: low
+  bilateral: true
+  movement_patterns: [shoulder_flexion]
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    load: wall_then_dumbbell
+  scaling_down: []
+  typical_volume:
+    sets: 1
+    reps: 15
+  sources: ["Ben Patrick, ATG Zero"]
+  notes: >
+    Arms reaching overhead through full shoulder range: back to a wall, or
+    lying with a dumbbell.
+
+- id: external_rotation
+  name: External Rotation
+  category: rehab
+  modality: [durability]
+  equipment: []
+  effort: low
+  bilateral: false
+  movement_patterns: [shoulder_external_rotation]
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    load: 5_to_20_lb
+  scaling_down: []
+  typical_volume:
+    sets: 1
+    reps: 15
+  sources: ["Ben Patrick, ATG Zero"]
+  notes: >
+    Elbow fixed, rotate the forearm up and out against a light weight. "I start
+    most clients at 5-10 pounds, and seek to build to 10-20 pounds."
+
+- id: band_pull_apart
+  name: Band Pull-Apart
+  category: accessory
+  modality: [durability]
+  equipment: [resistance_band]
+  effort: low
+  bilateral: true
+  movement_patterns: [horizontal_pull]
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    load: stronger_band
   scaling_down: []
   typical_volume:
     sets: 2
     reps: 20
-  sources:
-  - "ATG — Ben Patrick"
-  notes: 'Hands on the floor, alternately straightening one leg while bending the
-    other, walking the hamstrings through range. Daily-tolerable hamstring work that
-    does not require holding a static stretch.'
+  sources: ["Ben Patrick, ATG Program #1 & 2"]
+  notes: >
+    Arms straight in front, pull the band apart to the chest, shoulder blades
+    together.
 
-- id: seated_good_morning
-  name: Seated Good Morning
-  category: mobility
-  modality:
-  - mobility
-  - durability
-  equipment:
-  - barbell
+- id: atg_shoulder_press
+  name: ATG Dumbbell Shoulder Press
+  category: accessory
+  modality: [durability]
+  equipment: [dumbbell]
   effort: medium
   bilateral: true
-  movement_patterns:
-  - hip_hinge
-  requires:
-  - glute_bridge
+  movement_patterns: [vertical_push]
+  requires: []
   unlocks: []
-  contraindicated_with:
-  - lumbar_disc
-  - lumbar_disc_pathology
+  contraindicated_with: []
   progressions:
-    load: add_2_5kg_per_week
-    volume: add_reps_per_set
-  scaling_down:
-  - single_leg_deadlift_light
+    load: heavier_dumbbells
+  scaling_down: []
   typical_volume:
-    sets: 3
+    sets: 2
     reps: 10
-  sources:
-  - "ATG — Ben Patrick"
-  notes: 'Seated on a box with a light bar, hinging forward under control. Takes the
-    legs out of the movement so the load lands on the spinal erectors and hamstrings
-    at length. Light — this is a durability exercise, not a strength lift.'
+  sources: ["Ben Patrick, ATG Program #1 & 2; Knee Ability Series 3 of 10"]
+  notes: >
+    A dumbbell press through full range: lowered deep, past the shoulders,
+    pressed to lockout.
+
+- id: pull_up
+  name: Pull-Up Progression
+  category: bodyweight
+  modality: [relative_strength]
+  equipment: [pull_up_bar]
+  effort: medium
+  bilateral: true
+  movement_patterns: [vertical_pull]
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    intensity: assisted_to_full
+  scaling_down: [bodyweight_row]
+  typical_volume:
+    sets: 1
+    reps: max
+  sources: ["Ben Patrick, ATG Program #1 & 2; Simplified Pull-up Scale; Thrive With 5?"]
+  notes: >
+    Full pull-ups, from a dead hang. The scale: rings set low with the legs
+    assisting up and a controlled lowering, then full reps. Patrick's own
+    check: "10 full pull-ups every week."
+
+- id: push_up
+  name: Full Push-Up Progression
+  category: bodyweight
+  modality: [relative_strength]
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns: [horizontal_push]
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    intensity: incline_to_floor_to_deficit
+  scaling_down: []
+  typical_volume:
+    sets: 1
+    reps: max
+  sources: ["Ben Patrick, ATG Program #1 & 2; Minimalistic Full-Body Program"]
+  notes: >
+    Full-range push-ups, hands raised (a bench, a wall) until the floor can be
+    owned for every rep.
+
+- id: bodyweight_row
+  name: Bodyweight Row
+  category: bodyweight
+  modality: [relative_strength]
+  equipment: [rings]
+  effort: medium
+  bilateral: true
+  movement_patterns: [horizontal_pull]
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    intensity: feet_forward
+  scaling_down: []
+  typical_volume:
+    sets: 1
+    reps: max
+  sources: ["Ben Patrick, Knee Ability Series 3 of 10; Thrive With 5?"]
+  notes: >
+    Rows on rings: the farther back you stand, the easier; feet forward and
+    the body flatter make it harder.
+
+- id: face_pull
+  name: Face Pull
+  category: accessory
+  modality: [durability]
+  equipment: [resistance_band]
+  effort: low
+  bilateral: true
+  movement_patterns: [horizontal_pull]
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    load: stronger_band
+  scaling_down: []
+  typical_volume:
+    sets: 2
+    reps: 20
+  sources: ["Ben Patrick, Knee Ability Series 3 of 10; Minimalistic Full-Body Program"]
+  notes: >
+    Pull a band (or rings, or a cable) to the face, elbows high, rotating the
+    hands back at the end.
+
+- id: incline_bench_press
+  name: Incline Bench Press
+  category: barbell
+  modality: [max_strength]
+  equipment: [barbell, rack, plates]
+  effort: medium
+  bilateral: true
+  movement_patterns: [horizontal_push]
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    load: add_weight
+  scaling_down: [push_up]
+  typical_volume:
+    sets: 2
+    reps: 8
+  sources: ["Ben Patrick, Knee Ability Series 3 of 10"]
+  notes: >
+    A barbell bench press on an incline bench, lowered to the upper chest.

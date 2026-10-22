@@ -1,0 +1,112 @@
+id: operator_fitness
+name: "Operator Fitness (Gym Jones)"
+source_philosophy: gym_jones
+
+goals_served:
+  - mixed_modal_conditioning
+  - strength_endurance
+  - aerobic_base
+
+sessions_per_week:
+  max_strength: 1
+  mixed_modal_conditioning: 2
+  aerobic_base: 3
+modality_priority:
+  committed: [mixed_modal_conditioning]
+  core: [aerobic_base]
+  supplementary: []
+
+prescription_policy: framework
+# Every day as the plan writes it (its loads, rests and rounds).
+progression_model: as_written
+
+applicable_when:
+  training_level:
+    - intermediate
+    - advanced
+    - elite
+  days_per_week_min: 6
+  days_per_week_max: 7
+
+# No deload_protocol: the plans rest one day a week and follow every hard day
+# with a recovery day; none writes a deload week.
+
+categories:
+  strength:
+    name: "Strength"
+    modality: max_strength
+    archetypes:
+      - gj_of_d01
+      - gj_of_d12
+      - gj_of_d15
+      - gj_of_d26
+  recovery:
+    name: "Recovery"
+    modality: aerobic_base
+    archetypes:
+      - gj_of_d02
+      - gj_of_d04
+      - gj_of_d09
+      - gj_of_d11
+      - gj_of_d16
+      - gj_of_d18
+      - gj_of_d23
+      - gj_of_d25
+  progression:
+    name: "Progression"
+    modality: mixed_modal_conditioning
+    archetypes:
+      - gj_of_d03
+      - gj_of_d22
+  circuit:
+    name: "Circuit"
+    modality: mixed_modal_conditioning
+    archetypes:
+      - gj_of_d05
+      - gj_of_d24
+  endurance:
+    name: "Endurance (more than 90 minutes)"
+    modality: aerobic_base
+    archetypes:
+      - gj_of_d06
+      - gj_of_d13
+      - gj_of_d20
+      - gj_of_d27
+  power_endurance:
+    name: "Power Endurance"
+    modality: anaerobic_intervals
+    archetypes:
+      - gj_of_d08
+  interval:
+    name: "Interval"
+    modality: anaerobic_intervals
+    archetypes:
+      - gj_of_d10
+  breathing_ladder:
+    name: "Breathing Ladder"
+    modality: strength_endurance
+    archetypes:
+      - gj_of_d17
+  accumulation:
+    name: "Accumulation"
+    modality: mixed_modal_conditioning
+    archetypes:
+      - gj_of_d19
+
+sources:
+  - "Gym Jones, Operator Fitness (Rob MacDonald)"
+  - "Gym Jones, Soldier of Steel (2013)"
+
+notes: >
+  A one-month Foundation period, six days a week: three key workouts (strength,
+  circuit, accumulation), two recovery workouts and an endurance hike with a light
+  pack; an even mix of strength, power endurance and endurance.
+
+expectations:
+  min_weeks: 4
+  ideal_weeks: 4
+  min_days_per_week: 6
+  ideal_days_per_week: 6
+  min_session_minutes: 60
+  ideal_session_minutes: 120
+  supports_split_days: false

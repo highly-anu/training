@@ -59,6 +59,9 @@ tracks:
         base_intensity: 2
         specific: 1
         taper: 2
+      # Specific's back-to-back long days (pod_spec, R20).
+      adjacent_to_by_phase:
+        specific: long_day
       min_spacing_days: 1
       max_rpe: 6
       progression:

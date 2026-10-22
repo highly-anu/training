@@ -1,0 +1,42 @@
+id: cf_linda
+name: "Linda"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 35
+pool_only: true
+
+slots:
+  - role: linda
+    slot_type: for_time
+    rounds: 10
+    exercise_filter:
+      exercise_ids: [deadlift]
+      ordered: true
+    load: "1.5 x bodyweight"
+    notes: "10 down to 1 rep of each; set up three bars. Post time."
+
+  - role: linda_2
+    slot_type: amrap_movement
+    parent_slot_role: linda
+    exercise_filter:
+      exercise_ids: [bench_press]
+      ordered: true
+    load: "bodyweight"
+
+  - role: linda_3
+    slot_type: amrap_movement
+    parent_slot_role: linda
+    exercise_filter:
+      exercise_ids: [clean]
+      ordered: true
+    load: "0.75 x bodyweight"
+
+required_equipment:
+- barbell
+- rack
+- plates
+sources:
+- "CrossFit, Benchmark Workouts (2003) / The New Girls (2004) / crossfit.com/benchmark"
+notes: >
+  10-9-8-7-6-5-4-3-2-1 reps, for time, of deadlift at 1.5 bodyweight, bench press at bodyweight, clean at 0.75 bodyweight.

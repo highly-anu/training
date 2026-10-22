@@ -529,11 +529,18 @@ def test_bjj_substitutes_are_declared_and_refusals_name_the_way_out():
                            ('pinch', 'plate_pinch', 'dead_hang')):
         block = next(b for b in module['blocks'] if b['role'] == role)
         assert tc._choose(block, module, catalog, c, ({out}, set())) == sub, role
-    # StrengthLog's lifts are essential: an injury one has no substitute for
-    # refuses, naming it (the box jump under a knee flag, the presses under a shoulder's).
-    for flag in ('patellar_tendinopathy', 'shoulder_instability'):
-        hurt, _, _ = _bjj(weeks=1, injury_flags=[flag])
-        assert not hurt['weeks'], flag
+    # A lift an injury rules out, with no substitute, is left out and said; the
+    # rest of the workout runs (the owner's call, 2026-10-21).
+    hurt, g, c = _bjj(weeks=1, injury_flags=['shoulder_instability'])
+    tc.verify(hurt, g['training_contract'], c)
+    left = [line for line in hurt['compromises'] if 'your injury rules it out' in line]
+    assert all(any(name in line for line in left) for name in ('Bench Press', 'Overhead Press', 'Hanging Leg Raise')), left
+    lifts = {e['exercise']['id'] for ss in hurt['weeks'][0]['schedule'].values() for s in ss for e in s['exercises']
+             if e.get('exercise') and e['slot_role'].startswith('grappling_strength')}
+    assert 'trap_bar_deadlift' in lifts and not lifts & {'bench_press', 'overhead_press', 'hanging_leg_raise'}, lifts
+    # Rolling, positional work and drilling all ruled out leave no class: refused.
+    knee, _, _ = _bjj(weeks=1, injury_flags=['patellar_tendinopathy'])
+    assert not knee['weeks'] and 'mat_class' in knee['validation_errors'][0]['message']
     lumbar, _, _ = _bjj(weeks=1, injury_flags=['lumbar_disc'])
     assert not lumbar['weeks'] and 'none of' in lumbar['validation_errors'][0]['message']
 
@@ -561,6 +568,11 @@ def test_bjj_conditioning_is_optional_and_never_outnumbers_the_mat():
         q, _, _ = _bjj(weeks=1, days_per_week=4, **overrides)
         assert not any(m['id'] == 'competition_conditioning' for ss in q['weeks'][0]['schedule'].values()
                        for s in ss for m in s['modules']), overrides
+    # The output review (2026-10-22): a deload frees time, but adds no session
+    # the build weeks had no room for — at 60 minutes, no conditioning in week 7.
+    short, _, _ = _bjj(weeks=7)
+    assert not any(m['id'] == 'competition_conditioning' for w in short['weeks']
+                   for ss in w['schedule'].values() for s in ss for m in s['modules'])
 
 
 UPHILL_GYM = ['barbell', 'rack', 'plates', 'pull_up_bar', 'kettlebell', 'box', 'open_space']
@@ -613,6 +625,12 @@ def test_uphill_volume_ramps_recovers_and_holds():
     assert all('No pack yet.' in t for t in notes(1, 'aerobic_aerobic'))
     assert all('5 % of your bodyweight' in t for t in notes(5, 'aerobic_aerobic'))
     assert all('Pack' not in t for t in notes(9, 'long_day_long'))
+    # Specific's long days back to back (pod_spec, R20); the Zone 3 days stay 48 h apart.
+    for n in (21, 24, 27):
+        days = {m: [d for d, ss in weeks[n]['schedule'].items() for s in ss for x in s['modules'] if x['id'] == m]
+                for m in ('long_day', 'aerobic', 'zone_3')}
+        assert abs(days['aerobic'][0] - days['long_day'][0]) == 1, (n, days)
+        assert days['zone_3'][1] - days['zone_3'][0] >= 2, (n, days)
 
 
 def test_uphill_strength_goes_general_max_then_muscular_endurance():
@@ -657,6 +675,48 @@ def test_uphill_caps_the_long_day_and_refuses_what_it_is_not_for():
     assert not novice['weeks'] and 'intermediate, advanced and elite athletes' in novice['validation_errors'][0]['message']
     five, _, _ = _uphill(weeks=1, days_per_week=5)
     assert not five['weeks'], 'six days a week (R2)'
+
+
+FBB_GYM = ['barbell', 'rack', 'plates', 'dumbbell', 'pull_up_bar', 'resistance_band', 'cable_machine', 'open_space']
+
+
+def _filly(track=None, weeks=13, **overrides):
+    goal = goals.philosophy_to_goal('marcus_filly', list(loader.load_all_frameworks().values()), track)
+    c = dict(equipment=FBB_GYM, days_per_week=3, session_time_minutes=60, training_level='intermediate')
+    c.update(overrides)
+    return generate(None, c, num_weeks=weeks, goal_dict=goal, output_format='dict'), goal, c
+
+
+def test_filly_runs_the_sample_weeks_in_cycles_and_a_bridge_week():
+    # R3, R4, R6: each track's three sample days as printed, about an hour each;
+    # R8, R9: two six-week cycles of them, then the Bridge week at RPE 6–7, the
+    # work kept (I1: the published week repeats).
+    for track in ('functional_bodybuilding', 'pump_lift'):
+        p, g, c = _filly(track, weeks=14)
+        tc.verify(p, g['training_contract'], c)
+        days = lambda w: [s for _, ss in sorted(w['schedule'].items()) for s in ss]
+        for w in p['weeks']:
+            assert [s['modules'][0]['variant'] for s in days(w)] == ['day_1', 'day_2', 'day_3'], (track, w['week_number'])
+            assert all(50 <= s['archetype']['duration_estimate_minutes'] <= 60 for s in days(w)), track
+            assert all(s['is_deload'] == (w['week_number'] == 13) for s in days(w)), (track, w['week_number'])
+        ids = lambda s: [e['exercise']['id'] for e in s['exercises'] if e.get('exercise')]
+        first = days(p['weeks'][0])
+        assert ids(first[0])[0] == 'fbb_warm_up' and ids(first[0])[-1] == 'fbb_cooldown'
+        assert ('fbb_conditioning' in ids(first[0])) == (track == 'functional_bodybuilding'), 'Pump Lift has no conditioning (R4)'
+        bridge = days(p['weeks'][12])
+        assert [ids(s) for s in bridge] == [ids(s) for s in first], 'the Bridge week keeps the work'
+        assert all('RPE 6–7' in e['load']['load_note'] for s in bridge for e in s['exercises'] if e.get('exercise'))
+    p, g, c = _filly(weeks=1)
+    row = next(e for s in p['weeks'][0]['schedule'][1] for e in s['exercises'] if e['slot_role'] == 'persist_session_tripod_row')
+    assert (row['load']['sets'], row['load']['reps'], row['load']['target_rpe']) == (6, '10', 7)
+    assert '@20X1' in row['slot']['notes']
+    # Without a cable machine the sample's barbell options stand in (I5).
+    no_cable, g, c = _filly(weeks=1, equipment=[e for e in FBB_GYM if e != 'cable_machine'])
+    tc.verify(no_cable, g['training_contract'], c)
+    day_3 = [e['exercise']['id'] for s in no_cable['weeks'][0]['schedule'][5] for e in s['exercises'] if e.get('exercise')]
+    assert 'barbell_skull_crusher' in day_3 and 'barbell_bicep_curl' in day_3, day_3
+    novice, _, _ = _filly(weeks=1, training_level='novice')
+    assert not novice['weeks'], 'no novice track (I6)'
 
 
 SS_GYM = ['barbell', 'rack', 'plates', 'bench', 'pull_up_bar', 'open_space']
@@ -797,6 +857,31 @@ def test_ss_first_session_works_up():
                                'deadlift': {'made': True, 'weightKg': 80}})}}
     state = tc.confirmed_state(p, logs, g['training_contract'])['novice_lp']
     assert state['lifts']['back_squat']['next_kg'] == 67.5 and state['lifts']['deadlift']['next_kg'] == 87.5
+
+
+def test_ss_forecast_without_weights_says_the_jump_it_made():
+    # The output review (2026-10-22): with no weights entered, each session
+    # names the jump the last one earned — the squat's 5 kg for two weeks, the
+    # deadlift's 7.5 and the presses' and clean's 2.5 for three exposures —
+    # each work-up in the block's own reps, and the layoff advice once a session.
+    p, g, c = _ss(weeks=3)
+    tc.verify(p, g['training_contract'], c)
+    notes: dict = {}
+    for _, s in _ss_sessions(p):
+        for lift, load in _lifts(s).items():
+            notes.setdefault(lift, []).append(load.get('load_note') or '')
+    jumps = {lift: [n.split(' kg')[0] for n in ns[1:]] for lift, ns in notes.items() if lift != 'chin_up'}
+    assert jumps['back_squat'][:6] == ['5'] * 5 + ['2.5'], jumps['back_squat']
+    assert jumps['deadlift'][:3] == ['7.5', '7.5', '2.5'], jumps['deadlift']
+    assert jumps['strict_press'][:3] == ['2.5', '2.5', '1.25'], jumps['strict_press']
+    assert jumps['power_clean'][:3] == ['2.5', '2.5', '1.25'], jumps['power_clean']
+    assert 'sets of 3' in notes['power_clean'][0] and 'rest of the sets' in notes['power_clean'][0]
+    assert 'sets of 5' in notes['deadlift'][0] and 'rest of the sets' not in notes['deadlift'][0]
+    assert 'your last Back Squat 3×5' in notes['back_squat'][1]
+    advice = g['training_contract']['modules'][0]['advice']
+    for _, s in _ss_sessions(p):
+        said = [e for e in s['exercises'] if advice in (e['load'].get('load_note') or '')]
+        assert len(said) == 1 and said[0]['exercise']['id'] == 'back_squat', 'once, on the first lift'
 
 
 def test_ss_refuses_with_the_unblocking_constraint():

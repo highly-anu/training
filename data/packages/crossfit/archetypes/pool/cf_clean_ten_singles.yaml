@@ -1,0 +1,26 @@
+id: cf_clean_ten_singles
+name: "Clean"
+modality: max_strength
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 50
+pool_only: true
+
+slots:
+  - role: lift
+    slot_type: sets_reps
+    sets: 10
+    reps: '1-1-1-1-1-1-1-1-1-1'
+    rest_sec: 180
+    exercise_filter:
+      exercise_ids: [clean]
+      ordered: true
+    load: "Heavy: as much as each set allows, rest long and deliberate. Post loads."
+
+required_equipment:
+- barbell
+- plates
+sources:
+- "crossfit.com Workout of the Day, 2005 (2005-07-03)"
+notes: >
+  Clean 1-1-1-1-1-1-1-1-1-1 reps. Post loads.

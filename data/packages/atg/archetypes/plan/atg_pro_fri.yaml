@@ -1,0 +1,87 @@
+id: atg_pro_fri
+name: Knee Ability Pro — Friday
+modality: mobility
+category: gpp_durability
+training_levels:
+- intermediate
+- advanced
+- elite
+duration_estimate_minutes: 45
+pool_only: true
+slots:
+- role: pigeon_push_up
+  slot_type: sets_reps
+  sets: 2
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - pigeon_push_up
+    ordered: true
+  notes: Pigeon push-up, 2 x 20.
+- role: pancake
+  slot_type: sets_reps
+  sets: 2
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - standing_pancake_pulse
+    ordered: true
+  notes: Standing pancake pulse, 2 x 20.
+- role: couch_stretch
+  slot_type: sets_reps
+  sets: 2
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - couch_stretch
+    ordered: true
+  notes: Couch stretch pulse, 2 x 20.
+- role: slant_toe_touch
+  slot_type: sets_reps
+  sets: 2
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - slant_toe_touch
+    ordered: true
+  notes: Slant toe touch, 2 x 20.
+- role: l_sit
+  slot_type: static_hold
+  sets: 2
+  hold_seconds: 30
+  exercise_filter:
+    exercise_ids:
+    - l_sit
+    ordered: true
+  notes: L-sit, 2 x burnout — held as long as it can be owned.
+- role: face_pull
+  slot_type: sets_reps
+  sets: 2
+  reps: 20
+  exercise_filter:
+    exercise_ids:
+    - face_pull
+    ordered: true
+  notes: Face pull, 2 x 20.
+- role: incline_bench
+  slot_type: sets_reps
+  sets: 2
+  reps: 8
+  exercise_filter:
+    exercise_ids:
+    - incline_bench_press
+    ordered: true
+  notes: Incline bench, 2 x 8.
+- role: pull_up
+  slot_type: sets_reps
+  sets: 2
+  reps: max
+  exercise_filter:
+    exercise_ids:
+    - pull_up
+    ordered: true
+  notes: Pull-up, 2 x burnout.
+required_equipment: []
+sources:
+- 'Ben Patrick, ATG: Knee Ability Series 3 of 10 (2025-02-11)'
+notes: Flexibility pulses, then the L-sit, face pulls, incline bench and pull-ups.

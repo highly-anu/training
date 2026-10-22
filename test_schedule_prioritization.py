@@ -2,6 +2,10 @@
 """Test priority-based modality dropping and duration matching."""
 import json
 import sys
+
+import fixture_packages
+fixture_packages.use()
+
 from src.generator import generate
 from src import goals, loader
 from api import _normalize_schedule_constraints
@@ -9,22 +13,24 @@ from api import _normalize_schedule_constraints
 # Force UTF-8 for Windows console
 sys.stdout.reconfigure(encoding='utf-8') if hasattr(sys.stdout, 'reconfigure') else None
 
-print('=== TEST 1: Priority Tier Dropping (2 days only) ===')
+print('=== TEST 1: Priority Tier Dropping (4 days for seven sessions) ===')
 print()
 
-# Simulate user with limited availability (3 days should trigger tier dropping)
+# Simulate user with limited availability (fewer days than the framework's
+# seven sessions should trigger tier dropping)
 constraints_limited = {
-    'equipment': ['kettlebell'],
-    'days_per_week': 3,  # Limited but valid
+    'equipment': ['barbell', 'rack', 'plates', 'kettlebell', 'pull_up_bar', 'rower', 'box', 'open_space',
+                  'resistance_band'],
+    'days_per_week': 4,  # the framework writes seven sessions
     'session_time_minutes': 60,
     'training_level': 'intermediate',
-    'training_phase': 'base',
 }
 
-# A philosophy on the general scheduler: Wildman, the old choice, is built by
-# its training contract now, which refuses a program without kettlebells
-# rather than exercising the priority tiers and duration matching tested here.
-phil_id = 'crossfit'
+# A philosophy on the general scheduler: every shipped package runs as a
+# training contract or as week templates now, which do not exercise the
+# priority tiers and duration matching tested here, so it is the test fixture
+# (test_packages/block_fixture, staged by fixture_packages).
+phil_id = 'block_fixture'
 phil = loader.load_philosophy(phil_id)
 all_frameworks = loader.load_all_frameworks()
 
@@ -71,17 +77,13 @@ for day_sessions in week1['schedule'].values():
 print(f'Modalities in Week 1: {", ".join(sorted(modalities_used))}')
 print()
 
-# Verify tier 1 (foundational) modalities are present
-if 'aerobic_base' in modalities_used and 'max_strength' in modalities_used:
-    print('[OK] Tier 1 modalities (aerobic_base, max_strength) kept ✓')
+# The committed tier is kept whatever else is dropped
+committed = set(all_frameworks[primary_fw_id]['modality_priority']['committed'])
+if committed <= modalities_used:
+    print(f'[OK] Committed modalities ({", ".join(sorted(committed))}) kept ✓')
 else:
-    print('[FAIL] Tier 1 modalities missing! ✗')
-
-# Verify tier 4 (accessory) modalities are dropped
-if 'mobility' not in modalities_used:
-    print('[OK] Tier 4 modality (mobility) dropped ✓')
-else:
-    print('[NOTE] Tier 4 modality (mobility) still present')
+    print('[FAIL] Committed modalities missing! ✗')
+    sys.exit(1)
 
 print()
 print('=== TEST 2: Duration Matching with User Schedule ===')
@@ -94,18 +96,18 @@ weekly_schedule = {
     'Wednesday': {'session1': 'short', 'session2': 'rest', 'session3': 'rest', 'session4': 'rest'},
     'Thursday': {'session1': 'rest', 'session2': 'rest', 'session3': 'rest', 'session4': 'rest'},
     'Friday': {'session1': 'long', 'session2': 'rest', 'session3': 'rest', 'session4': 'rest'},
-    'Saturday': {'session1': 'rest', 'session2': 'rest', 'session3': 'rest', 'session4': 'rest'},
+    'Saturday': {'session1': 'long', 'session2': 'rest', 'session3': 'rest', 'session4': 'rest'},
     'Sunday': {'session1': 'rest', 'session2': 'rest', 'session3': 'rest', 'session4': 'rest'},
 }
 
 constraints_scheduled = {
-    'equipment': ['barbell', 'pull_up_bar', 'rower'],
+    'equipment': ['barbell', 'rack', 'plates', 'pull_up_bar', 'rower', 'kettlebell', 'box', 'open_space',
+                  'resistance_band'],
     'weekly_schedule': weekly_schedule,
     'training_level': 'intermediate',
-    'training_phase': 'base',
 }
 
-print('User schedule: Mon=Long (75min), Wed=Short (40min), Fri=Long (75min)')
+print('User schedule: Mon=Long (75min), Wed=Short (40min), Fri=Long (75min), Sat=Long (75min)')
 print()
 
 # api.py derives days_per_week / day_configs from weekly_schedule before

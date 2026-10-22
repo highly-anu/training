@@ -1,0 +1,40 @@
+id: cf_jt
+name: "J.T."
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 20
+pool_only: true
+
+slots:
+  - role: jt
+    slot_type: for_time
+    reps_per_round: 15
+    rounds: 3
+    exercise_filter:
+      exercise_ids: [handstand_push_up]
+      ordered: true
+    notes: "21-15-9 reps of each, for time. Post time."
+
+  - role: jt_2
+    slot_type: amrap_movement
+    parent_slot_role: jt
+    reps_per_round: 15
+    exercise_filter:
+      exercise_ids: [dip_ring]
+      ordered: true
+
+  - role: jt_3
+    slot_type: amrap_movement
+    parent_slot_role: jt
+    reps_per_round: 15
+    exercise_filter:
+      exercise_ids: [push_up]
+      ordered: true
+
+required_equipment:
+- rings
+sources:
+- "crossfit.com Workout of the Day, 2005 (2005-07-06)"
+notes: >
+  21-15-9 reps, for time, of handstand push-ups, ring dips and push-ups.

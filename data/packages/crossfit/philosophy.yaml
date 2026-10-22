@@ -1,85 +1,105 @@
 id: crossfit
-name: "CrossFit / CrossFit Endurance (Glassman)"
+name: "CrossFit (Glassman)"
 core_principles:
-  - intensity_over_volume
-  - broad_gpp_is_protective_and_transferable
-  - mixed_modal_conditioning_reveals_weaknesses
-  - constant_variation_prevents_accommodation
-  - functional_movement_over_machine_based_isolation
-  - form_mastery_before_load_or_speed
-  - benchmark_testing_tracks_adaptation
-  - cfe_applies_cf_principles_to_monostructural_domains
+  - constantly_varied_functional_movement_at_high_intensity
+  - three_days_on_one_day_off
+  - one_two_and_three_element_days
+  - benchmark_workouts_repeated_to_measure_progress
+  - mechanics_then_consistency_then_intensity
+  - scale_load_and_intensity_never_the_program
 scope:
-  - strength_endurance
-  - anaerobic_intervals
   - mixed_modal_conditioning
-bias:
-  - mixed_modal_conditioning
-  - anaerobic_intervals
-  - strength_endurance
-avoid_with:
   - max_strength
   - aerobic_base
+  - movement_skill
+bias:
+  - mixed_modal_conditioning
+avoid_with: []
 required_equipment:
   - barbell
   - rack
   - plates
   - pull_up_bar
+  - rings
   - jump_rope
   - box
+  - kettlebell
+  - medicine_ball
+  - rower
+  - open_space
 intensity_model: constant_variation
 progression_philosophy: density_based
 sources:
-  - "CrossFit Journal 2002–2012 (Glassman, Rippetoe, Starr, Dougherty, Takano, Vaughn)"
-  - "data/crossfit/crossfit journal/"
+  - "Greg Glassman, A Theoretical Template for CrossFit's Programming (2003); What Is Fitness? (2002); Foundations (2002); Benchmark Workouts (2003)"
+  - "The New Girls (CrossFit Journal, 2004); CrossFit Level 1 Training Guide; crossfit.com benchmarks and the 2005 Workouts of the Day"
 notes: >
-  CrossFit's progression mechanism is primarily density-based: same benchmark WOD
-  completed faster or with more rounds. Load-based progression exists for barbell
-  work (linear on beginner program) but is secondary to time/rounds as the primary
-  metric. Constant variation is intentional — the anti-periodization stance.
-  CFE (CrossFit Endurance) applies the same high-intensity, low-volume philosophy
-  to running, rowing, and cycling; it explicitly rejects high-mileage base building.
-  Rhabdo risk on first exposure requires mandatory scaling.
+  Constantly varied, high-intensity functional movement. Glassman's template
+  cycles three kinds of day — one element (a long slow distance, a single
+  skill, a single heavy lift), two elements for time, three elements for twenty
+  minutes — three days on and one off. The Girls recur irregularly, so progress
+  can be measured. Loads, reps and rounds are scaled to the athlete; the
+  program is not changed.
 
-# Every modality this philosophy's frameworks prescribe has an archetype in
-# this package; generation never needs to reach into another philosophy.
+# Every exercise of its workouts is the package's own.
 self_contained: true
 
-# One repeating phase: CrossFit's anti-periodization stance means constant
-# variation, not a block sequence. Phase text is drafted from this package's
-# own notes and framework notes — review before relying on it.
 primary_track_id: constantly_varied
 tracks:
   - id: constantly_varied
-    name: "Constantly Varied Conditioning"
+    name: "Three On, One Off"
     description: >
-      Constantly varied, high-intensity functional movement, measured by doing
-      the same work faster or with more rounds.
+      Glassman's template as crossfit.com ran it: three days of training, one
+      of rest, the days cycling through one, two and three elements.
     phases:
       - id: constantly_varied
         name: "Constantly Varied"
         kind: base
         weeks: 12
         repeatable: true
-        framework_id: emom_amrap
-        focus: "Density — more work in the same time"
+        framework_id: crossfit_template
+        focus: "Work capacity across broad time and modal domains"
         description: >
-          Variation is deliberate: no blocks, no peaking. EMOM and AMRAP
-          formats are the vehicle, and progress is density — a benchmark
-          completed faster, or more rounds in the same time domain. Barbell
-          work progresses by load as a secondary measure. Scale first
-          exposures.
+          Twelve weeks hold the twelve-day cycle seven times: a long slow distance,
+          a skill or a heavy lift; a couplet for time; a triplet for twenty minutes;
+          rest. Each day takes the next workout of its kind, the Girls among them.
         adaptations:
-          - "Mixed-modal work capacity"
-          - "Output across time domains"
-        intensity: "High intensity, low volume"
-        # Variation is the method: the main lift changes from session to session.
-        rotate_main_lifts: true
-        # Benchmark testing is how CrossFit tracks adaptation: a benchmark girl
-        # every fourth week, in turn, in place of a conditioning day.
-        tests:
-          - archetypes: [cf_benchmark_cindy, cf_benchmark_fran, cf_benchmark_helen]
-            every: 4
-            in_place_of: mixed_modal_conditioning
-        checks:
-          modalities_required: [mixed_modal_conditioning]
+          - "Work capacity across time and modal domains"
+          - "Strength, skill and endurance"
+        intensity: "High, relative to the athlete"
+        week_templates:
+          - [m, gw, triplet, rest, g, wm, triplet]
+          - [rest, w, mg, triplet, rest, m, gw]
+          - [triplet, rest, g, wm, triplet, rest, w]
+          - [mg, triplet, rest, m, gw, triplet, rest]
+          - [g, wm, triplet, rest, w, mg, triplet]
+          - [rest, m, gw, triplet, rest, g, wm]
+          - [triplet, rest, w, mg, triplet, rest, m]
+          - [gw, triplet, rest, g, wm, triplet, rest]
+          - [w, mg, triplet, rest, m, gw, triplet]
+          - [rest, g, wm, triplet, rest, w, mg]
+          - [triplet, rest, m, gw, triplet, rest, g]
+          - [wm, triplet, rest, w, mg, triplet, rest]
+        drop_order: [g, m, w, mg, wm, gw, triplet]
+  - id: five_on_two_off
+    name: "Five On, Two Off"
+    description: >
+      The template's five-days-on, two-days-off regimen, for fixed weekdays.
+    phases:
+      - id: five_on_two_off
+        name: "Constantly Varied (5/2)"
+        kind: base
+        weeks: 12
+        repeatable: true
+        framework_id: crossfit_template
+        focus: "Work capacity across broad time and modal domains"
+        description: >
+          The five-on, two-off pattern's three weeks, repeating: one, two and three element
+          days through the week, the weekend off.
+        adaptations:
+          - "Work capacity across time and modal domains"
+        intensity: "High, relative to the athlete"
+        week_templates:
+          - [m, gw, triplet, mg, w, rest, rest]
+          - [g, wm, triplet, gw, m, rest, rest]
+          - [w, mg, triplet, wm, g, rest, rest]
+        drop_order: [g, m, w, mg, wm, gw, triplet]

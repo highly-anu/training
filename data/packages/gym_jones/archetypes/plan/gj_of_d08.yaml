@@ -1,0 +1,39 @@
+id: gj_of_d08
+name: "Operator Fitness — Day 8: Power Endurance"
+modality: anaerobic_intervals
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 60
+pool_only: true
+
+slots:
+  - role: warm_up
+    slot_type: time_domain
+    duration_minutes: 10
+    exercise_filter:
+      exercise_ids: [run_easy]
+      ordered: true
+
+  - role: time_trial
+    slot_type: for_time
+    rounds: 1
+    distance_m: 4828
+    exercise_filter:
+      exercise_ids: [run_interval]
+      ordered: true
+    notes: "3 miles, all out (a time trial)."
+
+  - role: cool_down
+    slot_type: time_domain
+    duration_minutes: 15
+    exercise_filter:
+      exercise_ids: [run_easy]
+      ordered: true
+    notes: "10-20 minutes easy."
+
+required_equipment:
+- open_space
+sources:
+- "Gym Jones, Operator Fitness (Rob MacDonald)"
+notes: >
+  10 minutes easy, a 3-mile run time trial, 10-20 minutes easy.

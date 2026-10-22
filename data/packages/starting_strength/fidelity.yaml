@@ -164,4 +164,11 @@ currency:
   linear_progression: {entry: bar_load, rule: R5}
   texas_method: {entry: five_rep_max, rule: R13}
 
-next: Exercise media for the six lifts; the output review (print_package) recorded in `reviews`.
+reviews:
+  - kind: output_vs_dossier
+    date: '2026-10-22'
+    by: Claude (package audit)
+    scope: "tools/print_package.py starting_strength --profile ideal (both tracks, two weeks), and three novice weeks with no weights entered"
+    result: "A-B-A then B-A-B, the blocks, sets, reps and rests, Texas Method's volume, light and intensity days with the press and bench taking turns read as R1-R4 and R11-R13 write them. Fixed: with no weights entered each session named the jump the next one would earn, so the deadlift had one 7.5 kg jump instead of three, the press, bench and clean one 2.5 kg instead of three, and the squat four 5 kg instead of five (R7); the first session's work-up said sets of five for the clean's triples and \"the rest of the sets\" for single sets; \"more than you made last time\" was ambiguous on Texas Method Friday (the last squat was Wednesday's light day) and now names the lift's own sets × reps; the layoff advice (R16) was on every lift and is now once a session."
+
+next: Exercise media for the six lifts.

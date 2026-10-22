@@ -8,6 +8,7 @@ duration_estimate_minutes: 30
 slots:
 - role: three_hundred
   slot_type: for_time
+  reps_per_round: 25
   rounds: 1
   duration_sec: 1800
   intensity: max_effort

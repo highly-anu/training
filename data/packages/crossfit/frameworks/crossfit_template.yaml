@@ -1,0 +1,139 @@
+id: crossfit_template
+name: "CrossFit Template (Glassman)"
+source_philosophy: crossfit
+
+goals_served:
+  - mixed_modal_conditioning
+  - max_strength
+  - aerobic_base
+
+# What a twelve-day cycle of the template holds, at five days a week.
+sessions_per_week:
+  mixed_modal_conditioning: 3
+  aerobic_base: 1
+  max_strength: 1
+modality_priority:
+  committed: [mixed_modal_conditioning]
+  core: [max_strength, aerobic_base]
+  supplementary: [movement_skill]
+
+prescription_policy: framework
+# Every workout as written: loads, reps and rounds as crossfit.com prints them.
+progression_model: as_written
+
+applicable_when:
+  training_level:
+    - intermediate
+    - advanced
+    - elite
+  days_per_week_min: 5
+  days_per_week_max: 7
+
+# No deload_protocol: the rest day is the template's only rest (A Theoretical
+# Template; What Is Fitness?).
+
+# The template's day types (src/week_template.py): each day draws the next
+# workout of its type the athlete can do as written; a type none fits falls
+# back in the order given. Every workout is pool_only.
+categories:
+  m:
+    name: "One element: M (long, slow distance)"
+    modality: aerobic_base
+    fallback: [mg]
+    archetypes:
+      - cf_run_10k
+      - cf_run_5k
+  g:
+    name: "One element: G (a single skill)"
+    modality: movement_skill
+    fallback: [gw]
+    archetypes:
+      - cf_handstand_practice
+      - cf_30_muscle_ups
+      - cf_100_l_pull_ups
+  w:
+    name: "One element: W (a single heavy lift)"
+    modality: max_strength
+    fallback: [gw]
+    archetypes:
+      - cf_deadlift_5_3_3_2
+      - cf_deadlift_3_2_2_2
+      - cf_clean_ten_singles
+      - cf_overhead_squat_3_2
+      - cf_push_press_3_2
+  gw:
+    name: "Couplet: gymnastics and weightlifting"
+    modality: mixed_modal_conditioning
+    fallback: [wm, mg]
+    archetypes:
+      - cf_hspu_deadlift_couplet
+      - cf_fran
+      - cf_diane
+      - cf_elizabeth
+      - cf_amanda
+      - cf_lynne
+      - cf_snatch_rope_couplet
+      - cf_lunge_burpee_couplet
+      - cf_clean_jerk_pull_ups
+  wm:
+    name: "Couplet: weightlifting and metabolic"
+    modality: mixed_modal_conditioning
+    fallback: [gw, mg]
+    archetypes:
+      - cf_bench_row_couplet
+      - cf_nancy
+      - cf_run_snatch_couplet
+      - cf_run_thruster_couplet
+  mg:
+    name: "Couplet: metabolic and gymnastics"
+    modality: mixed_modal_conditioning
+    fallback: [gw, wm]
+    archetypes:
+      - cf_run_box_jump_couplet
+      - cf_annie
+      - cf_nicole
+  triplet:
+    name: "Three elements or more"
+    modality: mixed_modal_conditioning
+    fallback: [gw, wm, mg]
+    archetypes:
+      - cf_run_pull_thruster_triplet
+      - cf_lunge_press_row_triplet
+      - cf_clean_bike_push_up_triplet
+      - cf_cindy
+      - cf_mary
+      - cf_helen
+      - cf_murph
+      - cf_kelly
+      - cf_eva
+      - cf_jackie
+      - cf_chelsea
+      - cf_angie
+      - cf_barbara
+      - cf_linda
+      - cf_michael
+      - cf_jt
+      - cf_run_thruster_burpee_chipper
+      - cf_squats_and_runs
+      - cf_db_snatch_pull_up_run
+
+sources:
+  - "Greg Glassman, A Theoretical Template for CrossFit's Programming (CrossFit Journal, 2003)"
+  - "Greg Glassman, What Is Fitness? (2002); Foundations (2002); Benchmark Workouts (2003)"
+  - "crossfit.com Workout of the Day, July-September 2005"
+
+notes: >
+  Glassman's template: three days on and one off (or five on, two off), the
+  days cycling through one element (metabolic, gymnastics or weightlifting
+  alone: a long slow distance, a single skill, a single heavy lift), a couplet
+  of two elements for time, and three elements for twenty minutes. Every
+  workout as written, the Girls among them.
+
+expectations:
+  min_weeks: 4
+  ideal_weeks: 12
+  min_days_per_week: 5
+  ideal_days_per_week: 6
+  min_session_minutes: 60
+  ideal_session_minutes: 60
+  supports_split_days: false

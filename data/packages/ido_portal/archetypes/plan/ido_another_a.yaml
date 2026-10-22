@@ -1,0 +1,139 @@
+id: ido_another_a
+name: Another Workout — Advanced
+modality: movement_skill
+category: movement_skill
+training_levels:
+- advanced
+- elite
+duration_estimate_minutes: 60
+pool_only: true
+slots:
+- role: joint_mobility
+  slot_type: time_domain
+  duration_minutes: 5
+  exercise_filter:
+    exercise_ids:
+    - joint_mobility
+    ordered: true
+  notes: 5 min of total body joint mobility.
+- role: wrists
+  slot_type: skill_practice
+  sets: 1
+  duration_minutes: 3
+  exercise_filter:
+    exercise_ids:
+    - wrists_routine
+    ordered: true
+  notes: Wrists Routine X 1 set.
+- role: shoulder_rom
+  slot_type: skill_practice
+  sets: 1
+  duration_minutes: 3
+  exercise_filter:
+    exercise_ids:
+    - shoulder_rom_stabilization
+    ordered: true
+  notes: Shoulder ROM and Stabilization routine X 1 set.
+- role: squat_clinic
+  slot_type: skill_practice
+  sets: 1
+  duration_minutes: 3
+  exercise_filter:
+    exercise_ids:
+    - squat_clinic
+    ordered: true
+  notes: Ido's Squat Clinic Routine X 1 set.
+- role: scapula
+  slot_type: skill_practice
+  sets: 1
+  duration_minutes: 3
+  exercise_filter:
+    exercise_ids:
+    - scapula_mobilization
+    ordered: true
+  notes: Scapula Mobilization Routine X 1 set.
+- role: handstand
+  slot_type: static_hold
+  sets: 2
+  hold_seconds: 30
+  rest_sec: 60
+  exercise_filter:
+    exercise_ids:
+    - handstand_wall_drill
+    ordered: true
+  notes: B1. Handstand Body Line Wall Drill X 30 sec; 2 cycles of B1-B2, 60 sec between.
+- role: straighten
+  slot_type: static_hold
+  sets: 2
+  hold_seconds: 45
+  rest_sec: 60
+  exercise_filter:
+    exercise_ids:
+    - handstand_straighten_into_line
+    ordered: true
+  notes: B2. Handstand Straighten Into Line X 45 sec total work.
+- role: qdr_circles
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  rest_sec: 60
+  exercise_filter:
+    exercise_ids:
+    - qdr_circles
+    ordered: true
+  notes: QDR Circles X 10 reps per side / 3 sets / 60 sec rest.
+- role: high_bridge
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  rest_sec: 60
+  exercise_filter:
+    exercise_ids:
+    - rotation_high_bridge_qdr_exit
+    ordered: true
+  notes: Rotation Into High Bridge to QDR Exit X 10 reps / 3 sets / 60 sec.
+- role: corta_capim
+  slot_type: sets_reps
+  sets: 3
+  reps: 14
+  rest_sec: 45
+  exercise_filter:
+    exercise_ids:
+    - corta_capim_spin
+    ordered: true
+  notes: Corta Capim Spin X 14 reps / 3 sets / 45 sec rest.
+- role: nda
+  slot_type: sets_reps
+  sets: 5
+  reps: 10/8/6/4/2
+  rest_sec: 38
+  exercise_filter:
+    exercise_ids:
+    - nda_lateral_one_arm_push_up
+    ordered: true
+  notes: NDA Lateral One Arm Push Ups side to side X 10/8/6/4/2 reps, resting 60/45/30/15 sec between
+    sets.
+- role: prehab_shoulder
+  slot_type: skill_practice
+  sets: 2
+  duration_minutes: 4
+  exercise_filter:
+    exercise_ids:
+    - shoulder_rom_stabilization
+    ordered: true
+  notes: Shoulder ROM and Stabilization routine X 1 set with the Scapula Mobilization Routine; 2 supersets,
+    no rest.
+- role: prehab_scapula
+  slot_type: skill_practice
+  sets: 2
+  duration_minutes: 4
+  exercise_filter:
+    exercise_ids:
+    - scapula_mobilization
+    ordered: true
+  notes: Scapula Mobilization Routine X 1 set (2 supersets).
+required_equipment: []
+sources:
+- Ido Portal, Floreio Routines (data/portal/Ido Portal Floreio Routines.pdf), p. 14
+notes: Handstand wall drill and straighten into line, QDR circles, high bridge to QDR exit, corta capim
+  spins, one-arm NDA push-ups.

@@ -1,3 +1,204 @@
-# ATG — not yet worked against its sources (docs/package-fidelity/README.md).
-shape: scheduler
-next: Assessment gating — measurable range and regression gates.
+# ATG — the machine half of docs/package-fidelity/atg.md
+# (docs/schemas/fidelity.schema.json; docs/package-fidelity/README.md).
+# Read 2026-10-22: Ben Patrick's own published workouts — the ATG Zero
+# newsletter, the ATG Online articles and his Knee Ability series.
+shape: templates
+
+sources:
+  - id: zero
+    kind: primary
+    author: Ben Patrick
+    title: ATG Zero (ATG Online newsletter)
+    where: https://readwise.io/reader/shared/01h7c9z9p7xxr13brptvvq45ae
+    published: '2023-08-06'
+    read: full
+    accessed: '2026-10-22'
+  - id: p12
+    kind: primary
+    author: Ben Patrick
+    title: ATG Program #1 & 2
+    where: https://www.atgonlinecoaching.com/articles/article-atg-program-1-and-2
+    read: full
+    accessed: '2026-10-22'
+  - id: kas
+    kind: primary
+    author: Ben Patrick
+    title: "ATG: Knee Ability Series 1, 2 and 3 of 10"
+    where: https://kneesovertoesguy.substack.com/p/atg-knee-ability-series-3-of-10
+    published: '2025-01-07 to 2025-02-11'
+    read: full
+    accessed: '2026-10-22'
+  - id: kas4
+    kind: primary
+    author: Ben Patrick
+    title: Knee Ability Series 4
+    where: https://www.atgonlinecoaching.com/articles/article-knee-ability-series-4
+    read: full
+    accessed: '2026-10-22'
+  - id: mfb
+    kind: primary
+    author: Ben Patrick
+    title: Minimalistic Full-Body Program
+    where: https://www.atgonlinecoaching.com/articles/article-minimalistic-full-body-program
+    read: full
+    accessed: '2026-10-22'
+  - id: longevity
+    kind: primary
+    author: Ben Patrick
+    title: The ATG Longevity System
+    where: https://www.atgonlinecoaching.com/articles/article-the-atg-longevity-system
+    read: partial
+    accessed: '2026-10-22'
+    note: The text was read; its exercises are shown in images, which were not.
+  - id: pfa
+    kind: primary
+    author: Ben Patrick
+    title: Pain-Free Ability
+    where: https://www.atgonlinecoaching.com/articles/pain-free-ability
+    read: full
+    accessed: '2026-10-22'
+  - id: regress
+    kind: primary
+    author: Ben Patrick
+    title: Every Regression Counts; Simplified Step-ups for Knee Health; Updated ATG Ham Curl / Nordic System
+    where: https://www.atgonlinecoaching.com/articles/article-every-regression-counts
+    read: full
+    accessed: '2026-10-22'
+  - id: budget
+    kind: primary
+    author: Ben Patrick
+    title: ATG Lower Body Basics on a Budget; Thrive With 5?; Mobility Made SIMPLE
+    where: https://www.atgonlinecoaching.com/articles/article-atg-lower-body-basics-on-a-budget
+    read: full
+    accessed: '2026-10-22'
+  - id: kaz
+    kind: primary
+    author: Ben Patrick
+    title: Knee Ability Zero (book)
+    where: Athletic Truth Group, 2021
+    read: unavailable
+    note: No copy was found to read; nothing rests on it.
+  - id: app
+    kind: primary
+    author: ATG Online Coaching
+    title: The ATG app's programs and Ability Protocols
+    where: https://www.atgonlinecoaching.com/programs
+    read: paywalled
+    note: Behind the subscription; nothing rests on them.
+
+rules:
+  - id: R1
+    text: "ATG Zero: ten movements, as written — a 5-minute backward walk, 25 wall tibialis raises, 25 wall calf raises, 30 seconds of ATG split squat, 15 seated good mornings, 15 piriformis push-ups, 15 single-leg pikes, a 30-second couch stretch, 15 pullovers, 15 external rotations — three days a week, the days between for other exercise or sport."
+    cites: [{source: zero, at: '"Do the full sequence 3 days per week, leaving the days in between for other exercise or sport"'}]
+    enforced_by:
+      - data:archetypes/plan/atg_zero.yaml#slots
+      - data:philosophy.yaml#tracks.zero.phases.zero.week_templates
+      - week:zero_week
+      - test:test_week_template.py::test_atg_runs_its_programs_as_written
+  - id: R2
+    text: "ATG Program #2: two workouts, each once a week, as written — 3 days of sport and 2 days of ATG."
+    cites: [{source: p12, at: '"intended to be done once per week"; "3 DAYS OF SPORT AND 2 DAYS OF ATG - NOT 5 DAYS OF SPORT"'}]
+    enforced_by:
+      - data:archetypes/plan/atg_p2_w1.yaml#slots
+      - data:archetypes/plan/atg_p2_w2.yaml#slots
+      - data:philosophy.yaml#tracks.program.phases.program.week_templates
+      - week:program_week
+  - id: R3
+    text: "Knee Ability Pro: Monday and Thursday the heavy sled, the lower legs and the bottom of the squat; Tuesday and Friday flexibility pulses and the upper body, each as written."
+    cites: [{source: kas, at: 'Series 3 of 10: "Knee Ability Pro Program", Monday, Tuesday, Thursday, Friday'}]
+    enforced_by:
+      - data:frameworks/knee_ability_pro.yaml#categories
+      - data:philosophy.yaml#tracks.knee_ability_pro.phases.knee_ability_pro.week_templates
+      - week:pro_week
+  - id: R4
+    text: "From the ground up: backward and forward first, then the tibialis and calves, the knee, the hamstrings and hips, the core, and the upper body last."
+    cites:
+      - {source: longevity, at: '"All this ''earns'' the right to train the upper body!"'}
+      - {source: mfb, at: 'work "from the ground up"'}
+      - {source: kas4, at: 'backward work, then tibialis, then calf, then knee pressure tolerance'}
+      - {source: p12}
+    enforced_by:
+      - data:archetypes/plan/atg_p2_w1.yaml#slots
+      - test:test_week_template.py::test_atg_runs_its_programs_as_written
+  - id: R5
+    text: "The sled leads, backward first; a resisted treadmill or walking backward replaces it — \"You don't have to sled!\""
+    cites:
+      - {source: mfb, at: '"You don''t have to sled!"'}
+      - {source: zero, at: '"Walk backward, on a treadmill (not turned on), or drag a sled"'}
+      - {source: kas, at: 'Series 2: "Walking backward is the first knee-over-toes exercise I teach"'}
+      - {source: pfa, at: '"Reverse Sled is Step 1"'}
+    enforced_by:
+      - data:archetypes/plan/atg_p2_w1.yaml#slots.sled.exercise_filter.exercise_ids
+      - data:archetypes/plan/atg_pro_mon.yaml#slots.sled.exercise_filter.exercise_ids
+  - id: R6
+    text: "Every exercise scales — by assistance, height, slope and range — and is trained at the level that is pain-free, never through pain; the ladders are the exercises' own."
+    cites:
+      - {source: mfb, at: '"Never work through a level or range that doesn''t feel good for you."'}
+      - {source: regress, at: '"Simply work at YOUR pain-free level"; "WITHOUT EVER WORKING THROUGH PAIN"'}
+      - {source: pfa, at: '"The goal is increasing pain-free ability."'}
+      - {source: kas, at: 'Series 2: every exercise "scales to remarkably low and high levels"'}
+    enforced_by:
+      - data:exercises.yaml#exercises.nordic.notes
+      - data:exercises.yaml#exercises.atg_split_squat.notes
+      - data:exercises.yaml#exercises.reverse_slant_step_up.notes
+  - id: R7
+    text: "No phases, deloads or tests: the same workouts, repeated."
+    cites:
+      - {source: p12, at: 'Program #1 "intended to be worked on twice a week," the same workout each time'}
+      - {source: zero}
+      - {source: mfb}
+    enforced_by:
+      - data:philosophy.yaml#tracks.zero.phases.zero.repeatable
+      - test:test_week_template.py::test_atg_runs_its_programs_as_written
+
+open:
+  - "Assessment gating: which step of each ladder the athlete owns is not tracked. The workouts name the ladder (the Nordic progression, the pull-up progression) and say to work at the pain-free level; Patrick writes no pass marks (\"no test or numeric standard\"), only his own check of \"10 full pull-ups every week\"."
+  - "Knee Ability Zero (the 2021 book) was not found to read, and the ATG app's programs and Ability Protocols are behind the subscription."
+  - "Knee Ability Pro's two-session version (Monday and Tuesday back to back, Thursday and Friday back to back) is not built; the track needs four days."
+  - "Program #1 (for children), the Minimalistic Full-Body Program, Thrive With 5 and Mobility Made SIMPLE are read but not built as tracks; they agree with the three that are."
+  - "An injury flag that rules out the knee movements rules out every workout, since each is run as written; Patrick: \"I do not address conditions. I only address your pain-free ABILITY.\""
+  - "Knee Ability Pro's jumping (a staff basketball game, a Vertec test) is the athlete's sport, not programmed."
+
+inventions:
+  - id: I1
+    text: "With no track named, the level picks one: novice ATG Zero (where Patrick starts everyone), intermediate Program #2, advanced and elite Knee Ability Pro. The sources route by age and goal, not level."
+    implemented_by:
+      - data:philosophy.yaml#track_for_level
+  - id: I2
+    text: Knee Ability Pro is for intermediate athletes and up; Zero and Program #2 for every level.
+    implemented_by:
+      - data:frameworks/knee_ability_pro.yaml#applicable_when.training_level
+  - id: I3
+    text: "Zero's three days fall on Monday, Wednesday and Friday, Program #2's two on Monday and Thursday: the sources ask only for days between."
+    implemented_by:
+      - data:philosophy.yaml#tracks.zero.phases.zero.week_templates
+      - data:philosophy.yaml#tracks.program.phases.program.week_templates
+  - id: I4
+    text: "Four-week blocks, repeated: the sources give no length."
+    implemented_by:
+      - data:philosophy.yaml#tracks.zero.phases.zero.weeks
+  - id: I5
+    text: "Readings: yards in metres (50 yd as 46 m, 100 as 91), each way as a set; \"burnout\" and \"exhaustion\" as max reps, the L-sit's burnout as a 30-second hold; \"up to\" as the top of the range; a slant written as a box for the step-ups; each workout's minutes estimated."
+    implemented_by:
+      - data:archetypes/plan/atg_pro_fri.yaml#slots.l_sit
+  - id: I6
+    text: "Names merged: ATG Zero's piriformis push-up is the pigeon push-up; the wall tibialis raise and Knee Ability Pro's tibialis raise are one exercise; Zero's external rotation takes any light weight, so it needs no equipment."
+    implemented_by:
+      - data:exercises.yaml#exercises.pigeon_push_up
+      - data:exercises.yaml#exercises.external_rotation.equipment
+  - id: I7
+    text: "Each track needs its own training days (Zero 3, Program #2 2, Knee Ability Pro 4); there is no drop order for fewer."
+    implemented_by:
+      - data:frameworks/atg_zero.yaml#applicable_when.days_per_week_min
+
+reviews:
+  - kind: output_vs_dossier
+    date: '2026-10-22'
+    by: Claude (package audit)
+    scope: "tools/print_package.py atg --profile ideal: all three tracks, four weeks each"
+    result: "Every workout's movements, order and doses read as the sources write them; the sled's yards show as metres each way (I5). Nothing to fix."
+
+currency:
+  zero: {entry: plan_completion, rule: R1}
+  program: {entry: plan_completion, rule: R2}
+  knee_ability_pro: {entry: plan_completion, rule: R3}

@@ -1,0 +1,426 @@
+version: 1
+sources:
+- https://intercom.help/functional-bodybuilding/en/articles/8813247
+- https://intercom.help/functional-bodybuilding/en/articles/8813137
+- https://intercom.help/functional-bodybuilding/en/articles/5690334
+- https://intercom.help/functional-bodybuilding/en/articles/5698089
+- https://intercom.help/functional-bodybuilding/en/articles/6191351
+- https://functional-bodybuilding.com/blogs/articles/deload-week
+tracks:
+  functional_bodybuilding:
+    training_levels: [intermediate, advanced, elite]
+    notes: 'Three full-body days a week, each a warm-up, strength intensity, strength balance, conditioning and a cooldown. Tempo reads down, hold, up, pause (20X1: two seconds down, no pause, explosive up, a one-second pause). Choose your loads: work to the top of the reps, then add a little; RPE 7 leaves three reps in reserve. Every six weeks a cycle ends; after two, the Bridge week takes everything to RPE 6–7. In your first week, take a set or two off and the loads 10–20 lb lighter.
+
+      '
+    modules:
+    - id: persist_session
+      name: Pump Condition
+      archetype_id: fbb_pump_condition_day_1
+      modality: max_strength
+      training_levels: [intermediate, advanced, elite]
+      exposures_per_week: 3
+      min_spacing_days: 1
+      max_rpe: 9
+      # The Bridge week lowers the effort, not the work (Deload Week; the
+      # deload PDF: every section at RPE 6–7).
+      deload_keep: 1
+      progression:
+        model: skill_hold
+      rotation: [day_1, day_2, day_3]
+      # Two six-week cycles, then the Bridge week.
+      periods:
+      - name: Two six-week cycles
+        weeks: 12
+      - name: Bridge week
+        weeks: 1
+        deload: true
+        note: Bridge week — every section at RPE 6–7, loads lighter than you have been using.
+      variants:
+      - id: day_1
+        name: Pump Condition — Day 1
+        archetype_id: fbb_pump_condition_day_1
+        blocks:
+        - role: warm_up
+          exercise_id: fbb_warm_up
+          slot_type: skill_practice
+          duration_sec: 600
+          notes: "3 rounds: 60 s cardio of choice; 15 incline DB chest fly @20X1; 10 seated DB good morning @21X1."
+        - role: dip
+          exercise_id: dip
+          slot_type: sets_reps
+          sets: 3
+          reps: '—'
+          rest_sec: 30
+          duration_sec: 360
+          load_note: "The sample leaves the reps to the program: a working set you finish with a rep or two in reserve. Record the reps and the load."
+          notes: "Strength intensity, every 4:00 x 3 sets: the dip @20X0, rest 30 s, then the incline press."
+        - role: incline_press
+          exercise_id: db_incline_press
+          slot_type: sets_reps
+          sets: 3
+          reps: '—'
+          rest_sec: 180
+          duration_sec: 360
+          load_note: "The sample leaves the reps to the program: a working set you finish with a rep or two in reserve. Record the reps and the load."
+          notes: "Strength intensity: @20X0, after the dip."
+        - role: tripod_row
+          exercise_id: tripod_row
+          slot_type: sets_reps
+          sets: 6
+          reps: '10'
+          rest_sec: 45
+          duration_sec: 480
+          rpe_target: 7
+          notes: "Strength balance, every 75 s x 9 working sets: right arm, left arm, then the lunge @20X1."
+        - role: drop_lunge
+          exercise_id: db_suitcase_drop_lunge
+          slot_type: sets_reps
+          sets: 3
+          reps: '16 (8/side)'
+          rest_sec: 45
+          duration_sec: 240
+          rpe_target: 7
+          notes: "Strength balance: the third of every 75 s."
+        - role: conditioning
+          exercise_id: fbb_conditioning
+          slot_type: time_domain
+          duration_sec: 900
+          notes: "15 min AMRAP at 85 % effort: 6 DB RDL @20X1, 6 DB hang power clean, 6 dual DB push press @20X1 (50/35 or 35/20 lb), 50 double-unders or 75 single-unders."
+        - role: cooldown
+          exercise_id: fbb_cooldown
+          slot_type: skill_practice
+          duration_sec: 300
+          notes: "Shoulder extension on the floor 90 s; kneeling triceps stretch 60 s/side; standing single-leg hamstring stretch 60 s/side."
+      - id: day_2
+        name: Pump Condition — Day 2
+        archetype_id: fbb_pump_condition_day_2
+        blocks:
+        - role: warm_up
+          exercise_id: fbb_warm_up
+          slot_type: skill_practice
+          duration_sec: 600
+          notes: "Row 2 min easy; then 3 sets: 20 s row at a hard pace, rest 15 s, 20 s/side long split pulse, rest 15 s, 10 TRX, ring or pronated body rows @20X1, rest 60 s."
+        - role: squat
+          exercise_id: mf_back_squat
+          slot_type: sets_reps
+          sets: 4
+          reps: '—'
+          rest_sec: 150
+          duration_sec: 720
+          load_note: "The sample leaves the reps to the program: a working set you finish with a rep or two in reserve. Record the reps and the load."
+          notes: "Strength intensity, every 3:00 x 4 working sets."
+        - role: pull_up
+          exercise_id: pull_up
+          slot_type: sets_reps
+          sets: 3
+          reps: '10'
+          rest_sec: 45
+          duration_sec: 360
+          alternatives: [lat_pulldown]
+          notes: "Strength balance, every 90 s x 6 sets, alternating with the press: 10 @20X1, shoulder-width grip."
+        - role: strict_press
+          exercise_id: back_supported_db_strict_press
+          slot_type: sets_reps
+          sets: 3
+          reps: '12'
+          rest_sec: 45
+          duration_sec: 360
+          notes: "Strength balance: 12 @20X1, alternating with the pull-up."
+        - role: conditioning
+          exercise_id: fbb_conditioning
+          slot_type: time_domain
+          duration_sec: 720
+          notes: "Every 90 s x 10 sets: 1st 20 s row sprint + 15 GHD sit-ups; 2nd 20 s row sprint + 30 s KB front-rack carry (53/35 or 35/26 lb)."
+        - role: cooldown
+          exercise_id: fbb_cooldown
+          slot_type: skill_practice
+          duration_sec: 300
+          notes: "Prayer stretch 60 s; reclining hero pose 60 s; front split or a progression 60 s/side."
+      - id: day_3
+        name: Pump Condition — Day 3
+        archetype_id: fbb_pump_condition_day_3
+        blocks:
+        - role: warm_up
+          exercise_id: fbb_warm_up
+          slot_type: skill_practice
+          duration_sec: 720
+          notes: "2 min easy bike; then 10 min at an aerobic pace, continuous: 400/300 m bike, 10 scapular push-ups to down dog, 10/side cross-body single-leg RDL @20X0."
+        - role: stiff_leg_deadlift
+          exercise_id: stiff_leg_deadlift
+          slot_type: sets_reps
+          sets: 8
+          reps: '—'
+          rest_sec: 45
+          duration_sec: 720
+          load_note: "The sample leaves the reps to the program: a working set you finish with a rep or two in reserve. Record the reps and the load."
+          notes: "Strength intensity, every 75 s x 8 sets."
+        - role: triceps
+          exercise_id: cable_tricep_pushdown
+          slot_type: sets_reps
+          sets: 3
+          reps: '—'
+          rest_sec: 30
+          duration_sec: 300
+          alternatives: [barbell_skull_crusher]
+          load_note: "The sample leaves the reps to the program: a working set you finish with a rep or two in reserve. Record the reps and the load."
+          notes: "Strength balance, 3 working sets: rest 30 s, then the curl."
+        - role: biceps
+          exercise_id: cable_bicep_curl
+          slot_type: sets_reps
+          sets: 3
+          reps: '—'
+          rest_sec: 75
+          duration_sec: 420
+          alternatives: [barbell_bicep_curl]
+          load_note: "The sample leaves the reps to the program: a working set you finish with a rep or two in reserve. Record the reps and the load."
+          notes: "Strength balance: rest 60–90 s and return to the triceps."
+        - role: conditioning
+          exercise_id: fbb_conditioning
+          slot_type: time_domain
+          duration_sec: 900
+          notes: "3–4 sets: 10/8 cal bike, 25 squat jumps, 20 skater jumps (10/side), 15 V-ups, 10/8 cal bike; rest 90 s between sets."
+        - role: cooldown
+          exercise_id: fbb_cooldown
+          slot_type: skill_practice
+          duration_sec: 300
+          notes: "Banded bully stretch 30 s/side; band pass-through 10/side; shinbox switch 10/side."
+
+  pump_lift:
+    training_levels: [intermediate, advanced, elite]
+    notes: 'Three full-body days a week, each a warm-up, strength intensity, strength balance, a finisher (no conditioning) and a cooldown. Tempo reads down, hold, up, pause (20X1: two seconds down, no pause, explosive up, a one-second pause). Choose your loads: work to the top of the reps, then add a little; RPE 7 leaves three reps in reserve. Every six weeks a cycle ends; after two, the Bridge week takes everything to RPE 6–7. In your first week, take a set or two off and the loads 10–20 lb lighter.
+
+      '
+    modules:
+    - id: persist_session
+      name: Pump Lift
+      archetype_id: fbb_pump_lift_day_1
+      modality: max_strength
+      training_levels: [intermediate, advanced, elite]
+      exposures_per_week: 3
+      min_spacing_days: 1
+      max_rpe: 9
+      # The Bridge week lowers the effort, not the work (Deload Week; the
+      # deload PDF: every section at RPE 6–7).
+      deload_keep: 1
+      progression:
+        model: skill_hold
+      rotation: [day_1, day_2, day_3]
+      # Two six-week cycles, then the Bridge week.
+      periods:
+      - name: Two six-week cycles
+        weeks: 12
+      - name: Bridge week
+        weeks: 1
+        deload: true
+        note: Bridge week — every section at RPE 6–7, loads lighter than you have been using.
+      variants:
+      - id: day_1
+        name: Pump Lift — Day 1
+        archetype_id: fbb_pump_lift_day_1
+        blocks:
+        - role: warm_up
+          exercise_id: fbb_warm_up
+          slot_type: skill_practice
+          duration_sec: 480
+          notes: "2 min cardio of choice; then 2 sets: 15 high-to-low cable chest fly or incline DB chest fly @20X1; 10 seated DB good morning @21X1."
+        - role: dip
+          exercise_id: dip
+          slot_type: sets_reps
+          sets: 3
+          reps: '—'
+          rest_sec: 30
+          duration_sec: 360
+          load_note: "The sample leaves the reps to the program: a working set you finish with a rep or two in reserve. Record the reps and the load."
+          notes: "Strength intensity 1, every 4:00 x 3 sets: the dip @20X0, rest 30 s, then the incline bench press."
+        - role: incline_press
+          exercise_id: incline_bench_press
+          slot_type: sets_reps
+          sets: 3
+          reps: '—'
+          rest_sec: 180
+          duration_sec: 360
+          alternatives: [db_incline_press]
+          load_note: "The sample leaves the reps to the program: a working set you finish with a rep or two in reserve. Record the reps and the load."
+          notes: "Strength intensity 1: @20X0, after the dip."
+        - role: stiff_leg_deadlift
+          exercise_id: stiff_leg_deadlift
+          slot_type: sets_reps
+          sets: 8
+          reps: '—'
+          rest_sec: 45
+          duration_sec: 600
+          load_note: "The sample leaves the reps to the program: a working set you finish with a rep or two in reserve. Record the reps and the load."
+          notes: "Strength intensity 2, every 75 s x 8 sets."
+        - role: curtsy_squat
+          exercise_id: suitcase_curtsy_squat
+          slot_type: sets_reps
+          sets: 6
+          reps: '10'
+          rest_sec: 45
+          duration_sec: 600
+          notes: "Strength balance, every 75 s x 9 sets (3/leg): right leg, left leg @21X0, then the reverse crunches."
+        - role: reverse_crunch
+          exercise_id: banded_reverse_crunch
+          slot_type: sets_reps
+          sets: 3
+          reps: '20'
+          rest_sec: 60
+          duration_sec: 300
+          notes: "Strength balance: the third of every 75 s."
+        - role: row
+          exercise_id: wide_grip_cable_row
+          slot_type: sets_reps
+          sets: 3
+          reps: '15, 12-20, match'
+          rest_sec: 150
+          duration_sec: 600
+          alternatives: [incline_db_prone_row]
+          notes: "Finisher, every 3:00 x 3 sets: a warm-up set of 15 light; 12–20 at RPE 10 (form failure); then match those reps with 10 s breaks whenever form breaks down."
+        - role: cooldown
+          exercise_id: fbb_cooldown
+          slot_type: skill_practice
+          duration_sec: 300
+          notes: "Shoulder extension on the floor 90 s; kneeling triceps stretch 60 s/side; standing single-leg hamstring stretch 60 s/side."
+      - id: day_2
+        name: Pump Lift — Day 2
+        archetype_id: fbb_pump_lift_day_2
+        blocks:
+        - role: warm_up
+          exercise_id: fbb_warm_up
+          slot_type: skill_practice
+          duration_sec: 480
+          notes: "2 min cardio of choice; then 2 sets: 20 s/side long split pulse; 15 TRX, ring or pronated body rows @20X1."
+        - role: squat
+          exercise_id: mf_back_squat
+          slot_type: sets_reps
+          sets: 6
+          reps: '—'
+          rest_sec: 45
+          duration_sec: 720
+          load_note: "The sample leaves the reps to the program: a working set you finish with a rep or two in reserve. Record the reps and the load."
+          notes: "Strength intensity 1, every 75 s x 6 working sets (or the leg press)."
+        - role: pull_up
+          exercise_id: pull_up
+          slot_type: sets_reps
+          sets: 3
+          reps: '—'
+          rest_sec: 30
+          duration_sec: 300
+          alternatives: [lat_pulldown]
+          load_note: "The sample leaves the reps to the program: a working set you finish with a rep or two in reserve. Record the reps and the load."
+          notes: "Strength intensity 2, every 3:00 x 3 sets, directly into the front raise; the last working set: back to set 1 load, AMRAP @20X1 (10–14)."
+        - role: front_raise
+          exercise_id: db_front_raise
+          slot_type: sets_reps
+          sets: 3
+          reps: '15'
+          rest_sec: 120
+          duration_sec: 300
+          rpe_target: 7
+          notes: "Strength intensity 2: 15 @20X0, after the pull-up."
+        - role: strict_press
+          exercise_id: back_supported_db_strict_press
+          slot_type: sets_reps
+          sets: 3
+          reps: '—'
+          rest_sec: 120
+          duration_sec: 600
+          load_note: "The sample leaves the reps to the program: a working set you finish with a rep or two in reserve. Record the reps and the load."
+          notes: "Strength balance, every 2:30 x 3 working sets; the third: back to set 1 load, AMRAP @20X1, then a drop set to form failure."
+        - role: hamstring_curl
+          exercise_id: bc_gliding_hamstring_curl
+          slot_type: sets_reps
+          sets: 2
+          reps: '15'
+          rest_sec: 0
+          duration_sec: 240
+          notes: "Finisher, 2 working sets: 15 @20X1, directly into the raises."
+        - role: full_raise
+          exercise_id: db_full_raise
+          slot_type: sets_reps
+          sets: 2
+          reps: '10'
+          rest_sec: 0
+          duration_sec: 240
+          notes: "Finisher: 10 @20X0, directly into the lateral raise."
+        - role: lateral_raise
+          exercise_id: db_lateral_raise
+          slot_type: sets_reps
+          sets: 2
+          reps: '10'
+          rest_sec: 90
+          duration_sec: 240
+          notes: "Finisher: 10 @20X0; rest 90 s."
+        - role: cooldown
+          exercise_id: fbb_cooldown
+          slot_type: skill_practice
+          duration_sec: 300
+          notes: "Prayer stretch 60 s; reclining hero pose 60 s; front split or a progression 60 s/side."
+      - id: day_3
+        name: Pump Lift — Day 3
+        archetype_id: fbb_pump_lift_day_3
+        blocks:
+        - role: warm_up
+          exercise_id: fbb_warm_up
+          slot_type: skill_practice
+          duration_sec: 480
+          notes: "2 min cardio of choice; then 2 sets: 10/side cross-body single-leg RDL @20X0; 10 yoga push-ups."
+        - role: hip_thrust
+          exercise_id: landmine_single_leg_hip_thrust
+          slot_type: sets_reps
+          sets: 6
+          reps: '—'
+          rest_sec: 45
+          duration_sec: 600
+          load_note: "The sample leaves the reps to the program: a working set you finish with a rep or two in reserve. Record the reps and the load."
+          notes: "Strength intensity 1, every 75 s x 6 working sets (3/leg); the last an AMRAP — extend the rest between legs if you need to."
+        - role: split_squat
+          exercise_id: suitcase_ffe_split_squat
+          slot_type: sets_reps
+          sets: 6
+          reps: '—'
+          rest_sec: 60
+          duration_sec: 600
+          load_note: "The sample leaves the reps to the program: a working set you finish with a rep or two in reserve. Record the reps and the load."
+          notes: "Strength intensity 2, every 90 s x 6 working sets (3/side)."
+        - role: triceps
+          exercise_id: cable_tricep_pushdown
+          slot_type: sets_reps
+          sets: 3
+          reps: '—'
+          rest_sec: 30
+          duration_sec: 300
+          alternatives: [barbell_skull_crusher]
+          load_note: "The sample leaves the reps to the program: a working set you finish with a rep or two in reserve. Record the reps and the load."
+          notes: "Strength balance, 3 working sets: rest 30 s, then the curl."
+        - role: biceps
+          exercise_id: cable_bicep_curl
+          slot_type: sets_reps
+          sets: 3
+          reps: '—'
+          rest_sec: 75
+          duration_sec: 420
+          alternatives: [barbell_bicep_curl]
+          load_note: "The sample leaves the reps to the program: a working set you finish with a rep or two in reserve. Record the reps and the load."
+          notes: "Strength balance: rest 60–90 s and return to the triceps."
+        - role: prone_row
+          exercise_id: incline_db_prone_row
+          slot_type: sets_reps
+          sets: 3
+          reps: '15'
+          rest_sec: 0
+          duration_sec: 360
+          notes: "Finisher, 3 working sets: 15 @20X1, directly into the tib raise."
+        - role: tib_raise
+          exercise_id: tib_raise
+          slot_type: sets_reps
+          sets: 3
+          reps: '10-15'
+          rest_sec: 90
+          duration_sec: 360
+          notes: "Finisher: 10–15 @20X1 (or a tib bar); rest 90 s between sets."
+        - role: cooldown
+          exercise_id: fbb_cooldown
+          slot_type: skill_practice
+          duration_sec: 300
+          notes: "Banded behind-the-back stretch 30 s/side; band pass-through 10/side; shinbox ER and IR stretches 30 s/side."

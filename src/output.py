@@ -24,6 +24,9 @@ def _fmt_load(load: dict) -> str:
         # Skip standalone rendering when focus block will include the duration
         zone = load.get('zone_target', load.get('intensity', ''))
         s = f"{load['duration_minutes']} min"
+        if load.get('sets') and 'reps' not in load:
+            # Ten rounds of a minute's step-ups.
+            s = f"{load['sets']} × {s}"
         if zone:
             s += f" — {zone}"
         parts.append(s)
@@ -49,7 +52,16 @@ def _fmt_load(load: dict) -> str:
 
     if 'target_rounds' in load:
         fmt = load.get('format', 'AMRAP')
-        parts.append(f"{load['time_minutes']} min {fmt} — target {load['target_rounds']} rounds")
+        n = load['target_rounds']
+        rounds = f"{n} round{'' if n == 1 else 's'}"
+        if 'time_minutes' in load:
+            parts.append(f"{load['time_minutes']} min {fmt} — target {rounds}")
+        else:
+            # Rounds for time with no cap (Fran, a couplet's five rounds).
+            parts.append(f"{rounds} {fmt}")
+    elif 'time_minutes' in load:
+        # An AMRAP's minutes (Cindy's 20).
+        parts.append(f"{load['time_minutes']} min {load.get('format', 'AMRAP')}")
 
     if 'hold_seconds' in load:
         parts.append(f"{load.get('sets', 3)} × {load['hold_seconds']}s hold")

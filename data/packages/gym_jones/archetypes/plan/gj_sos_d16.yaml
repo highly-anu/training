@@ -1,0 +1,32 @@
+id: gj_sos_d16
+name: "Soldier of Steel — Day 16: Recovery"
+modality: aerobic_base
+category: conditioning
+training_levels: [novice, intermediate]
+duration_estimate_minutes: 66
+pool_only: true
+
+slots:
+  - role: easy
+    slot_type: time_domain
+    duration_minutes: 60
+    exercise_filter:
+      exercise_ids: [easy_aerobic]
+      ordered: true
+    notes: "Run, bike or swim at an easy pace."
+
+  - role: hold
+    slot_type: static_hold
+    sets: 1
+    hold_seconds: 300
+    exercise_filter:
+      exercise_ids: [plank_hold]
+      ordered: true
+    notes: "Accumulate 300 seconds, broken into sets as needed."
+
+required_equipment:
+- open_space
+sources:
+- "Gym Jones, Soldier of Steel (Army National Guard, 2013)"
+notes: >
+  60 minutes run, bike or swim at an easy pace, then 300 s in the front leaning rest.

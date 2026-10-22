@@ -86,12 +86,13 @@ def test_every_slot_resolves():
 def test_declared_overrides():
     print('\ndeclared overrides are scoped to archetype + slot role')
     r = watch_spec.resolve
-    tgu = r('gym_jones', 'gym_jones_tgu_recovery', 'tgu_volume', 'sets_reps')
+    tgu = r('gym_jones', 'gj_of_d04', 'get_ups', 'sets_reps')
     check('Gym Jones get-ups count toward 100, per side',
           tgu['a'] == 'cumulative' and tgu['behaviours'] == {'side_tracked': True, 'cumulative_target': 100})
-    ladder = r('gym_jones', 'gym_jones_breathing_ladder', 'breathing_ladder', 'amrap')
-    swings = r('gym_jones', 'gym_jones_breathing_ladder', 'warm_up_swing', 'sets_reps')
-    check('the ladder counts rungs', ladder['a'] == 'rung' and ladder['lines'] == 'ladder_total')
+    ladder = r('gym_jones', 'gj_of_d17', 'ladder', 'time_domain')
+    swings = r('gym_jones', 'gj_of_d17', 'practice', 'sets_reps')
+    check('the ladder counts rungs, LAP logging each',
+          ladder['a'] == 'rung' and ladder['lines'] == 'ladder_total' and ladder['lap'] == 'log_round')
     check('...its warm-up swings stay plain sets', swings['a'] == 'reps' and 'behaviours' not in swings)
     bjj = [r('bjj', 'bjj_class', role, t) for role, t in
            [('warm_up', 'time_domain'), ('technique_drilling', 'skill_practice')]]

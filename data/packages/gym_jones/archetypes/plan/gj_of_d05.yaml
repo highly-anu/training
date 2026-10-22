@@ -1,0 +1,61 @@
+id: gj_of_d05
+name: "Operator Fitness — Day 5: Circuit (Focus)"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 60
+pool_only: true
+
+slots:
+  - role: db_complex
+    slot_type: sets_reps
+    sets: 3
+    reps: 6
+    exercise_filter:
+      exercise_ids: [db_complex]
+      ordered: true
+    load: "20-25 lb (9-11 kg) dumbbells"
+    notes: "6 hi-pull, 6 bent-over row, 6 hang clean, 6 front squat push press, 6 OHS and SOTS press combo, 6 push-up and one-arm row."
+
+  - role: slams_step_ups
+    slot_type: for_time
+    reps_per_round: 20
+    rounds: 3
+    exercise_filter:
+      exercise_ids: [ball_slam]
+      ordered: true
+    load: "25 lb (11 kg) ball"
+    notes: "30-20-10 reps of each: ball slam, KB step-up with 2 x 35 lb in the rack onto a 20 in box."
+
+  - role: kb_step_ups
+    slot_type: amrap_movement
+    parent_slot_role: slams_step_ups
+    reps_per_round: 20
+    exercise_filter:
+      exercise_ids: [kb_step_up]
+      ordered: true
+    load: "2 x 35 lb (16 kg) in the rack, 20 in box"
+
+  - role: row_tabata
+    slot_type: time_domain
+    duration_minutes: 8
+    exercise_filter:
+      exercise_ids: [row_interval]
+      ordered: true
+    notes: "4 x (20 s work / 10 s rest) at more than 100 m an interval; 2-3 blocks, 2-3 minutes between."
+
+required_equipment:
+- barbell
+- box
+- dumbbell
+- kettlebell
+- medicine_ball
+- open_space
+- plates
+- pull_up_bar
+- rack
+- rower
+sources:
+- "Gym Jones, Operator Fitness (Rob MacDonald)"
+notes: >
+  The standard dumbbell complex x 3, ball slams and KB step-ups 30-20-10, and 20/10 row intervals.

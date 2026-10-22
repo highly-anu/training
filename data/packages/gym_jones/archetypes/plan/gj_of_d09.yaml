@@ -1,0 +1,52 @@
+id: gj_of_d09
+name: "Operator Fitness — Day 9: Recovery"
+modality: strength_endurance
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 60
+pool_only: true
+
+slots:
+  - role: deadlift
+    slot_type: sets_reps
+    sets: 3
+    reps: 20
+    exercise_filter:
+      exercise_ids: [deadlift]
+      ordered: true
+    load: "30 % of 1RM"
+
+  - role: deadlift_box
+    slot_type: sets_reps
+    sets: 3
+    reps: 20
+    exercise_filter:
+      exercise_ids: [deadlift]
+      ordered: true
+    load: "30 % of 1RM, standing on a 4 in box"
+
+  - role: pull_up_ladder
+    slot_type: sets_reps
+    sets: 3
+    reps: '1-6 ladder'
+    exercise_filter:
+      exercise_ids: [pull_up]
+      ordered: true
+
+  - role: row
+    slot_type: time_domain
+    duration_minutes: 30
+    exercise_filter:
+      exercise_ids: [row_easy]
+      ordered: true
+
+required_equipment:
+- barbell
+- box
+- plates
+- pull_up_bar
+- rower
+sources:
+- "Gym Jones, Operator Fitness (Rob MacDonald)"
+notes: >
+  Light deadlifts, pull-up ladders and a 30-minute easy row.

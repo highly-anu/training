@@ -77,6 +77,17 @@ None.
   third stall the lift is finished (R9). The article answers 403; it was re-read
   through a summary on 2026-10-21.
 
+## Output review (2026-10-22)
+
+Both tracks printed (`tools/print_package.py starting_strength --profile ideal`) and
+three novice weeks with no weights entered. The weeks read as R1–R4 and R11–R13 write
+them. Fixed: with no weights entered, each session named the jump the *next* one would
+earn, so the deadlift had one 7.5 kg jump where R7 gives three, and the press, bench and
+clean one 2.5 kg where it gives three; the work-up said "sets of five" for the clean's
+triples and "the rest of the sets" for single sets; "more than you made last time" was
+ambiguous on a Texas Method Friday, whose last squat was Wednesday's light day; and the
+layoff advice (R16) stood on every lift instead of once a session.
+
 ## Tests
 
 Source weeks (`data/packages/starting_strength/source_weeks.yaml`): two novice weeks,
@@ -85,6 +96,7 @@ sessions (R7); a Texas Method week from given five-rep maxes (R11).
 
 test_training_contract.py — `test_ss_alternates_a_and_b_across_weeks`,
 `test_ss_adds_weight_each_confirmed_session`, `test_ss_stall_resets_lightens_the_squat_then_triples`,
-`test_ss_first_session_works_up`, `test_ss_refuses_with_the_unblocking_constraint`,
+`test_ss_first_session_works_up`,
+`test_ss_forecast_without_weights_says_the_jump_it_made`, `test_ss_refuses_with_the_unblocking_constraint`,
 `test_ss_intermediate_routes_to_texas_method`, `test_texas_method_volume_light_intensity_week`,
 `test_confirm_route_records_each_lift`, `test_legacy_ss_program_seeds_loads`.

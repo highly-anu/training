@@ -1,0 +1,52 @@
+id: fbb_pump_condition_day_1
+name: "Pump Condition — Day 1"
+modality: max_strength
+category: strength
+training_levels:
+- intermediate
+- advanced
+- elite
+duration_estimate_minutes: 54
+applicable_phases:
+- build
+- deload
+sources:
+- "Functional Bodybuilding, Persist sample weeks (Help Center, 2025-12-31)"
+notes: >
+  Day 1 of Functional Bodybuilding's published Pump Condition 3x sample week, as printed.
+slots:
+- role: warm_up
+  slot_type: skill_practice
+  duration_minutes: 10
+  exercise_filter:
+    exercise_ids: [fbb_warm_up]
+- role: dip
+  slot_type: sets_reps
+  sets: 3
+  exercise_filter:
+    exercise_ids: [dip]
+- role: incline_press
+  slot_type: sets_reps
+  sets: 3
+  exercise_filter:
+    exercise_ids: [db_incline_press]
+- role: tripod_row
+  slot_type: sets_reps
+  sets: 6
+  exercise_filter:
+    exercise_ids: [tripod_row]
+- role: drop_lunge
+  slot_type: sets_reps
+  sets: 3
+  exercise_filter:
+    exercise_ids: [db_suitcase_drop_lunge]
+- role: conditioning
+  slot_type: time_domain
+  duration_minutes: 15
+  exercise_filter:
+    exercise_ids: [fbb_conditioning]
+- role: cooldown
+  slot_type: skill_practice
+  duration_minutes: 5
+  exercise_filter:
+    exercise_ids: [fbb_cooldown]

@@ -1,3 +1,177 @@
-# Gym Jones — not yet worked against its sources (docs/package-fidelity/README.md).
+# Gym Jones — the machine half of docs/package-fidelity/gym_jones.md
+# (docs/schemas/fidelity.schema.json; docs/package-fidelity/README.md).
+# Read 2026-10-21: the two Gym Jones plans the repository holds, in full, and
+# Mark Twight's Knowledge articles on the Wayback Machine.
 shape: templates
-next: Refuse novices (its foundation assumes training history); the published operator templates.
+
+sources:
+  - id: of1
+    kind: primary
+    author: Rob "Maximus" MacDonald (GM and Training Director, Gym Jones)
+    title: Operator Fitness (Gym Jones Training Plan)
+    where: data/gym jones/operator fitness I - gym jones.pdf
+    read: full
+    accessed: '2026-10-21'
+  - id: sos
+    kind: primary
+    author: Gym Jones (Mark Twight), for the Army National Guard
+    title: Soldier of Steel (Gym Jones Training Plan)
+    where: data/gym jones/gym jones soldier of steel.pdf
+    published: '2013'
+    read: full
+    accessed: '2026-10-21'
+  - id: of2
+    kind: primary
+    author: Rob "Maximus" MacDonald
+    title: Operator Fitness II
+    where: data/gym jones/operator fitness II - gym jones.pdf
+    read: partial
+    accessed: '2026-10-21'
+    note: The repository's copy ends at day 17.
+  - id: k_bl
+    kind: primary
+    author: Mark Twight
+    title: Breathing Ladders (Gym Jones Knowledge)
+    where: https://web.archive.org/web/2008/http://www.gymjones.com/knowledge.php?id=27
+    read: full
+    accessed: '2026-10-21'
+  - id: k_tns
+    kind: primary
+    author: Mark Twight
+    title: TNSTAAFL (Gym Jones Knowledge)
+    where: https://web.archive.org/web/2008/http://www.gymjones.com/knowledge.php?id=44
+    published: '2008'
+    read: full
+    accessed: '2026-10-21'
+  - id: k_e2
+    kind: primary
+    author: Mark Twight
+    title: Endurance V.2 (Gym Jones Knowledge)
+    where: https://web.archive.org/web/2008/http://www.gymjones.com/knowledge.php?id=8
+    published: '2004'
+    read: full
+    accessed: '2026-10-21'
+  - id: ea
+    kind: primary
+    author: Mark Twight, James Martin
+    title: Extreme Alpinism (2001)
+    where: The Mountaineers Books
+    read: unavailable
+    note: No text was found to read; nothing rests on it.
+
+rules:
+  - id: R1
+    text: "Operator Fitness lasts a month and asks six days a week: three key workouts (strength, circuit, accumulation), two recovery workouts and one endurance workout with a light pack on terrain with elevation."
+    cites: [{source: of1, at: '"requires a training commitment of 6 days per week. During the week there are three key workouts (i.e. strength, circuit, accumulation), two recovery based workouts, and one endurance workout"'}]
+    enforced_by:
+      - data:frameworks/operator_fitness.yaml#applicable_when.days_per_week_min
+      - data:philosophy.yaml#tracks.operator_fitness.phases.foundation.week_templates
+      - week:operator_fitness_month
+  - id: R2
+    text: A Foundation period, an even mix of strength, power endurance and endurance, to keep 60-70 % across the fitness continuum.
+    cites: [{source: of1, at: '"essentially a Foundation period"; "an even mix of strength, power endurance, and endurance type work"'}]
+    enforced_by:
+      - data:frameworks/operator_fitness.yaml#categories
+  - id: R3
+    text: The month may be done once or repeated a few times in a row.
+    cites: [{source: of1, at: '"could be done for only one month or could be repeated a few times in a row"'}]
+    enforced_by:
+      - data:philosophy.yaml#tracks.operator_fitness.phases.foundation.repeatable
+  - id: R4
+    text: Operator Fitness's 28 days as written, each workout's sections, loads, rests and rounds.
+    cites: [{source: of1}]
+    enforced_by:
+      - data:frameworks/operator_fitness.yaml#categories
+      - week:operator_fitness_month
+      - test:test_week_template.py::test_gym_jones_runs_its_two_months_as_written
+  - id: R5
+    text: An emphasis on single-leg and core strength.
+    cites: [{source: of1, at: '"there is an emphasis placed upon single leg strength and so-called core strength"'}]
+    enforced_by:
+      - week:operator_fitness_month
+  - id: R6
+    text: The endurance day is a 90-120 minute hike, with elevation gain where possible, under a 20-30 lb pack.
+    cites: [{source: of1, at: 'Days 6, 13, 20, 27'}]
+    enforced_by:
+      - data:frameworks/operator_fitness.yaml#categories.endurance
+  - id: R7
+    text: "The breathing ladder: a 1-20-1 pyramid of kettlebell swings at 53 lb, about 400 swings, the rest taken standing."
+    cites: [{source: k_bl, at: '"1-20-1 pyramid totaling 400 KB Swings"; "The standardized rest position is standing"'}, {source: of1, at: Day 17}]
+    enforced_by:
+      - data:frameworks/operator_fitness.yaml#categories.breathing_ladder
+  - id: R8
+    text: Soldier of Steel follows each hard day with an easier recovery day and rests one full day a week; otherwise training is every day.
+    cites: [{source: sos, at: '"following each hard day with an easier recovery day. The plan allows one full rest day each week, otherwise training is expected every day"'}]
+    enforced_by:
+      - data:philosophy.yaml#tracks.soldier_of_steel.phases.soldier_of_steel.week_templates
+      - week:soldier_of_steel_month
+  - id: R9
+    text: Soldier of Steel's 28 days as written, the beginner versions printed on the days among them.
+    cites: [{source: sos}]
+    enforced_by:
+      - data:frameworks/soldier_of_steel.yaml#categories
+      - week:soldier_of_steel_month
+      - test:test_week_template.py::test_gym_jones_runs_its_two_months_as_written
+  - id: R10
+    text: "Soldier of Steel is for the newly training: fundamental movements and the habit of daily exercise, most of it needing only open space."
+    cites: [{source: sos, at: '"will teach the trainee fundamental and universal movements, and begin to instill the habit of daily exercise"; "Approximately 80% of the workouts may be done without special equipment"'}]
+    enforced_by:
+      - data:philosophy.yaml#track_for_level
+      - test:test_week_template.py::test_gym_jones_runs_its_two_months_as_written
+  - id: R11
+    text: Repeat the month as written, or make it harder by less rest on bodyweight work or more weight on loaded work, and by strict form, full range and speed.
+    cites: [{source: sos, at: '"repeat the schedule exactly or increase the difficulty by either reducing the amount of rest … or by increasing the weight"'}]
+    enforced_by:
+      - data:philosophy.yaml#tracks.soldier_of_steel.description
+  - id: R12
+    text: No deload week; the recovery days and the weekly rest day are the recovery.
+    cites: [{source: of1}, {source: sos}]
+    enforced_by:
+      - data:frameworks/operator_fitness.yaml#categories.recovery
+      - test:test_week_template.py::test_gym_jones_runs_its_two_months_as_written
+
+open:
+  - "Operator Fitness II: the repository's copy ends at day 17, so it is not run; the source says the two months are interchangeable."
+  - "Extreme Alpinism and the paywalled Knowledge articles (2015 on) were not read."
+  - "\"300\" is a one-time test, an invitation-only challenge, not a program; it is not programmed."
+  - "The 2000 m row (Operator Fitness day 15) is run as the day writes it, not as a scheduled test; no source names it a block test."
+  - "Soldier of Steel's day 17 ladder (10 down to 1 of each) averages no whole number a round, so its movements carry no count; the note writes the ladder."
+
+inventions:
+  - id: I1
+    text: "The plans' days start on a Monday: Operator Fitness numbers its days 1 to 28 without weekdays; Soldier of Steel's are Monday to Sunday."
+    implemented_by:
+      - data:philosophy.yaml#tracks.operator_fitness.phases.foundation.week_templates
+  - id: I2
+    text: "A range is read at its middle — 60-90 minutes as 75, 90-120 as 105, 3-4 sets as 4 (the note keeps the range) — and each day's minutes are estimated."
+    implemented_by:
+      - data:frameworks/operator_fitness.yaml#categories
+  - id: I3
+    text: "A section is logged by its main movement (clean + front squat + hang clean as power cleans, the Six-Way complex as the barbell complex), its note carrying the source's words."
+    implemented_by:
+      - data:frameworks/operator_fitness.yaml#categories.progression
+  - id: I4
+    text: Six training days are required (both plans write six); there is no drop order for fewer.
+    implemented_by:
+      - data:frameworks/soldier_of_steel.yaml#applicable_when.days_per_week_min
+  - id: I5
+    text: "The pull-up's scapular-control prerequisite is met from novice (level_seeds): both plans prescribe pull-ups from the first week, Soldier of Steel with plank pulls until one is possible."
+    implemented_by:
+      - data:level_seeds.yaml#seeds.novice
+  - id: I6
+    text: Operator Fitness is for intermediate athletes and up, Soldier of Steel for novices and intermediates; the plans name their audiences (operators, the newly training), not levels.
+    implemented_by:
+      - data:frameworks/operator_fitness.yaml#applicable_when.training_level
+
+currency:
+  operator_fitness: {entry: plan_completion, rule: R4}
+  soldier_of_steel: {entry: plan_completion, rule: R9}
+
+reviews:
+  - kind: output_vs_dossier
+    date: '2026-10-22'
+    by: Claude (package audit)
+    scope: "tools/print_package.py gym_jones --profile ideal --weeks 3, both plans; day 17's ladder against the Soldier of Steel PDF"
+    result: "Both months run day for day as written (R1, R4, R8, R9): the squat warm-ups, Those Burpees Suck, the Six-Way complex, the breathing ladder, the hikes, the recovery days and the weekly rest. Fixed: the first movement of every for-time piece had no count (Those Burpees Suck's 10 pull-ups, Louder than 10's 5 slams, the chipper's 100 squats, the split jumps' 20) — written into the data and passed into the load; day 17's ladder pressed from the floor where the PDF writes \"BENCH PRESS AT 95#\" — the package had no bench press; it has one now, the floor press after it for an athlete without a rack and bench."
+
+next: "Operator Fitness II once a complete copy is read; exercise media."

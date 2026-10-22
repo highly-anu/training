@@ -9,6 +9,7 @@ pool_only: true
 slots:
   - role: squats
     slot_type: rounds_for_time
+    reps_per_round: 80
     rounds: 6
     duration_sec: 1380
     intensity: max_effort

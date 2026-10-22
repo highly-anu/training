@@ -1,0 +1,46 @@
+id: btm_d19
+name: Built to Move — Day 19
+modality: mobility
+category: recovery
+training_levels:
+- novice
+- intermediate
+- advanced
+- elite
+duration_estimate_minutes: 20
+pool_only: true
+slots:
+- role: floor_sitting
+  slot_type: skill_practice
+  duration_minutes: 5
+  exercise_filter:
+    exercise_ids:
+    - floor_sitting
+    ordered: true
+  notes: 'Floor-sitting positions: cross-legged, 90/90, long sitting, one-leg-up — here, and throughout
+    your day.'
+- role: sit_stands
+  slot_type: sets_reps
+  sets: 1
+  reps: 19
+  exercise_filter:
+    exercise_ids:
+    - sit_stand
+    ordered: true
+  notes: 19 sit-stands.
+- role: mobilizations
+  slot_type: skill_practice
+  duration_minutes: 9
+  sets: 3
+  exercise_filter:
+    exercise_ids:
+    - follow_along_mobilization
+    ordered: true
+  notes: 'Day #19''s 3 follow-along mobilizations (a ball or roller, a band): https://thereadystate.com/built-to-move-21-day-challenge-day-19/'
+required_equipment: []
+sources:
+- 'Kelly & Juliet Starrett, Built to Move 21-Day Challenge (The Ready State), Day #19; Built to Move,
+  Making It All Work'
+notes: 'Through the day: floor sitting; nose-only breathing at work; walk 8,000-10,000 steps (intentional
+  walking); eat 800 g of fruits and vegetables and your protein; accumulate 2 h 10 min of standing or
+  dynamic sitting while working; follow the sleep hygiene practices.'

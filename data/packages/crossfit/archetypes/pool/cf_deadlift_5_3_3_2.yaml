@@ -1,0 +1,26 @@
+id: cf_deadlift_5_3_3_2
+name: "Deadlift"
+modality: max_strength
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 48
+pool_only: true
+
+slots:
+  - role: lift
+    slot_type: sets_reps
+    sets: 9
+    reps: '5-3-3-2-2-2-1-1-1'
+    rest_sec: 180
+    exercise_filter:
+      exercise_ids: [deadlift]
+      ordered: true
+    load: "Heavy: as much as each set allows, rest long and deliberate. Post loads."
+
+required_equipment:
+- barbell
+- plates
+sources:
+- "Glassman, A Theoretical Template for CrossFit's Programming (2003), Table 4"
+notes: >
+  Deadlift 5-3-3-2-2-2-1-1-1 reps. Post loads.

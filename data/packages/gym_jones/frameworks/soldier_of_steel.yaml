@@ -1,0 +1,82 @@
+id: soldier_of_steel
+name: "Soldier of Steel (Gym Jones)"
+source_philosophy: gym_jones
+
+goals_served:
+  - mixed_modal_conditioning
+  - strength_endurance
+  - aerobic_base
+
+sessions_per_week:
+  mixed_modal_conditioning: 3
+  aerobic_base: 3
+modality_priority:
+  committed: [mixed_modal_conditioning]
+  core: [aerobic_base]
+  supplementary: []
+
+prescription_policy: framework
+# Every day as the plan writes it (its loads, rests and rounds).
+progression_model: as_written
+
+applicable_when:
+  training_level:
+    - novice
+    - intermediate
+  days_per_week_min: 6
+  days_per_week_max: 7
+
+# No deload_protocol: the plans rest one day a week and follow every hard day
+# with a recovery day; none writes a deload week.
+
+categories:
+  sos_workout:
+    name: "Workout"
+    modality: mixed_modal_conditioning
+    archetypes:
+      - gj_sos_d01
+      - gj_sos_d03
+      - gj_sos_d05
+      - gj_sos_d08
+      - gj_sos_d10
+      - gj_sos_d12
+      - gj_sos_d15
+      - gj_sos_d17
+      - gj_sos_d19
+      - gj_sos_d22
+      - gj_sos_d24
+      - gj_sos_d26
+  sos_recovery:
+    name: "Recovery"
+    modality: aerobic_base
+    archetypes:
+      - gj_sos_d02
+      - gj_sos_d04
+      - gj_sos_d06
+      - gj_sos_d09
+      - gj_sos_d11
+      - gj_sos_d13
+      - gj_sos_d16
+      - gj_sos_d18
+      - gj_sos_d20
+      - gj_sos_d23
+      - gj_sos_d25
+      - gj_sos_d27
+
+sources:
+  - "Gym Jones, Operator Fitness (Rob MacDonald)"
+  - "Gym Jones, Soldier of Steel (2013)"
+
+notes: >
+  A month for the newly training: every hard day followed by an easier recovery
+  day, one full rest day a week; fundamental movements and the habit of daily
+  exercise, most of it needing only open space.
+
+expectations:
+  min_weeks: 4
+  ideal_weeks: 4
+  min_days_per_week: 6
+  ideal_days_per_week: 6
+  min_session_minutes: 60
+  ideal_session_minutes: 120
+  supports_split_days: false

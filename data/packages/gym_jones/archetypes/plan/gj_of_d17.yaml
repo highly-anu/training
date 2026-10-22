@@ -1,0 +1,33 @@
+id: gj_of_d17
+name: "Operator Fitness — Day 17: Breathing Ladder"
+modality: strength_endurance
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 50
+pool_only: true
+
+slots:
+  - role: practice
+    slot_type: sets_reps
+    sets: 4
+    reps: 10
+    exercise_filter:
+      exercise_ids: [kb_swing_two_hand]
+      ordered: true
+    load: "25, 35, 44, 53 lb (11-24 kg)"
+
+  - role: ladder
+    slot_type: time_domain
+    duration_minutes: 45
+    exercise_filter:
+      exercise_ids: [kb_swing_breathing_ladder]
+      ordered: true
+    load: "53 lb (24 kg)"
+    notes: "1-20-1: a swing, then a breath; two swings, two breaths; up to 20 and down again (about 400 swings). Rest standing."
+
+required_equipment:
+- kettlebell
+sources:
+- "Gym Jones, Operator Fitness (Rob MacDonald)"
+notes: >
+  Swing practice at 25, 35, 44 and 53 lb, then the 1-20-1 kettlebell swing breathing ladder at 53 lb.

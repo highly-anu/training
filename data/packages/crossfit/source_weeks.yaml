@@ -1,0 +1,44 @@
+# CrossFit — the sources' own weeks (docs/schemas/source_weeks.schema.json).
+# Read 2026-10-21 from the CrossFit Journal PDFs.
+- id: table4_cycle
+  rule: R8
+  track: constantly_varied
+  note: >
+    Glassman, A Theoretical Template (2003), Table 4: the twelve days of a
+    three-on, one-off cycle with a workout for each. Days 1-12 fall on the
+    first twelve days of the program from Monday; the next cycle's first two
+    days (week 2, Saturday and Sunday) are compared by their day type only.
+  profile: {days_per_week: 6, session_time_minutes: 60, training_level: intermediate, equipment: all}
+  weeks:
+    - days:
+        - {archetype: cf_run_10k}
+        - {archetype: cf_hspu_deadlift_couplet}
+        - {archetype: cf_run_pull_thruster_triplet}
+        - rest
+        - {archetype: cf_handstand_practice}
+        - {archetype: cf_bench_row_couplet}
+        - {archetype: cf_lunge_press_row_triplet}
+    - days:
+        - rest
+        - {archetype: cf_deadlift_5_3_3_2}
+        - {archetype: cf_run_box_jump_couplet}
+        - {archetype: cf_clean_bike_push_up_triplet}
+        - rest
+        - {category: m}
+        - {category: gw}
+- id: five_two_week
+  rule: R2
+  track: five_on_two_off
+  note: >
+    The template's five-days-on, two-days-off regimen (Table 1), its first
+    week: M, GW, MGW, MG, W, then two days off.
+  profile: {days_per_week: 5, session_time_minutes: 60, training_level: intermediate, equipment: all}
+  weeks:
+    - days:
+        - {category: m}
+        - {category: gw}
+        - {category: triplet}
+        - {category: mg}
+        - {category: w}
+        - rest
+        - rest

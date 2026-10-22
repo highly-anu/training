@@ -1,3 +1,102 @@
-# Ido Portal — not yet worked against its sources (docs/package-fidelity/README.md).
-shape: scheduler
-next: Assessment gating — advancement markers sourced before anything else.
+# Ido Portal — the machine half of docs/package-fidelity/ido_portal.md
+# (docs/schemas/fidelity.schema.json; docs/package-fidelity/README.md).
+# Read 2026-10-22: the Floreio Routines the repository holds, all 16 pages.
+shape: templates
+
+sources:
+  - id: floreio
+    kind: primary
+    author: Ido Portal
+    title: Floreio Routines
+    where: data/portal/Ido Portal Floreio Routines.pdf
+    read: full
+    accessed: '2026-10-22'
+    note: "Thirteen routines, nearly all at three levels; their linked demonstration videos and routine pages (the wrists, squat clinic, shoulder and scapula routines) were not read."
+  - id: movement
+    kind: primary
+    author: Ido Portal
+    title: Ido Portal Method — Movement Culture (the camps, the online coaching, the handstand and rings programs)
+    where: https://www.idoportal.com
+    read: not_read
+    note: Nothing rests on it.
+
+rules:
+  - id: R1
+    text: "Thirteen routines, each as written: Floreio Basic, Floreio Workouts Number 1-5, Locomotion, Static QDR and Sequence Development, the Floreio Workout of the Day, the Bridge Workout, Another Workout, the Explosive Leg Workout, Air Baby and Pulling — their exercises, reps, holds, distances, sets and rests."
+    cites: [{source: floreio, at: 'pp. 1-16'}]
+    enforced_by:
+      - data:frameworks/floreio_routines.yaml#categories.floreio
+      - data:archetypes/plan/ido_basic_b.yaml#slots
+      - week:floreio_weeks
+      - test:test_week_template.py::test_ido_portal_runs_the_floreio_routines_at_each_level
+  - id: R2
+    text: "Each routine is written for beginners, intermediates and the advanced (a few for beginners and intermediates together, one for all); the athlete does the version written for their level."
+    cites: [{source: floreio, at: '"Floreio Basic Workout - beginner", "- intermidiate", "- advanced"; "Floreio Workout Number 3 - Beginners, Intermidiates and Advanced"'}]
+    enforced_by:
+      - data:archetypes/plan/ido_basic_b.yaml#training_levels
+      - data:archetypes/plan/ido_w2_bi.yaml#training_levels
+      - test:test_week_template.py::test_ido_portal_runs_the_floreio_routines_at_each_level
+  - id: R3
+    text: "The preparation opens every routine — jump rope or joint mobility, the wrists routine, Ido's squat clinic, the shoulder ROM and stabilization routine — and prehab of the shoulders, scapulae or wrists closes most."
+    cites: [{source: floreio, at: '"Warm Up - Mobility"; "Extra Mobility Cool Down"; "PreHab Cool Down"; "Rehab: Wrists Routine X 2 subsequent sets"'}]
+    enforced_by:
+      - data:archetypes/plan/ido_basic_b.yaml#slots.jump_rope
+      - data:archetypes/plan/ido_bridge_b.yaml#slots.rehab_wrists
+      - test:test_week_template.py::test_ido_portal_runs_the_floreio_routines_at_each_level
+  - id: R4
+    text: "Single movements are polished, then sequenced, then expressed in role work, improvised at the advanced level."
+    cites: [{source: floreio, at: '"Singular Movement Polish"; "Sequence Work"; "Role work + other Floreio movements you have down for 1 minute straight … Improvisation exercise."'}]
+    enforced_by:
+      - data:archetypes/plan/ido_basic_b.yaml#slots.role
+      - data:archetypes/plan/ido_wotd_b.yaml#slots.sequence
+      - data:archetypes/plan/ido_w4_a.yaml#slots.role
+  - id: R5
+    text: "\"Choose the variation you are capable of\": where a routine writes \"or\", the written movement comes first and its alternative after it."
+    cites: [{source: floreio, at: '"Head Bridge To QDR Work (choose the variation you are capable of)"; "Rotations Into Low Bridge or if you can already Rotations into High Bridge"'}]
+    enforced_by:
+      - data:archetypes/plan/ido_w5_b.yaml#slots.bridge.exercise_filter.exercise_ids
+      - data:archetypes/plan/ido_w2_bi.yaml#slots.au_cortado.exercise_filter.exercise_ids
+  - id: R6
+    text: "No phases or deloads: the routines are repeated."
+    cites: [{source: floreio}]
+    enforced_by:
+      - data:philosophy.yaml#tracks.floreio.phases.floreio.repeatable
+      - test:test_week_template.py::test_ido_portal_runs_the_floreio_routines_at_each_level
+
+open:
+  - "Assessment gating: when to move from the beginner to the intermediate version of a routine is the athlete's call; the PDF gives no criterion beyond \"if you can already\" and \"the variation you are capable of\"."
+  - "The routines the sessions name (the wrists routine, the squat clinic, the shoulder ROM and stabilization routine, the scapula mobilization) and every movement are linked videos and posts, not read; the exercise notes describe the movements, not Ido's cues."
+  - "Ido's wider method (the camps, the online coaching, the handstand and rings programs) was not read; only these routines are built."
+  - "A routine that opens with the jump rope has no written alternative, so without a rope it is passed over."
+
+inventions:
+  - id: I1
+    text: "Six training days a week, Sunday a rest day, fewer days dropping from the end of the week: the PDF names no frequency (only a \"Preparations For Our Daily Training\" post)."
+    implemented_by:
+      - data:philosophy.yaml#tracks.floreio.phases.floreio.week_templates
+  - id: I2
+    text: "The routines run in the PDF's order, each training day the next one written for the athlete's level."
+    implemented_by:
+      - data:frameworks/floreio_routines.yaml#categories.floreio.archetypes
+  - id: I3
+    text: "Levels: the PDF's beginner is novice, intermediate intermediate, advanced advanced and elite."
+    implemented_by:
+      - data:archetypes/plan/ido_basic_a.yaml#training_levels
+  - id: I4
+    text: "Readings: a range at its middle (3-5 sets as 4, 10-30 sec as 20, 10-14 reps as 12, 45-90 sec rest as 68), the note keeping it; a pyramid as \"10/8/6\" reps; a circuit or tri-set as each exercise's sets, the circuit in the notes; a routine's first pass three minutes and a repeat two; each routine's minutes estimated."
+    implemented_by:
+      - data:archetypes/plan/ido_w4_b.yaml#slots.gatherings
+  - id: I5
+    text: "The second \"Explosive Leg Workout - beginner/intermidiate\" (p. 15: front and back flips, the advanced shrimp) is read as the advanced version."
+    implemented_by:
+      - data:archetypes/plan/ido_legs_a.yaml#training_levels
+
+reviews:
+  - kind: output_vs_dossier
+    date: '2026-10-22'
+    by: Claude (package audit)
+    scope: "tools/print_package.py ido_portal --profile ideal, and each level's first fortnight"
+    result: "Every routine's preparation, work and cool-down read as the PDF writes them at the athlete's level, and the thirteen routines come round before one repeats. Fixed: the QDR push-up was named the beginner variation where the routines write only \"QDR Rotational Push Ups\". Role work's sets show in its note, not its line, as for every timed slot."
+
+currency:
+  floreio: {entry: plan_completion, rule: R1}

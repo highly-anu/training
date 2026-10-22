@@ -1,0 +1,38 @@
+id: cf_fran
+name: "Fran"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 15
+pool_only: true
+# A benchmark: its logged result suggests a standard result.
+test: {selectable: true}
+
+slots:
+  - role: fran
+    slot_type: for_time
+    reps_per_round: 15
+    rounds: 3
+    exercise_filter:
+      exercise_ids: [thruster]
+      ordered: true
+    load: "95 lb (43 kg); women 65 lb (30 kg)"
+    standard: wod_fran_minutes
+    notes: "21-15-9 reps of each, for time. Post time."
+
+  - role: fran_2
+    slot_type: amrap_movement
+    parent_slot_role: fran
+    reps_per_round: 15
+    exercise_filter:
+      exercise_ids: [pull_up]
+      ordered: true
+
+required_equipment:
+- barbell
+- plates
+- pull_up_bar
+sources:
+- "CrossFit, Benchmark Workouts (2003) / The New Girls (2004) / crossfit.com/benchmark"
+notes: >
+  21-15-9 reps, for time, of thrusters at 95/65 lb and pull-ups.

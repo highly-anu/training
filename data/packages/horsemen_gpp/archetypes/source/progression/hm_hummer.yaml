@@ -8,6 +8,7 @@ duration_estimate_minutes: 35
 slots:
 - role: hummer
   slot_type: rounds_for_time
+  reps_per_round: 30
   rounds: 4
   duration_sec: 1800
   intensity: max_effort

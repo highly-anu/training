@@ -1,0 +1,25 @@
+id: gj_of_d13
+name: "Operator Fitness — Day 13: Endurance"
+modality: aerobic_base
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 105
+pool_only: true
+
+slots:
+  - role: hike
+    slot_type: time_domain
+    duration_minutes: 105
+    exercise_filter:
+      exercise_ids: [ruck]
+      ordered: true
+    load: "20-30 lb (9-14 kg) pack"
+    notes: "90-120 minutes, preferably with elevation gain."
+
+required_equipment:
+- open_space
+- ruck_pack
+sources:
+- "Gym Jones, Operator Fitness (Rob MacDonald)"
+notes: >
+  90-120 minute hike, with elevation gain where possible, with a 20-30 lb pack.

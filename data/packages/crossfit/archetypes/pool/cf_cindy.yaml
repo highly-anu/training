@@ -1,0 +1,43 @@
+id: cf_cindy
+name: "Cindy"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 20
+pool_only: true
+# A benchmark: its logged result suggests a standard result.
+test: {selectable: true}
+
+slots:
+  - role: cindy
+    slot_type: amrap
+    reps_per_round: 5
+    duration_sec: 1200
+    exercise_filter:
+      exercise_ids: [pull_up]
+      ordered: true
+    standard: wod_cindy_rounds
+    notes: "20-minute AMRAP. Post rounds."
+
+  - role: cindy_2
+    slot_type: amrap_movement
+    parent_slot_role: cindy
+    reps_per_round: 10
+    exercise_filter:
+      exercise_ids: [push_up]
+      ordered: true
+
+  - role: cindy_3
+    slot_type: amrap_movement
+    parent_slot_role: cindy
+    reps_per_round: 15
+    exercise_filter:
+      exercise_ids: [squat_air]
+      ordered: true
+
+required_equipment:
+- pull_up_bar
+sources:
+- "CrossFit, Benchmark Workouts (2003) / The New Girls (2004) / crossfit.com/benchmark"
+notes: >
+  As many rounds as possible in 20 minutes of 5 pull-ups, 10 push-ups, 15 squats.

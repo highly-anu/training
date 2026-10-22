@@ -2,8 +2,9 @@
 """A new package needs no code change: three dropped in, end to end.
 
 Copies three packages — one per engine shape: Wildman (a training contract,
-with its own watch screens and source weeks), Horsemen (week templates) and ATG
-(the modality scheduler) — under ids no code has ever seen, into a packages
+with its own watch screens and source weeks), Horsemen (week templates) and the
+test fixture block_fixture (the modality scheduler, which no shipped package
+uses any more) — under ids no code has ever seen, into a packages
 folder of their own (`TRAINING_PACKAGES_DIR`, src/loader.py), and runs them
 through everything a package reaches: schema validation, generation of every
 track, the API's philosophies and generate routes, the watch payload with its
@@ -25,8 +26,9 @@ import sys
 import tempfile
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-COPIES = {'dropin_contract': 'wildman_kettlebell', 'dropin_templates': 'horsemen_gpp',
-          'dropin_scheduler': 'atg'}
+COPIES = {'dropin_contract': 'data/packages/wildman_kettlebell',
+          'dropin_templates': 'data/packages/horsemen_gpp',
+          'dropin_scheduler': 'test_packages/block_fixture'}
 FAILURES: list[str] = []
 
 
@@ -40,10 +42,11 @@ def check(label: str, condition: bool, detail: str = '') -> None:
 
 def make_packages(folder: str) -> None:
     """Each source package under its new id: the folder, and its own id
-    wherever its files name it (a word, so `atg_split_squat` stays)."""
-    for new, old in COPIES.items():
+    wherever its files name it (a word, so `block_fixture_x` stays)."""
+    for new, source in COPIES.items():
+        old = os.path.basename(source)
         dest = os.path.join(folder, new)
-        shutil.copytree(os.path.join(ROOT, 'data', 'packages', old), dest)
+        shutil.copytree(os.path.join(ROOT, source), dest)
         for dirpath, _, files in os.walk(dest):
             for name in files:
                 if name.endswith('.yaml'):

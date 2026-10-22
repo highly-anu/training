@@ -70,8 +70,8 @@ def _get_unlocked(training_level: str, exercises: dict, level_seeds: dict | None
 
     # Resolve prerequisite chains to a fixed point. A requirement is satisfied
     # when it is a known concept OR an exercise that is itself unlocked, so a
-    # chain like atg_split_squat -> bulgarian_split_squat_light resolves on its
-    # own. Previously only one hop was checked, which is why _LEVEL_CONCEPTS had
+    # chain like kb_snatch -> kb_swing_single_arm -> kb_swing_two_hand resolves
+    # on its own. Previously only one hop was checked, which is why _LEVEL_CONCEPTS had
     # to seed carries "directly to avoid multi-hop prerequisite chain limitation".
     unlocked: set = set()
     pending = dict(exercises)

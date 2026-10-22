@@ -32,7 +32,7 @@ CONSTRAINTS = {
     'training_level': 'intermediate', 'days_per_week': 5, 'session_time_minutes': 75,
     'equipment': ['barbell', 'rack', 'plates', 'kettlebell', 'pull_up_bar', 'ruck_pack', 'rings',
                   'open_space', 'box', 'sandbag', 'dumbbell', 'sled', 'rower', 'bike', 'jump_rope',
-                  'bench', 'mat', 'parallettes', 'wall', 'bands'],
+                  'bench', 'mat', 'parallettes', 'wall', 'bands', 'resistance_band', 'cable_machine'],
     'injury_flags': [], 'periodization_week': 1, 'fatigue_state': 'normal',
 }
 WEEKS = 12

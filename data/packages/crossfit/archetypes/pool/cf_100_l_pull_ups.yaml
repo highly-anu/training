@@ -1,0 +1,23 @@
+id: cf_100_l_pull_ups
+name: "100 L-Pull-Ups"
+modality: movement_skill
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 20
+pool_only: true
+
+slots:
+  - role: l_pull_ups
+    slot_type: for_time
+    rounds: 1
+    exercise_filter:
+      exercise_ids: [l_pull_up]
+      ordered: true
+    notes: "100 L-pull-ups for time."
+
+required_equipment:
+- pull_up_bar
+sources:
+- "crossfit.com Workout of the Day, 2005 (2005-07-22)"
+notes: >
+  100 L-pull-ups for time. Post time.

@@ -81,6 +81,10 @@ ALL_EQUIPMENT = [
     'open_space', 'sandbag', 'rower', 'box', 'medicine_ball', 'sled', 'tire',
     'rope', 'dumbbell', 'bench', 'gymnastics_rings', 'jump_rope', 'bike',
     'treadmill', 'trap_bar', 'ghd', 'parallettes', 'sled_harness',
+    # The cable machine and bands Filly's sample weeks name, and rings by the
+    # schema's id (gymnastics_rings above is no exercise's): Elizabeth's ring dips,
+    # Gym Jones' front leaning rest on rings.
+    'resistance_band', 'cable_machine', 'rings',
 ]
 
 

@@ -25,6 +25,9 @@ from pathlib import Path
 
 os.environ.setdefault('SUPABASE_URL', '')
 
+import fixture_packages  # noqa: E402
+fixture_packages.use()
+
 FIXTURE = Path(__file__).parent / 'frontend/src/mocks/fixtures/traced-programs.json'
 
 _ATHLETE = {
@@ -36,8 +39,8 @@ _ATHLETE = {
 SCENARIOS: dict[str, dict] = {
     # Slots emptied for equipment. (Starting Strength was this scenario until
     # its training contract began refusing a program with no barbell.)
-    'gym_jones_no_equipment': {
-        'philosophy_id': 'gym_jones', 'num_weeks': 1,
+    'block_fixture_no_equipment': {
+        'philosophy_id': 'block_fixture', 'num_weeks': 1,
         'constraints': {**_ATHLETE, 'days_per_week': 5, 'session_time_minutes': 90,
                         'equipment': [], 'training_level': 'intermediate'},
     },

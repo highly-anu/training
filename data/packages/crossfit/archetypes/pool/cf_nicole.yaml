@@ -1,0 +1,33 @@
+id: cf_nicole
+name: "Nicole"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 20
+pool_only: true
+
+slots:
+  - role: nicole
+    slot_type: amrap
+    distance_m: 400
+    duration_sec: 1200
+    exercise_filter:
+      exercise_ids: [run_interval]
+      ordered: true
+    notes: "20-minute AMRAP: run 400 m, then max pull-ups."
+
+  - role: nicole_2
+    slot_type: amrap_movement
+    parent_slot_role: nicole
+    exercise_filter:
+      exercise_ids: [pull_up]
+      ordered: true
+    notes: "Max reps each round; post the pull-ups each round."
+
+required_equipment:
+- open_space
+- pull_up_bar
+sources:
+- "CrossFit, Benchmark Workouts (2003) / The New Girls (2004) / crossfit.com/benchmark"
+notes: >
+  As many rounds as possible in 20 minutes of a 400 m run, then max pull-ups.

@@ -1,0 +1,107 @@
+id: atg_zero
+name: ATG Zero
+modality: durability
+category: gpp_durability
+training_levels:
+- novice
+- intermediate
+- advanced
+- elite
+duration_estimate_minutes: 30
+pool_only: true
+slots:
+- role: backward_walk
+  slot_type: time_domain
+  duration_minutes: 5
+  exercise_filter:
+    exercise_ids:
+    - backward_walk
+    ordered: true
+  notes: 5 minutes walking backward — or on a treadmill that is switched off, or dragging a sled.
+- role: tibialis_raise
+  slot_type: sets_reps
+  sets: 1
+  reps: 25
+  exercise_filter:
+    exercise_ids:
+    - tibialis_raise
+    ordered: true
+  notes: 25 wall tibialis raises. Closer stance = easier; one foot at a time = even easier.
+- role: calf_raise
+  slot_type: sets_reps
+  sets: 1
+  reps: 25
+  exercise_filter:
+    exercise_ids:
+    - wall_calf_raise
+    ordered: true
+  notes: 25 wall calf raises. Two legs is easier, one leg is tougher.
+- role: split_squat
+  slot_type: static_hold
+  sets: 1
+  hold_seconds: 30
+  exercise_filter:
+    exercise_ids:
+    - atg_split_squat
+    ordered: true
+  notes: 30 seconds in the ATG split squat; a stairwell or chair raises the front foot.
+- role: seated_good_morning
+  slot_type: sets_reps
+  sets: 1
+  reps: 15
+  exercise_filter:
+    exercise_ids:
+    - seated_good_morning
+    ordered: true
+  notes: 15 ATG-style seated good mornings; bodyweight, then dumbbells, then a barbell — slowly.
+- role: piriformis_push_up
+  slot_type: sets_reps
+  sets: 1
+  reps: 15
+  exercise_filter:
+    exercise_ids:
+    - pigeon_push_up
+    ordered: true
+  notes: 15 piriformis push-ups.
+- role: single_leg_pike
+  slot_type: sets_reps
+  sets: 1
+  reps: 15
+  exercise_filter:
+    exercise_ids:
+    - single_leg_pike
+    ordered: true
+  notes: 15 single-leg pikes, only to a level that feels good; the goal is palms to the floor.
+- role: couch_stretch
+  slot_type: static_hold
+  sets: 1
+  hold_seconds: 30
+  exercise_filter:
+    exercise_ids:
+    - couch_stretch
+    ordered: true
+  notes: 30 seconds; an actual couch is gentler than a wall.
+- role: pullover
+  slot_type: sets_reps
+  sets: 1
+  reps: 15
+  exercise_filter:
+    exercise_ids:
+    - pullover
+    ordered: true
+  notes: 15 pullovers, against a wall or with a dumbbell.
+- role: external_rotation
+  slot_type: sets_reps
+  sets: 1
+  reps: 15
+  exercise_filter:
+    exercise_ids:
+    - external_rotation
+    ordered: true
+  notes: '15 external rotations: start at 5-10 lb, build to 10-20 lb.'
+required_equipment: []
+sources:
+- Ben Patrick, ATG Zero (ATG newsletter, 2023-08-06)
+notes: 'Ten movements from the ground up, no equipment: backward walk, tibialis and calf raises, ATG split
+  squat, seated good morning, piriformis push-up, single-leg pike, couch stretch, pullover, external rotation.
+  Three days a week, other exercise or sport between; go through it a second time where you are deficient.'

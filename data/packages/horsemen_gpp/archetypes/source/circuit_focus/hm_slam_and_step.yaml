@@ -9,6 +9,7 @@ pool_only: true
 slots:
   - role: ball_slams
     slot_type: rounds_for_time
+    reps_per_round: 30
     rounds: 3
     duration_sec: 600
     intensity: max_effort

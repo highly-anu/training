@@ -1,0 +1,37 @@
+id: cf_diane
+name: "Diane"
+modality: mixed_modal_conditioning
+category: conditioning
+training_levels: [intermediate, advanced, elite]
+duration_estimate_minutes: 15
+pool_only: true
+# A benchmark: its logged result suggests a standard result.
+test: {selectable: true}
+
+slots:
+  - role: diane
+    slot_type: for_time
+    reps_per_round: 15
+    rounds: 3
+    exercise_filter:
+      exercise_ids: [deadlift]
+      ordered: true
+    load: "225 lb (102 kg); women 155 lb (70 kg)"
+    standard: wod_diane_minutes
+    notes: "21-15-9 reps of each, for time. Post time."
+
+  - role: diane_2
+    slot_type: amrap_movement
+    parent_slot_role: diane
+    reps_per_round: 15
+    exercise_filter:
+      exercise_ids: [handstand_push_up]
+      ordered: true
+
+required_equipment:
+- barbell
+- plates
+sources:
+- "CrossFit, Benchmark Workouts (2003) / The New Girls (2004) / crossfit.com/benchmark"
+notes: >
+  21-15-9 reps, for time, of deadlifts at 225/155 lb and handstand push-ups.

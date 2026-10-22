@@ -1,0 +1,80 @@
+id: atg_pro_thu
+name: Knee Ability Pro — Thursday
+modality: durability
+category: gpp_durability
+training_levels:
+- intermediate
+- advanced
+- elite
+duration_estimate_minutes: 60
+pool_only: true
+slots:
+- role: sled
+  slot_type: distance
+  sets: 2
+  distance_m: 46
+  exercise_filter:
+    exercise_ids:
+    - sled_forward_backward
+    - backward_walk
+    ordered: true
+  notes: 'Heavy: 50 yards backward, then 50 forward (46 m each way). No sled: a resisted treadmill or
+    walking backward — "You don''t have to sled!"'
+- role: tibialis_raise
+  slot_type: sets_reps
+  sets: 2
+  reps: 15
+  exercise_filter:
+    exercise_ids:
+    - tibialis_raise
+    ordered: true
+  notes: Tibialis raise, 2 x up to 15.
+- role: calf_raise
+  slot_type: sets_reps
+  sets: 2
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - single_leg_calf_raise
+    ordered: true
+  notes: Single-leg standing calf raise, 2 x up to 10.
+- role: seated_calf_raise
+  slot_type: sets_reps
+  sets: 2
+  reps: 15
+  exercise_filter:
+    exercise_ids:
+    - seated_calf_raise
+    ordered: true
+  notes: Seated calf raise, 2 x up to 15.
+- role: split_squat
+  slot_type: sets_reps
+  sets: 8
+  reps: 8
+  exercise_filter:
+    exercise_ids:
+    - atg_split_squat
+    ordered: true
+  notes: ATG split squat, 8 x 8.
+- role: kot_squat
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - kot_squat
+    ordered: true
+  notes: KOT squat, 3 x 10.
+- role: rdl
+  slot_type: sets_reps
+  sets: 3
+  reps: 15
+  exercise_filter:
+    exercise_ids:
+    - full_stretch_rdl
+    ordered: true
+  notes: Full-stretch RDL, 3 x 15.
+required_equipment: []
+sources:
+- 'Ben Patrick, ATG: Knee Ability Series 3 of 10 (2025-02-11)'
+notes: Heavy sled, the lower legs, then ATG split squats 8 x 8, KOT squats and full-stretch RDLs.
