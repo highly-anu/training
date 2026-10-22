@@ -97,6 +97,17 @@ def test_goal_carries_the_track():
     ok(h['track']['id'] == 'four_month_macro', 'a former track id runs the track that replaced it')
     ok(phases.resolve_start_phase(h['phase_sequence'], 'gpp_block') == 'strength',
        "and the dropped track's phase starts its first phase")
+    # Every track the rebuilds from the sources dropped, with each of its phases.
+    dropped = {('atg', 'joint_health'): ('zero', ['range', 'load', 'maintain']),
+               ('gym_jones', 'block_periodization'): ('operator_fitness', ['accumulation', 'transmutation', 'realization']),
+               ('ido_portal', 'movement_practice'): ('floreio', ['isolation', 'integration', 'expression']),
+               ('kelly_starrett', 'supple_leopard'): ('built_to_move', ['restore', 'load_the_range', 'maintain'])}
+    for (pid, old), (new, old_phases) in dropped.items():
+        g = goals.philosophy_to_goal(pid, FRAMEWORKS, track_id=old)
+        first = g['phase_sequence'][0]['phase_id']
+        ok(g['track']['id'] == new and all(phases.resolve_start_phase(g['phase_sequence'], p) == first
+                                           for p in old_phases),
+           f"{pid}'s dropped {old} runs {new} from its first phase")
     bad = {'id': 'x', 'tracks': [{'id': 'a', 'name': 'A', 'phases': [{'id': 'p', 'kind': 'base', 'framework_id': 'f'}]},
                                  {'id': 'b', 'name': 'B', 'former_ids': ['a'],
                                   'phases': [{'id': 'q', 'kind': 'base', 'framework_id': 'f'}]}]}

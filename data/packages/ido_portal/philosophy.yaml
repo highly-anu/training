@@ -41,6 +41,9 @@ primary_track_id: floreio
 tracks:
   - id: floreio
     name: "Floreio Routines"
+    # The Isolation -> Integration -> Expression track, dropped on 2026-10-22:
+    # a stored program that names it regenerates as the Floreio Routines.
+    former_ids: [movement_practice]
     description: >
       Ido Portal's routines in turn, each at the athlete's level: Floreio
       basics and sequences, handstand work, locomotion, bridges, the static

@@ -42,6 +42,9 @@ primary_track_id: built_to_move
 tracks:
   - id: built_to_move
     name: "Built to Move"
+    # The Supple Leopard track, dropped on 2026-10-22: a stored program that
+    # names it regenerates as Built to Move.
+    former_ids: [supple_leopard]
     description: >
       The Starretts' 21-Day Challenge, day by day — a vital sign a day for ten
       days, its test, its practice and the day's mobilizations, then eleven
@@ -49,6 +52,8 @@ tracks:
     phases:
       - id: challenge
         name: "21-Day Challenge"
+        # Supple Leopard's phases: a stored program starts the challenge.
+        former_ids: [restore, load_the_range, maintain]
         kind: base
         weeks: 3
         framework_id: built_to_move

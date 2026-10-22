@@ -51,6 +51,9 @@ track_for_level:
 tracks:
   - id: zero
     name: "ATG Zero"
+    # The Range -> Load -> Maintain track, dropped on 2026-10-22: a stored
+    # program that names it regenerates as Zero.
+    former_ids: [joint_health]
     description: >
       Ten movements, no equipment, three days a week: backward walking,
       tibialis and calf raises, the ATG split squat, the seated good morning,
@@ -58,6 +61,7 @@ tracks:
     phases:
       - id: zero
         name: "Zero"
+        former_ids: [range, load, maintain]
         kind: base
         weeks: 4
         repeatable: true
