@@ -1,0 +1,91 @@
+id: floreio_routines
+name: "Floreio Routines (Ido Portal)"
+source_philosophy: ido_portal
+
+goals_served:
+  - movement_skill
+  - mobility
+
+sessions_per_week:
+  movement_skill: 6
+modality_priority:
+  committed: [movement_skill]
+  core: []
+  supplementary: []
+
+prescription_policy: framework
+# Every routine as the PDF writes it (its reps, holds, distances and rests).
+progression_model: as_written
+
+applicable_when:
+  training_level:
+    - novice
+    - intermediate
+    - advanced
+    - elite
+  days_per_week_min: 2
+  days_per_week_max: 7
+
+# No deload_protocol: the routines write none.
+
+categories:
+  floreio:
+    name: "Floreio routine"
+    modality: movement_skill
+    # The PDF's order. Each routine is written per level; an athlete takes the
+    # next one written for theirs.
+    archetypes:
+      - ido_basic_b
+      - ido_basic_i
+      - ido_basic_a
+      - ido_w1_b
+      - ido_w1_i
+      - ido_w1_a
+      - ido_w2_bi
+      - ido_w2_a
+      - ido_w3
+      - ido_w4_b
+      - ido_w4_i
+      - ido_w4_a
+      - ido_w5_b
+      - ido_w5_i
+      - ido_w5_a
+      - ido_loco_b
+      - ido_loco_i
+      - ido_loco_a
+      - ido_qdr_b
+      - ido_qdr_i
+      - ido_qdr_a
+      - ido_wotd_b
+      - ido_wotd_i
+      - ido_wotd_a
+      - ido_bridge_b
+      - ido_bridge_i
+      - ido_bridge_a
+      - ido_another_b
+      - ido_another_i
+      - ido_another_a
+      - ido_legs_bi
+      - ido_legs_a
+      - ido_airbaby_b
+      - ido_airbaby_i
+      - ido_airbaby_a
+
+sources:
+  - "Ido Portal, Floreio Routines (data/portal/Ido Portal Floreio Routines.pdf)"
+
+notes: >
+  Thirteen routines, each written for beginners, intermediates and advanced:
+  the preparation (jump rope or joint mobility, the wrists, the squat clinic,
+  the shoulder routine), then Floreio — bridges, QDR, au cortado, rolê,
+  gatherings, corta capim — handstand work, locomotion, conditioning, and a
+  prehab cool-down.
+
+expectations:
+  min_weeks: 4
+  ideal_weeks: 12
+  min_days_per_week: 2
+  ideal_days_per_week: 6
+  min_session_minutes: 45
+  ideal_session_minutes: 60
+  supports_split_days: false

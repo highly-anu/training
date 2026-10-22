@@ -1,97 +1,67 @@
 id: ido_portal
 name: "Ido Portal / Movement Culture"
 core_principles:
-  - movement_quality_precedes_loading_and_complexity
-  - joint_preparation_is_non_negotiable_before_loading
-  - skill_acquisition_isolation_to_integration_to_spontaneous_expression
-  - daily_practice_habits_matter_more_than_session_intensity
-  - complexity_and_novelty_are_forms_of_progression
-  - prerequisite_hierarchy_must_be_respected
-  - time_based_practice_over_rep_based_intensity
-  - improvisation_is_the_highest_expression_of_skill
+  - prepare_the_joints_before_the_floor_work
+  - polish_single_movements_then_sequence_them_then_improvise
+  - every_routine_written_for_beginner_intermediate_and_advanced
+  - choose_the_variation_you_are_capable_of
+  - breathe_fluid_movement
+  - prehab_closes_the_session
 scope:
-  - mobility
   - movement_skill
+  - mobility
 bias:
   - movement_skill
   - mobility
-avoid_with:
-  - max_strength
-  - mixed_modal_conditioning
-required_equipment:
-  - open_space
-  - jump_rope
+avoid_with: []
+required_equipment: []
 intensity_model: skill_based
 progression_philosophy: complexity_based
 sources:
-  - "data/portal/Ido Portal Floreio Routines.pdf"
-  - "plan.md section 1 (Ido Portal)"
+  - "Ido Portal, Floreio Routines (data/portal/Ido Portal Floreio Routines.pdf)"
 notes: >
-  Prerequisite hierarchy is strictly enforced: low bridge before high bridge,
-  basic handstand before handstand walk, simple movement before sequences,
-  sequences before improvisation (role work). Warm-up protocol is standardized
-  across all sessions: 5-min jump rope, wrists routine, squat clinic, shoulder
-  ROM and stabilization, 5-min joint mobility, scapula mobilization cool-down.
-  Rep schemes: light 6–10, standard 10–14, high-volume 14–30; time holds 10–30s;
-  continuous movement (role work) 2–5 min. Three locomotion levels (beginner /
-  intermediate / advanced) define session difficulty. Floreio and locomotion
-  patterns form the core archetypes. No barbell or heavy loading is prescribed —
-  open space and bodyweight are the primary tools.
+  Ido Portal's Floreio routines: every session opens with the preparation —
+  jump rope or joint mobility, the wrists routine, his squat clinic, the
+  shoulder ROM and stabilization routine — and closes with prehab for the
+  shoulders, scapulae or wrists. Between them, the floor work of capoeira's
+  floreio: bridges and rotations into them, QDR, au cortado, rolê, gatherings,
+  corta capim; handstand work ("Equilibre"); locomotion patterns; and
+  bodyweight conditioning. Single movements are polished, then sequenced, then
+  improvised in role work. Every routine is written three times — for
+  beginners, intermediates and the advanced — with "the variation you are
+  capable of".
 
 # Every modality this philosophy's frameworks prescribe has an archetype in
 # this package; generation never needs to reach into another philosophy.
 self_contained: true
 
-# One track in Ido's three stages of skill. Phase text is drafted from this
-# package's own notes and framework notes — review before relying on it.
-primary_track_id: movement_practice
+# One track: the routines as written, the athlete's level choosing each one's
+# version (docs/package-fidelity/ido_portal.md).
+primary_track_id: floreio
 tracks:
-  - id: movement_practice
-    name: "Movement Practice Program"
+  - id: floreio
+    name: "Floreio Routines"
     description: >
-      High-frequency skill practice through Ido Portal's three stages:
-      isolation, integration and spontaneous expression.
+      Ido Portal's routines in turn, each at the athlete's level: Floreio
+      basics and sequences, handstand work, locomotion, bridges, the static
+      QDR, explosive legs, air baby and pulling.
     phases:
-      - id: isolation
-        name: "Isolation"
+      - id: floreio
+        name: "Floreio"
         kind: base
-        weeks: 12
-        framework_id: high_frequency_skill
-        focus: "Single patterns in a controlled setting"
-        description: >
-          One pattern at a time, in a controlled environment, practiced often
-          and briefly — frequency beats duration. Joint preparation comes
-          before any loading; it is a prerequisite, not a warm-up. A variant is
-          advanced only when the current one is owned.
-        adaptations:
-          - "Neural learning of base patterns"
-          - "Joint preparation and range"
-        intensity: "Short, frequent exposures"
-      - id: integration
-        name: "Integration"
-        kind: build
-        weeks: 8
-        framework_id: high_frequency_skill
-        focus: "Combining patterns; adding load and complexity"
-        description: >
-          Patterns are combined, and load or complexity is added: simple
-          movements become sequences, and harder variants open as the easier
-          ones become fluent under fatigue and in varied settings.
-        adaptations:
-          - "Sequencing and transitions"
-          - "Strength through harder variants"
-        intensity: "Rising complexity"
-      - id: expression
-        name: "Spontaneous Expression"
-        kind: peak
         weeks: 4
-        framework_id: high_frequency_skill
-        focus: "Reactive, improvised movement"
+        repeatable: true
+        former_ids: [isolation, integration, expression]
+        framework_id: floreio_routines
+        focus: "Polish, sequence, improvise"
         description: >
-          Movement becomes reactive and improvised — role work and
-          environment-driven practice, where the skill is expressed rather
-          than rehearsed.
+          One routine a training day, the next written for your level each
+          time: preparation, single-movement polish or sequences, role work,
+          handstands, locomotion or conditioning, and the prehab cool-down.
         adaptations:
-          - "Improvisation"
-          - "Adaptability across environments"
-        intensity: "Continuous movement, 2–5 minutes"
+          - "Floor-movement skill: bridges, QDR, au cortado, rolê"
+          - "Hand balancing and locomotion"
+          - "Joint preparation"
+        intensity: "Breathe, fluid movement"
+        week_templates:
+          - [floreio, floreio, floreio, floreio, floreio, floreio, rest]

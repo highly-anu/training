@@ -806,10 +806,18 @@ badly the default misrepresents the method and whether its policies exist:
    week) and his Knee Ability Pro week (four days); every movement at its pain-free step
    of its ladder, which the engine does not track (Patrick writes no pass marks). The
    Range → Load → Maintain phases, their deload and the post-operative rehab ladder from
-   the design document are gone. Ido's `requires` name exercises its package does
-   not have (`push_up`, `wrist_prep`, `dip_ring`, `sit_up`,
-   `squat_air`, `single_leg_balance`, `handstand_wall_drill`), which locks those
-   movements below elite. Horsemen had five such (`kb_clean_single`, `kb_halo`,
+   the design document are gone. *Kelly Starrett* — **done 2026-10-22**: Kelly and
+   Juliet Starrett's Built to Move 21-Day Challenge (their own day pages), day by day —
+   ten vital signs' tests and practices, then the practices stacked (sit-stands one more a
+   day to 21) — then day 21 every day; the through-the-day habits (steps, food, standing,
+   sleep) in each day's notes. The books were not found to read; the Supple Leopard track
+   built from descriptions of them is gone. The tests are practised, not scored: their
+   bands are on the book's pages. *Ido Portal* — **done 2026-10-22**: the Floreio Routines
+   PDF, all thirteen routines at the athlete's level (beginner, intermediate, advanced),
+   six days a week in the PDF's order. The Isolation → Integration → Expression phases and
+   the `requires` that locked movements behind exercises the package did not have are
+   gone. Next for all three: assessment gating — a level (ATG's ladders, Ido's
+   versions) the athlete moves up, and Built to Move's tests scored against its bands. Horsemen had five such (`kb_clean_single`, `kb_halo`,
    `sb_clean`, `sb_squat`), which kept its snatch test, snatch ladder and 12-minute
    complex from ever being placed; fixed 2026-10-22, and the reach check
    (`check_exercise_coverage._pooled`) now counts a pool workout only when the level

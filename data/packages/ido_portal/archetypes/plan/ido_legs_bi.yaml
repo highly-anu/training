@@ -1,0 +1,92 @@
+id: ido_legs_bi
+name: Explosive Leg Workout — Beginner/Intermediate
+modality: movement_skill
+category: movement_skill
+training_levels:
+- novice
+- intermediate
+duration_estimate_minutes: 55
+pool_only: true
+slots:
+- role: joint_mobility
+  slot_type: time_domain
+  duration_minutes: 5
+  exercise_filter:
+    exercise_ids:
+    - joint_mobility
+    ordered: true
+  notes: 5 min of total body joint mobility.
+- role: squat_clinic
+  slot_type: skill_practice
+  sets: 1
+  duration_minutes: 3
+  exercise_filter:
+    exercise_ids:
+    - squat_clinic
+    ordered: true
+  notes: Ido's Squat Clinic Routine X 1 set.
+- role: box_jump
+  slot_type: sets_reps
+  sets: 3
+  reps: 8
+  rest_sec: 90
+  exercise_filter:
+    exercise_ids:
+    - jump_into_box_standing
+    ordered: true
+  notes: Jump Into Box — Standing 8 reps X 3 sets / 90 sec rest.
+- role: box_jump_iso
+  slot_type: sets_reps
+  sets: 3
+  reps: 8
+  rest_sec: 90
+  exercise_filter:
+    exercise_ids:
+    - jump_into_box_iso_squat
+    ordered: true
+  notes: Jump Into Box — Iso-Squat 8 reps X 3 sets / 90 sec rest. 3 min rest.
+- role: shrimp
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  rest_sec: 90
+  exercise_filter:
+    exercise_ids:
+    - shrimp
+    ordered: true
+  notes: D1. The Shrimp (foot and knee, or just the knee, touching) 5 reps per leg; D1-D2 for 5 sets,
+    90 sec after each.
+- role: harop_curl
+  slot_type: sets_reps
+  sets: 5
+  reps: 5
+  rest_sec: 90
+  exercise_filter:
+    exercise_ids:
+    - harop_curl
+    ordered: true
+  notes: D2. Harop Curl 5 reps.
+- role: single_leg_jumps
+  slot_type: sets_reps
+  sets: 2
+  reps: 50
+  exercise_filter:
+    exercise_ids:
+    - single_leg_jump
+    ordered: true
+  notes: E1/E3. 50 jumps in place on one leg (jump rope, or just jumping), no knee bend — calf work only;
+    E1-E4 for 2 total sets, no rest between exercises.
+- role: single_leg_balance
+  slot_type: static_hold
+  sets: 2
+  hold_seconds: 60
+  exercise_filter:
+    exercise_ids:
+    - single_leg_stand_eyes_closed
+    ordered: true
+  notes: E2/E4. 60 sec standing on one leg only with eyes shut, each leg.
+required_equipment: []
+sources:
+- Ido Portal, Floreio Routines (data/portal/Ido Portal Floreio Routines.pdf), p. 14
+notes: Jumps onto a box, standing and from an iso-squat; shrimps and Harop curls; a one-leg calf and balance
+  finisher.

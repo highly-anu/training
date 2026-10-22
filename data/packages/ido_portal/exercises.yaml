@@ -1,1291 +1,1421 @@
+# Ido Portal — the movements the Floreio Routines name (docs/package-fidelity/ido_portal.md).
+# The routines write each workout at beginner, intermediate and advanced, so a
+# movement's level is the workout's: nothing here requires another.
 exercises:
-- id: push_up_ring
-  name: Push-Up (Rings)
-  category: bodyweight
-  modality:
-  - relative_strength
-  - movement_skill
-  equipment:
-  - rings
-  effort: high
-  bilateral: true
-  movement_patterns:
-  - horizontal_push
-  requires:
-  - push_up
-  unlocks:
-  - muscle_up_ring
-  contraindicated_with:
-  - wrist_injury
-  - shoulder_impingement
-  - shoulder_instability
-  progressions:
-    volume: increase_reps_per_set
-    complexity: muscle_up_ring
-  scaling_down:
-  - push_up
-  typical_volume:
-    sets: 3
-    reps: 10
-  sources:
-  - CrossFit
-  - Ido Portal
-  notes: 'Rings demand active shoulder stabilization throughout the press. Turn rings
-    out at lockout (RTO). Significant recruitment of pec minor, serratus anterior,
-    and rotator cuff relative to bar push-up.
-
-    '
-- id: push_up_archer
-  name: Push-Up (Archer)
-  category: bodyweight
-  modality:
-  - relative_strength
-  equipment:
-  - none
-  effort: high
-  bilateral: false
-  movement_patterns:
-  - horizontal_push
-  requires:
-  - push_up
-  unlocks:
-  - pistol_squat
-  contraindicated_with:
-  - wrist_injury
-  - shoulder_impingement
-  progressions:
-    volume: increase_reps_per_set
-    complexity: push_up_ring
-  scaling_down:
-  - push_up
-  typical_volume:
-    sets: 3
-    reps: 5
-  sources:
-  - Ido Portal
-  notes: 'Unilateral loading progression toward one-arm push-up. Wide stance; working
-    arm bends fully, assisting arm extends laterally with minimal weight-bearing.
-    Each side trained independently.
-
-    '
-- id: pull_up_ring
-  name: Pull-Up (Rings)
-  category: bodyweight
-  modality:
-  - relative_strength
-  - movement_skill
-  equipment:
-  - rings
-  effort: high
-  bilateral: true
-  movement_patterns:
-  - vertical_pull
-  requires:
-  - pull_up
-  unlocks:
-  - muscle_up_ring
-  contraindicated_with:
-  - shoulder_instability
-  - shoulder_impingement
-  progressions:
-    volume: increase_reps_per_set
-    complexity: muscle_up_ring
-  scaling_down:
-  - pull_up
-  typical_volume:
-    sets: 4
-    reps: 5
-  sources:
-  - CrossFit
-  - Ido Portal
-  notes: 'Rings allow natural rotation of the forearm throughout the pull. Higher
-    stabiliser demand than bar. Turn rings out at the top for full shoulder pack.
-    Prerequisite for ring muscle-up.
-
-    '
-- id: handstand_hold
-  name: Handstand Hold (Wall)
-  category: bodyweight
-  modality:
-  - relative_strength
-  - movement_skill
-  equipment:
-  - none
-  effort: medium
-  bilateral: true
-  movement_patterns:
-  - vertical_push
-  - isometric
-  requires:
-  - wrist_prep
-  - shoulder_stability
-  unlocks:
-  - handstand_push_up
-  contraindicated_with:
-  - wrist_injury
-  - shoulder_impingement
-  progressions:
-    volume: increase_duration
-    complexity: handstand_push_up
-  scaling_down: []
-  typical_volume:
-    sets: 3
-    duration_sec: 30
-  sources:
-  - CrossFit
-  - Ido Portal
-  notes: 'Chest-to-wall or back-to-wall hold. Active shoulders — push floor away,
-    protract scapulae. Foundation for HSPU. Ido Portal treats inversion practice as
-    a daily movement habit.
-
-    '
-- id: handstand_push_up_ring
-  name: Handstand Push-Up (Rings)
-  category: bodyweight
-  modality:
-  - relative_strength
-  - max_strength
-  - movement_skill
-  equipment:
-  - rings
-  effort: max
-  bilateral: true
-  movement_patterns:
-  - vertical_push
-  requires:
-  - handstand_push_up
-  - dip_ring
-  unlocks: []
-  contraindicated_with:
-  - wrist_injury
-  - shoulder_impingement
-  - shoulder_instability
-  progressions:
-    volume: increase_reps_per_set
-  scaling_down:
-  - handstand_push_up
-  typical_volume:
-    sets: 3
-    reps: 3
-  sources:
-  - Ido Portal
-  notes: 'Extreme stability demand. Rings set low; athlete kicks to inverted and controls
-    descent onto rings. Requires total shoulder stability and considerable proprioception.
-    Ido Portal advanced ring work.
-
-    '
-- id: l_sit
-  name: L-Sit (Parallettes or Floor)
-  category: bodyweight
-  modality:
-  - relative_strength
-  - movement_skill
-  equipment:
-  - parallettes
-  effort: high
-  bilateral: true
-  movement_patterns:
-  - isometric
-  - hip_flexion
-  requires:
-  - sit_up
-  - tuck_sit
-  unlocks: []
-  contraindicated_with:
-  - wrist_injury
-  - hip_flexor_strain
-  progressions:
-    volume: increase_duration
-  scaling_down:
-  - tuck_sit
-  typical_volume:
-    sets: 4
-    duration_sec: 10
-  sources:
-  - CrossFit
-  - Ido Portal
-  notes: 'Full hip flexion hold with straight legs, locked elbows, depressed scapulae.
-    Accumulate time in hold; 60 sec total volume is a reasonable benchmark. Ido Portal
-    uses as baseline compression strength indicator.
-
-    '
-- id: tuck_sit
-  name: Tuck Sit (Parallettes or Floor)
-  category: bodyweight
-  modality:
-  - relative_strength
-  - movement_skill
-  equipment:
-  - parallettes
-  effort: medium
-  bilateral: true
-  movement_patterns:
-  - isometric
-  requires: []
-  unlocks:
-  - l_sit
-  contraindicated_with:
-  - wrist_injury
-  progressions:
-    volume: increase_duration
-    complexity: l_sit
-  scaling_down: []
-  typical_volume:
-    sets: 4
-    duration_sec: 15
-  sources:
-  - Ido Portal
-  notes: 'Knees tucked to chest in supported hold. Regression of L-sit. Develops scapular
-    depression strength and hip flexor compression. Ido Portal prescribes as a daily
-    practice movement.
-
-    '
-- id: pistol_squat
-  name: Pistol Squat (Single-Leg Squat)
-  category: bodyweight
-  modality:
-  - relative_strength
-  - movement_skill
-  equipment:
-  - none
-  effort: high
-  bilateral: false
-  movement_patterns:
-  - squat
-  requires:
-  - squat_air
-  - single_leg_balance
-  unlocks: []
-  contraindicated_with:
-  - knee_meniscus_post_op
-  - patellar_tendinopathy
-  progressions:
-    volume: increase_reps_per_set
-    load: add_weight_vest
-  scaling_down:
-  - squat_air
-  typical_volume:
-    sets: 3
-    reps: 5
-  sources:
-  - CrossFit
-  - Ido Portal
-  notes: 'Single-leg squat to full depth with opposite leg extended forward. High
-    demand on hip flexor strength and ankle dorsiflexion mobility. Gym Jones single-leg
-    squat on 18–20" box is the primary regression.
-
-    '
-- id: hip_circle
-  name: Hip Circle
-  category: mobility
+- id: jump_rope
+  name: Jump Rope
+  category: aerobic
   modality:
   - mobility
   equipment:
-  - none
+  - jump_rope
   effort: low
   bilateral: true
-  movement_patterns:
-  - hip_flexion
-  - rotation
-  requires: []
-  unlocks:
-  - hip_90_90
-  contraindicated_with: []
-  progressions:
-    volume: increase_duration
-  scaling_down: []
-  typical_volume:
-    sets: 2
-    reps: 10
-  sources:
-  - Ido Portal
-  - Horsemen
-  notes: Standing hip circumduction — large circles in both directions. Standard
-    joint prep for any lower body session. Low threshold entry movement for hip mobility
-    warm-up sequences.
-- id: hip_90_90
-  name: Hip 90/90 Stretch
-  category: mobility
-  modality:
-  - mobility
-  equipment:
-  - none
-  effort: low
-  bilateral: false
-  movement_patterns:
-  - hip_flexion
-  - rotation
-  requires: []
-  unlocks:
-  - pigeon_pose
-  contraindicated_with: []
-  progressions:
-    volume: increase_duration
-    complexity: hip_90_90_with_transition
-  scaling_down:
-  - hip_circle
-  typical_volume:
-    sets: 2
-    duration_sec: 60
-  sources:
-  - Ido Portal
-  notes: Seated with both hips at 90 degrees — one internally rotated, one externally
-    rotated. Addresses both internal and external hip rotation. Transition between
-    sides is itself a mobility drill. Hold or apply gentle oscillating pressure.
-- id: hip_flexor_stretch
-  name: Hip Flexor Stretch (kneeling)
-  category: mobility
-  modality:
-  - mobility
-  equipment:
-  - none
-  effort: low
-  bilateral: false
-  movement_patterns:
-  - hip_flexion
-  requires: []
-  unlocks:
-  - couch_stretch
-  contraindicated_with: []
-  progressions:
-    volume: increase_duration
-    complexity: couch_stretch
-  scaling_down: []
-  typical_volume:
-    sets: 2
-    duration_sec: 60
-  sources:
-  - Horsemen
-  - Ido Portal
-  notes: Half-kneeling lunge position, drive hips forward to load iliopsoas. Posterior
-    pelvic tilt cue to deepen stretch. Essential counter to prolonged sitting and
-    heavy squat/deadlift days.
-- id: pigeon_pose
-  name: Pigeon Pose
-  category: mobility
-  modality:
-  - mobility
-  equipment:
-  - none
-  effort: low
-  bilateral: false
-  movement_patterns:
-  - hip_flexion
-  - rotation
-  requires: []
-  unlocks: []
-  contraindicated_with:
-  - knee_meniscus_acute
-  progressions:
-    volume: increase_duration
-  scaling_down:
-  - hip_90_90
-  typical_volume:
-    sets: 2
-    duration_sec: 90
-  sources:
-  - Ido Portal
-  notes: External hip rotation stretch targeting piriformis and external rotators.
-    Can be performed supine (figure-4) for those with knee discomfort. Contraindicated
-    with acute meniscus injury due to knee flexion under hip rotation load.
-- id: ankle_circle
-  name: Ankle Circle
-  category: mobility
-  modality:
-  - mobility
-  equipment:
-  - none
-  effort: low
-  bilateral: false
-  movement_patterns: []
-  requires: []
-  unlocks: []
-  contraindicated_with: []
-  progressions:
-    volume: increase_duration
-  scaling_down: []
-  typical_volume:
-    sets: 1
-    reps: 15
-  sources:
-  - Horsemen
-  - Ido Portal
-  notes: Non-weight-bearing ankle circumduction. Standard joint prep before any lower
-    body or locomotive work. Perform both clockwise and counterclockwise.
-- id: ankle_calf_stretch
-  name: Ankle Calf Stretch (gastrocnemius)
-  category: mobility
-  modality:
-  - mobility
-  equipment:
-  - none
-  effort: low
-  bilateral: false
-  movement_patterns: []
-  requires: []
-  unlocks:
-  - soleus_stretch
-  contraindicated_with: []
-  progressions:
-    volume: increase_duration
-  scaling_down:
-  - ankle_circle
-  typical_volume:
-    sets: 2
-    duration_sec: 60
-  sources:
-  - Ido Portal
-  notes: Straight-leg calf stretch targeting gastrocnemius. Wall-lean or step-edge
-    variant. Address dorsiflexion restriction before squat depth work.
-- id: soleus_stretch
-  name: Soleus Stretch (bent-knee calf)
-  category: mobility
-  modality:
-  - mobility
-  equipment:
-  - none
-  effort: low
-  bilateral: false
-  movement_patterns: []
-  requires:
-  - ankle_calf_stretch
-  unlocks: []
-  contraindicated_with: []
-  progressions:
-    volume: increase_duration
-  scaling_down:
-  - ankle_calf_stretch
-  typical_volume:
-    sets: 2
-    duration_sec: 60
-  sources:
-  - Ido Portal
-  notes: Bent-knee ankle flexion stretch isolating soleus. Critical for deep squat
-    dorsiflexion. More directly relevant to squat mechanics than straight-leg variant.
-- id: thoracic_rotation
-  name: Thoracic Rotation (quadruped or seated)
-  category: mobility
-  modality:
-  - mobility
-  equipment:
-  - none
-  effort: low
-  bilateral: false
-  movement_patterns:
-  - rotation
-  requires: []
-  unlocks: []
-  contraindicated_with: []
-  progressions:
-    volume: increase_duration
-  scaling_down: []
-  typical_volume:
-    sets: 2
-    reps: 10
-  sources:
-  - Ido Portal
-  notes: Quadruped open-book rotation or seated thoracic rotation. Targets mid-back
-    rotational mobility. Prerequisite context for overhead work and rotational patterns.
-    Perform slowly with exhale at end range.
-- id: thoracic_extension_foam_roll
-  name: Thoracic Extension (foam roll)
-  category: mobility
-  modality:
-  - mobility
-  equipment:
-  - none
-  effort: low
-  bilateral: true
-  movement_patterns: []
-  requires: []
-  unlocks: []
-  contraindicated_with:
-  - lumbar_disc
-  progressions:
-    volume: increase_duration
-  scaling_down:
-  - thoracic_rotation
-  typical_volume:
-    sets: 2
-    duration_sec: 60
-  sources:
-  - Horsemen
-  - Ido Portal
-  notes: Foam roller placed perpendicular to spine at mid-back. Segment-by-segment
-    extension over roller. Avoid rolling lumbar spine directly. Contraindicated with
-    active lumbar disc pathology due to spinal extension load.
-- id: shoulder_circle
-  name: Shoulder Circle
-  category: mobility
-  modality:
-  - mobility
-  equipment:
-  - none
-  effort: low
-  bilateral: true
-  movement_patterns: []
-  requires: []
-  unlocks:
-  - shoulder_dislocate_pvc
-  contraindicated_with: []
-  progressions:
-    volume: increase_duration
-  scaling_down: []
-  typical_volume:
-    sets: 1
-    reps: 15
-  sources:
-  - Ido Portal
-  - Horsemen
-  notes: Standing arm circles in both directions at varied speeds. Standard shoulder
-    joint prep before any upper body or overhead work. Both forward and backward directions
-    required.
-- id: shoulder_dislocate_pvc
-  name: Shoulder Dislocate (PVC pipe)
-  category: mobility
-  modality:
-  - mobility
-  equipment:
-  - none
-  effort: low
-  bilateral: true
-  movement_patterns:
-  - vertical_push
-  - horizontal_pull
-  requires:
-  - shoulder_circle
-  unlocks: []
-  contraindicated_with:
-  - shoulder_instability
-  - wrist_injury
-  - shoulder_impingement
-  progressions:
-    volume: increase_reps_per_set
-    load: narrow_grip
-  scaling_down:
-  - shoulder_circle
-  - band_pull_apart
-  typical_volume:
-    sets: 2
-    reps: 10
-  sources:
-  - Ido Portal
-  notes: Wide-grip PVC pass from front to overhead to behind back and return. Progressively
-    narrow grip as shoulder mobility improves. Contraindicated with shoulder instability
-    (hypermobility) or wrist pathology. Use resistance band as regression if PVC feels
-    binding.
-- id: band_pull_apart
-  name: Band Pull-Apart
-  category: mobility
-  modality:
-  - mobility
-  equipment:
-  - resistance_band
-  effort: low
-  bilateral: true
-  movement_patterns:
-  - horizontal_pull
-  requires: []
-  unlocks: []
-  contraindicated_with: []
-  progressions:
-    load: increase_band_resistance
-    volume: increase_reps_per_set
-  scaling_down: []
-  typical_volume:
-    sets: 3
-    reps: 20
-  sources:
-  - Horsemen
-  - Ido Portal
-  notes: Horizontal band pull-apart at chest height or overhead. Activates posterior
-    deltoid, infraspinatus, and lower trapezius. Critical for shoulder health maintenance.
-    Prehab staple for any pressing-heavy program.
-- id: wrist_circle
-  name: Wrist Circle
-  category: mobility
-  modality:
-  - mobility
-  equipment:
-  - none
-  effort: low
-  bilateral: true
-  movement_patterns: []
-  requires: []
-  unlocks:
-  - wrist_flexion_stretch
-  - wrist_extension_stretch
-  contraindicated_with: []
-  progressions:
-    volume: increase_duration
-  scaling_down: []
-  typical_volume:
-    sets: 1
-    reps: 15
-  sources:
-  - Ido Portal
-  notes: Wrist circumduction in both directions. Part of Ido Portal wrist prep routine.
-    Perform before any load-bearing hand position (push-ups, handstands, kettlebell
-    work).
-- id: wrist_flexion_stretch
-  name: Wrist Flexion Stretch
-  category: mobility
-  modality:
-  - mobility
-  equipment:
-  - none
-  effort: low
-  bilateral: false
-  movement_patterns: []
-  requires:
-  - wrist_circle
-  unlocks: []
-  contraindicated_with:
-  - wrist_injury
-  progressions:
-    volume: increase_duration
-  scaling_down:
-  - wrist_circle
-  typical_volume:
-    sets: 2
-    duration_sec: 30
-  sources:
-  - Ido Portal
-  notes: Extend arm forward, pull fingers back toward body to stretch wrist flexors.
-    Part of Ido Portal wrist routine. Contraindicated with acute wrist injury.
-- id: wrist_extension_stretch
-  name: Wrist Extension Stretch
-  category: mobility
-  modality:
-  - mobility
-  equipment:
-  - none
-  effort: low
-  bilateral: false
-  movement_patterns: []
-  requires:
-  - wrist_circle
-  unlocks: []
-  contraindicated_with:
-  - wrist_injury
-  progressions:
-    volume: increase_duration
-  scaling_down:
-  - wrist_circle
-  typical_volume:
-    sets: 2
-    duration_sec: 30
-  sources:
-  - Ido Portal
-  notes: Point fingers down and press back of hand away to stretch wrist extensors.
-    Counterbalances flexion stretch. Use floor press (quadruped wrist mobility) as
-    loaded variant.
-- id: squat_clinic
-  name: Ido Portal Squat Clinic Routine
-  category: mobility
-  modality:
-  - mobility
-  equipment:
-  - none
-  effort: low
-  bilateral: true
-  movement_patterns:
-  - squat
-  - hip_flexion
-  requires: []
-  unlocks: []
-  contraindicated_with: []
-  progressions:
-    volume: increase_duration
-  scaling_down:
-  - ankle_calf_stretch
-  - hip_flexor_stretch
-  typical_volume:
-    sets: 1
-    duration_sec: 300
-  sources:
-  - Ido Portal
-  notes: Ido Portal's standardized squat mobility sequence — includes deep squat
-    hold, weight shift, heel raises, internal/external rotation exploration, and ankle
-    mobilization. Performed as one continuous set at session start. Duration 3-5 min.
-    Part of the standard Floreio warm-up.
-- id: scapula_mobilization
-  name: Scapula Mobilization
-  category: mobility
-  modality:
-  - mobility
-  equipment:
-  - none
-  effort: low
-  bilateral: true
-  movement_patterns: []
-  requires: []
-  unlocks: []
-  contraindicated_with: []
-  progressions:
-    volume: increase_duration
-  scaling_down:
-  - shoulder_circle
-  typical_volume:
-    sets: 3
-    duration_sec: 60
-  sources:
-  - Ido Portal
-  notes: Scapular protraction/retraction, depression/elevation, and circumduction.
-    Listed in Ido Portal's cool-down (3 sets, 60-sec rest). Addresses scapulohumeral
-    rhythm restrictions. Perform as cool-down staple after any overhead or pushing
-    session.
-- id: couch_stretch
-  name: Couch Stretch (hip flexor/quad)
-  category: mobility
-  modality:
-  - mobility
-  equipment:
-  - none
-  effort: low
-  bilateral: false
-  movement_patterns:
-  - hip_flexion
-  - knee_extension
-  requires:
-  - hip_flexor_stretch
-  unlocks: []
-  contraindicated_with:
-  - knee_meniscus_acute
-  - patellar_tendinopathy_acute
-  progressions:
-    volume: increase_duration
-  scaling_down:
-  - hip_flexor_stretch
-  typical_volume:
-    sets: 2
-    duration_sec: 120
-  sources:
-  - Horsemen
-  - Ido Portal
-  notes: Rear foot elevated against wall, knee on floor, hip driven toward wall. Targets
-    rectus femoris and hip flexor complex simultaneously. One of the most effective
-    hip extension mobility drills. Contraindicated with acute knee conditions due
-    to end-range knee flexion load.
-- id: role_basic
-  name: Basic Roll (Corta Capim / Role)
-  category: skill
-  modality:
-  - movement_skill
-  equipment:
-  - open_space
-  effort: low
-  bilateral: true
-  movement_patterns:
-  - locomotion
-  requires: []
-  unlocks:
-  - au_cortado
-  - cartwheel
-  contraindicated_with:
-  - cervical_spine_injury
-  - shoulder_instability
-  progressions:
-    volume: increase_duration
-    complexity: au_cortado
-  scaling_down: []
-  typical_volume:
-    sets: 3
-    duration_sec: 120
-  sources:
-  - Ido Portal
-  notes: Ido Portal corta capim / role work — continuous rolling patterns on the
-    floor. Entry to all floreio ground work. 2-5 min continuous practice with 30-sec
-    rest. Advanced variants include improvisation of learned movements. Contraindicated
-    with cervical spine injury due to neck loading in rolls.
-- id: au_cortado
-  name: Au Cortado (Capoeira Cartwheel Variation)
-  category: skill
-  modality:
-  - movement_skill
-  equipment:
-  - open_space
-  effort: medium
-  bilateral: false
   movement_patterns:
   - ballistic
   - locomotion
-  requires:
-  - role_basic
-  - bridge_low
-  unlocks:
-  - au_cortado_press
-  - floreio_sequence
-  contraindicated_with:
-  - shoulder_instability
-  - wrist_injury
+  requires: []
+  unlocks: []
+  contraindicated_with: []
   progressions:
-    volume: increase_reps_per_set
-    complexity: au_cortado_press
-  scaling_down:
-  - role_basic
-  - cartwheel
-  typical_volume:
-    sets: 3
-    reps: 12
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
   sources:
-  - Ido Portal
-  notes: 'Capoeira-derived cartwheel-like movement — lateral hand-to-floor transition
-    with inversion. Requires simultaneous bridge mobility and role foundation. Intermediate
-    floreio element. Ido Portal programs 10-14 reps per set with 60-sec rest. Progression:
-    Half Au Cortado → Au Cortado → Au Cortado Press.'
-- id: bridge_low
-  name: Low Bridge (Rotations Into Low Bridge)
-  category: skill
+  - Ido Portal, Floreio Routines
+  notes: Easy, continuous rope jumping to open every session.
+- id: joint_mobility
+  name: Total Body Joint Mobility
+  category: mobility
   modality:
-  - movement_skill
-  equipment:
-  - open_space
+  - mobility
+  equipment: []
   effort: low
   bilateral: true
   movement_patterns:
+  - mobilization
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: Five minutes of general joint mobility, head to toe; "if clueless about this — educate yourself".
+- id: wrists_routine
+  name: Wrists Routine
+  category: mobility
+  modality:
+  - mobility
+  equipment: []
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - mobilization
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: Ido's preparation of the wrists for the hand loading of the floor work; also the prehab cool-down.
+- id: squat_clinic
+  name: Ido's Squat Clinic Routine
+  category: mobility
+  modality:
+  - mobility
+  equipment: []
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - squat
+  - mobilization
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: 'Ido''s routine for the deep squat: time in the bottom position, its variations and transitions.'
+- id: shoulder_rom_stabilization
+  name: Shoulder ROM and Stabilization Routine
+  category: mobility
+  modality:
+  - mobility
+  equipment: []
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - mobilization
+  - shoulder_external_rotation
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: Assisted stretching of the shoulders through their range, then rotator cuff work to stabilise
+    it.
+- id: scapula_mobilization
+  name: Scapula Mobilization Routine
+  category: mobility
+  modality:
+  - mobility
+  equipment: []
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - mobilization
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: The shoulder blades moved through elevation, depression, protraction and retraction.
+- id: rotations_into_low_bridge
+  name: Rotations Into Low Bridge
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - rotation
+  - hip_extension
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: From all fours, rotate through into a low bridge, hips high, and back.
+- id: rotations_into_low_bridge_advanced
+  name: Rotations Into Low Bridge — Advanced
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - rotation
+  - hip_extension
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: The low-bridge rotation at its advanced variation.
+- id: slide_into_low_bridge
+  name: Slide Into Low Bridge
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - hip_extension
   - isometric
   requires: []
-  unlocks:
-  - bridge_high
-  - au_cortado
-  - bridge_walk
-  contraindicated_with:
-  - lumbar_disc
-  - shoulder_instability
+  unlocks: []
+  contraindicated_with: []
   progressions:
-    volume: increase_reps_per_set
-    complexity: bridge_high
+    complexity: the_next_level_of_the_routine
   scaling_down: []
-  typical_volume:
-    sets: 3
-    reps: 10
   sources:
-  - Ido Portal
-  notes: Ground-level bridge from supine — low backbend with weight on hands and
-    feet, hips low. Multiple difficulty levels of approach. Ido Portal programs 10
-    reps rotating into bridge. Slide into low bridge variant uses 5 reps × 5-sec
-    hold. Foundation for all Floreio arch work.
-- id: bridge_high
-  name: High Bridge (Full Backbend)
+  - Ido Portal, Floreio Routines
+  notes: Slide the feet into a low bridge and hold the position.
+- id: rotations_into_arch_wall
+  name: Rotations Into Arch Using The Wall
   category: skill
   modality:
   - movement_skill
-  equipment:
-  - open_space
+  equipment: []
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - spinal_extension
+  - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: Rotating into an arch with the hands walking on a wall.
+- id: high_bridge_hold
+  name: High Bridge Hold
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
   effort: medium
   bilateral: true
   movement_patterns:
+  - spinal_extension
   - isometric
-  - vertical_push
-  requires:
-  - bridge_low
-  unlocks:
-  - bridge_walk
-  - floreio_sequence
-  contraindicated_with:
-  - lumbar_disc
-  - shoulder_impingement
-  - shoulder_instability
+  requires: []
+  unlocks: []
+  contraindicated_with: []
   progressions:
-    volume: increase_duration
-    complexity: bridge_walk
-  scaling_down:
-  - bridge_low
-  typical_volume:
-    sets: 3
-    duration_sec: 30
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
   sources:
-  - Ido Portal
-  notes: Full wheel / gymnastic bridge — hips driven high, arms and legs extended.
-    Must master low bridge first. Static hold 30 sec (can be broken into attempts).
-    Requires wrist, shoulder, thoracic, and hip flexor mobility simultaneously. Ido
-    Portal programs rotations into high bridge (10 reps) and static high bridge hold
-    (30 sec) as separate drill.
-- id: bridge_walk
-  name: Bridge Walk (Front or Back)
+  - Ido Portal, Floreio Routines
+  notes: The full (high) bridge held; it may be broken into attempts until the time is done.
+- id: rotations_into_high_bridge
+  name: Rotations Into High Bridge
   category: skill
   modality:
   - movement_skill
-  equipment:
-  - open_space
+  equipment: []
   effort: medium
   bilateral: true
   movement_patterns:
-  - locomotion
-  - isometric
-  requires:
-  - bridge_high
-  unlocks:
-  - floreio_sequence
-  contraindicated_with:
-  - lumbar_disc
-  - shoulder_impingement
-  - shoulder_instability
+  - rotation
+  - spinal_extension
+  requires: []
+  unlocks: []
+  contraindicated_with: []
   progressions:
-    volume: increase_duration
-    complexity: floreio_sequence
-  scaling_down:
-  - bridge_high
-  typical_volume:
-    sets: 3
-    distance_m: 12
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
   sources:
-  - Ido Portal
-  notes: Locomotion in bridge position — front bridge walking (12m intermediate)
-    or back bridge walking (15m advanced). Part of Ido Portal locomotion circuit programmed
-    3-5 rounds. Beginner variant is static hold 30 sec. Demands sustained spinal extension,
-    shoulder stability, and hip flexor length under load.
-- id: qdr_rotational_pushup
-  name: QDR Rotational Push-Up (Quadruped)
+  - Ido Portal, Floreio Routines
+  notes: From all fours, rotate through into a full bridge and back.
+- id: rotations_into_high_bridge_advanced
+  name: Rotations Into High Bridge — Advanced
   category: skill
   modality:
   - movement_skill
-  equipment:
-  - open_space
+  equipment: []
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - rotation
+  - spinal_extension
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: The high-bridge rotation at its advanced variation.
+- id: rotation_high_bridge_head_qdr_exit
+  name: Rotation Into High Bridge to Head to QDR Exit
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - rotation
+  - spinal_extension
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: Rotate into a high bridge, lower to the head, exit into QDR.
+- id: rotation_high_bridge_qdr_exit
+  name: Rotation Into High Bridge to QDR Exit
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - rotation
+  - spinal_extension
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: Rotate into a high bridge and exit straight into QDR.
+- id: head_bridge_to_qdr
+  name: Head Bridge To QDR
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
   effort: medium
-  bilateral: false
+  bilateral: true
+  movement_patterns:
+  - spinal_extension
+  - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: From a head bridge, turn out into QDR; choose the variation you are capable of.
+- id: qdr_push_up
+  name: QDR Rotational Push Ups
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: medium
+  bilateral: true
   movement_patterns:
   - horizontal_push
   - rotation
   requires: []
-  unlocks:
-  - floreio_sequence
-  contraindicated_with:
-  - shoulder_instability
-  - wrist_injury
+  unlocks: []
+  contraindicated_with: []
   progressions:
-    volume: increase_reps_per_set
-    complexity: qdr_rotational_pushup_advanced
+    complexity: the_next_level_of_the_routine
   scaling_down: []
-  typical_volume:
-    sets: 3
-    reps: 12
   sources:
-  - Ido Portal
-  notes: Ido Portal QDR (quadruped development) rotational push-up. Beginner 10-14
-    reps, 60-sec rest. Advanced variant lifts feet — 10 reps. Also programs QDR
-    Circles (10 reps per side). Central element in Floreio Basic tri-set. Develops
-    shoulder stability, scapular control, and thoracic rotation simultaneously.
+  - Ido Portal, Floreio Routines
+  notes: From the QDR (quadrupedal) position, a push-up that rotates side to side — the beginner variation,
+    which Workout Number 1's intermediates do lifting both feet off the floor.
+- id: qdr_push_up_advanced
+  name: QDR Rotational Push Up — Advanced Variation
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - horizontal_push
+  - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: The rotational QDR push-up at its advanced variation.
+- id: static_qdr
+  name: Static QDR
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - isometric
+  - horizontal_push
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: The QDR position held, each side.
+- id: qdr_circles
+  name: QDR Circles
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - rotation
+  - horizontal_push
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: Circling through the QDR position, each side.
+- id: half_au_cortado
+  name: Half Au Cortado
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - rotation
+  - vertical_push
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: The half version of the au cortado — a low, cut cartwheel.
+- id: au_cortado
+  name: Au Cortado
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - rotation
+  - vertical_push
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: The cut cartwheel of capoeira's floreio.
+- id: au_cortado_press
+  name: Au Cortado Press
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - rotation
+  - vertical_push
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: The au cortado pressed through slowly — "as slow as possible".
+- id: half_au_cortado_low_bridge
+  name: Half Au Cortado And Entry Rotation Into Low Bridge
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - rotation
+  - hip_extension
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: A half au cortado into a rotation into the low bridge, as one sequence.
+- id: au_cortado_low_bridge
+  name: Au Cortado And Rotation Into Low Bridge
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - rotation
+  - hip_extension
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: An au cortado into a rotation into the low bridge, as one sequence.
+- id: au_cortado_press_one_arm_bridge
+  name: Au Cortado Press And Rotation Into One Arm Low Bridge
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - rotation
+  - hip_extension
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: A pressed au cortado into a one-arm low bridge, as one sequence.
+- id: role_basic
+  name: Role
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - rotation
+  - locomotion
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: 'Capoeira''s rolê: turning travel low along the floor, right-left-left-right in random, continuous.'
+- id: role_into_qdr
+  name: Role Into QDR Sequence
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - rotation
+  - locomotion
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: A rolê into the QDR position.
+- id: role_into_qdr_push_up
+  name: Role Into QDR Rotational Push Ups
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - rotation
+  - horizontal_push
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: A rolê into a rotational QDR push-up.
+- id: role_into_half_au
+  name: Role Into Half Au
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: A rolê into a half au.
+- id: role_into_au_cortado
+  name: Role Into Au Cortado
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: A rolê into an au cortado.
+- id: role_into_regretting_au
+  name: Role Into Regretting Au
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: A rolê into a regretting au — an au that turns back on itself.
+- id: gatherings_beginner
+  name: Gatherings — Beginner Variations
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - locomotion
+  - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: Ido's gatherings, the beginner variations.
+- id: gatherings_intermediate
+  name: Gatherings — Intermediate Variations
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - locomotion
+  - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: Ido's gatherings, the intermediate variations.
+- id: gatherings_advanced
+  name: Gatherings — Advanced
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - locomotion
+  - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: Ido's gatherings, the advanced variations.
+- id: corta_capim_rotations
+  name: Corta Capim Rotations
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - rotation
+  - squat
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: Low on the hands, one leg sweeps around under the body — capoeira's corta capim.
+- id: corta_capim_spin
+  name: Corta Capim Spin
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - rotation
+  - squat
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: The corta capim as a continuous spin.
+- id: nda_lateral_push_up
+  name: NDA Lateral Push Ups
+  category: bodyweight
+  modality:
+  - relative_strength
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - horizontal_push
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: Lateral push-ups travelling side to side.
+- id: nda_lateral_one_arm_push_up
+  name: NDA Lateral One Arm Push Ups
+  category: bodyweight
+  modality:
+  - relative_strength
+  equipment: []
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - horizontal_push
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: Lateral push-ups side to side, onto one arm at a time.
+- id: handstand_wall_drill
+  name: Handstand Body Line Wall Drill
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - vertical_push
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: Handstand against the wall, working the straight body line.
+- id: handstand_straighten_into_line
+  name: Handstand Straighten Into Line
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - vertical_push
+  - isometric
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: Kick up and straighten into the line achieved on the wall.
+- id: frog_stance
+  name: Frog Stance
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - isometric
+  - horizontal_push
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: Knees on the elbows, feet lifted, balancing on the hands.
+- id: air_baby_extensions
+  name: Air Baby Extensions
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - isometric
+  - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: From the air baby (a one-arm balance on the elbow), extending the legs, each side.
+- id: static_air_baby
+  name: Static Air Baby
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - isometric
+  - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: The air baby held, each side.
+- id: handstand_swing_walk
+  name: Walk While Swinging Into Handstand
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - locomotion
+  - vertical_push
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: Walking forward, swinging up toward handstand at each step.
 - id: handstand_walk
   name: Handstand Walk
   category: skill
   modality:
   - movement_skill
-  equipment:
-  - open_space
-  effort: medium
+  equipment: []
+  effort: high
   bilateral: true
   movement_patterns:
   - locomotion
-  - isometric
   - vertical_push
-  requires:
-  - handstand_hold
-  unlocks:
-  - floreio_sequence
-  contraindicated_with:
-  - shoulder_instability
-  - wrist_injury
+  requires: []
+  unlocks: []
+  contraindicated_with: []
   progressions:
-    volume: increase_duration
-    complexity: handstand_walk_elbow_to_knee
-  scaling_down:
-  - handstand_freestanding
-  - handstand_wall_drill
-  typical_volume:
-    sets: 3
-    distance_m: 12
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
   sources:
-  - Ido Portal
-  notes: 'Freestanding handstand walking. Requires established freestanding handstand
-    balance. Ido Portal locomotion circuit: beginner 12m (swinging to initiate), intermediate
-    12m, advanced 15m with elbow-to-knee variation. 3-5 rounds with 90-120-sec rest.
-    Programs this as part of locomotion circuit with duck walk, horse walk, lizard
-    walk, and ostrich walk.'
-- id: handstand_freestanding
-  name: Handstand (Freestanding)
+  - Ido Portal, Floreio Routines
+  notes: Walking on the hands.
+- id: handstand_walk_elbow_to_knee
+  name: Handstand Walk, Elbow To Knee
   category: skill
   modality:
   - movement_skill
-  equipment:
-  - open_space
-  effort: medium
+  equipment: []
+  effort: high
   bilateral: true
   movement_patterns:
-  - isometric
+  - locomotion
   - vertical_push
-  requires:
-  - handstand_wall_drill
-  unlocks:
-  - handstand_walk
-  contraindicated_with:
-  - shoulder_instability
-  - wrist_injury
+  requires: []
+  unlocks: []
+  contraindicated_with: []
   progressions:
-    volume: increase_duration
-    complexity: handstand_walk
-  scaling_down:
-  - handstand_wall_drill
-  - balance_frog_stance
-  typical_volume:
-    sets: 5
-    duration_sec: 30
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
   sources:
-  - Ido Portal
-  notes: 'Freestanding handstand balance. Prerequisite to handstand walk. Ido Portal
-    equilibre section: wall drill first (10-30 sec, 3-5 sets, 45-60 sec rest), then
-    straighten into line (30-45 sec total, 2-3 sets, 90-sec rest). Handstand body
-    line is primary quality — not duration.'
-- id: locomotion_duck_walk
+  - Ido Portal, Floreio Routines
+  notes: A handstand walk in the elbow-to-knee position.
+- id: duck_walk
   name: Duck Walk
   category: skill
   modality:
   - movement_skill
-  equipment:
-  - open_space
+  equipment: []
   effort: low
   bilateral: true
   movement_patterns:
-  - squat
   - locomotion
+  - squat
   requires: []
-  unlocks:
-  - floreio_sequence
-  contraindicated_with:
-  - knee_meniscus_acute
+  unlocks: []
+  contraindicated_with: []
   progressions:
-    volume: increase_duration
+    complexity: the_next_level_of_the_routine
   scaling_down: []
-  typical_volume:
-    sets: 3
-    distance_m: 24
   sources:
-  - Ido Portal
-  notes: Low squat walking. Ido Portal locomotion circuit — beginner and intermediate
-    24m, advanced 30m. Develops deep hip flexion, ankle dorsiflexion, and knee tolerance.
-    Contraindicated with acute meniscus injury. One of five locomotion patterns programmed
-    in circuit with 90-120-sec rest between rounds.
-- id: locomotion_horse_walk
+  - Ido Portal, Floreio Routines
+  notes: Walking in a deep squat.
+- id: horse_walk
   name: Horse Walk
   category: skill
   modality:
   - movement_skill
-  equipment:
-  - open_space
+  equipment: []
   effort: low
   bilateral: true
   movement_patterns:
   - locomotion
+  - squat
   requires: []
-  unlocks:
-  - floreio_sequence
+  unlocks: []
   contraindicated_with: []
   progressions:
-    volume: increase_duration
+    complexity: the_next_level_of_the_routine
   scaling_down: []
-  typical_volume:
-    sets: 3
-    distance_m: 24
   sources:
-  - Ido Portal
-  notes: Quadruped locomotion with knees bent and floating above floor. Ido Portal
-    locomotion circuit — beginner and intermediate 24m, advanced 30m. Develops hip
-    mobility, shoulder stability, and proprioceptive coordination. Part of 3-5 round
-    locomotion circuit.
-- id: locomotion_lizard_walk
-  name: Lizard Walk
+  - Ido Portal, Floreio Routines
+  notes: Walking in a wide horse-stance squat.
+- id: lizard_walk_beginner
+  name: Lizard Walk — Beginner Variation
   category: skill
   modality:
   - movement_skill
-  equipment:
-  - open_space
+  equipment: []
   effort: medium
   bilateral: true
   movement_patterns:
   - locomotion
   - horizontal_push
   requires: []
-  unlocks:
-  - floreio_sequence
-  contraindicated_with:
-  - shoulder_instability
-  - wrist_injury
+  unlocks: []
+  contraindicated_with: []
   progressions:
-    volume: increase_duration
-    complexity: lizard_walk_advanced
-  scaling_down:
-  - locomotion_horse_walk
-  typical_volume:
-    sets: 3
-    distance_m: 12
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
   sources:
-  - Ido Portal
-  notes: 'Low crawl pattern with hip and shoulder close to floor — derived from
-    lizard movement. Ido Portal locomotion circuit: beginner 12m (beginner variant),
-    intermediate 12m (advanced variant), advanced 15m. More shoulder-intensive than
-    horse walk. Beginner and advanced variants differ in arm mechanics.'
-- id: locomotion_ostrich_walk
+  - Ido Portal, Floreio Routines
+  notes: A low crawl, opposite hand and foot, the beginner variation.
+- id: lizard_walk
+  name: Lizard Walk — Advanced Variation
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - locomotion
+  - horizontal_push
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: The low lizard crawl at its advanced variation.
+- id: ostrich_walk
   name: Ostrich Walk
   category: skill
   modality:
   - movement_skill
-  equipment:
-  - open_space
+  equipment: []
   effort: low
   bilateral: true
   movement_patterns:
   - locomotion
   - hip_hinge
   requires: []
-  unlocks:
-  - floreio_sequence
+  unlocks: []
   contraindicated_with: []
   progressions:
-    volume: increase_duration
+    complexity: the_next_level_of_the_routine
   scaling_down: []
-  typical_volume:
-    sets: 3
-    distance_m: 24
   sources:
-  - Ido Portal
-  notes: Hip-hinge-based walk — forward locomotion with torso pitched far forward
-    and leg swing from hip. Ido Portal locomotion circuit — beginner and intermediate
-    24m, advanced 30m. Develops hamstring extensibility and hip hinge motor pattern
-    under locomotor demand.
-- id: balance_frog_stance
-  name: Frog Stance (Balance)
+  - Ido Portal, Floreio Routines
+  notes: Walking folded forward, hands to the feet.
+- id: front_bridge_walk
+  name: Front Bridge Walking
   category: skill
   modality:
   - movement_skill
-  equipment:
-  - open_space
-  effort: low
+  equipment: []
+  effort: high
   bilateral: true
   movement_patterns:
+  - locomotion
+  - spinal_extension
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: Walking in the bridge, travelling forward.
+- id: back_bridge_walk
+  name: Back Bridge Walking
+  category: skill
+  modality:
+  - movement_skill
+  equipment: []
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - locomotion
+  - spinal_extension
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: Walking in the bridge, travelling backward.
+- id: shrimp
+  name: The Shrimp
+  category: bodyweight
+  modality:
+  - relative_strength
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - squat
+  - knee_extension
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: A single-leg squat holding the back foot; the foot and knee, or just the knee, of the back leg
+    touch down.
+- id: shrimp_advanced
+  name: The Shrimp — Advanced
+  category: bodyweight
+  modality:
+  - relative_strength
+  equipment: []
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - squat
+  - knee_extension
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: The shrimp in a quad-stretch position, or with only the knee touching behind you.
+- id: hanging_leg_raise_bench
+  name: Swedish Bench Hanging Leg Raises
+  category: bodyweight
+  modality:
+  - relative_strength
+  equipment:
+  - pull_up_bar
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - hip_flexion
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: Hanging leg raises on a Swedish (wall) bar.
+- id: hanging_leg_raise_0_90
+  name: 0-90 Hanging Leg Raises
+  category: bodyweight
+  modality:
+  - relative_strength
+  equipment:
+  - pull_up_bar
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - hip_flexion
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: Hanging, legs straight from vertical to ninety degrees.
+- id: one_arm_hanging_leg_raise
+  name: One Arm Hanging Leg Raises
+  category: bodyweight
+  modality:
+  - relative_strength
+  equipment:
+  - pull_up_bar
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - hip_flexion
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: Hanging leg raises from one arm, changing arms every rep.
+- id: bridge_push_up
+  name: Basic Bridge Push Ups
+  category: bodyweight
+  modality:
+  - relative_strength
+  equipment: []
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - spinal_extension
+  - vertical_push
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: Pressing up into the bridge from the floor and lowering.
+- id: one_leg_bridge_push_up
+  name: One Leg Bridge Push Ups
+  category: bodyweight
+  modality:
+  - relative_strength
+  equipment: []
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - spinal_extension
+  - vertical_push
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: Bridge push-ups on one leg, changing legs every rep.
+- id: one_arm_bridge_push_up
+  name: One Arm Bridge Push Ups
+  category: bodyweight
+  modality:
+  - relative_strength
+  equipment: []
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - spinal_extension
+  - vertical_push
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: Bridge push-ups on one arm, changing arms every rep.
+- id: iso_pull_up_hang_90_90
+  name: 90-90 Iso Pull Up Hang
+  category: bodyweight
+  modality:
+  - relative_strength
+  equipment:
+  - pull_up_bar
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - vertical_pull
   - isometric
   requires: []
-  unlocks:
-  - handstand_freestanding
-  contraindicated_with:
-  - wrist_injury
+  unlocks: []
+  contraindicated_with: []
   progressions:
-    volume: increase_duration
-    complexity: handstand_freestanding
+    complexity: the_next_level_of_the_routine
   scaling_down: []
-  typical_volume:
-    sets: 5
-    duration_sec: 20
   sources:
-  - Ido Portal
-  notes: Ido Portal equilibre entry — squat with knees resting on elbows, feet lifted,
-    balance on hands. 15-30 sec per set, 3-5 sets, 60-sec rest. Builds wrist strength,
-    shoulder stability, and proprioceptive feedback required for handstand progression.
-    First step in the balance skill tree.
-- id: air_baby
-  name: Air Baby Extensions (Ido Portal)
-  category: skill
+  - Ido Portal, Floreio Routines
+  notes: Holding the pull-up with the elbows at ninety degrees.
+- id: one_arm_iso_chin_hang_90_90
+  name: 90-90 One Arm Iso Chin Up Hang
+  category: bodyweight
   modality:
-  - movement_skill
+  - relative_strength
   equipment:
-  - open_space
-  effort: medium
-  bilateral: false
+  - pull_up_bar
+  effort: high
+  bilateral: true
   movement_patterns:
+  - vertical_pull
   - isometric
-  - rotation
-  requires:
-  - balance_frog_stance
-  unlocks:
-  - floreio_sequence
-  contraindicated_with:
-  - shoulder_instability
-  - wrist_injury
+  requires: []
+  unlocks: []
+  contraindicated_with: []
   progressions:
-    volume: increase_reps_per_set
-    complexity: floreio_sequence
-  scaling_down:
-  - balance_frog_stance
-  typical_volume:
-    sets: 3
-    reps: 8
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
   sources:
-  - Ido Portal
-  notes: 'Ido Portal equilibre movement — from ground support position, extend one
-    leg laterally while counter-rotating upper body. Air Baby Extensions: 5-10 reps
-    per side. Static Air Baby hold: 10-15 sec per side. Demands single-arm ground
-    support strength, hip abductor mobility, and contralateral coordination.'
-- id: floreio_sequence
-  name: Floreio Sequence (Combined Movement Flow)
+  - Ido Portal, Floreio Routines
+  notes: One arm at ninety degrees, each side (a rope assists at intermediate).
+- id: jump_into_box_standing
+  name: Jump Into Box — Standing
+  category: bodyweight
+  modality:
+  - power
+  equipment:
+  - box
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - ballistic
+  - squat
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: Jumping onto a box, landing standing.
+- id: jump_into_box_iso_squat
+  name: Jump Into Box — Iso-Squat
+  category: bodyweight
+  modality:
+  - power
+  equipment:
+  - box
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - ballistic
+  - squat
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: Jumping onto a box from a held squat.
+- id: front_flip_standing
+  name: Front Flip — Standing
   category: skill
   modality:
-  - movement_skill
-  equipment:
-  - open_space
+  - power
+  equipment: []
+  effort: max
+  bilateral: true
+  movement_patterns:
+  - ballistic
+  - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: A standing front flip.
+- id: back_flip_iso_squat
+  name: Back Flip — Iso Squat
+  category: skill
+  modality:
+  - power
+  equipment: []
+  effort: max
+  bilateral: true
+  movement_patterns:
+  - ballistic
+  - rotation
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: A back flip from a held squat.
+- id: harop_curl
+  name: Harop Curl
+  category: bodyweight
+  modality:
+  - relative_strength
+  equipment: []
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - knee_flexion
+  requires: []
+  unlocks: []
+  contraindicated_with: []
+  progressions:
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
+  sources:
+  - Ido Portal, Floreio Routines
+  notes: A hamstring curl of the body from the knees, feet anchored, controlling the hips' line.
+- id: single_leg_jump
+  name: Single-Leg Jumps In Place
+  category: bodyweight
+  modality:
+  - power
+  equipment: []
   effort: medium
   bilateral: true
   movement_patterns:
-  - locomotion
-  - rotation
   - ballistic
-  - isometric
-  requires:
-  - role_basic
-  - bridge_high
-  - au_cortado
-  - qdr_rotational_pushup
+  requires: []
   unlocks: []
-  contraindicated_with:
-  - shoulder_instability
-  - lumbar_disc
-  - wrist_injury
+  contraindicated_with: []
   progressions:
-    complexity: improvisation_floreio
-    volume: increase_duration
-  scaling_down:
-  - role_basic
-  - au_cortado
-  - bridge_high
-  typical_volume:
-    sets: 3
-    duration_sec: 120
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
   sources:
-  - Ido Portal
-  notes: Ido Portal floreio — chained sequence of role, bridge, au cortado, and
-    QDR movements without pause. Represents the integration tier (isolation → integration
-    → spontaneous expression). Ido Portal programs as 2-min continuous role work
-    with improvisation of learned elements, 3 sets, 30-sec rest. WOTD format uses
-    descending pyramid (10/8/6 reps of sequence).
-- id: cartwheel
-  name: Cartwheel
-  category: skill
+  - Ido Portal, Floreio Routines
+  notes: Jumping in place on one leg (with a rope or without), no knee bend — calf work only.
+- id: single_leg_stand_eyes_closed
+  name: Standing On One Leg, Eyes Shut
+  category: mobility
   modality:
-  - movement_skill
-  equipment:
-  - open_space
+  - mobility
+  equipment: []
   effort: low
-  bilateral: false
+  bilateral: true
   movement_patterns:
-  - locomotion
-  - ballistic
-  requires:
-  - role_basic
-  unlocks:
-  - au_cortado
-  contraindicated_with:
-  - shoulder_instability
-  - wrist_injury
+  - balance
+  requires: []
+  unlocks: []
+  contraindicated_with: []
   progressions:
-    complexity: au_cortado
-    volume: increase_reps_per_set
-  scaling_down:
-  - role_basic
-  typical_volume:
-    sets: 3
-    reps: 8
+    complexity: the_next_level_of_the_routine
+  scaling_down: []
   sources:
-  - Ido Portal
-  notes: Standard cartwheel — prerequisite bridge between role work and au cortado.
-    Establishes lateral inversion mechanics and hand-to-floor weight transfer. Both
-    directions required. Progression toward au cortado once mechanics are clean and
-    bilateral.
+  - Ido Portal, Floreio Routines
+  notes: Standing on one leg with the eyes shut.

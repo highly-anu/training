@@ -1,0 +1,81 @@
+id: built_to_move
+name: "Built to Move (Kelly & Juliet Starrett)"
+source_philosophy: kelly_starrett
+
+goals_served:
+  - mobility
+  - durability
+
+sessions_per_week:
+  mobility: 7
+modality_priority:
+  committed: [mobility]
+  core: []
+  supplementary: []
+
+prescription_policy: framework
+# Every day as the challenge writes it (its tests, sit-stands and mobilizations).
+progression_model: as_written
+
+applicable_when:
+  training_level:
+    - novice
+    - intermediate
+    - advanced
+    - elite
+  days_per_week_min: 7
+  days_per_week_max: 7
+
+# No deload_protocol: the challenge is daily practice, and its habits are "to
+# be mixed into each day for the rest of your days".
+
+categories:
+  challenge:
+    name: "Built to Move Challenge"
+    modality: mobility
+    archetypes:
+      - btm_d01
+      - btm_d02
+      - btm_d03
+      - btm_d04
+      - btm_d05
+      - btm_d06
+      - btm_d07
+      - btm_d08
+      - btm_d09
+      - btm_d10
+      - btm_d11
+      - btm_d12
+      - btm_d13
+      - btm_d14
+      - btm_d15
+      - btm_d16
+      - btm_d17
+      - btm_d18
+      - btm_d19
+      - btm_d20
+      - btm_d21
+  habits:
+    name: "Everyday Practices"
+    modality: mobility
+    archetypes:
+      - btm_d21
+
+sources:
+  - "Kelly & Juliet Starrett, Built to Move 21-Day Challenge (The Ready State)"
+
+notes: >
+  Ten vital signs in ten days — each a test, a physical practice and the day's
+  follow-along mobilizations — then eleven days stacking the practices into
+  habits: floor sitting, nose breathing, 8,000-10,000 steps, 800 g of fruit and
+  vegetables and enough protein, sit-stands (one more each day), balance,
+  standing at work, sleep.
+
+expectations:
+  min_weeks: 3
+  ideal_weeks: 3
+  min_days_per_week: 7
+  ideal_days_per_week: 7
+  min_session_minutes: 30
+  ideal_session_minutes: 30
+  supports_split_days: false

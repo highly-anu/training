@@ -158,6 +158,51 @@ packages:
     - 'I2: The PT test''s placement: the macro''s first and last hard job-specific days (the source never
       schedules it).'
     next: Decide GPP Circuits (I1) — rebuild it on the source's circuits, or drop it.
+  ido_portal:
+    status: audited
+    shape: templates
+    dossier: docs/package-fidelity/ido_portal.md
+    sources_kind: primary
+    debt: []
+    currency:
+      floreio: plan_completion
+    source_tests:
+    - test_week_template.py::test_ido_portal_runs_the_floreio_routines_at_each_level
+    inventions:
+    - 'I1: Six training days a week, Sunday a rest day, fewer days dropping from the end of the week:
+      the PDF names no frequency (only a "Preparations For Our Daily Training" post).'
+    - 'I2: The routines run in the PDF''s order, each training day the next one written for the athlete''s
+      level.'
+    - 'I3: Levels: the PDF''s beginner is novice, intermediate intermediate, advanced advanced and elite.'
+    - 'I4: Readings: a range at its middle (3-5 sets as 4, 10-30 sec as 20, 10-14 reps as 12, 45-90 sec
+      rest as 68), the note keeping it; a pyramid as "10/8/6" reps; a circuit or tri-set as each exercise''s
+      sets, the circuit in the notes; a routine''s first pass three minutes and a repeat two; each routine''s
+      minutes estimated.'
+    - 'I5: The second "Explosive Leg Workout - beginner/intermidiate" (p. 15: front and back flips, the
+      advanced shrimp) is read as the advanced version.'
+    last_review:
+      output_vs_dossier: '2026-10-22'
+  kelly_starrett:
+    status: audited
+    shape: templates
+    dossier: docs/package-fidelity/kelly_starrett.md
+    sources_kind: primary
+    debt: []
+    currency:
+      built_to_move: plan_completion
+    source_tests:
+    - test_week_template.py::test_kelly_starrett_runs_the_21_day_challenge_as_written
+    inventions:
+    - 'I1: Floor sitting is five minutes in the session; the challenge asks for it "throughout your day".'
+    - 'I2: Each follow-along mobilization counts as three minutes, a test as four, a balance practice
+      as three, so a day runs 15-30 minutes; the pages give no times.'
+    - 'I3: Day 7, which introduces the sit-stands without a number, does seven: day 8 does eight, one
+      more a day.'
+    - 'I4: After day 21, day 21 every day: its practices and its three mobilizations, the challenge''s
+      last stack.'
+    - 'I5: Seven days a week are required, and the challenge starts on a Monday.'
+    last_review:
+      output_vs_dossier: '2026-10-22'
   marcus_filly:
     status: audited
     shape: contract
@@ -286,11 +331,3 @@ packages:
     - 'I5: The repeat after a layoff (R11) is recommended in every swing session''s note, never enforced:
       the athlete decides and takes responsibility (owner, 2026-10-21).'
     next: The hand-to-hand option needs an alternating block; decide the two Codex tracks (I2, I3).
-  ido_portal:
-    status: not_started
-    shape: scheduler
-    next: Assessment gating — advancement markers sourced before anything else.
-  kelly_starrett:
-    status: not_started
-    shape: scheduler
-    next: Assessment-driven prescription and retesting.

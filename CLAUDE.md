@@ -437,9 +437,12 @@ group's name.
   CrossFit (since 2026-10-21): Glassman's three-on, one-off cycle laid on twelve weeks, its day
   types (one element, couplets, triplets) as pools of Table 4's workouts, the Girls and the 2005
   workouts read; Gym Jones (same day): Operator Fitness and Soldier of Steel, months the
-  source writes day by day, each day a one-workout pool; and ATG (2026-10-22): Ben Patrick's
-  ATG Zero, Program #2 and Knee Ability Pro weeks, each workout its own pool
-  (`test_week_template.py`).
+  source writes day by day, each day a one-workout pool; ATG (2026-10-22): Ben Patrick's
+  ATG Zero, Program #2 and Knee Ability Pro weeks, each workout its own pool; Kelly
+  Starrett (same day): the Built to Move 21-Day Challenge, its days one pool taken in order;
+  and Ido Portal (same day): the Floreio Routines, one pool whose versions the athlete's
+  level picks (`training_levels`). No shipped package runs on the modality scheduler any
+  more; its tests use `test_packages/block_fixture` (`test_week_template.py`).
 - **A training contract's progress is earned by confirmed sessions.** A module advances
   (`confirmed_state`, read when the program is regenerated) only on a completed session
   whose progressing exercises are logged clean at or below the module's RPE. A

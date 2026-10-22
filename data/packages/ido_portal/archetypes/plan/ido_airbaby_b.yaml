@@ -1,0 +1,118 @@
+id: ido_airbaby_b
+name: Air Baby and Pulling Workout — Beginner
+modality: movement_skill
+category: movement_skill
+training_levels:
+- novice
+duration_estimate_minutes: 55
+pool_only: true
+slots:
+- role: joint_mobility
+  slot_type: time_domain
+  duration_minutes: 5
+  exercise_filter:
+    exercise_ids:
+    - joint_mobility
+    ordered: true
+  notes: 5 min of total body joint mobility.
+- role: wrists
+  slot_type: skill_practice
+  sets: 1
+  duration_minutes: 3
+  exercise_filter:
+    exercise_ids:
+    - wrists_routine
+    ordered: true
+  notes: Wrists Routine X 1 set.
+- role: shoulder_rom
+  slot_type: skill_practice
+  sets: 1
+  duration_minutes: 3
+  exercise_filter:
+    exercise_ids:
+    - shoulder_rom_stabilization
+    ordered: true
+  notes: Shoulder ROM and Stabilization routine X 1 set.
+- role: squat_clinic
+  slot_type: skill_practice
+  sets: 1
+  duration_minutes: 3
+  exercise_filter:
+    exercise_ids:
+    - squat_clinic
+    ordered: true
+  notes: Ido's Squat Clinic Routine X 1 set.
+- role: scapula
+  slot_type: skill_practice
+  sets: 1
+  duration_minutes: 3
+  exercise_filter:
+    exercise_ids:
+    - scapula_mobilization
+    ordered: true
+  notes: Scapula Mobilization Routine X 1 set.
+- role: equilibre
+  slot_type: static_hold
+  sets: 4
+  hold_seconds: 22
+  rest_sec: 60
+  exercise_filter:
+    exercise_ids:
+    - frog_stance
+    ordered: true
+  notes: Frog Stance 15-30 sec X 3-5 sets / 60 sec rest.
+- role: qdr_push_up
+  slot_type: sets_reps
+  sets: 3
+  reps: 12
+  rest_sec: 60
+  exercise_filter:
+    exercise_ids:
+    - qdr_push_up
+    ordered: true
+  notes: QDR Rotational Push Ups — beginner variation X 10-14 reps / 3 sets / 60 sec rest.
+- role: high_bridge
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  rest_sec: 60
+  exercise_filter:
+    exercise_ids:
+    - rotations_into_high_bridge
+    - high_bridge_hold
+    ordered: true
+  notes: Rotations into High Bridge X 10 reps / 3 sets / 60 sec rest, or a High Bridge hold of 30 sec
+    total with Rotations Into Arch Using The Wall X 10 reps.
+- role: corta_capim
+  slot_type: sets_reps
+  sets: 3
+  reps: 15
+  rest_sec: 60
+  exercise_filter:
+    exercise_ids:
+    - corta_capim_rotations
+    ordered: true
+  notes: Corta Capim Rotations X 15 reps per side / 3 sets / 60 sec.
+- role: pull
+  slot_type: static_hold
+  sets: 5
+  hold_seconds: 15
+  rest_sec: 75
+  exercise_filter:
+    exercise_ids:
+    - iso_pull_up_hang_90_90
+    ordered: true
+  notes: 90-90 Iso Pull Up Hang 10-20 sec / 5 sets / 60-90 sec rest.
+- role: prehab_wrists
+  slot_type: skill_practice
+  sets: 3
+  duration_minutes: 6
+  exercise_filter:
+    exercise_ids:
+    - wrists_routine
+    ordered: true
+  notes: Wrists Routine X 3 subsequent sets.
+required_equipment: []
+sources:
+- Ido Portal, Floreio Routines (data/portal/Ido Portal Floreio Routines.pdf), p. 15
+notes: Frog stance, QDR push-ups, the high bridge, corta capim rotations, 90-90 iso pull-up hangs.

@@ -41,8 +41,9 @@ back to a primary source. The engine's part was that it could only express
      `categories`, `as_written`; src/week_template.py);
    - load added session to session (Starting Strength) → a contract with load
      per confirmed exposure (`load_per_exposure`);
-   - skills earned by assessment (Ido Portal, ATG, Kelly Starrett) →
-     assessment gating (not built yet);
+   - skills earned by assessment → assessment gating (not built yet). ATG,
+     Kelly Starrett and Ido Portal publish fixed workouts, so they run as week
+     templates, and each records the level the athlete moves up as open;
    - otherwise the modality scheduler, with the framework's
      `sessions_per_week`, `cadence_options` and the phase `checks:`.
 3. **The source's own weeks, as data.** What the source *shows* — an example

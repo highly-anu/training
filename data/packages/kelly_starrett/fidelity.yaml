@@ -1,3 +1,130 @@
-# Kelly Starrett — not yet worked against its sources (docs/package-fidelity/README.md).
-shape: scheduler
-next: Assessment-driven prescription and retesting.
+# Kelly Starrett — the machine half of docs/package-fidelity/kelly_starrett.md
+# (docs/schemas/fidelity.schema.json; docs/package-fidelity/README.md).
+# Read 2026-10-22: the Starretts' own Built to Move 21-Day Challenge, every
+# day's page (The Ready State, through the Wayback Machine's 2024 copies).
+shape: templates
+
+sources:
+  - id: btm21
+    kind: primary
+    author: Kelly Starrett and Juliet Starrett
+    title: Built to Move 21-Day Challenge, Days #0-21 (The Ready State)
+    where: https://thereadystate.com/built-to-move-21-day-challenge-day-1/ (Days 0-21; read at web.archive.org, 2024)
+    published: '2023'
+    read: full
+    accessed: '2026-10-22'
+    note: "Every day's text in full; its follow-along mobilization videos were not watched, and the pages do not name them."
+  - id: btm_reviews
+    kind: secondary
+    author: MindBodyDad; Marlo Yonocruz; Equinox (Diana Kelly Levey)
+    title: "Built to Move: the vital signs' tests, book notes, the ten signs"
+    where: https://www.mindbodydad.com/body/built-to-move-vital-signs
+    read: full
+    accessed: '2026-10-22'
+    note: The tests' protocols and the bands the book gives for some of them; nothing is built on the bands.
+  - id: btm
+    kind: primary
+    author: Kelly Starrett and Juliet Starrett
+    title: "Built to Move: The Ten Essential Habits to Help You Move Freely and Live Fully"
+    where: Knopf, 2023
+    read: unavailable
+    note: No copy was found to read; the challenge pages refer to its pages for every test's results.
+  - id: sl
+    kind: primary
+    author: Kelly Starrett with Glen Cordoza
+    title: Becoming a Supple Leopard (2nd ed.)
+    where: Victory Belt, 2015
+    read: unavailable
+    note: No copy was found to read; nothing rests on it.
+  - id: rtr
+    kind: primary
+    author: Kelly Starrett with T. J. Murphy
+    title: Ready to Run
+    where: Victory Belt, 2014
+    read: unavailable
+    note: No copy was found to read; nothing rests on it.
+
+rules:
+  - id: R1
+    text: "The 21-Day Challenge as written, a day at a time: days 1-10 one vital sign each — its test, its physical practice, that day's follow-along mobilizations — and days 11-21 the practices stacked, with that day's mobilizations."
+    cites: [{source: btm21, at: 'Day #1: "Each day will include an Intro Video as well accompanying Mobilization Videos. The first ten days will also include the Test/Retest videos"'}]
+    enforced_by:
+      - data:frameworks/built_to_move.yaml#categories.challenge
+      - data:philosophy.yaml#tracks.built_to_move.phases.challenge.week_templates
+      - week:challenge_weeks
+      - test:test_week_template.py::test_kelly_starrett_runs_the_21_day_challenge_as_written
+  - id: R2
+    text: "Ten tests in the first ten days: sit-and-rise, breath-hold, couch, the steps inventory, the airport scanner and shoulder rotation, the 800-gram and protein counts, the squat, SOLEC and the Old Man Balance Test, the sitting inventory, the hours count. The movement tests are in the sessions; the counts are in the day's notes."
+    cites: [{source: btm21, at: 'Days #1-10, "Assessment"'}, {source: btm_reviews}]
+    enforced_by:
+      - data:archetypes/plan/btm_d01.yaml#slots.test_sit_and_rise
+      - data:archetypes/plan/btm_d05.yaml#slots.test_airport_scanner
+      - data:archetypes/plan/btm_d08.yaml#slots.test_old_man_balance
+  - id: R3
+    text: "Practices stack: each day keeps the ones before it — floor sitting from day 1 every day after."
+    cites: [{source: btm21, at: '"Stacked Physical Practices: Floor-Sitting Positions (From Day #1)"'}]
+    enforced_by:
+      - data:archetypes/plan/btm_d21.yaml#slots.floor_sitting
+      - test:test_week_template.py::test_kelly_starrett_runs_the_21_day_challenge_as_written
+  - id: R4
+    text: "Sit-stands from day 7, one more each day: 8 on day 8, 21 on day 21."
+    cites: [{source: btm21, at: 'Day #8: "8 Sit-Stands (From Day #7)" … Day #21: "21 Sit-Stands (From Day #7)"'}]
+    enforced_by:
+      - data:archetypes/plan/btm_d21.yaml#slots.sit_stands.reps
+      - week:sit_stands
+  - id: R5
+    text: "Balance from day 8: the Y balance, balance play or the Old Man Balance Test, as each day names it."
+    cites: [{source: btm21, at: 'Days #8-21, "Practice balance play", "Practice Y-Balance Mobilization", "Practice Old Man Balance Test"'}]
+    enforced_by:
+      - data:archetypes/plan/btm_d12.yaml#slots.balance
+  - id: R6
+    text: "The through-the-day practices — 8,000-10,000 steps, nose-only breathing, 800 g of fruit and vegetables, 0.7-1 g of protein per pound, standing or dynamic sitting at work (30 minutes on day 9, ten more each day to 2 h 30 on day 21), sleep hygiene — go with each day, said in its notes; the engine schedules sessions, not the whole day."
+    cites: [{source: btm21, at: 'Days #4, #6, #9, #10: "Walk 8-10K steps", "Consume 800 grams", "Accumulate 30 minutes of standing", "Sleep Hygiene Practices"'}]
+    enforced_by:
+      - data:archetypes/plan/btm_d09.yaml#notes
+      - data:archetypes/plan/btm_d21.yaml#notes
+  - id: R7
+    text: "After day 21 the habits are \"to be mixed into each day for the rest of your days\"; no deload."
+    cites: [{source: btm21, at: 'Day #21: "They are to be mixed into each day for the rest of your days."'}]
+    enforced_by:
+      - data:philosophy.yaml#tracks.built_to_move.phases.habits.repeatable
+      - test:test_week_template.py::test_kelly_starrett_runs_the_21_day_challenge_as_written
+
+open:
+  - "Assessment gating: the ten tests are practised and logged, not scored. Their results and bands are on the book's pages (\"Refer to pp. 33-34 of Built to Move\"), which were not read; with them, each test could become a standard, retested, and steer the practice it belongs to."
+  - "The follow-along mobilizations are the challenge's videos, unnamed on its pages: each day's session links its page and counts them (I2)."
+  - "Becoming a Supple Leopard and Ready to Run were not read; their mobility prescriptions and standards are not built."
+  - "Extra credit (mouth taping, rucking, Tabata squats, jump rope, the worm push-up) is in each day's notes, not scheduled."
+  - "Eating and sleep are said in the day's notes; the engine plans training sessions, not meals or nights."
+
+inventions:
+  - id: I1
+    text: "Floor sitting is five minutes in the session; the challenge asks for it \"throughout your day\"."
+    implemented_by:
+      - data:archetypes/plan/btm_d01.yaml#slots.floor_sitting
+  - id: I2
+    text: "Each follow-along mobilization counts as three minutes, a test as four, a balance practice as three, so a day runs 15-30 minutes; the pages give no times."
+    implemented_by:
+      - data:archetypes/plan/btm_d01.yaml#slots.mobilizations
+  - id: I3
+    text: "Day 7, which introduces the sit-stands without a number, does seven: day 8 does eight, one more a day."
+    implemented_by:
+      - data:archetypes/plan/btm_d07.yaml#slots.sit_stands
+  - id: I4
+    text: "After day 21, day 21 every day: its practices and its three mobilizations, the challenge's last stack."
+    implemented_by:
+      - data:frameworks/built_to_move.yaml#categories.habits
+  - id: I5
+    text: "Seven days a week are required, and the challenge starts on a Monday."
+    implemented_by:
+      - data:frameworks/built_to_move.yaml#applicable_when.days_per_week_min
+
+reviews:
+  - kind: output_vs_dossier
+    date: '2026-10-22'
+    by: Claude (package audit)
+    scope: "tools/print_package.py kelly_starrett --profile ideal: the 21 days and the first habits weeks"
+    result: "Each day's tests, practices, sit-stand count, balance and mobilization count read as its page writes them; the through-the-day practices are in each day's note. Nothing to fix."
+
+currency:
+  built_to_move: {entry: plan_completion, rule: R1}

@@ -1,0 +1,58 @@
+id: ido_w1_a
+name: Floreio Workout Number 1 — Advanced
+modality: movement_skill
+category: movement_skill
+training_levels:
+- advanced
+- elite
+duration_estimate_minutes: 20
+pool_only: true
+slots:
+- role: jump_rope
+  slot_type: time_domain
+  duration_minutes: 5
+  exercise_filter:
+    exercise_ids:
+    - jump_rope
+    ordered: true
+  notes: 5 min jump rope.
+- role: shoulder_rom
+  slot_type: skill_practice
+  sets: 1
+  duration_minutes: 3
+  exercise_filter:
+    exercise_ids:
+    - shoulder_rom_stabilization
+    ordered: true
+  notes: Shoulder ROM and Stabilization routine X 1 set.
+- role: squat_clinic
+  slot_type: skill_practice
+  sets: 1
+  duration_minutes: 3
+  exercise_filter:
+    exercise_ids:
+    - squat_clinic
+    ordered: true
+  notes: Ido's Squat Clinic Routine X 1 set.
+- role: low_bridge
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - rotations_into_low_bridge_advanced
+    ordered: true
+  notes: D1. Rotations Into Low Bridge Advanced X 10 reps; D1-D2 for 3 total sets.
+- role: qdr_push_up
+  slot_type: sets_reps
+  sets: 3
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - qdr_push_up_advanced
+    ordered: true
+  notes: D2. QDR Rotational Push Ups — advanced variation X 10 reps.
+required_equipment: []
+sources:
+- Ido Portal, Floreio Routines (data/portal/Ido Portal Floreio Routines.pdf), p. 3
+notes: Advanced rotations into low bridge and advanced QDR push-ups, three sets.

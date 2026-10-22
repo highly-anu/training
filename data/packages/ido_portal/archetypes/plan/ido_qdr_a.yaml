@@ -1,0 +1,88 @@
+id: ido_qdr_a
+name: Floreio Static QDR and Sequence Development — Advanced
+modality: movement_skill
+category: movement_skill
+training_levels:
+- advanced
+- elite
+duration_estimate_minutes: 45
+pool_only: true
+slots:
+- role: jump_rope
+  slot_type: time_domain
+  duration_minutes: 5
+  exercise_filter:
+    exercise_ids:
+    - jump_rope
+    ordered: true
+  notes: 5 min jump rope.
+- role: wrists
+  slot_type: skill_practice
+  sets: 1
+  duration_minutes: 3
+  exercise_filter:
+    exercise_ids:
+    - wrists_routine
+    ordered: true
+  notes: Wrists Routine X 1 set.
+- role: squat_clinic
+  slot_type: skill_practice
+  sets: 1
+  duration_minutes: 3
+  exercise_filter:
+    exercise_ids:
+    - squat_clinic
+    ordered: true
+  notes: Ido's Squat Clinic Routine X 1 set.
+- role: shoulder_rom
+  slot_type: skill_practice
+  sets: 1
+  duration_minutes: 3
+  exercise_filter:
+    exercise_ids:
+    - shoulder_rom_stabilization
+    ordered: true
+  notes: Shoulder ROM and Stabilization routine X 1 set.
+- role: static_qdr
+  slot_type: static_hold
+  sets: 4
+  hold_seconds: 20
+  rest_sec: 45
+  exercise_filter:
+    exercise_ids:
+    - static_qdr
+    ordered: true
+  notes: B1. Static QDR 10-30 sec per side / 3-5 sets / 45 sec rest. Rest 90 sec.
+- role: sequence
+  slot_type: sets_reps
+  sets: 4
+  reps: 12
+  rest_sec: 60
+  exercise_filter:
+    exercise_ids:
+    - role_into_regretting_au
+    ordered: true
+  notes: C1. Role Into Regretting Au 12 reps / 3-5 sets / 60 sec rest.
+- role: role_into_qdr
+  slot_type: sets_reps
+  sets: 4
+  reps: 12
+  rest_sec: 60
+  exercise_filter:
+    exercise_ids:
+    - role_into_qdr_push_up
+    ordered: true
+  notes: D1. Role Into QDR Rotational Push Ups X 12 reps / 3-5 sets / 60 sec rest.
+- role: prehab_wrists
+  slot_type: skill_practice
+  sets: 3
+  duration_minutes: 6
+  exercise_filter:
+    exercise_ids:
+    - wrists_routine
+    ordered: true
+  notes: E1. Wrist Routine X 3 subsequent sets.
+required_equipment: []
+sources:
+- Ido Portal, Floreio Routines (data/portal/Ido Portal Floreio Routines.pdf), p. 9
+notes: Static QDR, then two sequences, then the wrists routine three times.

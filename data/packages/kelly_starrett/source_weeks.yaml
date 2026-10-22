@@ -1,0 +1,45 @@
+# Kelly Starrett — the source's own days (docs/schemas/source_weeks.schema.json).
+# The Built to Move 21-Day Challenge, read 2026-10-22: every day of its three
+# weeks, and the sit-stands it adds one a day.
+- id: challenge_weeks
+  rule: R1
+  track: built_to_move
+  note: >
+    The Built to Move 21-Day Challenge (The Ready State): Days #1-21 in order,
+    every day.
+  profile: {days_per_week: 7, session_time_minutes: 30, training_level: novice, equipment: []}
+  weeks:
+    - days:
+        - {archetype: btm_d01}
+        - {archetype: btm_d02}
+        - {archetype: btm_d03}
+        - {archetype: btm_d04}
+        - {archetype: btm_d05}
+        - {archetype: btm_d06}
+        - {archetype: btm_d07}
+    - days:
+        - {archetype: btm_d08}
+        - {archetype: btm_d09}
+        - {archetype: btm_d10}
+        - {archetype: btm_d11}
+        - {archetype: btm_d12}
+        - {archetype: btm_d13}
+        - {archetype: btm_d14}
+    - days:
+        - {archetype: btm_d15}
+        - {archetype: btm_d16}
+        - {archetype: btm_d17}
+        - {archetype: btm_d18}
+        - {archetype: btm_d19}
+        - {archetype: btm_d20}
+        - {archetype: btm_d21}
+- id: sit_stands
+  rule: R4
+  track: built_to_move
+  note: >
+    Sit-stands from Day #7, one more each day to 21 on Day #21 (Days #8-21:
+    "N Sit-Stands (From Day #7)"); day 7's seven is I3.
+  profile: {days_per_week: 7, session_time_minutes: 30, training_level: novice, equipment: []}
+  num_weeks: 3
+  series:
+    - {exercise: sit_stand, field: reps, values: [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]}

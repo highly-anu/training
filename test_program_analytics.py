@@ -139,7 +139,8 @@ _PKG_ROOT = Path(__file__).parent / 'data' / 'packages'
 
 
 @contextlib.contextmanager
-def throwaway_package(pkg_id: str, analytics: dict | None, borrows: list | None = None):
+def throwaway_package(pkg_id: str, analytics: dict | None, borrows: list | None = None,
+                      exercises: list | None = None):
     """A minimal package on disk: philosophy + one framework (+ analytics.yaml).
 
     The self-containment proof: a new methodology must get its own analytics
@@ -165,7 +166,7 @@ def throwaway_package(pkg_id: str, analytics: dict | None, borrows: list | None 
         'expectations': {'min_weeks': 4, 'ideal_weeks': 8, 'min_days_per_week': 3,
                          'ideal_days_per_week': 5, 'min_session_minutes': 45,
                          'ideal_session_minutes': 60, 'supports_split_days': False}}))
-    (root / 'exercises.yaml').write_text(yaml.safe_dump({'exercises': [
+    (root / 'exercises.yaml').write_text(yaml.safe_dump({'exercises': exercises or [
         {'id': f'{pkg_id}_lift', 'name': 'Lift', 'category': 'barbell',
          'modality': ['max_strength'], 'equipment': ['barbell'], 'effort': 'high'}]}))
     if analytics is not None:
@@ -926,11 +927,12 @@ def test_unlocks_benchmarks_completion_and_errors() -> None:
     check('the level-opened movements are counted, box_squat among them', r['assumedCount'] > 0)
     check('practised out of the movements the program draws on (squat, press, easy run)', r['programTotal'] == 3, str(r['programTotal']))
 
-    # Ido Portal: handstand_walk requires handstand_hold, which no level grants.
+    # A skill package (made for the test): the walk requires the hold, which
+    # requires a concept no level grants, so only practice opens either.
     def _skill(ex_id, name):
         return {'exercise': {'id': ex_id, 'name': name, 'movement_patterns': ['isometric']},
                 'slot_role': 'skill', 'slot_type': 'skill_practice', 'load': {'duration_minutes': 10}}
-    ido = {'goal': {'id': '_phil_ido_portal', 'primary_sources': ['ido_portal'],
+    practice = {'goal': {'id': '_phil__zz_skill', 'primary_sources': ['_zz_skill'],
                     'priorities': {'movement_skill': 1.0},
                     'framework_selection': {'default_framework': 'test_fw'}},
            'constraints': {'training_level': 'intermediate'},
@@ -939,29 +941,35 @@ def test_unlocks_benchmarks_completion_and_errors() -> None:
                                                'archetype': {'id': 'ladder', 'name': 'Ladder'},
                                                'exercises': [_skill('handstand_hold', 'Handstand hold')]}]}}
                      for n in (1, 2, 3)]}
-    ido_logs = {f'{n}-Monday-0': _log(f'2026-03-{2 + (n-1)*7:02d}T10:00:00+00:00') for n in (1, 2)}
-    e = E('u', 'unlocks', 'ido_portal', min_sessions=2)
-    once = run_primitive(e, _ctx(ido, {'1-Monday-0': ido_logs['1-Monday-0']}, today=START + timedelta(days=3)))
-    check('one handstand session: the walk is not open yet',
-          'handstand_walk' not in {a['exerciseId'] for a in once['available']})
-    twice = run_primitive(e, _ctx(ido, ido_logs, today=START + timedelta(days=10)))
-    walk = next((a for a in twice['available'] if a['exerciseId'] == 'handstand_walk'), None)
-    check('an available movement misses nothing', walk is not None and walk['missing'] == [], str(walk))
-    # require_clean: attendance does not earn it; two clean ticks do.
-    ec = E('u', 'unlocks', 'ido_portal', min_sessions=2, require_clean=True)
-    unticked = run_primitive(ec, _ctx(ido, ido_logs, today=START + timedelta(days=10)))
-    check('require_clean: two attended sessions earn nothing, and say why',
-          not unticked['practised'] and unticked['coverage']['reason'] == 'clean_not_logged',
-          str(unticked['coverage']))
-    clean_logs = {k: _log(v['completedAt'], {'handstand_hold': {'sets': [], 'clean': True}})
-                  for k, v in ido_logs.items()}
-    ticked = run_primitive(ec, _ctx(ido, clean_logs, today=START + timedelta(days=10)))
-    check('two clean sessions earn the hold and open the walk',
-          [p['exerciseId'] for p in ticked['practised']] == ['handstand_hold']
-          and 'handstand_walk' in {a['exerciseId'] for a in ticked['available']})
-    check('handstand_hold practised twice opens handstand_walk',
-          'handstand_walk' in {a['exerciseId'] for a in twice['available']},
-          str([a['exerciseId'] for a in twice['available']][:8]))
+    skill_logs = {f'{n}-Monday-0': _log(f'2026-03-{2 + (n-1)*7:02d}T10:00:00+00:00') for n in (1, 2)}
+    skill_exercises = [
+        {'id': 'handstand_hold', 'name': 'Handstand hold', 'category': 'skill', 'modality': ['movement_skill'],
+         'equipment': [], 'effort': 'medium', 'requires': ['_zz_never_granted']},
+        {'id': 'handstand_walk', 'name': 'Handstand walk', 'category': 'skill', 'modality': ['movement_skill'],
+         'equipment': [], 'effort': 'high', 'requires': ['handstand_hold']}]
+    with throwaway_package('_zz_skill', None, exercises=skill_exercises):
+        e = E('u', 'unlocks', '_zz_skill', min_sessions=2)
+        once = run_primitive(e, _ctx(practice, {'1-Monday-0': skill_logs['1-Monday-0']}, today=START + timedelta(days=3)))
+        check('one handstand session: the walk is not open yet',
+              'handstand_walk' not in {a['exerciseId'] for a in once['available']})
+        twice = run_primitive(e, _ctx(practice, skill_logs, today=START + timedelta(days=10)))
+        walk = next((a for a in twice['available'] if a['exerciseId'] == 'handstand_walk'), None)
+        check('an available movement misses nothing', walk is not None and walk['missing'] == [], str(walk))
+        # require_clean: attendance does not earn it; two clean ticks do.
+        ec = E('u', 'unlocks', '_zz_skill', min_sessions=2, require_clean=True)
+        unticked = run_primitive(ec, _ctx(practice, skill_logs, today=START + timedelta(days=10)))
+        check('require_clean: two attended sessions earn nothing, and say why',
+              not unticked['practised'] and unticked['coverage']['reason'] == 'clean_not_logged',
+              str(unticked['coverage']))
+        clean_logs = {k: _log(v['completedAt'], {'handstand_hold': {'sets': [], 'clean': True}})
+                      for k, v in skill_logs.items()}
+        ticked = run_primitive(ec, _ctx(practice, clean_logs, today=START + timedelta(days=10)))
+        check('two clean sessions earn the hold and open the walk',
+              [p['exerciseId'] for p in ticked['practised']] == ['handstand_hold']
+              and 'handstand_walk' in {a['exerciseId'] for a in ticked['available']})
+        check('handstand_hold practised twice opens handstand_walk',
+              'handstand_walk' in {a['exerciseId'] for a in twice['available']},
+              str([a['exerciseId'] for a in twice['available']][:8]))
 
     perf = {'back_squat_bw_ratio': [{'value': 1.2, 'date': '2026-02-01'}, {'value': 1.55, 'date': '2026-03-10'}],
             'strict_press_bw_ratio': [{'value': 0.6, 'date': '2026-03-10'}],

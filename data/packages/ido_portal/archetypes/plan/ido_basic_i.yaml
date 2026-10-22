@@ -1,0 +1,126 @@
+id: ido_basic_i
+name: Floreio Basic Workout — Intermediate
+modality: movement_skill
+category: movement_skill
+training_levels:
+- intermediate
+duration_estimate_minutes: 60
+pool_only: true
+slots:
+- role: jump_rope
+  slot_type: time_domain
+  duration_minutes: 5
+  exercise_filter:
+    exercise_ids:
+    - jump_rope
+    ordered: true
+  notes: 5 min jump rope.
+- role: wrists
+  slot_type: skill_practice
+  sets: 1
+  duration_minutes: 3
+  exercise_filter:
+    exercise_ids:
+    - wrists_routine
+    ordered: true
+  notes: Wrists Routine X 1 set.
+- role: squat_clinic
+  slot_type: skill_practice
+  sets: 1
+  duration_minutes: 3
+  exercise_filter:
+    exercise_ids:
+    - squat_clinic
+    ordered: true
+  notes: Ido's Squat Clinic Routine X 1 set.
+- role: shoulder_rom
+  slot_type: skill_practice
+  sets: 1
+  duration_minutes: 3
+  exercise_filter:
+    exercise_ids:
+    - shoulder_rom_stabilization
+    ordered: true
+  notes: Shoulder ROM and Stabilization routine X 1 set.
+- role: low_bridge
+  slot_type: sets_reps
+  sets: 1
+  reps: 10
+  exercise_filter:
+    exercise_ids:
+    - rotations_into_low_bridge
+    ordered: true
+  notes: Rotations Into Low Bridge X 10 reps.
+- role: qdr_push_up
+  slot_type: sets_reps
+  sets: 3
+  reps: 14
+  rest_sec: 60
+  exercise_filter:
+    exercise_ids:
+    - qdr_push_up
+    ordered: true
+  notes: QDR Rotational Push Ups X 14 reps / 3 sets / 60 sec rest.
+- role: high_bridge
+  slot_type: sets_reps
+  sets: 3
+  reps: 14
+  rest_sec: 60
+  exercise_filter:
+    exercise_ids:
+    - rotations_into_high_bridge
+    ordered: true
+  notes: Rotations into High Bridge X 14 reps / 3 sets / 60 sec rest.
+- role: au_cortado
+  slot_type: sets_reps
+  sets: 3
+  reps: 14
+  rest_sec: 60
+  exercise_filter:
+    exercise_ids:
+    - au_cortado
+    ordered: true
+  notes: Au Cortado X 14 reps / 3 sets / 60 sec rest.
+- role: role
+  slot_type: time_domain
+  duration_minutes: 2
+  sets: 3
+  rest_sec: 30
+  exercise_filter:
+    exercise_ids:
+    - role_basic
+    ordered: true
+  notes: Role work, right-left-left-right-left, etc. (in random) for 2 minutes straight / 3 sets / rest
+    30 sec. Breathe, fluid movement!
+- role: cool_down_shoulder
+  slot_type: skill_practice
+  sets: 3
+  duration_minutes: 6
+  exercise_filter:
+    exercise_ids:
+    - shoulder_rom_stabilization
+    ordered: true
+  notes: 'F1-F3 X 3 times, resting 60 seconds after F3 only: Shoulder ROM and Stabilization routine.'
+- role: cool_down_squat
+  slot_type: skill_practice
+  sets: 3
+  duration_minutes: 6
+  exercise_filter:
+    exercise_ids:
+    - squat_clinic
+    ordered: true
+  notes: Ido's Squat Clinic Routine (F1-F3 X 3).
+- role: cool_down_scapula
+  slot_type: skill_practice
+  sets: 3
+  duration_minutes: 6
+  exercise_filter:
+    exercise_ids:
+    - scapula_mobilization
+    ordered: true
+  notes: Scapula Mobilization Routine (F1-F3 X 3).
+required_equipment: []
+sources:
+- Ido Portal, Floreio Routines (data/portal/Ido Portal Floreio Routines.pdf), p. 1
+notes: Warm-up, singular movement polish (QDR push-ups, rotations into high bridge, au cortado), role
+  work, an extra mobility cool-down.

@@ -166,8 +166,6 @@ injury_flags:
         use: bike_zone2
       - instead_of: pistol_squat
         use: squat_air
-      - instead_of: pistol_squat
-        use: squat_clinic
       - instead_of: single_leg_squat_box
         use: squat_air
     training_phase_forced: rehab
