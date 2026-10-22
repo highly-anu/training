@@ -437,6 +437,9 @@ export interface Session {
    *  claim this was always present, which hid four unguarded dereferences that
    *  crashed the program view for anyone whose program had such a slot. */
   archetype: Archetype | null
+  /** Its workout icon, for its main exercise (src/session_icon.py; derived on
+   *  every read, never stored). Absent when none applies. */
+  icon?: string
   exercises: ExerciseAssignment[]
   complementary_work?: ComplementaryExercise[]
   duration_min?: number
@@ -1406,6 +1409,8 @@ export interface PlannedSession {
   modality: ModalityId
   archetypeId: string | null
   archetypeName: string | null
+  /** Its workout icon, from the archetype (src/session_icon.for_archetype). */
+  icon?: string | null
   durationMinutes: number
   phase: string | null
   isDeload: boolean

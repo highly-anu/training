@@ -17,6 +17,7 @@ import { Activity, Check, CheckCircle2, ChevronRight, GripVertical, Link2, Unlin
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { WorkoutIcon } from '@/components/icons/WorkoutIcon'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { COMPLETION } from '@/lib/completionColors'
 import { formatActivityType } from '@/lib/activityType'
@@ -53,6 +54,8 @@ interface WorkoutCardProps {
   onSelect?: () => void
   onOpen?: () => void
   note?: string
+  /** The session it is linked to: the workout shows that session's icon. */
+  linkedTo?: LinkSession
 }
 
 /** A workout that can be dragged onto a session. Its id carries the card's date: a cross-day link shows it twice. */
@@ -63,7 +66,7 @@ function DraggableWorkout(props: WorkoutCardProps) {
   return <WorkoutCard {...props} dragging={props.dragging || isDragging} handle={{ ref: setNodeRef, props: { ...attributes, ...listeners } }} />
 }
 
-function WorkoutCard({ workout, onDate, selected, dragging, onSelect, onOpen, note, handle }: WorkoutCardProps & {
+function WorkoutCard({ workout, onDate, selected, dragging, onSelect, onOpen, note, linkedTo, handle }: WorkoutCardProps & {
   handle?: { ref: (el: HTMLElement | null) => void; props: Record<string, unknown> }
 }) {
   return (
@@ -84,7 +87,9 @@ function WorkoutCard({ workout, onDate, selected, dragging, onSelect, onOpen, no
         className="flex flex-1 items-center gap-2 min-w-0 text-left cursor-grab active:cursor-grabbing touch-manipulation"
       >
         <GripVertical className="hidden sm:block size-3.5 shrink-0 text-muted-foreground/40 group-hover/card:text-muted-foreground" />
-        <Activity className="hidden sm:block size-3.5 shrink-0 text-muted-foreground" />
+        {linkedTo?.icon
+          ? <WorkoutIcon icon={linkedTo.icon} modality={linkedTo.modality} className="hidden sm:block size-3.5" />
+          : <Activity className="hidden sm:block size-3.5 shrink-0 text-muted-foreground" />}
         <div className="min-w-0">
           <p className="text-sm font-medium truncate">{formatActivityType(workout.activityType)}</p>
           <p className="text-[11px] text-muted-foreground truncate">
@@ -139,6 +144,7 @@ function SessionCard({ session, onDate, complete, armed, onPick, onOpen }: {
         className="flex flex-1 items-center gap-2 min-w-0 text-left"
         aria-label={armed ? `Link to ${session.name}` : `Open ${session.name}`}
       >
+        <WorkoutIcon icon={session.icon} modality={session.modality} className="size-4" />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium truncate">{session.name}</p>
           <p className="text-[11px] text-muted-foreground truncate">
@@ -250,7 +256,7 @@ function DayCard({ day, programLabel, armed, selectedId, draggingId, isComplete,
 
         {day.links.map((l) => (
           <Fragment key={`l|${l.workout.id}`}>
-            <DraggableWorkout {...workoutProps(l.workout)} />
+            <DraggableWorkout {...workoutProps(l.workout)} linkedTo={l.session} />
             <Connector kind="linked" label={`${formatActivityType(l.workout.activityType)} from ${l.session.name}`} onAction={() => onUnlink(l.workout)} />
             <SessionCard {...sessionProps(l.session)} />
           </Fragment>

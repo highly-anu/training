@@ -10,6 +10,7 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core'
 import { cn } from '@/lib/utils'
+import { WorkoutIcon } from '@/components/icons/WorkoutIcon'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { formatLoad } from '@/lib/formatLoad'
 import { useProfileStore } from '@/store/profileStore'
@@ -87,20 +88,21 @@ function SessionCard({
       />
 
       <div className="p-2 space-y-1.5 flex-1 flex flex-col">
-        {/* Modality + workout indicator row */}
+        {/* Workout icon + archetype name, workout indicator */}
         <div className="flex items-start justify-between gap-1">
-          <p
-            className="text-[10px] font-semibold uppercase tracking-wide leading-tight"
-            style={{ color: colors?.hex ?? 'inherit' }}
-          >
-            {session.modality.replace(/_/g, ' ')}
+          <p className="flex items-start gap-1 text-xs font-medium leading-snug text-foreground">
+            <WorkoutIcon icon={session.icon} modality={session.modality} className="size-3.5 mt-px" />
+            {session.archetype?.name ?? session.modality.replace(/_/g, ' ')}
           </p>
           {hasWorkout && <Activity className="size-3 text-blue-700 dark:text-blue-300 shrink-0 mt-0.5" />}
         </div>
 
-        {/* Archetype name */}
-        <p className="text-xs font-medium leading-snug text-foreground">
-          {session.archetype?.name ?? session.modality.replace(/_/g, ' ')}
+        {/* Modality, beside the name rather than over it */}
+        <p
+          className="text-[10px] font-semibold uppercase tracking-wide leading-tight"
+          style={{ color: colors?.hex ?? 'inherit' }}
+        >
+          {session.modality.replace(/_/g, ' ')}
         </p>
 
         {/* Duration */}
@@ -303,14 +305,15 @@ function DragGhost({ session }: { session: Session }) {
     <div className="rounded-lg border border-primary/40 bg-card shadow-2xl overflow-hidden w-[130px] rotate-2 opacity-95">
       <div className="h-0.5 w-full" style={{ backgroundColor: colors?.hex ?? 'var(--primary)' }} />
       <div className="p-2 space-y-1">
+        <p className="flex items-start gap-1 text-xs font-medium leading-snug">
+          <WorkoutIcon icon={session.icon} modality={session.modality} className="size-3.5 mt-px" />
+          {session.archetype?.name ?? session.modality.replace(/_/g, ' ')}
+        </p>
         <p
           className="text-[10px] font-semibold uppercase tracking-wide"
           style={{ color: colors?.hex ?? 'inherit' }}
         >
           {session.modality.replace(/_/g, ' ')}
-        </p>
-        <p className="text-xs font-medium leading-snug">
-          {session.archetype?.name ?? session.modality.replace(/_/g, ' ')}
         </p>
         {duration != null && duration > 0 && (
           <p className="text-[10px] text-muted-foreground">~{duration} min</p>

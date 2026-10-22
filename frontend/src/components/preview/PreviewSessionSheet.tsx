@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ArrowLeftRight, CircleSlash, RefreshCw } from 'lucide-react'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
+import { WorkoutIcon } from '@/components/icons/WorkoutIcon'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
 import { TestBadge } from '@/components/standards/TestBadge'
 import { SwapExerciseSheet } from '@/components/session/SwapExerciseSheet'
@@ -48,7 +49,10 @@ export function PreviewSessionSheet({ program, target, onClose, philosophyIds }:
       <Sheet open onOpenChange={(open) => !open && onClose()}>
         <SheetContent className="w-full sm:max-w-md overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>{session.archetype?.name ?? idLabel(session.modality)}</SheetTitle>
+            <SheetTitle className="flex items-center gap-2">
+              <WorkoutIcon icon={session.icon} modality={session.modality} />
+              {session.archetype?.name ?? idLabel(session.modality)}
+            </SheetTitle>
             <SheetDescription>
               Week {weekData.week_number} · {target.day}
               {session.archetype?.duration_estimate_minutes
