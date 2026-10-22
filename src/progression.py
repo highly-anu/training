@@ -362,13 +362,13 @@ def _as_written(slot: dict) -> dict:
             out['reps_per_round'] = slot['reps_per_round']
     elif slot_type in ('amrap', 'emom'):
         out = {'time_minutes': minutes or 10, 'format': slot_type.upper()}
+        out.update(_parent_count(slot))
     elif slot_type in ('for_time', 'rounds_for_time'):
         out = {'target_rounds': slot.get('rounds', 1), 'format': 'FOR TIME'}
         cap = slot.get('time_cap_sec') or slot.get('duration_sec')
         if cap:
             out['time_minutes'] = max(1, round(cap / 60))
-        if slot.get('distance_m'):
-            out['distance_km'] = round(slot['distance_m'] / 1000, 2)
+        out.update(_parent_count(slot))
     elif slot_type == 'amrap_movement' and slot.get('distance_m'):
         # A chipper's row or run is metres, not reps (Till U Collapse's 250 m).
         out = {'distance_m': slot['distance_m'],
@@ -377,7 +377,9 @@ def _as_written(slot: dict) -> dict:
         out = ({'duration_minutes': round(slot['duration_sec'] / 60)} if slot['duration_sec'] >= 60
                else {'work_sec': slot['duration_sec'], 'target_rounds': 1})
     elif slot_type == 'amrap_movement':
-        out = {'reps_per_round': slot.get('reps_per_round', 1)}
+        # No count is the source's (Nicole's max pull-ups, Linda's ladder): its
+        # note says how many, never an invented one a round.
+        out = {'reps_per_round': slot['reps_per_round']} if slot.get('reps_per_round') else {}
     else:
         out = {'sets': slot.get('sets', 1), 'reps': slot.get('reps', 1)}
     lo, hi, label = zone_band(slot.get('intensity'))
@@ -389,6 +391,17 @@ def _as_written(slot: dict) -> dict:
         out['pack_load_kg'] = slot['pack_load_kg']
     return out
 
+
+
+def _parent_count(slot: dict) -> dict:
+    """What a round's own first movement is (Cindy's 5 pull-ups, a 400 m run):
+    the slot that carries the rounds or the minutes is a movement too."""
+    out: dict = {}
+    if slot.get('reps_per_round'):
+        out['reps_per_round'] = slot['reps_per_round']
+    if slot.get('distance_m'):
+        out['distance_km'] = round(slot['distance_m'] / 1000, 2)
+    return out
 
 # ---------------------------------------------------------------------------
 # Public dispatcher

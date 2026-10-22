@@ -167,4 +167,11 @@ currency:
   pentathlon: {entry: jerk_rpm, rule: R12}
   getup_mobility: {entry: technique_time, rule: I2}
 
+reviews:
+  - kind: output_vs_dossier
+    date: '2026-10-22'
+    by: Claude (package audit)
+    scope: "tools/print_package.py wildman_kettlebell --profile ideal --weeks 3, all six tracks"
+    result: "General Practice runs Phase II's programs twice a week each, never on consecutive days, stacked as the 30-minute days allow (R2, R3): the swing's 10-minute EMOM two reps up a session from 6 (R4), the snatch joining after clean and press (R6), the layoff repeat said in the swing's note, never enforced (R11, I5); the single-program tracks and Double-Bell Practice twice a week; Pentathlon Prep's event repeats, volume and minute intervals with easy runs (I1), the long-cycle press trained by the volume and repeats sessions as its contract says. Fixed: an optional program left short was named once per wording across the whole program, so \"Nerd Math Snatch: 0 of 2 weekly sessions\" (before the snatch joins) stood beside \"1 of 2\" (week 3) as if one claim — each line now says its weeks unless it is every week."
+
 next: The hand-to-hand option needs an alternating block; decide the two Codex tracks (I2, I3).

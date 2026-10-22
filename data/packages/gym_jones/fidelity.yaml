@@ -135,6 +135,7 @@ open:
   - "Extreme Alpinism and the paywalled Knowledge articles (2015 on) were not read."
   - "\"300\" is a one-time test, an invitation-only challenge, not a program; it is not programmed."
   - "The 2000 m row (Operator Fitness day 15) is run as the day writes it, not as a scheduled test; no source names it a block test."
+  - "Soldier of Steel's day 17 ladder (10 down to 1 of each) averages no whole number a round, so its movements carry no count; the note writes the ladder."
 
 inventions:
   - id: I1
@@ -166,4 +167,11 @@ currency:
   operator_fitness: {entry: plan_completion, rule: R4}
   soldier_of_steel: {entry: plan_completion, rule: R9}
 
-next: "Operator Fitness II once a complete copy is read; exercise media; the output review."
+reviews:
+  - kind: output_vs_dossier
+    date: '2026-10-22'
+    by: Claude (package audit)
+    scope: "tools/print_package.py gym_jones --profile ideal --weeks 3, both plans; day 17's ladder against the Soldier of Steel PDF"
+    result: "Both months run day for day as written (R1, R4, R8, R9): the squat warm-ups, Those Burpees Suck, the Six-Way complex, the breathing ladder, the hikes, the recovery days and the weekly rest. Fixed: the first movement of every for-time piece had no count (Those Burpees Suck's 10 pull-ups, Louder than 10's 5 slams, the chipper's 100 squats, the split jumps' 20) — written into the data and passed into the load; day 17's ladder pressed from the floor where the PDF writes \"BENCH PRESS AT 95#\" — the package had no bench press; it has one now, the floor press after it for an athlete without a rack and bench."
+
+next: "Operator Fitness II once a complete copy is read; exercise media."

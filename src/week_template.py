@@ -89,7 +89,10 @@ def place_days(kept: list[tuple[int, dict]], preferred: list[int], forced_rest: 
     return list(zip(days, specs))
 
 
-def _prefixed(arch: dict, prefix: str, note: str = '', light: bool = False) -> list[dict]:
+def _prefixed(arch: dict, prefix: str, note: str = '', light: bool = False, bare: bool = True) -> list[dict]:
+    """The archetype's slots under `prefix`, each note led by `note`; a slot
+    with no note of its own takes it alone only when `bare` (the warm-up's
+    sentence does, a piece's "Meritorious:" does not)."""
     slots = []
     for slot in arch.get('slots') or []:
         slot = deepcopy(slot)
@@ -97,7 +100,7 @@ def _prefixed(arch: dict, prefix: str, note: str = '', light: bool = False) -> l
             slot['role'] = prefix + slot['role']
             if slot.get('parent_slot_role'):
                 slot['parent_slot_role'] = prefix + slot['parent_slot_role']
-        if note:
+        if note and (bare or slot.get('notes')):
             slot['notes'] = f"{note}{slot.get('notes') or ''}".strip()
         if light and slot.get('slot_type') not in ('time_domain', 'distance', 'skill_practice'):
             written = slot.get('load')
@@ -118,7 +121,7 @@ def compose(pieces: list[tuple[str, dict]], warm: dict | None, light: bool, cate
         slots += _prefixed(warm, f"warm_up__{warm['id']}__", f"Warm-up ({warm['name']}). ")
     for k, (_, arch) in enumerate(pieces):
         slots += _prefixed(arch, '' if k == 0 else f"{arch['id']}__",
-                           f"{arch['name']}: " if len(pieces) > 1 else '', light)
+                           f"{arch['name']}: " if len(pieces) > 1 else '', light, bare=False)
     minutes = sum(a.get('duration_estimate_minutes') or 0 for _, a in pieces) + \
         ((warm or {}).get('duration_estimate_minutes') or 0)
     composed = {**main, 'name': ' + '.join(a['name'] for _, a in pieces), 'slots': slots,

@@ -71,6 +71,15 @@ session (Pavel, Ido Portal, Gym Jones), the mobility session, quotes attributed 
 that no source holds, RTS and Renaissance Periodization as sources, the 5-week deload,
 "add 2.5–5 kg when RPE drops below 7", and the exercises only they used.
 
+## Output review (2026-10-22)
+
+Both 3x tracks' first fortnight and Functional Bodybuilding's Bridge week (week 13)
+printed (`tools/print_package.py marcus_filly --profile ideal`). Every section, exercise,
+set, rep, tempo, interval and pairing reads as the sample weeks print them (R3, R4, R6);
+the week repeats within a cycle (R8, I1); the Bridge week puts every section at RPE 6–7
+(R9). Nothing to fix. The first-week advice (R10) stands in the track's note every week,
+since a note has no week of its own.
+
 ## Tests
 
 Source weeks (`data/packages/marcus_filly/source_weeks.yaml`): both 3x sample weeks, each

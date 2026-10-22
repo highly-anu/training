@@ -253,12 +253,17 @@ rules:
       - data:philosophy.yaml#tracks.full_program.phases.taper.weeks
       - data:training_contract.yaml#tracks.full_program.deload_phases
       - test:test_training_contract.py::test_uphill_volume_ramps_recovers_and_holds
+  - id: R20
+    text: In Specific the long day's time is split over back-to-back days.
+    cites: [{source: pod_spec, at: "the specific week's back-to-back long days"}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.full_program.modules.aerobic.adjacent_to_by_phase
+      - test:test_training_contract.py::test_uphill_volume_ramps_recovers_and_holds
 
 open:
   - "The books (Training for the Uphill Athlete, Training for the New Alpinism) could not be read; every rule rests on Uphill Athlete's public articles, PDFs and podcasts."
   - "Hill muscular endurance (water carried up and dumped at the top, me16) is not programmed; the gym workout is."
   - "The heart-rate drift test (drift) that finds the aerobic threshold is not scheduled; the zones are the app's heart-rate zones."
-  - "Back-to-back long days in Specific (60/40, pod_spec) are not placed next to each other."
   - "Pack weight past 15 % of bodyweight (up to 25 % on aerobic hikes, mtn) does not progress."
   - "More transition weeks for an aerobically deficient athlete (plan_use) are not modelled."
   - "A novice track (Beginner Mountain Fitness is sold, not published): the next step."
@@ -315,4 +320,11 @@ inventions:
 currency:
   full_program: {entry: aerobic_volume, rule: R5}
 
-next: "A novice track on the mountaineering article's numbers (5 hours over six days, hikes, the General Strength circuit); exercise media; the output review."
+reviews:
+  - kind: output_vs_dossier
+    date: '2026-10-22'
+    by: Claude (package audit)
+    scope: "tools/print_package.py uphill_athlete --profile ideal --weeks 29: every week's sessions and minutes, Transition, Base and Specific weeks in full"
+    result: "Six days of four aerobic and two strength (R2); the long day half the aerobic time (R3); three build weeks of about 10 %, a recovery week at half, each block a step above the last (R4, R5, I2); the General Strength laps by the week (R11); max strength in Base (R12, R13); the first Zone 3 in week 13 with its warm-up and cool-down (R8, R10, I9); in Specific the volume holds, two Zone 3 sessions 48 hours apart, maintenance strength and the muscular-endurance workouts in order, repeated after a recovery week (R14-R17, I7); a one-week taper at half (R19). Fixed: Specific's back-to-back long days (an open item) were placed apart — a contract module may now sit beside another in a phase (adjacent_to_by_phase), R20. Noted: the second long day carries the week's pack and the long day none; the sources read say no heavy pack on the long day only."
+
+next: "A novice track on the mountaineering article's numbers (5 hours over six days, hikes, the General Strength circuit); exercise media."

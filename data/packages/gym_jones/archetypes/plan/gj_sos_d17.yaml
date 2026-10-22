@@ -43,7 +43,7 @@ slots:
     slot_type: for_time
     rounds: 10
     exercise_filter:
-      exercise_ids: [floor_press]
+      exercise_ids: [bench_press, floor_press]
       ordered: true
     load: "95 lb (43 kg); beginners 2 x 30 lb dumbbells"
     notes: "10-9-8-7-6-5-4-3-2-1 reps of each: bench press, goblet squat, pull-up, box jump, deadlift."

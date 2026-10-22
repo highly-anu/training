@@ -17,6 +17,7 @@ slots:
 
   - role: rounds
     slot_type: for_time
+    reps_per_round: 5
     rounds: 5
     exercise_filter:
       exercise_ids: [push_up]

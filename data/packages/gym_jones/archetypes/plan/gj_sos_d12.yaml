@@ -50,6 +50,7 @@ slots:
 
   - role: chipper
     slot_type: for_time
+    reps_per_round: 100
     rounds: 1
     exercise_filter:
       exercise_ids: [squat_air]

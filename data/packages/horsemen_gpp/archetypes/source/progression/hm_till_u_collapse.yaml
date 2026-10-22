@@ -8,6 +8,7 @@ duration_estimate_minutes: 50
 slots:
 - role: till_u_collapse
   slot_type: for_time
+  reps_per_round: 50
   rounds: 1
   duration_sec: 2700
   intensity: max_effort

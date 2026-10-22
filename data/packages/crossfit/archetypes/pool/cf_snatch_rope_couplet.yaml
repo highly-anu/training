@@ -9,6 +9,7 @@ pool_only: true
 slots:
   - role: couplet
     slot_type: for_time
+    reps_per_round: 21
     rounds: 3
     exercise_filter:
       exercise_ids: [snatch]

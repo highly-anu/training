@@ -74,6 +74,16 @@ and barbell-complex sessions, the TGU, circuit, row-interval and aerobic-recover
 `avoid_with`, and the exercises only they used. The old package lives on as the modality
 scheduler's test fixture (`test_packages/block_fixture`), never shipped.
 
+## Output review (2026-10-22)
+
+Three weeks of both plans printed (`tools/print_package.py gym_jones --profile ideal`).
+Both months run day for day as written (R1, R4, R8, R9). Fixed: the first movement of every
+for-time piece had no count (Those Burpees Suck's 10 pull-ups, the chipper's 100 squats) —
+written into the data and passed into the load; Soldier of Steel's day 17 ladder pressed
+from the floor where the PDF writes "BENCH PRESS AT 95#" — the package now has the bench
+press, the floor press after it for an athlete without a rack and bench. Open: the day 17
+ladder (10 down to 1) carries no count a round.
+
 ## Tests
 
 Source weeks (`data/packages/gym_jones/source_weeks.yaml`): the Operator Fitness month (R4)

@@ -42,6 +42,7 @@ slots:
 
   - role: louder_than_10
     slot_type: for_time
+    reps_per_round: 5
     rounds: 11
     exercise_filter:
       exercise_ids: [ball_slam]

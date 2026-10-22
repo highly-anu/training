@@ -9,6 +9,7 @@ pool_only: true
 slots:
   - role: wall_balls
     slot_type: rounds_for_time
+    reps_per_round: 50
     rounds: 5
     duration_sec: 1080
     intensity: max_effort

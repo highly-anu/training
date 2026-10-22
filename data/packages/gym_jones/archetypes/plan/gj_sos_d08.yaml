@@ -42,6 +42,7 @@ slots:
 
   - role: split_jumps
     slot_type: for_time
+    reps_per_round: 20
     rounds: 5
     exercise_filter:
       exercise_ids: [lunge_jumping]
@@ -58,6 +59,7 @@ slots:
 
   - role: frog_hops
     slot_type: for_time
+    reps_per_round: 20
     rounds: 4
     exercise_filter:
       exercise_ids: [frog_hop]
@@ -74,6 +76,7 @@ slots:
 
   - role: burpees
     slot_type: for_time
+    reps_per_round: 20
     rounds: 3
     exercise_filter:
       exercise_ids: [burpee]

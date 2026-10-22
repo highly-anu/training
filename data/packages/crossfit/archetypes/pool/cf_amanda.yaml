@@ -9,6 +9,7 @@ pool_only: true
 slots:
   - role: amanda
     slot_type: for_time
+    reps_per_round: 7
     rounds: 3
     exercise_filter:
       exercise_ids: [muscle_up_ring]

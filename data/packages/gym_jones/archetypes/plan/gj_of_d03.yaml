@@ -43,6 +43,7 @@ slots:
 
   - role: those_burpees_suck
     slot_type: for_time
+    reps_per_round: 10
     rounds: 1
     exercise_filter:
       exercise_ids: [pull_up]

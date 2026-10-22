@@ -9,6 +9,7 @@ pool_only: true
 slots:
   - role: barbara
     slot_type: for_time
+    reps_per_round: 20
     rounds: 5
     exercise_filter:
       exercise_ids: [pull_up]

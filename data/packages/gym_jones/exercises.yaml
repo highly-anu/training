@@ -370,6 +370,32 @@ exercises:
     advanced: 110
     elite: 140
   weekly_increment_kg: 2.5
+- id: bench_press
+  name: Bench Press
+  category: barbell
+  modality:
+  - max_strength
+  - strength_endurance
+  equipment:
+  - barbell
+  - rack
+  - plates
+  effort: high
+  bilateral: true
+  movement_patterns:
+  - horizontal_push
+  requires: []
+  unlocks: []
+  contraindicated_with:
+  - shoulder_impingement
+  - shoulder_instability
+  sources:
+  - Gym Jones
+  notes: 'On a bench, the bar to the chest and pressed to lockout. Soldier of Steel''s
+    day 17 ladder at 95 lb; without a rack and bench, the floor press.
+
+    '
+
 - id: floor_press
   name: Floor Press
   category: barbell

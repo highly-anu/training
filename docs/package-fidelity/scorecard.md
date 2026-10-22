@@ -36,23 +36,20 @@ Every criterion passes.
 
 ### bjj
 
-- ✗ **D3** Exercise media — 0 of 24 exercises have media
-- ◐ **D4** Movement patterns, archetype levels, no inert scaling — 2 inert equipment_limited scalings
-- ◐ **S6** A review of the output against the dossier is recorded — no review of the output against the dossier recorded
+Every criterion passes.
 
 ### crossfit
 
-- ◐ **S6** A review of the output against the dossier is recorded — no review of the output against the dossier recorded
+Every criterion passes.
 
 ### gym_jones
 
-- ◐ **S6** A review of the output against the dossier is recorded — no review of the output against the dossier recorded
+Every criterion passes.
 
 ### horsemen_gpp
 
 - ✗ **D3** Exercise media — 28 of 237 exercises have media
-- ◐ **D4** Movement patterns, archetype levels, no inert scaling — 7 exercises without movement patterns; 4 archetypes without training levels; 7 inert equipment_limited scalings
-- ◐ **S6** A review of the output against the dossier is recorded — no review of the output against the dossier recorded
+- ◐ **D4** Movement patterns, archetype levels, no inert scaling — 1 exercises without movement patterns; 4 archetypes without training levels; 7 inert equipment_limited scalings
 - ◐ **E1** `gpp_circuits` No session with every slot empty — eval-level-advanced: 8 session(s) with a slot empty, e.g. week 1 loaded_carry_circuit
 - ✗ **E2** `gpp_circuits` Sessions are their own modality, not substitutes — eval-level-novice: 16 of 32 sessions substituted
 - ✗ **E4** `gpp_circuits` No archetype dominates its modality — gpp_block: horsemen_named_workout is 100% of mixed_modal_conditioning (1 archetype on offer)
@@ -71,18 +68,16 @@ Every criterion passes.
 
 ### marcus_filly
 
-- ◐ **S6** A review of the output against the dossier is recorded — no review of the output against the dossier recorded
+Every criterion passes.
 
 ### starting_strength
 
-- ✗ **D3** Exercise media — 0 of 6 exercises have media
-- ◐ **S6** A review of the output against the dossier is recorded — no review of the output against the dossier recorded
+Every criterion passes.
 
 ### uphill_athlete
 
-- ◐ **S6** A review of the output against the dossier is recorded — no review of the output against the dossier recorded
+Every criterion passes.
 
 ### wildman_kettlebell
 
-- ◐ **D3** Exercise media — 18 of 22 exercises have media
-- ◐ **S6** A review of the output against the dossier is recorded — no review of the output against the dossier recorded
+Every criterion passes.

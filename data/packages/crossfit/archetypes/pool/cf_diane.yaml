@@ -11,6 +11,7 @@ test: {selectable: true}
 slots:
   - role: diane
     slot_type: for_time
+    reps_per_round: 15
     rounds: 3
     exercise_filter:
       exercise_ids: [deadlift]

@@ -9,6 +9,7 @@ pool_only: true
 slots:
   - role: jt
     slot_type: for_time
+    reps_per_round: 15
     rounds: 3
     exercise_filter:
       exercise_ids: [handstand_push_up]

@@ -163,7 +163,8 @@ open:
   - "The novice: the Level 1 guide scales load first, intensity and volume by half for two weeks or more, a month at least of significant scaling, with no set protocol for restoring it; a scaled track is not built."
   - "Of the 2005 archive's 138 training days, the workouts transcribed are those named in this record; the rest are not."
   - "Today's crossfit.com is not strictly three on, one off (October 2026 rests on irregular days)."
-  - "M3: the scorecard's ideal athlete has no rings (its equipment list names gymnastics_rings, no exercise's id), so Elizabeth's ring dips never fit; and the five-on, two-off track's one triplet a week does not reach Murph in eight weeks. Adding rings moves Gym Jones' lumbar-disc profile: fixed with Gym Jones' review."
+  - "A descending scheme (Fran's 21-15-9, Annie's 50-40-30-20-10) has no structured field: each movement carries its per-round average (15, 30), which keeps the volume, and the workout's note the scheme. Linda's 10-down-to-1 averages no whole number, so its movements carry none."
+  - "The phone's AMRAP and for-time rows do not show a round's own count yet (the web and the watches do)."
 
 inventions:
   - id: I1
@@ -195,4 +196,11 @@ currency:
   constantly_varied: {entry: benchmark_wods, rule: R10}
   five_on_two_off: {entry: benchmark_wods, rule: R10}
 
-next: "A scaled novice track (the Level 1 guide's scaling, the benchmarks' beginner versions); more of the 2005 archive; exercise media; the output review."
+reviews:
+  - kind: output_vs_dossier
+    date: '2026-10-22'
+    by: Claude (package audit)
+    scope: "tools/print_package.py crossfit --profile ideal --weeks 4, both tracks"
+    result: "Three on, one off and five on, two off run Glassman's cycle day for day (R1-R3), Table 4's twelve days first (R8), then the Girls and the 2005 workouts, each day type from its own pool. Fixed: the first movement of every couplet, triplet and Girl had no count — the slot that carries the rounds or the minutes is a movement too (Cindy's 5 pull-ups, the 400 m run of a triplet, the bench press x 10): written into the data and passed into the load; a movement the source does not count (Nicole's max pull-ups) said \"1 rep a round\" and now says nothing beyond its note; a for-time test that opens with a run (Helen) lost its rounds; Fran's test day read \"FOR_TIME\"; one-round workouts read \"1 rounds\" on the web; the review tool itself failed on a for-time load with no time cap."
+
+next: "A scaled novice track (the Level 1 guide's scaling, the benchmarks' beginner versions); more of the 2005 archive; exercise media."

@@ -83,7 +83,9 @@ packages:
       reps" pull-ups are sets to failure, a 20–30-second pinch is a 30-second hold, the weighted plank
       carries a plate, the farmer''s carry is with dumbbells (or kettlebells); the deload notes add an
       easier pull-up and a lower box.'
-    next: Exercise media (D3), the output review (S6), and a competition camp if the owner wants one.
+    last_review:
+      output_vs_dossier: '2026-10-22'
+    next: Exercise media (D3), and a competition camp if the owner wants one.
   crossfit:
     status: audited
     shape: templates
@@ -112,8 +114,10 @@ packages:
       built.'
     - 'I6: Each workout''s minutes are an estimate; loads are given in pounds as written with kilograms
       beside them.'
+    last_review:
+      output_vs_dossier: '2026-10-22'
     next: A scaled novice track (the Level 1 guide's scaling, the benchmarks' beginner versions); more
-      of the 2005 archive; exercise media; the output review.
+      of the 2005 archive; exercise media.
   gym_jones:
     status: audited
     shape: templates
@@ -137,7 +141,9 @@ packages:
       pull-ups from the first week, Soldier of Steel with plank pulls until one is possible.'
     - 'I6: Operator Fitness is for intermediate athletes and up, Soldier of Steel for novices and intermediates;
       the plans name their audiences (operators, the newly training), not levels.'
-    next: Operator Fitness II once a complete copy is read; exercise media; the output review.
+    last_review:
+      output_vs_dossier: '2026-10-22'
+    next: Operator Fitness II once a complete copy is read; exercise media.
   horsemen_gpp:
     status: audited
     shape: templates
@@ -157,6 +163,8 @@ packages:
     - 'I1: The GPP Circuits track and its archetypes (not in the source).'
     - 'I2: The PT test''s placement: the macro''s first and last hard job-specific days (the source never
       schedules it).'
+    last_review:
+      output_vs_dossier: '2026-10-22'
     next: Decide GPP Circuits (I1) — rebuild it on the source's circuits, or drop it.
   ido_portal:
     status: audited
@@ -229,8 +237,10 @@ packages:
       can be read.'
     - 'I7: At four or five training days the three sessions run on three of them (the 3x tracks; the 4x
       and 5x weeks are not public).'
+    last_review:
+      output_vs_dossier: '2026-10-22'
     next: The 4x and 5x tracks if their weeks become readable; the within-cycle progression; a novice
-      track on Base Camp; exercise media; the output review.
+      track on Base Camp; exercise media.
   starting_strength:
     status: audited
     shape: contract
@@ -261,7 +271,9 @@ packages:
     - 'I5: Every stall resets 5 % (R8), the one that brings 5×3 too; the deadlift and power clean, which
       the 5×3 switch does not name, reset a second time instead; and after a third stall the lift is finished
       (R9). The article was re-read through a summary on 2026-10-21 (the page answers 403).'
-    next: Exercise media for the six lifts; the output review (print_package) recorded in `reviews`.
+    last_review:
+      output_vs_dossier: '2026-10-22'
+    next: Exercise media for the six lifts.
   uphill_athlete:
     status: audited
     shape: contract
@@ -300,8 +312,10 @@ packages:
     - 'I10: The aerobic-deficiency gate (R9) is said in the Zone 3 and ME notes, never enforced — the
       athlete measures their thresholds (the owner''s rule for Wildman, 2026-10-21).'
     - 'I11: Six training days are required (R2 writes six); at seven the same six sessions run.'
+    last_review:
+      output_vs_dossier: '2026-10-22'
     next: A novice track on the mountaineering article's numbers (5 hours over six days, hikes, the General
-      Strength circuit); exercise media; the output review.
+      Strength circuit); exercise media.
   wildman_kettlebell:
     status: audited
     shape: contract
@@ -330,4 +344,6 @@ packages:
       are in paid programs.'
     - 'I5: The repeat after a layoff (R11) is recommended in every swing session''s note, never enforced:
       the athlete decides and takes responsibility (owner, 2026-10-21).'
+    last_review:
+      output_vs_dossier: '2026-10-22'
     next: The hand-to-hand option needs an alternating block; decide the two Codex tracks (I2, I3).

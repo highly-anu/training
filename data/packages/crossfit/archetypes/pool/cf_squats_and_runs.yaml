@@ -9,6 +9,7 @@ pool_only: true
 slots:
   - role: chipper
     slot_type: for_time
+    reps_per_round: 21
     rounds: 1
     exercise_filter:
       exercise_ids: [back_squat]

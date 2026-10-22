@@ -127,11 +127,14 @@ def in_phase(module: dict, phase_id: str | None) -> dict | None:
     """The module as it runs in a phase, or None where it does not run: a
     module may name its `phases` (Uphill's General Strength runs in
     Transition, its muscular endurance in Specific) and its weekly exposures
-    per phase (`exposures_by_phase`)."""
+    per phase (`exposures_by_phase`), and the module whose day it sits beside
+    in a phase (`adjacent_to_by_phase`: Uphill's back-to-back long days)."""
     if module.get('phases') and phase_id not in module['phases']:
         return None
     n = (module.get('exposures_by_phase') or {}).get(phase_id)
-    return {**module, 'exposures_per_week': n} if n is not None else module
+    out = {**module, 'exposures_per_week': n} if n is not None else module
+    beside = (module.get('adjacent_to_by_phase') or {}).get(phase_id)
+    return {**out, 'adjacent_to': beside} if beside else out
 
 
 def module_week(module: dict, week_in_program: int, week_in_phase: int) -> int:
@@ -667,7 +670,8 @@ def _cuts(module: dict, deload: bool) -> bool:
 
 
 def _assignment(block: dict, module: dict, exercises: dict, constraints: dict,
-                state: dict, step: int, deload: bool, blocked: tuple | None = None) -> dict:
+                state: dict, step: int, deload: bool, blocked: tuple | None = None,
+                advise: bool = True) -> dict:
     eid = _choose(block, module, exercises, constraints, blocked)
     ex = exercises[eid]
     if not _equipment_ok(ex, set(constraints.get('equipment') or [])):
@@ -771,9 +775,10 @@ def _assignment(block: dict, module: dict, exercises: dict, constraints: dict,
                 conditional=step != state.get('completed', 0), elapsed_sec=seconds)
     if module.get('period_note') and not block.get('standard'):
         load['load_note'] = f"{module['period_note']} {load.get('load_note') or ''}".strip()
-    if module.get('advice') and load['advances_module']:
+    if advise and module.get('advice') and load['advances_module']:
         # The method's recommendation, left to the athlete: said where the
-        # block is read, never acted on by the cursor.
+        # block is read (the module's first advancing block of the session,
+        # once), never acted on by the cursor.
         load['load_note'] = f"{load.get('load_note') or ''} {module['advice']}".strip()
     return {'slot_role': slot['role'], 'slot_type': slot['slot_type'], 'slot': slot,
             'exercise': ex, 'load': load, **({'standard': block['standard']} if block.get('standard') else {})}
@@ -786,6 +791,7 @@ def _lift_load(block: dict, module: dict, exercises: dict, state: dict, step: in
     lift = block['exercise_id']
     record = lift_forecast(module, state, step).get(lift) or {}
     increment = lift_increment(module, lift, record.get('exposures', 0) + 1, record.get('resets', 0))
+    name = (exercises.get(lift) or {}).get('name', lift)
     step_kg = module['progression'].get('round_kg', 1.25)
     out: dict = {'lift': lift}
     if _advancing(block):
@@ -797,17 +803,22 @@ def _lift_load(block: dict, module: dict, exercises: dict, state: dict, step: in
                                 else f"{kg:g} kg. Make every rep and next time it is {increment:g} kg more.")
         elif not record.get('exposures'):
             out['work_up'] = True
-            out['load_note'] = ('Work up from the empty bar in sets of five, in small jumps. The weight that '
-                                'feels heavy but keeps your form is today\'s: do the rest of the sets there, '
-                                'and record it.')
+            reps = block.get('reps') or 5
+            out['load_note'] = (f"Work up from the empty bar in sets of {reps}, in small jumps. "
+                                + ("The weight that feels heavy but keeps your form is today's: do the rest of "
+                                   'the sets there, and record it.' if (block.get('sets') or 1) > 1 else
+                                   "The heaviest set you make with good form is today's: record it."))
         else:
-            out['load_note'] = f"{increment:g} kg more than you made last time."
+            # What the last made exposure added, not what this one will.
+            added = lift_increment(module, lift, record['exposures'], record.get('resets', 0))
+            out['load_note'] = (f"{added:g} kg more than your last {name} "
+                                f"{block.get('sets') or 1}×{block.get('reps')}.")
     else:
         pct = block.get('pct', 1)
         basis = record.get('kg') if record.get('kg') is not None else record.get('next_kg')
         if basis is not None:
             out['weight_kg'] = _round_kg(basis * pct, step_kg)
-            out['load_note'] = f"{pct:.0%} of your current {(exercises.get(lift) or {}).get('name', lift)}."
+            out['load_note'] = f"{pct:.0%} of your current {name}."
         else:
             out['load_note'] = f"About {pct:.0%} of your five-rep max; record the weight."
     if record.get('stalled'):
@@ -828,6 +839,7 @@ def _module_rows(module, exercises, constraints, state, step, deload, blocked=No
     its options fits (a dead hang under a shoulder-instability flag) is left out
     and named in `left_out`; an essential one still refuses."""
     rows = []
+    advised = False
     for block in module['blocks']:
         if _cuts(module, deload) and not block.get('standard') and _keep(block, module) == 0:
             continue
@@ -845,7 +857,8 @@ def _module_rows(module, exercises, constraints, state, step, deload, blocked=No
                 left_out.append(f"{module['name']}: {exercises.get(block['exercise_id'], {}).get('name', block['exercise_id'])} "
                                 'left out — your injury rules it out')
             continue
-        row = _assignment(block, module, exercises, constraints, state, step, deload, blocked)
+        row = _assignment(block, module, exercises, constraints, state, step, deload, blocked, advise=not advised)
+        advised = advised or bool(row['load'].get('advances_module'))
         rows.append(row)
         if block.get('rest_after_sec'):
             # Whole minutes, as every timed block: the session's minutes are
@@ -883,12 +896,29 @@ def _placements(modules: list, durations: dict, pool: list[int], cap: float, day
                 continue
             if any(totals[d] + durations[m['id']] > limit[d] for d in days):
                 continue
+            beside = {d for d, ms in result.items() if any(x['id'] == m.get('adjacent_to') for x in ms)}
+            if beside and not all(d - 1 in beside or d + 1 in beside for d in days):
+                # Placed after the module it sits beside (the contract's order).
+                continue
             for d in days:
                 result[d].append(m); totals[d] += durations[m['id']]
             yield from assign(index + 1)
             for d in days:
                 result[d].pop(); totals[d] -= durations[m['id']]
     yield from assign(0)
+
+
+def _week_span(weeks: list[int]) -> str:
+    """"week 3", "weeks 1–2", "weeks 1–2 and 5"."""
+    runs: list[list[int]] = []
+    for w in sorted(set(weeks)):
+        if runs and w == runs[-1][-1] + 1:
+            runs[-1].append(w)
+        else:
+            runs.append([w])
+    parts = [f"{r[0]}–{r[-1]}" if len(r) > 1 else str(r[0]) for r in runs]
+    text = parts[0] if len(parts) == 1 else ', '.join(parts[:-1]) + ' and ' + parts[-1]
+    return ('week ' if len(runs) == 1 and len(runs[0]) == 1 else 'weeks ') + text
 
 
 def _place_optional(module: dict, minutes: float, free: list[int], room: dict) -> list[int]:
@@ -1049,6 +1079,10 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
     # Each module's last day the week before: a week placed differently (a
     # test week closes with its test) must keep the spacing across the boundary.
     previous: dict[str, int] = {}
+    # Each module's minutes in the last week nothing deloaded.
+    build_minutes: dict[str, float] = {}
+    # Optional work left short: (module, placed, of, reason) -> its weeks.
+    shortfalls: dict[tuple, list[int]] = {}
     # Each module's light exposures so far (with_stall), which its forecast steps over.
     light_steps: dict[str, set] = {m['id']: set() for m in modules}
     all_modules = modules
@@ -1091,6 +1125,13 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
                         for k in ((range(m['exposures_per_week']) if m.get('variants')
                                    else [m['exposures_per_week'] - 1]))) / 60
                      for m in modules}
+        # Optional work is offered by the last build week's minutes: a deload
+        # frees time, and it never adds a session the build weeks had no room
+        # for (BJJ's conditioning used to appear in the deload week alone).
+        if not any(deloads.values()):
+            build_minutes.update(estimates)
+        build_estimates = {mid: max(minutes, build_minutes.get(mid, 0)) if deloads[mid] else minutes
+                           for mid, minutes in estimates.items()}
         for m in modules:
             if not m.get('optional') and estimates[m['id']] > cap:
                 # Say which and by how much, not that "the budget cannot fit".
@@ -1129,7 +1170,7 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
             test_days = [d for d, ms in candidate.items() if any(m['id'] == contract.get('test_module') for m in ms)]
             closes = not close_with_test_module or (bool(test_days) and max(test_days) == max(candidate))
             limit = max(test_days) if close_with_test_module and test_days else 8
-            room = {d: min(cap, day_caps.get(d, cap)) - sum(estimates[x['id']] for x in candidate.get(d, []))
+            room = {d: min(cap, day_caps.get(d, cap)) - sum(build_estimates[x['id']] for x in candidate.get(d, []))
                     for d in pool}
             fit = {}
             for m in optional:
@@ -1140,9 +1181,9 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
                         and (d not in candidate or m.get('may_share_day'))
                         and not {x['id'] for x in candidate.get(d, [])} & set(m.get('never_with') or [])]
                 days.sort(key=lambda d: (d in candidate, -room[d], d))
-                fit[m['id']] = _place_optional(m, estimates[m['id']], days, room)
+                fit[m['id']] = _place_optional(m, build_estimates[m['id']], days, room)
                 for d in fit[m['id']]:
-                    room[d] -= estimates[m['id']]
+                    room[d] -= build_estimates[m['id']]
             return fit, closes
 
         # The first placement that closes a test week with its test and fits
@@ -1303,13 +1344,17 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
                                  'is_deload': deload or bool(deloads and all(deloads.values())),
                                  **({'modules_skipped': skipped} if skipped else {})})
         for item in skipped:
-            line = f"{item['name']}: {item['placed']} of {item['of']} weekly sessions — {item['reason']}."
-            if line not in program['compromises']:
-                program['compromises'].append(line)
+            shortfalls.setdefault((item['name'], item['placed'], item['of'], item['reason']), []).append(
+                entry['week_in_program'])
         if tests and constraints.get('fatigue_state') == 'overreached':
             program['weeks'][-1]['tests_skipped'] = [{'archetypes': t['archetypes'], 'reason': 'overreached'} for t in tests]
         elif pending_test:
             raise ContractError('The required test could not be placed in its module.')
+    # One line a shortfall, with its weeks unless it is every week: "0 of 2"
+    # before the snatch joins and "1 of 2" after read as one claim otherwise.
+    for (name, placed, of, reason), weeks in shortfalls.items():
+        when = '' if len(weeks) == len(program['weeks']) else f" in {_week_span(weeks)}"
+        program['compromises'].append(f"{name}: {placed} of {of} weekly sessions{when} — {reason}.")
     verify(program, contract, constraints)
     if include_trace:
         program['generation_trace'] = _trace(program, contract, constraints)

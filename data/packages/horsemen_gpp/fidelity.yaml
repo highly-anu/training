@@ -74,6 +74,7 @@ rules:
 open:
   - Workouts the source leaves undefined ("400 m Rob Shauls"); movements it names without defining (cauldron, corkscrew, arm haulers …) are read as noted in the catalog.
   - No equipment id for an elliptical, a stair master, climbing, paddling or skiing.
+  - "A descending scheme (Fran's 21-15-9, Horse's Tail's 30-20-10) has no structured field: each movement carries its first round's count, the note the scheme. CrossFit's package carries the per-round average instead; one rep-scheme field on every client would end both."
   - "Decided by the owner (2026-10-19): every workout is kept, each listing its equipment and passed over when the athlete lacks it; names with profanity or a slur are cleaned."
 
 inventions:
@@ -93,5 +94,12 @@ currency:
 
 excluded_tracks:
   gpp_circuits: I1
+
+reviews:
+  - kind: output_vs_dossier
+    date: '2026-10-22'
+    by: Claude (package audit)
+    scope: "tools/print_package.py horsemen_gpp --profile ideal --weeks 16 --track four_month_macro: months one and two read in full, months three and four by their days"
+    result: "Each month's days run the source's categories (R1, R3), every day opens with a warm-up from its list (R4), loads as written — the day's worked-up max and its percentages, fixed weights, bodyweight multiples (R5) — with the source's substitutes said where they apply (R6) and the PT test on the first and last hard job-specific days (I2). Fixed: the first movement of 23 for-time and AMRAP pieces had no count (Fran's 21 thrusters, Dead Storage's 100, PBR's 10 front squats) — written into the data and passed into the load; a second workout on one day labelled each of its uncounted movements with a bare \"Meritorious:\"."
 
 next: Decide GPP Circuits (I1) — rebuild it on the source's circuits, or drop it.

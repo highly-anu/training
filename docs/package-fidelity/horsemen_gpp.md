@@ -44,6 +44,17 @@ placed where it fits the method (I2).
   findings are its).
 - I2: the PT test's placement — the macro's first and last hard job-specific days.
 
+## Output review (2026-10-22)
+
+The 4-Month Macro printed for sixteen weeks (`tools/print_package.py horsemen_gpp
+--profile ideal --track four_month_macro`). The days run the months' categories (R1, R3),
+each opening with a warm-up from its list (R4), loads as written (R5), the source's
+substitutes said where they apply (R6), the PT test on the first and last hard
+job-specific days (I2). Fixed: the first movement of 23 for-time and AMRAP pieces had no
+count (Fran's 21 thrusters, Dead Storage's 100) — now in the data and the load; a second
+workout on one day labelled its uncounted movements with a bare "Meritorious:". Open: a
+descending scheme carries its first round's count (CrossFit carries the average).
+
 ## Tests
 
 Source weeks (`data/packages/horsemen_gpp/source_weeks.yaml`): the sixteen example

@@ -9,6 +9,7 @@ pool_only: true
 slots:
   - role: couplet
     slot_type: for_time
+    reps_per_round: 5
     rounds: 5
     exercise_filter:
       exercise_ids: [handstand_push_up]

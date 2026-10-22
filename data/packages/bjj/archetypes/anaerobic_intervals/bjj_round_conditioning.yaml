@@ -80,9 +80,3 @@ scaling:
     - shuttle_block
     - cool_down
     notes: Sprawl intervals alone, after a real warm-up, is a complete session.
-  equipment_limited:
-    substitutions:
-    - missing_equipment: open_space
-      substitute_approach: >
-        Sprawls in place plus burpees for the shuttle block. Same work:rest,
-        no travel.

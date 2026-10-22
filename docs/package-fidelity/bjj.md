@@ -86,6 +86,17 @@ None.
   pinch a 30 s hold, the weighted plank carries a plate, the carry is with dumbbells;
   the deload notes add an easier pull-up and a lower box.
 
+## Output review (2026-10-22)
+
+Eight weeks at five days printed (`tools/print_package.py bjj --profile ideal --weeks 8`):
+three classes and two StrengthLog workouts a week, every lift's sets, reps and holds as
+R4 and R6 write them through the strength block, the deload week and the first power week.
+Fixed: the competitor's conditioning, which has no room beside 60-minute strength days in
+the build weeks, appeared in the deload week alone, because the lighter workouts freed the
+time — optional work is now offered by the last build week's minutes, so a deload never
+adds a session (`training_contract`, every contract package); the track's note said "sets
+of five to eight" where R3 runs five to fifteen.
+
 ## Tests
 
 Source weeks (`data/packages/bjj/source_weeks.yaml`): BJJEE's six-day week (R1), its

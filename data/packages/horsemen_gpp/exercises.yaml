@@ -1860,7 +1860,8 @@ exercises:
   - none
   effort: low
   bilateral: false
-  movement_patterns: []
+  movement_patterns:
+  - mobilization
   requires: []
   unlocks: []
   contraindicated_with: []
@@ -1887,7 +1888,8 @@ exercises:
   - none
   effort: low
   bilateral: true
-  movement_patterns: []
+  movement_patterns:
+  - mobilization
   requires: []
   unlocks: []
   contraindicated_with:
@@ -1917,7 +1919,8 @@ exercises:
   - none
   effort: low
   bilateral: true
-  movement_patterns: []
+  movement_patterns:
+  - mobilization
   requires: []
   unlocks:
   - shoulder_dislocate_pvc
@@ -2072,7 +2075,8 @@ exercises:
   - none
   effort: low
   bilateral: false
-  movement_patterns: []
+  movement_patterns:
+  - mobilization
   requires: []
   unlocks: []
   contraindicated_with:
@@ -2099,7 +2103,8 @@ exercises:
   - none
   effort: low
   bilateral: false
-  movement_patterns: []
+  movement_patterns:
+  - mobilization
   requires: []
   unlocks: []
   contraindicated_with:
@@ -3399,7 +3404,8 @@ exercises:
   - dumbbell
   effort: low
   bilateral: true
-  movement_patterns: []
+  movement_patterns:
+  - shoulder_external_rotation
   requires: []
   unlocks: []
   contraindicated_with:

@@ -17,6 +17,7 @@ slots:
 
   - role: twenties
     slot_type: for_time
+    reps_per_round: 20
     rounds: 1
     exercise_filter:
       exercise_ids: [squat_air]

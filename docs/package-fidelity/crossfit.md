@@ -67,6 +67,20 @@ bodyweight-circuit sessions, the benchmark test every fourth week, the Zone 2 wa
 Fran's 12-minute cap, `avoid_with: [max_strength, aerobic_base]`, the CrossFit Endurance
 claims, and the exercises only they used.
 
+## Output review (2026-10-22)
+
+Four weeks of both tracks printed (`tools/print_package.py crossfit --profile ideal`).
+The cycles run Glassman's day types day for day (R1–R3), Table 4 first (R8), then the
+Girls and the 2005 workouts. Fixed: the first movement of every couplet, triplet and Girl
+had no count, because the slot that carries the rounds or the minutes is a movement too
+(Cindy's 5 pull-ups, a triplet's 400 m run, the bench press × 10) — now written into the
+data and passed into the load (`progression._parent_count`); a movement the source does
+not count (Nicole's max pull-ups) said "1 rep a round"; a for-time test that opens with a
+run (Helen) lost its rounds; Fran's test day read "FOR_TIME"; one-round workouts read "1
+rounds" on the web; and `print_package` failed on a for-time load with no time cap. Open:
+descending schemes carry their per-round average (Fran's 15), Linda none; the phone's
+AMRAP and for-time rows do not show a round's own count yet.
+
 ## Tests
 
 Source weeks (`data/packages/crossfit/source_weeks.yaml`): Table 4's cycle (R1, R3, R8);

@@ -693,12 +693,25 @@ ATG, Kelly Starrett, Ido Portal), unpushed. What is left, in order:
    level the athlete moves up (ATG's ladders, Ido's beginner → intermediate →
    advanced versions; neither source writes a pass mark), and Built to Move's ten
    tests scored against the book's bands (needs a copy of the book).
-3. *Hygiene (S each, content)* — the output review (S6) recorded for BJJ, CrossFit,
-   Gym Jones, Horsemen, Marcus Filly and Starting Strength; exercise media (D3) for
-   BJJ (0 of 24), Starting Strength (0 of 6) and Horsemen (28 of 237); Horsemen's and
-   BJJ's inert `equipment_limited` scalings and Horsemen's unpatterned exercises (D4).
+3. *Hygiene* — **output reviews done 2026-10-22**: every package's programs were read
+   against its record (S6, recorded in each `fidelity.yaml` `reviews` and dossier),
+   and what they found fixed — the first movement of a for-time or AMRAP piece had no
+   count in CrossFit, Gym Jones and Horsemen (55 slots; `progression._parent_count`);
+   Starting Strength's work-up forecast named the wrong jump (the deadlift had one
+   7.5 kg jump where Rippetoe gives three); BJJ's conditioning appeared in the deload
+   week alone (optional work now goes by the last build week's minutes); Uphill's
+   Specific long days were apart (R20, `adjacent_to_by_phase`); Gym Jones's day 17
+   pressed from the floor where the PDF writes a bench press; Wildman's shortfall notes
+   lacked their weeks; `print_package` failed on CrossFit. Media (D3) and D4 now pass
+   everywhere but Horsemen. Left: Horsemen's exercise media (28 of 237; content, item
+   3's kind of work) and its D4 items, all in GPP Circuits but one undefined movement.
 4. *GPP Circuits* — rebuild it from the source or drop the track.
-5. *Each package's "Left"* (step 4 below) — mostly material that is not public:
+5. *Rep schemes and the phone (S–M)* — a descending scheme (21-15-9) has no structured
+   field: CrossFit's movements carry the per-round average, Horsemen's the first
+   round, each workout's note the scheme; one `rep_scheme` on the load, shown by the
+   web, the phone and both watches, would end both. The phone's AMRAP and for-time rows
+   do not show a round's own count yet (`LoadFormat.swift`; the web and watches do).
+6. *Each package's "Left"* (step 4 below) — mostly material that is not public:
    Uphill's novice plan, Filly's 4x/5x tracks and Base Camp, CrossFit's scaled
    novice track, Operator Fitness II, the Starrett books; then Wildman's follow-ups
    (step 5), the portability leftovers and the Dev Lab (step 6).

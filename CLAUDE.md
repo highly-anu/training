@@ -387,8 +387,11 @@ group's name.
   program — six weeks of strength, a deload week of its own workouts run as written, five
   of power, repeating — and the classes never deload on a schedule. Uphill's aerobic
   modules ramp by `weekly_volume` (three build weeks of 10 %, a recovery week at half, the
-  ramp holding from Specific on); its modules run in named `phases`. A period's `note`
-  leads every block's note in its weeks (Persist's Bridge week: RPE 6–7, the work kept).
+  ramp holding from Specific on); its modules run in named `phases`, and in a phase a
+  module may sit beside another (`adjacent_to_by_phase`: Specific's back-to-back long
+  days). A period's `note` leads every block's note in its weeks (Persist's Bridge week:
+  RPE 6–7, the work kept). Optional modules are offered by the last build week's minutes,
+  so a deload never adds a session (BJJ's conditioning once appeared in week 7 alone).
 - **Theory fidelity** (`src/fidelity.py`, `tools/check_fidelity.py`): a generated program
   is read against its package — `sessions_per_week`, `intensity_distribution`,
   `deload_protocol`, archetype level and phase, recovery windows, equipment and injuries,
@@ -423,7 +426,9 @@ group's name.
   the session). Days keep their template positions (the source's rest day), honouring
   preferred and forced-rest days. Loads are `progression_model: as_written`: the slot's `load`
   text ("75% of today's 1RM", "24 kg (53 lb)", "1.25x bodyweight"), no ramp, level, phase or
-  deload scaling. A slot's `exercise_filter.ordered` takes the written movement first and the
+  deload scaling. The slot that carries a for-time or AMRAP piece's rounds or minutes is a
+  movement too: its own `reps_per_round` or `distance_m` reaches the load
+  (`progression._parent_count`; Cindy's 5 pull-ups). A slot's `exercise_filter.ordered` takes the written movement first and the
   source's declared substitutes after it; a workout's movements are `named_only` exercises,
   so adding them never changes what an open slot picks. Rotation resumes where a regenerate's
   first week stands (the elapsed template weeks are replayed, `prior_entries`); a test may

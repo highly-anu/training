@@ -9,6 +9,7 @@ pool_only: true
 slots:
   - role: mary
     slot_type: amrap
+    reps_per_round: 5
     duration_sec: 1200
     exercise_filter:
       exercise_ids: [handstand_push_up]

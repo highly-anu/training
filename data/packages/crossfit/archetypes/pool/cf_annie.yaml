@@ -11,6 +11,7 @@ test: {selectable: true}
 slots:
   - role: annie
     slot_type: for_time
+    reps_per_round: 30
     rounds: 5
     exercise_filter:
       exercise_ids: [jump_rope_double_under]

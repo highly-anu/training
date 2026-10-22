@@ -144,18 +144,27 @@ def protocol_load(exercise: dict, slot: dict) -> dict:
         out = {'distance_km': round(m / 1000, 3)} if m >= 1000 else {'distance_m': m}
         if slot.get('time_cap_sec'):
             out['time_minutes'] = max(1, round(slot['time_cap_sec'] / 60))
+        if st != 'distance' and (slot.get('rounds') or 1) > 1:
+            # Helen's 400 m is the first of three rounds, not the whole test.
+            out.update({'format': 'FOR TIME', 'target_rounds': slot['rounds']})
     elif st in ('for_time', 'rounds_for_time'):
-        out = {'format': 'FOR_TIME'}
+        out = {'format': 'FOR TIME'}
         cap = slot.get('time_cap_sec') or slot.get('duration_sec')
         if cap:
             # A cap only where the test writes one (Fran has none).
             out['time_minutes'] = max(1, round(cap / 60))
         if slot.get('rounds'):
             out['target_rounds'] = slot['rounds']
+        if slot.get('reps_per_round'):
+            out['reps_per_round'] = slot['reps_per_round']
     elif st == 'amrap':
         out = {'time_minutes': max(1, round((slot.get('duration_sec') or 1200) / 60)), 'format': 'AMRAP'}
+        if slot.get('reps_per_round'):
+            out['reps_per_round'] = slot['reps_per_round']
+        if slot.get('distance_m'):
+            out['distance_km'] = round(slot['distance_m'] / 1000, 2)
     elif st == 'amrap_movement':
-        out = {'reps_per_round': slot.get('reps_per_round', 10)}
+        out = {'reps_per_round': slot['reps_per_round']} if slot.get('reps_per_round') else {}
     elif st == 'static_hold':
         out = {'sets': slot.get('sets', 1)}
         if slot.get('hold_seconds') or slot.get('duration_sec'):

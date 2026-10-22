@@ -9,6 +9,7 @@ pool_only: true
 slots:
   - role: cleans
     slot_type: rounds_for_time
+    reps_per_round: 21
     rounds: 3
     duration_sec: 720
     intensity: max_effort

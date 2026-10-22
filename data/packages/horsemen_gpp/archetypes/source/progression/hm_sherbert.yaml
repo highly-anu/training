@@ -8,6 +8,7 @@ duration_estimate_minutes: 20
 slots:
 - role: sherbert
   slot_type: for_time
+  reps_per_round: 10
   rounds: 1
   duration_sec: 1200
   intensity: max_effort

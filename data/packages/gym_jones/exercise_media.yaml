@@ -360,6 +360,46 @@ easy_aerobic:
   muscles_secondary:
   - calves
   - hamstrings
+bench_press:
+  animation:
+    external_id: Bench_Press_-_Powerlifting
+    gif_alt: Bench Press
+    gif_source: free_exercise_db
+    gif_url: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bench_Press_-_Powerlifting/0.jpg
+    type: gif
+  coaching_focus: Bench pressing is a full-body movement — leg drive and upper-back tightness are not
+    optional if you want to press heavy.
+  common_errors:
+  - Flared elbows at 90 degrees — places the shoulder in an impingement-prone position
+  - Butt rising off the bench — usually means the load exceeds current strength
+  - Losing upper-back tightness and letting shoulder blades wing under load
+  - Bouncing the bar off the chest — catching a bounce trains the wrong quality
+  cue_points:
+  - 'Grip: roughly 1 finger outside shoulder width; forearms vertical when bar touches chest'
+  - Retract and depress the shoulder blades before unracking — hold this through every rep
+  - Arch your upper back and keep glutes on the bench; feet drive actively into the floor
+  - 'Bar path: slight diagonal from lower chest at the bottom to over the upper chest at the top'
+  - Touch lower chest or upper sternum — not the clavicle and not the belly
+  - Elbows at 45–75 degrees to the torso — straight out stresses the shoulder
+  description: The bench press is the foundational horizontal pushing movement — a bilateral press where
+    the bar descends to the lower chest and is driven to lockout while the feet drive into the floor and
+    the upper back remains tight. The Horsemen goal is 1.5x bodyweight; Starting Strength builds from
+    3x5 linear progression.
+  muscle_diagram:
+    highlight_primary:
+    - pec
+    - deltoids
+    - triceps
+    highlight_secondary:
+    - core
+    - forearms
+  muscles_primary:
+  - pec
+  - deltoids
+  - triceps
+  muscles_secondary:
+  - core
+  - forearms
 floor_press:
   animation:
     external_id: Floor_Press

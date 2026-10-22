@@ -819,3 +819,112 @@ wk_kb_tgu:
   - hip_flexors
   - serratus_anterior
   - obliques
+run_zone2:
+  animation:
+    type: none
+  coaching_focus: Easy enough to hold a conversation the whole way.
+  common_errors:
+  - Drifting into a hard pace
+  - Turning an easy day into a test
+  cue_points:
+  - Short, relaxed strides
+  - Breathe through the nose if you can
+  - Slow down on hills to keep the effort easy
+  description: 'Easy, steady running on days without lifting: able to talk throughout.'
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - calves
+    highlight_secondary:
+    - hamstrings
+    - glutes
+  muscles_primary:
+  - quadriceps
+  - calves
+  muscles_secondary:
+  - hamstrings
+  - glutes
+wk_deck_squat:
+  animation:
+    type: none
+  coaching_focus: Roll up with momentum, not the hands.
+  common_errors:
+  - Pushing off the floor with the hands
+  cue_points:
+  - Sit down and roll back
+  - Reach forward to roll up
+  - Stand, or jump, from the squat
+  description: A squat that rolls back onto the shoulders and rolls up to stand, or to jump.
+  muscle_diagram:
+    highlight_primary:
+    - quadriceps
+    - core
+    highlight_secondary:
+    - glutes
+    - hip_flexors
+  muscles_primary:
+  - quadriceps
+  - core
+  muscles_secondary:
+  - glutes
+  - hip_flexors
+wk_kb_half_snatch:
+  animation:
+    type: none
+  coaching_focus: Fix the lockout, stop in the rack, then let the bell fall into the swing.
+  common_errors:
+  - Pressing the bell out instead of punching through
+  - Skipping the stop in the rack
+  - Letting the bell pull the back round in the backswing
+  cue_points:
+  - Hip snap drives the bell up
+  - Punch through to lockout, biceps by the ear
+  - Lower to the rack and pause before dropping
+  description: A snatch to a straight-arm lockout, lowered to the rack with a stop, then dropped
+    from the rack into the backswing for the next rep.
+  muscle_diagram:
+    highlight_primary:
+    - glutes
+    - hamstrings
+    - shoulders
+    highlight_secondary:
+    - core
+    - forearms
+    - upper_back
+  muscles_primary:
+  - glutes
+  - hamstrings
+  - shoulders
+  muscles_secondary:
+  - core
+  - forearms
+  - upper_back
+wk_kb_long_cycle_press:
+  animation:
+    type: none
+  coaching_focus: Clean, settle in the rack, then press with the legs straight.
+  common_errors:
+  - Dipping the knees to start the press
+  - Pressing straight out of the clean with no stop
+  - Lowering before the lockout is fixed
+  cue_points:
+  - Settle the bell in the rack before pressing
+  - 'Legs locked: the press is the arm''s alone'
+  - Fix the lockout before lowering
+  description: 'A clean and a strict press every rep: a still moment in the rack, no knee bend
+    before the press, the bell fixed overhead without sway.'
+  muscle_diagram:
+    highlight_primary:
+    - shoulders
+    - triceps
+    highlight_secondary:
+    - glutes
+    - hamstrings
+    - core
+  muscles_primary:
+  - shoulders
+  - triceps
+  muscles_secondary:
+  - glutes
+  - hamstrings
+  - core

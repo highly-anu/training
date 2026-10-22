@@ -9,6 +9,7 @@ pool_only: true
 slots:
   - role: triplet
     slot_type: amrap
+    reps_per_round: 20
     duration_sec: 1200
     exercise_filter:
       exercise_ids: [clean]
