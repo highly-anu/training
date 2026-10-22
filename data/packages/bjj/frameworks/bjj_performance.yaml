@@ -8,14 +8,14 @@ goals_served:
   - combat_sport
 
 # At five training days; the contract scales classes with the week
-# (training_contract.yaml exposures_by_days). Joint maintenance sits inside the
-# strength sessions; live rolling is the conditioning.
+# (training_contract.yaml exposures_by_days). StrengthLog's two workouts are
+# the strength; live rolling is the conditioning.
 sessions_per_week:
   combat_sport: 3
-  strength_endurance: 2
+  max_strength: 2
 modality_priority:
   committed: [combat_sport]
-  core: [strength_endurance]
+  core: [max_strength]
   supplementary: []
 
 intensity_distribution:
@@ -24,7 +24,9 @@ intensity_distribution:
   zone4_5_pct: 0.30
   max_effort_pct: 0.20
 
-progression_model: rpe_autoregulation
+# StrengthLog: add weight once every set makes its reps (the athlete's own
+# weights; training_contract.yaml).
+progression_model: linear_load
 
 applicable_when:
   training_level:
@@ -37,10 +39,9 @@ applicable_when:
   goal_priority_min:
     combat_sport: 0.3
 
-deload_protocol:
-  frequency_weeks: 4
-  volume_reduction_pct: 0.40
-  intensity_change: reduce_slightly
+# No deload_protocol: no source deloads the mat. The strength and
+# conditioning modules deload in StrengthLog's deload week, the seventh of
+# each twelve (training_contract.yaml `periods`); the classes are the gym's.
 
 # Hard/easy alternation — prevent stacking hard S&C sessions back-to-back
 cadence_options:

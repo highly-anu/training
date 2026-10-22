@@ -1,0 +1,73 @@
+id: grappling_sc
+name: "Strength for BJJ (StrengthLog)"
+modality: max_strength
+category: strength
+duration_estimate_minutes: 50
+required_equipment:
+  - barbell
+  - plates
+  - pull_up_bar
+applicable_phases:
+  - base
+  - build
+  - peak
+  - maintenance
+training_levels:
+  - novice
+  - intermediate
+  - advanced
+  - elite
+sources:
+  - "StrengthLog, Strength Training for BJJ"
+notes: >
+  StrengthLog's strength program for BJJ: two full-body workouts, one with a
+  lower-body and one with an upper-body lean, beside the classes. Six weeks of
+  strength and hypertrophy, a deload week, five weeks of power and explosive
+  strength. Three or four sets on the compound lifts, higher reps on the rest;
+  two to four minutes' rest on the compound lifts, one to two on the rest. The
+  workouts themselves are the training contract's (training_contract.yaml,
+  module grappling_strength); this is Workout 1 of the strength block.
+
+slots:
+  - role: deadlift
+    slot_type: sets_reps
+    sets: 4
+    reps: 5
+    rest_sec: 120
+    exercise_filter:
+      exercise_ids: [trap_bar_deadlift]
+  - role: pull
+    slot_type: sets_reps
+    sets: 3
+    reps: max
+    rest_sec: 120
+    exercise_filter:
+      exercise_ids: [pull_up]
+  - role: split_squat
+    slot_type: sets_reps
+    sets: 3
+    reps: 8
+    rest_sec: 120
+    exercise_filter:
+      exercise_ids: [bulgarian_split_squat]
+  - role: row
+    slot_type: sets_reps
+    sets: 4
+    reps: 8
+    rest_sec: 120
+    exercise_filter:
+      exercise_ids: [barbell_row]
+  - role: carry
+    slot_type: sets_reps
+    sets: 3
+    reps: 20 m
+    rest_sec: 60
+    exercise_filter:
+      exercise_ids: [farmer_carry]
+  - role: leg_raise
+    slot_type: sets_reps
+    sets: 3
+    reps: 12-15
+    rest_sec: 60
+    exercise_filter:
+      exercise_ids: [hanging_leg_raise]

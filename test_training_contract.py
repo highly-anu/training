@@ -416,10 +416,12 @@ def test_builder_requirements_are_scoped_to_the_selected_level():
 
 
 
+BJJ_GYM = ['barbell', 'rack', 'plates', 'pull_up_bar', 'dumbbell', 'box', 'open_space']
+
+
 def _bjj(weeks=4, **overrides):
     goal = goals.philosophy_to_goal('bjj', list(loader.load_all_frameworks().values()))
-    c = dict(equipment=['pull_up_bar', 'kettlebell', 'open_space'], days_per_week=5,
-             session_time_minutes=60, training_level='intermediate')
+    c = dict(equipment=BJJ_GYM, days_per_week=5, session_time_minutes=60, training_level='intermediate')
     c.update(overrides)
     return generate(None, c, num_weeks=weeks, goal_dict=goal, output_format='dict'), goal, c
 
@@ -432,17 +434,22 @@ def _by_archetype(week):
     return out
 
 
+def _variants(week):
+    return [m.get('variant') for d, ss in sorted(week['schedule'].items()) for s in ss
+            for m in s['modules'] if m['id'] == 'grappling_strength']
+
+
 def test_bjj_mat_time_leads_the_week():
     # Mat first (StrengthLog, BJJEE): classes outnumber strength sessions at every
-    # week size, and strength never exceeds two short sessions.
+    # week size; StrengthLog's two workouts from five days, one up to four (I5).
     for days, classes, strength in ((3, 2, 1), (4, 3, 1), (5, 3, 2), (6, 4, 2), (7, 5, 2)):
-        p, g, c = _bjj(weeks=2, days_per_week=days)
+        p, g, c = _bjj(weeks=2, days_per_week=days, session_time_minutes=90)
         tc.verify(p, g['training_contract'], c)
         week = _by_archetype(p['weeks'][0])
-        n_strength = len(week.get('grappling_sc', [])) + len(week.get('bjj_grip_isometric', []))
-        assert len(week['bjj_class']) == classes and n_strength == strength, (days, {k: len(v) for k, v in week.items()})
+        assert len(week['bjj_class']) == classes and len(week.get('grappling_sc', [])) == strength, \
+            (days, {k: len(v) for k, v in week.items()})
         assert all(s['modality'] == 'combat_sport' for s in week['bjj_class'])
-        assert all(s['modality'] == 'strength_endurance' for k in ('grappling_sc', 'bjj_grip_isometric') for s in week.get(k, []))
+        assert all(s['modality'] == 'max_strength' for s in week['grappling_sc'])
     p, _, _ = _bjj(weeks=1, days_per_week=5)
     days = {d: ss[0]['archetype']['id'] for d, ss in p['weeks'][0]['schedule'].items()}
     order = [days[d] for d in sorted(days)]
@@ -450,37 +457,83 @@ def test_bjj_mat_time_leads_the_week():
         f'strength days are not back to back: {order}'
 
 
-def test_bjj_deload_drops_rolling_and_keeps_drilling():
-    p, g, c = _bjj(weeks=4)
+def test_bjj_strength_runs_strengthlogs_cycle_and_the_mat_carries_on():
+    # StrengthLog (R3, R4, R6–R8): Workout 1 and 2, six weeks of strength, a deload
+    # week of its own workouts, five weeks of power; the cycle repeats (I3). No
+    # source deloads the mat.
+    p, g, c = _bjj(weeks=13)
     tc.verify(p, g['training_contract'], c)
-    normal, deload = p['weeks'][0], p['weeks'][3]
-    assert deload['is_deload'] and not normal['is_deload']
     ids = lambda s: [e['exercise']['id'] for e in s['exercises'] if e.get('exercise')]
-    assert ids(_by_archetype(normal)['bjj_class'][0]) == ['bjj_shrimp_drill', 'bjj_drilling', 'bjj_positional_sparring', 'bjj_live_rolling']
-    light = _by_archetype(deload)['bjj_class'][0]
-    assert ids(light) == ['bjj_shrimp_drill', 'bjj_drilling', 'bjj_positional_sparring']
+    full_class = ['bjj_shrimp_drill', 'bjj_drilling', 'bjj_positional_sparring', 'bjj_live_rolling']
+    expected = {**{w: ['strength_1', 'strength_2'] for w in (1, 2, 3, 4, 5, 6, 13)},
+                7: ['deload_1', 'deload_2'], **{w: ['power_1', 'power_2'] for w in (8, 9, 10, 11, 12)}}
+    for w in p['weeks']:
+        week = _by_archetype(w)
+        assert _variants(w) == expected[w['week_number']], (w['week_number'], _variants(w))
+        assert not w['is_deload'], 'the week is not a deload: the classes carry on'
+        assert all(ids(s) == full_class and not s['is_deload'] for s in week['bjj_class']), w['week_number']
+        assert all(s['is_deload'] == (w['week_number'] == 7) for s in week['grappling_sc']), w['week_number']
+    loads = lambda w, variant: {e['exercise']['id']: e['load'] for s in _by_archetype(p['weeks'][w - 1])['grappling_sc']
+                                for e in s['exercises'] if e.get('exercise') and s['modules'][0]['variant'] == variant
+                                and e['slot_role'].startswith('grappling_strength')}
+    one = loads(1, 'strength_1')
+    assert [(k, v['sets'], v['reps']) for k, v in one.items()] == [
+        ('trap_bar_deadlift', 4, 5), ('pull_up', 3, 'max'), ('bulgarian_split_squat', 3, 8),
+        ('barbell_row', 4, 8), ('farmer_carry', 3, '20 m'), ('hanging_leg_raise', 3, '12-15')], one
+    # The weights are the athlete's: no effort target, StrengthLog's rule instead.
+    assert not any('target_rpe' in l for w in range(1, 14) for v in ('strength_1', 'power_1')
+                   for l in loads(w, v).values())
+    assert 'add weight next time' in one['trap_bar_deadlift']['load_note']
+    # The deload week is StrengthLog's own two workouts, as written.
+    deload = loads(7, 'deload_1')
+    assert [(k, v['sets'], v['reps']) for k, v in deload.items()] == [
+        ('front_squat', 2, 10), ('pull_up', 2, 10), ('box_jump', 2, 10), ('hanging_leg_raise', 2, 12)], deload
+    assert '50–60 %' in deload['front_squat']['load_note']
+    power = loads(8, 'power_1')
+    assert (power['trap_bar_deadlift']['sets'], power['trap_bar_deadlift']['reps']) == (5, 3)
+    assert '75 %' in power['trap_bar_deadlift']['load_note']
+    # A deload week advances nothing: the rotation picks up where it stopped.
+    steps = [s['modules'][0]['forecast_step'] for w in p['weeks'] for s in _by_archetype(w)['grappling_sc']]
+    assert steps == list(range(12)) + [12, 12] + list(range(12, 24)), steps
+    # One workout a week (four days) alternates week to week; the deload week runs Workout 1's.
+    q, g, c = _bjj(weeks=9, days_per_week=4, session_time_minutes=90)
+    tc.verify(q, g['training_contract'], c)
+    assert [v for w in q['weeks'] for v in _variants(w)] == [
+        'strength_1', 'strength_2'] * 3 + ['deload_1', 'power_1', 'power_2']
+    # Attending moves the rotation on: a regenerate after two sessions starts at the third.
+    logs = {f"1-{SS_DAYS[d - 1]}-0": {'completedAt': '2026-10-21'} for d in p['weeks'][0]['schedule']}
+    state = tc.confirmed_state(p, logs, g['training_contract'])
+    assert state['grappling_strength']['completed'] == 2 and state['mat_class']['completed'] == 0
+    # Fatigue deloads everything: the class drops live rolling and keeps the drilling.
+    tired, g, c = _bjj(weeks=1, fatigue_state='overreached')
+    tc.verify(tired, g['training_contract'], c)
+    light = _by_archetype(tired['weeks'][0])['bjj_class'][0]
+    assert tired['weeks'][0]['is_deload'] and ids(light) == full_class[:3]
     drill = next(e for e in light['exercises'] if (e.get('exercise') or {}).get('id') == 'bjj_drilling')
     assert drill['load']['duration_minutes'] == 20, 'drilling is not cut on a deload'
+    assert _variants(tired['weeks'][0]) == ['strength_1', 'strength_2'], 'a held cursor still alternates'
 
 
-def test_bjj_substitutes_are_declared_and_supporting_blocks_say_when_they_go():
-    p, g, c = _bjj(weeks=1, injury_flags=['shoulder_instability'])
-    tc.verify(p, g['training_contract'], c)
-    week = _by_archetype(p['weeks'][0])
-    rolling = [e['exercise']['id'] for s in week['bjj_class'] for e in s['exercises'] if e['slot_role'] == 'mat_class_rolling']
-    assert set(rolling) == {'bjj_positional_sparring'}, 'positional work stands in for rolling'
-    assert not any(e['exercise']['id'] == 'dead_hang' for k in ('grappling_sc', 'bjj_grip_isometric')
-                   for s in week[k] for e in s['exercises'] if e.get('exercise'))
-    assert any('Dead Hang left out' in line for line in p['compromises'])
-    bare, g, c = _bjj(weeks=1, equipment=['open_space'])
-    tc.verify(bare, g['training_contract'], c)
-    pulls = {e['exercise']['id'] for ss in bare['weeks'][0]['schedule'].values() for s in ss
-             for e in s['exercises'] if e['slot_role'].endswith('pull')}
-    assert pulls == {'bjj_inverted_row'}, pulls
-    strength = next(s for ss in p['weeks'][0]['schedule'].values() for s in ss if s['archetype']['id'] == 'grappling_sc')
-    pull = next(e for e in strength['exercises'] if e['slot_role'] == 'grappling_strength_pull')
-    assert pull['load']['sets'] == 5 and pull['load']['reps'] == 5 and pull['load']['target_rpe'] == 8
-    assert 'RPE 8' in pull['load']['load_note']
+def test_bjj_substitutes_are_declared_and_refusals_name_the_way_out():
+    # No pull-up bar: inverted rows stand in for the pull-ups and the row (I4);
+    # the hanging leg raise has no substitute, so the track refuses and says so.
+    no_bar = [e for e in BJJ_GYM if e != 'pull_up_bar']
+    bare, _, _ = _bjj(weeks=1, equipment=no_bar)
+    assert not bare['weeks'] and 'pull_up_bar' in str(bare['validation_errors']), bare.get('validation_errors')
+    # A declared substitute takes a ruled-out lift's place: inverted rows for the
+    # barbell row, split squats for the front squat, a dead hang for the pinch.
+    _, g, c = _bjj(weeks=1)
+    module = next(m for m in g['training_contract']['modules'] if m['id'] == 'grappling_strength')
+    catalog = loader.load_all_exercises()[1]['bjj']
+    for role, out, sub in (('row', 'barbell_row', 'bjj_inverted_row'), ('front_squat', 'front_squat', 'bulgarian_split_squat'),
+                           ('pinch', 'plate_pinch', 'dead_hang')):
+        block = next(b for b in module['blocks'] if b['role'] == role)
+        assert tc._choose(block, module, catalog, c, ({out}, set())) == sub, role
+    # StrengthLog's lifts are essential: an injury one has no substitute for
+    # refuses, naming it (the box jump under a knee flag, the presses under a shoulder's).
+    for flag in ('patellar_tendinopathy', 'shoulder_instability'):
+        hurt, _, _ = _bjj(weeks=1, injury_flags=[flag])
+        assert not hurt['weeks'], flag
     lumbar, _, _ = _bjj(weeks=1, injury_flags=['lumbar_disc'])
     assert not lumbar['weeks'] and 'none of' in lumbar['validation_errors'][0]['message']
 
@@ -488,8 +541,8 @@ def test_bjj_substitutes_are_declared_and_supporting_blocks_say_when_they_go():
 def test_bjj_conditioning_is_optional_and_never_outnumbers_the_mat():
     # A competitor's conditioning (Vitruve's pre-competition circuits, Chad Wesley
     # Smith's rounds): once a week beside a strength day, never on a class day,
-    # never more sessions than the mat, gone on a deload and for a novice.
-    p, g, c = _bjj(weeks=4, days_per_week=4, session_time_minutes=90)
+    # never more sessions than the mat, cut in the deload week and gone for a novice.
+    p, g, c = _bjj(weeks=7, days_per_week=4, session_time_minutes=90)
     tc.verify(p, g['training_contract'], c)
     tc.verify_phase_rules(p, g)
     for w in p['weeks']:
@@ -500,7 +553,7 @@ def test_bjj_conditioning_is_optional_and_never_outnumbers_the_mat():
     ids = {e['exercise']['id'] for ss in p['weeks'][0]['schedule'].values() for s in ss
            for e in s['exercises'] if e.get('exercise') and e['slot_role'].startswith('competition_conditioning')}
     assert ids == {'bjj_takedown_practice', 'bjj_sprawl_interval', 'bjj_shuttle_sprint', 'bjj_bear_crawl'}, ids
-    deload = next(w for w in p['weeks'] if w['is_deload'])
+    deload = p['weeks'][6]
     kept = {e['exercise']['id'] for ss in deload['schedule'].values() for s in ss
             for e in s['exercises'] if e.get('exercise') and e['slot_role'].startswith('competition_conditioning')}
     assert kept <= {'bjj_takedown_practice'}, kept
@@ -579,21 +632,56 @@ def test_ss_adds_weight_each_confirmed_session():
     assert _lifts(nxt)['back_squat']['weight_kg'] == 70 and _lifts(nxt)['strict_press']['weight_kg'] == 40
 
 
-def test_ss_stall_repeats_then_resets():
+def test_ss_stall_resets_lightens_the_squat_then_triples():
     # Alter, "The Reset": missed at one weight twice in a row, reset 5 % and
-    # climb in smaller jumps; stalled again after that, the novice progression
-    # of that lift is over.
+    # climb in smaller jumps, and the week's second squat becomes a light day
+    # (80 % of the first day's, 2×5); stalled again, reset and the squat, bench
+    # and press run 5×3; stalled after that, the lift's novice progression is over.
     module = tc.load_contract('starting_strength', 'linear_progression')['modules'][0]
     lift = {'next_kg': 100, 'exposures': 10}
     tc.apply_lift_outcome(module, 'back_squat', lift, False, 100)
     assert lift['next_kg'] == 100 and lift['failures'] == 1
     tc.apply_lift_outcome(module, 'back_squat', lift, False, 100)
     assert lift['next_kg'] == 95 and lift['resets'] == 1 and lift['failures'] == 0
+    once = deepcopy(lift)
+
+    # After the first reset: the week's second squat is light and moves nothing.
+    p, g, c = _ss(weeks=2, module_progression_state={'novice_lp': {'completed': 0, 'lifts': {'back_squat': once}}})
+    tc.verify(p, g['training_contract'], c)
+    squats = [_lifts(s)['back_squat'] for _, s in _ss_sessions(p)]
+    assert [q['weight_kg'] for q in squats] == [95, 76.25, 96.25, 97.5, 77.5, 98.75], [q['weight_kg'] for q in squats]
+    light = squats[1]
+    assert (light['sets'], light['reps'], light['advances_module']) == (2, 5, False)
+    assert [(q['sets'], q['reps']) for q in squats[::3]] == [(3, 5), (3, 5)]
+    assert [s['modules'][0].get('light_day') for _, s in _ss_sessions(p)] == [None, 'back_squat', None] * 2
+    logs = {k: {'completedAt': '2026-10-19', 'exercises': tc.confirmation_outcomes(s, True, None)}
+            for k, s in _ss_sessions(p)[:2]}
+    state = tc.confirmed_state(p, logs, g['training_contract'])['novice_lp']
+    assert state['completed'] == 2 and state['lifts']['back_squat']['next_kg'] == 96.25, \
+        'the light day is attended, not progressed'
+
     tc.apply_lift_outcome(module, 'back_squat', lift, True, 95)
     assert lift['next_kg'] == 96.25, 'a step smaller after a reset'
     for _ in range(2):
         tc.apply_lift_outcome(module, 'back_squat', lift, False, 96.25)
-    assert lift.get('stalled') and lift['next_kg'] == 96.25
+    assert lift['resets'] == 2 and lift['next_kg'] == 91.25
+
+    # After the second: the squat, bench and press run 5×3; the light day stays.
+    bench = {'next_kg': 60, 'exposures': 12, 'resets': 2}
+    deadlift = {'next_kg': 120, 'exposures': 12, 'resets': 2}
+    p, g, c = _ss(weeks=1, module_progression_state={'novice_lp': {'completed': 0, 'lifts': {
+        'back_squat': deepcopy(lift), 'bench_press': bench, 'deadlift': deadlift}}})
+    tc.verify(p, g['training_contract'], c)
+    (_, a1), (_, b1), (_, a2) = _ss_sessions(p)
+    assert (_lifts(a1)['back_squat']['sets'], _lifts(a1)['back_squat']['reps']) == (5, 3)
+    assert (_lifts(b1)['back_squat']['sets'], _lifts(b1)['back_squat']['reps']) == (2, 5)
+    assert (_lifts(b1)['bench_press']['sets'], _lifts(b1)['bench_press']['reps']) == (5, 3)
+    assert (_lifts(a1)['deadlift']['sets'], _lifts(a1)['deadlift']['reps']) == (1, 5), 'not the deadlift'
+    assert _lifts(a1)['back_squat']['duration_minutes'] == 20, 'the same minutes'
+
+    for _ in range(2):
+        tc.apply_lift_outcome(module, 'back_squat', lift, False, 91.25)
+    assert lift.get('stalled') and lift['next_kg'] == 91.25
     p, _, _ = _ss(weeks=1, module_progression_state={'novice_lp': {'completed': 0, 'lifts': {'back_squat': lift}}})
     squat = _lifts(_ss_sessions(p)[0][1])['back_squat']
     assert squat['stalled'] and 'Texas Method' in squat['load_note']

@@ -377,7 +377,11 @@ group's name.
 - **Deload**: every `deload_protocol.frequency_weeks` (a framework without a protocol never
   deloads on schedule) or when `fatigue_state: overreached`; `volume_reduction_pct` is the
   share of volume the week **keeps**. In a kind that is itself the deload (taper) it is the
-  total, not a second cut on top of the kind's multiplier.
+  total, not a second cut on top of the kind's multiplier. A training contract's module
+  may run its own cycle instead (`periods`: weeks, a rotation of its variants, `deload`;
+  `training_contract.period_of`, `module_deload`): BJJ's strength is StrengthLog's
+  program — six weeks of strength, a deload week of its own workouts run as written, five
+  of power, repeating — and the classes never deload on a schedule.
 - **Theory fidelity** (`src/fidelity.py`, `tools/check_fidelity.py`): a generated program
   is read against its package — `sessions_per_week`, `intensity_distribution`,
   `deload_protocol`, archetype level and phase, recovery windows, equipment and injuries,
@@ -1179,7 +1183,9 @@ Starting Strength runs as a training contract (since 2026-10-20): Workouts A and
 alternate by a module's `variants` + `rotation`, the Texas Method is its intermediate
 track (`track_for_level` routes a request with no track by level), and
 `load_per_exposure` prescribes kg from what each lift made — a miss repeats, two
-reset 5 %, a lift with no weight works up on the day; the one-tap confirm takes
+reset 5 % (after the first reset the week's second squat is a light day, after the
+second the squat, bench and press run 5×3; a third stall finishes the lift), a lift
+with no weight works up on the day; layoff resets are the module's `advice`; the one-tap confirm takes
 `lifts: {id: {made, weightKg}}` (docs/logic/training_contracts.md).
 **In a worktree under `.claude/worktrees/`, blank `DATABASE_URL` and `SUPABASE_URL`**:
 `load_dotenv()` walks up to the main checkout's production `.env`.

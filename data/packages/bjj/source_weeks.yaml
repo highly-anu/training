@@ -1,5 +1,5 @@
 # BJJ — the sources' own weeks (docs/schemas/source_weeks.schema.json).
-# The one week a source writes out day by day, re-read 2026-10-21.
+# Re-read 2026-10-21.
 - id: bjjee_training_mix
   rule: R1
   track: mat_support
@@ -12,4 +12,38 @@
     the class count is not compared. The weekdays are the author's.
   profile: {days_per_week: 6, session_time_minutes: 90, training_level: intermediate, equipment: all}
   weeks:
-    - modalities: {strength_endurance: 2}
+    - modalities: {max_strength: 2}
+- id: strengthlog_cycle
+  rule: R6
+  track: mat_support
+  note: >
+    StrengthLog's program, each lift's sets and reps through the twelve weeks
+    at five training days (both workouts every week): the strength block's
+    Workout 1 and 2 for six weeks, the deload week's two workouts, the power
+    block's for five (weeks 8–12). The article prints one week of each block;
+    the weeks within a block repeat it. Which weekday each workout falls on is
+    the package's, so only the order of the sessions is compared.
+  profile: {days_per_week: 5, session_time_minutes: 60, training_level: intermediate, equipment: all}
+  num_weeks: 12
+  series:
+    - {exercise: trap_bar_deadlift, field: sets, values: [4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5]}
+    - {exercise: trap_bar_deadlift, field: reps, values: [5, 5, 5, 5, 5, 5, 3, 3, 3, 3, 3]}
+    - {exercise: pull_up, field: sets, values: [3, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3, 3]}
+    - {exercise: pull_up, field: reps, values: [max, max, max, max, max, max, 10, 5, 5, 5, 5, 5]}
+    - {exercise: bulgarian_split_squat, field: sets, values: [3, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3, 3]}
+    - {exercise: bulgarian_split_squat, field: reps, values: [8, 8, 8, 8, 8, 8, 10, 6, 6, 6, 6, 6]}
+    - {exercise: barbell_row, field: sets, values: [4, 4, 4, 4, 4, 4, 2, 4, 4, 4, 4, 4]}
+    - {exercise: barbell_row, field: reps, values: [8, 8, 8, 8, 8, 8, 10, 6, 6, 6, 6, 6]}
+    - {exercise: farmer_carry, field: reps, values: [20 m, 20 m, 20 m, 20 m, 20 m, 20 m, 20 s, 20 s, 20 s, 20 s, 20 s]}
+    - {exercise: hanging_leg_raise, field: reps, values: [12-15, 12-15, 12-15, 12-15, 12-15, 12-15, 12]}
+    - {exercise: bench_press, field: sets, values: [3, 3, 3, 3, 3, 3, 2]}
+    - {exercise: bench_press, field: reps, values: [5, 5, 5, 5, 5, 5, 10]}
+    - {exercise: overhead_press, field: sets, values: [3, 3, 3, 3, 3, 3, 5, 5, 5, 5, 5]}
+    - {exercise: overhead_press, field: reps, values: [6-8, 6-8, 6-8, 6-8, 6-8, 6-8, 3, 3, 3, 3, 3]}
+    - {exercise: front_squat, field: sets, values: [3, 3, 3, 3, 3, 3, 2, 4, 4, 4, 4, 4]}
+    - {exercise: front_squat, field: reps, values: [8, 8, 8, 8, 8, 8, 10, 5, 5, 5, 5, 5]}
+    - {exercise: bjj_inverted_row, field: reps, values: [10, 10, 10, 10, 10, 10, 8, 8, 8, 8, 8]}
+    - {exercise: plate_pinch, field: sets, values: [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]}
+    - {exercise: bjj_plank_hold, field: hold_seconds, values: [45, 45, 45, 45, 45, 45, 60, 60, 60, 60, 60, 60]}
+    - {exercise: box_jump, field: reps, values: [10, 4, 4, 4, 4, 4]}
+    - {exercise: hanging_windshield_wiper, field: reps, values: [8/side, 8/side, 8/side, 8/side, 8/side]}

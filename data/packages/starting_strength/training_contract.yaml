@@ -25,15 +25,37 @@ tracks:
       min_spacing_days: 2
       # Not read by the load model: a lift moves on made reps, not effort.
       max_rpe: 10
+      # Alter's layoff resets, recommended and left to the athlete (R16, I4):
+      # what they confirm lifting carries on.
+      advice: Back from a layoff? After a week off, repeat your last workout; longer, take 5 % off
+        (10 % if you are over 40), and 10 % after three to four weeks. Confirm what you lift and the
+        program carries on from there.
       progression:
         model: load_per_exposure
         round_kg: 1.25
-        # Missed twice in a row at one weight: reset 5 % (Alter, "The Reset");
-        # stalled again after that: the lift's novice progression is over.
+        # Missed twice in a row at one weight: reset 5 % (Alter, "The Reset").
+        # After the first reset the squat's second session of the week is a
+        # light day (80 % of the first day's, 2×5); after the second the squat,
+        # bench and press run 5×3; stalled again after that, the lift's novice
+        # progression is over.
         stall:
           failures: 2
           reset_pct: 5
-          resets: 1
+          resets: 2
+          light_day:
+            lift: back_squat
+            after_resets: 1
+            exposure: 2
+            pct: 0.8
+            sets: 2
+            reps: 5
+            note: Light day — two sets of five at 80 % of this week's first squat. It keeps the
+              squat moving without adding to it; the next heavy day goes up.
+          scheme:
+            lifts: [back_squat, bench_press, strict_press]
+            after_resets: 2
+            sets: 5
+            reps: 3
         # Rippetoe (2013), in kg: the squat 10 lb a session for two weeks, then
         # 5; the deadlift 15 lb at first, then 5; the press, bench and clean 5
         # lb, then 1–3. A step smaller after a reset.

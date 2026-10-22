@@ -34,7 +34,9 @@ The status is the scorecard's (status.yaml).
 | R6 | First session: empty bar, sets of five, small jumps to a heavy weight that keeps form, two more sets there (Rippetoe 2013) | `work_up` prescription for a lift with no weight; the logged weight becomes its start |
 | R7 | Squat +10 lb for two weeks, then +5; deadlift +15 at first, then 5; press, bench, clean +5, then 1–3 (Rippetoe 2013, 2013 TM) | `lifts.*.increments_kg` / `first_exposures`, in kg rounded to 1.25 kg plates |
 | R8 | Missed reps once: repeat the weight; missed at one weight twice in a row: reset 5 % and climb in smaller jumps (Alter 2018) | `stall: {failures: 2, reset_pct: 5}`; a step down `increments_kg` after a reset |
-| R9 | Stalled again after the adjustments: that lift is intermediate; the others carry on (Alter 2018) | `stall.resets: 1`: the lift holds, `stalled`, and its note sends it to the Texas Method |
+| R9 | Stalled again after the adjustments: that lift is intermediate; the others carry on (Alter 2018) | `stall.resets: 2`: the lift holds, `stalled`, and its note sends it to the Texas Method |
+| R15 | After a first stall, a light squat day (80 % of day 1's squat, 2×5); after a second, the squat, bench and press go to 5×3 (Alter 2018) | `stall.light_day` (the week's second session), `stall.scheme`; source weeks `alter_light_day`, `alter_triples` |
+| R16 | Layoffs: a week off repeats the last workout; longer, 5 % off under 40, 10 % over; 10 % after three to four weeks (Alter 2018) | the module's `advice`, in every lift's note — recommended, never applied (I4) |
 | R10 | Novice ends when progress stops session to session; intermediates progress weekly (Rippetoe 2013) | `track_for_level`: novice → Linear Progression, intermediate → Texas Method; the novice track refuses an intermediate, naming the Texas Method |
 | R11 | Monday: squat 5×5 across at ~90 % of 5RM (up to 8–10 min rest); press or bench 5×5 at ~90 %, alternating Mondays; one heavy set of five deadlifts, up every week (Rippetoe, TM) | `texas_method` variants `volume_press` / `volume_bench`; `pct: 0.9`; the deadlift advances |
 | R12 | Wednesday: squat 2×5 at 80 % of Monday; the other press for three lighter sets; chin-ups 3×failure (Rippetoe, TM) | `light_*` variants, squat `pct: 0.72` (80 % of 90 %) |
@@ -56,11 +58,7 @@ The status is the scorecard's (status.yaml).
 
 ## Debt (rules nothing enforces yet)
 
-- R15: after a first stall, a light squat day (80 % of the first day's squat, 2×5)
-  joins the week; after a second, the lift switches to 5×3 (Alter 2018). The contract
-  resets 5 % and steps the increment down, then flags the lift.
-- R16: layoffs — a week off repeats the last workout; longer resets 5 % under 40, 10 %
-  over; three to four weeks resets 10 % (Alter 2018).
+None.
 
 ## Inventions
 
@@ -71,6 +69,13 @@ The status is the scorecard's (status.yaml).
 - I3: the light day's press shares (bench 85 %, press 87.5 % of the five-rep max): the
   article says "a little lighter than the last 5×5" and "a little heavier relative to
   5RM" for the press.
+- I4: the layoff resets (R16) are recommended in each lift's note and never applied —
+  the athlete confirms what they lift and the program carries on from it; the owner's
+  rule for Wildman's layoff repeat (2026-10-21), applied here.
+- I5: every stall resets 5 % (R8), the one that brings 5×3 too; the deadlift and power
+  clean, which the 5×3 switch does not name, reset a second time instead; after a
+  third stall the lift is finished (R9). The article answers 403; it was re-read
+  through a summary on 2026-10-21.
 
 ## Tests
 
@@ -79,7 +84,7 @@ A-B-A and B-A-B with each workout's sets and reps (R1); the squat's jumps over n
 sessions (R7); a Texas Method week from given five-rep maxes (R11).
 
 test_training_contract.py — `test_ss_alternates_a_and_b_across_weeks`,
-`test_ss_adds_weight_each_confirmed_session`, `test_ss_stall_repeats_then_resets`,
+`test_ss_adds_weight_each_confirmed_session`, `test_ss_stall_resets_lightens_the_squat_then_triples`,
 `test_ss_first_session_works_up`, `test_ss_refuses_with_the_unblocking_constraint`,
 `test_ss_intermediate_routes_to_texas_method`, `test_texas_method_volume_light_intensity_week`,
 `test_confirm_route_records_each_lift`, `test_legacy_ss_program_seeds_loads`.

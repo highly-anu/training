@@ -4,25 +4,23 @@ core_principles:
   - mat_time_is_non_transferable_sparring_has_no_substitute
   - rolling_is_both_training_stimulus_and_test
   - conditioning_targets_isometric_endurance_hip_explosiveness_grip_endurance
-  - joint_health_must_be_actively_maintained
   - positional_drilling_before_live_sparring
-  - sport_specific_strength_endurance_over_general_max_strength
+  - strength_and_power_in_two_full_body_sessions_beside_the_mat
   - tap_early_protect_joints_for_long_term_training
 scope:
   - combat_sport
-  - strength_endurance
+  - max_strength
   - anaerobic_intervals
-  - mobility
 bias:
   - combat_sport
-  - strength_endurance
+  - max_strength
 avoid_with: []
 required_equipment: []
 intensity_model: hard_easy_alternation
 progression_philosophy: time_based
 sources:
   - "plan.md section 1 (BJJ)"
-  - "StrengthLog, Strength training for BJJ (2–3 short sessions on lighter mat days)"
+  - "StrengthLog, Strength Training for BJJ (two full-body workouts; strength, deload, power)"
   - "BJJEE, finding your BJJ / strength and conditioning ratio"
 notes: >
   BJJ as a philosophy entry governs how the system allocates and protects mat time.
@@ -52,9 +50,9 @@ tracks:
       Strength and conditioning around the mat: class is the anchor, and
       everything else supports it without competing for recovery. Classes
       take most of the week — two at three training days, three at four or
-      five, four at six, five at seven — with one short strength session up
-      to four days and two from five, never more than the mat
-      (training_contract.yaml).
+      five, four at six, five at seven — and StrengthLog's strength program
+      beside them: one of its two workouts a week up to four days, both from
+      five, never more than the mat (training_contract.yaml).
     phases:
       - id: mat_support
         name: "Mat-Time Support"
@@ -64,22 +62,24 @@ tracks:
         framework_id: bjj_performance
         focus: "Support the mat without stealing recovery"
         description: >
-          Mat time is non-negotiable; S&C fits around it, on the days between
-          classes where the week allows. Strength is prescribed by effort —
-          the load you finish at the target RPE, lowered by a hard week on the
-          mat. The targets are the sport's demands — isometric endurance for
-          frames and grips, hip explosiveness, grip endurance through
-          six-minute rounds — and the neck, shoulders, hips and wrists are
-          maintained inside every strength session. Deload weeks drop live
-          rolling and keep the drilling.
+          Mat time is non-negotiable; strength fits around it, on the days
+          between classes where the week allows. StrengthLog's program runs in
+          twelve-week cycles: six weeks of strength and hypertrophy (trap bar
+          deadlifts, split squats, rows, presses, pull-ups, carries and grip
+          work at three or four sets of five to eight), a deload week of two
+          easy sets of about ten, and five weeks of power — up to 75 % of a
+          one-rep max, every rep as fast as it can go. The weights are the
+          athlete's own: add weight once every set makes its reps. The classes
+          never deload on a schedule; an athlete who is overreached deloads
+          everything, and the class drops live rolling and keeps the drilling.
         adaptations:
-          - "Isometric and grip endurance"
-          - "Hip explosiveness"
-          - "Joint resilience"
-        intensity: "Hard/easy alternation; RPE-governed S&C"
+          - "Strength and hypertrophy"
+          - "Power and explosive strength"
+          - "Grip strength"
+        intensity: "Hard/easy alternation; strength by reps made, power by speed"
         # Mat time first: classes outnumber the strength work and the
         # competitor's conditioning every week (docs/package-fidelity/bjj.md).
         checks:
           modality_outnumbers:
-            - [combat_sport, strength_endurance]
+            - [combat_sport, max_strength]
             - [combat_sport, anaerobic_intervals]

@@ -12,7 +12,7 @@ sources:
     published: '2025-01'
     read: partial
     accessed: '2026-10-21'
-    note: Frequency, volume, progression and deload passages, quoted.
+    note: The program as the article prints it — frequency, volume, rest, progression, one week of each block and the deload week, quoted. Week-by-week loads are in StrengthLog's app, not the article.
   - id: bjjee_mix
     kind: secondary
     author: Guillaume Huni (BJJEE)
@@ -57,19 +57,26 @@ rules:
       - week:bjjee_training_mix
       - test:test_training_contract.py::test_bjj_mat_time_leads_the_week
   - id: R2
-    text: Strength supports the mat — two or three sessions a week for most, two beside four or five BJJ sessions, one at peak.
-    cites: [{source: strengthlog, at: frequency}]
+    text: Strength supports the mat — two full-body workouts a week beside the classes.
+    cites: [{source: strengthlog, at: '"2 full-body workouts with upper- or lower-body focus per week"'}]
     enforced_by:
-      - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.exposures_per_week
-      - data:training_contract.yaml#tracks.mat_support.modules.grip_endurance.exposures_by_days
+      - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.exposures_by_days
+      - week:bjjee_training_mix
   - id: R3
-    text: Low strength volume — about three sets of three to six reps on the compound lifts.
-    cites: [{source: strengthlog, at: '"3 sets per exercise, 3–6 reps per set for compound exercises"'}, {source: vitruve, at: Phase 3 maintenance strength}]
+    text: "Three or four sets an exercise: five to fifteen reps in the strength block, three to eight in the power block; three to six on the compound lifts."
+    cites: [{source: strengthlog, at: '"3 sets per exercise, 3–6 reps per set for compound exercises"; "6 exercises/workout, 5–15 reps, 3–4 sets/exercise"; "3–8 reps, 3–5 sets/exercise"'}, {source: vitruve, at: Phase 3 maintenance strength}]
     enforced_by:
-      - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.blocks
+      - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.variants
+      - week:strengthlog_cycle
   - id: R4
-    text: "A deload week between the two six-week halves of a twelve-week strength block: 50–60 % of the weight, about ten reps, two sets."
-    cites: [{source: strengthlog, at: deload}]
+    text: "Week 7 is a deload: two days of light training at 50–60 % of the regular weight, about ten reps, two sets — front squat, pull-up, box jump and hanging leg raise; bench press, Bulgarian split squat, barbell row and plank."
+    cites: [{source: strengthlog, at: Week 7 deload}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.periods.1
+      - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.variants.deload_1
+      - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.variants.deload_2
+      - week:strengthlog_cycle
+      - test:test_training_contract.py::test_bjj_strength_runs_strengthlogs_cycle_and_the_mat_carries_on
   - id: R5
     text: "A competitor's conditioning: ten-minute rounds of 15–30-second efforts with sprints or animal movements between; shuttle runs of 30–40 m and partner drills for takedown entries in short bursts."
     cites: [{source: juggernaut_circuits}, {source: vitruve, at: Phase 2 functional circuits}]
@@ -77,7 +84,35 @@ rules:
       - data:training_contract.yaml#tracks.mat_support.modules.competition_conditioning
       - test:test_training_contract.py::test_bjj_conditioning_is_optional_and_never_outnumbers_the_mat
 
+  - id: R6
+    text: "Twelve weeks: six of strength and hypertrophy (Workout 1: trap bar deadlift 4×5, pull-ups 3 × max, Bulgarian split squat 3×8, barbell row 4×8, farmer's carry 3 × 20 m, hanging leg raise 3 × 12–15; Workout 2: bench press 3×5, overhead press 3 × 6–8, front squat 3×8, inverted row 4×10, plate pinch 3 × 20–30 s, weighted plank 3 × 45 s), the deload week, five of power and explosive strength (Workout 1: trap bar deadlift 5×3, box jump 4×4, front squat 4×5, pull-up 3×5, farmer's carry 3 × 20 s, hanging windshield wiper 3 × 8 a side; Workout 2: overhead press 5×3, barbell row 4×6, Bulgarian split squat 3×6, inverted row 3×8, plate pinch 3 × 20–30 s, weighted plank 3 × 60 s)."
+    cites: [{source: strengthlog, at: 'Block 1, Week 7, Block 2'}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.periods
+      - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.variants
+      - week:strengthlog_cycle
+      - test:test_training_contract.py::test_bjj_strength_runs_strengthlogs_cycle_and_the_mat_carries_on
+  - id: R7
+    text: Try to add weight or a rep each workout; once every set makes its reps, add weight next time.
+    cites: [{source: strengthlog, at: '"When you can do the designated number of reps for each set, increase the load the next time you hit the gym."'}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.variants.strength_1.blocks.deadlift.load_note
+      - test:test_training_contract.py::test_bjj_strength_runs_strengthlogs_cycle_and_the_mat_carries_on
+  - id: R8
+    text: "The power block: up to 75 % of the one-rep max, each rep as explosive as possible; a set ends when the weight slows, not at failure."
+    cites: [{source: strengthlog, at: Block 2}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.variants.power_1.blocks.deadlift.load_note
+      - test:test_training_contract.py::test_bjj_strength_runs_strengthlogs_cycle_and_the_mat_carries_on
+  - id: R9
+    text: Two to four minutes' rest on the compound lifts, one to two on isolation work.
+    cites: [{source: strengthlog, at: rest}]
+    enforced_by:
+      - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.variants.strength_1.blocks.deadlift.rest_sec
+      - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.variants.strength_1.blocks.carry.rest_sec
+
 open:
+  - "StrengthLog's week-by-week loads within a block are in its app; the article prints one week of each block, and the contract repeats it."
   - "Competition preparation: a camp's weeks and the taper (\"reducing volume about 1–2 weeks out\", Vitruve) are not modelled; the conditioning module is what a competitor adds in a normal week."
   - How a class divides its minutes; the sources leave the class to the gym.
 
@@ -87,20 +122,22 @@ inventions:
     implemented_by:
       - data:training_contract.yaml#tracks.mat_support.modules.mat_class.blocks
   - id: I2
-    text: Strength is prescribed by effort (an RPE target); the sources write reps and percentages of a one-rep max and add weight when the reps are made.
+    text: "The weights are the athlete's: each lift carries StrengthLog's rule in its note (R7, R8) and the athlete records what they lift; the app prescribes no kilogram, because the article gives no starting weights or increments (its app holds them)."
     implemented_by:
-      - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.blocks
+      - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.variants
   - id: I3
-    text: Every fourth week deloads the whole program, dropping live rolling and keeping the drilling; no source deloads the mat, and StrengthLog's strength deload (R4) comes after six weeks.
+    text: "StrengthLog writes one twelve-week program; it repeats here, its deload week the seventh of every twelve, and the competition conditioning deloads in it with the strength work it shares a day with. The mat never deloads on a schedule (no source deloads it); an athlete who reports being overreached deloads everything, the class then drops live rolling and keeps the drilling, and the workouts keep alternating (owner, 2026-10-21)."
     implemented_by:
-      - data:frameworks/bjj_performance.yaml#deload_protocol
-      - test:test_training_contract.py::test_bjj_deload_drops_rolling_and_keeps_drilling
+      - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.periods
+      - data:training_contract.yaml#tracks.mat_support.modules.competition_conditioning.periods
+      - data:training_contract.yaml#tracks.mat_support.modules.mat_class.blocks
+      - test:test_training_contract.py::test_bjj_strength_runs_strengthlogs_cycle_and_the_mat_carries_on
   - id: I4
-    text: Declared substitutes for an injured athlete (positional or drilling for rolling, inverted rows for pull-ups), and supporting blocks named when they are left out.
+    text: "Declared substitutes: positional work or drilling for rolling under an injury; inverted rows for pull-ups and the barbell row, Bulgarian split squats for the front squat, a dead hang for the plate pinch, a hollow hold for the plank. A lift with no substitute refuses, naming what it needs."
     implemented_by:
-      - test:test_training_contract.py::test_bjj_substitutes_are_declared_and_supporting_blocks_say_when_they_go
+      - test:test_training_contract.py::test_bjj_substitutes_are_declared_and_refusals_name_the_way_out
   - id: I5
-    text: "Up to four training days, one strength session beside the classes: the sources' two need five days."
+    text: "Up to four training days, one of the two workouts a week beside the classes, alternating week to week: StrengthLog's two need five days."
     implemented_by:
       - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.exposures_per_week
   - id: I6
@@ -112,7 +149,12 @@ inventions:
     implemented_by:
       - data:training_contract.yaml#tracks.mat_support.modules.mat_class.exposures_by_days
 
+  - id: I8
+    text: "The rests are the short end of StrengthLog's ranges — two minutes on the compound lifts, one on the rest — so a workout is about fifty minutes; the notes say up to four. Read as written: \"max reps\" pull-ups are sets to failure, a 20–30-second pinch is a 30-second hold, the weighted plank carries a plate, the farmer's carry is with dumbbells (or kettlebells); the deload notes add an easier pull-up and a lower box."
+    implemented_by:
+      - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.variants
+
 currency:
   mat_support: {entry: mat_time, rule: R1}
 
-next: "Decide against StrengthLog: the strength prescription (I2) and the deload (R4, I3); a competition camp if the owner wants one."
+next: "Exercise media (D3), the output review (S6), and a competition camp if the owner wants one."

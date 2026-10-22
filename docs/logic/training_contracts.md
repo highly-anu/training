@@ -66,6 +66,13 @@ progressing exposure lifts), `kg` (the last made), `exposures`, `failures`,
 - a miss repeats the weight; `stall.failures` misses in a row reset it by
   `stall.reset_pct`; a lift that stalls again after `stall.resets` resets holds,
   `stalled`, and its note sends it to the next track;
+- each reset may change how the lift runs (`with_stall`, Alter's "The Reset"):
+  from `stall.light_day.after_resets` the week's `exposure`-th session lifts it
+  light (`pct` of the last weight made, its own sets and reps, not advancing it;
+  the session's module record names it as `light_day`, and the forecast steps over
+  it), and from `stall.scheme.after_resets` the named lifts run the scheme's sets
+  and reps in the same minutes (Starting Strength: a light squat day after one
+  reset, 5×3 for the squat, bench and press after two);
 - a block with `pct` (the Texas Method's Monday at 90 %) reads its lift's last
   made weight and does not move it; a block at full weight does;
 - a lift with no weight works up on the day (`load.work_up`), unless the builder
@@ -112,6 +119,23 @@ Future exposures are conditional forecasts. Only chronologically ordered,
 completed sessions with all required outcomes, clean mechanics and RPE at or below
 the module ceiling advance confirmed state. Missing, failed, out-of-order, deload
 and scored-test sessions do not. Existing active-program log scoping is reused.
+
+A deload is the framework's (`deload_protocol`), the athlete's (`fatigue_state:
+overreached`) or a deload phase's, and cuts each block to its `deload_keep` share
+(0 drops it). A module may run its own cycle instead of the framework's cadence:
+`periods` — each so many program weeks, repeating — may name a rotation of the
+module's variants and say `deload` (`period_of`, `module_deload`). A deload period
+with its own rotation runs those workouts as written, cut by nothing; without one,
+the blocks keep their `deload_keep` share. BJJ's strength is StrengthLog's program
+that way: Workout 1 and 2 of the strength block for six weeks, the deload week's own
+two workouts, the power block's for five, again; its competition conditioning deloads
+in the same week, and the classes carry on. Fatigue still deloads every module. A
+deload holds the cursor, so the week's sessions take the next variants by their
+order in it. Each session's module record says whether it deloaded (`deload`),
+which `confirmed_state` and `verify` read per module. A module whose variants have
+nothing to earn (BJJ's workouts: the weights are the athlete's, each block's
+`load_note` says how to choose them) moves its rotation on attendance; a block's
+`reps` may be written as the source writes them ("6-8", "20 m", "8/side").
 
 An API regeneration automatically recovers that state from the current program
 and its logs when the contract identity/version matches. An explicit

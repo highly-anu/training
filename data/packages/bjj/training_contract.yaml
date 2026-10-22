@@ -13,11 +13,15 @@ tracks:
     - advanced
     - elite
     notes: 'Mat time first. Classes take most of the week and grow with it — two at three training days,
-      three at four or five, four at six, five at seven — and strength and conditioning support them:
-      one short session up to four days, two from five, never more than the mat. The class is your
-      gym''s; its minutes here are the shape of a typical class, not instructions to the coach. Strength
-      work is prescribed by effort: choose the load you finish at the target RPE and let a hard week
-      on the mat lower it. Deload weeks drop live rolling and keep the drilling.
+      three at four or five, four at six, five at seven — and strength supports them: StrengthLog''s
+      program, one workout a week up to four days and both from five, never more than the mat. The
+      class is your gym''s; its minutes here are the shape of a typical class, not instructions to
+      the coach. Strength runs in a twelve-week cycle: six weeks of strength (three or four sets of
+      five to eight), a deload week, five weeks of power (up to 75 % of your one-rep max, every rep
+      fast), and again. The weights are yours: add weight once every set makes its reps. Rest two
+      minutes between sets of the big lifts — up to four if you have the time — and one minute on
+      the rest. The classes never deload on a schedule; a competitor''s conditioning deloads with
+      the strength.
 
       '
     modules:
@@ -68,144 +72,336 @@ tracks:
         - bjj_drilling
         notes: Live rounds of five to six minutes with a minute between. Tap early. Where an injury
           rules rolling out, positional work or drilling takes its place.
+    # StrengthLog, "Strength Training for BJJ": two full-body workouts that
+    # alternate — six weeks of strength and hypertrophy, a deload week, five of
+    # power and explosive strength — with the cycle repeating (I3). Three sets
+    # of three to six on the compound lifts, higher reps on the rest, rests of
+    # two to four minutes and one to two (the short end here, I8). The weights
+    # are the athlete's: add weight once every set makes its reps (R7).
     - id: grappling_strength
-      name: Grappling Strength
+      name: Strength
       archetype_id: grappling_sc
-      modality: strength_endurance
+      modality: max_strength
       training_levels:
       - novice
       - intermediate
       - advanced
       - elite
-      exposures_per_week: 1
-      min_spacing_days: 2
-      max_rpe: 8
-      deload_keep: 0.6
-      progression:
-        model: skill_hold
-      blocks:
-      - role: prep
-        exercise_id: bjj_shoulder_dislocate
-        slot_type: skill_practice
-        optional: true
-        duration_sec: 300
-        alternatives:
-        - bjj_thoracic_extension
-      - role: pull
-        exercise_id: pull_up
-        slot_type: sets_reps
-        sets: 5
-        reps: 5
-        rest_sec: 150
-        rpe_target: 8
-        duration_sec: 900
-        alternatives:
-        - bjj_inverted_row
-        notes: Full dead hang at the bottom; add load when five clean reps stay below RPE 8.
-      - role: hinge
-        exercise_id: bjj_kb_swing
-        slot_type: sets_reps
-        sets: 5
-        reps: 10
-        rest_sec: 90
-        rpe_target: 7
-        duration_sec: 600
-        alternatives:
-        - bjj_romanian_deadlift
-        - bjj_glute_bridge
-        notes: Hip drive for bridging, sweeps and escapes; speed is the quality, not grinding.
-      - role: hang
-        exercise_id: dead_hang
-        slot_type: static_hold
-        optional: true
-        sets: 3
-        hold_sec: 45
-        rest_sec: 60
-      - role: trunk
-        exercise_id: bjj_hollow_hold
-        slot_type: static_hold
-        sets: 3
-        hold_sec: 30
-        rest_sec: 45
-        alternatives:
-        - bjj_plank_hold
-      - role: neck
-        exercise_id: bjj_neck_isometric
-        slot_type: static_hold
-        optional: true
-        sets: 4
-        hold_sec: 20
-        rest_sec: 30
-        deload_keep: 1
-        notes: Gently, four directions; stop at any radiating symptom.
-    - id: grip_endurance
-      name: Grip and Isometric Endurance
-      archetype_id: bjj_grip_isometric
-      modality: strength_endurance
-      training_levels:
-      - novice
-      - intermediate
-      - advanced
-      - elite
-      exposures_per_week: 1
+      exposures_per_week: 2
       exposures_by_days:
-        3: 0
-        5: 1
+        3: 1
+        5: 2
       min_spacing_days: 2
-      max_rpe: 8
-      deload_keep: 0.6
+      max_rpe: 9
       progression:
         model: skill_hold
-      blocks:
-      - role: prep
-        exercise_id: bjj_hip_90_90
-        slot_type: skill_practice
-        optional: true
-        duration_sec: 300
-        alternatives:
-        - bjj_couch_stretch
-      - role: towel_pull
-        exercise_id: bjj_towel_pull_up
-        slot_type: sets_reps
-        sets: 4
-        reps: 6
-        rest_sec: 120
-        rpe_target: 8
-        duration_sec: 600
-        alternatives:
-        - pull_up
-        - bjj_inverted_row
-        notes: A towel over the bar is a lapel; stop the set when the grip goes.
-      - role: hang
-        exercise_id: dead_hang
-        slot_type: static_hold
-        optional: true
-        sets: 4
-        hold_sec: 45
-        rest_sec: 60
-      - role: frame
-        exercise_id: bjj_side_plank
-        slot_type: static_hold
-        sets: 4
-        hold_sec: 40
-        rest_sec: 45
-        alternatives:
-        - bjj_plank_hold
-        - bjj_glute_bridge
-      - role: anti_rotation
-        exercise_id: bjj_pallof_press
-        slot_type: static_hold
-        sets: 3
-        hold_sec: 30
-        rest_sec: 45
-        alternatives:
-        - bjj_hollow_hold
-        notes: Hold the press out and refuse to be turned, each side.
-      - role: wrists
-        exercise_id: bjj_wrist_prep
-        slot_type: skill_practice
-        duration_sec: 180
-        deload_keep: 1
+      periods:
+      - name: Strength and hypertrophy
+        weeks: 6
+        rotation: [strength_1, strength_2]
+      - name: Deload
+        weeks: 1
+        deload: true
+        rotation: [deload_1, deload_2]
+      - name: Power and explosive strength
+        weeks: 5
+        rotation: [power_1, power_2]
+      variants:
+      - id: strength_1
+        name: Strength — Workout 1
+        blocks:
+        - role: deadlift
+          exercise_id: trap_bar_deadlift
+          slot_type: sets_reps
+          sets: 4
+          reps: 5
+          rest_sec: 120
+          duration_sec: 600
+          load_note: &own_weight Your weight — once every set makes its reps, add weight next time. Record what you lift.
+        - role: pull
+          exercise_id: pull_up
+          slot_type: sets_reps
+          sets: 3
+          to_failure: true
+          rest_sec: 120
+          duration_sec: 480
+          alternatives:
+          - bjj_inverted_row
+          load_note: As many clean reps as you can each set; try for one more each workout.
+          notes: Full dead hang at the bottom, chin over the bar.
+        - role: split_squat
+          exercise_id: bulgarian_split_squat
+          slot_type: sets_reps
+          sets: 3
+          reps: 8
+          rest_sec: 120
+          duration_sec: 570
+          load_note: *own_weight
+          notes: Each leg.
+        - role: row
+          exercise_id: barbell_row
+          slot_type: sets_reps
+          sets: 4
+          reps: 8
+          rest_sec: 120
+          duration_sec: 620
+          alternatives:
+          - bjj_inverted_row
+          load_note: *own_weight
+        - role: carry
+          exercise_id: farmer_carry
+          slot_type: sets_reps
+          sets: 3
+          reps: 20 m
+          rest_sec: 60
+          duration_sec: 270
+          load_note: Heavy, but enough to last the whole distance; lighten it a little if you cannot.
+        - role: leg_raise
+          exercise_id: hanging_leg_raise
+          slot_type: sets_reps
+          sets: 3
+          reps: 12-15
+          rest_sec: 60
+          duration_sec: 300
+      - id: strength_2
+        name: Strength — Workout 2
+        blocks:
+        - role: bench
+          exercise_id: bench_press
+          slot_type: sets_reps
+          sets: 3
+          reps: 5
+          rest_sec: 120
+          duration_sec: 450
+          load_note: *own_weight
+        - role: press
+          exercise_id: overhead_press
+          slot_type: sets_reps
+          sets: 3
+          reps: 6-8
+          rest_sec: 120
+          duration_sec: 465
+          load_note: *own_weight
+        - role: front_squat
+          exercise_id: front_squat
+          slot_type: sets_reps
+          sets: 3
+          reps: 8
+          rest_sec: 120
+          duration_sec: 480
+          alternatives:
+          - bulgarian_split_squat
+          load_note: *own_weight
+        - role: inverted_row
+          exercise_id: bjj_inverted_row
+          slot_type: sets_reps
+          sets: 4
+          reps: 10
+          rest_sec: 120
+          duration_sec: 640
+        - role: pinch
+          exercise_id: plate_pinch
+          slot_type: static_hold
+          sets: 3
+          hold_sec: 30
+          rest_sec: 60
+          alternatives:
+          - dead_hang
+          load_note: 20–30 seconds a set; heavier plates once you hold 30.
+        - role: plank
+          exercise_id: bjj_plank_hold
+          slot_type: static_hold
+          sets: 3
+          hold_sec: 45
+          rest_sec: 60
+          alternatives:
+          - bjj_hollow_hold
+          load_note: Weighted — a plate on your back.
+      - id: deload_1
+        name: Deload — Workout 1
+        blocks:
+        - role: front_squat
+          exercise_id: front_squat
+          slot_type: sets_reps
+          sets: 2
+          reps: 10
+          rest_sec: 120
+          duration_sec: 330
+          alternatives:
+          - bulgarian_split_squat
+          load_note: &deload_weight Deload week — 50–60 % of your usual weight; every rep easy.
+        - role: pull
+          exercise_id: pull_up
+          slot_type: sets_reps
+          sets: 2
+          reps: 10
+          rest_sec: 120
+          duration_sec: 320
+          alternatives:
+          - bjj_inverted_row
+          load_note: Deload week — easy reps; a band or an easier variant if ten are not.
+        - role: box_jump
+          exercise_id: box_jump
+          slot_type: sets_reps
+          sets: 2
+          reps: 10
+          rest_sec: 120
+          duration_sec: 300
+          load_note: Deload week — a lower box; every jump easy.
+        - role: leg_raise
+          exercise_id: hanging_leg_raise
+          slot_type: sets_reps
+          sets: 2
+          reps: 12
+          rest_sec: 60
+          duration_sec: 200
+      - id: deload_2
+        name: Deload — Workout 2
+        blocks:
+        - role: bench
+          exercise_id: bench_press
+          slot_type: sets_reps
+          sets: 2
+          reps: 10
+          rest_sec: 120
+          duration_sec: 330
+          load_note: *deload_weight
+        - role: split_squat
+          exercise_id: bulgarian_split_squat
+          slot_type: sets_reps
+          sets: 2
+          reps: 10
+          rest_sec: 120
+          duration_sec: 400
+          load_note: *deload_weight
+          notes: Each leg.
+        - role: row
+          exercise_id: barbell_row
+          slot_type: sets_reps
+          sets: 2
+          reps: 10
+          rest_sec: 120
+          duration_sec: 330
+          alternatives:
+          - bjj_inverted_row
+          load_note: *deload_weight
+        - role: plank
+          exercise_id: bjj_plank_hold
+          slot_type: static_hold
+          sets: 2
+          hold_sec: 60
+          rest_sec: 60
+          alternatives:
+          - bjj_hollow_hold
+      - id: power_1
+        name: Power — Workout 1
+        blocks:
+        - role: deadlift
+          exercise_id: trap_bar_deadlift
+          slot_type: sets_reps
+          sets: 5
+          reps: 3
+          rest_sec: 120
+          duration_sec: 700
+          load_note: &explosive Up to 75 % of your one-rep max, every rep as fast as you can; the set ends when the weight slows, not at failure.
+        - role: box_jump
+          exercise_id: box_jump
+          slot_type: sets_reps
+          sets: 4
+          reps: 4
+          rest_sec: 120
+          duration_sec: 540
+          load_note: Every jump as high and fast as you can; the set ends when they slow.
+        - role: front_squat
+          exercise_id: front_squat
+          slot_type: sets_reps
+          sets: 4
+          reps: 5
+          rest_sec: 120
+          duration_sec: 600
+          alternatives:
+          - bulgarian_split_squat
+          load_note: *explosive
+        - role: pull
+          exercise_id: pull_up
+          slot_type: sets_reps
+          sets: 3
+          reps: 5
+          rest_sec: 120
+          duration_sec: 435
+          alternatives:
+          - bjj_inverted_row
+          load_note: Every rep as fast as you can; add weight once five come fast.
+        - role: carry
+          exercise_id: farmer_carry
+          slot_type: sets_reps
+          sets: 3
+          reps: 20 s
+          rest_sec: 60
+          duration_sec: 240
+          load_note: Heavy, but enough to last the time; lighten it a little if you cannot.
+        - role: windshield_wiper
+          exercise_id: hanging_windshield_wiper
+          slot_type: sets_reps
+          sets: 3
+          reps: 8/side
+          rest_sec: 60
+          duration_sec: 300
+      - id: power_2
+        name: Power — Workout 2
+        blocks:
+        - role: press
+          exercise_id: overhead_press
+          slot_type: sets_reps
+          sets: 5
+          reps: 3
+          rest_sec: 120
+          duration_sec: 700
+          load_note: *explosive
+        - role: row
+          exercise_id: barbell_row
+          slot_type: sets_reps
+          sets: 4
+          reps: 6
+          rest_sec: 120
+          duration_sec: 600
+          alternatives:
+          - bjj_inverted_row
+          load_note: *explosive
+        - role: split_squat
+          exercise_id: bulgarian_split_squat
+          slot_type: sets_reps
+          sets: 3
+          reps: 6
+          rest_sec: 120
+          duration_sec: 525
+          load_note: *explosive
+          notes: Each leg.
+        - role: inverted_row
+          exercise_id: bjj_inverted_row
+          slot_type: sets_reps
+          sets: 3
+          reps: 8
+          rest_sec: 120
+          duration_sec: 450
+        - role: pinch
+          exercise_id: plate_pinch
+          slot_type: static_hold
+          sets: 3
+          hold_sec: 30
+          rest_sec: 60
+          alternatives:
+          - dead_hang
+          load_note: 20–30 seconds a set; heavier plates once you hold 30.
+        - role: plank
+          exercise_id: bjj_plank_hold
+          slot_type: static_hold
+          sets: 3
+          hold_sec: 60
+          rest_sec: 60
+          alternatives:
+          - bjj_hollow_hold
+          load_note: Weighted — a plate on your back.
     # A competitor's conditioning (Vitruve's pre-competition phase: shuttle runs
     # and short takedown-entry bursts beside the strength work; Chad Wesley
     # Smith's rounds: short efforts with sprints or animal movements between).
@@ -224,6 +420,12 @@ tracks:
       max_rpe: 9
       optional: true
       may_share_day: true
+      # Deloads with the strength work it shares a day with (I3).
+      periods:
+      - weeks: 6
+      - weeks: 1
+        deload: true
+      - weeks: 5
       never_with:
       - mat_class
       progression:
