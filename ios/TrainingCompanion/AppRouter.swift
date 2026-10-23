@@ -46,8 +46,9 @@ final class AppRouter: ObservableObject {
         analyticsSection = nil
     }
 
-    /// A detail screen an Analytics section pushes (§6.37): Progress's
-    /// measures and exercises, Recovery's readiness, sleep, trends and
+    /// A detail an Analytics section opens (§6.37): Progress's measures and
+    /// exercises (selected in its chart), score, scorecard, intensity,
+    /// movement and workouts, Recovery's readiness, sleep, trends and
     /// check-ins, Load's fitness, fatigue and form.
     enum AnalyticsDetail: Hashable {
         case measure(String)
@@ -61,10 +62,9 @@ final class AppRouter: ObservableObject {
         /// The section that pushes it.
         var section: AnalyticsTab {
             switch self {
-            case .measure, .exercise, .score: return .progress
+            case .measure, .exercise, .score, .scorecard, .intensity, .movement, .sessionShapes: return .progress
             case .readiness, .sleep, .hrv, .restingHR, .checkIns: return .recovery
             case .pmc, .loadFocus, .mix, .weekly: return .load
-            case .scorecard, .intensity, .movement, .sessionShapes: return .program
             case .blockLoad: return .blocks
             }
         }

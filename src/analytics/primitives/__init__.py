@@ -117,6 +117,12 @@ def series_point(h: dict, value, **extra) -> dict:
     return p
 
 
+def expected_point(h: dict, value) -> dict:
+    """One session's expected value, dated like its series point so the
+    clients can draw both on one date axis."""
+    return {'week': h['week_number'], 'x': h['ordinal'], 'date': h['date'].isoformat(), 'value': value}
+
+
 def result(entry: spec_mod.Entry, *, metric: str, unit: str, series: list, expected: list | None = None,
            status: str = 'insufficient_data', trend: dict | None = None, coverage_: dict | None = None,
            evidence: list | None = None, **extra) -> dict:

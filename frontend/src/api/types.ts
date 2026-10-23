@@ -1599,51 +1599,6 @@ export interface ProgressionReview {
   purpose?: string
 }
 
-export interface ExerciseHistoryPoint {
-  date: string
-  week_number: number
-  session_key: string
-  best_weight_kg: number | null
-  total_volume: number | null
-  est_1rm: number | null
-  best_reps: number | null
-  rpe: number | null
-  duration_sec: number | null
-  distance_km: number | null
-  rounds_completed: number | null
-  hr_avg: number | null
-  hr_max: number | null
-  source?: 'matched_workout'
-}
-
-export interface ExerciseExpectedPoint {
-  week_number: number
-  week_index?: number
-  expected_value: number | null
-  unit: string
-  metric_type: ProgressionMetricType
-}
-
-export interface ExerciseHistoryItem {
-  exerciseId: string
-  name: string
-  history: ExerciseHistoryPoint[]
-  expected: ExerciseExpectedPoint[]
-  /** In a session whose day has come. Absent from an older server. */
-  scheduledSoFar?: boolean
-  /** From the stored prescription's slot: what the card measures, in what. */
-  metricType?: ProgressionMetricType
-  unit?: string
-  /** This week's prescription (else the first): what "Target" means. */
-  target?: { value: number | null; weekNumber: number } | null
-}
-
-export interface ExerciseHistoryResponse {
-  exercises: ExerciseHistoryItem[]
-  /** The program's movements, those whose day has come, those with data. */
-  counts?: { inProgram: number; soFar: number; withData: number }
-}
-
 export interface MatchedSessionArchetype {
   name: string
   modality: string
@@ -1728,7 +1683,7 @@ export interface AnalyticsSeriesPoint {
   [extra: string]: unknown
 }
 
-export interface AnalyticsExpectedPoint { week: number | null; x: number; value: number | null }
+export interface AnalyticsExpectedPoint { week: number | null; x: number; value: number | null; date?: string | null }
 
 export interface AnalyticsCoverage {
   inScope: number
@@ -1941,9 +1896,10 @@ export interface AnalyticsBenchmarkRow {
   unit: string
   metricType: string
   lowerIsBetter: boolean
-  why: Array<'philosophy' | 'priority_modality' | 'declared' | 'tested'>
-  /** The program's own: declared by its package or measured by a test it
-   *  schedules. The rest sit behind "More standards". */
+  why: Array<'tested' | 'linked' | 'declared' | 'philosophy' | 'priority_modality'>
+  /** Always true since 2026-10-23: every row is the program's own (tested,
+   *  or estimated from a lift it schedules). An older server sent extras,
+   *  false here, for "More standards". */
   primary?: boolean
   standards: Record<string, number>
   standardsText?: Record<string, string>
@@ -1979,10 +1935,56 @@ export interface ProgramAnalytics {
   intensity: AnalyticsIntensity
   methodologies: AnalyticsMethodology[]
   progress: AnalyticsProgressEntry[]
+  /** Absent from a document cached before 2026-10-23. */
+  exerciseSeries?: ExerciseSeriesSection
   movement: AnalyticsMovement
   archetypes: AnalyticsArchetypeRow[]
   benchmarks: { sex: string; blockStart?: string; bodyweightKg: number | null; bodyweightText?: string | null; bodyweightDate: string | null; benchmarks: AnalyticsBenchmarkRow[] }
   load: { pmc?: PMCEntry[]; readiness?: { score: number; status: string }; phase: string | null; isDeload: boolean; tsb: number | null; reading: string | null; note: string }
+}
+
+// ─── Exercise series ─────────────────────────────────────────────────────────
+// `exerciseSeries` on GET /api/analytics/program — src/analytics/exercise_series.py.
+// Every exercise of the program, session by session: prescribed and done, for
+// the Progress tab's one chart; `measures` names the progress entries it also draws.
+
+export type ExerciseSeriesMetricId =
+  | 'weight' | 'reps' | 'sets' | 'totalReps' | 'volume' | 'est1rm' | 'rpe'
+  | 'time' | 'hold' | 'rounds' | 'distance'
+
+export type ExerciseSeriesValues = Partial<Record<ExerciseSeriesMetricId, number | null>>
+
+export interface ExerciseSeriesPoint {
+  date: string | null
+  week: number
+  x: number
+  isDeload: boolean
+  elapsed: boolean
+  /** What the done values come from; null when nothing was logged. */
+  source: 'log' | 'workout' | null
+  sessionName: string | null
+  done: ExerciseSeriesValues
+  prescribed: ExerciseSeriesValues
+  doneText: string | null
+  prescribedText: string | null
+  setsDone: Array<{ weightKg: number | null; reps: number | null; seconds: number | null; rpe: number | null }>
+}
+
+export interface ExerciseSeriesExercise {
+  exerciseId: string
+  name: string
+  modality: string | null
+  metrics: ExerciseSeriesMetricId[]
+  defaultMetric: ExerciseSeriesMetricId
+  scheduled: number
+  logged: number
+  points: ExerciseSeriesPoint[]
+}
+
+export interface ExerciseSeriesSection {
+  metrics: Array<{ id: ExerciseSeriesMetricId; label: string; unit: string }>
+  exercises: ExerciseSeriesExercise[]
+  measures: Array<{ id: string; label: string; unit: string | null; philosophy: string; primitive: string }>
 }
 
 // ─── Development across programs ─────────────────────────────────────────────

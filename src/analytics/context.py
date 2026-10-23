@@ -81,6 +81,14 @@ class Context:
     def week_start(self, week_index: int) -> date:
         return self.start_date + timedelta(days=7 * week_index)
 
+    def week_date(self, week_number) -> str | None:
+        """The ISO start of the first week numbered `week_number`, for a
+        weekly series point; numbers may start past 1 (an event-date block)."""
+        for i, week in enumerate(self.weeks):
+            if week.get('week_number', i + 1) == week_number:
+                return self.week_start(i).isoformat()
+        return None
+
     def session_date(self, week_index: int, day: str) -> date | None:
         iso = session_calendar_date(self.start_date.isoformat(), week_index, day)
         return date.fromisoformat(iso) if iso else None

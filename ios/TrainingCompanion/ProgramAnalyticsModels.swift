@@ -2,7 +2,7 @@ import Foundation
 
 /// `GET /api/analytics/program` — how the athlete is doing against what the
 /// active program is *for*, per methodology, in that methodology's own
-/// currency. The same document the web's Analytics ▸ Program tab lays out;
+/// currency. The same document the web's Analytics ▸ Progress tab lays out;
 /// the engine is `src/analytics/`, nothing is computed on the phone.
 ///
 /// Every section is decoded on its own and may be nil: the server answers a
@@ -17,8 +17,12 @@ struct ProgramAnalytics: Decodable {
     let intensity: Intensity?
     let methodologies: [Methodology]
     let progress: [ProgressEntry]
+    /// Every exercise session by session, done against prescribed: the
+    /// Progress chart's series (`ExerciseSeriesModels.swift`). Nil from a
+    /// server before 2026-10-23.
+    let exerciseSeries: ExerciseSeries?
     let movement: Movement?
-    /// Per session shape: how each archetype in the block is going.
+    /// Workouts (Session shapes until 2026-10-23): how each archetype in the block is going.
     let archetypes: [ArchetypeRow]?
     /// The standards this program is measured by, and where the athlete stands.
     let benchmarks: Benchmarks?
@@ -29,8 +33,8 @@ struct ProgramAnalytics: Decodable {
     var hasProgram: Bool { status != "no_program" }
 
     private enum CodingKeys: String, CodingKey {
-        case status, revision, generatedAt, frame, scorecard, intensity, methodologies, progress, movement,
-             archetypes, benchmarks, load
+        case status, revision, generatedAt, frame, scorecard, intensity, methodologies, progress, exerciseSeries,
+             movement, archetypes, benchmarks, load
     }
 
     private struct SectionError: Decodable { let error: String }
@@ -56,6 +60,7 @@ struct ProgramAnalytics: Decodable {
         scorecard = section(Scorecard.self, .scorecard)
         intensity = section(Intensity.self, .intensity)
         movement = section(Movement.self, .movement)
+        exerciseSeries = section(ExerciseSeries.self, .exerciseSeries)
         archetypes = section([Lossy<ArchetypeRow>].self, .archetypes)?.compactMap(\.value)
         benchmarks = section(Benchmarks.self, .benchmarks)
         load = section(Load.self, .load)
@@ -239,6 +244,9 @@ struct ProgramAnalytics: Decodable {
         let x: Double
         let week: Int?
         let value: Double?
+        /// The session's (or week's) day, for the chart's date axis; absent
+        /// from a document before 2026-10-23.
+        var date: String? = nil
         var id: Double { x }
     }
 
@@ -724,7 +732,7 @@ struct ProgramAnalytics: Decodable {
             /// older cached document.
             var thresholdTexts: [String: String] {
                 guard standardsText.isEmpty else { return standardsText }
-                return standards.mapValues { "\(AnalyticsProgramTab.number($0))\(unit)" }
+                return standards.mapValues { "\(AnalyticsProgressTab.number($0))\(unit)" }
             }
         }
         let bodyweightKg: Double?

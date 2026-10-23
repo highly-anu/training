@@ -26,8 +26,7 @@ import {
 import { cn } from '@/lib/utils'
 import { WeeklyLoadChart } from '@/components/bio/WeeklyLoadChart'
 import { PMCChart } from '@/components/bio/PMCChart'
-import { ProgramTab } from '@/components/analytics/ProgramTab'
-import { ProgressionTab } from '@/components/progression/ProgressionTab'
+import { ProgressTab } from '@/components/analytics/ProgressTab'
 import { RecoveryTab } from '@/components/bio/RecoveryTab'
 import { DevelopmentTab } from '@/components/analytics/DevelopmentTab'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
@@ -38,22 +37,23 @@ import { EmptyState } from '@/components/shared/EmptyState'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type SubTab = 'program' | 'progress' | 'blocks' | 'load' | 'recovery'
+type SubTab = 'progress' | 'blocks' | 'load' | 'recovery'
 type Period = '7d' | '30d' | '3m' | '1y' | 'all'
 
-// Analytics is the interpretation: what the program is for (Program), how the
-// athlete is progressing against it (Progress), what the body has been asked
-// to absorb (Load) and how it is coping (Recovery); Blocks reads every program
-// the athlete has run. The record itself — every recorded workout — lives under
-// Log. Names and order match the phone's Analytics sections.
+// Analytics is the interpretation: what the athlete did against the program
+// and whether it is working (Progress — Program and Progress until
+// 2026-10-23), what the body has been asked to absorb (Load) and how it is
+// coping (Recovery); Blocks reads every program the athlete has run. The
+// record itself — every recorded workout — lives under Log. Names and order
+// match the phone's Analytics sections.
 const SUB_TABS: { id: SubTab; label: string }[] = [
-  { id: 'program',  label: 'Program'  },
   { id: 'progress', label: 'Progress' },
   { id: 'blocks',   label: 'Blocks'   },
   { id: 'load',     label: 'Load'     },
   { id: 'recovery', label: 'Recovery' },
 ]
 const SUB_TAB_IDS = new Set<string>(SUB_TABS.map((t) => t.id))
+const TAB_ALIASES: Record<string, SubTab> = { development: 'blocks', program: 'progress' }
 
 const PERIODS: { id: Period; label: string; days: number | null }[] = [
   { id: '7d',  label: '7d',   days: 7   },
@@ -519,15 +519,18 @@ export function WorkoutAnalytics() {
   // URL-driven so Home cards and the /bio redirect can land on a tab.
   const [searchParams, setSearchParams] = useSearchParams()
   // `development` is the tab's name before 2026-10-13, when both clients
-  // settled on Blocks (the phone's segment control cannot fit the long word).
+  // settled on Blocks (the phone's segment control cannot fit the long word);
+  // `program` the tab that merged into Progress on 2026-10-23.
   const rawTab = searchParams.get('tab')
-  const tabParam = rawTab === 'development' ? 'blocks' : rawTab
-  const activeTab: SubTab = tabParam && SUB_TAB_IDS.has(tabParam) ? (tabParam as SubTab) : 'program'
+  const tabParam = rawTab ? (TAB_ALIASES[rawTab] ?? rawTab) : null
+  const activeTab: SubTab = tabParam && SUB_TAB_IDS.has(tabParam) ? (tabParam as SubTab) : 'progress'
   function setActiveTab(tab: SubTab) {
     setSearchParams(
       (prev) => {
         const next = new URLSearchParams(prev)
-        if (tab === 'program') next.delete('tab')
+        // The chart's selection belongs to Progress.
+        for (const k of ['exercise', 'measure', 'metric']) next.delete(k)
+        if (tab === 'progress') next.delete('tab')
         else next.set('tab', tab)
         return next
       },
@@ -556,12 +559,7 @@ export function WorkoutAnalytics() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
-        {activeTab === 'program'  && <ProgramTab />}
-        {activeTab === 'progress' && (
-          <div className="max-w-5xl mx-auto px-6 py-6 space-y-6">
-            <ProgressionTab />
-          </div>
-        )}
+        {activeTab === 'progress' && <ProgressTab />}
         {activeTab === 'blocks'   && <DevelopmentTab />}
         {activeTab === 'load'     && <LoadTab period={period} onPeriodChange={setPeriod} />}
         {activeTab === 'recovery' && <RecoveryTab />}

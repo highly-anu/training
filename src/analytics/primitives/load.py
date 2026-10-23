@@ -22,8 +22,8 @@ lift prescribed in kg, without the kg, say so (`no_kg_logged`).
 from __future__ import annotations
 
 from src.analytics import trend as trend_mod
-from src.analytics.primitives import (coverage, primitive, result, scoped_hits, series_point,
-                                      trend_dict)
+from src.analytics.primitives import (coverage, expected_point, primitive, result, scoped_hits,
+                                      series_point, trend_dict)
 from src.progression import _DEFAULT_INCREMENT_KG
 
 # The per-exercise statuses in words for the evidence lines both clients show
@@ -131,7 +131,7 @@ def set_load(entry, ctx) -> dict:
             # The reps reading of the same session, used if the lift turns out
             # to carry no kg at all.
             p_reps = prescribed_reps(ea.get('load') or {})
-            rec['repExpected'].append({'week': h['week_number'], 'x': h['ordinal'], 'value': p_reps})
+            rec['repExpected'].append(expected_point(h, p_reps))
             top_reps = best_reps(logged.get(ex_id))
             if entry.expected == 'achieved_plus_increment':
                 exp = rec['last'] + rec['increment'] if rec['last'] is not None else prescribed
@@ -139,7 +139,7 @@ def set_load(entry, ctx) -> dict:
                 exp = prescribed
             else:
                 exp = None
-            rec['expected'].append({'week': h['week_number'], 'x': h['ordinal'], 'value': exp})
+            rec['expected'].append(expected_point(h, exp))
             best = best_completed_set(logged.get(ex_id))
             if best:
                 rec['kg'] = True
@@ -254,8 +254,7 @@ def load_at_rpe(entry, ctx) -> dict:
                 any_rpe = True
             near = [s for s in with_rpe if abs(float(s['rpe']) - target) <= 1.0]
             suggested = (ea.get('load') or {}).get('suggested_weight_kg')
-            rec['expected'].append({'week': h['week_number'], 'x': h['ordinal'],
-                                    'value': float(suggested) if isinstance(suggested, (int, float)) else None})
+            rec['expected'].append(expected_point(h, float(suggested) if isinstance(suggested, (int, float)) else None))
             if near:
                 best = max(near, key=lambda s: float(s['weightKg']))
                 rec['points'].append(series_point(h, float(best['weightKg']), rpe=float(best['rpe']),

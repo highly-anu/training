@@ -1,29 +1,19 @@
 import SwiftUI
-import Charts
 
-/// One progress measure in full (design-system §6.37), pushed from its card on
-/// Analytics ▸ Progress: where it stands, the actual series against the
-/// expected one for whichever exercise the athlete picks, every movement
-/// practised and opened, every standard (each opens its own sheet), every line
-/// of evidence, and — last — what the measure is and what to log for it, in
-/// the server's words.
+/// One progress measure in full (design-system §6.37), pushed from its row on
+/// Analytics ▸ Progress: where it stands, each exercise's status, every
+/// movement practised and opened, every standard (each opens its own sheet),
+/// every line of evidence, and — last — what the measure is and what to log
+/// for it, in the server's words. Its line is on the Progress chart.
 struct MeasureDetailView: View {
     let entry: ProgramAnalytics.ProgressEntry
 
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var router: AppRouter
-    @State private var selectedExerciseId: String?
     @State private var standard: StandardSubject?
 
-    private var exercise: ProgramAnalytics.ExerciseResult? {
-        entry.exercises.first { $0.exerciseId == selectedExerciseId } ?? entry.leadExercise
-    }
-    private var status: String { exercise?.status ?? entry.status }
-    private var trend: ProgramAnalytics.Trend? { exercise?.trend ?? entry.trend }
-    private var series: [ProgramAnalytics.SeriesPoint] { exercise?.series ?? entry.series }
-    private var expected: [ProgramAnalytics.ExpectedPoint] { exercise?.expected ?? entry.expected }
-    /// A bodyweight lift beside a loaded one: each exercise says its own unit.
-    private var unit: String { exercise?.unit ?? entry.unit }
+    private var status: String { entry.leadExercise?.status ?? entry.status }
+    private var trend: ProgramAnalytics.Trend? { entry.leadExercise?.trend ?? entry.trend }
 
     var body: some View {
         List {
@@ -65,86 +55,28 @@ struct MeasureDetailView: View {
         .padding(.vertical, 2)
     }
 
-    // MARK: - Series
+    // MARK: - Exercises
 
+    /// Each exercise's status in words; the lines themselves are on the
+    /// Progress chart (this screen had its own until 2026-10-23).
     @ViewBuilder
     private var progressSection: some View {
-        if !entry.exercises.isEmpty || series.contains(where: { $0.value != nil }) {
-            Section {
-                if entry.exercises.count > 1 {
-                    // A display choice inside the screen, so a menu picker (§6.8).
-                    Picker("Exercise", selection: Binding(
-                        get: { exercise?.exerciseId },
-                        set: { id in withAnimation(AppAnimation.springStandard) { selectedExerciseId = id } }
-                    )) {
-                        ForEach(entry.exercises) { ex in
-                            Text(ex.series.isEmpty ? ex.name : "\(ex.name) · \(ex.series.count)")
-                                .tag(Optional(ex.exerciseId))
+        if !entry.exercises.isEmpty {
+            Section("Exercises") {
+                ForEach(entry.exercises) { ex in
+                    HStack(spacing: 8) {
+                        Text(ex.name)
+                        Spacer(minLength: 4)
+                        if ex.stalled {
+                            Label("Stalled", systemImage: "pause.circle.fill")
+                                .labelStyle(.inline).font(.footnote).foregroundStyle(.red)
                         }
+                        AnalyticsStatusBadge(status: ex.status)
                     }
-                    .pickerStyle(.menu)
-                }
-                if series.contains(where: { $0.value != nil }) {
-                    chart.padding(.vertical, 6)
-                }
-                if let ex = exercise, ex.stalled {
-                    Label("Stalled · \(ex.name)", systemImage: "pause.circle.fill")
-                        .font(.subheadline).foregroundStyle(.red)
-                }
-            } header: {
-                Text("Progress")
-            }
-        }
-    }
-
-    private var chart: some View {
-        Chart {
-            ForEach(series) { p in
-                if let v = p.value {
-                    LineMark(x: .value("Point", p.x), y: .value("Actual", v), series: .value("Series", "Actual"))
-                        .foregroundStyle(by: .value("Series", "Actual"))
-                        .interpolationMethod(.monotone)
-                    // An easy week's point hollow, as on Blocks; it was drawn
-                    // in clear and vanished where the line dips.
-                    PointMark(x: .value("Point", p.x), y: .value("Actual", v))
-                        .symbol {
-                            if p.isDeload {
-                                Circle().strokeBorder(Color.green, lineWidth: 2).frame(width: 9, height: 9)
-                            } else {
-                                Circle().fill(Color.green).frame(width: 7, height: 7)
-                            }
-                        }
-                }
-            }
-            ForEach(expected) { e in
-                if let v = e.value {
-                    LineMark(x: .value("Point", e.x), y: .value("Expected", v), series: .value("Series", "Expected"))
-                        .foregroundStyle(by: .value("Series", "Expected"))
-                        .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [5, 3]))
-                        .interpolationMethod(.monotone)
+                    .accessibilityElement(children: .combine)
                 }
             }
         }
-        .chartForegroundStyleScale(["Actual": Color.green, "Expected": Color.indigo])
-        // From the lightest value, not from 0 kg, which flattened 55 → 90 kg
-        // into the top third (the exercise history's chart does the same).
-        .chartYScale(domain: .automatic(includesZero: false))
-        .chartLegend(expected.contains { $0.value != nil } ? .visible : .hidden)
-        .chartYAxis {
-            AxisMarks(position: .leading) { value in
-                AxisValueLabel {
-                    if let v = value.as(Double.self) {
-                        Text("\(AnalyticsProgramTab.number(v))\(unit.isEmpty ? "" : " \(unit)")")
-                            .font(.caption2).foregroundStyle(.secondary)
-                    }
-                }
-            }
-        }
-        .chartXAxis {
-            AxisMarks { _ in AxisValueLabel().font(.caption2) }
-        }
-        .frame(height: 200)
-        .accessibilityLabel("\(exercise?.name ?? entry.label): \(series.compactMap(\.value).count) points, latest \(series.compactMap(\.value).last.map { AnalyticsProgramTab.number($0) } ?? "none") \(unit)")
     }
 
     // MARK: - Movements
@@ -193,7 +125,7 @@ struct MeasureDetailView: View {
                 Text(row.name ?? row.benchmarkId)
                 Spacer(minLength: 4)
                 if row.latest != nil { StandardLevelBadge(level: row.level, domain: row.domain) }
-                Text(row.latest.map { row.latestText ?? "\(AnalyticsProgramTab.number($0))\(row.unit ?? "")" } ?? "—")
+                Text(row.latest.map { row.latestText ?? "\(AnalyticsProgressTab.number($0))\(row.unit ?? "")" } ?? "—")
                     .monospacedDigit().foregroundStyle(.secondary)
                 Image(systemName: "chevron.right")
                     .font(.caption).foregroundStyle(.tertiary)

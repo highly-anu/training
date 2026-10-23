@@ -92,7 +92,7 @@ def session_completion(entry, ctx) -> dict:
         wk['planned'] += 1
         wk['completed'] += int(h['completed'])
     weeks = sorted(weekly.values(), key=lambda w: w['week'])
-    series = [{'week': w['week'], 'x': w['week'], 'isDeload': w['isDeload'],
+    series = [{'week': w['week'], 'x': w['week'], 'date': ctx.week_date(w['week']), 'isDeload': w['isDeload'],
                'value': round(100.0 * w['completed'] / w['planned'], 1) if w['planned'] else None,
                'planned': w['planned'], 'completed': w['completed']} for w in weeks]
     planned = sum(w['planned'] for w in weeks)

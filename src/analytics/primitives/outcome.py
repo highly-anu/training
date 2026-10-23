@@ -9,8 +9,8 @@ density-based methodology on a program where no rounds have been logged gets
 from __future__ import annotations
 
 from src.analytics import trend as trend_mod
-from src.analytics.primitives import (coverage, expected_value, primitive, result, scoped_hits,
-                                      series_point, trend_dict)
+from src.analytics.primitives import (coverage, expected_point, expected_value, primitive, result,
+                                      scoped_hits, series_point, trend_dict)
 
 _MEASURED_SOURCES = ('workout', 'timeline', 'logged')
 
@@ -47,7 +47,7 @@ def rounds(entry, ctx) -> dict:
             if target is None:
                 t = _load(ea).get('target_rounds')
                 target = float(t) if isinstance(t, (int, float)) else None
-            expected.append({'week': h['week_number'], 'x': h['ordinal'], 'value': target})
+            expected.append(expected_point(h, target))
             r = (logged.get(ex_id) or {}).get('rounds')
             if isinstance(r, (int, float)):
                 series.append(series_point(h, float(r), exerciseId=ex_id, target=target))
@@ -101,7 +101,7 @@ def duration(entry, ctx) -> dict:
         is_measured = source in _MEASURED_SOURCES
         if is_measured:
             measured += 1
-        expected.append({'week': h['week_number'], 'x': h['ordinal'], 'value': planned or None})
+        expected.append(expected_point(h, planned or None))
         series.append(series_point(h, round(minutes, 1), source=source, assumed=not is_measured,
                                    planned=planned))
         wk = weekly.setdefault(h['week_number'], {'week': h['week_number'], 'planned': 0.0,
@@ -152,7 +152,7 @@ def distance(entry, ctx) -> dict:
                 planned += float(ld['distance_km'])
             elif isinstance(ld.get('distance_m'), (int, float)):
                 planned += float(ld['distance_m']) / 1000.0
-        expected.append({'week': h['week_number'], 'x': h['ordinal'], 'value': planned or None})
+        expected.append(expected_point(h, planned or None))
         km = None
         source = None
         w = h['workout']
@@ -200,7 +200,7 @@ def hold_seconds(entry, ctx) -> dict:
             if target is None:
                 hs = _load(ea).get('hold_seconds')
                 target = float(hs) if isinstance(hs, (int, float)) else None
-            expected.append({'week': h['week_number'], 'x': h['ordinal'], 'value': target})
+            expected.append(expected_point(h, target))
             holds = [float(s['durationSeconds']) for s in ((logged.get(ex_id) or {}).get('sets') or [])
                      if s.get('completed') and isinstance(s.get('durationSeconds'), (int, float))]
             if holds:
@@ -242,7 +242,7 @@ def rate(entry, ctx) -> dict:
                        if isinstance(s.get('durationSeconds'), (int, float)))
             if secs <= 0 and isinstance(ex_log.get('durationSec'), (int, float)):
                 secs = float(ex_log['durationSec'])
-            expected.append({'week': h['week_number'], 'x': h['ordinal'], 'value': target})
+            expected.append(expected_point(h, target))
             if reps > 0 and secs > 0:
                 series.append(series_point(h, round(reps / (secs / 60.0), 1), exerciseId=ex_id,
                                            reps=reps, seconds=secs, target=target))

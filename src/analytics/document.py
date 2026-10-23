@@ -9,7 +9,8 @@ from __future__ import annotations
 import traceback
 from datetime import date
 
-from src.analytics import archetypes, benchmarks, frame, intensity, movement, scorecard, vocabulary
+from src.analytics import (archetypes, benchmarks, exercise_series, frame, intensity, movement, scorecard,
+                           vocabulary)
 from src.analytics import spec as spec_mod
 from src import loader, phases
 from src.analytics.context import AnalyticsInputs, Context
@@ -68,6 +69,7 @@ def compute_program_analytics(inputs: AnalyticsInputs, *, load: dict | None = No
         'intensity': _guard('intensity', lambda: intensity.build(ctx)),
         'methodologies': methodologies,
         'progress': progress,
+        'exerciseSeries': _guard('exerciseSeries', lambda: exercise_series.build(ctx, progress)),
         'movement': _guard('movement', lambda: movement.build(ctx, specs)),
         'archetypes': _guard('archetypes', lambda: archetypes.build(ctx)),
         'benchmarks': _guard('benchmarks', lambda: benchmarks.build(ctx, specs)),

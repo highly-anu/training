@@ -114,7 +114,7 @@ struct PMCChart: View {
                 AxisMarks(position: .leading) { value in
                     AxisValueLabel {
                         if let v = value.as(Double.self) {
-                            Text(AnalyticsProgramTab.number(v)).font(.caption2).foregroundStyle(.secondary)
+                            Text(AnalyticsProgressTab.number(v)).font(.caption2).foregroundStyle(.secondary)
                         }
                     }
                 }

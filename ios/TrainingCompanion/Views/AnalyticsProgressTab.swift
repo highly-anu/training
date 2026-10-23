@@ -1,16 +1,25 @@
 import SwiftUI
 import Charts
 
-/// Analytics ▸ Program: how the athlete is doing against what the active
-/// program is *for* — per methodology, in that methodology's own currency.
-/// Lays out the server's `/analytics/program` document (the engine is
-/// `src/analytics/`); the web's Analytics ▸ Program tab reads the same one,
-/// so the two platforms cannot disagree. Nothing is computed here.
-struct AnalyticsProgramTab: View {
+/// Analytics ▸ Progress: what the athlete did against what the program
+/// asked, and whether it is working — per methodology, in that methodology's
+/// own currency. Lays out the server's `/analytics/program` document (the
+/// engine is `src/analytics/`) and the progression review; the web's
+/// Analytics ▸ Progress tab reads the same ones, so the two platforms cannot
+/// disagree. Nothing is computed here. Program and Progress were two sections
+/// until 2026-10-23; Movement balance is parked (the server still builds it,
+/// and `open=movement` still pushes its screen).
+struct AnalyticsProgressTab: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var router: AppRouter
     /// A detail pushed from outside (a deep link); the cards push their own.
     @State private var route: AppRouter.AnalyticsDetail?
+    /// What the chart draws; nil until the document has loaded.
+    @State private var chartSelection: ProgressChartModel.Selection?
+    /// Bumped to bring the chart into view (a deep link to a measure or exercise).
+    @State private var chartScrollRequest = 0
+    /// The symbol column of the recommendation rows, at the reader's text size.
+    @ScaledMetric(relativeTo: .subheadline) private var iconWidth: CGFloat = 18
 
     var body: some View {
         Group {
@@ -33,14 +42,21 @@ struct AnalyticsProgramTab: View {
         // Reload whenever the stored program changes revision; the server
         // caches the document, so a visit with nothing new is one cheap read.
         .task(id: appState.serverProgram?.revision) { await appState.loadIfStale("programAnalytics") { await appState.loadProgramAnalytics() } }
+        .task { await appState.loadIfStale("progressionReview") { await appState.loadProgressionReview() } }
         .task { await appState.loadPhilosophiesIfNeeded() }
         .refreshable {
-            await AppRefresh.perform { await appState.loadProgramAnalytics(fresh: true) }
+            await AppRefresh.perform {
+                await appState.loadProgressionReview()
+                await appState.loadProgramAnalytics(fresh: true)
+            }
         }
         .navigationDestination(item: $route) { detail($0) }
         .task { applyPendingDetail() }
         .onChange(of: router.pendingAnalyticsDetail) { applyPendingDetail() }
         .onChange(of: appState.programAnalytics?.progress.count) { applyPendingDetail() }
+        // The review's arrival, not its score: a review with no score yet
+        // (collecting) left a score link waiting for good.
+        .onChange(of: appState.progressionReview != nil) { applyPendingDetail() }
     }
 
     @ViewBuilder
@@ -54,21 +70,45 @@ struct AnalyticsProgramTab: View {
             if let scorecard = appState.programAnalytics?.scorecard { ScorecardDetailView(scorecard: scorecard) }
         case .intensity:
             if let intensity = appState.programAnalytics?.intensity { IntensityDetailView(intensity: intensity) }
+        case .measure(let id):
+            if let entry = appState.programAnalytics?.progress.first(where: { $0.id == id }) {
+                MeasureDetailView(entry: entry)
+            }
+        case .score:
+            if let review = appState.progressionReview {
+                ScoreDetailView(review: review, doc: appState.programAnalytics)
+            }
         default:
             EmptyView()
         }
     }
 
-    /// Push what a deep link asked for once the document has loaded.
+    /// Act on what a deep link asked for once its data has loaded: a measure or
+    /// an exercise is selected in the chart, the rest push their screen; one
+    /// that names nothing loaded is dropped then.
     private func applyPendingDetail() {
-        guard let pending = router.pendingAnalyticsDetail, pending.section == .program,
-              let doc = appState.programAnalytics else { return }
+        guard let pending = router.pendingAnalyticsDetail, pending.section == .progress else { return }
         switch pending {
-        case .movement where doc.movement != nil, .sessionShapes where doc.archetypes != nil,
-             .scorecard where doc.scorecard != nil, .intensity where doc.intensity != nil:
+        case .measure(let id), .exercise(let id):
+            guard let doc = appState.programAnalytics else { return }
+            let measure: String? = { if case .measure = pending { return id }; return nil }()
+            let exercise: String? = { if case .exercise = pending { return id }; return nil }()
+            if let s = ProgressChartModel.resolve(exercise: exercise, measure: measure, in: doc), s.id == id {
+                chartSelection = s
+                chartScrollRequest += 1
+            }
+        case .score:
+            guard appState.progressionReview != nil else { return }
             route = pending
         default:
-            break
+            guard let doc = appState.programAnalytics else { return }
+            switch pending {
+            case .movement where doc.movement != nil, .sessionShapes where doc.archetypes != nil,
+                 .scorecard where doc.scorecard != nil, .intensity where doc.intensity != nil:
+                route = pending
+            default:
+                break
+            }
         }
         router.clearPendingAnalyticsDetail()
     }
@@ -76,20 +116,150 @@ struct AnalyticsProgramTab: View {
     // MARK: - Layout
 
     private func content(_ doc: ProgramAnalytics) -> some View {
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: 16) {
-                if let frame = doc.frame { frameCard(frame) }
-                if let scorecard = doc.scorecard { ScorecardCard(scorecard: scorecard) }
-                if let intensity = doc.intensity { IntensityCard(intensity: intensity) }
-                if let movement = doc.movement, !movement.isEmpty { MovementCard(movement: movement) }
-                if let shapes = doc.archetypes, !shapes.isEmpty { SessionShapesCard(rows: shapes) }
-                if let load = doc.load { LoadCard(load: load) }
-                if !doc.sectionErrors.isEmpty { sectionErrorsCard(doc.sectionErrors) }
-                Spacer(minLength: 24)
+        let review = appState.progressionReview
+        let chartable = Set(ProgressChartModel.chartableMeasures(doc).map { "\($0.philosophy):\($0.id)" })
+        let finding: ExerciseFinding? = {
+            guard case .exercise(let id, _) = chartSelection else { return nil }
+            return review?.exerciseFindings.first { $0.exerciseId == id }
+        }()
+        return ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 16) {
+                    if let frame = doc.frame { frameCard(frame) }
+                    if let review { overviewCard(review: review) }
+                    ProgressChartView(doc: doc, selection: $chartSelection, finding: finding)
+                        .id("chart")
+                    ForEach(doc.methodologies) { method in
+                        MethodologySectionView(method: method, doc: doc, chartable: chartable,
+                                               selectedId: chartSelection.flatMap {
+                                                   if case .measure(let id) = $0 { return id }; return nil
+                                               }) { id in
+                            AppHaptics.light()
+                            withAnimation(AppAnimation.springStandard) { chartSelection = .measure(id: id) }
+                            withAnimation { proxy.scrollTo("chart", anchor: .center) }
+                        }
+                    }
+                    if let scorecard = doc.scorecard { ScorecardCard(scorecard: scorecard) }
+                    if let intensity = doc.intensity { IntensityCard(intensity: intensity) }
+                    if let benchmarks = doc.benchmarks, benchmarks.rows.contains(where: \.primary) {
+                        ProgramStandardsCard(benchmarks: benchmarks)
+                    }
+                    if let shapes = doc.archetypes, !shapes.isEmpty { SessionShapesCard(rows: shapes) }
+                    if let load = doc.load { LoadCard(load: load) }
+                    if let review { adviceCards(review) }
+                    if !doc.sectionErrors.isEmpty { sectionErrorsCard(doc.sectionErrors) }
+                    Spacer(minLength: 24)
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 12)
             }
-            .padding(.horizontal)
-            .padding(.vertical, 12)
+            .onChange(of: chartScrollRequest) { withAnimation { proxy.scrollTo("chart", anchor: .center) } }
         }
+        .task(id: doc.generatedAt) {
+            if chartSelection.map({ ProgressChartModel.series($0, in: doc) == nil }) ?? true {
+                chartSelection = ProgressChartModel.resolve(in: doc)
+            }
+            applyPendingDetail()
+        }
+    }
+
+    // MARK: - Score, recommendations, adjustments (the progression review)
+
+    /// The score, its band and the completion beside it, and how many
+    /// measures are stalled, behind, on track or ahead (§6.37). Why, each
+    /// measure's points, the bands and what the score is for are
+    /// `ScoreDetailView`'s.
+    private func overviewCard(review: ProgressionReview) -> some View {
+        let band = ProgressionScore.band(review)
+
+        return AnalyticsDetailCard(header: "Score", hint: "Opens how the score is made") {
+            if review.overallScore != nil, let band {
+                TintCapsule(text: band.label, color: ProgressionScore.color(band.id))
+            }
+        } destination: {
+            ScoreDetailView(review: review, doc: appState.programAnalytics)
+        } content: {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .top) {
+                    ScoreHeadline(review: review)
+                    Spacer()
+                    // What the percentage covers is said to VoiceOver; on
+                    // screen it repeated the percentage in words (§1.4).
+                    Label("\(review.compliancePct)%", systemImage: "checkmark.circle")
+                        .font(.subheadline).fontWeight(.semibold).monospacedDigit()
+                        .accessibilityLabel("\(review.compliancePct) percent of sessions done"
+                                            + (review.scopeLabel.map { ", \($0)" } ?? ""))
+                }
+                if let counts = review.scoreStatus?.counts, !counts.isEmpty {
+                    ScoreCounts(counts: counts)
+                } else if let status = review.scoreStatus {
+                    // An older server sends the sentence only.
+                    Text(status.reason).font(.subheadline)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func adviceCards(_ review: ProgressionReview) -> some View {
+        if !review.recommendations.isEmpty {
+            recommendationsSection(recommendations: review.recommendations)
+        }
+        if !review.adjustments.isEmpty {
+            adjustmentsSection(adjustments: review.adjustments)
+        }
+        if review.scoreBreakdown.map({ $0.basis != "not_started" }) ?? (review.overallScore != nil),
+           review.recommendations.isEmpty, review.adjustments.isEmpty {
+            AnalyticsCard(header: "Recommendations") {
+                Label("Nothing to change — keep going.", systemImage: "checkmark.circle")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private func recommendationsSection(recommendations: [String]) -> some View {
+        AnalyticsCard(header: "Recommendations") {
+            VStack(alignment: .leading, spacing: 8) {
+                // The text is the identity; a review never repeats a line.
+                ForEach(Array(NSOrderedSet(array: recommendations)) as! [String], id: \.self) { rec in
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "lightbulb")
+                            .font(.subheadline)
+                            .foregroundStyle(.yellow)
+                            .frame(width: iconWidth)
+                        Text(rec)
+                            .font(.subheadline)
+                            .foregroundStyle(.primary)
+                    }
+                }
+            }
+        }
+    }
+
+    /// The review's adjustments were advice nothing could act on. The ones the
+    /// server can apply edit the stored program from the current week on, under
+    /// the revision check, and this copy is replaced with what was saved.
+    private func adjustmentsSection(adjustments: [ProgressionAdjustment]) -> some View {
+        AnalyticsCard(header: "Suggested adjustments") {
+            VStack(alignment: .leading, spacing: 10) {
+                ForEach(adjustments) { adj in
+                    AdjustmentRow(adjustment: adj)
+                    if adj.id != adjustments.last?.id { Divider() }
+                }
+            }
+            if let conflict = appState.programSaveConflict {
+                Label(conflict, systemImage: "exclamationmark.triangle")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+            }
+        }
+    }
+
+    /// "80kg", "45s", but "3 exercises" — the server's own rule for its
+    /// change line (`progression_findings`), so the two lines agree.
+    static func withUnit(_ value: String, _ unit: String) -> String {
+        ["", "kg", "%", "s", "km", "m"].contains(unit) ? value + unit : "\(value) \(unit)"
     }
 
     private func emptyState(icon: String, title: String, message: String,
@@ -400,7 +570,7 @@ struct IntensityWeeksChart: View {
                 AxisValueLabel {
                     if let v = value.as(Double.self) {
                         // Up to two decimals: a first week's minutes read 0, 0, 1.
-                        Text("\(AnalyticsProgramTab.number(v)) min").font(.caption2).foregroundStyle(.secondary)
+                        Text("\(AnalyticsProgressTab.number(v)) min").font(.caption2).foregroundStyle(.secondary)
                     }
                 }
             }
@@ -413,16 +583,19 @@ struct IntensityWeeksChart: View {
 
 // MARK: - Progress entry
 
-/// One progress entry — a methodology's own metric, in its own currency — as
-/// a summary (design-system §6.37): its status beside the header, where it
-/// stands now and which way it is moving, a sparkline, and why it cannot be
-/// measured yet if it cannot. The chart, the exercises, every movement and
-/// standard, the evidence and what the measure is are `MeasureDetailView`'s,
-/// one tap away. Until 2026-10-17 the card carried all of that inline.
-struct ProgressEntryCard: View {
+/// One progress measure as a row (§6.37): where it stands in its own
+/// currency, its status and trend. Tapping it draws it on the Progress chart
+/// when the chart can (`chartable`); the chevron pushes `MeasureDetailView`
+/// with the evidence, the movements or standards and what the measure is.
+/// It was a card with a sparkline until 2026-10-23, when the one chart took
+/// over every line.
+struct MeasureRow: View {
     let entry: ProgramAnalytics.ProgressEntry
+    var chartable = false
+    var selected = false
+    var onChart: () -> Void = {}
 
-    /// The card reads the lead exercise; the detail lets the athlete pick another.
+    /// The row reads the lead exercise, as the chart does.
     private var lead: ProgramAnalytics.ExerciseResult? { entry.leadExercise }
     private var status: String { lead?.status ?? entry.status }
     private var trend: ProgramAnalytics.Trend? { lead?.trend ?? entry.trend }
@@ -430,34 +603,57 @@ struct ProgressEntryCard: View {
     private var unit: String { lead?.unit ?? entry.unit }
 
     var body: some View {
-        AnalyticsDetailCard(header: entry.label, hint: "Opens \(entry.label)") {
-            AnalyticsStatusBadge(status: status)
-        } destination: {
-            MeasureDetailView(entry: entry)
-        } content: {
-            HStack(alignment: .bottom, spacing: 12) {
-                VStack(alignment: .leading, spacing: 4) {
-                    standing
-                    HStack(spacing: 10) {
-                        if let t = trend, t.direction != "insufficient_data" {
-                            MeasureTrendLabel(trend: t)
+        HStack(spacing: 8) {
+            Button(action: { if chartable { onChart() } }) {
+                HStack(spacing: 10) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 6) {
+                            Text(entry.label).font(.subheadline).fontWeight(.semibold).lineLimit(2)
+                            if entry.headline {
+                                Image(systemName: "star.fill").font(.caption2).foregroundStyle(Color.accentColor)
+                                    .accessibilityLabel("Headline")
+                            }
+                            Spacer(minLength: 6)
+                            AnalyticsStatusBadge(status: status)
                         }
-                        if entry.headline {
-                            TintCapsule(text: "Headline", symbol: "star.fill", color: .accentColor)
+                        ViewThatFits(in: .horizontal) {
+                            HStack(spacing: 10) { standing; trendLabel }
+                            VStack(alignment: .leading, spacing: 2) { standing; trendLabel }
+                        }
+                        if let coverage = entry.coverage, coverage.inScope == 0 || coverage.measured == 0 {
+                            CoverageNoticeView(coverage: coverage)
                         }
                     }
                 }
-                Spacer(minLength: 0)
-                if values.count >= 2 {
-                    Sparkline(values: values, color: AnalyticsStatusStyle.color(status) == .secondary
-                              ? .green : AnalyticsStatusStyle.color(status))
-                        .accessibilityHidden(true)
-                }
+                .contentShape(Rectangle())
             }
-            if let coverage = entry.coverage, coverage.inScope == 0 || coverage.measured == 0 {
-                CoverageNoticeView(coverage: coverage)
+            .buttonStyle(.plain)
+            .disabled(!chartable)
+            .accessibilityHint(chartable ? "Draws it on the chart" : "")
+            .accessibilityAddTraits(selected ? .isSelected : [])
+            NavigationLink {
+                MeasureDetailView(entry: entry)
+            } label: {
+                Image(systemName: "chevron.right")
+                    .font(.caption).fontWeight(.semibold).foregroundStyle(.tertiary)
+                    .frame(minWidth: 32, minHeight: 44)
+                    .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Open \(entry.label)")
         }
+        .padding(.leading, AppMetrics.cardPadding)
+        .padding(.trailing, 8)
+        .padding(.vertical, 10)
+        .background(selected ? Color.accentColor.opacity(0.12) : Color.clear)
+        .overlay(alignment: .leading) {
+            if selected { Rectangle().fill(Color.accentColor).frame(width: 3) }
+        }
+    }
+
+    @ViewBuilder
+    private var trendLabel: some View {
+        if let t = trend, t.direction != "insufficient_data" { MeasureTrendLabel(trend: t) }
     }
 
     /// Where the measure stands, in its own currency: the latest value and the
@@ -467,42 +663,32 @@ struct ProgressEntryCard: View {
     private var standing: some View {
         switch entry.primitive {
         case "unlocks":
-            HStack(spacing: 14) {
-                Label(entry.programTotal.flatMap { $0 > 0 ? "\(entry.practised.count)/\($0)" : nil }
-                      ?? "\(entry.practised.count)", systemImage: "checkmark.circle")
-                    .accessibilityLabel("Practised \(entry.practised.count)"
-                                        + (entry.programTotal.map { " of \($0)" } ?? ""))
-                if !entry.levelOpensAll {
-                    Label("\(entry.available.count)", systemImage: "lock.open")
-                        .foregroundStyle(.secondary)
-                        .accessibilityLabel("\(entry.available.count) now available")
-                }
-            }
-            .font(.title3).fontWeight(.semibold).monospacedDigit()
+            Label(entry.programTotal.flatMap { $0 > 0 ? "\(entry.practised.count)/\($0)" : nil }
+                  ?? "\(entry.practised.count)", systemImage: "checkmark.circle")
+                .font(.subheadline).monospacedDigit()
+                .accessibilityLabel("Practised \(entry.practised.count)"
+                                    + (entry.programTotal.map { " of \($0)" } ?? ""))
         case "benchmark_level":
             let rows = entry.benchmarks.filter { !$0.missing }
             let targeted = rows.filter { $0.target != nil }
             if !targeted.isEmpty {
                 let met = targeted.filter { $0.met == true }.count
                 Label("\(met)/\(targeted.count)", systemImage: "target")
-                    .font(.title3).fontWeight(.semibold).monospacedDigit()
+                    .font(.subheadline).monospacedDigit()
                     .accessibilityLabel("\(met) of \(targeted.count) standards at target")
             } else if !rows.isEmpty {
                 let logged = rows.filter { $0.latest != nil }.count
                 Label("\(logged)/\(rows.count)", systemImage: "checkmark.circle")
-                    .font(.title3).fontWeight(.semibold).monospacedDigit()
+                    .font(.subheadline).monospacedDigit()
                     .accessibilityLabel("\(logged) of \(rows.count) standards with a result")
             }
         default:
             if let latest = values.last {
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(ProgressionView.withUnit(AnalyticsProgramTab.number(latest), unit))
-                        .font(.title3).fontWeight(.semibold).monospacedDigit()
-                    if let name = lead?.name {
-                        Text(name).font(.footnote).foregroundStyle(.secondary).lineLimit(1)
-                    }
-                }
-                .accessibilityElement(children: .combine)
+                Text([AnalyticsProgressTab.withUnit(AnalyticsProgressTab.number(latest), unit), lead?.name]
+                        .compactMap { $0 }.joined(separator: " · "))
+                    .font(.subheadline).monospacedDigit().lineLimit(1)
+            } else {
+                Text("Nothing measured yet").font(.subheadline).foregroundStyle(.secondary)
             }
         }
     }
@@ -514,12 +700,12 @@ struct MeasureTrendLabel: View {
     let trend: ProgramAnalytics.Trend
 
     var body: some View {
-        Label("\(trend.slopePct > 0 ? "+" : "")\(AnalyticsProgramTab.number(trend.slopePct))%/pt",
+        Label("\(trend.slopePct > 0 ? "+" : "")\(AnalyticsProgressTab.number(trend.slopePct))%/pt",
               systemImage: trend.direction == "improving" ? "arrow.up.right"
                 : trend.direction == "declining" ? "arrow.down.right" : "arrow.right")
             .labelStyle(.inline)
             .font(.subheadline).fontWeight(.semibold).monospacedDigit()
-            .accessibilityLabel("\(trend.direction), \(AnalyticsProgramTab.number(trend.slopePct)) percent per point")
+            .accessibilityLabel("\(trend.direction), \(AnalyticsProgressTab.number(trend.slopePct)) percent per point")
     }
 }
 
@@ -612,7 +798,7 @@ struct MovementDetailView: View {
                     Text("Minutes")
                 } footer: {
                     if let assumed = minutes.assumed, assumed > 0 {
-                        Text("\(AnalyticsProgramTab.number(assumed)) min assumed from completed sessions without a recorded workout.")
+                        Text("\(AnalyticsProgressTab.number(assumed)) min assumed from completed sessions without a recorded workout.")
                     }
                 }
             }
@@ -627,8 +813,8 @@ struct MovementDetailView: View {
                unilateral > 0 || (movement.unilateralShare?.planned ?? 0) > 0 {
                 Section {
                     LabeledContent("Unilateral") {
-                        Text("\(AnalyticsProgramTab.number(unilateral))%"
-                             + (movement.unilateralShare?.planned.map { " of \(AnalyticsProgramTab.number($0))% planned" } ?? ""))
+                        Text("\(AnalyticsProgressTab.number(unilateral))%"
+                             + (movement.unilateralShare?.planned.map { " of \(AnalyticsProgressTab.number($0))% planned" } ?? ""))
                             .monospacedDigit()
                     }
                 }
@@ -673,7 +859,7 @@ private struct MovementBars: View {
                     // GridRow hands its modifiers to every cell).
                     GridRow {
                         Text(Self.name(row.pattern)).font(.subheadline).lineLimit(1)
-                            .accessibilityLabel("\(Self.name(row.pattern)): \(AnalyticsProgramTab.number(row.value.done)) of \(AnalyticsProgramTab.number(row.value.planned))\(title.map { " \($0.lowercased())" } ?? "")")
+                            .accessibilityLabel("\(Self.name(row.pattern)): \(AnalyticsProgressTab.number(row.value.done)) of \(AnalyticsProgressTab.number(row.value.planned))\(title.map { " \($0.lowercased())" } ?? "")")
                         GeometryReader { geo in
                             ZStack(alignment: .leading) {
                                 Capsule().fill(Color(.systemGray4))
@@ -685,7 +871,7 @@ private struct MovementBars: View {
                         }
                         .frame(height: 6)
                         .accessibilityHidden(true)
-                        Text("\(AnalyticsProgramTab.number(row.value.done))/\(AnalyticsProgramTab.number(row.value.planned))")
+                        Text("\(AnalyticsProgressTab.number(row.value.done))/\(AnalyticsProgressTab.number(row.value.planned))")
                             .font(.caption).monospacedDigit().foregroundStyle(.secondary)
                             .fixedSize()
                             .gridColumnAlignment(.trailing)
@@ -717,7 +903,7 @@ private struct BalanceRow: View {
                     .foregroundStyle(pair.level == "warning" ? Color.red : Color.yellow)
                     .accessibilityLabel("out of range")
             }
-            Text(pair.ratio.map { "\(AnalyticsProgramTab.number($0)) (\(AnalyticsProgramTab.number(pair.min))–\(AnalyticsProgramTab.number(pair.max)))" }
+            Text(pair.ratio.map { "\(AnalyticsProgressTab.number($0)) (\(AnalyticsProgressTab.number(pair.min))–\(AnalyticsProgressTab.number(pair.max)))" }
                  ?? "—")
                 .monospacedDigit()
                 .foregroundStyle(pair.outside ? (pair.level == "warning" ? Color.red : Color.yellow) : Color.secondary)
@@ -738,7 +924,7 @@ private struct LoadCard: View {
         } content: {
             VStack(alignment: .leading, spacing: 8) {
                 if let tsb = load.tsb {
-                    Text("TSB \(AnalyticsProgramTab.number(tsb))")
+                    Text("TSB \(AnalyticsProgressTab.number(tsb))")
                         .font(.title3).fontWeight(.semibold).monospacedDigit()
                 }
                 if let readiness = load.readiness {
@@ -748,6 +934,84 @@ private struct LoadCard: View {
                         .accessibilityLabel("Readiness \(readiness.score), \(ReadinessResult.statusLabel(readiness.status))")
                 }
             }
+        }
+    }
+}
+
+/// One suggested adjustment and, where the server can apply it, the button
+/// that does. Owns its own in-flight and outcome state so one tap never
+/// blocks the others.
+private struct AdjustmentRow: View {
+    let adjustment: ProgressionAdjustment
+
+    @EnvironmentObject var appState: AppState
+    @ScaledMetric(relativeTo: .subheadline) private var iconWidth: CGFloat = 18
+    @State private var isApplying = false
+    @State private var applied = false
+    @State private var outcome: String? = nil
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .top, spacing: 8) {
+                Image(systemName: adjustment.isAppliable ? "slider.horizontal.3" : "lightbulb")
+                    .font(.subheadline)
+                    .foregroundStyle(.orange)
+                    .frame(width: iconWidth)
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 6) {
+                        Text(adjustment.label)
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                        if let target = adjustment.targetLabel {
+                            Text("· \(target)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+                    }
+                    Text(adjustment.reason)
+                        .font(.subheadline)
+                        .foregroundStyle(.primary)
+                }
+                Spacer(minLength: 8)
+                if adjustment.isAppliable {
+                    Button {
+                        Task { await apply() }
+                    } label: {
+                        if isApplying {
+                            ProgressView().scaleEffect(0.8)
+                        } else {
+                            Text(applied ? "Applied" : "Apply")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.regular)
+                    .tint(applied ? .green : .orange)
+                    .disabled(isApplying || applied)
+                } else {
+                    TintCapsule(text: "advice", color: .secondary)
+                }
+            }
+            if let outcome {
+                Text(outcome)
+                    .font(.caption)
+                    .foregroundStyle(applied ? Color.green : Color.orange)
+            }
+        }
+    }
+
+    private func apply() async {
+        isApplying = true
+        defer { isApplying = false }
+        do {
+            let result = try await appState.applyAdjustment(adjustment)
+            applied = true
+            AppHaptics.success()
+            outcome = result.summary { appState.allWeeks[safe: $0]?.weekNumber }
+        } catch {
+            outcome = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
         }
     }
 }

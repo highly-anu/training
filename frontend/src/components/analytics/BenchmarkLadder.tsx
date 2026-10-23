@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { AnalyticsBenchmarkRow, ProgramAnalytics } from '@/api/types'
 import { StandardLadder, StandardLevelBadge } from '@/components/standards/StandardLadder'
@@ -6,32 +5,27 @@ import { StandardSparkline } from '@/components/standards/StandardSparkline'
 import { blockChangeText, thresholdTexts } from '@/lib/standards'
 
 const WHY_LABEL: Record<string, string> = {
-  declared: 'declared by this methodology', tested: 'tested in this program',
-  philosophy: 'cites this methodology', priority_modality: 'same domain as a priority',
+  tested: 'tested in this program', linked: 'estimated from a lift in this program',
+  declared: 'declared by this methodology',
 }
 
 /**
- * The standards this program is measured by — what its package declares and
- * what it tests — with where the athlete stood when the block began and how
- * far they have moved. Standards that only share a domain or cite the
- * methodology wait behind "More standards"; a result alone no longer makes
- * a standard the program's own.
+ * The standards this program is measured by — those it tests and those a lift
+ * it schedules estimates — with where the athlete stood when the block began
+ * and how far they have moved. Every other standard is on Profile ▸
+ * Standards; "More standards" (same domain, other sources) went on
+ * 2026-10-23, when the server stopped sending them.
  */
 export function BenchmarkLadder({ benchmarks }: { benchmarks: ProgramAnalytics['benchmarks'] }) {
-  const [showMore, setShowMore] = useState(false)
-  const rows = benchmarks.benchmarks
-  if (rows.length === 0) return null
-  const own = rows.filter((b) => b.primary)
-  const more = rows.filter((b) => !b.primary)
-  const shown = showMore ? [...own, ...more] : own
+  // An older server still sends the extras, marked not primary.
+  const shown = benchmarks.benchmarks.filter((b) => b.primary !== false)
+  if (shown.length === 0) return null
   return (
     <div className="rounded-lg border bg-card p-4 space-y-4">
       <div>
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Standards</p>
         <p className="text-xs text-muted-foreground">
-          {own.length > 0
-            ? 'What this program is measured by, and how far you have moved this block.'
-            : 'This program declares no standards of its own.'}
+          What this program tests, or estimates from its lifts, and how far you have moved this block.
           {benchmarks.bodyweightKg != null
             ? <> Bodyweight {benchmarks.bodyweightText ?? `${benchmarks.bodyweightKg} kg`} lets ×BW standards derive from your logged sets.</>
             : <> Log your bodyweight under Profile ▸ Athlete to derive ×BW standards from logged sets.</>}
@@ -42,12 +36,9 @@ export function BenchmarkLadder({ benchmarks }: { benchmarks: ProgramAnalytics['
           {shown.map((b) => <StandardRow key={b.benchmarkId} b={b} />)}
         </div>
       )}
-      {more.length > 0 && (
-        <button type="button" onClick={() => setShowMore((v) => !v)}
-          className="text-[11px] text-muted-foreground hover:text-foreground transition-colors">
-          {showMore ? 'Fewer standards' : `More standards (${more.length}) — same domains, other sources`}
-        </button>
-      )}
+      <Link to="/profile?tab=standards" className="block text-[11px] text-muted-foreground hover:text-foreground transition-colors">
+        Every standard, with your results, is on Profile ▸ Standards →
+      </Link>
     </div>
   )
 }
@@ -80,7 +71,7 @@ function StandardRow({ b }: { b: AnalyticsBenchmarkRow }) {
           ].filter(Boolean).join(' · ')
             // With nothing to say about the result, say why it is here — for
             // the program's own, only that (not every incidental reason).
-            || b.why.filter((w) => !b.primary || w === 'declared' || w === 'tested').map((w) => WHY_LABEL[w] ?? w).join(' · ')}
+            || b.why.map((w) => WHY_LABEL[w] ?? w).join(' · ')}
         </p>
         {b.blockHistory && (
           <StandardSparkline points={b.blockHistory} domain={b.domain}

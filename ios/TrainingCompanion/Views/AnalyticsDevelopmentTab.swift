@@ -359,7 +359,7 @@ private struct SeriesCard: View {
         .accessibilityLabel("\(option.name): \(points.count) sessions across \(doc.blocks.count) blocks")
     }
 
-    private func number(_ v: Double) -> String { AnalyticsProgramTab.number(v) }
+    private func number(_ v: Double) -> String { AnalyticsProgressTab.number(v) }
 }
 
 /// One series block by block (§6.37), pushed from "By block" on Lifts across
@@ -399,7 +399,7 @@ private struct SeriesBlocksView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    private func number(_ v: Double) -> String { AnalyticsProgramTab.number(v) }
+    private func number(_ v: Double) -> String { AnalyticsProgressTab.number(v) }
 }
 
 /// A trend in words, in the status colour the engine's direction maps to.
@@ -419,12 +419,12 @@ private struct TrendText: View {
         if trend.direction == "insufficient_data" {
             Label("No trend yet", systemImage: "hourglass").font(.footnote).foregroundStyle(.secondary)
         } else {
-            Label("\(trend.slopePct > 0 ? "+" : "")\(AnalyticsProgramTab.number(trend.slopePct))%/session",
+            Label("\(trend.slopePct > 0 ? "+" : "")\(AnalyticsProgressTab.number(trend.slopePct))%/session",
                   systemImage: trend.direction == "improving" ? "arrow.up.right"
                     : trend.direction == "declining" ? "arrow.down.right" : "arrow.right")
                 .font(.subheadline).fontWeight(.semibold).monospacedDigit()
                 .foregroundStyle(AnalyticsStatusStyle.color(status))
-                .accessibilityLabel("\(trend.direction), \(AnalyticsProgramTab.number(trend.slopePct)) percent per session over \(trend.pointsUsed) points")
+                .accessibilityLabel("\(trend.direction), \(AnalyticsProgressTab.number(trend.slopePct)) percent per session over \(trend.pointsUsed) points")
         }
     }
 }
@@ -640,7 +640,7 @@ private struct StandardsCard: View {
                     .accessibilityHidden(true)
             }
             if let last = b.history.last {
-                Text(last.valueText ?? AnalyticsProgramTab.number(last.value))
+                Text(last.valueText ?? AnalyticsProgressTab.number(last.value))
                     .font(.subheadline).fontWeight(.semibold).monospacedDigit()
             }
             Image(systemName: "chevron.right")

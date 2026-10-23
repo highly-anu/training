@@ -1,8 +1,7 @@
 """The standards this program is measured by, and where the athlete stands.
 
-Selection is authored, not guessed: a standard belongs here when its `sources`
-name one of the program's philosophies, when its `domain` is a modality the
-goal prioritises, or when the package's analytics.yaml lists it. Each carries
+Selection is authored, not guessed: a standard belongs here when the program
+tests it or schedules a lift it is estimated from (`program_standards`). Each carries
 the athlete's PRs from performance_logs, the level reached and the gap to the
 next one.
 
@@ -95,30 +94,41 @@ def _standard_ref(raw) -> str | None:
     return None
 
 
-def program_standards(goal: dict, weeks: list[dict], specs: list) -> dict[str, list[str]]:
+def linked_exercises(b: dict) -> tuple:
+    """The exercises that link a standard to a program: its YAML's
+    `derived_from` lifts, whose logged sets estimate it."""
+    return tuple((b.get('derived_from') or {}).get('exercises') or ())
+
+
+def scheduled_exercises(weeks: list[dict]) -> set[str]:
+    """Every exercise id a program's weeks schedule, elapsed or not."""
+    out: set[str] = set()
+    for w in weeks:
+        for sessions in (w.get('schedule') or {}).values():
+            for sess in sessions or []:
+                if not isinstance(sess, dict):
+                    continue
+                for ea in sess.get('exercises') or []:
+                    ex = (ea or {}).get('exercise') if isinstance(ea, dict) else None
+                    if isinstance(ex, dict) and ex.get('id') and not ea.get('injury_skip'):
+                        out.add(ex['id'])
+    return out
+
+
+def program_standards(goal: dict, weeks: list[dict], specs: list,
+                      catalog: list[dict] | None = None) -> dict[str, list[str]]:
     """{standard id: [why…]} — the standards *this* program is measured by.
 
-    `declared`: its package's analytics.yaml names it (top-level `benchmarks:`,
-    framework-scoped to the frameworks the program runs, or a `benchmark_level`
-    entry). `tested`: a session the program schedules measures it (a slot's or
-    session's `standard`). Everything else a standard can be — in a priority
-    modality's domain, citing the philosophy, or merely having a result — is
-    not the program's: it waits behind "More standards" on Progress and under
-    "Your results" on Profile. (A result alone used to make a standard
-    primary, so a logged back squat led a kettlebell block's standards.)
+    `tested`: a session the program schedules measures it (a slot's or
+    session's `standard`). `linked`: the program schedules a lift the standard
+    is estimated from (its `derived_from`). Nothing else makes a standard the
+    program's: a package's analytics.yaml naming it (`declared`) only says so
+    beside one of the two, and a standard in a priority modality's domain,
+    citing the philosophy or merely having a result waits on Profile. (Until
+    2026-10-23 a declaration alone made a standard the program's, so Starting
+    Strength led with the power clean before any power clean was scheduled.)
     """
-    # A standard scoped to frameworks is declared only for a program that runs
-    # one of them: Wildman's pentathlon events in Pentathlon Prep, not in
-    # General Practice.
-    program_frameworks = {spec_mod.framework_id_of(w) for w in weeks} - {None}
     out: dict[str, list[str]] = {}
-    for s in specs:
-        for b in (s.benchmarks or []):
-            if b not in s.benchmark_frameworks or s.benchmark_frameworks[b] & program_frameworks:
-                out.setdefault(b, ['declared'])
-        for e in s.entries:
-            for b in (e.benchmarks or []):
-                out.setdefault(b, ['declared'])
     for w in weeks:
         for sessions in (w.get('schedule') or {}).values():
             for sess in sessions or []:
@@ -130,6 +140,23 @@ def program_standards(goal: dict, weeks: list[dict], specs: list) -> dict[str, l
                     why = out.setdefault(sid, [])
                     if 'tested' not in why:
                         why.append('tested')
+    scheduled = scheduled_exercises(weeks)
+    for b in (catalog if catalog is not None else bd.load_benchmarks()):
+        if set(linked_exercises(b)) & scheduled:
+            out.setdefault(b['id'], []).append('linked')
+    # A standard scoped to frameworks is declared only for a program that runs
+    # one of them: Wildman's pentathlon events in Pentathlon Prep, not in
+    # General Practice.
+    program_frameworks = {spec_mod.framework_id_of(w) for w in weeks} - {None}
+    declared: set[str] = set()
+    for s in specs:
+        for b in (s.benchmarks or []):
+            if b not in s.benchmark_frameworks or s.benchmark_frameworks[b] & program_frameworks:
+                declared.add(b)
+        for e in s.entries:
+            declared.update(e.benchmarks or [])
+    for sid in declared & set(out):
+        out[sid].append('declared')
     return out
 
 
@@ -140,19 +167,14 @@ def _at(hist: list[dict], day: date) -> dict | None:
 
 
 def build(ctx: Context, specs: list) -> dict:
-    sources = set(ctx.goal.get('primary_sources') or [])
-    priority_domains = {m for m, w in (ctx.goal.get('priorities') or {}).items() if w}
-    own = program_standards(ctx.goal, ctx.weeks, specs)
+    catalog = bd.load_benchmarks()
+    own = program_standards(ctx.goal, ctx.weeks, specs, catalog)
     sex = (ctx.profile.get('sex') or 'male').lower()
     sex = sex if sex in ('male', 'female') else 'male'
 
     out = []
-    for b in bd.load_benchmarks():
+    for b in catalog:
         why = list(own.get(b['id'], []))
-        if set(b.get('sources') or []) & sources:
-            why.append('philosophy')
-        if b.get('domain') in priority_domains:
-            why.append('priority_modality')
         if not why:
             continue
         st = standing(ctx, b, sex)
@@ -162,9 +184,9 @@ def build(ctx: Context, specs: list) -> dict:
             'benchmarkId': b['id'], 'name': b['name'], 'category': b['category'], 'domain': b.get('domain'),
             'unit': b['unit'], 'metricType': b['metric_type'], 'lowerIsBetter': b['lower_is_better'],
             'why': why, 'sources': b.get('sources', []),
-            # The program's own standards (program_standards); the rest wait
-            # behind "More standards".
-            'primary': bool({'declared', 'tested'} & set(why)),
+            # Every row is the program's own (program_standards); kept for the
+            # builds that still put the rest behind "More standards".
+            'primary': True,
             'standards': ladder,
             'standardsText': {lvl: bd.format_value(b, v) for lvl, v in ladder.items()},
             'latest': latest['value'] if latest else None,
@@ -180,8 +202,7 @@ def build(ctx: Context, specs: list) -> dict:
                          'valueText': bd.format_value(b, r['value'])} for r in hist],
             **_this_block(b, hist, ctx, sex, lv),
         })
-    order = {'declared': 0, 'tested': 0, 'philosophy': 1, 'priority_modality': 2}
-    out.sort(key=lambda r: (min(order[w] for w in r['why']), r['name']))
+    out.sort(key=lambda r: (0 if 'tested' in r['why'] else 1, r['name']))
     bw = _series(ctx, 'bodyweight_kg')
     return {
         'blockStart': ctx.start_date.isoformat(),

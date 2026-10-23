@@ -13,11 +13,11 @@
 # simulator's defaults until cleared — and open a section before the shot:
 #
 #   LOCAL_API=1 ./ios/run_sim.sh /tmp/today.png
-#   LOCAL_API=1 ROUTE='trainingcompanion://analytics?section=program' ./ios/run_sim.sh /tmp/program.png
+#   LOCAL_API=1 ROUTE='trainingcompanion://analytics?section=progress' ./ios/run_sim.sh /tmp/progress.png
 #   LOCAL_API=0 ./ios/run_sim.sh          # back to production
 #
-# Routes: today · program · analytics?section=program|overview|workouts|
-# progress|recovery · profile (DeepLink.swift). Override the device with
+# Routes: today · program · analytics?section=progress|blocks|load|recovery
+# (&exercise=<id>, &measure=<id>, &open=workouts…) · profile (DeepLink.swift). Override the device with
 # SIM_DEVICE="iPhone 16e" when nothing is booted.
 set -euo pipefail
 

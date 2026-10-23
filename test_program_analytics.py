@@ -1036,6 +1036,8 @@ def test_sections() -> None:
     matches = [{'importedWorkoutId': 'run1', 'sessionKey': '1-Saturday-0', 'matchConfidence': 'auto'}]
     perf = {'bodyweight_kg': [{'value': 82.0, 'date': '2026-02-20'}],
             'run_3mile_minutes': [{'value': 24.0, 'date': '2026-03-01'}]}
+    # Week 3's run is a 3-mile test: the program's own standard.
+    prog['weeks'][2]['schedule']['Saturday'][0]['exercises'][0]['standard'] = 'run_3mile_minutes'
     ctx = _ctx(prog, logs, [run], matches, perf=perf)
     ctx.frameworks['test_fw']['intensity_distribution'] = {'zone1_2_pct': 0, 'zone3_pct': 0, 'zone4_5_pct': 0, 'max_effort_pct': 1.0}
     specs = spec_mod.compose(ctx.goal)
@@ -1103,19 +1105,25 @@ def test_sections() -> None:
 
     bm = benchmarks_mod.build(ctx, specs)
     ids = {b['benchmarkId']: b for b in bm['benchmarks']}
-    check('standards selected by philosophy source (SS) and priority domain',
-          'back_squat_bw_ratio' in ids and 'philosophy' in ids['back_squat_bw_ratio']['why'], str(list(ids)[:6]))
-    check('an aerobic_base standard is in via priority_modality',
-          'run_3mile_minutes' in ids and 'priority_modality' in ids['run_3mile_minutes']['why'])
+    check('a scheduled lift links the standard it estimates (and SS declares it)',
+          sorted(ids.get('back_squat_bw_ratio', {}).get('why', [])) == ['declared', 'linked'], str(list(ids)))
+    check('a scheduled test brings its standard', ids.get('run_3mile_minutes', {}).get('why') == ['tested'])
+    check('only the program\'s own: no philosophy or priority-domain extras',
+          set(ids) == {'back_squat_bw_ratio', 'run_3mile_minutes'}, str(sorted(ids)))
+    check('declared standards the program schedules nothing for drop out (SS bench, power clean, deadlift)',
+          not {'bench_press_bw_ratio', 'power_clean_bw_ratio', 'deadlift_bw_ratio'} & set(ids))
     check('a logged PR is levelled', ids['run_3mile_minutes']['level'] == 'intermediate' or ids['run_3mile_minutes']['levelIndex'] >= 1, str(ids['run_3mile_minutes']['level']))
     sq = ids['back_squat_bw_ratio']
     check('squat ratio derived from est-1RM ÷ bodyweight when no PR is logged',
           sq['valueSource'] == 'derived' and sq['derived']['bodyweightKg'] == 82.0
           and sq['derived']['value'] == round(round(101.25 * (1 + 0.0333 * 5), 1) / 82.0, 2), str(sq['derived']))
     check('bodyweight surfaced', bm['bodyweightKg'] == 82.0)
-    check("the methodology's own standard is primary", ids['back_squat_bw_ratio']['primary'])
-    check('a result alone does not make a standard the program\'s own (it waits behind "More standards")',
-          not ids['run_3mile_minutes']['primary'], str(ids['run_3mile_minutes']['why']))
+    check('every row is primary, for the builds that still sort by it', all(b['primary'] for b in bm['benchmarks']))
+    check('a test leads the list', bm['benchmarks'][0]['benchmarkId'] == 'run_3mile_minutes')
+    untested = {b['benchmarkId'] for b in benchmarks_mod.build(_ctx(fixture_program(weeks=3), logs, [run], matches,
+                                                                    perf=perf), specs)['benchmarks']}
+    check('a result alone does not make a standard the program\'s own', 'run_3mile_minutes' not in untested,
+          str(sorted(untested)))
     r3 = ids['run_3mile_minutes']
     check('the standing when the block began (a result the day before)',
           r3['atBlockStart'] and r3['atBlockStart']['date'] == '2026-03-01' and r3['levelChange'] is None
@@ -1129,10 +1137,13 @@ def test_sections() -> None:
     sat['exercises'][0]['standard'] = {'id': 'row_2km_minutes', 'result': 'duration'}
     own = benchmarks_mod.program_standards(tested_prog['goal'], tested_prog['weeks'], specs)
     check('a scheduled test makes its standard the program\'s own', own.get('row_2km_minutes') == ['tested'], str(own.get('row_2km_minutes')))
-    check('…next to what the package declares', own.get('back_squat_bw_ratio') == ['declared'], str(own))
-    domain_only = [b for b in bm['benchmarks'] if b['why'] == ['priority_modality'] and b['value'] is None]
-    check('a priority-domain standard with no number waits behind "More standards"',
-          domain_only and not any(b['primary'] for b in domain_only), str(len(domain_only)))
+    check('…next to the lifts it schedules', own.get('back_squat_bw_ratio') == ['linked', 'declared'], str(own))
+    check('a declaration alone is not enough', 'power_clean_bw_ratio' not in own, str(own))
+    tested_prog['weeks'][0]['schedule']['Monday'][0]['exercises'].append(_lift('power_clean', 'power', 60))
+    own = benchmarks_mod.program_standards(tested_prog['goal'], tested_prog['weeks'], specs)
+    check('…until the program schedules the lift', own.get('power_clean_bw_ratio') == ['linked', 'declared'], str(own))
+    check('an injury-skipped lift links nothing', 'deadlift_bw_ratio' not in benchmarks_mod.program_standards(
+        {}, [{'schedule': {'Monday': [{'exercises': [dict(_lift('deadlift', 'hinge', 100), injury_skip=True)]}]}}], []))
     lvl = run_primitive(E('std', 'benchmark_level', 'starting_strength', benchmarks=['back_squat_bw_ratio'],
                           target_level='intermediate'), ctx)
     row = lvl['benchmarks'][0]
@@ -1212,12 +1223,12 @@ def test_headline_follows_the_track() -> None:
         check(f'{track}: applicable counts only entries the program schedules',
               m['applicable'] == sum(p['applies'] for p in doc['progress']) and m['applicable'] <= m['total'])
         jerk = next((b for b in doc['benchmarks']['benchmarks'] if b['benchmarkId'] == 'kb_pentathlon_jerk_reps'), None)
-        if track == 'pentathlon':
-            check('Pentathlon Prep: the jerk standard is declared, and primary',
-                  jerk and 'declared' in jerk['why'] and jerk['primary'], str(jerk and jerk['why']))
+        tests_jerk = 'kb_pentathlon_jerk_reps' in benchmarks_mod.program_standards(goal, prog['weeks'], [])
+        if tests_jerk:
+            check(f'{track}: the jerk standard is tested, and declared',
+                  jerk and 'tested' in jerk['why'] and 'declared' in jerk['why'], str(jerk and jerk['why']))
         else:
-            check('GP: the pentathlon standards are not declared (at most a same-domain extra)',
-                  jerk is None or ('declared' not in jerk['why'] and not jerk['primary']),
+            check(f'{track}: no pentathlon test or lift scheduled, so no jerk standard', jerk is None,
                   str(jerk and jerk['why']))
         if track == 'general_practice':
             check('GP: cadence does not apply and says it applies in Pentathlon Prep',
@@ -1392,6 +1403,93 @@ def test_change_summary_units():
     check('a word is spaced from it', summary('exercises') == '+2 exercises over 1 wk', summary('exercises'))
 
 
+def test_exercise_series() -> None:
+    """The Progress tab's one chart: each exercise session by session, done
+    against prescribed, from the stored prescription and the log."""
+    print('\nexercise series: done vs prescribed')
+    from src.analytics import exercise_series
+    prog = fixture_program(weeks=4, deload_week=3)
+    mon1 = prog['weeks'][0]['schedule']['Monday'][0]['exercises']
+    mon1[1]['load'] = {'sets': 3, 'reps': '8-10', 'target_rpe': 8}      # press: a rep range at an RPE
+    prog['weeks'][1]['schedule']['Monday'][0]['exercises'][1]['load'] = {'sets': 3, 'reps': 'max'}
+    logs = {
+        '1-Monday-0': _log('2026-03-02T10:00:00+00:00', {
+            'back_squat': {'sets': _sets((100, 5), (100, 5), (100, 4)), 'rpe': 8},
+            'press': {'sets': _sets((40, 9), (40, 8))}}),
+        # A set with a weight and no reps in the middle: the pairing stays per set.
+        '1-Wednesday-0': _log('2026-03-04T10:00:00+00:00', {
+            'back_squat': {'sets': [{'setIndex': 0, 'completed': True, 'weightKg': 101.25, 'repsActual': 5},
+                                    {'setIndex': 1, 'completed': True, 'weightKg': 105, 'repsActual': None},
+                                    {'setIndex': 2, 'completed': True, 'weightKg': 103, 'repsActual': 3},
+                                    {'setIndex': 3, 'completed': False, 'weightKg': 110, 'repsActual': 1}]}}),
+    }
+    workouts = [{'id': 'w1', 'date': '2026-03-07', 'durationMinutes': 52.0,
+                 'distance': {'value': 8400, 'unit': 'm'}}]
+    matches = [{'importedWorkoutId': 'w1', 'sessionKey': '1-Saturday-0', 'matchConfidence': 'high'}]
+    ctx = _ctx(prog, logs, workouts=workouts, matches=matches)
+    out = exercise_series.build(ctx, [])
+    by_id = {e['exerciseId']: e for e in out['exercises']}
+    check('the metric list names every metric once', [m['id'] for m in out['metrics']] ==
+          ['weight', 'reps', 'sets', 'totalReps', 'volume', 'est1rm', 'rpe', 'time', 'hold', 'rounds', 'distance'])
+    sq = by_id['back_squat']
+    check('every planned session is a point, future ones too (4 weeks × 2)', len(sq['points']) == 8, str(len(sq['points'])))
+    p0, p1 = sq['points'][0], sq['points'][1]
+    check('done: top set, its reps, sets, total reps, volume, RPE',
+          p0['done']['weight'] == 100 and p0['done']['reps'] == 5 and p0['done']['sets'] == 3
+          and p0['done']['totalReps'] == 14 and p0['done']['volume'] == 1400 and p0['done']['rpe'] == 8, str(p0['done']))
+    check('prescribed from ea.load: 3 × 5 @ 100', p0['prescribed']['weight'] == 100 and p0['prescribed']['sets'] == 3
+          and p0['prescribed']['reps'] == 5 and p0['prescribed']['totalReps'] == 15
+          and p0['prescribed']['volume'] == 1500, str(p0['prescribed']))
+    check('the heaviest set is paired with its own reps (105 has none: 105 with no reps, not 105×3)',
+          p1['done']['weight'] == 105 and p1['done']['reps'] is None and p1['done']['est1rm'] is None, str(p1['done']))
+    check('an uncompleted set counts for nothing', p1['done']['sets'] == 3 and p1['done']['totalReps'] == 8)
+    check('done text in set order', p1['doneText'] == '101.25×5, 105 kg, 103×3', repr(p1['doneText']))
+    check('prescribed text from the stored load', p0['prescribedText'] == '3 × 5 @ 100 kg', repr(p0['prescribedText']))
+    future = sq['points'][-1]
+    check('a future session: prescribed only', not future['elapsed'] and future['source'] is None
+          and all(v is None for v in future['done'].values()) and future['prescribed']['weight'] == 108.75)
+    check('the deload week is flagged', [p['isDeload'] for p in sq['points']][4:6] == [True, True])
+    check('opens on the top set', sq['defaultMetric'] == 'weight' and sq['logged'] == 2 and sq['scheduled'] == 8)
+    pr = by_id['press']
+    check('"8-10" prescribes its low end, the RPE target carried',
+          pr['points'][0]['prescribed']['reps'] == 8 and pr['points'][0]['prescribed']['rpe'] == 8
+          and pr['points'][0]['prescribed']['totalReps'] == 24, str(pr['points'][0]['prescribed']))
+    check('"max" prescribes no reps', pr['points'][1]['prescribed']['reps'] is None
+          and pr['points'][1]['prescribed']['sets'] == 3)
+    budget = exercise_series.prescribed_values({'load': {'sets': 3, 'reps': 5, 'duration_minutes': 20}}, {})
+    check("a lift's minutes are its time budget, not a prescribed time", budget['time'] is None
+          and budget['reps'] == 5)
+    to_failure = exercise_series.prescribed_values({'load': {'sets': 3, 'reps': 'max', 'duration_minutes': 10}}, {})
+    check('…to failure too', to_failure['time'] is None and to_failure['reps'] is None)
+    steps = exercise_series.prescribed_values({'load': {'sets': 10, 'duration_minutes': 1}}, {})
+    check('sets of minutes prescribe time', steps['time'] == 1)
+    run = by_id['easy_run']
+    check('a matched workout gives the endurance exercise its minutes and km',
+          run['points'][0]['source'] == 'workout' and run['points'][0]['done']['time'] == 52.0
+          and run['points'][0]['done']['distance'] == 8.4, str(run['points'][0]))
+    check('against the prescribed minutes', run['points'][0]['prescribed']['time'] == 60)
+    check('a run opens on distance once one is recorded', run['defaultMetric'] == 'distance', run['defaultMetric'])
+    check('only metrics with a value are offered', 'weight' not in run['metrics'] and 'time' in run['metrics'])
+    check('logged exercises lead', [e['exerciseId'] for e in out['exercises']][:3] ==
+          ['back_squat', 'press', 'easy_run'])
+
+    # The document serves it, and expected points now carry a date.
+    from src.analytics.document import compute_program_analytics
+    doc = compute_program_analytics(AnalyticsInputs(prog, START, TODAY, logs, matches, workouts, {}, [], {}),
+                                    frameworks=TEST_FW)
+    check('the document carries exerciseSeries', 'exercises' in (doc.get('exerciseSeries') or {}),
+          str(doc.get('exerciseSeries'))[:200])
+    dated = [e for p in doc['progress'] for e in p['expected']]
+    check('every expected point has a date', dated and all(e.get('date') for e in dated),
+          str([e for e in dated if not e.get('date')][:2]))
+    weekly = [s for p in doc['progress'] if p['primitive'] in ('zone_minutes', 'session_completion')
+              for s in p['series']]
+    check('weekly series points have a date too', all(s.get('date') for s in weekly), str(weekly[:2]))
+    check('measures name the chartable progress entries',
+          {m['id'] for m in doc['exerciseSeries']['measures']} <=
+          {p['id'] for p in doc['progress'] if p['applies']})
+
+
 if __name__ == '__main__':
     test_families()
     test_zones()
@@ -1417,6 +1515,7 @@ if __name__ == '__main__':
     test_notes_route_and_fatigue()
     test_describe()
     test_change_summary_units()
+    test_exercise_series()
     if _failures:
         print(f'\n{len(_failures)} failure(s): ' + ', '.join(_failures))
         sys.exit(1)

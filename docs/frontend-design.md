@@ -1454,7 +1454,8 @@ Visualization is now the largest single surface in the app — **18 files** rend
 | `dashboard/AdherenceWidget` | bar | status colour per week |
 | `program/ProgramOverview` | phase timeline (§12.5) | phase hex |
 | `program/PhaseChanges` (`PhaseMatrix`) | archetype × phase table, cells tinted by frequency | modality hex rows, phase hex headers |
-| `progression/ExerciseTrendChart` | line + trend | primary token |
+| `analytics/ProgressChart` | the Progress tab's one chart: done (solid) against prescribed or expected (dashed) on a date axis, deload shaded, today ruled | emerald done, indigo planned |
+| `analytics/IntensitySplit` | stacked bar | zone ramp |
 | `bio/PMCChart` | dual-axis line + bar (§12.7) | fixed 3-series |
 | `bio/SleepStageChart` | stacked bar (§12.6) | sleep-stage set |
 | `bio/HRZoneChart` | horizontal bar | zone ramp (§8.7) |
@@ -1482,7 +1483,7 @@ is matched to its segment by position, because the calendar numbers weeks from
 
 **Planned against recorded zones** (`bio/ZonePlanComparison.tsx`, no Recharts):
 the planned minutes are a zone-coloured outline, the recorded minutes a fill over
-it, "22/8 min" at the end of each row. The Analytics ▸ Program intensity split draws
+it, "22/8 min" at the end of each row. The Analytics ▸ Progress intensity split draws
 it from `intensity.zones` over the block. `PlannedZones` draws a workout's
 "Against the plan" from `analysis.planned` (`src/analytics/hr_plan.py`): the zone
 minutes that count — only where an exercise prescribes zones, inside the times the
@@ -2411,7 +2412,7 @@ Status as of 2026-10-01, after the information-architecture restructure
 | **Home** | `House` | "Home" | None | None | Program settings sheet | ✅ — see §17.9 |
 | **Program** | `CalendarDays` | Program name | None | Overview · Calendar · History (`?tab=`) | New program · Injuries · week selector (Calendar) | ⚠️ two-row — the `PhaseBar` control strip, see below |
 | **Log** | `ClipboardList` | "Log" | None | Activity · Linking (count) | Import (opens a sheet) | ✅ |
-| **Analytics** | `BarChart3` | "Analytics" | None | Program · Progress · Load · Recovery (`?tab=`) | None (the period selector is content-level) | ✅ |
+| **Analytics** | `BarChart3` | "Analytics" | None | Progress · Blocks · Load · Recovery (`?tab=`; `program` and `development` alias Progress and Blocks) | None (the period selector is content-level) | ✅ |
 | **Explore** | `Compass` | "Explore" | None | Section pills **+** topic selector: Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards | None | ✅ two-tier variant — see below |
 | **Profile** | `User` | "Profile" | None | Athlete (incl. heart rate) · Equipment · Injuries · Schedule · Standards | None | ✅ |
 | **Settings** | `Settings` | "Settings" | None | Connections · Account · Appearance (· Developer, dev builds) (`?tab=`) | None | ✅ — the OAuth callbacks land on `?tab=connections` |
@@ -2465,7 +2466,8 @@ This is a legitimate third variant, not a violation. The rules it follows: `gap-
 **The `w-px h-4 bg-border/60` hairline is the established tier separator.** It appears in Explore, Program, Log and Analytics. Use it wherever a header holds two distinct control groups.
 
 **Sub-tabs are URL-driven where another page links to them.** Program, Log and
-Analytics read `?tab=` (Home's cards land on `/analytics?tab=progress`, the
+Analytics read `?tab=` (Home's cards land on `/analytics?tab=progress` — Progress
+takes `exercise` | `measure` and `metric` too, the chart's selection — the
 `/bio` redirect on `?tab=recovery`, the builder's Rebuild dialog on
 `/program?tab=history`). A sub-tab nobody deep-links to may stay in local state.
 

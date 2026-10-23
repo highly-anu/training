@@ -617,12 +617,12 @@ struct TodayView: View {
     private var adherenceCard: some View {
         if let stats = complianceStats, stats.scheduled > 0 {
             Button {
-                router.showAnalytics(.program)
+                router.showAnalytics(.progress)
             } label: {
                 adherenceScoreCard(stats)
             }
             .buttonStyle(.plain)
-            .accessibilityHint("Opens Analytics, Program")
+            .accessibilityHint("Opens Analytics, Progress")
         } else if complianceStats != nil {
             todayNote(icon: "calendar", title: "No sessions due yet")
         } else if appState.isLoadingProgramAnalytics {

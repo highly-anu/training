@@ -86,7 +86,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["exercises"],
-      "description": "Training that estimates this standard: the best est. 1RM (Epley) of these exercises' logged sets ÷ the bodyweight that day, shown as `est.` when no result is newer. A completed single on one of them can be suggested as a result.",
+      "description": "Training that estimates this standard: the best est. 1RM (Epley) of these exercises' logged sets ÷ the bodyweight that day, shown as `est.` when no result is newer. A completed single on one of them can be suggested as a result. They also make the standard one of a program's own (Analytics ▸ Progress, Profile ▸ Standards' This program) when the program schedules one of them; every id must be an exercise a package has (validate_entities).",
       "properties": {
         "exercises": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^[a-z0-9_]+$" } },
         "per": { "type": "string", "enum": ["bodyweight_kg"], "default": "bodyweight_kg" }

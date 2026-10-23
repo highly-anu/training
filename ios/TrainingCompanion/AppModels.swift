@@ -169,7 +169,7 @@ struct AppBenchmark: Codable, Identifiable {
         let pairs: [(String, Double?)] = [("entry", s.entry), ("intermediate", s.intermediate),
                                           ("advanced", s.advanced), ("elite", s.elite)]
         return Dictionary(uniqueKeysWithValues: pairs.compactMap { level, v in
-            v.map { (level, "\(AnalyticsProgramTab.number($0))\(unit ?? "")") }
+            v.map { (level, "\(AnalyticsProgressTab.number($0))\(unit ?? "")") }
         })
     }
 

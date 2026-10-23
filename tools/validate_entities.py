@@ -197,6 +197,17 @@ def _extra_checks(data: dict, schema_filename: str, path: str | None = None) -> 
             if rounds and rounds != len(scheme):
                 errors.append(f"slot '{slot.get('role')}': rep_scheme {scheme} in {rounds} rounds")
 
+    if schema_filename == 'benchmark.schema.json':
+        # A standard's `derived_from` lifts link it to every program that
+        # schedules one (analytics.benchmarks.program_standards): an id no
+        # package owns links it to nothing (three did, until 2026-10-23).
+        sys.path.insert(0, _ROOT)
+        from src import loader
+        catalog, _ = loader.load_all_exercises()
+        for ex_id in (data.get('derived_from') or {}).get('exercises') or []:
+            if ex_id not in catalog:
+                errors.append(f"derived_from names '{ex_id}', which no package's exercises.yaml has")
+
     if schema_filename == 'framework.schema.json':
         # intensity_distribution must sum to 1.0
         dist = data.get('intensity_distribution') or {}

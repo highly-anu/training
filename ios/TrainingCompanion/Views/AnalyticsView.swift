@@ -4,16 +4,17 @@ import SwiftUI
 /// can send the user to one (the Dashboard's readiness card → Recovery).
 enum AnalyticsTab: Int, AppSubTab {
     // The web's Analytics tabs, in the web's order (information-architecture.md
-    // §2). Load was "Overview" here until 2026-10-13; `section=overview` and
-    // `section=development` still deep-link (DeepLink.swift).
-    case program, progress, blocks, load, recovery
+    // §2). Load was "Overview" here until 2026-10-13, and Program a section of
+    // its own until 2026-10-23, when it merged into Progress; `section=overview`,
+    // `section=development` and `section=program` still deep-link (DeepLink.swift).
+    case progress, blocks, load, recovery
 
     var label: String {
         switch self {
-        case .program: return "Program"
         case .progress: return "Progress"
-        // Five segments share the width and the segmented control truncates
-        // anything longer (§6.8), which is why both clients say Blocks.
+        // Five segments shared the width until 2026-10-23 and the segmented
+        // control truncated anything longer (§6.8), which is why both
+        // clients say Blocks.
         case .blocks: return "Blocks"
         case .load: return "Load"
         case .recovery: return "Recovery"
@@ -22,15 +23,16 @@ enum AnalyticsTab: Int, AppSubTab {
 }
 
 /// Root container for the Analytics tab. Owns shared state: period selector
-/// and the bio entry sheet. Progress (the progression review) lives here as a
-/// section rather than as a push from Today, so the review has one home.
+/// and the bio entry sheet. Progress (the program document and the
+/// progression review) lives here as a section rather than as a push from
+/// Today, so the review has one home.
 /// Recorded workouts moved to the Log tab on 2026-10-01 (§6.19); Development
 /// (every block, not just this one) was added the same day (§6.20).
 struct AnalyticsView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var router: AppRouter
 
-    @State private var selectedSegment: AnalyticsTab = .program
+    @State private var selectedSegment: AnalyticsTab = .progress
     @State private var period: AnalyticsPeriod = .thirtyDays
     @State private var showBioEntry = false
 
@@ -38,11 +40,8 @@ struct AnalyticsView: View {
         NavigationStack {
             AppSubTabScreen(selection: $selectedSegment) { tab in
                 switch tab {
-                case .program:
-                    AnalyticsProgramTab()
-                        .environmentObject(appState)
                 case .progress:
-                    ProgressionView()
+                    AnalyticsProgressTab()
                         .environmentObject(appState)
                 case .blocks:
                     AnalyticsDevelopmentTab()

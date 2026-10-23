@@ -98,7 +98,7 @@ def unlocks(entry, ctx) -> dict:
     in_program = {ea['exercise']['id'] for h in spec_mod.select(entry, ctx.weeks)
                   for ea in h['assignments']}
 
-    series = [{'week': wk, 'x': wk, 'value': n, 'isDeload': False}
+    series = [{'week': wk, 'x': wk, 'date': ctx.week_date(wk), 'value': n, 'isDeload': False}
               for wk, n in sorted(weekly_practised.items())]
     t = trend_mod.fit([trend_mod.Point(p['x'], p['value']) for p in series])
     status = ('on_track' if t.direction == 'improving' else

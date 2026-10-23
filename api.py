@@ -252,7 +252,7 @@ def _injury_flags() -> list[dict]:
 # Bumped when a cached analytics document's *shape* changes, so a snapshot
 # written by the previous code (missing the new keys) is recomputed once
 # instead of being served until its inputs happen to change.
-_ANALYTICS_SHAPE = 'card-details-1'
+_ANALYTICS_SHAPE = 'progress-tab-1'
 
 
 def _standards_digest_key(performance: dict) -> list:
@@ -5305,7 +5305,7 @@ def _program_analytics_hash(inputs, stored: dict, revision) -> str:
                              (s or {}).get('rpe'), (s or {}).get('durationSeconds'))
                             for s in ((d or {}).get('sets') or []) if isinstance(s, dict)],
                        (d or {}).get('rounds'), (d or {}).get('durationSec'), (d or {}).get('distanceKm'),
-                       (d or {}).get('clean'))
+                       (d or {}).get('clean'), (d or {}).get('rpe'))
                       for ex, d in (v.get('exercises') or {}).items() if isinstance(d, dict)),
                       # The watch's exercise times: they decide which minutes count in zones.
                       v.get('exerciseTimeline'))
@@ -5315,7 +5315,7 @@ def _program_analytics_hash(inputs, stored: dict, revision) -> str:
         # The matched workouts themselves: a richer copy that merges into a
         # matched row (a Garmin file after the watch's live upload) changes its
         # heart rate and length without changing any match.
-        _j.dumps(sorted((w.get('id'), w.get('durationMinutes'), (w.get('heartRate') or {}).get('avg'),
+        _j.dumps(sorted((w.get('id'), w.get('durationMinutes'), w.get('distance'), (w.get('heartRate') or {}).get('avg'),
                          len((w.get('heartRate') or {}).get('samples') or []))
                         for w in inputs.workouts), default=str),
         _j.dumps(_standards_digest_key(inputs.performance_logs), default=str),

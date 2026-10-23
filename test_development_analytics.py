@@ -119,7 +119,7 @@ def test_currencies_load_and_benchmarks():
     assert bench[0]['inCurrentProgram'] is False and bench[0]['standardsText']['advanced'] == '140kg'
 
     inputs = _history()
-    inputs.program_standards = {'back_squat_1rm': ['declared']}
+    inputs.program_standards = {'back_squat_1rm': ['linked']}
     inputs.benchmarks = inputs.benchmarks + [{'id': 'fran', 'name': 'Fran', 'unit': ' min', 'lower_is_better': True,
                                               'metric_type': 'time_minutes',
                                               'levels': {'entry': {'male': 12}, 'intermediate': {'male': 8},

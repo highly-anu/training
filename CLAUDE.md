@@ -203,7 +203,8 @@ in the same order, as the iOS tabs (`docs/information-architecture.md` §2 — r
 a section on both clients in one change). Train — Today `/`
 (`pages/Dashboard.tsx`, no sub-tabs, side panel), Program `/program` (Overview · Calendar ·
 History via `?tab=`, Overview first since 2026-10-17; the builder is the flow `/program/new`), Analytics `/analytics`
-(Program · Progress · Blocks · Load · Recovery via `?tab=`; `development` aliases Blocks;
+(Progress · Blocks · Load · Recovery via `?tab=`; `development` aliases Blocks and `program`
+Progress — Program and Progress merged on 2026-10-23, `components/analytics/ProgressTab.tsx`;
 before Log since 2026-10-16, which folded the old Insight group into Train), Log `/log` (Activity ·
 Linking, Import as a sheet; Activity is recorded workouts and logged sessions in one
 list with an All · Workouts · Sessions filter (`?show=`; the old `?tab=workouts|sessions`
@@ -291,12 +292,16 @@ group's name.
   of a standard (latest result, else the estimate from logged sets) the program ladder and
   `benchmark_level` share.
 - **Only a program's own standards lead.** `analytics.benchmarks.program_standards(goal,
-  weeks, specs)` — declared by the package's `analytics.yaml` for the frameworks the program
-  runs, or measured by a test it schedules (a slot's or session's `standard`) — is the one
-  answer for Progress (`primary`), Profile ▸ Standards' *This program* (`programStandards`
-  on `/standards/results`) and Blocks (`inCurrentProgram`, sorted first). Same domain, cites
-  the philosophy or merely has a result: secondary ("More standards", *Your results*). A
-  result alone used to make a standard primary. Progress rows carry `atBlockStart`,
+  weeks, specs)` — measured by a test the program schedules (a slot's or session's
+  `standard`: `tested`), or estimated from a lift it schedules (the standard's
+  `derived_from`: `linked`) — is the one answer for Progress (the only rows it sends,
+  each `primary`), Profile ▸ Standards' *This program* (`programStandards` on
+  `/standards/results`) and Blocks (`inCurrentProgram`, sorted first). A package's
+  `analytics.yaml` naming a standard (`declared`) is a label beside those, never enough
+  alone (until 2026-10-23 it was, so Starting Strength led with the power clean before
+  any was scheduled). Same domain, cites the philosophy or merely has a result: Profile's
+  *Your results*; "More standards" is gone. `validate_entities` fails a `derived_from` id
+  no package has (three did). A result alone used to make a standard primary. Progress rows carry `atBlockStart`,
   `levelChange` and `blockHistory` (the block's results, its starting standing first).
 - **The Cell maps by its own words:** II entry, III intermediate, IV advanced, V elite
   (until 2026-10-17 I–IV, which made Cell's "Advanced" the app's elite).
@@ -772,6 +777,19 @@ writes.
   edges; both clients lay it out (web `bio/ZonePlanComparison.tsx` +
   `lib/zonePlan.ts`, iOS `ZonePlanComparison.swift`, design-system §6.35).
   Fidelity's planning-side split still uses the family rule (roadmap 13).
+- **One chart, every series** (`src/analytics/exercise_series.py`, since 2026-10-23).
+  `exerciseSeries` on `/analytics/program` is every exercise of the program session by
+  session — elapsed or not — with the stored prescription and, once logged, what was done,
+  read set by set (top set with its own reps, sets, total reps, volume, est. 1RM, RPE;
+  time, hold, rounds and distance from the log, else the matched workout for the session's
+  endurance exercise), plus `doneText` / `prescribedText` in the server's words. A lift's
+  `duration_minutes` is its time budget: only a prescription naming no reps prescribes
+  time. `measures` names the progress entries the chart also draws (not `benchmark_level`).
+  Every expected point carries `date` (`primitives.expected_point`; weekly series take
+  `Context.week_date`). Both clients' Progress tab draws one chart from it (web
+  `analytics/ProgressChart` + `lib/progressChart.ts`, iOS `ProgressChartView` +
+  `ProgressChartModel`, design-system §6.41); the per-measure charts and the exercise
+  cards it replaced read `/progression/exercises`, which stays for installed builds.
 - **Each measure says what it is.** Every `progress` entry carries `about`
   (`vocabulary.about`: what it measures, what to log and where, the package's
   `notes`), which ends the phone's measure screen (design-system §6.37); the
@@ -828,8 +846,8 @@ writes.
 - **iOS load charts are server-side.** Analytics ▸ Overview reads
   `/health/load/pmc` and `/health/load/weekly`; `AnalyticsEngine` is the
   fallback when the request fails, and the footnote says which was used, so
-  the phone and the web cannot quietly disagree. Analytics ▸ Program
-  (`Views/AnalyticsProgramTab.swift`) lays out the same `/analytics/program`
+  the phone and the web cannot quietly disagree. Analytics ▸ Progress
+  (`Views/AnalyticsProgressTab.swift`) lays out the same `/analytics/program`
   document the web does; `ProgramAnalyticsModels.swift` decodes every section
   on its own, and `AnalyticsStatusStyle` is the phone's copy of
   `components/analytics/status.ts`. Analytics ▸ Blocks
@@ -1083,15 +1101,15 @@ the Simulator window is not scriptable:
 
 ```bash
 LOCAL_API=1 ./ios/run_sim.sh /tmp/today.png                                            # local API, Today
-LOCAL_API=1 ROUTE='trainingcompanion://analytics?section=program' ./ios/run_sim.sh /tmp/p.png
+LOCAL_API=1 ROUTE='trainingcompanion://analytics?section=progress' ./ios/run_sim.sh /tmp/p.png
 LOCAL_API=0 ./ios/run_sim.sh                                                            # back to production
 ```
 
 Routes: `today`, `workout-complete[?id=…]` (the Workout complete sheet, newest workout if no id), `program?section=overview|calendar|history`
 (`&phase=<n>|compare` pushes a phase's screen or Compare phases from Overview),
-`analytics?section=program|progress|blocks|load|recovery` (`overview` and `development`
-still alias Load and Blocks; `&measure=<entry id>` or `&exercise=<id>` pushes a Progress detail,
-`&open=readiness|sleep|hrv|resting-hr|checkins` a Recovery one, `pmc|load-focus|mix|weekly` Load's, `scorecard|intensity|movement|shapes` Program's, `score` Progress's, `block-load` Blocks'), `log?section=workouts|linking|sessions` (`suggestions` aliases Linking),
+`analytics?section=progress|blocks|load|recovery` (`overview`, `development` and `program`
+still alias Load, Blocks and Progress; `&measure=<entry id>` or `&exercise=<id>` selects it on Progress's chart,
+`&open=readiness|sleep|hrv|resting-hr|checkins` a Recovery one, `pmc|load-focus|mix|weekly` Load's, `score|scorecard|intensity|movement|workouts` Progress's (`shapes` aliases workouts), `block-load` Blocks'), `log?section=workouts|linking|sessions` (`suggestions` aliases Linking),
 `profile?section=…` (`DeepLink.swift`, routed through `AppRouter`). The route travels
 in the launch environment (`SIMCTL_CHILD_TC_ROUTE`), because `simctl openurl` makes
 iOS ask "Open in Training Companion?" and nothing can tap that. Screens behind a tap

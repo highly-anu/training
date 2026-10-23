@@ -464,7 +464,7 @@ def sql_checks(dsn: str) -> None:
     print('\nan imported run')
     from src import standard_results as sr2
     real_cps = sr2.current_program_standards
-    sr2.current_program_standards = lambda uid: {'run_1mile_minutes': ['declared']}
+    sr2.current_program_standards = lambda uid: {'run_1mile_minutes': ['tested']}
     try:
         out = sr2.after_workouts_import(USER, [run('fit_file-run9', mps=4.0, km=2.0, day=MONDAY.isoformat())])
         pend = (out or {}).get('pending') or []
