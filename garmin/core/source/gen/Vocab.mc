@@ -55,7 +55,7 @@ module Vocab {
     }
 
     function summaryPages() {
-        return ["summary", "heart_rate", "training_effect", "exercises"];
+        return ["summary", "heart_rate", "hr_zones", "training_effect", "training_status", "exercises"];
     }
 
     function weightStepByCategory() {

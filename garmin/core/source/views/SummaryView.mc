@@ -2,16 +2,24 @@ using Toybox.WatchUi as Ui;
 using Toybox.Graphics as Gfx;
 using Toybox.System;
 using Toybox.Lang;
+using Toybox.UserProfile;
+using Toybox.ActivityMonitor;
 
-// The summary after Save, as Garmin's own activities show it: a page loop with
-// vertical dots on the left, the next page named at the bottom, and the START
-// hint. UP/DOWN turn the pages; START opens Done / the pages by name; BACK is
-// Done, which leaves the app, as the watch returns to the watch face.
+// All Stats, opened from the post-save list (SummaryList.mc), as Garmin's own
+// activities show it: a page loop with vertical dots on the left, the next page
+// named at the bottom, and the START hint. UP/DOWN turn the pages; START opens
+// Done / the pages by name; BACK returns to the list.
 //
 //   Summary         the session's icon and name, duration, SETS | VOLUME, sync
 //   Heart Rate      Avg. / Max. and the HR over the session
+//   HR Zones        time and share in each zone, on the athlete's own zones
 //   Training Effect Garmin's aerobic TE, when the watch computed one
+//   Training Status recovery time left and VO2 max, when the watch has them
 //   Exercises       each exercise's logged sets
+//
+// Training status itself (Productive, Maintaining...) reaches only watch faces
+// (Complications needs ComplicationSubscriber, which a watch app may not hold),
+// so the page shows the two numbers an app can read.
 class SummaryView extends Ui.View {
 
     hidden var _ctl;
@@ -23,20 +31,64 @@ class SummaryView extends Ui.View {
         View.initialize();
         _ctl = ctl;
         _page = 0;
-        // The package chooses the pages and their order (watch.summary.pages,
-        // vocabulary summary_pages); Training Effect only when the watch has one.
-        _pages = [];
+        _pages = pagesFor(ctl);
+    }
+
+    // The package chooses the pages and their order (watch.summary.pages,
+    // vocabulary summary_pages); a page only when the watch has its numbers.
+    static function pagesFor(ctl) {
+        var out = [];
         var ids = ctl.session().summaryPages();
-        for (var i = 0; i < ids.size() && _pages.size() < 5; i += 1) {
+        for (var i = 0; i < ids.size() && out.size() < 6; i += 1) {
             var id = ids[i];
-            if (id.equals("summary"))              { _pages.add([:summary, "SUMMARY"]); }
-            else if (id.equals("heart_rate"))      { _pages.add([:hr, "HEART RATE"]); }
-            else if (id.equals("training_effect")) {
-                if (ctl.trainingEffect() != null) { _pages.add([:te, "TRAINING EFFECT"]); }
+            if (id.equals("summary"))              { out.add([:summary, "SUMMARY"]); }
+            else if (id.equals("heart_rate"))      { out.add([:hr, "HEART RATE"]); }
+            else if (id.equals("hr_zones")) {
+                if (ctl.zoneSeconds() != null) { out.add([:zones, "HR ZONES"]); }
             }
-            else if (id.equals("exercises"))       { _pages.add([:exercises, "EXERCISES"]); }
+            else if (id.equals("training_effect")) {
+                if (ctl.trainingEffect() != null) { out.add([:te, "TRAINING EFFECT"]); }
+            }
+            else if (id.equals("training_status")) {
+                if (recoveryHours() != null || vo2max() != null) { out.add([:status, "TRAINING STATUS"]); }
+            }
+            else if (id.equals("exercises"))       { out.add([:exercises, "EXERCISES"]); }
         }
-        if (_pages.size() == 0) { _pages.add([:summary, "SUMMARY"]); }
+        if (out.size() == 0) { out.add([:summary, "SUMMARY"]); }
+        return out;
+    }
+
+    // Garmin's aerobic Training Effect bands: [word, colour].
+    static function benefit(v) {
+        if (v >= 5.0) { return ["Overreaching", Native.Z5]; }
+        if (v >= 4.0) { return ["Highly improving", Native.Z4]; }
+        if (v >= 3.0) { return ["Improving", Native.Z3]; }
+        if (v >= 2.0) { return ["Maintaining", Native.Z2]; }
+        if (v >= 1.0) { return ["Minor benefit", Native.Z1]; }
+        return ["No benefit", Native.DIM];
+    }
+
+    // The hours of recovery the watch has left, read now (the save updates it).
+    static function recoveryHours() {
+        try {
+            var info = ActivityMonitor.getInfo();
+            if (info != null && (info has :timeToRecovery) && info.timeToRecovery != null) {
+                var h = info.timeToRecovery.toNumber();
+                if (h >= 0 && h <= 240) { return h; }
+            }
+        } catch (e) {}
+        return null;
+    }
+
+    static function vo2max() {
+        try {
+            var p = UserProfile.getProfile();
+            if (p != null && (p has :vo2maxRunning) && p.vo2maxRunning != null) {
+                var v = p.vo2maxRunning.toNumber();
+                if (v >= 10 && v <= 100) { return v; }
+            }
+        } catch (e) {}
+        return null;
     }
 
     function onLayout(dc) {
@@ -75,7 +127,9 @@ class SummaryView extends Ui.View {
         var g = _g;
         var id = _pages[_page][0];
         if (id == :hr) { drawHr(dc); }
+        else if (id == :zones) { drawZones(dc); }
         else if (id == :te) { drawTe(dc); }
+        else if (id == :status) { drawStatus(dc); }
         else if (id == :exercises) { drawExercises(dc); }
         else { drawSummary(dc); }
 
@@ -181,22 +235,66 @@ class SummaryView extends Ui.View {
                     Gfx.TEXT_JUSTIFY_LEFT | Gfx.TEXT_JUSTIFY_VCENTER);
     }
 
-    // Garmin's aerobic Training Effect bands.
+    // Five bars, zone 5 on top as on the watch: each zone's colour, its time
+    // and its share of the time with a reading, and the bpm it starts at.
+    hidden function drawZones(dc) {
+        var g = _g;
+        Native.text(dc, g.cx, (g.h * 15) / 100, Text.small(), "HR ZONES", Gfx.COLOR_WHITE);
+        var secs = _ctl.zoneSeconds();
+        var floors = _ctl.zoneFloors();
+        var total = 0;
+        var most = 1;
+        for (var i = 0; i < secs.size(); i += 1) {
+            total += secs[i];
+            if (secs[i] > most) { most = secs[i]; }
+        }
+        var f = Text.small();
+        var step = (g.h * 105) / 1000;
+        var y = (g.h * 27) / 100;
+        var barH = step / 2;
+        var x0 = (g.w * 26) / 100;     // the bars start right of the zone's bpm
+        var barW = (g.w * 30) / 100;
+        for (var z = 5; z >= 1; z -= 1) {
+            var s = secs[z - 1];
+            var pct = (total > 0) ? ((s * 100) / total) : 0;
+            dc.setColor(Native.DIM, Gfx.COLOR_TRANSPARENT);
+            if (floors != null && z - 1 < floors.size()) {
+                dc.drawText(x0 - (g.w * 2) / 100, y, f, floors[z - 1].toString(),
+                            Gfx.TEXT_JUSTIFY_RIGHT | Gfx.TEXT_JUSTIFY_VCENTER);
+            }
+            dc.setColor(0x3A3A3A, Gfx.COLOR_TRANSPARENT);
+            dc.fillRectangle(x0, y - barH / 2, barW, barH);
+            var w = (barW * s) / most;
+            if (s > 0 && w < 3) { w = 3; }
+            dc.setColor(Native.zoneColor(z), Gfx.COLOR_TRANSPARENT);
+            dc.fillRectangle(x0, y - barH / 2, w, barH);
+            dc.setColor(Gfx.COLOR_WHITE, Gfx.COLOR_TRANSPARENT);
+            dc.drawText(x0 + barW + (g.w * 3) / 100, y, f,
+                        Text.mmss(s) + "  " + pct.toString() + "%",
+                        Gfx.TEXT_JUSTIFY_LEFT | Gfx.TEXT_JUSTIFY_VCENTER);
+            y += step;
+        }
+    }
+
     hidden function drawTe(dc) {
         var g = _g;
-        var te = _ctl.trainingEffect();
+        var v = _ctl.trainingEffect().toFloat();
+        var b = benefit(v);
         Native.text(dc, g.cx, (g.h * 15) / 100, Text.small(), "TRAINING EFFECT", Gfx.COLOR_WHITE);
         Native.text(dc, g.cx, (g.h * 25) / 100, Text.small(), "Aerobic", Native.DIM);
-        var v = te.toFloat();
-        var label = "No benefit";
-        var col = Native.DIM;
-        if (v >= 5.0)      { label = "Overreaching";     col = Native.Z5; }
-        else if (v >= 4.0) { label = "Highly improving"; col = Native.Z4; }
-        else if (v >= 3.0) { label = "Improving";        col = Native.Z3; }
-        else if (v >= 2.0) { label = "Maintaining";      col = Native.Z2; }
-        else if (v >= 1.0) { label = "Minor benefit";    col = Native.Z1; }
-        Native.text(dc, g.cx, (g.h * 45) / 100, Text.bigNum(), v.format("%.1f"), col);
-        Native.text(dc, g.cx, (g.h * 64) / 100, Text.line(), label, col);
+        Native.text(dc, g.cx, (g.h * 45) / 100, Text.bigNum(), v.format("%.1f"), b[1]);
+        Native.text(dc, g.cx, (g.h * 64) / 100, Text.line(), b[0], b[1]);
+    }
+
+    // RECOVERY | VO2 MAX, the fields the watch itself puts on this page.
+    hidden function drawStatus(dc) {
+        var g = _g;
+        Native.text(dc, g.cx, (g.h * 15) / 100, Text.small(), "TRAINING STATUS", Gfx.COLOR_WHITE);
+        var h = recoveryHours();
+        var v = vo2max();
+        Native.fields(dc, g, (g.h * 40) / 100, (g.h * 51) / 100,
+                      (h != null) ? ["RECOVERY", h.toString() + " h"] : null,
+                      (v != null) ? ["VO2 MAX", v.toString()] : null);
     }
 
     hidden function drawExercises(dc) {
@@ -233,7 +331,7 @@ class SummaryDelegate extends Ui.BehaviorDelegate {
 
     function onNextPage()     { _view.turn(1);  return true; }
     function onPreviousPage() { _view.turn(-1); return true; }
-    function onBack()         { done(); return true; }
+    function onBack()         { Ui.popView(Ui.SLIDE_RIGHT); return true; }
     function onTap(evt)       { return true; }
 
     // START: Done, or a page by name.
@@ -250,12 +348,7 @@ class SummaryDelegate extends Ui.BehaviorDelegate {
         return true;
     }
 
-    // Leave the app. An upload still in flight would die with it: buffer it for
-    // the next open (the server dedups a repeat by the workout's id).
-    function done() {
-        try { _ctl.parkPendingUpload(); } catch (e) {}
-        Toybox.System.exit();
-    }
+    function done() { $.leaveSummary(_ctl); }
 }
 
 class SummaryMenuDelegate extends Ui.Menu2InputDelegate {

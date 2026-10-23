@@ -9,7 +9,7 @@ using Toybox.Lang;
 // label over a sub-label, left-aligned; the focused row sits at the centre on a
 // band in the activity's colour with a bar of it on the rule.
 //
-// rows: [[id, label, sub-label or null, icon Rez id or null], ...]
+// rows: [[id, label, sub-label or null, icon Rez id, a number String, or null], ...]
 module NativeList {
 
     const ICON_X = 270;     // thousandths of the width
@@ -48,7 +48,8 @@ module NativeList {
             dc.setPenWidth(2);
             dc.drawLine(ruleX, top + 4, ruleX, top + rh - 4);
         }
-        if (row[3] != null) { drawIcon(dc, (g.w * ICON_X) / 1000, y, row[3], (g.w * 74) / 454); }
+        if (row[3] instanceof Lang.String) { drawAside(dc, g, ruleX, y, row[3]); }
+        else if (row[3] != null) { drawIcon(dc, (g.w * ICON_X) / 1000, y, row[3], (g.w * 74) / 454); }
         var w = right - textX;
         if (w <= 0) { return; }
         var label = Text.line();
@@ -67,6 +68,17 @@ module NativeList {
         dc.setColor(focused ? Gfx.COLOR_WHITE : SUB_COLOR, Gfx.COLOR_TRANSPARENT);
         dc.drawText(textX, y0 + lh + sh / 2, sub, Clip.fit(dc, row[2], sub, w),
                     Gfx.TEXT_JUSTIFY_LEFT | Gfx.TEXT_JUSTIFY_VCENTER);
+    }
+
+    // A number in place of the icon, right-aligned against the rule, as the
+    // post-save list shows each page's headline ("45:12", "1.6", "112").
+    function drawAside(dc, g, ruleX, y, str) {
+        var right = ruleX - (g.w * 3) / 100;
+        var left = g.cx - Native.chordHalf(g, y) + (g.w * 3) / 100;
+        var f = Text.hrNum();
+        if (dc.getTextWidthInPixels(str, f) > right - left) { f = Text.small(); }
+        dc.setColor(Gfx.COLOR_WHITE, Gfx.COLOR_TRANSPARENT);
+        dc.drawText(right, y, f, str, Gfx.TEXT_JUSTIFY_RIGHT | Gfx.TEXT_JUSTIFY_VCENTER);
     }
 
     // The menu icons are system_size__menu_icon (74 px on a 454 px face); a

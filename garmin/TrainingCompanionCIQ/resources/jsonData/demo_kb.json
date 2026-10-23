@@ -86,7 +86,9 @@
        "pages": [
         "summary",
         "heart_rate",
+        "hr_zones",
         "training_effect",
+        "training_status",
         "exercises"
        ]
       },
@@ -210,7 +212,9 @@
        "pages": [
         "summary",
         "heart_rate",
+        "hr_zones",
         "training_effect",
+        "training_status",
         "exercises"
        ]
       },
@@ -294,7 +298,9 @@
        "pages": [
         "summary",
         "heart_rate",
+        "hr_zones",
         "training_effect",
+        "training_status",
         "exercises"
        ]
       },
@@ -392,7 +398,9 @@
        "pages": [
         "summary",
         "heart_rate",
+        "hr_zones",
         "training_effect",
+        "training_status",
         "exercises"
        ]
       },
@@ -507,7 +515,9 @@
        "pages": [
         "summary",
         "heart_rate",
+        "hr_zones",
         "training_effect",
+        "training_status",
         "exercises"
        ]
       },
@@ -638,7 +648,9 @@
        "pages": [
         "summary",
         "heart_rate",
+        "hr_zones",
         "training_effect",
+        "training_status",
         "exercises"
        ]
       },
@@ -721,7 +733,9 @@
        "pages": [
         "summary",
         "heart_rate",
+        "hr_zones",
         "training_effect",
+        "training_status",
         "exercises"
        ]
       },

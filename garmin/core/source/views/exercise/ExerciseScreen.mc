@@ -56,14 +56,21 @@ class ExerciseScreen extends Ui.View {
 
     function onHide() { Icons.release(); Native.releaseHints(); }
 
-    // The session ended while a menu was on top (Save): hand over to the summary.
+    // The session ended while a menu was on top (Save): "Saving", "Activity
+    // Saved", then the post-save list. Saved before START, nothing was
+    // recorded: straight to the list, which says so.
     function leaveIfComplete() {
         if (_left || _ctl.state() != WorkoutController.COMPLETE) { return; }
         _left = true;
         var app = TrainingCompanionApp.instance();
         if (app != null) { app.activeController = null; }
-        var sv = new SummaryView(_ctl);
-        Ui.switchToView(sv, new SummaryDelegate(sv, _ctl), Ui.SLIDE_UP);
+        if (_ctl.wasDiscarded()) {
+            var lv = new SummaryListView(_ctl);
+            Ui.switchToView(lv, new SummaryListDelegate(lv, _ctl), Ui.SLIDE_UP);
+            return;
+        }
+        var ov = new OutcomeView(_ctl, :saved);
+        Ui.switchToView(ov, new OutcomeDelegate(ov), Ui.SLIDE_IMMEDIATE);
     }
 
     // A key handler threw: keep the message and show it on the next frame.

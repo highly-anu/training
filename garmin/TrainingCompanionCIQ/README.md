@@ -211,8 +211,18 @@ Resolved (verified by compiling against SDK 9.2.0):
   pages, and on the step page walk the list; hold UP opens Stop Workout / Skip / Set Next
   (the next sets' reps and load) / Edit Set / Settings. Edit Set changes the last set (reps ±1, weight ±2.5 kg, RPE ±0.5) and
   carries the new values to the sets after it. When every step is done the
-  activity keeps recording ("Workout complete") until Save. Touch is off while
-  recording. Icons and button hints are the Personality Library's
+  activity keeps recording ("Workout complete") until Save. The end is Garmin's
+  too (since 1.11.0): Save shows "Saving" while an arc sweeps the bezel, then
+  "Activity Saved" in a green ring (red, "Activity Not Saved", when the recording's
+  save failed), then the post-save list (`SummaryList.mc`): Done (the sync's state
+  below it), All Stats, Training Effect, Heart Rate, Sets, each with its headline
+  number left of the rule. A row opens All Stats at its page: Summary, Heart Rate,
+  HR Zones (time and share per zone on the athlete's own zones), Training Effect
+  (aerobic only), Training Status (recovery time left and VO2 max — the status
+  word itself is a complication, which only watch faces may read), Exercises;
+  BACK returns to the list, Done or BACK there closes the app. Discard shows
+  "Discarding" with a red sweep, then "Activity Discarded", and closes.
+  Touch is off while recording. Icons and button hints are the Personality Library's
   (`resources/drawables/garmin.xml`); glyphs it lacks are drawn by `tools/gen_icons.py`.
 
 - Phase 3 **watch-side** phone-link hooks (`PhoneLink.mc`): registers for BLE
