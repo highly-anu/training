@@ -31,6 +31,8 @@
           automaticPalette="false" scope="application" />
   <bitmap id="GmRefresh" filename="icons/menu/menu_refresh.svg" personality="system_size__menu_icon"
           automaticPalette="false" scope="application" />
+  <bitmap id="GmSettings" filename="icons/menu/menu_settings.svg" personality="system_size__menu_icon"
+          automaticPalette="false" scope="application" />
 
   <!-- Toast icons. -->
   <bitmap id="GmToastCheck"   personality="system_icon_positive__check system_size__toast_icon" scope="application" />

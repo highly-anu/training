@@ -182,8 +182,8 @@ class WorkoutController {
 
     // ── lifecycle ────────────────────────────────────────────────────────────────
 
-    // Do Workout: the workout screen is up but nothing records until START, as on
-    // Garmin's own workouts. The clock runs only to show the live HR.
+    // The workout screen is up but nothing records until START, as on Garmin's
+    // own workouts. The clock runs only to show the live HR.
     function prepare() {
         Cues.load();
         _isCardio = isCardioSession();

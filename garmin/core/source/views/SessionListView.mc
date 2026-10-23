@@ -7,13 +7,25 @@ using Toybox.System;
 using Toybox.Time;
 using Toybox.Time.Gregorian;
 
-// The pre-start page, as Garmin's own activities have one: the session's icon,
-// name and length, a rule in its colour, readiness, and the green START hint that
-// says the activity is ready. START opens the workout (Do Workout / Steps, where
-// reps and weights are set); UP/DOWN move between the day's
-// sessions; hold UP opens the activity menu (Workout, Today, Week, Readiness);
-// BACK leaves the app. Refreshes from the backend on show; seeds from the
-// same-day cache for an instant paint.
+// The pre-start page, as Garmin's own activities have one (Strength's,
+// photographed on the athlete's fenix 9 Pro, 2026-10-23): the battery at the top,
+// the session's icon and name, a rule in its colour, the green START hint, and a
+// list below it. With the header focused START starts the workout — the timer,
+// after the Countdown Start when it is on — as the watch's own START does. DOWN
+// moves into the list (NativeList):
+//
+//   Workouts           the day's sessions, when there is more than one
+//   Steps              the session's exercises; select one to set its reps, weight
+//   Training Calendar  the week ahead (the Week menu)
+//   Programme          the demo's programme (demo only)
+//   Progress           this week, the programme, the methodology's measure
+//   Readiness          today's score
+//   Settings           tones, vibration, the lead-in
+//   Sync               re-fetch today, under the last result (real programme only)
+//
+// START opens a row; BACK in the list returns to the header, and on the header
+// leaves the app. Hold UP still opens the same items as a menu. Refreshes from
+// the backend on show; seeds from the same-day cache for an instant paint.
 class SessionListView extends Ui.View {
 
     hidden var _sync;
@@ -25,6 +37,10 @@ class SessionListView extends Ui.View {
     hidden var _g;          // built once in onLayout
     hidden var _index;      // which of the day's sessions is shown
     hidden var _tomorrow;   // the payload's tomorrow preview, or null
+    hidden var _focus;      // -1: the header; else the focused row of rows()
+
+    // The band of a list with no session behind it (a rest day): the system blue.
+    const LIST_ACCENT = 0x4F6FA8;
 
     function initialize(deepLink) {
         View.initialize();
@@ -33,6 +49,7 @@ class SessionListView extends Ui.View {
         _deepLink = deepLink;
         _autoStarted = false;
         _index = 0;
+        _focus = -1;
         // Only seed from cache when the cached date matches today; stale cache
         // (from another day) would briefly show a misleading session.
         var cached = SyncCache.cachedToday();
@@ -49,6 +66,8 @@ class SessionListView extends Ui.View {
         _g = new Grid(dc);
         Text.init(_g);
     }
+
+    function onHide() { NativeList.release(); }
 
     function onShow() {
         if (DemoSession.enabled()) {
@@ -113,12 +132,63 @@ class SessionListView extends Ui.View {
 
     function sessions() { return _sessions; }
 
-    // Move between the sessions scheduled on the same day.
-    function cycle(delta) {
-        if (_sessions == null || _sessions.size() <= 1) { return; }
-        var n = _sessions.size();
-        _index = ((_index + delta) % n + n) % n;
+    // ── the list ─────────────────────────────────────────────────────────────────
+
+    // The rows under the header: [id, label, sub-label, icon].
+    function rows() {
+        var out = [];
+        var s = current();
+        if (s != null && _sessions.size() > 1) {
+            out.add([:today, "Workouts", s.archetypeName(), Rez.Drawables.GmToday]);
+        }
+        if (s != null) {
+            var n = s.exerciseCount();
+            out.add([:workout, "Steps", n.toString() + ((n == 1) ? " exercise" : " exercises"),
+                     Rez.Drawables.GmList]);
+        }
+        if (DemoSession.enabled() || SyncCache.cachedWeek() != null) {
+            out.add([:week, "Training Calendar", weekTitle(), Rez.Drawables.GmWeek]);
+        }
+        if (DemoSession.enabled()) {
+            out.add([:programme, "Programme", DemoProgram.programName(), Rez.Drawables.GmList]);
+        }
+        var p = progress();
+        if (p != null) { out.add([:progress, "Progress", $.progressLine(p), Rez.Drawables.GmCheck]); }
+        var r = _readiness;
+        if (r != null && r.hasKey("score") && r["score"] != null) {
+            out.add([:readiness, "Readiness", r["score"].toString() + "  " + $.readinessWord(r["status"]),
+                     Rez.Drawables.GmReadiness]);
+        }
+        out.add([:settings, "Settings", "Alerts and lead-in", Rez.Drawables.GmSettings]);
+        if (!DemoSession.enabled()) {
+            out.add([:sync, "Sync", SyncCache.syncLine(), Rez.Drawables.GmRefresh]);
+        }
+        return out;
+    }
+
+    // DOWN / UP: into the list from the header, along it, and round again.
+    function move(d) {
+        _focus = NativeList.step(_focus, d, rows().size());
         Ui.requestUpdate();
+    }
+
+    // START: on the header, start the workout; on a row, open it.
+    function choose() {
+        if (_focus < 0) {
+            if (current() != null) { startNow(); }
+            return;
+        }
+        var rs = rows();
+        if (_focus >= rs.size()) { _focus = -1; Ui.requestUpdate(); return; }
+        $.openPreStartItem(self, rs[_focus][0], false);
+    }
+
+    // BACK: from the list to the header; false on the header, which leaves.
+    function back() {
+        if (_focus < 0) { return false; }
+        _focus = -1;
+        Ui.requestUpdate();
+        return true;
     }
 
     // The demo programme changed: show its day 0 and refresh the glance's cache.
@@ -216,8 +286,15 @@ class SessionListView extends Ui.View {
             Native.text(dc, g.cx, g.cy, Text.line(), "Syncing...", Native.DIM);
             return;
         }
+        var rs = rows();
+        if (_focus >= rs.size()) { _focus = rs.size() - 1; }
+        if (_focus >= 0) {
+            drawList(dc, g, rs);
+            return;
+        }
+        drawStatus(dc, g);
         if (_status.equals("ok") && _sessions != null && _sessions.size() > 0) {
-            drawSession(dc, g, _sessions[_index]);
+            drawSession(dc, g, _sessions[_index], rs);
         } else if (_status.equals("ok")) {
             drawRest(dc, g);
         } else if (_status.equals("offline")) {
@@ -232,55 +309,65 @@ class SessionListView extends Ui.View {
         }
     }
 
-    hidden function drawSession(dc, g, s) {
+    // The header focused (the photo's "Free" page): the session's icon in its
+    // colour, its name, its length, the rule, and the first rows peeking below.
+    hidden function drawSession(dc, g, s, rs) {
         var accent = Theme.sessionAccent(s);
-        Icons.drawCentered(dc, g.cx, (g.h * 14) / 100, g.iconChip,
-                           Icons.forSession(s), accent);
-        var day = "TODAY";
-        if (_sessions.size() > 1) {
-            day += "  " + (_index + 1).toString() + " OF " + _sessions.size().toString();
-        }
-        Native.text(dc, g.cx, (g.h * 225) / 1000, Text.small(), day, Native.DIM);
-
-        // The name on up to two lines, then its length.
-        var lineH = (g.h * 80) / 1000;
-        var ny = (g.h * 285) / 1000;
-        var lines = Text.drawWrapped2(dc, g.cx, ny, (g.w * 76) / 100, lineH,
-                                      s.archetypeName(), Gfx.COLOR_WHITE, Text.line());
-        var my = ny + (lines * lineH) + (g.h * 40) / 1000;
+        Icons.drawCentered(dc, g.cx, (g.h * 30) / 100, g.iconChip, Icons.forSession(s), accent);
+        var ny = (g.h * 410) / 1000;
+        Native.fitted(dc, g.cx, ny, Text.lineBold(), s.archetypeName(), Gfx.COLOR_WHITE,
+                      Native.chordHalf(g, ny) * 2 - (g.w * 16) / 100);
         var n = s.exerciseCount();
-        Native.text(dc, g.cx, my, Text.small(),
-                    s.estimatedMinutes().toString() + " min  " + n.toString()
-                        + ((n == 1) ? " exercise" : " exercises"), Native.DIM);
+        var sub = s.estimatedMinutes().toString() + " min  " + n.toString()
+                  + ((n == 1) ? " exercise" : " exercises");
+        var col = Native.DIM;
+        if (s.isCompleted()) { sub = "Completed  " + sub; col = Native.GOOD; }
+        else if (s.isDeload()) { sub = "Deload  " + sub; col = Native.WARN; }
+        var sy = (g.h * 485) / 1000;
+        Native.fitted(dc, g.cx, sy, Text.small(), sub, col, Native.chordHalf(g, sy) * 2 - (g.w * 16) / 100);
 
-        // The rule in the session's colour, as under the activity name in Garmin's menus.
-        var ry = my + (g.h * 55) / 1000;
-        var half = (g.w * 30) / 100;
+        // The rule in the session's colour, as under the activity name in Garmin's lists.
+        var ry = (g.h * 555) / 1000;
+        var half = (g.w * 34) / 100;
         dc.setColor(accent, Gfx.COLOR_TRANSPARENT);
         dc.setPenWidth((g.h >= 400) ? 3 : 2);
         dc.drawLine(g.cx - half, ry, g.cx + half, ry);
 
-        var y = ry + (g.h * 70) / 1000;
-        if (_readiness != null && _readiness.hasKey("score") && _readiness["score"] != null) {
-            Native.text(dc, g.cx, y, Text.line(), "Readiness " + _readiness["score"].toString(),
-                        Theme.readiness(_readiness["status"]));
-            y += (g.h * 80) / 1000;
-        }
-        if (s.isCompleted()) {
-            Native.text(dc, g.cx, y, Text.small(), "Completed", Native.GOOD);
-        } else if (s.isDeload()) {
-            Native.text(dc, g.cx, y, Text.small(), "Deload week", Native.WARN);
-        }
-
-        if (DemoSession.enabled()) {
-            // Build stamp and free memory, so a photo of this page says which build
-            // ran and how much room it had.
-            var st = System.getSystemStats();
-            Native.text(dc, g.cx, (g.h * 92) / 100, Text.small(),
-                        DemoProgram.stamp() + "  " + (st.freeMemory / 1024).toString() + " KB", 0x5F6368);
-        }
-        Native.pageDots(dc, g, _index, _sessions.size());
+        NativeList.draw(dc, g, rs, -1, accent, (g.h * 670) / 1000);
         Native.hint(dc, :ready);
+    }
+
+    // The list focused: the session's name small at the top over its rule, the
+    // focused row at the centre.
+    hidden function drawList(dc, g, rs) {
+        var s = current();
+        var accent = (s != null) ? Theme.sessionAccent(s) : LIST_ACCENT;
+        var ty = (g.h * 65) / 1000;
+        var title = (s != null) ? s.archetypeName() : "Training";
+        Native.fitted(dc, g.cx, ty, Text.small(), title, Gfx.COLOR_WHITE,
+                      Native.chordHalf(g, ty) * 2 - (g.w * 8) / 100);
+        var ry = (g.h * 115) / 1000;
+        var half = Native.chordHalf(g, ry) - (g.w * 10) / 100;
+        dc.setColor(accent, Gfx.COLOR_TRANSPARENT);
+        dc.setPenWidth(2);
+        dc.drawLine(g.cx - half, ry, g.cx + half, ry);
+        NativeList.draw(dc, g, rs, _focus, accent, 0);
+    }
+
+    // Battery and its hours left, as at the top of the watch's own pre-start
+    // page; a demo build adds its stamp and free memory, so a photo of the page
+    // says which build ran and how much room it had.
+    hidden function drawStatus(dc, g) {
+        var st = System.getSystemStats();
+        var t = st.battery.toNumber().toString() + "%";
+        if ((st has :batteryInDays) && st.batteryInDays != null) {
+            var hrs = (st.batteryInDays * 24).toNumber();
+            t += "  " + ((hrs >= 48) ? ((hrs / 24).toString() + "d") : (hrs.toString() + "h"));
+        }
+        if (DemoSession.enabled()) {
+            t = DemoProgram.stamp() + "  " + (st.freeMemory / 1024).toString() + " KB  " + t;
+        }
+        Native.text(dc, g.cx, (g.h * 120) / 1000, Text.small(), t, Gfx.COLOR_WHITE);
     }
 
     // Rest day: the charging battery in the recovery green, and what comes next.
@@ -311,8 +398,9 @@ class SessionListView extends Ui.View {
         if (sub != null) { Native.text(dc, g.cx, (g.h * 60) / 100, Text.small(), sub, Native.DIM); }
     }
 
-    // Do Workout: the workout screen, ready but not recording until START. A
-    // workout already recording (the app was left mid-session) is resumed instead.
+    // The workout screen, ready but not recording until its START (startNow
+    // presses it). A workout already recording (the app was left mid-session) is
+    // resumed instead.
     function startFirstSession() {
         var app = TrainingCompanionApp.instance();
         var ctl = (app != null) ? app.activeController : null;
@@ -327,12 +415,19 @@ class SessionListView extends Ui.View {
         Ui.pushView(ev, new WorkoutDelegate(ctl, ev), Ui.SLIDE_LEFT);
     }
 
-    // Auto-start from the glance skips the menu and begins at once.
-    hidden function autoStart() {
+    // START on the header, and auto-start from the glance: the workout screen,
+    // and the timer started (after the Countdown Start when it is on). A workout
+    // already recording is shown as it is.
+    function startNow() {
         startFirstSession();
         var app = TrainingCompanionApp.instance();
-        if (app != null && app.activeController != null) { app.activeController.start(); }
+        if (app != null && app.activeController != null) {
+            app.activeController.start();
+            StepAlert.flush(app.activeController);
+        }
     }
+
+    hidden function autoStart() { startNow(); }
 }
 
 class SessionListDelegate extends Ui.BehaviorDelegate {
@@ -341,18 +436,20 @@ class SessionListDelegate extends Ui.BehaviorDelegate {
         BehaviorDelegate.initialize();
         _view = view;
     }
-    // START: the workout menu (Do Workout / Steps), as Garmin opens a workout.
+    // START: the workout on the header, the row in the list.
     function onSelect() {
-        if (_view.current() != null) { $.openWorkoutMenu(_view); }
+        _view.choose();
         return true;
     }
-    // BACK on the pre-start page leaves the app, as on Garmin's own. Exit
-    // explicitly: after a workout this is not the only view on the stack.
+    // BACK in the list returns to the header; on the header it leaves the app,
+    // as on Garmin's own. Exit explicitly: after a workout this is not the only
+    // view on the stack.
     function onBack() {
+        if (_view.back()) { return true; }
         Toybox.System.exit();
     }
-    function onNextPage()     { _view.cycle(1);  return true; }
-    function onPreviousPage() { _view.cycle(-1); return true; }
+    function onNextPage()     { _view.move(1);  return true; }
+    function onPreviousPage() { _view.move(-1); return true; }
 
     // hold UP: the activity menu.
     function onMenu() {

@@ -199,9 +199,13 @@ Resolved (verified by compiling against SDK 9.2.0):
   - EMOM per-interval buzz + round counter; AMRAP time-cap countdown with
     SELECT-to-count rounds; for-time round counter.
 - Garmin-style workout (2026-10-09, matching the watch's own Strength workout):
-  START on the pre-start page opens Do Workout / Steps (Steps sets each exercise's
-  reps, hold, weight and RPE for the run); Do Workout shows the workout ready, and
-  nothing records until START. Once started, START pauses and opens Resume / Save / Discard (Discard asks with the system's
+  the pre-start page is Garmin's (since 1.10.0, from the athlete's photos of
+  Strength): the battery, the session's icon and name over a rule in its colour,
+  and a list below it (`NativeList`) — Workouts (the day's other sessions), Steps
+  (each exercise's reps, hold, weight and RPE for the run), Training Calendar,
+  Progress, Readiness, Settings, Sync. With the header focused START starts the
+  workout at once (after Countdown Start); DOWN moves into the list, START opens a
+  row, BACK returns to the header. Once started, START pauses and opens Resume / Save / Discard (Discard asks with the system's
   delete confirmation); BACK is LAP — it ends a set (then the rest runs), ends a
   rest early, counts a round or lap, or moves to the next step; DOWN/UP turn the
   pages, and on the step page walk the list; hold UP opens Stop Workout / Skip / Set Next

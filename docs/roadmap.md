@@ -549,10 +549,12 @@ Voice. What the platform will not do, found on the way:
 - **One glance per app:** variants are a style setting. Whether a Connect IQ glance can go
   in a fenix glance folder, and whether a glance-launched app may record, needs the watch.
 
-*Next, from the athlete's photos of the native Strength flow (2026-10-23):* the pre-start
-page as Garmin's — the header focused, START starts at once, DOWN into a list (Workouts,
-Steps, Training Calendar, Progress, Readiness, Settings, Sync) — in place of the Do Workout /
-Steps menu; Save → "Saving" → "Activity Saved" and Discard → "Discarding" (red arc) →
+*The pre-start page as Garmin's (2026-10-23, same release):* the header focused, START
+starts at once, DOWN into a list (Workouts, Steps, Training Calendar, Progress, Readiness,
+Settings, Sync) drawn by `NativeList` — in place of the Do Workout / Steps menu and UP/DOWN
+cycling the day's sessions; hold UP lists the same rows as a Menu2.
+
+*Next, from the athlete's photos of the native Strength flow (2026-10-23):* Save → "Saving" → "Activity Saved" and Discard → "Discarding" (red arc) →
 "Activity Discarded" (green ring); the post-save list (Done · All Stats · TE · Heart Rate ·
 Sets, numbers in a column on the left) and All Stats pages Summary → Heart Rate → HR Zones →
 Training Effect → Training Status; glance styles (Next up, Day bar, Ring), left-aligned in
