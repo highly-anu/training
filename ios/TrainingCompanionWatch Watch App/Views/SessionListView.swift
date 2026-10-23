@@ -70,6 +70,9 @@ struct SessionListView: View {
                             menuRow("Progress", WatchListText.progressLine(progress), icon: "checkmark.circle")
                         }
                     }
+                    NavigationLink(destination: WatchSettingsView()) {
+                        menuRow("Settings", "Lead-in and voice", icon: "gearshape")
+                    }
                     Button { connectivity.requestSync() } label: {
                         menuRow("Sync", connectivity.lastSync?.line ?? "today's session",
                                 icon: "arrow.triangle.2.circlepath",

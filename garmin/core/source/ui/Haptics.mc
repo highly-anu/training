@@ -9,17 +9,18 @@ using Toybox.Attention;
 // vibration profiles and system tones.
 //
 // Every call is guarded: Attention is absent on some products, and the user can
-// disable vibration or tones system-wide, in which case these are no-ops.
+// disable vibration or tones system-wide, in which case these are no-ops. The
+// app's own Settings (Cues) turn the tones or the vibrations off for a workout.
 module Haptics {
 
     function vibe(pattern) {
-        if (Attention has :vibrate) {
+        if (Cues.vibrate && (Attention has :vibrate)) {
             try { Attention.vibrate(pattern); } catch (e) {}
         }
     }
 
     function tone(t) {
-        if (Attention has :playTone) {
+        if (Cues.tones && (Attention has :playTone)) {
             try { Attention.playTone(t); } catch (e) {}
         }
     }
@@ -76,15 +77,17 @@ module Haptics {
         tone(dir > 0 ? Attention.TONE_ALERT_HI : Attention.TONE_ALERT_LO);
     }
 
-    // Count-in before a timed block: three ticks then a go.
-    function countTick() {
+    // The lead-in before work (Cues.leadIn): a short low tick on each of the
+    // last three seconds, then a long go. The tones are the athlete's pick
+    // (Settings ▸ Lead-in tones); a custom pitch would play nothing on a speaker.
+    function leadTick() {
         vibe([ new Attention.VibeProfile(50, 100) ]);
-        tone(Attention.TONE_KEY);
+        tone(Cues.tickTone);
     }
 
-    function countGo() {
-        vibe([ new Attention.VibeProfile(100, 350) ]);
-        tone(Attention.TONE_START);
+    function leadGo() {
+        vibe([ new Attention.VibeProfile(100, 500) ]);
+        tone(Cues.goTone);
     }
 
     // Side change on a unilateral movement (TGU, single-leg work).

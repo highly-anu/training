@@ -7,6 +7,12 @@ module Vocab {
     const VERSION = 1;
     const FALLBACK_TEMPLATE = "timed";
     const WEIGHT_STEP_KG = 2.5f;
+    const LEAD_IN_SEC = 3;
+
+    // The lead-in's words, one per second from LEAD_IN_SEC down to the go.
+    function leadInWords() {
+        return ["Work in 3", "2", "1", "Go"];
+    }
 
     // slot_type -> template.
     function templateFor(slotType) {

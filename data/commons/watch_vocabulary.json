@@ -121,6 +121,10 @@
     "training_effect": "Aerobic and anaerobic training effect.",
     "exercises": "What was logged, per exercise."
   },
+  "cues": {
+    "_comment": "The lead-in both watches count before work that starts on a clock: the last seconds of a rest, and START when Countdown Start is on. A tick on each second, then the go; the words are what the Apple Watch says with Voice on (the Garmin has no speech) and what both screens show.",
+    "lead_in": { "seconds": 3, "words": ["Work in 3", "2", "1", "Go"] }
+  },
   "limits": { "title_parts": 4, "summary_pages": 5, "phases": 8, "module_menu_items": 2 },
   "defaults": {
     "slot_types": {

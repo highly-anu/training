@@ -181,13 +181,17 @@ class ExerciseScreen extends Ui.View {
                                     : ["SET", _ctl.currentSetCount().toString() + "/"
                                               + Steps.setCount(ex).toString()];
             var n = _ctl.nextStep();
-            ls = ["Next: " + n[0], n[1]];
+            var lead = _ctl.leadInLeft();
+            ls = (lead > 0) ? [Cues.leadText(lead), "Next: " + n[0]] : ["Next: " + n[0], n[1]];
         } else {
             title = _renderer.title(_ctl, ex);
             a = _renderer.fieldA(_ctl, ex);
             b = _renderer.fieldB(_ctl, ex);
-            // Ready: nothing records until START, as on Garmin's own workouts.
-            ls = _ctl.isReady() ? ["Press START", "to begin"] : _renderer.lines(_ctl, ex);
+            // Ready: nothing records until START, as on Garmin's own workouts;
+            // with Countdown Start, "Work in 3", "2", "1" first.
+            var c = _ctl.countInLeft();
+            ls = (c > 0) ? [Cues.leadText(c), null]
+                : (_ctl.isReady() ? ["Press START", "to begin"] : _renderer.lines(_ctl, ex));
         }
 
         var ty = (g.h * 245) / 1000;

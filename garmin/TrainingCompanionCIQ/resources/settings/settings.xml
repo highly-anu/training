@@ -18,4 +18,17 @@
   <setting propertyKey="demoProgrammes" title="Demo session (no account)">
     <settingConfig type="boolean"/>
   </setting>
+  <!-- Workout cues; the lead-in's tones are picked by ear on the watch (Settings ▸ Lead-in Tones). -->
+  <setting propertyKey="cueTones" title="Workout tones">
+    <settingConfig type="boolean"/>
+  </setting>
+  <setting propertyKey="cueVibrate" title="Workout vibrations">
+    <settingConfig type="boolean"/>
+  </setting>
+  <setting propertyKey="leadIn" title="Lead-in before work (3, 2, 1, go)">
+    <settingConfig type="boolean"/>
+  </setting>
+  <setting propertyKey="countdownStart" title="Countdown after START">
+    <settingConfig type="boolean"/>
+  </setting>
 </settings>
