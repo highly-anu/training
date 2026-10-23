@@ -346,9 +346,18 @@ struct TodayView: View {
                         Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
                     }
                 }
-                Text(arch?.name ?? ModalityStyle.label(for: session.modality))
-                    .font(.body).fontWeight(.medium)
-                    .foregroundStyle(done ? .secondary : .primary)
+                HStack(spacing: 6) {
+                    // The workout icon leads the name; the capsule above keeps
+                    // the modality (§6.40).
+                    if let icon = session.icon, AppSymbol.custom.contains(icon) {
+                        Image(symbol: icon)
+                            .foregroundStyle(color)
+                            .accessibilityHidden(true)
+                    }
+                    Text(arch?.name ?? ModalityStyle.label(for: session.modality))
+                        .font(.body).fontWeight(.medium)
+                        .foregroundStyle(done ? .secondary : .primary)
+                }
                 HStack(spacing: 12) {
                     if let mins = arch?.durationEstimateMinutes {
                         Label("\(mins) min", systemImage: "clock")

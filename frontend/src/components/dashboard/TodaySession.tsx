@@ -3,6 +3,7 @@ import { format } from 'date-fns'
 import { motion } from 'framer-motion'
 import { ArrowRight, Clock, Dumbbell } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { WorkoutIcon } from '@/components/icons/WorkoutIcon'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
 import { useProfileStore } from '@/store/profileStore'
 import type { GeneratedProgram } from '@/api/types'
@@ -62,7 +63,10 @@ export function TodaySession({ program, weekIndex }: TodaySessionProps) {
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs text-muted-foreground">{format(new Date(), 'EEEE, MMMM d')}</p>
-          <h3 className="text-base font-bold text-foreground mt-0.5">{session.archetype?.name ?? session.modality}</h3>
+          <h3 className="flex items-center gap-2 text-base font-bold text-foreground mt-0.5">
+            <WorkoutIcon icon={session.icon} modality={session.modality} />
+            {session.archetype?.name ?? session.modality}
+          </h3>
         </div>
         <ModalityBadge modality={session.modality} />
       </div>

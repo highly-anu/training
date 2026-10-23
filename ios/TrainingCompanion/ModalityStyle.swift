@@ -115,23 +115,12 @@ enum ActivityIcon {
     }
 }
 
-/// Symbols the app draws itself, from the asset catalog, for what SF Symbols
-/// has no glyph for (design-system §6.12). Each is written by an
-/// `ios/tools/make_<name>_symbol.py`; ios/docs/custom-icons.md is how to add one.
-enum AppSymbol {
-    static let kettlebell = "kettlebell"
-    static let custom: Set<String> = [kettlebell]
-}
-
-extension Image {
-    /// An icon name from `ActivityIcon` or `ModalityStyle`: one of the app's
-    /// own symbols from the asset catalog, any other from SF Symbols.
-    /// `Image(systemName:)` draws nothing for a custom name.
-    init(symbol name: String) {
-        if AppSymbol.custom.contains(name) {
-            self.init(name)
-        } else {
-            self.init(systemName: name)
-        }
+/// What a planned session leads with (design-system §6.40): its workout icon
+/// — what its main exercise is, from the server's `icon` — tinted with its
+/// modality's colour; a session without one keeps its modality icon.
+enum SessionIcon {
+    static func symbol(icon: String?, modality: String) -> String {
+        if let icon, AppSymbol.custom.contains(icon) { return icon }
+        return ModalityStyle.icon(for: modality)
     }
 }

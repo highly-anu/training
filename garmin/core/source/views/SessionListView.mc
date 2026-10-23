@@ -235,7 +235,7 @@ class SessionListView extends Ui.View {
     hidden function drawSession(dc, g, s) {
         var accent = Theme.sessionAccent(s);
         Icons.drawCentered(dc, g.cx, (g.h * 14) / 100, g.iconChip,
-                           Icons.categoryKey(s.archetypeCategory()), accent);
+                           Icons.forSession(s), accent);
         var day = "TODAY";
         if (_sessions.size() > 1) {
             day += "  " + (_index + 1).toString() + " OF " + _sessions.size().toString();

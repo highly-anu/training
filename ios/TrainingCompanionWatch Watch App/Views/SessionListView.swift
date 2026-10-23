@@ -139,9 +139,9 @@ struct SessionListView: View {
     @ViewBuilder
     private func sessionRow(_ session: WatchSession, done: Bool) -> some View {
         HStack(spacing: 10) {
-            Image(systemName: done
+            Image(symbol: done
                   ? "checkmark.circle.fill"
-                  : ModalityStyle.icon(for: session.modalityId))
+                  : SessionIcon.symbol(icon: session.icon, modality: session.modalityId))
                 .foregroundStyle(done ? .green : ModalityStyle.color(for: session.modalityId))
                 .frame(width: 24)
             VStack(alignment: .leading, spacing: 2) {

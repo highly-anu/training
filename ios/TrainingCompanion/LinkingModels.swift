@@ -66,6 +66,8 @@ struct LinkSession: Decodable, Equatable, Identifiable {
     let uid: String?
     let date: String
     let modality: String?
+    /// Its workout icon (src/session_icon.py), for both lines of a pair.
+    var icon: String? = nil
     let name: String
     let durationMinutes: Double?
     let historical: Bool

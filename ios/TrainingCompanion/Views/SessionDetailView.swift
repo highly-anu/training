@@ -157,7 +157,7 @@ struct SessionDetailView: View {
     private var headerSection: some View {
         Section {
             HStack(spacing: 12) {
-                Image(systemName: ModalityStyle.icon(for: currentSession.modality))
+                Image(symbol: SessionIcon.symbol(icon: currentSession.icon, modality: currentSession.modality))
                     .foregroundStyle(ModalityStyle.color(for: currentSession.modality))
                     .font(.title2)
                 VStack(alignment: .leading, spacing: 4) {

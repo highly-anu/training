@@ -182,7 +182,7 @@ struct LogLinkingTab: View {
 
     private func pairRow(_ w: LinkWorkout, _ s: LinkSession, linked: Bool) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            workoutLine(w)
+            workoutLine(w, linkedTo: linked ? s : nil)
             HStack(spacing: 8) {
                 Image(systemName: linked ? "checkmark.circle.fill" : "arrow.turn.down.right")
                     .foregroundStyle(linked ? Color.green : Color.secondary)
@@ -194,11 +194,14 @@ struct LogLinkingTab: View {
         .accessibilityLabel(linked ? "\(w.title) linked to \(s.name)" : "\(w.title) may be \(s.name)")
     }
 
-    private func workoutLine(_ w: LinkWorkout) -> some View {
-        HStack(spacing: 8) {
-            Image(symbol: ActivityIcon.forWorkout(activityType: w.activityType ?? "",
-                                                  modalityId: w.inferredModalityId))
-                .foregroundStyle(ModalityStyle.color(for: w.inferredModalityId ?? ""))
+    /// A workout linked to a session shows that session's icon and colour, so
+    /// the pair reads as one; any other leads with what the device recorded.
+    private func workoutLine(_ w: LinkWorkout, linkedTo s: LinkSession? = nil) -> some View {
+        let sessionIcon = s?.icon.flatMap { AppSymbol.custom.contains($0) ? $0 : nil }
+        return HStack(spacing: 8) {
+            Image(symbol: sessionIcon ?? ActivityIcon.forWorkout(activityType: w.activityType ?? "",
+                                                                 modalityId: w.inferredModalityId))
+                .foregroundStyle(ModalityStyle.color(for: (sessionIcon != nil ? s?.modality : w.inferredModalityId) ?? ""))
                 .frame(width: 22)
             VStack(alignment: .leading, spacing: 1) {
                 Text(w.title).font(.subheadline.weight(.medium)).lineLimit(1)
@@ -209,7 +212,7 @@ struct LogLinkingTab: View {
 
     private func sessionLine(_ s: LinkSession) -> some View {
         HStack(spacing: 8) {
-            Image(symbol: ModalityStyle.icon(for: s.modality ?? ""))
+            Image(symbol: SessionIcon.symbol(icon: s.icon, modality: s.modality ?? ""))
                 .foregroundStyle(ModalityStyle.color(for: s.modality ?? ""))
                 .frame(width: 22)
             VStack(alignment: .leading, spacing: 1) {

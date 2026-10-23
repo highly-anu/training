@@ -208,7 +208,7 @@ class ActivityHeader extends Ui.Drawable {
         }
         var accent = Theme.sessionAccent(_s);
         var icon = (w * 67) / 1000;
-        Icons.drawCentered(dc, cx, (h * 22) / 100, icon, Icons.categoryKey(_s.archetypeCategory()), accent);
+        Icons.drawCentered(dc, cx, (h * 22) / 100, icon, Icons.forSession(_s), accent);
         var nw = (w * 62) / 100;
         dc.setColor(Gfx.COLOR_WHITE, Gfx.COLOR_TRANSPARENT);
         dc.drawText(cx, (h * 52) / 100, Text.lineBold(), Clip.fit(dc, _s.archetypeName(), Text.lineBold(), nw),

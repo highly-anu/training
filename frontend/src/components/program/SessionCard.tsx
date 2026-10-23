@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Clock, CheckCircle2, Activity, CircleSlash } from 'lucide-react'
+import { WorkoutIcon } from '@/components/icons/WorkoutIcon'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
 import { TestBadge } from '@/components/standards/TestBadge'
 import { cn } from '@/lib/utils'
@@ -60,7 +61,10 @@ export function SessionCard({ session, weekNumber, day, sessionIndex, className,
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-xs font-semibold text-foreground truncate">{session.archetype?.name ?? session.modality.replace(/_/g, ' ')}</p>
+          <p className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+            <WorkoutIcon icon={session.icon} modality={session.modality} className="size-4" />
+            <span className="truncate">{session.archetype?.name ?? session.modality.replace(/_/g, ' ')}</span>
+          </p>
           <div className="mt-1 flex flex-wrap items-center gap-1.5">
             <ModalityBadge modality={session.modality} size="sm" />
             {session.test && <TestBadge test={session.test} />}

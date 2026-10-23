@@ -40,6 +40,11 @@
       ],
       "description": "Which exercise library file this lives in."
     },
+    "icon": {
+      "type": "string",
+      "pattern": "^[a-z]+(\\.[a-z]+)*$",
+      "description": "The workout icon of a session this exercise leads: an id from data/commons/workout_icons.json (src/session_icon.py). An archetype's own icon comes first."
+    },
     "modality": {
       "type": "array",
       "description": "Which modalities this exercise develops. Use existing modality IDs or introduce new ones defined in your package's philosophy scope.",

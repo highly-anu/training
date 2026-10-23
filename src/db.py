@@ -278,8 +278,14 @@ def save_user_program(user_id: str, program_data: dict[str, Any]) -> None:
     # would leave a stored copy stale.
     derived = ('phase_summary', 'held_back')
     if isinstance(cp, dict) and any(k in cp for k in derived):
-        program_data = {**program_data,
-                        'currentProgram': {k: v for k, v in cp.items() if k not in derived}}
+        cp = {k: v for k, v in cp.items() if k not in derived}
+        program_data = {**program_data, 'currentProgram': cp}
+    # Each session's `icon` (src/session_icon.py) is derived on read too.
+    if isinstance(cp, dict):
+        from src import session_icon
+        stripped = session_icon.strip(cp)
+        if stripped is not cp:
+            program_data = {**program_data, 'currentProgram': stripped}
     conn = _get_pg_conn()
     if conn:
         try:

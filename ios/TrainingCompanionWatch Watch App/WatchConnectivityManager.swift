@@ -300,7 +300,8 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
                 archetypeName: s.archetypeName,
                 estimatedMinutes: s.estimatedMinutes,
                 isDeload: s.isDeload,
-                exerciseNames: Array(s.exercises.prefix(4).map { $0.name })
+                exerciseNames: Array(s.exercises.prefix(4).map { $0.name }),
+                icon: s.icon
             )
         }
         var data = WidgetTodayData(date: date, sessions: widgetSessions, updatedAt: Date())

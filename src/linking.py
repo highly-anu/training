@@ -22,6 +22,7 @@ from __future__ import annotations
 import re
 from datetime import date, timedelta
 
+from src import session_icon
 from src.workout_matcher import (
     DAY_NAMES, RULES, score_match, session_calendar_date, session_equipment,
 )
@@ -67,6 +68,8 @@ def program_sessions(program: dict, start_date: str, version_id: str | None) -> 
                     'uid': session_uid(version_id, week_index, day_name, index) if version_id else None,
                     'date': day, 'weekNumber': week.get('week_number'), 'dayName': day_name, 'index': index,
                     'modality': s.get('modality'),
+                    # The session's workout icon (src/session_icon.py).
+                    'icon': session_icon.session_icon(s),
                     'name': _name(s.get('modality'), archetype.get('name')),
                     'durationMinutes': archetype.get('duration_estimate_minutes') or RULES['defaultSessionMinutes'],
                     'equipment': session_equipment(s),
@@ -87,6 +90,7 @@ def history_session(row: dict) -> dict:
         'weekNumber': row.get('weekNumber') if row.get('weekNumber') is not None else row.get('weekIndex', 0) + 1,
         'dayName': row.get('dayName'), 'index': row.get('sessionIndex') or 0,
         'modality': row.get('modality'),
+        'icon': row.get('icon'),
         'name': _name(row.get('modality'), row.get('archetypeName')),
         'durationMinutes': row.get('durationMinutes') or RULES['defaultSessionMinutes'],
         'equipment': [],
@@ -285,7 +289,7 @@ def build_linking_days(*, workouts: list[dict], matches: list[dict], pending: li
 _WORKOUT_KEYS = ('id', 'date', 'startTime', 'source', 'activityType', 'name',
                  'durationMinutes', 'inferredModalityId', 'distance')
 _SESSION_KEYS = ('key', 'legacyKey', 'uid', 'date', 'weekNumber', 'dayName', 'index',
-                 'modality', 'name', 'durationMinutes', 'historical', 'programVersionId',
+                 'modality', 'icon', 'name', 'durationMinutes', 'historical', 'programVersionId',
                  'completedAt')
 
 

@@ -41,6 +41,8 @@ export interface LinkSession {
   dayName: string
   index: number
   modality: ModalityId
+  /** The session's workout icon (src/session_icon.py), for both cards of a pair. */
+  icon?: string | null
   name: string
   durationMinutes: number
   equipment: string[]
@@ -125,6 +127,7 @@ export function programSessions(
           uid: programVersionId ? sessionUid(programVersionId, weekIndex, dayName, index) : null,
           date, weekNumber: week.week_number, dayName, index,
           modality: session.modality,
+          icon: session.icon ?? null,
           name: session.archetype?.name ?? session.modality.replace(/_/g, ' '),
           durationMinutes: session.archetype?.duration_estimate_minutes ?? rules.defaultSessionMinutes,
           equipment: sessionEquipment(session),
@@ -143,6 +146,7 @@ export function historySession(row: PlannedSession): LinkSession {
     key: row.sessionUid, legacyKey: row.sessionKey, uid: row.sessionUid,
     date: row.date, weekNumber: row.weekNumber ?? row.weekIndex + 1, dayName: row.dayName, index: row.sessionIndex,
     modality: row.modality,
+    icon: row.icon ?? null,
     name: row.archetypeName ?? row.modality.replace(/_/g, ' '),
     durationMinutes: row.durationMinutes || rules.defaultSessionMinutes,
     equipment: [],

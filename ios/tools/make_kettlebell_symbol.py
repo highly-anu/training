@@ -10,7 +10,7 @@ list size — the window is what says "kettlebell".
 """
 import math
 
-from symbol_template import Glyph, write_symbolset
+from symbol_template import ASSETS, Glyph, write_symbolset
 
 CX, CY, R = 50.0, 62.0, 34.0         # the ball
 LEG, BASE_Y, WIN = 30.0, 92.0, 21.0  # where the handle meets the ball, the base, the window's floor
@@ -45,4 +45,12 @@ def kettlebell():
 
 
 if __name__ == '__main__':
-    print(write_symbolset('kettlebell', kettlebell(), script='make_kettlebell_symbol.py'))
+    # Every target draws it — the phone, and a session's workout icon on the
+    # widgets and the Apple Watch (data/commons/workout_icons.json) — and each
+    # target has its own catalog.
+    ios = ASSETS.parent.parent
+    for catalog in (ASSETS,
+                    ios / 'TrainingCompanionWatch Watch App/Assets.xcassets',
+                    ios / 'TrainingWidgets/Assets.xcassets',
+                    ios / 'TrainingWatchWidgets/Assets.xcassets'):
+        print(write_symbolset('kettlebell', kettlebell(), script='make_kettlebell_symbol.py', assets=catalog))

@@ -216,7 +216,7 @@ struct ProgramPreviewView: View {
             HStack(alignment: .top, spacing: 10) {
                 Text(day.prefix(3)).font(.subheadline).foregroundStyle(.secondary)
                     .frame(width: 34, alignment: .leading)
-                Image(systemName: ModalityStyle.icon(for: session.modality))
+                Image(symbol: SessionIcon.symbol(icon: session.icon, modality: session.modality))
                     .foregroundStyle(ModalityStyle.color(for: session.modality))
                     .font(.caption)
                     .padding(.top, 3)

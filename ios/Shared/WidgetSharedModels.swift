@@ -1,4 +1,33 @@
 import Foundation
+import SwiftUI
+
+// MARK: - The symbols every target draws itself
+
+/// Symbols the app draws itself, from each target's asset catalog, for what SF
+/// Symbols has no glyph for (design-system §6.12): a recorded kettlebell
+/// workout, and a session's workout icon (data/commons/workout_icons.json) on
+/// the phone, the widgets and the Apple Watch. Each is written by an
+/// `ios/tools/make_<name>_symbol.py` into every catalog;
+/// ios/docs/custom-icons.md is how to add one.
+enum AppSymbol {
+    static let kettlebell = "kettlebell"
+    static let custom: Set<String> = [kettlebell]
+}
+
+extension Image {
+    /// An icon name from `ActivityIcon`, `ModalityStyle` or a session's `icon`:
+    /// one of the app's own symbols from the asset catalog, any other from SF
+    /// Symbols. `Image(systemName:)` draws nothing for a custom name.
+    init(symbol name: String) {
+        if AppSymbol.custom.contains(name) {
+            self.init(name)
+        } else {
+            self.init(systemName: name)
+        }
+    }
+}
+
+// MARK: - Widget data
 
 // Lightweight session snapshot for widgets. Shared between:
 //   TrainingCompanion (iOS app)
@@ -15,6 +44,8 @@ struct WidgetSession: Codable, Identifiable {
     let isDeload: Bool
     /// First few exercise names for widget preview rows
     let exerciseNames: [String]
+    /// Its workout icon (src/session_icon.py); nil → the modality icon.
+    var icon: String? = nil
 }
 
 struct WidgetTodayData: Codable {

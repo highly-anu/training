@@ -2051,7 +2051,7 @@ className="w-full sm:max-w-md"
 
 ## 15. Icon System
 
-All icons come from `lucide-react`. Sizing uses Tailwind's `size-*` shorthand (sets both width and height).
+All icons come from `lucide-react`, except a session's workout icon (§15.4). Sizing uses Tailwind's `size-*` shorthand (sets both width and height).
 
 ### 15.1 Size Convention
 
@@ -2099,6 +2099,20 @@ Icons inherit `currentColor` by default, so they follow their parent's `text-*` 
 | `Plus` | Add |
 | `Trash2` | Delete |
 | `Settings` | Configuration |
+
+### 15.4 Session Workout Icon
+
+A planned session leads with its workout icon — what its main exercise is — in
+its modality's `hex` (§8.1): `<WorkoutIcon icon={session.icon} modality={session.modality} />`
+(`components/icons/WorkoutIcon.tsx`). The server derives `icon` on every read
+(`src/session_icon.py`, `data/commons/workout_icons.json`); the glyphs are
+generated into `workoutIcons.generated.ts` by `tools/icons/gen_workout_icons.py`
+(`--check` fails when it is stale), the same shapes the phone, both watches and
+the widgets draw. Today there is one, `kettlebell`. A session without an icon
+draws none and its `ModalityBadge` carries the rest; the badge stays on every
+card either way, never as the header. In Log ▸ Linking a linked workout shows
+its session's icon. In the week overview's narrow columns the icon sits on its
+own row above the name.
 
 ---
 

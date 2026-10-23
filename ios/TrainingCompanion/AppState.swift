@@ -545,7 +545,8 @@ final class AppState: ObservableObject {
                 archetypeName: s.archetype?.name ?? s.modality,
                 estimatedMinutes: s.archetype?.durationEstimateMinutes ?? 45,
                 isDeload: s.isDeload,
-                exerciseNames: Array(names.prefix(4))
+                exerciseNames: Array(names.prefix(4)),
+                icon: s.icon
             )
         }
         WidgetDataStore.write(WidgetTodayData(date: dateStr, sessions: sessions, updatedAt: Date()))

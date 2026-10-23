@@ -1,0 +1,13 @@
+{
+  "_about": "Session workout icons: one per session, chosen for its main exercise, tinted with its modality's colour on every client. src/session_icon.py resolves a session's: an archetype's or the lead exercise's own `icon:`, else the lead exercise's category (`exercise_category_defaults`), else — when the session has no lead exercise to read, as an archived row — the archetype's category (`archetype_category_defaults`). A session with none draws its modality icon. tools/icons/gen_workout_icons.py draws each id for the web from tools/icons/workout_glyphs.py; iOS, the Apple Watch and the widgets use the `kettlebell` symbolset (ios/tools/make_kettlebell_symbol.py), Garmin its cat_kettlebell bitmap. `fallback` is the icon a platform without the asset draws instead.",
+  "version": 1,
+  "icons": [
+    {"id": "kettlebell", "label": "Kettlebell", "fallback": null}
+  ],
+  "exercise_category_defaults": {
+    "kettlebell": "kettlebell"
+  },
+  "archetype_category_defaults": {
+    "kettlebell": "kettlebell"
+  }
+}
