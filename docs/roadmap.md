@@ -52,6 +52,7 @@ deferred is under *Later*.
 | 13 | Heart rate from the programming: ship the watches' exercise times, fidelity, pauses | P2 | M | watch, engine |
 | 14 | Watch parity: the Apple Watch on the server's contract and vocabulary | P2 | M | watch, iOS, API |
 | 15 | Program preview on the phone; the regenerate offer that asks the server first (*IA*) | P2 | M | iOS, web |
+| 16 | Garmin's official Connect API, open again since 2026-10-21: verify the integration, then health data and workouts pushed to the watch | P2 | M | API, watch, web, iOS |
 
 ---
 
@@ -1268,6 +1269,58 @@ session used asked to rebuild the plan. Left open:
    watcher served the first transform of each file until Vite was restarted. Try
    `server.watch.usePolling` or an explicit `server.watch` path when the root is under a
    dot directory; meanwhile restart Vite (`--force`) after edits in a worktree.
+
+---
+
+### 16. Garmin's official Connect API — P2 · M
+
+Added 2026-10-23, from a r/Garmin thread the athlete shared. On 2026-10-21 Garmin
+reopened its Connect Developer Program, closed to new applicants since March 2026, as three
+tiers ([DC Rainmaker](https://www.dcrainmaker.com/2026/10/garmin-connect-api-revamps-connect-developer.html),
+[the5krunner](https://the5krunner.com/2026/10/22/garmin-personal-api/); check
+developer.garmin.com for the terms):
+
+- **Personal**: free. One person makes a key in Garmin Connect themselves, with no
+  application, and it is read-only. It gives activity summaries, full FIT files, and
+  health and women's health summaries. FIT files sent through the API have some fields
+  Garmin calls proprietary removed. VO2 max, recovery time and training status or load are
+  not listed.
+- **Startup**: free, for up to 1,000 users, and approval is said to be almost immediate. It
+  has the same data plus the **Training and Courses APIs**: structured workouts and courses
+  pushed to Garmin Connect, which sends them on to the watch. Data arrives by push only,
+  with no historical backfill.
+- **Enterprise**: historical backfill, support, and more than 1,000 users. There is a
+  $1,000 entry fee, then a fee per monthly active user, payable from 2027-04-01.
+
+**What exists.** `src/garmin_connect.py` (OAuth 2.0 + PKCE, activity fetch, backfill), the
+webhook and `src/garmin_worker.py` with its `garmin_webhook_events` queue. Because the portal
+was closed, all of it was written against a local stub (`test_garmin_webhook.py`). The
+module docstring says its hosts, paths and scope are unverified. The web's Settings ▸
+Connections has the Garmin button.
+
+1. **A Personal key on the athlete's own account (S).** This is a spike: pull one activity
+   and one day's health summary, and compare them with what the Connect IQ app and the
+   Apple Health relay send now. Check which FIT fields are removed (HR series, laps, sets),
+   whether sleep, HRV, Body Battery and resting HR are in the health summary, and the rate
+   limits.
+2. **Apply for Startup and verify the integration (S).** Check every endpoint in
+   `garmin_connect.py` against the real documentation. The backfill call is Enterprise-only,
+   so connecting an account must manage without it: say "from today on", or ask for a
+   manual FIT upload of older workouts. Then turn it on in production.
+3. **Activities by webhook (S).** For a Garmin user this replaces Garmin → Apple Health →
+   relay and the manual FIT upload. Dedup already ranks the `garmin` source; check that the
+   matcher and `fastest_seconds` get the speed they need from an API FIT file.
+4. **Health summaries (M).** Daily resting HR, sleep, Body Battery and stress, read by
+   `_bio_for_scoring`. It could replace the Connect IQ wellness posts (item 2) and the
+   phone relay's resting HR, which only gets there after Garmin Connect has synced to Apple
+   Health. Keep one series per method (`wellness.merge_for_scoring`), never a day-by-day mix.
+5. **Push the program's sessions as Garmin workouts (M–L).** This is the big one: today's
+   and the week's sessions arrive on any Garmin, without the Connect IQ app, and run in the
+   watch's own workout player and summary. Map each watch template to Garmin's workout
+   steps (sets with exercise, reps and weight; intervals; repeats; time and distance
+   targets). Note what does not carry over: AMRAP rounds, for-time clocks, the lead-in and
+   test results. Decide what that means for the Connect IQ app: keep it for what the
+   native player cannot do, or offer both.
 
 ## Later
 
