@@ -19,8 +19,11 @@ final class WatchSummaryTextTests: XCTestCase {
         let plain = WatchSession(sessionId: "s", modalityId: "m", archetypeName: "A", estimatedMinutes: 30,
                                  isDeload: false, exercises: [])
         XCTAssertEqual(WatchSummaryText.pages(plain), ["summary", "heart_rate", "exercises"],
-                       "the vocabulary's default, training effect left to the Garmin")
+                       "the vocabulary's default: HR zones is the heart-rate page, training effect and status left to the Garmin")
         var custom = plain
+        custom.watch = WatchIdentity(summary: .init(pages: ["hr_zones", "summary", "training_status"]))
+        XCTAssertEqual(WatchSummaryText.pages(custom), ["heart_rate", "summary"],
+                       "HR zones alone still draws the heart-rate page, which has the zones")
         custom.watch = WatchIdentity(summary: .init(pages: ["exercises", "training_effect", "summary"]))
         XCTAssertEqual(WatchSummaryText.pages(custom), ["exercises", "summary"])
         custom.watch = WatchIdentity(summary: .init(pages: ["training_effect"]))

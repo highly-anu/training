@@ -117,15 +117,17 @@
   },
   "summary_pages": {
     "summary": "Time, sets, volume and calories.",
-    "heart_rate": "Average and max HR, time in zones.",
-    "training_effect": "Aerobic and anaerobic training effect.",
+    "heart_rate": "Average and max HR, the HR over the session.",
+    "hr_zones": "Time and share in each HR zone, on the athlete's own zones.",
+    "training_effect": "The watch's aerobic training effect and what it means; Garmin's own, so the Apple Watch has none.",
+    "training_status": "Recovery time left and VO2 max, as the watch reads them after the session; Garmin's own.",
     "exercises": "What was logged, per exercise."
   },
   "cues": {
     "_comment": "The lead-in both watches count before work that starts on a clock: the last seconds of a rest, and START when Countdown Start is on. A tick on each second, then the go; the words are what the Apple Watch says with Voice on (the Garmin has no speech) and what both screens show.",
     "lead_in": { "seconds": 3, "words": ["Work in 3", "2", "1", "Go"] }
   },
-  "limits": { "title_parts": 4, "summary_pages": 5, "phases": 8, "module_menu_items": 2 },
+  "limits": { "title_parts": 4, "summary_pages": 6, "phases": 8, "module_menu_items": 2 },
   "defaults": {
     "slot_types": {
       "sets_reps": "sets",
@@ -141,7 +143,7 @@
     },
     "fallback_template": "timed",
     "identity": { "accent": null },
-    "summary": { "pages": ["summary", "heart_rate", "training_effect", "exercises"] },
+    "summary": { "pages": ["summary", "heart_rate", "hr_zones", "training_effect", "training_status", "exercises"] },
     "edit": { "weight_step_kg": 2.5, "weight_step_by_category": { "kettlebell": 4.0 } }
   }
 }

@@ -52,6 +52,7 @@ class WorkoutController {
     hidden var _hrPeak;
     hidden var _hrLast;         // last sampled bpm, so onUpdate never has to
                                 // call Activity.getActivityInfo() itself
+    hidden var _zoneSec;        // [Number] seconds in zones 1-5 (index 0-4), for HR Zones
 
     // GPS / distance / elevation — captured for cardio sessions only.
     // Parallel Float arrays rather than an array of {lat,lng,altitude}
@@ -145,6 +146,7 @@ class WorkoutController {
         _hrVal = new [SAMPLE_CAP];
         _hrN = 0; _hrStride = 1; _hrPhase = 0;
         _hrSum = 0; _hrCount = 0; _hrPeak = 0; _hrLast = null;
+        _zoneSec = [0, 0, 0, 0, 0];
         _isCardio = false;
         _distanceM = 0; _ascent = 0; _descent = 0;
         _gpsLat = new [SAMPLE_CAP];
@@ -317,6 +319,8 @@ class WorkoutController {
             pushHr(_elapsed, hr);
             _hrSum += hr; _hrCount += 1;
             if (hr > _hrPeak) { _hrPeak = hr; }
+            var z = zoneOf(hr);
+            if (z != null) { _zoneSec[z - 1] += 1; }
         }
         if (info != null) {
             if ((info has :calories) && info.calories != null) { _calories = info.calories; }
@@ -655,12 +659,29 @@ class WorkoutController {
     function ascentM()       { return _ascent; }
 
     // The HR zone the athlete is actually in, 1-5, or null.
-    function currentZone() {
-        if (_hrZones == null || _hrLast == null) { return null; }
-        for (var z = 1; z < _hrZones.size(); z += 1) {
-            if (_hrLast < _hrZones[z]) { return z; }
+    function currentZone() { return (_hrLast == null) ? null : zoneOf(_hrLast); }
+
+    // The zone a bpm falls in on the athlete's own boundaries, 1-5 (below zone
+    // 1's floor counts as zone 1, as the watch's gauge shows it), or null.
+    function zoneOf(hr) {
+        if (_hrZones == null || _hrZones.size() < 2) { return null; }
+        var top = _hrZones.size() - 1;
+        if (top > 5) { top = 5; }
+        for (var z = 1; z < top; z += 1) {
+            if (hr < _hrZones[z]) { return z; }
         }
-        return _hrZones.size() - 1;
+        return top;
+    }
+
+    // Seconds in each zone, zone 1 first; null when the watch has no zones.
+    function zoneSeconds() { return (_hrZones == null || _hrZones.size() < 2) ? null : _zoneSec; }
+
+    // The bpm each zone starts at, zone 1 first (the boundaries' lower edges).
+    function zoneFloors() {
+        if (_hrZones == null || _hrZones.size() < 2) { return null; }
+        var out = [];
+        for (var z = 0; z < 5 && z < _hrZones.size() - 1; z += 1) { out.add(_hrZones[z]); }
+        return out;
     }
 
     // Mark a lap in the FIT file. addLap() was never called before, so per-exercise

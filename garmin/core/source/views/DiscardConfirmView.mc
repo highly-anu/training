@@ -34,11 +34,13 @@ class DiscardConfirmDelegate extends Ui.InputDelegate {
     function onKey(evt) {
         var k = evt.getKey();
         if (k == Styles.confirmation_input__delete.button) {
-            // As on Garmin's own stop menu: a discarded workout has no summary.
+            // As on Garmin's own stop menu: a discarded workout has no summary,
+            // only "Discarding" and "Activity Discarded" before the app closes.
             _ctl.discardSession();
             var app = TrainingCompanionApp.instance();
             if (app != null) { app.activeController = null; }
-            Toybox.System.exit();
+            var ov = new OutcomeView(_ctl, :discarded);
+            Ui.switchToView(ov, new OutcomeDelegate(ov), Ui.SLIDE_IMMEDIATE);
             return true;
         }
         if (k == Styles.confirmation_input__reject.button || k == Ui.KEY_ESC) {

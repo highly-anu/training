@@ -7,12 +7,18 @@ import Foundation
 enum WatchSummaryText {
 
     /// The pages this watch draws, in the package's order (the vocabulary's
-    /// `summary_pages`). Training effect is the Garmin's own measure — it is
-    /// shown only where the watch has one, and the Apple Watch has none.
+    /// `summary_pages`). Training effect and training status are the Garmin's
+    /// own measures — shown only where the watch has them, and the Apple Watch
+    /// has neither. HR zones is this watch's heart-rate page, which already
+    /// shows the minutes in each zone, so it is drawn once.
     static func pages(_ session: WatchSession) -> [String] {
         let drawn: Set<String> = ["summary", "heart_rate", "exercises"]
         let wanted = session.watch?.summary?.pages ?? WatchVocab.summaryPages
-        let pages = wanted.filter(drawn.contains)
+        var pages: [String] = []
+        for page in wanted.map({ $0 == "hr_zones" ? "heart_rate" : $0 })
+        where drawn.contains(page) && !pages.contains(page) {
+            pages.append(page)
+        }
         return pages.isEmpty ? ["summary"] : pages
     }
 

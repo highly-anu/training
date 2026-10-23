@@ -554,11 +554,17 @@ starts at once, DOWN into a list (Workouts, Steps, Training Calendar, Progress, 
 Settings, Sync) drawn by `NativeList` — in place of the Do Workout / Steps menu and UP/DOWN
 cycling the day's sessions; hold UP lists the same rows as a Menu2.
 
-*Next, from the athlete's photos of the native Strength flow (2026-10-23):* Save → "Saving" → "Activity Saved" and Discard → "Discarding" (red arc) →
-"Activity Discarded" (green ring); the post-save list (Done · All Stats · TE · Heart Rate ·
-Sets, numbers in a column on the left) and All Stats pages Summary → Heart Rate → HR Zones →
-Training Effect → Training Status; glance styles (Next up, Day bar, Ring), left-aligned in
-`FONT_GLANCE`. HIIT and Run need the same photos before their pages are matched.
+*1.11.0 (2026-10-23): the end as Garmin's, from the athlete's photos of Strength.* Save →
+"Saving" (an arc sweeps the bezel) → "Activity Saved" (green ring) → the post-save list
+(Done · All Stats · Training Effect · Heart Rate · Sets, each page's number left of the
+rule; `SummaryList.mc`) → All Stats: Summary, Heart Rate, HR Zones and Training Status (new
+`summary_pages`), Training Effect, Exercises. Discard → "Discarding" (red) → "Activity
+Discarded" → closed (`OutcomeView.mc`). Training Status shows recovery time and VO2 max:
+the status word is a complication, and `ComplicationSubscriber` is a watch-face
+permission (the SDK's `projectInfo.xml`), so a watch app cannot read it.
+
+*Next:* glance styles (Next up, Day bar, Ring), left-aligned in `FONT_GLANCE`. HIIT and Run
+need the same photos as Strength (pre-start, pause, summary) before their pages are matched.
 
 **Order of work** (each slice ends in a demo `.iq` and photos from the watch;
 the simulator can't be scripted, so also passive `monkeydo` screenshots on a
