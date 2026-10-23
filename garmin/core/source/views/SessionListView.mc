@@ -38,6 +38,7 @@ class SessionListView extends Ui.View {
     hidden var _index;      // which of the day's sessions is shown
     hidden var _tomorrow;   // the payload's tomorrow preview, or null
     hidden var _focus;      // -1: the header; else the focused row of rows()
+    hidden var _rows;       // rows(), built when the day, readiness or sync changes
 
     // The band of a list with no session behind it (a rest day): the system blue.
     const LIST_ACCENT = 0x4F6FA8;
@@ -73,6 +74,7 @@ class SessionListView extends Ui.View {
         if (DemoSession.enabled()) {
             DemoProgram.seedGlanceCache();
             _readiness = DemoSession.readiness();
+            _rows = null;
             maybeAutoStart();
             return;
         }
@@ -94,6 +96,7 @@ class SessionListView extends Ui.View {
             // show another day's sessions.
             _status = "offline";
             _sessions = [];
+            _rows = null;
             Ui.requestUpdate();
             return;
         }
@@ -114,10 +117,11 @@ class SessionListView extends Ui.View {
     }
 
     function onReadiness(success, data) as Void {
-        if (success) { _readiness = data as Lang.Dictionary?; Ui.requestUpdate(); }
+        if (success) { _readiness = data as Lang.Dictionary?; _rows = null; Ui.requestUpdate(); }
     }
 
     hidden function applyToday(data as Lang.Dictionary?) as Void {
+        _rows = null;
         if (DemoSession.enabled()) {
             _status = "ok";
             _sessions = DemoProgram.week()[0]["sessions"];
@@ -134,8 +138,15 @@ class SessionListView extends Ui.View {
 
     // ── the list ─────────────────────────────────────────────────────────────────
 
-    // The rows under the header: [id, label, sub-label, icon].
+    // The rows under the header: [id, label, sub-label, icon]. Built once per
+    // change of the day, readiness or sync, not per frame: the week and the
+    // day are read from Storage.
     function rows() {
+        if (_rows == null) { _rows = buildRows(); }
+        return _rows;
+    }
+
+    hidden function buildRows() {
         var out = [];
         var s = current();
         if (s != null && _sessions.size() > 1) {
@@ -201,6 +212,7 @@ class SessionListView extends Ui.View {
 
     function select(i) {
         if (_sessions != null && i >= 0 && i < _sessions.size()) { _index = i; }
+        _rows = null;
         Ui.requestUpdate();
     }
 
@@ -257,6 +269,7 @@ class SessionListView extends Ui.View {
     function refresh() {
         if (DemoSession.enabled()) { return; }
         _status = "loading";
+        _rows = null;
         Ui.requestUpdate();
         _sync.fetchToday(method(:onToday));
     }
@@ -282,14 +295,16 @@ class SessionListView extends Ui.View {
         if (_g == null) { _g = new Grid(dc); Text.init(_g); }
         var g = _g;
 
-        if (_status.equals("loading")) {
-            Native.text(dc, g.cx, g.cy, Text.line(), "Syncing...", Native.DIM);
-            return;
-        }
+        // The list stays up while a sync runs (its Sync row started it); the
+        // header waits for the day.
         var rs = rows();
         if (_focus >= rs.size()) { _focus = rs.size() - 1; }
         if (_focus >= 0) {
             drawList(dc, g, rs);
+            return;
+        }
+        if (_status.equals("loading")) {
+            Native.text(dc, g.cx, g.cy, Text.line(), "Syncing...", Native.DIM);
             return;
         }
         drawStatus(dc, g);
