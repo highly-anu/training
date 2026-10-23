@@ -2,56 +2,92 @@ using Toybox.WatchUi as Ui;
 using Toybox.Graphics as Gfx;
 using Toybox.Lang;
 
-// hold UP on the pre-start page: the activity menu, built as Garmin builds its
-// own — the system Menu2 (so the rows, icons, focus band and scrolling are the
-// watch's), under a header with the activity's icon, name and a rule in its
-// colour.
-//
-//   Workout    the session's steps
-//   Today      pick another of the day's sessions (when there is more than one)
-//   Week       today and the six days after it, each day's sessions, each
-//              session's steps (the demo's programme, or the synced week)
-//   Programme  the demo's programme: SOF, Kettlebell or Uphill (demo only)
-//   Progress   this program week's sessions done, the programme's share done,
-//              and the methodology's own measure (real programme only)
-//   Readiness  today's score
-//   Settings   tones, vibration, the lead-in (SettingsMenu)
-//   Sync       re-fetch today, under the last result (real programme only)
+// hold UP on the pre-start page: the pre-start list's rows as the system Menu2
+// (so the rows, icons, focus band and scrolling are the watch's), under a header
+// with the activity's icon, name and a rule in its colour. The rows are the
+// page's own (SessionListView.rows), so the two never differ.
 function openActivityMenu(view) {
-    var s = view.current();
-    var m = new Ui.Menu2({ :title => new ActivityHeader(s) });
-    if (s != null) {
-        var n = s.exerciseCount();
-        m.addItem(new Ui.IconMenuItem("Workout", n.toString() + ((n == 1) ? " exercise" : " exercises"),
-                                      :workout, Native.icon(Rez.Drawables.GmList), {}));
-        var all = view.sessions();
-        if (all != null && all.size() > 1) {
-            m.addItem(new Ui.IconMenuItem("Today", all.size().toString() + " sessions",
-                                          :today, Native.icon(Rez.Drawables.GmToday), {}));
-        }
-    }
-    if (view.week() != null) {
-        m.addItem(new Ui.IconMenuItem("Week", view.weekTitle(), :week, Native.icon(Rez.Drawables.GmWeek), {}));
-    }
-    if (DemoSession.enabled()) {
-        m.addItem(new Ui.IconMenuItem("Programme", DemoProgram.programName(), :programme,
-                                      Native.icon(Rez.Drawables.GmList), {}));
-    }
-    var p = view.progress();
-    if (p != null) {
-        m.addItem(new Ui.IconMenuItem("Progress", progressLine(p), :progress,
-                                      Native.icon(Rez.Drawables.GmCheck), {}));
-    }
-    var r = view.readiness();
-    if (r != null && r.hasKey("score") && r["score"] != null) {
-        m.addItem(new Ui.IconMenuItem("Readiness", r["score"].toString() + "  " + readinessWord(r["status"]),
-                                      :readiness, Native.icon(Rez.Drawables.GmReadiness), {}));
-    }
-    m.addItem(new Ui.MenuItem("Settings", "Alerts and lead-in", :settings, {}));
-    if (!DemoSession.enabled()) {
-        m.addItem(new Ui.IconMenuItem("Sync", SyncCache.syncLine(), :sync, Native.icon(Rez.Drawables.GmRefresh), {}));
+    var m = new Ui.Menu2({ :title => new ActivityHeader(view.current()) });
+    var rs = view.rows();
+    for (var i = 0; i < rs.size(); i += 1) {
+        m.addItem(new Ui.IconMenuItem(rs[i][1], rs[i][2], rs[i][0], Native.icon(rs[i][3]), {}));
     }
     Ui.pushView(m, new ActivityMenuDelegate(view), Ui.SLIDE_LEFT);
+}
+
+// One of the pre-start rows, opened from the page's list or from the hold-UP
+// menu (`fromMenu`: the menu is on the stack and goes when a pick returns to
+// the page).
+//
+//   :today      pick another of the day's sessions
+//   :workout    the session's steps; select one to set its reps, hold, weight
+//   :week       today and the six days after it, each day's sessions, each
+//               session's steps (the demo's programme, or the synced week)
+//   :programme  the demo's programme: SOF, Kettlebell or Uphill (demo only)
+//   :progress   this program week's sessions done, the programme's share done,
+//               and the methodology's own measure (real programme only)
+//   :readiness  today's score
+//   :settings   tones, vibration, the lead-in (SettingsMenu)
+//   :sync       re-fetch today, under the last result (real programme only)
+function openPreStartItem(view, id, fromMenu) {
+    var pops = fromMenu ? 2 : 1;
+    if (id == :workout) {
+        var s = view.current();
+        if (s != null) { $.openSessionSteps(s); }
+    } else if (id == :today) {
+        var m = new Ui.Menu2({ :title => "Workouts" });
+        var all = view.sessions();
+        for (var i = 0; i < all.size(); i += 1) {
+            var s2 = all[i];
+            var sub = s2.estimatedMinutes().toString() + " min";
+            if (i == view.index()) {
+                m.addItem(new Ui.IconMenuItem(s2.archetypeName(), sub, i, Native.icon(Rez.Drawables.GmCheck), {}));
+            } else {
+                m.addItem(new Ui.MenuItem(s2.archetypeName(), sub, i, {}));
+            }
+        }
+        Ui.pushView(m, new TodayMenuDelegate(view, pops), Ui.SLIDE_LEFT);
+    } else if (id == :week) {
+        openWeek(view);
+    } else if (id == :programme) {
+        var m2 = new Ui.Menu2({ :title => "Programme" });
+        var cur = DemoProgram.current();
+        for (var k = 0; k < DemoProgram.IDS.size(); k += 1) {
+            var pid = DemoProgram.IDS[k];
+            if (pid.equals(cur)) {
+                m2.addItem(new Ui.IconMenuItem(DemoProgram.NAMES[k], null, pid,
+                                               Native.icon(Rez.Drawables.GmCheck), {}));
+            } else {
+                m2.addItem(new Ui.MenuItem(DemoProgram.NAMES[k], null, pid, {}));
+            }
+        }
+        Ui.pushView(m2, new ProgrammeMenuDelegate(view, pops), Ui.SLIDE_LEFT);
+    } else if (id == :progress) {
+        var p = view.progress();
+        if (p != null) { $.openProgress(p); }
+    } else if (id == :readiness) {
+        var rv = new ReadinessView(view.readiness());
+        Ui.pushView(rv, new PopDelegate(), Ui.SLIDE_LEFT);
+    } else if (id == :settings) {
+        $.openSettings();
+    } else if (id == :sync) {
+        if (fromMenu) { Ui.popView(Ui.SLIDE_RIGHT); }
+        view.refresh();
+    }
+}
+
+function openWeek(view) {
+    var days = view.week();
+    if (days == null) { return; }
+    var m = new Ui.Menu2({ :title => view.weekTitle() });
+    for (var i = 0; i < days.size(); i += 1) {
+        var d = days[i];
+        var n = d["sessions"].size();
+        var sub = (n == 0) ? "Rest day"
+            : (d["title"] + "  " + Clip.dayMinutes(d).toString() + " min");
+        m.addItem(new Ui.MenuItem(Native.dayName(d["offset"]), sub, i, {}));
+    }
+    Ui.pushView(m, new WeekMenuDelegate(days), Ui.SLIDE_LEFT);
 }
 
 // "3/5 this week · 29%" — the Progress row's sublabel.
@@ -119,20 +155,6 @@ function readinessWord(status) {
     return "";
 }
 
-// START on the pre-start page: Garmin's workout menu.
-//
-//   Do Workout   the workout screen, ready; START there starts the timer
-//   Steps        every exercise; select one to set its reps / hold, weight, RPE
-function openWorkoutMenu(view) {
-    var s = view.current();
-    if (s == null) { return; }
-    var m = new Ui.Menu2({ :title => new ActivityHeader(s) });
-    m.addItem(new Ui.IconMenuItem("Do Workout", null, :go, Native.icon(Rez.Drawables.GmResume), {}));
-    m.addItem(new Ui.IconMenuItem("Steps", "set reps and weights", :steps,
-                                  Native.icon(Rez.Drawables.GmEdit), {}));
-    Ui.pushView(m, new WorkoutStartDelegate(view), Ui.SLIDE_LEFT);
-}
-
 // A session's steps as a system list, name over prescription. Selecting an
 // exercise with something to set (reps, a hold, a load, an RPE) opens its editor.
 function openSessionSteps(s) { openSteps(s, true); }
@@ -150,24 +172,6 @@ function openSteps(s, editable) {
             Steps.overview(ex) + ((last != null) ? ("  · last " + last) : ""), i, {}));
     }
     Ui.pushView(m, new StepsMenuDelegate(list, editable), Ui.SLIDE_LEFT);
-}
-
-class WorkoutStartDelegate extends Ui.Menu2InputDelegate {
-    hidden var _view;
-    function initialize(view) {
-        Menu2InputDelegate.initialize();
-        _view = view;
-    }
-    function onSelect(item) {
-        var id = item.getId();
-        if (id == :go) {
-            _view.startFirstSession();
-        } else if (id == :steps) {
-            var s = _view.current();
-            if (s != null) { $.openSessionSteps(s); }
-        }
-    }
-    function onBack() { Ui.popView(Ui.SLIDE_RIGHT); }
 }
 
 class StepsMenuDelegate extends Ui.Menu2InputDelegate {
@@ -234,100 +238,49 @@ class ActivityMenuDelegate extends Ui.Menu2InputDelegate {
         _view = view;
     }
 
-    function onSelect(item) {
-        var id = item.getId();
-        if (id == :workout) {
-            var s = _view.current();
-            if (s != null) { $.openSessionSteps(s); }
-        } else if (id == :today) {
-            var m = new Ui.Menu2({ :title => "Today" });
-            var all = _view.sessions();
-            for (var i = 0; i < all.size(); i += 1) {
-                var s2 = all[i];
-                var sub = s2.estimatedMinutes().toString() + " min";
-                if (i == _view.index()) {
-                    m.addItem(new Ui.IconMenuItem(s2.archetypeName(), sub, i, Native.icon(Rez.Drawables.GmCheck), {}));
-                } else {
-                    m.addItem(new Ui.MenuItem(s2.archetypeName(), sub, i, {}));
-                }
-            }
-            Ui.pushView(m, new TodayMenuDelegate(_view), Ui.SLIDE_LEFT);
-        } else if (id == :week) {
-            openWeek();
-        } else if (id == :programme) {
-            var m2 = new Ui.Menu2({ :title => "Programme" });
-            var cur = DemoProgram.current();
-            for (var k = 0; k < DemoProgram.IDS.size(); k += 1) {
-                var pid = DemoProgram.IDS[k];
-                if (pid.equals(cur)) {
-                    m2.addItem(new Ui.IconMenuItem(DemoProgram.NAMES[k], null, pid,
-                                                   Native.icon(Rez.Drawables.GmCheck), {}));
-                } else {
-                    m2.addItem(new Ui.MenuItem(DemoProgram.NAMES[k], null, pid, {}));
-                }
-            }
-            Ui.pushView(m2, new ProgrammeMenuDelegate(_view), Ui.SLIDE_LEFT);
-        } else if (id == :progress) {
-            var p = _view.progress();
-            if (p != null) { $.openProgress(p); }
-        } else if (id == :readiness) {
-            var rv = new ReadinessView(_view.readiness());
-            Ui.pushView(rv, new PopDelegate(), Ui.SLIDE_LEFT);
-        } else if (id == :settings) {
-            $.openSettings();
-        } else if (id == :sync) {
-            Ui.popView(Ui.SLIDE_RIGHT);
-            _view.refresh();
-        }
-    }
+    function onSelect(item) { $.openPreStartItem(_view, item.getId(), true); }
 
     function onBack() { Ui.popView(Ui.SLIDE_RIGHT); }
-
-    hidden function openWeek() {
-        var days = _view.week();
-        if (days == null) { return; }
-        var m = new Ui.Menu2({ :title => _view.weekTitle() });
-        for (var i = 0; i < days.size(); i += 1) {
-            var d = days[i];
-            var n = d["sessions"].size();
-            var sub = (n == 0) ? "Rest day"
-                : (d["title"] + "  " + Clip.dayMinutes(d).toString() + " min");
-            m.addItem(new Ui.MenuItem(Native.dayName(d["offset"]), sub, i, {}));
-        }
-        Ui.pushView(m, new WeekMenuDelegate(days), Ui.SLIDE_LEFT);
-    }
 }
 
 // Pick a demo programme, and go straight back to the pre-start page showing its
-// day 0.
+// day 0 (`pops`: this list, and the hold-UP menu when it came from there).
 class ProgrammeMenuDelegate extends Ui.Menu2InputDelegate {
     hidden var _view;
-    function initialize(view) {
+    hidden var _pops;
+    function initialize(view, pops) {
         Menu2InputDelegate.initialize();
         _view = view;
+        _pops = pops;
     }
     function onSelect(item) {
         DemoProgram.select(item.getId());
         _view.reloadDemo();
-        Ui.popView(Ui.SLIDE_IMMEDIATE);
-        Ui.popView(Ui.SLIDE_RIGHT);
+        $.popViews(_pops);
     }
     function onBack() { Ui.popView(Ui.SLIDE_RIGHT); }
 }
 
 class TodayMenuDelegate extends Ui.Menu2InputDelegate {
     hidden var _view;
-    function initialize(view) {
+    hidden var _pops;
+    function initialize(view, pops) {
         Menu2InputDelegate.initialize();
         _view = view;
+        _pops = pops;
     }
     // Pick a session, and go straight back to the pre-start page showing it.
     function onSelect(item) {
         _view.select(item.getId());
-        Ui.popView(Ui.SLIDE_IMMEDIATE);
-        Ui.popView(Ui.SLIDE_RIGHT);
+        $.popViews(_pops);
     }
     function onBack() { Ui.popView(Ui.SLIDE_RIGHT); }
+}
+
+// Pop `n` views, the last with the slide back.
+function popViews(n) {
+    for (var i = 1; i < n; i += 1) { Ui.popView(Ui.SLIDE_IMMEDIATE); }
+    Ui.popView(Ui.SLIDE_RIGHT);
 }
 
 class WeekMenuDelegate extends Ui.Menu2InputDelegate {

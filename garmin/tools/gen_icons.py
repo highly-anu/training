@@ -359,6 +359,10 @@ ICONS['menu_edit'] = [
 ]
 ICONS['menu_today'] = [ring(48, 48, 36, 9), r(44, 22, 8, 30, rx=4), r(48, 46, 22, 8, rx=4)]
 ICONS['menu_refresh'] = ICONS['ui_sync']
+# A gear: a ring and eight teeth.
+ICONS['menu_settings'] = [ring(48, 48, 30, 13)] + [
+    r(41, 8, 14, 18, rx=3, rot=(a, 48, 48)) for a in range(0, 360, 45)
+]
 
 
 HERO = {'ui_rest'}
