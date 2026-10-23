@@ -71,7 +71,8 @@ final class ProgressChartModelTests: XCTestCase {
         XCTAssertEqual(ProgressChartModel.resolve(exercise: "press", metric: "reps", in: d), .exercise(id: "press", metric: "reps"))
         XCTAssertEqual(ProgressChartModel.resolve(exercise: "press", metric: "distance", in: d), .exercise(id: "press", metric: "weight"),
                        "a metric the exercise lacks falls back to its default")
-        XCTAssertEqual(ProgressChartModel.resolve(measure: "rounds", in: d), .measure(id: "rounds"))
+        XCTAssertEqual(ProgressChartModel.resolve(measure: "rounds", in: d), .measure(id: "p:rounds"),
+                       "a bare entry id resolves to its key")
         XCTAssertEqual(ProgressChartModel.resolve(measure: "ladder", in: d), .exercise(id: "back_squat", metric: "weight"),
                        "a measure the server does not name is not drawn")
     }
@@ -86,7 +87,7 @@ final class ProgressChartModelTests: XCTestCase {
     }
 
     func testMeasureSeriesIsJoinedBySession() throws {
-        let s = try XCTUnwrap(ProgressChartModel.series(.measure(id: "rounds"), in: try doc()))
+        let s = try XCTUnwrap(ProgressChartModel.series(.measure(id: "p:rounds"), in: try doc()))
         XCTAssertEqual(s.plannedLabel, "Expected")
         XCTAssertEqual(s.points.map(\.done), [7, nil])
         XCTAssertEqual(s.points.map(\.planned), [8, 8])

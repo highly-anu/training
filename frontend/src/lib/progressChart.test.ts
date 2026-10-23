@@ -41,11 +41,12 @@ describe('progress chart selection', () => {
       .toEqual({ kind: 'exercise', id: 'press', metric: 'weight' })
   })
   it('selects a measure the server names, never one it does not', () => {
-    expect(resolveSelection({ measure: 'rounds' }, section, progress)).toEqual({ kind: 'measure', id: 'rounds' })
+    expect(resolveSelection({ measure: 'rounds' }, section, progress)).toEqual({ kind: 'measure', id: 'p:rounds' })
+    expect(resolveSelection({ measure: 'p:rounds' }, section, progress)).toEqual({ kind: 'measure', id: 'p:rounds' })
     expect(resolveSelection({ measure: 'ladder' }, section, progress)).toEqual({ kind: 'exercise', id: 'back_squat', metric: 'weight' })
   })
   it('falls back to a measure, then to nothing', () => {
-    expect(resolveSelection({}, { ...section, exercises: [] }, progress)).toEqual({ kind: 'measure', id: 'rounds' })
+    expect(resolveSelection({}, { ...section, exercises: [] }, progress)).toEqual({ kind: 'measure', id: 'p:rounds' })
     expect(resolveSelection({}, undefined, [])).toBeNull()
   })
 })
@@ -58,9 +59,16 @@ describe('progress chart series', () => {
     expect(s.points.map((p) => [p.done, p.planned])).toEqual([[100, 100], [null, 80]])
   })
   it('draws a measure against its expectation, joined by session', () => {
-    const s = seriesFor({ kind: 'measure', id: 'rounds' }, section, progress)!
+    const s = seriesFor({ kind: 'measure', id: 'p:rounds' }, section, progress)!
     expect(s.plannedLabel).toBe('Expected')
     expect(s.points.map((p) => [p.date, p.done, p.planned])).toEqual([['2026-03-06', 7, 8], ['2026-03-13', null, 8]])
+  })
+  it('tells two methodologies\' measures of one id apart', () => {
+    const twin = [...progress, { ...progress[0], philosophy: 'q', label: 'Rounds (q)',
+      series: [{ week: 1, x: 1, value: 3, date: '2026-03-06', isDeload: false }] }] as AnalyticsProgressEntry[]
+    const both = { ...section, measures: [...section.measures, { ...section.measures[0], philosophy: 'q' }] }
+    expect(seriesFor({ kind: 'measure', id: 'q:rounds' }, both, twin)!.points[0].done).toBe(3)
+    expect(seriesFor({ kind: 'measure', id: 'p:rounds' }, both, twin)!.points[0].done).toBe(7)
   })
   it('shades contiguous deload points', () => {
     const s = seriesFor({ kind: 'exercise', id: 'back_squat', metric: 'weight' }, section, progress)!

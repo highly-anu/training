@@ -93,7 +93,8 @@ struct AnalyticsProgressTab: View {
             guard let doc = appState.programAnalytics else { return }
             let measure: String? = { if case .measure = pending { return id }; return nil }()
             let exercise: String? = { if case .exercise = pending { return id }; return nil }()
-            if let s = ProgressChartModel.resolve(exercise: exercise, measure: measure, in: doc), s.id == id {
+            if let s = ProgressChartModel.resolve(exercise: exercise, measure: measure, in: doc),
+               s.id == id || s.id.hasSuffix(":\(id)") {
                 chartSelection = s
                 chartScrollRequest += 1
             }
@@ -132,10 +133,10 @@ struct AnalyticsProgressTab: View {
                     ForEach(doc.methodologies) { method in
                         MethodologySectionView(method: method, doc: doc, chartable: chartable,
                                                selectedId: chartSelection.flatMap {
-                                                   if case .measure(let id) = $0 { return id }; return nil
-                                               }) { id in
+                                                   if case .measure(let key) = $0 { return key }; return nil
+                                               }) { key in
                             AppHaptics.light()
-                            withAnimation(AppAnimation.springStandard) { chartSelection = .measure(id: id) }
+                            withAnimation(AppAnimation.springStandard) { chartSelection = .measure(id: key) }
                             withAnimation { proxy.scrollTo("chart", anchor: .center) }
                         }
                     }

@@ -121,9 +121,12 @@ def program_standards(goal: dict, weeks: list[dict], specs: list,
 
     `tested`: a session the program schedules measures it (a slot's or
     session's `standard`). `linked`: the program schedules a lift the standard
-    is estimated from (its `derived_from`). Nothing else makes a standard the
-    program's: a package's analytics.yaml naming it (`declared`) only says so
-    beside one of the two, and a standard in a priority modality's domain,
+    is estimated from (its `derived_from`). `manual`: the package declares it
+    `manual: true` for a framework the program runs — a test the athlete runs on
+    their own and enters by hand (Wildman's SSST and get-up, Horsemen's swim),
+    which nothing scheduled could ever measure. Otherwise a package's
+    analytics.yaml naming it (`declared`) only says so beside one of those,
+    and a standard in a priority modality's domain,
     citing the philosophy or merely having a result waits on Profile. (Until
     2026-10-23 a declaration alone made a standard the program's, so Starting
     Strength led with the power clean before any power clean was scheduled.)
@@ -153,6 +156,8 @@ def program_standards(goal: dict, weeks: list[dict], specs: list,
         for b in (s.benchmarks or []):
             if b not in s.benchmark_frameworks or s.benchmark_frameworks[b] & program_frameworks:
                 declared.add(b)
+                if b in getattr(s, 'benchmark_manual', set()):
+                    out.setdefault(b, []).append('manual')
         for e in s.entries:
             declared.update(e.benchmarks or [])
     for sid in declared & set(out):
@@ -202,7 +207,7 @@ def build(ctx: Context, specs: list) -> dict:
                          'valueText': bd.format_value(b, r['value'])} for r in hist],
             **_this_block(b, hist, ctx, sex, lv),
         })
-    out.sort(key=lambda r: (0 if 'tested' in r['why'] else 1, r['name']))
+    out.sort(key=lambda r: (0 if 'tested' in r['why'] else 1 if 'linked' in r['why'] else 2, r['name']))
     bw = _series(ctx, 'bodyweight_kg')
     return {
         'blockStart': ctx.start_date.isoformat(),

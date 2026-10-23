@@ -21,6 +21,7 @@ struct MethodologySectionView: View {
     let doc: ProgramAnalytics
     /// `philosophy:id` of the measures the Progress chart can draw.
     var chartable: Set<String> = []
+    /// The charted measure's `philosophy:id`.
     var selectedId: String? = nil
     var onChart: (String) -> Void = { _ in }
 
@@ -38,8 +39,10 @@ struct MethodologySectionView: View {
                 if !entries.isEmpty {
                     VStack(spacing: 0) {
                         ForEach(entries) { entry in
-                            MeasureRow(entry: entry, chartable: chartable.contains("\(entry.philosophy):\(entry.id)"),
-                                       selected: selectedId == entry.id) { onChart(entry.id) }
+                            MeasureRow(entry: entry, chartable: chartable.contains(ProgressChartModel.key(entry)),
+                                       selected: selectedId == ProgressChartModel.key(entry)) {
+                                onChart(ProgressChartModel.key(entry))
+                            }
                             if entry.id != entries.last?.id { Divider().padding(.leading, AppMetrics.cardPadding) }
                         }
                     }

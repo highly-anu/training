@@ -77,8 +77,9 @@ struct ProgressChartView: View {
                 let measures = ProgressChartModel.chartableMeasures(doc)
                 if !measures.isEmpty {
                     Section("Measures") {
-                        ForEach(measures) { m in
-                            Button(m.label) { choose(.measure(id: m.id)) }
+                        // Keyed philosophy:id — a blend repeats entry ids.
+                        ForEach(measures.map { (ProgressChartModel.key($0), $0.label) }, id: \.0) { key, label in
+                            Button(label) { choose(.measure(id: key)) }
                         }
                     }
                 }

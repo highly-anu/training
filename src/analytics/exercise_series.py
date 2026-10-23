@@ -222,8 +222,10 @@ def build(ctx: Context, progress: list | None = None) -> dict:
                 'elapsed': elapsed,
                 'source': source,
                 'sessionName': (session.get('archetype') or {}).get('name'),
-                'done': done,
-                'prescribed': prescribed,
+                # Only the metrics with a value: every null in every future
+                # session made a 16-week document ~240 KB.
+                'done': {k: v for k, v in done.items() if v is not None},
+                'prescribed': {k: v for k, v in prescribed.items() if v is not None},
                 'doneText': done_text(done, sets_done) if source else None,
                 'prescribedText': prescribed_text(ea.get('load') or {}),
                 'setsDone': sets_done,
@@ -233,11 +235,10 @@ def build(ctx: Context, progress: list | None = None) -> dict:
     for ex_id in order:
         rec = per_ex[ex_id]
         pts = rec['points']
-        metrics = [m for m in _METRIC_IDS
-                   if any(p['done'].get(m) is not None or p['prescribed'].get(m) is not None for p in pts)]
+        metrics = [m for m in _METRIC_IDS if any(m in p['done'] or m in p['prescribed'] for p in pts)]
         if not metrics:
             continue
-        with_done = [m for m in _DEFAULT_ORDER if any(p['done'].get(m) is not None for p in pts)]
+        with_done = [m for m in _DEFAULT_ORDER if any(m in p['done'] for p in pts)]
         planned = [m for m in _DEFAULT_ORDER if m in metrics]
         default = (with_done or planned or metrics)[0]
         exercises.append(dict(rec, metrics=metrics, defaultMetric=default,

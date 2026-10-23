@@ -1142,6 +1142,13 @@ def test_sections() -> None:
     tested_prog['weeks'][0]['schedule']['Monday'][0]['exercises'].append(_lift('power_clean', 'power', 60))
     own = benchmarks_mod.program_standards(tested_prog['goal'], tested_prog['weeks'], specs)
     check('…until the program schedules the lift', own.get('power_clean_bw_ratio') == ['linked', 'declared'], str(own))
+    manual_spec = spec_mod.Spec('wildman_kettlebell', 'declared', [], [], False, ['ssst_reps', 'kb_pentathlon_jerk_reps'],
+                                {'ssst_reps': {'test_fw'}, 'kb_pentathlon_jerk_reps': {'kb_pentathlon'}},
+                                {'ssst_reps', 'kb_pentathlon_jerk_reps'})
+    own_manual = benchmarks_mod.program_standards(tested_prog['goal'], tested_prog['weeks'], [manual_spec])
+    check('a hand-entered standard the package declares for a framework the program runs is its own',
+          own_manual.get('ssst_reps') == ['manual', 'declared'], str(own_manual))
+    check('…not for a framework it does not run', 'kb_pentathlon_jerk_reps' not in own_manual, str(own_manual))
     check('an injury-skipped lift links nothing', 'deadlift_bw_ratio' not in benchmarks_mod.program_standards(
         {}, [{'schedule': {'Monday': [{'exercises': [dict(_lift('deadlift', 'hinge', 100), injury_skip=True)]}]}}], []))
     lvl = run_primitive(E('std', 'benchmark_level', 'starting_strength', benchmarks=['back_squat_bw_ratio'],
@@ -1435,27 +1442,27 @@ def test_exercise_series() -> None:
     check('every planned session is a point, future ones too (4 weeks × 2)', len(sq['points']) == 8, str(len(sq['points'])))
     p0, p1 = sq['points'][0], sq['points'][1]
     check('done: top set, its reps, sets, total reps, volume, RPE',
-          p0['done']['weight'] == 100 and p0['done']['reps'] == 5 and p0['done']['sets'] == 3
-          and p0['done']['totalReps'] == 14 and p0['done']['volume'] == 1400 and p0['done']['rpe'] == 8, str(p0['done']))
-    check('prescribed from ea.load: 3 × 5 @ 100', p0['prescribed']['weight'] == 100 and p0['prescribed']['sets'] == 3
-          and p0['prescribed']['reps'] == 5 and p0['prescribed']['totalReps'] == 15
-          and p0['prescribed']['volume'] == 1500, str(p0['prescribed']))
+          p0['done'].get('weight') == 100 and p0['done'].get('reps') == 5 and p0['done'].get('sets') == 3
+          and p0['done'].get('totalReps') == 14 and p0['done'].get('volume') == 1400 and p0['done'].get('rpe') == 8, str(p0['done']))
+    check('prescribed from ea.load: 3 × 5 @ 100', p0['prescribed'].get('weight') == 100 and p0['prescribed'].get('sets') == 3
+          and p0['prescribed'].get('reps') == 5 and p0['prescribed'].get('totalReps') == 15
+          and p0['prescribed'].get('volume') == 1500, str(p0['prescribed']))
     check('the heaviest set is paired with its own reps (105 has none: 105 with no reps, not 105×3)',
-          p1['done']['weight'] == 105 and p1['done']['reps'] is None and p1['done']['est1rm'] is None, str(p1['done']))
-    check('an uncompleted set counts for nothing', p1['done']['sets'] == 3 and p1['done']['totalReps'] == 8)
+          p1['done'].get('weight') == 105 and p1['done'].get('reps') is None and p1['done'].get('est1rm') is None, str(p1['done']))
+    check('an uncompleted set counts for nothing', p1['done'].get('sets') == 3 and p1['done'].get('totalReps') == 8)
     check('done text in set order', p1['doneText'] == '101.25×5, 105 kg, 103×3', repr(p1['doneText']))
     check('prescribed text from the stored load', p0['prescribedText'] == '3 × 5 @ 100 kg', repr(p0['prescribedText']))
     future = sq['points'][-1]
     check('a future session: prescribed only', not future['elapsed'] and future['source'] is None
-          and all(v is None for v in future['done'].values()) and future['prescribed']['weight'] == 108.75)
+          and future['done'] == {} and future['prescribed'].get('weight') == 108.75)
     check('the deload week is flagged', [p['isDeload'] for p in sq['points']][4:6] == [True, True])
     check('opens on the top set', sq['defaultMetric'] == 'weight' and sq['logged'] == 2 and sq['scheduled'] == 8)
     pr = by_id['press']
     check('"8-10" prescribes its low end, the RPE target carried',
-          pr['points'][0]['prescribed']['reps'] == 8 and pr['points'][0]['prescribed']['rpe'] == 8
-          and pr['points'][0]['prescribed']['totalReps'] == 24, str(pr['points'][0]['prescribed']))
-    check('"max" prescribes no reps', pr['points'][1]['prescribed']['reps'] is None
-          and pr['points'][1]['prescribed']['sets'] == 3)
+          pr['points'][0]['prescribed'].get('reps') == 8 and pr['points'][0]['prescribed'].get('rpe') == 8
+          and pr['points'][0]['prescribed'].get('totalReps') == 24, str(pr['points'][0]['prescribed']))
+    check('"max" prescribes no reps', pr['points'][1]['prescribed'].get('reps') is None
+          and pr['points'][1]['prescribed'].get('sets') == 3)
     budget = exercise_series.prescribed_values({'load': {'sets': 3, 'reps': 5, 'duration_minutes': 20}}, {})
     check("a lift's minutes are its time budget, not a prescribed time", budget['time'] is None
           and budget['reps'] == 5)
@@ -1465,9 +1472,9 @@ def test_exercise_series() -> None:
     check('sets of minutes prescribe time', steps['time'] == 1)
     run = by_id['easy_run']
     check('a matched workout gives the endurance exercise its minutes and km',
-          run['points'][0]['source'] == 'workout' and run['points'][0]['done']['time'] == 52.0
-          and run['points'][0]['done']['distance'] == 8.4, str(run['points'][0]))
-    check('against the prescribed minutes', run['points'][0]['prescribed']['time'] == 60)
+          run['points'][0]['source'] == 'workout' and run['points'][0]['done'].get('time') == 52.0
+          and run['points'][0]['done'].get('distance') == 8.4, str(run['points'][0]))
+    check('against the prescribed minutes', run['points'][0]['prescribed'].get('time') == 60)
     check('a run opens on distance once one is recorded', run['defaultMetric'] == 'distance', run['defaultMetric'])
     check('only metrics with a value are offered', 'weight' not in run['metrics'] and 'time' in run['metrics'])
     check('logged exercises lead', [e['exerciseId'] for e in out['exercises']][:3] ==

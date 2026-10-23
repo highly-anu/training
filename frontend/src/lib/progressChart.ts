@@ -14,7 +14,18 @@ import type {
 
 export type ChartSelection =
   | { kind: 'exercise'; id: string; metric: ExerciseSeriesMetricId }
+  /** `id` is `measureKey`: a blend repeats entry ids (Uphill's and Horsemen's aerobic_volume). */
   | { kind: 'measure'; id: string }
+
+/** "philosophy:id", one measure's key. */
+export function measureKey(entry: { philosophy: string; id: string }): string {
+  return `${entry.philosophy}:${entry.id}`
+}
+
+/** A link's `measure`: the key, or a bare entry id (the first methodology's). */
+function findMeasure<T extends { philosophy: string; id: string }>(measures: T[], wanted: string): T | undefined {
+  return measures.find((m) => measureKey(m) === wanted) ?? measures.find((m) => m.id === wanted)
+}
 
 export interface ChartPoint {
   /** Milliseconds, for a numeric time axis. */
@@ -39,8 +50,8 @@ export interface ChartSeries {
 
 /** The measures the chart can draw: those the server names in `exerciseSeries.measures`. */
 export function chartableMeasures(section: ExerciseSeriesSection | undefined, progress: AnalyticsProgressEntry[]) {
-  const named = new Set((section?.measures ?? []).map((m) => `${m.philosophy}:${m.id}`))
-  return progress.filter((p) => named.has(`${p.philosophy}:${p.id}`))
+  const named = new Set((section?.measures ?? []).map(measureKey))
+  return progress.filter((p) => named.has(measureKey(p)))
 }
 
 /**
@@ -64,12 +75,12 @@ export function resolveSelection(
     if (ex) return { kind: 'exercise', id: ex.exerciseId, metric: metricFor(ex) }
   }
   if (params.measure) {
-    const m = measures.find((e) => e.id === params.measure)
-    if (m) return { kind: 'measure', id: m.id }
+    const m = findMeasure(measures, params.measure)
+    if (m) return { kind: 'measure', id: measureKey(m) }
   }
   const logged = exercises.find((e) => e.logged > 0)
   if (logged) return { kind: 'exercise', id: logged.exerciseId, metric: metricFor(logged) }
-  if (measures.length) return { kind: 'measure', id: measures[0].id }
+  if (measures.length) return { kind: 'measure', id: measureKey(measures[0]) }
   if (exercises.length) return { kind: 'exercise', id: exercises[0].exerciseId, metric: metricFor(exercises[0]) }
   return null
 }
@@ -120,7 +131,7 @@ export function seriesFor(
       points: ex.points.map((p) => exercisePoint(p, selection.metric)).filter((p): p is ChartPoint => p != null),
     }
   }
-  const entry = progress.find((p) => p.id === selection.id)
+  const entry = findMeasure(progress, selection.id)
   if (!entry) return null
   const lead = (entry.exercises ?? []).find((e) => e.exerciseId === entry.leadExerciseId)
   return {

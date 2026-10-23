@@ -4,7 +4,7 @@ import {
   ResponsiveContainer, ComposedChart, Line, XAxis, YAxis, Tooltip, Legend, ReferenceArea, ReferenceLine, CartesianGrid,
 } from 'recharts'
 import type { AnalyticsProgressEntry, ExerciseFinding, ExerciseSeriesSection } from '@/api/types'
-import { chartableMeasures, deloadSpans, seriesFor, type ChartPoint, type ChartSelection } from '@/lib/progressChart'
+import { chartableMeasures, deloadSpans, measureKey, seriesFor, type ChartPoint, type ChartSelection } from '@/lib/progressChart'
 import { cn } from '@/lib/utils'
 
 // The one actual/expected pair, everywhere: done emerald, planned indigo dashed.
@@ -122,7 +122,7 @@ export function ProgressChart({ section, progress, selection, onSelect, findings
           )}
           {measures.length > 0 && (
             <optgroup label="Measures">
-              {measures.map((m) => <option key={`${m.philosophy}:${m.id}`} value={`m:${m.id}`}>{m.label}</option>)}
+              {measures.map((m) => <option key={measureKey(m)} value={`m:${measureKey(m)}`}>{m.label}</option>)}
             </optgroup>
           )}
         </select>

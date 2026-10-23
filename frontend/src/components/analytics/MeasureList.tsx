@@ -22,8 +22,9 @@ export function MeasureList({ methodologies, progress, frame, chartable, selecte
   frame: AnalyticsFrame
   /** `${philosophy}:${id}` of the measures the chart can draw. */
   chartable: Set<string>
+  /** The charted measure's `${philosophy}:${id}`. */
   selectedId: string | null
-  onChart: (id: string) => void
+  onChart: (key: string) => void
 }) {
   return (
     <div className="space-y-5">
@@ -67,8 +68,9 @@ function Methodology({ method, entries, frame, chartable, selectedId, onChart }:
       </div>
       <ul className="divide-y divide-border/60 rounded-lg border bg-card">
         {ordered.map((entry) => (
-          <MeasureRow key={entry.id} entry={entry} selected={selectedId === entry.id}
-                      chartable={chartable.has(`${entry.philosophy}:${entry.id}`)} onChart={() => onChart(entry.id)} />
+          <MeasureRow key={entry.id} entry={entry} selected={selectedId === `${entry.philosophy}:${entry.id}`}
+                      chartable={chartable.has(`${entry.philosophy}:${entry.id}`)}
+                      onChart={() => onChart(`${entry.philosophy}:${entry.id}`)} />
         ))}
       </ul>
       {elsewhere.length > 0 && (

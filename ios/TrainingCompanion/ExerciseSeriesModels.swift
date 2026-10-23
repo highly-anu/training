@@ -90,7 +90,7 @@ extension ProgramAnalytics {
             }
         }
 
-        struct Measure: Decodable, Identifiable {
+        struct Measure: Decodable {
             let id: String
             let label: String
             let unit: String?
@@ -119,6 +119,7 @@ extension ProgramAnalytics {
 enum ProgressChartModel {
     enum Selection: Hashable {
         case exercise(id: String, metric: String)
+        /// `id` is `key(_:)`: a blend repeats entry ids (Uphill's and Horsemen's aerobic_volume).
         case measure(id: String)
 
         var id: String {
@@ -148,10 +149,18 @@ enum ProgressChartModel {
         let points: [Point]
     }
 
+    /// "philosophy:id", one measure's key.
+    static func key(_ entry: ProgramAnalytics.ProgressEntry) -> String { "\(entry.philosophy):\(entry.id)" }
+
     /// The progress entries the chart can draw: those the server names.
     static func chartableMeasures(_ doc: ProgramAnalytics) -> [ProgramAnalytics.ProgressEntry] {
         let named = Set((doc.exerciseSeries?.measures ?? []).map { "\($0.philosophy):\($0.id)" })
-        return doc.progress.filter { named.contains("\($0.philosophy):\($0.id)") }
+        return doc.progress.filter { named.contains(key($0)) }
+    }
+
+    /// A link's measure: the key, or a bare entry id (the first methodology's).
+    private static func entry(_ wanted: String, in entries: [ProgramAnalytics.ProgressEntry]) -> ProgramAnalytics.ProgressEntry? {
+        entries.first { key($0) == wanted } ?? entries.first { $0.id == wanted }
     }
 
     /// What a link asked for, read against what the document has; else the
@@ -167,9 +176,9 @@ enum ProgressChartModel {
         if let exercise, let ex = exercises.first(where: { $0.exerciseId == exercise }) {
             return .exercise(id: ex.exerciseId, metric: metricFor(ex))
         }
-        if let measure, measures.contains(where: { $0.id == measure }) { return .measure(id: measure) }
+        if let measure, let m = entry(measure, in: measures) { return .measure(id: key(m)) }
         if let ex = exercises.first(where: { $0.logged > 0 }) { return .exercise(id: ex.exerciseId, metric: metricFor(ex)) }
-        if let m = measures.first { return .measure(id: m.id) }
+        if let m = measures.first { return .measure(id: key(m)) }
         if let ex = exercises.first { return .exercise(id: ex.exerciseId, metric: metricFor(ex)) }
         return nil
     }
@@ -188,7 +197,7 @@ enum ProgressChartModel {
             return Series(label: ex.name, unit: section.metric(metric)?.unit ?? "", plannedLabel: "Prescribed",
                           points: points)
         case .measure(let id):
-            guard let entry = doc.progress.first(where: { $0.id == id }) else { return nil }
+            guard let entry = entry(id, in: doc.progress) else { return nil }
             let lead = entry.leadExercise
             var byX: [Double: Point] = [:]
             for p in lead?.series ?? entry.series {
