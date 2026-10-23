@@ -315,12 +315,12 @@ final class ProgramAnalyticsCodableTests: XCTestCase {
     }
 
     func testFidelityLabelsAndNumbers() {
-        XCTAssertEqual(AnalyticsProgramTab.fidelityLabel("days_per_week"), "Days per week")
-        XCTAssertEqual(AnalyticsProgramTab.fidelityLabel("session_time_minutes"), "Session length")
-        XCTAssertEqual(AnalyticsProgramTab.fidelityLabel("some_other_field"), "Some Other Field")
-        XCTAssertEqual(AnalyticsProgramTab.number(75), "75")
-        XCTAssertEqual(AnalyticsProgramTab.number(2.5), "2.5")
-        XCTAssertEqual(AnalyticsProgramTab.number(0.75), "0.75", "a ×BW threshold keeps its second decimal")
-        XCTAssertEqual(AnalyticsProgramTab.number(-4.2), "-4.2")
+        XCTAssertEqual(AnalyticsProgressTab.fidelityLabel("days_per_week"), "Days per week")
+        XCTAssertEqual(AnalyticsProgressTab.fidelityLabel("session_time_minutes"), "Session length")
+        XCTAssertEqual(AnalyticsProgressTab.fidelityLabel("some_other_field"), "Some Other Field")
+        XCTAssertEqual(AnalyticsProgressTab.number(75), "75")
+        XCTAssertEqual(AnalyticsProgressTab.number(2.5), "2.5")
+        XCTAssertEqual(AnalyticsProgressTab.number(0.75), "0.75", "a ×BW threshold keeps its second decimal")
+        XCTAssertEqual(AnalyticsProgressTab.number(-4.2), "-4.2")
     }
 }

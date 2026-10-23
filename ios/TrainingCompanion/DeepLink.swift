@@ -3,8 +3,9 @@ import Foundation
 /// `trainingcompanion://` URLs, parsed once, routed through `AppRouter`.
 ///
 /// The widgets open `today` and `session?key=…`; `program`, `analytics`
-/// (`?section=program|progress|blocks|load|recovery`; `overview` and
-/// `development` are the old names of Load and Blocks) and `profile`
+/// (`?section=progress|blocks|load|recovery`; `overview`, `development` and
+/// `program` are the old names of Load, Blocks and the half of Progress that
+/// was its own section until 2026-10-23) and `profile`
 /// exist so a simulator can be driven to any section from the command line
 /// and screenshotted — the Simulator window is not scriptable. Opening the
 /// URL from outside (`simctl openurl`) makes iOS ask "Open in Training
@@ -15,10 +16,11 @@ enum DeepLink: Equatable {
     case tab(AppRouter.Tab)
     case analytics(AnalyticsTab)
     /// `analytics?section=progress&measure=<entry id>` or `&exercise=<exercise id>` —
-    /// Progress pushes that measure's or exercise's screen (§6.37);
+    /// Progress draws that measure or exercise on its chart (§6.41);
     /// `analytics?open=readiness|sleep|hrv|resting-hr|checkins` one of Recovery's,
-    /// `open=pmc|load-focus|mix|weekly` Load's, `open=scorecard|intensity|movement|shapes`
-    /// Program's, `open=score` Progress's, `open=block-load` Blocks'.
+    /// `open=pmc|load-focus|mix|weekly` Load's,
+    /// `open=score|scorecard|intensity|movement|workouts` Progress's (`shapes`
+    /// aliases workouts), `open=block-load` Blocks'.
     case analyticsDetail(AppRouter.AnalyticsDetail)
     /// `session?key=<week number>-<Day>-<index>` — Today opens that session.
     case session(String)
@@ -112,13 +114,14 @@ enum DeepLink: Equatable {
                 "score": .score,
                 "readiness": .readiness, "sleep": .sleep, "hrv": .hrv, "resting-hr": .restingHR, "checkins": .checkIns,
                 "pmc": .pmc, "load-focus": .loadFocus, "mix": .mix, "weekly": .weekly,
-                "scorecard": .scorecard, "intensity": .intensity, "movement": .movement, "shapes": .sessionShapes,
+                "scorecard": .scorecard, "intensity": .intensity, "movement": .movement,
+                "workouts": .sessionShapes, "shapes": .sessionShapes,
                 "block-load": .blockLoad]
             if let open = query.first(where: { $0.name == "open" })?.value?.lowercased(), let detail = details[open] {
                 return .analyticsDetail(detail)
             }
             if let raw = query.first(where: { $0.name == "section" })?.value?.lowercased() {
-                let wanted = ["overview": "load", "development": "blocks"][raw] ?? raw
+                let wanted = ["overview": "load", "development": "blocks", "program": "progress"][raw] ?? raw
                 if let section = AnalyticsTab.allCases.first(where: { $0.label.lowercased() == wanted }) {
                     return .analytics(section)
                 }

@@ -162,7 +162,7 @@ struct IntensityDetailView: View {
             if let pct = intensity.pct1rm, let mean = pct.meanPct {
                 Section {
                     LabeledContent {
-                        Text("\(AnalyticsProgramTab.number(mean))% of 1RM").monospacedDigit()
+                        Text("\(AnalyticsProgressTab.number(mean))% of 1RM").monospacedDigit()
                     } label: {
                         Label("Working sets", systemImage: "scalemass").labelStyle(.inline)
                     }

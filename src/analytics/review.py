@@ -33,7 +33,7 @@ BANDS = [
 ]
 
 PURPOSE = ("Is the training working? Your methodology's own measures over time — lifts, skills, "
-           'minutes — scored by their trends. How much of the plan you have done is the Program tab.')
+           'minutes — scored by their trends. How much of the plan you have done is the Scorecard below.')
 
 
 def band(score: int) -> dict:

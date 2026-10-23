@@ -96,9 +96,10 @@ def zone_minutes(entry, ctx) -> dict:
         for b in BUCKETS:
             agg[b] += wk[b]
         if classified:
-            series.append({'week': wk['week'], 'x': wk['week'], 'value': shares['zone1_2_pct'],
+            series.append({'week': wk['week'], 'x': wk['week'], 'date': ctx.week_date(wk['week']),
+                           'value': shares['zone1_2_pct'],
                            'isDeload': wk['isDeload'], 'classifiedMinutes': round(classified)})
-        expected.append({'week': wk['week'], 'x': wk['week'],
+        expected.append({'week': wk['week'], 'x': wk['week'], 'date': ctx.week_date(wk['week']),
                          'value': planned_pct['zone1_2_pct'] if planned_pct else None})
 
     by_fw_out = []

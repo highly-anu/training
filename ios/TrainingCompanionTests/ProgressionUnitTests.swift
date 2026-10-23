@@ -5,10 +5,10 @@ import XCTest
 /// server's rule for its change line, so "0exercises" never shows again.
 final class ProgressionUnitTests: XCTestCase {
     func testWordsAreSpacedSymbolsAttach() {
-        XCTAssertEqual(ProgressionView.withUnit("0", "exercises"), "0 exercises")
-        XCTAssertEqual(ProgressionView.withUnit("4", "rounds"), "4 rounds")
-        XCTAssertEqual(ProgressionView.withUnit("80", "kg"), "80kg")
-        XCTAssertEqual(ProgressionView.withUnit("45", "s"), "45s")
-        XCTAssertEqual(ProgressionView.withUnit("12", ""), "12")
+        XCTAssertEqual(AnalyticsProgressTab.withUnit("0", "exercises"), "0 exercises")
+        XCTAssertEqual(AnalyticsProgressTab.withUnit("4", "rounds"), "4 rounds")
+        XCTAssertEqual(AnalyticsProgressTab.withUnit("80", "kg"), "80kg")
+        XCTAssertEqual(AnalyticsProgressTab.withUnit("45", "s"), "45s")
+        XCTAssertEqual(AnalyticsProgressTab.withUnit("12", ""), "12")
     }
 }

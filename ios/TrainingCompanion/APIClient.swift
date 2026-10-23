@@ -427,13 +427,6 @@ final class APIClient {
 
     // MARK: - Progression
 
-    /// Each exercise of the program with its history and prescription; `today`
-    /// is the athlete's date, which decides what is "so far".
-    func fetchExerciseHistory(today: String) async throws -> ExerciseHistoryResponse? {
-        let data = try await get("/progression/exercises?today=\(today)")
-        return try? JSONDecoder().decode(ExerciseHistoryResponse.self, from: data)
-    }
-
     func fetchProgressionReview(period: String = "weekly") async throws -> ProgressionReview? {
         let data = try await get("/progression/review?period=\(period)")
         return try? JSONDecoder().decode(ProgressionReview.self, from: data)

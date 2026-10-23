@@ -73,9 +73,7 @@ final class AppState: ObservableObject {
     // MARK: - Progression
 
     @Published var progressionReview: ProgressionReview? = nil
-    /// Analytics ▸ Progress's exercise cards (`/progression/exercises`).
-    @Published var exerciseHistory: ExerciseHistoryResponse? = nil
-    /// `GET /analytics/program` — the methodology scorecard (Analytics ▸ Program).
+    /// `GET /analytics/program` — the methodology scorecard and the chart (Analytics ▸ Progress).
     @Published var programAnalytics: ProgramAnalytics? = nil
     @Published var isLoadingProgramAnalytics = false
     @Published var programAnalyticsError: String? = nil
@@ -811,8 +809,8 @@ final class AppState: ObservableObject {
                                                           performance: performance)
             // A test slot's outcome comes back as a suggestion to save.
             if standards != nil { await loadStandardSuggestions() }
-            // A logged set moves the exercise into "With data" on Progress.
-            if exerciseHistory != nil { await loadExerciseHistory() }
+            // A logged set is a new point on the Progress chart.
+            if programAnalytics != nil { await loadProgramAnalytics() }
         } catch {
             AppLogger.logFromBackground("session log: save failed — \(error.localizedDescription)")
         }
@@ -911,15 +909,6 @@ final class AppState: ObservableObject {
         }
     }
 
-    func loadExerciseHistory() async {
-        guard let api else { return }
-        do {
-            exerciseHistory = try await api.fetchExerciseHistory(today: dayFormatter.string(from: Date()))
-        } catch {
-            if (error as? URLError)?.code == .cancelled { return }
-            AppLogger.logFromBackground("progression: exercises fetch failed — \(error.localizedDescription)")
-        }
-    }
 
     func loadProgressionReview() async {
         guard let api else { return }

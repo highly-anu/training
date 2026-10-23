@@ -98,6 +98,9 @@ class Spec:
     benchmarks: list                    # every declared id
     # id -> frameworks: declared only where the program runs one of them
     benchmark_frameworks: dict = field(default_factory=dict)
+    # Declared `manual: true`: tests the athlete runs on their own and enters by
+    # hand — nothing a program schedules measures them.
+    benchmark_manual: set = field(default_factory=set)
 
 
 # ── Loading and synthesis ────────────────────────────────────────────────────
@@ -134,7 +137,8 @@ def _from_declared(raw: dict, package_id: str, weight: float, philosophy: dict |
     _mark_headline(entries, philosophy or _philosophy(package_id))
     balance = list((raw.get('movement') or {}).get('balance') or [])
     ids, scoped = benchmark_ids(raw.get('benchmarks'))
-    return Spec(package_id, 'declared', entries, balance, bool(balance), ids, scoped)
+    manual = {item['id'] for item in raw.get('benchmarks') or [] if isinstance(item, dict) and item.get('manual')}
+    return Spec(package_id, 'declared', entries, balance, bool(balance), ids, scoped, manual)
 
 
 def benchmark_ids(items) -> tuple[list, dict]:

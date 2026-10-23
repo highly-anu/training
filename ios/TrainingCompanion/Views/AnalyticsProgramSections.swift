@@ -1,23 +1,29 @@
 import SwiftUI
 
-// Sections of the `/analytics/program` document shared by Analytics ▸
-// Program and Analytics ▸ Progress: a methodology's own measures, Standards
-// and Session shapes — the web's `MethodologySection`, `BenchmarkLadder` and
+// Sections of the `/analytics/program` document on Analytics ▸ Progress: a
+// methodology's own measures, Standards and Workouts (Session shapes until
+// 2026-10-23) — the web's `MeasureList`, `BenchmarkLadder` and
 // `ArchetypeTable`. They lay out the server's document; nothing is computed
 // here.
 
 // MARK: - Methodology
 
 /// One philosophy's measures: its name as the label above them (with its
-/// share in a blend), a `ProgressEntryCard` per measure that applies,
-/// headline first, and — when there are any — a row to the measures this
-/// program does not schedule. The name was a card of its own with
+/// share in a blend), a `MeasureRow` per measure that applies, headline
+/// first, in one card, and — when there are any — a row to the measures this
+/// program does not schedule. Rows were cards with a sparkline until
+/// 2026-10-23. The name was a card of its own with
 /// "measurable / applicable" until 2026-10-18; that count is the Score
 /// detail's now, and each measure's card says itself when it cannot be read.
 /// Lives on Progress (it was on Program until 2026-10-16).
 struct MethodologySectionView: View {
     let method: ProgramAnalytics.Methodology
     let doc: ProgramAnalytics
+    /// `philosophy:id` of the measures the Progress chart can draw.
+    var chartable: Set<String> = []
+    /// The charted measure's `philosophy:id`.
+    var selectedId: String? = nil
+    var onChart: (String) -> Void = { _ in }
 
     var body: some View {
         let name = doc.frame?.philosophies.first { $0.id == method.philosophy }?.name ?? method.philosophy
@@ -30,8 +36,18 @@ struct MethodologySectionView: View {
                                     ? "\(name), \(Int((method.weight * 100).rounded())) percent of the blend" : name)
                 .padding(.top, 8)
             VStack(alignment: .leading, spacing: 16) {
-                ForEach(entries) { entry in
-                    ProgressEntryCard(entry: entry)
+                if !entries.isEmpty {
+                    VStack(spacing: 0) {
+                        ForEach(entries) { entry in
+                            MeasureRow(entry: entry, chartable: chartable.contains(ProgressChartModel.key(entry)),
+                                       selected: selectedId == ProgressChartModel.key(entry)) {
+                                onChart(ProgressChartModel.key(entry))
+                            }
+                            if entry.id != entries.last?.id { Divider().padding(.leading, AppMetrics.cardPadding) }
+                        }
+                    }
+                    .background(.background.secondary)
+                    .clipShape(RoundedRectangle(cornerRadius: AppMetrics.cardCornerRadius))
                 }
                 if !elsewhere.isEmpty {
                     NavigationLink {
@@ -113,10 +129,11 @@ struct MeasuresElsewhereView: View {
 
 // MARK: - Standards
 
-/// The standards this program is measured by — what its package declares and
-/// what it tests — with how far the athlete has moved this block. Standards
-/// that only share a domain or cite the methodology wait behind "More
-/// standards"; a result alone no longer makes a standard the program's own.
+/// The standards this program is measured by — those it tests and those a
+/// lift it schedules estimates — with how far the athlete has moved this
+/// block. Every other standard is on Profile ▸ Standards; "More standards"
+/// went on 2026-10-23, when the server stopped sending them (an older one
+/// still marks them not primary, and they are left out).
 /// A row is the summary — value, level, gap, the block's line; tap it for the
 /// standard's own sheet, here (§6.32), with the ladder and every result. It
 /// used to jump to Profile ▸ Standards and draw a ladder on every row.
@@ -124,23 +141,16 @@ struct ProgramStandardsCard: View {
     let benchmarks: ProgramAnalytics.Benchmarks
     @EnvironmentObject private var router: AppRouter
     @EnvironmentObject private var appState: AppState
-    @State private var showMore = false
     @State private var sheet: StandardSubject?
 
-    private var own: [ProgramAnalytics.Benchmarks.Row] { benchmarks.rows.filter(\.primary) }
-    private var more: [ProgramAnalytics.Benchmarks.Row] { benchmarks.rows.filter { !$0.primary } }
-    private var shown: [ProgramAnalytics.Benchmarks.Row] { showMore ? own + more : own }
+    private var shown: [ProgramAnalytics.Benchmarks.Row] { benchmarks.rows.filter(\.primary) }
 
     var body: some View {
         AnalyticsCard(header: "Standards") {
             VStack(alignment: .leading, spacing: 12) {
-                if own.isEmpty {
-                    Text("This program declares no standards of its own.")
-                        .font(.footnote).foregroundStyle(.secondary)
-                }
                 // ×BW standards derive from logged sets with a bodyweight.
                 Label(benchmarks.bodyweightText.map { "BW \($0)" }
-                      ?? benchmarks.bodyweightKg.map { "BW \(AnalyticsProgramTab.number($0)) kg" } ?? "No bodyweight",
+                      ?? benchmarks.bodyweightKg.map { "BW \(AnalyticsProgressTab.number($0)) kg" } ?? "No bodyweight",
                       systemImage: "figure.stand")
                     .font(.caption).foregroundStyle(.secondary)
                 ForEach(shown) { row in
@@ -148,14 +158,10 @@ struct ProgramStandardsCard: View {
                         .buttonStyle(.plain)
                         .accessibilityHint("Opens the standard")
                 }
-                if !more.isEmpty {
-                    Button(showMore ? "Fewer standards" : "More standards (\(more.count))") {
-                        withAnimation(AppAnimation.layoutChange) { showMore.toggle() }
-                    }
+                Button("Every standard is in Profile") { router.showProfile(.standards) }
                     .font(.footnote)
                     .frame(minHeight: 44)
                     .contentShape(Rectangle())
-                }
             }
         }
         .sheet(item: $sheet) { StandardDetailSheet(subject: $0).environmentObject(appState) }
@@ -179,7 +185,7 @@ private struct StandardRowView: View {
 
     private var valueText: String? {
         row.value.map { v in
-            "\(row.valueText ?? "\(AnalyticsProgramTab.number(v))\(row.unit)")\(row.valueSource == "derived" ? " est." : "")"
+            "\(row.valueText ?? "\(AnalyticsProgressTab.number(v))\(row.unit)")\(row.valueSource == "derived" ? " est." : "")"
         }
     }
 
@@ -190,7 +196,7 @@ private struct StandardRowView: View {
             parts.append(change)
         }
         if row.value != nil, let next = row.next,
-           let gap = row.gapText ?? row.gapToNext.map({ "\(AnalyticsProgramTab.number($0))\(row.unit)" }) {
+           let gap = row.gapText ?? row.gapToNext.map({ "\(AnalyticsProgressTab.number($0))\(row.unit)" }) {
             parts.append("\(gap) to \(next)")
         }
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
@@ -238,13 +244,14 @@ private struct StandardRowView: View {
     }
 }
 
-// MARK: - Session shapes
+// MARK: - Workouts
 
-/// Session shapes as a summary (§6.37): done of scheduled across every
-/// shape, how many ran far from their estimate, and the first three shapes;
-/// the screen lists every shape with its duration against the estimate,
-/// heart rate and lead lift. The list grew with every archetype inline until
-/// 2026-10-17.
+/// Workouts as a summary (§6.37; "Session shapes" until 2026-10-23): done of
+/// scheduled across every workout, how many ran far from their estimate, and
+/// the first three; the screen lists every workout with its duration against
+/// the estimate, heart rate and lead lift. The list grew with every archetype
+/// inline until 2026-10-17. The types keep their old names, as `open=shapes`
+/// does.
 struct SessionShapesCard: View {
     let rows: [ProgramAnalytics.ArchetypeRow]
 
@@ -254,7 +261,7 @@ struct SessionShapesCard: View {
     private var offEstimate: Int { rows.filter { abs($0.meanDurationDeltaPct ?? 0) > 25 }.count }
 
     var body: some View {
-        AnalyticsDetailCard(header: "Session shapes", hint: "Opens every session shape") {
+        AnalyticsDetailCard(header: "Workouts", hint: "Opens every workout") {
             SessionShapesDetailView(rows: rows)
         } content: {
             VStack(alignment: .leading, spacing: 10) {
@@ -265,20 +272,20 @@ struct SessionShapesCard: View {
                     if offEstimate > 0 {
                         Label("\(offEstimate)", systemImage: "clock.badge.exclamationmark")
                             .font(.subheadline).foregroundStyle(.yellow)
-                            .accessibilityLabel("\(offEstimate) shapes ran far from their estimate")
+                            .accessibilityLabel("\(offEstimate) workouts ran far from their estimate")
                     }
                 }
                 ForEach(rows.prefix(3)) { row in SessionShapeRow(row: row, showsDetail: false) }
                 if rows.count > 3 {
                     Text("+\(rows.count - 3)").font(.footnote).foregroundStyle(.secondary)
-                        .accessibilityLabel("\(rows.count - 3) more shapes")
+                        .accessibilityLabel("\(rows.count - 3) more workouts")
                 }
             }
         }
     }
 }
 
-/// Every session shape, pushed from its card.
+/// Every workout, pushed from its card.
 struct SessionShapesDetailView: View {
     let rows: [ProgramAnalytics.ArchetypeRow]
 
@@ -287,7 +294,7 @@ struct SessionShapesDetailView: View {
             SessionShapeRow(row: row, showsDetail: true).padding(.vertical, 2)
         }
         .listStyle(.insetGrouped)
-        .navigationTitle("Session shapes")
+        .navigationTitle("Workouts")
         .navigationBarTitleDisplayMode(.inline)
     }
 }
@@ -335,9 +342,9 @@ private struct SessionShapeRow: View {
                     .accessibilityLabel("Heart rate \(avg) average\(row.hr?.max.map { ", \($0) max" } ?? "")")
             }
             if let lift = row.leadLift, let first = lift.firstEst1rm, let latest = lift.latestEst1rm {
-                Label("\(AnalyticsProgramTab.number(first))→\(AnalyticsProgramTab.number(latest))", systemImage: "dumbbell")
+                Label("\(AnalyticsProgressTab.number(first))→\(AnalyticsProgressTab.number(latest))", systemImage: "dumbbell")
                     .lineLimit(1)
-                    .accessibilityLabel("\(lift.exerciseId.replacingOccurrences(of: "_", with: " ")) est 1RM \(AnalyticsProgramTab.number(first)) to \(AnalyticsProgramTab.number(latest))")
+                    .accessibilityLabel("\(lift.exerciseId.replacingOccurrences(of: "_", with: " ")) est 1RM \(AnalyticsProgressTab.number(first)) to \(AnalyticsProgressTab.number(latest))")
             }
         }
         .font(.caption).monospacedDigit().foregroundStyle(.secondary)

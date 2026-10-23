@@ -90,7 +90,7 @@
   # Training that estimates it: the best est. 1RM of these lifts' logged sets
   # ÷ the bodyweight that day (analytics/benchmarks.py).
   derived_from:
-    exercises: [deadlift, mf_deadlift]
+    exercises: [deadlift]
   sources:
     - starting_strength
     - horsemen_gpp
@@ -138,7 +138,7 @@
   # Training that estimates it: the best est. 1RM of these lifts' logged sets
   # ÷ the bodyweight that day (analytics/benchmarks.py).
   derived_from:
-    exercises: [strict_press, mf_overhead_press]
+    exercises: [strict_press]
   sources:
     - starting_strength
     - horsemen_gpp
@@ -183,7 +183,7 @@
   # Training that estimates it: the best est. 1RM of these lifts' logged sets
   # ÷ the bodyweight that day (analytics/benchmarks.py).
   derived_from:
-    exercises: [bench_press, mf_bench_press]
+    exercises: [bench_press]
   sources:
     - horsemen_gpp
     - starting_strength

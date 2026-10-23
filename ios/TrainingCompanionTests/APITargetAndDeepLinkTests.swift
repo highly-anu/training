@@ -51,7 +51,8 @@ final class APITargetAndDeepLinkTests: XCTestCase {
         XCTAssertEqual(parse("trainingcompanion://log?section=suggestions"), .log(.linking))  // the old name
         XCTAssertEqual(parse("trainingcompanion://profile?section=nope"), .tab(.profile))
         XCTAssertEqual(parse("trainingcompanion://analytics"), .tab(.analytics))
-        XCTAssertEqual(parse("trainingcompanion://analytics?section=program"), .analytics(.program))
+        // Program merged into Progress on 2026-10-23; the old link lands there.
+        XCTAssertEqual(parse("trainingcompanion://analytics?section=program"), .analytics(.progress))
         XCTAssertEqual(parse("trainingcompanion://analytics?section=Recovery"), .analytics(.recovery))
         XCTAssertEqual(parse("trainingcompanion://program?section=overview"), .program(.overview))
         XCTAssertEqual(parse("trainingcompanion://program?section=overview&phase=2"), .programPhase("2"),
@@ -71,9 +72,15 @@ final class APITargetAndDeepLinkTests: XCTestCase {
         XCTAssertEqual(parse("trainingcompanion://analytics?open=readiness"), .analyticsDetail(.readiness))
         XCTAssertEqual(parse("trainingcompanion://analytics?open=pmc"), .analyticsDetail(.pmc))
         XCTAssertEqual(parse("trainingcompanion://analytics?open=shapes"), .analyticsDetail(.sessionShapes))
+        XCTAssertEqual(parse("trainingcompanion://analytics?open=workouts"), .analyticsDetail(.sessionShapes),
+                       "Session shapes are Workouts since 2026-10-23")
+        XCTAssertEqual(parse("trainingcompanion://analytics?open=movement"), .analyticsDetail(.movement))
+        XCTAssertEqual(AppRouter.AnalyticsDetail.movement.section, .progress, "parked, but still Progress's")
+        XCTAssertEqual(AppRouter.AnalyticsDetail.sessionShapes.section, .progress)
+        XCTAssertEqual(AppRouter.AnalyticsDetail.exercise("back_squat").section, .progress)
         // Every card's detail (design-system §6.37), and the section each belongs to.
         let cards: [(String, AppRouter.AnalyticsDetail, AnalyticsTab)] = [
-            ("score", .score, .progress), ("scorecard", .scorecard, .program), ("intensity", .intensity, .program),
+            ("score", .score, .progress), ("scorecard", .scorecard, .progress), ("intensity", .intensity, .progress),
             ("load-focus", .loadFocus, .load), ("mix", .mix, .load), ("weekly", .weekly, .load),
             ("block-load", .blockLoad, .blocks)]
         for (open, detail, section) in cards {
@@ -93,7 +100,7 @@ final class APITargetAndDeepLinkTests: XCTestCase {
 
     func testLaunchEnvironmentRoute() {
         XCTAssertEqual(DeepLink.fromLaunchEnvironment(["TC_ROUTE": "trainingcompanion://analytics?section=program"]),
-                       .analytics(.program))
+                       .analytics(.progress))
         XCTAssertNil(DeepLink.fromLaunchEnvironment([:]))
         XCTAssertNil(DeepLink.fromLaunchEnvironment(["TC_ROUTE": "not a url at all"]))
     }
@@ -101,9 +108,9 @@ final class APITargetAndDeepLinkTests: XCTestCase {
     @MainActor
     func testRouterOpensADeepLink() async {
         let router = AppRouter()
-        router.open(.analytics(.program))
+        router.open(.analytics(.blocks))
         XCTAssertEqual(router.tab, .analytics)
-        XCTAssertEqual(router.analyticsSection, .program)
+        XCTAssertEqual(router.analyticsSection, .blocks)
         router.open(.tab(.profile))
         XCTAssertEqual(router.tab, .profile)
         router.open(.analyticsDetail(.exercise("back_squat")))

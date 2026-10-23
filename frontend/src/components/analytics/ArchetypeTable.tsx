@@ -2,12 +2,12 @@ import type { AnalyticsArchetypeRow } from '@/api/types'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
 import { cn } from '@/lib/utils'
 
-/** Per session shape: how each archetype in the block is going. */
+/** Workouts (Session shapes until 2026-10-23): how each archetype in the block is going. */
 export function ArchetypeTable({ rows }: { rows: AnalyticsArchetypeRow[] }) {
   if (rows.length === 0) return null
   return (
     <div className="rounded-lg border bg-card p-4 space-y-3">
-      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Session shapes</p>
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Workouts</p>
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead className="text-[10px] uppercase tracking-wider text-muted-foreground">

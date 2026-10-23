@@ -824,7 +824,7 @@ modality and no session, so the modality icon is the correct and only answer.
 |---|---|---|
 | **Today** | `TodayView` | — (cards: sessions, readiness, suggestions, development, progression) |
 | **Program** | `ProgramView` | Overview · Calendar · History |
-| **Analytics** | `AnalyticsView` | Program · Progress · Blocks · Load · Recovery |
+| **Analytics** | `AnalyticsView` | Progress · Blocks · Load · Recovery |
 | **Log** | `LogView` | Activity · Linking |
 | **Profile** | `ProfileView` | Athlete (incl. injuries and HR zones) · Equipment · Schedule · Standards |
 
@@ -1054,19 +1054,32 @@ section became the third user. `AnalyticsStatus.swift` holds
 `AnalyticsStatusStyle` — the engine's statuses folded onto green / yellow /
 red / neutral and put into words, the same mapping as the web's
 `components/analytics/status.ts` — `AnalyticsStatusBadge` (the capsule), and
-the coverage reason copy. `ProgressionView` reads its colours from it.
+the coverage reason copy. `AnalyticsProgressTab` reads its colours from it.
 
-**Analytics ▸ Program** (`Views/AnalyticsProgramTab.swift`) lays out the
-server's `GET /api/analytics/program` document — how closely the plan is
-being followed (`ProgramAnalyticsModels.swift`, every section decoded on its
-own so a failed or future section cannot blank the screen):
-
-The sections, titles and order are the web's (`components/analytics/ProgramTab.tsx`);
-the phone lacked Standards and Session shapes, half of Movement and the
-intensity footer until 2026-10-16.
+**Analytics ▸ Progress** (`Views/AnalyticsProgressTab.swift`) lays out the
+server's `GET /api/analytics/program` document (`ProgramAnalyticsModels.swift`,
+every section decoded on its own so a failed or future section cannot blank the
+screen) and the progression review. Program and Progress were two sections
+until 2026-10-23; the sections, titles and order are the web's
+(`components/analytics/ProgressTab.tsx`):
 
 - *Program*: the program header (§6.28) with plan fidelity as its footer —
   each field actual / ideal with a mark.
+- *Score* (§6.25): the review's score, its band and the completion beside it.
+- *Progress* — the one chart (§6.41): every exercise, each metric done
+  against prescribed, and each methodology measure against its expectation.
+- A section per methodology (`MethodologySectionView`,
+  `Views/AnalyticsProgramSections.swift`): its name as a `SectionLabel`
+  (§6.37), then one card of `MeasureRow`s, headline first — the name and the
+  status badge on one line, where the measure stands in its own currency and
+  its trend under it (side by side when they fit), the `CoverageNoticeView`
+  when nothing measures it yet. Tapping a row draws it on the chart (the row
+  tints, with an accent bar) and scrolls to it; the chevron pushes
+  `MeasureDetailView` (§6.37): each exercise's status and stall, every movement
+  and standard (each opens its sheet), the evidence and the About section. The
+  rows were cards with a sparkline, and the detail had its own chart, until
+  2026-10-23. Entries the program does not schedule fold behind one "N not in
+  this program" row.
 - *Scorecard*: the headline gate (`on_plan` / `off_plan` / `not_started`), a
   row per modality with completion against the plan to date and the weekly
   dose against the framework's range.
@@ -1077,50 +1090,22 @@ intensity footer until 2026-10-16.
   filled over it, "recorded/planned min" beside it. A zone shows only when it
   has either. An older server sends no `zones`; the card then draws minutes per
   bucket per week. % of 1RM for max-effort frameworks.
-- *Movement* (a summary, §6.37): the three patterns the program plans most,
-  done against planned (planned in grey, done over it, on the whole table's
-  scale, in a `Grid` so every track is as long — a full-width background in
-  the same dark grey hid where planned ended, until 2026-10-18), the balance
-  pairs out of range with a mark, or "Balance in range"; an "N out of range"
-  badge beside the header. `MovementDetailView` has both tables in full,
-  every pair (named as the bars are, "Push : Pull"), the unilateral share
-  when the program has any, and the minutes assumed (the footer under
-  Minutes).
-- *Session shapes* (`SessionShapesCard`, a summary): done of scheduled across
-  every shape, how many ran past ±25 % of their estimate, and the first three
-  shapes. `SessionShapesDetailView` lists every shape with its duration against
-  the archetype's estimate (amber past ±25 %), HR and the lead lift's est. 1RM.
-- *Load* (TSB read in the phase's terms).
-
-**Analytics ▸ Progress** (`Views/ProgressionView.swift`) reads the same
-document for what it measures progress by, after the review's score (§6.25)
-and measures — the web's Progress tab:
-
-- A section per methodology (`MethodologySectionView`, `Views/AnalyticsProgramSections.swift`): its name as a `SectionLabel` (§6.37), then a `ProgressEntryCard` per metric that applies — a
-  summary that opens `MeasureDetailView` (§6.37): the status badge, where the
-  measure stands in its own currency (the lead lift's latest value and its
-  name; movements practised of the program's and `lock.open` the ones opened;
-  standards met of those with a target), the trend, the headline pill, a
-  `Sparkline`, and the `CoverageNoticeView` when nothing measures it yet.
-  The detail has the exercise picker (a menu), the actual-against-expected
-  chart (actual green, expected indigo dashed, deload points hollow), the
-  stall line, every movement and standard (each opens its sheet), every line
-  of evidence and the About section. Entries the program does not schedule
-  fold behind one "N not in this program" row.
-- *Standards* (`ProgramStandardsCard`): the program's own (`primary`), the
-  rest behind "More standards"; per standard the modality's symbol and the
+- *Standards* (`ProgramStandardsCard`): the program's own — those it tests and
+  those a lift it schedules estimates (the server's rule, `program_standards`);
+  "More standards" went on 2026-10-23, and a button sends the athlete to
+  Profile ▸ Standards for the rest. Per standard the modality's symbol and the
   name, the value as the server prints it, a chevron, the level badge and the
   gap on a second line, and the block's `Sparkline`. A row presents
-  `StandardDetailSheet` in place (§6.32), which draws the ladder; rows drew
-  one each, and jumped to Profile, until 2026-10-17.
-- *Exercises* (`ExerciseProgressSection`, from `GET /progression/exercises`):
-  a segmented filter on three counts — with data, so far, in the program (the first that shows something until the athlete picks), and a row
-  per exercise — latest value, this week's prescription as the target, a
-  sparkline, HR from a linked workout, the finding's change line. "No trend
-  yet" when logged but unmeasured, "Not tracked" when nothing is logged. A
-  row pushes `ExerciseHistoryView`: the standing, every logged session as a
-  chart (the target as a dashed rule) and as rows, "How to do it"
-  (`ExerciseDetailSheet`, §6.14) and the finding's words as About.
+  `StandardDetailSheet` in place (§6.32).
+- *Workouts* (`SessionShapesCard`, a summary; "Session shapes" until
+  2026-10-23): done of scheduled across every workout, how many ran past
+  ±25 % of their estimate, and the first three. `SessionShapesDetailView`
+  lists every workout with its duration against the archetype's estimate
+  (amber past ±25 %), HR and the lead lift's est. 1RM.
+- *Load* (TSB read in the phase's terms), then Recommendations and Suggested
+  adjustments.
+- *Movement* is parked: the server still builds it and `open=movement` still
+  pushes `MovementDetailView`, but the section shows no card.
 
 Rules: nothing is computed on the phone; the chart's two colours are the
 web's; a status the engine adds later shows neutral, never a missing style.
@@ -1208,7 +1193,7 @@ restarted the check in a loop.
 methodology's summary, emphasis (modalities), core principles and how it
 trains (intensity model, progression philosophy). Three presenters: the
 builder's philosophy cards (step 1) and the book on the program header
-card (§6.28) on Program ▸ Overview and Analytics ▸ Program; a blend turns
+card (§6.28) on Program ▸ Overview and Analytics ▸ Progress; a blend turns
 the book into a menu with one entry per source
 (`AppState.programMethodologies()`). It was private to
 the builder until 2026-10-01, which left the plan the athlete was on with no
@@ -1261,7 +1246,7 @@ selection; the sheet is the one methodology reference on the phone.
   exercise with content ("Back Squat — 3 sets · 3×5 @ 80 kg"). A row that
   resolves opens the session detail.
 
-Analytics keeps Program · Progress · Blocks · Load · Recovery: it
+Analytics keeps Progress · Blocks · Load · Recovery: it
 interprets, it no longer lists. `router.showLog(_:)` and
 `trainingcompanion://log?section=…` name the sections (§6.9).
 
@@ -1439,7 +1424,7 @@ one `line.3.horizontal.decrease.circle` button.
 ### 6.25 Score Explanation
 
 **A score says what it is made of and which band it is in.**
-The Score card on Analytics ▸ Progress (`Views/ProgressionView.swift`) opens
+The Score card on Analytics ▸ Progress (`Views/AnalyticsProgressTab.swift`) opens
 `ScoreDetailView` (§6.37), with the band from
 `ProgressionScore` (`ProgressionScore.swift`). Today's Progress card no longer
 shows the score (2026-10-16): it shows the methodology's headline measure, worded
@@ -1549,7 +1534,7 @@ optional mark.
   listed progression, intensity model and framework, a weeks cell, and the
   priority mix as a card of its own — "linear progression" four times over for
   Starting Strength.
-- *Analytics ▸ Program* (first card): every tag — how it progresses,
+- *Analytics ▸ Progress* (first card): every tag — how it progresses,
   intensity model, framework (the name from the analytics document's frame,
   since the phone has no framework catalog) — and plan fidelity as its footer,
   each field actual / ideal with a check or a warning mark.
@@ -1759,7 +1744,7 @@ label, a track with the planned minutes as a stroked outline and the recorded mi
 a fill in `HRZoneStyle.color` (§8), both against the largest value — and "22/8 min"
 (recorded/planned) at the trailing edge; a Recorded/Planned key under the rows. Zones
 with neither side are left out (`ZonePlanComparison.rows(planned:recorded:)` from the
-server's five-zone arrays). Analytics ▸ Program's intensity card draws it over the block
+server's five-zone arrays). Analytics ▸ Progress's intensity card draws it over the block
 (`intensity.zones`).
 
 `PlannedZonesView(analysis:)` is one workout against its session's programming
@@ -1844,13 +1829,13 @@ a screen with the full chart, the numbers and, at the end, *About*.
   `TintCapsule`, `MeasureTrendLabel` and `CoverageNoticeView` carry it
   themselves.
 - A detail a deep link can open, for screenshots and other screens:
-  `analytics?section=progress&measure=<entry id>` and `&exercise=<id>`,
-  `analytics?open=score|scorecard|intensity|movement|shapes|readiness|sleep|hrv|resting-hr|checkins|pmc|load-focus|mix|weekly|block-load`
+  `analytics?section=progress&measure=<entry id>` and `&exercise=<id>` (selected on the
+  Progress chart, §6.41), `analytics?open=score|scorecard|intensity|movement|workouts|shapes|readiness|sleep|hrv|resting-hr|checkins|pmc|load-focus|mix|weekly|block-load`
   (`AppRouter.openAnalyticsDetail`; each section pushes its own).
 
 Users: Analytics ▸ Progress's Score (`ScoreDetailView`, §6.25), its measure
-cards (`MeasureDetailView`), "N not in this program" under them
-(`MeasuresElsewhereView`), its Exercises rows (`ExerciseHistoryView`), its
+rows (`MeasureDetailView`), "N not in this program" under them
+(`MeasuresElsewhereView`), its
 Standards rows (the standard's sheet, §6.32); Analytics ▸ Recovery's readiness (`ReadinessDetailView`, §6.21),
 sleep (`SleepDetailView` — Sleep Debt, Last Night and Sleep Stages were three
 cards), HRV and resting heart rate (`RecoveryTrendDetailView`, one view for
@@ -1864,10 +1849,10 @@ and Weekly (`WeeklyDetailView`: sessions and TRIMP a week, each week's two
 numbers) — `Views/LoadCardDetails.swift`; Analytics ▸ Blocks' block rows
 (`ProgramVersionDetailView`), "By block" (`SeriesBlocksView`), TRIMP by block
 (`BlockLoadDetailView`: each block's weeks, average a week, peak and total —
-the server's `load.byBlock`) and standards (the sheet); Analytics ▸ Program's
+the server's `load.byBlock`) and standards (the sheet); Analytics ▸ Progress's
 Scorecard (`ScorecardDetailView`: weeks, tiers, each modality's minutes),
 Intensity split (`IntensityDetailView`: zones, weeks, each framework's split,
-share of 1RM) — `Views/ProgramCardDetails.swift` — Movement and Session shapes
+share of 1RM) — `Views/ProgramCardDetails.swift` — Movement and Workouts
 (`MovementDetailView`, `SessionShapesDetailView`); and Program ▸ Overview's
 phases (§6.26, before this section was written). Program's Load card is a
 summary of the PMC that Load's own card opens.
@@ -1967,3 +1952,36 @@ Image(symbol: SessionIcon.symbol(icon: session.icon, modality: session.modality)
   sheet, the session header, the preview, the session pickers (import,
   workout detail, Workout complete), Log ▸ Linking. The inline watch
   complication keeps the modality's system symbol.
+
+### 6.41 Progress Chart
+
+**Every time series of the program is one chart.** Analytics ▸ Progress
+draws what the athlete did against what the program asked on one card
+(`Views/ProgressChartView.swift`), the web's `ProgressChart`:
+
+- A menu names the series (Exercises — "Back Squat · 10 logged" — then the
+  methodology measures the server names in `exerciseSeries.measures`), a row of
+  capsules its metric (top set, reps, sets, total reps, volume, est. 1RM, RPE,
+  time, hold, rounds, distance — only those the exercise has a value for), and
+  `info.circle` opens the exercise's reference (`ExerciseDetailSheet`, §6.14).
+- The last done value large, "Last done <day>" under it, "logged/scheduled"
+  beside it.
+- Swift Charts on a date axis: done as a green line with points (hollow on a
+  deload, the deload day shaded), prescribed (an exercise) or expected (a
+  measure) as an indigo dashed line, today as a dotted rule. Straight segments
+  — sessions are discrete, and a curve invented values between them. The
+  legend names the dashed line only when there is one (a lift the method
+  works up on the day prescribes no kg). The y-axis starts from the lightest
+  value, not 0.
+- Touching the chart picks the nearest session and shows a panel under it:
+  the day, the workout, the prescription in the server's words and what was
+  done set by set ("100×5, 100×5, 100×4 · RPE 8").
+
+The series are the server's (`exerciseSeries` on `/analytics/program`,
+`src/analytics/exercise_series.py`); `ProgressChartModel`
+(`ExerciseSeriesModels.swift`) only selects and lines them up, as
+`lib/progressChart.ts` does on the web (`ProgressChartModelTests`). It
+replaced, on 2026-10-23, the measure cards' sparklines, `MeasureDetailView`'s
+chart, and the Exercises section with its `ExerciseHistoryView` screen
+(`/progression/exercises`, which stays for installed builds).
+

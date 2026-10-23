@@ -229,11 +229,11 @@ def test_routes():
     logs = {'wod_fran_minutes': [{'id': 2, 'value': 4.97, 'date': '2026-09-01 10:00:00+00:00'}]}
     with mock.patch.object(api._health, 'get_performance_logs', return_value=logs), \
             mock.patch('src.program_history.list_activations', return_value=[]), \
-            mock.patch.object(api, '_current_program_standards', return_value={'wod_fran_minutes': ['declared']}), \
+            mock.patch.object(api, '_current_program_standards', return_value={'wod_fran_minutes': ['tested']}), \
             mock.patch('src.db.get_user_profile', return_value={'sex': 'female'}):
         r = c.get('/api/standards/results')
     assert r.status_code == 200 and r.json['sex'] == 'female'
-    assert r.json['programStandards'] == [{'id': 'wod_fran_minutes', 'why': ['declared']}], "Profile's This program"
+    assert r.json['programStandards'] == [{'id': 'wod_fran_minutes', 'why': ['tested']}], "Profile's This program"
     assert r.json['standards']['wod_fran_minutes']['current']['valueText'] == '4:58'
 
     with mock.patch.object(api._health, 'add_performance_entry', return_value=9) as add, \

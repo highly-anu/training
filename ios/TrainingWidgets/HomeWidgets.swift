@@ -264,7 +264,7 @@ struct StatusRowView: View {
     }
 
     private func adherenceCell(_ s: WidgetStatusData) -> some View {
-        Link(destination: URL(string: "trainingcompanion://analytics?section=program")!) {
+        Link(destination: URL(string: "trainingcompanion://analytics?section=progress")!) {
             StatusCell(title: "ADHERENCE", tint: Self.verdictColor(s.adherence?.verdict)) {
                 if let a = s.adherence {
                     Text("\(a.pct)%")
