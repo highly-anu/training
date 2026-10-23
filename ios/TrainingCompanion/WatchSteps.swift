@@ -143,6 +143,23 @@ enum WatchCues {
         return workSecond == at
     }
 
+    /// The lead-in before work that starts on a clock (watch_vocabulary.json
+    /// `cues`, the Garmin's Cues.leadIn): a tick on each of the last
+    /// `WatchVocab.leadInSeconds` seconds, then the go at 0.
+    enum LeadIn: Equatable { case tick, go }
+
+    static func leadIn(secondsLeft: Int) -> LeadIn? {
+        guard secondsLeft >= 0, secondsLeft <= WatchVocab.leadInSeconds else { return nil }
+        return secondsLeft == 0 ? .go : .tick
+    }
+
+    /// The vocabulary's word for `secondsLeft` ("Work in 3", "2", "1", "Go"):
+    /// what the screen shows while counting and what Voice says.
+    static func leadInWord(secondsLeft: Int) -> String? {
+        let i = WatchVocab.leadInSeconds - secondsLeft
+        return WatchVocab.leadInWords.indices.contains(i) ? WatchVocab.leadInWords[i] : nil
+    }
+
     /// A rest with `restUntilHr`: over once the heart rate has stayed under
     /// it for five seconds; the rest's own time is then only its cap.
     struct RestGate: Equatable {

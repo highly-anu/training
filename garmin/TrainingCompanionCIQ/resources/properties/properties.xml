@@ -14,4 +14,16 @@
        the demo store builds stored demoMode=true on the watch, and a stored value
        outlives an update, so the real build reads a key the demo never wrote. -->
   <property id="demoProgrammes" type="boolean">false</property>
+  <!-- Workout cues (core Cues.mc). The watch's Settings menu writes the same keys. -->
+  <property id="cueTones" type="boolean">true</property>
+  <property id="cueVibrate" type="boolean">true</property>
+  <!-- "Work in 3, 2, 1, go" before work that starts on a clock (a rest's end). -->
+  <property id="leadIn" type="boolean">true</property>
+  <!-- The same count after START, before the timer starts (Garmin's Countdown Start). -->
+  <property id="countdownStart" type="boolean">true</property>
+  <!-- The lead-in's tones, Toybox.Attention TONE_* values: Alert Low (5) for each
+       count, Loud Beep (6) for the go. Picked by ear on the watch (Settings ▸
+       Lead-in Tones); a custom pitch plays nothing on a watch with a speaker. -->
+  <property id="leadTickTone" type="number">5</property>
+  <property id="leadGoTone" type="number">6</property>
 </properties>

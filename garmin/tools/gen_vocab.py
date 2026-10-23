@@ -57,6 +57,12 @@ def render(vocab: dict) -> str:
         f"    const VERSION = {vocab['version']};",
         f"    const FALLBACK_TEMPLATE = {mc(d['fallback_template'])};",
         f"    const WEIGHT_STEP_KG = {mc(float(d['edit']['weight_step_kg']))};",
+        f"    const LEAD_IN_SEC = {vocab['cues']['lead_in']['seconds']};",
+        '',
+        '    // The lead-in\'s words, one per second from LEAD_IN_SEC down to the go.',
+        '    function leadInWords() {',
+        f"        return {mc(vocab['cues']['lead_in']['words'])};",
+        '    }',
         '',
         '    // slot_type -> template.',
         '    function templateFor(slotType) {',
@@ -196,6 +202,10 @@ def render_swift(vocab: dict) -> str:
         f"    static let weightStepKg = {float(d['edit']['weight_step_kg'])}",
         '    static let weightStepByCategory: [String: Double] = ['
         + ', '.join(f'"{k}": {float(v)}' for k, v in d['edit']['weight_step_by_category'].items()) + ']',
+        f"    static let leadInSeconds = {vocab['cues']['lead_in']['seconds']}",
+        '    /// The lead-in\'s words, one per second from leadInSeconds down to the go.',
+        '    static let leadInWords: [String] = ['
+        + ', '.join(json.dumps(w) for w in vocab['cues']['lead_in']['words']) + ']',
         '    static let summaryPages: [String] = [' + ', '.join(f'"{p}"' for p in d['summary']['pages']) + ']',
         '    static let palette: [String: UInt32] = ['
         + ', '.join(f'"{k}": {v}' for k, v in vocab['palette'].items()) + ']',

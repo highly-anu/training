@@ -101,6 +101,18 @@ final class WatchStepsTests: XCTestCase {
                        "without a heart rate the rest runs to its cap")
     }
 
+    /// The lead-in both watches count (watch_vocabulary.json `cues`; the
+    /// Garmin's is CuesTests.mc): a tick on each of the last three seconds,
+    /// the go at 0, and a word for each.
+    func testTheLeadInTicksThreeThenGoes() {
+        XCTAssertEqual((-1...5).map { WatchCues.leadIn(secondsLeft: $0) },
+                       [nil, .go, .tick, .tick, .tick, nil, nil])
+        XCTAssertEqual(WatchVocab.leadInWords.count, WatchVocab.leadInSeconds + 1, "a word per count and the go")
+        XCTAssertEqual((0...3).reversed().map { WatchCues.leadInWord(secondsLeft: $0) },
+                       ["Work in 3", "2", "1", "Go"])
+        XCTAssertNil(WatchCues.leadInWord(secondsLeft: 4))
+    }
+
     func testAnHRGatedIntervalIsPreviewedWithItsZone() throws {
         let swing = try ex(#"{"exerciseId": "wk_kb_half_snatch", "name": "Half Snatch", "slotType": "emom", "targetRounds": 20, "workSec": 15, "intervalRestSec": 90, "restUntilHr": 126, "prescribedZoneLower": 1, "prescribedZoneUpper": 2}"#)
         let s = session([swing])

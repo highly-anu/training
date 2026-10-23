@@ -526,6 +526,38 @@ kettlebell weights are per bell everywhere, as the packages prescribe them
 (`kb_press_double` starts at 16 kg); the id suffix `_double` marks a double, and the
 summary's volume counts both bells.
 
+*1.10.0 (2026-10-23): cue settings and the lead-in, on both watches.* "Work in 3, 2, 1,
+go" before work on a clock: the last three seconds of a set rest or an interval rest, a
+rest-less EMOM's minute, and a heart-rate rest once HR is under its target; after START too,
+with Countdown Start (`watch_vocabulary.json` `cues`; Garmin `Cues.mc`, Apple Watch
+`WatchCues.leadIn` + `WatchCuePlayer`). Settings on the Garmin (pre-start and workout
+hold-UP menus, and Garmin Connect Mobile): Tones, Vibration, Lead-in, Countdown Start, and
+Lead-in Tones, picked by ear. On the Apple Watch (the Today list): Lead-in, Countdown Start,
+Voice. What the platform will not do, found on the way:
+- **No voice on the Garmin.** Connect IQ has no text-to-speech, no sound-file resource and no
+  way to reach the watch's voice prompts. A custom `ToneProfile` pitch is silent on speaker
+  watches (fenix 8 and 9; forum reports from the Connect IQ team), so only the 19 built-in
+  `TONE_*` sounds are usable. *Later:* the phone could speak for the Garmin (the Connect IQ
+  Mobile SDK in the iOS app, a phone-app message per count; Bluetooth adds 0.5–2 s).
+- **The simulator cannot show the native screens.** It runs only Connect IQ code, and its
+  `Menu2` is generic; on the watch `Menu2`, `Confirmation` and the Personality layouts draw
+  natively. The reference stays the athlete's photos and the fenix 8 manual (Activity
+  Settings, Strength, HIIT, Stopping an Activity).
+- **Post-workout data:** aerobic TE only (`Activity.Info.trainingEffect`); recovery time,
+  training status and VO2 max through `Complications` (API 4.2); no anaerobic TE and no
+  Acute Load. The TE page will show aerobic only.
+- **One glance per app:** variants are a style setting. Whether a Connect IQ glance can go
+  in a fenix glance folder, and whether a glance-launched app may record, needs the watch.
+
+*Next, from the athlete's photos of the native Strength flow (2026-10-23):* the pre-start
+page as Garmin's — the header focused, START starts at once, DOWN into a list (Workouts,
+Steps, Training Calendar, Progress, Readiness, Settings, Sync) — in place of the Do Workout /
+Steps menu; Save → "Saving" → "Activity Saved" and Discard → "Discarding" (red arc) →
+"Activity Discarded" (green ring); the post-save list (Done · All Stats · TE · Heart Rate ·
+Sets, numbers in a column on the left) and All Stats pages Summary → Heart Rate → HR Zones →
+Training Effect → Training Status; glance styles (Next up, Day bar, Ring), left-aligned in
+`FONT_GLANCE`. HIIT and Run need the same photos before their pages are matched.
+
 **Order of work** (each slice ends in a demo `.iq` and photos from the watch;
 the simulator can't be scripted, so also passive `monkeydo` screenshots on a
 round AMOLED and a solar MIP device):

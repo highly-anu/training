@@ -1012,6 +1012,21 @@ plain **Skip** beside it — still two buttons (§9.2). `DataPageView` and `Step
 (`Views/StepPageView.swift`) replaced the eight views the watch chose by slot type; a new
 template is drawn there, never in a view of its own.
 
+While a lead-in counts (`WorkoutSessionState.leadInLeft`: Countdown Start after Start, or
+a rest's last three seconds), the vocabulary's word ("Work in 3", "2", "1") stands over
+the buttons in `.title3` rounded semibold in the modality colour, and Start is hidden
+until the clock runs.
+
+### 9.7 Settings and the lead-in
+
+The watch's Settings (`WatchSettingsView`, `WatchCuePlayer.swift`) is the last menu row
+of the Today list before Sync: **Lead-in**, **Countdown Start** and **Voice** as system
+toggles, a footer saying what each does, and **Try it**, which plays the count. The values
+live on the watch (`@AppStorage`, `WatchCueSettings`), as the Garmin's live on the Garmin.
+A count is `.click`, the go `.start` (both sound unless the watch is silenced); with Voice
+on, `AVSpeechSynthesizer` also says the word, ducking other audio. The rule is
+`WatchCues.leadIn`, the Garmin's `Cues.leadIn`: change it in `watch_vocabulary.json`.
+
 ---
 
 ## Color Utility

@@ -69,6 +69,7 @@ As of 2026-10-18. *Server* is the payload key; *—* means the server has no par
 | Edit set before, next and after; pace | — | yes | Set Next and Edit Set (commands page, carried forward); pace edit and the pre-start plan pending |
 | Metronome | `targetRpm`, `metronome_rpm` | yes | yes: a haptic beat while paced, switched on the commands page |
 | Summary pages | `watch.summary.pages` | yes | summary, heart rate (zones), exercises; training effect is the Garmin's own |
+| Lead-in "Work in 3, 2, 1, go" before work on a clock (a rest's last seconds; after Start with Countdown Start) and its settings | — (`cues.lead_in` in the vocabulary) | tones you pick (Settings ▸ Lead-in Tones) and a vibration; Settings: Tones, Vibration, Lead-in, Countdown Start (also in Garmin Connect Mobile) | a click on each count, the start haptic on the go, spoken with Voice on; Settings on the Today list: Lead-in, Countdown Start, Voice |
 | Hand switch | `switchAtSec` (slot `switch_at_sec`: the pentathlon test's five events at 3:00) | in a timed block (1.7.0) and an interval's work: Left/Right, a Switch hands alert | the same, with the turn haptic for the new hand |
 | Rest that ends on heart rate | `restUntilHr` in bpm (slot `rest_until_hr_pct` × max HR: Wildman's anti-glycolytic sets, Uphill's hill repeats) | the interval's rest ends 5 s under it; HR TO and the time so far | the same (`WatchCues.RestGate`); the rest screen's "still recovering" guess is gone |
 | A round's movements and their reps, a rep scheme | `repsPerRound`, `repScheme` (slot `rep_scheme`: Fran's [21, 15, 9]) | the round line: the step's own movement, then the folded ones, each with this round's reps; "21-15-9 for time" in the step lists | the same; a for-time piece's movements fold into its round, as the Garmin's always did |
@@ -84,6 +85,7 @@ As of 2026-10-18. *Server* is the payload key; *—* means the server has no par
 | Payload | `test_today_session.py`, `test_watch_spec.py`, `test_last_time.py` | — | `WatchDayTests` on `data/watch_day_fixture.json` (route-written) and the demo sessions |
 | Generated files current | `test_watch_spec.py` (`gen_vocab --check`, `check_core_neutral`) | — | — |
 | Rendering | — | `SpecFixtures.mc` on `data/watch_fixtures.json` (`build.sh --test`, simulator open) | `WatchSpecTests` on the same file |
+| Lead-in rule | — | `CuesTests.mc` | `WatchStepsTests.testTheLeadInTicksThreeThenGoes` |
 | Upload shape | — | `WireTests.mc` | `WatchUploadTests` |
 
 `data/watch_fixtures.json` is the screens' contract: a server-shaped exercise, its spec

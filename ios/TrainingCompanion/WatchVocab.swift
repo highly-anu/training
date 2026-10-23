@@ -163,6 +163,9 @@ nonisolated enum WatchVocab {
 
     static let weightStepKg = 2.5
     static let weightStepByCategory: [String: Double] = ["kettlebell": 4.0]
+    static let leadInSeconds = 3
+    /// The lead-in's words, one per second from leadInSeconds down to the go.
+    static let leadInWords: [String] = ["Work in 3", "2", "1", "Go"]
     static let summaryPages: [String] = ["summary", "heart_rate", "training_effect", "exercises"]
     static let palette: [String: UInt32] = ["red": 0xEF4444, "rose": 0xF43F5E, "orange": 0xF97316, "amber": 0xF59E0B, "yellow": 0xEAB308, "lime": 0x84CC16, "emerald": 0x10B981, "teal": 0x14B8A6, "cyan": 0x06B6D4, "sky": 0x0EA5E9, "violet": 0x8B5CF6, "pink": 0xEC4899]
 }

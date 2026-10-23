@@ -1,6 +1,6 @@
 using Toybox.WatchUi as Ui;
 
-// hold UP while recording: Stop Workout, Skip, Set Next, Edit Set.
+// hold UP while recording: Stop Workout, Skip, Set Next, Edit Set, Settings.
 class WorkoutMenuDelegate extends Ui.Menu2InputDelegate {
 
     hidden var _ctl;
@@ -33,6 +33,11 @@ class WorkoutMenuDelegate extends Ui.Menu2InputDelegate {
             if (id == :pace) {
                 Ui.popView(Ui.SLIDE_IMMEDIATE);
                 $.editPace(_ctl);
+                return;
+            }
+            if (id == :settings) {
+                Ui.popView(Ui.SLIDE_IMMEDIATE);
+                $.openSettings();
                 return;
             }
             if (id == :metronome) {

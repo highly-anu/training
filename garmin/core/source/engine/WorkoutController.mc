@@ -4,7 +4,6 @@ using Toybox.Timer;
 using Toybox.Time;
 using Toybox.Time.Gregorian;
 using Toybox.Lang;
-using Toybox.Attention;
 using Toybox.WatchUi;
 using Toybox.UserProfile;
 
@@ -133,6 +132,7 @@ class WorkoutController {
     hidden var _lastError;  // first failure swallowed to keep the workout alive
     hidden var _paused;     // stop menu open: clock and recording held
     hidden var _discarded;  // ended without saving or uploading
+    hidden var _countIn;    // Countdown Start: seconds left before the timer starts, 0 = none
 
     function initialize(session, sync) {
         _session = session;
@@ -176,6 +176,7 @@ class WorkoutController {
         _lastError = null;
         _paused = false;
         _discarded = false;
+        _countIn = 0;
         seedSetEditor();
     }
 
@@ -184,6 +185,7 @@ class WorkoutController {
     // Do Workout: the workout screen is up but nothing records until START, as on
     // Garmin's own workouts. The clock runs only to show the live HR.
     function prepare() {
+        Cues.load();
         _isCardio = isCardioSession();
         _hrZones = readHrZones();
         if (_timer == null) {
@@ -195,16 +197,46 @@ class WorkoutController {
     // BACK before START: leave without having recorded anything.
     function cancel() {
         if (_state != IDLE) { return; }
+        _countIn = 0;
         if (_timer != null) { try { _timer.stop(); } catch (e) {} }
         _timer = null;
     }
 
     function isReady() { return _state == IDLE; }
 
-    // START: begin recording. Set Next values chosen while ready carry over.
+    // Countdown Start: the seconds left before the timer starts (3, 2, 1), else 0.
+    function countInLeft() { return _countIn; }
+
+    // The seconds left of a lead-in into work (3, 2, 1) — Countdown Start's, or a
+    // rest's last — else 0: the screen says "Work in 3" while the ticks play.
+    function leadInLeft() {
+        if (_countIn > 0) { return _countIn; }
+        if (Cues.leadInOn && _state == RESTING && _restRemaining > 0
+                && _restRemaining <= Vocab.LEAD_IN_SEC) {
+            return _restRemaining;
+        }
+        return 0;
+    }
+
+    // START: begin recording — after "Work in 3, 2, 1" when Countdown Start is on,
+    // as on Garmin's own activities. The clock is restarted on the press so the
+    // counts fall a second apart from it. Set Next values chosen while ready
+    // carry over.
     function start() {
-        if (_state != IDLE) { return; }
+        if (_state != IDLE || _countIn > 0) { return; }
         prepare();
+        if (Cues.countdownStartOn) {
+            _countIn = Vocab.LEAD_IN_SEC;
+            if (_timer != null) { try { _timer.stop(); } catch (e) {} }
+            _timer = new Timer.Timer();
+            _timer.start(method(:onTick), 1000, true);
+            Haptics.leadTick();
+            return;
+        }
+        begin();
+    }
+
+    hidden function begin() {
         _startMoment = Time.now();
         _rec = Rec.createSession({
             :name => _session.archetypeName(),
@@ -263,6 +295,13 @@ class WorkoutController {
     function onBeat() as Void { Haptics.metronome(); }
 
     hidden function tick() {
+        if (_state == IDLE && _countIn > 0) {
+            _countIn -= 1;
+            if (_countIn > 0) { Haptics.leadTick(); }
+            else { Haptics.leadGo(); begin(); }
+            WatchUi.requestUpdate();
+            return;
+        }
         if (_state == IDLE) {
             var i0 = Activity.getActivityInfo();
             if (i0 != null && i0.currentHeartRate != null) { _hrLast = i0.currentHeartRate; }
@@ -290,8 +329,9 @@ class WorkoutController {
             // Graded cues: the athlete reads these without looking at the watch.
             if (_restRemaining == 30)     { Haptics.restWarn30(); }
             else if (_restRemaining == 10) { Haptics.restWarn10(); }
+            if (Cues.leadInOn && Cues.leadIn(_restRemaining) == :tick) { Haptics.leadTick(); }
             if (_restRemaining <= 0) {
-                Haptics.restOver();
+                if (Cues.leadInOn) { Haptics.leadGo(); } else { Haptics.restOver(); }
                 endRest();
             }
         }
@@ -838,7 +878,17 @@ class WorkoutController {
                 var gate = ex.restUntilHr();
                 if (_hrLast != null && gate != null && _hrLast < gate) { _gateBelow += 1; }
                 else { _gateBelow = 0; }
-                if (_gateBelow >= 5) { _intPhaseLeft = 0; }
+                // Under the target: the rest is over, after the lead-in when it is on.
+                var lead = (Cues.leadInOn && (_emomTotal == 0 || _emomRound < _emomTotal))
+                    ? Vocab.LEAD_IN_SEC : 0;
+                if (_gateBelow >= 5 && _intPhaseLeft > lead) { _intPhaseLeft = lead; }
+            }
+            // The lead-in into the next round's work: the end of a rest, or of a
+            // rest-less EMOM's minute.
+            if (Cues.leadInOn && _intPhaseLeft > 0 && Cues.leadIn(_intPhaseLeft) == :tick
+                    && (_emomTotal == 0 || _emomRound < _emomTotal)
+                    && (_intPhase == PHASE_REST || _intRestSec == 0)) {
+                Haptics.leadTick();
             }
             if (_intPhaseLeft > 0) { return; }
 
@@ -863,7 +913,7 @@ class WorkoutController {
             _gateRest = false;
             _intPhaseLeft = _workSec;
             markLap();
-            Haptics.intervalWork();
+            if (Cues.leadInOn) { Haptics.leadGo(); } else { Haptics.intervalWork(); }
             if (_workSec >= 60 || ex.restUntilHr() != null) {
                 queueAlert(workLabel(ex) + " " + _emomRound.toString() + "/" + _emomTotal.toString(),
                            workValue(ex));
@@ -941,7 +991,7 @@ class WorkoutController {
     // Static hold countdown, with the same graded end-of-period cue.
     hidden function tickHold() {
         _holdLeft -= 1;
-        if (_holdLeft == 3) { Haptics.countTick(); }
+        if (_holdLeft == 3) { Haptics.leadTick(); }
         if (_holdLeft <= 0) {
             _holdRunning = false;
             _holdLeft = 0;
@@ -1409,12 +1459,6 @@ class WorkoutController {
     }
 
     // ── helpers ────────────────────────────────────────────────────────────────
-
-    hidden function vibrate() {
-        if (Attention has :vibrate) {
-            Attention.vibrate([ new Attention.VibeProfile(75, 400) ]);
-        }
-    }
 
     // "YYYY-MM-DDTHH:MM:SSZ" in UTC — parseable by the backend's ISO8601 reader.
     hidden function isoFromMoment(moment) {

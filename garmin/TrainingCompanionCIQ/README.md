@@ -106,6 +106,22 @@ App settings (`resources/settings`, editable in Garmin Connect Mobile):
   deep link (empty encodes the raw code).
 - `autoStartOnLaunch` — when opened from the complication/glance, start today's
   session immediately instead of just showing the today screen (default off).
+- `cueTones`, `cueVibrate` — the workout's tones and vibrations (default on).
+- `leadIn` — "Work in 3, 2, 1, go" before work that starts on a clock: the last three
+  seconds of a set rest or an interval rest, a rest-less EMOM's minute, and a rest that
+  ends on heart rate once HR is under its target (default on).
+- `countdownStart` — the same count after START, before the timer starts, as Garmin's
+  Countdown Start (default on).
+- `leadTickTone`, `leadGoTone` — the count's and the go's tones (`Toybox.Attention`
+  `TONE_*`, default Alert Low and Loud Beep). Picked by ear on the watch only (Settings ▸
+  Lead-in Tones plays each as it is selected), so they are not in Garmin Connect Mobile.
+
+The same switches are on the watch: Settings, in the pre-start page's hold-UP menu and
+the workout's (`SettingsMenu.mc`, values in `Cues.mc`). **The Garmin cannot speak.**
+Connect IQ has no text-to-speech, no sound-file resource and no way to reach the watch's
+own voice prompts, and a custom `ToneProfile` pitch plays nothing on a watch with a
+speaker (the fenix 8 and 9) — so the lead-in is the watch's built-in tones. The Apple
+Watch says it ("Work in 3", "2", "1", "Go", `watch_vocabulary.json` `cues`).
 
 ## How it talks to the backend
 
@@ -189,7 +205,7 @@ Resolved (verified by compiling against SDK 9.2.0):
   delete confirmation); BACK is LAP — it ends a set (then the rest runs), ends a
   rest early, counts a round or lap, or moves to the next step; DOWN/UP turn the
   pages, and on the step page walk the list; hold UP opens Stop Workout / Skip / Set Next
-  (the next sets' reps and load) / Edit Set. Edit Set changes the last set (reps ±1, weight ±2.5 kg, RPE ±0.5) and
+  (the next sets' reps and load) / Edit Set / Settings. Edit Set changes the last set (reps ±1, weight ±2.5 kg, RPE ±0.5) and
   carries the new values to the sets after it. When every step is done the
   activity keeps recording ("Workout complete") until Save. Touch is off while
   recording. Icons and button hints are the Personality Library's

@@ -37,20 +37,24 @@ extension WorkoutSessionState {
         }
     }
 
+    /// Start: the step's clock, after "Work in 3, 2, 1" with Countdown Start.
     func start(_ index: Int, _ ex: WatchExercise, _ screen: WatchScreen) {
         switch screen.template {
         case .sets, .hold:
             return
         case .timed, .roundTimer:
-            startTimedWork(exerciseIndex: index)
+            startAfterCountIn(index) { self.startTimedWork(exerciseIndex: index) }
         case .interval:
-            startEMOM(exerciseIndex: index, workSeconds: ex.emomPlan.workSec)
+            startAfterCountIn(index) { self.startEMOM(exerciseIndex: index, workSeconds: ex.emomPlan.workSec) }
         case .rounds:
             // A capped AMRAP counts down; an uncapped one (a ladder) counts up.
-            if let cap = ex.timeMinutes, cap > 0 { startAMRAP(exerciseIndex: index, minutes: cap) }
-            else { startClock(index) }
+            if let cap = ex.timeMinutes, cap > 0 {
+                startAfterCountIn(index) { self.startAMRAP(exerciseIndex: index, minutes: cap) }
+            } else {
+                startAfterCountIn(index) { self.startClock(index) }
+            }
         case .forTime, .distance:
-            startClock(index)
+            startAfterCountIn(index) { self.startClock(index) }
         }
     }
 

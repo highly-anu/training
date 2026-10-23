@@ -78,10 +78,20 @@ struct StepControlsView: View {
         let outcome = WatchSpecText.lap(exercise, screen, st)
         let tint = ModalityStyle.color(for: session.modalityId)
         VStack(spacing: 6) {
+            if let left = sessionState.leadInLeft(index), let word = WatchCues.leadInWord(secondsLeft: left) {
+                // The lead-in: Countdown Start's, or a rest's last seconds.
+                Text(word)
+                    .font(.system(.title3, design: .rounded).weight(.semibold))
+                    .foregroundStyle(tint)
+                    .frame(maxWidth: .infinity)
+                    .contentTransition(.numericText(countsDown: true))
+            }
             if !running {
-                Button("Start") { sessionState.start(index, exercise, screen) }
-                    .buttonStyle(.borderedProminent)
-                    .tint(tint)
+                if sessionState.countIn?.index != index {
+                    Button("Start") { sessionState.start(index, exercise, screen) }
+                        .buttonStyle(.borderedProminent)
+                        .tint(tint)
+                }
             } else {
                 Button(label(outcome, st)) {
                     if outcome == .completeSet { showLogger = true }

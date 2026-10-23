@@ -111,6 +111,15 @@ final class WorkoutSessionState: ObservableObject {
     @Published var metronomeOn = true
     /// An interval rest that ends on heart rate: seconds under its target so far.
     var restGate = WatchCues.RestGate()
+    /// Countdown Start: the step whose clock starts after "Work in 3, 2, 1",
+    /// and the seconds left.
+    @Published var countIn: CountIn? = nil
+    var countInTask: Task<Void, Never>? = nil
+
+    struct CountIn: Equatable {
+        let index: Int
+        var left: Int
+    }
 
     struct WorkingSet: Equatable {
         var reps: Int
@@ -168,6 +177,7 @@ final class WorkoutSessionState: ObservableObject {
         stepWindows = [:]; currentStep = nil
         sideIsLeft = true; holdStartedAt = nil; clockStarts = [:]; restAdvances = false
         workingSets = [:]; metronomeOn = true
+        countInTask?.cancel(); countInTask = nil; countIn = nil
     }
 
     /// The step after `index`, past the movements folded into an AMRAP.
@@ -203,6 +213,7 @@ final class WorkoutSessionState: ObservableObject {
         case 11: WKInterfaceDevice.current().play(.directionUp)
         default: break
         }
+        leadInTick(secondsLeft: remaining - 1)
         if remaining <= 1 {
             endRest(exerciseIndex: ei, completedSet: cs)
         } else {
@@ -223,7 +234,62 @@ final class WorkoutSessionState: ObservableObject {
             currentSetStartOffset = elapsedSeconds
             phase = .active(exerciseIndex: exerciseIndex, setIndex: completedSet + 1)
         }
-        WKInterfaceDevice.current().play(.start)
+        goCue()
+    }
+
+    // MARK: - Lead-in
+
+    /// A tick of the lead-in into work, when `secondsLeft` is one of its counts.
+    private func leadInTick(secondsLeft: Int) {
+        guard WatchCueSettings.leadIn, secondsLeft > 0,
+              WatchCues.leadIn(secondsLeft: secondsLeft) == .tick else { return }
+        WatchCuePlayer.shared.play(.tick, secondsLeft: secondsLeft)
+    }
+
+    /// The moment a clock rolls into work: the lead-in's go, else the start haptic.
+    private func goCue() {
+        if WatchCueSettings.leadIn { WatchCuePlayer.shared.go() }
+        else { WKInterfaceDevice.current().play(.start) }
+    }
+
+    /// The seconds left of a lead-in into work on `index` (3, 2, 1), else nil:
+    /// the page says "Work in 3" while the ticks play.
+    func leadInLeft(_ index: Int) -> Int? {
+        if let c = countIn, c.index == index { return c.left }
+        guard WatchCueSettings.leadIn else { return nil }
+        switch phase {
+        case let .resting(ei, _, left) where ei == index && left - 1 > 0 && left - 1 <= WatchVocab.leadInSeconds:
+            return left - 1
+        case let .emomInterval(ei, _, false, left) where ei == index && left - 1 > 0 && left - 1 <= WatchVocab.leadInSeconds:
+            return left - 1
+        default:
+            return nil
+        }
+    }
+
+    /// Start a step's clock — after "Work in 3, 2, 1" when Countdown Start is
+    /// on, a second apart from the press; the clock's own start haptic is the go.
+    func startAfterCountIn(_ index: Int, then run: @escaping @MainActor () -> Void) {
+        guard countIn == nil else { return }
+        guard WatchCueSettings.countdownStart else { run(); return }
+        let n = WatchVocab.leadInSeconds
+        countIn = CountIn(index: index, left: n)
+        WatchCuePlayer.shared.play(.tick, secondsLeft: n)
+        countInTask = Task { @MainActor [weak self] in
+            for left in stride(from: n - 1, through: 0, by: -1) {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                guard let self, !Task.isCancelled else { return }
+                if left > 0 {
+                    self.countIn = CountIn(index: index, left: left)
+                    WatchCuePlayer.shared.play(.tick, secondsLeft: left)
+                } else {
+                    self.countIn = nil
+                    self.countInTask = nil
+                    run()
+                    if WatchCueSettings.voice { WatchCuePlayer.shared.play(.go, secondsLeft: 0) }
+                }
+            }
+        }
     }
 
     func extendRest(exerciseIndex: Int, completedSet: Int, current remaining: Int) {
@@ -316,11 +382,20 @@ final class WorkoutSessionState: ObservableObject {
         guard case let .emomInterval(ei, round, isWork, remaining) = phase else { return }
         // A rest that ends on heart rate is over once HR has stayed under its
         // target for five seconds; its time is then only the cap.
+        // With the lead-in on, the rest is cut to its last three seconds instead.
         if !isWork, let target = exercise?.restUntilHr,
            restGate.tick(heartRate: currentHR, target: target) {
-            advanceEMOMRound(ei: ei, round: round, workSec: workSec,
-                             totalRounds: totalRounds, exerciseId: exerciseId)
-            return
+            let lead = WatchCueSettings.leadIn && round < totalRounds ? WatchVocab.leadInSeconds : 0
+            if lead == 0 {
+                advanceEMOMRound(ei: ei, round: round, workSec: workSec,
+                                 totalRounds: totalRounds, exerciseId: exerciseId)
+                return
+            }
+            if remaining - 1 > lead {
+                phase = .emomInterval(exerciseIndex: ei, round: round, isWork: false, remaining: lead + 1)
+                leadInTick(secondsLeft: lead)
+                return
+            }
         }
         if remaining <= 1 {
             if isWork {
@@ -343,6 +418,11 @@ final class WorkoutSessionState: ObservableObject {
             if isWork, let ex = exercise, WatchCues.switchDue(ex, workSecond: workSec - remaining + 1) {
                 switchHands()
             }
+            // The lead-in into the next round's work: a rest's end, or a
+            // rest-less interval's minute.
+            if round < totalRounds && (!isWork || restSec == 0) {
+                leadInTick(secondsLeft: remaining - 1)
+            }
         }
     }
 
@@ -363,7 +443,7 @@ final class WorkoutSessionState: ObservableObject {
         } else {
             phase = .emomInterval(exerciseIndex: ei, round: next,
                                   isWork: true, remaining: workSec)
-            WKInterfaceDevice.current().play(.start)
+            goCue()
         }
     }
 

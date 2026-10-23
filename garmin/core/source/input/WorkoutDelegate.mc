@@ -8,7 +8,8 @@ using Toybox.WatchUi as Ui;
 //   BACK = LAP     end the set (then rest); during a rest, end the rest; on other
 //                  slot types count a round or lap, or move to the next step
 //   DOWN / UP      turn the pages; on the step page, walk the list
-//   hold UP        the workout menu: Stop Workout, Skip, Set Next, Edit Set
+//   hold UP        the workout menu: Stop Workout, Skip, Set Next, Edit Set,
+//                  Settings
 //   BACK before the start leaves without recording anything
 //
 // Touch is off while recording, as on the watch's activities: a tap or a sideways
@@ -98,6 +99,7 @@ class WorkoutDelegate extends Ui.BehaviorDelegate {
             m.addItem(new Ui.ToggleMenuItem("Metronome", ex.targetRpm().toString() + " RPM",
                                             :metronome, _ctl.metronomeOn(), {}));
         }
+        m.addItem(new Ui.MenuItem("Settings", "Alerts and lead-in", :settings, {}));
         Ui.pushView(m, new WorkoutMenuDelegate(_ctl, _view), Ui.SLIDE_LEFT);
         return true;
     }

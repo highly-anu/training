@@ -15,6 +15,7 @@ using Toybox.Lang;
 //   Progress   this program week's sessions done, the programme's share done,
 //              and the methodology's own measure (real programme only)
 //   Readiness  today's score
+//   Settings   tones, vibration, the lead-in (SettingsMenu)
 //   Sync       re-fetch today, under the last result (real programme only)
 function openActivityMenu(view) {
     var s = view.current();
@@ -46,6 +47,7 @@ function openActivityMenu(view) {
         m.addItem(new Ui.IconMenuItem("Readiness", r["score"].toString() + "  " + readinessWord(r["status"]),
                                       :readiness, Native.icon(Rez.Drawables.GmReadiness), {}));
     }
+    m.addItem(new Ui.MenuItem("Settings", "Alerts and lead-in", :settings, {}));
     if (!DemoSession.enabled()) {
         m.addItem(new Ui.IconMenuItem("Sync", SyncCache.syncLine(), :sync, Native.icon(Rez.Drawables.GmRefresh), {}));
     }
@@ -271,6 +273,8 @@ class ActivityMenuDelegate extends Ui.Menu2InputDelegate {
         } else if (id == :readiness) {
             var rv = new ReadinessView(_view.readiness());
             Ui.pushView(rv, new PopDelegate(), Ui.SLIDE_LEFT);
+        } else if (id == :settings) {
+            $.openSettings();
         } else if (id == :sync) {
             Ui.popView(Ui.SLIDE_RIGHT);
             _view.refresh();
