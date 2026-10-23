@@ -65,6 +65,7 @@ class SummaryListView extends Ui.View {
     }
 
     hidden function syncText() {
+        if (_ctl.wasDiscarded()) { return "Nothing recorded"; }   // saved before START
         if (DemoSession.enabled()) { return "Demo - not saved"; }
         if (_ctl.lastError() != null) { return _ctl.lastError(); }
         var ok = _ctl.uploadOk();
