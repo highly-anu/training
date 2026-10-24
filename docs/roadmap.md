@@ -564,8 +564,15 @@ Discarded" → closed (`OutcomeView.mc`). Training Status shows recovery time an
 the status word is a complication, and `ComplicationSubscriber` is a watch-face
 permission (the SDK's `projectInfo.xml`), so a watch app cannot read it.
 
-*Next:* glance styles (Next up, Day bar, Ring), left-aligned in `FONT_GLANCE`. HIIT and Run
-need the same photos as Strength (pre-start, pause, summary) before their pages are matched.
+*1.12.0 (2026-10-24): glance styles.* `glanceStyle` (Settings ▸ Glance, and Garmin Connect
+Mobile): Next up (the default, left-aligned in `FONT_GLANCE` — the day's state, the next
+session, its minutes and the week), Day bar (a segment per session, or the week's on a rest
+day) and Ring (the glance until now). The words are `GlanceDay.mc`'s, tested on hand-built
+days. Still for the watch: the glance in a folder, the app among START's activities, and
+whether a glance-launched copy records.
+
+*Next:* HIIT and Run need the same photos as Strength (pre-start, pause, summary) before
+their pages are matched.
 
 **Order of work** (each slice ends in a demo `.iq` and photos from the watch;
 the simulator can't be scripted, so also passive `monkeydo` screenshots on a

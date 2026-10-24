@@ -26,4 +26,7 @@
        Lead-in Tones); a custom pitch plays nothing on a watch with a speaker. -->
   <property id="leadTickTone" type="number">5</property>
   <property id="leadGoTone" type="number">6</property>
+  <!-- The glance's style (core GlanceView.mc): 0 Next up, 1 Day bar, 2 Ring (the
+       glance until 1.12). The watch's Settings ▸ Glance writes the same key. -->
+  <property id="glanceStyle" type="number">0</property>
 </properties>

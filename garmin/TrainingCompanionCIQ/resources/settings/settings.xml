@@ -31,4 +31,11 @@
   <setting propertyKey="countdownStart" title="Countdown after START">
     <settingConfig type="boolean"/>
   </setting>
+  <setting propertyKey="glanceStyle" title="Glance style">
+    <settingConfig type="list">
+      <listEntry value="0">@Strings.GlanceNextUp</listEntry>
+      <listEntry value="1">@Strings.GlanceDayBar</listEntry>
+      <listEntry value="2">@Strings.GlanceRing</listEntry>
+    </settingConfig>
+  </setting>
 </settings>

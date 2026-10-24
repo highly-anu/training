@@ -76,7 +76,7 @@ As of 2026-10-18. *Server* is the payload key; *—* means the server has no par
 | Session icon (its main exercise, in its modality's colour) | `icon` (src/session_icon.py; also on `tomorrow`) | the session hero, activity header and summary: `Icons.forSession` (`cat_kettlebell`), else the archetype category's | the session list (`SessionIcon`, the `kettlebell` symbol in the watch's catalog), the complication; else the modality's |
 | Double bells | `bells` (exercises.yaml) | 2x24 and both bells in the volume | the same; neither watch reads it off the id any more |
 | Upload: sets by id, rounds, clock, distance | — | `Wire.mc` | `WatchUpload` |
-| **Native, not shared** | | glance (64 KB), wellness posting, pairing QR | HealthKit workout and route, complication, overtime prompt |
+| **Native, not shared** | | glance (64 KB; Next up, Day bar or Ring, `glanceStyle`), wellness posting, pairing QR | HealthKit workout and route, complication, overtime prompt |
 
 ## Tests
 

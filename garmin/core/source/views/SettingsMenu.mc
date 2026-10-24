@@ -1,5 +1,6 @@
 using Toybox.WatchUi as Ui;
 using Toybox.Attention;
+using Toybox.Lang;
 
 // Settings, as Garmin's own activity settings: the system list, switches that
 // change at once and stay in the menu. Reached from the pre-start page's
@@ -11,6 +12,7 @@ using Toybox.Attention;
 //   Lead-in          "Work in 3, 2, 1" and the go before work on a clock
 //   Countdown Start  the same count after START
 //   Lead-in Tones    which of the watch's tones count and which says go
+//   Glance           the glance's style: Next up, Day bar or Ring
 function openSettings() {
     Cues.load();
     var m = new Ui.Menu2({ :title => "Settings" });
@@ -21,6 +23,7 @@ function openSettings() {
                                     Cues.countdownStartOn, {}));
     m.addItem(new Ui.MenuItem("Lead-in Tones", toneName(Cues.tickTone) + " · " + toneName(Cues.goTone),
                               :tones, {}));
+    m.addItem(new Ui.MenuItem("Glance", glanceStyleName(Cues.prop("glanceStyle", 0)), :glance, {}));
     Ui.pushView(m, new SettingsMenuDelegate(), Ui.SLIDE_LEFT);
 }
 
@@ -43,6 +46,12 @@ function toneName(t) {
     return (i >= 0) ? names[i] : "Tone";
 }
 
+// GlanceView's styles, in `glanceStyle` order (settings.xml names them the same).
+function glanceStyleName(i) {
+    var names = ["Next up", "Day bar", "Ring"];
+    return (i instanceof Lang.Number && i >= 0 && i < names.size()) ? names[i] : names[0];
+}
+
 class SettingsMenuDelegate extends Ui.Menu2InputDelegate {
 
     function initialize() { Menu2InputDelegate.initialize(); }
@@ -56,7 +65,36 @@ class SettingsMenuDelegate extends Ui.Menu2InputDelegate {
             Ui.pushView(m, new LeadToneMenuDelegate(item), Ui.SLIDE_LEFT);
             return;
         }
+        if (id == :glance) {
+            var cur = Cues.prop("glanceStyle", 0);
+            var m = new Ui.Menu2({ :title => "Glance" });
+            for (var i = 0; i < 3; i += 1) {
+                m.addItem(new Ui.MenuItem(glanceStyleName(i), (i == cur) ? "Selected" : null, i, {}));
+            }
+            Ui.pushView(m, new GlancePickDelegate(item), Ui.SLIDE_LEFT);
+            return;
+        }
         if (item instanceof Ui.ToggleMenuItem) { Cues.set(id, item.isEnabled()); }
+    }
+
+    function onBack() { Ui.popView(Ui.SLIDE_RIGHT); }
+}
+
+// A style is kept as it is picked and the list closes; the glance draws it the
+// next time the glance loop is open.
+class GlancePickDelegate extends Ui.Menu2InputDelegate {
+
+    hidden var _settingsItem;
+
+    function initialize(settingsItem) {
+        Menu2InputDelegate.initialize();
+        _settingsItem = settingsItem;
+    }
+
+    function onSelect(item) {
+        Cues.set("glanceStyle", item.getId());
+        _settingsItem.setSubLabel(glanceStyleName(item.getId()));
+        Ui.popView(Ui.SLIDE_RIGHT);
     }
 
     function onBack() { Ui.popView(Ui.SLIDE_RIGHT); }
