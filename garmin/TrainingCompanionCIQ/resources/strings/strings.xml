@@ -1,3 +1,7 @@
 <strings>
   <string id="AppName">Training</string>
+  <!-- Glance style (settings.xml); the watch's Settings menu names them the same. -->
+  <string id="GlanceNextUp">Next up</string>
+  <string id="GlanceDayBar">Day bar</string>
+  <string id="GlanceRing">Ring</string>
 </strings>

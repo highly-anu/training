@@ -115,6 +115,15 @@ App settings (`resources/settings`, editable in Garmin Connect Mobile):
 - `leadTickTone`, `leadGoTone` — the count's and the go's tones (`Toybox.Attention`
   `TONE_*`, default Alert Low and Loud Beep). Picked by ear on the watch only (Settings ▸
   Lead-in Tones plays each as it is selected), so they are not in Garmin Connect Mobile.
+- `glanceStyle` — the glance (since 1.12.0; `GlanceView.mc` draws, `GlanceDay.mc` words):
+  **Next up** (default) — Garmin's own glance layout, left-aligned in the glance font:
+  the day's state ("TODAY · 2/3"), the next session, its minutes and the week's
+  "3/5 this wk", beside a bar in that session's colour; **Day bar** — a title, a
+  segment per session in its modality's colour (bright once done; on a rest day the
+  week's sessions) and "2 left · 1h 10m" under it; **Ring** — the glance before 1.12,
+  a ring at the left (readiness, then the day's sessions, then a tick) beside a label
+  and one line. Rest days, the evening's look at tomorrow and the finished day follow
+  each style. Also on the watch: Settings ▸ Glance.
 
 The same switches are on the watch: Settings, in the pre-start page's hold-UP menu and
 the workout's (`SettingsMenu.mc`, values in `Cues.mc`). **The Garmin cannot speak.**
@@ -244,6 +253,13 @@ Resolved (verified by compiling against SDK 9.2.0):
 
 Remaining:
 - Hardware verification: first watch sideload + full pair→today→run→upload test.
+- The glance on the fenix 9 (1.12.0), which the simulator cannot answer: each style
+  in the glance loop and in a glance folder, whether the app is listed among the
+  START button's activities and can be a favourite, and whether a copy launched from
+  the glance records (if not, a glance tap should open Today read-only). A Connect IQ
+  app has one glance, so the styles are a setting, not three glances. The glance's
+  accent colour (`AppBase.getGlanceTheme`) is not offered: the SDK lists the fenix 8
+  for it, not the fenix 9.
 - Daily wellness is sent on open (slice 5 of item 2 in `docs/roadmap.md`), written
   2026-10-06 against calls the hardware spike in `../WellnessSpike/` ran on the
   fēnix 9 Pro, and **not compiled yet**: `DEVICE=fenix9pro47mm ./build.sh --device`.
