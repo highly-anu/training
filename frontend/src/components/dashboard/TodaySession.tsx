@@ -60,15 +60,17 @@ export function TodaySession({ program, weekIndex }: TodaySessionProps) {
       animate={{ opacity: 1, y: 0, transition: { duration: 0.3 } }}
       className="h-full rounded-xl border bg-card p-5 shadow-sm flex flex-col gap-3"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div>
+      {/* The name gets the card's full width: beside the badge a long one
+          ("Single-Bell Clean and Press Practice + …") wrapped a word a line. */}
+      <div className="flex flex-col gap-1.5">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
           <p className="text-xs text-muted-foreground">{format(new Date(), 'EEEE, MMMM d')}</p>
-          <h3 className="flex items-center gap-2 text-base font-bold text-foreground mt-0.5">
-            <WorkoutIcon icon={session.icon} modality={session.modality} />
-            {session.archetype?.name ?? session.modality}
-          </h3>
+          <ModalityBadge modality={session.modality} className="whitespace-nowrap" />
         </div>
-        <ModalityBadge modality={session.modality} />
+        <h3 className="flex items-start gap-2 text-base font-bold leading-snug text-foreground">
+          <WorkoutIcon icon={session.icon} modality={session.modality} className="mt-px" />
+          <span className="min-w-0 break-words">{session.archetype?.name ?? session.modality}</span>
+        </h3>
       </div>
 
       <div className="flex items-center gap-4 text-xs text-muted-foreground">
