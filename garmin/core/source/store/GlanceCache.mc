@@ -9,7 +9,8 @@ using Toybox.Lang;
 // a day, and the glance never touches the full one.
 module GlanceCache {
 
-    const SESSION_KEYS = ["sessionId", "completed", "modalityId", "archetypeName", "estimatedMinutes"];
+    const SESSION_KEYS = ["sessionId", "completed", "modalityId", "archetypeName", "estimatedMinutes",
+                          "icon", "archetypeCategory"];
 
     function write(today as Lang.Dictionary) as Void {
         var out = { "status" => today["status"], "date" => today["date"],
@@ -33,6 +34,16 @@ module GlanceCache {
                 for (var k = 0; k < SESSION_KEYS.size(); k += 1) {
                     var key = SESSION_KEYS[k];
                     if (s.hasKey(key)) { t[key] = s[key]; }
+                }
+                // The card's "4 ex", and the colour the pre-start page draws the
+                // session in (its package's accent), resolved here: the glance
+                // cannot afford Vocab or Theme.
+                var ex = s["exercises"];
+                if (ex instanceof Lang.Array) { t["exerciseCount"] = ex.size(); }
+                var w = s["watch"];
+                if (w instanceof Lang.Dictionary && w.hasKey("accent")) {
+                    var c = Vocab.colour(w["accent"]);
+                    if (c != null) { t["accent"] = c; }
                 }
                 slim.add(t);
             }

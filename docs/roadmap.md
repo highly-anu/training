@@ -571,6 +571,17 @@ day) and Ring (the glance until now). The words are `GlanceDay.mc`'s, tested on 
 days. Still for the watch: the glance in a folder, the app among START's activities, and
 whether a glance-launched copy records.
 
+*1.14.0 (2026-10-25): the glance as Garmin's cards, from the athlete's photo of the glance
+loop.* Each style is a white title in the glance font over one row, left-aligned where
+Garmin's "Training" and "Health" cards start (the 18 % inset assumed a full-face Dc; the
+card is ~350 × 125 beside the app's icon). Next up: "Today · 1/2" over the session's icon
+in its colour and its minutes, then "4 ex"; Day bar: the segments with the time left
+beside them. The glance copy keeps each session's `icon`, `archetypeCategory`,
+`exerciseCount` and package `accent`, and today-session's `tomorrow` adds
+`archetypeCategory` and `exerciseCount`. Ring is dropped. A press on the glance opens
+Today (`TodayDetailView`) instead of the pre-start page. Still for the watch: the cards
+beside Garmin's, and the Today page.
+
 *Next:* HIIT and Run need the same photos as Strength (pre-start, pause, summary) before
 their pages are matched.
 

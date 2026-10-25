@@ -79,9 +79,12 @@ module DemoProgram {
         var d0 = days[0]["sessions"];
         for (var i = 0; i < d0.size(); i += 1) {
             var s = d0[i];
-            today.add({ "sessionId" => s["sessionId"], "modalityId" => s["modalityId"],
-                        "archetypeName" => s["archetypeName"],
-                        "estimatedMinutes" => s["estimatedMinutes"] });
+            var g = { "sessionId" => s["sessionId"], "modalityId" => s["modalityId"],
+                      "archetypeName" => s["archetypeName"],
+                      "estimatedMinutes" => s["estimatedMinutes"],
+                      "icon" => s["icon"], "archetypeCategory" => s["archetypeCategory"] };
+            if (s["exercises"] instanceof Lang.Array) { g["exerciseCount"] = s["exercises"].size(); }
+            today.add(g);
         }
         var tomorrow = null;
         if (days.size() > 1) {
@@ -91,7 +94,9 @@ module DemoProgram {
             } else {
                 tomorrow = { "sessionCount" => d1.size(), "modalityId" => d1[0]["modalityId"],
                              "archetypeName" => d1[0]["archetypeName"],
-                             "estimatedMinutes" => d1[0]["estimatedMinutes"] };
+                             "estimatedMinutes" => d1[0]["estimatedMinutes"],
+                             "icon" => d1[0]["icon"], "archetypeCategory" => d1[0]["archetypeCategory"] };
+                if (d1[0]["exercises"] instanceof Lang.Array) { tomorrow["exerciseCount"] = d1[0]["exercises"].size(); }
             }
         }
         // Only the glance's copy: the real cached day and readiness stay as the

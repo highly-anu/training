@@ -35,7 +35,6 @@
     <settingConfig type="list">
       <listEntry value="0">@Strings.GlanceNextUp</listEntry>
       <listEntry value="1">@Strings.GlanceDayBar</listEntry>
-      <listEntry value="2">@Strings.GlanceRing</listEntry>
     </settingConfig>
   </setting>
 </settings>

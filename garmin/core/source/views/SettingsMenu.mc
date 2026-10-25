@@ -12,7 +12,7 @@ using Toybox.Lang;
 //   Lead-in          "Work in 3, 2, 1" and the go before work on a clock
 //   Countdown Start  the same count after START
 //   Lead-in Tones    which of the watch's tones count and which says go
-//   Glance           the glance's style: Next up, Day bar or Ring
+//   Glance           the glance's style: Next up or Day bar
 function openSettings() {
     Cues.load();
     var m = new Ui.Menu2({ :title => "Settings" });
@@ -48,7 +48,7 @@ function toneName(t) {
 
 // GlanceView's styles, in `glanceStyle` order (settings.xml names them the same).
 function glanceStyleName(i) {
-    var names = ["Next up", "Day bar", "Ring"];
+    var names = ["Next up", "Day bar"];
     return (i instanceof Lang.Number && i >= 0 && i < names.size()) ? names[i] : names[0];
 }
 
@@ -66,9 +66,10 @@ class SettingsMenuDelegate extends Ui.Menu2InputDelegate {
             return;
         }
         if (id == :glance) {
-            var cur = Cues.prop("glanceStyle", 0);
+            // Ring's 2, from before 1.14, draws as Next up.
+            var cur = (Cues.prop("glanceStyle", 0) == 1) ? 1 : 0;
             var m = new Ui.Menu2({ :title => "Glance" });
-            for (var i = 0; i < 3; i += 1) {
+            for (var i = 0; i < 2; i += 1) {
                 m.addItem(new Ui.MenuItem(glanceStyleName(i), (i == cur) ? "Selected" : null, i, {}));
             }
             Ui.pushView(m, new GlancePickDelegate(item), Ui.SLIDE_LEFT);

@@ -5,31 +5,25 @@ using Toybox.Application.Storage;
 using Toybox.System;
 using Toybox.Lang;
 
-// The glance, in one of three styles the athlete picks (Settings ▸ Glance on
-// the watch, Glance style in Garmin Connect Mobile; `glanceStyle`):
+// The glance, as Garmin's own cards in the glance loop (the athlete's fenix 9
+// Pro, 2026-10-25: "Training", "Health"): a white title in the glance font,
+// left-aligned, over one row of information. Two styles, picked in Settings ▸
+// Glance on the watch or Glance style in Garmin Connect Mobile (`glanceStyle`):
 //
-//   0  Next up   Garmin's own glance layout: left-aligned text in the glance
-//                font, the day's state over what is next and how long, beside
-//                a bar in that session's colour. Two lines when the glance is
-//                too short for three. The default since 1.12.
-//   1  Day bar   a title, a bar with a segment per session (its modality's
-//                colour, bright once done; on a rest day the week's sessions)
-//                and one line under it.
-//   2  Ring      the glance until 1.12: a small ring at the left (readiness
-//                before any training, then the day's sessions, then a tick)
-//                beside a label and one line.
+//   0  Next up   two icon + value pairs: the next session's icon in its
+//                colour and its minutes, then its exercise count ("4 ex").
+//   1  Day bar   a segment per session (its colour, bright once done; on a
+//                rest day the week's sessions) and one value beside them.
 //
 // What each says is GlanceDay's; this file only draws it. Everything comes
 // from Storage: a glance has no reliable network. A Connect IQ app has one
-// glance, so "styles" is a setting, not several glances.
+// glance, so "styles" is a setting, not several glances. Ring, the glance
+// until 1.14, is gone; a stored 2 reads as Next up.
 (:glance)
 class GlanceView extends Ui.GlanceView {
 
     const TRACK = 0x2A2A2E;
     const GOOD  = 0x10B981;
-    const DIM_TEXT = 0xAAAAAA;
-
-    hidden var _demoReadiness = null;   // a demo day's own readiness, from its glance copy
 
     function initialize() {
         // Qualified: this class is also named GlanceView, so the bare name is itself
@@ -42,11 +36,11 @@ class GlanceView extends Ui.GlanceView {
         drawStyle(dc, style());
     }
 
-    // 0 Next up, 1 Day bar, 2 Ring.
+    // 0 Next up, 1 Day bar.
     function style() {
         try {
             var v = Application.Properties.getValue("glanceStyle");
-            if (v instanceof Lang.Number && v >= 0 && v <= 2) { return v; }
+            if (v instanceof Lang.Number && v == 1) { return 1; }
         } catch (e) {}
         return 0;
     }
@@ -58,109 +52,125 @@ class GlanceView extends Ui.GlanceView {
 
         var today = Storage.getValue(Config.KEY_TODAY_GLANCE) as Lang.Dictionary?;
         var demo = today != null && today["demo"] == true;
-        _demoReadiness = demo ? today["readiness"] : null;
         if (today != null && !demo && stale()) { today = null; }
         var d = GlanceDay.read(today, DayLog.done(),
                                System.getClockTime().hour >= Config.GLANCE_EVENING_HOUR);
 
-        // The glance Dc spans the FULL face; the device profile puts the content
-        // area ~18% in and ~77% wide, and the card ~30% of the width tall (138 px
-        // measured from a photo of the 454 px fenix 9; the 416 px 43 mm's
-        // profile gives 120), so everything is held inside that, centred in its
-        // height. The band sits near the top of a round face where the chord is
-        // narrower.
+        // The Dc is the card, beside the app's icon the watch draws at its left:
+        // in the photo the native titles start ~14 px into it (4 % of its ~347
+        // px), and an 18 % inset written for a full-face Dc put our text 65 px
+        // right of theirs. Title and row are one block, centred in the card.
         var w = dc.getWidth();
-        var pad = (w * 18) / 100;
-        var right = pad + (w * 77) / 100;
+        var x = (w * 4) / 100;
+        var right = w - (w * 4) / 100;
         var gh = dc.getHeight();
-        if (gh > (w * 30) / 100) { gh = (w * 30) / 100; }
+        if (gh > (w * 40) / 100) { gh = (w * 40) / 100; }
+        var f = Gfx.FONT_GLANCE;
+        var fh = dc.getFontHeight(f);
+        var ty = (gh - fh * 2) / 2;
+        if (ty < 0) { ty = 0; }
 
         try {
-            if (style == 1) { drawBar(dc, d, pad, right, gh); }
-            else if (style == 2) { drawRing(dc, d, pad, right, gh); }
-            else { drawNextUp(dc, d, pad, right, gh); }
+            if (style == 1) { drawBar(dc, d, x, right, ty, f, fh); }
+            else { drawNextUp(dc, d, x, right, ty, f, fh); }
         } catch (e) {
             dc.setColor(Gfx.COLOR_WHITE, Gfx.COLOR_TRANSPARENT);
-            dc.drawText(pad, 0, Gfx.FONT_XTINY, "gfx: " + e.getErrorMessage(), Gfx.TEXT_JUSTIFY_LEFT);
+            dc.drawText(x, 0, Gfx.FONT_XTINY, "gfx: " + e.getErrorMessage(), Gfx.TEXT_JUSTIFY_LEFT);
         }
     }
 
     // ── Next up ────────────────────────────────────────────────────────────
 
-    hidden function drawNextUp(dc, d, pad, right, gh) {
-        var lines = GlanceDay.nextUp(d);
-        var f = Gfx.FONT_GLANCE;
-        var fh = dc.getFontHeight(f);
-        var k = (lines[2] != null && fh * 3 <= gh) ? 3 : 2;
-        var ty = (gh - fh * k) / 2;
-        if (ty < 0) { ty = 0; }
-        // The bar: the next session's colour, green once the day is done.
-        var st = d[:st];
-        var c = Gfx.COLOR_DK_GRAY;
-        if (st == :done) { c = GOOD; }
-        else if (st == :todo || st == :some) { c = modalityColor(sessionModality(d[:next])); }
-        else if (st == :evening || st == :rest) {
-            var t = d[:tomorrow];
-            if (t != null && GlanceDay.count(t) > 0) { c = modalityColor(sessionModality(t)); }
+    hidden function drawNextUp(dc, d, x, right, ty, f, fh) {
+        var c = GlanceDay.nextUp(d);
+        title(dc, c[0], x, right, ty, f);
+        var ry = ty + fh;
+        if (c[2] == null) {
+            pair(dc, c[1], x, right, ry, f, fh);
+            return;
         }
-        var bw = dc.getWidth() / 100 + 3;
-        dc.setColor(c, Gfx.COLOR_TRANSPARENT);
-        dc.fillRoundedRectangle(pad, ty + fh / 6, bw, fh * k - fh / 3, bw / 2);
-        var tx = pad + bw + 10;
-        var avail = right - 8 - tx;
-        dc.setColor(DIM_TEXT, Gfx.COLOR_TRANSPARENT);
-        dc.drawText(tx, ty, f, clip(dc, lines[0], f, avail), Gfx.TEXT_JUSTIFY_LEFT);
+        // Two pairs, the second from the middle of the card, as Garmin's.
+        var mid = x + (right - x) / 2;
+        pair(dc, c[1], x, mid - 6, ry, f, fh);
+        pair(dc, c[2], mid, right, ry, f, fh);
+    }
+
+    // [glyph, text, session]: the icon, then the value in white.
+    hidden function pair(dc, p, x, right, y, f, fh) {
+        var sz = iconSize();
+        var tint = Gfx.COLOR_LT_GRAY;
+        var rid = Rez.Drawables.GlGeneric;
+        var g = p[0];
+        if (g == :session) { rid = sessionIcon(p[2]); tint = sessionColor(p[2]); }
+        else if (g == :check) { rid = Rez.Drawables.GlCheck; tint = GOOD; }
+        else if (g == :sets)  { rid = Rez.Drawables.GlSets; }
+        else if (g == :steps) { rid = Rez.Drawables.GlSteps; }
+        else if (g == :week)  { rid = Rez.Drawables.GlWeek; tint = GOOD; }
+        else if (g == :rest)  { rid = Rez.Drawables.GlRest; tint = GOOD; }
+        else if (g == :sync)  { rid = Rez.Drawables.GlSync; }
+        var iy = y + (fh - sz) / 2;
+        try {
+            var r = Application.loadResource(rid);
+            if (dc has :drawBitmap2) { dc.drawBitmap2(x, iy, r, { :tintColor => tint }); }
+            else { dc.drawBitmap(x, iy, r); }
+        } catch (e) {}
+        var tx = x + sz + 6;
         dc.setColor(Gfx.COLOR_WHITE, Gfx.COLOR_TRANSPARENT);
-        dc.drawText(tx, ty + fh, f, clip(dc, lines[1], f, avail), Gfx.TEXT_JUSTIFY_LEFT);
-        if (k == 3) {
-            dc.setColor(DIM_TEXT, Gfx.COLOR_TRANSPARENT);
-            dc.drawText(tx, ty + fh * 2, f, clip(dc, lines[2], f, avail), Gfx.TEXT_JUSTIFY_LEFT);
-        }
+        dc.drawText(tx, y, f, clip(dc, p[1], f, right - tx), Gfx.TEXT_JUSTIFY_LEFT);
     }
 
     // ── Day bar ────────────────────────────────────────────────────────────
 
-    hidden function drawBar(dc, d, pad, right, gh) {
-        var lines = GlanceDay.bar(d);
-        var f = Gfx.FONT_GLANCE;
-        var fh = dc.getFontHeight(f);
+    hidden function drawBar(dc, d, x, right, ty, f, fh) {
+        var c = GlanceDay.bar(d);
+        title(dc, c[0], x, right, ty, f);
+        var ry = ty + fh;
+        // The value at the right of the row, the segments filling what is left.
+        var vw = dc.getTextWidthInPixels(c[1], f);
+        var maxV = ((right - x) * 45) / 100;
+        if (vw > maxV) { vw = maxV; }
+        var segRight = right - vw - 10;
         var bh = fh / 3;
         if (bh < 6) { bh = 6; }
-        var gap = fh / 4;
-        var ty = (gh - (fh * 2 + bh + gap * 2)) / 2;
-        if (ty < 0) { ty = 0; }
-        var tx = pad + 4;
-        var avail = right - 8 - tx;
-        dc.setColor(DIM_TEXT, Gfx.COLOR_TRANSPARENT);
-        dc.drawText(tx, ty, f, clip(dc, lines[0], f, avail), Gfx.TEXT_JUSTIFY_LEFT);
+        var by = ry + (fh - bh) / 2;
+        var width = segRight - x;
 
-        var by = ty + fh + gap;
         var st = d[:st];
         if (st == :rest) {
             // The week: done in green, still to come dim.
             var wk = GlanceDay.week(d);
             if (wk == null) {
-                segments(dc, tx, by, avail, bh, 1, null, null);
+                segments(dc, x, by, width, bh, 1, null, null);
             } else {
                 var n = wk[1];
                 if (n > 14) { n = 14; }
                 var cols = new [n];
                 var lit = new [n];
                 for (var i = 0; i < n; i += 1) { cols[i] = GOOD; lit[i] = i < wk[0]; }
-                segments(dc, tx, by, avail, bh, n, cols, lit);
+                segments(dc, x, by, width, bh, n, cols, lit);
             }
+        } else if (st == :evening) {
+            // Tomorrow's sessions, all still to do, in its first one's colour.
+            var t = d[:tomorrow];
+            var n = GlanceDay.count(t);
+            if (n < 1) { n = 1; }
+            if (n > 14) { n = 14; }
+            var cols = new [n];
+            var lit = new [n];
+            for (var i = 0; i < n; i += 1) { cols[i] = sessionColor(t); lit[i] = false; }
+            segments(dc, x, by, width, bh, n, cols, lit);
         } else if (d[:sessions] != null) {
             var ss = d[:sessions];
             var n = ss.size();
             var cols = new [n];
-            for (var i = 0; i < n; i += 1) { cols[i] = modalityColor(sessionModality(ss[i])); }
-            segments(dc, tx, by, avail, bh, n, cols, d[:flags]);
+            for (var i = 0; i < n; i += 1) { cols[i] = sessionColor(ss[i]); }
+            segments(dc, x, by, width, bh, n, cols, d[:flags]);
         } else {
-            segments(dc, tx, by, avail, bh, 1, null, null);
+            segments(dc, x, by, width, bh, 1, null, null);
         }
 
         dc.setColor(Gfx.COLOR_WHITE, Gfx.COLOR_TRANSPARENT);
-        dc.drawText(tx, by + bh + gap, f, clip(dc, lines[1], f, avail), Gfx.TEXT_JUSTIFY_LEFT);
+        dc.drawText(right, ry, f, clip(dc, c[1], f, maxV), Gfx.TEXT_JUSTIFY_RIGHT);
     }
 
     // `n` rounded segments across `width`; with no colours, one empty track.
@@ -175,94 +185,6 @@ class GlanceView extends Ui.GlanceView {
         }
     }
 
-    // ── Ring ───────────────────────────────────────────────────────────────
-
-    hidden function drawRing(dc, d, pad, right, gh) {
-        var lines = GlanceDay.ring(d);
-        var label = lines[0];
-        var value = lines[1];
-        var st = d[:st];
-
-        // The graphic, at the left of the band. Plain vector draws, no bitmaps:
-        // the glance budget is 64 KB.
-        var gx = pad + 16;
-        var gy = gh / 2;
-        var gr = (gh * 22) / 100;
-        if (gr > 16) { gr = 16; }
-        if (gr < 8)  { gr = 8; }
-        dc.setPenWidth(4);
-        if (st == :some) {
-            drawProgress(dc, gx, gy, gr, d[:sessions], d[:flags]);
-        } else if (st == :done || st == :evening) {
-            drawDone(dc, gx, gy, gr);
-        } else {
-            // Readiness before any training; a grey ring when not synced.
-            drawReadiness(dc, gx, gy, gr, st == :todo || st == :rest, d[:first]);
-        }
-
-        // Label small over the value, Garmin's glance order.
-        var avail = right - pad - 40;
-        var fl = Gfx.FONT_XTINY;
-        var fv = fit(dc, value, avail);
-        var hl = dc.getFontHeight(fl);
-        var hv = dc.getFontHeight(fv);
-        var ty = (gh - (hl + hv)) / 2;
-        if (ty < 0) { ty = 0; }
-        var tx = pad + 40;
-        dc.setColor(Gfx.COLOR_LT_GRAY, Gfx.COLOR_TRANSPARENT);
-        dc.drawText(tx, ty, fl, clip(dc, label, fl, avail), Gfx.TEXT_JUSTIFY_LEFT);
-        dc.setColor(Gfx.COLOR_WHITE, Gfx.COLOR_TRANSPARENT);
-        dc.drawText(tx, ty + hl, fv, clip(dc, value, fv, avail), Gfx.TEXT_JUSTIFY_LEFT);
-    }
-
-    // Readiness: a ring swept by the score around a dot in the first session's colour.
-    hidden function drawReadiness(dc, gx, gy, gr, show, first) {
-        var rc = Gfx.COLOR_DK_GRAY;
-        var sweep = 1.0;
-        var r = !show ? null
-              : ((_demoReadiness != null) ? (_demoReadiness as Lang.Dictionary?)
-                                          : (Storage.getValue(Config.KEY_READINESS) as Lang.Dictionary?));
-        if (r != null && r.hasKey("status")) {
-            rc = readinessColor(r["status"] as Lang.String);
-            if (r.hasKey("score") && r["score"] != null) { sweep = r["score"].toFloat() / 100.0; }
-        }
-        dc.setColor(TRACK, Gfx.COLOR_TRANSPARENT);
-        dc.drawCircle(gx, gy, gr);
-        dc.setColor(rc, Gfx.COLOR_TRANSPARENT);
-        if (sweep >= 0.99) {
-            dc.drawCircle(gx, gy, gr);
-        } else if (sweep > 0.02) {
-            dc.drawArc(gx, gy, gr, Gfx.ARC_CLOCKWISE, 90, 90 - (360.0 * sweep).toNumber());
-        }
-        dc.setColor(modalityColor(sessionModality(first)), Gfx.COLOR_TRANSPARENT);
-        dc.fillCircle(gx, gy, gr / 2);
-    }
-
-    // One arc per session, clockwise from 12, in its modality colour: bright when
-    // done, dim when still to do.
-    hidden function drawProgress(dc, gx, gy, gr, sessions, flags) {
-        var n = sessions.size();
-        var seg = 360 / n;
-        var gap = (n > 1) ? 8 : 0;
-        for (var i = 0; i < n; i += 1) {
-            var c = modalityColor(sessionModality(sessions[i]));
-            dc.setColor(flags[i] ? c : dim(c, 30), Gfx.COLOR_TRANSPARENT);
-            var a0 = 90 - (i * seg) - (gap / 2);
-            var a1 = 90 - ((i + 1) * seg) + (gap / 2);
-            if (n == 1) { dc.drawCircle(gx, gy, gr); } else { dc.drawArc(gx, gy, gr, Gfx.ARC_CLOCKWISE, a0, a1); }
-        }
-    }
-
-    // A full green ring with a tick.
-    hidden function drawDone(dc, gx, gy, gr) {
-        dc.setColor(GOOD, Gfx.COLOR_TRANSPARENT);
-        dc.drawCircle(gx, gy, gr);
-        dc.setPenWidth(3);
-        var u = gr / 2;
-        dc.drawLine(gx - u, gy, gx - (u / 4), gy + (u * 2 / 3));
-        dc.drawLine(gx - (u / 4), gy + (u * 2 / 3), gx + u, gy - (u * 2 / 3));
-    }
-
     // ── Shared ─────────────────────────────────────────────────────────────
 
     // The cache is another day's (stamped with the local date the watch asked for).
@@ -272,12 +194,46 @@ class GlanceView extends Ui.GlanceView {
         return !Config.localDate().equals(d);
     }
 
-    hidden function sessionModality(s) {
-        return (s != null && s.hasKey("modalityId")) ? s["modalityId"] : null;
+    // The card's title: white, in the glance font, as Garmin's.
+    hidden function title(dc, str, x, right, y, f) {
+        dc.setColor(Gfx.COLOR_WHITE, Gfx.COLOR_TRANSPARENT);
+        dc.drawText(x, y, f, clip(dc, str, f, right - x), Gfx.TEXT_JUSTIFY_LEFT);
     }
 
-    // `c` at `pct` percent: the ring's arcs at 30, the bar's wider segments at 45
-    // (at 30 a lone to-do segment all but vanished).
+    // glance.xml's icons are 6 % of the screen's width.
+    hidden function iconSize() {
+        return (System.getDeviceSettings().screenWidth * 6) / 100;
+    }
+
+    // As the pre-start page draws a session (Icons.forSession): its workout
+    // icon, else its archetype category's. Tomorrow carries the same two keys.
+    hidden function sessionIcon(s) {
+        if (s == null) { return Rez.Drawables.GlGeneric; }
+        var icon = s.hasKey("icon") ? s["icon"] : null;
+        if (icon != null && icon.equals("kettlebell")) { return Rez.Drawables.GlKettlebell; }
+        var c = s.hasKey("archetypeCategory") ? s["archetypeCategory"] : null;
+        if (c == null) { return Rez.Drawables.GlGeneric; }
+        if (c.equals("strength"))       { return Rez.Drawables.GlStrength; }
+        if (c.equals("conditioning"))   { return Rez.Drawables.GlConditioning; }
+        if (c.equals("kettlebell"))     { return Rez.Drawables.GlKettlebell; }
+        if (c.equals("gpp_durability")) { return Rez.Drawables.GlGppDurability; }
+        if (c.equals("movement_skill")) { return Rez.Drawables.GlMovementSkill; }
+        if (c.equals("combat_sport"))   { return Rez.Drawables.GlCombatSport; }
+        if (c.equals("recovery"))       { return Rez.Drawables.GlRecovery; }
+        return Rez.Drawables.GlGeneric;
+    }
+
+    // The session's colour as the pre-start page draws it (Theme.sessionAccent):
+    // its package's accent, which the app resolved into the glance copy, else
+    // its modality's.
+    hidden function sessionColor(s) {
+        if (s == null) { return Gfx.COLOR_LT_GRAY; }
+        if (s.hasKey("accent") && s["accent"] != null) { return s["accent"]; }
+        return modalityColor(s.hasKey("modalityId") ? s["modalityId"] : null);
+    }
+
+    // `c` at `pct` percent: a to-do segment at 45 (at 30 a lone one all but
+    // vanished).
     hidden function dim(c, pct) {
         var r = ((c >> 16) & 0xFF) * pct / 100;
         var g = ((c >> 8) & 0xFF) * pct / 100;
@@ -285,11 +241,6 @@ class GlanceView extends Ui.GlanceView {
         return (r << 16) | (g << 8) | b;
     }
 
-    // Largest bitmap font that fits `str` in `w` pixels.
-    hidden function fit(dc, str, w) {
-        if (dc.getTextWidthInPixels(str, Gfx.FONT_TINY) <= w)  { return Gfx.FONT_TINY; }
-        return Gfx.FONT_XTINY;
-    }
 
     // Truncate with an ellipsis so a long archetype name cannot overflow.
     // Stepping the font down alone was not enough: "Gym Jones Accumulation
@@ -330,11 +281,4 @@ class GlanceView extends Ui.GlanceView {
         return Gfx.COLOR_LT_GRAY;
     }
 
-    hidden function readinessColor(status) {
-        if (status == null) { return Gfx.COLOR_DK_GRAY; }
-        if (status.equals("green"))  { return 0x10B981; }
-        if (status.equals("yellow")) { return 0xEAB308; }
-        if (status.equals("red"))    { return 0xEF4444; }
-        return Gfx.COLOR_DK_GRAY;
-    }
 }
