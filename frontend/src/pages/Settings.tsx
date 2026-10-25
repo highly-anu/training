@@ -2,7 +2,7 @@ import { useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Settings as SettingsIcon, Plug, UserCircle, Palette, Terminal } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { DEVLAB_ENABLED } from '@/lib/featureFlags'
+import { useDevLabEnabled } from '@/lib/featureFlags'
 import { ConnectionsSettings } from '@/components/settings/ConnectionsSettings'
 import { AccountSettings } from '@/components/settings/AccountSettings'
 import { AppearanceSettings } from '@/components/settings/AppearanceSettings'
@@ -10,7 +10,7 @@ import { DeveloperSettings } from '@/components/settings/DeveloperSettings'
 
 /**
  * Configuration, not a destination: the services connected, the account,
- * the look, and (in dev builds) the developer switches. Profile keeps what
+ * the look, and (in dev builds and for `dev` users) the developer switches. Profile keeps what
  * is about the athlete — level, equipment, injuries, schedule, benchmarks,
  * heart rate. The phone's Settings screen holds the same set, pushed from
  * Profile's gear (ios/docs/design-system.md §6.13).
@@ -26,19 +26,19 @@ const SUB_TABS: SubTabItem[] = [
   { id: 'connections', label: 'Connections', Icon: Plug },
   { id: 'appearance',  label: 'Appearance',  Icon: Palette },
   { id: 'account',     label: 'Account',     Icon: UserCircle },
-  ...(DEVLAB_ENABLED ? [{ id: 'developer' as const, label: 'Developer', Icon: Terminal }] : []),
 ]
+const DEVELOPER_TAB: SubTabItem = { id: 'developer', label: 'Developer', Icon: Terminal }
 
-const SUB_TAB_IDS = SUB_TABS.map((t) => t.id)
-
-function isSettingsTab(value: string | null): value is SettingsTab {
-  return !!value && (SUB_TAB_IDS as string[]).includes(value)
+function isSettingsTab(value: string | null, tabs: SubTabItem[]): value is SettingsTab {
+  return !!value && tabs.some((t) => t.id === value)
 }
 
 export function Settings() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const devLab = useDevLabEnabled()
+  const tabs = devLab ? [...SUB_TABS, DEVELOPER_TAB] : SUB_TABS
   const requested = searchParams.get('tab')
-  const activeTab: SettingsTab = isSettingsTab(requested) ? requested : 'connections'
+  const activeTab: SettingsTab = isSettingsTab(requested, tabs) ? requested : 'connections'
 
   function setActiveTab(tab: SettingsTab) {
     const next = new URLSearchParams(searchParams)
@@ -61,7 +61,7 @@ export function Settings() {
         <div className="ml-4 flex items-center gap-2">
           <div className="w-px h-4 bg-border/60 shrink-0" />
           <div className="flex items-center gap-1" role="tablist" aria-label="Settings sections">
-            {SUB_TABS.map((tab) => {
+            {tabs.map((tab) => {
               const isActive = tab.id === activeTab
               const Icon = tab.Icon
               return (
@@ -91,7 +91,7 @@ export function Settings() {
         {activeTab === 'connections' && <ConnectionsSettings />}
         {activeTab === 'account'     && <AccountSettings />}
         {activeTab === 'appearance'  && <AppearanceSettings />}
-        {activeTab === 'developer'   && DEVLAB_ENABLED && <DeveloperSettings />}
+        {activeTab === 'developer'   && devLab && <DeveloperSettings />}
       </div>
     </motion.div>
   )

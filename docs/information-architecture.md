@@ -104,7 +104,7 @@ with a new **Overview** (methodology, phases, priority mix) beside it.
 | Train | **Log** | `/log` | Activity (All · Workouts · Sessions) · Linking (count badge) | Import (sheet) |
 | Library | **Explore** | `/explore` | Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards | — |
 | You | **Profile** | `/profile` | Athlete (incl. heart-rate zones) · Equipment · Injuries · Schedule · Standards | — |
-| You | **Settings** | `/settings` | Connections · Appearance · Account (· Developer in dev builds) | — |
+| You | **Settings** | `/settings` | Connections · Appearance · Account (· Developer in dev builds and for `dev` users) | — |
 | Dev (build flag) | Dev Lab | `/dev` | Pipeline Trace · Object Browser · Ontology · Model Interactions | — |
 
 Flows and details, not nav items: `/program/new` (the builder, launched from the Home

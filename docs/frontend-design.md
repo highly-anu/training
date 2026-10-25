@@ -1809,7 +1809,7 @@ phone keeps the same split with Settings pushed from Profile's gear.
 | Train | Home `/` · Program `/program` · Analytics `/analytics` · Log `/log` | Where the athlete lives day to day: today, the plan, how it is going, the record — the phone's tab order (Analytics before Log since 2026-10-16, which folded the Insight group in) |
 | Library | Explore `/explore` | Reference and inspiration; its CTAs start the builder |
 | You | Profile `/profile` | Configuration — visited to change something |
-| Dev | Dev Lab `/dev` | Developer tooling; dev builds only (`src/lib/featureFlags.ts`) |
+| Dev | Dev Lab `/dev` | Developer tooling; dev builds, and in production users whose Supabase `app_metadata.roles` has `dev` (`src/lib/featureFlags.ts`) |
 
 The builder is **not** a nav item. It is a flow at `/program/new`, launched from
 Program's header, the Home and Program empty states, the settings sheet's
@@ -2418,7 +2418,7 @@ Status as of 2026-10-01, after the information-architecture restructure
 | **Settings** | `Settings` | "Settings" | None | Connections · Account · Appearance (· Developer, dev builds) (`?tab=`) | None | ✅ — the OAuth callbacks land on `?tab=connections` |
 | **Program Builder** | `Wand2` | Dynamic step title | None | None | "Step N of 4" (right) | ✅ wizard variant, at `/program/new` |
 | **Program Preview** | Back-nav + `ScanEye` | "Preview" / "Preview changes" | Methodology name | Overview · Calendar · Held back (`?tab=`) | Adjust · Start this program / Apply from week N | ✅ two-row like Program (the `PhaseBar` strip); `/program/preview`, the builder's last step and the profile's regenerate offer (`?mode=regenerate`) |
-| **Dev Lab** | `Terminal` | "Dev Lab" | None | Pipeline Trace · Object Browser · Ontology · Model Interactions | None | ✅ — dev builds only |
+| **Dev Lab** | `Terminal` | "Dev Lab" | None | Pipeline Trace · Object Browser · Ontology · Model Interactions | None | ✅ — dev builds and `dev` users |
 | **Login** | — | "Training" | — | — | — | Exempt — pre-auth, centered card, outside app shell; returns to the page that sent it there (`lib/returnPath.ts`) |
 | **Pair a watch** | `Watch` | "Pair a watch" | None | None | None | ✅ — `/pair?code=…`, the watch QR's target; not in the sidebar |
 | **Session Detail** | Back-nav | Day/session context | — | — | — | Back-nav pattern, not tab header |
