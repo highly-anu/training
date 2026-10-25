@@ -6,7 +6,9 @@ using Toybox.WatchUi as Ui;
 //                  recording); after: pause and open the stop menu
 //                  (Resume / Save / Discard)
 //   BACK = LAP     end the set (then rest); during a rest, end the rest; on other
-//                  slot types count a round or lap, or move to the next step
+//                  slot types count a round or lap, or move to the next step —
+//                  after "Skip <step>?" when the step would have gone on by
+//                  itself (time or rounds left, short of its distance)
 //   DOWN / UP      turn the pages; on the step page, walk the list
 //   hold UP        the workout menu: Stop Workout, Skip, Set Next, Edit Set,
 //                  Settings
@@ -56,7 +58,13 @@ class WorkoutDelegate extends Ui.BehaviorDelegate {
                 _ctl.skipRest();
             } else {
                 var r = _view.renderer();
-                if (r != null) { r.onLap(_ctl, _ctl.currentExercise()); }
+                var ex = _ctl.currentExercise();
+                if (r != null && r.lapSkipsEarly(_ctl, ex)) {
+                    var cv = new SkipConfirmView(ex);
+                    Ui.pushView(cv, new SkipConfirmDelegate(_ctl, _view, ex), Ui.SLIDE_IMMEDIATE);
+                    return true;
+                }
+                if (r != null) { r.onLap(_ctl, ex); }
             }
             _view.bindRenderer();
             StepAlert.flush(_ctl);

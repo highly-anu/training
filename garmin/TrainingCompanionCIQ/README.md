@@ -219,8 +219,11 @@ Resolved (verified by compiling against SDK 9.2.0):
   Progress, Readiness, Settings, Sync. With the header focused START starts the
   workout at once (after Countdown Start); DOWN moves into the list, START opens a
   row, BACK returns to the header. Once started, START pauses and opens Resume / Save / Discard (Discard asks with the system's
-  delete confirmation); BACK is LAP — it ends a set (then the rest runs), ends a
-  rest early, counts a round or lap, or moves to the next step; DOWN/UP turn the
+  delete confirmation: the red trash at START, the white keep arrow at DOWN); BACK is LAP — it ends a set (then the rest runs), ends a
+  rest early, counts a round or lap, or moves to the next step — after "Skip <step>?"
+  (`SkipConfirmView`; START skips, DOWN or LAP again keeps it) when the step would have
+  gone on by itself: time left on a block, an interval block, a distance short of its
+  target (`Renderer.lapSkipsEarly`, since 1.14.1); DOWN/UP turn the
   pages, and on the step page walk the list; hold UP opens Stop Workout / Skip / Set Next
   (the next sets' reps and load) / Edit Set / Settings. Edit Set changes the last set (reps ±1, weight ±2.5 kg, RPE ±0.5) and
   carries the new values to the sets after it. When every step is done the

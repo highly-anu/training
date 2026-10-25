@@ -1,14 +1,33 @@
 <layouts>
   <!--
-    The Personality Library's Delete Confirmation: the destructive hint at the confirm
-    button (START on a fenix) and the reject hint at the reject button (DOWN on a
-    fenix 9), with the body in the system confirmation font. WatchUi.Confirmation only
-    does yes/no, so Garmin documents building this one from selectors.
+    The Personality Library's Delete Confirmation, as Garmin's own Discard page
+    draws it: the red trash at the delete button (START on a fenix) and the white
+    back arrow, "keep", at the keep button (DOWN on a fenix 9), with the body in
+    the system confirmation font. The red X is the reject hint of a yes/no
+    question; until 1.14.1 this page drew it, so both answers were red.
+    WatchUi.Confirmation only does yes/no, so Garmin documents building this one
+    from selectors.
   -->
   <layout id="DiscardConfirm">
     <bitmap id="deleteHint" personality="confirmation_icon__hint_delete confirmation_loc__hint_delete" />
-    <bitmap id="rejectHint" personality="confirmation_icon__hint_reject confirmation_loc__hint_reject" />
+    <bitmap id="keepHint" personality="confirmation_icon__hint_keep confirmation_loc__hint_keep" />
     <text-area id="body" text="@Strings.DiscardQ" personality="
+        confirmation_color_dark__body
+        confirmation_size__body
+        confirmation_loc__body
+        confirmation_font__body" />
+  </layout>
+
+  <!--
+    "Skip Zone 2 Run?": a yes/no question (the green tick at START, the red X at
+    DOWN), drawn from the same selectors as WatchUi.Confirmation so it looks like
+    one, but built here so the answer can pop it before the next step's alert is
+    pushed. The body is set in code.
+  -->
+  <layout id="SkipConfirm">
+    <bitmap id="confirmHint" personality="confirmation_icon__hint_confirm confirmation_loc__hint_confirm" />
+    <bitmap id="rejectHint" personality="confirmation_icon__hint_reject confirmation_loc__hint_reject" />
+    <text-area id="body" text="@Strings.SkipQ" personality="
         confirmation_color_dark__body
         confirmation_size__body
         confirmation_loc__body

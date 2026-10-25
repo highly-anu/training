@@ -67,3 +67,35 @@ function vocabularyColoursAndSteps(logger as Test.Logger) as Lang.Boolean {
     Test.assertEqual(Vocab.weightStepByCategory()["kettlebell"], 4.0f);
     return true;
 }
+
+// LAP asks "Skip …?" only when it would cut short a step that ends by itself.
+(:test)
+function lapAsksBeforeCuttingAStepShort(logger as Test.Logger) as Lang.Boolean {
+    var r = new SpecRenderer();
+    var bike = { "exerciseId" => "bike_easy", "name" => "Easy Bike", "slotType" => "time_domain",
+                 "durationMinutes" => 30 };
+    var cases = [
+        // [name, exercise, state, asks]
+        ["a block with time left", bike, { "elapsedSec" => 600 }, true],
+        ["a block whose time is up", bike, { "elapsedSec" => 1800 }, false],
+        ["an open block", { "exerciseId" => "mob", "name" => "Mobility", "slotType" => "time_domain" },
+         { "elapsedSec" => 600 }, false],
+        ["an interval block", { "exerciseId" => "kb_swing", "name" => "Swing", "slotType" => "emom",
+                                "targetRounds" => 10, "workSec" => 40, "intervalRestSec" => 20 },
+         { "intervalRound" => 2, "intervalTotal" => 10 }, true],
+        ["a ruck short of its distance", { "exerciseId" => "ruck", "name" => "Ruck", "slotType" => "distance",
+                                           "distanceKm" => 8 }, { "distanceKm" => 3.4 }, true],
+        ["a ruck past it", { "exerciseId" => "ruck", "name" => "Ruck", "slotType" => "distance",
+                             "distanceKm" => 8 }, { "distanceKm" => 8.1 }, false],
+        ["a set", { "exerciseId" => "kb_press", "name" => "Press", "slotType" => "sets_reps",
+                    "sets" => 5, "reps" => 5 }, {}, false],
+        ["a round", { "exerciseId" => "kb_swing", "name" => "Swing", "slotType" => "amrap",
+                      "timeMinutes" => 10 }, { "capLeftSec" => 300 }, false]
+    ];
+    for (var i = 0; i < cases.size(); i += 1) {
+        var c = cases[i];
+        var ex = new WorkoutExercise(c[1], null, null);
+        Test.assertEqualMessage(r.lapSkipsEarly(new SpecFixtureCtl(c[2], ex), ex), c[3], c[0]);
+    }
+    return true;
+}

@@ -582,6 +582,13 @@ beside them. The glance copy keeps each session's `icon`, `archetypeCategory`,
 Today (`TodayDetailView`) instead of the pre-start page. Still for the watch: the cards
 beside Garmin's, and the Today page.
 
+*1.14.1 (2026-10-25): no step lost to a brushed LAP.* LAP on a step that would have gone
+on by itself (time left on a block, an interval block, a distance short of its target)
+asks "Skip <step>?" first; START skips, DOWN or LAP again keeps it, and a step with no end
+of its own still ends at once. The Discard page draws Garmin's white keep arrow at DOWN
+instead of the red X of a yes/no question. Still for the watch: the red ring of Garmin's
+pause menu, which Menu2 cannot draw (a photo of Garmin's own first).
+
 *Next:* HIIT and Run need the same photos as Strength (pre-start, pause, summary) before
 their pages are matched.
 

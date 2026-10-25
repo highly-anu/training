@@ -247,6 +247,28 @@ class SpecRenderer extends Renderer {
         ctl.skip();
     }
 
+    // Whether LAP would move on from a step that ends by itself before it has:
+    // a block with time left, an interval block (it ends after its last round),
+    // a distance short of its target. A step with no end of its own — an open
+    // block, a distance with no target, a test's clock — is ended by LAP, and
+    // the actions that do not move on (a set, a hold, a side, a round) never ask.
+    function lapSkipsEarly(ctl, ex) {
+        if (ex == null) { return false; }
+        var id = spec(ex)["lap"];
+        var longDistance = ex.isTemplate("distance") && !Steps.isShortDistance(ex);
+        if (id != null && (id.equals("complete_set") || id.equals("toggle_hold") || id.equals("next_side")
+                           || (id.equals("log_round") && !longDistance))) {
+            return false;
+        }
+        if (longDistance) {
+            var km = ex.distanceKm();
+            return km != null && ctl.distanceKm() < km;
+        }
+        if (ex.isTemplate("interval")) { return ctl.emomTotal() > 0; }
+        var l = blockLeft(ctl, ex);
+        return l != null && l > 0;
+    }
+
     // Counts a round or lap; moves on once the step's countable target is reached,
     // or at once when it has none.
     hidden function logRound(ctl, ex) {
