@@ -136,6 +136,12 @@ own voice prompts, and a custom `ToneProfile` pitch plays nothing on a watch wit
 speaker (the fenix 8 and 9) — so the lead-in is the watch's built-in tones. The Apple
 Watch says it ("Work in 3", "2", "1", "Go", `watch_vocabulary.json` `cues`).
 
+The voice the fenix 9 does speak ("Set 3, 2:00") is the watch's own lap announcement,
+set off by each lap the app marks in the FIT file (a step's end, an interval round) and
+turned off only in the watch's Audio Prompts settings, never by `cueTones`. It used to
+swallow the lead-in's go, played in the same instant; since 1.14.2 the lap is marked a
+tick later (`WorkoutController.markLap`), so the go sounds first.
+
 ## How it talks to the backend
 
 Base URL from the `apiBaseUrl` app setting (default `https://training-api.fly.dev/api`).

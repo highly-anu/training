@@ -589,6 +589,11 @@ of its own still ends at once. The Discard page draws Garmin's white keep arrow 
 instead of the red X of a yes/no question. Still for the watch: the red ring of Garmin's
 pause menu, which Menu2 cannot draw (a photo of Garmin's own first).
 
+*1.14.2 (2026-10-25): the go is heard again.* A lap marked in the FIT file sets off the
+watch's own lap announcement ("Set 3, 2:00"), which no app setting reaches; marked in the
+same instant as the lead-in's go, it swallowed the go's tone and vibration. The lap now
+goes in a tick later. Still for the watch: that the go plays, then the voice.
+
 *Next:* HIIT and Run need the same photos as Strength (pre-start, pause, summary) before
 their pages are matched.
 
