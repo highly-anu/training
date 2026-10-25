@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
@@ -17,16 +17,19 @@ import { Explore } from '@/pages/Explore'
 import { Log } from '@/pages/Log'
 import { WorkoutDetail } from '@/pages/WorkoutDetail'
 import { WorkoutAnalytics } from '@/pages/WorkoutAnalytics'
-import { DevLab } from '@/pages/DevLab'
 import { LoginPage } from '@/pages/LoginPage'
 import { NotFound } from '@/pages/NotFound'
 import { PairDevice } from '@/pages/PairDevice'
 import { LegacyRedirect } from '@/components/layout/LegacyRedirect'
 import { HealthDataProvider } from '@/components/HealthDataProvider'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
-import { DEVLAB_ENABLED } from '@/lib/featureFlags'
+import { useDevLabEnabled } from '@/lib/featureFlags'
 import { useAuthStore } from '@/store/authStore'
 import { queryClient } from '@/lib/queryClient'
+
+// Loaded on first visit: production ships it to `dev` users only, so it stays
+// out of the bundle everyone else downloads.
+const DevLab = lazy(() => import('@/pages/DevLab').then((m) => ({ default: m.DevLab })))
 
 
 function AuthInit({ children }: { children: React.ReactNode }) {
@@ -39,6 +42,7 @@ function AuthInit({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const devLab = useDevLabEnabled()
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} themes={['light', 'dark', 'military', 'zen']}>
       {/* reducedMotion="user" honours prefers-reduced-motion: transform/layout
@@ -79,7 +83,7 @@ export default function App() {
                     {/* The watch's pairing QR: <web>/pair?code=… */}
                     <Route path="pair" element={<PairDevice />} />
                     {/* Dev */}
-                    {DEVLAB_ENABLED && <Route path="dev" element={<DevLab />} />}
+                    <Route path="dev" element={devLab ? <Suspense fallback={null}><DevLab /></Suspense> : <NotFound />} />
                     {/* Old addresses. Query and router state survive the hop. */}
                     <Route path="builder" element={<LegacyRedirect to="/program/new" />} />
                     <Route path="import" element={<LegacyRedirect to="/log" />} />

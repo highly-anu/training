@@ -3,8 +3,9 @@ import { Terminal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 /**
- * Settings → Developer, dev builds only (src/lib/featureFlags.ts). Where
- * this build sends its requests, and the way into the Dev Lab.
+ * Settings → Developer, in dev builds and for accounts with the `dev` role
+ * (src/lib/featureFlags.ts). Where this build sends its requests, and the
+ * way into the Dev Lab.
  */
 export function DeveloperSettings() {
   const apiBase = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? ''
@@ -19,7 +20,7 @@ export function DeveloperSettings() {
           </p>
           <h2 className="text-2xl font-semibold tracking-tight">Developer.</h2>
           <p className="text-sm text-muted-foreground max-w-prose">
-            Present in development builds only. Nothing here reaches an athlete.
+            Present in development builds and for accounts with the dev role. Nothing here reaches an athlete.
           </p>
         </div>
 
@@ -39,7 +40,7 @@ export function DeveloperSettings() {
           <h3 className="text-xs uppercase tracking-wider text-muted-foreground/50 font-medium">Dev Lab</h3>
           <div className="rounded-lg border border-border/30 bg-card/40 p-4 flex items-center justify-between gap-3">
             <p className="text-[11px] text-muted-foreground">
-              Pipeline trace, object browser, ontology and model interactions. Behind VITE_DEVLAB in production builds.
+              Pipeline trace, object browser, ontology and model interactions. In production, for accounts with the dev role; authoring writes only where the server allows it.
             </p>
             <Button asChild size="sm" variant="outline" className="h-8 text-xs shrink-0">
               <Link to="/dev"><Terminal className="size-3.5" /> Open Dev Lab</Link>

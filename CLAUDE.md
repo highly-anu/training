@@ -221,11 +221,14 @@ side effects, whose key would tick this program's session of that name; `/log/:w
 `/explore` (Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards,
 with "Build with this" CTAs into the builder). You — Profile `/profile` (Athlete, with the
 heart-rate zones · Equipment · Injuries · Schedule · Benchmarks; `heartrate` aliases Athlete)
-and Settings `/settings` (Connections · Appearance · Account · Developer in dev builds). The Garmin and Strava OAuth callbacks land on
+and Settings `/settings` (Connections · Appearance · Account · Developer in dev builds and for `dev` users). The Garmin and Strava OAuth callbacks land on
 `/profile?tab=connections`, which redirects to `/settings?tab=connections` with the query
 intact — the server keeps naming the old URL because `FRONTEND_URL` may pin a deployment
 that predates Settings. Dev Lab `/dev` exists in dev
-builds only (`src/lib/featureFlags.ts`). `/pair?code=…` (`pages/PairDevice.tsx`) is the
+builds and, in production, for users whose Supabase `app_metadata.roles` holds `dev`
+(`featureFlags.useDevLabEnabled`; set it with the admin API and the service-role key — the
+user cannot write app_metadata — and it takes effect at their next token refresh). It is
+lazy-loaded, and the authoring routes it calls stay behind the server's own gate. `/pair?code=…` (`pages/PairDevice.tsx`) is the
 watch QR's target, outside the sidebar: it claims on a tap, never on load, and sign-in
 returns to it (`ProtectedRoute` passes the path, `lib/returnPath.safeReturnPath` keeps
 it in-app). Old paths (`/builder`, `/import`, `/bio`,

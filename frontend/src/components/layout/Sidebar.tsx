@@ -11,7 +11,7 @@ import {
 import { cn } from '@/lib/utils'
 import { ThemeToggle } from '@/components/shared/ThemeToggle'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { DEVLAB_ENABLED } from '@/lib/featureFlags'
+import { useDevLabEnabled } from '@/lib/featureFlags'
 
 interface NavItem {
   to: string
@@ -51,14 +51,14 @@ const NAV_GROUPS: NavGroup[] = [
       { to: '/settings', label: 'Settings', icon: SettingsIcon },
     ],
   },
-  // Developer tooling: present in dev builds, absent from production unless
-  // the build sets VITE_DEVLAB=1 (src/lib/featureFlags.ts).
-  ...(DEVLAB_ENABLED
-    ? [{ label: 'Dev', items: [{ to: '/dev', label: 'Dev Lab', icon: Terminal }] }]
-    : []),
 ]
 
+// Developer tooling: present in dev builds and for users with the `dev` role,
+// absent for everyone else (src/lib/featureFlags.ts).
+const DEV_GROUP: NavGroup = { label: 'Dev', items: [{ to: '/dev', label: 'Dev Lab', icon: Terminal }] }
+
 export function Sidebar() {
+  const groups = useDevLabEnabled() ? [...NAV_GROUPS, DEV_GROUP] : NAV_GROUPS
   return (
     <aside className="flex h-full w-56 flex-col border-r bg-card">
       {/* Logo */}
@@ -70,7 +70,7 @@ export function Sidebar() {
       {/* Nav */}
       <ScrollArea className="flex-1">
         <nav className="p-2 space-y-3" aria-label="Primary">
-          {NAV_GROUPS.map((group) => (
+          {groups.map((group) => (
             <div key={group.label} className="space-y-0.5">
               <p className="px-3 pt-2 pb-1 text-[10px] font-medium uppercase tracking-widest text-muted-foreground/50 select-none">
                 {group.label}
