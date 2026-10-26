@@ -116,7 +116,7 @@ All prefixed `/api/`:
 |--------|------|---------|
 | GET | `/philosophies` | `Philosophy[]` |
 | GET | `/analytics/specs` | every philosophy's analytics spec, described (`src/analytics/describe.py`) |
-| GET | `/explore/links` | Explore's lineage: the movements (patterns exercises declare) and every link between neighbouring levels — philosophy→framework (by track and phase), framework→modality, modality→archetype, archetype→exercise (the selector's slot rule: `exercise_ids`, else the pattern filter, within the package), exercise→movement, and the exercise progression (`requires` ∪ `unlocks`) (`src/explore_links.py`); static, built once |
+| GET | `/explore/links` | Explore's lineage: the movements (patterns exercises declare) and every link between neighbouring levels — philosophy→framework (by track and phase), framework→modality, modality→archetype, archetype→exercise (the selector's slot rule: `exercise_ids`, else the pattern filter, within the package), exercise→movement, and the exercise progression (`requires` ∪ `unlocks`); `equipment` — what each exercise and archetype needs as the generator reads it (all of it, open space free), for Explore ▸ Equipment, pinned to `selector._equipment_ok` and the archetype filter by `test_explore_links.py` (`src/explore_links.py`); static, built once |
 | GET | `/analytics/vocabulary` | the analytics words: primitives, what each needs logged, and the `terms` (`vocabulary.TERMS`: load, recovery, completion, intensity, mix…) for the phone's About sections; static, no sign-in |
 | GET | `/analytics/development?from=&to=&fresh=1` | development across programs — blocks, lifts and currencies across the span, load by block, standards over time (`src/analytics/development.py`); last 365 days by default, cached on a digest |
 | GET | `/frameworks` | `Framework[]` |
@@ -219,7 +219,7 @@ the server matcher's index. Every link sends `sessionUid` (the server keeps a gi
 only if it is planned for the athlete, else resolves the key on the workout's date, which
 finds nothing across days), and one into an earlier program skips the completion
 side effects, whose key would tick this program's session of that name; `/log/:workoutId` is WorkoutDetail). Library — Explore
-`/explore` (Philosophies · Frameworks · Modalities · Archetypes · Exercises · Movements · Standards,
+`/explore` (Philosophies · Frameworks · Modalities · Archetypes · Exercises · Movements · Equipment · Standards,
 with "Build with this" CTAs into the builder). You — Profile `/profile` (Athlete, with the
 heart-rate zones · Equipment · Injuries · Schedule · Benchmarks; `heartrate` aliases Athlete)
 and Settings `/settings` (Connections · Appearance · Account · Developer in dev builds and for `dev` users). The Garmin and Strava OAuth callbacks land on

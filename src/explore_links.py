@@ -14,12 +14,19 @@ pairs are written on both sides, 53 on one only), so the progression is their
 union; a `requires` entry that is no exercise is a concept the athlete brings
 (`bracing_mechanics`), kept apart.
 
+`equipment` says what each exercise and archetype needs, for Explore ▸
+Equipment, which asks what a set of equipment enables.
+
 Pure over the loaded data: `build(...)` takes the lists, `build_from_loader()`
 reads them.
 """
 from __future__ import annotations
 
+import json
+import os
+
 from src import loader, provenance
+from src.blockers import NOT_EQUIPMENT
 from src.analytics.movement import ROLLUPS
 from src.selector import _PATTERN_ALIASES, _matches_slot_filter
 
@@ -153,12 +160,38 @@ def _movements(exercises: dict) -> tuple[list, list]:
     return movements, edges
 
 
+_CONSTRAINTS_SCHEMA = os.path.join(os.path.dirname(__file__), '..', 'docs', 'schemas', 'constraints.schema.json')
+
+
+def equipment_vocabulary() -> list[str]:
+    """The equipment an athlete can declare: the constraints schema's enum,
+    which the API validates against (loader.load_equipment's list is short)."""
+    with open(_CONSTRAINTS_SCHEMA, encoding='utf-8') as f:
+        return list(json.load(f)['properties']['equipment']['items']['enum'])
+
+
+def _equipment(archetypes: list, exercises: dict, vocabulary: list) -> dict:
+    """What each exercise and archetype needs, as the generator reads it, so
+    a client only tests that the athlete's set covers the list: an exercise
+    every item of `equipment` but open space and 'none'
+    (selector._equipment_ok), an archetype every item of `required_equipment`
+    but open space (select_archetype's filter), with no relaxation."""
+    return {
+        'vocabulary': vocabulary,
+        'exercises': {ex['id']: sorted(set(_listify(ex.get('equipment'))) - NOT_EQUIPMENT)
+                      for ex in exercises.values()},
+        'archetypes': {a['id']: sorted(set(_listify(a.get('required_equipment'))) - {'open_space'})
+                       for a in archetypes},
+    }
+
+
 def build(philosophies: list, frameworks: dict, modalities: dict,
-          archetypes: list, exercises: dict) -> dict:
+          archetypes: list, exercises: dict, vocabulary: list | None = None) -> dict:
     movements, exercise_movement = _movements(exercises)
     progression, concepts = _progression(exercises)
     return {
         'movements': movements,
+        'equipment': _equipment(archetypes, exercises, vocabulary or []),
         'links': {
             'philosophyFramework': _philosophy_frameworks(philosophies, frameworks),
             'frameworkModality': _framework_modalities(frameworks, modalities),
@@ -176,4 +209,5 @@ def build(philosophies: list, frameworks: dict, modalities: dict,
 def build_from_loader() -> dict:
     exercises, _ = loader.load_all_exercises()
     return build(loader.load_philosophies(), loader.load_all_frameworks(),
-                 loader.load_all_modalities(), loader.load_all_archetypes(), exercises)
+                 loader.load_all_modalities(), loader.load_all_archetypes(), exercises,
+                 equipment_vocabulary())

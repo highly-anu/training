@@ -153,11 +153,59 @@ class RealDataTests(unittest.TestCase):
             self.assertEqual(len(keys), len(set(keys)), kind)
 
 
+class EquipmentTests(unittest.TestCase):
+    """The equipment block says what the generator needs, so a client that only
+    tests coverage agrees with it on every set."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.doc = explore_links.build_from_loader()
+        cls.exercises, _ = loader.load_all_exercises()
+        cls.archetypes = loader.load_all_archetypes()
+        import json
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'docs', 'schemas',
+                               'constraints.schema.json')) as f:
+            cls.enum = json.load(f)['properties']['equipment']['items']['enum']
+        sets = [set(), set(cls.enum)]
+        sets += [set(p['equipment']) for p in loader.load_equipment_profiles()]
+        # One item at a time, and each profile less its first item.
+        sets += [{e} for e in cls.enum] + [set(p['equipment'][1:]) for p in loader.load_equipment_profiles()]
+        cls.sets = sets
+
+    def test_vocabulary_is_the_schema_enum(self):
+        self.assertEqual(self.doc['equipment']['vocabulary'], self.enum)
+
+    def test_free_items_are_never_needed(self):
+        eq = self.doc['equipment']
+        for needs in [*eq['exercises'].values(), *eq['archetypes'].values()]:
+            self.assertFalse({'open_space', 'none'} & set(needs), needs)
+
+    def test_exercise_coverage_is_the_selectors_rule(self):
+        from src.selector import _equipment_ok
+        needs = self.doc['equipment']['exercises']
+        self.assertEqual(set(needs), set(self.exercises))
+        for s in self.sets:
+            for ex in self.exercises.values():
+                self.assertEqual(set(needs[ex['id']]) <= s, _equipment_ok(ex, s), (ex['id'], sorted(s)))
+
+    def test_archetype_coverage_is_the_generators_rule(self):
+        from src.generator import _fits_as_written
+        needs = self.doc['equipment']['archetypes']
+        whole = {'archetype': True, 'exercises': []}
+        for s in self.sets:
+            for arch in self.archetypes:
+                level = (arch.get('training_levels') or ['intermediate'])[0]
+                phase = (arch.get('applicable_phases') or ['base'])[0]
+                fits = _fits_as_written(arch, {'equipment': sorted(s), 'training_level': level}, phase,
+                                        lambda _a: whole)
+                self.assertEqual(set(needs[arch['id']]) <= s, fits, (arch['id'], sorted(s)))
+
+
 class RouteTests(unittest.TestCase):
     def test_route(self):
         import api
         body = api.app.test_client().get('/api/explore/links').get_json()
-        self.assertEqual(set(body), {'movements', 'links'})
+        self.assertEqual(set(body), {'movements', 'equipment', 'links'})
         self.assertIn('squat', {m['id'] for m in body['movements']})
 
 

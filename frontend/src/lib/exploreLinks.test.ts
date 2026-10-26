@@ -3,6 +3,7 @@ import { indexLinks, lineageOf, progressionOf, type LineageNames } from '@/lib/e
 import type { ExploreLinks } from '@/api/types'
 
 const LINKS: ExploreLinks = {
+  equipment: { vocabulary: [], exercises: {}, archetypes: {} },
   movements: [
     { id: 'squat', name: 'Squat', exerciseCount: 2, filterGroups: [], rollup: 'squat' },
     { id: 'hip_hinge', name: 'Hip hinge', exerciseCount: 1, filterGroups: ['hinge', 'swing'], rollup: 'hinge' },

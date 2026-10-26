@@ -21,11 +21,12 @@ import { cn } from '@/lib/utils'
 import { PhilosophyPanel, ArchetypeCard } from '@/components/explore/PhilosophyPanel'
 import { StandardsLanding } from '@/components/explore/StandardsLanding'
 import { MovementLanding, MovementDetail } from '@/components/explore/MovementPanel'
+import { EquipmentPanel } from '@/components/explore/EquipmentPanel'
 import { LineagePill, LineageSection } from '@/components/explore/LineageSection'
 import { TOPICS, useExploreNavigate } from '@/components/explore/topics'
 import { useLinkIndex } from '@/components/explore/useLineage'
 import { useExploreLinks } from '@/api/exploreLinks'
-import { lineageOf, progressionOf, type ExploreTopic } from '@/lib/exploreLinks'
+import { lineageOf, progressionOf, type ExploreTopic, type LinkedTopic } from '@/lib/exploreLinks'
 import { useBuilderStore } from '@/store/builderStore'
 import { Button } from '@/components/ui/button'
 import { HeatmapPanel } from '@/components/devlab/heatmap/HeatmapPanel'
@@ -135,7 +136,7 @@ type Topic = ExploreTopic
 
 // What one detail shows of its lineage (lib/exploreLinks.ts): null while the
 // links load.
-function useLineage(topic: Exclude<Topic, 'standards'>, id: string) {
+function useLineage(topic: LinkedTopic, id: string) {
   const { index, names, colors } = useLinkIndex()
   return useMemo(() => (index ? lineageOf(index, topic, id, names, colors) : null), [index, topic, id, names, colors])
 }
@@ -1764,7 +1765,7 @@ export function Explore() {
 
   const isLoading = {
     philosophies: philLoading, frameworks: fwLoading, modalities: modLoading, archetypes: archLoading,
-    exercises: exLoading, movements: linksLoading, standards: false,
+    exercises: exLoading, movements: linksLoading, equipment: linksLoading, standards: false,
   }[topic]
   const error = topic === 'philosophies' ? philError : topic === 'frameworks' ? fwError
     : topic === 'modalities' ? modError : topic === 'movements' ? linksError : null
@@ -1885,6 +1886,7 @@ export function Explore() {
                       />
                     : <MovementLanding movements={movements} isLoading={linksLoading} onSelect={(id) => open('movements', id)} />
                 )}
+                {topic === 'equipment' && <EquipmentPanel />}
                 {topic === 'standards' && <StandardsLanding />}
             </div>
           )

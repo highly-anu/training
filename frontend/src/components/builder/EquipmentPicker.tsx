@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils'
 import type { EquipmentId } from '@/api/types'
+import { EQUIPMENT_GROUPS } from '@/lib/equipment'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -36,62 +37,6 @@ const EQUIPMENT_PRESETS = [
     equipment: ['barbell', 'rack', 'plates', 'kettlebell', 'pull_up_bar'],
   },
 ] as const
-
-const EQUIPMENT_GROUPS = [
-  {
-    name: 'Free Weights',
-    items: [
-      { id: 'barbell' as EquipmentId,    label: 'Barbell' },
-      { id: 'rack' as EquipmentId,       label: 'Rack' },
-      { id: 'plates' as EquipmentId,     label: 'Plates' },
-      { id: 'kettlebell' as EquipmentId, label: 'Kettlebell' },
-      { id: 'dumbbell' as EquipmentId,   label: 'Dumbbell' },
-    ],
-  },
-  {
-    name: 'Gymnastics / Bodyweight',
-    items: [
-      { id: 'pull_up_bar' as EquipmentId,  label: 'Pull-up Bar' },
-      { id: 'rings' as EquipmentId,        label: 'Rings' },
-      { id: 'parallettes' as EquipmentId,  label: 'Parallettes' },
-      { id: 'hangboard' as EquipmentId,    label: 'Hangboard' },
-      { id: 'rope' as EquipmentId,         label: 'Rope Climb' },
-      { id: 'box' as EquipmentId,          label: 'Box' },
-    ],
-  },
-  {
-    name: 'Cardio Machines',
-    items: [
-      { id: 'rower' as EquipmentId,   label: 'Rower' },
-      { id: 'bike' as EquipmentId,    label: 'Assault Bike' },
-      { id: 'ski_erg' as EquipmentId, label: 'Ski Erg' },
-      { id: 'pool' as EquipmentId,    label: 'Pool (Swimming)' },
-    ],
-  },
-  {
-    name: 'Field / Load',
-    items: [
-      { id: 'ruck_pack' as EquipmentId,       label: 'Ruck Pack' },
-      { id: 'sandbag' as EquipmentId,         label: 'Sandbag' },
-      { id: 'jump_rope' as EquipmentId,       label: 'Jump Rope' },
-      { id: 'resistance_band' as EquipmentId, label: 'Resistance Band' },
-    ],
-  },
-  {
-    name: 'Specialty',
-    items: [
-      { id: 'ghd' as EquipmentId,           label: 'GHD' },
-      { id: 'medicine_ball' as EquipmentId, label: 'Medicine Ball' },
-      { id: 'sled' as EquipmentId,          label: 'Sled' },
-      { id: 'tire' as EquipmentId,          label: 'Tire' },
-      { id: 'sledgehammer' as EquipmentId,  label: 'Sledgehammer' },
-      { id: 'cable_machine' as EquipmentId, label: 'Cable Machine' },
-      { id: 'hurdles' as EquipmentId,       label: 'Hurdles' },
-      { id: 'agility_ladder' as EquipmentId, label: 'Agility Ladder' },
-      { id: 'training_partner' as EquipmentId, label: 'Training Partner' },
-    ],
-  },
-]
 
 // Items with no exercises — shown grayed out, non-interactive. Horsemen's
 // named workouts use the GHD, medicine ball, sled and tire (2026-10-19).

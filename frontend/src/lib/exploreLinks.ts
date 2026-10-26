@@ -7,9 +7,10 @@ import type { ExploreLinks } from '@/api/types'
 import { movementColor } from '@/lib/movementColors'
 
 export type ExploreTopic =
-  | 'philosophies' | 'frameworks' | 'modalities' | 'archetypes' | 'exercises' | 'movements' | 'standards'
+  | 'philosophies' | 'frameworks' | 'modalities' | 'archetypes' | 'exercises' | 'movements' | 'equipment' | 'standards'
 
-export type LinkedTopic = Exclude<ExploreTopic, 'standards'>
+/** The topics that are levels with details; Equipment and Standards are not. */
+export type LinkedTopic = Exclude<ExploreTopic, 'standards' | 'equipment'>
 
 export interface LineageItem {
   /** Absent for a plain item that opens nothing (a concept, a filter group). */

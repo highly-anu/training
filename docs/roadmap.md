@@ -1348,6 +1348,12 @@ scheduled ahead of the ranked list.
   the heatmap and the philosophy detail's slot pools show far fewer exercises
   than the selector can pick. Explore's lineage reads the server's links
   (`/api/explore/links`); the heatmap and the slot pools should read them too.
+- **Equipment pickers disagree with the engine** — Profile ▸ Equipment
+  (`ProfileBenchmarks.tsx`) and the builder (`ConstraintsForm.tsx`) offer
+  `dip_bar`, `assault_bike` and `foam_roller`, which no exercise or archetype uses,
+  and cannot pick `dip_belt` or `bike`; both should read `lib/equipment.ts`.
+  `useExercises({equipment})` filters any-of where the generator needs all-of
+  (Explore ▸ Equipment reads the server's needs instead).
 - **iOS Library tab** — the contextual exercise sheet exists
   (`ExerciseDetailSheet`, design-system §6.14); a tab only once there is
   content to browse rather than look up.
@@ -1381,6 +1387,13 @@ reasoning for each is in `frontend-fix-plan.md`.
 ## Done
 
 Shipped items from the absorbed documents, so nobody re-plans them.
+
+**Explore ▸ Equipment (2026-10-26)**: pick equipment and see the modalities,
+frameworks, movements and exercises it enables, by the generator's all-of rule
+(open space free; frameworks whole or partly); pick results to narrow the other
+lists, and +N on each chip says what adding it would open. Needs come from
+`/api/explore/links`' `equipment` block, pinned to `selector._equipment_ok` and
+the archetype filter by `test_explore_links.py`.
 
 **Explore: Movements and lineage (2026-10-26)**: a Movements topic (the 42 patterns
 exercises declare, grouped as the analytics count them) and, on every detail, what
