@@ -94,6 +94,21 @@ describe('lineageOf', () => {
   })
 })
 
+describe('colours', () => {
+  it('stamps each item with its level colour; a rollup takes its group colour', () => {
+    const colors = { modalities: { strength: '#ef4444' }, exercises: { goblet: '#f97316' } }
+    const fw = lineageOf(ix, 'frameworks', 'gp', NAMES, colors)
+    expect(fw.down[0].items.map((i) => i.color)).toEqual(['#ef4444', undefined])
+    const arch = lineageOf(ix, 'archetypes', 'kb_day', NAMES, colors)
+    expect(arch.down[0].items[0].color).toBe('#f97316')
+    // Without colours the items are as before.
+    expect(lineageOf(ix, 'frameworks', 'gp', NAMES).down[0].items[0].color).toBeUndefined()
+    const move = lineageOf(ix, 'movements', 'hip_hinge', NAMES)
+    expect(move.down.find((g) => g.label === 'Counted as')?.items[0].color).toBe('#eab308')
+    expect(progressionOf(ix, 'goblet', [], NAMES, { exercises: { front: '#ef4444' } }).after[0].color).toBe('#ef4444')
+  })
+})
+
 describe('progressionOf', () => {
   it('reads requires and unlocks from both ends, a concept as a plain item', () => {
     const p = progressionOf(ix, 'swing', ['kb_deadlift', 'goblet'], NAMES)

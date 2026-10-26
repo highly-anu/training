@@ -19,8 +19,10 @@ export function LineagePill({ item }: { item: LineageItem }) {
     </>
   )
   const base = 'inline-flex max-w-full items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px]'
+  // The level's colour as a left border, the landings' colour-coded border (§13.6).
+  const style = item.color ? { borderLeftColor: item.color, borderLeftWidth: 2 } : undefined
   if (!item.topic) {
-    return <span className={cn(base, 'border-dashed border-border/60 text-muted-foreground')}>{body}</span>
+    return <span className={cn(base, 'border-dashed border-border/60 text-muted-foreground')} style={style}>{body}</span>
   }
   const topic = item.topic
   return (
@@ -28,6 +30,7 @@ export function LineagePill({ item }: { item: LineageItem }) {
       type="button"
       onClick={() => open(topic, item.id)}
       className={cn(base, 'border-border bg-muted text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors')}
+      style={style}
     >
       {body}
     </button>
