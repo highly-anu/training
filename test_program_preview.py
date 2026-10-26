@@ -140,14 +140,18 @@ def test_generate_counts_what_was_held_back() -> None:
         'philosophy_id': 'starting_strength', 'num_weeks': 2, 'constraints': ATHLETE}).get_json()
     check('nothing held back with the kit the method asks for', full.get('held_back') == {'slots': 0, 'sessions': 0},
           full.get('held_back'))
+    # A blend a training contract leads runs on the scheduler and the picker,
+    # which leave a slot empty when the kit cannot fill it; a package's own
+    # week (Gym Jones, since its templates) takes a workout the kit can do.
     bare = client.post('/api/programs/generate', json={
-        'philosophy_id': 'gym_jones', 'num_weeks': 2,
-        'constraints': {**ATHLETE, 'training_level': 'intermediate', 'days_per_week': 4,
+        'philosophy_ids': ['uphill_athlete', 'horsemen_gpp'],
+        'philosophy_weights': {'uphill_athlete': 0.7, 'horsemen_gpp': 0.3}, 'num_weeks': 2,
+        'constraints': {**ATHLETE, 'training_level': 'intermediate', 'days_per_week': 6,
                         'equipment': ['kettlebell', 'pull_up_bar']}}).get_json()
     held = bare.get('held_back') or {}
     empty = [ea for w in bare['weeks'] for ss in w['schedule'].values() for s in ss for ea in s['exercises']
              if ea.get('exercise') is None and ea.get('blocked_by')]
-    check('a kettlebell kit leaves Gym Jones slots empty, each counted',
+    check('a kettlebell kit leaves a blend\'s slots empty, each counted',
           held.get('slots', 0) >= len(empty) > 0 and held.get('sessions', 0) > 0, (held, len(empty)))
 
 
@@ -222,8 +226,9 @@ def test_impact_for_every_athlete() -> None:
     real = api._authoring_enabled
     api._authoring_enabled = lambda: False
     try:
+        # Gym Jones's Operator Fitness is six days a week.
         body = {'philosophy_id': 'gym_jones', 'num_weeks': 1,
-                'constraints': {**ATHLETE, 'training_level': 'intermediate', 'days_per_week': 4,
+                'constraints': {**ATHLETE, 'training_level': 'intermediate', 'days_per_week': 6,
                                 'equipment': ['kettlebell']}}
         dev = client.post('/api/dev/constraint-impact', json=body)
         check('the Dev Lab route keeps its gate', dev.status_code == 403, dev.status_code)

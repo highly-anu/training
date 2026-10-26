@@ -98,10 +98,12 @@ def test_api() -> None:
     import api
     from src import db
     client = api.app.test_client()
-    body = {'philosophy_id': 'uphill_athlete', 'num_weeks': 8,
-            'constraints': {'days_per_week': 5, 'session_time_minutes': 75, 'training_level': 'intermediate',
+    # Uphill's contract (since 2026-10-21) asks for six days and a kettlebell;
+    # twelve weeks reach its second phase (eight of transition, then base).
+    body = {'philosophy_id': 'uphill_athlete', 'num_weeks': 12,
+            'constraints': {'days_per_week': 6, 'session_time_minutes': 75, 'training_level': 'intermediate',
                             'equipment': ['barbell', 'rack', 'plates', 'pull_up_bar', 'ruck_pack',
-                                          'open_space', 'box', 'dumbbell'], 'injury_flags': []}}
+                                          'open_space', 'box', 'dumbbell', 'kettlebell'], 'injury_flags': []}}
     resp = client.post('/api/programs/generate', json=body)
     data = resp.get_json() or {}
     summary = data.get('phase_summary') or []

@@ -1177,6 +1177,34 @@ osascript -e 'tell application "System Events" to click at {1812, 105}'
 
 ## Checks
 
+**Every check runs locally, before the push; GitHub runs none** (since 2026-10-26;
+the Training contracts and Frontend Build workflows are gone, Deploy API and Cloudflare
+Pages still deploy). The shared hooks in `../code-checks` (`core.hooksPath`; once per
+machine `../code-checks/install.sh`) call `checks.sh`: at commit the syntax of the
+changed Python and each changed data YAML against its schema; at push, by the paths the
+pushed commits touch:
+
+- **backend** (engine, data, schemas, API, tools, tests, migrations) — every command of
+  `checks/python_suites.yaml`, run by `tools/run_checks.py` in a clean checkout of the
+  pushed commit outside the repository (no `.env`/`.env.local`, database and Supabase
+  variables blank, the gitignored `data/*.fit` copied in), in parallel; the three suites
+  that drop tables each on a database made and dropped for the run, skipped — never run
+  on `training_test` — without a local Postgres. The list is the registry:
+  `run_checks.py` fails while a root `test_*.py` is in none of its sections,
+  `package_fidelity` counts a package's cited test only when it is listed, and
+  `check_package_status.py` holds the package README's gate table to it.
+- **frontend** — lint, `npm run build` (tsc + vite), vitest (`npm ci` first in a
+  worktree without `node_modules`).
+- **ios** — `./ios/run_tests.sh` on a booted simulator.
+- **garmin** — the release build (all devices) in the clean checkout, `test_watch_spec.py`
+  and `check_code_neutral.py`; the core's `--test` needs the open simulator and stays manual.
+
+`../code-checks/try.sh pre-push --all` runs every area by hand; `.venv/bin/python
+tools/run_checks.py --only test_selection.py` one suite as the hook would. A worktree
+needs the hooks path absolute (`git config core.hooksPath <abs>/code-checks/hooks`): the
+relative one resolves from `.claude/worktrees/<name>/` to nothing, and git then runs no
+hook at all.
+
 Run this after touching analytics, a package's `analytics.yaml`, the matcher's
 zone edges or the session-log path (needs `SUPABASE_URL=''` for the routing checks):
 
