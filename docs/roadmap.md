@@ -1354,6 +1354,11 @@ scheduled ahead of the ranked list.
   and cannot pick `dip_belt` or `bike`; both should read `lib/equipment.ts`.
   `useExercises({equipment})` filters any-of where the generator needs all-of
   (Explore ▸ Equipment reads the server's needs instead).
+- **The scheduler's day order and its high-cost window** — `_POSITION_ORDER` knows
+  `first/main/accessory/finisher/cooldown`, while the modality schema and YAML say
+  `first/last/any/standalone`, so `last` is never honoured within a day; and
+  `modality.schema.json` says `recovery_hours_min` governs a high-cost pair, where
+  `_recovery_safe` uses a fixed 48 h.
 - **iOS Library tab** — the contextual exercise sheet exists
   (`ExerciseDetailSheet`, design-system §6.14); a tab only once there is
   content to browse rather than look up.
@@ -1387,6 +1392,16 @@ reasoning for each is in `frontend-fix-plan.md`.
 ## Done
 
 Shipped items from the absorbed documents, so nobody re-plans them.
+
+**Recovery windows both ways and across weeks (2026-10-26)**: the scheduler's
+checks (`_recovery_safe`, `_score_days`) looked only at earlier days of the same
+week, though modalities are placed hardest first, so a session could land the day
+before another and a Sunday's heavy day next to Monday's. They now look both ways
+and at last week's end (`_neighbours`), and a session placed inside its window
+says so in the compromises (`test_recovery_schedule.py`). No single-philosophy
+program changed (each is a source's own week or a training contract); of the 200
+two-philosophy blends that generate at 4–6 days, 27 moved a session and 8 have fewer
+clashes, none more.
 
 **Explore ▸ Equipment (2026-10-26)**: pick equipment and see the modalities,
 frameworks, movements and exercises it enables, by the generator's all-of rule
