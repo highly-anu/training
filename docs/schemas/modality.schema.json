@@ -27,13 +27,13 @@
     },
     "recovery_hours_min": {
       "type": "integer",
-      "description": "Minimum hours before this modality can be repeated or paired with another high-cost modality.",
+      "description": "Minimum hours before this modality can be repeated; between two high-cost modalities the larger of their two, and never under 48 (scheduler.recovery_window, which fidelity audits by).",
       "minimum": 0
     },
     "session_position": {
       "type": "string",
       "enum": ["first", "last", "any", "standalone"],
-      "description": "Where in a session this modality should appear when paired with others. 'standalone' means it should not be combined."
+      "description": "Where this modality's session goes in a day it shares: first, last, either (any), or standalone (never combined into another session). The scheduler orders a day's sessions by it (scheduler._order_day)."
     },
     "compatible_in_session_with": {
       "type": "array",

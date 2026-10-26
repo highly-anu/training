@@ -245,10 +245,30 @@ def test_claims() -> None:
     check('a contract program breaking a claim is refused', refused)
 
 
+def test_recovery_reads_the_modalities_windows() -> None:
+    print('recovery: the scheduler\'s window, read back')
+    mods = {**MODALITIES, 'long_recovery': {'recovery_cost': 'high', 'recovery_hours_min': 72}}
+
+    def found(placed):
+        out = fidelity._Collector()
+        fidelity._check_recovery(out, 'p1', 1, placed, mods, frozenset())
+        return [f.detail for f in out.findings()]
+
+    check('two 48 h high-cost modalities two days apart are fine',
+          not found({1: ['max_strength'], 3: ['anaerobic_intervals']}))
+    check('a 72 h one two days from another high-cost one is not',
+          found({1: ['long_recovery'], 3: ['max_strength']}) ==
+          ['long_recovery and max_strength are both high-cost, 48 h apart; they need 72 h'],
+          found({1: ['long_recovery'], 3: ['max_strength']}))
+    check('three days apart it is', not found({1: ['long_recovery'], 4: ['max_strength']}))
+    check('and it repeats only after its own 72 h',
+          found({1: ['long_recovery'], 3: ['long_recovery']}) == ['long_recovery repeats after 48 h; it needs 72 h'])
+
+
 def main() -> int:
     for t in (test_clean_program, test_minutes_and_buckets, test_shape, test_intensity_and_zone_cap,
               test_levels_and_kinds, test_fixed_lifts, test_deload, test_volume, test_constraints,
-              test_claims):
+              test_claims, test_recovery_reads_the_modalities_windows):
         t()
     print()
     if FAILURES:

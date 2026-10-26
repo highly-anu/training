@@ -1357,11 +1357,6 @@ scheduled ahead of the ranked list.
 - **Regional load on Explore** — the archetype and exercise details could show where
   a session's work lands (`recovery_regions.archetype_load`), served with
   `/api/explore/links`.
-- **The scheduler's day order and its high-cost window** — `_POSITION_ORDER` knows
-  `first/main/accessory/finisher/cooldown`, while the modality schema and YAML say
-  `first/last/any/standalone`, so `last` is never honoured within a day; and
-  `modality.schema.json` says `recovery_hours_min` governs a high-cost pair, where
-  `_recovery_safe` uses a fixed 48 h.
 - **iOS Library tab** — the contextual exercise sheet exists
   (`ExerciseDetailSheet`, design-system §6.14); a tab only once there is
   content to browse rather than look up.
@@ -1395,6 +1390,14 @@ reasoning for each is in `frontend-fix-plan.md`.
 ## Done
 
 Shipped items from the absorbed documents, so nobody re-plans them.
+
+**The scheduler's day order and its high-cost window (2026-10-26)**: a day's
+sessions sort by the schema's `session_position` words (first, any/standalone,
+last), where `_POSITION_ORDER` knew only words no modality uses, so `last` was
+never honoured; and a high-cost pair is held to the larger of the two modalities'
+`recovery_hours_min`, never under 48 h, in one rule the scheduler places by and
+fidelity audits by (`scheduler.recovery_window`), where both had a fixed 48 h.
+Nothing shipped changes: every high-cost modality has 48 h and none says `last`.
 
 **Regional recovery (2026-10-26)**: a session's load on lower body, upper push,
 upper pull, trunk and cardio, derived from its exercises' movement patterns, slot
