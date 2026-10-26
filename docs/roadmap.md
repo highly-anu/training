@@ -1354,6 +1354,9 @@ scheduled ahead of the ranked list.
   and cannot pick `dip_belt` or `bike`; both should read `lib/equipment.ts`.
   `useExercises({equipment})` filters any-of where the generator needs all-of
   (Explore ▸ Equipment reads the server's needs instead).
+- **Regional load on Explore** — the archetype and exercise details could show where
+  a session's work lands (`recovery_regions.archetype_load`), served with
+  `/api/explore/links`.
 - **The scheduler's day order and its high-cost window** — `_POSITION_ORDER` knows
   `first/main/accessory/finisher/cooldown`, while the modality schema and YAML say
   `first/last/any/standalone`, so `last` is never honoured within a day; and
@@ -1392,6 +1395,17 @@ reasoning for each is in `frontend-fix-plan.md`.
 ## Done
 
 Shipped items from the absorbed documents, so nobody re-plans them.
+
+**Regional recovery (2026-10-26)**: a session's load on lower body, upper push,
+upper pull, trunk and cardio, derived from its exercises' movement patterns, slot
+intensity and modality cost (`src/recovery_regions.py`). A soft rule where the app
+chooses — the archetype picker (−2 a day after a heavy load on a shared region, −1
+two days after) and a contract's placement (after the spacing terms) — and a
+`region_back_to_back` info finding in fidelity. No single-philosophy program changes
+(their weeks are the source's or a contract's, and every contract's placement already
+had its order); of 200 blends, 38 change and heavy-region repeats fall 3182 → 3074.
+The picker's trace now adds up to its score (day fit and blocked-equipment terms
+were missing).
 
 **Every check runs locally; GitHub runs none (2026-10-26)**: `checks.sh` for the
 shared hooks in `../code-checks`. The pre-push hook runs, by the paths a push

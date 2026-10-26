@@ -37,6 +37,7 @@ suites:
   - test_devlab_trace.py
   - test_constraint_impact.py
   - test_recovery_schedule.py
+  - test_recovery_regions.py
   - test_explore_links.py
   - test_similarity.py
   - test_program_preview.py

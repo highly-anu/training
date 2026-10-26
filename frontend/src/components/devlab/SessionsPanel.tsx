@@ -35,9 +35,11 @@ function ArchetypeSelectionBlock({ trace }: { trace: SessionTrace['archetype'] }
               <th className="pb-1 pr-3">Archetype</th>
               <th className="pb-1 pr-3 text-right">Score</th>
               <th className="pb-1 pr-3 text-right">Equip</th>
-              <th className="pb-1 pr-3 text-right">Source</th>
               <th className="pb-1 pr-3 text-right">Recency</th>
-              <th className="pb-1 text-right">Injury</th>
+              <th className="pb-1 pr-3 text-right">Day fit</th>
+              <th className="pb-1 pr-3 text-right">Injury</th>
+              <th className="pb-1 pr-3 text-right">Blocked</th>
+              <th className="pb-1 text-right" title="A body region a session yesterday or the day before loaded heavily">Regional</th>
             </tr>
           </thead>
           <tbody>
@@ -57,9 +59,14 @@ function ArchetypeSelectionBlock({ trace }: { trace: SessionTrace['archetype'] }
                 </td>
                 <td className="py-1 pr-3 text-right font-mono font-bold">{c.score}</td>
                 <td className="py-1 pr-3 text-right font-mono text-sky-700 dark:text-sky-300">{c.breakdown.equipment ?? 0}</td>
-                <td className="py-1 pr-3 text-right font-mono text-emerald-700 dark:text-emerald-300">{c.breakdown.source ?? 0}</td>
                 <td className="py-1 pr-3 text-right font-mono text-amber-700 dark:text-amber-300">{c.breakdown.recency ?? 0}</td>
-                <td className="py-1 text-right font-mono text-rose-700 dark:text-rose-300">{c.breakdown.injury_penalty ?? 0}</td>
+                <td className="py-1 pr-3 text-right font-mono text-emerald-700 dark:text-emerald-300">{c.breakdown.day_fit ?? 0}</td>
+                <td className="py-1 pr-3 text-right font-mono text-rose-700 dark:text-rose-300">{c.breakdown.injury_penalty ?? 0}</td>
+                <td className="py-1 pr-3 text-right font-mono text-rose-700 dark:text-rose-300">{c.breakdown.equipment_blocked ?? 0}</td>
+                <td className="py-1 text-right font-mono text-violet-700 dark:text-violet-300"
+                    title={c.heavy_regions?.length ? `Loads heavily: ${c.heavy_regions.join(', ').replace(/_/g, ' ')}` : undefined}>
+                  {c.breakdown.regional ?? 0}
+                </td>
               </tr>
             ))}
           </tbody>

@@ -460,6 +460,12 @@
       "items": { "type": "string" },
       "description": "The modalities this session best follows on a split day: a day that adds a second (mobility) session after one of these prefers this archetype (scheduler._add_split_sessions, generator). Grappling mobility complements combat_sport; strength mobility the strength modalities."
     },
+    "regional_load": {
+      "type": "object",
+      "additionalProperties": { "type": "number", "minimum": 0 },
+      "propertyNames": { "enum": ["lower", "upper_push", "upper_pull", "trunk", "cardio"] },
+      "description": "Where the session's work lands on the body, for an archetype whose slots name no exercises to read it from (data/commons/recovery_regions.yaml; src/recovery_regions.py). Region -> load, 0.5 and over is heavy. Without it the load is derived from the slots."
+    },
     "pool_only": {
       "type": "boolean",
       "description": "A named workout picked only from a framework day category's pool (a phase's week_templates, src/week_template.py), never by modality: it is prescribed as written and means nothing under another progression model."

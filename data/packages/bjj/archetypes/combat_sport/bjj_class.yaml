@@ -15,6 +15,14 @@ training_levels:
   - novice
   - intermediate
   - advanced
+# The mat is the prescription, so no slot names an exercise to read the load
+# from: rolling loads the whole body, hardest the grips, hips and trunk.
+regional_load:
+  lower: 0.75
+  upper_pull: 0.75
+  trunk: 0.75
+  upper_push: 0.5
+  cardio: 0.75
 sources:
   - "BJJ (Gracie, Gym Jones, Ido Portal)"
   - "Kelly Starrett"

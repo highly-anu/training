@@ -391,6 +391,21 @@ def _check_week(out, w, phase_id, kind, fw, level, equipment, excl_patterns, exc
     if not templated:
         # A templated week's day order is the source's own.
         _check_recovery(out, phase_id, wn, placed, modalities, allowed)
+    _read_regions(out, phase_id, wn, w, modalities)
+
+
+def _read_regions(out, phase_id, wn, w, modalities):
+    """Information, never drift: a body region two sessions a day apart both
+    load heavily (src/recovery_regions.py). A source may mean it — a source's
+    own week is never rearranged for it — so it is read, not gated."""
+    from . import recovery_regions
+    heavy: dict[int, frozenset] = defaultdict(frozenset)
+    for day, s in _sessions(w):
+        heavy[day] |= recovery_regions.heavy(recovery_regions.session_load(s, modalities))
+    for day in sorted(heavy):
+        for region in sorted(heavy[day] & heavy.get(day + 1, frozenset())):
+            out.add('region_back_to_back', 'info', phase_id, region,
+                    f"{region.replace('_', ' ')} loaded heavily on {_DAY_NAMES[day - 1]} and {_DAY_NAMES[day]}", wn)
 
 
 def _check_compliance(out, phase_id, wn, ea, equipment, excl_patterns, excl_ids, flagged):

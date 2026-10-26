@@ -767,6 +767,8 @@ export interface CandidateScore {
   name: string
   score: number
   breakdown: Record<string, number>
+  /** An archetype's heavily loaded body regions (src/recovery_regions.py). */
+  heavy_regions?: string[]
   package?: string  // First declaring package (display only)
   packages?: string[]  // Every philosophy package declaring this exercise id
 }

@@ -4,7 +4,7 @@ import os as _os
 import yaml as _yaml
 from typing import Optional
 from src.progression import zone_band as _zone_band
-from . import blockers, phases, provenance, standard_tests
+from . import blockers, phases, provenance, recovery_regions, standard_tests
 from . import loader as _loader
 
 # ---------------------------------------------------------------------------
@@ -236,8 +236,15 @@ def select_archetype(
     preferred_archetype_id: str | frozenset | None = None,
     day_session_types: list | None = None,
     relax_equipment: bool = False,
+    recent_regions: list | None = None,
+    arch_regions: dict | None = None,
 ) -> Optional[dict]:
     """Pick the best archetype for a session slot.
+
+    recent_regions: (hours ago, heavy regions) of the sessions before this one
+    within two days; arch_regions: each archetype's heavy regions
+    (src/recovery_regions.py). An archetype that loads a region a recent session
+    loaded heavily scores lower — a soft rule, never a filter.
 
     When return_trace=True returns (archetype, trace_dict) instead of just archetype.
     When preferred_archetype_id is provided — one id, or a set of them (the
@@ -322,48 +329,56 @@ def select_archetype(
 
     _excl = excl_patterns or set()
 
-    def _score_arch(arch: dict) -> tuple:
-        score = 0
+    def _parts(arch: dict) -> dict:
+        """Each term of an archetype's score, so the trace adds up to it."""
+        parts = {'preferred': 0, 'equipment': 0, 'recency': 0, 'day_fit': 0,
+                 'injury_penalty': 0, 'equipment_blocked': 0, 'regional': 0}
         # Strong preference for complementary mobility archetype
         if preferred_archetype_id and (arch['id'] == preferred_archetype_id if isinstance(preferred_archetype_id, str)
                                        else arch['id'] in preferred_archetype_id):
-            score += 10  # Higher than equipment bonus to take precedence
+            parts['preferred'] = 10  # Higher than equipment bonus to take precedence
         # Prefer archetypes whose equipment is fully satisfied over equipment_limited fallbacks.
         # Bonus must exceed the max recency penalty (-3) so a recently-used fully-equipped
         # archetype always beats an equipment-limited one.
         required = set(arch.get('required_equipment', [])) - {'open_space'}
         if required.issubset(available_equip):
-            score += 6
+            parts['equipment'] = 6
         if arch['id'] in recent:
-            score -= 3
+            parts['recency'] = -3
         # Duration fit: reward archetypes that match the day's slot type
         if day_session_types:
             arch_dur = arch.get('duration_estimate_minutes', 60)
             if 'long' in day_session_types and arch_dur >= 60:
-                score += 3
+                parts['day_fit'] = 3
             elif 'short' in day_session_types and 'long' not in day_session_types and arch_dur <= 45:
-                score += 3
+                parts['day_fit'] = 3
             elif 'long' in day_session_types and arch_dur <= 45:
-                score -= 2  # Short archetype on long day is suboptimal
+                parts['day_fit'] = -2  # Short archetype on long day is suboptimal
         # Penalise archetypes with a high injury-skip rate: prefer alternatives
         # that can actually be executed with the athlete's active injury constraints.
         if _excl:
             slots = [s for s in arch.get('slots', []) if not s.get('skip_exercise')]
             if slots:
                 skipped = sum(1 for s in slots if _slot_injury_blocked(s, _excl))
-                skip_rate = skipped / len(slots)
-                score -= round(skip_rate * 8)
-        # Penalise archetypes whose exercise slots require equipment the athlete doesn't have.
-        # Uses -8 per blocked slot (not rate-based) so a blocked main-strength slot is always
+                parts['injury_penalty'] = -round(skipped / len(slots) * 8)
+        # Penalise archetypes whose exercise slots require equipment the athlete doesn't have:
+        # -10 per blocked slot (not rate-based) so a blocked main-strength slot is always
         # decisive: a bodyweight-only alternative will beat a partially-filled barbell session.
         blocked_cats = _blocked_categories_for_equipment(available_equip)
         if blocked_cats:
             all_slots = [s for s in arch.get('slots', []) if not s.get('skip_exercise') and not s.get('is_meta')]
-            equip_blocked = sum(
+            parts['equipment_blocked'] = -10 * sum(
                 1 for s in all_slots
                 if s.get('exercise_filter', {}).get('category') in blocked_cats
             )
-            score -= equip_blocked * 10
+        # Regional recovery: a region yesterday's (or the day before's) session
+        # loaded heavily, loaded heavily again.
+        if recent_regions and arch_regions:
+            parts['regional'] = -recovery_regions.penalty(arch_regions.get(arch['id'], frozenset()), recent_regions)
+        return parts
+
+    def _score_arch(arch: dict) -> tuple:
+        score = sum(_parts(arch).values())
         return (score, -last_used.get(arch['id'], -1), -order.get(arch['id'], 0))
 
     if not candidates:
@@ -386,27 +401,9 @@ def select_archetype(
         return selected
 
     def _breakdown(arch: dict) -> dict:
-        equip_bonus = 0
-        source_bonus = 0  # the free-text sources bonus is gone; kept for the trace's shape
-        recency_penalty = 0
-        injury_penalty = 0
-        required = set(arch.get('required_equipment', [])) - {'open_space'}
-        if required.issubset(available_equip):
-            equip_bonus = 6
-        if arch['id'] in recent:
-            recency_penalty = -3
-        if _excl:
-            slots = [s for s in arch.get('slots', []) if not s.get('skip_exercise')]
-            if slots:
-                skipped = sum(1 for s in slots if _slot_injury_blocked(s, _excl))
-                injury_penalty = -round((skipped / len(slots)) * 8)
-        return {
-            'equipment': equip_bonus,
-            'source': source_bonus,
-            'recency': recency_penalty,
-            'injury_penalty': injury_penalty,
-            'total': equip_bonus + source_bonus + recency_penalty + injury_penalty,
-        }
+        parts = _parts(arch)
+        return {**parts, 'source': 0,  # the free-text sources bonus is gone; kept for the trace's shape
+                'total': sum(parts.values())}
 
     trace = {
         'selected_id': selected['id'],
@@ -421,6 +418,7 @@ def select_archetype(
                 'name': arch.get('name', arch['id']),
                 'score': _score_arch(arch)[0],
                 'breakdown': _breakdown(arch),
+                'heavy_regions': sorted((arch_regions or {}).get(arch['id'], frozenset())),
             }
             for arch in candidates
         ],
@@ -751,6 +749,8 @@ def populate_session(
     pinned_lifts: dict | None = None,
     deload_keep: float | None = None,
     unfilled_cache: dict | None = None,
+    recent_regions: list | None = None,
+    arch_regions: dict | None = None,
 ) -> dict:
     """Populate a session with an archetype and exercises.
 
@@ -810,6 +810,8 @@ def populate_session(
             preferred_archetype_id=preferred_archetype_id,
             day_session_types=day_session_types,
             relax_equipment=relax_equipment,
+            recent_regions=recent_regions,
+            arch_regions=arch_regions,
         )
         arch, arch_trace = arch_result if isinstance(arch_result, tuple) else (arch_result, {})
     else:
@@ -820,6 +822,8 @@ def populate_session(
             preferred_archetype_id=preferred_archetype_id,
             day_session_types=day_session_types,
             relax_equipment=relax_equipment,
+            recent_regions=recent_regions,
+            arch_regions=arch_regions,
         )
 
     if arch is None:
