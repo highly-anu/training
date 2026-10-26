@@ -663,9 +663,9 @@ export function DevLab() {
               {/* ③ Schedule */}
               <TabsContent value="schedule">
                 <StepMeta
-                  reads={['phase priority weights', 'framework.sessions_per_week', 'modality.recovery_cost', 'modality.incompatible_in_session_with']}
+                  reads={['phase priority weights', 'framework.sessions_per_week', 'framework.cadence_options', 'modality.recovery_cost / recovery_hours_min', 'modality.incompatible_in_session_with', 'phase.week_templates', 'training contract modules']}
                   outputs={['session counts per modality', 'day-of-week assignment', 'deload flag']}
-                  description="Converts priority weights into session counts via the framework template, then places sessions on days using modality recovery rules and cadence patterns."
+                  description="Converts priority weights into session counts via the framework, then places them on the framework's cadence days, hardest first: a modality keeps its recovery window from itself and two high-cost modalities 48 h apart, checked against the days before and after and last week's end. A phase that writes its own week (week_templates) takes the source's days instead, and a training contract places its modules itself — alternating them, spacing each module's sessions and keeping heavily loaded body regions apart. Every shipped package does one or the other; the scheduler places blends a contract philosophy leads and packages with neither."
                 />
                 {trace ? (
                   <SchedulerPanel weeks={trace.weeks} />
@@ -677,9 +677,9 @@ export function DevLab() {
               {/* ④ Sessions */}
               <TabsContent value="sessions">
                 <StepMeta
-                  reads={['assigned modality', 'primary_sources (philosophy packages)', 'training phase', 'equipment', 'archetypes', 'exercises', 'injury flags', 'progression model']}
-                  outputs={['selected archetype', 'exercises per slot (package-filtered)', 'load prescriptions']}
-                  description="For each scheduled session: selects the best-scoring archetype, fills its exercise slots (filtered by philosophy package, movement pattern, equipment, injury), then calculates load via the progression model. Only exercises from the selected philosophy packages are used."
+                  reads={['assigned modality', 'the package and the packages it borrows from', 'training phase', 'equipment', 'archetypes', 'exercises', 'injury flags', 'progression model']}
+                  outputs={['selected archetype', 'exercises per slot', 'load prescriptions']}
+                  description="Each session gets its archetype: a template day the next named workout of its category the athlete can do as written, a contract its module's, a test its own. Only a session left to choose is scored — after the hard filters (modality, phase, level, equipment, time): +6 equipment met, −3 used in the last 14, ±3 day fit, injury and blocked-equipment penalties, −2/−1 per body region a session a day or two before loaded heavily; ties go to the least recently used, then the first authored. Slots fill from the archetype's own package and those its philosophy borrows from: named exercises (in order where the slot says so) or its pattern and category, filtered by equipment, injury, level unlocks, phase exclusions and the taper rule; −2 per recent use, +0.5 for a pattern and for an unlock, ties to the first authored. A main lift stays the same through a phase. Load comes from the framework's progression model for the modality where it overrides one, else the modality's."
                 />
                 {trace ? (
                   <>

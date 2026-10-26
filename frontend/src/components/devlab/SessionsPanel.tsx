@@ -21,8 +21,19 @@ function FilterCounts({ counts }: { counts: Record<string, number> }) {
   )
 }
 
+// Why an archetype was placed rather than scored (the trace's selection_reason).
+const PLACED_BY: Record<string, string> = {
+  training_contract: 'the training contract',
+  week_template: "the source's own week",
+  forced: 'a test or a named workout',
+}
+
 function ArchetypeSelectionBlock({ trace }: { trace: SessionTrace['archetype'] }) {
   if (trace.candidates.length === 0) {
+    if (trace.selected_id && trace.selection_reason) {
+      const by = PLACED_BY[trace.selection_reason] ?? `its day category (${trace.selection_reason.replace(/_/g, ' ')})`
+      return <p className="text-xs text-muted-foreground">Placed by {by}, not scored.</p>
+    }
     return <p className="text-xs text-destructive">No archetype candidates found.</p>
   }
   return (
