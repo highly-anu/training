@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils'
 
 // Explore ▸ Equipment: pick equipment, see what it enables, narrow by picking
 // results (lib/equipmentExplorer.ts). The state is the URL —
-// ?topic=equipment&eq=…&show=…&m=…&f=…&v=…&x=… — replaced on every change, so
+// ?topic=equipment&eq=…&bw=0&show=…&m=…&f=…&v=…&x=… — replaced on every change, so
 // filtering leaves no history, while ↗ pushes the item's detail and Back
 // returns here as it was.
 
@@ -32,26 +32,29 @@ function useExplorerState() {
   const [params, setParams] = useSearchParams()
   const key = params.toString()
   // Read once per URL, so the lists are recomputed only when it changes.
-  const { equipment, show, picked } = useMemo(() => {
+  const { equipment, bodyweight, show, picked } = useMemo(() => {
     const p = new URLSearchParams(key)
     const showParam = p.get('show')
     return {
       equipment: list(p.get('eq')),
+      bodyweight: p.get('bw') !== '0',
       show: showParam === null ? [...FACETS] : FACETS.filter((f) => list(showParam).includes(f)),
       picked: Object.fromEntries(FACETS.map((f) => [f, list(p.get(FACET_PARAM[f]))])) as Picked,
     }
   }, [key])
-  function write(next: { equipment?: string[]; show?: Facet[]; picked?: Picked }) {
+  function write(next: { equipment?: string[]; bodyweight?: boolean; show?: Facet[]; picked?: Picked }) {
     const eq = next.equipment ?? equipment
+    const bw = next.bodyweight ?? bodyweight
     const sh = next.show ?? show
     const pk = next.picked ?? picked
     const p: Record<string, string> = { topic: 'equipment' }
     if (eq.length) p.eq = eq.join(',')
+    if (!bw) p.bw = '0'
     if (sh.length !== FACETS.length) p.show = sh.join(',')
     for (const f of FACETS) if (pk[f].length) p[FACET_PARAM[f]] = pk[f].join(',')
     setParams(p, { replace: true })
   }
-  return { equipment, show, picked, write }
+  return { equipment, bodyweight, show, picked, write }
 }
 
 const toggle = (xs: string[], x: string) => (xs.includes(x) ? xs.filter((y) => y !== x) : [...xs, x])
@@ -67,20 +70,45 @@ function chipStyle(color: string, on: boolean) {
 
 const PRIMARY = 'var(--primary)'
 
+/** A selection toggle (equipment, Show): filled in the primary colour when
+ *  chosen, neutral and dark when not, so the choice reads at a glance. Result
+ *  chips keep `chipStyle`, since their colour names their level. */
+function toggleStyle(on: boolean) {
+  return on
+    ? { backgroundColor: tint(PRIMARY, 28), color: PRIMARY, border: `1px solid ${tint(PRIMARY, 60)}` }
+    : { backgroundColor: 'transparent', color: 'var(--muted-foreground)', border: '1px solid var(--border)', opacity: 0.6 }
+}
+
 function unlockTitle(u: Unlock | undefined) {
   if (!u || u.total === 0) return 'Adds nothing to these lists'
   return FACETS.filter((f) => u.byFacet[f] > 0)
     .map((f) => `+${u.byFacet[f]} ${FACET_LABEL[f].toLowerCase()}`).join(' · ')
 }
 
-function EquipmentChips({ selected, used, unlock, onToggle }: {
+function EquipmentChips({ selected, used, unlock, bodyweight, onToggle, onBodyweight }: {
   selected: Set<string>
   used: Set<string>
   unlock: Record<string, Unlock>
+  bodyweight: boolean
   onToggle: (id: string) => void
+  onBodyweight: () => void
 }) {
   return (
     <div className="space-y-3">
+      <div className="space-y-1.5">
+        <p className="text-[10px] text-muted-foreground/60">No equipment</p>
+        <button
+          type="button"
+          aria-pressed={bodyweight}
+          onClick={onBodyweight}
+          title={bodyweight ? 'Counted: turn off to see only what your equipment adds' : 'Left out: only what needs your equipment'}
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono transition-all"
+          style={toggleStyle(bodyweight)}
+        >
+          <div className="size-1.5 rounded-full" style={{ backgroundColor: bodyweight ? PRIMARY : 'var(--muted-foreground)' }} />
+          Bodyweight / open space
+        </button>
+      </div>
       {EQUIPMENT_GROUPS.map((g) => (
         <div key={g.name} className="space-y-1.5">
           <p className="text-[10px] text-muted-foreground/60">{g.name}</p>
@@ -98,9 +126,10 @@ function EquipmentChips({ selected, used, unlock, onToggle }: {
                   title={usable ? (on ? 'Selected' : unlockTitle(u)) : 'Nothing in the library needs it'}
                   className={cn('flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono transition-all',
                     !usable && 'cursor-not-allowed')}
-                  style={usable ? chipStyle(PRIMARY, on) : { border: '1px dashed var(--border)', opacity: 0.35 }}
+                  aria-pressed={usable ? on : undefined}
+                  style={usable ? toggleStyle(on) : { border: '1px dashed var(--border)', opacity: 0.25 }}
                 >
-                  <div className="size-1.5 rounded-full" style={{ backgroundColor: usable ? PRIMARY : 'var(--muted-foreground)' }} />
+                  <div className="size-1.5 rounded-full" style={{ backgroundColor: on ? PRIMARY : 'var(--muted-foreground)' }} />
                   {label}
                   {!on && usable && u && u.total > 0 && <span className="opacity-70">+{u.total}</span>}
                 </button>
@@ -182,13 +211,13 @@ export function EquipmentPanel() {
   const { data: links, isLoading, error } = useExploreLinks()
   const { data: profiles = [] } = useEquipmentProfiles()
   const { names, colors } = useLinkIndex()
-  const { equipment, show, picked, write } = useExplorerState()
+  const { equipment, bodyweight, show, picked, write } = useExplorerState()
 
   const ix = useMemo(() => (links ? indexEquipment(links) : null), [links])
   const eqSet = useMemo(() => new Set(equipment), [equipment])
-  const lists = useMemo(() => (ix ? explore(ix, eqSet, picked, names, colors) : null),
-    [ix, eqSet, picked, names, colors])
-  const unlock = useMemo(() => (ix ? unlocks(ix, eqSet, picked) : {}), [ix, eqSet, picked])
+  const lists = useMemo(() => (ix ? explore(ix, eqSet, picked, names, colors, { bodyweight }) : null),
+    [ix, eqSet, picked, names, colors, bodyweight])
+  const unlock = useMemo(() => (ix ? unlocks(ix, eqSet, picked, { bodyweight }) : {}), [ix, eqSet, picked, bodyweight])
 
   if (isLoading) return <div className="p-6"><LoadingCard /></div>
   if (error) return <div className="p-6"><ErrorBanner error={error as Error} /></div>
@@ -196,7 +225,7 @@ export function EquipmentPanel() {
 
   // Every piece of equipment the engine knows; an unknown id from a profile is dropped.
   const known = new Set(ix.vocabulary)
-  const applyProfile = (eq: string[]) => write({ equipment: eq.filter((e) => known.has(e) && e !== 'open_space') })
+  const applyProfile = (eq: string[]) => write({ equipment: eq.filter((e) => known.has(e) && e !== 'open_space'), bodyweight: true })
 
   return (
     <div className="h-full overflow-y-auto">
@@ -206,7 +235,8 @@ export function EquipmentPanel() {
           <h2 className="text-2xl font-semibold leading-snug">What your equipment enables.</h2>
           <p className="text-sm text-muted-foreground leading-relaxed max-w-xl">
             Pick what you have, read what it opens up — by the generator's own rule: an exercise or a session needs
-            every piece it lists, open space is assumed. Pick results to narrow the other lists; +N on a piece is
+            every piece it lists, open space is assumed. Turn off bodyweight to see only what your equipment
+            adds. Pick results to narrow the other lists; +N on a piece is
             what adding it would open.
           </p>
         </div>
@@ -232,12 +262,16 @@ export function EquipmentPanel() {
               selected={eqSet}
               used={ix.used}
               unlock={unlock}
+              bodyweight={bodyweight}
+              onBodyweight={() => write({ bodyweight: !bodyweight })}
               onToggle={(id) => write({ equipment: toggle(equipment, id) })}
             />
             <p className="text-[10px] text-muted-foreground/60">
               {equipment.length
-                ? `${equipment.length} selected: ${equipment.map(equipmentLabel).join(', ')}.`
-                : 'Nothing selected: what bodyweight and open space alone enable.'}
+                ? `${equipment.length} selected: ${equipment.map(equipmentLabel).join(', ')}${bodyweight ? ', plus bodyweight and open space' : ' — only what uses it'}.`
+                : bodyweight
+                  ? 'Nothing selected: what bodyweight and open space alone enable.'
+                  : 'Nothing selected: pick equipment to see what needs it.'}
             </p>
           </div>
         </Section>
@@ -251,7 +285,7 @@ export function EquipmentPanel() {
                 <button key={f} type="button" aria-pressed={on}
                   onClick={() => write({ show: on ? show.filter((s) => s !== f) : FACETS.filter((x) => x === f || show.includes(x)) })}
                   className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono transition-all"
-                  style={chipStyle(PRIMARY, on)}>
+                  style={toggleStyle(on)}>
                   <Icon className="size-3" />
                   {FACET_LABEL[f]} · {lists[f].filter((i) => !i.unavailable && !i.unmatched).length}
                 </button>

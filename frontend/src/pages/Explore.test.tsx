@@ -94,6 +94,13 @@ describe('Explore', () => {
     expect(location()).toBe('/explore?topic=exercises&id=goblet')
   })
 
+  it('equipment: bodyweight can be left out', async () => {
+    wrap('/explore?topic=equipment&eq=kettlebell')
+    fireEvent.click(await screen.findByRole('button', { name: /Bodyweight \/ open space/, pressed: true }))
+    expect(location()).toBe('/explore?topic=equipment&eq=kettlebell&bw=0')
+    expect(screen.getByRole('button', { name: /Bodyweight \/ open space/, pressed: false })).toBeTruthy()
+  })
+
   it('lists the movements under Movements', async () => {
     wrap('/explore?topic=movements')
     expect(await screen.findByText('1 movements.')).toBeTruthy()

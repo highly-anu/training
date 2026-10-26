@@ -102,6 +102,23 @@ describe('explore', () => {
     expect(r.exercises.find((x) => x.id === 'back_squat')?.picked).toBe(true)
   })
 
+  it('without bodyweight, keeps only what uses the equipment', () => {
+    const off = { bodyweight: false }
+    const r = explore(ix, new Set(['kettlebell']), NOTHING_PICKED, NAMES, {}, off)
+    // The air squat and the bodyweight day need nothing, so they go, and
+    // Strength and the barbell framework with them.
+    expect(ids(r.exercises)).toEqual(['goblet', 'swing'])
+    expect(ids(r.modalities)).toEqual(['power'])
+    expect(r.frameworks.map((f) => [f.id, f.note])).toEqual([['kb_fw', '1 of 2 modalities']])
+    expect(ids(r.movements).sort()).toEqual(['hip_hinge', 'squat'])
+
+    const none = explore(ix, new Set(), NOTHING_PICKED, NAMES, {}, off)
+    expect(Object.values(none).every((l) => l.length === 0)).toBe(true)
+    // Barbell adds its day, which brings Strength back.
+    expect(unlocks(ix, new Set(['kettlebell']), NOTHING_PICKED, off).barbell.byFacet)
+      .toEqual({ modalities: 1, frameworks: 1, movements: 0, exercises: 1 })
+  })
+
   it('a pick the equipment no longer enables stays, marked, so it can be unpicked', () => {
     const r = explore(ix, new Set(['kettlebell']), pick({ exercises: ['back_squat'] }), NAMES)
     expect(r.exercises.at(-1)).toMatchObject({ id: 'back_squat', picked: true, unavailable: true })
