@@ -16,8 +16,10 @@ import os
 import sys
 from pathlib import Path
 
+# Blank, not unset: api.py's load_dotenv() fills an unset variable from the
+# nearest .env, which from a .claude/worktrees/ worktree is production's.
 os.environ['SUPABASE_URL'] = ''
-os.environ.pop('DATABASE_URL', None)
+os.environ['DATABASE_URL'] = ''
 sys.path.insert(0, str(Path(__file__).parent))
 
 import api  # noqa: E402

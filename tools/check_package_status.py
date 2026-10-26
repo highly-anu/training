@@ -6,7 +6,8 @@ exactly what the records and the recorded scorecard
 (tools/scorecard_baseline.json, written by tools/evaluate_packages.py) write —
 so a status cannot be typed, and "audited" cannot outlive the grades that
 earned it. A package without a record is `not_started`; nothing outside its
-folder lists it. And every gate README's table names runs in CI. See
+folder lists it. And every gate README's table names runs in the local checks
+(checks/python_suites.yaml). See
 docs/package-fidelity/README.md.
 
     python tools/check_package_status.py
@@ -30,15 +31,16 @@ def _tracks(pkg: str) -> set:
 
 
 def gate_problems() -> list[str]:
-    """Every command README's gate table names runs in the CI workflow."""
+    """Every command README's gate table names runs in the local checks."""
+    from src.package_fidelity import _workflow
     readme = (ROOT / 'docs/package-fidelity/README.md').read_text()
-    workflow = (ROOT / '.github/workflows/training-contract.yml').read_text()
+    workflow = _workflow()
     section = readme.split('## The gates', 1)[1].split('\n## ', 1)[0]
     out = []
     for line in section.splitlines():
         m = re.match(r'^\|\s*`([^`]+\.py[^`]*)`', line)
         if m and f'python {m.group(1)}' not in workflow:
-            out.append(f'README gate `{m.group(1)}` does not run in .github/workflows/training-contract.yml')
+            out.append(f'README gate `{m.group(1)}` is not in checks/python_suites.yaml')
     return out
 
 

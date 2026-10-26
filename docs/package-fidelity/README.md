@@ -62,7 +62,7 @@ back to a primary source. The engine's part was that it could only express
 4. **Every rule into data.** Each rule is enforced by something the engine
    executes (a contract module, a template day, a phase key, a slot's load
    text), a fidelity `checks:` claim tools/check_fidelity.py tests, a source
-   week the scorecard reproduces, or a test CI runs — its `enforced_by`:
+   week the scorecard reproduces, or a test the checks run — its `enforced_by`:
    `data:<file>#<key path>`, `checks:<track>/<phase>.<key>`, `week:<id>`,
    `test:<file>::<function>`, every one resolved by the scorecard. A rule
    with none is debt; the scorecard counts it, nobody declares it.
@@ -94,7 +94,7 @@ grades in [scorecard.md](scorecard.md)). Six dimensions, each criterion pass
 (✓), partial (◐) or fail (✗) — never a blended number, because a weighted sum
 hides the one failure that matters. A dimension reads its worst criterion that
 is not hygiene; the grades ratchet in `tools/scorecard_baseline.json` (a worse
-grade fails CI, and so does a better one left unrecorded), and
+grade fails the checks, and so does a better one left unrecorded), and
 `status.yaml` is written from the records and the grades
 (`--update-baseline`) — a status is earned, never typed.
 
@@ -104,7 +104,7 @@ grade fails CI, and so does a better one left unrecorded), and
 | | S2 | The sources, as read | a primary read in full, or ≥3 read | fewer read | none read |
 | | S3 | Rules nothing enforces (debt, computed); every `enforced_by` resolves | none | some debt | a reference to nothing, or no rules |
 | | S4 | Every rule rests on a source read; every currency and excluded track names a rule or invention; the dossier names every id | all | — | any not, or no rules |
-| | S5 | The track's own source weeks (`source_weeks.yaml` entries for it), generated and compared; a track that is itself an invention has none to reproduce | all reproduce | only numbers differ; or none, but a source test CI runs | the structure differs, or neither |
+| | S5 | The track's own source weeks (`source_weeks.yaml` entries for it), generated and compared; a track that is itself an invention has none to reproduce | all reproduce | only numbers differ; or none, but a source test the checks run | the structure differs, or neither |
 | | S6 *hygiene* | A review of the output against the dossier (`tools/print_package.py`) in `reviews` | recorded | none | — |
 | Execution | E1 | Sessions delivered with slots empty | none | some slots | every slot |
 | | E2 | Sessions another modality's for lack of their own (`substituted_for`), worst written-for profile | none | ≤25 % | more |
@@ -140,10 +140,12 @@ scorecard, with nothing in the repository changed.
 
 ## The gates
 
-Run on every change to the engine, the data, the schemas, the tools, the tests or
-the watch code (.github/workflows/training-contract.yml). Every command in the
-first column runs there; `tools/check_package_status.py` fails when the table
-and the workflow part.
+Run before every push that changes the engine, the data, the schemas, the tools,
+the tests or the watch code: the pre-push hook (`checks.sh`, `../code-checks`) runs
+every command of `checks/python_suites.yaml` in a clean checkout of the pushed
+commit (`tools/run_checks.py`). Every command in the first column is in that list;
+`tools/check_package_status.py` fails when the table and the list part. (Until
+2026-10-26 they ran in GitHub's `training-contract.yml` workflow.)
 
 | Gate | What it holds |
 |---|---|
@@ -153,7 +155,7 @@ and the workflow part.
 | `tools/check_styles.py` | every philosophy × track × phase generates on its own framework |
 | `tools/evaluate_packages.py` | the scorecard may not get worse, `status` is the one it earns, every fidelity finding is in the baseline (`check_fidelity.gate`, in the same pass) and every catalog exercise reaches a program (`check_exercise_coverage`, in the same pass); a baseline that a change has made stale fails until it is updated in that change |
 | `tools/check_analytics.py` | every declared measure applies somewhere |
-| `tools/check_package_status.py` | each record names its own tracks; `status.yaml` is what the records and the recorded scorecard write; this table matches the workflow |
+| `tools/check_package_status.py` | each record names its own tracks; `status.yaml` is what the records and the recorded scorecard write; this table matches `checks/python_suites.yaml` |
 | `test_watch_spec.py` | a package's `watch.yaml` resolves; the watches' generated tables are current; `garmin/core` names no package |
 | `test_program_analytics.py` | a package's analytics, including one written to disk as a throwaway package, need no engine change |
 | `test_source_weeks.py` | a source week against hand-built programs: what is structure, what is a number, what is never compared |
