@@ -25,10 +25,18 @@ rules its movement out, it is left out and the week and the program's compromise
 say why. It is never a reason to refuse the request.
 
 Essential modules are placed by searching every valid placement (exposures,
-spacing, budget) and keeping the first that (1) puts the test module's session
+spacing, budget) and keeping the best that (1) puts the test module's session
 last in the week, so a test week differs from its twin only by the test and the
-test closes it; (2) gives no module a shared day it does not need; and (3) fits
-the most optional sessions. Recovery spacing holds across week boundaries too.
+test closes it; (2) gives no module a shared day it does not need; (3) fits
+the most optional sessions; and then (`_spacing`) (4) puts the fewest days of
+one modality back to back on the calendar, (5) the fewest next to each other
+among the training days, the week wrapping into the next, and (6) spreads each
+module's own sessions furthest apart. Until 2026-10-26 the first placement
+meeting (1)–(3) won, and it put the first module on the lowest days: Wildman's
+General Practice ran swing, swing, clean and press, clean and press every week,
+where his own example alternates them (swings Monday and Thursday, clean and
+press Wednesday and Saturday — the days `kb_general_practice` now declares for
+four days a week). Recovery spacing holds across week boundaries too.
 
 A block that progresses without a bell says `progresses: true` (an easy run's
 minutes follow its timed cycle); `intensity: zone2` writes the zone band onto the

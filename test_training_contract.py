@@ -118,6 +118,29 @@ def test_general_practice_runs_wildmans_phase_two():
 
 
 
+def test_programs_alternate_on_wildmans_days():
+    # "Kettlebell Swings on Monday & Thursday, Clean & Press on Wednesday &
+    # Saturday": the two programs alternate, never swing, swing, press, press.
+    p, _, _ = plan(weeks=4, days_per_week=4)
+    for w in p['weeks']:
+        on = {}
+        for d, ss in w['schedule'].items():
+            for s in ss:
+                for r in s['modules']:
+                    on.setdefault(r['id'], set()).add(d)
+        assert on['swing'] == {1, 4} and on['clean_press'] == {3, 6}, on
+    # A placement's spacing: alternating beats two of a kind in a row, and a
+    # module's own sessions as far apart as the days allow.
+    kb = lambda mid, mod: {'id': mid, 'modality': mod}
+    paired = {1: [kb('swing', 'power')], 3: [kb('swing', 'power')],
+              5: [kb('press', 'skill')], 7: [kb('press', 'skill')]}
+    alternating = {1: [kb('swing', 'power')], 3: [kb('press', 'skill')],
+                   5: [kb('swing', 'power')], 7: [kb('press', 'skill')]}
+    assert tc._spacing(alternating) > tc._spacing(paired)
+    # Back to back on the calendar ranks below anything merely alike.
+    assert tc._spacing({1: [kb('a', 'x')], 2: [kb('b', 'x')]}) < tc._spacing({1: [kb('a', 'x')], 4: [kb('b', 'x')]})
+
+
 def test_one_tap_confirmation_earns_the_exposure():
     # A watch-recorded or linked session logs no per-exercise outcome; the
     # athlete's "done as written" writes the prescribed rounds with clean and

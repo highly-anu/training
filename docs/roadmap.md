@@ -1403,6 +1403,14 @@ program changed (each is a source's own week or a training contract); of the 200
 two-philosophy blends that generate at 4–6 days, 27 moved a session and 8 have fewer
 clashes, none more.
 
+**Training contracts alternate and space their programs (2026-10-26)**: the
+placement search ranks, after test, stacking and optional fit, by back-to-back
+same-modality days, same-modality neighbours (wrapping into next week) and each
+module's own spacing (`training_contract._spacing`). Wildman's General Practice
+and Double-Bell Practice run his example week at four days (Mon/Thu and Wed/Sat,
+`cadence_options`) instead of one program twice and then the other; single-program
+tracks run Monday and Friday instead of Monday and Wednesday.
+
 **Explore ▸ Equipment (2026-10-26)**: pick equipment and see the modalities,
 frameworks, movements and exercises it enables, by the generator's all-of rule
 (open space free; frameworks whole or partly); pick results to narrow the other
