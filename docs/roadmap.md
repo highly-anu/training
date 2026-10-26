@@ -1407,6 +1407,21 @@ had its order); of 200 blends, 38 change and heavy-region repeats fall 3182 → 
 The picker's trace now adds up to its score (day fit and blocked-equipment terms
 were missing).
 
+**Every check runs locally; GitHub runs none (2026-10-26)**: `checks.sh` for the
+shared hooks in `../code-checks`. The pre-push hook runs, by the paths a push
+touches, every Python check in `checks/python_suites.yaml` (`tools/run_checks.py`:
+a clean checkout of the pushed commit outside the repository, eight at a time, a
+scratch database for each suite that drops tables, the admin DSN for those that
+make their own), the web's lint, build and tests, the iOS unit tests and the Garmin
+release build. The Training contracts and Frontend Build workflows are deleted; the
+registry replaced the workflow as the list `package_fidelity` and
+`check_package_status` read. GitHub ran 20 Python commands on engine changes and the
+web's three on web pull requests; the hooks now run 56 suites, and `src/` + `api.py`
+line coverage of what runs before a change lands went from 51 % to 79 % (17 files at
+0 % to 1). Three suites GitHub never ran had been failing on master since the
+Uphill contract (2026-10-21) and Gym Jones's six-day templates; fixed. The hooks
+path must be absolute for a `.claude/worktrees/` worktree to run them.
+
 **Recovery windows both ways and across weeks (2026-10-26)**: the scheduler's
 checks (`_recovery_safe`, `_score_days`) looked only at earlier days of the same
 week, though modalities are placed hardest first, so a session could land the day

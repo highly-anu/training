@@ -470,7 +470,7 @@ def grade_s5(weeks: int, structure: list[str], numbers: list[str], tests_in_ci: 
             return PARTIAL, _first(numbers)
         return PASS, ''
     if tests_in_ci:
-        return PARTIAL, f'no source week; {tests_in_ci} source test(s) CI runs'
+        return PARTIAL, f'no source week; {tests_in_ci} source test(s) the checks run'
     return FAIL, 'no source week, and no source test CI runs'
 
 

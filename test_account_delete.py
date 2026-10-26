@@ -15,9 +15,11 @@ import os
 import sys
 from pathlib import Path
 
+# Blank, not unset: api.py's load_dotenv() fills an unset variable from the
+# nearest .env, which from a .claude/worktrees/ worktree is production's.
 os.environ['SUPABASE_URL'] = ''
-os.environ.pop('DATABASE_URL', None)
-os.environ.pop('SUPABASE_SERVICE_ROLE_KEY', None)
+os.environ['DATABASE_URL'] = ''
+os.environ['SUPABASE_SERVICE_ROLE_KEY'] = ''
 sys.path.insert(0, str(Path(__file__).parent))
 
 import api  # noqa: E402
@@ -115,7 +117,7 @@ def test_preconditions() -> None:
     finally:
         account.delete_rows, account.revoke_integrations, account.requests.delete = saved
         os.environ['SUPABASE_URL'] = ''
-        os.environ.pop('SUPABASE_SERVICE_ROLE_KEY', None)
+        os.environ['SUPABASE_SERVICE_ROLE_KEY'] = ''
 
 
 def test_route() -> None:
@@ -184,7 +186,7 @@ def sql_suite() -> None:
     finally:
         import src.db
         src.db.close_conn()
-        os.environ.pop('DATABASE_URL', None)
+        os.environ['DATABASE_URL'] = ''
         with conn.cursor() as cur:
             cur.execute(f'DROP DATABASE IF EXISTS {name} WITH (FORCE)')
         conn.close()

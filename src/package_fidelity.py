@@ -25,7 +25,7 @@ from src import loader
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PACKAGES = loader._PACKAGES_DIR
 DOSSIERS = os.path.join(ROOT, 'docs', 'package-fidelity')
-WORKFLOW = os.path.join(ROOT, '.github', 'workflows', 'training-contract.yml')
+CHECKS = os.path.join(ROOT, 'checks', 'python_suites.yaml')
 FILE = 'fidelity.yaml'
 SOURCE_WEEKS = 'source_weeks.yaml'
 READ = ('full', 'partial')
@@ -64,8 +64,13 @@ def _yaml(pkg: str, name: str):
 
 
 def _workflow() -> str:
-    with open(WORKFLOW, encoding='utf-8') as fh:
-        return fh.read()
+    """The commands the pre-push checks run (checks/python_suites.yaml), one
+    `python <command>` a line: a package's cited test counts as enforced only
+    when it runs there. (Until 2026-10-26 the GitHub workflow was the list.)"""
+    with open(CHECKS, encoding='utf-8') as fh:
+        doc = yaml.safe_load(fh) or {}
+    run = (doc.get('suites') or []) + (doc.get('exclusive') or []) + (doc.get('scratch_db') or [])
+    return '\n'.join(f'python {c}' for c in run)
 
 
 # ── References ───────────────────────────────────────────────────────────────
@@ -115,7 +120,7 @@ def ref_error(pkg: str, ref: str, workflow: str | None = None) -> str | None:
             if f'def {name}(' not in fh.read():
                 return f'{ref}: {file} has no {name}'
         if f'python {file}' not in (workflow if workflow is not None else _workflow()):
-            return f'{ref}: CI does not run {file}'
+            return f'{ref}: the checks do not run {file} (checks/python_suites.yaml)'
         return None
     if kind == 'week':
         weeks = _yaml(pkg, SOURCE_WEEKS) or []
