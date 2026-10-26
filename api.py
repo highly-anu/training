@@ -654,6 +654,22 @@ def get_ontology():
     })
 
 
+_explore_links_cache: dict | None = None
+
+
+@app.get('/api/explore/links')
+def get_explore_links():
+    """How Explore's levels connect, for each detail's "Leads into it" and
+    "Follows from it": the movements, and every link between neighbouring
+    levels with the selector's own slot rule (src/explore_links.py). Static
+    data, built once like the similarity scores."""
+    global _explore_links_cache
+    if _explore_links_cache is None:
+        from src import explore_links
+        _explore_links_cache = explore_links.build_from_loader()
+    return jsonify(_explore_links_cache)
+
+
 @app.get('/api/similarity')
 def get_similarity():
     """Pairwise likeness scores for all ontology categories.

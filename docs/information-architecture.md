@@ -67,7 +67,7 @@ web's Insight group into Train.
 | **Program** | Overview · Calendar · History | Overview · Calendar · History |
 | **Analytics** | Progress · Blocks · Load · Recovery | Progress · Blocks · Load · Recovery |
 | **Log** | Activity · Linking | Activity · Linking |
-| **Explore** | Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards | — |
+| **Explore** | Philosophies · Frameworks · Modalities · Archetypes · Exercises · Movements · Standards | — |
 | **Profile** | Athlete · Equipment · Injuries · Schedule · Standards | Athlete (incl. injuries) · Equipment · Schedule · Standards — Injuries folded into Athlete on 2026-10-17; `section=injuries` lands there. Benchmarks was renamed Standards the same day (`?tab=benchmarks` / `section=benchmarks` land there): *This program* · *Your results* · *All standards*, each standard's history one tap away |
 | **Settings** | Connections · Appearance · Account (· Developer) | Connections · Devices · Pair · Notifications · Appearance · Account · developer sections (pushed from Profile's gear) |
 
@@ -102,7 +102,7 @@ with a new **Overview** (methodology, phases, priority mix) beside it.
 | Train | **Program** | `/program` | Overview · Calendar · History | New program · Settings (rebuild, regenerate from week, event date, injuries) |
 | Train | **Analytics** | `/analytics` | Progress · Blocks · Load · Recovery | — (period selector is a control strip) |
 | Train | **Log** | `/log` | Activity (All · Workouts · Sessions) · Linking (count badge) | Import (sheet) |
-| Library | **Explore** | `/explore` | Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards | — |
+| Library | **Explore** | `/explore` | Philosophies · Frameworks · Modalities · Archetypes · Exercises · Movements · Standards | — |
 | You | **Profile** | `/profile` | Athlete (incl. heart-rate zones) · Equipment · Injuries · Schedule · Standards | — |
 | You | **Settings** | `/settings` | Connections · Appearance · Account (· Developer in dev builds and for `dev` users) | — |
 | Dev (build flag) | Dev Lab | `/dev` | Pipeline Trace · Object Browser · Ontology · Model Interactions | — |
@@ -206,6 +206,7 @@ Cross-tab moves go through `AppRouter` methods (design system §6.9): `showAnaly
 | From | To | Control | Status 2026-10-01, after the restructure (web / iOS) |
 |---|---|---|---|
 | Explore philosophy / framework | Builder, prefilled | "Build with this" | ✓ / n.a. (no Explore on the phone) |
+| Any Explore detail | The levels above and below it (philosophy ↔ framework ↔ modality ↔ archetype ↔ exercise ↔ movement) | "Leads into it" / "Follows from it" pills (`?topic=&id=`, pushed, so Back retraces the trail) | ✓ since 2026-10-26 / n.a. |
 | Home or Program empty state | Builder | primary button | ✓ / ✓ |
 | Session exercise | Exercise reference (cues, media, prereqs) | popover → "Open in Explore" / detail sheet | ✓ / ✓ (`ExerciseDetailSheet`, design-system §6.14) |
 | Program overview | Methodology detail | link | ✓ / ✓ ("About this methodology" row under the phase bar → `PhilosophyDetailSheet`) |

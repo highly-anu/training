@@ -17,6 +17,9 @@ import { cn } from '@/lib/utils'
 import { SimilarItems } from '@/components/shared/SimilarItems'
 import { Badge } from '@/components/ui/badge'
 import { belongsToPackage } from '@/lib/provenance'
+import { lineageOf } from '@/lib/exploreLinks'
+import { LineageSection } from '@/components/explore/LineageSection'
+import { useLinkIndex } from '@/components/explore/useLineage'
 import {
   Select,
   SelectContent,
@@ -476,7 +479,7 @@ function SlotRow({ slot, allExercises }: { slot: ArchetypeSlot; allExercises: Ex
 
 // ─── ArchetypeCard ────────────────────────────────────────────────────────────
 
-export function ArchetypeCard({ archetype, allExercises, allArchetypes, isOpen, onToggle, alwaysOpen }: { archetype: Archetype; allExercises: Exercise[]; allArchetypes: Archetype[]; isOpen: boolean; onToggle: () => void; alwaysOpen?: boolean }) {
+export function ArchetypeCard({ archetype, allExercises, allArchetypes, isOpen, onToggle, onSelectArchetype, alwaysOpen }: { archetype: Archetype; allExercises: Exercise[]; allArchetypes: Archetype[]; isOpen: boolean; onToggle: () => void; onSelectArchetype?: (id: string) => void; alwaysOpen?: boolean }) {
   const open = alwaysOpen || isOpen
 
   const levelInitials = (archetype.training_levels ?? []).map(l => ({
@@ -616,6 +619,7 @@ export function ArchetypeCard({ archetype, allExercises, allArchetypes, isOpen, 
               category="archetypes"
               id={archetype.id}
               getLabel={(id) => allArchetypes.find(a => a.id === id)?.name ?? id}
+              onSelect={onSelectArchetype}
               count={4}
             />
           </div>
@@ -1384,7 +1388,9 @@ function BuildWithPhilosophy({ phil, frameworks }: { phil: Philosophy; framework
   )
 }
 
-export function PhilosophyPanel({ controlledId, onBack }: { controlledId?: string; onBack?: () => void } = {}) {
+/** `controlledId` + `onSelect`: the parent owns the selection (Explore's URL),
+ *  and a link to another philosophy asks it to move. */
+export function PhilosophyPanel({ controlledId, onSelect, onBack }: { controlledId?: string; onSelect?: (id: string) => void; onBack?: () => void } = {}) {
   const { data: philosophies = [], isLoading: loadingPhil } = usePhilosophies()
   const { data: frameworksList = [] } = useFrameworks()
   const { data: archetypesList = [] } = useArchetypes()
@@ -1394,7 +1400,12 @@ export function PhilosophyPanel({ controlledId, onBack }: { controlledId?: strin
 
   const [internalId, setInternalId] = useState<string>('')
   const selectedId = controlledId !== undefined ? controlledId : internalId
-  const setSelectedId = (id: string) => { if (controlledId === undefined) setInternalId(id) }
+  const setSelectedId = (id: string) => { if (controlledId === undefined) setInternalId(id); else onSelect?.(id) }
+  const { index, names } = useLinkIndex()
+  const lineage = useMemo(
+    () => (index && selectedId ? lineageOf(index, 'philosophies', selectedId, names) : null),
+    [index, selectedId, names],
+  )
 
   // Per-section open state (all start collapsed; reset when selected philosophy changes)
   const [fwOpen, setFwOpen] = useState<Set<string>>(new Set())
@@ -1542,6 +1553,11 @@ export function PhilosophyPanel({ controlledId, onBack }: { controlledId?: strin
                       ? <PhilosophyMeasuresCard spec={spec} vocabulary={specs.vocabulary} accentHex={accentHex} />
                       : <div className="rounded-lg border border-border/40 bg-card/40 p-4 text-[11px] text-muted-foreground">Loading what it measures…</div>}
                   </div>
+                  <LineageSection
+                    lineage={lineage}
+                    emptyUp="Nothing: a philosophy is where a program starts."
+                    emptyDown="It runs no framework."
+                  />
                 </>
               )
             })()}

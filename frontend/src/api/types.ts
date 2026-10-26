@@ -309,6 +309,44 @@ export interface ArchetypeSlot {
   exercise_filter?: {
     movement_pattern?: string
     category?: string
+    /** The exercises the slot may take — how 1,748 of 1,762 slots pick. */
+    exercise_ids?: string[]
+    /** Take them in the written order, the first that fits. */
+    ordered?: boolean
+  }
+}
+
+/** A movement pattern exercises declare (`movement_patterns`): Explore's level
+ *  below Exercise. GET /api/explore/links. */
+export interface Movement {
+  id: string
+  name: string
+  exerciseCount: number
+  /** The slot-filter aliases that include it (movement_patterns.yaml: press, hinge…). */
+  filterGroups: string[]
+  /** The analytics group it counts toward (push, pull, hinge…), if any. */
+  rollup: string | null
+}
+
+/** How Explore's levels connect, computed with the selector's own slot rule
+ *  (src/explore_links.py). */
+export interface ExploreLinks {
+  movements: Movement[]
+  links: {
+    philosophyFramework: {
+      philosophy: string
+      framework: string
+      owner: boolean
+      phases: { trackId: string; trackName: string; trackIndex: number; phaseId: string; phaseName: string; order: number }[]
+    }[]
+    frameworkModality: { framework: string; modality: string; sessionsPerWeek: number | null; tier: 'committed' | 'core' | 'supplementary' | null }[]
+    modalityArchetype: { modality: string; archetype: string; package: string | null }[]
+    archetypeExercise: { archetype: string; exercise: string; slots: string[]; via: 'listed' | 'filter' }[]
+    exerciseMovement: { exercise: string; movement: string }[]
+    /** `requires` and `unlocks` folded together: `from` comes before `to`. */
+    exerciseProgression: { from: string; to: string; declaredBy: ('requires' | 'unlocks')[] }[]
+    /** `requires` entries that are no exercise — what the athlete brings. */
+    exerciseConcepts: { exercise: string; concept: string }[]
   }
 }
 

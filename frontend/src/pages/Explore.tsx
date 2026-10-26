@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, BookOpen, Compass, Dumbbell, Layers, Network, Search, X, Zap, Trophy, Wand2 } from 'lucide-react'
+import { ArrowLeft, Compass, Search, X, Wand2 } from 'lucide-react'
 import { LoadingCard } from '@/components/shared/LoadingCard'
 import { ErrorBanner } from '@/components/shared/ErrorBanner'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
@@ -19,6 +19,12 @@ import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { cn } from '@/lib/utils'
 import { PhilosophyPanel, ArchetypeCard } from '@/components/explore/PhilosophyPanel'
 import { StandardsLanding } from '@/components/explore/StandardsLanding'
+import { MovementLanding, MovementDetail } from '@/components/explore/MovementPanel'
+import { LineagePill, LineageSection } from '@/components/explore/LineageSection'
+import { TOPICS, useExploreNavigate } from '@/components/explore/topics'
+import { useLinkIndex } from '@/components/explore/useLineage'
+import { useExploreLinks } from '@/api/exploreLinks'
+import { lineageOf, progressionOf, type ExploreTopic } from '@/lib/exploreLinks'
 import { useBuilderStore } from '@/store/builderStore'
 import { Button } from '@/components/ui/button'
 import { HeatmapPanel } from '@/components/devlab/heatmap/HeatmapPanel'
@@ -124,22 +130,14 @@ function SortToggle({ sort, onChange }: {
 
 // ─── Topic Selector ───────────────────────────────────────────────────────────
 
-type Topic = 'philosophies' | 'modalities' | 'exercises' | 'archetypes' | 'frameworks' | 'standards'
+type Topic = ExploreTopic
 
-interface TopicTab {
-  id: Topic
-  label: string
-  Icon: React.ElementType
+// What one detail shows of its lineage (lib/exploreLinks.ts): null while the
+// links load.
+function useLineage(topic: Exclude<Topic, 'standards'>, id: string) {
+  const { index, names } = useLinkIndex()
+  return useMemo(() => (index ? lineageOf(index, topic, id, names) : null), [index, topic, id, names])
 }
-
-const TOPICS: TopicTab[] = [
-  { id: 'philosophies', label: 'Philosophies', Icon: BookOpen },
-  { id: 'frameworks',   label: 'Frameworks',   Icon: Network },
-  { id: 'modalities',   label: 'Modalities',   Icon: Zap },
-  { id: 'archetypes',   label: 'Archetypes',   Icon: Layers },
-  { id: 'exercises',    label: 'Exercises',     Icon: Dumbbell },
-  { id: 'standards',    label: 'Standards',     Icon: Trophy },
-]
 
 // ─── Archetype category colors ────────────────────────────────────────────────
 
@@ -504,6 +502,7 @@ function ModalityDetail({
     [mod.id, philosophies]
   )
   const { data: specs } = useAnalyticsSpecs()
+  const lineage = useLineage('modalities', mod.id)
   const measuredAs = useMemo(
     () => specEntriesWhere(specs, (e) => e.scope.modalities.some((m) => m.id === mod.id)),
     [specs, mod.id],
@@ -646,20 +645,13 @@ function ModalityDetail({
           </Section>
         )}
 
-        {/* Featured in */}
+        {/* Featured in: the philosophies that lean on it (their bias) */}
         {featuredIn.length > 0 && (
           <Section label="Featured in">
-            <div className="flex flex-wrap gap-1.5">
-              {featuredIn.map((p) => {
-                const phColor = MODALITY_COLORS[p.bias[0] as ModalityId]?.hex ?? '#6366f1'
-                return (
-                  <span key={p.id}
-                    className="inline-block px-2 py-0.5 rounded-full text-[10px] border border-border/40 bg-card/40 text-muted-foreground"
-                    style={{ borderLeftColor: phColor, borderLeftWidth: 2 }}>
-                    {p.name}
-                  </span>
-                )
-              })}
+            <div className="flex flex-wrap gap-1">
+              {featuredIn.map((p) => (
+                <LineagePill key={p.id} item={{ topic: 'philosophies', id: p.id, name: p.name }} />
+              ))}
             </div>
           </Section>
         )}
@@ -681,6 +673,12 @@ function ModalityDetail({
             <p className="text-[11px] text-muted-foreground leading-relaxed">{mod.notes}</p>
           </Section>
         )}
+
+        <LineageSection
+          lineage={lineage}
+          emptyUp="No framework schedules this modality."
+          emptyDown="No archetype is written for this modality."
+        />
 
         {/* Similar modalities */}
         <SimilarItems
@@ -867,6 +865,12 @@ function ExercisePanel({
   onNavigate: (id: string) => void
   onBack: () => void
 }) {
+  const { index, names } = useLinkIndex()
+  const lineage = useLineage('exercises', exercise.id)
+  const progression = useMemo(
+    () => (index ? progressionOf(index, exercise.id, exercise.scaling_down, names) : null),
+    [index, exercise.id, exercise.scaling_down, names],
+  )
   return (
     <div className="h-full overflow-y-auto">
       <div className="px-6 py-5 space-y-5">
@@ -918,20 +922,6 @@ function ExercisePanel({
           ))}
         </div>
 
-        {/* Movement patterns */}
-        {exercise.movement_patterns.length > 0 && (
-          <div className="space-y-1.5">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">Patterns</p>
-            <div className="flex flex-wrap gap-1">
-              {exercise.movement_patterns.map((p) => (
-                <span key={p} className="text-[10px] rounded-full bg-muted px-2 py-0.5 text-muted-foreground capitalize">
-                  {p.replace(/_/g, ' ')}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Progressions */}
         {exercise.progressions && Object.keys(exercise.progressions).length > 0 && (
           <div className="space-y-1.5">
@@ -940,20 +930,6 @@ function ExercisePanel({
               {exercise.progressions.load && <p><span className="text-foreground font-medium">Load:</span> {exercise.progressions.load}</p>}
               {exercise.progressions.volume && <p><span className="text-foreground font-medium">Volume:</span> {exercise.progressions.volume}</p>}
               {exercise.progressions.complexity && <p><span className="text-foreground font-medium">Complexity:</span> {exercise.progressions.complexity}</p>}
-            </div>
-          </div>
-        )}
-
-        {/* Scale down */}
-        {exercise.scaling_down && exercise.scaling_down.length > 0 && (
-          <div className="space-y-1.5">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">Scale Down To</p>
-            <div className="flex flex-wrap gap-1">
-              {exercise.scaling_down.map((s) => (
-                <span key={s} className="text-[10px] rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
-                  {s.replace(/_/g, ' ')}
-                </span>
-              ))}
             </div>
           </div>
         )}
@@ -992,11 +968,7 @@ function ExercisePanel({
         {/* Prereq chain */}
         <div className="space-y-2 border-t border-border/30 pt-4">
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">Progression Chain</p>
-          <PrereqChain
-            exercise={exercise}
-            allExercises={allExercises}
-            onSelect={(id) => onNavigate(id)}
-          />
+          <PrereqChain name={exercise.name} progression={progression} />
         </div>
 
         {/* Sources */}
@@ -1010,6 +982,12 @@ function ExercisePanel({
             </div>
           </div>
         )}
+
+        <LineageSection
+          lineage={lineage}
+          emptyUp="No archetype's slot takes this exercise."
+          emptyDown="It declares no movement pattern."
+        />
 
         {/* Similar exercises */}
         <SimilarItems
@@ -1175,13 +1153,15 @@ function ArchetypeLanding({ archetypes, onSelect }: {
 
 // ─── Archetype detail page ────────────────────────────────────────────────────
 
-function ArchetypeDetail({ archetype, allExercises, allArchetypes, onBack }: {
+function ArchetypeDetail({ archetype, allExercises, allArchetypes, onSelect, onBack }: {
   archetype: Archetype
   allExercises: Exercise[]
   allArchetypes: Archetype[]
+  onSelect: (id: string) => void
   onBack: () => void
 }) {
   const catColor = ARCH_CAT_COLORS[archetype.category] ?? '#94a3b8'
+  const lineage = useLineage('archetypes', archetype.id)
   const { data: specs } = useAnalyticsSpecs()
   const trackedBy = useMemo(
     () => specEntriesWhere(specs, (e) => e.scope.archetypes.some((a) => a.id === archetype.id)),
@@ -1236,6 +1216,12 @@ function ArchetypeDetail({ archetype, allExercises, allArchetypes, onBack }: {
           </Section>
         )}
 
+        <LineageSection
+          lineage={lineage}
+          emptyUp="No philosophy schedules this archetype."
+          emptyDown="Its slots take no exercise."
+        />
+
         {/* Card content — always open, no accordion */}
         <ArchetypeCard
           archetype={archetype}
@@ -1243,6 +1229,7 @@ function ArchetypeDetail({ archetype, allExercises, allArchetypes, onBack }: {
           allArchetypes={allArchetypes}
           isOpen={true}
           onToggle={() => {}}
+          onSelectArchetype={onSelect}
           alwaysOpen
         />
       </div>
@@ -1435,6 +1422,8 @@ function FrameworkExplorerDetail({
   onSelect: (fw: Framework) => void
 }) {
   const { data: specs } = useAnalyticsSpecs()
+  const lineage = useLineage('frameworks', fw.id)
+  const openInExplore = useExploreNavigate()
   // The source philosophy's signals that apply while this framework governs:
   // unscoped ones always, framework-scoped ones only when they name it.
   const measuredBy = useMemo(
@@ -1493,7 +1482,10 @@ function FrameworkExplorerDetail({
                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">Framework</p>
                 <h2 className="text-base font-semibold" style={{ color: hex }}>{fw.name}</h2>
                 {sourcePhil && (
-                  <p className="text-[11px] text-muted-foreground/70">{sourcePhil.name}</p>
+                  <button type="button" onClick={() => openInExplore('philosophies', sourcePhil.id)}
+                    className="text-[11px] text-muted-foreground/70 hover:text-foreground transition-colors">
+                    {sourcePhil.name}
+                  </button>
                 )}
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -1720,6 +1712,12 @@ function FrameworkExplorerDetail({
           </Section>
         )}
 
+        <LineageSection
+          lineage={lineage}
+          emptyUp="No philosophy runs this framework."
+          emptyDown="It schedules no modality."
+        />
+
         <SimilarItems
           category="frameworks"
           id={fw.id}
@@ -1749,61 +1747,48 @@ const TOPIC_IDS = new Set<string>(TOPICS.map((t) => t.id))
 
 export function Explore() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const initialTopic = searchParams.get('topic')
   const [section, setSection] = useState<ExploreSection>('explorer')
-  const [topic, setTopic] = useState<Topic>(initialTopic && TOPIC_IDS.has(initialTopic) ? initialTopic as Topic : 'philosophies')
-  const [selectedPhil, setSelectedPhilState] = useState<Philosophy | null>(null)
-  const [selectedMod, setSelectedMod] = useState<Modality | null>(null)
-  const [selectedArchetype, setSelectedArchetype] = useState<Archetype | null>(null)
-  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null)
-  const [selectedFramework, setSelectedFramework] = useState<Framework | null>(null)
+  // The URL is the selection: ?topic=&id=. Opening a detail pushes, so Back
+  // steps back along a trail of links; a back button or a topic replaces.
+  const topicParam = searchParams.get('topic')
+  const topic: Topic = topicParam && TOPIC_IDS.has(topicParam) ? topicParam as Topic : 'philosophies'
+  const selectedId = searchParams.get('id')
 
   const { data: philosophies = [], isLoading: philLoading, error: philError } = usePhilosophies()
   const { data: frameworks = [], isLoading: fwLoading, error: fwError } = useFrameworks()
   const { data: modalities = [], isLoading: modLoading, error: modError } = useModalities()
-  const { data: allArchetypes = [] } = useArchetypes()
-  const { data: allExercises = [] } = useExercises()
+  const { data: allArchetypes = [], isLoading: archLoading } = useArchetypes()
+  const { data: allExercises = [], isLoading: exLoading } = useExercises()
+  const { data: links, isLoading: linksLoading, error: linksError } = useExploreLinks()
+  const movements = useMemo(() => links?.movements ?? [], [links])
 
-  // A ?id= from a deep link resolves once the philosophies have loaded.
-  const wantedPhilId = searchParams.get('id')
-  const [resolvedWantedId, setResolvedWantedId] = useState<string | null>(null)
-  if (topic === 'philosophies' && wantedPhilId && wantedPhilId !== resolvedWantedId && philosophies.length) {
-    setResolvedWantedId(wantedPhilId)
-    setSelectedPhilState(philosophies.find((p) => p.id === wantedPhilId) ?? null)
+  const pick = <T extends { id: string }>(t: Topic, rows: T[]) =>
+    topic === t && selectedId ? rows.find((r) => r.id === selectedId) ?? null : null
+  const selectedPhil = pick('philosophies', philosophies)
+  const selectedFramework = pick('frameworks', frameworks)
+  const selectedMod = pick('modalities', modalities)
+  const selectedArchetype = pick('archetypes', allArchetypes)
+  const selectedExercise = pick('exercises', allExercises)
+  const selectedMovement = pick('movements', movements)
+
+  function open(t: Topic, id: string) {
+    setSearchParams({ topic: t, id })
   }
 
-  // Likewise an exercise deep link — a session row's "Open in Explore".
-  const wantedExerciseId = topic === 'exercises' ? searchParams.get('id') : null
-  const [resolvedExerciseId, setResolvedExerciseId] = useState<string | null>(null)
-  if (wantedExerciseId && wantedExerciseId !== resolvedExerciseId && allExercises.length) {
-    setResolvedExerciseId(wantedExerciseId)
-    setSelectedExercise(allExercises.find((e) => e.id === wantedExerciseId) ?? null)
-  }
-
-  function setSelectedPhil(p: Philosophy | null) {
-    setSelectedPhilState(p)
-    setResolvedWantedId(p?.id ?? null)
-    setSearchParams(p ? { topic: 'philosophies', id: p.id } : {}, { replace: true })
+  function backToList() {
+    setSearchParams(topic === 'philosophies' ? {} : { topic }, { replace: true })
   }
 
   function handleTopicChange(t: Topic) {
-    setTopic(t)
-    setSelectedPhilState(null)
-    setResolvedWantedId(null)
     setSearchParams(t === 'philosophies' ? {} : { topic: t }, { replace: true })
-    setSelectedMod(null)
-    setSelectedArchetype(null)
-    setSelectedExercise(null)
-    setSelectedFramework(null)
   }
 
-  function handleNavigateExercise(id: string) {
-    const ex = allExercises.find((e) => e.id === id)
-    if (ex) setSelectedExercise(ex)
-  }
-
-  const isLoading = topic === 'philosophies' ? philLoading : topic === 'frameworks' ? fwLoading : modLoading
-  const error = topic === 'philosophies' ? philError : topic === 'frameworks' ? fwError : modError
+  const isLoading = {
+    philosophies: philLoading, frameworks: fwLoading, modalities: modLoading, archetypes: archLoading,
+    exercises: exLoading, movements: linksLoading, standards: false,
+  }[topic]
+  const error = topic === 'philosophies' ? philError : topic === 'frameworks' ? fwError
+    : topic === 'modalities' ? modError : topic === 'movements' ? linksError : null
 
   return (
     <motion.div
@@ -1843,9 +1828,10 @@ export function Explore() {
 
       {/* ── Explorer: unified landing ↔ detail pattern for all topics ── */}
       {section === 'explorer' && (
-        (topic === 'philosophies' || topic === 'modalities' || topic === 'frameworks') && isLoading
+        // A deep link waits for its list rather than flashing the landing.
+        (isLoading && (selectedId || topic === 'philosophies' || topic === 'modalities' || topic === 'frameworks'))
           ? <div className="flex-1 p-6"><LoadingCard /></div>
-          : (topic === 'philosophies' || topic === 'modalities' || topic === 'frameworks') && error
+          : error
           ? <div className="flex-1 p-6"><ErrorBanner error={error as Error} /></div>
           : (
             <div className="flex-1 min-h-0 overflow-hidden">
@@ -1853,12 +1839,13 @@ export function Explore() {
                   selectedPhil
                     ? <PhilosophyPanel
                         controlledId={selectedPhil.id}
-                        onBack={() => setSelectedPhil(null)}
+                        onSelect={(id) => open('philosophies', id)}
+                        onBack={backToList}
                       />
                     : <PhilosophyOverview
                         philosophies={philosophies}
                         frameworks={frameworks}
-                        onSelect={setSelectedPhil}
+                        onSelect={(p) => open('philosophies', p.id)}
                       />
                 )}
                 {topic === 'modalities' && (
@@ -1868,10 +1855,10 @@ export function Explore() {
                         modalities={modalities}
                         philosophies={philosophies}
                         allArchetypes={allArchetypes}
-                        onSelectMod={setSelectedMod}
-                        onBack={() => setSelectedMod(null)}
+                        onSelectMod={(m) => open('modalities', m.id)}
+                        onBack={backToList}
                       />
-                    : <ModalityOverview modalities={modalities} onSelect={setSelectedMod} />
+                    : <ModalityOverview modalities={modalities} onSelect={(m) => open('modalities', m.id)} />
                 )}
                 {topic === 'archetypes' && (
                   selectedArchetype
@@ -1879,9 +1866,10 @@ export function Explore() {
                         archetype={selectedArchetype}
                         allExercises={allExercises}
                         allArchetypes={allArchetypes}
-                        onBack={() => setSelectedArchetype(null)}
+                        onSelect={(id) => open('archetypes', id)}
+                        onBack={backToList}
                       />
-                    : <ArchetypeLanding archetypes={allArchetypes} onSelect={setSelectedArchetype} />
+                    : <ArchetypeLanding archetypes={allArchetypes} onSelect={(a) => open('archetypes', a.id)} />
                 )}
                 {topic === 'frameworks' && (
                   selectedFramework
@@ -1889,13 +1877,13 @@ export function Explore() {
                         fw={selectedFramework}
                         philosophies={philosophies}
                         frameworks={frameworks}
-                        onBack={() => setSelectedFramework(null)}
-                        onSelect={setSelectedFramework}
+                        onBack={backToList}
+                        onSelect={(f) => open('frameworks', f.id)}
                       />
                     : <FrameworkOverview
                         frameworks={frameworks}
                         philosophies={philosophies}
-                        onSelect={setSelectedFramework}
+                        onSelect={(f) => open('frameworks', f.id)}
                       />
                 )}
                 {topic === 'exercises' && (
@@ -1903,10 +1891,20 @@ export function Explore() {
                     ? <ExercisePanel
                         exercise={selectedExercise}
                         allExercises={allExercises}
-                        onNavigate={handleNavigateExercise}
-                        onBack={() => setSelectedExercise(null)}
+                        onNavigate={(id) => open('exercises', id)}
+                        onBack={backToList}
                       />
-                    : <ExerciseLanding allExercises={allExercises} onSelect={setSelectedExercise} />
+                    : <ExerciseLanding allExercises={allExercises} onSelect={(e) => open('exercises', e.id)} />
+                )}
+                {topic === 'movements' && (
+                  selectedMovement
+                    ? <MovementDetail
+                        movement={selectedMovement}
+                        movements={movements}
+                        onSelect={(id) => open('movements', id)}
+                        onBack={backToList}
+                      />
+                    : <MovementLanding movements={movements} isLoading={linksLoading} onSelect={(id) => open('movements', id)} />
                 )}
                 {topic === 'standards' && <StandardsLanding />}
             </div>
