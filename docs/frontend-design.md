@@ -2088,8 +2088,11 @@ by picking results (`components/explore/EquipmentPanel.tsx`, logic in
   it schedules has one of its own package's, *partly* (dimmed, "2 of 3
   modalities") when only some do. The server says what each needs; the client
   only tests coverage, and `test_explore_links.py` pins that to the selector.
-- **Equipment chips** are the Explore filter chip (§13.6's colour-tinted pill) in
-  the primary colour, grouped by `lib/equipment.ts`' `EQUIPMENT_GROUPS` (shared
+- **Equipment chips** are selection toggles, not the colour-tinted filter chip:
+  filled in the primary colour when chosen, transparent with muted text and a
+  plain border when not (`toggleStyle`; *Show* uses it too), so what is selected
+  reads at a glance. Result chips keep §13.6's tint, whose colour names a level.
+  Grouped by `lib/equipment.ts`' `EQUIPMENT_GROUPS` (shared
   with the builder's `EquipmentPicker`). An unchosen chip shows **+N** — how many
   more results adding it opens, broken down in its title; one nothing needs is
   dashed and disabled. Presets (equipment profiles) and *Clear* sit above.
@@ -2100,8 +2103,14 @@ by picking results (`components/explore/EquipmentPanel.tsx`, logic in
   others rule out stays, dimmed "no match"; one the equipment no longer enables,
   "not enabled" — both so they can be unpicked.
 - **The URL is the state** (`?topic=equipment&eq=…&show=…&m=…&f=…&v=…&x=…`),
-  replaced on every change; ↗ pushes, so Back returns to the same view.
-- With nothing selected the lists show what bodyweight and open space alone enable.
+  `&bw=0` when bodyweight is off; replaced on every change; ↗ pushes, so Back returns to the same view.
+- **Bodyweight / open space** is a toggle of its own, on by default: what needs
+  nothing counts, as the generator assumes. Off (`bw=0`), the lists keep only an
+  exercise that needs some of the chosen equipment and a session that needs some
+  or takes such an exercise; a framework's "N of M modalities" still counts every
+  session. A preset turns it back on.
+- With nothing selected the lists show what bodyweight and open space alone
+  enable, or nothing with bodyweight off.
 
 ## 14. Responsive Design
 

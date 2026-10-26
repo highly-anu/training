@@ -11,6 +11,10 @@
 // connects to it, through the archetypes that take each exercise. Picks
 // combine with OR within a list and AND across lists, and a list ignores its
 // own picks, so a second item can still be added to it.
+// With `bodyweight: false` the lists keep only what uses the chosen equipment:
+// an exercise that needs some of it, a session that needs some or takes such
+// an exercise. A framework's completeness still counts every session, since
+// the generator would.
 import type { ExploreLinks } from '@/api/types'
 import { prettify, type LineageColors, type LineageNames } from '@/lib/exploreLinks'
 
@@ -35,6 +39,11 @@ export interface FacetItem {
 }
 
 export type FacetLists = Record<Facet, FacetItem[]>
+
+export interface ExploreOptions {
+  /** Count what needs nothing (bodyweight, open space). On by default. */
+  bodyweight?: boolean
+}
 
 export interface EquipmentIndex {
   vocabulary: string[]
@@ -92,15 +101,17 @@ function tally(): Counted { return { ids: new Map() } }
 function bump(c: Counted, id: string) { c.ids.set(id, (c.ids.get(id) ?? 0) + 1) }
 
 /** The ids each facet would list, with how many things connect to each. */
-function compute(ix: EquipmentIndex, equipment: Set<string>, picked: Picked) {
+function compute(ix: EquipmentIndex, equipment: Set<string>, picked: Picked, { bodyweight = true }: ExploreOptions = {}) {
   const P = Object.fromEntries(FACETS.map((f) => [f, new Set(picked[f])])) as Record<Facet, Set<string>>
-  const exercises = Object.keys(ix.exNeeds).filter((x) => covers(equipment, ix.exNeeds[x]))
+  const needsSome = (needs: string[] | undefined) => bodyweight || (needs ?? []).length > 0
+  const exercises = Object.keys(ix.exNeeds)
+    .filter((x) => covers(equipment, ix.exNeeds[x]) && needsSome(ix.exNeeds[x]))
   const exOn = new Set(exercises)
   const archs = Object.keys(ix.archNeeds).filter((a) => covers(equipment, ix.archNeeds[a]) && ix.archModality[a])
 
   // Each enabled archetype: its modality, the frameworks of its package that
   // schedule it, and the enabled exercises its slots take.
-  const hub = archs.map((a) => {
+  const allHub = archs.map((a) => {
     const m = ix.archModality[a]
     const pkg = ix.archPackage[a]
     return {
@@ -109,6 +120,7 @@ function compute(ix: EquipmentIndex, equipment: Set<string>, picked: Picked) {
       xs: (ix.archExercises[a] ?? []).filter((x) => exOn.has(x)),
     }
   })
+  const hub = bodyweight ? allHub : allHub.filter((h) => needsSome(ix.archNeeds[h.id]) || h.xs.length > 0)
 
   const mOk = (h: typeof hub[number]) => P.modalities.size === 0 || P.modalities.has(h.m)
   const fOk = (h: typeof hub[number]) => P.frameworks.size === 0 || h.fws.some((f) => P.frameworks.has(f))
@@ -137,17 +149,17 @@ function compute(ix: EquipmentIndex, equipment: Set<string>, picked: Picked) {
   }
 
   // A framework is whole when each modality it schedules has an enabled
-  // archetype of its own package, whatever is picked.
+  // archetype of its own package, whatever is picked or left out.
   const covered = new Map<string, Set<string>>()
-  for (const h of hub) for (const f of h.fws) (covered.get(f) ?? covered.set(f, new Set()).get(f)!).add(h.m)
+  for (const h of allHub) for (const f of h.fws) (covered.get(f) ?? covered.set(f, new Set()).get(f)!).add(h.m)
 
   return { modalities, frameworks, movements, exercises: exerciseList, covered }
 }
 
 export function explore(ix: EquipmentIndex, equipment: Set<string>, picked: Picked,
-                        names: LineageNames, colors: LineageColors = {}): FacetLists {
-  const c = compute(ix, equipment, picked)
-  const bare = picked === NOTHING_PICKED ? c : compute(ix, equipment, NOTHING_PICKED)
+                        names: LineageNames, colors: LineageColors = {}, opts: ExploreOptions = {}): FacetLists {
+  const c = compute(ix, equipment, picked, opts)
+  const bare = picked === NOTHING_PICKED ? c : compute(ix, equipment, NOTHING_PICKED, opts)
   const nameOf: Record<Facet, (id: string) => string> = {
     modalities: (id) => names.modalities[id] ?? prettify(id),
     frameworks: (id) => names.frameworks[id] ?? prettify(id),
@@ -200,9 +212,10 @@ export interface Unlock {
 
 /** For each piece of equipment not yet chosen (and used by something), how
  *  many more items each list would hold with it added. */
-export function unlocks(ix: EquipmentIndex, equipment: Set<string>, picked: Picked): Record<string, Unlock> {
+export function unlocks(ix: EquipmentIndex, equipment: Set<string>, picked: Picked,
+                        opts: ExploreOptions = {}): Record<string, Unlock> {
   const size = (eq: Set<string>) => {
-    const c = compute(ix, eq, picked)
+    const c = compute(ix, eq, picked, opts)
     return Object.fromEntries(FACETS.map((f) => [f, c[f].ids.size])) as Record<Facet, number>
   }
   const base = size(equipment)
