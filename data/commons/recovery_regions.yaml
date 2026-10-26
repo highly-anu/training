@@ -1,0 +1,95 @@
+# Where a session's work lands on the body, read from what is already written:
+# each exercise's movement patterns, each slot's intensity, the modality's
+# recovery cost (src/recovery_regions.py). Nothing is tagged per exercise.
+#
+# A session's load on a region = the modality's cost weight x the mean, over
+# its working slots, of the slot's intensity weight x its exercise's weight on
+# that region (the largest of its patterns'). A region at or above `heavy_at`
+# is loaded heavily; two heavy loads on one region within the windows below
+# cost the second session a soft penalty where the app chooses (the archetype
+# picker, a contract's placement) and an info finding in the fidelity report.
+# A week a source writes day by day is never rearranged.
+
+regions:
+  lower: Lower body (squat, hinge, lunge, jumps)
+  upper_push: Upper body, pushing
+  upper_pull: Upper body, pulling and grip
+  trunk: Trunk (spine, rotation, carries)
+  cardio: Cardiovascular (locomotion, monostructural)
+
+# Movement pattern -> region weights (0-1). A pattern not listed loads nothing
+# (mobility, balance, breathing); test_recovery_regions.py fails on a pattern an
+# exercise declares that is neither listed nor in `unloaded`.
+patterns:
+  squat: {lower: 1}
+  hip_hinge: {lower: 1, trunk: 0.5}
+  hip_extension: {lower: 1}
+  knee_extension: {lower: 1}
+  knee_flexion: {lower: 1}
+  lunge: {lower: 1}
+  step_up: {lower: 1}
+  single_leg: {lower: 1}
+  jump: {lower: 1}
+  ballistic: {lower: 1, trunk: 0.5}
+  olympic_lift: {lower: 1, upper_pull: 0.5}
+  vertical_push: {upper_push: 1}
+  horizontal_push: {upper_push: 1}
+  elbow_extension: {upper_push: 0.5}
+  shoulder_flexion: {upper_push: 0.5}
+  shoulder_abduction: {upper_push: 0.5}
+  vertical_pull: {upper_pull: 1}
+  horizontal_pull: {upper_pull: 1}
+  elbow_flexion: {upper_pull: 0.5}
+  grip: {upper_pull: 0.5}
+  shoulder_external_rotation: {upper_pull: 0.5}
+  loaded_carry: {trunk: 1, upper_pull: 0.5, lower: 0.5}
+  farmer_carry: {trunk: 1, upper_pull: 0.5, lower: 0.5}
+  rack_carry: {trunk: 1, upper_push: 0.5, lower: 0.5}
+  get_up: {trunk: 1, upper_push: 0.5}
+  rotation: {trunk: 1}
+  spinal_extension: {trunk: 1}
+  spinal_flexion: {trunk: 1}
+  lateral_flexion: {trunk: 1}
+  core_flexion: {trunk: 1}
+  core_stability: {trunk: 1}
+  hip_flexion: {trunk: 0.5}
+  isometric: {trunk: 0.5}
+  locomotion: {cardio: 1, lower: 0.5}
+  aerobic_monostructural: {cardio: 1}
+
+# Patterns that load no region: mobility and control work.
+unloaded:
+  - mobilization
+  - stretching
+  - breathing
+  - balance
+  - ankle_dorsiflexion
+  - ankle_plantarflexion
+  - hip_external_rotation
+  - hip_abduction
+
+# The modality's recovery_cost, and the slot's intensity; an intensity not
+# listed counts 1.
+cost_weight: {high: 1, medium: 0.5, low: 0.1}
+intensity_weight:
+  max_effort: 1.25
+  max: 1.25
+  heavy: 1.25
+  high: 1.25
+  zone4_5: 1.25
+  zone4: 1.25
+  light: 0.5
+  low: 0.5
+  zone1: 0.5
+  zone2: 0.5
+
+# Slots that are not the session's work: their role contains one of these.
+warm_up_roles: [warm_up, warmup, cool_down, cooldown, prep, primer, mobility]
+# Technique practice counts half: a double jerk practised for quality loads
+# less than the same lift for reps.
+slot_type_weight: {skill_practice: 0.5}
+
+heavy_at: 0.5
+# Hours apart -> penalty per region two heavy sessions share; capped.
+penalty_by_hours: {24: 2, 48: 1}
+penalty_cap: 4

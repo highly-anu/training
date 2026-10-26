@@ -17,7 +17,7 @@ from itertools import combinations
 import math
 import os
 
-from . import provenance
+from . import provenance, recovery_regions
 from .selector import _equipment_ok, _injury_exclusions
 
 
@@ -874,14 +874,16 @@ def _module_rows(module, exercises, constraints, state, step, deload, blocked=No
     return rows
 
 
-def _spacing(candidate: dict) -> tuple[int, int, int]:
+def _spacing(candidate: dict, regions: dict | None = None) -> tuple[int, int, int, int]:
     """How well a placement alternates and spreads its work, higher is better:
     fewest same-modality days back to back (two gym sessions, a run of
     classes), then fewest same-modality neighbours among the training days,
     the week wrapping into the next (swing, swing, press, press reads worse
-    than swing, press, swing, press), then the widest gap between each
-    module's own sessions (Wildman: "Kettlebell Swings on Monday & Thursday,
-    Clean & Press on Wednesday & Saturday")."""
+    than swing, press, swing, press), then the fewest body regions loaded
+    heavily on days a day or two apart (`regions`: module id -> heavy regions,
+    src/recovery_regions.py; a day apart counts twice), then the widest gap
+    between each module's own sessions (Wildman: "Kettlebell Swings on Monday
+    & Thursday, Clean & Press on Wednesday & Saturday")."""
     days = sorted(candidate)
     kind = {d: frozenset(m['modality'] for m in candidate[d]) for d in days}
     pairs = list(zip(days, days[1:] + days[:1])) if len(days) > 1 else []
@@ -892,7 +894,10 @@ def _spacing(candidate: dict) -> tuple[int, int, int]:
         for m in candidate[d]:
             on.setdefault(m['id'], []).append(d)
     spread = sum(min((b - a) % 7 or 7 for a, b in zip(ds, ds[1:] + ds[:1])) for ds in on.values())
-    return -adjacent, -neighbours, spread
+    load = {d: frozenset().union(*((regions or {}).get(m['id'], frozenset()) for m in candidate[d])) for d in days}
+    regional = sum((3 - gap) * len(load[a] & load[b]) for i, a in enumerate(days) for b in days[i + 1:]
+                   for gap in [min(b - a, 7 + a - b)] if gap <= 2)
+    return -adjacent, -neighbours, -regional, spread
 
 
 def _placements(modules: list, durations: dict, pool: list[int], cap: float, day_caps: dict | None = None):
@@ -1051,6 +1056,11 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
             raise ContractError(f"{m['id']}: confirm mastery of {m['requires_mastery']} before using this track.")
         if m['archetype_id'] not in {a['id'] for a in data['archetypes'] if a.get('_package') == contract['package']}:
             raise ContractError(f"{m['id']}: its declared archetype is absent from the package.")
+    # Each module's heavily loaded regions, read from its archetype, so the
+    # placement keeps two leg-heavy programs off neighbouring days when it can.
+    archetype_of = {a['id']: a for a in data['archetypes'] if a.get('_package') == contract['package']}
+    module_regions = {m['id']: recovery_regions.heavy(recovery_regions.archetype_load(
+        archetype_of[m['archetype_id']], data['exercises'], data['modalities'])) for m in modules}
     supplied = constraints.get('module_progression_state') or {}
     if not isinstance(supplied, dict):
         raise ContractError('Module progression state must be an object keyed by module id.')
@@ -1217,7 +1227,7 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
             fit, closes = optional_fit(candidate)
             # Optional work never costs an essential session its own day.
             stacked = sum(len(ms) - 1 for ms in candidate.values())
-            key = (closes, -stacked, sum(len(v) for v in fit.values()), *_spacing(candidate))
+            key = (closes, -stacked, sum(len(v) for v in fit.values()), *_spacing(candidate, module_regions))
             if best is None or key > best[0]:
                 best = (key, candidate, fit)
             if i >= 500:

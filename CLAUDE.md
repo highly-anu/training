@@ -393,6 +393,20 @@ group's name.
   each module's sessions furthest apart. The first valid placement used to win, so
   Wildman's General Practice ran swing, swing, press, press; it now runs his example
   week (swings Mon/Thu, clean and press Wed/Sat).
+- **Regional recovery** (`src/recovery_regions.py`, `data/commons/recovery_regions.yaml`,
+  since 2026-10-26): where a session's work lands — lower, upper push, upper pull, trunk,
+  cardio — derived, never tagged: each exercise's movement patterns weighted by region,
+  each working slot's intensity, the modality's recovery cost (an archetype whose slots
+  name no exercise may write `regional_load`; only `bjj_class` does). 0.5 and over is
+  heavy. It is a soft rule only where the app chooses: the archetype picker scores −2 per
+  region a session 24 h earlier loaded heavily, −1 at 48 h, capped at −4
+  (`select_archetype`'s `regional` term, in the Dev Lab trace), and a contract's placement
+  ranks it after the spacing terms. Fidelity reads a region loaded heavily on consecutive
+  days as `region_back_to_back` (info, never gated). A source's own week is never
+  rearranged for it. **Where scoring runs at all:** every shipped package places its
+  sessions by its own `week_templates` or a training contract, so the archetype picker
+  (and the scheduler) run only for blends a contract philosophy leads, for packages
+  without either, and for a single-session regenerate.
 - **Exercise scoring**: prefers exercises with defined movement_patterns (+0.5) and forward-unlocking exercises (+0.5); penalizes recently used (-2 per recent use). AMRAP/for_time slots exclude `mobility` and `rehab` category exercises.
 - **Deload**: every `deload_protocol.frequency_weeks` (a framework without a protocol never
   deloads on schedule) or when `fatigue_state: overreached`; `volume_reduction_pct` is the

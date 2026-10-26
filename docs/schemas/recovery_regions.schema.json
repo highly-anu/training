@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Recovery regions",
+  "description": "data/commons/recovery_regions.yaml: where a session's work lands on the body, derived from movement patterns (src/recovery_regions.py).",
+  "type": "object",
+  "required": ["regions", "patterns", "unloaded", "cost_weight", "intensity_weight", "heavy_at", "penalty_by_hours", "penalty_cap"],
+  "additionalProperties": false,
+  "properties": {
+    "regions": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {"type": "string"}
+    },
+    "patterns": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "minProperties": 1,
+        "additionalProperties": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    },
+    "unloaded": {"type": "array", "items": {"type": "string"}},
+    "cost_weight": {
+      "type": "object",
+      "required": ["high", "medium", "low"],
+      "additionalProperties": {"type": "number", "minimum": 0}
+    },
+    "intensity_weight": {"type": "object", "additionalProperties": {"type": "number", "minimum": 0}},
+    "warm_up_roles": {"type": "array", "items": {"type": "string"}},
+    "slot_type_weight": {"type": "object", "additionalProperties": {"type": "number", "minimum": 0}},
+    "heavy_at": {"type": "number", "exclusiveMinimum": 0},
+    "penalty_by_hours": {
+      "type": "object",
+      "propertyNames": {"pattern": "^[0-9]+$"},
+      "additionalProperties": {"type": "number", "minimum": 0}
+    },
+    "penalty_cap": {"type": "number", "minimum": 0}
+  }
+}

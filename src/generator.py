@@ -1,7 +1,7 @@
 """Main program generator — orchestrates all modules."""
 from __future__ import annotations
 
-from . import blockers, loader, phases, provenance, standard_tests, week_template
+from . import blockers, loader, phases, provenance, recovery_regions, standard_tests, week_template
 from .scheduler import schedule_week, select_framework
 from .selector import populate_session, select_archetype
 from .progression import calculate_load
@@ -473,6 +473,9 @@ def generate(
     # library, which is the legacy permissive behaviour.
     fallback_archetypes = archetypes if policy.strict else lib['all_archetypes']
     fallback_exercises = exercises if policy.strict else lib['all_exercises']
+    # Each archetype's heavily loaded regions, for the picker's regional rule.
+    arch_regions = {a['id']: recovery_regions.heavy(recovery_regions.archetype_load(a, lib['all_exercises'], modalities))
+                    for a in fallback_archetypes}
 
     # --- Validate feasibility ------------------------------------------------
     validation = validate(goal, constraints, archetypes, modalities, injury_flags_data)
@@ -565,6 +568,9 @@ def generate(
     unfilled_cache: dict = {}  # why a slot came up empty, explained once per phase
     pinned_phase = None
     all_compromises: list[str] = []  # Collect compromises from all weeks
+    # Day of the program (week index x 7 + day) -> the regions its sessions
+    # loaded heavily, so the picker knows what yesterday asked of the body.
+    region_days: dict[int, frozenset] = {}
 
     # Progression model for each modality (static, load from modalities data)
     prog_model_for = {
@@ -578,7 +584,7 @@ def generate(
         'philosophy_mode': 'synthetic_goal' if goal.get('is_synthetic') else 'explicit_goal',
     } if include_trace else None
 
-    for entry in entries:
+    for week_index, entry in enumerate(entries):
         phase          = entry['phase']
         week_in_phase  = entry['week_in_phase']
         week_in_program = entry.get('week_in_program', week_in_phase)
@@ -677,6 +683,9 @@ def generate(
                                       and complements in (a.get('complements') or [])) if complements else None
             day_session_types = day_cfg.get('session_types')
 
+            program_day = week_index * 7 + day
+            recent_regions = [((program_day - d) * 24, regions) for d, regions in region_days.items()
+                              if 0 < program_day - d <= 2 and regions]
             for idx, session in enumerate(resolved_by_day[day]):
                 test = placed_tests.get((day, idx))
                 # Determine if this session should use the mobility hint
@@ -719,6 +728,8 @@ def generate(
                     pinned_lifts=None if forced else week_pins,
                     deload_keep=deload_keep,
                     unfilled_cache=unfilled_cache,
+                    recent_regions=recent_regions,
+                    arch_regions=arch_regions,
                 )
                 populated = test['populated'] if test is not None else rotation_source
 
@@ -873,6 +884,8 @@ def generate(
                     day_session_traces.append(session_trace)
 
             populated_schedule[day] = populated_sessions
+            region_days[program_day] = frozenset().union(
+                *(recovery_regions.heavy(recovery_regions.session_load(s, modalities)) for s in populated_sessions))
             if include_trace and week_trace is not None:
                 week_trace['sessions'][day_name] = day_session_traces
 

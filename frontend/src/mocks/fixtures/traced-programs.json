@@ -140,15 +140,15 @@
       },
       {
        "code": "EQUIPMENT_SCALED",
-       "message": "'Gym Jones Operator Circuit' will use equipment-limited scaling (missing: {'barbell', 'pull_up_bar', 'rower', 'plates'})."
+       "message": "'Gym Jones Operator Circuit' will use equipment-limited scaling (missing: {'plates', 'pull_up_bar', 'rower', 'barbell'})."
       },
       {
        "code": "EQUIPMENT_SCALED",
-       "message": "'Barbell Power Complex (Olympic Lift Derivatives)' will use equipment-limited scaling (missing: {'barbell', 'plates'})."
+       "message": "'Barbell Power Complex (Olympic Lift Derivatives)' will use equipment-limited scaling (missing: {'plates', 'barbell'})."
       },
       {
        "code": "EQUIPMENT_SCALED",
-       "message": "'EMOM Strength Wave (10×1)' will use equipment-limited scaling (missing: {'barbell', 'plates', 'rack'})."
+       "message": "'EMOM Strength Wave (10×1)' will use equipment-limited scaling (missing: {'plates', 'barbell', 'rack'})."
       }
      ]
     },
@@ -572,7 +572,8 @@
            "skip_exercise": false
           }
          ],
-         "complementary_work": []
+         "complementary_work": [],
+         "icon": "kettlebell"
         }
        ],
        "Wednesday": [
@@ -1527,12 +1528,19 @@
              "name": "Gym Jones Operator Strength (SL Squat / Step-Up / FLR)",
              "score": 6,
              "breakdown": {
+              "preferred": 0,
               "equipment": 6,
-              "source": 0,
               "recency": 0,
+              "day_fit": 0,
               "injury_penalty": 0,
+              "equipment_blocked": 0,
+              "regional": 0,
+              "source": 0,
               "total": 6
-             }
+             },
+             "heavy_regions": [
+              "lower"
+             ]
             }
            ]
           },
@@ -1805,12 +1813,17 @@
              "name": "Gym Jones TGU Recovery (100 Total Reps)",
              "score": 0,
              "breakdown": {
+              "preferred": 0,
               "equipment": 0,
-              "source": 0,
               "recency": 0,
+              "day_fit": 0,
               "injury_penalty": 0,
+              "equipment_blocked": 0,
+              "regional": 0,
+              "source": 0,
               "total": 0
-             }
+             },
+             "heavy_regions": []
             }
            ]
           },
@@ -1853,14 +1866,21 @@
             {
              "id": "barbell_power_complex",
              "name": "Barbell Power Complex (Olympic Lift Derivatives)",
-             "score": -30,
+             "score": -31,
              "breakdown": {
+              "preferred": 0,
               "equipment": 0,
-              "source": 0,
               "recency": 0,
+              "day_fit": 0,
               "injury_penalty": 0,
-              "total": 0
-             }
+              "equipment_blocked": -30,
+              "regional": -1,
+              "source": 0,
+              "total": -31
+             },
+             "heavy_regions": [
+              "lower"
+             ]
             }
            ]
           },
@@ -1990,24 +2010,36 @@
              "name": "Gym Jones Accumulation Circuit (Goblet Squat / Bear Crawl / Carry)",
              "score": -10,
              "breakdown": {
+              "preferred": 0,
               "equipment": 0,
-              "source": 0,
               "recency": 0,
+              "day_fit": 0,
               "injury_penalty": 0,
-              "total": 0
-             }
+              "equipment_blocked": -10,
+              "regional": 0,
+              "source": 0,
+              "total": -10
+             },
+             "heavy_regions": [
+              "lower"
+             ]
             },
             {
              "id": "gym_jones_circuit",
              "name": "Gym Jones Operator Circuit",
              "score": -30,
              "breakdown": {
+              "preferred": 0,
               "equipment": 0,
-              "source": 0,
               "recency": 0,
+              "day_fit": 0,
               "injury_penalty": 0,
-              "total": 0
-             }
+              "equipment_blocked": -30,
+              "regional": 0,
+              "source": 0,
+              "total": -30
+             },
+             "heavy_regions": []
             }
            ]
           },
@@ -2191,12 +2223,17 @@
              "name": "Gym Jones Aerobic Recovery (Row / Swim / Ruck)",
              "score": 6,
              "breakdown": {
+              "preferred": 0,
               "equipment": 6,
-              "source": 0,
               "recency": 0,
+              "day_fit": 0,
               "injury_penalty": 0,
+              "equipment_blocked": 0,
+              "regional": 0,
+              "source": 0,
               "total": 6
-             }
+             },
+             "heavy_regions": []
             }
            ]
           },
@@ -2399,6 +2436,9 @@
         "job_specific_short",
         "job_specific_long",
         "job_specific_hard"
+       ],
+       "former_ids": [
+        "gpp_block"
        ]
       },
       {
@@ -2664,12 +2704,7 @@
      ],
      "framework_selection": {
       "default_framework": "concurrent_training",
-      "alternatives": [
-       {
-        "framework_id": "gpp_circuits",
-        "condition": ""
-       }
-      ]
+      "alternatives": []
      },
      "primary_sources": [
       "horsemen_gpp"
@@ -2705,22 +2740,22 @@
      "warnings": [
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype '2 Minutes' requires {'medicine_ball', 'hurdles', 'box', 'cable_machine', 'sandbag', 'resistance_band', 'tire', 'jump_rope'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype '2 Minutes' requires {'sandbag', 'hurdles', 'resistance_band', 'tire', 'medicine_ball', 'box', 'jump_rope', 'cable_machine'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Bannister' requires {'tire', 'hurdles', 'cable_machine'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Bannister' requires {'tire', 'cable_machine', 'hurdles'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Crazy 8' requires {'medicine_ball', 'agility_ladder', 'box', 'parallettes', 'dumbbell'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Crazy 8' requires {'dumbbell', 'medicine_ball', 'box', 'agility_ladder', 'parallettes'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Double/Doubles' requires {'box', 'rope', 'cable_machine', 'tire', 'jump_rope'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Double/Doubles' requires {'rope', 'tire', 'box', 'jump_rope', 'cable_machine'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2730,7 +2765,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Mirror' requires {'sandbag', 'dumbbell'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Mirror' requires {'dumbbell', 'sandbag'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2745,12 +2780,12 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Tens' requires {'medicine_ball', 'box', 'ghd', 'parallettes', 'dumbbell'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Tens' requires {'dumbbell', 'ghd', 'medicine_ball', 'box', 'parallettes'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Triples' requires {'medicine_ball', 'sandbag', 'rope', 'cable_machine'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Triples' requires {'rope', 'cable_machine', 'medicine_ball', 'sandbag'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2760,7 +2795,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Death to Infidels' requires {'box', 'rings', 'ghd'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Death to Infidels' requires {'ghd', 'rings', 'box'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2800,7 +2835,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Appeal to God' requires {'rings', 'ghd'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Appeal to God' requires {'ghd', 'rings'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2830,12 +2865,12 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'The Cog' requires {'rower', 'dumbbell'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'The Cog' requires {'dumbbell', 'rower'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Twister' requires {'medicine_ball', 'parallettes', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Twister' requires {'parallettes', 'medicine_ball', 'box'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2930,12 +2965,12 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'D-Day' requires {'box', 'ghd'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'D-Day' requires {'ghd', 'box'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Drunken Lullaby' requires {'sandbag', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Drunken Lullaby' requires {'box', 'sandbag'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2955,7 +2990,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Girl Farts' requires {'rower', 'dumbbell'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Girl Farts' requires {'dumbbell', 'rower'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2965,7 +3000,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Lovely Turd' requires {'sandbag', 'parallettes', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Lovely Turd' requires {'box', 'parallettes', 'sandbag'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2980,7 +3015,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Start Your Face' requires {'box', 'dumbbell'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Start Your Face' requires {'dumbbell', 'box'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3015,7 +3050,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'George Washington' requires {'rower', 'box', 'rings', 'ghd'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'George Washington' requires {'ghd', 'rings', 'rower', 'box'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3030,7 +3065,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Till U Collapse' requires {'medicine_ball', 'tire', 'rower', 'ghd'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Till U Collapse' requires {'ghd', 'rower', 'medicine_ball', 'tire'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3050,32 +3085,32 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Winter in August' requires {'rower', 'parallettes'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Winter in August' requires {'parallettes', 'rower'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Act With a Purpose' requires {'box', 'ghd', 'parallettes', 'tire', 'dumbbell'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Act With a Purpose' requires {'dumbbell', 'ghd', 'tire', 'box', 'parallettes'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Ben Franklin' requires {'dumbbell', 'box', 'ghd'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Ben Franklin' requires {'ghd', 'dumbbell', 'box'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Bloody Nose' requires {'rings', 'ghd'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Bloody Nose' requires {'ghd', 'rings'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Chin Up. Soldier On.' requires {'sandbag', 'tire', 'rings', 'dumbbell'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Chin Up. Soldier On.' requires {'rings', 'tire', 'dumbbell', 'sandbag'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Family Friendly Violence' requires {'tire', 'parallettes', 'dumbbell'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Family Friendly Violence' requires {'parallettes', 'dumbbell', 'tire'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3085,7 +3120,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Honey Butter' requires {'sandbag', 'dumbbell', 'box', 'ghd'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Honey Butter' requires {'ghd', 'box', 'dumbbell', 'sandbag'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3100,17 +3135,17 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Max Out!' requires {'sandbag', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Max Out!' requires {'box', 'sandbag'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Russian Aggression' requires {'box', 'dumbbell'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Russian Aggression' requires {'dumbbell', 'box'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Soviet Capitalists' requires {'sandbag', 'parallettes', 'ghd'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Soviet Capitalists' requires {'ghd', 'parallettes', 'sandbag'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3135,7 +3170,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Get-ups, Burpees and Step-ups' requires {'box', 'dumbbell'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Get-ups, Burpees and Step-ups' requires {'dumbbell', 'box'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3170,7 +3205,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype '10-Minute Step-ups' requires {'box', 'dumbbell'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype '10-Minute Step-ups' requires {'dumbbell', 'box'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3455,7 +3490,8 @@
            "skip_exercise": false
           }
          ],
-         "complementary_work": []
+         "complementary_work": [],
+         "icon": "kettlebell"
         }
        ]
       },
@@ -3607,9 +3643,9 @@
             "selected_id": "run_tempo_horsemen",
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 24,
-             "after_package": 24,
-             "after_equip": 16,
+             "in_pool": 9,
+             "after_package": 9,
+             "after_equip": 4,
              "after_filter": 1,
              "final": 1
             },
@@ -3671,9 +3707,9 @@
             "selected_id": null,
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 24,
-             "after_package": 24,
-             "after_equip": 16,
+             "in_pool": 9,
+             "after_package": 9,
+             "after_equip": 4,
              "after_filter": 0,
              "final": 0
             },
@@ -4558,429 +4594,11 @@
            "skip_exercise": false
           }
          ],
-         "complementary_work": []
+         "complementary_work": [],
+         "icon": "kettlebell"
         }
        ],
        "Wednesday": [
-        {
-         "modality": "power",
-         "archetype": {
-          "id": "kb_ballistic_session",
-          "name": "Nerd Math Two-Hand Swing + Deck Squat Practice",
-          "_package": "wildman_kettlebell",
-          "modality": "power",
-          "duration_estimate_minutes": 25,
-          "slots": [
-           {
-            "role": "swing_prep",
-            "slot_type": "skill_practice",
-            "notes": "Rehearse the hinge with a controllable bell; this is preparation, not a load test.",
-            "exercise_filter": {
-             "exercise_ids": [
-              "kb_deadlift"
-             ]
-            },
-            "rest_sec": 0
-           },
-           {
-            "role": "swing_main",
-            "slot_type": "emom",
-            "notes": "Swings at the top of each minute (or round); rest for its remainder. Wildman's most common option alternates minutes of two-hand and hand-to-hand swings once both are clean. Stop if technique or breathing deteriorates.",
-            "exercise_filter": {
-             "exercise_ids": [
-              "wk_kb_swing_two_hand"
-             ]
-            },
-            "rest_sec": 0
-           },
-           {
-            "role": "swing_recovery",
-            "slot_type": "skill_practice",
-            "notes": "Gentle unloaded or very light shoulder circles; omit external load if fatigued.",
-            "exercise_filter": {
-             "exercise_ids": [
-              "wk_kb_halo"
-             ]
-            },
-            "rest_sec": 0
-           },
-           {
-            "role": "deck_squat_squat",
-            "slot_type": "emom",
-            "notes": "Deck squats at the top of each minute: squat, roll back with the head off the floor, roll forward and stand. Bodyweight until a cycle is clean, then a light bell at the chest.",
-            "exercise_filter": {
-             "exercise_ids": [
-              "wk_deck_squat"
-             ]
-            },
-            "rest_sec": 0
-           }
-          ],
-          "notes": "Repeated single-bell practice in independently progressing modules. Complete the repetitions at the start of each minute and rest for the remainder. Advance only after clean completion at RPE 7 or below. Future exposures are conditional forecasts, not earned progress. Keep the chosen bell throughout the cycle; choosing a heavier bell starts a new cycle explicitly. No snatch, jerk or double-bell progression is inferred from the calendar.\n",
-          "training_levels": [
-           "novice",
-           "intermediate",
-           "advanced",
-           "elite"
-          ]
-         },
-         "is_deload": false,
-         "modules": [
-          {
-           "id": "swing",
-           "forecast_step": 1,
-           "deload": false,
-           "archetype_id": "kb_ballistic_session",
-           "exercise_ids": [
-            "wk_kb_swing_two_hand"
-           ],
-           "rounds": 10,
-           "max_rpe": 7,
-           "requirements": {
-            "wk_kb_swing_two_hand": {
-             "rounds": 10,
-             "duration_sec": 0
-            }
-           },
-           "duration_sec": 0
-          },
-          {
-           "id": "deck_squat",
-           "forecast_step": 1,
-           "deload": false,
-           "archetype_id": "kb_squat_practice",
-           "exercise_ids": [
-            "wk_deck_squat"
-           ],
-           "rounds": 10,
-           "max_rpe": 7,
-           "requirements": {
-            "wk_deck_squat": {
-             "rounds": 10,
-             "duration_sec": 0
-            }
-           },
-           "duration_sec": 0
-          }
-         ],
-         "provenance": {
-          "package": "wildman_kettlebell",
-          "borrowed": false
-         },
-         "exercises": [
-          {
-           "exercise": {
-            "id": "kb_deadlift",
-            "name": "Kettlebell Deadlift",
-            "category": "kettlebell",
-            "modality": [
-             "max_strength",
-             "durability"
-            ],
-            "equipment": [
-             "kettlebell"
-            ],
-            "effort": "low",
-            "bilateral": true,
-            "movement_patterns": [
-             "hip_hinge"
-            ],
-            "unlocks": [
-             "wk_kb_swing_two_hand",
-             "wk_kb_swing_single_arm"
-            ],
-            "contraindicated_with": [
-             "lumbar_disc",
-             "hip_flexor_strain"
-            ],
-            "progressions": {
-             "load": "increase_bell_weight",
-             "volume": "increase_reps_per_set",
-             "complexity": "wk_kb_swing_two_hand"
-            },
-            "scaling_down": [],
-            "typical_volume": {
-             "sets": 3,
-             "reps": 10
-            },
-            "sources": [
-             "Wildman",
-             "Pavel"
-            ],
-            "notes": "Hip-hinge pattern with kettlebell between feet, pulled to standing. No prerequisites beyond basic motor control; the first movement taught in Wildman's complexity ladder. Direct gateway to swings; teaches the hip hinge without ballistic demand.\n",
-            "starting_load_kg": {
-             "novice": 16,
-             "intermediate": 24,
-             "advanced": 32,
-             "elite": 48
-            },
-            "_package": "wildman_kettlebell",
-            "_packages": [
-             "wildman_kettlebell"
-            ]
-           },
-           "load": {
-            "duration_minutes": 3,
-            "focus": "Controlled technique; stop before movement quality deteriorates.",
-            "prescription_version": 1,
-            "progression_model": "density_cycle",
-            "module_id": "swing",
-            "forecast_step": 1,
-            "advances_module": false,
-            "conditional": true,
-            "elapsed_sec": 180
-           },
-           "slot_role": "swing_prep",
-           "slot_type": "skill_practice",
-           "rest_sec": 0,
-           "meta": false,
-           "injury_skip": false,
-           "coverage_gap": false,
-           "equipment_gap": false,
-           "gap_reason": null,
-           "substituted_for": null,
-           "error": null,
-           "load_note": null,
-           "notes": "Rehearse the hinge with a controllable bell; this is preparation, not a load test.",
-           "parent_slot_role": null,
-           "skip_exercise": false
-          },
-          {
-           "exercise": {
-            "id": "wk_kb_swing_two_hand",
-            "name": "Kettlebell Swing (Two-Hand)",
-            "category": "kettlebell",
-            "modality": [
-             "power",
-             "aerobic_base",
-             "strength_endurance"
-            ],
-            "equipment": [
-             "kettlebell"
-            ],
-            "effort": "medium",
-            "bilateral": true,
-            "movement_patterns": [
-             "hip_hinge",
-             "ballistic"
-            ],
-            "requires": [
-             "hip_hinge",
-             "bracing_mechanics"
-            ],
-            "unlocks": [
-             "wk_kb_swing_single_arm",
-             "kb_deadlift"
-            ],
-            "contraindicated_with": [
-             "lumbar_disc",
-             "hip_flexor_strain"
-            ],
-            "progressions": {
-             "load": "increase_bell_weight",
-             "volume": "increase_duration_or_reps",
-             "complexity": "wk_kb_swing_single_arm"
-            },
-            "scaling_down": [
-             "kb_deadlift"
-            ],
-            "typical_volume": {
-             "sets": 3,
-             "reps": 20
-            },
-            "sources": [
-             "Wildman",
-             "Pavel",
-             "Horsemen",
-             "Gym Jones"
-            ],
-            "notes": "Foundational kettlebell ballistic. Hip-hinge driven; bell floats to shoulder height on the hip-snap. Horsemen warm-up complex: 1 min two-hand swings. Gym Jones breathing ladder uses swings 1–20 at 53 lb. Wildman complexity progression begins here. Two hands on the bell; posterior-chain power driver.\n",
-            "starting_load_kg": {
-             "novice": 16,
-             "intermediate": 24,
-             "advanced": 32,
-             "elite": 40
-            },
-            "_package": "wildman_kettlebell",
-            "_packages": [
-             "wildman_kettlebell"
-            ]
-           },
-           "load": {
-            "target_rounds": 10,
-            "reps_per_round": 8,
-            "work_sec": 60,
-            "rest_sec": 0,
-            "time_minutes": 10,
-            "format": "EMOM",
-            "duration_minutes": 10,
-            "prescription_version": 1,
-            "progression_model": "density_cycle",
-            "module_id": "swing",
-            "forecast_step": 1,
-            "advances_module": true,
-            "conditional": true,
-            "elapsed_sec": 600
-           },
-           "slot_role": "swing_main",
-           "slot_type": "emom",
-           "rest_sec": 0,
-           "meta": false,
-           "injury_skip": false,
-           "coverage_gap": false,
-           "equipment_gap": false,
-           "gap_reason": null,
-           "substituted_for": null,
-           "error": null,
-           "load_note": "Choose a bell you can control throughout. Record its weight before increasing load. Away more than a week? Wildman repeats the last workouts before moving on — repeat them if you need to; the program carries on either way.",
-           "notes": "Swings at the top of each minute (or round); rest for its remainder. Wildman's most common option alternates minutes of two-hand and hand-to-hand swings once both are clean. Stop if technique or breathing deteriorates.",
-           "parent_slot_role": null,
-           "skip_exercise": false
-          },
-          {
-           "exercise": {
-            "id": "wk_kb_halo",
-            "name": "Kettlebell Halo",
-            "category": "kettlebell",
-            "modality": [
-             "movement_skill"
-            ],
-            "equipment": [
-             "kettlebell"
-            ],
-            "effort": "low",
-            "bilateral": false,
-            "movement_patterns": [
-             "rotation"
-            ],
-            "requires": [],
-            "unlocks": [
-             "wk_kb_tgu",
-             "kb_windmill"
-            ],
-            "contraindicated_with": [
-             "shoulder_impingement",
-             "neck_strain",
-             "wrist_injury"
-            ],
-            "progressions": {
-             "load": "increase_bell_weight",
-             "volume": "increase_reps_per_side",
-             "complexity": "wk_kb_tgu"
-            },
-            "scaling_down": [],
-            "typical_volume": {
-             "sets": 2,
-             "reps": 5
-            },
-            "sources": [
-             "Wildman",
-             "Pavel"
-            ],
-            "notes": "Bell held by horns and circled around the head in a controlled arc; direction alternated each rep. Standard Wildman warm-up movement used to prime the shoulder girdle, thoracic spine, and neck before any pressing or overhead work. Teaches scapular control and positions the shoulder for TGU and windmill loading.\n",
-            "starting_load_kg": {
-             "novice": 8,
-             "intermediate": 12,
-             "advanced": 16,
-             "elite": 20
-            },
-            "_package": "wildman_kettlebell",
-            "_packages": [
-             "wildman_kettlebell"
-            ]
-           },
-           "load": {
-            "duration_minutes": 2,
-            "focus": "Controlled technique; stop before movement quality deteriorates.",
-            "prescription_version": 1,
-            "progression_model": "density_cycle",
-            "module_id": "swing",
-            "forecast_step": 1,
-            "advances_module": false,
-            "conditional": true,
-            "elapsed_sec": 120
-           },
-           "slot_role": "swing_recovery",
-           "slot_type": "skill_practice",
-           "rest_sec": 0,
-           "meta": false,
-           "injury_skip": false,
-           "coverage_gap": false,
-           "equipment_gap": false,
-           "gap_reason": null,
-           "substituted_for": null,
-           "error": null,
-           "load_note": null,
-           "notes": "Gentle unloaded or very light shoulder circles; omit external load if fatigued.",
-           "parent_slot_role": null,
-           "skip_exercise": false
-          },
-          {
-           "exercise": {
-            "id": "wk_deck_squat",
-            "name": "Deck Squat",
-            "category": "kettlebell",
-            "modality": [
-             "movement_skill",
-             "strength_endurance"
-            ],
-            "equipment": [],
-            "effort": "medium",
-            "bilateral": true,
-            "movement_patterns": [
-             "squat"
-            ],
-            "requires": [],
-            "unlocks": [],
-            "contraindicated_with": [
-             "lumbar_disc",
-             "knee_meniscus_post_op"
-            ],
-            "sources": [
-             "Wildman"
-            ],
-            "notes": "Wildman's deck squat: squat down, roll back onto the spine with the head kept off the floor, roll forward and stand straight up out of the squat. Bodyweight first; a kettlebell (or sandbag, medicine ball) held at the chest once the roll and the stand are clean.\n",
-            "_package": "wildman_kettlebell",
-            "_packages": [
-             "wildman_kettlebell"
-            ]
-           },
-           "load": {
-            "target_rounds": 10,
-            "reps_per_round": 3,
-            "work_sec": 60,
-            "rest_sec": 0,
-            "time_minutes": 10,
-            "format": "EMOM",
-            "duration_minutes": 10,
-            "prescription_version": 1,
-            "progression_model": "density_cycle",
-            "module_id": "deck_squat",
-            "forecast_step": 1,
-            "advances_module": true,
-            "conditional": true,
-            "elapsed_sec": 600
-           },
-           "slot_role": "deck_squat_squat",
-           "slot_type": "emom",
-           "rest_sec": 0,
-           "meta": false,
-           "injury_skip": false,
-           "coverage_gap": false,
-           "equipment_gap": false,
-           "gap_reason": null,
-           "substituted_for": null,
-           "error": null,
-           "load_note": null,
-           "notes": "Deck squats at the top of each minute: squat, roll back with the head off the floor, roll forward and stand. Bodyweight until a cycle is clean, then a light bell at the chest.",
-           "parent_slot_role": null,
-           "skip_exercise": false
-          }
-         ],
-         "complementary_work": []
-        }
-       ],
-       "Friday": [
         {
          "modality": "movement_skill",
          "archetype": {
@@ -5455,10 +5073,431 @@
            "skip_exercise": false
           }
          ],
-         "complementary_work": []
+         "complementary_work": [],
+         "icon": "kettlebell"
         }
        ],
-       "Sunday": [
+       "Thursday": [
+        {
+         "modality": "power",
+         "archetype": {
+          "id": "kb_ballistic_session",
+          "name": "Nerd Math Two-Hand Swing + Deck Squat Practice",
+          "_package": "wildman_kettlebell",
+          "modality": "power",
+          "duration_estimate_minutes": 25,
+          "slots": [
+           {
+            "role": "swing_prep",
+            "slot_type": "skill_practice",
+            "notes": "Rehearse the hinge with a controllable bell; this is preparation, not a load test.",
+            "exercise_filter": {
+             "exercise_ids": [
+              "kb_deadlift"
+             ]
+            },
+            "rest_sec": 0
+           },
+           {
+            "role": "swing_main",
+            "slot_type": "emom",
+            "notes": "Swings at the top of each minute (or round); rest for its remainder. Wildman's most common option alternates minutes of two-hand and hand-to-hand swings once both are clean. Stop if technique or breathing deteriorates.",
+            "exercise_filter": {
+             "exercise_ids": [
+              "wk_kb_swing_two_hand"
+             ]
+            },
+            "rest_sec": 0
+           },
+           {
+            "role": "swing_recovery",
+            "slot_type": "skill_practice",
+            "notes": "Gentle unloaded or very light shoulder circles; omit external load if fatigued.",
+            "exercise_filter": {
+             "exercise_ids": [
+              "wk_kb_halo"
+             ]
+            },
+            "rest_sec": 0
+           },
+           {
+            "role": "deck_squat_squat",
+            "slot_type": "emom",
+            "notes": "Deck squats at the top of each minute: squat, roll back with the head off the floor, roll forward and stand. Bodyweight until a cycle is clean, then a light bell at the chest.",
+            "exercise_filter": {
+             "exercise_ids": [
+              "wk_deck_squat"
+             ]
+            },
+            "rest_sec": 0
+           }
+          ],
+          "notes": "Repeated single-bell practice in independently progressing modules. Complete the repetitions at the start of each minute and rest for the remainder. Advance only after clean completion at RPE 7 or below. Future exposures are conditional forecasts, not earned progress. Keep the chosen bell throughout the cycle; choosing a heavier bell starts a new cycle explicitly. No snatch, jerk or double-bell progression is inferred from the calendar.\n",
+          "training_levels": [
+           "novice",
+           "intermediate",
+           "advanced",
+           "elite"
+          ]
+         },
+         "is_deload": false,
+         "modules": [
+          {
+           "id": "swing",
+           "forecast_step": 1,
+           "deload": false,
+           "archetype_id": "kb_ballistic_session",
+           "exercise_ids": [
+            "wk_kb_swing_two_hand"
+           ],
+           "rounds": 10,
+           "max_rpe": 7,
+           "requirements": {
+            "wk_kb_swing_two_hand": {
+             "rounds": 10,
+             "duration_sec": 0
+            }
+           },
+           "duration_sec": 0
+          },
+          {
+           "id": "deck_squat",
+           "forecast_step": 1,
+           "deload": false,
+           "archetype_id": "kb_squat_practice",
+           "exercise_ids": [
+            "wk_deck_squat"
+           ],
+           "rounds": 10,
+           "max_rpe": 7,
+           "requirements": {
+            "wk_deck_squat": {
+             "rounds": 10,
+             "duration_sec": 0
+            }
+           },
+           "duration_sec": 0
+          }
+         ],
+         "provenance": {
+          "package": "wildman_kettlebell",
+          "borrowed": false
+         },
+         "exercises": [
+          {
+           "exercise": {
+            "id": "kb_deadlift",
+            "name": "Kettlebell Deadlift",
+            "category": "kettlebell",
+            "modality": [
+             "max_strength",
+             "durability"
+            ],
+            "equipment": [
+             "kettlebell"
+            ],
+            "effort": "low",
+            "bilateral": true,
+            "movement_patterns": [
+             "hip_hinge"
+            ],
+            "unlocks": [
+             "wk_kb_swing_two_hand",
+             "wk_kb_swing_single_arm"
+            ],
+            "contraindicated_with": [
+             "lumbar_disc",
+             "hip_flexor_strain"
+            ],
+            "progressions": {
+             "load": "increase_bell_weight",
+             "volume": "increase_reps_per_set",
+             "complexity": "wk_kb_swing_two_hand"
+            },
+            "scaling_down": [],
+            "typical_volume": {
+             "sets": 3,
+             "reps": 10
+            },
+            "sources": [
+             "Wildman",
+             "Pavel"
+            ],
+            "notes": "Hip-hinge pattern with kettlebell between feet, pulled to standing. No prerequisites beyond basic motor control; the first movement taught in Wildman's complexity ladder. Direct gateway to swings; teaches the hip hinge without ballistic demand.\n",
+            "starting_load_kg": {
+             "novice": 16,
+             "intermediate": 24,
+             "advanced": 32,
+             "elite": 48
+            },
+            "_package": "wildman_kettlebell",
+            "_packages": [
+             "wildman_kettlebell"
+            ]
+           },
+           "load": {
+            "duration_minutes": 3,
+            "focus": "Controlled technique; stop before movement quality deteriorates.",
+            "prescription_version": 1,
+            "progression_model": "density_cycle",
+            "module_id": "swing",
+            "forecast_step": 1,
+            "advances_module": false,
+            "conditional": true,
+            "elapsed_sec": 180
+           },
+           "slot_role": "swing_prep",
+           "slot_type": "skill_practice",
+           "rest_sec": 0,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": false,
+           "gap_reason": null,
+           "substituted_for": null,
+           "error": null,
+           "load_note": null,
+           "notes": "Rehearse the hinge with a controllable bell; this is preparation, not a load test.",
+           "parent_slot_role": null,
+           "skip_exercise": false
+          },
+          {
+           "exercise": {
+            "id": "wk_kb_swing_two_hand",
+            "name": "Kettlebell Swing (Two-Hand)",
+            "category": "kettlebell",
+            "modality": [
+             "power",
+             "aerobic_base",
+             "strength_endurance"
+            ],
+            "equipment": [
+             "kettlebell"
+            ],
+            "effort": "medium",
+            "bilateral": true,
+            "movement_patterns": [
+             "hip_hinge",
+             "ballistic"
+            ],
+            "requires": [
+             "hip_hinge",
+             "bracing_mechanics"
+            ],
+            "unlocks": [
+             "wk_kb_swing_single_arm",
+             "kb_deadlift"
+            ],
+            "contraindicated_with": [
+             "lumbar_disc",
+             "hip_flexor_strain"
+            ],
+            "progressions": {
+             "load": "increase_bell_weight",
+             "volume": "increase_duration_or_reps",
+             "complexity": "wk_kb_swing_single_arm"
+            },
+            "scaling_down": [
+             "kb_deadlift"
+            ],
+            "typical_volume": {
+             "sets": 3,
+             "reps": 20
+            },
+            "sources": [
+             "Wildman",
+             "Pavel",
+             "Horsemen",
+             "Gym Jones"
+            ],
+            "notes": "Foundational kettlebell ballistic. Hip-hinge driven; bell floats to shoulder height on the hip-snap. Horsemen warm-up complex: 1 min two-hand swings. Gym Jones breathing ladder uses swings 1–20 at 53 lb. Wildman complexity progression begins here. Two hands on the bell; posterior-chain power driver.\n",
+            "starting_load_kg": {
+             "novice": 16,
+             "intermediate": 24,
+             "advanced": 32,
+             "elite": 40
+            },
+            "_package": "wildman_kettlebell",
+            "_packages": [
+             "wildman_kettlebell"
+            ]
+           },
+           "load": {
+            "target_rounds": 10,
+            "reps_per_round": 8,
+            "work_sec": 60,
+            "rest_sec": 0,
+            "time_minutes": 10,
+            "format": "EMOM",
+            "duration_minutes": 10,
+            "prescription_version": 1,
+            "progression_model": "density_cycle",
+            "module_id": "swing",
+            "forecast_step": 1,
+            "advances_module": true,
+            "conditional": true,
+            "elapsed_sec": 600
+           },
+           "slot_role": "swing_main",
+           "slot_type": "emom",
+           "rest_sec": 0,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": false,
+           "gap_reason": null,
+           "substituted_for": null,
+           "error": null,
+           "load_note": "Choose a bell you can control throughout. Record its weight before increasing load. Away more than a week? Wildman repeats the last workouts before moving on — repeat them if you need to; the program carries on either way.",
+           "notes": "Swings at the top of each minute (or round); rest for its remainder. Wildman's most common option alternates minutes of two-hand and hand-to-hand swings once both are clean. Stop if technique or breathing deteriorates.",
+           "parent_slot_role": null,
+           "skip_exercise": false
+          },
+          {
+           "exercise": {
+            "id": "wk_kb_halo",
+            "name": "Kettlebell Halo",
+            "category": "kettlebell",
+            "modality": [
+             "movement_skill"
+            ],
+            "equipment": [
+             "kettlebell"
+            ],
+            "effort": "low",
+            "bilateral": false,
+            "movement_patterns": [
+             "rotation"
+            ],
+            "requires": [],
+            "unlocks": [
+             "wk_kb_tgu",
+             "kb_windmill"
+            ],
+            "contraindicated_with": [
+             "shoulder_impingement",
+             "neck_strain",
+             "wrist_injury"
+            ],
+            "progressions": {
+             "load": "increase_bell_weight",
+             "volume": "increase_reps_per_side",
+             "complexity": "wk_kb_tgu"
+            },
+            "scaling_down": [],
+            "typical_volume": {
+             "sets": 2,
+             "reps": 5
+            },
+            "sources": [
+             "Wildman",
+             "Pavel"
+            ],
+            "notes": "Bell held by horns and circled around the head in a controlled arc; direction alternated each rep. Standard Wildman warm-up movement used to prime the shoulder girdle, thoracic spine, and neck before any pressing or overhead work. Teaches scapular control and positions the shoulder for TGU and windmill loading.\n",
+            "starting_load_kg": {
+             "novice": 8,
+             "intermediate": 12,
+             "advanced": 16,
+             "elite": 20
+            },
+            "_package": "wildman_kettlebell",
+            "_packages": [
+             "wildman_kettlebell"
+            ]
+           },
+           "load": {
+            "duration_minutes": 2,
+            "focus": "Controlled technique; stop before movement quality deteriorates.",
+            "prescription_version": 1,
+            "progression_model": "density_cycle",
+            "module_id": "swing",
+            "forecast_step": 1,
+            "advances_module": false,
+            "conditional": true,
+            "elapsed_sec": 120
+           },
+           "slot_role": "swing_recovery",
+           "slot_type": "skill_practice",
+           "rest_sec": 0,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": false,
+           "gap_reason": null,
+           "substituted_for": null,
+           "error": null,
+           "load_note": null,
+           "notes": "Gentle unloaded or very light shoulder circles; omit external load if fatigued.",
+           "parent_slot_role": null,
+           "skip_exercise": false
+          },
+          {
+           "exercise": {
+            "id": "wk_deck_squat",
+            "name": "Deck Squat",
+            "category": "kettlebell",
+            "modality": [
+             "movement_skill",
+             "strength_endurance"
+            ],
+            "equipment": [],
+            "effort": "medium",
+            "bilateral": true,
+            "movement_patterns": [
+             "squat"
+            ],
+            "requires": [],
+            "unlocks": [],
+            "contraindicated_with": [
+             "lumbar_disc",
+             "knee_meniscus_post_op"
+            ],
+            "sources": [
+             "Wildman"
+            ],
+            "notes": "Wildman's deck squat: squat down, roll back onto the spine with the head kept off the floor, roll forward and stand straight up out of the squat. Bodyweight first; a kettlebell (or sandbag, medicine ball) held at the chest once the roll and the stand are clean.\n",
+            "_package": "wildman_kettlebell",
+            "_packages": [
+             "wildman_kettlebell"
+            ]
+           },
+           "load": {
+            "target_rounds": 10,
+            "reps_per_round": 3,
+            "work_sec": 60,
+            "rest_sec": 0,
+            "time_minutes": 10,
+            "format": "EMOM",
+            "duration_minutes": 10,
+            "prescription_version": 1,
+            "progression_model": "density_cycle",
+            "module_id": "deck_squat",
+            "forecast_step": 1,
+            "advances_module": true,
+            "conditional": true,
+            "elapsed_sec": 600
+           },
+           "slot_role": "deck_squat_squat",
+           "slot_type": "emom",
+           "rest_sec": 0,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": false,
+           "gap_reason": null,
+           "substituted_for": null,
+           "error": null,
+           "load_note": null,
+           "notes": "Deck squats at the top of each minute: squat, roll back with the head off the floor, roll forward and stand. Bodyweight until a cycle is clean, then a light bell at the chest.",
+           "parent_slot_role": null,
+           "skip_exercise": false
+          }
+         ],
+         "complementary_work": [],
+         "icon": "kettlebell"
+        }
+       ],
+       "Saturday": [
         {
          "modality": "movement_skill",
          "archetype": {
@@ -5933,7 +5972,8 @@
            "skip_exercise": false
           }
          ],
-         "complementary_work": []
+         "complementary_work": [],
+         "icon": "kettlebell"
         }
        ]
       },
@@ -6288,171 +6328,6 @@
         ],
         "Wednesday": [
          {
-          "modality": "power",
-          "archetype": {
-           "selected_id": "kb_ballistic_session",
-           "filter_counts": {},
-           "candidates": []
-          },
-          "modules": [
-           "swing",
-           "deck_squat"
-          ],
-          "slots": [
-           {
-            "slot_index": 0,
-            "slot_role": "swing_prep",
-            "slot_type": "skill_practice",
-            "meta": false,
-            "movement_pattern": null,
-            "selected_id": "kb_deadlift",
-            "injury_blocked": false,
-            "filter_counts": {},
-            "candidates": [],
-            "module_id": "swing"
-           },
-           {
-            "slot_index": 1,
-            "slot_role": "swing_main",
-            "slot_type": "emom",
-            "meta": false,
-            "movement_pattern": null,
-            "selected_id": "wk_kb_swing_two_hand",
-            "injury_blocked": false,
-            "filter_counts": {},
-            "candidates": [],
-            "module_id": "swing"
-           },
-           {
-            "slot_index": 2,
-            "slot_role": "swing_recovery",
-            "slot_type": "skill_practice",
-            "meta": false,
-            "movement_pattern": null,
-            "selected_id": "wk_kb_halo",
-            "injury_blocked": false,
-            "filter_counts": {},
-            "candidates": [],
-            "module_id": "swing"
-           },
-           {
-            "slot_index": 3,
-            "slot_role": "deck_squat_squat",
-            "slot_type": "emom",
-            "meta": false,
-            "movement_pattern": null,
-            "selected_id": "wk_deck_squat",
-            "injury_blocked": false,
-            "filter_counts": {},
-            "candidates": [],
-            "module_id": "deck_squat"
-           }
-          ],
-          "progression": [
-           {
-            "exercise_id": "kb_deadlift",
-            "exercise_name": "Kettlebell Deadlift",
-            "slot_role": "swing_prep",
-            "slot_type": "skill_practice",
-            "model": "density_cycle",
-            "week": 1,
-            "phase": "build",
-            "level": "intermediate",
-            "is_deload": false,
-            "output": {
-             "duration_minutes": 3,
-             "focus": "Controlled technique; stop before movement quality deteriorates.",
-             "prescription_version": 1,
-             "progression_model": "density_cycle",
-             "module_id": "swing",
-             "forecast_step": 1,
-             "advances_module": false,
-             "conditional": true,
-             "elapsed_sec": 180
-            }
-           },
-           {
-            "exercise_id": "wk_kb_swing_two_hand",
-            "exercise_name": "Kettlebell Swing (Two-Hand)",
-            "slot_role": "swing_main",
-            "slot_type": "emom",
-            "model": "density_cycle",
-            "week": 1,
-            "phase": "build",
-            "level": "intermediate",
-            "is_deload": false,
-            "output": {
-             "target_rounds": 10,
-             "reps_per_round": 8,
-             "work_sec": 60,
-             "rest_sec": 0,
-             "time_minutes": 10,
-             "format": "EMOM",
-             "duration_minutes": 10,
-             "load_note": "Choose a bell you can control throughout. Record its weight before increasing load. Away more than a week? Wildman repeats the last workouts before moving on — repeat them if you need to; the program carries on either way.",
-             "prescription_version": 1,
-             "progression_model": "density_cycle",
-             "module_id": "swing",
-             "forecast_step": 1,
-             "advances_module": true,
-             "conditional": true,
-             "elapsed_sec": 600
-            }
-           },
-           {
-            "exercise_id": "wk_kb_halo",
-            "exercise_name": "Kettlebell Halo",
-            "slot_role": "swing_recovery",
-            "slot_type": "skill_practice",
-            "model": "density_cycle",
-            "week": 1,
-            "phase": "build",
-            "level": "intermediate",
-            "is_deload": false,
-            "output": {
-             "duration_minutes": 2,
-             "focus": "Controlled technique; stop before movement quality deteriorates.",
-             "prescription_version": 1,
-             "progression_model": "density_cycle",
-             "module_id": "swing",
-             "forecast_step": 1,
-             "advances_module": false,
-             "conditional": true,
-             "elapsed_sec": 120
-            }
-           },
-           {
-            "exercise_id": "wk_deck_squat",
-            "exercise_name": "Deck Squat",
-            "slot_role": "deck_squat_squat",
-            "slot_type": "emom",
-            "model": "density_cycle",
-            "week": 1,
-            "phase": "build",
-            "level": "intermediate",
-            "is_deload": false,
-            "output": {
-             "target_rounds": 10,
-             "reps_per_round": 3,
-             "work_sec": 60,
-             "rest_sec": 0,
-             "time_minutes": 10,
-             "format": "EMOM",
-             "duration_minutes": 10,
-             "prescription_version": 1,
-             "progression_model": "density_cycle",
-             "module_id": "deck_squat",
-             "forecast_step": 1,
-             "advances_module": true,
-             "conditional": true,
-             "elapsed_sec": 600
-            }
-           }
-          ]
-         }
-        ],
-        "Friday": [
-         {
           "modality": "movement_skill",
           "archetype": {
            "selected_id": "kb_clean_press_practice",
@@ -6623,7 +6498,172 @@
           ]
          }
         ],
-        "Sunday": [
+        "Thursday": [
+         {
+          "modality": "power",
+          "archetype": {
+           "selected_id": "kb_ballistic_session",
+           "filter_counts": {},
+           "candidates": []
+          },
+          "modules": [
+           "swing",
+           "deck_squat"
+          ],
+          "slots": [
+           {
+            "slot_index": 0,
+            "slot_role": "swing_prep",
+            "slot_type": "skill_practice",
+            "meta": false,
+            "movement_pattern": null,
+            "selected_id": "kb_deadlift",
+            "injury_blocked": false,
+            "filter_counts": {},
+            "candidates": [],
+            "module_id": "swing"
+           },
+           {
+            "slot_index": 1,
+            "slot_role": "swing_main",
+            "slot_type": "emom",
+            "meta": false,
+            "movement_pattern": null,
+            "selected_id": "wk_kb_swing_two_hand",
+            "injury_blocked": false,
+            "filter_counts": {},
+            "candidates": [],
+            "module_id": "swing"
+           },
+           {
+            "slot_index": 2,
+            "slot_role": "swing_recovery",
+            "slot_type": "skill_practice",
+            "meta": false,
+            "movement_pattern": null,
+            "selected_id": "wk_kb_halo",
+            "injury_blocked": false,
+            "filter_counts": {},
+            "candidates": [],
+            "module_id": "swing"
+           },
+           {
+            "slot_index": 3,
+            "slot_role": "deck_squat_squat",
+            "slot_type": "emom",
+            "meta": false,
+            "movement_pattern": null,
+            "selected_id": "wk_deck_squat",
+            "injury_blocked": false,
+            "filter_counts": {},
+            "candidates": [],
+            "module_id": "deck_squat"
+           }
+          ],
+          "progression": [
+           {
+            "exercise_id": "kb_deadlift",
+            "exercise_name": "Kettlebell Deadlift",
+            "slot_role": "swing_prep",
+            "slot_type": "skill_practice",
+            "model": "density_cycle",
+            "week": 1,
+            "phase": "build",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "duration_minutes": 3,
+             "focus": "Controlled technique; stop before movement quality deteriorates.",
+             "prescription_version": 1,
+             "progression_model": "density_cycle",
+             "module_id": "swing",
+             "forecast_step": 1,
+             "advances_module": false,
+             "conditional": true,
+             "elapsed_sec": 180
+            }
+           },
+           {
+            "exercise_id": "wk_kb_swing_two_hand",
+            "exercise_name": "Kettlebell Swing (Two-Hand)",
+            "slot_role": "swing_main",
+            "slot_type": "emom",
+            "model": "density_cycle",
+            "week": 1,
+            "phase": "build",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "target_rounds": 10,
+             "reps_per_round": 8,
+             "work_sec": 60,
+             "rest_sec": 0,
+             "time_minutes": 10,
+             "format": "EMOM",
+             "duration_minutes": 10,
+             "load_note": "Choose a bell you can control throughout. Record its weight before increasing load. Away more than a week? Wildman repeats the last workouts before moving on — repeat them if you need to; the program carries on either way.",
+             "prescription_version": 1,
+             "progression_model": "density_cycle",
+             "module_id": "swing",
+             "forecast_step": 1,
+             "advances_module": true,
+             "conditional": true,
+             "elapsed_sec": 600
+            }
+           },
+           {
+            "exercise_id": "wk_kb_halo",
+            "exercise_name": "Kettlebell Halo",
+            "slot_role": "swing_recovery",
+            "slot_type": "skill_practice",
+            "model": "density_cycle",
+            "week": 1,
+            "phase": "build",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "duration_minutes": 2,
+             "focus": "Controlled technique; stop before movement quality deteriorates.",
+             "prescription_version": 1,
+             "progression_model": "density_cycle",
+             "module_id": "swing",
+             "forecast_step": 1,
+             "advances_module": false,
+             "conditional": true,
+             "elapsed_sec": 120
+            }
+           },
+           {
+            "exercise_id": "wk_deck_squat",
+            "exercise_name": "Deck Squat",
+            "slot_role": "deck_squat_squat",
+            "slot_type": "emom",
+            "model": "density_cycle",
+            "week": 1,
+            "phase": "build",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "target_rounds": 10,
+             "reps_per_round": 3,
+             "work_sec": 60,
+             "rest_sec": 0,
+             "time_minutes": 10,
+             "format": "EMOM",
+             "duration_minutes": 10,
+             "prescription_version": 1,
+             "progression_model": "density_cycle",
+             "module_id": "deck_squat",
+             "forecast_step": 1,
+             "advances_module": true,
+             "conditional": true,
+             "elapsed_sec": 600
+            }
+           }
+          ]
+         }
+        ],
+        "Saturday": [
          {
           "modality": "movement_skill",
           "archetype": {
