@@ -971,7 +971,7 @@ Both Swift files carry the web hex in a trailing comment on every line (`// #ef4
 
 `test/semanticContrast.test.ts` is the only thing keeping §8 honest. Run by `npm test` and by CI on every frontend PR.
 
-**What it checks.** Every entry of `MODALITY_COLORS`, `PHASE_COLORS`, `COMPLETION`, `STATUS_STYLES` and `STATUS_TEXT`, against all four themes:
+**What it checks.** Every entry of `MODALITY_COLORS`, `PHASE_COLORS`, `MOVEMENT_GROUP_COLORS` (§8.11), `COMPLETION`, `STATUS_STYLES` and `STATUS_TEXT`, against all four themes:
 
 1. **Contrast ≥ 4.5:1** — composites the `/N` tint over that theme's `--background`, picks the light or dark half of the pair depending on the theme, and measures.
 2. **Both halves declared** — a bare `text-*` and a `dark:text-*`. This is the structural half of the rule: a single mid-shade cannot serve both themes, so an entry missing one half is wrong even if it happens to pass numerically today.
@@ -989,6 +989,35 @@ modality/power in "zen": 4.25:1 (need 4.5:1)
 Bump the light half one step and re-run. Do not lower the threshold, and do not exempt a theme.
 
 **Why this exists at all.** This bug class is invisible to every other gate — `tsc`, `vite build`, and `eslint` all pass on a badge at 2.3:1, and Tailwind emits no error for a nonsense variant chain like `dark:hover:text-x-700 dark:hover:text-x-300`. It only shows in a theme most development never opens. When the guard was first written it immediately found **14 entries** that a careful manual sweep had missed.
+
+
+### 8.11 Movement Group Colors
+
+Explore ▸ Movements colours a movement by the analytics group it counts toward
+(`src/analytics/movement.ROLLUPS`), as an exercise is coloured by its category
+(§8.5): the two pushes share orange the way two barbell lifts share red, and a
+pattern outside every group is slate. One module, `lib/movementColors.ts`
+(`MOVEMENT_GROUP_COLORS`, `movementColor(rollup)`), in the §8.1 shape:
+
+| Group | hex | | Group | hex |
+|---|---|---|---|---|
+| push | `#f97316` orange | | locomotion | `#0ea5e9` sky |
+| pull | `#3b82f6` blue | | rotation | `#8b5cf6` violet |
+| hinge | `#eab308` yellow | | isometric | `#14b8a6` teal |
+| squat | `#10b981` emerald | | ballistic | `#ef4444` red |
+| carry | `#d97706` amber | | olympic | `#ec4899` pink |
+| *other* | `#94a3b8` slate | | | |
+
+Web only: the phone has no Explore, so nothing mirrors it (§8.9). It shares hues
+with the modality palette; the two never sit on one mark — a lineage pill is one
+level's entity, drawn in that level's colour.
+
+**Every Explore level has one colour, from one place** (`lib/exploreColors.ts` and
+the modules it reads), used by its landing cards, its detail header and its
+lineage pills (§13.8): a philosophy in its first bias's modality colour, a
+framework in its philosophy's, a modality in its own (§8.1), an archetype and an
+exercise by category (`ARCH_CAT_COLORS`, `EX_CATEGORY_COLORS`, with the landings'
+fallbacks), a movement by group.
 
 ---
 
@@ -2033,8 +2062,9 @@ Exercise → Movement (`components/explore/LineageSection.tsx`, fed by
   placed just above Similar.
 - **Groups, then pills.** A group is a label and a count (`Archetypes · Wildman 3`,
   a track's name, a slot role); many-to-many levels group by philosophy. A pill
-  (`LineagePill`) carries its topic's icon and a mono note (`2/wk · committed`,
-  a phase, a slot role); past 12 a group collapses to "Show all N".
+  (`LineagePill`) carries its topic's icon, a mono note (`2/wk · committed`,
+  a phase, a slot role) and its level's colour as a 2px left border (§8.11, the
+  landings' colour-coded border); past 12 a group collapses to "Show all N".
 - **A pill opens the detail it names** by pushing `?topic=&id=` — Back steps back
   along the trail. What has no detail (a prerequisite concept, a slot-filter
   alias) is a dashed, unclickable pill.

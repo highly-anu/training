@@ -2,10 +2,11 @@ import { useMemo } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { LoadingCard } from '@/components/shared/LoadingCard'
 import { SimilarItems } from '@/components/shared/SimilarItems'
-import { Section, StatCell } from '@/components/explore/ExploreSection'
+import { StatCell } from '@/components/explore/ExploreSection'
 import { LineageSection } from '@/components/explore/LineageSection'
 import { useLinkIndex } from '@/components/explore/useLineage'
 import { lineageOf, prettify } from '@/lib/exploreLinks'
+import { movementColor } from '@/lib/movementColors'
 import type { Movement } from '@/api/types'
 
 // The analytics groups (src/analytics/movement.ROLLUPS), in that order; a
@@ -27,7 +28,7 @@ export function MovementLanding({ movements, isLoading, onSelect }: {
     const keys = [...ROLLUP_ORDER.filter((k) => byRollup.has(k)), ...(byRollup.has('') ? [''] : [])]
     return keys.map((k) => ({
       key: k,
-      label: k ? prettify(k) : 'Other',
+      color: movementColor(k),
       items: (byRollup.get(k) ?? []).sort((a, b) => b.exerciseCount - a.exerciseCount),
     }))
   }, [movements])
@@ -49,7 +50,11 @@ export function MovementLanding({ movements, isLoading, onSelect }: {
         </div>
 
         {groups.map((g) => (
-          <Section key={g.key} label={g.label}>
+          <div key={g.key} className="space-y-2">
+            <div className="flex items-center gap-1.5">
+              <div className="size-1.5 rounded-full" style={{ backgroundColor: g.color.hex }} />
+              <p className={`text-[10px] uppercase tracking-wider font-medium ${g.color.text}`}>{g.color.label}</p>
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {g.items.map((m) => (
                 <button
@@ -58,6 +63,7 @@ export function MovementLanding({ movements, isLoading, onSelect }: {
                   onClick={() => onSelect(m.id)}
                   className="text-left rounded-lg border border-border/30 bg-card/40 px-3 py-2.5 transition-all
                              hover:border-primary/40 hover:shadow-sm hover:-translate-y-px hover:bg-muted/20 group"
+                  style={{ borderLeftColor: g.color.hex, borderLeftWidth: 2 }}
                 >
                   <p className="text-[11px] font-medium truncate group-hover:text-primary transition-colors">{m.name}</p>
                   <p className="text-[10px] text-muted-foreground/60 font-mono">
@@ -66,7 +72,7 @@ export function MovementLanding({ movements, isLoading, onSelect }: {
                 </button>
               ))}
             </div>
-          </Section>
+          </div>
         ))}
       </div>
     </div>
@@ -79,12 +85,13 @@ export function MovementDetail({ movement, movements, onSelect, onBack }: {
   onSelect: (id: string) => void
   onBack: () => void
 }) {
-  const { index, names } = useLinkIndex()
+  const { index, names, colors } = useLinkIndex()
   const lineage = useMemo(
-    () => (index ? lineageOf(index, 'movements', movement.id, names) : null),
-    [index, movement.id, names],
+    () => (index ? lineageOf(index, 'movements', movement.id, names, colors) : null),
+    [index, movement.id, names, colors],
   )
   const philosophyCount = lineage?.up.length ?? 0
+  const color = movementColor(movement.rollup)
 
   return (
     <div className="h-full overflow-y-auto">
@@ -97,11 +104,15 @@ export function MovementDetail({ movement, movements, onSelect, onBack }: {
           All movements
         </button>
 
-        <div className="space-y-1">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">
-            Movement{movement.rollup ? ` · ${prettify(movement.rollup)}` : ''}
-          </p>
-          <h2 className="text-xl font-semibold">{movement.name}</h2>
+        {/* Name header — the group's dot and colour, as an archetype's category */}
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            <div className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: color.hex }} />
+            <span className={`text-[10px] font-mono uppercase tracking-wider ${color.text}`}>
+              Movement · {color.label}
+            </span>
+          </div>
+          <h2 className="text-xl font-semibold" style={{ color: color.hex }}>{movement.name}</h2>
         </div>
 
         <div className="grid grid-cols-3 gap-2">
@@ -121,6 +132,7 @@ export function MovementDetail({ movement, movements, onSelect, onBack }: {
           id={movement.id}
           getLabel={(id) => movements.find((m) => m.id === id)?.name ?? prettify(id)}
           onSelect={onSelect}
+          accentHex={color.hex}
         />
       </div>
     </div>

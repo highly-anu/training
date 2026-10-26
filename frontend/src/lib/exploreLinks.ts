@@ -4,6 +4,7 @@
 // exercise also has its own progression (comes before / after, easier). This
 // is the one place the edges become what a detail shows.
 import type { ExploreLinks } from '@/api/types'
+import { movementColor } from '@/lib/movementColors'
 
 export type ExploreTopic =
   | 'philosophies' | 'frameworks' | 'modalities' | 'archetypes' | 'exercises' | 'movements' | 'standards'
@@ -16,6 +17,8 @@ export interface LineageItem {
   id: string
   name: string
   note?: string
+  /** Its level's colour (lib/exploreColors.ts): the pill's left border. */
+  color?: string
 }
 
 export interface LineageGroup {
@@ -41,6 +44,17 @@ export interface LineageNames {
   modalities: Record<string, string>
   archetypes: Record<string, string>
   exercises: Record<string, string>
+}
+
+/** Each level's colours by id, stamped onto the items (`color`). */
+export type LineageColors = Partial<Record<LinkedTopic, Record<string, string>>>
+
+function paint(items: LineageItem[], colors?: LineageColors): LineageItem[] {
+  if (!colors) return items
+  return items.map((i) => {
+    const color = i.topic ? colors[i.topic]?.[i.id] : undefined
+    return color ? { ...i, color } : i
+  })
 }
 
 type L = ExploreLinks['links']
@@ -108,7 +122,14 @@ function groupByPhilosophy<T>(rows: T[], pkgOf: (r: T) => string | undefined, it
   return out
 }
 
-export function lineageOf(ix: LinkIndex, topic: LinkedTopic, id: string, names: LineageNames): Lineage {
+export function lineageOf(ix: LinkIndex, topic: LinkedTopic, id: string, names: LineageNames,
+                          colors?: LineageColors): Lineage {
+  const { up, down } = lineageUncoloured(ix, topic, id, names)
+  const each = (groups: LineageGroup[]) => groups.map((g) => ({ ...g, items: paint(g.items, colors) }))
+  return { up: each(up), down: each(down) }
+}
+
+function lineageUncoloured(ix: LinkIndex, topic: LinkedTopic, id: string, names: LineageNames): Lineage {
   const l = ix.doc.links
   switch (topic) {
     case 'philosophies': {
@@ -208,7 +229,9 @@ export function lineageOf(ix: LinkIndex, topic: LinkedTopic, id: string, names: 
       if (move?.filterGroups.length) {
         down.push({ label: 'Slot filters', items: move.filterGroups.map((g) => ({ id: g, name: prettify(g) })) })
       }
-      if (move?.rollup) down.push({ label: 'Counted as', items: [{ id: move.rollup, name: prettify(move.rollup) }] })
+      if (move?.rollup) {
+        down.push({ label: 'Counted as', items: [{ id: move.rollup, name: prettify(move.rollup), color: movementColor(move.rollup).hex }] })
+      }
       return {
         up: groupByPhilosophy(tagged, (e) => ix.exercisePackages[e.exercise], (e) => ({
           topic: 'exercises', id: e.exercise, name: name(names.exercises, e.exercise),
@@ -222,10 +245,10 @@ export function lineageOf(ix: LinkIndex, topic: LinkedTopic, id: string, names: 
 /** An exercise's progression: `requires` and `unlocks` read from both ends,
  *  a prerequisite concept as a plain item, and its easier versions. */
 export function progressionOf(ix: LinkIndex, id: string, scalingDown: string[] | undefined,
-                              names: LineageNames): ExerciseProgression {
+                              names: LineageNames, colors?: LineageColors): ExerciseProgression {
   const l = ix.doc.links
   const ex = (i: string): LineageItem => ({ topic: 'exercises', id: i, name: name(names.exercises, i) })
-  return {
+  const p = {
     before: [
       ...l.exerciseProgression.filter((e) => e.to === id).map((e) => ex(e.from)),
       ...l.exerciseConcepts.filter((e) => e.exercise === id).map((e) => ({ id: e.concept, name: prettify(e.concept), note: 'concept' })),
@@ -233,4 +256,5 @@ export function progressionOf(ix: LinkIndex, id: string, scalingDown: string[] |
     after: l.exerciseProgression.filter((e) => e.from === id).map((e) => ex(e.to)),
     easier: (scalingDown ?? []).map((s) => (names.exercises[s] ? ex(s) : { id: s, name: prettify(s) })),
   }
+  return { before: paint(p.before, colors), after: paint(p.after, colors), easier: paint(p.easier, colors) }
 }

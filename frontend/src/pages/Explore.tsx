@@ -16,6 +16,7 @@ import { useArchetypes } from '@/api/archetypes'
 import { useExercises } from '@/api/exercises'
 import { useDebounce } from '@/hooks/useDebounce'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
+import { ARCH_CAT_COLORS, EX_CATEGORY_COLORS, philosophyHex } from '@/lib/exploreColors'
 import { cn } from '@/lib/utils'
 import { PhilosophyPanel, ArchetypeCard } from '@/components/explore/PhilosophyPanel'
 import { StandardsLanding } from '@/components/explore/StandardsLanding'
@@ -135,18 +136,8 @@ type Topic = ExploreTopic
 // What one detail shows of its lineage (lib/exploreLinks.ts): null while the
 // links load.
 function useLineage(topic: Exclude<Topic, 'standards'>, id: string) {
-  const { index, names } = useLinkIndex()
-  return useMemo(() => (index ? lineageOf(index, topic, id, names) : null), [index, topic, id, names])
-}
-
-// ─── Archetype category colors ────────────────────────────────────────────────
-
-const ARCH_CAT_COLORS: Record<string, string> = {
-  strength:       '#ef4444',
-  conditioning:   '#f97316',
-  kettlebell:     '#eab308',
-  gpp_durability: '#22c55e',
-  movement_skill: '#3b82f6',
+  const { index, names, colors } = useLinkIndex()
+  return useMemo(() => (index ? lineageOf(index, topic, id, names, colors) : null), [index, topic, id, names, colors])
 }
 
 function TopicSelector({
@@ -650,7 +641,7 @@ function ModalityDetail({
           <Section label="Featured in">
             <div className="flex flex-wrap gap-1">
               {featuredIn.map((p) => (
-                <LineagePill key={p.id} item={{ topic: 'philosophies', id: p.id, name: p.name }} />
+                <LineagePill key={p.id} item={{ topic: 'philosophies', id: p.id, name: p.name, color: philosophyHex(p.bias) }} />
               ))}
             </div>
           </Section>
@@ -697,18 +688,6 @@ function ModalityDetail({
 }
 
 // ─── Exercise components ──────────────────────────────────────────────────────
-
-const EX_CATEGORY_COLORS: Record<string, string> = {
-  barbell:     '#ef4444',
-  kettlebell:  '#f97316',
-  bodyweight:  '#10b981',
-  aerobic:     '#0ea5e9',
-  loaded_carry:'#f59e0b',
-  sandbag:     '#ca8a04',
-  mobility:    '#14b8a6',
-  skill:       '#8b5cf6',
-  rehab:       '#84cc16',
-}
 
 const EX_EFFORT_COLORS: Record<string, string> = {
   low: '#10b981', medium: '#f59e0b', high: '#f97316', max: '#ef4444',
@@ -865,11 +844,11 @@ function ExercisePanel({
   onNavigate: (id: string) => void
   onBack: () => void
 }) {
-  const { index, names } = useLinkIndex()
+  const { index, names, colors } = useLinkIndex()
   const lineage = useLineage('exercises', exercise.id)
   const progression = useMemo(
-    () => (index ? progressionOf(index, exercise.id, exercise.scaling_down, names) : null),
-    [index, exercise.id, exercise.scaling_down, names],
+    () => (index ? progressionOf(index, exercise.id, exercise.scaling_down, names, colors) : null),
+    [index, exercise.id, exercise.scaling_down, names, colors],
   )
   return (
     <div className="h-full overflow-y-auto">

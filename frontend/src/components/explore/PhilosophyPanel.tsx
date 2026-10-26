@@ -1401,10 +1401,10 @@ export function PhilosophyPanel({ controlledId, onSelect, onBack }: { controlled
   const [internalId, setInternalId] = useState<string>('')
   const selectedId = controlledId !== undefined ? controlledId : internalId
   const setSelectedId = (id: string) => { if (controlledId === undefined) setInternalId(id); else onSelect?.(id) }
-  const { index, names } = useLinkIndex()
+  const { index, names, colors } = useLinkIndex()
   const lineage = useMemo(
-    () => (index && selectedId ? lineageOf(index, 'philosophies', selectedId, names) : null),
-    [index, selectedId, names],
+    () => (index && selectedId ? lineageOf(index, 'philosophies', selectedId, names, colors) : null),
+    [index, selectedId, names, colors],
   )
 
   // Per-section open state (all start collapsed; reset when selected philosophy changes)

@@ -21,6 +21,7 @@ import { MODALITY_COLORS } from '../src/lib/modalityColors'
 import { PHASE_COLORS } from '../src/lib/phaseColors'
 import { COMPLETION } from '../src/lib/completionColors'
 import { STATUS_STYLES, STATUS_TEXT } from '../src/lib/statusColors'
+import { MOVEMENT_GROUP_COLORS, MOVEMENT_OTHER_COLOR } from '../src/lib/movementColors'
 
 import { AA_NORMAL, PALETTE, THEME_BG, parseText, ratioFor } from './contrastUtils'
 
@@ -35,6 +36,11 @@ const CASES: Case[] = [
   ...Object.entries(PHASE_COLORS).map(([name, c]) => ({
     system: 'phase', name, text: c.text, bg: c.bg,
   })),
+  // Explore ▸ Movements: on its tint, and as a group label straight on the page.
+  ...Object.entries({ ...MOVEMENT_GROUP_COLORS, other: MOVEMENT_OTHER_COLOR }).flatMap(([name, c]) => [
+    { system: 'movement', name, text: c.text, bg: c.bg },
+    { system: 'movement-label', name, text: c.text, bg: '' },
+  ]),
   { system: 'completion', name: 'surface', text: COMPLETION.text, bg: COMPLETION.bg },
   { system: 'completion', name: 'interactive', text: COMPLETION.text, bg: COMPLETION.bgStrong },
   ...Object.entries(STATUS_STYLES).flatMap(([name, s]) => [
