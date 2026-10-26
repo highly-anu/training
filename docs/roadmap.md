@@ -1357,6 +1357,11 @@ scheduled ahead of the ranked list.
 - **Regional load on Explore** — the archetype and exercise details could show where
   a session's work lands (`recovery_regions.archetype_load`), served with
   `/api/explore/links`.
+- **The scheduler's day order and its high-cost window** — `_POSITION_ORDER` knows
+  `first/main/accessory/finisher/cooldown`, while the modality schema and YAML say
+  `first/last/any/standalone`, so `last` is never honoured within a day; and
+  `modality.schema.json` says `recovery_hours_min` governs a high-cost pair, where
+  `_recovery_safe` uses a fixed 48 h.
 - **iOS Library tab** — the contextual exercise sheet exists
   (`ExerciseDetailSheet`, design-system §6.14); a tab only once there is
   content to browse rather than look up.
@@ -1401,6 +1406,16 @@ two days after) and a contract's placement (after the spacing terms) — and a
 had its order); of 200 blends, 38 change and heavy-region repeats fall 3182 → 3074.
 The picker's trace now adds up to its score (day fit and blocked-equipment terms
 were missing).
+
+**Recovery windows both ways and across weeks (2026-10-26)**: the scheduler's
+checks (`_recovery_safe`, `_score_days`) looked only at earlier days of the same
+week, though modalities are placed hardest first, so a session could land the day
+before another and a Sunday's heavy day next to Monday's. They now look both ways
+and at last week's end (`_neighbours`), and a session placed inside its window
+says so in the compromises (`test_recovery_schedule.py`). No single-philosophy
+program changed (each is a source's own week or a training contract); of the 200
+two-philosophy blends that generate at 4–6 days, 27 moved a session and 8 have fewer
+clashes, none more.
 
 **Training contracts alternate and space their programs (2026-10-26)**: the
 placement search ranks, after test, stacking and optional fit, by back-to-back

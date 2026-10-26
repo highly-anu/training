@@ -417,26 +417,45 @@ def consecutive_allowances(framework: dict | None, phase: str) -> frozenset:
     )
 
 
+def _neighbours(day: int, schedule: dict, prev_week: dict | None, reach: int):
+    """(hours apart, modality) for every session placed within `reach` days
+    of `day`, before it and after it, and on the previous week's last days.
+
+    Both ways, because modalities are placed hardest first, not in day order:
+    a strength day used to land the day before a conditioning day already
+    there. And across the week, because a rotating cadence puts this week's
+    Monday a day after last week's Sunday; the next week checks itself
+    against this one, so every pair is seen once."""
+    for other in range(max(1, day - reach), min(7, day + reach) + 1):
+        if other != day:
+            for mod in schedule.get(other, []):
+                yield abs(day - other) * 24, mod
+    for other, mods in (prev_week or {}).items():
+        gap = day + 7 - other
+        if gap <= reach:
+            for mod in mods:
+                yield gap * 24, mod
+
+
 def _recovery_safe(day: int, modality: str, mod_data: dict,
                    schedule: dict, modalities: dict,
-                   allowed: frozenset = frozenset()) -> bool:
+                   allowed: frozenset = frozenset(),
+                   prev_week: dict | None = None) -> bool:
     """Return True if placing modality on day respects recovery windows."""
     recovery_needed = mod_data.get('recovery_hours_min', 24)
     my_cost = _RECOVERY_COST_RANK.get(mod_data.get('recovery_cost', 'low'), 1)
 
-    for prev_day in range(max(1, day - 3), day):
-        hours = (day - prev_day) * 24
-        for prev_mod in schedule.get(prev_day, []):
-            # The framework may have cleared this pair for adjacent days.
-            if hours <= 24 and frozenset((prev_mod, modality)) in allowed:
-                continue
-            # Same modality: enforce its recovery window
-            if prev_mod == modality and hours < recovery_needed:
-                return False
-            # Two high-cost modalities: minimum 48 h gap
-            pm_cost = _recovery_cost_rank(prev_mod, modalities)
-            if my_cost == 3 and pm_cost == 3 and hours < 48:
-                return False
+    for hours, other_mod in _neighbours(day, schedule, prev_week, 3):
+        # The framework may have cleared this pair for adjacent days.
+        if hours <= 24 and frozenset((other_mod, modality)) in allowed:
+            continue
+        # Same modality: enforce its recovery window
+        if other_mod == modality and hours < recovery_needed:
+            return False
+        # Two high-cost modalities: minimum 48 h gap
+        pm_cost = _recovery_cost_rank(other_mod, modalities)
+        if my_cost == 3 and pm_cost == 3 and hours < 48:
+            return False
     return True
 
 
@@ -458,7 +477,7 @@ def _session_compatible(day: int, new_mod: str, mod_data: dict,
 
 def _score_days(days: list, schedule: dict, modality: str,
                 mod_data: dict, modalities: dict, day_configs: dict | None = None,
-                allowed: frozenset = frozenset()) -> list:
+                allowed: frozenset = frozenset(), prev_week: dict | None = None) -> list:
     """Return days sorted by placement desirability (best first).
 
     Considers recovery windows and (optionally) duration matching.
@@ -470,18 +489,16 @@ def _score_days(days: list, schedule: dict, modality: str,
     for day in days:
         gap_score = 0
 
-        # Recovery-based scoring (existing logic)
-        for prev_day in range(max(1, day - 4), day):
-            hours = (day - prev_day) * 24
-            for prev_mod in schedule.get(prev_day, []):
-                if hours <= 24 and frozenset((prev_mod, modality)) in allowed:
-                    continue
-                if prev_mod == modality:
-                    needed = mod_data.get('recovery_hours_min', 24)
-                    gap_score -= max(0, needed - hours)
-                pm_cost = _recovery_cost_rank(prev_mod, modalities)
-                if my_cost == 3 and pm_cost == 3:
-                    gap_score -= max(0, 48 - hours)
+        # Recovery-based scoring, both ways and from last week's end
+        for hours, other_mod in _neighbours(day, schedule, prev_week, 4):
+            if hours <= 24 and frozenset((other_mod, modality)) in allowed:
+                continue
+            if other_mod == modality:
+                needed = mod_data.get('recovery_hours_min', 24)
+                gap_score -= max(0, needed - hours)
+            pm_cost = _recovery_cost_rank(other_mod, modalities)
+            if my_cost == 3 and pm_cost == 3:
+                gap_score -= max(0, 48 - hours)
 
         # Duration matching: prefer placing modalities on days whose time budget fits
         if day_configs and day in day_configs:
@@ -584,11 +601,16 @@ def assign_to_days(allocation: dict, modalities: dict,
                    days_per_week: int,
                    day_pool: List[int] | None = None,
                    constraints: dict | None = None,
-                   allowed_consecutive: frozenset = frozenset()) -> Dict[int, List[str]]:
+                   allowed_consecutive: frozenset = frozenset(),
+                   prev_week: dict | None = None,
+                   compromises: list | None = None) -> Dict[int, List[str]]:
     """Place modalities on specific days with recovery-awareness and duration matching.
 
     day_pool: pre-computed ordered day numbers (1=Mon … 7=Sun).
     constraints: optional dict with day_configs for duration matching.
+    prev_week: last week's {day: [modality]}, so its end counts against this
+    week's start. compromises: where a session placed inside its recovery
+    window is said.
     The returned dict always has keys 1–7 so the calendar shows rest days.
     """
     schedule: Dict[int, List[str]] = {d: [] for d in range(1, 8)}
@@ -610,12 +632,12 @@ def assign_to_days(allocation: dict, modalities: dict,
         mod_data = modalities.get(modality, {})
         placed = 0
         ordered_days = _score_days(days, schedule, modality, mod_data, modalities, day_configs,
-                                   allowed_consecutive)
+                                   allowed_consecutive, prev_week)
 
         for day in ordered_days:
             if placed >= count:
                 break
-            if (_recovery_safe(day, modality, mod_data, schedule, modalities, allowed_consecutive) and
+            if (_recovery_safe(day, modality, mod_data, schedule, modalities, allowed_consecutive, prev_week) and
                     _session_compatible(day, modality, mod_data, schedule, modalities)):
                 schedule[day].append(modality)
                 placed += 1
@@ -628,6 +650,10 @@ def assign_to_days(allocation: dict, modalities: dict,
                 if modality not in schedule[day]:
                     schedule[day].append(modality)
                     placed += 1
+                    if compromises is not None:
+                        note = f"{modality.replace('_', ' ')} placed inside its recovery window (not enough days apart)"
+                        if note not in compromises:
+                            compromises.append(note)
 
     return schedule
 
@@ -726,12 +752,15 @@ def _add_split_sessions(raw: Dict[int, List[str]], modalities: dict,
 def schedule_week(goal: dict, constraints: dict, data: dict,
                   phase: str, week_number: int,
                   phase_framework_id: str | None = None,
-                  collect_trace: bool = False) -> dict:
+                  collect_trace: bool = False,
+                  prev_week: dict | None = None) -> dict:
     """
     Build a weekly schedule.
 
     Args:
         phase_framework_id: Optional phase-specific framework override (the week's phase names it)
+        prev_week: the previous week's {day: [modality]}, whose last days count
+            against this week's first
 
     Returns:
         {
@@ -779,7 +808,8 @@ def schedule_week(goal: dict, constraints: dict, data: dict,
         is_deload = True
 
     raw = assign_to_days(allocation, data['modalities'], len(pool), pool, constraints,
-                         allowed_consecutive=consecutive_allowances(framework, phase))
+                         allowed_consecutive=consecutive_allowances(framework, phase),
+                         prev_week=prev_week, compromises=compromises)
 
     if constraints.get('allow_split_sessions'):
         _add_split_sessions(raw, data['modalities'], constraints)
