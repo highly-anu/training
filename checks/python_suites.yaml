@@ -1,0 +1,94 @@
+# Every Python check the pre-push hook runs (checks.sh -> tools/run_checks.py),
+# each in a clean checkout of the pushed commit, outside the repository, so no
+# .env or .env.local reaches it and nothing it writes lands in a working tree.
+#
+# This list is the one registry: tools/run_checks.py refuses to run while a
+# test_*.py at the root is in none of its sections, src/package_fidelity.py
+# counts a package's cited test as enforced only when it is listed here, and
+# tools/check_package_status.py fails when docs/package-fidelity/README.md's
+# gate table names a command this list does not run. (Until 2026-10-26 the
+# GitHub workflow .github/workflows/training-contract.yml was that registry.)
+#
+# A command is a script path plus its arguments, run from the checkout's root.
+
+# Run in parallel.
+suites:
+  # The package gates (docs/package-fidelity/README.md, "The gates").
+  - tools/validate_entities.py --all -q
+  - tools/check_provenance.py
+  - tools/check_provenance.py --coverage
+  - tools/check_styles.py
+  - tools/evaluate_packages.py        # the scorecard; the fidelity gate and exercise coverage in the same pass
+  - tools/check_analytics.py
+  - tools/check_package_status.py
+  - tools/check_code_neutral.py
+  - test_source_weeks.py
+  # Generation
+  - test_training_contract.py
+  - test_selection.py
+  - test_standard_tests.py
+  - test_phases.py
+  - test_week_template.py
+  - test_week_numbering.py
+  - test_provenance.py
+  - test_fidelity.py
+  - test_package_eval.py
+  - test_phase_summary.py
+  - test_devlab_trace.py
+  - test_constraint_impact.py
+  - test_recovery_schedule.py
+  - test_recovery_regions.py
+  - test_explore_links.py
+  - test_similarity.py
+  - test_program_preview.py
+  - test_session_icon.py
+  - test_wildman.py
+  # Analytics
+  - test_development_analytics.py
+  - test_workout_metrics.py
+  - test_workout_analysis.py
+  - test_load_summary.py
+  - test_progression_review.py
+  # The watches
+  - test_today_session.py
+  - test_last_time.py
+  # Standards
+  - test_standards.py
+  - test_standard_results_sql.py      # makes and drops its own database (TEST_ADMIN_DSN)
+  - test_standard_suggestions.py      # SQL half on its own database
+  # Program history, matching, import
+  - test_program_history.py
+  - test_session_scope.py
+  - test_workout_matcher.py
+  - test_linking.py
+  - test_fit_import.py                # the gitignored data/*.fit fixtures are copied in
+  - test_profile_merge.py
+  - test_workout_dedupe.py
+  # Accounts, devices, wellness, the server
+  - test_account_delete.py            # SQL half on its own database
+  - test_apple_client_secret.py
+  - test_device_scope.py
+  - test_wellness.py                  # SQL half on its own database
+  - test_oauth_landing.py
+  - test_worker_stalls.py
+
+# Run one at a time, after the parallel ones: each needs the checkout to itself.
+exclusive:
+  - test_program_analytics.py         # writes a throwaway package into data/packages/
+  - test_package_dropin.py            # fails if anything else changes the checkout while it runs
+  - test_watch_spec.py                # writes a throwaway package (_zz_watch_test) into data/packages/
+
+# Each gets a database of its own, created for the run and dropped after
+# (TEST_DATABASE_URL): they DROP and recreate tables in whatever they reach,
+# and their default is training_test, the local dev database. Skipped, never
+# run on the default, when no local Postgres answers.
+scratch_db:
+  - test_dedupe_sql.py
+  - test_garmin_webhook.py
+  - test_program_history_sql.py
+
+# Never run, and why.
+never:
+  test_program_envelope.py: its database is hard-coded to training_test (the dev database) and it drops user_programs
+  test_uphill_athlete.py: a demo script that asserts nothing; it generates 0 weeks on master
+  test_schedule_prioritization.py: a demo script that asserts nothing

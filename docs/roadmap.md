@@ -1357,6 +1357,11 @@ scheduled ahead of the ranked list.
 - **Regional load on Explore** — the archetype and exercise details could show where
   a session's work lands (`recovery_regions.archetype_load`), served with
   `/api/explore/links`.
+- **The scheduler's day order and its high-cost window** — `_POSITION_ORDER` knows
+  `first/main/accessory/finisher/cooldown`, while the modality schema and YAML say
+  `first/last/any/standalone`, so `last` is never honoured within a day; and
+  `modality.schema.json` says `recovery_hours_min` governs a high-cost pair, where
+  `_recovery_safe` uses a fixed 48 h.
 - **iOS Library tab** — the contextual exercise sheet exists
   (`ExerciseDetailSheet`, design-system §6.14); a tab only once there is
   content to browse rather than look up.
@@ -1401,6 +1406,31 @@ two days after) and a contract's placement (after the spacing terms) — and a
 had its order); of 200 blends, 38 change and heavy-region repeats fall 3182 → 3074.
 The picker's trace now adds up to its score (day fit and blocked-equipment terms
 were missing).
+
+**Every check runs locally; GitHub runs none (2026-10-26)**: `checks.sh` for the
+shared hooks in `../code-checks`. The pre-push hook runs, by the paths a push
+touches, every Python check in `checks/python_suites.yaml` (`tools/run_checks.py`:
+a clean checkout of the pushed commit outside the repository, eight at a time, a
+scratch database for each suite that drops tables, the admin DSN for those that
+make their own), the web's lint, build and tests, the iOS unit tests and the Garmin
+release build. The Training contracts and Frontend Build workflows are deleted; the
+registry replaced the workflow as the list `package_fidelity` and
+`check_package_status` read. GitHub ran 20 Python commands on engine changes and the
+web's three on web pull requests; the hooks now run 56 suites, and `src/` + `api.py`
+line coverage of what runs before a change lands went from 51 % to 79 % (17 files at
+0 % to 1). Three suites GitHub never ran had been failing on master since the
+Uphill contract (2026-10-21) and Gym Jones's six-day templates; fixed. The hooks
+path must be absolute for a `.claude/worktrees/` worktree to run them.
+
+**Recovery windows both ways and across weeks (2026-10-26)**: the scheduler's
+checks (`_recovery_safe`, `_score_days`) looked only at earlier days of the same
+week, though modalities are placed hardest first, so a session could land the day
+before another and a Sunday's heavy day next to Monday's. They now look both ways
+and at last week's end (`_neighbours`), and a session placed inside its window
+says so in the compromises (`test_recovery_schedule.py`). No single-philosophy
+program changed (each is a source's own week or a training contract); of the 200
+two-philosophy blends that generate at 4–6 days, 27 moved a session and 8 have fewer
+clashes, none more.
 
 **Training contracts alternate and space their programs (2026-10-26)**: the
 placement search ranks, after test, stacking and optional fit, by back-to-back
