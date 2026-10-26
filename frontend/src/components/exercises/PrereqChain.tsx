@@ -1,61 +1,62 @@
 import { ArrowDown } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import type { Exercise } from '@/api/types'
+import { LineagePill } from '@/components/explore/LineageSection'
+import type { ExerciseProgression } from '@/lib/exploreLinks'
 
 interface PrereqChainProps {
-  exercise: Exercise
-  allExercises: Exercise[]
-  onSelect: (id: string) => void
+  name: string
+  /** lib/exploreLinks.progressionOf: `requires` and `unlocks` read from both ends. */
+  progression: ExerciseProgression | null
 }
 
-export function PrereqChain({ exercise, allExercises, onSelect }: PrereqChainProps) {
-  const requires = allExercises.filter((e) => exercise.requires.includes(e.id))
-  const unlocks = allExercises.filter((e) => exercise.unlocks.includes(e.id))
+export function PrereqChain({ name, progression }: PrereqChainProps) {
+  if (!progression) return <div className="h-10 rounded-md bg-muted/20 animate-pulse" />
+  const { before, after, easier } = progression
 
-  if (!requires.length && !unlocks.length) {
+  if (!before.length && !after.length && !easier.length) {
     return (
       <p className="text-xs text-muted-foreground">No prerequisite chain found.</p>
     )
   }
 
   return (
-    <div className="flex flex-col items-center gap-1">
-      {/* Prerequisites above */}
-      {requires.map((req) => (
-        <button
-          key={req.id}
-          onClick={() => onSelect(req.id)}
-          className="rounded-full border border-border bg-muted px-3 py-1 text-xs text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors"
-        >
-          {req.name}
-        </button>
-      ))}
+    <div className="space-y-3">
+      <div className="flex flex-col items-center gap-1">
+        {/* Comes before */}
+        {before.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-1">
+            {before.map((item) => <LineagePill key={item.id} item={item} />)}
+          </div>
+        )}
 
-      {requires.length > 0 && (
-        <ArrowDown className="size-3.5 text-muted-foreground/50" />
-      )}
+        {before.length > 0 && (
+          <ArrowDown className="size-3.5 text-muted-foreground/50" />
+        )}
 
-      {/* Current exercise */}
-      <div className={cn(
-        'rounded-full border-2 border-primary bg-primary/10 px-3 py-1 text-xs font-semibold text-primary'
-      )}>
-        {exercise.name}
+        {/* Current exercise */}
+        <div className="rounded-full border-2 border-primary bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+          {name}
+        </div>
+
+        {after.length > 0 && (
+          <ArrowDown className="size-3.5 text-muted-foreground/50" />
+        )}
+
+        {/* Comes after */}
+        {after.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-1">
+            {after.map((item) => <LineagePill key={item.id} item={item} />)}
+          </div>
+        )}
       </div>
 
-      {unlocks.length > 0 && (
-        <ArrowDown className="size-3.5 text-muted-foreground/50" />
+      {easier.length > 0 && (
+        <div className="space-y-1">
+          <p className="text-[10px] text-muted-foreground/70">Scale down to</p>
+          <div className="flex flex-wrap gap-1">
+            {easier.map((item) => <LineagePill key={item.id} item={item} />)}
+          </div>
+        </div>
       )}
-
-      {/* Unlocks below */}
-      {unlocks.map((u) => (
-        <button
-          key={u.id}
-          onClick={() => onSelect(u.id)}
-          className="rounded-full border border-border bg-muted px-3 py-1 text-xs text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors"
-        >
-          {u.name}
-        </button>
-      ))}
     </div>
   )
 }

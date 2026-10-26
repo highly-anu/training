@@ -1342,6 +1342,12 @@ scheduled ahead of the ranked list.
   worth their own place. Both clients, one change (§2 of the IA).
 - **Push notifications** — local session reminders exist
   (`NotificationManager`); push would need a device-token table and a sender.
+- **Ontology heatmap reads slots by pattern only** — `useHeatmapData` and
+  `PhilosophyPanel.exerciseMatchesSlot` match a slot by `movement_pattern` /
+  `category`, but 1,748 of 1,762 slots name their exercises (`exercise_ids`), so
+  the heatmap and the philosophy detail's slot pools show far fewer exercises
+  than the selector can pick. Explore's lineage reads the server's links
+  (`/api/explore/links`); the heatmap and the slot pools should read them too.
 - **iOS Library tab** — the contextual exercise sheet exists
   (`ExerciseDetailSheet`, design-system §6.14); a tab only once there is
   content to browse rather than look up.
@@ -1375,6 +1381,13 @@ reasoning for each is in `frontend-fix-plan.md`.
 ## Done
 
 Shipped items from the absorbed documents, so nobody re-plans them.
+
+**Explore: Movements and lineage (2026-10-26)**: a Movements topic (the 42 patterns
+exercises declare, grouped as the analytics count them) and, on every detail, what
+leads into it and what follows from it, from `GET /api/explore/links`. Selection is
+the URL for every topic (`?topic=&id=`), so a pill pushes and Back retraces the
+trail. The exercise's progression chain reads `requires` and `unlocks` from both
+ends, and an exercise now lists the archetypes whose slots take it.
 
 **Standards, phase 7 (2026-10-17)**: imported runs suggest run results. A standard's YAML
 `best_effort` names its distance (1, 3, 5 miles); a FIT run — uploaded, or from Garmin Connect

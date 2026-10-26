@@ -1981,7 +1981,7 @@ Active state: primary-tinted background + primary text. Inactive: muted text tha
 **Use case:** A detail page whose subject has two halves a reader wants side by
 side before the deep disclosures — on a philosophy, *how it is set up* and
 *what it tracks and measures* (`components/explore/PhilosophySetupCard.tsx`,
-`PhilosophyMeasuresCard.tsx`, mounted by `PhilosophyExplorerPanel`).
+`PhilosophyMeasuresCard.tsx`, mounted by `PhilosophyPanel`).
 
 ```tsx
 <div className="grid gap-3 lg:grid-cols-2 items-start">
@@ -2011,6 +2011,39 @@ side before the deep disclosures — on a philosophy, *how it is set up* and
 - **Cross-references, not copies.** The framework detail's "Measured by", the
   modality's "How philosophies measure it" and the archetype's "Tracked by"
   filter the same spec document by scope rather than restating it.
+
+### 13.8 Explorer Detail: Lineage
+
+**Use case:** every Explore detail says what leads into it and what follows
+from it, one level each way: Philosophy → Framework → Modality → Archetype →
+Exercise → Movement (`components/explore/LineageSection.tsx`, fed by
+`lib/exploreLinks.lineageOf` over `GET /api/explore/links`).
+
+```tsx
+<LineageSection
+  lineage={lineage}                       // null while the links load: a pulse
+  emptyUp="No framework schedules this modality."
+  emptyDown="No archetype is written for this modality."
+/>
+```
+
+**Key patterns:**
+- **Two `Section`s side by side** ("Leads into it" / "Follows from it"), stacking
+  under `md`, in one `rounded-lg border border-border/40 bg-card/30 p-3` box,
+  placed just above Similar.
+- **Groups, then pills.** A group is a label and a count (`Archetypes · Wildman 3`,
+  a track's name, a slot role); many-to-many levels group by philosophy. A pill
+  (`LineagePill`) carries its topic's icon and a mono note (`2/wk · committed`,
+  a phase, a slot role); past 12 a group collapses to "Show all N".
+- **A pill opens the detail it names** by pushing `?topic=&id=` — Back steps back
+  along the trail. What has no detail (a prerequisite concept, a slot-filter
+  alias) is a dashed, unclickable pill.
+- **Say why a side is empty** — every caller passes both sentences; a philosophy
+  has nothing above it, a movement's lower side is only its filter groups.
+- **The links come from the server**, computed with the selector's own slot rule
+  (`src/explore_links.py`): slots name their exercises by `exercise_ids`, which
+  a client-side pattern match misses. The exercise's progression chain
+  (`PrereqChain`) reads the same document: `requires` and `unlocks` from both ends.
 
 ## 14. Responsive Design
 
@@ -2413,7 +2446,7 @@ Status as of 2026-10-01, after the information-architecture restructure
 | **Program** | `CalendarDays` | Program name | None | Overview · Calendar · History (`?tab=`) | New program · Injuries · week selector (Calendar) | ⚠️ two-row — the `PhaseBar` control strip, see below |
 | **Log** | `ClipboardList` | "Log" | None | Activity · Linking (count) | Import (opens a sheet) | ✅ |
 | **Analytics** | `BarChart3` | "Analytics" | None | Progress · Blocks · Load · Recovery (`?tab=`; `program` and `development` alias Progress and Blocks) | None (the period selector is content-level) | ✅ |
-| **Explore** | `Compass` | "Explore" | None | Section pills **+** topic selector: Philosophies · Frameworks · Modalities · Archetypes · Exercises · Standards | None | ✅ two-tier variant — see below |
+| **Explore** | `Compass` | "Explore" | None | Section pills **+** topic selector: Philosophies · Frameworks · Modalities · Archetypes · Exercises · Movements · Standards | None | ✅ two-tier variant — see below |
 | **Profile** | `User` | "Profile" | None | Athlete (incl. heart rate) · Equipment · Injuries · Schedule · Standards | None | ✅ |
 | **Settings** | `Settings` | "Settings" | None | Connections · Account · Appearance (· Developer, dev builds) (`?tab=`) | None | ✅ — the OAuth callbacks land on `?tab=connections` |
 | **Program Builder** | `Wand2` | Dynamic step title | None | None | "Step N of 4" (right) | ✅ wizard variant, at `/program/new` |
