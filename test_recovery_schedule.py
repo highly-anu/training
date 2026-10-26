@@ -42,6 +42,29 @@ class RecoveryWindows(unittest.TestCase):
         self.assertEqual(sum(len(v) for v in placed.values()), 3)
         self.assertEqual(notes, ['max strength placed inside its recovery window (not enough days apart)'])
 
+    def test_the_window_is_the_modalities_own(self):
+        mods = {**MODS, 'long_recovery': {'recovery_cost': 'high', 'recovery_hours_min': 72}}
+        w = scheduler.recovery_window
+        self.assertEqual(w('max_strength', 'max_strength', mods), 48)
+        self.assertEqual(w('max_strength', 'power', mods), 48)          # two high-cost: 48 h
+        self.assertEqual(w('long_recovery', 'max_strength', mods), 72)  # the larger of the two
+        self.assertEqual(w('max_strength', 'mobility', mods), 0)        # high and low
+        self.assertEqual(w('mobility', 'aerobic_base', mods), 0)
+        self.assertEqual(w('movement_skill', 'movement_skill', mods), 24)
+        # A 72 h modality keeps another high-cost one three days off, last week's included.
+        long = mods['long_recovery']
+        self.assertFalse(scheduler._recovery_safe(4, 'long_recovery', long, {2: ['max_strength']}, mods))
+        self.assertTrue(scheduler._recovery_safe(5, 'long_recovery', long, {2: ['max_strength']}, mods))
+        self.assertFalse(scheduler._recovery_safe(2, 'long_recovery', long, {}, mods, prev_week={7: ['power']}))
+        self.assertTrue(scheduler._recovery_safe(2, 'long_recovery', long, {}, mods, prev_week={6: ['power']}))
+        self.assertEqual(scheduler.window_reach_days(mods), 3)
+        self.assertEqual(scheduler.window_reach_days({**mods, 'x': {'recovery_hours_min': 96}}), 4)
+
+    def test_a_day_runs_first_then_any_then_last(self):
+        mods = {'a': {'session_position': 'last'}, 'b': {'session_position': 'any'},
+                'c': {'session_position': 'first'}, 'd': {'session_position': 'standalone'}, 'e': {}}
+        self.assertEqual(scheduler._order_day(['a', 'b', 'c', 'd', 'e'], mods), ['c', 'b', 'd', 'e', 'a'])
+
     def test_the_generator_passes_last_week_on(self):
         frameworks = list(loader.load_all_frameworks().values())
         # A blend led by a training contract runs on the scheduler.

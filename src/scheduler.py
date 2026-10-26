@@ -7,7 +7,13 @@ from . import loader, phases
 from .goals import FrameworkResolutionError
 
 _RECOVERY_COST_RANK = {'high': 3, 'medium': 2, 'low': 1}
-_POSITION_ORDER = {'first': 0, 'main': 1, 'accessory': 2, 'finisher': 3, 'cooldown': 4}
+# A day's sessions in the order of their modalities' `session_position`, the
+# schema's own words (modality.schema.json): first, then any or standalone,
+# then last. `standalone` (never combined) is met by construction: each session
+# the scheduler places is one modality. Until 2026-10-26 this read first, main,
+# accessory, finisher and cooldown, words no modality uses, so `last` sorted
+# with everything else.
+_POSITION_ORDER = {'first': 0, 'any': 1, 'standalone': 1, 'last': 2}
 
 
 # ---------------------------------------------------------------------------
@@ -437,24 +443,47 @@ def _neighbours(day: int, schedule: dict, prev_week: dict | None, reach: int):
                 yield gap * 24, mod
 
 
+_HIGH_COST_FLOOR_HOURS = 48  # modality.schema.json: recovery_cost high = 48 h minimum
+
+
+def high_pair_window(a: str, b: str, modalities: dict) -> int:
+    """Hours between two high-cost sessions (the same modality or two): at
+    least 48, more when either's `recovery_hours_min` asks for more; 0 unless
+    both are high-cost. It was a fixed 48 h whatever the modalities said."""
+    ma, mb = modalities.get(a) or {}, modalities.get(b) or {}
+    if ma.get('recovery_cost') != 'high' or mb.get('recovery_cost') != 'high':
+        return 0
+    return max(_HIGH_COST_FLOOR_HOURS, ma.get('recovery_hours_min', 0), mb.get('recovery_hours_min', 0))
+
+
+def window_reach_days(modalities: dict, floor: int = 3) -> int:
+    """Days either side to look at: enough for the longest window any modality
+    declares (three days for every shipped one)."""
+    longest = max([m.get('recovery_hours_min', 0) for m in modalities.values()] + [_HIGH_COST_FLOOR_HOURS])
+    return max(floor, -(-longest // 24))
+
+
+def recovery_window(a: str, b: str, modalities: dict) -> int:
+    """Hours two sessions of these modalities must stand apart: a modality's
+    `recovery_hours_min` from itself (default 24), and between two high-cost
+    ones `high_pair_window`. The one rule the scheduler places by and fidelity
+    audits by."""
+    own = (modalities.get(a) or {}).get('recovery_hours_min', 24) if a == b else 0
+    return max(own, high_pair_window(a, b, modalities))
+
+
 def _recovery_safe(day: int, modality: str, mod_data: dict,
                    schedule: dict, modalities: dict,
                    allowed: frozenset = frozenset(),
                    prev_week: dict | None = None) -> bool:
-    """Return True if placing modality on day respects recovery windows."""
-    recovery_needed = mod_data.get('recovery_hours_min', 24)
-    my_cost = _RECOVERY_COST_RANK.get(mod_data.get('recovery_cost', 'low'), 1)
-
-    for hours, other_mod in _neighbours(day, schedule, prev_week, 3):
+    """Return True if placing modality on day respects recovery windows
+    (`recovery_window`) against the sessions near it."""
+    mods = {**modalities, modality: mod_data}
+    for hours, other_mod in _neighbours(day, schedule, prev_week, window_reach_days(mods)):
         # The framework may have cleared this pair for adjacent days.
         if hours <= 24 and frozenset((other_mod, modality)) in allowed:
             continue
-        # Same modality: enforce its recovery window
-        if other_mod == modality and hours < recovery_needed:
-            return False
-        # Two high-cost modalities: minimum 48 h gap
-        pm_cost = _recovery_cost_rank(other_mod, modalities)
-        if my_cost == 3 and pm_cost == 3 and hours < 48:
+        if hours < recovery_window(modality, other_mod, mods):
             return False
     return True
 
@@ -482,23 +511,22 @@ def _score_days(days: list, schedule: dict, modality: str,
 
     Considers recovery windows and (optionally) duration matching.
     """
-    my_cost = _RECOVERY_COST_RANK.get(mod_data.get('recovery_cost', 'low'), 1)
     mod_duration = mod_data.get('typical_duration_minutes', 60)
+    mods = {**modalities, modality: mod_data}
 
     scored = []
     for day in days:
         gap_score = 0
 
         # Recovery-based scoring, both ways and from last week's end
-        for hours, other_mod in _neighbours(day, schedule, prev_week, 4):
+        for hours, other_mod in _neighbours(day, schedule, prev_week, window_reach_days(mods, 4)):
             if hours <= 24 and frozenset((other_mod, modality)) in allowed:
                 continue
+            # Both terms, as before: a high-cost modality near itself is
+            # pushed away by its own window and by the high-cost pair's.
             if other_mod == modality:
-                needed = mod_data.get('recovery_hours_min', 24)
-                gap_score -= max(0, needed - hours)
-            pm_cost = _recovery_cost_rank(other_mod, modalities)
-            if my_cost == 3 and pm_cost == 3:
-                gap_score -= max(0, 48 - hours)
+                gap_score -= max(0, mod_data.get('recovery_hours_min', 24) - hours)
+            gap_score -= max(0, high_pair_window(modality, other_mod, mods) - hours)
 
         # Duration matching: prefer placing modalities on days whose time budget fits
         if day_configs and day in day_configs:
@@ -663,7 +691,7 @@ def _order_day(modality_list: list, modalities: dict) -> list:
     return sorted(
         modality_list,
         key=lambda m: _POSITION_ORDER.get(
-            modalities.get(m, {}).get('session_position', 'main'), 1
+            modalities.get(m, {}).get('session_position', 'any'), 1
         ),
     )
 

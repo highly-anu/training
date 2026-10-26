@@ -25,7 +25,7 @@ from dataclasses import dataclass, field
 
 from src import phases as phases_mod
 from src.analytics.families import is_strength
-from src.scheduler import consecutive_allowances
+from src.scheduler import consecutive_allowances, recovery_window, window_reach_days
 from src.selector import _equipment_ok, _injury_exclusions, _matches_slot_filter, is_main_lift_slot
 
 BUCKETS = ('zone1_2_pct', 'zone3_pct', 'zone4_5_pct', 'max_effort_pct')
@@ -451,25 +451,27 @@ def _check_template(out, phase_id, phase, fw, pweeks, constraints):
 
 
 def _check_recovery(out, phase_id, wn, placed: dict, modalities: dict, allowed: frozenset):
+    """The scheduler's own rule (scheduler.recovery_window), read back."""
     days = sorted(placed)
+    reach = window_reach_days(modalities) * 24
     for i, d1 in enumerate(days):
         for d2 in days[i + 1:]:
             hours = (d2 - d1) * 24
-            if hours >= 72:
+            if hours >= reach:
                 break
             for m1 in placed[d1]:
                 for m2 in placed[d2]:
                     if hours <= 24 and frozenset((m1, m2)) in allowed:
                         continue
-                    need = (modalities.get(m2) or {}).get('recovery_hours_min', 24)
-                    both_high = all((modalities.get(m) or {}).get('recovery_cost') == 'high'
-                                    for m in (m1, m2))
-                    if m1 == m2 and hours < need:
+                    need = recovery_window(m1, m2, modalities)
+                    if hours >= need:
+                        continue
+                    if m1 == m2:
                         out.add('recovery_window', 'warn', phase_id, m2,
                                 f"{m2} repeats after {hours} h; it needs {need} h", wn)
-                    elif m1 != m2 and both_high and hours < 48:
+                    else:
                         out.add('recovery_window', 'warn', phase_id, f"{m1}+{m2}",
-                                f"{m1} and {m2} are both high-cost, {hours} h apart", wn)
+                                f"{m1} and {m2} are both high-cost, {hours} h apart; they need {need} h", wn)
 
 
 def _available_substitute(ea, flagged, injury_flags, library, equipment, excl_patterns, excl_ids,
