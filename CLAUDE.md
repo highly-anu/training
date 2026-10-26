@@ -386,6 +386,13 @@ group's name.
 - **Coverage gaps, not substitutions**: when a package cannot fill a slot, the slot is left empty and marked `coverage_gap` (the same way `injury_skip` marks an injury-blocked slot) rather than filled from another philosophy. Programs carry a `coverage_report` listing unfilled sessions, unfilled slots and borrowed sessions; `validate()` warns `PACKAGE_COVERAGE_GAP` per uncovered modality and only errors when every top-2 priority is uncoverable.
 - **Archetype fallback**: sessions whose modality has no valid archetype for the phase fall back within the allowed packages (equipment filter relaxed first, then `aerobic_base` → `durability` → `mobility`). A cross-modality swap is recorded (since 2026-10-16; it used to change the modality and leave no trace): the session carries `substituted_for`, the compromises say it once per modality, `coverage_report.substituted_sessions` lists each, and when the athlete's level is the cause (no archetype for it written for that level) generate adds a `LEVEL_COVERAGE_GAP` warning naming the substitute (`validator.check_level_coverage`, run on what was actually substituted). `check_provenance.py --coverage` lists the static level/phase gaps (reported, not failed): all novice — Horsemen, Marcus Filly, Uphill, Wildman.
 - **Prerequisites**: `requires` is resolved transitively — a requirement is met if it is a concept the training level knows or an exercise that is itself unlocked. A package may declare `level_seeds.yaml` for concepts its own athletes arrive with.
+- **Training contracts space their programs** (`training_contract._spacing`, since
+  2026-10-26): of the placements that close a test week and fit the optional work,
+  the one with the fewest same-modality days back to back, then the fewest
+  same-modality neighbours among the training days (wrapping into next week), then
+  each module's sessions furthest apart. The first valid placement used to win, so
+  Wildman's General Practice ran swing, swing, press, press; it now runs his example
+  week (swings Mon/Thu, clean and press Wed/Sat).
 - **Exercise scoring**: prefers exercises with defined movement_patterns (+0.5) and forward-unlocking exercises (+0.5); penalizes recently used (-2 per recent use). AMRAP/for_time slots exclude `mobility` and `rehab` category exercises.
 - **Deload**: every `deload_protocol.frequency_weeks` (a framework without a protocol never
   deloads on schedule) or when `fatigue_state: overreached`; `volume_reduction_pct` is the

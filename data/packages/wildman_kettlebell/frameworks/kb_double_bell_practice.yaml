@@ -30,6 +30,13 @@ deload_protocol:
   frequency_weeks: 4
   volume_reduction_pct: 0.5
   intensity_change: maintain
+# Wildman's programming page: "Never repeat the same workout on back-to-back
+# training days — always allow a rest day between sessions of the same type",
+# and "Example: Kettlebell Swings on Monday & Thursday, Clean & Press on
+# Wednesday & Saturday". Four days take his example's days; the contract
+# alternates the two programs on them (training_contract._spacing).
+cadence_options:
+  4: [[1, 3, 4, 6]]
 sources:
 - Wildman
 notes: 'Wildman movement families on nonconsecutive Tetris scheduling. Repeat these fixed modules twice weekly. Calendar time never grants
