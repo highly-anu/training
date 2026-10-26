@@ -874,6 +874,27 @@ def _module_rows(module, exercises, constraints, state, step, deload, blocked=No
     return rows
 
 
+def _spacing(candidate: dict) -> tuple[int, int, int]:
+    """How well a placement alternates and spreads its work, higher is better:
+    fewest same-modality days back to back (two gym sessions, a run of
+    classes), then fewest same-modality neighbours among the training days,
+    the week wrapping into the next (swing, swing, press, press reads worse
+    than swing, press, swing, press), then the widest gap between each
+    module's own sessions (Wildman: "Kettlebell Swings on Monday & Thursday,
+    Clean & Press on Wednesday & Saturday")."""
+    days = sorted(candidate)
+    kind = {d: frozenset(m['modality'] for m in candidate[d]) for d in days}
+    pairs = list(zip(days, days[1:] + days[:1])) if len(days) > 1 else []
+    adjacent = sum(1 for a, b in pairs if (b - a) % 7 == 1 and kind[a] == kind[b])
+    neighbours = sum(1 for a, b in pairs if kind[a] == kind[b])
+    on: dict[str, list[int]] = {}
+    for d in days:
+        for m in candidate[d]:
+            on.setdefault(m['id'], []).append(d)
+    spread = sum(min((b - a) % 7 or 7 for a, b in zip(ds, ds[1:] + ds[:1])) for ds in on.values())
+    return -adjacent, -neighbours, spread
+
+
 def _placements(modules: list, durations: dict, pool: list[int], cap: float, day_caps: dict | None = None):
     """Every placement of the essential modules that keeps their exposures,
     spacing and each day's budget (`day_caps`, within the session cap: a long
@@ -1186,8 +1207,9 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
                     room[d] -= build_estimates[m['id']]
             return fit, closes
 
-        # The first placement that closes a test week with its test and fits
-        # the most optional work; the search is small (a week, a few modules).
+        # The placement that closes a test week with its test and fits the most
+        # optional work, then alternates and spaces the work best; the search
+        # is small (a week, a few modules).
         best = None
         for i, candidate in enumerate(_placements(essential, estimates, pool, cap, day_caps)):
             if not spaced(candidate):
@@ -1195,14 +1217,10 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
             fit, closes = optional_fit(candidate)
             # Optional work never costs an essential session its own day.
             stacked = sum(len(ms) - 1 for ms in candidate.values())
-            # Alternate kinds of work: two days of the same modality back to
-            # back (two gym sessions, a run of classes) only when nothing else fits.
-            kind = {d: frozenset(m['modality'] for m in ms) for d, ms in candidate.items()}
-            alike = sum(1 for d in kind if kind.get(d % 7 + 1) == kind[d])
-            key = (closes, -stacked, sum(len(v) for v in fit.values()), -alike)
+            key = (closes, -stacked, sum(len(v) for v in fit.values()), *_spacing(candidate))
             if best is None or key > best[0]:
                 best = (key, candidate, fit)
-            if key == (True, 0, sum(m['exposures_per_week'] for m in optional), 0) or i >= 500:
+            if i >= 500:
                 break
         if best is None:
             raise ContractError('Required module frequency, recovery spacing and session budget cannot all fit. Increase available time or days.')
