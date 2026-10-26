@@ -484,7 +484,13 @@ group's name.
   loads (`progression._DEFAULT_INCREMENT_KG` is the sole code default). A framework may
   declare `recovery.allow_consecutive: [[a, b], …]` (+ `phases`) to let a modality pair sit
   on back-to-back days despite the recovery windows — Uphill's specific phase does, for
-  its two ME long days (`scheduler.consecutive_allowances`).
+  its two ME long days (`scheduler.consecutive_allowances`). The windows (a modality's
+  `recovery_hours_min` from itself, 48 h between two high-cost modalities) are checked
+  against days before **and after** (modalities are placed hardest first, not in day
+  order) and against the previous week's last days (`scheduler._neighbours`, since
+  2026-10-26); a session the week has no safe day for is still placed and the compromises
+  say so. Only weeks the scheduler builds are checked: a source's own week
+  (`week_templates`) and a training contract place their sessions themselves.
 - **Framework expectations**: Every framework defines required `expectations` (min/ideal weeks, days/week, session minutes, split-day support). UI derives "Ideal for this goal" banners from framework expectations (or weighted blend when combining frameworks). Philosophy-specific, not goal-generic.
 - **Philosophies own their phases** (`src/phases.py`). `philosophy.yaml` declares
   `tracks`; each track is an ordered list of the philosophy's own phases — id, name,

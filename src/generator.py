@@ -564,6 +564,8 @@ def generate(
     pinned_lifts: dict = {}
     unfilled_cache: dict = {}  # why a slot came up empty, explained once per phase
     pinned_phase = None
+    # Last week's {day: [modality]}: its end counts against this week's start.
+    prev_week_modalities: dict | None = None
     all_compromises: list[str] = []  # Collect compromises from all weeks
 
     # Progression model for each modality (static, load from modalities data)
@@ -592,7 +594,7 @@ def generate(
         # 1. Build the modality→day schedule
         sched_result = schedule_week(goal, constraints, data, phase, week_in_phase,
                                      phase_framework_id=phase_framework_id,
-                                     collect_trace=include_trace)
+                                     collect_trace=include_trace, prev_week=prev_week_modalities)
         week_schedule = sched_result['schedule']
         is_deload     = sched_result['is_deload']
         framework     = sched_result['framework']
@@ -610,6 +612,8 @@ def generate(
         for compromise in week_compromises:
             if compromise not in all_compromises:
                 all_compromises.append(compromise)
+        prev_week_modalities = {d: [s['modality'] for s in ss if s.get('modality')]
+                                for d, ss in week_schedule.items()}
 
         week_trace: dict | None = None
         if include_trace:
