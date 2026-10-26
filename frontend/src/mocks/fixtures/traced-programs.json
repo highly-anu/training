@@ -140,7 +140,7 @@
       },
       {
        "code": "EQUIPMENT_SCALED",
-       "message": "'Gym Jones Operator Circuit' will use equipment-limited scaling (missing: {'plates', 'pull_up_bar', 'rower', 'barbell'})."
+       "message": "'Gym Jones Operator Circuit' will use equipment-limited scaling (missing: {'plates', 'pull_up_bar', 'barbell', 'rower'})."
       },
       {
        "code": "EQUIPMENT_SCALED",
@@ -2740,27 +2740,27 @@
      "warnings": [
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype '2 Minutes' requires {'sandbag', 'hurdles', 'resistance_band', 'tire', 'medicine_ball', 'box', 'jump_rope', 'cable_machine'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype '2 Minutes' requires {'hurdles', 'sandbag', 'box', 'cable_machine', 'resistance_band', 'medicine_ball', 'jump_rope', 'tire'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Bannister' requires {'tire', 'cable_machine', 'hurdles'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Bannister' requires {'hurdles', 'cable_machine', 'tire'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Crazy 8' requires {'dumbbell', 'medicine_ball', 'box', 'agility_ladder', 'parallettes'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Crazy 8' requires {'agility_ladder', 'box', 'medicine_ball', 'dumbbell', 'parallettes'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Double/Doubles' requires {'rope', 'tire', 'box', 'jump_rope', 'cable_machine'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Double/Doubles' requires {'cable_machine', 'box', 'rope', 'jump_rope', 'tire'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Fifty' requires {'jump_rope', 'parallettes', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Fifty' requires {'box', 'jump_rope', 'parallettes'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2780,12 +2780,12 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Tens' requires {'dumbbell', 'ghd', 'medicine_ball', 'box', 'parallettes'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Tens' requires {'ghd', 'box', 'medicine_ball', 'dumbbell', 'parallettes'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Triples' requires {'rope', 'cable_machine', 'medicine_ball', 'sandbag'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Triples' requires {'sandbag', 'rope', 'cable_machine', 'medicine_ball'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2795,7 +2795,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Death to Infidels' requires {'ghd', 'rings', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Death to Infidels' requires {'rings', 'ghd', 'box'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2835,7 +2835,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Appeal to God' requires {'ghd', 'rings'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Appeal to God' requires {'rings', 'ghd'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2870,7 +2870,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Twister' requires {'parallettes', 'medicine_ball', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Twister' requires {'medicine_ball', 'box', 'parallettes'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2905,7 +2905,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Wicked Hangover' requires {'rower', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Wicked Hangover' requires {'box', 'rower'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2970,7 +2970,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Drunken Lullaby' requires {'box', 'sandbag'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Drunken Lullaby' requires {'sandbag', 'box'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3000,7 +3000,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Lovely Turd' requires {'box', 'parallettes', 'sandbag'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Lovely Turd' requires {'sandbag', 'box', 'parallettes'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3030,7 +3030,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype '10-to-1 Grind Ladder: Swings, Push-ups, Sit-ups, Dips, Pull-ups' requires {'parallettes', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype '10-to-1 Grind Ladder: Swings, Push-ups, Sit-ups, Dips, Pull-ups' requires {'box', 'parallettes'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3050,7 +3050,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'George Washington' requires {'ghd', 'rings', 'rower', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'George Washington' requires {'rings', 'ghd', 'rower', 'box'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3065,7 +3065,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Till U Collapse' requires {'ghd', 'rower', 'medicine_ball', 'tire'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Till U Collapse' requires {'medicine_ball', 'ghd', 'rower', 'tire'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3085,32 +3085,32 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Winter in August' requires {'parallettes', 'rower'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Winter in August' requires {'rower', 'parallettes'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Act With a Purpose' requires {'dumbbell', 'ghd', 'tire', 'box', 'parallettes'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Act With a Purpose' requires {'ghd', 'box', 'dumbbell', 'tire', 'parallettes'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Ben Franklin' requires {'ghd', 'dumbbell', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Ben Franklin' requires {'dumbbell', 'ghd', 'box'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Bloody Nose' requires {'ghd', 'rings'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Bloody Nose' requires {'rings', 'ghd'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Chin Up. Soldier On.' requires {'rings', 'tire', 'dumbbell', 'sandbag'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Chin Up. Soldier On.' requires {'sandbag', 'tire', 'dumbbell', 'rings'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Family Friendly Violence' requires {'parallettes', 'dumbbell', 'tire'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Family Friendly Violence' requires {'dumbbell', 'tire', 'parallettes'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3120,7 +3120,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Honey Butter' requires {'ghd', 'box', 'dumbbell', 'sandbag'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Honey Butter' requires {'sandbag', 'box', 'ghd', 'dumbbell'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3135,7 +3135,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Max Out!' requires {'box', 'sandbag'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Max Out!' requires {'sandbag', 'box'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3145,7 +3145,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Soviet Capitalists' requires {'ghd', 'parallettes', 'sandbag'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Soviet Capitalists' requires {'sandbag', 'ghd', 'parallettes'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3155,7 +3155,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Wasted Love' requires {'medicine_ball', 'sandbag'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Wasted Love' requires {'sandbag', 'medicine_ball'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -6167,7 +6167,8 @@
           "archetype": {
            "selected_id": "kb_ballistic_session",
            "filter_counts": {},
-           "candidates": []
+           "candidates": [],
+           "selection_reason": "training_contract"
           },
           "modules": [
            "swing",
@@ -6332,7 +6333,8 @@
           "archetype": {
            "selected_id": "kb_clean_press_practice",
            "filter_counts": {},
-           "candidates": []
+           "candidates": [],
+           "selection_reason": "training_contract"
           },
           "modules": [
            "clean_press",
@@ -6504,7 +6506,8 @@
           "archetype": {
            "selected_id": "kb_ballistic_session",
            "filter_counts": {},
-           "candidates": []
+           "candidates": [],
+           "selection_reason": "training_contract"
           },
           "modules": [
            "swing",
@@ -6669,7 +6672,8 @@
           "archetype": {
            "selected_id": "kb_clean_press_practice",
            "filter_counts": {},
-           "candidates": []
+           "candidates": [],
+           "selection_reason": "training_contract"
           },
           "modules": [
            "clean_press",

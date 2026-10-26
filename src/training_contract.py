@@ -1402,7 +1402,8 @@ def _trace(program: dict, contract: dict, constraints: dict) -> dict:
         exercises = s['exercises']
         return {
             'modality': s['modality'],
-            'archetype': {'selected_id': s['archetype']['id'], 'filter_counts': {}, 'candidates': []},
+            'archetype': {'selected_id': s['archetype']['id'], 'filter_counts': {}, 'candidates': [],
+                          'selection_reason': 'training_contract'},
             'modules': [m['id'] for m in s.get('modules') or []],
             'slots': [{'slot_index': i, 'slot_role': ea['slot_role'], 'slot_type': ea.get('slot_type'),
                        'meta': bool(ea.get('meta')), 'movement_pattern': None,
