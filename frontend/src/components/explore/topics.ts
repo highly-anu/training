@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { BookOpen, Dumbbell, Layers, Network, PersonStanding, Trophy, Zap } from 'lucide-react'
+import { BookOpen, Dumbbell, Layers, Network, PersonStanding, Trophy, Wrench, Zap } from 'lucide-react'
 import type { ExploreTopic } from '@/lib/exploreLinks'
 
 export interface TopicTab {
@@ -17,6 +17,7 @@ export const TOPICS: TopicTab[] = [
   { id: 'archetypes',   label: 'Archetypes',   Icon: Layers },
   { id: 'exercises',    label: 'Exercises',    Icon: Dumbbell },
   { id: 'movements',    label: 'Movements',    Icon: PersonStanding },
+  { id: 'equipment',    label: 'Equipment',    Icon: Wrench },
   { id: 'standards',    label: 'Standards',    Icon: Trophy },
 ]
 

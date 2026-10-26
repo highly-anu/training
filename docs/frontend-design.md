@@ -2075,6 +2075,34 @@ Exercise → Movement (`components/explore/LineageSection.tsx`, fed by
   a client-side pattern match misses. The exercise's progression chain
   (`PrereqChain`) reads the same document: `requires` and `unlocks` from both ends.
 
+### 13.9 Explorer: Equipment Facets
+
+**Use case:** Explore ▸ Equipment — pick equipment, read what it enables, narrow
+by picking results (`components/explore/EquipmentPanel.tsx`, logic in
+`lib/equipmentExplorer.ts`, data from `GET /api/explore/links`' `equipment`).
+
+**Key patterns:**
+- **The generator's rule, not a looser one.** An exercise or a session (archetype)
+  is enabled when the selection covers *every* item it needs; open space is free.
+  A modality needs one enabled archetype; a framework is whole when each modality
+  it schedules has one of its own package's, *partly* (dimmed, "2 of 3
+  modalities") when only some do. The server says what each needs; the client
+  only tests coverage, and `test_explore_links.py` pins that to the selector.
+- **Equipment chips** are the Explore filter chip (§13.6's colour-tinted pill) in
+  the primary colour, grouped by `lib/equipment.ts`' `EQUIPMENT_GROUPS` (shared
+  with the builder's `EquipmentPicker`). An unchosen chip shows **+N** — how many
+  more results adding it opens, broken down in its title; one nothing needs is
+  dashed and disabled. Presets (equipment profiles) and *Clear* sit above.
+- **Facets.** *Show* toggles which of Modalities · Frameworks · Movements ·
+  Exercises are on screen. A result chip in its level's colour (§8.11) picks or
+  unpicks; ↗ opens its detail. Picks are OR within a list and AND across lists,
+  and a list ignores its own picks, so a second can still be added. A pick the
+  others rule out stays, dimmed "no match"; one the equipment no longer enables,
+  "not enabled" — both so they can be unpicked.
+- **The URL is the state** (`?topic=equipment&eq=…&show=…&m=…&f=…&v=…&x=…`),
+  replaced on every change; ↗ pushes, so Back returns to the same view.
+- With nothing selected the lists show what bodyweight and open space alone enable.
+
 ## 14. Responsive Design
 
 ### 14.1 Breakpoint Usage
@@ -2476,7 +2504,7 @@ Status as of 2026-10-01, after the information-architecture restructure
 | **Program** | `CalendarDays` | Program name | None | Overview · Calendar · History (`?tab=`) | New program · Injuries · week selector (Calendar) | ⚠️ two-row — the `PhaseBar` control strip, see below |
 | **Log** | `ClipboardList` | "Log" | None | Activity · Linking (count) | Import (opens a sheet) | ✅ |
 | **Analytics** | `BarChart3` | "Analytics" | None | Progress · Blocks · Load · Recovery (`?tab=`; `program` and `development` alias Progress and Blocks) | None (the period selector is content-level) | ✅ |
-| **Explore** | `Compass` | "Explore" | None | Section pills **+** topic selector: Philosophies · Frameworks · Modalities · Archetypes · Exercises · Movements · Standards | None | ✅ two-tier variant — see below |
+| **Explore** | `Compass` | "Explore" | None | Section pills **+** topic selector: Philosophies · Frameworks · Modalities · Archetypes · Exercises · Movements · Equipment · Standards | None | ✅ two-tier variant — see below |
 | **Profile** | `User` | "Profile" | None | Athlete (incl. heart rate) · Equipment · Injuries · Schedule · Standards | None | ✅ |
 | **Settings** | `Settings` | "Settings" | None | Connections · Account · Appearance (· Developer, dev builds) (`?tab=`) | None | ✅ — the OAuth callbacks land on `?tab=connections` |
 | **Program Builder** | `Wand2` | Dynamic step title | None | None | "Step N of 4" (right) | ✅ wizard variant, at `/program/new` |

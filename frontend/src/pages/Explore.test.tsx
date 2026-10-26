@@ -11,11 +11,19 @@ import { Explore } from '@/pages/Explore'
 import type { ExploreLinks } from '@/api/types'
 
 const LINKS: ExploreLinks = {
-  movements: [{ id: 'squat', name: 'Squat', exerciseCount: 1, filterGroups: [], rollup: 'squat' }],
+  movements: [{ id: 'squat', name: 'Squat', exerciseCount: 2, filterGroups: [], rollup: 'squat' }],
+  equipment: {
+    vocabulary: ['barbell', 'kettlebell', 'open_space'],
+    exercises: { goblet: ['kettlebell'], back_squat: ['barbell'] },
+    archetypes: { kb_day: ['kettlebell'], bb_day: ['barbell'] },
+  },
   links: {
-    philosophyFramework: [], frameworkModality: [], modalityArchetype: [],
-    archetypeExercise: [],
-    exerciseMovement: [{ exercise: 'goblet', movement: 'squat' }],
+    philosophyFramework: [], frameworkModality: [],
+    modalityArchetype: [{ modality: 'power', archetype: 'kb_day', package: 'wk' },
+                        { modality: 'max_strength', archetype: 'bb_day', package: 'ss' }],
+    archetypeExercise: [{ archetype: 'kb_day', exercise: 'goblet', slots: ['main'], via: 'listed' },
+                        { archetype: 'bb_day', exercise: 'back_squat', slots: ['main'], via: 'listed' }],
+    exerciseMovement: [{ exercise: 'goblet', movement: 'squat' }, { exercise: 'back_squat', movement: 'squat' }],
     exerciseProgression: [], exerciseConcepts: [],
   },
 }
@@ -26,10 +34,14 @@ const GOBLET = {
   progressions: {}, sources: [], _package: 'wk',
 }
 
+const BACK_SQUAT = { ...GOBLET, id: 'back_squat', name: 'Back squat', category: 'barbell', _package: 'ss' }
+
 const RESPONSES: Record<string, unknown> = {
   '/explore/links': LINKS,
-  '/exercises': [GOBLET],
-  '/philosophies': [], '/frameworks': [], '/modalities': [], '/archetypes': [],
+  '/exercises': [GOBLET, BACK_SQUAT],
+  '/philosophies': [], '/frameworks': [],
+  '/modalities': [{ id: 'power', name: 'Power' }, { id: 'max_strength', name: 'Max Strength' }],
+  '/archetypes': [],
 }
 
 vi.mock('@/api/client', () => ({
@@ -64,6 +76,22 @@ describe('Explore', () => {
     expect(await screen.findByRole('heading', { name: 'Goblet squat' })).toBeTruthy()
     // …and the exercise leads back down to its movement.
     expect(await screen.findByRole('button', { name: /^Squat$/ })).toBeTruthy()
+  })
+
+  it('equipment: lists what it enables, a pick narrows the rest, ↗ opens the detail', async () => {
+    wrap('/explore?topic=equipment&eq=kettlebell,barbell')
+    const exercises = async () => (await screen.findAllByRole('button', { pressed: false }))
+      .map((b) => b.textContent ?? '')
+    expect(await screen.findByRole('button', { name: /Goblet squat/, pressed: false })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Back squat/, pressed: false })).toBeTruthy()
+
+    // Pick Power: the barbell squat is not in it.
+    fireEvent.click(screen.getByRole('button', { name: /^Power/, pressed: false }))
+    expect(location()).toBe('/explore?topic=equipment&eq=kettlebell%2Cbarbell&m=power')
+    expect((await exercises()).some((t) => t.startsWith('Back squat'))).toBe(false)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open Goblet squat' }))
+    expect(location()).toBe('/explore?topic=exercises&id=goblet')
   })
 
   it('lists the movements under Movements', async () => {

@@ -332,6 +332,13 @@ export interface Movement {
  *  (src/explore_links.py). */
 export interface ExploreLinks {
   movements: Movement[]
+  /** What each exercise and archetype needs, as the generator reads it: a set
+   *  of equipment enables one when it covers the list (open space is free). */
+  equipment: {
+    vocabulary: string[]
+    exercises: Record<string, string[]>
+    archetypes: Record<string, string[]>
+  }
   links: {
     philosophyFramework: {
       philosophy: string
