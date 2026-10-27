@@ -10,7 +10,7 @@ import heapq
 import itertools
 import math
 import os
-import yaml
+from src import loader
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -356,7 +356,7 @@ _MP_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'commons', 'mov
 
 def _load_pattern_aliases() -> dict:
     with open(_MP_PATH, encoding='utf-8') as f:
-        return yaml.safe_load(f).get('aliases', {})
+        return loader.safe_load(f).get('aliases', {})
 
 
 def _build_pattern_membership(aliases: dict) -> dict[str, set]:

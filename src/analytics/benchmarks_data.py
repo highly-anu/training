@@ -16,7 +16,7 @@ from __future__ import annotations
 import os
 from functools import lru_cache
 
-import yaml
+from src import loader
 
 _DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data')
 LEVELS = ('entry', 'intermediate', 'advanced', 'elite')
@@ -90,7 +90,7 @@ _CELL_DOMAIN_MODALITY = {'hips': 'max_strength', 'push': 'max_strength', 'pull':
 
 def _load_yaml(path: str):
     with open(path, encoding='utf-8') as f:
-        return yaml.safe_load(f)
+        return loader.safe_load(f)
 
 
 def parse_time(t) -> float:

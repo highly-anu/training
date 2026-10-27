@@ -14,9 +14,21 @@ _COMMONS_DIR  = os.path.join(_DATA_DIR, 'commons')
 _PACKAGES_DIR = os.environ.get('TRAINING_PACKAGES_DIR') or os.path.join(_DATA_DIR, 'packages')
 
 
+# libyaml's C parser when PyYAML was built with it (the Linux wheels are):
+# ten times faster than the pure-Python one on the package data, with the same
+# result for every file. The reference routes re-read the packages, and on the
+# shared-CPU machine the pure-Python parser made the Explore tab time out.
+_SAFE_LOADER = getattr(yaml, 'CSafeLoader', yaml.SafeLoader)
+
+
+def safe_load(stream):
+    """yaml.safe_load, on the C parser when there is one."""
+    return yaml.load(stream, Loader=_SAFE_LOADER)
+
+
 def _load_yaml(path: str) -> dict:
     with open(path, encoding='utf-8') as f:
-        return yaml.safe_load(f)
+        return safe_load(f)
 
 
 def _data_path(*parts) -> str:

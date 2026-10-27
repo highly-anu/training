@@ -1,7 +1,6 @@
 """Select archetypes and exercises for each session."""
 from __future__ import annotations
 import os as _os
-import yaml as _yaml
 from typing import Optional
 from src.progression import zone_band as _zone_band
 from . import blockers, phases, provenance, recovery_regions, standard_tests
@@ -18,7 +17,7 @@ from . import loader as _loader
 _mp_path = _os.path.join(_os.path.dirname(__file__), '..', 'data', 'commons', 'movement_patterns.yaml')
 _PATTERN_ALIASES: dict[str, tuple] = {
     k: (v['mode'], v['patterns'])
-    for k, v in _yaml.safe_load(open(_mp_path))['aliases'].items()
+    for k, v in _loader.safe_load(open(_mp_path))['aliases'].items()
 }
 
 # ---------------------------------------------------------------------------

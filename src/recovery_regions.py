@@ -18,7 +18,7 @@ from __future__ import annotations
 import os
 from functools import lru_cache
 
-import yaml
+from src import loader
 
 _PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                      'data', 'commons', 'recovery_regions.yaml')
@@ -27,7 +27,7 @@ _PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 @lru_cache(maxsize=1)
 def config() -> dict:
     with open(_PATH, encoding='utf-8') as f:
-        return yaml.safe_load(f)
+        return loader.safe_load(f)
 
 
 def pattern_weights(patterns) -> dict[str, float]:

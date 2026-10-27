@@ -178,6 +178,155 @@ def _gzip(response):
     response.vary.add('Accept-Encoding')
     return response
 
+# The reference routes (philosophies, frameworks, archetypes, exercises, the
+# Explore documents, the analytics specs…) are pure functions of the package
+# files, which change only with a deploy or an authoring write. Each used to
+# re-read every YAML file on every request, and Explore fires eight at once:
+# on 2026-10-27 four threads each holding the parsed packages took the worker
+# past 140 MB and the 256 MB machine killed it (the browser saw CORS errors —
+# no answer came back at all). Now:
+#
+# - the Docker build answers every one of them (`build_static`, run by
+#   tools/build_static_cache.py) into STATIC_BUILD_DIR — JSON, gzip and an
+#   ETag per route — so the worker serves bytes and never parses a package
+#   for them;
+# - anything not built there (local dev, tests, a query the build did not
+#   ask, every answer after an authoring write) is built once per process,
+#   one build at a time (`_BUILD_LOCK`), so a burst cannot multiply memory;
+# - a client that has the answer gets a 304.
+_STATIC_LOCK = threading.Lock()
+_BUILD_LOCK = threading.Lock()
+_STATIC: dict[str, tuple[bytes, bytes, str]] = {}   # full path → (json, gzip, etag)
+_STATIC_BUILD_DIR = os.environ.get('STATIC_BUILD_DIR') or None
+_BUILT: dict | None = None   # the build's manifest: full path → {json, gz, etag}; {} once data changed
+
+
+def _built(key: str) -> tuple[bytes, bytes, str] | None:
+    global _BUILT
+    if _BUILT is None:
+        _BUILT = {}
+        if _STATIC_BUILD_DIR:
+            try:
+                with open(os.path.join(_STATIC_BUILD_DIR, 'manifest.json'), encoding='utf-8') as f:
+                    _BUILT = json.load(f)
+            except (OSError, ValueError) as exc:
+                app.logger.warning('static build: no manifest in %s (%s); building on demand', _STATIC_BUILD_DIR, exc)
+    entry = _BUILT.get(key)
+    if not entry:
+        return None
+    try:
+        with open(os.path.join(_STATIC_BUILD_DIR, entry['json']), 'rb') as f:
+            body = f.read()
+        with open(os.path.join(_STATIC_BUILD_DIR, entry['gz']), 'rb') as f:
+            gz = f.read()
+    except OSError:
+        return None
+    return body, gz, entry['etag']
+
+
+def _pack(body: bytes) -> tuple[bytes, bytes, str]:
+    import gzip as _gzip_mod
+    import hashlib as _hashlib
+    return body, _gzip_mod.compress(body, compresslevel=9), _hashlib.sha1(body).hexdigest()[:20]
+
+
+def static_json(view):
+    """Serve `view` from the build, else from memory after its first
+    successful answer."""
+    from functools import wraps
+
+    @wraps(view)
+    def wrapper(*args, **kwargs):
+        key = request.full_path
+        hit = _STATIC.get(key)
+        if hit is None:
+            with _BUILD_LOCK:
+                hit = _STATIC.get(key) or _built(key)
+                if hit is None:
+                    response = app.make_response(view(*args, **kwargs))
+                    if response.status_code != 200 or response.mimetype != 'application/json':
+                        return response
+                    hit = _pack(response.get_data())
+                with _STATIC_LOCK:
+                    _STATIC[key] = hit
+        body, gz, etag = hit
+        if etag in request.if_none_match:
+            response = app.response_class(status=304)
+        elif ('gzip' in request.headers.get('Accept-Encoding', '').lower() and len(body) >= _GZIP_MIN_BYTES
+              and not request.headers.get('Authorization', '').startswith('Bearer ciqdev_')):
+            response = app.response_class(gz, mimetype='application/json')
+            response.headers['Content-Encoding'] = 'gzip'
+            response.vary.add('Accept-Encoding')
+        else:
+            response = app.response_class(body, mimetype='application/json')
+        response.set_etag(etag)
+        # Revalidate every time (the ETag makes that a 304): data changes with a deploy.
+        response.headers['Cache-Control'] = 'no-cache'
+        return response
+    return wrapper
+
+
+_AUTHORING_PREFIXES = ('/api/exercises', '/api/archetypes', '/api/modalities', '/api/frameworks')
+
+
+@app.after_request
+def _package_data_changed(response):
+    """An authoring write changed the package files: drop every answer built
+    from them, so the next read sees the change."""
+    if (request.method in ('POST', 'PUT', 'DELETE', 'PATCH') and 200 <= response.status_code < 300
+            and request.path.startswith(_AUTHORING_PREFIXES)):
+        clear_static_cache()
+    return response
+
+
+def clear_static_cache() -> None:
+    """Forget every reference answer — the build's too, which no longer
+    matches the files."""
+    global _explore_links_cache, _BUILT
+    from src import explore_philosophy
+    with _STATIC_LOCK:
+        _STATIC.clear()
+        _BUILT = {}
+    _explore_links_cache = None
+    explore_philosophy.clear_cache()
+    _watch_spec.clear_cache()
+
+
+def _static_paths() -> list[str]:
+    """Every reference answer the clients load: what the build writes."""
+    from src import explore_philosophy
+    return (['/api/philosophies', '/api/frameworks', '/api/archetypes', '/api/exercises', '/api/modalities',
+             '/api/explore/links', '/api/philosophies/glance', '/api/analytics/specs', '/api/analytics/vocabulary',
+             '/api/similarity', '/api/standards', '/api/standards?sex=male', '/api/standards?sex=female',
+             '/api/constraints/equipment-profiles', '/api/constraints/injury-flags', '/api/equipment', '/api/ontology']
+            + [f"/api/philosophies/{g['id']}/describe" for g in explore_philosophy.glance_all()])
+
+
+def build_static(out_dir: str) -> dict:
+    """Answer every reference route and write each answer to `out_dir` with a
+    manifest (the Docker build; tools/build_static_cache.py). Raises on any
+    route that does not answer 200, so a broken package fails the build
+    instead of the first visitor."""
+    import hashlib as _hashlib
+    os.makedirs(out_dir, exist_ok=True)
+    client = app.test_client()
+    for path in _static_paths():
+        resp = client.get(path)
+        if resp.status_code != 200:
+            raise RuntimeError(f'{path} answered {resp.status_code}')
+    manifest = {}
+    for key, (body, gz, etag) in sorted(_STATIC.items()):
+        name = _hashlib.sha1(key.encode()).hexdigest()[:16]
+        with open(os.path.join(out_dir, f'{name}.json'), 'wb') as f:
+            f.write(body)
+        with open(os.path.join(out_dir, f'{name}.json.gz'), 'wb') as f:
+            f.write(gz)
+        manifest[key] = {'json': f'{name}.json', 'gz': f'{name}.json.gz', 'etag': etag}
+    with open(os.path.join(out_dir, 'manifest.json'), 'w', encoding='utf-8') as f:
+        json.dump(manifest, f, indent=1, sort_keys=True)
+    return manifest
+
+
 _DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 _DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
 
@@ -188,7 +337,7 @@ _DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
 
 def _load_yaml(path: str) -> dict:
     with open(path, encoding='utf-8') as f:
-        return yaml.safe_load(f)
+        return loader.safe_load(f)
 
 
 _EXERCISE_LIST_KEYS = ('modality', 'equipment', 'movement_patterns', 'requires', 'unlocks',
@@ -491,6 +640,7 @@ def _transform_program(raw: dict, goal: dict, constraints: dict, validation) -> 
 # ---------------------------------------------------------------------------
 
 @app.get('/api/exercises')
+@static_json
 def get_exercises():
     return jsonify(_all_exercises())
 
@@ -502,6 +652,7 @@ def get_exercise_media(ex_id: str):
 
 
 @app.get('/api/modalities')
+@static_json
 def get_modalities():
     return jsonify(_all_modalities())
 
@@ -528,22 +679,26 @@ def create_modality():
 
 
 @app.get('/api/equipment')
+@static_json
 def get_equipment():
     return jsonify(loader.load_equipment())
 
 
 @app.get('/api/constraints/equipment-profiles')
+@static_json
 def get_equipment_profiles():
     return jsonify(_equipment_profiles())
 
 
 @app.get('/api/constraints/injury-flags')
+@static_json
 def get_injury_flags():
     return jsonify(_injury_flags())
 
 
 @app.get('/api/standards')
 @app.get('/api/benchmarks')
+@static_json
 def get_benchmarks():
     """The standards. `?sex=female|male` picks the tables; the default is the
     male set, which is what every client got before the profile could say.
@@ -553,12 +708,14 @@ def get_benchmarks():
 
 
 @app.get('/api/frameworks')
+@static_json
 def get_frameworks():
     fw_dict = loader.load_all_frameworks()
     return jsonify(sorted(fw_dict.values(), key=lambda fw: fw.get('id', '')))
 
 
 @app.get('/api/philosophies')
+@static_json
 def get_philosophies():
     philosophies = loader.load_philosophies()
     from src.training_contract import load_contract
@@ -598,6 +755,7 @@ def get_philosophies():
 
 
 @app.get('/api/philosophies/glance')
+@static_json
 def philosophies_glance():
     """Every philosophy's comparable facts — weeks, days, minutes, levels,
     equipment, modality mix, intensity, each track and phase in numbers
@@ -608,6 +766,7 @@ def philosophies_glance():
 
 
 @app.get('/api/philosophies/<philosophy_id>/describe')
+@static_json
 def describe_philosophy(philosophy_id):
     """Explore ▸ Philosophies' page as the package writes it: tracks and each
     phase's week from what builds it (contract, template, framework), the
@@ -622,11 +781,13 @@ def describe_philosophy(philosophy_id):
 
 
 @app.get('/api/archetypes')
+@static_json
 def get_archetypes():
     return jsonify(sorted(loader.load_all_archetypes(), key=lambda a: a.get('id', '')))
 
 
 @app.get('/api/ontology')
+@static_json
 def get_ontology():
     """Lightweight static graph of the full ontology for heatmap visualization."""
     # Philosophies
@@ -701,6 +862,7 @@ _explore_links_cache: dict | None = None
 
 
 @app.get('/api/explore/links')
+@static_json
 def get_explore_links():
     """How Explore's levels connect, for each detail's "Leads into it" and
     "Follows from it": the movements, and every link between neighbouring
@@ -714,6 +876,7 @@ def get_explore_links():
 
 
 @app.get('/api/similarity')
+@static_json
 def get_similarity():
     """Pairwise likeness scores for all ontology categories.
 
@@ -5607,6 +5770,7 @@ def _analytics_specs_digest() -> str:
 
 
 @app.get('/api/analytics/specs')
+@static_json
 def analytics_specs():
     """Every package's analytics spec, described: what each philosophy tracks
     and measures, resolved to names. Static data — no user, no program."""
@@ -5615,6 +5779,7 @@ def analytics_specs():
 
 
 @app.get('/api/analytics/vocabulary')
+@static_json
 def analytics_vocabulary():
     """The analytics words: the twelve primitives, what each needs logged,
     and the load and recovery terms (src/analytics/vocabulary.py) — the About
