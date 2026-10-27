@@ -25,6 +25,8 @@ suites:
   - test_source_weeks.py
   # Generation
   - test_training_contract.py
+  - test_composition.py
+  - test_single_lane_golden.py       # every one-track program as recorded before compositions (~6 min)
   - test_selection.py
   - test_standard_tests.py
   - test_phases.py
