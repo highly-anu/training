@@ -53,6 +53,7 @@ deferred is under *Later*.
 | 14 | Watch parity: the Apple Watch on the server's contract and vocabulary | P2 | M | watch, iOS, API |
 | 15 | Program preview on the phone; the regenerate offer that asks the server first (*IA*) | P2 | M | iOS, web |
 | 16 | Garmin's official Connect API, open again since 2026-10-21: verify the integration, then health data and workouts pushed to the watch | P2 | M | API, watch, web, iOS |
+| 17 | Explore: each philosophy's page read from its package — a server document, its week and rules, one colour system | P2 | M | API, web, iOS, content |
 
 ---
 
@@ -1360,6 +1361,88 @@ Connections has the Garmin button.
    test results. Decide what that means for the Connect IQ app: keep it for what the
    native player cannot do, or offer both.
 
+---
+
+### 17. Explore: each philosophy's page read from its package — P2 · M
+
+Added 2026-10-27 from an audit of Explore ▸ Philosophies (web
+`components/explore/PhilosophyPanel.tsx`, iOS `PhilosophyDetailSheet.swift`). Nearly
+every value on the page comes from the package, but the browser decides what it means,
+with its own copies of engine logic, and what makes each method distinctive is not on it:
+
+- **Exercise pools are empty.** The web's slot matcher (`PATTERN_ALIASES`,
+  `exerciseMatchesSlot`) reads a slot's pattern or category, never `exercise_ids`, which
+  1,748 of the 1,769 slots use, so almost every slot shows no exercise. The server has
+  the right rule (`selector._matches_slot_filter`, already used by `src/explore_links.py`).
+- **Archetypes in one flat list, some hidden.** Seven packages are mostly `pool_only`
+  named workouts (Horsemen 195, Gym Jones 48, CrossFit 45, Ido Portal 35…), listed
+  ungrouped; 21 archetypes (tests, off-framework modalities) are filtered out by the
+  client's "modality in some framework" guess.
+- **The browser computes the profile.** The modality radar adds every framework's
+  `sessions_per_week` unweighted (a 1-week taper counts as much as a 16-week base);
+  "Weekly shape" mirrors `goals._main_framework` and is the framework's, not the training
+  contract's or the week template's that five packages actually run on; a modality's
+  "×/wk" is the first framework's.
+- **What the package says is missing or reduced to ids.** Phase `description`,
+  `adaptations`, `intensity` and `tests`; training-contract modules; week templates and
+  workout categories; `borrows_from`; the 125 cited rules of `fidelity.yaml` (the method's
+  own claims, quoted from the source) and its inventions. `core_principles`,
+  `intensity_model` and `progression_philosophy` are snake_case ids put into words by a
+  regex on both clients. The Modalities section is commons text, the same on every page.
+- **Colour off the system.** The header is violet for every philosophy (Mixed Modal's
+  colour: Starting Strength reads as CrossFit) and frameworks blue (Aerobic Base's);
+  `SessionsPerWeekRows` paints every modality in the philosophy's accent; levels have
+  colours (`LEVEL_COLORS`, against frontend-design §8.1); recovery cost uses the status
+  traffic light; the committed / core tiers are red and orange, Max Strength's and
+  Strength Endurance's.
+
+The rule, as for the analytics specs (`src/analytics/describe.py`): the server writes
+one document per philosophy from its package, both clients lay it out, and no client
+recomputes selection, frameworks or wording.
+
+1. **The document (M).** `GET /api/philosophies/<id>/describe` (`src/explore_philosophy.py`),
+   static, built once: identity (summary, sources, accent modality, levels, equipment by
+   name, the two models in words); tracks with every phase's words, its week's source
+   (contract modules, template days, framework) and modality mix, its intensity split and
+   tests in words, and the track's mix weighted by phase weeks; the rules and inventions
+   of `fidelity.yaml`; the sessions grouped by modality, then by category for named
+   workouts, tests apart, each slot's exercises by the selector's rule; borrows;
+   expectations. The web page is rebuilt on it in the order a reader asks — what it is,
+   what a week holds, how it runs over time, what it holds true, its sessions, what it
+   measures, what it needs — and the client's matcher, radar and framework mirror go.
+   Raw ids and framework internals move behind a dev-build disclosure.
+2. **One colour system (S).** Modality colour for what kind of training (mix, week, session
+   groups), phase colour for where in the program, HR-zone colours for intensity, neutral
+   surfaces otherwise. A *fingerprint* — the track's mix as a strip of modality colours —
+   on the hero and on every landing card, replacing the radar. Levels, tiers and recovery
+   cost lose their colours.
+3. **A sample week per phase (M).** One week generated per phase for the reference athlete
+   (`tools/check_styles.py` already generates every phase; ~40 s for all), shown in the
+   Program ▸ Calendar's session cards. Generation is too slow per request on the 256 MB
+   machine: build it into a checked-in file with a staleness check, or cache it per
+   process on a data digest.
+4. **Words the packages lack (S, content).** A one-line `tagline` per philosophy, the
+   intensity and progression models in a commons vocabulary (label + sentence), and
+   `notes` split where it addresses authors (Wildman's "Executable rules live in…").
+5. **iOS (S).** `PhilosophyDetailSheet` reads the same document in the same order
+   (design-system §6.18).
+
+Acceptance: a new package with no code change gets a complete page (`test_package_dropin.py`
+copies three); no slot of a shipped package shows "no exercises" when the selector finds
+some; the page names no colour outside §8.
+
+**Progress.** Slice 1 landed 2026-10-27 (`feat/explore-describe`): the document, the web page
+on it (`components/explore/philosophy/`; `PhilosophyPanel` and `PhilosophySetupCard` gone),
+and Explore ▸ Archetypes' slot exercises from `/explore/links` instead of the client's
+pattern copy. Of slice 2, the header and framework colours went with the old page, levels
+lost theirs in the archetype card and `SessionsPerWeekRows` draws each modality in its own
+colour; the fingerprint is on the page's header, not yet on the landing cards (that needs
+the mix in `/philosophies`). Found on the way: every phase of every shipped package runs a
+contract or a week template — none reads its framework's `sessions_per_week` any more —
+and several `notes` speak to authors ("src/week_template.py", "training_contract.yaml"),
+which slice 4's `summary` should replace on the page. Not checked at phone width (the
+headless shot opens the nav drawer).
+
 ## Later
 
 Larger items from the IA review. Each needs a backend step first; none is
@@ -1373,12 +1456,11 @@ scheduled ahead of the ranked list.
   worth their own place. Both clients, one change (§2 of the IA).
 - **Push notifications** — local session reminders exist
   (`NotificationManager`); push would need a device-token table and a sender.
-- **Ontology heatmap reads slots by pattern only** — `useHeatmapData` and
-  `PhilosophyPanel.exerciseMatchesSlot` match a slot by `movement_pattern` /
-  `category`, but 1,748 of 1,762 slots name their exercises (`exercise_ids`), so
-  the heatmap and the philosophy detail's slot pools show far fewer exercises
-  than the selector can pick. Explore's lineage reads the server's links
-  (`/api/explore/links`); the heatmap and the slot pools should read them too.
+- **Ontology heatmap reads slots by pattern only** — `useHeatmapData` matches a
+  slot by `movement_pattern` / `category`, but 1,748 of 1,769 slots name their
+  exercises (`exercise_ids`), so the heatmap shows far fewer exercises than the
+  selector can pick. Explore's lineage, the philosophy page and the archetype
+  card read the server's links (since 2026-10-27); the heatmap should too.
 - **Equipment pickers disagree with the engine** — Profile ▸ Equipment
   (`ProfileBenchmarks.tsx`) and the builder (`ConstraintsForm.tsx`) offer
   `dip_bar`, `assault_bike` and `foam_roller`, which no exercise or archetype uses,

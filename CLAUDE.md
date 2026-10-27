@@ -117,6 +117,7 @@ All prefixed `/api/`:
 | GET | `/philosophies` | `Philosophy[]` |
 | GET | `/analytics/specs` | every philosophy's analytics spec, described (`src/analytics/describe.py`) |
 | GET | `/explore/links` | Explore's lineage: the movements (patterns exercises declare) and every link between neighbouring levels — philosophy→framework (by track and phase), framework→modality, modality→archetype, archetype→exercise (the selector's slot rule: `exercise_ids`, else the pattern filter, within the package), exercise→movement, and the exercise progression (`requires` ∪ `unlocks`); `equipment` — what each exercise and archetype needs as the generator reads it (all of it, open space free), for Explore ▸ Equipment, pinned to `selector._equipment_ok` and the archetype filter by `test_explore_links.py` (`src/explore_links.py`); static, built once |
+| GET | `/philosophies/<id>/describe` | Explore ▸ Philosophies' page as the package writes it (`src/explore_philosophy.py`): each track's phases with their words, tests and the week from what builds it — a training contract's modules, the phase's `week_templates` days, else the framework's sessions per week — the modality mix (a track's weighted by phase weeks), the rules, inventions and open questions of `fidelity.yaml`, every session grouped (template category, contract module, modality, tests) with each slot's exercises by the selector's rule (`explore_links.slot_exercises`); static, built once per process. The web page (`components/explore/philosophy/`) only lays it out |
 | GET | `/analytics/vocabulary` | the analytics words: primitives, what each needs logged, and the `terms` (`vocabulary.TERMS`: load, recovery, completion, intensity, mix…) for the phone's About sections; static, no sign-in |
 | GET | `/analytics/development?from=&to=&fresh=1` | development across programs — blocks, lifts and currencies across the span, load by block, standards over time (`src/analytics/development.py`); last 365 days by default, cached on a digest |
 | GET | `/frameworks` | `Framework[]` |
@@ -1360,6 +1361,7 @@ SUPABASE_URL='' .venv/bin/python test_phase_summary.py   # Program ▸ Overview'
 SUPABASE_URL='' .venv/bin/python test_devlab_trace.py    # the Dev Lab's recorded trace has the server's shape; --record after a trace change
 SUPABASE_URL='' .venv/bin/python test_constraint_impact.py  # what each constraint changes against the reference, and which (Dev Lab ▸ Impact)
 SUPABASE_URL='' .venv/bin/python test_explore_links.py     # Explore's lineage: slot links by the selector's rule, progression, movements
+SUPABASE_URL='' .venv/bin/python test_explore_philosophy.py  # Explore's philosophy page: weeks from contracts and templates, mixes, rules, sessions
 ```
 
 The Dev Lab's panels render a recorded `generate?trace=1` answer

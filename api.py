@@ -597,6 +597,20 @@ def get_philosophies():
     return jsonify(philosophies)
 
 
+@app.get('/api/philosophies/<philosophy_id>/describe')
+def describe_philosophy(philosophy_id):
+    """Explore ▸ Philosophies' page as the package writes it: tracks and each
+    phase's week from what builds it (contract, template, framework), the
+    rules of its fidelity record, every session with the exercises the
+    selector can give each slot (src/explore_philosophy.py). Static data —
+    no user; built once per process."""
+    from src import explore_philosophy
+    doc = explore_philosophy.describe(philosophy_id)
+    if doc is None:
+        return jsonify({'error': f'Unknown philosophy: {philosophy_id}'}), 404
+    return jsonify(doc)
+
+
 @app.get('/api/archetypes')
 def get_archetypes():
     return jsonify(sorted(loader.load_all_archetypes(), key=lambda a: a.get('id', '')))

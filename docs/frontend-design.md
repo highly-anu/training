@@ -2005,41 +2005,53 @@ Active state: primary-tinted background + primary text. Inactive: muted text tha
 
 ---
 
-### 13.7 Explorer Detail: the "At a Glance" Pair
+### 13.7 Explorer Detail: a Philosophy, as Its Package Writes It
 
-**Use case:** A detail page whose subject has two halves a reader wants side by
-side before the deep disclosures — on a philosophy, *how it is set up* and
-*what it tracks and measures* (`components/explore/PhilosophySetupCard.tsx`,
-`PhilosophyMeasuresCard.tsx`, mounted by `PhilosophyPanel`).
+**Use case:** Explore ▸ Philosophies' detail (`components/explore/philosophy/PhilosophyPage.tsx`).
+It lays out one server document, `GET /api/philosophies/<id>/describe`
+(`src/explore_philosophy.py`); nothing on it is computed in the browser. Until
+2026-10-27 the page assembled itself from the raw lists — a client copy of the
+selector that never read `exercise_ids` (almost every slot showed no exercise),
+a radar that summed every framework's sessions unweighted, and a "weekly shape"
+read from framework fields that no shipped phase runs on any more.
 
-```tsx
-<div className="grid gap-3 lg:grid-cols-2 items-start">
-  <SetupCard />      {/* authored structure: phases, weekly shape, expectations */}
-  <MeasuresCard />   {/* the analytics spec in words, from /api/analytics/specs */}
-</div>
-{/* …then the existing collapsed disclosures: frameworks, modalities, archetypes */}
-```
+In the order a reader asks:
+
+1. **Header** — name; tracks, levels and the two models in one muted line; the
+   summary; "Build a program with this"; the **fingerprint** (`ModalityMix`):
+   the main track's sessions a week as a strip of modality colours, each as wide
+   as its share, weighted by phase weeks on the server.
+2. **How it runs** (`PhilosophyTracks`) — track tabs (main first, "for
+   novices" from `track_for_level`), a timeline of phases in their kind's
+   colour (§8.2) that picks the phase shown, then the phase's words and its
+   week (`PhaseWeek`) from what builds it: the source's seven days (a stripe
+   per day in the pieces' modality colours, "+ warm-up", "light", rest days
+   dashed; a stepper through the template's weeks), a contract's module cards
+   (modality stripe, ×/wk, optional / once mastered, how it progresses, its
+   variants as chips, each exercise with its prescription), or the framework's
+   sessions per week. The intensity split uses the HR-zone buckets (§8.7).
+3. **What it holds true** (`PhilosophyRules`) — the rules of `fidelity.yaml`,
+   each expanding to the quoted passage it rests on; "Where the app decides"
+   (inventions) and "Not modelled yet" collapsed under them. Without a record,
+   the core principles.
+4. **What it asks of you** — expectations as `StatCell`s, equipment, borrows.
+5. **Its sessions** (`PhilosophySessions`) — groups as the method groups them
+   (template categories in the source's order, contract modules, then
+   modalities, tests last), a modality-coloured left border; open when the
+   package has eight sessions or fewer. Each slot lists the exercises the
+   server says it can take, as links into Exercises.
+6. **What it tracks & measures** (`PhilosophyMeasuresCard`), **Lineage**
+   (§13.8), sources (linked) and similar philosophies.
 
 **Key patterns:**
-- **Two cards, one row, stacking under `lg`** — each card is
-  `rounded-lg border border-border/40 bg-card/40 p-4 space-y-4` with an
-  uppercase `text-[10px] tracking-widest` eyebrow ("How it's set up" / "What it
-  tracks & measures") and a one-line `text-[11px]` summary under it.
-- **`items-start`** so the shorter card does not stretch to the taller one's
-  height; the cards are read, not compared.
-- **Sections inside a card use `Section` from
-  `components/explore/ExploreSection.tsx`** — the same label style the
-  framework and modality details use, so the eye reads one system.
+- **Neutral surfaces, colour only on its axis.** Modality colour for what kind
+  of training (fingerprint, day stripes, module cards, session groups), phase
+  kind for where in the program, HR zones for intensity. The page used to be
+  violet throughout — Mixed Modal's colour, on Starting Strength too.
+- **Facts, not claims.** Every line is the package's; the rules carry their
+  citations, the app's own decisions are labelled as such.
 - **The measures card leads with the headline signal open** (`ProgressSpecRow`
-  with `defaultOpen`) and the rest collapsed — §1.4 progressive disclosure at
-  row level; the sentence on each row (`lib/analyticsSpecText.ts`) is enough to
-  scan without expanding.
-- **Facts, not claims.** Both cards render authored package data; a default
-  (synthesised) spec is badged `SpecSourceBadge` and a movement-balance rule
-  the package did not declare is captioned *shown for information only*.
-- **Cross-references, not copies.** The framework detail's "Measured by", the
-  modality's "How philosophies measure it" and the archetype's "Tracked by"
-  filter the same spec document by scope rather than restating it.
+  with `defaultOpen`); a default (synthesised) spec is badged `SpecSourceBadge`.
 
 ### 13.8 Explorer Detail: Lineage
 

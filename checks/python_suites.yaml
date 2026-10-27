@@ -41,6 +41,7 @@ suites:
   - test_recovery_schedule.py
   - test_recovery_regions.py
   - test_explore_links.py
+  - test_explore_philosophy.py
   - test_similarity.py
   - test_program_preview.py
   - test_session_icon.py

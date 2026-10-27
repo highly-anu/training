@@ -18,7 +18,8 @@ import { useDebounce } from '@/hooks/useDebounce'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { ARCH_CAT_COLORS, EX_CATEGORY_COLORS, philosophyHex } from '@/lib/exploreColors'
 import { cn } from '@/lib/utils'
-import { PhilosophyPanel, ArchetypeCard } from '@/components/explore/PhilosophyPanel'
+import { ArchetypeCard } from '@/components/explore/ArchetypeCard'
+import { PhilosophyPage } from '@/components/explore/philosophy/PhilosophyPage'
 import { StandardsLanding } from '@/components/explore/StandardsLanding'
 import { MovementLanding, MovementDetail } from '@/components/explore/MovementPanel'
 import { EquipmentPanel } from '@/components/explore/EquipmentPanel'
@@ -1371,7 +1372,7 @@ function FrameworkOverview({
 
 // ─── Framework Explorer detail ────────────────────────────────────────────────
 
-/** Explore → Builder with this framework fixed (see PhilosophyPanel's twin). */
+/** Explore → Builder with this framework fixed (see PhilosophyPage's twin). */
 function BuildWithFramework({ fw, phil, frameworks }: { fw: Framework; phil: Philosophy; frameworks: Framework[] }) {
   const navigate = useNavigate()
   const prefill = useBuilderStore((s) => s.prefillFromFramework)
@@ -1529,7 +1530,7 @@ function FrameworkExplorerDetail({
         {/* Sessions per week — dot visualization */}
         {fw.sessions_per_week && Object.keys(fw.sessions_per_week).length > 0 && (
           <Section label="Sessions / week">
-            <SessionsPerWeekRows sessionsPerWeek={fw.sessions_per_week} accentHex={hex} />
+            <SessionsPerWeekRows sessionsPerWeek={fw.sessions_per_week} />
           </Section>
         )}
 
@@ -1817,8 +1818,8 @@ export function Explore() {
             <div className="flex-1 min-h-0 overflow-hidden">
                 {topic === 'philosophies' && (
                   selectedPhil
-                    ? <PhilosophyPanel
-                        controlledId={selectedPhil.id}
+                    ? <PhilosophyPage
+                        id={selectedPhil.id}
                         onSelect={(id) => open('philosophies', id)}
                         onBack={backToList}
                       />

@@ -99,3 +99,13 @@ export const MODALITY_COLORS: Record<ModalityId, ModalityColor> = {
     label: 'Rehab',
   },
 }
+
+/** A modality's hex and label by an id the server sent as a plain string;
+ *  slate and the id in words for one the map does not know. */
+export function modalityHex(id: string | null | undefined): string {
+  return (id && MODALITY_COLORS[id as ModalityId]?.hex) || '#94a3b8'
+}
+
+export function modalityLabel(id: string | null | undefined): string {
+  return id ? MODALITY_COLORS[id as ModalityId]?.label ?? id.replace(/_/g, ' ') : ''
+}

@@ -80,13 +80,37 @@ def _framework_modalities(frameworks: dict, modalities: dict) -> list:
     return out
 
 
-def _policy(pkg: str | None, philosophies: dict) -> provenance.SourcePolicy:
+def policy_for(pkg: str | None, philosophies: dict) -> provenance.SourcePolicy:
     # provenance.resolve_source_policy, from the philosophies already loaded.
     if not pkg:
         return provenance.SourcePolicy()
     phil = philosophies.get(pkg) or {}
     return provenance.SourcePolicy(owner_packages=frozenset({pkg}),
                                    borrows=provenance._parse_borrows(phil) if phil else {})
+
+
+def slot_exercises(slot: dict, modality: str | None, exercises: dict,
+                   policy: provenance.SourcePolicy) -> tuple[list[dict], bool]:
+    """The exercises a slot can take, by the selector's rule, and whether the
+    slot lists them (`exercise_ids`) rather than filtering the catalog."""
+    if slot.get('skip_exercise'):
+        return [], False
+    ex_filter = slot.get('exercise_filter') or {}
+    listed = ex_filter.get('exercise_ids') or []
+    # A listed slot can only take what it lists, in its order; a filter slot reads them all.
+    pool = [exercises[i] for i in listed if i in exercises] if listed else exercises.values()
+    out = []
+    for ex in pool:
+        # A test's own exercise or a named workout's movement is taken
+        # only by a slot that names it (selector.select_exercise).
+        if (ex.get('test_only') or ex.get('named_only')) and ex['id'] not in listed:
+            continue
+        if not provenance.allows_exercise(ex, policy, modality):
+            continue
+        if not _matches_slot_filter(ex, ex_filter, set()):
+            continue
+        out.append(ex)
+    return out, bool(listed)
 
 
 def _archetype_exercises(archetypes: list, exercises: dict, philosophies: list) -> list:
@@ -96,26 +120,12 @@ def _archetype_exercises(archetypes: list, exercises: dict, philosophies: list) 
     for arch in archetypes:
         pkg = arch.get('_package')
         if pkg not in policies:
-            policies[pkg] = _policy(pkg, by_id)
+            policies[pkg] = policy_for(pkg, by_id)
         policy = policies[pkg]
-        modality = arch.get('modality')
         found: dict = {}
         for slot in arch.get('slots') or []:
-            if slot.get('skip_exercise'):
-                continue
-            ex_filter = slot.get('exercise_filter') or {}
-            listed = ex_filter.get('exercise_ids') or []
-            # A listed slot can only take what it lists; a filter slot reads them all.
-            pool = [exercises[i] for i in listed if i in exercises] if listed else exercises.values()
+            pool, listed = slot_exercises(slot, arch.get('modality'), exercises, policy)
             for ex in pool:
-                # A test's own exercise or a named workout's movement is taken
-                # only by a slot that names it (selector.select_exercise).
-                if (ex.get('test_only') or ex.get('named_only')) and ex['id'] not in listed:
-                    continue
-                if not provenance.allows_exercise(ex, policy, modality):
-                    continue
-                if not _matches_slot_filter(ex, ex_filter, set()):
-                    continue
                 edge = found.setdefault(ex['id'], {'archetype': arch['id'], 'exercise': ex['id'],
                                                    'slots': [], 'via': 'listed' if listed else 'filter'})
                 role = slot.get('role')
