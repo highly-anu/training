@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { ChevronDown, ChevronRight, ExternalLink, FlaskConical } from 'lucide-react'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { ModalityGlyph } from './Glance'
 import type { DescribedSession, DescribedSessionGroup, PhilosophyDescription } from '@/api/types'
 import { useExploreNavigate } from '@/components/explore/topics'
 import { cn } from '@/lib/utils'
@@ -69,49 +71,60 @@ function groupLabel(g: DescribedSessionGroup): string {
   return modalityLabel(g.modality) || 'Other'
 }
 
-function Group({ group, sessions, defaultOpen }: {
-  group: DescribedSessionGroup; sessions: Record<string, DescribedSession>; defaultOpen: boolean
-}) {
-  const [open, setOpen] = useState(defaultOpen)
-  const hex = modalityHex(group.modality)
+/** One group as a tile: its modality's icon and colour, its name, how many. */
+function GroupTile({ group, onOpen }: { group: DescribedSessionGroup; onOpen: () => void }) {
   return (
-    <div className="rounded-lg border border-border/40 overflow-hidden" style={{ borderLeftColor: group.modality ? hex : undefined, borderLeftWidth: group.modality ? 3 : 1 }}>
-      <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open}
-        className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-muted/20">
-        {open ? <ChevronDown className="size-3.5 shrink-0 text-muted-foreground/60" />
-          : <ChevronRight className="size-3.5 shrink-0 text-muted-foreground/60" />}
-        <span className="flex-1 text-xs font-semibold">{groupLabel(group)}</span>
-        {group.warmUp && <span className="text-[9px] rounded bg-muted px-1 text-muted-foreground">warm-ups</span>}
-        {group.name && group.modality && (
-          <span className="text-[10px]" style={{ color: hex }}>{modalityLabel(group.modality)}</span>
-        )}
-        <span className="font-mono text-[10px] text-muted-foreground">{group.sessions.length}</span>
-      </button>
-      {open && (
-        <div className="space-y-1.5 border-t border-border/30 px-3 py-2">
-          {group.advice && <p className="text-[10px] italic text-muted-foreground">{group.advice}</p>}
-          <ul className="space-y-1">
-            {group.sessions.map((id) => sessions[id] && <Session key={id} session={sessions[id]} />)}
-          </ul>
-        </div>
-      )}
-    </div>
+    <button type="button" onClick={onOpen}
+      className="flex items-center gap-2 rounded-md border border-border/50 bg-card/60 px-2.5 py-2 text-left transition-colors hover:border-primary/40"
+      style={group.modality ? { borderLeftColor: modalityHex(group.modality), borderLeftWidth: 3 } : undefined}>
+      {group.kind === 'tests'
+        ? <FlaskConical className="size-4 shrink-0 text-muted-foreground" />
+        : <ModalityGlyph modality={group.modality} className="size-4" />}
+      <span className="min-w-0 flex-1 truncate text-xs font-medium">{groupLabel(group)}</span>
+      <span className="font-mono text-[11px] text-muted-foreground tabular-nums">{group.sessions.length}</span>
+    </button>
   )
 }
 
 /**
- * Every session the package writes, grouped as the method groups them: a
- * template's day categories in the source's order, a contract's modules, the
- * rest by modality, tests apart. Each slot lists the exercises the generator
- * can give it (the server applies the selector's rule).
+ * Every session the package writes, as tiles grouped as the method groups
+ * them — a template's day categories in the source's order, a contract's
+ * modules, the rest by modality, tests last. A tile opens its sessions in a
+ * sheet; each slot lists the exercises the generator can give it (the
+ * server applies the selector's rule).
  */
 export function PhilosophySessions({ doc }: { doc: PhilosophyDescription }) {
-  const total = doc.groups.reduce((n, g) => n + g.sessions.length, 0)
+  const [open, setOpen] = useState<DescribedSessionGroup | null>(null)
   return (
-    <div className="space-y-1.5">
-      {doc.groups.map((g) => (
-        <Group key={`${g.kind}-${g.id}`} group={g} sessions={doc.sessions} defaultOpen={total <= 8} />
-      ))}
-    </div>
+    <>
+      <div className="grid gap-1.5 grid-cols-[repeat(auto-fill,minmax(11rem,1fr))]">
+        {doc.groups.map((g) => <GroupTile key={`${g.kind}-${g.id}`} group={g} onOpen={() => setOpen(g)} />)}
+      </div>
+      <Sheet open={!!open} onOpenChange={(o) => !o && setOpen(null)}>
+        <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
+          {open && (
+            <>
+              <SheetHeader>
+                <SheetTitle className="flex items-center gap-2">
+                  {open.modality && <ModalityGlyph modality={open.modality} className="size-4" />}
+                  {groupLabel(open)}
+                </SheetTitle>
+                <SheetDescription>
+                  {open.sessions.length} session{open.sessions.length === 1 ? '' : 's'}
+                  {open.name && open.modality ? ` · ${modalityLabel(open.modality)}` : ''}
+                  {open.warmUp ? ' · opens a day' : ''}
+                </SheetDescription>
+              </SheetHeader>
+              <div className="space-y-2 px-4 pb-6">
+                {open.advice && <p className="text-[11px] italic text-muted-foreground">{open.advice}</p>}
+                <ul className="space-y-1">
+                  {open.sessions.map((id) => doc.sessions[id] && <Session key={id} session={doc.sessions[id]} />)}
+                </ul>
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
+    </>
   )
 }

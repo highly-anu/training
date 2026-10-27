@@ -2005,53 +2005,56 @@ Active state: primary-tinted background + primary text. Inactive: muted text tha
 
 ---
 
-### 13.7 Explorer Detail: a Philosophy, as Its Package Writes It
+### 13.7 Explorer Detail: a Philosophy at a Glance
 
-**Use case:** Explore ▸ Philosophies' detail (`components/explore/philosophy/PhilosophyPage.tsx`).
-It lays out one server document, `GET /api/philosophies/<id>/describe`
-(`src/explore_philosophy.py`); nothing on it is computed in the browser. Until
-2026-10-27 the page assembled itself from the raw lists — a client copy of the
-selector that never read `exercise_ids` (almost every slot showed no exercise),
-a radar that summed every framework's sessions unweighted, and a "weekly shape"
-read from framework fields that no shipped phase runs on any more.
+**Use case:** Explore ▸ Philosophies — the landing cards
+(`components/explore/philosophy/PhilosophyCard.tsx`) and the detail
+(`PhilosophyPage.tsx`). Both lay out the server's `glance`
+(`GET /api/philosophies/glance`, and `glance` on
+`GET /api/philosophies/<id>/describe`, `src/explore_philosophy.py`): the same
+keys for every philosophy, numbers and ids rather than prose, so two can be set
+side by side. Nothing is computed in the browser.
 
-In the order a reader asks:
+**Glance first, words on demand.** What greets the reader is marks, not text;
+every paragraph is one tap away in a sheet (§1.4).
 
-1. **Header** — name; tracks, levels and the two models in one muted line; the
-   summary; "Build a program with this"; the **fingerprint** (`ModalityMix`):
-   the main track's sessions a week as a strip of modality colours, each as wide
-   as its share, weighted by phase weeks on the server.
-2. **How it runs** (`PhilosophyTracks`) — track tabs (main first, "for
-   novices" from `track_for_level`), a timeline of phases in their kind's
-   colour (§8.2) that picks the phase shown, then the phase's words and its
-   week (`PhaseWeek`) from what builds it: the source's seven days (a stripe
-   per day in the pieces' modality colours, "+ warm-up", "light", rest days
-   dashed; a stepper through the template's weeks), a contract's module cards
-   (modality stripe, ×/wk, optional / once mastered, how it progresses, its
-   variants as chips, each exercise with its prescription), or the framework's
-   sessions per week. The intensity split uses the HR-zone buckets (§8.7).
-3. **What it holds true** (`PhilosophyRules`) — the rules of `fidelity.yaml`,
-   each expanding to the quoted passage it rests on; "Where the app decides"
-   (inventions) and "Not modelled yet" collapsed under them. Without a record,
-   the core principles.
-4. **What it asks of you** — expectations as `StatCell`s, equipment, borrows.
-5. **Its sessions** (`PhilosophySessions`) — groups as the method groups them
-   (template categories in the source's order, contract modules, then
-   modalities, tests last), a modality-coloured left border; open when the
-   package has eight sessions or fewer. Each slot lists the exercises the
-   server says it can take, as links into Exercises.
-6. **What it tracks & measures** (`PhilosophyMeasuresCard`), **Lineage**
-   (§13.8), sources (linked) and similar philosophies.
+1. **Header** — the bias modalities' icons, the name, *About* (the summary,
+   models, borrows, sources — in a sheet) and *Build a program*; six
+   `StatTile`s — weeks, days a week, minutes a session, level pips, equipment,
+   tracks · phases; the fingerprint (`ModalityMix`, the main track's sessions a
+   week by modality, weighted by phase weeks) with its `MixLegend` (modality
+   icon + ×/wk) and the easy → hard `IntensityBar`.
+2. **Tracks & phases** (`PhilosophyTracks`) — every track as one row with the
+   same columns (name, `LevelPips`, length, `PhaseBar` on a scale shared by all
+   tracks, days · minutes, mix), then the chosen track's phases as cards: the
+   kind's colour, weeks, the `WeekGlyph` (a template's seven days split by
+   modality, rest dashed; else one dot per weekly session), the intensity bar,
+   days, minutes and tests as icons. A card opens the phase sheet: the full
+   week (`PhaseWeek`), description, what it builds, how hard, tests.
+3. **Goals** — what the main track builds (chips) and *progress is …* with the
+   standards it is measured by (chips in their modality's colour, a flask on
+   the ones a phase tests). **Requirements** — equipment chips, the movements
+   each track expects you to own, borrows.
+4. **The method** — tiles: rules from the source, sources, app decisions, not
+   modelled yet, progress signals; each opens its sheet.
+5. **Sessions** — one tile per group (template category, contract module,
+   modality, tests) with the modality icon and a count; a tile opens the
+   group's sessions, each slot with the exercises the server says it takes.
+6. Lineage (§13.8) and similar philosophies.
+
+The landing card is the header in miniature: bias icons, name, fingerprint,
+weeks · days · minutes, level pips, and the main track's phase bar on one scale
+for every card, so the wall of cards already compares.
 
 **Key patterns:**
-- **Neutral surfaces, colour only on its axis.** Modality colour for what kind
-  of training (fingerprint, day stripes, module cards, session groups), phase
-  kind for where in the program, HR zones for intensity. The page used to be
-  violet throughout — Mixed Modal's colour, on Starting Strength too.
-- **Facts, not claims.** Every line is the package's; the rules carry their
-  citations, the app's own decisions are labelled as such.
-- **The measures card leads with the headline signal open** (`ProgressSpecRow`
-  with `defaultOpen`); a default (synthesised) spec is badged `SpecSourceBadge`.
+- **One glance vocabulary** (`Glance.tsx`): `LevelPips`, `StatTile`,
+  `ModalityGlyph` (`lib/modalityIcons.ts`, the lucide counterparts of the
+  phone's `ModalityStyle.icon`), `MixLegend`, `WeekGlyph`, `PhaseBar`,
+  `IntensityBar`. A comparison view reuses them as they are.
+- **Colour only on its axis** — modality (§8.1), phase kind (§8.2), heart-rate
+  zone (§8.7); surfaces neutral; levels uncoloured.
+- **A card is a `<button>` with `items-stretch`**: Chrome's button sets
+  `align-items: flex-start`, which shrank the bars and let titles overflow.
 
 ### 13.8 Explorer Detail: Lineage
 

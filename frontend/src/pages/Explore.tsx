@@ -20,6 +20,8 @@ import { ARCH_CAT_COLORS, EX_CATEGORY_COLORS, philosophyHex } from '@/lib/explor
 import { cn } from '@/lib/utils'
 import { ArchetypeCard } from '@/components/explore/ArchetypeCard'
 import { PhilosophyPage } from '@/components/explore/philosophy/PhilosophyPage'
+import { PhilosophyCard } from '@/components/explore/philosophy/PhilosophyCard'
+import { usePhilosophyGlances } from '@/api/philosophyDescription'
 import { StandardsLanding } from '@/components/explore/StandardsLanding'
 import { MovementLanding, MovementDetail } from '@/components/explore/MovementPanel'
 import { EquipmentPanel } from '@/components/explore/EquipmentPanel'
@@ -178,72 +180,44 @@ function TopicSelector({
 
 // ─── Philosophy overview (landing) ───────────────────────────────────────────
 
-function PhilosophyOverview({ philosophies, frameworks, onSelect }: {
+function PhilosophyOverview({ philosophies, onSelect }: {
   philosophies: Philosophy[]
-  frameworks: { source_philosophy?: string; sessions_per_week?: Record<string, number> }[]
   onSelect: (p: Philosophy) => void
 }) {
   const [sort, setSort] = useState<'alpha' | 'likeness'>('likeness')
   const { data: matrix } = useSimilarity()
-
-  const philSummaries = useMemo(() =>
-    philosophies.map(p => ({
-      p,
-      fwCount: frameworks.filter(fw => fw.source_philosophy === p.id).length,
-      color: MODALITY_COLORS[p.bias[0] as ModalityId]?.hex ?? '#6366f1',
-    })),
-    [philosophies, frameworks]
-  )
+  const { data: glances = [] } = usePhilosophyGlances()
+  const byId = useMemo(() => Object.fromEntries(glances.map((g) => [g.id, g])), [glances])
+  // Every card's phase bar on one scale: the longest main track.
+  const scale = useMemo(() => Math.max(1, ...glances.map((g) =>
+    (g.tracks.find((t) => t.id === g.primaryTrackId) ?? g.tracks[0])?.weeks ?? 0)), [glances])
 
   const sorted = useMemo(() => {
-    if (sort === 'alpha') return [...philSummaries].sort((a, b) => a.p.name.localeCompare(b.p.name))
-    const ordered = sortByLikeness(philosophies, matrix?.['philosophies'])
-    const byId = Object.fromEntries(philSummaries.map(s => [s.p.id, s]))
-    return ordered.map(p => byId[p.id]).filter(Boolean)
-  }, [philSummaries, philosophies, sort, matrix])
+    if (sort === 'alpha') return [...philosophies].sort((a, b) => a.name.localeCompare(b.name))
+    return sortByLikeness(philosophies, matrix?.['philosophies'])
+  }, [philosophies, sort, matrix])
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="max-w-2xl mx-auto px-8 py-12 space-y-10">
-
-        <div className="space-y-3">
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium">
-            Training ontology
-          </p>
-          <h2 className="text-2xl font-semibold leading-snug">
-            {philosophies.length} training philosophies.
-          </h2>
-          <p className="text-sm text-muted-foreground leading-relaxed max-w-lg">
-            From barbell minimalism to movement generalism — each philosophy encodes a distinct theory of how to stress, recover, and progress.
-            Select one to explore its frameworks, archetypes, and exercise vocabulary.
-          </p>
+      <div className="max-w-4xl mx-auto px-6 py-10 space-y-6">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div className="space-y-1">
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium">Training ontology</p>
+            <h2 className="text-2xl font-semibold leading-snug">{philosophies.length} training philosophies</h2>
+          </div>
+          <SortToggle sort={sort} onChange={setSort} />
         </div>
 
-        <SortToggle sort={sort} onChange={setSort} />
-
-        <div className="grid grid-cols-2 gap-2">
-          {sorted.map(({ p, fwCount, color }) => (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => onSelect(p)}
-              className="flex items-start gap-2.5 rounded-lg border border-border/30 bg-card/40 px-3 py-2.5 text-left
-                         transition-all hover:border-primary/40 hover:shadow-md hover:-translate-y-px hover:bg-muted/20 group cursor-pointer"
-              style={{ borderLeftColor: color, borderLeftWidth: 2 }}
-            >
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-medium leading-snug truncate group-hover:text-primary transition-colors">{p.name}</p>
-                <p className="text-[10px] text-muted-foreground/60 mt-0.5">
-                  {fwCount} framework{fwCount !== 1 ? 's' : ''} · {p.bias.length} bias{p.bias.length !== 1 ? 'es' : ''}
-                </p>
-              </div>
-            </button>
-          ))}
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {sorted.map((p) => byId[p.id]
+            ? <PhilosophyCard key={p.id} glance={byId[p.id]} scaleWeeks={scale} onSelect={() => onSelect(p)} />
+            : (
+              <button key={p.id} type="button" onClick={() => onSelect(p)}
+                className="rounded-lg border border-border/40 bg-card/50 p-3 text-left text-xs font-semibold hover:border-primary/40">
+                {p.name}
+              </button>
+            ))}
         </div>
-
-        <p className="text-[10px] text-muted-foreground/30 text-center pb-4">
-          Select a philosophy to explore its full structure
-        </p>
       </div>
     </div>
   )
@@ -1825,7 +1799,6 @@ export function Explore() {
                       />
                     : <PhilosophyOverview
                         philosophies={philosophies}
-                        frameworks={frameworks}
                         onSelect={(p) => open('philosophies', p.id)}
                       />
                 )}

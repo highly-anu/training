@@ -597,6 +597,16 @@ def get_philosophies():
     return jsonify(philosophies)
 
 
+@app.get('/api/philosophies/glance')
+def philosophies_glance():
+    """Every philosophy's comparable facts — weeks, days, minutes, levels,
+    equipment, modality mix, intensity, each track and phase in numbers
+    (src/explore_philosophy.glance): Explore's landing and comparing. Static
+    data — no user; built once per process."""
+    from src import explore_philosophy
+    return jsonify(explore_philosophy.glance_all())
+
+
 @app.get('/api/philosophies/<philosophy_id>/describe')
 def describe_philosophy(philosophy_id):
     """Explore ▸ Philosophies' page as the package writes it: tracks and each
