@@ -18,7 +18,7 @@ import { LoadingCard } from '@/components/shared/LoadingCard'
 import { HeldBackPanel, RefusedPanel, type HeldBackActions } from '@/components/preview/HeldBackPanel'
 import { AdjustSheet, type AdjustableConstraints } from '@/components/preview/AdjustSheet'
 import { PreviewSessionSheet, type PreviewSessionTarget } from '@/components/preview/PreviewSessionSheet'
-import {
+import { sourcesOf,
   commitProgram, commitRegeneratedTail, isInfeasible, useGenerateDraft, type GenerateParams,
 } from '@/api/programs'
 import { usePhilosophies } from '@/api/philosophies'
@@ -96,7 +96,7 @@ export function ProgramPreview() {
   const changed = useMemo(() => new Set((regenerate?.changes ?? [])
     .map((c) => `${c.week_index}|${c.day}|${c.session_index}`)), [regenerate])
 
-  const ids = params?.philosophyIds ?? (params?.philosophyId ? [params.philosophyId] : [])
+  const ids = params ? sourcesOf(params).ids.filter(Boolean) : []
   const title = philosophies?.filter((p) => ids.includes(p.id)).map((p) => p.name).join(' + ')
     || draft?.goal?.name || 'Program'
   const refused = isInfeasible(draft)

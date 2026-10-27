@@ -5,6 +5,17 @@ import { derivePhilosophyPriorities } from '@/lib/philosophyPriorities'
 import { trackForFramework } from '@/lib/tracks'
 
 type Step = 1 | 2 | 3 | 4
+
+/** One track of a blend: a philosophy's track, its weight (0–100 raw,
+ *  normalised at generate time) and where it starts. Several tracks — of
+ *  different philosophies, or two of one — compose one program. */
+export interface BuilderLane {
+  philosophyId: string
+  /** null = the track written for the athlete's level. */
+  trackId: string | null
+  weight: number
+  startPhaseId: string | null
+}
 type Direction = 'forward' | 'backward'
 export type SourceMode = 'philosophy' | 'blend' | 'custom'
 
@@ -31,6 +42,8 @@ interface BuilderStore {
   startPhaseId: string | null
   priorityOverrides: Partial<Record<ModalityId, number>> | null
   numWeeks: number | null
+  /** A blend's tracks (sourceMode 'blend'); one per philosophy until another is added. */
+  lanes: BuilderLane[]
 
   setStep: (step: Step, dir?: Direction) => void
   setSourceMode: (mode: SourceMode | null) => void
@@ -49,6 +62,11 @@ interface BuilderStore {
   setStartPhase: (id: string | null) => void
   setPriorityOverrides: (overrides: Partial<Record<ModalityId, number>> | null) => void
   setNumWeeks: (n: number | null) => void
+  setLanes: (lanes: BuilderLane[]) => void
+  updateLane: (index: number, patch: Partial<BuilderLane>) => void
+  /** Another track of a philosophy already in the blend. */
+  addLane: (philosophyId: string, trackId: string) => void
+  removeLane: (index: number) => void
   reset: () => void
   /**
    * Explore → Builder. Starts a fresh draft at step 2 with the philosophy as
@@ -104,6 +122,7 @@ const freshState = () => ({
   startPhaseId: null as string | null,
   priorityOverrides: null as Partial<Record<ModalityId, number>> | null,
   numWeeks: null as number | null,
+  lanes: [] as BuilderLane[],
 })
 
 function prefilled(phil: Philosophy, frameworks: Framework[],
@@ -140,6 +159,7 @@ export const useBuilderStore = create<BuilderStore>()(
       startPhaseId: null,
       priorityOverrides: null,
       numWeeks: null,
+      lanes: [],
 
       setStep: (step, dir = 'forward') => set({ step, direction: dir }),
       // Clearing source mode also resets philosophy context
@@ -169,6 +189,17 @@ export const useBuilderStore = create<BuilderStore>()(
       setStartPhase: (id) => set({ startPhaseId: id }),
       setPriorityOverrides: (overrides) => set({ priorityOverrides: overrides }),
       setNumWeeks: (n) => set({ numWeeks: n }),
+      setLanes: (lanes) => set({ lanes }),
+      updateLane: (index, patch) =>
+        set((s) => ({
+          lanes: s.lanes.map((l, i) => (i === index
+            // Another track starts at its own first phase.
+            ? { ...l, ...patch, ...('trackId' in patch && patch.trackId !== l.trackId ? { startPhaseId: null } : {}) }
+            : l)),
+        })),
+      addLane: (philosophyId, trackId) =>
+        set((s) => ({ lanes: [...s.lanes, { philosophyId, trackId, weight: 50, startPhaseId: null }] })),
+      removeLane: (index) => set((s) => ({ lanes: s.lanes.filter((_, i) => i !== index) })),
       reset: () => set(freshState()),
       prefillFromPhilosophy: (phil, frameworks) => set(prefilled(phil, frameworks, null, null)),
       prefillFromFramework: (fw, phil, frameworks) => {
@@ -194,12 +225,19 @@ export const useBuilderStore = create<BuilderStore>()(
       // v1: tracks replaced the framework pick. A persisted selectedFrameworkId
       // cannot be mapped without the philosophy data, so it is dropped and the
       // draft falls back to the primary track.
-      version: 1,
-      migrate: (persisted) => {
+      // v2: a blend's tracks (`lanes`), one per philosophy at its weight.
+      version: 2,
+      migrate: (persisted, version) => {
         const { selectedFrameworkId: _dropped, ...rest } =
           (persisted ?? {}) as Record<string, unknown> & { selectedFrameworkId?: unknown }
         void _dropped
-        return { ...rest, selectedTrackId: null, startPhaseId: null } as unknown as BuilderStore
+        const base = version < 1 ? { ...rest, selectedTrackId: null, startPhaseId: null } : rest
+        const ids = (base.selectedPhilosophyIds as string[] | undefined) ?? []
+        const weights = (base.philosophyWeights as Record<string, number> | undefined) ?? {}
+        const lanes: BuilderLane[] = base.sourceMode === 'blend'
+          ? ids.map((id) => ({ philosophyId: id, trackId: null, weight: weights[id] ?? 50, startPhaseId: null }))
+          : []
+        return { ...base, lanes } as unknown as BuilderStore
       },
       partialize: (s) => ({
         step: s.step,
@@ -214,6 +252,7 @@ export const useBuilderStore = create<BuilderStore>()(
         startPhaseId: s.startPhaseId,
         priorityOverrides: s.priorityOverrides,
         numWeeks: s.numWeeks,
+        lanes: s.lanes,
       }),
     }
   )

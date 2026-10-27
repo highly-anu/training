@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { TrackBadge } from '@/components/shared/TrackBadge'
 import { motion } from 'framer-motion'
 import { Clock, CheckCircle2, Activity, CircleSlash } from 'lucide-react'
 import { WorkoutIcon } from '@/components/icons/WorkoutIcon'
@@ -68,6 +69,7 @@ export function SessionCard({ session, weekNumber, day, sessionIndex, className,
           <div className="mt-1 flex flex-wrap items-center gap-1.5">
             <ModalityBadge modality={session.modality} size="sm" />
             {session.test && <TestBadge test={session.test} />}
+            <TrackBadge session={session} />
             {session.provenance?.borrowed && (
               // This session came from a package the philosophy declares it
               // borrows from — say so rather than passing it off as its own.

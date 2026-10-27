@@ -9,7 +9,7 @@ import { useProfileStore } from '@/store/profileStore'
 import { useInjuryFlags } from '@/api/constraints'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { usePhilosophies } from '@/api/philosophies'
-import { builderTrack } from '@/lib/tracks'
+import { builderTrack, findTrack, primaryTrack } from '@/lib/tracks'
 import type { EquipmentId, InjuryFlagId, TrainingLevel, FatigueState } from '@/api/types'
 
 const SECTION_LABEL = 'text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium'
@@ -72,7 +72,18 @@ export function ConstraintsForm() {
   const selectedTrackId = useBuilderStore((s) => s.selectedTrackId)
   const startPhaseId = useBuilderStore((s) => s.startPhaseId)
   const setStartPhase = useBuilderStore((s) => s.setStartPhase)
+  const sourceMode = useBuilderStore((s) => s.sourceMode)
+  const lanes = useBuilderStore((s) => s.lanes)
+  const updateLane = useBuilderStore((s) => s.updateLane)
   const { data: philosophies } = usePhilosophies()
+  // A blend of several tracks: each starts at a phase of its own.
+  const laneStarts = sourceMode === 'blend' && lanes.length > 1
+    ? lanes.map((lane, index) => {
+        const phil = philosophies?.find((p) => p.id === lane.philosophyId)
+        const track = findTrack(phil, lane.trackId) ?? primaryTrack(phil, constraints.training_level)
+        return { index, lane, label: `${phil?.name ?? lane.philosophyId} — ${track?.name ?? ''}`, phases: track?.phases ?? [] }
+      }).filter((l) => l.phases.length > 1)
+    : null
   // The start phase is one of the chosen track's own phases.
   const trackPhases = builderTrack(philosophies, selectedPhilosophyIds, selectedTrackId, constraints.training_level)?.track.phases ?? []
 
@@ -272,7 +283,32 @@ export function ConstraintsForm() {
                 </Select>
               </div>
 
-              {trackPhases.length > 1 && (
+              {laneStarts?.map(({ index, lane, label, phases }) => (
+                <div key={`${lane.philosophyId}-${index}`}
+                     className={cn('space-y-2', eventDate && 'opacity-50 pointer-events-none')}>
+                  <Label className="text-sm font-semibold">
+                    Starting Phase · {label}
+                    {eventDate && (
+                      <span className="ml-2 text-[10px] font-normal text-muted-foreground">(auto from event date)</span>
+                    )}
+                  </Label>
+                  <Select
+                    value={lane.startPhaseId ?? phases[0].id}
+                    onValueChange={(v) => updateLane(index, { startPhaseId: v === phases[0].id ? null : v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {phases.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ))}
+
+              {!laneStarts && trackPhases.length > 1 && (
                 <div className={cn('space-y-2', eventDate && 'opacity-50 pointer-events-none')}>
                   <Label className="text-sm font-semibold">
                     Starting Phase

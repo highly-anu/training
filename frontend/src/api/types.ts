@@ -135,6 +135,18 @@ export interface GoalTrack {
   philosophy_id: string
 }
 
+/** One track of a composed program (src/composition.py), with its own phases. */
+export interface GoalCompositionTrack {
+  lane_key: string
+  philosophy_id: string
+  id: string
+  name: string
+  weight: number
+  kind: 'contract' | 'template'
+  description?: string | null
+  phase_sequence: PhaseEntry[]
+}
+
 export interface FrameworkSelection {
   default_framework: string
   alternatives: Array<{ framework_id: string; condition: string }>
@@ -148,6 +160,8 @@ export interface GoalProfile {
   primary_sources: string[]
   phase_sequence: PhaseEntry[]
   track?: GoalTrack
+  /** A composed program's tracks, the lead first (`track` and `phase_sequence` are its). */
+  tracks?: GoalCompositionTrack[]
   minimum_prerequisites: Record<string, number>
   incompatible_with: Array<string | { goal_id: string; reason?: string }>
   framework_selection: FrameworkSelection
@@ -497,6 +511,16 @@ export interface Session {
   substitution_cause?: 'level' | 'phase'
   /** The equipment its archetype asks for that the athlete lacks; it runs scaled. */
   equipment_scaled?: string[]
+  /** A composed program's track for this session (`<philosophy>/<track>`), and the
+   *  phase, framework and phase week it runs in — its own, not the week's. */
+  lane_key?: string
+  track_id?: string
+  phase?: PhaseKind
+  phase_id?: string
+  framework?: string
+  week_in_phase?: number
+  /** Whether this session deloads (its own track's cadence in a composed program). */
+  is_deload?: boolean
   /** A session no archetype could fill says why. */
   error?: string
 }
@@ -670,6 +694,40 @@ export interface WeekData {
   framework?: string
   /** A test the phase called for that the week could not run, and why (generator._plan_week_tests). */
   tests_skipped?: { archetypes?: string[]; phase_id?: string; week_in_phase?: number; reason: string }[]
+  /** A composed program's tracks this week: each one's own phase (the week's
+   *  `phase` fields are the lead track's), deload, and session count. */
+  lanes?: WeekLane[]
+}
+
+export interface WeekLane {
+  lane_key: string
+  track_id: string
+  phase: PhaseKind
+  phase_id?: string
+  phase_name?: string
+  week_in_phase: number
+  framework?: string
+  is_deload: boolean
+  sessions: number
+}
+
+/** How a composed program shared the athlete's week between its tracks. */
+export interface ProgramComposition {
+  days: number[]
+  lanes: {
+    key: string
+    kind: 'contract' | 'template'
+    philosophy_id: string
+    track_id: string
+    name: string
+    weight: number
+    /** Its share of the athlete's training days, and the days it keeps for itself. */
+    days: number
+    reserved_days: number[]
+    cuts: { optional: boolean; volume: number; exposures: Record<string, number> }
+    training_contract?: { id: string; version: number; status: string }
+    module_state?: Record<string, { completed: number; weight_kg?: number }>
+  }[]
 }
 
 export interface ValidationMessage {
@@ -753,6 +811,9 @@ export interface GeneratedProgram {
   weeks: WeekData[]
   volume_summary?: WeekVolumeSummary[]
   phase_summary?: PhaseSummary[]
+  /** A composed program's phase summary per track (two tracks may share a phase id). */
+  lane_phase_summary?: { lane_key: string; phases: PhaseSummary[] }[]
+  composition?: ProgramComposition
   program_start_date?: string
   compromises?: string[]
   coverage_report?: CoverageReport | null

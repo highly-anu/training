@@ -22,6 +22,7 @@ export function useFeasibility(): FeasibilitySignal[] {
     selectedTrackId,
     constraints,
     numWeeks,
+    lanes,
   } = useBuilderStore()
 
   const { data: philosophies } = usePhilosophies()
@@ -31,6 +32,9 @@ export function useFeasibility(): FeasibilitySignal[] {
     if (!philosophies || !frameworks) return []
     if (sourceMode !== 'philosophy' && sourceMode !== 'blend') return []
     if (!selectedPhilosophyIds.length) return []
+    // Several tracks share the week: no one framework's expectations are the
+    // program's, and the server says what had to give (the preview).
+    if (sourceMode === 'blend' && lanes.length > 1) return []
 
     const exp = blendExpectations([], [], {}, {
       sourceMode: 'philosophy',
@@ -74,7 +78,7 @@ export function useFeasibility(): FeasibilitySignal[] {
     }
 
     return signals
-  }, [
+  }, [lanes, 
     philosophies,
     frameworks,
     sourceMode,

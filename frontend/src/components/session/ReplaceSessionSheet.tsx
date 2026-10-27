@@ -108,11 +108,13 @@ export function ReplaceSessionSheet({
   const baseParams = {
     goalId: program.goal?.id,
     modality: session.modality,
-    phase: weekData.phase,
-    weekInPhase: weekData.week_in_phase,
-    isDeload: weekData.is_deload,
-    phaseId: weekData.phase_id,
-    frameworkId: weekData.framework,
+    // A composed program's session runs its own track's phase and framework.
+    phase: session.phase ?? weekData.phase,
+    weekInPhase: session.week_in_phase ?? weekData.week_in_phase,
+    isDeload: session.lane_key ? !!session.is_deload : weekData.is_deload,
+    phaseId: session.phase_id ?? weekData.phase_id,
+    frameworkId: session.framework ?? weekData.framework,
+    laneKey: session.lane_key,
     constraints: effectiveConstraints,
   }
 

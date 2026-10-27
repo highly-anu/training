@@ -13,6 +13,7 @@ import { usePhilosophies } from '@/api/philosophies'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { PhaseChangeList, PhaseMatrix } from './PhaseChanges'
 import { findPhaseSummary } from '@/lib/phaseSummary'
+import { CompositionTracks } from './CompositionTracks'
 
 // ── Category config (for backend volume summary bars — 4 fixed buckets) ───────
 
@@ -223,7 +224,12 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
         return (
           <div>
             <h2 className="text-sm font-semibold mb-2">About this Program</h2>
-            {phils.length === 1 ? (
+            {(goal.tracks?.length ?? 0) > 1 ? (
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Composed from {goal.tracks!.length} tracks — {goal.tracks!.map((t) => t.name).join(', ')} —
+                each in its own phases, sharing your week by weight.
+              </p>
+            ) : phils.length === 1 ? (
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Built from the <span className="font-medium text-foreground">{phils[0].name}</span> methodology
                 {track ? <>, on its <span className="font-medium text-foreground">{track.name}</span> track.</> : '.'}
@@ -236,9 +242,12 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
             ) : (
               <p className="text-sm text-muted-foreground leading-relaxed">{goal.notes}</p>
             )}
-            {track?.description && (
+            {track?.description && !goal.tracks?.length && (
               <p className="text-xs text-muted-foreground leading-relaxed mt-2">{track.description}</p>
             )}
+            <div className="mt-3">
+              <CompositionTracks program={program} />
+            </div>
             {phils.length > 0 && (
               <div className="flex flex-wrap items-center gap-3 mt-3">
                 {phils.map((p) => (
