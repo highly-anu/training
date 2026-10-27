@@ -1132,10 +1132,14 @@ def start(contract: dict, entries: list, constraints: dict, data: dict, policy,
     capped_said: set = set()
     held: dict = {}
 
-    def week(entry: dict, day_room: dict | None = None, others: dict | None = None) -> dict:
+    def week(entry: dict, day_room: dict | None = None, others: dict | None = None,
+             essential_days=None, search: int = 500) -> dict:
         """Place and emit one week of the contract; `day_room` caps each day's
         minutes below its own budget, `others` is {day: heavy regions} of the
-        work already there, which this week's placement steers clear of."""
+        work already there, which this week's placement steers clear of, and
+        `essential_days` (when given) the only days its essential work may
+        take — optional work may still go wherever there is room. `search` is
+        how many placements are looked at."""
         nonlocal previous
         fw = frameworks[entry['framework_id']]
         # The modules this phase runs (`phases`), with its exposures.
@@ -1237,22 +1241,32 @@ def start(contract: dict, entries: list, constraints: dict, data: dict, policy,
         # optional work, then alternates and spaces the work best; the search
         # is small (a week, a few modules).
         best = None
-        for i, candidate in enumerate(_placements(essential, estimates, pool, cap, day_caps)):
+        essential_caps = day_caps if essential_days is None else \
+            {d: (day_caps[d] if d in essential_days else 0) for d in pool}
+        for i, candidate in enumerate(_placements(essential, estimates, pool, cap, essential_caps)):
             if not spaced(candidate):
                 continue
             fit, closes = optional_fit(candidate)
             # Optional work never costs an essential session its own day.
             stacked = sum(len(ms) - 1 for ms in candidate.values())
-            # In a composition, a day another track already trains on counts
-            # as a stacked day too.
-            stacked += sum(1 for d in candidate if d in (others or {}))
-            key = (closes, -stacked, sum(len(v) for v in fit.values()), *_spacing(candidate, module_regions, others))
+            # In a composition, a day another track trains on (or keeps for
+            # itself) is avoided before a day of this track's own is shared.
+            shared = sum(1 for d in candidate if d in (others or {}))
+            key = (closes, -shared, -stacked, sum(len(v) for v in fit.values()),
+                   *_spacing(candidate, module_regions, others))
             if best is None or key > best[0]:
                 best = (key, candidate, fit)
-            if i >= 500:
+            if i >= search:
                 break
         if best is None:
-            raise ContractError('Required module frequency, recovery spacing and session budget cannot all fit. Increase available time or days.')
+            error = ContractError('Required module frequency, recovery spacing and session budget cannot all fit. Increase available time or days.')
+            # What the week asked for, module by module, which a composition
+            # weighs against the track's share of the athlete's minutes.
+            error.week_minutes = sum(estimates[m['id']] * m['exposures_per_week'] for m in essential)
+            error.module_minutes = {m['id']: estimates[m['id']] for m in essential}
+            error.volume_minutes = sum(estimates[m['id']] * m['exposures_per_week'] for m in essential
+                                       if m['progression']['model'] == 'weekly_volume')
+            raise error
         _, placed, fit = best
         previous = {}
         skipped = []

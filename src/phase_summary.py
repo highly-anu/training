@@ -244,3 +244,29 @@ def build(weeks: list, goal: dict | None = None) -> list[dict]:
         _diff(cur, out[-1] if out else None)
         out.append(cur)
     return out
+
+
+def lane_weeks(weeks: list, lane_key: str) -> list:
+    """A composed program's weeks as one of its tracks ran them: its phase,
+    framework and deload, and only its sessions."""
+    out = []
+    for w in weeks or []:
+        lane = next((l for l in w.get('lanes') or [] if l.get('lane_key') == lane_key), None)
+        if lane is None:
+            continue
+        schedule = {d: [s for s in ss if s.get('lane_key') == lane_key]
+                    for d, ss in (w.get('schedule') or {}).items()}
+        out.append({**w, **{k: lane[k] for k in ('phase', 'phase_id', 'phase_name', 'framework', 'week_in_phase')
+                            if lane.get(k) is not None},
+                    'is_deload': bool(lane.get('is_deload')),
+                    'schedule': {d: ss for d, ss in schedule.items() if ss}})
+    return out
+
+
+def build_lanes(weeks: list, goal: dict | None) -> list[dict]:
+    """A composed program's summary per track, [{lane_key, phases}], each read
+    against its own track's phases (two tracks may share a phase id: ATG and
+    Kelly Starrett both have a `maintain`); [] for one track."""
+    return [{'lane_key': t['lane_key'], 'phases': build(lane_weeks(weeks, t['lane_key']),
+                                                        {'phase_sequence': t.get('phase_sequence') or []})}
+            for t in (goal or {}).get('tracks') or []]

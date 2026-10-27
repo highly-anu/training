@@ -942,6 +942,35 @@ def compute_progression_review(
         elif readiness_trend == 'declining':
             readiness_trend = 'improving'
 
+    composed = (program.get('composition') or {}).get('lanes') or []
+    contract_lanes = [l for l in composed if l.get('kind') == 'contract' and l.get('training_contract')]
+    # Every track a contract: their earned positions are the review. With a
+    # templated track beside them, the general review reads the weeks.
+    if contract_lanes and len(contract_lanes) == len(composed):
+        # A composed program: each contract track's earned positions, read on
+        # its own sessions (src/composition.lane_view), named for its track.
+        from . import composition, training_contract
+        progression: dict = {}
+        recommendations = []
+        for lane in contract_lanes:
+            package, track_id = lane['training_contract']['id'].split('@')[0].split('/', 1)
+            try:
+                contract = training_contract.load_contract(package, track_id)
+                state = training_contract.confirmed_state(composition.lane_view(program, lane['key']),
+                                                          session_logs, contract) if contract else {}
+            except training_contract.ContractError:
+                state = {}
+            progression[lane['key']] = state
+            recommendations += [f"{lane.get('name', lane['key'])} — {mid.replace('_', ' ').title()}: "
+                                f"{s.get('completed', 0)} clean exposures confirmed. Regenerate after logging "
+                                "outcomes to update the next prescription." for mid, s in state.items()]
+        return {'period_key': period_key, 'period_type': period,
+                'generated_at': datetime.utcnow().isoformat(), 'overall_score': None,
+                'readiness_trend': readiness_trend, 'avg_readiness': avg_readiness,
+                'compliance_pct': compliance_pct, 'exercise_findings': [],
+                'flags': ['module_progression'], 'recommendations': recommendations,
+                'adjustments': [], 'module_progression': progression}
+
     if program.get('training_contract'):
         # Replaying a modality's kg/rounds heuristic would reinterpret an EMOM
         # density cycle as stalled because its round count deliberately holds.

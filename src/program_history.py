@@ -266,7 +266,8 @@ def flatten_program(vid: str, envelope: dict) -> list[dict]:
                     'duration_min':  int(pick(archetype, 'duration_estimate_minutes',
                                               'durationEstimateMinutes')
                                          or RULES['defaultSessionMinutes']),
-                    'phase':         phase,
+                    # A composed program's session runs its own track's phase.
+                    'phase':         session.get('phase') or phase,
                     'is_deload':     bool(pick(session, 'is_deload', 'isDeload')),
                 })
     return rows

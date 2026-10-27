@@ -294,6 +294,11 @@ def _plan_week_tests(entry: dict, resolved_by_day: dict, archetypes: list, const
             if cap and (arch.get('duration_estimate_minutes') or 0) > cap * 1.1 and 'long' not in types:
                 reason = 'session_too_short'
                 continue
+            # In a composition, the minutes the other tracks leave on the day.
+            room = (constraints.get('day_room') or {}).get(day)
+            if room is not None and (arch.get('duration_estimate_minutes') or 0) > room:
+                reason = 'session_too_short'
+                continue
             # A templated day keeps its category (the day the test stands in
             # for); the replaced day's pieces and warm-up are not the test's.
             test_session = {k: v for k, v in session.items()
