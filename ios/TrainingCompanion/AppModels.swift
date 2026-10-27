@@ -956,6 +956,9 @@ struct GenerateProgramRequest: Encodable {
     let philosophyId: String?
     let philosophyIds: [String]?
     let philosophyWeights: [String: Double]?
+    /// Two or more tracks composed into one program (ProgramComposition.swift);
+    /// wins over the philosophy fields on the server.
+    let lanes: [ProgramLane]?
     let constraints: GenerateConstraints
     let numWeeks: Int?
     /// `week_number` of the first generated week: a partial regenerate passes
@@ -970,11 +973,13 @@ struct GenerateProgramRequest: Encodable {
     var persist: Bool = false
 
     init(philosophyId: String? = nil, philosophyIds: [String]? = nil, philosophyWeights: [String: Double]? = nil,
+         lanes: [ProgramLane]? = nil,
          constraints: GenerateConstraints, numWeeks: Int?, weekInProgram: Int? = nil,
          startDate: String?, eventDate: String?, persist: Bool = false) {
         self.philosophyId = philosophyId
         self.philosophyIds = philosophyIds
         self.philosophyWeights = philosophyWeights
+        self.lanes = lanes
         self.constraints = constraints
         self.numWeeks = numWeeks
         self.weekInProgram = weekInProgram
@@ -989,6 +994,7 @@ struct GenerateProgramRequest: Encodable {
         case philosophyId = "philosophy_id"
         case philosophyIds = "philosophy_ids"
         case philosophyWeights = "philosophy_weights"
+        case lanes
         case constraints
         case numWeeks = "num_weeks"
         case weekInProgram = "week_in_program"

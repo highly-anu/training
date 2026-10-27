@@ -42,6 +42,8 @@ struct SubstituteRequest: Encodable {
     var phaseId: String? = nil
     var frameworkId: String? = nil
     var limit: Int = 8
+    /// A composed program's session's track: the server draws from its package.
+    var laneKey: String? = nil
 
     enum CodingKeys: String, CodingKey {
         case archetypeId   = "archetype_id"
@@ -55,6 +57,7 @@ struct SubstituteRequest: Encodable {
         case exclude, limit
         case phaseId       = "phase_id"
         case frameworkId   = "framework_id"
+        case laneKey       = "lane_key"
     }
 }
 

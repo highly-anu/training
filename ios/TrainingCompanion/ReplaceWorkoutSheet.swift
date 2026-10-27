@@ -293,16 +293,18 @@ struct ReplaceWorkoutSheet: View {
         let request = GenerateSessionRequest(
             primarySources: [],
             modality: arch.modality,
-            phase: week?.phase ?? "base",
-            weekInPhase: weekIndex + 1,
-            isDeload: week?.isDeload ?? false,
+            // A composed program's session runs its own track's phase.
+            phase: session.lanePhase ?? week?.phase ?? "base",
+            weekInPhase: session.laneWeekInPhase ?? weekIndex + 1,
+            isDeload: session.laneKey != nil ? session.isDeload : (week?.isDeload ?? false),
             constraints: GenerateSessionConstraints(
                 sessionTimeMinutes: arch.durationEstimateMinutes ?? Int(sessionMinutes),
                 fatigueState: fatigueState.rawValue
             ),
             archetypeId: arch.id,
-            phaseId: week?.phaseId,
-            frameworkId: week?.frameworkId
+            phaseId: session.lanePhaseId ?? week?.phaseId,
+            frameworkId: session.laneFramework ?? week?.frameworkId,
+            laneKey: session.laneKey
         )
         do {
             preview = try await api.generateSession(request)
@@ -319,16 +321,18 @@ struct ReplaceWorkoutSheet: View {
         let request = GenerateSessionRequest(
             primarySources: [],
             modality: session.modality,
-            phase: week?.phase ?? "base",
-            weekInPhase: weekIndex + 1,
-            isDeload: week?.isDeload ?? false,
+            // A composed program's session runs its own track's phase.
+            phase: session.lanePhase ?? week?.phase ?? "base",
+            weekInPhase: session.laneWeekInPhase ?? weekIndex + 1,
+            isDeload: session.laneKey != nil ? session.isDeload : (week?.isDeload ?? false),
             constraints: GenerateSessionConstraints(
                 sessionTimeMinutes: Int(sessionMinutes),
                 fatigueState: fatigueState.rawValue
             ),
             archetypeId: nil,
-            phaseId: week?.phaseId,
-            frameworkId: week?.frameworkId
+            phaseId: session.lanePhaseId ?? week?.phaseId,
+            frameworkId: session.laneFramework ?? week?.frameworkId,
+            laneKey: session.laneKey
         )
         do {
             preview = try await api.generateSession(request)

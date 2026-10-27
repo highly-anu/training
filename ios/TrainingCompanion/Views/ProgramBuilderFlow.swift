@@ -37,8 +37,43 @@ final class BuilderState: ObservableObject {
     /// The generated draft, pushed as Program ▸ Preview; started from there.
     @Published var preview: PreviewDraft? = nil
 
-    var isStep1Valid: Bool { selectedPhilosophyId != nil }
+    /// A blend: two or more tracks composed into one program
+    /// (ProgramComposition.swift). One lane is the single-methodology path
+    /// above, kept in `selectedPhilosophyId`.
+    @Published var lanes: [BuilderLane] = [] {
+        didSet {
+            let single = lanes.count == 1 ? lanes[0].philosophyId : nil
+            if selectedPhilosophyId != single { selectedPhilosophyId = single }
+        }
+    }
+    var isComposed: Bool { lanes.count > 1 }
+
+    var isStep1Valid: Bool { !lanes.isEmpty }
     var isStep3Valid: Bool { !constraints.equipment.isEmpty }
+
+    /// Up to four methodologies; picking one again removes it (and any
+    /// further track of it).
+    func toggle(_ philosophy: PhilosophyCard) {
+        if lanes.contains(where: { $0.philosophyId == philosophy.id }) {
+            lanes.removeAll { $0.philosophyId == philosophy.id }
+        } else if Set(lanes.map(\.philosophyId)).count < 4 {
+            lanes.append(BuilderLane(philosophyId: philosophy.id))
+        }
+    }
+
+    /// The track a lane runs: its pick, else the one for the athlete's level.
+    func track(of lane: BuilderLane, in philosophies: [PhilosophyCard]) -> PhilosophyTrack? {
+        philosophies.first { $0.id == lane.philosophyId }?.track(lane.trackId, level: constraints.trainingLevel)
+    }
+
+    /// A composition runs as long as its longest track.
+    func applyLength(ofLanes philosophies: [PhilosophyCard]) {
+        let key = "lanes:" + lanes.map { "\($0.philosophyId)/\(track(of: $0, in: philosophies)?.id ?? "")" }.joined(separator: ",")
+        guard lengthSetFor != key else { return }
+        lengthSetFor = key
+        let longest = lanes.compactMap { track(of: $0, in: philosophies)?.totalWeeks }.max()
+        if let longest, longest > 0 { numWeeks = longest }
+    }
 
     /// The track the program will run: the picked one, else the one written
     /// for the athlete's level, else the primary — as the server picks it.
@@ -54,6 +89,16 @@ final class BuilderState: ObservableObject {
         lengthSetFor = track.id
         if track.phases.count > 1 { numWeeks = track.totalWeeks }
     }
+}
+
+/// One track of a blend in the builder: a methodology's track, its weight
+/// (5–95, normalised when sent) and where it starts.
+struct BuilderLane: Identifiable, Hashable {
+    let id = UUID()
+    let philosophyId: String
+    var trackId: String? = nil
+    var weight: Double = 50
+    var startPhaseId: String? = nil
 }
 
 /// A generated program not yet started, and the request that made it —
@@ -137,7 +182,7 @@ struct ProgramBuilderFlow: View {
     }
 
     private func generateProgram() async {
-        guard let philosophyId = builder.selectedPhilosophyId else { return }
+        guard builder.isComposed || builder.selectedPhilosophyId != nil else { return }
         builder.isGenerating = true
         builder.generationError = nil
 
@@ -157,8 +202,18 @@ struct ProgramBuilderFlow: View {
         // A draft: nothing is saved until the preview's Start. This used to
         // post `persist: true` and throw the answer away, so a refusal kept
         // the old program with nothing said.
+        // Several tracks: each its own track and start phase (none with an
+        // event date, which puts every track's last phase on it).
+        let total = builder.lanes.reduce(0) { $0 + $1.weight }
+        let lanes: [ProgramLane]? = builder.isComposed ? builder.lanes.map {
+            ProgramLane(philosophyId: $0.philosophyId, trackId: $0.trackId,
+                        weight: $0.weight / (total > 0 ? total : 1),
+                        startPhase: builder.eventDate == nil ? $0.startPhaseId : nil)
+        } : nil
+        if lanes != nil { constraints.trackId = nil; constraints.startPhase = nil }
         let request = GenerateProgramRequest(
-            philosophyId: philosophyId,
+            philosophyId: lanes == nil ? builder.selectedPhilosophyId : nil,
+            lanes: lanes,
             constraints: constraints,
             numWeeks: builder.numWeeks,
             startDate: startStr,
@@ -203,7 +258,7 @@ struct BuilderStep1PhilosophyView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Choose a methodology")
                         .font(.headline)
-                    Text("The training philosophy the program is built from. Tap ⓘ to read what it believes and how it trains.")
+                    Text("The training philosophy the program is built from — or up to four, blended into one program that shares your week. Tap ⓘ to read what each believes and how it trains.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
@@ -248,11 +303,12 @@ struct BuilderStep1PhilosophyView: View {
     }
 
     private func philosophyCard(_ philosophy: PhilosophyCard) -> some View {
-        let selected = builder.selectedPhilosophyId == philosophy.id
+        let selected = builder.lanes.contains { $0.philosophyId == philosophy.id }
         let topModality = philosophy.bias?.first
 
         return Button {
-            builder.selectedPhilosophyId = selected ? nil : philosophy.id
+            AppHaptics.light()
+            builder.toggle(philosophy)
         } label: {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
@@ -322,12 +378,17 @@ struct BuilderStep2ScheduleView: View {
     private var weekOptions: [Int] {
         var options: Set<Int> = [4, 6, 8, 10, 12, 16, 20, 24, builder.numWeeks]
         if let track = builder.track(in: philosophy) { options.insert(track.totalWeeks) }
+        for lane in builder.lanes {
+            if let t = builder.track(of: lane, in: appState.philosophies) { options.insert(t.totalWeeks) }
+        }
         return options.sorted()
     }
 
     var body: some View {
         Form {
-            if let tracks = philosophy?.tracks, !tracks.isEmpty {
+            if builder.isComposed {
+                LaneSections(builder: builder)
+            } else if let tracks = philosophy?.tracks, !tracks.isEmpty {
                 trackSection(tracks)
             }
 
@@ -373,7 +434,10 @@ struct BuilderStep2ScheduleView: View {
                 }
             }
         }
-        .onAppear { builder.applyLength(of: builder.track(in: philosophy)) }
+        .onAppear {
+            if builder.isComposed { builder.applyLength(ofLanes: appState.philosophies) }
+            else { builder.applyLength(of: builder.track(in: philosophy)) }
+        }
     }
 
     /// The methodology's tracks, each with its own phases. One track is shown
@@ -389,12 +453,12 @@ struct BuilderStep2ScheduleView: View {
                         builder.startPhaseId = nil
                         builder.applyLength(of: track)
                     } label: {
-                        trackRow(track, selected: track.id == active?.id,
-                                 primary: track.id == philosophy?.primaryTrack?.id)
+                        TrackChoiceRow(track: track, selected: track.id == active?.id,
+                                       primary: track.id == philosophy?.primaryTrack?.id)
                     }
                     .buttonStyle(.plain)
                 } else {
-                    trackRow(track, selected: false, primary: false)
+                    TrackChoiceRow(track: track, selected: false, primary: false)
                 }
             }
         } header: {
@@ -405,8 +469,16 @@ struct BuilderStep2ScheduleView: View {
             }
         }
     }
+}
 
-    private func trackRow(_ track: PhilosophyTrack, selected: Bool, primary: Bool) -> some View {
+/// One track of a methodology as a choice: its name, description and phases
+/// (TrackPhaseList). The builder's track list and a blend's tracks.
+struct TrackChoiceRow: View {
+    let track: PhilosophyTrack
+    let selected: Bool
+    let primary: Bool
+
+    var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text(track.name)
@@ -432,6 +504,91 @@ struct BuilderStep2ScheduleView: View {
         .padding(.vertical, 4)
         .contentShape(Rectangle())
         .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+}
+
+/// A blend's tracks (step 2): each methodology runs one of its tracks in its
+/// own phases at its weight, and may add another of its tracks. The server
+/// composes them into one week; the preview says how the days were shared
+/// and what gave way (design-system §6.22).
+struct LaneSections: View {
+    @ObservedObject var builder: BuilderState
+    @EnvironmentObject var appState: AppState
+
+    private var total: Double { max(builder.lanes.reduce(0) { $0 + $1.weight }, 1) }
+
+    var body: some View {
+        ForEach($builder.lanes) { $lane in
+            laneSection($lane)
+        }
+        let addable = addableTracks
+        if !addable.isEmpty {
+            Section {
+                ForEach(addable, id: \.0.id) { philosophy, track in
+                    Button {
+                        AppHaptics.light()
+                        builder.lanes.append(BuilderLane(philosophyId: philosophy.id, trackId: track.id))
+                        builder.applyLength(ofLanes: appState.philosophies)
+                    } label: {
+                        Label("Add another \(philosophy.name) track", systemImage: "plus.circle")
+                    }
+                }
+            } footer: {
+                Text("Every track runs in its own phases on your week together; its weight is its share of your days.")
+            }
+        }
+    }
+
+    /// A methodology in the blend with a track not in it yet, and that track.
+    private var addableTracks: [(PhilosophyCard, PhilosophyTrack)] {
+        var seen: [String] = []
+        var out: [(PhilosophyCard, PhilosophyTrack)] = []
+        for lane in builder.lanes where !seen.contains(lane.philosophyId) {
+            seen.append(lane.philosophyId)
+            guard let phil = appState.philosophies.first(where: { $0.id == lane.philosophyId }) else { continue }
+            let used = Set(builder.lanes.filter { $0.philosophyId == phil.id }
+                .compactMap { builder.track(of: $0, in: appState.philosophies)?.id })
+            if let next = (phil.tracks ?? []).first(where: { !used.contains($0.id) }) { out.append((phil, next)) }
+        }
+        return out
+    }
+
+    private func laneSection(_ lane: Binding<BuilderLane>) -> some View {
+        let phil = appState.philosophies.first { $0.id == lane.wrappedValue.philosophyId }
+        let active = builder.track(of: lane.wrappedValue, in: appState.philosophies)
+        let siblings = builder.lanes.filter { $0.id != lane.wrappedValue.id && $0.philosophyId == lane.wrappedValue.philosophyId }
+            .compactMap { builder.track(of: $0, in: appState.philosophies)?.id }
+        let tracks = phil?.tracks ?? []
+        return Section {
+            ForEach(tracks.count > 1 ? tracks : (active.map { [$0] } ?? [])) { track in
+                let taken = siblings.contains(track.id)
+                Button {
+                    AppHaptics.light()
+                    lane.wrappedValue.trackId = track.id
+                    lane.wrappedValue.startPhaseId = nil
+                    builder.applyLength(ofLanes: appState.philosophies)
+                } label: {
+                    TrackChoiceRow(track: track, selected: tracks.count > 1 && track.id == active?.id, primary: false)
+                }
+                .buttonStyle(.plain)
+                .disabled(tracks.count < 2 || taken)
+                .opacity(taken ? 0.4 : 1)
+            }
+            HStack {
+                Text("Weight")
+                Slider(value: lane.weight, in: 5...95, step: 5)
+                Text("\(Int((lane.wrappedValue.weight / total * 100).rounded())) %")
+                    .monospacedDigit()
+                    .frame(width: 44, alignment: .trailing)
+            }
+            if !siblings.isEmpty {
+                Button("Remove this track", role: .destructive) {
+                    builder.lanes.removeAll { $0.id == lane.wrappedValue.id }
+                }
+            }
+        } header: {
+            Text(phil?.name ?? lane.wrappedValue.philosophyId)
+        }
     }
 }
 
@@ -463,7 +620,20 @@ struct BuilderStep3ConstraintsView: View {
             EquipmentToggleSection(selection: $builder.constraints.equipment)
             InjuryToggleSection(selection: $builder.constraints.injuryFlags)
 
-            if trackPhases.count > 1 {
+            if builder.isComposed {
+                // Each track starts at a phase of its own.
+                ForEach($builder.lanes) { $lane in
+                    let phases = builder.track(of: lane, in: appState.philosophies)?.phases ?? []
+                    if phases.count > 1 {
+                        Section {
+                            StartPhasePicker(phases: phases, selection: $lane.startPhaseId)
+                                .disabled(builder.eventDate != nil)
+                        } header: {
+                            Text("Starting Phase · " + (builder.track(of: lane, in: appState.philosophies)?.name ?? ""))
+                        }
+                    }
+                }
+            } else if trackPhases.count > 1 {
                 Section {
                     StartPhasePicker(phases: trackPhases, selection: $builder.startPhaseId)
                         .disabled(builder.eventDate != nil)
@@ -508,7 +678,12 @@ struct BuilderStep4ReviewView: View {
     @State private var startingText: [String: String] = [:]
 
     private var requirements: TrackEntryRequirements? {
-        builder.track(in: appState.philosophies.first { $0.id == builder.selectedPhilosophyId })?.entryRequirements
+        if builder.isComposed {
+            // What any of the tracks asks before it runs.
+            return .merged(builder.lanes.compactMap { builder.track(of: $0, in: appState.philosophies)?.entryRequirements },
+                           level: builder.constraints.trainingLevel)
+        }
+        return builder.track(in: appState.philosophies.first { $0.id == builder.selectedPhilosophyId })?.entryRequirements
     }
     private var entryReady: Bool {
         guard let r = requirements else { return true }
@@ -527,7 +702,32 @@ struct BuilderStep4ReviewView: View {
 
     var body: some View {
         List {
-            Section("Methodology") {
+            if builder.isComposed {
+                Section {
+                    let total = max(builder.lanes.reduce(0) { $0 + $1.weight }, 1)
+                    ForEach(builder.lanes) { lane in
+                        let phil = appState.philosophies.first { $0.id == lane.philosophyId }
+                        let track = builder.track(of: lane, in: appState.philosophies)
+                        VStack(alignment: .leading, spacing: 4) {
+                            LabeledContent(phil?.name ?? lane.philosophyId,
+                                           value: "\(Int((lane.weight / total * 100).rounded())) %")
+                            if let track {
+                                Text(track.name + (builder.eventDate == nil
+                                    ? (track.phases.first { $0.id == lane.startPhaseId }.map { " · from \($0.name)" } ?? "")
+                                    : ""))
+                                    .font(.caption).foregroundStyle(.secondary)
+                                TrackPhaseList(track: track)
+                            }
+                        }
+                        .padding(.vertical, 2)
+                    }
+                } header: {
+                    Text("Tracks")
+                } footer: {
+                    Text("One program from all of them, sharing your week by weight. The preview shows how the days were shared and what had to give.")
+                }
+            }
+            if !builder.isComposed { Section("Methodology") {
                 if let id = builder.selectedPhilosophyId,
                    let philosophy = appState.philosophies.first(where: { $0.id == id }) {
                     LabeledContent("Methodology", value: philosophy.name)
@@ -541,7 +741,7 @@ struct BuilderStep4ReviewView: View {
                             .padding(.vertical, 4)
                     }
                 }
-            }
+            } }
 
             Section("Schedule") {
                 LabeledContent("Duration", value: "\(builder.numWeeks) weeks")
@@ -660,6 +860,11 @@ private final class SettingsState: ObservableObject {
     @Published var startDate: Date
     @Published var eventDate: Date?
     @Published var constraints: GenerateConstraints
+    /// A program of several tracks regenerates as all of them, each from the
+    /// first week's own phase; empty for one track. A blend used to collapse
+    /// to its first source here.
+    let lanes: [ProgramLane]
+    let laneNames: [String: String]
 
     @Published var isGenerating = false
     @Published var generationError: String? = nil
@@ -668,8 +873,23 @@ private final class SettingsState: ObservableObject {
     init(program: ServerProgram, weeks: [ProgramWeek], profile: UserProfile) {
         let dayFmt = DateFormatter(); dayFmt.dateFormat = "yyyy-MM-dd"
         // sourceGoalIds holds philosophy ids — the name predates the removal
-        // of the goals layer. A blend collapses to its first source here.
+        // of the goals layer.
         selectedPhilosophyId = program.sourceGoalIds.first ?? ""
+        let composed = program.currentProgram?.compositionLanes ?? []
+        if composed.count > 1 {
+            lanes = program.currentProgram?.regenerateLanes(from: 0) ?? []
+            laneNames = Dictionary(uniqueKeysWithValues: composed.map { ($0.key, $0.name) })
+        } else if program.sourceGoalIds.filter({ $0 != "_blended" }).count > 1 {
+            // A blend stored before compositions: each methodology on the
+            // track written for the athlete's level.
+            lanes = program.sourceGoalIds.filter { $0 != "_blended" }.map {
+                ProgramLane(philosophyId: $0, trackId: nil, weight: program.sourceGoalWeights[$0] ?? 1)
+            }
+            laneNames = [:]
+        } else {
+            lanes = []
+            laneNames = [:]
+        }
         selectedTrackId = weeks.first?.trackId
         startPhaseId = weeks.first?.phaseId
         numWeeks = weeks.count
@@ -769,7 +989,29 @@ struct ProgramSettingsSheet: View {
 
     // MARK: - Sections
 
+    @ViewBuilder
     private var methodologySection: some View {
+        if !settings.lanes.isEmpty {
+            Section {
+                let total = max(settings.lanes.reduce(0) { $0 + $1.weight }, 0.0001)
+                ForEach(settings.lanes, id: \.self) { lane in
+                    let phil = appState.philosophies.first { $0.id == lane.philosophyId }
+                    let track = phil?.track(lane.trackId, level: settings.constraints.trainingLevel)
+                    LabeledContent(lane.key.flatMap { settings.laneNames[$0] } ?? phil?.name ?? lane.philosophyId,
+                                   value: "\(Int((lane.weight / total * 100).rounded())) %")
+                    if let track { TrackPhaseList(track: track).padding(.vertical, 2) }
+                }
+            } header: {
+                Text("Tracks")
+            } footer: {
+                Text("A new preview keeps these tracks and their weights. To change them, build a new program.")
+            }
+        } else {
+            singleMethodologySection
+        }
+    }
+
+    private var singleMethodologySection: some View {
         Section("Methodology") {
             if appState.philosophies.isEmpty {
                 ProgressView()
@@ -923,8 +1165,15 @@ struct ProgramSettingsSheet: View {
         }
         constraints.startPhase = settings.eventDate == nil ? start : nil
         if start != nil || settings.eventDate != nil { constraints.trainingPhase = nil }
+        let composed = !settings.lanes.isEmpty
+        if composed { constraints.trackId = nil; constraints.startPhase = nil; constraints.trainingPhase = nil }
         let request = GenerateProgramRequest(
-            philosophyId: settings.selectedPhilosophyId,
+            philosophyId: composed ? nil : settings.selectedPhilosophyId,
+            lanes: composed ? settings.lanes.map { lane in
+                var l = lane
+                if settings.eventDate != nil { l.startPhase = nil; l.periodizationWeek = nil }
+                return l
+            } : nil,
             constraints: constraints,
             numWeeks: settings.numWeeks,
             startDate: dayFmt.string(from: settings.startDate),

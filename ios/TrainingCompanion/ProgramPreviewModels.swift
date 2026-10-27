@@ -242,13 +242,27 @@ extension GenerateProgramRequest {
     /// The same request with other constraints — a re-preview.
     func with(constraints: GenerateConstraints) -> GenerateProgramRequest {
         GenerateProgramRequest(philosophyId: philosophyId, philosophyIds: philosophyIds,
-                               philosophyWeights: philosophyWeights, constraints: constraints,
+                               philosophyWeights: philosophyWeights, lanes: lanes, constraints: constraints,
                                numWeeks: numWeeks, weekInProgram: weekInProgram,
                                startDate: startDate, eventDate: eventDate, persist: persist)
     }
 
-    /// The methodologies it builds from, in order.
-    var sourceIds: [String] { philosophyIds ?? philosophyId.map { [$0] } ?? [] }
+    /// The methodologies it builds from, in order (a composition's, each once).
+    var sourceIds: [String] {
+        if let lanes, lanes.count > 1 {
+            var ids: [String] = []
+            for lane in lanes where !ids.contains(lane.philosophyId) { ids.append(lane.philosophyId) }
+            return ids
+        }
+        return philosophyIds ?? philosophyId.map { [$0] } ?? []
+    }
+
+    /// Their weights: a composition's tracks' summed per methodology.
+    var sourceWeights: [String: Double] {
+        guard let lanes, lanes.count > 1 else { return philosophyWeights ?? [:] }
+        let total = lanes.reduce(0) { $0 + $1.weight }
+        return lanes.reduce(into: [:]) { $0[$1.philosophyId, default: 0] += $1.weight / (total > 0 ? total : 1) }
+    }
 
     /// Held back's request for `draft`: the draft's own first track, phase and
     /// week in phase and its length (the comparison runs at most 12 weeks),
@@ -257,13 +271,15 @@ extension GenerateProgramRequest {
     /// program than an event-dated 20-week draft.
     func impactRequest(for draft: GeneratedProgram) -> GenerateProgramRequest {
         var c = constraints
-        if let first = draft.weeks.first {
+        // A composition: every track from the draft's own first week.
+        let resumed = draft.regenerateLanes(from: 0)
+        if resumed == nil, let first = draft.weeks.first {
             c.trackId = first.trackId ?? c.trackId
             if let phaseId = first.phaseId { c.startPhase = phaseId; c.trainingPhase = nil }
             c.periodizationWeek = first.weekInPhase
         }
         return GenerateProgramRequest(philosophyId: philosophyId, philosophyIds: philosophyIds,
-                                      philosophyWeights: philosophyWeights, constraints: c,
+                                      philosophyWeights: philosophyWeights, lanes: resumed ?? lanes, constraints: c,
                                       numWeeks: min(max(draft.weeks.count, 1), 12), weekInProgram: weekInProgram,
                                       startDate: startDate, eventDate: nil, persist: false)
     }
