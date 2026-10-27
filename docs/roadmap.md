@@ -1448,8 +1448,9 @@ spec tiles, the fingerprint, every track as a row on one week scale, phase cards
 seven-day glyph and an intensity bar, goals and requirements as chips, the method and the
 sessions as tiles; every paragraph opens in a sheet. The numbers are the server's `glance`
 (`GET /api/philosophies/glance`, the same keys for every philosophy) — which is what a
-**compare** view will set side by side (next), and what the landing cards now draw (slice 2's
-fingerprint on the cards, done). Noticed: Uphill's phase frameworks declare a 360-minute
+**compare** view will set side by side (next). The landing keeps the outline and card of the
+other Explore landings (frontend-design §13.6): its cards read the glance as a metadata line and
+chips, not the fingerprint. Noticed: Uphill's phase frameworks declare a 360-minute
 "ideal session" (its long day), so its tiles read "60–360′"; a package-side
 `ideal_long_session_minutes` would fix it.
 
