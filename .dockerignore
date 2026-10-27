@@ -40,9 +40,9 @@ docs/*
 .idea/
 .vscode/
 
-# A package's fidelity record and source weeks are read by the scorecard
-# (tools/evaluate_packages.py), never at runtime.
-data/packages/*/fidelity.yaml
+# A package's source weeks are read by the scorecard (tools/evaluate_packages.py),
+# never at runtime. Its fidelity record is: Explore's philosophy page shows the
+# rules, inventions and open questions (src/explore_philosophy.py).
 data/packages/*/source_weeks.yaml
 
 # The modality scheduler's test fixture package (fixture_packages.py).

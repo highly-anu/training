@@ -2259,3 +2259,148 @@ export interface AnalyticsSpecs {
   }
   philosophies: Record<string, PhilosophySpec>
 }
+
+// ─── Explore ▸ Philosophies: GET /philosophies/<id>/describe ────────────────
+// A philosophy as its package writes it (src/explore_philosophy.py); the page
+// only lays it out.
+
+export interface DescribedMix { modality: string; perWeek: number; share: number }
+
+export interface DescribedTemplatePiece { category: string; name: string; modality: string | null }
+export interface DescribedTemplateDay {
+  day: string
+  rest: boolean
+  pieces: DescribedTemplatePiece[]
+  warmUp: boolean
+  light: boolean
+}
+
+export interface DescribedItem {
+  exercise: string
+  name: string
+  role: string | null
+  prescription: string
+  note: string | null
+  optional: boolean
+  alternatives: string[]
+}
+
+export interface DescribedModule {
+  id: string
+  name: string
+  modality: string
+  archetype: string | null
+  archetypeName: string | null
+  perWeek: number | null
+  perWeekByDays: Record<string, number> | null
+  levels: string[]
+  optional: boolean
+  whenMastered: boolean
+  requires: string[]
+  maxRpe: number | null
+  progression: string
+  periods: Array<{ name: string; weeks: number; deload: boolean }>
+  variants: Array<{ id: string; name: string; archetype: string | null; items: DescribedItem[] }>
+  items: DescribedItem[]
+  advice: string | null
+}
+
+export type DescribedWeek =
+  | { kind: 'template'; weeks: DescribedTemplateDay[][]; dropOrder: string[]; warmUp: string | null }
+  | { kind: 'contract'; modules: DescribedModule[] }
+  | { kind: 'framework'; sessions: Array<{ modality: string; perWeek: number }> }
+
+export interface DescribedPhase {
+  id: string
+  name: string
+  kind: PhaseKind
+  weeks: number
+  repeatable: boolean
+  framework: { id: string; name: string }
+  focus: string | null
+  description: string | null
+  adaptations: string[]
+  intensity: string | null
+  intensitySplit: Record<string, number>
+  deload: string | null
+  tests: Array<{ when: string; sessions: string[]; standards: string[]; onDeload: boolean }>
+  notYet: string[]
+  week: DescribedWeek
+  mix: DescribedMix[]
+}
+
+export interface DescribedTrack {
+  id: string
+  name: string
+  description: string | null
+  primary: boolean
+  forLevels: TrainingLevel[]
+  levels: TrainingLevel[]
+  builtBy: 'contract' | 'template' | 'framework'
+  weeks: number
+  repeatable: boolean
+  notes: string | null
+  kettlebellPair: boolean
+  mix: DescribedMix[]
+  phases: DescribedPhase[]
+}
+
+export interface DescribedSlot {
+  role: string
+  name: string
+  slotType: string
+  prescription: string
+  note: string | null
+  parent: string | null
+  listed: boolean
+  technique: boolean
+  standard: string | null
+  exercises: Array<{ id: string; name: string }>
+}
+
+export interface DescribedSession {
+  id: string
+  name: string
+  modality: string
+  minutes: number | null
+  levels: TrainingLevel[]
+  test: boolean
+  note: string | null
+  equipment: string[]
+  slots: DescribedSlot[]
+}
+
+export interface DescribedSessionGroup {
+  kind: 'category' | 'module' | 'modality' | 'tests'
+  id: string
+  name: string | null
+  modality: string | null
+  advice: string | null
+  warmUp: boolean
+  sessions: string[]
+}
+
+export interface PhilosophyDescription {
+  id: string
+  name: string
+  summary: string | null
+  accent: string | null
+  bias: string[]
+  scope: string[]
+  avoidWith: string[]
+  principles: string[]
+  models: { intensity: string | null; progression: string | null }
+  levels: TrainingLevel[]
+  equipment: Array<{ id: string; name: string }>
+  expectations: GoalExpectations | null
+  primaryTrackId: string | null
+  mix: DescribedMix[]
+  tracks: DescribedTrack[]
+  borrows: Array<{ package: string; label: string; reason: string | null; modalities: string[] }>
+  sources: Array<{ id: string | null; title: string; where: string | null; kind: string | null; read: string | null; published: string | null }>
+  rules: Array<{ id: string; text: string; cites: Array<{ source: string; quote: string | null }> }>
+  inventions: Array<{ id: string; text: string }>
+  open: string[]
+  groups: DescribedSessionGroup[]
+  sessions: Record<string, DescribedSession>
+}

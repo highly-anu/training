@@ -111,6 +111,13 @@ def child(folder: str) -> int:
           all((r or {}).get('exercise_names', {}).keys() >= set((r or {}).get('mastered_exercises') or [])
               for r in contract_tracks.values()))
     for pkg in sorted(COPIES):
+        page = client.get(f'/api/philosophies/{pkg}/describe').get_json() or {}
+        weeks = [p['mix'] for t in page.get('tracks') or [] for p in t['phases']]
+        grouped = sorted(s for g in page.get('groups') or [] for s in g['sessions'])
+        check(f'Explore describes {pkg}: every phase a week, every session grouped',
+              bool(weeks) and all(weeks) and grouped == sorted(page.get('sessions') or {}),
+              f'{len(weeks)} phases, {len(grouped)} grouped of {len(page.get("sessions") or {})}')
+    for pkg in sorted(COPIES):
         (goal, constraints, _), = [v for k, v in programs.items() if k[0] == pkg][:1] or [(None, None, None)]
         if goal is None:
             continue
