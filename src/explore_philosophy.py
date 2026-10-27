@@ -578,18 +578,35 @@ def build(phil: dict, *, philosophies: list, frameworks: dict, modalities: dict,
 
 _CACHE: dict = {}
 _GLANCES: list | None = None
+_DATA: dict | None = None
+
+
+def clear_cache() -> None:
+    """An authoring write changed the packages (api.clear_static_cache)."""
+    global _GLANCES, _DATA
+    _CACHE.clear()
+    _GLANCES = None
+    _DATA = None
 
 
 def _specs() -> dict:
-    from src.analytics.describe import describe_all
-    return describe_all()['philosophies']
+    data = _loaded()
+    if data['specs'] is None:
+        from src.analytics.describe import describe_all
+        data['specs'] = describe_all()['philosophies']
+    return data['specs']
 
 
 def _loaded() -> dict:
-    exercises, _ = loader.load_all_exercises()
-    return {'philosophies': loader.load_philosophies(), 'frameworks': loader.load_all_frameworks(),
-            'modalities': loader.load_all_modalities(), 'archetypes': loader.load_all_archetypes(),
-            'exercises': exercises, 'standards': benchmarks_data.by_id()}
+    """The package data, read once: every describe and the glances read the
+    same lists, which they never change."""
+    global _DATA
+    if _DATA is None:
+        exercises, _ = loader.load_all_exercises()
+        _DATA = {'philosophies': loader.load_philosophies(), 'frameworks': loader.load_all_frameworks(),
+                 'modalities': loader.load_all_modalities(), 'archetypes': loader.load_all_archetypes(),
+                 'exercises': exercises, 'standards': benchmarks_data.by_id(), 'specs': None}
+    return _DATA
 
 
 def _contracts(phil: dict) -> dict:
@@ -610,8 +627,10 @@ def describe(phil_id: str) -> dict | None:
     phil = next((p for p in data['philosophies'] if p['id'] == phil_id), None)
     if phil is None:
         return None
-    doc = build(phil, contracts=_contracts(phil), record=_record(phil_id),
-                measures=measures_of(_specs().get(phil_id)), **data)
+    doc = build(phil, philosophies=data['philosophies'], frameworks=data['frameworks'],
+                modalities=data['modalities'], archetypes=data['archetypes'], exercises=data['exercises'],
+                standards=data['standards'], contracts=_contracts(phil), record=_record(phil_id),
+                measures=measures_of(_specs().get(phil_id)))
     _CACHE[phil_id] = doc
     return doc
 

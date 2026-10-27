@@ -33,6 +33,19 @@ A training logic system that algorithmically generates periodized training progr
   sync worker, a phone that stopped reading mid-download of `/user/program` held
   it until the 120 s kill, again and again overnight on 2026-10-12, and the
   watch's morning sync queued behind it (`test_worker_stalls.py`).
+- **Reference routes are built into the image** (since 2026-10-27, `api.static_json`). The
+  package-data routes (`/philosophies`, `/frameworks`, `/archetypes`, `/exercises`, the
+  Explore documents, `/analytics/specs`, `/similarity`…) are pure functions of the YAML: the
+  Docker build answers every one into `STATIC_BUILD_DIR` (`tools/build_static_cache.py` →
+  `api.build_static`, JSON + gzip + ETag each; a route that fails fails the build), and the
+  worker serves those bytes (a revisit is a 304). What the build did not answer — local dev,
+  tests, an unusual query, everything after a successful authoring write — is built once per
+  process, one at a time (`_BUILD_LOCK`). YAML is parsed with libyaml (`loader.safe_load`,
+  10× the pure-Python parser, identical on every file — `test_static_cache.py`). Before, each
+  request re-parsed the packages, and on 2026-10-27 Explore's concurrent calls held four copies
+  at once: the worker passed 140 MB and was OOM-killed — the browser showed CORS errors and
+  "timeout of 30000ms" because no answer came back at all. A new route that reads only
+  package data takes `@static_json` and goes in `_static_paths`; one that reads the user must not.
 - **The app runs beside its database** (Fly `cdg`, Supabase `aws-1-eu-west-3`, both
   Paris, since 2026-10-17). In `sjc` every query crossed the Atlantic (~150 ms), and
   Log ▸ Linking took 17 s; keep `primary_region` with the database. Reads that may
