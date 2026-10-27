@@ -167,6 +167,44 @@ class TemplateTests(unittest.TestCase):
         self.assertEqual(self.track['builtBy'], 'template')
 
 
+class GlanceTests(unittest.TestCase):
+    def setUp(self):
+        self.doc = build()
+        self.g = self.doc['glance']
+
+    def test_template_phase_glyph_and_days(self):
+        a = self.g['tracks'][0]['phases'][0]
+        self.assertEqual(a['days'], [['max_strength'], ['aerobic_base'], None, ['max_strength', 'aerobic_base'],
+                                     None, None, None])
+        self.assertEqual(a['daysPerWeek'], 2.0)   # three days, then one: averaged
+        self.assertEqual(a['sessionsPerWeek'], 2.0)
+        self.assertEqual(a['tests'], 1)
+
+    def test_track_intensity_weighted_by_phase_weeks(self):
+        t = self.g['tracks'][0]
+        # A (6 of 8 weeks) declares 80/20; B declares nothing.
+        self.assertEqual(t['intensity'], {'zone1_2_pct': 0.6, 'zone4_5_pct': 0.15})
+        self.assertEqual(self.g['intensity'], t['intensity'])  # the primary track's
+
+    def test_contract_track_requires_and_ranges(self):
+        c = self.g['tracks'][1]
+        self.assertIsNone(c['phases'][0]['days'])
+        self.assertEqual(c['requires'], [])
+        self.assertEqual(c['builtBy'], 'contract')
+
+    def test_identity_numbers(self):
+        self.assertEqual(self.g['weeks'], {'min': 4, 'ideal': 8})
+        self.assertEqual(self.g['counts']['rules'], 1)
+        self.assertEqual(self.g['counts']['sessions'], len(ARCHETYPES))
+        self.assertEqual(self.g['tested'], ['Mile run'])
+
+    def test_measures_from_the_spec(self):
+        spec = {'progress': [{'label': 'Load', 'headline': True}, {'label': 'Other'}],
+                'benchmarks': [{'id': 'b', 'name': 'B', 'domain': 'max_strength'}]}
+        self.assertEqual(ep.measures_of(spec), {'headline': 'Load', 'signals': 2,
+                                                'standards': [{'id': 'b', 'name': 'B', 'domain': 'max_strength'}]})
+
+
 class ContractTests(unittest.TestCase):
     def setUp(self):
         self.track = build()['tracks'][1]
@@ -284,6 +322,17 @@ class RealDataTests(unittest.TestCase):
         # The web's old matcher left 1,748 of 1,769 empty.
         self.assertLess(len(empty), 5, [(sl['role']) for sl in empty])
 
+    def test_every_glance_has_the_same_keys(self):
+        # Comparing two philosophies reads the same keys on both.
+        glances = ep.glance_all()
+        self.assertEqual({g['id'] for g in glances}, set(self.docs))
+        keys = {frozenset(g) for g in glances}
+        track_keys = {frozenset(t) for g in glances for t in g['tracks']}
+        phase_keys = {frozenset(p) for g in glances for t in g['tracks'] for p in t['phases']}
+        self.assertEqual((len(keys), len(track_keys), len(phase_keys)), (1, 1, 1))
+        for g in glances:
+            self.assertEqual(g, self.docs[g['id']]['glance'], g['id'])
+
     def test_every_record_rule_is_there(self):
         for pid, doc in self.docs.items():
             rec = ep._record(pid)
@@ -299,6 +348,8 @@ class RouteTests(unittest.TestCase):
         self.assertEqual(body['id'], pid)
         self.assertIn('tracks', body)
         self.assertEqual(client.get('/api/philosophies/nope/describe').status_code, 404)
+        glances = client.get('/api/philosophies/glance').get_json()
+        self.assertIn(pid, {g['id'] for g in glances})
 
 
 if __name__ == '__main__':

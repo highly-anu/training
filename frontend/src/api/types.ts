@@ -2403,4 +2403,65 @@ export interface PhilosophyDescription {
   open: string[]
   groups: DescribedSessionGroup[]
   sessions: Record<string, DescribedSession>
+  glance: PhilosophyGlance
+}
+
+// GET /philosophies/glance, and `glance` on the describe document: the
+// comparable facts, the same keys for every philosophy (explore_philosophy.glance).
+
+export interface GlancePhase {
+  id: string
+  name: string
+  kind: PhaseKind
+  weeks: number
+  repeatable: boolean
+  focus: string | null
+  /** The source's first week, day by day (templates only): modalities, null for rest. */
+  days: (string[] | null)[] | null
+  daysPerWeek: number | null
+  minutes: number | null
+  sessionsPerWeek: number
+  mix: DescribedMix[]
+  intensitySplit: Record<string, number>
+  tests: number
+}
+
+export interface GlanceTrack {
+  id: string
+  name: string
+  primary: boolean
+  forLevels: TrainingLevel[]
+  levels: TrainingLevel[]
+  builtBy: 'contract' | 'template' | 'framework'
+  weeks: number
+  repeatable: boolean
+  kettlebellPair: boolean
+  requires: string[]
+  daysPerWeek: { min: number; max: number } | null
+  minutes: { min: number; max: number } | null
+  mix: DescribedMix[]
+  intensity: Record<string, number>
+  tests: number
+  goals: string[]
+  phases: GlancePhase[]
+}
+
+export interface PhilosophyGlance {
+  id: string
+  name: string
+  accent: string | null
+  bias: string[]
+  levels: TrainingLevel[]
+  weeks: { min: number; ideal: number } | null
+  daysPerWeek: { min: number; ideal: number } | null
+  sessionMinutes: { min: number; ideal: number } | null
+  longSessionMinutes: number | null
+  equipment: Array<{ id: string; name: string }>
+  primaryTrackId: string | null
+  mix: DescribedMix[]
+  intensity: Record<string, number>
+  tested: string[]
+  measures: { headline: string | null; signals: number; standards: Array<{ id: string; name: string; domain: string | null }> }
+  counts: { tracks: number; rules: number; sources: number; inventions: number; open: number; sessions: number }
+  tracks: GlanceTrack[]
 }

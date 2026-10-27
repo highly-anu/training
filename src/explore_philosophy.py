@@ -280,9 +280,22 @@ def _phase(phase: dict, framework: dict, contract: dict | None, archetypes: dict
         week = _template_week(phase, framework)
     else:
         week = _framework_week(framework)
+    exp = framework.get('expectations') or {}
+    mix = week_mix(week)
+    days = None
+    days_per_week = exp.get('ideal_days_per_week')
+    if week['kind'] == 'template' and week['weeks']:
+        # The source's first week, day by day: its modalities, None for rest.
+        days = [None if d['rest'] else [p['modality'] for p in d['pieces']] for d in week['weeks'][0]]
+        days_per_week = round(sum(sum(not d['rest'] for d in w) for w in week['weeks']) / len(week['weeks']), 1)
     return {
         'id': phase['id'], 'name': phase.get('name') or words(phase['id']), 'kind': phase.get('kind'),
         'weeks': phase.get('weeks'), 'repeatable': bool(phase.get('repeatable')),
+        # At a glance, the same keys for every phase however it is built.
+        'days': days,
+        'daysPerWeek': days_per_week,
+        'minutes': exp.get('ideal_session_minutes'),
+        'sessionsPerWeek': round(sum(mix.values()), 1),
         'framework': {'id': framework.get('id'), 'name': framework.get('name')},
         'focus': phase.get('focus'), 'description': (phase.get('description') or '').strip() or None,
         'adaptations': phase.get('adaptations') or [], 'intensity': phase.get('intensity'),
@@ -291,7 +304,7 @@ def _phase(phase: dict, framework: dict, contract: dict | None, archetypes: dict
         'tests': _tests(phase, archetypes, standards),
         'notYet': [exercises.get(e, {}).get('name') or words(e) for e in phase.get('exclude_exercises') or []],
         'week': week,
-        'mix': _mix_list(week_mix(week)),
+        'mix': _mix_list(mix),
     }
 
 
@@ -313,9 +326,20 @@ def _track(phil: dict, track: dict, contract: dict | None, frameworks: dict, arc
                   for ph in track.get('phases') or []]
     weeks = sum(p['weeks'] or 0 for p in phase_docs)
     mix: dict[str, float] = {}
+    intensity: dict[str, float] = {}
     for p in phase_docs:
+        share = (p['weeks'] or 0) / (weeks or 1)
         for row in p['mix']:
-            mix[row['modality']] = mix.get(row['modality'], 0) + row['perWeek'] * (p['weeks'] or 0) / (weeks or 1)
+            mix[row['modality']] = mix.get(row['modality'], 0) + row['perWeek'] * share
+        for bucket, pct in p['intensitySplit'].items():
+            intensity[bucket] = intensity.get(bucket, 0) + pct * share
+    goals: list[str] = []
+    for p in phase_docs:
+        goals += [a for a in p['adaptations'] if a not in goals]
+    requires = []
+    for m in (contract or {}).get('modules') or []:
+        if not m.get('when_mastered'):
+            requires += [e for e in m.get('requires_mastery') or [] if e not in requires]
     primary = phases.primary_track(phil)
     return {
         'id': track['id'], 'name': track.get('name') or words(track['id']),
@@ -330,8 +354,19 @@ def _track(phil: dict, track: dict, contract: dict | None, frameworks: dict, arc
         'notes': ((contract or {}).get('notes') or '').strip() or None,
         'kettlebellPair': bool(contract and contract.get('requires_kettlebell_pair')),
         'mix': _mix_list(mix),
+        'intensity': {k: round(v, 3) for k, v in intensity.items() if v},
+        'daysPerWeek': _span(p['daysPerWeek'] for p in phase_docs),
+        'minutes': _span(p['minutes'] for p in phase_docs),
+        'tests': sum(len(p['tests']) for p in phase_docs),
+        'goals': goals,
+        'requires': [exercises.get(e, {}).get('name') or words(e) for e in requires],
         'phases': phase_docs,
     }
+
+
+def _span(values) -> dict | None:
+    vals = [v for v in values if v is not None]
+    return {'min': min(vals), 'max': max(vals)} if vals else None
 
 
 # ─── Sessions ────────────────────────────────────────────────────────────────
@@ -435,15 +470,13 @@ def _rules(record: dict | None) -> dict:
 
 # ─── The document ────────────────────────────────────────────────────────────
 
-def build(phil: dict, *, philosophies: list, frameworks: dict, modalities: dict, archetypes: list,
-          exercises: dict, contracts: dict, record: dict | None, standards: dict) -> dict:
-    """`contracts`: track id → the loaded training contract, for the tracks
-    that have one."""
-    package_archetypes = [a for a in archetypes if a.get('_package') == phil['id']]
+def _core(phil: dict, *, frameworks: dict, archetypes: list, exercises: dict, contracts: dict,
+          record: dict | None, standards: dict) -> dict:
+    """Everything but the session catalogue: cheap enough to build for every
+    philosophy at once (the landing, and comparing)."""
     arch_by_id = {a['id']: a for a in archetypes}
     track_docs = [_track(phil, t, contracts.get(t['id']), frameworks, arch_by_id, exercises, standards)
                   for t in phases.tracks_of(phil)]
-    framework_ids = phases.framework_ids_of(phil)
     primary = next((t for t in track_docs if t['primary']), track_docs[0] if track_docs else None)
     main_fw = frameworks.get(goals._main_framework(phases.primary_track(phil)) or '') if track_docs else None
     expectations = phil.get('expectations') or (main_fw or {}).get('expectations')
@@ -478,12 +511,94 @@ def build(phil: dict, *, philosophies: list, frameworks: dict, modalities: dict,
         'rules': rules['rules'],
         'inventions': rules['inventions'],
         'open': rules['open'],
-        **_sessions(phil, track_docs, framework_ids, frameworks, package_archetypes, exercises,
-                    {p['id']: p for p in philosophies}),
+        'sessionCount': sum(1 for a in archetypes if a.get('_package') == phil['id']),
     }
 
 
+def measures_of(spec: dict | None) -> dict:
+    """What progress means for the method (its analytics spec's headline) and
+    the standards it is measured by, each with its modality (`domain`)."""
+    if not spec:
+        return {'headline': None, 'signals': 0, 'standards': []}
+    head = next((e for e in spec.get('progress') or [] if e.get('headline')), None)
+    return {'headline': head['label'] if head else None, 'signals': len(spec.get('progress') or []),
+            'standards': [{'id': b['id'], 'name': b['name'], 'domain': b.get('domain')}
+                          for b in spec.get('benchmarks') or []]}
+
+
+def glance(core: dict, measures: dict | None = None) -> dict:
+    """The comparable facts: the same keys for every philosophy, numbers and
+    ids rather than prose, so a header, a landing card or a side-by-side
+    comparison reads them alike. Tracks keep their phases' glance fields."""
+    exp = core['expectations'] or {}
+    primary = next((t for t in core['tracks'] if t['id'] == core['primaryTrackId']), None)
+    standards: list[str] = []
+    for t in core['tracks']:
+        for p in t['phases']:
+            for test in p['tests']:
+                standards += [n for n in test['standards'] if n not in standards]
+    phase_keys = ('id', 'name', 'kind', 'weeks', 'repeatable', 'focus', 'days', 'daysPerWeek', 'minutes',
+                  'sessionsPerWeek', 'mix', 'intensitySplit')
+    return {
+        'id': core['id'], 'name': core['name'], 'accent': core['accent'], 'bias': core['bias'],
+        'levels': core['levels'],
+        'weeks': {'min': exp.get('min_weeks'), 'ideal': exp.get('ideal_weeks')} if exp else None,
+        'daysPerWeek': {'min': exp.get('min_days_per_week'), 'ideal': exp.get('ideal_days_per_week')} if exp else None,
+        'sessionMinutes': {'min': exp.get('min_session_minutes'), 'ideal': exp.get('ideal_session_minutes')} if exp else None,
+        'longSessionMinutes': exp.get('ideal_long_session_minutes'),
+        'equipment': core['equipment'],
+        'primaryTrackId': core['primaryTrackId'],
+        'mix': core['mix'],
+        'intensity': primary['intensity'] if primary else {},
+        'tested': standards,
+        'measures': measures or measures_of(None),
+        'counts': {'tracks': len(core['tracks']), 'rules': len(core['rules']), 'sources': len(core['sources']),
+                   'inventions': len(core['inventions']), 'open': len(core['open']),
+                   'sessions': core['sessionCount']},
+        'tracks': [{**{k: t[k] for k in ('id', 'name', 'primary', 'forLevels', 'levels', 'builtBy', 'weeks',
+                                        'repeatable', 'kettlebellPair', 'requires', 'daysPerWeek', 'minutes',
+                                        'mix', 'intensity', 'tests', 'goals')},
+                    'phases': [{k: p[k] for k in phase_keys} | {'tests': len(p['tests'])} for p in t['phases']]}
+                   for t in core['tracks']],
+    }
+
+
+def build(phil: dict, *, philosophies: list, frameworks: dict, modalities: dict, archetypes: list,
+          exercises: dict, contracts: dict, record: dict | None, standards: dict,
+          measures: dict | None = None) -> dict:
+    """`contracts`: track id → the loaded training contract, for the tracks
+    that have one."""
+    core = _core(phil, frameworks=frameworks, archetypes=archetypes, exercises=exercises, contracts=contracts,
+                 record=record, standards=standards)
+    package_archetypes = [a for a in archetypes if a.get('_package') == phil['id']]
+    return {**core, 'glance': glance(core, measures),
+            **_sessions(phil, core['tracks'], phases.framework_ids_of(phil), frameworks, package_archetypes,
+                        exercises, {p['id']: p for p in philosophies})}
+
+
 _CACHE: dict = {}
+_GLANCES: list | None = None
+
+
+def _specs() -> dict:
+    from src.analytics.describe import describe_all
+    return describe_all()['philosophies']
+
+
+def _loaded() -> dict:
+    exercises, _ = loader.load_all_exercises()
+    return {'philosophies': loader.load_philosophies(), 'frameworks': loader.load_all_frameworks(),
+            'modalities': loader.load_all_modalities(), 'archetypes': loader.load_all_archetypes(),
+            'exercises': exercises, 'standards': benchmarks_data.by_id()}
+
+
+def _contracts(phil: dict) -> dict:
+    out = {}
+    for t in phases.tracks_of(phil):
+        c = training_contract.load_contract(phil['id'], t['id'])
+        if c:
+            out[t['id']] = c
+    return out
 
 
 def describe(phil_id: str) -> dict | None:
@@ -491,19 +606,24 @@ def describe(phil_id: str) -> dict | None:
     changes only with a deploy); None for an unknown id."""
     if phil_id in _CACHE:
         return _CACHE[phil_id]
-    philosophies = loader.load_philosophies()
-    phil = next((p for p in philosophies if p['id'] == phil_id), None)
+    data = _loaded()
+    phil = next((p for p in data['philosophies'] if p['id'] == phil_id), None)
     if phil is None:
         return None
-    exercises, _ = loader.load_all_exercises()
-    contracts = {}
-    for t in phases.tracks_of(phil):
-        c = training_contract.load_contract(phil_id, t['id'])
-        if c:
-            contracts[t['id']] = c
-    doc = build(phil, philosophies=philosophies, frameworks=loader.load_all_frameworks(),
-                modalities=loader.load_all_modalities(), archetypes=loader.load_all_archetypes(),
-                exercises=exercises, contracts=contracts, record=_record(phil_id),
-                standards=benchmarks_data.by_id())
+    doc = build(phil, contracts=_contracts(phil), record=_record(phil_id),
+                measures=measures_of(_specs().get(phil_id)), **data)
     _CACHE[phil_id] = doc
     return doc
+
+
+def glance_all() -> list[dict]:
+    """Every philosophy's glance, in the loader's order; built once."""
+    global _GLANCES
+    if _GLANCES is None:
+        data, specs = _loaded(), _specs()
+        _GLANCES = [glance(_core(phil, frameworks=data['frameworks'], archetypes=data['archetypes'],
+                                 exercises=data['exercises'], contracts=_contracts(phil),
+                                 record=_record(phil['id']), standards=data['standards']),
+                           measures_of(specs.get(phil['id'])))
+                    for phil in data['philosophies']]
+    return _GLANCES

@@ -15,6 +15,7 @@ export const queryKeys = {
   },
   exploreLinks: ['explore', 'links'] as const,
   philosophyDescription: (id: string) => ['explore', 'philosophy', id] as const,
+  philosophyGlances: ['explore', 'glances'] as const,
   standards: {
     all: ['standards'] as const,
     results: ['standards', 'results'] as const,

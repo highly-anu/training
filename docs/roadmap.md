@@ -1443,6 +1443,16 @@ and several `notes` speak to authors ("src/week_template.py", "training_contract
 which slice 4's `summary` should replace on the page. Not checked at phone width (the
 headless shot opens the nav drawer).
 
+**Glance first** (2026-10-27, `feat/explore-glance`). The page greets with marks, not prose:
+spec tiles, the fingerprint, every track as a row on one week scale, phase cards with a
+seven-day glyph and an intensity bar, goals and requirements as chips, the method and the
+sessions as tiles; every paragraph opens in a sheet. The numbers are the server's `glance`
+(`GET /api/philosophies/glance`, the same keys for every philosophy) — which is what a
+**compare** view will set side by side (next), and what the landing cards now draw (slice 2's
+fingerprint on the cards, done). Noticed: Uphill's phase frameworks declare a 360-minute
+"ideal session" (its long day), so its tiles read "60–360′"; a package-side
+`ideal_long_session_minutes` would fix it.
+
 ## Later
 
 Larger items from the IA review. Each needs a backend step first; none is
