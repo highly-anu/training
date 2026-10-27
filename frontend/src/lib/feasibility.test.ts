@@ -85,3 +85,48 @@ describe('blendExpectations with a phased philosophy', () => {
     expect(blended?.ideal_days_per_week).toBe(3)
   })
 })
+
+// The builder's schedule step recommended rest on every day for a blend of
+// several tracks: the expectations came back null, since a blend had no one
+// track to read them from.
+describe('blendExpectations with several tracks', () => {
+  const two = any_({
+    id: 'p2',
+    tracks: [{ id: 'lift', name: 'Lift', phases: [{ id: 'l', name: 'L', kind: 'base', framework_id: 'fw-lift', weeks: 12 }] }],
+  })
+  const frameworks = [
+    { id: 'fw-base', expectations: { ...expectations(4), ideal_long_session_minutes: 120, supports_split_days: true } },
+    { id: 'fw-lift', expectations: { ...expectations(3), min_weeks: 6, ideal_weeks: 12, ideal_session_minutes: 75 } },
+  ]
+  const opts = (lanes: unknown[]) => any_({
+    sourceMode: 'blend', frameworks, philosophies: [philosophy, two], selectedPhilosophyIds: ['p1', 'p2'], lanes,
+  })
+
+  it('asks for every track\'s days, each session and long day, and the longest track\'s weeks', () => {
+    const exp = blendExpectations([], [], {}, opts([
+      { philosophyId: 'p1', trackId: 'single', weight: 60 },
+      { philosophyId: 'p2', trackId: null, weight: 40 },
+    ]))
+    expect(exp?.ideal_days_per_week).toBe(7)
+    expect(exp?.min_days_per_week).toBe(4)
+    expect(exp?.ideal_session_minutes).toBe(75)
+    expect(exp?.ideal_long_session_minutes).toBe(120)
+    expect(exp?.ideal_weeks).toBe(12)
+    expect(exp?.supports_split_days).toBe(true)
+  })
+
+  it('never asks for more than seven days', () => {
+    const exp = blendExpectations([], [], {}, opts([
+      { philosophyId: 'p1', trackId: 'single', weight: 50 },
+      { philosophyId: 'p1', trackId: 'single', weight: 50 },
+      { philosophyId: 'p2', trackId: 'lift', weight: 50 },
+    ]))
+    expect(exp?.ideal_days_per_week).toBe(7)
+  })
+
+  it('reads one track as before', () => {
+    const exp = blendExpectations([], [], {}, any_({ ...opts([{ philosophyId: 'p2', trackId: 'lift', weight: 100 }]),
+      sourceMode: 'philosophy', selectedPhilosophyIds: ['p2'] }))
+    expect(exp?.ideal_days_per_week).toBe(3)
+  })
+})

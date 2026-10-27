@@ -1,5 +1,5 @@
-import type { GoalProfile, AthleteConstraints, GoalExpectations, Framework, Philosophy } from '@/api/types'
-import { builderTrack } from '@/lib/tracks'
+import type { GoalProfile, AthleteConstraints, GoalExpectations, Framework, Philosophy, Track } from '@/api/types'
+import { builderTrack, findTrack, primaryTrack } from '@/lib/tracks'
 
 export interface FeasibilitySignal {
   code: string
@@ -16,6 +16,89 @@ export interface FeasibilitySignal {
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
+/** A track's expectations: its framework's, or the weeks-weighted blend of
+ *  its phases' frameworks. */
+function trackExpectations(track: Track | undefined, frameworks: Framework[]): GoalExpectations | null {
+  const phases = track?.phases
+
+  // A one-phase track is its framework: use that framework's own block,
+  // which knows a minimum shorter than the phase's default length.
+  if (phases && phases.length === 1) {
+    const only = frameworks.find((f) => f.id === phases[0].framework_id)
+    if (only?.expectations) return only.expectations
+  }
+
+  if (phases && phases.length > 1) {
+    // Keep each phase paired with its framework. These used to be a filtered
+    // array of frameworks indexed alongside the UNfiltered `phases`, so a
+    // phase whose framework was missing or had no expectations shifted every
+    // later phase onto the wrong duration — silently weighting the blend by
+    // another phase's weeks.
+    const phaseFrameworks = phases
+      .map((phase) => ({ phase, fw: frameworks.find((f) => f.id === phase.framework_id) }))
+      .filter((pair): pair is { phase: typeof pair.phase; fw: Framework } =>
+        pair.fw?.expectations != null)
+
+    if (phaseFrameworks.length > 0) {
+      // Program length counts every phase; the weighting denominator counts
+      // only the phases actually contributing, so the weights sum to 1.
+      const totalWeeks = phases.reduce((sum: number, phase) => sum + (phase.weeks ?? 0), 0)
+      const weightedWeeks = phaseFrameworks.reduce(
+        (sum, { phase }) => sum + (phase.weeks ?? 0), 0)
+
+      const weighted = (fn: (e: GoalExpectations) => number): number => {
+        if (weightedWeeks === 0) return 0
+        let sum = 0
+        for (const { phase, fw } of phaseFrameworks) {
+          const weight = (phase.weeks ?? 0) / weightedWeeks
+          if (fw.expectations) sum += fn(fw.expectations) * weight
+        }
+        return sum
+      }
+
+      const longDays = phaseFrameworks.filter(
+        ({ fw }) => fw.expectations?.ideal_long_session_minutes != null)
+
+      return {
+        min_weeks: totalWeeks,
+        ideal_weeks: totalWeeks,
+        min_days_per_week: Math.round(weighted((e) => e.min_days_per_week)),
+        ideal_days_per_week: Math.round(weighted((e) => e.ideal_days_per_week)),
+        min_session_minutes: Math.round(weighted((e) => e.min_session_minutes)),
+        ideal_session_minutes: Math.round(weighted((e) => e.ideal_session_minutes)),
+        ideal_long_session_minutes: longDays.length
+          ? Math.round(longDays.reduce(
+              (sum: number, { fw }) => sum + fw.expectations!.ideal_long_session_minutes!, 0,
+            ) / longDays.length)
+          : undefined,
+        supports_split_days: phaseFrameworks.some(({ fw }) => fw.expectations?.supports_split_days),
+      }
+    }
+  }
+  return null
+}
+
+/** Several tracks running side by side in one program (src/composition.py).
+ *  Each would rather keep days of its own, so the ideal week is every track's
+ *  ideal days together, up to seven; the server stacks two tracks on a day
+ *  only when the week is shorter. Each track's session and long day must fit,
+ *  and the longest track sets the program's length. */
+export function composedExpectations(each: GoalExpectations[]): GoalExpectations | null {
+  if (!each.length) return null
+  const most = (fn: (e: GoalExpectations) => number) => Math.max(...each.map(fn))
+  const longs = each.map((e) => e.ideal_long_session_minutes).filter((m): m is number => m != null)
+  return {
+    min_weeks: most((e) => e.min_weeks),
+    ideal_weeks: most((e) => e.ideal_weeks),
+    min_days_per_week: Math.min(7, most((e) => e.min_days_per_week)),
+    ideal_days_per_week: Math.min(7, each.reduce((sum, e) => sum + e.ideal_days_per_week, 0)),
+    min_session_minutes: most((e) => e.min_session_minutes),
+    ideal_session_minutes: most((e) => e.ideal_session_minutes),
+    ideal_long_session_minutes: longs.length ? Math.max(...longs) : undefined,
+    supports_split_days: each.some((e) => e.supports_split_days),
+  }
+}
+
 export function blendExpectations(
   goals: GoalProfile[],
   selectedGoalIds: string[],
@@ -28,68 +111,25 @@ export function blendExpectations(
     philosophies?: Philosophy[]
     /** The athlete's level: with no track picked, the one written for it. */
     trainingLevel?: string | null
+    /** A blend's tracks; two or more compose one program. */
+    lanes?: { philosophyId: string; trackId: string | null; weight: number }[]
   },
 ): GoalExpectations | null {
+  // Several tracks share the week (the server's composition).
+  if (opts?.sourceMode === 'blend' && (opts.lanes?.length ?? 0) > 1 && opts.philosophies && opts.frameworks) {
+    const each = opts.lanes!.map((lane) => {
+      const phil = opts.philosophies!.find((p) => p.id === lane.philosophyId)
+      const track = findTrack(phil, lane.trackId) ?? primaryTrack(phil, opts.trainingLevel)
+      return trackExpectations(track, opts.frameworks!)
+    })
+    return composedExpectations(each.filter((e): e is GoalExpectations => e != null))
+  }
+
   // Philosophy mode: the expectations of the track the athlete will run.
   if (opts?.sourceMode === 'philosophy' && opts.philosophies && opts.frameworks) {
     const picked = builderTrack(opts.philosophies, opts.selectedPhilosophyIds ?? [], opts.selectedTrackId, opts.trainingLevel)
-    const phases = picked?.track.phases
-
-    // A one-phase track is its framework: use that framework's own block,
-    // which knows a minimum shorter than the phase's default length.
-    if (phases && phases.length === 1) {
-      const only = opts.frameworks.find((f) => f.id === phases[0].framework_id)
-      if (only?.expectations) return only.expectations
-    }
-
-    if (phases && phases.length > 1) {
-      // Keep each phase paired with its framework. These used to be a filtered
-      // array of frameworks indexed alongside the UNfiltered `phases`, so a
-      // phase whose framework was missing or had no expectations shifted every
-      // later phase onto the wrong duration — silently weighting the blend by
-      // another phase's weeks.
-      const phaseFrameworks = phases
-        .map((phase) => ({ phase, fw: opts.frameworks!.find((f) => f.id === phase.framework_id) }))
-        .filter((pair): pair is { phase: typeof pair.phase; fw: Framework } =>
-          pair.fw?.expectations != null)
-
-      if (phaseFrameworks.length > 0) {
-        // Program length counts every phase; the weighting denominator counts
-        // only the phases actually contributing, so the weights sum to 1.
-        const totalWeeks = phases.reduce((sum: number, phase) => sum + (phase.weeks ?? 0), 0)
-        const weightedWeeks = phaseFrameworks.reduce(
-          (sum, { phase }) => sum + (phase.weeks ?? 0), 0)
-
-        const weighted = (fn: (e: GoalExpectations) => number): number => {
-          if (weightedWeeks === 0) return 0
-          let sum = 0
-          for (const { phase, fw } of phaseFrameworks) {
-            const weight = (phase.weeks ?? 0) / weightedWeeks
-            if (fw.expectations) sum += fn(fw.expectations) * weight
-          }
-          return sum
-        }
-
-        const longDays = phaseFrameworks.filter(
-          ({ fw }) => fw.expectations?.ideal_long_session_minutes != null)
-
-        return {
-          min_weeks: totalWeeks,
-          ideal_weeks: totalWeeks,
-          min_days_per_week: Math.round(weighted((e) => e.min_days_per_week)),
-          ideal_days_per_week: Math.round(weighted((e) => e.ideal_days_per_week)),
-          min_session_minutes: Math.round(weighted((e) => e.min_session_minutes)),
-          ideal_session_minutes: Math.round(weighted((e) => e.ideal_session_minutes)),
-          ideal_long_session_minutes: longDays.length
-            ? Math.round(longDays.reduce(
-                (sum: number, { fw }) => sum + fw.expectations!.ideal_long_session_minutes!, 0,
-              ) / longDays.length)
-            : undefined,
-          supports_split_days: phaseFrameworks.some(({ fw }) => fw.expectations?.supports_split_days),
-        }
-      }
-    }
-
+    const exp = trackExpectations(picked?.track, opts.frameworks)
+    if (exp) return exp
   }
 
   // Fall back to goal-based expectations
