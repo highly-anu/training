@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { ChevronDown, ChevronRight, ExternalLink, FlaskConical } from 'lucide-react'
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { ModalityGlyph } from './Glance'
+import { InlinePanel, ModalityGlyph } from './Glance'
 import type { DescribedSession, DescribedSessionGroup, PhilosophyDescription } from '@/api/types'
 import { useExploreNavigate } from '@/components/explore/topics'
 import { cn } from '@/lib/utils'
@@ -72,10 +71,11 @@ function groupLabel(g: DescribedSessionGroup): string {
 }
 
 /** One group as a tile: its modality's icon and colour, its name, how many. */
-function GroupTile({ group, onOpen }: { group: DescribedSessionGroup; onOpen: () => void }) {
+function GroupTile({ group, selected, onOpen }: { group: DescribedSessionGroup; selected: boolean; onOpen: () => void }) {
   return (
-    <button type="button" onClick={onOpen}
-      className="flex items-center gap-2 rounded-md border border-border/50 bg-card/60 px-2.5 py-2 text-left transition-colors hover:border-primary/40"
+    <button type="button" onClick={onOpen} aria-expanded={selected}
+      className={cn('flex items-center gap-2 rounded-md border px-2.5 py-2 text-left transition-colors hover:border-primary/40',
+        selected ? 'border-primary/50 bg-primary/10' : 'border-border/50 bg-card/60')}
       style={group.modality ? { borderLeftColor: modalityHex(group.modality), borderLeftWidth: 3 } : undefined}>
       {group.kind === 'tests'
         ? <FlaskConical className="size-4 shrink-0 text-muted-foreground" />
@@ -89,42 +89,40 @@ function GroupTile({ group, onOpen }: { group: DescribedSessionGroup; onOpen: ()
 /**
  * Every session the package writes, as tiles grouped as the method groups
  * them — a template's day categories in the source's order, a contract's
- * modules, the rest by modality, tests last. A tile opens its sessions in a
- * sheet; each slot lists the exercises the generator can give it (the
- * server applies the selector's rule).
+ * modules, the rest by modality, tests last. A tile opens its sessions in
+ * place, under the tiles; each slot lists the exercises the generator can
+ * give it (the server applies the selector's rule).
  */
 export function PhilosophySessions({ doc }: { doc: PhilosophyDescription }) {
-  const [open, setOpen] = useState<DescribedSessionGroup | null>(null)
+  const [openKey, setOpenKey] = useState<string | null>(null)
+  const key = (g: DescribedSessionGroup) => `${g.kind}-${g.id}`
+  const open = doc.groups.find((g) => key(g) === openKey)
   return (
-    <>
+    <div className="space-y-2">
       <div className="grid gap-1.5 grid-cols-[repeat(auto-fill,minmax(11rem,1fr))]">
-        {doc.groups.map((g) => <GroupTile key={`${g.kind}-${g.id}`} group={g} onOpen={() => setOpen(g)} />)}
+        {doc.groups.map((g) => (
+          <GroupTile key={key(g)} group={g} selected={key(g) === openKey}
+            onOpen={() => setOpenKey((cur) => (cur === key(g) ? null : key(g)))} />
+        ))}
       </div>
-      <Sheet open={!!open} onOpenChange={(o) => !o && setOpen(null)}>
-        <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
-          {open && (
-            <>
-              <SheetHeader>
-                <SheetTitle className="flex items-center gap-2">
-                  {open.modality && <ModalityGlyph modality={open.modality} className="size-4" />}
-                  {groupLabel(open)}
-                </SheetTitle>
-                <SheetDescription>
-                  {open.sessions.length} session{open.sessions.length === 1 ? '' : 's'}
-                  {open.name && open.modality ? ` · ${modalityLabel(open.modality)}` : ''}
-                  {open.warmUp ? ' · opens a day' : ''}
-                </SheetDescription>
-              </SheetHeader>
-              <div className="space-y-2 px-4 pb-6">
-                {open.advice && <p className="text-[11px] italic text-muted-foreground">{open.advice}</p>}
-                <ul className="space-y-1">
-                  {open.sessions.map((id) => doc.sessions[id] && <Session key={id} session={doc.sessions[id]} />)}
-                </ul>
-              </div>
-            </>
-          )}
-        </SheetContent>
-      </Sheet>
-    </>
+      {open && (
+        <InlinePanel key={openKey} accent={open.modality ? modalityHex(open.modality) : undefined}
+          onClose={() => setOpenKey(null)}
+          title={<span className="flex items-center gap-2">
+            {open.modality && <ModalityGlyph modality={open.modality} className="size-4" />}
+            {groupLabel(open)}
+          </span>}
+          subtitle={<>
+            {open.sessions.length} session{open.sessions.length === 1 ? '' : 's'}
+            {open.name && open.modality ? ` · ${modalityLabel(open.modality)}` : ''}
+            {open.warmUp ? ' · opens a day' : ''}
+          </>}>
+          {open.advice && <p className="mb-2 text-[11px] italic text-muted-foreground">{open.advice}</p>}
+          <ul className="grid items-start gap-1 md:grid-cols-2">
+            {open.sessions.map((id) => doc.sessions[id] && <Session key={id} session={doc.sessions[id]} />)}
+          </ul>
+        </InlinePanel>
+      )}
+    </div>
   )
 }

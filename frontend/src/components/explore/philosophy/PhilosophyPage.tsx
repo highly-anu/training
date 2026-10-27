@@ -5,7 +5,6 @@ import {
   Library, Loader2, Package, Sparkles, Target, Timer, Wand2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { usePhilosophies } from '@/api/philosophies'
 import { useFrameworks } from '@/api/frameworks'
 import { useAnalyticsSpecs } from '@/api/analyticsSpecs'
@@ -20,12 +19,12 @@ import { lineageOf } from '@/lib/exploreLinks'
 import { modalityHex } from '@/lib/modalityColors'
 import type { PhilosophyDescription } from '@/api/types'
 import { ModalityMix } from './ModalityMix'
-import { IntensityBar, LevelPips, MixLegend, ModalityGlyph, StatTile } from './Glance'
+import { InlinePanel, IntensityBar, LevelPips, MixLegend, ModalityGlyph, StatTile } from './Glance'
 import { PhilosophyTracks } from './PhilosophyTracks'
 import { PhilosophyRules } from './PhilosophyRules'
 import { PhilosophySessions } from './PhilosophySessions'
 
-type SheetId = 'about' | 'rules' | 'measures' | 'equipment' | null
+type MethodPanel = 'rules' | 'sources' | 'inventions' | 'open' | null
 
 function PageSection({ title, icon: Icon, children, action }: {
   title: string; icon?: React.ComponentType<{ className?: string }>; children: React.ReactNode; action?: React.ReactNode
@@ -57,7 +56,7 @@ function Chip({ children, hex, onClick, title }: {
 }
 
 /** Goals: what the main track builds, and the standards that measure it. */
-function Goals({ doc, onMeasures }: { doc: PhilosophyDescription; onMeasures: () => void }) {
+function Goals({ doc, measuresOpen, onMeasures }: { doc: PhilosophyDescription; measuresOpen: boolean; onMeasures: () => void }) {
   const g = doc.glance
   const primary = g.tracks.find((t) => t.id === g.primaryTrackId) ?? g.tracks[0]
   const standards = g.measures.standards
@@ -86,6 +85,10 @@ function Goals({ doc, onMeasures }: { doc: PhilosophyDescription; onMeasures: ()
             {standards.length > 6 && <Chip onClick={onMeasures}>+{standards.length - 6}</Chip>}
           </div>
         )}
+        <button type="button" onClick={onMeasures} aria-expanded={measuresOpen}
+          className={`inline-flex items-center gap-1 text-[11px] hover:text-foreground ${measuresOpen ? 'text-foreground' : 'text-muted-foreground'}`}>
+          <Info className="size-3" /> How progress is measured
+        </button>
       </div>
     </div>
   )
@@ -93,16 +96,19 @@ function Goals({ doc, onMeasures }: { doc: PhilosophyDescription; onMeasures: ()
 
 /** Requirements: what the athlete needs — equipment, movements already
  *  owned per track, a pair of bells. */
-function Requirements({ doc, onEquipment }: { doc: PhilosophyDescription; onEquipment: () => void }) {
+function Requirements({ doc }: { doc: PhilosophyDescription }) {
   const g = doc.glance
+  const [allEquipment, setAllEquipment] = useState(false)
   const prereq = g.tracks.filter((t) => t.requires.length > 0 || t.kettlebellPair)
   return (
     <div className="space-y-3 rounded-lg border border-border/50 bg-card/40 p-3">
       <div className="space-y-1.5">
         <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">Equipment</p>
         <div className="flex flex-wrap gap-1">
-          {g.equipment.slice(0, 8).map((e) => <Chip key={e.id}>{e.name}</Chip>)}
-          {g.equipment.length > 8 && <Chip onClick={onEquipment}>+{g.equipment.length - 8}</Chip>}
+          {(allEquipment ? g.equipment : g.equipment.slice(0, 8)).map((e) => <Chip key={e.id}>{e.name}</Chip>)}
+          {g.equipment.length > 8 && (
+            <Chip onClick={() => setAllEquipment((a) => !a)}>{allEquipment ? 'fewer' : `+${g.equipment.length - 8}`}</Chip>
+          )}
           {!g.equipment.length && <span className="text-[11px] text-muted-foreground/60">None</span>}
         </div>
       </div>
@@ -129,7 +135,7 @@ function Requirements({ doc, onEquipment }: { doc: PhilosophyDescription; onEqui
  * Explore ▸ Philosophies' detail, glance first: what a reader takes in without
  * reading — spec tiles, the modality fingerprint, every track and its phases
  * as bars and week glyphs, goals and requirements as chips — and the words on
- * demand, in sheets. Every number comes from the server's `glance`
+ * demand, opened in place under what was clicked. Every number comes from the server's `glance`
  * (GET /philosophies/<id>/describe), the same keys for every philosophy, so a
  * comparison can set two side by side.
  */
@@ -145,7 +151,9 @@ export function PhilosophyPage({ id, onSelect, onBack }: {
     [index, id, names, colors])
   const navigate = useNavigate()
   const prefill = useBuilderStore((s) => s.prefillFromPhilosophy)
-  const [sheet, setSheet] = useState<SheetId>(null)
+  const [about, setAbout] = useState(false)
+  const [measures, setMeasures] = useState(false)
+  const [method, setMethod] = useState<MethodPanel>(null)
   const phil = philosophies.find((p) => p.id === id)
   const ownFrameworks = useMemo(() => frameworks.filter((f) => f.source_philosophy === id), [frameworks, id])
 
@@ -171,6 +179,7 @@ export function PhilosophyPage({ id, onSelect, onBack }: {
   const spec = specs?.philosophies[doc.id]
   const primary = g.tracks.find((t) => t.id === g.primaryTrackId) ?? g.tracks[0]
   const phaseCount = g.tracks.reduce((n, t) => n + t.phases.length, 0)
+  const toggleMethod = (m: Exclude<MethodPanel, null>) => setMethod((cur) => (cur === m ? null : m))
 
   return (
     <div className="h-full overflow-y-auto">
@@ -191,7 +200,7 @@ export function PhilosophyPage({ id, onSelect, onBack }: {
               <h2 className="text-lg font-semibold leading-tight">{doc.name}</h2>
             </div>
             <div className="flex items-center gap-2">
-              <Button size="sm" variant="outline" onClick={() => setSheet('about')}>
+              <Button size="sm" variant={about ? 'secondary' : 'outline'} aria-expanded={about} onClick={() => setAbout((a) => !a)}>
                 <Info className="mr-1.5 size-3.5" /> About
               </Button>
               {phil && (
@@ -202,13 +211,31 @@ export function PhilosophyPage({ id, onSelect, onBack }: {
             </div>
           </div>
 
+          {about && (
+            <InlinePanel title="About" subtitle={doc.name} onClose={() => setAbout(false)}>
+              <div className="max-w-3xl space-y-3">
+                {doc.summary && <p className="text-xs leading-relaxed text-foreground/85">{doc.summary}</p>}
+                {(doc.models.intensity || doc.models.progression) && (
+                  <p className="text-[11px] text-muted-foreground">
+                    {doc.models.intensity && <>Intensity: {doc.models.intensity.toLowerCase()}. </>}
+                    {doc.models.progression && <>Progression: {doc.models.progression.toLowerCase()}.</>}
+                  </p>
+                )}
+                {doc.borrows.map((b) => (
+                  <p key={b.package} className="text-[11px] text-muted-foreground">
+                    <span className="text-foreground/90">Borrows from {b.label}.</span> {b.reason}
+                  </p>
+                ))}
+              </div>
+            </InlinePanel>
+          )}
           <div className="grid gap-1.5 grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))]">
             <StatTile icon={CalendarRange} value={range(g.weeks)} label="weeks" />
             <StatTile icon={CalendarDays} value={range(g.daysPerWeek)} label="days a week" />
             <StatTile icon={Timer} value={range(g.sessionMinutes, '′')} label="a session"
               title={g.longSessionMinutes ? `Long session ${g.longSessionMinutes} min` : undefined} />
             <StatTile icon={Target} label="level"><LevelPips levels={g.levels} /></StatTile>
-            <StatTile icon={Package} value={g.equipment.length} label="equipment" onClick={() => setSheet('equipment')}
+            <StatTile icon={Package} value={g.equipment.length} label="equipment"
               title={g.equipment.map((e) => e.name).join(', ')} />
             <StatTile icon={GitBranch} value={`${g.counts.tracks} · ${phaseCount}`} label="tracks · phases" />
           </div>
@@ -237,22 +264,56 @@ export function PhilosophyPage({ id, onSelect, onBack }: {
 
         <div className="grid gap-4 md:grid-cols-2">
           <PageSection title="Goals" icon={Target}>
-            <Goals doc={doc} onMeasures={() => setSheet('measures')} />
+            <Goals doc={doc} measuresOpen={measures} onMeasures={() => setMeasures((m) => !m)} />
           </PageSection>
           <PageSection title="Requirements" icon={Package}>
-            <Requirements doc={doc} onEquipment={() => setSheet('equipment')} />
+            <Requirements doc={doc} />
           </PageSection>
         </div>
+        {measures && spec && specs && (
+          <InlinePanel title="How progress is measured" subtitle={g.measures.headline ? `Progress is ${g.measures.headline.toLowerCase()}` : undefined}
+            accent={modalityHex(doc.accent)} onClose={() => setMeasures(false)}>
+            <PhilosophyMeasuresCard spec={spec} vocabulary={specs.vocabulary} accentHex={modalityHex(doc.accent)} />
+          </InlinePanel>
+        )}
 
         <PageSection title="The method" icon={BookOpen}>
           <div className="grid gap-1.5 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
             <StatTile icon={BookOpen} value={g.counts.rules || doc.principles.length}
-              label={g.counts.rules ? 'rules from the source' : 'principles'} onClick={() => setSheet('rules')} />
-            <StatTile icon={Library} value={g.counts.sources} label="sources" onClick={() => setSheet('about')} />
-            <StatTile icon={Sparkles} value={g.counts.inventions} label="app decisions" onClick={() => setSheet('rules')} />
-            <StatTile icon={CircleHelp} value={g.counts.open} label="not modelled yet" onClick={() => setSheet('rules')} />
-            {spec && <StatTile icon={Target} value={g.measures.signals} label="progress signals" onClick={() => setSheet('measures')} />}
+              label={g.counts.rules ? 'rules from the source' : 'principles'}
+              active={method === 'rules'} onClick={() => toggleMethod('rules')} />
+            <StatTile icon={Library} value={g.counts.sources} label="sources"
+              active={method === 'sources'} onClick={() => toggleMethod('sources')} />
+            <StatTile icon={Sparkles} value={g.counts.inventions} label="app decisions"
+              active={method === 'inventions'} onClick={() => toggleMethod('inventions')} />
+            <StatTile icon={CircleHelp} value={g.counts.open} label="not modelled yet"
+              active={method === 'open'} onClick={() => toggleMethod('open')} />
           </div>
+          {method && (
+            <InlinePanel key={method} onClose={() => setMethod(null)}
+              title={{ rules: g.counts.rules ? 'What it holds true' : 'Core principles', sources: 'Sources',
+                inventions: 'Where the app decides', open: 'Not modelled yet' }[method]}
+              subtitle={{ rules: g.counts.rules ? 'The method’s rules, each with the passage it rests on.' : undefined,
+                sources: undefined, inventions: 'What the sources leave open and the app had to settle.',
+                open: 'What the package does not program yet.' }[method]}>
+              {method === 'sources'
+                ? (
+                  <ul className="max-w-3xl space-y-1">
+                    {doc.sources.map((s) => (
+                      <li key={s.id ?? s.title} className="text-[11px] text-muted-foreground">
+                        {s.where?.startsWith('http')
+                          ? <a href={s.where} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 hover:text-foreground hover:underline">
+                              {s.title} <ExternalLink className="size-2.5" />
+                            </a>
+                          : s.title}
+                        {s.published && <span className="text-muted-foreground/60"> ({s.published.slice(0, 4)})</span>}
+                      </li>
+                    ))}
+                  </ul>
+                )
+                : <PhilosophyRules doc={doc} show={method} />}
+            </InlinePanel>
+          )}
         </PageSection>
 
         <PageSection title={`Sessions (${g.counts.sessions})`} icon={Package}>
@@ -267,61 +328,6 @@ export function PhilosophyPage({ id, onSelect, onBack }: {
             onSelect={onSelect} count={4} />
         </div>
       </div>
-
-      <Sheet open={sheet !== null} onOpenChange={(o) => !o && setSheet(null)}>
-        <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
-          <SheetHeader>
-            <SheetTitle>
-              {{ about: 'About', rules: 'What it holds true', measures: 'How progress is measured', equipment: 'Equipment' }[sheet ?? 'about']}
-            </SheetTitle>
-            <SheetDescription>{doc.name}</SheetDescription>
-          </SheetHeader>
-          <div className="space-y-4 px-4 pb-6">
-            {sheet === 'about' && (
-              <>
-                {doc.summary && <p className="text-xs leading-relaxed text-foreground/85">{doc.summary}</p>}
-                {(doc.models.intensity || doc.models.progression) && (
-                  <p className="text-[11px] text-muted-foreground">
-                    {doc.models.intensity && <>Intensity: {doc.models.intensity.toLowerCase()}. </>}
-                    {doc.models.progression && <>Progression: {doc.models.progression.toLowerCase()}.</>}
-                  </p>
-                )}
-                {doc.borrows.map((b) => (
-                  <p key={b.package} className="text-[11px] text-muted-foreground">
-                    <span className="text-foreground/90">Borrows from {b.label}.</span> {b.reason}
-                  </p>
-                ))}
-                {doc.sources.length > 0 && (
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">Sources</p>
-                    <ul className="space-y-0.5">
-                      {doc.sources.map((s) => (
-                        <li key={s.id ?? s.title} className="text-[11px] text-muted-foreground">
-                          {s.where?.startsWith('http')
-                            ? <a href={s.where} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 hover:text-foreground hover:underline">
-                                {s.title} <ExternalLink className="size-2.5" />
-                              </a>
-                            : s.title}
-                          {s.published && <span className="text-muted-foreground/60"> ({s.published.slice(0, 4)})</span>}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </>
-            )}
-            {sheet === 'rules' && <PhilosophyRules doc={doc} />}
-            {sheet === 'measures' && spec && specs && (
-              <PhilosophyMeasuresCard spec={spec} vocabulary={specs.vocabulary} accentHex={modalityHex(doc.accent)} />
-            )}
-            {sheet === 'equipment' && (
-              <ul className="space-y-1">
-                {doc.equipment.map((e) => <li key={e.id} className="text-xs text-muted-foreground">{e.name}</li>)}
-              </ul>
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
     </div>
   )
 }

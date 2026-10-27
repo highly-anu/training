@@ -1,11 +1,10 @@
 import { useState } from 'react'
 import { CalendarDays, CalendarRange, FlaskConical, Info, Repeat, Timer } from 'lucide-react'
 import type { DescribedPhase, DescribedTrack, GlancePhase, GlanceTrack, PhilosophyDescription } from '@/api/types'
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { PHASE_COLORS } from '@/lib/phaseColors'
 import { INTENSITY_BUCKETS } from '@/lib/hrZones'
 import { cn } from '@/lib/utils'
-import { IntensityBar, LevelPips, MixLegend, PhaseBar, WeekGlyph } from './Glance'
+import { InlinePanel, IntensityBar, LevelPips, MixLegend, PhaseBar, WeekGlyph } from './Glance'
 import { PhaseWeek } from './PhaseWeek'
 
 const LEVEL_WORDS: Record<string, string> = {
@@ -47,12 +46,13 @@ function TrackRow({ track, scale, selected, onSelect }: {
 }
 
 /** One phase as a card: its kind's colour, its weeks, its week as a glyph,
- *  how hard. The words are in the sheet it opens. */
-function PhaseCard({ phase, onOpen }: { phase: GlancePhase; onOpen: () => void }) {
+ *  how hard. The words open under the cards. */
+function PhaseCard({ phase, selected, onOpen }: { phase: GlancePhase; selected: boolean; onOpen: () => void }) {
   const c = PHASE_COLORS[phase.kind]
   return (
-    <button type="button" onClick={onOpen}
-      className="group flex flex-col items-stretch overflow-hidden rounded-md border border-border/50 bg-card/60 text-left transition-colors hover:border-primary/40">
+    <button type="button" onClick={onOpen} aria-expanded={selected}
+      className={cn('group flex flex-col items-stretch overflow-hidden rounded-md border bg-card/60 text-left transition-colors hover:border-primary/40',
+        selected ? 'border-primary/60 ring-1 ring-primary/30' : 'border-border/50')}>
       <div className="h-1" style={{ backgroundColor: c?.hex }} />
       <div className="flex flex-1 flex-col gap-2 p-2.5">
         <div className="flex items-baseline justify-between gap-2">
@@ -100,82 +100,58 @@ function IntensityLegend({ split }: { split: Record<string, number> }) {
   )
 }
 
-/** A phase in words, and its full week — on demand, in a sheet. */
-function PhaseSheet({ phase, track, onClose }: { phase: DescribedPhase | null; track: DescribedTrack; onClose: () => void }) {
-  const c = phase ? PHASE_COLORS[phase.kind] : undefined
+/** A phase in words, and its full week — opened in place under the cards. */
+function PhaseDetail({ phase, track, onClose }: { phase: DescribedPhase; track: DescribedTrack; onClose: () => void }) {
+  const c = PHASE_COLORS[phase.kind]
   return (
-    <Sheet open={!!phase} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-2xl">
-        {phase && (
-          <>
-            <SheetHeader>
-              <SheetTitle className={cn('flex items-baseline gap-2', c?.text)}>
-                {phase.name}
-                <span className="font-mono text-xs font-normal text-muted-foreground">{phase.weeks} weeks{phase.repeatable ? ', repeated' : ''}</span>
-              </SheetTitle>
-              <SheetDescription>{track.name}{phase.focus ? ` — ${phase.focus}` : ''}</SheetDescription>
-            </SheetHeader>
-            <div className="space-y-5 px-4 pb-6">
-              <PhaseWeek key={phase.id} week={phase.week} />
-              {phase.description && <p className="text-xs leading-relaxed text-muted-foreground">{phase.description}</p>}
-              <div className="grid gap-4 sm:grid-cols-2">
-                {phase.adaptations.length > 0 && (
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">What it builds</p>
-                    <ul className="space-y-0.5">
-                      {phase.adaptations.map((a) => (
-                        <li key={a} className="flex gap-1.5 text-[11px] text-muted-foreground"><span style={{ color: c?.hex }}>·</span>{a}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                <div className="space-y-1.5">
-                  <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">How hard</p>
-                  {phase.intensity && <p className="text-[11px] text-muted-foreground">{phase.intensity}</p>}
-                  <IntensityBar split={phase.intensitySplit} />
-                  <IntensityLegend split={phase.intensitySplit} />
-                  {phase.deload && <p className="text-[10px] text-muted-foreground">{phase.deload}</p>}
-                </div>
-              </div>
-              {(phase.tests.length > 0 || phase.notYet.length > 0) && (
-                <div className="space-y-1 text-[11px] text-muted-foreground">
-                  {phase.tests.map((t, i) => (
-                    <p key={i} className="flex gap-1.5">
-                      <FlaskConical className="mt-0.5 size-3 shrink-0" />
-                      <span><span className="font-medium text-foreground/90">{t.when}:</span> {t.sessions.join(', ')}
-                        {t.standards.length > 0 && <> — {t.standards.join(', ')}</>}</span>
-                    </p>
-                  ))}
-                  {phase.notYet.length > 0 && <p>Not yet in this phase: {phase.notYet.join(', ')}.</p>}
-                </div>
-              )}
+    <InlinePanel accent={c?.hex} onClose={onClose}
+      title={<span className={cn('flex items-baseline gap-2', c?.text)}>
+        {phase.name}
+        <span className="font-mono text-xs font-normal text-muted-foreground">{phase.weeks} weeks{phase.repeatable ? ', repeated' : ''}</span>
+      </span>}
+      subtitle={`${track.name}${phase.focus ? ` — ${phase.focus}` : ''}`}>
+      <div className="space-y-5">
+        <PhaseWeek key={phase.id} week={phase.week} />
+        {phase.description && <p className="max-w-3xl text-xs leading-relaxed text-muted-foreground">{phase.description}</p>}
+        <div className="grid gap-4 sm:grid-cols-2">
+          {phase.adaptations.length > 0 && (
+            <div className="space-y-1">
+              <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">What it builds</p>
+              <ul className="space-y-0.5">
+                {phase.adaptations.map((a) => (
+                  <li key={a} className="flex gap-1.5 text-[11px] text-muted-foreground"><span style={{ color: c?.hex }}>·</span>{a}</li>
+                ))}
+              </ul>
             </div>
-          </>
-        )}
-      </SheetContent>
-    </Sheet>
-  )
-}
-
-function TrackSheet({ track, open, onClose }: { track: DescribedTrack; open: boolean; onClose: () => void }) {
-  return (
-    <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
-        <SheetHeader>
-          <SheetTitle>{track.name}</SheetTitle>
-          <SheetDescription>{track.weeks} weeks · {track.phases.length} phase{track.phases.length === 1 ? '' : 's'}</SheetDescription>
-        </SheetHeader>
-        <div className="space-y-3 px-4 pb-6 text-xs leading-relaxed text-muted-foreground">
-          {track.description && <p>{track.description}</p>}
-          {track.notes && <p className="rounded-md border border-border/40 bg-muted/30 px-3 py-2">{track.notes}</p>}
+          )}
+          <div className="space-y-1.5">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">How hard</p>
+            {phase.intensity && <p className="text-[11px] text-muted-foreground">{phase.intensity}</p>}
+            <IntensityBar split={phase.intensitySplit} />
+            <IntensityLegend split={phase.intensitySplit} />
+            {phase.deload && <p className="text-[10px] text-muted-foreground">{phase.deload}</p>}
+          </div>
         </div>
-      </SheetContent>
-    </Sheet>
+        {(phase.tests.length > 0 || phase.notYet.length > 0) && (
+          <div className="space-y-1 text-[11px] text-muted-foreground">
+            {phase.tests.map((t, i) => (
+              <p key={i} className="flex gap-1.5">
+                <FlaskConical className="mt-0.5 size-3 shrink-0" />
+                <span><span className="font-medium text-foreground/90">{t.when}:</span> {t.sessions.join(', ')}
+                  {t.standards.length > 0 && <> — {t.standards.join(', ')}</>}</span>
+              </p>
+            ))}
+            {phase.notYet.length > 0 && <p>Not yet in this phase: {phase.notYet.join(', ')}.</p>}
+          </div>
+        )}
+      </div>
+    </InlinePanel>
   )
 }
 
 /** How the philosophy runs: every track as a row on one week scale, the
- *  chosen track's phases as cards, a phase's words and week in a sheet. */
+ *  chosen track's phases as cards; a phase's words and week open in place
+ *  under the cards, the track's own words under its header. */
 export function PhilosophyTracks({ doc }: { doc: PhilosophyDescription }) {
   const tracks = doc.glance.tracks
   const [trackId, setTrackId] = useState(doc.glance.primaryTrackId ?? tracks[0]?.id)
@@ -185,6 +161,7 @@ export function PhilosophyTracks({ doc }: { doc: PhilosophyDescription }) {
   const detail = doc.tracks.find((t) => t.id === track?.id)
   if (!track || !detail) return null
   const scale = Math.max(...tracks.map((t) => t.weeks), 1)
+  const openPhase = detail.phases.find((p) => p.id === phaseId)
 
   return (
     <div className="space-y-3">
@@ -198,7 +175,7 @@ export function PhilosophyTracks({ doc }: { doc: PhilosophyDescription }) {
         </div>
         {tracks.map((t) => (
           <TrackRow key={t.id} track={t} scale={scale} selected={t.id === track.id}
-            onSelect={() => { setTrackId(t.id); setPhaseId(null) }} />
+            onSelect={() => { setTrackId(t.id); setPhaseId(null); setAboutTrack(false) }} />
         ))}
       </div>
 
@@ -207,18 +184,30 @@ export function PhilosophyTracks({ doc }: { doc: PhilosophyDescription }) {
           {track.name} — {track.phases.length > 1 ? `${track.phases.length} phases` : 'one phase'}
         </p>
         {(detail.description || detail.notes) && (
-          <button type="button" onClick={() => setAboutTrack(true)}
-            className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground">
+          <button type="button" onClick={() => setAboutTrack((o) => !o)} aria-expanded={aboutTrack}
+            className={cn('inline-flex items-center gap-1 text-[11px] hover:text-foreground',
+              aboutTrack ? 'text-foreground' : 'text-muted-foreground')}>
             <Info className="size-3" /> About this track
           </button>
         )}
       </div>
+      {aboutTrack && (
+        <InlinePanel title={detail.name} subtitle={`${detail.weeks} weeks · ${detail.phases.length} phase${detail.phases.length === 1 ? '' : 's'}`}
+          onClose={() => setAboutTrack(false)}>
+          <div className="max-w-3xl space-y-3 text-xs leading-relaxed text-muted-foreground">
+            {detail.description && <p>{detail.description}</p>}
+            {detail.notes && <p className="rounded-md border border-border/40 bg-muted/30 px-3 py-2">{detail.notes}</p>}
+          </div>
+        </InlinePanel>
+      )}
       <div className="grid gap-2 grid-cols-[repeat(auto-fill,minmax(10.5rem,1fr))]">
-        {track.phases.map((p) => <PhaseCard key={p.id} phase={p} onOpen={() => setPhaseId(p.id)} />)}
+        {track.phases.map((p) => (
+          <PhaseCard key={p.id} phase={p} selected={p.id === phaseId}
+            onOpen={() => setPhaseId((cur) => (cur === p.id ? null : p.id))} />
+        ))}
       </div>
 
-      <PhaseSheet phase={detail.phases.find((p) => p.id === phaseId) ?? null} track={detail} onClose={() => setPhaseId(null)} />
-      <TrackSheet track={detail} open={aboutTrack} onClose={() => setAboutTrack(false)} />
+      {openPhase && <PhaseDetail phase={openPhase} track={detail} onClose={() => setPhaseId(null)} />}
     </div>
   )
 }

@@ -1,4 +1,5 @@
-import { createElement } from 'react'
+import { createElement, useEffect, useRef } from 'react'
+import { X } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { DescribedMix, GlancePhase, TrainingLevel } from '@/api/types'
 import { INTENSITY_BUCKETS } from '@/lib/hrZones'
@@ -33,9 +34,9 @@ export function LevelPips({ levels, className }: { levels: TrainingLevel[]; clas
 }
 
 /** An icon, a number, a small label. */
-export function StatTile({ icon: Icon, value, label, title, children, onClick }: {
+export function StatTile({ icon: Icon, value, label, title, children, onClick, active = false }: {
   icon: LucideIcon; value?: React.ReactNode; label: string; title?: string; children?: React.ReactNode
-  onClick?: () => void
+  onClick?: () => void; active?: boolean
 }) {
   const body = (
     <>
@@ -48,7 +49,9 @@ export function StatTile({ icon: Icon, value, label, title, children, onClick }:
   )
   const cls = 'flex items-center gap-2 rounded-md border border-border/50 bg-card/60 px-2.5 py-2 text-left'
   return onClick
-    ? <button type="button" onClick={onClick} title={title} className={cn(cls, 'hover:border-primary/40 hover:bg-muted/30 transition-colors')}>{body}</button>
+    ? <button type="button" onClick={onClick} title={title} aria-expanded={active}
+        className={cn(cls, 'hover:border-primary/40 hover:bg-muted/30 transition-colors',
+          active && 'border-primary/50 bg-primary/10')}>{body}</button>
     : <div title={title} className={cls}>{body}</div>
 }
 
@@ -133,6 +136,36 @@ export function IntensityBar({ split, className }: { split: Record<string, numbe
       aria-label={rows.map((b) => `${b.label} ${Math.round(b.pct * 100)}%`).join(', ')}>
       {rows.map((b) => <div key={b.key} style={{ width: `${b.pct * 100}%`, backgroundColor: b.color }}
         title={`${b.label} ${Math.round(b.pct * 100)}%`} />)}
+    </div>
+  )
+}
+
+/** Detail opened in place, right under what was clicked — never a drawer at
+ *  the edge of the screen, so the eye stays where it was. `accent` is the
+ *  axis colour of what opened it (a phase kind, a modality); the panel scrolls
+ *  itself into view only as far as it must. */
+export function InlinePanel({ title, subtitle, accent, onClose, children }: {
+  title: React.ReactNode; subtitle?: React.ReactNode; accent?: string; onClose: () => void; children: React.ReactNode
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    ref.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' })
+  }, [])
+  return (
+    <div ref={ref} role="region" aria-label={typeof title === 'string' ? title : undefined}
+      className="overflow-hidden rounded-lg border border-border/60 bg-card/70 animate-in fade-in-0 slide-in-from-top-1 duration-200">
+      {accent && <div className="h-0.5" style={{ backgroundColor: accent }} />}
+      <div className="flex items-start justify-between gap-3 px-4 pt-3">
+        <div className="min-w-0">
+          <div className="text-sm font-semibold">{title}</div>
+          {subtitle && <div className="text-[11px] text-muted-foreground">{subtitle}</div>}
+        </div>
+        <button type="button" onClick={onClose} aria-label="Close"
+          className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground">
+          <X className="size-3.5" />
+        </button>
+      </div>
+      <div className="px-4 pb-4 pt-3">{children}</div>
     </div>
   )
 }

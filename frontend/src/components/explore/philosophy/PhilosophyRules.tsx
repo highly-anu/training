@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronRight, Quote } from 'lucide-react'
+import { ChevronDown, Quote } from 'lucide-react'
 import type { PhilosophyDescription } from '@/api/types'
 
 const SHOWN = 6
@@ -30,30 +30,33 @@ function Rule({ rule }: { rule: PhilosophyDescription['rules'][number] }) {
   )
 }
 
-function Disclosure({ label, children }: { label: string; children: React.ReactNode }) {
-  const [open, setOpen] = useState(false)
-  return (
-    <div>
-      <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open}
-        className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground">
-        {open ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
-        {label}
-      </button>
-      {open && <div className="mt-1.5 pl-4">{children}</div>}
-    </div>
-  )
-}
-
 /**
  * What the method holds true, in its own words: the rules of the package's
- * fidelity record, each with the passage it rests on; then, said as plainly,
- * where the app had to decide (inventions) and what it does not model yet.
- * A package without a record shows its core principles.
+ * fidelity record, each with the passage it rests on (`show="rules"`); where
+ * the app had to decide (`inventions`); what it does not model yet (`open`).
+ * A package without a record shows its core principles for its rules.
  */
-export function PhilosophyRules({ doc }: { doc: PhilosophyDescription }) {
+export function PhilosophyRules({ doc, show }: { doc: PhilosophyDescription; show: 'rules' | 'inventions' | 'open' }) {
   const [all, setAll] = useState(false)
+  if (show === 'inventions') {
+    return (
+      <ul className="max-w-3xl space-y-1.5">
+        {doc.inventions.map((i) => (
+          <li key={i.id} className="text-[11px] leading-relaxed text-muted-foreground">
+            <span className="font-mono text-[9px] text-muted-foreground/60">{i.id}</span> {i.text}
+          </li>
+        ))}
+      </ul>
+    )
+  }
+  if (show === 'open') {
+    return (
+      <ul className="max-w-3xl space-y-1.5">
+        {doc.open.map((o) => <li key={o} className="text-[11px] leading-relaxed text-muted-foreground">· {o}</li>)}
+      </ul>
+    )
+  }
   if (!doc.rules.length) {
-    if (!doc.principles.length) return null
     return (
       <ul className="space-y-0.5">
         {doc.principles.map((p) => <li key={p} className="text-[11px] text-muted-foreground">· {p}</li>)}
@@ -62,8 +65,8 @@ export function PhilosophyRules({ doc }: { doc: PhilosophyDescription }) {
   }
   const rules = all ? doc.rules : doc.rules.slice(0, SHOWN)
   return (
-    <div className="space-y-3">
-      <ul className="space-y-1.5">
+    <div className="space-y-2">
+      <ul className="grid items-start gap-1.5 lg:grid-cols-2">
         {rules.map((r) => <Rule key={r.id} rule={r} />)}
       </ul>
       {doc.rules.length > SHOWN && (
@@ -72,26 +75,6 @@ export function PhilosophyRules({ doc }: { doc: PhilosophyDescription }) {
           {all ? 'Show fewer' : `Show all ${doc.rules.length} rules`}
         </button>
       )}
-      <div className="space-y-1.5">
-        {doc.inventions.length > 0 && (
-          <Disclosure label={`Where the app decides (${doc.inventions.length})`}>
-            <ul className="space-y-1">
-              {doc.inventions.map((i) => (
-                <li key={i.id} className="text-[10px] leading-relaxed text-muted-foreground">
-                  <span className="font-mono text-muted-foreground/60">{i.id}</span> {i.text}
-                </li>
-              ))}
-            </ul>
-          </Disclosure>
-        )}
-        {doc.open.length > 0 && (
-          <Disclosure label={`Not modelled yet (${doc.open.length})`}>
-            <ul className="space-y-1">
-              {doc.open.map((o) => <li key={o} className="text-[10px] leading-relaxed text-muted-foreground">· {o}</li>)}
-            </ul>
-          </Disclosure>
-        )}
-      </div>
     </div>
   )
 }
