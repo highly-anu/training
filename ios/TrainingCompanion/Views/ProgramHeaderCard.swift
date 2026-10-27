@@ -40,6 +40,7 @@ struct ProgramHeaderCard<Footer: View>: View {
     @ViewBuilder let footer: () -> Footer
 
     @State private var sheet: PhilosophyCard?
+    @EnvironmentObject private var appState: AppState
 
     var body: some View {
         AnalyticsCard(header: "Program") {
@@ -62,7 +63,7 @@ struct ProgramHeaderCard<Footer: View>: View {
                 footer()
             }
         }
-        .sheet(item: $sheet) { PhilosophyDetailSheet(philosophy: $0) }
+        .sheet(item: $sheet) { PhilosophyDetailSheet(philosophy: $0, compareWith: appState.philosophies) }
     }
 
     private func phaseRow(_ phase: Phase) -> some View {

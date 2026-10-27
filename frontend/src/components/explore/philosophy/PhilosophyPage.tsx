@@ -1,10 +1,13 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  BookOpen, CalendarDays, CalendarRange, ChevronLeft, CircleHelp, ExternalLink, FlaskConical, GitBranch, Info,
+  BookOpen, CalendarDays, CalendarRange, ChevronLeft, CircleHelp, Columns3, ExternalLink, FlaskConical, GitBranch, Info,
   Library, Loader2, Package, Sparkles, Target, Timer, Wand2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { useSimilarity } from '@/api/similarity'
+import { nearestTo } from '@/components/explore/compare/compareIds'
 import { usePhilosophies } from '@/api/philosophies'
 import { useFrameworks } from '@/api/frameworks'
 import { useAnalyticsSpecs } from '@/api/analyticsSpecs'
@@ -139,13 +142,14 @@ function Requirements({ doc }: { doc: PhilosophyDescription }) {
  * (GET /philosophies/<id>/describe), the same keys for every philosophy, so a
  * comparison can set two side by side.
  */
-export function PhilosophyPage({ id, onSelect, onBack }: {
-  id: string; onSelect: (id: string) => void; onBack?: () => void
+export function PhilosophyPage({ id, onSelect, onCompare, onBack }: {
+  id: string; onSelect: (id: string) => void; onCompare?: (ids: string[]) => void; onBack?: () => void
 }) {
   const { data: doc, isLoading, error } = usePhilosophyDescription(id)
   const { data: philosophies = [] } = usePhilosophies()
   const { data: frameworks = [] } = useFrameworks()
   const { data: specs } = useAnalyticsSpecs()
+  const { data: matrix } = useSimilarity()
   const { index, names, colors } = useLinkIndex()
   const lineage = useMemo(() => (index ? lineageOf(index, 'philosophies', id, names, colors) : null),
     [index, id, names, colors])
@@ -203,6 +207,22 @@ export function PhilosophyPage({ id, onSelect, onBack }: {
               <Button size="sm" variant={about ? 'secondary' : 'outline'} aria-expanded={about} onClick={() => setAbout((a) => !a)}>
                 <Info className="mr-1.5 size-3.5" /> About
               </Button>
+              {onCompare && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button size="sm" variant="outline"><Columns3 className="mr-1.5 size-3.5" /> Compare with…</Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-64 p-1">
+                    <p className="px-2 py-1 text-[10px] text-muted-foreground">Most alike first</p>
+                    {nearestTo([doc.id], philosophies.map((p) => p.id), matrix?.['philosophies']).map((pid) => (
+                      <button key={pid} type="button" onClick={() => onCompare([doc.id, pid])}
+                        className="block w-full truncate rounded px-2 py-1 text-left text-xs hover:bg-muted">
+                        {philosophies.find((p) => p.id === pid)?.name ?? pid}
+                      </button>
+                    ))}
+                  </PopoverContent>
+                </Popover>
+              )}
               {phil && (
                 <Button size="sm" onClick={() => { prefill(phil, ownFrameworks); navigate('/program/new') }}>
                   <Wand2 className="mr-1.5 size-3.5" /> Build a program
@@ -325,7 +345,7 @@ export function PhilosophyPage({ id, onSelect, onBack }: {
             emptyDown="It runs no framework." />
           <SimilarItems category="philosophies" id={doc.id}
             getLabel={(pid) => philosophies.find((p) => p.id === pid)?.name ?? pid}
-            onSelect={onSelect} count={4} />
+            onSelect={onSelect} onCompare={onCompare && ((pid) => onCompare([doc.id, pid]))} count={4} />
         </div>
       </div>
     </div>

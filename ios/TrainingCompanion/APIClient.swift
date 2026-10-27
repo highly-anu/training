@@ -449,6 +449,24 @@ final class APIClient {
     /// The heavy comparison routes answer 429 while another run is in flight.
     struct Busy: Error {}
 
+    /// Two or three philosophies side by side (`GET /philosophies/compare`); static.
+    func fetchPhilosophyCompare(ids: [String]) async throws -> PhilosophyCompare {
+        let list = ids.joined(separator: ",").addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        return try JSONDecoder().decode(PhilosophyCompare.self, from: try await get("/philosophies/compare?ids=\(list)"))
+    }
+
+    /// One philosophy's track generated on the athlete's profile, never saved
+    /// (`POST /philosophies/<id>/for-me`; a heavy run, 429 → `Busy`).
+    func philosophyForMe(id: String, trackId: String?) async throws -> PhilosophyForMe {
+        let body = try JSONSerialization.data(withJSONObject: trackId.map { ["track_id": $0] } ?? [:])
+        let (data, status) = try await postForStatus("/philosophies/\(id)/for-me", body: body)
+        if status == 429 { throw Busy() }
+        guard (200..<300).contains(status) else {
+            throw APIError.serverErrorDetail(status, Self.detail(from: data) ?? "Could not build it for you")
+        }
+        return try JSONDecoder().decode(PhilosophyForMe.self, from: data)
+    }
+
     /// The preview's Held back: `request` against the same program with
     /// nothing in the way (POST /programs/impact; several generations).
     func programImpact(_ request: GenerateProgramRequest) async throws -> ConstraintImpact {

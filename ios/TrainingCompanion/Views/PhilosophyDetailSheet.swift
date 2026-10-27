@@ -7,7 +7,10 @@ import SwiftUI
 /// builder, so the program the athlete was on had no way to explain itself.
 struct PhilosophyDetailSheet: View {
     let philosophy: PhilosophyCard
+    /// The others it can be set beside (design-system §6.42); none, no menu.
+    var compareWith: [PhilosophyCard] = []
     @Environment(\.dismiss) private var dismiss
+    @State private var comparing: String?
 
     var body: some View {
         NavigationStack {
@@ -58,6 +61,20 @@ struct PhilosophyDetailSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) { Button("Done") { dismiss() } }
+                if !compareWith.isEmpty {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Menu {
+                            ForEach(compareWith.filter { $0.id != philosophy.id }) { other in
+                                Button(other.name) { comparing = other.id }
+                            }
+                        } label: {
+                            Label("Compare with…", systemImage: "rectangle.split.3x1")
+                        }
+                    }
+                }
+            }
+            .navigationDestination(item: $comparing) { other in
+                PhilosophyCompareView(ids: [philosophy.id, other])
             }
         }
     }

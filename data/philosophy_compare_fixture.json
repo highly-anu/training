@@ -1,0 +1,1800 @@
+{
+ "compare": {
+  "ids": [
+   "uphill_athlete",
+   "gym_jones",
+   "horsemen_gpp"
+  ],
+  "philosophies": [
+   {
+    "id": "uphill_athlete",
+    "name": "Uphill Athlete — Steve House & Scott Johnston",
+    "accent": "aerobic_base",
+    "bias": [
+     "aerobic_base",
+     "strength_endurance"
+    ],
+    "levels": [
+     "intermediate",
+     "advanced",
+     "elite"
+    ],
+    "weeks": {
+     "min": 8,
+     "ideal": 29
+    },
+    "daysPerWeek": {
+     "min": 6,
+     "ideal": 6
+    },
+    "sessionMinutes": {
+     "min": 60,
+     "ideal": 360
+    },
+    "longSessionMinutes": null,
+    "equipment": [
+     {
+      "id": "box",
+      "name": "Box"
+     },
+     {
+      "id": "barbell",
+      "name": "Barbell"
+     },
+     {
+      "id": "rack",
+      "name": "Rack"
+     },
+     {
+      "id": "plates",
+      "name": "Plates"
+     },
+     {
+      "id": "kettlebell",
+      "name": "Kettlebell"
+     },
+     {
+      "id": "pull_up_bar",
+      "name": "Pull up bar"
+     }
+    ],
+    "primaryTrackId": "full_program",
+    "mix": [
+     {
+      "modality": "aerobic_base",
+      "perWeek": 3.14,
+      "share": 0.526
+     },
+     {
+      "modality": "max_strength",
+      "perWeek": 1.14,
+      "share": 0.191
+     },
+     {
+      "modality": "anaerobic_intervals",
+      "perWeek": 0.86,
+      "share": 0.145
+     },
+     {
+      "modality": "relative_strength",
+      "perWeek": 0.55,
+      "share": 0.092
+     },
+     {
+      "modality": "strength_endurance",
+      "perWeek": 0.28,
+      "share": 0.046
+     }
+    ],
+    "intensity": {
+     "zone1_2_pct": 0.707,
+     "zone3_pct": 0.045,
+     "max_effort_pct": 0.248
+    },
+    "tested": [],
+    "measures": {
+     "headline": "Aerobic volume",
+     "signals": 6,
+     "standards": [
+      {
+       "id": "run_1mile_minutes",
+       "name": "1-Mile Run (time in minutes)",
+       "domain": "anaerobic_intervals"
+      },
+      {
+       "id": "ruck_12mi_40lb_minutes",
+       "name": "12-Mile Ruck, 40 lb (time in minutes)",
+       "domain": "durability"
+      },
+      {
+       "id": "pack_vertical_ft_per_hour",
+       "name": "Pack Carry — Vertical Pace, 20 % BW (ft per hour)",
+       "domain": "aerobic_base"
+      }
+     ]
+    },
+    "counts": {
+     "tracks": 1,
+     "rules": 20,
+     "sources": 14,
+     "inventions": 11,
+     "open": 6,
+     "sessions": 6
+    },
+    "tracks": [
+     {
+      "id": "full_program",
+      "name": "Mountain Objective",
+      "primary": true,
+      "forLevels": [],
+      "levels": [
+       "intermediate",
+       "advanced",
+       "elite"
+      ],
+      "builtBy": "contract",
+      "weeks": 29,
+      "repeatable": false,
+      "kettlebellPair": false,
+      "requires": [],
+      "daysPerWeek": {
+       "min": 6,
+       "max": 6
+      },
+      "minutes": {
+       "min": 360,
+       "max": 360
+      },
+      "mix": [
+       {
+        "modality": "aerobic_base",
+        "perWeek": 3.14,
+        "share": 0.526
+       },
+       {
+        "modality": "max_strength",
+        "perWeek": 1.14,
+        "share": 0.191
+       },
+       {
+        "modality": "anaerobic_intervals",
+        "perWeek": 0.86,
+        "share": 0.145
+       },
+       {
+        "modality": "relative_strength",
+        "perWeek": 0.55,
+        "share": 0.092
+       },
+       {
+        "modality": "strength_endurance",
+        "perWeek": 0.28,
+        "share": 0.046
+       }
+      ],
+      "intensity": {
+       "zone1_2_pct": 0.707,
+       "zone3_pct": 0.045,
+       "max_effort_pct": 0.248
+      },
+      "tests": 0,
+      "goals": [
+       "Aerobic base below AeT",
+       "General strength",
+       "Aerobic capacity",
+       "Max strength",
+       "A rising aerobic threshold",
+       "Mountain-specific muscular endurance",
+       "Zone 3 durability",
+       "Fatigue dissipates while fitness is kept"
+      ],
+      "phases": [
+       {
+        "id": "transition",
+        "name": "Transition",
+        "kind": "transition",
+        "weeks": 8,
+        "repeatable": false,
+        "focus": "Aerobic re-entry and general strength",
+        "days": null,
+        "daysPerWeek": 6,
+        "minutes": 360,
+        "sessionsPerWeek": 6,
+        "mix": [
+         {
+          "modality": "aerobic_base",
+          "perWeek": 4,
+          "share": 0.667
+         },
+         {
+          "modality": "relative_strength",
+          "perWeek": 2,
+          "share": 0.333
+         }
+        ],
+        "intensitySplit": {
+         "zone1_2_pct": 0.75,
+         "zone3_pct": 0.0,
+         "zone4_5_pct": 0.0,
+         "max_effort_pct": 0.25
+        },
+        "tests": 0
+       },
+       {
+        "id": "base",
+        "name": "Base",
+        "kind": "base",
+        "weeks": 4,
+        "repeatable": false,
+        "focus": "Aerobic volume and max strength",
+        "days": null,
+        "daysPerWeek": 6,
+        "minutes": 360,
+        "sessionsPerWeek": 6,
+        "mix": [
+         {
+          "modality": "aerobic_base",
+          "perWeek": 4,
+          "share": 0.667
+         },
+         {
+          "modality": "max_strength",
+          "perWeek": 2,
+          "share": 0.333
+         }
+        ],
+        "intensitySplit": {
+         "zone1_2_pct": 0.75,
+         "zone3_pct": 0.0,
+         "zone4_5_pct": 0.0,
+         "max_effort_pct": 0.25
+        },
+        "tests": 0
+       },
+       {
+        "id": "base_intensity",
+        "name": "Base with Zone 3",
+        "kind": "base",
+        "weeks": 8,
+        "repeatable": false,
+        "focus": "Aerobic volume, a first Zone 3 session",
+        "days": null,
+        "daysPerWeek": 6,
+        "minutes": 360,
+        "sessionsPerWeek": 6,
+        "mix": [
+         {
+          "modality": "aerobic_base",
+          "perWeek": 3,
+          "share": 0.5
+         },
+         {
+          "modality": "max_strength",
+          "perWeek": 2,
+          "share": 0.333
+         },
+         {
+          "modality": "anaerobic_intervals",
+          "perWeek": 1,
+          "share": 0.167
+         }
+        ],
+        "intensitySplit": {
+         "zone1_2_pct": 0.7,
+         "zone3_pct": 0.05,
+         "zone4_5_pct": 0.0,
+         "max_effort_pct": 0.25
+        },
+        "tests": 0
+       },
+       {
+        "id": "specific",
+        "name": "Specific",
+        "kind": "specific",
+        "weeks": 8,
+        "repeatable": false,
+        "focus": "Muscular endurance and Zone 3",
+        "days": null,
+        "daysPerWeek": 6,
+        "minutes": 360,
+        "sessionsPerWeek": 6,
+        "mix": [
+         {
+          "modality": "aerobic_base",
+          "perWeek": 2,
+          "share": 0.333
+         },
+         {
+          "modality": "anaerobic_intervals",
+          "perWeek": 2,
+          "share": 0.333
+         },
+         {
+          "modality": "max_strength",
+          "perWeek": 1,
+          "share": 0.167
+         },
+         {
+          "modality": "strength_endurance",
+          "perWeek": 1,
+          "share": 0.167
+         }
+        ],
+        "intensitySplit": {
+         "zone1_2_pct": 0.65,
+         "zone3_pct": 0.1,
+         "zone4_5_pct": 0.0,
+         "max_effort_pct": 0.25
+        },
+        "tests": 0
+       },
+       {
+        "id": "taper",
+        "name": "Taper",
+        "kind": "taper",
+        "weeks": 1,
+        "repeatable": false,
+        "focus": "Arrive rested",
+        "days": null,
+        "daysPerWeek": 6,
+        "minutes": 360,
+        "sessionsPerWeek": 5,
+        "mix": [
+         {
+          "modality": "aerobic_base",
+          "perWeek": 3,
+          "share": 0.6
+         },
+         {
+          "modality": "anaerobic_intervals",
+          "perWeek": 1,
+          "share": 0.2
+         },
+         {
+          "modality": "max_strength",
+          "perWeek": 1,
+          "share": 0.2
+         }
+        ],
+        "intensitySplit": {
+         "zone1_2_pct": 0.7,
+         "zone3_pct": 0.1,
+         "zone4_5_pct": 0.0,
+         "max_effort_pct": 0.2
+        },
+        "tests": 0
+       }
+      ]
+     }
+    ],
+    "models": {
+     "intensity": "Polarized 80 20 uphill",
+     "progression": "Volume based"
+    }
+   },
+   {
+    "id": "gym_jones",
+    "name": "Gym Jones / Mark Twight",
+    "accent": "strength_endurance",
+    "bias": [
+     "strength_endurance",
+     "mixed_modal_conditioning",
+     "durability"
+    ],
+    "levels": [
+     "novice",
+     "intermediate",
+     "advanced",
+     "elite"
+    ],
+    "weeks": {
+     "min": 4,
+     "ideal": 4
+    },
+    "daysPerWeek": {
+     "min": 6,
+     "ideal": 6
+    },
+    "sessionMinutes": {
+     "min": 60,
+     "ideal": 120
+    },
+    "longSessionMinutes": null,
+    "equipment": [],
+    "primaryTrackId": "operator_fitness",
+    "mix": [
+     {
+      "modality": "aerobic_base",
+      "perWeek": 3.0,
+      "share": 0.5
+     },
+     {
+      "modality": "mixed_modal_conditioning",
+      "perWeek": 1.25,
+      "share": 0.208
+     },
+     {
+      "modality": "max_strength",
+      "perWeek": 1.0,
+      "share": 0.167
+     },
+     {
+      "modality": "anaerobic_intervals",
+      "perWeek": 0.5,
+      "share": 0.083
+     },
+     {
+      "modality": "strength_endurance",
+      "perWeek": 0.25,
+      "share": 0.042
+     }
+    ],
+    "intensity": {},
+    "tested": [],
+    "measures": {
+     "headline": "Days done as written",
+     "signals": 2,
+     "standards": [
+      {
+       "id": "row_2km_minutes",
+       "name": "2km Row (time in minutes)",
+       "domain": "anaerobic_intervals"
+      },
+      {
+       "id": "back_squat_bw_ratio",
+       "name": "Back Squat (bodyweight ratio)",
+       "domain": "max_strength"
+      },
+      {
+       "id": "deadlift_bw_ratio",
+       "name": "Deadlift (bodyweight ratio)",
+       "domain": "max_strength"
+      },
+      {
+       "id": "wod_murph_minutes",
+       "name": "Murph (time in minutes)",
+       "domain": "mixed_modal_conditioning"
+      }
+     ]
+    },
+    "counts": {
+     "tracks": 2,
+     "rules": 12,
+     "sources": 7,
+     "inventions": 6,
+     "open": 4,
+     "sessions": 48
+    },
+    "tracks": [
+     {
+      "id": "operator_fitness",
+      "name": "Operator Fitness",
+      "primary": true,
+      "forLevels": [
+       "intermediate",
+       "advanced",
+       "elite"
+      ],
+      "levels": [
+       "intermediate",
+       "advanced",
+       "elite"
+      ],
+      "builtBy": "template",
+      "weeks": 4,
+      "repeatable": true,
+      "kettlebellPair": false,
+      "requires": [],
+      "daysPerWeek": {
+       "min": 6.0,
+       "max": 6.0
+      },
+      "minutes": {
+       "min": 120,
+       "max": 120
+      },
+      "mix": [
+       {
+        "modality": "aerobic_base",
+        "perWeek": 3.0,
+        "share": 0.5
+       },
+       {
+        "modality": "mixed_modal_conditioning",
+        "perWeek": 1.25,
+        "share": 0.208
+       },
+       {
+        "modality": "max_strength",
+        "perWeek": 1.0,
+        "share": 0.167
+       },
+       {
+        "modality": "anaerobic_intervals",
+        "perWeek": 0.5,
+        "share": 0.083
+       },
+       {
+        "modality": "strength_endurance",
+        "perWeek": 0.25,
+        "share": 0.042
+       }
+      ],
+      "intensity": {},
+      "tests": 0,
+      "goals": [
+       "Strength, power endurance and endurance, evenly",
+       "Single-leg and core strength"
+      ],
+      "phases": [
+       {
+        "id": "foundation",
+        "name": "Foundation",
+        "kind": "base",
+        "weeks": 4,
+        "repeatable": true,
+        "focus": "Fit for whatever comes next",
+        "days": [
+         [
+          "max_strength"
+         ],
+         [
+          "aerobic_base"
+         ],
+         [
+          "mixed_modal_conditioning"
+         ],
+         [
+          "aerobic_base"
+         ],
+         [
+          "mixed_modal_conditioning"
+         ],
+         [
+          "aerobic_base"
+         ],
+         null
+        ],
+        "daysPerWeek": 6.0,
+        "minutes": 120,
+        "sessionsPerWeek": 6.0,
+        "mix": [
+         {
+          "modality": "aerobic_base",
+          "perWeek": 3.0,
+          "share": 0.5
+         },
+         {
+          "modality": "mixed_modal_conditioning",
+          "perWeek": 1.25,
+          "share": 0.208
+         },
+         {
+          "modality": "max_strength",
+          "perWeek": 1.0,
+          "share": 0.167
+         },
+         {
+          "modality": "anaerobic_intervals",
+          "perWeek": 0.5,
+          "share": 0.083
+         },
+         {
+          "modality": "strength_endurance",
+          "perWeek": 0.25,
+          "share": 0.042
+         }
+        ],
+        "intensitySplit": {},
+        "tests": 0
+       }
+      ]
+     },
+     {
+      "id": "soldier_of_steel",
+      "name": "Soldier of Steel",
+      "primary": false,
+      "forLevels": [
+       "novice"
+      ],
+      "levels": [
+       "novice",
+       "intermediate"
+      ],
+      "builtBy": "template",
+      "weeks": 4,
+      "repeatable": true,
+      "kettlebellPair": false,
+      "requires": [],
+      "daysPerWeek": {
+       "min": 6.0,
+       "max": 6.0
+      },
+      "minutes": {
+       "min": 120,
+       "max": 120
+      },
+      "mix": [
+       {
+        "modality": "aerobic_base",
+        "perWeek": 3.0,
+        "share": 0.5
+       },
+       {
+        "modality": "mixed_modal_conditioning",
+        "perWeek": 3.0,
+        "share": 0.5
+       }
+      ],
+      "intensity": {},
+      "tests": 0,
+      "goals": [
+       "Work tolerance",
+       "Power endurance and strength endurance",
+       "General endurance"
+      ],
+      "phases": [
+       {
+        "id": "soldier_of_steel",
+        "name": "Soldier of Steel",
+        "kind": "base",
+        "weeks": 4,
+        "repeatable": true,
+        "focus": "Fundamental movements and the habit of daily exercise",
+        "days": [
+         [
+          "mixed_modal_conditioning"
+         ],
+         [
+          "aerobic_base"
+         ],
+         [
+          "mixed_modal_conditioning"
+         ],
+         [
+          "aerobic_base"
+         ],
+         [
+          "mixed_modal_conditioning"
+         ],
+         [
+          "aerobic_base"
+         ],
+         null
+        ],
+        "daysPerWeek": 6.0,
+        "minutes": 120,
+        "sessionsPerWeek": 6.0,
+        "mix": [
+         {
+          "modality": "aerobic_base",
+          "perWeek": 3.0,
+          "share": 0.5
+         },
+         {
+          "modality": "mixed_modal_conditioning",
+          "perWeek": 3.0,
+          "share": 0.5
+         }
+        ],
+        "intensitySplit": {},
+        "tests": 0
+       }
+      ]
+     }
+    ],
+    "models": {
+     "intensity": null,
+     "progression": null
+    }
+   },
+   {
+    "id": "horsemen_gpp",
+    "name": "Horsemen GPP / SOF-Style Training",
+    "accent": "durability",
+    "bias": [
+     "durability",
+     "strength_endurance",
+     "mixed_modal_conditioning"
+    ],
+    "levels": [
+     "intermediate",
+     "advanced",
+     "elite"
+    ],
+    "weeks": {
+     "min": 12,
+     "ideal": 16
+    },
+    "daysPerWeek": {
+     "min": 4,
+     "ideal": 6
+    },
+    "sessionMinutes": {
+     "min": 60,
+     "ideal": 90
+    },
+    "longSessionMinutes": 120,
+    "equipment": [
+     {
+      "id": "barbell",
+      "name": "Barbell"
+     },
+     {
+      "id": "plates",
+      "name": "Plates"
+     },
+     {
+      "id": "kettlebell",
+      "name": "Kettlebell"
+     },
+     {
+      "id": "dumbbell",
+      "name": "Dumbbell"
+     },
+     {
+      "id": "sandbag",
+      "name": "Sandbag"
+     },
+     {
+      "id": "pull_up_bar",
+      "name": "Pull up bar"
+     },
+     {
+      "id": "rings",
+      "name": "Rings"
+     },
+     {
+      "id": "ghd",
+      "name": "Ghd"
+     },
+     {
+      "id": "rower",
+      "name": "Rower"
+     },
+     {
+      "id": "box",
+      "name": "Box"
+     },
+     {
+      "id": "medicine_ball",
+      "name": "Medicine ball"
+     },
+     {
+      "id": "sled",
+      "name": "Sled"
+     },
+     {
+      "id": "tire",
+      "name": "Tire"
+     },
+     {
+      "id": "rope",
+      "name": "Rope"
+     }
+    ],
+    "primaryTrackId": "four_month_macro",
+    "mix": [
+     {
+      "modality": "mixed_modal_conditioning",
+      "perWeek": 1.59,
+      "share": 0.266
+     },
+     {
+      "modality": "durability",
+      "perWeek": 1.53,
+      "share": 0.255
+     },
+     {
+      "modality": "aerobic_base",
+      "perWeek": 1.41,
+      "share": 0.234
+     },
+     {
+      "modality": "max_strength",
+      "perWeek": 1.06,
+      "share": 0.177
+     },
+     {
+      "modality": "strength_endurance",
+      "perWeek": 0.28,
+      "share": 0.047
+     },
+     {
+      "modality": "power",
+      "perWeek": 0.12,
+      "share": 0.021
+     }
+    ],
+    "intensity": {},
+    "tested": [
+     "Pull-ups (max unweighted reps)",
+     "PT Test — Sit-ups (reps in 3 min)",
+     "PT Test — Push-ups (reps in 3 min)",
+     "3-Mile Run (time in minutes)"
+    ],
+    "measures": {
+     "headline": "Strength",
+     "signals": 2,
+     "standards": [
+      {
+       "id": "run_3mile_minutes",
+       "name": "3-Mile Run (time in minutes)",
+       "domain": "aerobic_base"
+      },
+      {
+       "id": "bench_press_bw_ratio",
+       "name": "Bench Press (bodyweight ratio)",
+       "domain": "max_strength"
+      },
+      {
+       "id": "deadlift_bw_ratio",
+       "name": "Deadlift (bodyweight ratio)",
+       "domain": "max_strength"
+      },
+      {
+       "id": "run_5mile_minutes",
+       "name": "PT Test II — 5-Mile Run (time in minutes)",
+       "domain": "aerobic_base"
+      },
+      {
+       "id": "bench_press_bodyweight_reps",
+       "name": "PT Test II — Bench Press at Bodyweight (reps)",
+       "domain": "strength_endurance"
+      },
+      {
+       "id": "pull_ups_weighted_25lb_reps",
+       "name": "PT Test II — Pull-ups with 25 lb (reps)",
+       "domain": "relative_strength"
+      },
+      {
+       "id": "swim_800m_minutes",
+       "name": "PT Test — 800 m Swim (time in minutes)",
+       "domain": "aerobic_base"
+      },
+      {
+       "id": "pt_push_ups_3min_reps",
+       "name": "PT Test — Push-ups (reps in 3 min)",
+       "domain": "strength_endurance"
+      },
+      {
+       "id": "pt_sit_ups_3min_reps",
+       "name": "PT Test — Sit-ups (reps in 3 min)",
+       "domain": "strength_endurance"
+      },
+      {
+       "id": "pull_up_reps",
+       "name": "Pull-ups (max unweighted reps)",
+       "domain": "relative_strength"
+      },
+      {
+       "id": "ssst_reps",
+       "name": "Secret Service Snatch Test (SSST) — Reps in 10 Minutes",
+       "domain": "strength_endurance"
+      },
+      {
+       "id": "strict_press_bw_ratio",
+       "name": "Strict Press (bodyweight ratio)",
+       "domain": "max_strength"
+      },
+      {
+       "id": "run_1mile_minutes",
+       "name": "1-Mile Run (time in minutes)",
+       "domain": "anaerobic_intervals"
+      },
+      {
+       "id": "row_2km_minutes",
+       "name": "2km Row (time in minutes)",
+       "domain": "anaerobic_intervals"
+      },
+      {
+       "id": "power_clean_bw_ratio",
+       "name": "Power Clean (bodyweight ratio)",
+       "domain": "power"
+      },
+      {
+       "id": "pull_up_weighted_bw_ratio",
+       "name": "Weighted Pull-up 1RM (added load as BW ratio)",
+       "domain": "relative_strength"
+      }
+     ]
+    },
+    "counts": {
+     "tracks": 1,
+     "rules": 9,
+     "sources": 1,
+     "inventions": 1,
+     "open": 3,
+     "sessions": 196
+    },
+    "tracks": [
+     {
+      "id": "four_month_macro",
+      "name": "4-Month Macro",
+      "primary": true,
+      "forLevels": [],
+      "levels": [
+       "intermediate",
+       "advanced",
+       "elite"
+      ],
+      "builtBy": "template",
+      "weeks": 16,
+      "repeatable": false,
+      "kettlebellPair": false,
+      "requires": [],
+      "daysPerWeek": {
+       "min": 6.0,
+       "max": 6.0
+      },
+      "minutes": {
+       "min": 90,
+       "max": 90
+      },
+      "mix": [
+       {
+        "modality": "mixed_modal_conditioning",
+        "perWeek": 1.59,
+        "share": 0.266
+       },
+       {
+        "modality": "durability",
+        "perWeek": 1.53,
+        "share": 0.255
+       },
+       {
+        "modality": "aerobic_base",
+        "perWeek": 1.41,
+        "share": 0.234
+       },
+       {
+        "modality": "max_strength",
+        "perWeek": 1.06,
+        "share": 0.177
+       },
+       {
+        "modality": "strength_endurance",
+        "perWeek": 0.28,
+        "share": 0.047
+       },
+       {
+        "modality": "power",
+        "perWeek": 0.12,
+        "share": 0.021
+       }
+      ],
+      "intensity": {},
+      "tests": 2,
+      "goals": [
+       "Maximal strength toward the bodyweight goals",
+       "Power endurance and job-specific capacity kept alongside it",
+       "Repeatable power under fatigue",
+       "Work capacity",
+       "Task-specific conditioning",
+       "Grip, climbing and load-carriage capacity",
+       "Retained strength and conditioning",
+       "Recovery"
+      ],
+      "phases": [
+       {
+        "id": "strength",
+        "name": "Strength",
+        "kind": "base",
+        "weeks": 4,
+        "repeatable": false,
+        "focus": "Strength-dominant month",
+        "days": [
+         [
+          "max_strength"
+         ],
+         [
+          "durability"
+         ],
+         [
+          "mixed_modal_conditioning"
+         ],
+         [
+          "strength_endurance"
+         ],
+         [
+          "max_strength"
+         ],
+         [
+          "aerobic_base"
+         ],
+         null
+        ],
+        "daysPerWeek": 6.0,
+        "minutes": 90,
+        "sessionsPerWeek": 6.0,
+        "mix": [
+         {
+          "modality": "max_strength",
+          "perWeek": 2.0,
+          "share": 0.333
+         },
+         {
+          "modality": "mixed_modal_conditioning",
+          "perWeek": 1.5,
+          "share": 0.25
+         },
+         {
+          "modality": "aerobic_base",
+          "perWeek": 1.0,
+          "share": 0.167
+         },
+         {
+          "modality": "durability",
+          "perWeek": 1.0,
+          "share": 0.167
+         },
+         {
+          "modality": "power",
+          "perWeek": 0.25,
+          "share": 0.042
+         },
+         {
+          "modality": "strength_endurance",
+          "perWeek": 0.25,
+          "share": 0.042
+         }
+        ],
+        "intensitySplit": {},
+        "tests": 1
+       },
+       {
+        "id": "power_endurance",
+        "name": "Power Endurance",
+        "kind": "build",
+        "weeks": 4,
+        "repeatable": false,
+        "focus": "Power-endurance month",
+        "days": [
+         [
+          "mixed_modal_conditioning"
+         ],
+         [
+          "durability"
+         ],
+         [
+          "max_strength"
+         ],
+         [
+          "mixed_modal_conditioning"
+         ],
+         [
+          "aerobic_base"
+         ],
+         [
+          "aerobic_base"
+         ],
+         null
+        ],
+        "daysPerWeek": 6.0,
+        "minutes": 90,
+        "sessionsPerWeek": 6.0,
+        "mix": [
+         {
+          "modality": "mixed_modal_conditioning",
+          "perWeek": 2.5,
+          "share": 0.417
+         },
+         {
+          "modality": "aerobic_base",
+          "perWeek": 1.12,
+          "share": 0.188
+         },
+         {
+          "modality": "durability",
+          "perWeek": 1.12,
+          "share": 0.188
+         },
+         {
+          "modality": "max_strength",
+          "perWeek": 0.75,
+          "share": 0.125
+         },
+         {
+          "modality": "power",
+          "perWeek": 0.25,
+          "share": 0.042
+         },
+         {
+          "modality": "strength_endurance",
+          "perWeek": 0.25,
+          "share": 0.042
+         }
+        ],
+        "intensitySplit": {},
+        "tests": 0
+       },
+       {
+        "id": "job_specific",
+        "name": "Job Specific",
+        "kind": "specific",
+        "weeks": 4,
+        "repeatable": false,
+        "focus": "Job-specific month",
+        "days": [
+         [
+          "durability"
+         ],
+         [
+          "max_strength"
+         ],
+         [
+          "durability"
+         ],
+         [
+          "mixed_modal_conditioning"
+         ],
+         [
+          "durability"
+         ],
+         [
+          "aerobic_base"
+         ],
+         null
+        ],
+        "daysPerWeek": 6.0,
+        "minutes": 90,
+        "sessionsPerWeek": 6.0,
+        "mix": [
+         {
+          "modality": "durability",
+          "perWeek": 3.0,
+          "share": 0.5
+         },
+         {
+          "modality": "aerobic_base",
+          "perWeek": 1.25,
+          "share": 0.208
+         },
+         {
+          "modality": "mixed_modal_conditioning",
+          "perWeek": 1.12,
+          "share": 0.188
+         },
+         {
+          "modality": "max_strength",
+          "perWeek": 0.5,
+          "share": 0.083
+         },
+         {
+          "modality": "strength_endurance",
+          "perWeek": 0.12,
+          "share": 0.021
+         }
+        ],
+        "intensitySplit": {},
+        "tests": 0
+       },
+       {
+        "id": "maintenance",
+        "name": "Maintenance",
+        "kind": "maintenance",
+        "weeks": 4,
+        "repeatable": false,
+        "focus": "Maintenance month",
+        "days": [
+         [
+          "mixed_modal_conditioning"
+         ],
+         [
+          "max_strength"
+         ],
+         [
+          "aerobic_base"
+         ],
+         [
+          "durability"
+         ],
+         [
+          "mixed_modal_conditioning"
+         ],
+         [
+          "aerobic_base"
+         ],
+         null
+        ],
+        "daysPerWeek": 6.0,
+        "minutes": 90,
+        "sessionsPerWeek": 6.0,
+        "mix": [
+         {
+          "modality": "aerobic_base",
+          "perWeek": 2.25,
+          "share": 0.375
+         },
+         {
+          "modality": "mixed_modal_conditioning",
+          "perWeek": 1.25,
+          "share": 0.208
+         },
+         {
+          "modality": "durability",
+          "perWeek": 1.0,
+          "share": 0.167
+         },
+         {
+          "modality": "max_strength",
+          "perWeek": 1.0,
+          "share": 0.167
+         },
+         {
+          "modality": "strength_endurance",
+          "perWeek": 0.5,
+          "share": 0.083
+         }
+        ],
+        "intensitySplit": {},
+        "tests": 1
+       }
+      ]
+     }
+    ],
+    "models": {
+     "intensity": "Block periodization",
+     "progression": "Load based"
+    }
+   }
+  ],
+  "scale": {
+   "trackWeeks": 29
+  },
+  "pairs": [
+   {
+    "a": "uphill_athlete",
+    "b": "gym_jones",
+    "score": 0.325,
+    "primary": {
+     "label": "Scope overlap",
+     "detail": "4 of 8 modalities shared",
+     "value": 0.5
+    },
+    "secondary": {
+     "label": "Training style",
+     "detail": "different training methodology",
+     "value": 0.0
+    }
+   },
+   {
+    "a": "uphill_athlete",
+    "b": "horsemen_gpp",
+    "score": 0.2438,
+    "primary": {
+     "label": "Scope overlap",
+     "detail": "3 of 8 modalities shared",
+     "value": 0.375
+    },
+    "secondary": {
+     "label": "Training style",
+     "detail": "different training methodology",
+     "value": 0.0
+    }
+   },
+   {
+    "a": "gym_jones",
+    "b": "horsemen_gpp",
+    "score": 0.5571,
+    "primary": {
+     "label": "Scope overlap",
+     "detail": "6 of 7 modalities shared",
+     "value": 0.8571
+    },
+    "secondary": {
+     "label": "Training style",
+     "detail": "different training methodology",
+     "value": 0.0
+    }
+   }
+  ],
+  "same": {
+   "weeks": false,
+   "daysPerWeek": true,
+   "sessionMinutes": false,
+   "levels": false,
+   "tracks": false,
+   "mix": false,
+   "intensity": false,
+   "intensityModel": false,
+   "progression": false,
+   "headline": false
+  },
+  "bias": {
+   "shared": [
+    "strength_endurance"
+   ],
+   "only": {
+    "uphill_athlete": [
+     "aerobic_base"
+    ],
+    "gym_jones": [],
+    "horsemen_gpp": []
+   },
+   "some": [
+    {
+     "item": "mixed_modal_conditioning",
+     "ids": [
+      "gym_jones",
+      "horsemen_gpp"
+     ]
+    },
+    {
+     "item": "durability",
+     "ids": [
+      "gym_jones",
+      "horsemen_gpp"
+     ]
+    }
+   ]
+  },
+  "equipment": {
+   "shared": [],
+   "only": {
+    "uphill_athlete": [
+     {
+      "id": "rack",
+      "name": "Rack"
+     }
+    ],
+    "gym_jones": [],
+    "horsemen_gpp": [
+     {
+      "id": "dumbbell",
+      "name": "Dumbbell"
+     },
+     {
+      "id": "sandbag",
+      "name": "Sandbag"
+     },
+     {
+      "id": "rings",
+      "name": "Rings"
+     },
+     {
+      "id": "ghd",
+      "name": "Ghd"
+     },
+     {
+      "id": "rower",
+      "name": "Rower"
+     },
+     {
+      "id": "medicine_ball",
+      "name": "Medicine ball"
+     },
+     {
+      "id": "sled",
+      "name": "Sled"
+     },
+     {
+      "id": "tire",
+      "name": "Tire"
+     },
+     {
+      "id": "rope",
+      "name": "Rope"
+     }
+    ]
+   },
+   "some": [
+    {
+     "item": {
+      "id": "box",
+      "name": "Box"
+     },
+     "ids": [
+      "uphill_athlete",
+      "horsemen_gpp"
+     ]
+    },
+    {
+     "item": {
+      "id": "barbell",
+      "name": "Barbell"
+     },
+     "ids": [
+      "uphill_athlete",
+      "horsemen_gpp"
+     ]
+    },
+    {
+     "item": {
+      "id": "plates",
+      "name": "Plates"
+     },
+     "ids": [
+      "uphill_athlete",
+      "horsemen_gpp"
+     ]
+    },
+    {
+     "item": {
+      "id": "kettlebell",
+      "name": "Kettlebell"
+     },
+     "ids": [
+      "uphill_athlete",
+      "horsemen_gpp"
+     ]
+    },
+    {
+     "item": {
+      "id": "pull_up_bar",
+      "name": "Pull up bar"
+     },
+     "ids": [
+      "uphill_athlete",
+      "horsemen_gpp"
+     ]
+    }
+   ]
+  },
+  "standards": {
+   "shared": [],
+   "only": {
+    "uphill_athlete": [
+     {
+      "id": "ruck_12mi_40lb_minutes",
+      "name": "12-Mile Ruck, 40 lb (time in minutes)",
+      "domain": "durability",
+      "tested": false
+     },
+     {
+      "id": "pack_vertical_ft_per_hour",
+      "name": "Pack Carry — Vertical Pace, 20 % BW (ft per hour)",
+      "domain": "aerobic_base",
+      "tested": false
+     }
+    ],
+    "gym_jones": [
+     {
+      "id": "back_squat_bw_ratio",
+      "name": "Back Squat (bodyweight ratio)",
+      "domain": "max_strength",
+      "tested": false
+     },
+     {
+      "id": "wod_murph_minutes",
+      "name": "Murph (time in minutes)",
+      "domain": "mixed_modal_conditioning",
+      "tested": false
+     }
+    ],
+    "horsemen_gpp": [
+     {
+      "id": "run_3mile_minutes",
+      "name": "3-Mile Run (time in minutes)",
+      "domain": "aerobic_base",
+      "tested": true
+     },
+     {
+      "id": "bench_press_bw_ratio",
+      "name": "Bench Press (bodyweight ratio)",
+      "domain": "max_strength",
+      "tested": false
+     },
+     {
+      "id": "run_5mile_minutes",
+      "name": "PT Test II — 5-Mile Run (time in minutes)",
+      "domain": "aerobic_base",
+      "tested": false
+     },
+     {
+      "id": "bench_press_bodyweight_reps",
+      "name": "PT Test II — Bench Press at Bodyweight (reps)",
+      "domain": "strength_endurance",
+      "tested": false
+     },
+     {
+      "id": "pull_ups_weighted_25lb_reps",
+      "name": "PT Test II — Pull-ups with 25 lb (reps)",
+      "domain": "relative_strength",
+      "tested": false
+     },
+     {
+      "id": "swim_800m_minutes",
+      "name": "PT Test — 800 m Swim (time in minutes)",
+      "domain": "aerobic_base",
+      "tested": false
+     },
+     {
+      "id": "pt_push_ups_3min_reps",
+      "name": "PT Test — Push-ups (reps in 3 min)",
+      "domain": "strength_endurance",
+      "tested": true
+     },
+     {
+      "id": "pt_sit_ups_3min_reps",
+      "name": "PT Test — Sit-ups (reps in 3 min)",
+      "domain": "strength_endurance",
+      "tested": true
+     },
+     {
+      "id": "pull_up_reps",
+      "name": "Pull-ups (max unweighted reps)",
+      "domain": "relative_strength",
+      "tested": true
+     },
+     {
+      "id": "ssst_reps",
+      "name": "Secret Service Snatch Test (SSST) — Reps in 10 Minutes",
+      "domain": "strength_endurance",
+      "tested": false
+     },
+     {
+      "id": "strict_press_bw_ratio",
+      "name": "Strict Press (bodyweight ratio)",
+      "domain": "max_strength",
+      "tested": false
+     },
+     {
+      "id": "power_clean_bw_ratio",
+      "name": "Power Clean (bodyweight ratio)",
+      "domain": "power",
+      "tested": false
+     },
+     {
+      "id": "pull_up_weighted_bw_ratio",
+      "name": "Weighted Pull-up 1RM (added load as BW ratio)",
+      "domain": "relative_strength",
+      "tested": false
+     }
+    ]
+   },
+   "some": [
+    {
+     "item": {
+      "id": "run_1mile_minutes",
+      "name": "1-Mile Run (time in minutes)",
+      "domain": "anaerobic_intervals",
+      "testedBy": []
+     },
+     "ids": [
+      "uphill_athlete",
+      "horsemen_gpp"
+     ]
+    },
+    {
+     "item": {
+      "id": "row_2km_minutes",
+      "name": "2km Row (time in minutes)",
+      "domain": "anaerobic_intervals",
+      "testedBy": []
+     },
+     "ids": [
+      "gym_jones",
+      "horsemen_gpp"
+     ]
+    },
+    {
+     "item": {
+      "id": "deadlift_bw_ratio",
+      "name": "Deadlift (bodyweight ratio)",
+      "domain": "max_strength",
+      "testedBy": []
+     },
+     "ids": [
+      "gym_jones",
+      "horsemen_gpp"
+     ]
+    }
+   ]
+  }
+ },
+ "forMe": {
+  "uphill_athlete": {
+   "id": "uphill_athlete",
+   "trackId": "full_program",
+   "trackName": "Mountain Objective",
+   "feasible": false,
+   "weeks": 0,
+   "ofWeeks": 29,
+   "trackWeeks": 29,
+   "assumed": [],
+   "missingEquipment": [
+    {
+     "id": "barbell",
+     "name": "Barbell"
+    },
+    {
+     "id": "box",
+     "name": "Box"
+    },
+    {
+     "id": "plates",
+     "name": "Plates"
+    },
+    {
+     "id": "rack",
+     "name": "Rack"
+    }
+   ],
+   "reasons": [
+    {
+     "code": "INSUFFICIENT_DAYS",
+     "message": "Framework 'Transition Phase (Uphill Athlete)' requires at least 6 days/week. Athlete has 4."
+    },
+    {
+     "code": "SCHEDULE_INSUFFICIENT_DAYS",
+     "message": "Your schedule provides 4 training day(s) but this program needs at least 6."
+    }
+   ]
+  },
+  "gym_jones": {
+   "id": "gym_jones",
+   "trackId": "operator_fitness",
+   "trackName": "Operator Fitness",
+   "feasible": false,
+   "weeks": 0,
+   "ofWeeks": 4,
+   "trackWeeks": 4,
+   "assumed": [],
+   "missingEquipment": [],
+   "reasons": [
+    {
+     "code": "INSUFFICIENT_DAYS",
+     "message": "Framework 'Operator Fitness (Gym Jones)' requires at least 6 days/week. Athlete has 4."
+    },
+    {
+     "code": "SCHEDULE_INSUFFICIENT_DAYS",
+     "message": "Your schedule provides 4 training day(s) but this program needs at least 6."
+    }
+   ]
+  },
+  "horsemen_gpp": {
+   "id": "horsemen_gpp",
+   "trackId": "four_month_macro",
+   "trackName": "4-Month Macro",
+   "feasible": true,
+   "weeks": 16,
+   "ofWeeks": 16,
+   "trackWeeks": 16,
+   "assumed": [],
+   "missingEquipment": [
+    {
+     "id": "barbell",
+     "name": "Barbell"
+    },
+    {
+     "id": "box",
+     "name": "Box"
+    },
+    {
+     "id": "dumbbell",
+     "name": "Dumbbell"
+    },
+    {
+     "id": "ghd",
+     "name": "Ghd"
+    },
+    {
+     "id": "medicine_ball",
+     "name": "Medicine ball"
+    },
+    {
+     "id": "plates",
+     "name": "Plates"
+    },
+    {
+     "id": "rings",
+     "name": "Rings"
+    },
+    {
+     "id": "rope",
+     "name": "Rope"
+    },
+    {
+     "id": "rower",
+     "name": "Rower"
+    },
+    {
+     "id": "sandbag",
+     "name": "Sandbag"
+    },
+    {
+     "id": "sled",
+     "name": "Sled"
+    },
+    {
+     "id": "tire",
+     "name": "Tire"
+    }
+   ],
+   "reasons": [],
+   "perWeek": {
+    "days": 4.0,
+    "sessions": 4.0,
+    "minutes": 198
+   },
+   "intensity": {
+    "zone1_2_pct": 0.02,
+    "zone3_pct": 0.699,
+    "zone4_5_pct": 0.0,
+    "max_effort_pct": 0.281
+   },
+   "mix": [
+    {
+     "modality": "durability",
+     "perWeek": 1.5
+    },
+    {
+     "modality": "mixed_modal_conditioning",
+     "perWeek": 1.2
+    },
+    {
+     "modality": "max_strength",
+     "perWeek": 1.1
+    },
+    {
+     "modality": "strength_endurance",
+     "perWeek": 0.1
+    },
+    {
+     "modality": "aerobic_base",
+     "perWeek": 0.1
+    }
+   ],
+   "heldBack": {
+    "slots": 0,
+    "sessions": 0
+   },
+   "skippedForEquipment": 124,
+   "sessionCount": 196,
+   "gaps": {
+    "sessions": 0,
+    "slots": 0,
+    "substituted": []
+   },
+   "tests": {
+    "placed": 2,
+    "skipped": []
+   },
+   "warnings": [
+    {
+     "code": "MINIMAL_DAYS",
+     "message": "Running at minimum 4 day(s)/week — lower-priority modalities will be dropped."
+    },
+    {
+     "code": "SCHEDULE_BELOW_IDEAL_DAYS",
+     "message": "Your schedule provides 4 day(s) (ideal: 6). Some modalities may be compressed or dropped."
+    }
+   ],
+   "phases": [
+    {
+     "id": "strength",
+     "name": "Strength",
+     "kind": "base",
+     "weeks": 4,
+     "sessions": 4.0,
+     "minutes": 184
+    },
+    {
+     "id": "power_endurance",
+     "name": "Power Endurance",
+     "kind": "build",
+     "weeks": 4,
+     "sessions": 4.0,
+     "minutes": 198
+    },
+    {
+     "id": "job_specific",
+     "name": "Job Specific",
+     "kind": "specific",
+     "weeks": 4,
+     "sessions": 4.0,
+     "minutes": 225
+    },
+    {
+     "id": "maintenance",
+     "name": "Maintenance",
+     "kind": "maintenance",
+     "weeks": 4,
+     "sessions": 3.9,
+     "minutes": 185
+    }
+   ]
+  }
+ }
+}

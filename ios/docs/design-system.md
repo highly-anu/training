@@ -2013,3 +2013,28 @@ replaced, on 2026-10-23, the measure cards' sparklines, `MeasureDetailView`'s
 chart, and the Exercises section with its `ExerciseHistoryView` screen
 (`/progression/exercises`, which stays for installed builds).
 
+### 6.42 Philosophy Comparison
+
+`Views/PhilosophyCompareView.swift`: two or three philosophies side by side, on the
+server's comparison (`GET /philosophies/compare`, `PhilosophyCompareModels.swift`) — the
+document the web's Explore ▸ Compare lays out (frontend-design §13.10). Pushed from the
+methodology sheet's **Compare with…** (§6.18; the builder's and Program's), presented from
+the builder's methodology step when two or three are picked (**Compare these 3**), and by
+`compare?ids=a,b[,c]`.
+
+- **Rows, not a grid**: each row is its label, then one cell per philosophy, equal widths,
+  so three fit a phone without scrolling sideways (§6.26's matrix scrolls; this one cannot
+  afford to hide a column). Sections: At a glance, Shape, Tracks & phases, Progress,
+  Requirements, For you, How alike.
+- **Column heads** carry the short name ("Uphill Athlete"; the full one to VoiceOver), the
+  bias icons and, with several tracks, a track menu.
+- **What every one shares** is one line above the row ("Both" / "All three"); a cell shows
+  only its own. **Only differences** hides the rows the server says read alike; such a row
+  says "same for all".
+- **Marks**: modality colour and icon (`ModalityStyle`, `Image(symbol:)` for the custom
+  ones), phase kind (`PhaseStyle`) on a strip as long as the track on one scale, the
+  heart-rate zone colours for easy → hard (§3.5), level pips uncoloured.
+- **For you** on request — **See what each gives you** — one column after another
+  (`POST /philosophies/<id>/for-me`, a 429 retried), each cell Waiting… → Generating… →
+  its answer; a refusal says "Not as you are" with the server's reasons.
+
