@@ -363,6 +363,19 @@ def _clean_exercise_assignment(ea: dict) -> dict:
     }
 
 
+def _lane_phase_summary(weeks: list, goal: dict | None) -> dict:
+    """A composed program's phase summary per track, as `{lane_phase_summary}`
+    to spread into a program; {} for one track."""
+    from src import phase_summary
+    if not (goal or {}).get('tracks'):
+        return {}
+    try:
+        return {'lane_phase_summary': phase_summary.build_lanes(weeks, goal)}
+    except Exception as err:
+        app.logger.warning('lane phase_summary failed: %s', err)
+        return {}
+
+
 def _phase_summary(weeks: list, goal: dict | None) -> list:
     """How sessions and exercises change phase to phase (src/phase_summary.py).
 
@@ -416,6 +429,11 @@ def _transform_program(raw: dict, goal: dict, constraints: dict, validation) -> 
                     # named workouts it does and the warm-up that opens it.
                     **{k: session[k] for k in ('category', 'category_name', 'pieces', 'warm_up', 'light')
                        if session.get(k)},
+                    # A composed program's track for this session, and its
+                    # phase and framework (src/composition.py); absent alone.
+                    **{k: session[k] for k in ('lane_key', 'track_id', 'phase', 'phase_id', 'framework',
+                                               'week_in_phase')
+                       if session.get('lane_key') and session.get(k) is not None},
                     'exercises': [
                         _clean_exercise_assignment(ea)
                         for ea in session.get('exercises', [])
@@ -435,7 +453,7 @@ def _transform_program(raw: dict, goal: dict, constraints: dict, validation) -> 
             'schedule':      named_schedule,
         }
         # The philosophy's own phase: id and display name, and the track.
-        for key in ('phase_id', 'phase_name', 'track_id', 'tests_skipped'):
+        for key in ('phase_id', 'phase_name', 'track_id', 'tests_skipped', 'lanes'):
             if wk.get(key):
                 week_out[key] = wk[key]
         weeks.append(week_out)
@@ -458,12 +476,13 @@ def _transform_program(raw: dict, goal: dict, constraints: dict, validation) -> 
         'weeks':          _session_icon.with_icons(weeks),
         'volume_summary': volume_summary,
         'phase_summary':  _phase_summary(weeks, goal),
+        **_lane_phase_summary(weeks, goal),
         # What the constraints held back, counted once for both clients
         # (src/blockers.held_back); derived from the weeks, never stored.
         'held_back':      _blockers.held_back(weeks),
         'compromises':    raw.get('compromises', []),
         'coverage_report': raw.get('coverage_report'),
-        **{k: raw[k] for k in ('training_contract', 'module_state') if k in raw},
+        **{k: raw[k] for k in ('training_contract', 'module_state', 'composition') if k in raw},
     }
 
 
@@ -856,6 +875,14 @@ def _goal_ids_from_body(body: dict, generated: dict) -> tuple[list, dict]:
     """Source philosophy ids + weights for an envelope, from the request if it
     carried them, else recovered from the generated goal's own id."""
     ids = body.get('philosophy_ids') or body.get('goal_ids') or []
+    if not ids and body.get('lanes'):
+        # A composition: each philosophy once, its tracks' weights summed.
+        weights: dict = {}
+        total = sum(float(l.get('weight', 1)) for l in body['lanes']) or 1.0
+        for lane in body['lanes']:
+            pid = lane.get('philosophy_id')
+            weights[pid] = weights.get(pid, 0.0) + float(lane.get('weight', 1)) / total
+        return list(weights), weights
     if not ids and (body.get('philosophy_id') or body.get('goal_id')):
         ids = [body.get('philosophy_id') or body['goal_id']]
     if not ids:
@@ -871,6 +898,19 @@ def _goal_ids_from_body(body: dict, generated: dict) -> tuple[list, dict]:
             ids = [goal_id[len('_phil_'):]]
     weights = body.get('philosophy_weights') or body.get('goal_weights') or {}
     return list(ids), dict(weights)
+
+
+def _composition_goal(current: dict) -> dict | None:
+    """A stored composition's goal, rebuilt from its tracks (src/composition.py)."""
+    lanes = (current.get('composition') or {}).get('lanes') or []
+    if len(lanes) < 2:
+        return None
+    from src import composition
+    constraints = current.get('constraints') or {}
+    specs = [{'philosophy_id': l['philosophy_id'], 'track_id': l['track_id'], 'weight': l.get('weight', 1)}
+             for l in lanes]
+    built = composition.build_lanes(specs, constraints, list(loader.load_all_frameworks().values()))
+    return composition.composition_goal(built)
 
 
 def _monday_of(day: _date) -> _date:
@@ -1114,12 +1154,24 @@ def _normalize_schedule_constraints(constraints: dict) -> dict:
 
 
 def _generate_program_inner(body):
+    lanes_body = body.get('lanes') or []
+    if len(lanes_body) == 1 and isinstance(lanes_body[0], dict):
+        # One track is a single-track request (src/composition.py never sees it).
+        lane = lanes_body[0]
+        body = {**{k: v for k, v in body.items() if k not in ('lanes', 'philosophy_ids', 'philosophy_weights')},
+                'philosophy_id': lane.get('philosophy_id'),
+                **({'track_id': lane['track_id']} if lane.get('track_id') else {}),
+                'constraints': {**(body.get('constraints') or {}),
+                                **{k: lane[k] for k in ('start_phase', 'periodization_week') if lane.get(k)}}}
+    elif not lanes_body and not body.get('philosophy_id') and len(set(body.get('philosophy_ids') or [])) == 1:
+        body = {**body, 'philosophy_id': body['philosophy_ids'][0]}
+        body.pop('philosophy_ids')
     philosophy_id = body.get('philosophy_id')
     philosophy_ids = body.get('philosophy_ids', [])
     philosophy_weights = body.get('philosophy_weights', {})
 
-    if not philosophy_id and not philosophy_ids:
-        return jsonify({'detail': 'philosophy_id or philosophy_ids is required'}), 400
+    if not philosophy_id and not philosophy_ids and not lanes_body:
+        return jsonify({'detail': 'philosophy_id, philosophy_ids or lanes is required'}), 400
 
     constraints = body.get('constraints', {})
 
@@ -1138,6 +1190,10 @@ def _generate_program_inner(body):
     # A 'base' default here is what kept Uphill from ever running Transition.
     constraints.setdefault('periodization_week', 1)
     constraints.setdefault('fatigue_state', 'normal')
+
+    if len(lanes_body) > 1 or (not philosophy_id and len(set(philosophy_ids)) > 1):
+        # Several tracks: one program composed from all of them.
+        return _generate_composition(body, constraints)
 
     blend_warnings: list[str] = []
 
@@ -1337,19 +1393,130 @@ def _generate_program_inner(body):
     return jsonify(result)
 
 
-def _stored_contract() -> str | None:
+def _generate_composition(body: dict, constraints: dict):
+    """`POST /programs/generate` for several tracks (src/composition.py): the
+    same request and answer as one track's, the weeks each track's sessions
+    tagged with it, and `composition` saying how the week was shared."""
+    from src import composition, training_contract, health_store
+    from src.validator import ValidationResult
+    all_frameworks = list(loader.load_all_frameworks().values())
+    try:
+        specs = composition.normalise_request(body, constraints)
+        lanes = composition.build_lanes(specs, constraints, all_frameworks)
+    except FileNotFoundError as e:
+        return jsonify({'detail': str(e)}), 404
+    except (PhaseResolutionError, composition.CompositionError, ContractError) as e:
+        return jsonify({'detail': str(e)}), 422
+    goal = composition.composition_goal(lanes)
+    constraints['track_id'] = lanes[0].track_id
+    constraints.pop('start_phase', None)
+
+    program_start_monday = None
+    if body.get('start_date'):
+        try:
+            sd = _date.fromisoformat(body['start_date'])
+            program_start_monday = sd - _timedelta(days=sd.weekday())
+        except ValueError:
+            pass
+    event_date = None
+    if body.get('event_date'):
+        try:
+            event_date = _date.fromisoformat(body['event_date'])
+        except ValueError:
+            event_date = None
+    if event_date is not None:
+        # The weeks from today to the event, as the lead track counts them.
+        from src.phase_calendar import build_remaining_schedule
+        num_weeks = len(build_remaining_schedule(compute_phase_from_date(lanes[0].goal, event_date)))
+    else:
+        num_weeks = body.get('num_weeks') or max(
+            sum(int(p.get('weeks') or 1) for p in l.goal.get('phase_sequence') or []) for l in lanes)
+    try:
+        start_week_number = max(1, int(body.get('week_in_program') or 1))
+    except (TypeError, ValueError):
+        start_week_number = 1
+
+    extra_injury_flags: dict = {}
+    for flag in body.get('custom_injury_flags', []):
+        if flag.get('id'):
+            extra_injury_flags[flag['id']] = flag
+            if flag['id'] not in constraints['injury_flags']:
+                constraints['injury_flags'].append(flag['id'])
+
+    # Each contract track carries on from what the athlete earned in it: the
+    # stored composition's track, else a stored program of that track alone.
+    states: dict = {}
+    if any(l.kind == 'contract' for l in lanes):
+        from src.db import get_user_program
+        try:
+            current = (get_user_program(g.user_id) or {}).get('currentProgram') or {}
+        except Exception:
+            current = {}
+        logs = None
+        for lane in lanes:
+            if lane.kind != 'contract':
+                continue
+            identity = f"{lane.contract['package']}/{lane.contract['track_id']}@{lane.contract['version']}"
+            stored = next((l for l in (current.get('composition') or {}).get('lanes') or []
+                           if l.get('key') == lane.key), None)
+            view = None
+            if stored and (stored.get('training_contract') or {}).get('id') == identity:
+                view = composition.lane_view(current, lane.key)
+            elif (current.get('training_contract') or {}).get('id') == identity:
+                view = current
+            if view is not None:
+                logs = logs if logs is not None else health_store.get_session_logs(g.user_id)
+                states[lane.key] = training_contract.confirmed_state(view, logs, lane.contract)
+    if states:
+        constraints['module_progression_states'] = states
+
+    include_trace = bool(body.get('include_trace')) or request.args.get('trace') == '1'
+    raw = composition.generate(lanes, constraints, num_weeks=num_weeks, first_week_number=start_week_number,
+                               event_date=event_date, extra_injury_flags=extra_injury_flags or None,
+                               include_trace=include_trace)
+    constraints.pop('module_progression_states', None)
+    validation = ValidationResult()
+    if raw.get('validation_errors'):
+        for error in raw['validation_errors']:
+            validation.add_error(error['code'], error['message'], error.get('suggested_fix'))
+        result = _transform_program(raw, goal, constraints, validation)
+        result['detail'] = '; '.join(error['message'] for error in raw['validation_errors'])
+        return jsonify(result)
+    result = _transform_program(raw, goal, constraints, validation)
+    if include_trace and 'generation_trace' in raw:
+        result['generation_trace'] = raw['generation_trace']
+    if program_start_monday:
+        result['program_start_date'] = program_start_monday.isoformat()
+    return jsonify(result)
+
+
+def _stored_contract(lane_key: str | None = None, package: str | None = None) -> str | None:
     """The training contract the athlete's active program was built by, if any.
 
     A single-session regenerate or an exercise swap would bypass its modules,
     so both refuse for such a program. Asked of the stored program, not of the
     request's packages: the phone sends no philosophy ids for a regenerate, and
     a blend that includes a contract package is built by the general generator.
+
+    In a composition only a contract track's sessions are fixed: the session's
+    track (`lane_key`), else the track its archetype's package runs; a request
+    that names neither is refused while any track is a contract.
     """
     try:
         from src.db import get_user_program
         current = (get_user_program(g.user_id) or {}).get('currentProgram') or {}
     except Exception:
         return None
+    lanes = (current.get('composition') or {}).get('lanes')
+    if lanes:
+        contracts = [l for l in lanes if l.get('kind') == 'contract']
+        if lane_key:
+            lane = next((l for l in lanes if l.get('key') == lane_key), None)
+            return ((lane or {}).get('training_contract') or {}).get('id') if lane in contracts else None
+        if package:
+            lane = next((l for l in contracts if l.get('philosophy_id') == package), None)
+            return ((lane or {}).get('training_contract') or {}).get('id') if lane else None
+        return (contracts[0].get('training_contract') or {}).get('id') if contracts else None
     return (current.get('training_contract') or {}).get('id')
 
 
@@ -1632,6 +1799,9 @@ def _week_phase_rules(body: dict, philosophy_ids) -> tuple[frozenset, float | No
 
 def _generate_session_inner(body):
     primary_sources = body.get('primary_sources', [])  # Philosophy IDs
+    if body.get('lane_key'):
+        # A composed program's session: its own track's package.
+        primary_sources = [body['lane_key'].split('/')[0]]
     modality = body.get('modality')
     phase    = body.get('phase')
     week_in_phase = body.get('week_in_phase', 1)
@@ -1688,7 +1858,7 @@ def _generate_session_inner(body):
         # Use the archetype's own modality — the request modality is the session being replaced
         modality = forced_arch.get('modality', modality)
 
-    if _stored_contract():
+    if _stored_contract(body.get('lane_key'), (forced_arch or {}).get('_package')):
         return jsonify({'detail': 'Regenerate this contract program to replace a module while preserving its progression.'}), 422
     phase_excluded, deload_keep = _week_phase_rules(body, primary_sources)
     session_stub = {'modality': modality, 'is_deload': is_deload}
@@ -1792,6 +1962,9 @@ def substitute_exercise():
                                           'pull_up_bar', 'ruck_pack', 'open_space'])
     constraints.setdefault('injury_flags', [])
     goal = {'primary_sources': list(body.get('philosophy_ids') or [])}
+    if body.get('lane_key'):
+        # A composed program's session: its own track's package.
+        goal = {'primary_sources': [body['lane_key'].split('/')[0]]}
 
     data = loader.load_all_data()
     policy = provenance.resolve_source_policy(goal)
@@ -1805,7 +1978,7 @@ def substitute_exercise():
     arch = next((a for a in data['archetypes'] if a.get('id') == archetype_id), None)
     if arch is None:
         return jsonify({'detail': f'Archetype {archetype_id!r} not found'}), 404
-    if _stored_contract():
+    if _stored_contract(body.get('lane_key'), arch.get('_package')):
         return jsonify({'detail': 'This exercise belongs to a fixed training module; regenerate the contract program to change it.'}), 422
     slot_index, slot = next(((i, sl) for i, sl in enumerate(arch.get('slots') or [])
                              if sl.get('role') == slot_role), (None, None))
@@ -2776,7 +2949,9 @@ def get_user_program_endpoint():
                 try:
                     all_frameworks = list(loader.load_all_frameworks().values())
                     track_id = _track_of_weeks(current)
-                    if len(source_ids) == 1:
+                    if current.get('composition'):
+                        goal = _composition_goal(current)
+                    elif len(source_ids) == 1:
                         goal = _philosophy_to_goal(source_ids[0], all_frameworks, track_id)
                     elif len(source_ids) > 1:
                         weights = program.get('sourceGoalWeights') or {}
@@ -2822,7 +2997,8 @@ def get_user_program_endpoint():
             if isinstance(current, dict) and current.get('weeks'):
                 program['currentProgram'] = {
                     **current, 'weeks': _session_icon.with_icons(current['weeks']),
-                    'phase_summary': _phase_summary(current['weeks'], current.get('goal'))}
+                    'phase_summary': _phase_summary(current['weeks'], current.get('goal')),
+                    **_lane_phase_summary(current['weeks'], current.get('goal'))}
         return jsonify(program)
     except Exception as e:
         app.logger.warning('get_user_program error: %s', e)
@@ -2907,6 +3083,9 @@ def save_user_program_endpoint():
             for field in ('constraints', 'validation', 'coverage_report'):
                 if field in existing_cp and field not in current:
                     current[field] = existing_cp[field]
+            # A composition's tracks, which a build that predates them drops.
+            if same_goal and 'composition' in existing_cp and 'composition' not in current:
+                current['composition'] = existing_cp['composition']
 
             if same_goal and 'goal' in existing_cp:
                 current['goal'] = existing_cp['goal']
@@ -2914,7 +3093,9 @@ def save_user_program_endpoint():
                 # Source goals changed — rebuild rather than inherit a stale goal.
                 try:
                     all_frameworks = list(loader.load_all_frameworks().values())
-                    if len(new_ids) == 1:
+                    if current.get('composition'):
+                        current['goal'] = _composition_goal(current)
+                    elif len(new_ids) == 1:
                         current['goal'] = _philosophy_to_goal(
                             new_ids[0], all_frameworks, _track_of_weeks(current))
                     else:
@@ -2957,6 +3138,8 @@ def save_user_program_endpoint():
             # The saved weeks' summary: a client that moved, swapped or
             # spliced weeks shows phase changes for what it just saved.
             'phaseSummary':     _phase_summary(saved.get('weeks') or [], saved.get('goal')),
+            'lanePhaseSummary': _lane_phase_summary(saved.get('weeks') or [], saved.get('goal'))
+                                .get('lane_phase_summary'),
             # Elapsed days put back (keepDaysBehind): the saved weeks differ
             # from what the client sent, so it reads the program again.
             'keptDays':         kept_days,
@@ -3247,7 +3430,8 @@ def adjust_program():
     history = _record_program_history(user_id, envelope, 'adjust', revision)
     program = {**envelope, 'revision': revision, 'programVersionId': history.get('versionId'),
                'currentProgram': {**current, 'weeks': _session_icon.with_icons(weeks),
-                                  'phase_summary': _phase_summary(weeks, current.get('goal'))}}
+                                  'phase_summary': _phase_summary(weeks, current.get('goal')),
+                                  **_lane_phase_summary(weeks, current.get('goal'))}}
     return jsonify({'saved': True, 'revision': revision,
                     'programVersionId': history.get('versionId'),
                     'applied': applied, 'program': program})

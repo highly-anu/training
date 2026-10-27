@@ -51,7 +51,7 @@ def zone_minutes(entry, ctx) -> dict:
         in_scope += 1
         wk = weeks.setdefault(h['week_number'], {
             'week': h['week_number'], 'isDeload': h['is_deload'],
-            'frameworkId': _framework_id(h['week']),
+            'frameworkId': _framework_id(h['session']) or _framework_id(h['week']),
             **{b: 0.0 for b in BUCKETS}, 'unclassified': 0.0, 'sessions': 0})
         wk['sessions'] += 1
         minutes, _ = ctx.duration_minutes(h)

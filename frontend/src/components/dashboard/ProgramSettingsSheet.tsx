@@ -72,6 +72,7 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
     regenerate.mutate({
       ...regenerateSource(sourceGoalIds, sourceGoalWeights, program),
       trackId: resume.trackId,
+      ...(resume.lanes ? { lanes: resume.lanes } : {}),
       startPhaseId: resume.startPhaseId,
       constraints: resume.constraints,
       numWeeks: weeksRemainingFromTomorrow,

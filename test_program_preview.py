@@ -140,19 +140,24 @@ def test_generate_counts_what_was_held_back() -> None:
         'philosophy_id': 'starting_strength', 'num_weeks': 2, 'constraints': ATHLETE}).get_json()
     check('nothing held back with the kit the method asks for', full.get('held_back') == {'slots': 0, 'sessions': 0},
           full.get('held_back'))
-    # A blend a training contract leads runs on the scheduler and the picker,
-    # which leave a slot empty when the kit cannot fill it; a package's own
-    # week (Gym Jones, since its templates) takes a workout the kit can do.
+    # Every shipped package now writes its own week (a training contract or
+    # templates), and a blend composes them: what a kit cannot fill is refused
+    # or taken as written, never left empty. A blend a contract led used to run
+    # on the scheduler and the picker, which left such slots; the count is
+    # still served, and still counts them, for a package that runs that way.
     bare = client.post('/api/programs/generate', json={
-        'philosophy_ids': ['uphill_athlete', 'horsemen_gpp'],
-        'philosophy_weights': {'uphill_athlete': 0.7, 'horsemen_gpp': 0.3}, 'num_weeks': 2,
+        'philosophy_ids': ['horsemen_gpp', 'crossfit'],
+        'philosophy_weights': {'horsemen_gpp': 0.5, 'crossfit': 0.5}, 'num_weeks': 2,
         'constraints': {**ATHLETE, 'training_level': 'intermediate', 'days_per_week': 6,
                         'equipment': ['kettlebell', 'pull_up_bar']}}).get_json()
-    held = bare.get('held_back') or {}
-    empty = [ea for w in bare['weeks'] for ss in w['schedule'].values() for s in ss for ea in s['exercises']
-             if ea.get('exercise') is None and ea.get('blocked_by')]
-    check('a kettlebell kit leaves a blend\'s slots empty, each counted',
-          held.get('slots', 0) >= len(empty) > 0 and held.get('sessions', 0) > 0, (held, len(empty)))
+    check('a composed program serves the count', bool(bare.get('weeks')) and bare.get('held_back') == {'slots': 0, 'sessions': 0},
+          bare.get('held_back'))
+    from src import blockers
+    empty = {'exercise': None, 'blocked_by': {'cause': 'equipment', 'text': 'needs a barbell'}}
+    weeks = [{'schedule': {'Monday': [{'exercises': [empty, empty, {'exercise': {'id': 'swing'}}]}],
+                           'Tuesday': [{'exercises': [{'exercise': None, 'meta': True, 'blocked_by': {}}]}]}}]
+    check('a slot the kit left empty is counted, with its session', blockers.held_back(weeks) == {'slots': 2, 'sessions': 1},
+          blockers.held_back(weeks))
 
 
 def test_heavy_runs_are_gated() -> None:

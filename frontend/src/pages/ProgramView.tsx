@@ -110,6 +110,7 @@ export function ProgramView() {
       {
         ...regenerateSource(storedIds, sourceGoalWeights, program),
         trackId: resume.trackId,
+        ...(resume.lanes ? { lanes: resume.lanes } : {}),
         startPhaseId: resume.startPhaseId,
         constraints: {
           ...resume.constraints,

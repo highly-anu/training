@@ -1,5 +1,19 @@
 import type { GeneratedProgram } from '@/api/types'
+import type { LaneParam } from '@/api/programs'
 import { DAY_NAMES, sessionCalendarDate } from '@/lib/workoutMatcher'
+
+/**
+ * A composed program's tracks as a request names them (src/composition.py):
+ * from its `composition`, else its goal's `tracks`; none for one track.
+ */
+export function compositionLanes(
+  program: Partial<Pick<GeneratedProgram, 'composition' | 'goal'>> | null | undefined,
+): LaneParam[] | undefined {
+  const lanes = program?.composition?.lanes?.map((l) => ({
+    philosophyId: l.philosophy_id, trackId: l.track_id, weight: l.weight,
+  })) ?? program?.goal?.tracks?.map((t) => ({ philosophyId: t.philosophy_id, trackId: t.id, weight: t.weight }))
+  return lanes && lanes.length > 1 ? lanes : undefined
+}
 
 /**
  * Which philosophies a regenerate asks for: the stored envelope's
@@ -12,8 +26,11 @@ import { DAY_NAMES, sessionCalendarDate } from '@/lib/workoutMatcher'
 export function regenerateSource(
   sourceGoalIds: string[],
   sourceGoalWeights: Record<string, number>,
-  program: Pick<GeneratedProgram, 'goal'> | null | undefined,
-): { philosophyId?: string; philosophyIds?: string[]; philosophyWeights?: Record<string, number> } {
+  program: Pick<GeneratedProgram, 'goal' | 'composition'> | null | undefined,
+): { philosophyId?: string; philosophyIds?: string[]; philosophyWeights?: Record<string, number>; lanes?: LaneParam[] } {
+  // A composed program regenerates as its tracks.
+  const lanes = compositionLanes(program)
+  if (lanes) return { lanes }
   let ids = sourceGoalIds.filter((id) => id && id !== '_blended')
   if (ids.length === 0) {
     const goal = program?.goal
@@ -35,12 +52,26 @@ export function regenerateSource(
  * kind is sent instead, which the server maps to the first phase of that kind.
  */
 export function tailResume(
-  program: Pick<GeneratedProgram, 'weeks' | 'constraints'>,
+  program: Pick<GeneratedProgram, 'weeks' | 'constraints'> & Partial<Pick<GeneratedProgram, 'composition' | 'goal'>>,
   weekIndex: number,
-): { trackId?: string; startPhaseId?: string; constraints: GeneratedProgram['constraints'] } {
+): { trackId?: string; startPhaseId?: string; constraints: GeneratedProgram['constraints']; lanes?: LaneParam[] } {
   const week = program.weeks[weekIndex]
   const base = { ...(program.constraints ?? {}) } as GeneratedProgram['constraints']
   if (!week) return { constraints: base }
+  // A composed program: every track resumes in its own phase and phase week.
+  const lanes = compositionLanes(program)
+  if (lanes && week.lanes?.length) {
+    const constraints = { ...base }
+    delete constraints.start_phase
+    delete constraints.training_phase
+    return {
+      constraints,
+      lanes: lanes.map((l) => {
+        const at = week.lanes?.find((w) => w.lane_key === `${l.philosophyId}/${l.trackId}`)
+        return at?.phase_id ? { ...l, startPhaseId: at.phase_id, periodizationWeek: at.week_in_phase } : l
+      }),
+    }
+  }
   const constraints = { ...base, periodization_week: week.week_in_phase }
   if (week.phase_id) {
     delete constraints.training_phase

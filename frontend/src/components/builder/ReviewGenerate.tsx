@@ -16,7 +16,7 @@ import { useFrameworks } from '@/api/frameworks'
 import { usePreviewStore } from '@/store/previewStore'
 import { builderGenerateParams } from '@/lib/builderParams'
 import { scheduleToConstraints, type ScheduleConstraints } from '@/lib/scheduleToConstraints'
-import { builderTrack, mainFramework } from '@/lib/tracks'
+import { builderTrack, findTrack, mainFramework, mergedEntryRequirements, primaryTrack } from '@/lib/tracks'
 
 export function ReviewGenerate() {
   const navigate = useNavigate()
@@ -30,6 +30,7 @@ export function ReviewGenerate() {
     selectedTrackId,
     startPhaseId,
     numWeeks,
+    lanes,
   } = useBuilderStore()
   const { customInjuryFlags, weeklySchedule } = useProfileStore()
   const { mutate, isPending, error, data } = useGenerateDraft()
@@ -87,7 +88,15 @@ export function ReviewGenerate() {
     [philosophies, selectedPhilosophyIds, selectedTrackId, constraints.training_level],
   )
   const activeTrack = sourceMode === 'philosophy' || sourceMode === 'blend' ? picked?.track : undefined
-  const requirements = activeTrack?.entry_requirements
+  // Several tracks: each is listed, and the athlete answers what any of them asks.
+  const composed = sourceMode === 'blend' && lanes.length > 1
+  const laneTracks = useMemo(() => (composed ? lanes : []).map((l) => {
+    const phil = philosophies?.find((p) => p.id === l.philosophyId)
+    return { lane: l, philosophy: phil, track: findTrack(phil, l.trackId) ?? primaryTrack(phil, constraints.training_level) }
+  }), [composed, lanes, philosophies, constraints.training_level])
+  const requirements = composed
+    ? mergedEntryRequirements(laneTracks.map((t) => t.track), constraints.training_level ?? 'intermediate')
+    : activeTrack?.entry_requirements
   const requiredSkills = requirements?.mastered_exercises_by_level?.[constraints.training_level ?? 'intermediate']
     ?? requirements?.mastered_exercises ?? []
   const entryReady = !requirements || (
@@ -249,7 +258,15 @@ export function ReviewGenerate() {
         <Separator />
         <dl className="space-y-2 text-sm">
           <Row label="Source" value={sourceLabel} />
-          <Row label="Track" value={trackLabel} />
+          {composed ? laneTracks.map(({ lane, philosophy, track }, i) => {
+            const total = lanes.reduce((n, l) => n + l.weight, 0) || 1
+            const start = track?.phases.find((p) => p.id === lane.startPhaseId)?.name
+            return (
+              <Row key={`${lane.philosophyId}-${i}`}
+                   label={`Track · ${Math.round((lane.weight / total) * 100)}%`}
+                   value={`${philosophy?.name ?? lane.philosophyId} — ${track?.name ?? ''}${start && !eventDate ? ` (from ${start})` : ''}`} />
+            )
+          }) : <Row label="Track" value={trackLabel} />}
           {numWeeks && <Row label="Duration" value={`${numWeeks} weeks`} />}
           <Row label="Days / week" value={String(scheduleOverride.days_per_week ?? constraints.days_per_week ?? 4)} />
           <Row
@@ -263,7 +280,7 @@ export function ReviewGenerate() {
             }
           />
           <Row label="Level" value={constraints.training_level ?? 'intermediate'} />
-          {activeTrack && (
+          {activeTrack && !composed && (
             <div className="flex justify-between gap-4">
               <dt className="text-muted-foreground shrink-0">Phases</dt>
               <dd className="font-medium text-foreground text-right">
@@ -277,7 +294,7 @@ export function ReviewGenerate() {
               </dd>
             </div>
           )}
-          {startPhaseName && !eventDate && <Row label="Starts at" value={startPhaseName} />}
+          {!composed && startPhaseName && !eventDate && <Row label="Starts at" value={startPhaseName} />}
           <Row label="Fatigue" value={constraints.fatigue_state ?? 'normal'} />
           <Row label="Equipment" value={`${(constraints.equipment ?? []).length} items`} />
           <Row label="Injuries" value={(constraints.injury_flags ?? []).length === 0 ? 'None' : (constraints.injury_flags ?? []).length + ' flags'} />
@@ -290,7 +307,7 @@ export function ReviewGenerate() {
       {!data && <FeasibilityPanel mode="full" />}
 
       {/* Schedule guidance */}
-      {weeklySchedule && idealSchedule && actualSchedule && (
+      {!composed && weeklySchedule && idealSchedule && actualSchedule && (
         <ScheduleGuidance ideal={idealSchedule} actual={actualSchedule} compromises={compromises} />
       )}
 

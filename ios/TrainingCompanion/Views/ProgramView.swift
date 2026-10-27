@@ -429,6 +429,7 @@ private struct DaySessionsSheet: View {
                         Text("· \(mins) min").font(.caption).foregroundStyle(.secondary)
                     }
                     if session.testInfo != nil { TestBadge() }
+                    TrackBadge(session: session)
                 }
             }
             Spacer()

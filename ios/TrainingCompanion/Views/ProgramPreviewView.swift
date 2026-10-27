@@ -184,6 +184,9 @@ struct ProgramPreviewView: View {
 
     @ViewBuilder
     private var planSections: some View {
+        if draft.compositionLanes.count > 1 {
+            Section("Tracks") { CompositionTracks(program: draft).padding(.vertical, 4) }
+        }
         ForEach(Array(draft.weeks.enumerated()), id: \.offset) { wi, week in
             Section {
                 ForEach(Regeneration.dayOrder, id: \.self) { day in
@@ -225,6 +228,7 @@ struct ProgramPreviewView: View {
                         Text(session.archetype?.name ?? ModalityStyle.label(for: session.modality))
                             .font(.subheadline).foregroundStyle(.primary)
                         if session.testInfo != nil { TestBadge() }
+                        TrackBadge(session: session)
                     }
                     if held > 0 {
                         // Symbol and words, never colour alone (§1.6).

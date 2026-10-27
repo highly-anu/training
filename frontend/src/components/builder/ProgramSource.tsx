@@ -290,7 +290,7 @@ export function ProgramSource() {
 
   const {
     setSourceMode, setGoalIds, setGoalWeightsBulk, setPriorityOverrides,
-    setTrack, setPhilosophyIds, setPhilosophyWeights, setSourcePriorities,
+    setTrack, setPhilosophyIds, setPhilosophyWeights, setSourcePriorities, setLanes,
   } = useBuilderStore()
 
   function activateMode(mode: SourceMode) {
@@ -385,6 +385,15 @@ export function ProgramSource() {
     setPhilosophyIds(philIds)
     setPhilosophyWeights(weights)
     setTrack(null)
+    // Each philosophy runs one of its tracks; a track already picked for it
+    // in the next step is kept, its weight follows the slider.
+    const current = useBuilderStore.getState().lanes
+    setLanes(philIds.flatMap((id) => {
+      const kept = current.filter((l) => l.philosophyId === id)
+      return kept.length > 0
+        ? kept.map((l, i) => (i === 0 ? { ...l, weight: weights[id] ?? 50 } : l))
+        : [{ philosophyId: id, trackId: null, weight: weights[id] ?? 50, startPhaseId: null }]
+    }))
   }
 
   // ── Mode 3: custom priorities ──

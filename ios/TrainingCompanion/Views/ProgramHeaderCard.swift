@@ -18,7 +18,7 @@ enum ProgramHeader {
     struct Tag: Identifiable {
         let icon: String
         let text: String
-        var id: String { icon }
+        var id: String { icon + "|" + text }
     }
 
     /// "rpm_based" → "Rpm based".

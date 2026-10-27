@@ -17,9 +17,21 @@ function getMondayOf(date: Date): string {
   return `${y}-${m}-${dd}`
 }
 
+/** One track of a composed program (src/composition.py). */
+export interface LaneParam {
+  philosophyId: string
+  /** null = the track written for the athlete's level. */
+  trackId?: string | null
+  weight: number
+  startPhaseId?: string | null
+  periodizationWeek?: number
+}
+
 export interface GenerateParams {
   // Philosophy-based program generation
   philosophyId?: string
+  /** Two or more tracks composed into one program; wins over the philosophy fields. */
+  lanes?: LaneParam[]
   philosophyIds?: string[]
   philosophyWeights?: Record<string, number>
   constraints: AthleteConstraints
@@ -49,6 +61,23 @@ export interface GenerateParams {
 }
 
 export function buildPostBody(params: GenerateParams) {
+  if (params.lanes && params.lanes.length > 1) {
+    return {
+      lanes: params.lanes.map((l) => ({
+        philosophy_id: l.philosophyId,
+        ...(l.trackId ? { track_id: l.trackId } : {}),
+        weight: l.weight,
+        ...(l.startPhaseId ? { start_phase: l.startPhaseId } : {}),
+        ...(l.periodizationWeek ? { periodization_week: l.periodizationWeek } : {}),
+      })),
+      constraints: params.constraints,
+      ...(params.eventDate ? { event_date: params.eventDate } : {}),
+      ...(params.startDate ? { start_date: params.startDate } : {}),
+      ...(params.numWeeks ? { num_weeks: params.numWeeks } : {}),
+      ...(params.weekInProgram ? { week_in_program: params.weekInProgram } : {}),
+      custom_injury_flags: params.customInjuryFlags ?? [],
+    }
+  }
   const multiPhil = params.philosophyIds && params.philosophyIds.length > 1
   const single = params.philosophyId ?? params.philosophyIds?.[0]
   if (!multiPhil && !single) {
@@ -94,13 +123,27 @@ export function useGenerateDraft() {
   })
 }
 
+/** The philosophies a request draws on and their weights: a composition's
+ *  tracks, each philosophy once with its tracks' weights summed. */
+export function sourcesOf(params: Pick<GenerateParams, 'philosophyId' | 'philosophyIds' | 'philosophyWeights' | 'lanes'>):
+  { ids: string[]; weights: Record<string, number> } {
+  if (params.lanes && params.lanes.length > 1) {
+    const total = params.lanes.reduce((s, l) => s + l.weight, 0) || 1
+    const weights: Record<string, number> = {}
+    for (const l of params.lanes) weights[l.philosophyId] = (weights[l.philosophyId] ?? 0) + l.weight / total
+    return { ids: Object.keys(weights), weights }
+  }
+  return { ids: params.philosophyIds ?? [params.philosophyId ?? ''], weights: params.philosophyWeights ?? {} }
+}
+
 /** Make a previewed draft the active program and save it (revision-checked PUT). */
 export function commitProgram(
   queryClient: ReturnType<typeof useQueryClient>,
   draft: GeneratedProgram,
-  params: Pick<GenerateParams, 'eventDate' | 'philosophyId' | 'philosophyIds' | 'philosophyWeights'>,
+  params: Pick<GenerateParams, 'eventDate' | 'philosophyId' | 'philosophyIds' | 'philosophyWeights' | 'lanes'>,
 ): boolean {
   if (isInfeasible(draft)) return false
+  const sources = sourcesOf(params)
   queryClient.setQueryData(queryKeys.programs.current, draft)
   const startMonday = draft.program_start_date ?? getMondayOf(new Date())
   // Single atomic update + server persist
@@ -108,8 +151,8 @@ export function commitProgram(
     draft,
     params.eventDate ?? null,
     startMonday,
-    params.philosophyIds ?? [params.philosophyId ?? ''],
-    params.philosophyWeights ?? {},
+    sources.ids,
+    sources.weights,
     // A rebuild of the same block keeps the days already behind the athlete.
     { keepDaysBehind: true },
   )
@@ -211,9 +254,10 @@ export function impactParams(params: GenerateParams, draft: GeneratedProgram | n
   const weeks = draft?.weeks ?? []
   const base: GenerateParams = { ...params, eventDate: undefined }
   if (weeks.length === 0) return { ...base, numWeeks: Math.min(params.numWeeks ?? 12, 12) }
-  const resume = tailResume({ weeks, constraints: params.constraints }, 0)
+  const resume = tailResume({ weeks, constraints: params.constraints, goal: draft?.goal, composition: draft?.composition }, 0)
   return {
     ...base,
+    ...(resume.lanes ? { lanes: resume.lanes } : {}),
     trackId: resume.trackId ?? params.trackId,
     startPhaseId: resume.startPhaseId ?? params.startPhaseId,
     constraints: resume.constraints,
@@ -318,6 +362,8 @@ export interface GenerateSessionParams {
    *  exclude_exercises and the framework's deload share. */
   phaseId?: string
   frameworkId?: string
+  /** A composed program's session's track: the server draws from its package. */
+  laneKey?: string
 }
 
 export function useGenerateSession() {
@@ -334,6 +380,7 @@ export function useGenerateSession() {
         ...(p.archetypeId ? { archetype_id: p.archetypeId } : {}),
         ...(p.phaseId ? { phase_id: p.phaseId } : {}),
         ...(p.frameworkId ? { framework_id: p.frameworkId } : {}),
+        ...(p.laneKey ? { lane_key: p.laneKey } : {}),
       }) as unknown as Promise<Session>,
   })
 }
@@ -363,6 +410,8 @@ export interface SubstituteParams {
   /** The week's phase and framework (see GenerateSessionParams). */
   phaseId?: string
   frameworkId?: string
+  /** A composed program's session's track: the server draws from its package. */
+  laneKey?: string
 }
 
 /**
@@ -388,6 +437,7 @@ export function useSubstituteExercise() {
         limit: p.limit ?? 8,
         ...(p.phaseId ? { phase_id: p.phaseId } : {}),
         ...(p.frameworkId ? { framework_id: p.frameworkId } : {}),
+        ...(p.laneKey ? { lane_key: p.laneKey } : {}),
       }) as unknown as Promise<{ alternatives: ExerciseAlternative[] }>,
   })
 }

@@ -587,6 +587,8 @@ struct GenerateSessionRequest: Encodable {
     /// The week's phase and framework (see `SubstituteRequest`).
     var phaseId: String? = nil
     var frameworkId: String? = nil
+    /// A composed program's session's track (`SubstituteRequest.laneKey`).
+    var laneKey: String? = nil
     enum CodingKeys: String, CodingKey {
         case primarySources = "primary_sources"
         case modality, phase
@@ -596,6 +598,7 @@ struct GenerateSessionRequest: Encodable {
         case archetypeId    = "archetype_id"
         case phaseId        = "phase_id"
         case frameworkId    = "framework_id"
+        case laneKey        = "lane_key"
     }
 }
 

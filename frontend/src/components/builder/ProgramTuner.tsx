@@ -10,9 +10,10 @@ import { sortPriorities } from '@/lib/prioritySort'
 import { frameworkImpliedPriorities } from '@/lib/frameworkPriorities'
 import { checkStyleCompatibility, blockingReason } from '@/lib/styleCompatibility'
 import { blendExpectations } from '@/lib/feasibility'
-import { builderTrack, mainFramework, trackWeeks, tracksOf } from '@/lib/tracks'
+import { builderTrack, findTrack, mainFramework, primaryTrack, trackWeeks, tracksOf } from '@/lib/tracks'
 import { FrameworkDetailModal } from './FrameworkDetailModal'
 import { PhaseSpine } from '@/components/shared/PhaseSpine'
+import { LanePicker } from './LanePicker'
 import type { Framework, ModalityId } from '@/api/types'
 
 const SECTION_LABEL = 'text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium'
@@ -33,7 +34,11 @@ export function ProgramTuner() {
     setPriorityOverrides,
     setNumWeeks,
     setEventDate,
+    lanes,
   } = useBuilderStore()
+  // Several tracks: each picked on its own (LanePicker); no single track's
+  // recommendations or priority sliders apply.
+  const composed = sourceMode === 'blend' && lanes.length > 1
 
   const { data: frameworks } = useFrameworks()
   const { data: philosophies } = usePhilosophies()
@@ -116,11 +121,18 @@ export function ProgramTuner() {
 
   // ── Duration + event date ──────────────────────────────────────────────────
   const defaultNumWeeks = useMemo(() => {
+    // A composition runs as long as its longest track.
+    if (composed) {
+      return Math.max(1, ...lanes.map((l) => {
+        const phil = philosophies?.find((p) => p.id === l.philosophyId)
+        return trackWeeks(findTrack(phil, l.trackId) ?? primaryTrack(phil, constraints.training_level))
+      }))
+    }
     // A multi-phase track runs all of its phases; a single repeatable block
     // takes its framework's ideal length.
     if (activeTrack && activeTrack.phases.length > 1) return trackWeeks(activeTrack)
     return displayExpectations?.ideal_weeks ?? trackWeeks(activeTrack) ?? 12
-  }, [activeTrack, displayExpectations])
+  }, [activeTrack, displayExpectations, composed, lanes, philosophies, constraints.training_level])
 
   const effectiveNumWeeks = numWeeks ?? defaultNumWeeks
 
@@ -170,10 +182,14 @@ export function ProgramTuner() {
           Tune your program.
         </h2>
         <p className="text-sm text-muted-foreground leading-relaxed max-w-lg">
-          Choose a track, adjust modality priorities, and set program duration.
+          {composed
+            ? 'Choose each philosophy’s track and its weight, and set program duration.'
+            : 'Choose a track, adjust modality priorities, and set program duration.'}
         </p>
       </div>
 
+      {composed ? <LanePicker /> : (
+      <>
       {/* Program recommendations */}
       {displayExpectations && (
         <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
@@ -420,6 +436,8 @@ export function ProgramTuner() {
           })}
         </div>
       </section>
+      </>
+      )}
 
       <FrameworkDetailModal
         framework={detailFramework}

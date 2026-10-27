@@ -34,6 +34,7 @@ export function GuidedScheduler() {
     sourceMode,
     selectedTrackId,
     selectedPhilosophyIds,
+    lanes,
     constraints,
   } = useBuilderStore()
 
@@ -49,9 +50,10 @@ export function GuidedScheduler() {
       selectedPhilosophyIds,
       philosophies,
       trainingLevel: constraints.training_level,
+      lanes,
     }),
     [selectedGoalIds, goalWeights, sourceMode, frameworks, selectedTrackId, selectedPhilosophyIds, philosophies,
-     constraints.training_level],
+     constraints.training_level, lanes],
   )
 
   // Initialize from Profile schedule or create default

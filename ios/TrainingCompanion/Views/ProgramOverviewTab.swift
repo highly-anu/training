@@ -37,6 +37,12 @@ struct ProgramOverviewTab: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
                         headerCard
+                        if let program = appState.serverProgram?.currentProgram, program.compositionLanes.count > 1 {
+                            CompositionTracks(program: program)
+                                .padding()
+                                .background(Color(.secondarySystemBackground))
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
                         phasesCard
                         Spacer(minLength: 40)
                     }
@@ -82,6 +88,11 @@ struct ProgramOverviewTab: View {
     /// (§6.18, the book), and Analytics ▸ Program's header names the framework;
     /// on Overview the three rows repeated the phase's own name.
     private func headerTags(cards: [PhilosophyCard], week: ProgramWeek?) -> [ProgramHeader.Tag] {
+        // A composition: every track.
+        let lanes = appState.serverProgram?.currentProgram?.compositionLanes ?? []
+        if lanes.count > 1 {
+            return lanes.map { .init(icon: "arrow.triangle.branch", text: $0.name) }
+        }
         // The methodology whose track this week runs; a blend's heaviest otherwise.
         let lead = cards.first { card in card.tracks?.contains { $0.id == week?.trackId } ?? false } ?? cards.first
         guard let track = lead?.track(week?.trackId), (lead?.tracks?.count ?? 0) > 1 else { return [] }

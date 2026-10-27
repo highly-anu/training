@@ -63,11 +63,12 @@ export function RegenerateFromWeekBanner() {
   const request = useMemo(() => {
     if (!program || diffs.length === 0 || remaining <= 0) return null
     const source = regenerateSource(ids, sourceGoalWeights, program)
-    if (!source.philosophyId && !source.philosophyIds) return null
+    if (!source.philosophyId && !source.philosophyIds && !source.lanes) return null
     const resume = tailResume(program, startIdx)
     const params: GenerateParams = {
       ...source,
       trackId: resume.trackId,
+      ...(resume.lanes ? { lanes: resume.lanes } : {}),
       startPhaseId: resume.startPhaseId,
       constraints: mergedConstraints(resume.constraints, profile),
       numWeeks: remaining,

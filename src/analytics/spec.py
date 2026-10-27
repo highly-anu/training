@@ -236,7 +236,8 @@ def framework_id_of(week: dict) -> str | None:
 
 def session_in_scope(entry: Entry, week: dict, session: dict) -> bool:
     scope = entry.scope or {}
-    if scope.get('frameworks') and framework_id_of(week) not in scope['frameworks']:
+    # A composed program's session runs its own track's framework.
+    if scope.get('frameworks') and (framework_id_of(session) or framework_id_of(week)) not in scope['frameworks']:
         return False
     if scope.get('modalities') and session.get('modality') not in scope['modalities']:
         return False

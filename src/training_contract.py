@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from itertools import combinations
+from typing import NamedTuple
 import math
 import os
 
@@ -874,7 +875,8 @@ def _module_rows(module, exercises, constraints, state, step, deload, blocked=No
     return rows
 
 
-def _spacing(candidate: dict, regions: dict | None = None) -> tuple[int, int, int, int]:
+def _spacing(candidate: dict, regions: dict | None = None,
+             others: dict | None = None) -> tuple[int, int, int, int]:
     """How well a placement alternates and spreads its work, higher is better:
     fewest same-modality days back to back (two gym sessions, a run of
     classes), then fewest same-modality neighbours among the training days,
@@ -883,7 +885,9 @@ def _spacing(candidate: dict, regions: dict | None = None) -> tuple[int, int, in
     heavily on days a day or two apart (`regions`: module id -> heavy regions,
     src/recovery_regions.py; a day apart counts twice), then the widest gap
     between each module's own sessions (Wildman: "Kettlebell Swings on Monday
-    & Thursday, Clean & Press on Wednesday & Saturday")."""
+    & Thursday, Clean & Press on Wednesday & Saturday"). In a composition,
+    `others` is {day: heavy regions} of the other tracks' work, and loading a
+    region beside (or on) a day they load it counts against the placement too."""
     days = sorted(candidate)
     kind = {d: frozenset(m['modality'] for m in candidate[d]) for d in days}
     pairs = list(zip(days, days[1:] + days[:1])) if len(days) > 1 else []
@@ -897,6 +901,8 @@ def _spacing(candidate: dict, regions: dict | None = None) -> tuple[int, int, in
     load = {d: frozenset().union(*((regions or {}).get(m['id'], frozenset()) for m in candidate[d])) for d in days}
     regional = sum((3 - gap) * len(load[a] & load[b]) for i, a in enumerate(days) for b in days[i + 1:]
                    for gap in [min(b - a, 7 + a - b)] if gap <= 2)
+    regional += sum((3 - gap) * len(load[a] & theirs) for a in days for b, theirs in (others or {}).items()
+                    for gap in [min(abs(b - a), 7 - abs(b - a))] if gap <= 2)
     return -adjacent, -neighbours, -regional, spread
 
 
@@ -1026,9 +1032,12 @@ def _level_refusal(contract: dict, level: str) -> str:
             f"program is written for {level} (they cover {', '.join(written)}).")
 
 
-def generate(contract: dict, entries: list, constraints: dict, data: dict, policy,
-             frameworks: dict, include_trace: bool = False) -> dict:
-    """Compile the contract directly to the normal generator result shape."""
+def start(contract: dict, entries: list, constraints: dict, data: dict, policy,
+          frameworks: dict) -> 'ContractRun':
+    """The contract ready to compile week by week: `week(entry)` places and
+    emits one week (appending it to `program`), `finish()` closes the program.
+    A composition (src/composition.py) passes each week the `day_room` its other
+    tracks leave on each day and their work (`others`); alone, neither."""
     from .scheduler import _build_day_pool
     if len(policy.owner_packages) > 1:
         raise ContractError('Module contracts currently support one methodology at a time; a blend needs an explicit composition contract.')
@@ -1122,7 +1131,16 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
     program['training_contract']['longest_minutes'] = longest
     capped_said: set = set()
     held: dict = {}
-    for entry in entries:
+
+    def week(entry: dict, day_room: dict | None = None, others: dict | None = None,
+             essential_days=None, search: int = 500) -> dict:
+        """Place and emit one week of the contract; `day_room` caps each day's
+        minutes below its own budget, `others` is {day: heavy regions} of the
+        work already there, which this week's placement steers clear of, and
+        `essential_days` (when given) the only days its essential work may
+        take — optional work may still go wherever there is room. `search` is
+        how many placements are looked at."""
+        nonlocal previous
         fw = frameworks[entry['framework_id']]
         # The modules this phase runs (`phases`), with its exposures.
         modules = [w for w in (in_phase(m, entry.get('phase_id')) for m in all_modules) if w]
@@ -1177,6 +1195,8 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
         pending_test = tests[0] if tests and constraints.get('fatigue_state') != 'overreached' else None
         test_last = bool(pending_test and pending_test.get('day') == 'last')
         day_caps = {d: (constraints.get('day_configs', {}).get(d) or {}).get('minutes', cap) for d in pool}
+        if day_room is not None:
+            day_caps = {d: min(day_caps[d], day_room.get(d, day_caps[d])) for d in pool}
         optional = [m for m in modules if m.get('optional') and not optional_out[m['id']]]
 
         def clear_of_last_week(mid: str, day: int, spacing: int) -> bool:
@@ -1221,19 +1241,32 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
         # optional work, then alternates and spaces the work best; the search
         # is small (a week, a few modules).
         best = None
-        for i, candidate in enumerate(_placements(essential, estimates, pool, cap, day_caps)):
+        essential_caps = day_caps if essential_days is None else \
+            {d: (day_caps[d] if d in essential_days else 0) for d in pool}
+        for i, candidate in enumerate(_placements(essential, estimates, pool, cap, essential_caps)):
             if not spaced(candidate):
                 continue
             fit, closes = optional_fit(candidate)
             # Optional work never costs an essential session its own day.
             stacked = sum(len(ms) - 1 for ms in candidate.values())
-            key = (closes, -stacked, sum(len(v) for v in fit.values()), *_spacing(candidate, module_regions))
+            # In a composition, a day another track trains on (or keeps for
+            # itself) is avoided before a day of this track's own is shared.
+            shared = sum(1 for d in candidate if d in (others or {}))
+            key = (closes, -shared, -stacked, sum(len(v) for v in fit.values()),
+                   *_spacing(candidate, module_regions, others))
             if best is None or key > best[0]:
                 best = (key, candidate, fit)
-            if i >= 500:
+            if i >= search:
                 break
         if best is None:
-            raise ContractError('Required module frequency, recovery spacing and session budget cannot all fit. Increase available time or days.')
+            error = ContractError('Required module frequency, recovery spacing and session budget cannot all fit. Increase available time or days.')
+            # What the week asked for, module by module, which a composition
+            # weighs against the track's share of the athlete's minutes.
+            error.week_minutes = sum(estimates[m['id']] * m['exposures_per_week'] for m in essential)
+            error.module_minutes = {m['id']: estimates[m['id']] for m in essential}
+            error.volume_minutes = sum(estimates[m['id']] * m['exposures_per_week'] for m in essential
+                                       if m['progression']['model'] == 'weekly_volume')
+            raise error
         _, placed, fit = best
         previous = {}
         skipped = []
@@ -1262,7 +1295,7 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
         position: dict[str, int] = {}
         for day, day_modules in sorted(placed.items()):
             # Also honour per-day budgets, not just the overall session limit.
-            day_cap = (constraints.get('day_configs', {}).get(day) or {}).get('minutes', cap)
+            day_cap = day_caps[day]
             assignments, records, session_test = [], [], None
             # A test day is a test session for every module on it: none deloads
             # or advances, as `verify` and `confirmed_state` read the session.
@@ -1378,15 +1411,37 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
             program['weeks'][-1]['tests_skipped'] = [{'archetypes': t['archetypes'], 'reason': 'overreached'} for t in tests]
         elif pending_test:
             raise ContractError('The required test could not be placed in its module.')
-    # One line a shortfall, with its weeks unless it is every week: "0 of 2"
-    # before the snatch joins and "1 of 2" after read as one claim otherwise.
-    for (name, placed, of, reason), weeks in shortfalls.items():
-        when = '' if len(weeks) == len(program['weeks']) else f" in {_week_span(weeks)}"
-        program['compromises'].append(f"{name}: {placed} of {of} weekly sessions{when} — {reason}.")
-    verify(program, contract, constraints)
-    if include_trace:
-        program['generation_trace'] = _trace(program, contract, constraints)
-    return program
+        return program['weeks'][-1]
+
+    def finish(include_trace: bool = False) -> dict:
+        # One line a shortfall, with its weeks unless it is every week: "0 of 2"
+        # before the snatch joins and "1 of 2" after read as one claim otherwise.
+        for (name, placed, of, reason), weeks in shortfalls.items():
+            when = '' if len(weeks) == len(program['weeks']) else f" in {_week_span(weeks)}"
+            program['compromises'].append(f"{name}: {placed} of {of} weekly sessions{when} — {reason}.")
+        verify(program, contract, constraints)
+        if include_trace:
+            program['generation_trace'] = _trace(program, contract, constraints)
+        return program
+
+    return ContractRun(week=week, finish=finish, program=program, state=state, pool=pool)
+
+
+class ContractRun(NamedTuple):
+    week: object
+    finish: object
+    program: dict
+    state: dict
+    pool: list
+
+
+def generate(contract: dict, entries: list, constraints: dict, data: dict, policy,
+             frameworks: dict, include_trace: bool = False) -> dict:
+    """Compile the contract directly to the normal generator result shape."""
+    run = start(contract, entries, constraints, data, policy, frameworks)
+    for entry in entries:
+        run.week(entry)
+    return run.finish(include_trace)
 
 
 def _trace(program: dict, contract: dict, constraints: dict) -> dict:

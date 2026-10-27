@@ -57,6 +57,63 @@ def _test_problems(weeks: list, ph: dict) -> list[str]:
     return problems
 
 
+# Compositions (src/composition.py): tracks of different methods, and two of
+# one, on one week. (lanes, days, minutes, extra constraints, event in weeks)
+_KB = ['wk_kb_clean_single', 'wk_kb_press_single', 'wk_kb_snatch', 'wk_kb_swing_single_arm']
+COMPOSITIONS = [
+    ([('uphill_athlete', None, 0.6), ('starting_strength', None, 0.4)], 7, 90, {}, None),
+    ([('horsemen_gpp', None, 0.5), ('wildman_kettlebell', 'general_practice', 0.5)], 6, 75,
+     {'mastered_exercises': _KB}, None),
+    ([('wildman_kettlebell', 'general_practice', 0.6), ('wildman_kettlebell', 'snatch_practice', 0.4)], 5, 60,
+     {'mastered_exercises': _KB}, None),
+    ([('bjj', None, 0.6), ('kelly_starrett', None, 0.4)], 5, 75, {}, None),
+    ([('crossfit', None, 0.5), ('starting_strength', None, 0.5)], 5, 75, {}, 12),
+]
+
+
+def _check_compositions() -> list[str]:
+    """Each sample composes; every session runs its own track's phase
+    framework and comes from its own track's packages; no day goes past its
+    minutes."""
+    from datetime import date, timedelta
+    from src import composition, provenance
+    frameworks = list(loader.load_all_frameworks().values())
+    failures = []
+    for lanes, days, minutes, extra, event_weeks in COMPOSITIONS:
+        label = ' + '.join(f"{p}/{t or '-'}" for p, t, _ in lanes)
+        constraints = {'days_per_week': days, 'session_time_minutes': minutes, 'training_level': 'intermediate',
+                       'equipment': ALL_EQUIPMENT, 'injury_flags': [], 'kettlebell_count': 2,
+                       'fatigue_state': 'normal', **extra}
+        request = {'lanes': [{'philosophy_id': p, **({'track_id': t} if t else {}), 'weight': w} for p, t, w in lanes]}
+        built = composition.build_lanes(composition.normalise_request(request, constraints), constraints, frameworks)
+        event = date.today() + timedelta(weeks=event_weeks) if event_weeks else None
+        raw = composition.generate(built, constraints, num_weeks=event_weeks or 8, event_date=event)
+        problems = [e['message'] for e in raw.get('validation_errors') or []]
+        allowed = {l.key: provenance.resolve_source_policy(l.goal).allowed_packages for l in built}
+        for w in raw.get('weeks') or []:
+            lanes_by = {l['lane_key']: l for l in w['lanes']}
+            for day, sessions in w['schedule'].items():
+                if sum(s['archetype']['duration_estimate_minutes'] for s in sessions) > minutes:
+                    problems.append(f"week {w['week_number']} day {day} over {minutes} minutes")
+                for s in sessions:
+                    lane = lanes_by[s['lane_key']]
+                    if s.get('framework') != lane['framework']:
+                        problems.append(f"week {w['week_number']}: {s['lane_key']} ran {s.get('framework')}")
+                    if s['archetype'].get('_package') not in allowed[s['lane_key']]:
+                        problems.append(f"week {w['week_number']}: {s['lane_key']} drew {s['archetype'].get('_package')}")
+        if event_weeks and raw.get('weeks'):
+            # Every track ends on the last phase of its track.
+            for l in built:
+                last = (l.goal.get('phase_sequence') or [{}])[-1].get('phase_id')
+                got = next(x['phase_id'] for x in raw['weeks'][-1]['lanes'] if x['lane_key'] == l.key)
+                if got != last:
+                    problems.append(f"{l.key} ends in {got}, not {last}")
+        problems = list(dict.fromkeys(problems))
+        print(f"  {'compose ' + label:52} {'ok' if not problems else 'FAIL ' + '; '.join(problems[:3])}")
+        failures += [f"compose {label}: {p}" for p in problems[:3]]
+    return failures
+
+
 def main() -> int:
     frameworks = list(loader.load_all_frameworks().values())
     fw_by_id = {f['id']: f for f in frameworks}
@@ -129,6 +186,8 @@ def main() -> int:
                     problems = _test_problems(raw.get('weeks', []), ph)
                     print(f"  {label + ' (tests)':52} {'ok' if not problems else 'FAIL ' + '; '.join(problems)}")
                     failures += [f"{label}: {p}" for p in problems]
+
+    failures += _check_compositions()
 
     print()
     if failures:

@@ -113,3 +113,33 @@ export function builderTrack(
   const t = primaryTrack(first, level)
   return first && t ? { philosophy: first, track: t } : undefined
 }
+
+type EntryRequirements = NonNullable<Track['entry_requirements']>
+
+/**
+ * What every one of several tracks asks of the athlete before it runs, as one
+ * track's requirements: the levels all of them are written for, every
+ * movement any of them needs mastered at this level, the most bells, and
+ * every lift any of them may start from a known weight. None when no track
+ * asks anything.
+ */
+export function mergedEntryRequirements(
+  tracks: (Track | undefined)[],
+  level: string,
+): EntryRequirements | undefined {
+  const reqs = tracks.map((t) => t?.entry_requirements).filter((r): r is EntryRequirements => !!r)
+  if (reqs.length === 0) return undefined
+  if (reqs.length === 1) return reqs[0]
+  const mastered = Array.from(new Set(reqs.flatMap((r) => r.mastered_exercises_by_level?.[level] ?? r.mastered_exercises)))
+  const loads = new Map<string, { id: string; name: string }>()
+  for (const r of reqs) for (const l of r.starting_loads ?? []) loads.set(l.id, l)
+  return {
+    training_levels: reqs.slice(1).reduce((acc, r) => acc.filter((lv) => r.training_levels.includes(lv)),
+      reqs[0].training_levels),
+    mastered_exercises: mastered,
+    mastered_exercises_by_level: { [level]: mastered },
+    exercise_names: Object.assign({}, ...reqs.map((r) => r.exercise_names ?? {})),
+    kettlebell_count: Math.max(...reqs.map((r) => r.kettlebell_count)),
+    starting_loads: Array.from(loads.values()),
+  }
+}

@@ -258,7 +258,7 @@ Philosophy → Tracks → Phases → Frameworks → Modalities → Archetypes �
 
 1. **Philosophy** — training methodology; declares one or more tracks
 2. **Tracks and phases** — a track is one way to follow the philosophy, an ordered list of its own phases; each phase names its framework and a shared kind
-3. **Synthetic goal** — built from one track (its phases become `phase_sequence`) + priorities; allows philosophy blending
+3. **Synthetic goal** — built from one track (its phases become `phase_sequence`) + priorities; several tracks compose one program (*Compositions*)
 4. **Scheduler** — maps priorities + framework → session slots per day (recovery-aware)
 5. **Selector** — picks best archetype per slot; fills archetype slots with exercises (injury/equipment/level filtered)
 6. **Progression** — calculates load prescription per slot type (linear_load, rpe_autoregulation, time_to_task, distance, density)
@@ -508,6 +508,31 @@ group's name.
   say so. A day's sessions are ordered by their modalities' `session_position` (first,
   any/standalone, last). Only weeks the scheduler builds are checked: a source's own week
   (`week_templates`) and a training contract place their sessions themselves.
+- **Compositions: several tracks, one program** (`src/composition.py`, since 2026-10-27).
+  `POST /programs/generate` takes `lanes: [{philosophy_id, track_id?, weight, start_phase?,
+  periodization_week?}]` — tracks of different philosophies or two of one; the old blend shape
+  (`philosophy_ids` + weights + one `track_id`) is read the same way, the named track its
+  owner's, the others the level's. One lane is the single-track request, untouched
+  (`test_single_lane_golden.py` hashes 131 programs). Every track runs its own phases on its
+  own engine — a contract its modules, spacing and earned state (`training_contract.start`,
+  week by week), a template its named workouts (`generator.start`). Each week the contracts
+  place first (lightest first, on the days each keeps: `reserve_days`, a contract the most
+  evenly spaced), then the templates, each into the minutes the others left (`day_room`);
+  a placement avoids another track's days and a body region it loads heavily (`others`). A
+  week that cannot fit gives way cheapest first, for the whole program, and each cut is a
+  compromise naming the track: optional work, one weekly session of the module with the
+  fewest minutes, the weekly volume (a uniform scale, so ramps keep their shape); a cut
+  that breaks a track's own phase rules is undone and never made again; a template none of
+  whose days filled gets another day; a track that cannot run alone is refused as such at
+  once. Weeks carry `lanes` (each track's phase, framework, deload — the week's own fields
+  are the lead track's, `is_deload` only when every track deloads); sessions their
+  `lane_key`, `phase`, `phase_id`, `framework`; the program `composition` (shares, kept
+  days, cuts, each contract's id and module state) and, on read, `lane_phase_summary`.
+  Contract state carries on per track from a stored composition or a stored one-track
+  program (`composition.lane_view`); swaps and session regenerates are refused only on a
+  contract track's session (`_stored_contract(lane_key, package)`). Both clients build them
+  (web `LanePicker`, `CompositionTracks`, `TrackBadge`; iOS `LaneSections`,
+  `CompositionTracks`, `TrackBadge`) and regenerate every track from its own phase.
 - **Framework expectations**: Every framework defines required `expectations` (min/ideal weeks, days/week, session minutes, split-day support). UI derives "Ideal for this goal" banners from framework expectations (or weighted blend when combining frameworks). Philosophy-specific, not goal-generic.
 - **Philosophies own their phases** (`src/phases.py`). `philosophy.yaml` declares
   `tracks`; each track is an ordered list of the philosophy's own phases — id, name,
@@ -533,8 +558,9 @@ group's name.
     `PHASE_KIND_NOT_IN_TRACK` warning; older iOS builds send it, and the current one
     sends it beside `start_phase` on a tail regenerate). Neither → the track's first phase; the API
     no longer defaults to `'base'`. An unknown `start_phase` is infeasible.
-  - **Picks.** `track_id` picks a track (a blend may name any member's; otherwise the
-    heaviest member's primary track). The legacy `framework_id` maps to the track and
+  - **Picks.** `track_id` picks a track (otherwise the one `track_for_level` names, else
+    the primary). Several tracks are a composition (below); the old blend shape's `track_id`
+    is its owner's track there. The legacy `framework_id` maps to the track and
     phase that run it (`goals.owner_track_for_framework`) — it used to sit in
     constraints as `forced_framework`, where the phase's framework overrode it.
   - **Regenerates** send the target week's `track_id`, `start_phase` and
@@ -715,7 +741,8 @@ training data; only sign-in goes to Supabase.
   them).
 - **iOS builds from philosophies.** `GET /api/goals` was removed on 2026-04-25;
   the iOS builder and settings sheet pick a methodology from
-  `GET /api/philosophies` and send it as `philosophy_id`.
+  `GET /api/philosophies` and send it as `philosophy_id` — or several as `lanes`
+  (a composition, `ProgramComposition.swift`).
 
 ## Program Analytics
 
@@ -1311,6 +1338,8 @@ Run these after touching engine code or package data:
 .venv/bin/python tools/check_provenance.py --coverage    # coverage gaps + authoring problems
 .venv/bin/python tools/check_styles.py                   # every philosophy x track x phase generates on its framework
 SUPABASE_URL='' .venv/bin/python test_phases.py          # tracks, phase text ownership, start phase, event date, legacy picks
+SUPABASE_URL='' .venv/bin/python test_composition.py     # several tracks: request, shares, cuts, real compositions, the API
+.venv/bin/python test_single_lane_golden.py              # every one-track program unchanged (~6 min; --record only on purpose)
 .venv/bin/python test_provenance.py                      # source-policy rules
 SUPABASE_URL='' .venv/bin/python test_week_numbering.py  # a partial regenerate's tail continues the numbering
 SUPABASE_URL='' .venv/bin/python test_today_session.py   # the watch's today-session: completed flags, tomorrow, ?spec=1, progress

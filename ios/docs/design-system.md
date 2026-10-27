@@ -1389,6 +1389,17 @@ both from the week it starts at (`ProgramConstraintsDiff.merged`). A
 methodology with one track shows it without a choice; a track with one phase
 shows no start picker.
 
+**Several tracks (a composition).** Picking two to four methodologies in step 1
+makes a blend of tracks (`BuilderLane`, `ProgramComposition.swift`). Step 2 is
+`LaneSections`: per track a `TrackChoiceRow` list (the same row the one-track
+picker uses), a weight slider and "Add another <methodology> track"; step 3 a
+`StartPhasePicker` per track; step 4 lists the tracks. The request sends
+`lanes`. A composed program shows `CompositionTracks` — each track's share,
+days, kept days, its own phase strip and what it gave up — on Program ▸
+Overview and in the preview, the same view in both; session rows carry a
+`TrackBadge`. A regenerate (settings sheet, from this week) sends every track
+from its own phase that week, never the lead track's alone.
+
 
 ---
 

@@ -1,4 +1,5 @@
 import { Clock } from 'lucide-react'
+import { TrackBadge } from '@/components/shared/TrackBadge'
 import { WorkoutIcon } from '@/components/icons/WorkoutIcon'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
 import { PhaseBadge } from '@/components/shared/PhaseBadge'
@@ -22,6 +23,7 @@ export function SessionHeader({ session, day, weekNumber, weekInPhase, phase, ph
         <ModalityBadge modality={session.modality} />
         <PhaseBadge phase={phase} label={phaseLabel} />
         {session.test && <TestBadge test={session.test} size="md" />}
+        <TrackBadge session={session} size="md" />
       </div>
       {session.test?.instead_of?.name && (
         <p className="text-xs text-muted-foreground">

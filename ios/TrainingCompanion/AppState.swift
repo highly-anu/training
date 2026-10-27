@@ -1122,12 +1122,14 @@ final class AppState: ObservableObject {
                 injuryFlags: injuryFlags,
                 sessionTimeMinutes: archetype.durationEstimateMinutes ?? 60),
             philosophyIds: philosophyIds,
-            phase: week.phase,
-            weekInPhase: week.weekInPhase ?? (weekIndex + 1),
-            isDeload: week.isDeload,
+            // A composed program's session runs its own track's phase.
+            phase: session.lanePhase ?? week.phase,
+            weekInPhase: session.laneWeekInPhase ?? week.weekInPhase ?? (weekIndex + 1),
+            isDeload: session.laneKey != nil ? session.isDeload : week.isDeload,
             exclude: session.exercises.compactMap { $0.exercise?.id },
-            phaseId: week.phaseId,
-            frameworkId: week.frameworkId)
+            phaseId: session.lanePhaseId ?? week.phaseId,
+            frameworkId: session.laneFramework ?? week.frameworkId,
+            laneKey: session.laneKey)
         return try await api.substituteExercise(request)
     }
 
@@ -1248,11 +1250,17 @@ final class AppState: ObservableObject {
         let baseline = ProgramConstraintsDiff.baseline(program: programConstraints,
                                                        weekInPhase: week.weekInPhase, phase: week.phase,
                                                        phaseId: week.phaseId, trackId: week.trackId)
+        // A composed program regenerates as its tracks, each from its own
+        // phase that week (the week's own phase fields are the lead track's).
+        let lanes = program.regenerateLanes(from: start)
+        var tail = constraints
+        if lanes != nil { tail.trackId = nil; tail.startPhase = nil; tail.trainingPhase = nil; tail.periodizationWeek = nil }
         let request = GenerateProgramRequest(
             philosophyId: ids.count == 1 ? ids[0] : nil,
             philosophyIds: ids.count > 1 ? ids : nil,
             philosophyWeights: ids.count > 1 ? sp.sourceGoalWeights : nil,
-            constraints: constraints, numWeeks: program.weeks.count - start, weekInProgram: start + 1,
+            lanes: lanes,
+            constraints: tail, numWeeks: program.weeks.count - start, weekInProgram: start + 1,
             startDate: nil, eventDate: sp.eventDate, persist: false)
         return (request, start, baseline)
     }
@@ -1357,7 +1365,7 @@ final class AppState: ObservableObject {
         // phone regenerate — a session trained this morning is not rewritten.
         let payload = UserProgramSavePayload(
             currentProgram: draft, programStartDate: startDate, eventDate: request.eventDate,
-            sourceGoalIds: request.sourceIds, sourceGoalWeights: request.philosophyWeights ?? [:],
+            sourceGoalIds: request.sourceIds, sourceGoalWeights: request.sourceWeights,
             baseRevision: serverProgram?.revision, extra: ["keepDaysBehind": .bool(true)])
         do {
             _ = try await api.saveProgram(payload)

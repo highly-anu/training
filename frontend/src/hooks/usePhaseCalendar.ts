@@ -29,6 +29,32 @@ export function trackSegments(phases: Phase[]): PhaseSegment[] {
   return out
 }
 
+/**
+ * One track of a composed program as its own phases ran: its weeks grouped by
+ * the track's phase (`week.lanes`), its words from the track's own sequence —
+ * the week's phase fields are the lead track's.
+ */
+export function laneSegments(weeks: WeekData[] | undefined, laneKey: string,
+                             sequence: PhaseEntry[] = []): PhaseSegment[] {
+  const segments: PhaseSegment[] = []
+  let cursor = 1
+  for (const week of weeks ?? []) {
+    const lane = week.lanes?.find((l) => l.lane_key === laneKey)
+    const key = lane?.phase_id ?? lane?.phase
+    const last = segments[segments.length - 1]
+    if (lane && last && (last.phaseId ?? last.phase) === key) {
+      last.weeks += 1
+      last.endWeek = cursor
+    } else if (lane) {
+      const entry = sequence.find((e) => e.phase_id === lane.phase_id)
+      segments.push({ phase: lane.phase, phaseId: lane.phase_id, name: lane.phase_name ?? entry?.name,
+                      weeks: 1, focus: entry?.focus, entry, startWeek: cursor, endWeek: cursor })
+    }
+    cursor += 1
+  }
+  return segments
+}
+
 export interface PhaseCalendar {
   segments: PhaseSegment[]
   totalWeeks: number

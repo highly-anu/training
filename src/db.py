@@ -276,7 +276,7 @@ def save_user_program(user_id: str, program_data: dict[str, Any]) -> None:
     cp = program_data.get('currentProgram') if isinstance(program_data, dict) else None
     # `held_back` (src/blockers.held_back) is derived the same way, and a swap
     # would leave a stored copy stale.
-    derived = ('phase_summary', 'held_back')
+    derived = ('phase_summary', 'lane_phase_summary', 'held_back')
     if isinstance(cp, dict) and any(k in cp for k in derived):
         cp = {k: v for k, v in cp.items() if k not in derived}
         program_data = {**program_data, 'currentProgram': cp}
