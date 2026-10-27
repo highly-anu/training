@@ -166,8 +166,12 @@ struct ProgramPreviewView: View {
                         .font(.caption).foregroundStyle(.secondary)
                     PhaseProgressBar(weeks: draft.weeks, currentIndex: nil)
                 }
-                if case .regenerate = mode, !changed.isEmpty, !draft.isInfeasible {
-                    Text("Your new settings change \(changed.count) session\(changed.count == 1 ? "" : "s"), marked below. Weeks before week \(startWeek), and the days already behind you this week, stay as they are.")
+                if case .regenerate = mode, !draft.isInfeasible {
+                    Text((changed.isEmpty ? "Nothing changes from week \(startWeek). "
+                          : "\(changed.count) session\(changed.count == 1 ? "" : "s") change from week \(startWeek), marked below. ")
+                         + (startWeek > 1 ? "Weeks 1–\(startWeek - 1), and the days already behind you this week, stay as they are."
+                            : "The days already behind you this week stay as they are.")
+                         + " Nothing is saved until you apply.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 if isWorking {
@@ -467,7 +471,7 @@ struct ProgramPreviewView: View {
                 ? "\(title) becomes your program. The one you are on now stays in Program ▸ History with its logs and linked workouts."
                 : "\(title) becomes your program."
         case .regenerate:
-            return "The rest of your program is rebuilt for your new settings. The weeks and days already behind you keep their sessions, logs and linked workouts."
+            return "Your program is rebuilt from week \(startWeek) as previewed. The weeks and days already behind you keep their sessions, logs and linked workouts, and the plan you have now stays in Program ▸ History."
         }
     }
 
@@ -518,7 +522,8 @@ struct ProgramPreviewView: View {
     }
 
     /// The same request with other constraints, previewed again; swaps on
-    /// the draft are dropped with it, and the change marks no longer apply.
+    /// the draft are dropped with it. A regenerate keeps the days behind the
+    /// athlete and marks what the new draft changes.
     private func repreview(_ constraints: GenerateConstraints) async {
         guard let api = appState.api else { return }
         isWorking = true
@@ -528,9 +533,13 @@ struct ProgramPreviewView: View {
         do {
             let d = try await api.generateProgramPreview(next)
             request = next
-            draft = d
             edits = 0
-            changed = []
+            if case .regenerate(let start, _) = mode {
+                (draft, changed) = appState.regeneratePreviewDraft(d, from: start)
+            } else {
+                draft = d
+                changed = []
+            }
             generation += 1
         } catch {
             self.error = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription

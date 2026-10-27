@@ -218,23 +218,6 @@ export function commitRegeneratedTail(
   return true
 }
 
-export function useRegenerateFromWeek() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async (params: GenerateParams) => {
-      const tail = await (apiClient.post('/programs/generate', buildPostBody(params)) as unknown as Promise<GeneratedProgram>)
-      if (isInfeasible(tail)) {
-        throw new Error(tail.validation?.errors?.[0]?.message ?? 'These settings cannot build the rest of the program.')
-      }
-      return tail
-    },
-    onSuccess: (tail, params) => {
-      commitRegeneratedTail(queryClient, tail, params)
-    },
-  })
-}
-
 // ── Preview: what the constraints hold back, and whether a change matters ────
 
 /** The heavy routes answer 429 while another run is in flight; wait and ask again. */

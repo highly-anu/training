@@ -19,7 +19,9 @@ import { useProfileStore } from '@/store/profileStore'
 import { usePreviewStore } from '@/store/previewStore'
 import { applyRegeneratedTail, commitProgram, impactParams, isInfeasible } from '@/api/programs'
 import { heldBackSummary } from '@/lib/heldBack'
-import { spliceRegenerated } from '@/lib/programSource'
+import { changedSessionKeys, spliceRegenerated } from '@/lib/programSource'
+import { format } from 'date-fns'
+import { ProgramSettingsSheet } from '@/components/dashboard/ProgramSettingsSheet'
 import { RegenerateFromWeekBanner } from '@/components/program/RegenerateFromWeekBanner'
 import type { GeneratedProgram, Session, WeekData } from '@/api/types'
 
@@ -203,7 +205,7 @@ describe('the profile offers a regenerate only when it changes the program', () 
     expect(patch).not.toHaveBeenCalled()
   })
 
-  it('says what it rebuilt once Apply has removed the difference', async () => {
+  it('never applies from the banner: the change opens in the preview, and nothing is saved', async () => {
     post.mockResolvedValue({
       affected: true, comparable: true, sessions: { total: 9, changed: 3 }, first_week_number: 1,
       changes: [], program: program([week(1, 'n'), week(2, 'n'), week(3, 'n')]),
@@ -211,15 +213,76 @@ describe('the profile offers a regenerate only when it changes the program', () 
     useProfileStore.setState({ equipment: ['kettlebell'] })
     renderBanner()
     await act(async () => { vi.advanceTimersByTime(1600) })
-    const apply = await screen.findByText('Apply from week 1')
-    // The saved program now carries the profile's settings, as the server's would.
-    put.mockImplementation(async () => {
-      const cp = useProgramStore.getState().currentProgram!
-      useProgramStore.setState({ currentProgram: { ...cp, constraints: { ...cp.constraints, equipment: ['kettlebell'] } } })
-      return { revision: 'r2' }
-    })
-    await act(async () => { apply.click() })
-    await waitFor(() => expect(screen.getByText(/Rebuilt 3 weeks with these settings/)).toBeTruthy())
-    expect(put).toHaveBeenCalled()
+    const preview = await screen.findByText('Preview changes')
+    expect(screen.queryByText(/Apply from week/)).toBeNull()
+    await act(async () => { preview.click() })
+    const p = usePreviewStore.getState()
+    expect(p.mode).toBe('regenerate')
+    expect(p.draft?.weeks).toHaveLength(3)
+    expect(p.regenerate?.startIdx).toBe(0)
+    expect(put).not.toHaveBeenCalled()
+  })
+})
+
+describe('"From tomorrow onwards" (2026-10-27)', () => {
+  // A program two weeks in, rebuilt on Tuesday of its third week: before,
+  // the settings sheet's start-date field had re-anchored it to tomorrow in
+  // memory, so tomorrow fell in week 1, all 16 weeks were rebuilt and saved
+  // at once, and weeks 1-2 left the program with their links and logs.
+  const mondayTwoWeeksAgo = () => {
+    const d = new Date()
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7) - 14)
+    return format(d, 'yyyy-MM-dd')
+  }
+
+  function renderSheet(p: GeneratedProgram) {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    return render(
+      <QueryClientProvider client={client}>
+        <MemoryRouter><ProgramSettingsSheet program={p} /></MemoryRouter>
+      </QueryClientProvider>
+    )
+  }
+
+  it('previews the weeks from tomorrow and saves nothing', async () => {
+    const current = program([week(1), week(2), week(3), week(4)])
+    useProgramStore.setState({ currentProgram: current, programStartDate: mondayTwoWeeksAgo(),
+                               sourceGoalIds: ['starting_strength'] })
+    post.mockResolvedValue(program([week(3, 'n'), week(4, 'n')]))
+    renderSheet(current)
+    await act(async () => { screen.getByLabelText('Program settings').click() })
+    expect(screen.queryByDisplayValue(mondayTwoWeeksAgo())).toBeNull()   // no start-date field to edit
+    await act(async () => { screen.getByText('Rebuild Program').click() })
+    await act(async () => { screen.getByText('From tomorrow onwards').click() })
+    await waitFor(() => expect(usePreviewStore.getState().draft).not.toBeNull())
+    const body = post.mock.calls[0][1]
+    expect(body.week_in_program).toBe(3)
+    expect(body.num_weeks).toBe(2)
+    expect(put).not.toHaveBeenCalled()
+    const p = usePreviewStore.getState()
+    expect(p.mode).toBe('regenerate')
+    expect(p.regenerate?.startIdx).toBe(2)
+    // This week's Monday is behind the athlete: the preview shows it as planned.
+    expect(p.draft!.weeks[0].schedule.Monday?.[0].archetype?.id).toBe('a')
+    expect(useProgramStore.getState().currentProgram).toBe(current)
+  })
+
+  it('offers nothing without a start date, rather than rebuild every week', async () => {
+    const current = program([week(1), week(2), week(3)])
+    useProgramStore.setState({ currentProgram: current, programStartDate: null, sourceGoalIds: ['starting_strength'] })
+    renderSheet(current)
+    await act(async () => { screen.getByLabelText('Program settings').click() })
+    await act(async () => { screen.getByText('Rebuild Program').click() })
+    const button = screen.getByText('From tomorrow onwards').closest('button')!
+    expect(button.disabled).toBe(true)
+    expect(post).not.toHaveBeenCalled()
+  })
+})
+
+describe('changedSessionKeys', () => {
+  it('marks what the tail plans differently from the weeks it replaces', () => {
+    const current = [week(1), week(2), week(3)]
+    const tail = [week(2), { ...week(3, 'n'), schedule: { Monday: [session('n')], Friday: [session('n')] } } as WeekData]
+    expect(changedSessionKeys(current, tail, 1)).toEqual(['1|Monday|0', '1|Friday|0'])
   })
 })

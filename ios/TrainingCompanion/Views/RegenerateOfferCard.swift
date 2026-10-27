@@ -9,8 +9,9 @@ import SwiftUI
 /// the program both ways (`POST /programs/constraint-change`). A change that
 /// moves nothing is recorded on the program (`PATCH /user/program/constraints`)
 /// and the offer never appears; one that does says how many sessions from
-/// which week, and opens them in the preview or applies them from the current
-/// week, keeping the weeks and days already behind the athlete.
+/// which week, and opens them in the preview — applied from there, from the
+/// current week, keeping the weeks and days already behind the athlete. The
+/// card used to apply them straight away as well.
 struct RegenerateOfferCard: View {
     @EnvironmentObject var appState: AppState
     @State private var state: CheckState = .idle
@@ -162,31 +163,19 @@ struct RegenerateOfferCard: View {
     @ViewBuilder
     private func actions(tail: GeneratedProgram?, request: GenerateProgramRequest?,
                          result: ConstraintChangeResult?, start: Int, refused: Bool) -> some View {
-        if let tail, let request {
-            Button {
-                previewStart = start
-                previewChanged = Set(result?.changes.map(\.id) ?? [])
-                preview = PreviewDraft(request: request, draft: tail)
-            } label: {
-                Label(refused ? "See why" : "Preview changes", systemImage: "eye")
+        Button {
+            Task { await openPreview(tail: tail, request: request, result: result, start: start) }
+        } label: {
+            HStack {
+                if isRunning { ProgressView().controlSize(.small) }
+                Label(isRunning ? "Building a preview…" : refused ? "See why" : "Preview changes", systemImage: "eye")
                     .labelStyle(.inline)
-                    .fixedSize()
+                    .fontWeight(.semibold)
             }
-            .buttonStyle(refused ? AnyPrimitiveButtonStyle(.borderedProminent) : AnyPrimitiveButtonStyle(.bordered))
+            .fixedSize()
         }
-        if !refused {
-            Button {
-                Task { await apply(tail: tail, start: start) }
-            } label: {
-                HStack {
-                    if isRunning { ProgressView().controlSize(.small) }
-                    Text(isRunning ? "Applying…" : "Apply from week \(start + 1)").fontWeight(.semibold)
-                }
-                .fixedSize()
-            }
-            .buttonStyle(.borderedProminent)
-            .disabled(isRunning || remaining(from: start) <= 0)
-        }
+        .buttonStyle(.borderedProminent)
+        .disabled(isRunning || remaining(from: start) <= 0)
     }
 
     private var startIndex: Int {
@@ -217,32 +206,27 @@ struct RegenerateOfferCard: View {
         }
     }
 
-    /// The tail the check built, spliced and saved; without one (the check
-    /// failed), a regenerate as before.
-    private func apply(tail: GeneratedProgram?, start: Int) async {
+    /// The tail the check built, in the preview; without one (the check
+    /// failed), one generated for it. The preview's Apply saves.
+    private func openPreview(tail: GeneratedProgram?, request: GenerateProgramRequest?,
+                             result: ConstraintChangeResult?, start: Int) async {
         isRunning = true
         error = nil
         do {
-            let weeks: Int
-            if let tail {
-                weeks = try appState.applyRegeneratedTail(tail, from: start)
+            if let tail, let request {
+                let p = appState.regeneratePreviewDraft(tail, from: start)
+                previewStart = start
+                previewChanged = p.changed.union(result?.changes.map(\.id) ?? [])
+                preview = PreviewDraft(request: request, draft: p.draft)
             } else {
-                weeks = try await appState.regenerateFromCurrentWeek()
+                let p = try await appState.previewRegenerateFromCurrentWeek()
+                previewStart = p.start
+                previewChanged = p.changed
+                preview = PreviewDraft(request: p.request, draft: p.draft)
             }
-            // Set in the same turn as the save, so the card is still there
-            // to say it when the difference it was mounted for is gone.
-            appState.profileOfferOutcome = .applied(weeks: weeks)
-            AppHaptics.success()
         } catch {
             self.error = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
         }
         isRunning = false
     }
-}
-
-/// `.buttonStyle` takes one concrete style; this picks between two.
-private struct AnyPrimitiveButtonStyle: PrimitiveButtonStyle {
-    private let make: (Configuration) -> AnyView
-    init<S: PrimitiveButtonStyle>(_ style: S) { make = { AnyView(style.makeBody(configuration: $0)) } }
-    func makeBody(configuration: Configuration) -> some View { make(configuration) }
 }

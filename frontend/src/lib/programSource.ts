@@ -119,3 +119,38 @@ export function spliceRegenerated(
     return { ...week, schedule }
   })
 }
+
+/** What makes two planned sessions the same: modality, archetype and movements. */
+function sessionSignature(session: GeneratedProgram['weeks'][number]['schedule'][string][number]): string {
+  const exercises = (session.exercises ?? []).map((ea) => ea.exercise?.id ?? '').join(',')
+  return `${session.modality}|${session.archetype?.id ?? ''}|${session.archetype?.name ?? ''}|${exercises}`
+}
+
+/**
+ * The sessions a regenerated tail plans differently from the program it
+ * replaces, as `${tailIndex}|${day}|${sessionIndex}` — the keys the preview
+ * marks. `startIdx` is the week of the current program the tail's first week
+ * stands in for. A day the tail leaves empty that had sessions is marked on
+ * its first one, so a removed session is never silent.
+ */
+export function changedSessionKeys(
+  currentWeeks: GeneratedProgram['weeks'],
+  tailWeeks: GeneratedProgram['weeks'],
+  startIdx: number,
+): string[] {
+  const keys: string[] = []
+  tailWeeks.forEach((week, i) => {
+    const old = currentWeeks[startIdx + i]
+    for (const day of DAY_NAMES) {
+      const now = week.schedule?.[day] ?? []
+      const was = old?.schedule?.[day] ?? []
+      const n = Math.max(now.length, was.length)
+      for (let s = 0; s < n; s++) {
+        const a = now[s] ? sessionSignature(now[s]) : null
+        const b = was[s] ? sessionSignature(was[s]) : null
+        if (a !== b) keys.push(`${i}|${day}|${Math.min(s, Math.max(0, now.length - 1))}`)
+      }
+    }
+  })
+  return [...new Set(keys)]
+}

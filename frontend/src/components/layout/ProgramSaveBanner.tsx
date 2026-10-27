@@ -20,7 +20,9 @@ export function ProgramSaveBanner() {
 
   // A stale revision is a conflict, not an outage: someone else's copy won, so
   // the honest fix is to re-pull rather than retry this write over the top.
-  const isConflict = error === 'stale_revision'
+  // So is a moved start date, which only a newly started program may set:
+  // the server kept the program as it was.
+  const isConflict = error === 'stale_revision' || error === 'start_date_changed'
 
   return (
     <div
@@ -29,7 +31,9 @@ export function ProgramSaveBanner() {
     >
       <AlertTriangle className="size-4 shrink-0 text-amber-500" />
       <p className="flex-1 leading-snug">
-        {isConflict
+        {error === 'start_date_changed'
+          ? "Your latest edit would have moved your program's start date, so it was not saved. Reload to get your program back."
+          : isConflict
           ? 'This program was changed somewhere else. Your latest edit was not saved — reload to pick up the newer version.'
           : "Your last change couldn't be saved. It's still on screen but not on the server, and will be lost if you reload."}
       </p>

@@ -23,11 +23,13 @@ import { sourcesOf,
 } from '@/api/programs'
 import { usePhilosophies } from '@/api/philosophies'
 import { usePhaseCalendar } from '@/hooks/usePhaseCalendar'
+import { regeneratePreviewDraft } from '@/hooks/useRegeneratePreview'
 import { usePreviewStore } from '@/store/previewStore'
 import { useProgramStore } from '@/store/programStore'
 import { useProfileStore } from '@/store/profileStore'
 import { useBuilderStore } from '@/store/builderStore'
 import { builderGenerateParams } from '@/lib/builderParams'
+import { changedSessionKeys } from '@/lib/programSource'
 import { heldBackSummary, idLabel } from '@/lib/heldBack'
 import { cn } from '@/lib/utils'
 import type { EquipmentId, TrainingPhase } from '@/api/types'
@@ -57,7 +59,8 @@ export function ProgramPreview() {
   const urlMode = searchParams.get('mode') === 'regenerate' ? 'regenerate' : 'new'
 
   const { mode, params, draft, edits, regenerate, setDraft, open, clear } = usePreviewStore()
-  const hasActive = useProgramStore((s) => !!s.currentProgram)
+  const currentProgram = useProgramStore((s) => s.currentProgram)
+  const hasActive = !!currentProgram
   const profileEquipment = useProfileStore((s) => s.equipment)
   const { weeklySchedule, customInjuryFlags } = useProfileStore()
   const generate = useGenerateDraft()
@@ -93,8 +96,13 @@ export function ProgramPreview() {
 
   const { segments, totalWeeks } = usePhaseCalendar(draft ?? undefined, 1)
   const counts = useMemo(() => (draft ? heldBackSummary(draft) : { slots: 0, sessions: 0 }), [draft])
-  const changed = useMemo(() => new Set((regenerate?.changes ?? [])
-    .map((c) => `${c.week_index}|${c.day}|${c.session_index}`)), [regenerate])
+  // A regenerate marks every session that differs from the plan it replaces,
+  // and any the server's comparison named.
+  const changed = useMemo(() => new Set([
+    ...(regenerate?.changes ?? []).map((c) => `${c.week_index}|${c.day}|${c.session_index}`),
+    ...(mode === 'regenerate' && regenerate && draft && currentProgram
+      ? changedSessionKeys(currentProgram.weeks, draft.weeks, regenerate.startIdx) : []),
+  ]), [mode, regenerate, draft, currentProgram])
 
   const ids = params ? sourcesOf(params).ids.filter(Boolean) : []
   const title = philosophies?.filter((p) => ids.includes(p.id)).map((p) => p.name).join(' + ')
@@ -119,7 +127,9 @@ export function ProgramPreview() {
     if (!params) return
     const next: GenerateParams = { ...params, constraints: { ...params.constraints, ...patch } }
     setAdjustOpen(false)
-    generate.mutate(next, { onSuccess: (d) => setDraft(next, d) })
+    generate.mutate(next, {
+      onSuccess: (d) => setDraft(next, mode === 'regenerate' ? regeneratePreviewDraft(d, next) : d),
+    })
   }
 
   const actions: HeldBackActions = {
@@ -237,10 +247,14 @@ export function ProgramPreview() {
             <Loader2 className="size-4 animate-spin" aria-hidden="true" /> Previewing again…
           </p>
         )}
-        {mode === 'regenerate' && !refused && regenerate && regenerate.changes.length > 0 && (
+        {mode === 'regenerate' && !refused && (
           <p className="mx-6 mt-4 text-sm text-muted-foreground">
-            Your new settings change {regenerate.changes.length} session{regenerate.changes.length === 1 ? '' : 's'},
-            marked in the calendar. Weeks before week {startWeek}, and the days already behind you this week, stay as they are.
+            {changed.size > 0
+              ? <>{changed.size} session{changed.size === 1 ? '' : 's'} change from week {startWeek}, marked in the calendar. </>
+              : <>Nothing changes from week {startWeek}. </>}
+            {startWeek > 1 ? `Weeks 1–${startWeek - 1}, and the days already behind you this week, stay as they are.`
+              : 'The days already behind you this week stay as they are.'}
+            {' '}Nothing is saved until you apply.
           </p>
         )}
 
@@ -305,7 +319,7 @@ export function ProgramPreview() {
             </AlertDialogTitle>
             <AlertDialogDescription>
               {mode === 'regenerate'
-                ? 'The rest of your program is rebuilt for your new settings. The weeks and days already behind you keep their sessions, logs and linked workouts.'
+                ? `Your program is rebuilt from week ${startWeek} as previewed. The weeks and days already behind you keep their sessions, logs and linked workouts, and the plan you have now stays in Program ▸ History.`
                 : hasActive
                   ? `${title} becomes your program. The one you are on now stays in Program ▸ History with its logs and linked workouts.`
                   : `${title} becomes your program.`}

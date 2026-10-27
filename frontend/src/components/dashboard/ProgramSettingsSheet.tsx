@@ -20,7 +20,7 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { useProgramStore } from '@/store/programStore'
 import { useBuilderStore } from '@/store/builderStore'
-import { useRegenerateFromWeek } from '@/api/programs'
+import { useRegeneratePreview } from '@/hooks/useRegeneratePreview'
 import type { GeneratedProgram } from '@/api/types'
 import { regenerateSource, tailResume } from '@/lib/programSource'
 
@@ -39,10 +39,9 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
   const sourceGoalIds = useProgramStore((s) => s.sourceGoalIds).filter((id) => id !== '_blended')
   const sourceGoalWeights = useProgramStore((s) => s.sourceGoalWeights)
   const setEventDate = useProgramStore((s) => s.setEventDate)
-  const setProgramStartDate = useProgramStore((s) => s.setProgramStartDate)
   const loadFromProgram = useBuilderStore((s) => s.loadFromProgram)
   const reset = useBuilderStore((s) => s.reset)
-  const regenerate = useRegenerateFromWeek()
+  const regenerate = useRegeneratePreview()
 
   const today = new Date().toISOString().slice(0, 10)
 
@@ -56,20 +55,24 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
     ? differenceInWeeks(parseISO(eventDate), new Date())
     : null
 
-  // Which week index does "tomorrow" fall in, based on the program start date?
+  // Which week index does "tomorrow" fall in, from the saved start date. Without
+  // one there is no telling which days are behind the athlete, so nothing is
+  // offered — reading it as week 0 rebuilt every week.
   const tomorrowWeekIdx = useMemo(() => {
-    if (!programStartDate) return 0
+    if (!programStartDate) return null
     const tomorrow = addDays(new Date(), 1)
     const days = differenceInCalendarDays(tomorrow, parseISO(programStartDate))
     return Math.max(0, Math.floor(days / 7))
   }, [programStartDate])
 
-  const weeksRemainingFromTomorrow = program.weeks.length - tomorrowWeekIdx
+  const weeksRemainingFromTomorrow = tomorrowWeekIdx === null ? 0 : program.weeks.length - tomorrowWeekIdx
   const canRegenerateFromTomorrow = weeksRemainingFromTomorrow > 0
 
   function handleRebuildFromTomorrow() {
+    if (tomorrowWeekIdx === null) return
     const resume = tailResume(program, tomorrowWeekIdx)
-    regenerate.mutate({
+    // Generated, then shown in Program ▸ Preview; saved only on its Apply.
+    regenerate.open({
       ...regenerateSource(sourceGoalIds, sourceGoalWeights, program),
       trackId: resume.trackId,
       ...(resume.lanes ? { lanes: resume.lanes } : {}),
@@ -79,9 +82,7 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
       weekInProgram: tomorrowWeekIdx + 1,
       // Today and the days before it in tomorrow's week stay as they are.
       keepBefore: format(addDays(new Date(), 1), 'yyyy-MM-dd'),
-    })
-    setRebuildDialogOpen(false)
-    setOpen(false)
+    }, tomorrowWeekIdx)
   }
 
   function handleRebuildFull() {
@@ -190,15 +191,13 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
               <CalendarDays className="size-3.5 text-muted-foreground" />
               Program Start Date
             </label>
-            <p className="text-[11px] text-muted-foreground">
-              Used to map program weeks to calendar dates for workout import matching.
+            <p className="text-sm">
+              {programStartDate ? format(parseISO(programStartDate), 'EEEE, MMM d, yyyy') : 'Not recorded'}
             </p>
-            <input
-              type="date"
-              value={programStartDate ?? ''}
-              onChange={(e) => setProgramStartDate(e.target.value || null)}
-              className="w-full h-9 rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-            />
+            <p className="text-[11px] text-muted-foreground">
+              Every session&apos;s date, and every linked workout, hangs on it, so it is set when a
+              program is built. To start on another day, build a new program.
+            </p>
           </div>
 
           <Separator />
@@ -262,17 +261,19 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
             className="w-full rounded-lg border-2 border-primary bg-primary/5 px-4 py-3 text-left transition-colors hover:bg-primary/10 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <p className="text-sm font-semibold text-primary">
-              {regenerate.isPending ? 'Generating…' : 'From tomorrow onwards'}
+              {regenerate.isPending ? 'Building a preview…' : 'From tomorrow onwards'}
             </p>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
-              {canRegenerateFromTomorrow
-                ? `Keeps your completed sessions. Regenerates the remaining ${weeksRemainingFromTomorrow} week${weeksRemainingFromTomorrow !== 1 ? 's' : ''} using your current goal and constraints.`
-                : 'No weeks remaining to regenerate — your program is complete.'}
+              {tomorrowWeekIdx === null
+                ? 'Your program has no start date, so the days behind you are unknown. Build a new program instead.'
+                : canRegenerateFromTomorrow
+                  ? `Keeps everything up to today. Rebuilds the remaining ${weeksRemainingFromTomorrow} week${weeksRemainingFromTomorrow !== 1 ? 's' : ''} with your current goal and constraints, and shows them before anything changes.`
+                  : 'No weeks remaining to regenerate — your program is complete.'}
             </p>
           </button>
-          {regenerate.isError && (
+          {regenerate.error && (
             <p className="text-xs text-red-700 dark:text-red-300">
-              {regenerate.error instanceof Error ? regenerate.error.message : 'Could not regenerate'}
+              {regenerate.error.message || 'Could not regenerate'}
             </p>
           )}
 

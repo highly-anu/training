@@ -3060,6 +3060,24 @@ def save_user_program_endpoint():
                     'currentRevision': current_rev,
                 }), 409
 
+        # An edit never moves the start date: every session's date hangs on
+        # it. On 2026-10-27 the web's Program Settings sheet re-anchored a
+        # program two weeks in to tomorrow in memory, the next save ("From
+        # tomorrow onwards") stored it, and weeks 1-2 left the program in
+        # force with their links and logs. Only a previewed program being
+        # started (keepDaysBehind) sets a start date.
+        if not keep_days_behind:
+            from src import program_history as _ph
+            stored_start = _ph.start_date_of(_normalize_program_keys(get_user_program(user_id) or {}))
+            if stored_start and _ph.start_date_of(body) != stored_start:
+                app.logger.info('program save rejected: start %s != stored %s',
+                                _ph.start_date_of(body), stored_start)
+                return jsonify({
+                    'saved': False,
+                    'detail': 'start_date_changed',
+                    'programStartDate': stored_start,
+                }), 409
+
         # When the iOS app saves after move/replace, GeneratedProgram only contains
         # `weeks` (Swift Codable strips unknown fields on re-encode). Preserve the
         # goal, constraints, validation, and volume_summary from the existing stored

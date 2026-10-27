@@ -301,6 +301,25 @@ def test_adopt_constraints() -> None:
             res = client.put('/api/user/program', json={**envelope, 'baseRevision': str(store['rev'])})
             check('an ordinary save leaves the past as sent', len(calls) == 1
                   and res.get_json().get('keptDays') == 0, res.get_json())
+
+            # An edit never moves the start date (2026-10-27: a settings-sheet
+            # edit re-anchored a program to tomorrow and "From tomorrow" saved
+            # it). Starting a previewed program may.
+            rev = store['rev']
+            moved = client.put('/api/user/program', json={**envelope, 'programStartDate': '2026-10-28',
+                                                          'baseRevision': str(rev)})
+            check('an edit that moves the start date is refused', moved.status_code == 409
+                  and moved.get_json().get('detail') == 'start_date_changed'
+                  and moved.get_json().get('programStartDate') == '2026-10-19', moved.get_json())
+            dropped = client.put('/api/user/program', json={**envelope, 'programStartDate': None,
+                                                            'baseRevision': str(rev)})
+            check('so is one that drops it', dropped.status_code == 409, dropped.status_code)
+            check('and nothing is written', store['rev'] == rev
+                  and store['program']['programStartDate'] == '2026-10-19', store['program'].get('programStartDate'))
+            started = client.put('/api/user/program', json={**envelope, 'programStartDate': '2026-10-26',
+                                                            'baseRevision': str(rev), 'keepDaysBehind': True})
+            check('a started program sets its own', started.status_code == 200
+                  and store['program']['programStartDate'] == '2026-10-26', started.get_json())
         finally:
             api._keep_days_behind_counted = real_keep
     finally:
