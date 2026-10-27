@@ -2014,11 +2014,15 @@ Active state: primary-tinted background + primary text. Inactive: muted text tha
 keys for every philosophy, numbers and ids rather than prose, so two can be set
 side by side. Nothing is computed in the browser.
 
-**Glance first, words on demand.** What greets the reader is marks, not text;
-every paragraph is one tap away in a sheet (§1.4).
+**Glance first, words on demand — in place.** What greets the reader is marks,
+not text; every paragraph is one tap away (§1.4), and it opens right under what
+was tapped (`InlinePanel`), never in a drawer at the screen's edge, so the eye
+stays in the centre column. The tapped card or tile stays highlighted, a second
+tap or the panel's × closes it, and the panel scrolls itself into view only as
+far as it must.
 
 1. **Header** — the bias modalities' icons, the name, *About* (the summary,
-   models, borrows, sources — in a sheet) and *Build a program*; six
+   models and borrows, opening inside the header) and *Build a program*; six
    `StatTile`s — weeks, days a week, minutes a session, level pips, equipment,
    tracks · phases; the fingerprint (`ModalityMix`, the main track's sessions a
    week by modality, weighted by phase weeks) with its `MixLegend` (modality
@@ -2028,17 +2032,21 @@ every paragraph is one tap away in a sheet (§1.4).
    tracks, days · minutes, mix), then the chosen track's phases as cards: the
    kind's colour, weeks, the `WeekGlyph` (a template's seven days split by
    modality, rest dashed; else one dot per weekly session), the intensity bar,
-   days, minutes and tests as icons. A card opens the phase sheet: the full
-   week (`PhaseWeek`), description, what it builds, how hard, tests.
+   days, minutes and tests as icons. A card opens the phase under the cards:
+   the full week (`PhaseWeek`), description, what it builds, how hard, tests;
+   *About this track* opens the track's words under its header.
 3. **Goals** — what the main track builds (chips) and *progress is …* with the
    standards it is measured by (chips in their modality's colour, a flask on
-   the ones a phase tests). **Requirements** — equipment chips, the movements
-   each track expects you to own, borrows.
+   the ones a phase tests); a standard, or *How progress is measured*, opens the
+   measures card under Goals and Requirements. **Requirements** — equipment chips
+   (*+N* shows the rest in place), the movements each track expects you to own,
+   borrows.
 4. **The method** — tiles: rules from the source, sources, app decisions, not
-   modelled yet, progress signals; each opens its sheet.
+   modelled yet; each opens its list under the tiles.
 5. **Sessions** — one tile per group (template category, contract module,
    modality, tests) with the modality icon and a count; a tile opens the
-   group's sessions, each slot with the exercises the server says it takes.
+   group's sessions under the tiles, each slot with the exercises the server
+   says it takes.
 6. Lineage (§13.8) and similar philosophies.
 
 The landing keeps §13.6's outline and card like every other Explore landing:
@@ -2047,7 +2055,8 @@ phases · weeks) and the Frameworks cards' chips (sessions a week, minutes, the
 level range in the philosophy's colour), read from the same `glance`.
 
 **Key patterns:**
-- **One glance vocabulary** (`Glance.tsx`): `LevelPips`, `StatTile`,
+- **One glance vocabulary** (`Glance.tsx`): `LevelPips`, `StatTile` (with `active`),
+  `InlinePanel`,
   `ModalityGlyph` (`lib/modalityIcons.ts`, the lucide counterparts of the
   phone's `ModalityStyle.icon`), `MixLegend`, `WeekGlyph`, `PhaseBar`,
   `IntensityBar`. A comparison view reuses them as they are.
