@@ -7,6 +7,7 @@ from .selector import populate_session, select_archetype
 from .progression import calculate_load
 from .validator import validate
 from .output import format_program
+from typing import NamedTuple
 
 
 # Movement patterns → recovery/mobility patterns that address them
@@ -467,16 +468,6 @@ def generate(
     if extra_injury_flags:
         injury_flags_data = {**injury_flags_data, **extra_injury_flags}
 
-    # Pool used when the philosophy's own archetypes cannot cover a scheduled
-    # modality. Under a strict policy that stays inside the allowed packages and
-    # the session is reported as a coverage gap; otherwise it is the whole
-    # library, which is the legacy permissive behaviour.
-    fallback_archetypes = archetypes if policy.strict else lib['all_archetypes']
-    fallback_exercises = exercises if policy.strict else lib['all_exercises']
-    # Each archetype's heavily loaded regions, for the picker's regional rule.
-    arch_regions = {a['id']: recovery_regions.heavy(recovery_regions.archetype_load(a, lib['all_exercises'], modalities))
-                    for a in fallback_archetypes}
-
     # --- Validate feasibility ------------------------------------------------
     validation = validate(goal, constraints, archetypes, modalities, injury_flags_data)
     if not validation.feasible:
@@ -519,6 +510,42 @@ def generate(
         if output_format == 'dict':
             return program
         return format_program(program, goal, constraints, validation)
+    run = start(goal, constraints, data, lib, policy, injury_flags_data, include_trace)
+    run.prime(entries)
+    for week_index, entry in enumerate(entries):
+        run.week(week_index, entry)
+    return run.finish(entries, output_format, validation)
+
+
+class ProgramRun(NamedTuple):
+    prime: object
+    week: object
+    note_regions: object
+    finish: object
+    program: dict
+
+
+def start(goal: dict, constraints: dict, data: dict, lib: dict, policy, injury_flags_data: dict,
+          include_trace: bool = False) -> ProgramRun:
+    """The goal ready to generate week by week (what `generate` loops over):
+    `prime(entries)` replays a templated track's elapsed weeks, `week(index,
+    entry)` builds one week and appends it to `program`, `finish(entries,
+    output_format, validation)` closes the program. A composition
+    (src/composition.py) passes a week its own `plan_constraints` (the days and
+    minutes the other tracks leave) and has `note_regions` record what the
+    other tracks load each day."""
+    archetypes = lib['archetypes']
+    exercises  = lib['exercises']
+    modalities = lib['modalities']
+    # Pool used when the philosophy's own archetypes cannot cover a scheduled
+    # modality. Under a strict policy that stays inside the allowed packages and
+    # the session is reported as a coverage gap; otherwise it is the whole
+    # library, which is the legacy permissive behaviour.
+    fallback_archetypes = archetypes if policy.strict else lib['all_archetypes']
+    # Each archetype's heavily loaded regions, for the picker's regional rule.
+    arch_regions = {a['id']: recovery_regions.heavy(recovery_regions.archetype_load(a, lib['all_exercises'], modalities))
+                    for a in fallback_archetypes}
+    track_id = (goal.get('track') or {}).get('id')
     program = {'weeks': []}
     # A templated phase's rotation through each category's workouts, and
     # whether each workout fits the athlete as written (per phase).
@@ -550,16 +577,19 @@ def generate(
             return template_fits[key]
         return fits
 
-    if entries and entries[0].get('week_template'):
-        # A regenerate from mid-track carries on where the track stands: the
-        # weeks before it are planned again (cheaply: fits are cached) so each
-        # pool's rotation and the last week's picks are what they were.
-        all_frameworks = loader.load_all_frameworks()
-        for prior in week_template.prior_entries(goal.get('phase_sequence') or [], entries[0]):
-            fw = all_frameworks.get(prior.get('framework_id')) or {}
-            if fw.get('categories'):
-                week_template.plan_week(prior, fw, constraints, archetypes_by_id, template_rotation,
-                                        _template_fits(prior), template_recent)
+
+    def prime(entries: list) -> None:
+        """Replay the weeks before a mid-track regenerate's first."""
+        if entries and entries[0].get('week_template'):
+            # A regenerate from mid-track carries on where the track stands: the
+            # weeks before it are planned again (cheaply: fits are cached) so each
+            # pool's rotation and the last week's picks are what they were.
+            all_frameworks = loader.load_all_frameworks()
+            for prior in week_template.prior_entries(goal.get('phase_sequence') or [], entries[0]):
+                fw = all_frameworks.get(prior.get('framework_id')) or {}
+                if fw.get('categories'):
+                    week_template.plan_week(prior, fw, constraints, archetypes_by_id, template_rotation,
+                                            _template_fits(prior), template_recent)
     recent_arch_ids: list[str] = []
     recent_ex_ids:   list[str] = []
     # Each phase's main lifts, (archetype id, slot index) -> exercise id; reset
@@ -586,7 +616,11 @@ def generate(
         'philosophy_mode': 'synthetic_goal' if goal.get('is_synthetic') else 'explicit_goal',
     } if include_trace else None
 
-    for week_index, entry in enumerate(entries):
+
+    def week(week_index: int, entry: dict, plan_constraints: dict | None = None) -> dict:
+        """Build one week; `plan_constraints` (a composition's) decide its days
+        and minutes in place of the athlete's whole week."""
+        nonlocal pinned_lifts, unfilled_cache, pinned_phase, prev_week_modalities
         phase          = entry['phase']
         week_in_phase  = entry['week_in_phase']
         week_in_program = entry.get('week_in_program', week_in_phase)
@@ -613,7 +647,7 @@ def generate(
             # The source's own week, day by day: each day the next named
             # workout of its category the athlete can do as written.
             week_schedule, week_compromises = week_template.plan_week(
-                entry, framework, constraints, archetypes_by_id, template_rotation,
+                entry, framework, plan_constraints or constraints, archetypes_by_id, template_rotation,
                 _template_fits(entry), template_recent, template_left_out)
         for compromise in week_compromises:
             if compromise not in all_compromises:
@@ -664,8 +698,8 @@ def generate(
         categories = framework.get('categories') or {}
         for day, cat in template_left_out.items():
             resolved_by_day[day] = [{'modality': categories[cat]['modality'], 'category': cat, '_placeholder': True}]
-        placed_tests, skipped_tests = _plan_week_tests(entry, resolved_by_day, archetypes, constraints,
-                                                       is_deload, _populate_test)
+        placed_tests, skipped_tests = _plan_week_tests(entry, resolved_by_day, archetypes,
+                                                       plan_constraints or constraints, is_deload, _populate_test)
         for day in template_left_out:
             if (day, 0) not in placed_tests:
                 del resolved_by_day[day]
@@ -888,7 +922,7 @@ def generate(
                     day_session_traces.append(session_trace)
 
             populated_schedule[day] = populated_sessions
-            region_days[program_day] = frozenset().union(
+            region_days[program_day] = region_days.get(program_day, frozenset()).union(
                 *(recovery_regions.heavy(recovery_regions.session_load(s, modalities)) for s in populated_sessions))
             if include_trace and week_trace is not None:
                 week_trace['sessions'][day_name] = day_session_traces
@@ -912,28 +946,37 @@ def generate(
         program['weeks'].append(week_out)
         if include_trace and generation_trace is not None and week_trace is not None:
             generation_trace['weeks'].append(week_trace)
+        return week_out
 
-    # Add compromises to program
-    program['compromises'] = all_compromises
-    if entries and all(e.get('week_template') for e in entries) and \
-            not any(w['schedule'] for w in program['weeks']):
-        # Nothing of the source fits as written (Horsemen has no novice path;
-        # an athlete without its gear gets none of its workouts): say so
-        # rather than hand back weeks of rest.
-        level = constraints.get('training_level', 'intermediate')
-        return {'weeks': [], 'compromises': all_compromises,
-                'coverage_report': _build_coverage_report({}, policy),
-                'validation_errors': [{
-                    'code': 'TEMPLATE_UNFILLED',
-                    'message': (f"None of this track's named workouts can be done as written by a {level} "
-                                'athlete with this equipment and these injuries.'),
-                    'suggested_fix': 'The source is written for experienced athletes with a full gym; '
-                                     'check the training level and equipment.'}]}
-    program['coverage_report'] = _build_coverage_report(program, policy)
+    def note_regions(week_index: int, day: int, regions: frozenset) -> None:
+        """What another track's session loads on a day, for the picker's regional rule."""
+        key = week_index * 7 + day
+        region_days[key] = region_days.get(key, frozenset()) | regions
 
-    if output_format == 'dict':
-        if include_trace and generation_trace is not None:
-            program['generation_trace'] = generation_trace
-        return program
+    def finish(entries: list, output_format: str = 'dict', validation=None):
+        # Add compromises to program
+        program['compromises'] = all_compromises
+        if entries and all(e.get('week_template') for e in entries) and \
+                not any(w['schedule'] for w in program['weeks']):
+            # Nothing of the source fits as written (Horsemen has no novice path;
+            # an athlete without its gear gets none of its workouts): say so
+            # rather than hand back weeks of rest.
+            level = constraints.get('training_level', 'intermediate')
+            return {'weeks': [], 'compromises': all_compromises,
+                    'coverage_report': _build_coverage_report({}, policy),
+                    'validation_errors': [{
+                        'code': 'TEMPLATE_UNFILLED',
+                        'message': (f"None of this track's named workouts can be done as written by a {level} "
+                                    'athlete with this equipment and these injuries.'),
+                        'suggested_fix': 'The source is written for experienced athletes with a full gym; '
+                                         'check the training level and equipment.'}]}
+        program['coverage_report'] = _build_coverage_report(program, policy)
 
-    return format_program(program, goal, constraints, validation)
+        if output_format == 'dict':
+            if include_trace and generation_trace is not None:
+                program['generation_trace'] = generation_trace
+            return program
+
+        return format_program(program, goal, constraints, validation)
+
+    return ProgramRun(prime=prime, week=week, note_regions=note_regions, finish=finish, program=program)
