@@ -650,6 +650,12 @@ def generate(lanes: list[Lane], constraints: dict, *, num_weeks: int, first_week
         except _Failed as failed:
             last = failed
             lane = failed.lane
+            # Not a matter of room (a movement the equipment or an injury rules
+            # out, a level the track is not written for): if the track cannot
+            # run alone either, nothing the others give up helps.
+            if getattr(failed.error, 'week_minutes', None) is None and not history \
+                    and _alone_error(lane, constraints, injury_flags):
+                return _refusal(lanes, failed, alone=True)
             if failed.rules and lane.kind != 'contract':
                 # A template none of whose days could be filled: give it
                 # another day (the next of its week), else it cannot run.
@@ -657,9 +663,8 @@ def generate(lanes: list[Lane], constraints: dict, *, num_weeks: int, first_week
                     lane.days += 1
                     reserve_days(lanes, pool, frameworks)
                     continue
-                if _alone_error(lane, constraints, injury_flags):
-                    return _refusal(lanes, failed, alone=True)
-                # It runs alone: the other tracks leave it no room, so they give way.
+                # It runs alone (checked above): the other tracks leave it no
+                # room, so they give way.
             made = [h for h in history if h[0] is lane and h[1] != 'optional']
             if failed.rules and made:
                 # A cut broke the track's own phase rules (a session its
@@ -745,7 +750,8 @@ def _refusal(lanes: list[Lane], failed: _Failed, alone: bool = False) -> dict:
     return {'weeks': [], 'compromises': [], 'validation_errors': [{
         'code': 'COMPOSITION_UNFULFILLED',
         'message': message,
-        'suggested_fix': 'Add a training day or minutes, lower its weight, or drop a track.'}]}
+        'suggested_fix': ('Give this track what it needs (minutes, equipment, level), or drop it.' if alone
+                          else 'Add a training day or minutes, lower its weight, or drop a track.')}]}
 
 
 def lane_view(program: dict, key: str) -> dict:
