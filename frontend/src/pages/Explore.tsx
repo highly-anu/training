@@ -20,7 +20,6 @@ import { ARCH_CAT_COLORS, EX_CATEGORY_COLORS, philosophyHex } from '@/lib/explor
 import { cn } from '@/lib/utils'
 import { ArchetypeCard } from '@/components/explore/ArchetypeCard'
 import { PhilosophyPage } from '@/components/explore/philosophy/PhilosophyPage'
-import { PhilosophyCard } from '@/components/explore/philosophy/PhilosophyCard'
 import { usePhilosophyGlances } from '@/api/philosophyDescription'
 import { StandardsLanding } from '@/components/explore/StandardsLanding'
 import { MovementLanding, MovementDetail } from '@/components/explore/MovementPanel'
@@ -188,9 +187,6 @@ function PhilosophyOverview({ philosophies, onSelect }: {
   const { data: matrix } = useSimilarity()
   const { data: glances = [] } = usePhilosophyGlances()
   const byId = useMemo(() => Object.fromEntries(glances.map((g) => [g.id, g])), [glances])
-  // Every card's phase bar on one scale: the longest main track.
-  const scale = useMemo(() => Math.max(1, ...glances.map((g) =>
-    (g.tracks.find((t) => t.id === g.primaryTrackId) ?? g.tracks[0])?.weeks ?? 0)), [glances])
 
   const sorted = useMemo(() => {
     if (sort === 'alpha') return [...philosophies].sort((a, b) => a.name.localeCompare(b.name))
@@ -199,25 +195,74 @@ function PhilosophyOverview({ philosophies, onSelect }: {
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="max-w-4xl mx-auto px-6 py-10 space-y-6">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div className="space-y-1">
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium">Training ontology</p>
-            <h2 className="text-2xl font-semibold leading-snug">{philosophies.length} training philosophies</h2>
-          </div>
-          <SortToggle sort={sort} onChange={setSort} />
+      <div className="max-w-3xl mx-auto px-8 py-12 space-y-8">
+
+        <div className="space-y-3">
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium">
+            Training ontology
+          </p>
+          <h2 className="text-2xl font-semibold leading-snug">
+            {philosophies.length} training philosophies.
+          </h2>
+          <p className="text-sm text-muted-foreground leading-relaxed max-w-lg">
+            From barbell minimalism to movement generalism — each philosophy encodes a distinct theory of how to stress, recover, and progress.
+            Select one to see its tracks and phases, what it builds and what it asks of you.
+          </p>
         </div>
 
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {sorted.map((p) => byId[p.id]
-            ? <PhilosophyCard key={p.id} glance={byId[p.id]} scaleWeeks={scale} onSelect={() => onSelect(p)} />
-            : (
-              <button key={p.id} type="button" onClick={() => onSelect(p)}
-                className="rounded-lg border border-border/40 bg-card/50 p-3 text-left text-xs font-semibold hover:border-primary/40">
-                {p.name}
+        <SortToggle sort={sort} onChange={setSort} />
+
+        <div className="grid grid-cols-2 gap-2">
+          {sorted.map((p) => {
+            const g = byId[p.id]
+            const color = philosophyHex(p.bias)
+            const primary = g && (g.tracks.find((t) => t.id === g.primaryTrackId) ?? g.tracks[0])
+            const phases = g ? g.tracks.reduce((n, t) => n + t.phases.length, 0) : 0
+            const perWeek = primary ? Math.round(primary.mix.reduce((n, m) => n + m.perWeek, 0) * 10) / 10 : null
+            const span = (r: { min: number; ideal: number } | null | undefined) =>
+              !r ? null : r.min === r.ideal ? `${r.ideal}` : `${r.min}–${r.ideal}`
+            const levels = g?.levels ?? []
+            const chip = 'text-[9px] px-1.5 py-0.5 rounded font-mono bg-muted/50 text-muted-foreground border border-border/30'
+            return (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => onSelect(p)}
+                className="flex items-start gap-2.5 rounded-lg border border-border/30 bg-card/40 px-3 py-2.5 text-left
+                           transition-all hover:border-primary/40 hover:shadow-md hover:-translate-y-px hover:bg-muted/20 group cursor-pointer"
+                style={{ borderLeftColor: color, borderLeftWidth: 2 }}
+              >
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <p className="text-xs font-medium leading-snug truncate group-hover:text-primary transition-colors">{p.name}</p>
+                  {g && (
+                    <p className="text-[10px] text-muted-foreground/60 font-mono">
+                      {g.counts.tracks} track{g.counts.tracks === 1 ? '' : 's'} · {phases} phase{phases === 1 ? '' : 's'}
+                      {span(g.weeks) && ` · ${span(g.weeks)} weeks`}
+                    </p>
+                  )}
+                  {g && (
+                    <div className="flex flex-wrap gap-1">
+                      {perWeek != null && perWeek > 0 && (
+                        <span className={chip}>{Number.isInteger(perWeek) ? perWeek : perWeek.toFixed(1)}×/wk</span>
+                      )}
+                      {span(g.sessionMinutes) && <span className={chip}>{span(g.sessionMinutes)} min</span>}
+                      {levels.length > 0 && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded font-mono"
+                          style={{ color, backgroundColor: `${color}15`, border: `1px solid ${color}30` }}>
+                          {levels.length === 1 ? levels[0] : `${levels[0]}–${levels[levels.length - 1]}`}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
               </button>
-            ))}
+            )
+          })}
         </div>
+
+        <p className="text-[10px] text-muted-foreground/30 text-center pb-4">
+          Select a philosophy to explore its full structure
+        </p>
       </div>
     </div>
   )

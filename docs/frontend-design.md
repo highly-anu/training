@@ -2007,9 +2007,8 @@ Active state: primary-tinted background + primary text. Inactive: muted text tha
 
 ### 13.7 Explorer Detail: a Philosophy at a Glance
 
-**Use case:** Explore ▸ Philosophies — the landing cards
-(`components/explore/philosophy/PhilosophyCard.tsx`) and the detail
-(`PhilosophyPage.tsx`). Both lay out the server's `glance`
+**Use case:** Explore ▸ Philosophies' detail
+(`components/explore/philosophy/PhilosophyPage.tsx`). It lays out the server's `glance`
 (`GET /api/philosophies/glance`, and `glance` on
 `GET /api/philosophies/<id>/describe`, `src/explore_philosophy.py`): the same
 keys for every philosophy, numbers and ids rather than prose, so two can be set
@@ -2042,9 +2041,10 @@ every paragraph is one tap away in a sheet (§1.4).
    group's sessions, each slot with the exercises the server says it takes.
 6. Lineage (§13.8) and similar philosophies.
 
-The landing card is the header in miniature: bias icons, name, fingerprint,
-weeks · days · minutes, level pips, and the main track's phase bar on one scale
-for every card, so the wall of cards already compares.
+The landing keeps §13.6's outline and card like every other Explore landing:
+the philosophy's colour as the left border, the name, a metadata line (tracks ·
+phases · weeks) and the Frameworks cards' chips (sessions a week, minutes, the
+level range in the philosophy's colour), read from the same `glance`.
 
 **Key patterns:**
 - **One glance vocabulary** (`Glance.tsx`): `LevelPips`, `StatTile`,
