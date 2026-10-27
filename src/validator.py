@@ -26,6 +26,12 @@ class ValidationResult:
         self.info.append({'code': code, 'message': message})
 
 
+
+def _set_text(items) -> str:
+    """A set as Python prints one, in sorted order: a set's own order changes
+    with the process's hash seed, and so did these messages."""
+    return '{' + ', '.join(repr(x) for x in sorted(items)) + '}'
+
 def validate(
     goal: dict,
     constraints: dict,
@@ -188,12 +194,12 @@ def _check_equipment(goal, constraints, archetypes, result):
         if arch.get('scaling', {}).get('equipment_limited'):
             result.add_info(
                 'EQUIPMENT_SCALED',
-                f"'{arch['name']}' will use equipment-limited scaling (missing: {missing}).",
+                f"'{arch['name']}' will use equipment-limited scaling (missing: {_set_text(missing)}).",
             )
         else:
             result.add_warning(
                 'EQUIPMENT_MISSING',
-                f"Archetype '{arch['name']}' requires {missing} — not available. "
+                f"Archetype '{arch['name']}' requires {_set_text(missing)} — not available. "
                 f"This archetype will be skipped in selection.",
             )
 
