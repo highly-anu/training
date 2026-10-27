@@ -35,6 +35,10 @@ class Renderer {
     // LAP (the BACK button while recording). Default: on to the next step.
     function onLap(ctl, ex) { ctl.skip(); }
 
+    // Whether LAP would leave a step before it has finished on its own, so the
+    // workout asks first (SkipConfirmView). Default: never.
+    function lapSkipsEarly(ctl, ex) { return false; }
+
     // ── shared helpers ───────────────────────────────────────────────────────────
 
     function elapsed(ctl) { return ctl.exerciseElapsedSec(); }

@@ -571,6 +571,29 @@ day) and Ring (the glance until now). The words are `GlanceDay.mc`'s, tested on 
 days. Still for the watch: the glance in a folder, the app among START's activities, and
 whether a glance-launched copy records.
 
+*1.14.0 (2026-10-25): the glance as Garmin's cards, from the athlete's photo of the glance
+loop.* Each style is a white title in the glance font over one row, left-aligned where
+Garmin's "Training" and "Health" cards start (the 18 % inset assumed a full-face Dc; the
+card is ~350 × 125 beside the app's icon). Next up: "Today · 1/2" over the session's icon
+in its colour and its minutes, then "4 ex"; Day bar: the segments with the time left
+beside them. The glance copy keeps each session's `icon`, `archetypeCategory`,
+`exerciseCount` and package `accent`, and today-session's `tomorrow` adds
+`archetypeCategory` and `exerciseCount`. Ring is dropped. A press on the glance opens
+Today (`TodayDetailView`) instead of the pre-start page. Still for the watch: the cards
+beside Garmin's, and the Today page.
+
+*1.14.1 (2026-10-25): no step lost to a brushed LAP.* LAP on a step that would have gone
+on by itself (time left on a block, an interval block, a distance short of its target)
+asks "Skip <step>?" first; START skips, DOWN or LAP again keeps it, and a step with no end
+of its own still ends at once. The Discard page draws Garmin's white keep arrow at DOWN
+instead of the red X of a yes/no question. Still for the watch: the red ring of Garmin's
+pause menu, which Menu2 cannot draw (a photo of Garmin's own first).
+
+*1.14.2 (2026-10-25): the go is heard again.* A lap marked in the FIT file sets off the
+watch's own lap announcement ("Set 3, 2:00"), which no app setting reaches; marked in the
+same instant as the lead-in's go, it swallowed the go's tone and vibration. The lap now
+goes in a tick later. Still for the watch: that the go plays, then the voice.
+
 *Next:* HIIT and Run need the same photos as Strength (pre-start, pause, summary) before
 their pages are matched.
 

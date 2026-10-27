@@ -115,15 +115,19 @@ App settings (`resources/settings`, editable in Garmin Connect Mobile):
 - `leadTickTone`, `leadGoTone` — the count's and the go's tones (`Toybox.Attention`
   `TONE_*`, default Alert Low and Loud Beep). Picked by ear on the watch only (Settings ▸
   Lead-in Tones plays each as it is selected), so they are not in Garmin Connect Mobile.
-- `glanceStyle` — the glance (since 1.12.0; `GlanceView.mc` draws, `GlanceDay.mc` words):
-  **Next up** (default) — Garmin's own glance layout, left-aligned in the glance font:
-  the day's state ("TODAY · 2/3"), the next session, its minutes and the week's
-  "3/5 this wk", beside a bar in that session's colour; **Day bar** — a title, a
-  segment per session in its modality's colour (bright once done; on a rest day the
-  week's sessions) and "2 left · 1h 10m" under it; **Ring** — the glance before 1.12,
-  a ring at the left (readiness, then the day's sessions, then a tick) beside a label
-  and one line. Rest days, the evening's look at tomorrow and the finished day follow
-  each style. Also on the watch: Settings ▸ Glance.
+- `glanceStyle` — the glance (since 1.12.0; `GlanceView.mc` draws, `GlanceDay.mc` words),
+  as Garmin's own cards since 1.14.0: a white title in the glance font over one row.
+  **Next up** (default) — "Today · 1/2" over the next session's icon in its colour with
+  its minutes, then its exercise count ("[kettlebell] 23 min  [steps] 4 ex");
+  **Day bar** — "Today" over a segment per session (its colour, bright once done; on a
+  rest day the week's sessions) with the time left beside them. Rest days, the
+  evening's look at tomorrow and the finished day follow each style. The icons are
+  `glance.xml`'s, scoped to the glance. Ring (until 1.14) is gone; a stored 2 reads as
+  Next up. Also on the watch: Settings ▸ Glance.
+- A press on the glance opens **Today** (`TodayDetailView.mc`): the day's sessions with
+  their icons, minutes and exercises (ticked once done), the week and readiness. START
+  opens the pre-start page, BACK returns to the glance loop. With `autoStartOnLaunch`
+  on, the press still goes straight into the session.
 
 The same switches are on the watch: Settings, in the pre-start page's hold-UP menu and
 the workout's (`SettingsMenu.mc`, values in `Cues.mc`). **The Garmin cannot speak.**
@@ -131,6 +135,12 @@ Connect IQ has no text-to-speech, no sound-file resource and no way to reach the
 own voice prompts, and a custom `ToneProfile` pitch plays nothing on a watch with a
 speaker (the fenix 8 and 9) — so the lead-in is the watch's built-in tones. The Apple
 Watch says it ("Work in 3", "2", "1", "Go", `watch_vocabulary.json` `cues`).
+
+The voice the fenix 9 does speak ("Set 3, 2:00") is the watch's own lap announcement,
+set off by each lap the app marks in the FIT file (a step's end, an interval round) and
+turned off only in the watch's Audio Prompts settings, never by `cueTones`. It used to
+swallow the lead-in's go, played in the same instant; since 1.14.2 the lap is marked a
+tick later (`WorkoutController.markLap`), so the go sounds first.
 
 ## How it talks to the backend
 
@@ -215,8 +225,11 @@ Resolved (verified by compiling against SDK 9.2.0):
   Progress, Readiness, Settings, Sync. With the header focused START starts the
   workout at once (after Countdown Start); DOWN moves into the list, START opens a
   row, BACK returns to the header. Once started, START pauses and opens Resume / Save / Discard (Discard asks with the system's
-  delete confirmation); BACK is LAP — it ends a set (then the rest runs), ends a
-  rest early, counts a round or lap, or moves to the next step; DOWN/UP turn the
+  delete confirmation: the red trash at START, the white keep arrow at DOWN); BACK is LAP — it ends a set (then the rest runs), ends a
+  rest early, counts a round or lap, or moves to the next step — after "Skip <step>?"
+  (`SkipConfirmView`; START skips, DOWN or LAP again keeps it) when the step would have
+  gone on by itself: time left on a block, an interval block, a distance short of its
+  target (`Renderer.lapSkipsEarly`, since 1.14.1); DOWN/UP turn the
   pages, and on the step page walk the list; hold UP opens Stop Workout / Skip / Set Next
   (the next sets' reps and load) / Edit Set / Settings. Edit Set changes the last set (reps ±1, weight ±2.5 kg, RPE ±0.5) and
   carries the new values to the sets after it. When every step is done the
@@ -253,11 +266,13 @@ Resolved (verified by compiling against SDK 9.2.0):
 
 Remaining:
 - Hardware verification: first watch sideload + full pair→today→run→upload test.
-- The glance on the fenix 9 (1.12.0), which the simulator cannot answer: each style
-  in the glance loop and in a glance folder, whether the app is listed among the
+- The glance on the fenix 9 (1.14.0), which the simulator cannot answer: each card
+  against Garmin's beside it (the 4 % inset and the 350 × 125 card were measured from
+  one photo), in a glance folder, whether the app is listed among the
   START button's activities and can be a favourite, and whether a copy launched from
-  the glance records (if not, a glance tap should open Today read-only). A Connect IQ
-  app has one glance, so the styles are a setting, not three glances. The glance's
+  the glance records (a glance press now opens Today, whose START goes to the pre-start
+  page). A Connect IQ app has one glance, so the styles are a setting, not several
+  glances. The glance's
   accent colour (`AppBase.getGlanceTheme`) is not offered: the SDK lists the fenix 8
   for it, not the fenix 9.
 - Daily wellness is sent on open (slice 5 of item 2 in `docs/roadmap.md`), written

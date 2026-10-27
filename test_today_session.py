@@ -19,13 +19,22 @@ def _session(name, modality='max_strength', minutes=50):
             'exercises': []}
 
 
+def _ruck():
+    s = _session('Ruck', 'aerobic_base', 90)
+    s['archetype']['category'] = 'conditioning'
+    s['exercises'] = [{'exercise': {'id': 'ruck_march', 'name': 'Ruck March'},
+                       'slot_type': 'time_domain', 'role': 'ruck', 'load': {}},
+                      {'injury_skip': True, 'slot_type': 'sets_reps', 'role': 'carry'}]
+    return s
+
+
 PROGRAM = {
     'programStartDate': '2026-10-05',          # a Monday
     'currentProgram': {'weeks': [{
         'week_number': 1,
         'schedule': {
             'Friday': [_session('Strength A'), _session('PT Prep', 'strength_endurance', 25)],
-            'Saturday': [_session('Ruck', 'aerobic_base', 90)],
+            'Saturday': [_ruck()],
         },
     }]},
 }
@@ -59,6 +68,9 @@ def run():
     t = body['tomorrow']
     check(t and t['sessionCount'] == 1 and t['archetypeName'] == 'Ruck'
           and t['estimatedMinutes'] == 90, f"tomorrow {t}")
+    # The glance card's icon and "1 ex": the injury-skipped slot is not sent.
+    check(t.get('archetypeCategory') == 'conditioning' and t.get('exerciseCount') == 1,
+          f"tomorrow's category and exercise count {t}")
 
     # progress: this week's sessions done of those due (Friday's two; Saturday's
     # is ahead) and of all three, the program so far, and no headline until the

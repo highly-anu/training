@@ -1,0 +1,63 @@
+<resources xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
+  <!-- The glance card's icons (GlanceView.mc), beside each value as on Garmin's
+       own cards: the same white-on-transparent SVGs as icons.xml, tinted when
+       drawn, at about the glance font's cap height. Scoped to the glance (which
+       makes them the app's too); icons.xml keeps its 46 out of the 64 KB glance. -->
+  <bitmap id="GlKettlebell" filename="icons/cat/cat_kettlebell.svg"
+          scaleX="6%" scaleY="6%" scaleRelativeTo="screen"
+          automaticPalette="false" packingFormat="default"
+          scope="glance" />
+  <bitmap id="GlStrength" filename="icons/cat/cat_strength.svg"
+          scaleX="6%" scaleY="6%" scaleRelativeTo="screen"
+          automaticPalette="false" packingFormat="default"
+          scope="glance" />
+  <bitmap id="GlConditioning" filename="icons/cat/cat_conditioning.svg"
+          scaleX="6%" scaleY="6%" scaleRelativeTo="screen"
+          automaticPalette="false" packingFormat="default"
+          scope="glance" />
+  <bitmap id="GlGppDurability" filename="icons/cat/cat_gpp_durability.svg"
+          scaleX="6%" scaleY="6%" scaleRelativeTo="screen"
+          automaticPalette="false" packingFormat="default"
+          scope="glance" />
+  <bitmap id="GlMovementSkill" filename="icons/cat/cat_movement_skill.svg"
+          scaleX="6%" scaleY="6%" scaleRelativeTo="screen"
+          automaticPalette="false" packingFormat="default"
+          scope="glance" />
+  <bitmap id="GlCombatSport" filename="icons/cat/cat_combat_sport.svg"
+          scaleX="6%" scaleY="6%" scaleRelativeTo="screen"
+          automaticPalette="false" packingFormat="default"
+          scope="glance" />
+  <bitmap id="GlRecovery" filename="icons/cat/cat_recovery.svg"
+          scaleX="6%" scaleY="6%" scaleRelativeTo="screen"
+          automaticPalette="false" packingFormat="default"
+          scope="glance" />
+  <bitmap id="GlGeneric" filename="icons/cat/ui_generic.svg"
+          scaleX="6%" scaleY="6%" scaleRelativeTo="screen"
+          automaticPalette="false" packingFormat="default"
+          scope="glance" />
+  <bitmap id="GlCheck" filename="icons/cat/ui_check.svg"
+          scaleX="6%" scaleY="6%" scaleRelativeTo="screen"
+          automaticPalette="false" packingFormat="default"
+          scope="glance" />
+  <bitmap id="GlSets" filename="icons/cat/slot_sets_reps.svg"
+          scaleX="6%" scaleY="6%" scaleRelativeTo="screen"
+          automaticPalette="false" packingFormat="default"
+          scope="glance" />
+  <bitmap id="GlRest" filename="icons/cat/ui_rest.svg"
+          scaleX="6%" scaleY="6%" scaleRelativeTo="screen"
+          automaticPalette="false" packingFormat="default"
+          scope="glance" />
+  <bitmap id="GlSync" filename="icons/cat/ui_sync.svg"
+          scaleX="6%" scaleY="6%" scaleRelativeTo="screen"
+          automaticPalette="false" packingFormat="default"
+          scope="glance" />
+  <bitmap id="GlSteps" filename="icons/menu/menu_list.svg"
+          scaleX="6%" scaleY="6%" scaleRelativeTo="screen"
+          automaticPalette="false" packingFormat="default"
+          scope="glance" />
+  <bitmap id="GlWeek" filename="icons/menu/menu_week.svg"
+          scaleX="6%" scaleY="6%" scaleRelativeTo="screen"
+          automaticPalette="false" packingFormat="default"
+          scope="glance" />
+</resources>

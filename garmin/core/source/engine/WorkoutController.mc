@@ -86,6 +86,7 @@ class WorkoutController {
     hidden var _amrapRounds;    // rounds the athlete has logged (AMRAP / for-time)
     hidden var _capSec;         // AMRAP time cap in seconds (0 = none)
     hidden var _capBuzzed;      // whether the cap-reached buzz has fired
+    hidden var _lapDue;         // a lap to mark on the next tick (markLap)
 
     // Real work/rest interval structure, from the slot's workSec/intervalRestSec.
     // Deriving an interval as (total time / rounds) cannot express Tabata — 8
@@ -178,6 +179,7 @@ class WorkoutController {
         _lastError = null;
         _paused = false;
         _discarded = false;
+        _lapDue = false;
         _countIn = 0;
         seedSetEditor();
     }
@@ -310,6 +312,7 @@ class WorkoutController {
             WatchUi.requestUpdate();
             return;
         }
+        flushLap();
         if (_paused) { return; }
         _elapsed += 1;
         var info = Activity.getActivityInfo();
@@ -686,7 +689,16 @@ class WorkoutController {
 
     // Mark a lap in the FIT file. addLap() was never called before, so per-exercise
     // and per-round splits never reached Garmin Connect at all.
-    hidden function markLap() {
+    //
+    // The lap goes in on the next tick, a second after the cue that came with it.
+    // A lap sets off the watch's own lap announcement ("Set 3, 2:00", Settings ▸
+    // Audio Prompts, which a watch app cannot turn off), and the announcement
+    // swallowed the lead-in's go and the vibration played in the same instant.
+    hidden function markLap() { _lapDue = true; }
+
+    hidden function flushLap() {
+        if (!_lapDue) { return; }
+        _lapDue = false;
         if (_rec != null && (_rec has :addLap)) {
             try { _rec.addLap(); } catch (e) {}
         }
@@ -1298,6 +1310,7 @@ class WorkoutController {
     // recording. Resume continues the same FIT session.
     function pause() {
         if (_state == COMPLETE || _paused) { return; }
+        flushLap();
         _paused = true;
         stopMetronome();
         try { if (_rec != null) { _rec.stop(); } } catch (e) { noteError("pause", e); }
@@ -1356,6 +1369,7 @@ class WorkoutController {
         // workout reaching its finish screen, and the failure is shown there.
         try {
             if (_rec != null) {
+                flushLap();
                 _rec.stop();
                 // A demo session is not a real activity: discard it rather than
                 // writing it to the watch's history (and on to Garmin Connect).

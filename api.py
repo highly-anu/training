@@ -3999,6 +3999,13 @@ def get_today_session():
                 'modalityId': first.get('modality') or '',
                 'archetypeName': t_arch.get('name') or first.get('modality') or '',
                 'estimatedMinutes': _pick(t_arch, 'duration_estimate_minutes', 'durationEstimateMinutes') or 45,
+                # The glance's card ("[icon] 90 min  [steps] 5 ex"): the category
+                # picks the icon, and the count is the exercises the watch would
+                # be sent for it.
+                'archetypeCategory': t_arch.get('category'),
+                'exerciseCount': sum(
+                    1 for ea in (first.get('exercises') or [])
+                    if _encode_watch_exercise(ea, first.get('modality') or '') is not None),
             }
             t_icon = _session_icon.session_icon(first)
             if t_icon:

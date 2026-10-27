@@ -63,6 +63,12 @@ class TrainingCompanionApp extends Application.AppBase {
             }
         }
 
+        // A press on the glance opens the day's detail, as Garmin's own glances
+        // do; with autoStartOnLaunch on it still goes straight into the session.
+        if (_deepLinkToday && Application.Properties.getValue("autoStartOnLaunch") != true) {
+            return [ new TodayDetailView(), new TodayDetailDelegate() ];
+        }
+
         // Paired: show today's session (loads from cache, refreshes in background).
         // When deep-linked from the complication/glance, SessionListView can jump
         // straight into the session (opt-in via the autoStartOnLaunch setting).

@@ -951,9 +951,9 @@ way they own their analytics. Layout and the add-a-philosophy walk-through:
   older build ignores the key) (`api._watch_progress`): this program
   week's sessions done / due / in all, the program's done of due, and the
   methodology's headline sentence read from the cached `/analytics/program`
-  snapshot — never computed on the watch's sync. The Garmin glance adds
-  "3/5 THIS WK" to its label on a rest day, in the evening and once the day is
-  done (GlanceCache keeps the two numbers); the Apple Watch reads `completed`
+  snapshot — never computed on the watch's sync. The Garmin glance shows
+  "3/5 wk" on a rest day and when a finished day logged no sets (GlanceCache
+  keeps the two numbers, and each session's icon, exercise count and colour); the Apple Watch reads `completed`
   and `progress` from the day the phone relays, joins them to what it recorded
   itself and shows the week's count over the week ahead. The
   Garmin app's activity menu has a Progress page (week, programme, the

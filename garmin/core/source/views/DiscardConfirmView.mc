@@ -4,9 +4,9 @@ using Toybox.Lang;
 import Rez.Styles;
 
 // "Discard?" — the Personality Library's Delete Confirmation, so it is the watch's
-// own page: the red trash hint at the confirm button (START), the back-arrow hint
-// at the reject button (DOWN on a fenix 9), the body in the system font. Buttons
-// come from the same selectors, so they always match the hints drawn.
+// own page: the red trash hint at the delete button (START), the white back
+// arrow at the keep button (DOWN on a fenix 9), the body in the system font.
+// Buttons come from the same selectors, so they always match the hints drawn.
 class DiscardConfirmView extends Ui.View {
 
     function initialize() { View.initialize(); }
@@ -43,7 +43,7 @@ class DiscardConfirmDelegate extends Ui.InputDelegate {
             Ui.switchToView(ov, new OutcomeDelegate(ov), Ui.SLIDE_IMMEDIATE);
             return true;
         }
-        if (k == Styles.confirmation_input__reject.button || k == Ui.KEY_ESC) {
+        if (k == Styles.confirmation_input__keep.button || k == Ui.KEY_ESC) {
             Ui.popView(Ui.SLIDE_IMMEDIATE);
         }
         return true;

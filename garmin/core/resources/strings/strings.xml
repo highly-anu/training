@@ -10,5 +10,6 @@
   <string id="Complete">Session complete</string>
   <string id="SyncError">Sync failed — will retry</string>
   <string id="DiscardQ">Discard?</string>
+  <string id="SkipQ">Skip step?</string>
   <string id="Resume">Resume session</string>
 </strings>
