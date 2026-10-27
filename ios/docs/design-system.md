@@ -1180,14 +1180,16 @@ profile's and compares them:
   and the card says "Your program doesn't change with these settings". No offer.
   Adding a kettlebell no session uses used to ask for a rebuild.
 - **Affected** — "These settings change 18 sessions from week 1", the
-  differences, **Preview changes** (Program ▸ Preview in regenerate mode, the
-  moved sessions marked, §6.39) and **Apply from week N**
-  (`applyRegeneratedTail`: the tail the check built, spliced onto the weeks and
-  days already behind the athlete, saved through the revision-checked PUT).
+  differences and **Preview changes** (Program ▸ Preview in regenerate mode,
+  the days already behind the athlete as planned and the moved sessions marked,
+  §6.39). Only the preview's **Apply from week N** saves
+  (`applyRegeneratedTail`: the tail spliced onto the weeks and days already
+  behind the athlete, through the revision-checked PUT); the card no longer
+  applies on its own.
 - **Refused** — "These settings can't build the rest of your program", the
   engine's reason and **See why** (the preview's "What would let it build").
 - **Not comparable or the check failed** — the old "built for different
-  settings" wording, and Apply regenerates as before.
+  settings" wording, and Preview changes generates the tail for the preview.
 
 After Apply the difference is gone, and with it the reason the card was shown;
 `AppState.profileOfferOutcome` (`.applied(weeks:)` / `.adopted`) keeps the

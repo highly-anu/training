@@ -3,7 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { differenceInCalendarDays, format, parseISO } from 'date-fns'
 import { CalendarDays, Wand2, ShieldAlert, Plus } from 'lucide-react'
-import { useCurrentProgram, useRegenerateFromWeek } from '@/api/programs'
+import { useCurrentProgram } from '@/api/programs'
+import { useRegeneratePreview } from '@/hooks/useRegeneratePreview'
 import { WeekCalendar } from '@/components/program/WeekCalendar'
 import { WeekSelector } from '@/components/program/WeekSelector'
 import { PhaseBar } from '@/components/program/PhaseBar'
@@ -72,7 +73,7 @@ export function ProgramView() {
   })()
   const currentWeekData = program?.weeks[weekIndex]
   const { segments, totalWeeks } = usePhaseCalendar(program ?? undefined, weekIndex + 1)
-  const regenerate = useRegenerateFromWeek()
+  const regenerate = useRegeneratePreview()
 
   // Which array index is the real current calendar week?
   const currentCalendarWeekIdx = useMemo(() => {
@@ -106,7 +107,8 @@ export function ProgramView() {
     if (!program || !currentWeekData) return
     const { sourceGoalIds: storedIds, sourceGoalWeights } = useProgramStore.getState()
     const resume = tailResume(program, weekIndex)
-    regenerate.mutate(
+    // Shown in Program ▸ Preview first; saved only on its Apply.
+    regenerate.open(
       {
         ...regenerateSource(storedIds, sourceGoalWeights, program),
         trackId: resume.trackId,
@@ -124,7 +126,7 @@ export function ProgramView() {
         // Never the days already behind the athlete.
         keepBefore: format(new Date(), 'yyyy-MM-dd'),
       },
-      { onSuccess: () => setInjurySheetOpen(false) }
+      weekIndex,
     )
   }
 
@@ -292,12 +294,12 @@ export function ProgramView() {
               className="w-full h-9 rounded-md bg-primary text-sm font-medium text-primary-foreground disabled:opacity-50 transition-opacity"
             >
               {regenerate.isPending
-                ? 'Generating…'
-                : `Regenerate from Week ${weekIndex + 1}`}
+                ? 'Building a preview…'
+                : `Preview from Week ${weekIndex + 1}`}
             </button>
-            {regenerate.isError && (
+            {regenerate.error && (
               <p className="text-xs text-red-700 dark:text-red-300">
-                {regenerate.error instanceof Error ? regenerate.error.message : 'Could not regenerate'}
+                {regenerate.error.message || 'Could not regenerate'}
               </p>
             )}
           </div>

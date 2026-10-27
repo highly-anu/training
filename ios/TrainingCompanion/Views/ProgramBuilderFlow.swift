@@ -927,6 +927,16 @@ struct ProgramSettingsSheet: View {
     @State private var isRegeneratingTail = false
     /// The rebuilt program, previewed before it replaces this one.
     @State private var preview: PreviewDraft? = nil
+    /// The rest of this program rebuilt from this week, previewed before it
+    /// is applied: (start week index, the sessions it changes, the draft).
+    @State private var tailPreview: TailPreview? = nil
+
+    struct TailPreview: Identifiable, Hashable {
+        let draft: PreviewDraft
+        let start: Int
+        let changed: Set<String>
+        var id: PreviewDraft.ID { draft.id }
+    }
 
     /// Seeded from the live program once, at construction. This replaces a
     /// placeholder state object built from an empty program and field-copied
@@ -975,6 +985,12 @@ struct ProgramSettingsSheet: View {
                 ProgramPreviewView(mode: .new, request: p.request, draft: p.draft,
                                    onEditSchedule: { preview = nil }) { started in
                     if started { settings.didSucceed = true }
+                }
+            }
+            .navigationDestination(item: $tailPreview) { p in
+                ProgramPreviewView(mode: .regenerate(start: p.start, changed: p.changed),
+                                   request: p.draft.request, draft: p.draft.draft) { applied in
+                    if applied { settings.didSucceed = true }
                 }
             }
         }
@@ -1107,7 +1123,7 @@ struct ProgramSettingsSheet: View {
                     if isRegeneratingTail {
                         ProgressView()
                     } else {
-                        Label("Regenerate from this week", systemImage: "arrow.uturn.forward")
+                        Label("Preview from this week", systemImage: "arrow.uturn.forward")
                     }
                     Spacer()
                 }
@@ -1131,21 +1147,24 @@ struct ProgramSettingsSheet: View {
             .buttonStyle(.borderedProminent)
             .disabled(settings.isGenerating || settings.selectedPhilosophyId.isEmpty)
         } footer: {
-            // The preview asks before it replaces anything; the current plan
-            // is kept in Program ▸ History with everything logged against it.
-            Text("Builds a new program with these settings and shows it first. Nothing changes until you start it.")
+            // Both preview first and ask before they change anything; the
+            // current plan is kept in Program ▸ History with everything logged
+            // against it.
+            Text("Preview from this week keeps the weeks and days behind you and rebuilds the rest. Preview a new program builds a new one with these settings. Both show it first; nothing changes until you apply or start it.")
                 .font(.caption)
         }
     }
 
     // MARK: - Generation
 
+    /// Rebuilds the rest from this week and shows it; the preview's Apply saves.
     private func regenerateFromThisWeek() async {
         isRegeneratingTail = true
         settings.generationError = nil
         do {
-            try await appState.regenerateFromCurrentWeek()
-            settings.didSucceed = true
+            let p = try await appState.previewRegenerateFromCurrentWeek()
+            tailPreview = TailPreview(draft: PreviewDraft(request: p.request, draft: p.draft),
+                                      start: p.start, changed: p.changed)
         } catch {
             settings.generationError = error.localizedDescription
         }

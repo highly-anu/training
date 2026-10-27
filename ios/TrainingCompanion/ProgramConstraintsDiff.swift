@@ -179,6 +179,42 @@ enum Regeneration {
         return GeneratedProgram(weeks: weeks, extra: extra)
     }
 
+    /// The regenerated tail as it will be saved: the days already behind the
+    /// athlete in its first week are the program's own (`splice`), so the
+    /// preview shows what Apply keeps — the web's `regeneratePreviewDraft`.
+    static func previewTail(current: GeneratedProgram, from start: Int, generated: GeneratedProgram,
+                            programStartDate: String?, keepBefore: String) -> GeneratedProgram {
+        guard !generated.isInfeasible else { return generated }
+        let spliced = splice(current: current, from: start, generated: generated,
+                             programStartDate: programStartDate, keepBefore: keepBefore)
+        let keep = max(0, min(start, current.weeks.count))
+        return GeneratedProgram(weeks: Array(spliced.weeks.dropFirst(keep)), extra: generated.extra)
+    }
+
+    /// The sessions a regenerated tail plans differently from the weeks it
+    /// replaces, as ProgramPreviewView's "week|day|index" ids (tail-relative)
+    /// — the web's `changedSessionKeys`. A day the tail leaves emptier is
+    /// marked on its last session, so a removed session is never silent.
+    static func changedSessions(current: GeneratedProgram, tail: GeneratedProgram, from start: Int) -> Set<String> {
+        func signature(_ s: ProgramSession) -> String {
+            "\(s.modality)|\(s.archetype?.id ?? "")|\(s.archetype?.name ?? "")|"
+                + s.exercises.map { $0.exercise?.id ?? "" }.joined(separator: ",")
+        }
+        var ids: Set<String> = []
+        for (i, week) in tail.weeks.enumerated() {
+            let old = start + i < current.weeks.count ? current.weeks[start + i] : nil
+            for day in dayOrder {
+                let now = week.schedule[day] ?? [], was = old?.schedule[day] ?? []
+                for s in 0..<max(now.count, was.count) {
+                    let a = s < now.count ? signature(now[s]) : nil
+                    let b = s < was.count ? signature(was[s]) : nil
+                    if a != b { ids.insert("\(i)|\(day)|\(min(s, max(0, now.count - 1)))") }
+                }
+            }
+        }
+        return ids
+    }
+
     static let dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
     /// `start` + `days` as YYYY-MM-DD — `workout_matcher.session_calendar_date`'s

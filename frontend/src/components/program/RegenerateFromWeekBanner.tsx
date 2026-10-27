@@ -1,19 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useQueryClient } from '@tanstack/react-query'
 import { differenceInCalendarDays, format, parseISO } from 'date-fns'
-import { Check, Loader2, RefreshCw, ScanEye } from 'lucide-react'
+import { Check, Loader2, ScanEye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useProgramStore } from '@/store/programStore'
 import { useProfileStore } from '@/store/profileStore'
-import { usePreviewStore } from '@/store/previewStore'
 import {
-  adoptProgramConstraints, commitRegeneratedTail, isInfeasible, useConstraintChangeCheck, useRegenerateFromWeek,
+  adoptProgramConstraints, isInfeasible, useConstraintChangeCheck,
   type GenerateParams,
 } from '@/api/programs'
 import { constraintDifferences, mergedConstraints } from '@/lib/programConstraintsDiff'
 import { regenerateSource, tailResume } from '@/lib/programSource'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useRegeneratePreview } from '@/hooks/useRegeneratePreview'
 
 /**
  * Shown on Profile when the profile's level, equipment, schedule or injuries
@@ -25,12 +23,10 @@ import { useDebounce } from '@/hooks/useDebounce'
  * the program both ways (POST /programs/constraint-change). A change that
  * moves nothing is recorded on the program (PATCH /user/program/constraints)
  * and the offer never appears; one that does says how many sessions it moves,
- * and opens them in the preview or applies them from the current week,
+ * and opens them in the preview, applied from there from the current week,
  * keeping the weeks and days already behind the athlete.
  */
 export function RegenerateFromWeekBanner() {
-  const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const program = useProgramStore((s) => s.currentProgram)
   const programStartDate = useProgramStore((s) => s.programStartDate)
   const revision = useProgramStore((s) => s.revision)
@@ -41,10 +37,10 @@ export function RegenerateFromWeekBanner() {
   const injuryFlags = useProfileStore((s) => s.injuryFlags)
   const customInjuryFlags = useProfileStore((s) => s.customInjuryFlags)
   const weeklySchedule = useProfileStore((s) => s.weeklySchedule)
-  const regenerate = useRegenerateFromWeek()
-  // What the last difference came to, said once it is gone: the banner used
-  // to vanish the moment an apply removed the difference it was about.
-  const [outcome, setOutcome] = useState<{ applied: number } | { adopted: true } | null>(null)
+  const regenerate = useRegeneratePreview()
+  // That the program holds for the new settings, said once the difference is
+  // gone (an applied change was confirmed in its preview).
+  const [outcome, setOutcome] = useState<{ adopted: true } | null>(null)
 
   const profile = useMemo(() => ({ trainingLevel, equipment, injuryFlags, weeklySchedule }),
                           [trainingLevel, equipment, injuryFlags, weeklySchedule])
@@ -127,9 +123,7 @@ export function RegenerateFromWeekBanner() {
     return (
       <p className="mx-6 mt-4 inline-flex items-center gap-1.5 text-xs text-muted-foreground" aria-live="polite">
         <Check className="size-3.5" aria-hidden="true" />
-        {'applied' in outcome
-          ? `Rebuilt ${outcome.applied} week${outcome.applied === 1 ? '' : 's'} with these settings. The previous plan is in Program ▸ History.`
-          : 'Your program doesn’t change with these settings.'}
+        Your program doesn’t change with these settings.
       </p>
     )
   }
@@ -155,21 +149,12 @@ export function RegenerateFromWeekBanner() {
   const tail = result?.program
   const refused = !!tail && isInfeasible(tail)
 
+  // Every change is previewed, and applied from there: the banner used to
+  // apply it straight away as well. Without the comparison's tail (the check
+  // failed) the preview generates one.
   function preview() {
-    if (!tail || !request) return
-    usePreviewStore.getState().open('regenerate', request.params, tail,
-                                    { startIdx, changes: result?.changes ?? [] })
-    navigate('/program/preview?mode=regenerate&tab=calendar')
-  }
-
-  function applyNow() {
     if (!request) return
-    if (tail && !refused) {
-      if (commitRegeneratedTail(queryClient, tail, request.params)) setOutcome({ applied: remaining })
-      return
-    }
-    // The check failed: regenerate as before, without knowing what it moves.
-    regenerate.mutate(request.params, { onSuccess: () => setOutcome({ applied: remaining }) })
+    regenerate.open(request.params, startIdx, tail, result?.changes ?? [])
   }
 
   const changed = result?.sessions.changed ?? 0
@@ -198,17 +183,12 @@ export function RegenerateFromWeekBanner() {
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {tail && (
-            <Button size="sm" variant={refused ? 'default' : 'outline'} onClick={preview}>
-              <ScanEye className="size-3.5" aria-hidden="true" /> {refused ? 'See why' : 'Preview changes'}
-            </Button>
-          )}
-          {!refused && (
-            <Button size="sm" onClick={applyNow} disabled={regenerate.isPending || ids.length === 0}>
-              <RefreshCw className={regenerate.isPending ? 'size-3.5 animate-spin' : 'size-3.5'} />
-              {regenerate.isPending ? 'Regenerating…' : `Apply from week ${startIdx + 1}`}
-            </Button>
-          )}
+          <Button size="sm" onClick={preview} disabled={regenerate.isPending}>
+            {regenerate.isPending
+              ? <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+              : <ScanEye className="size-3.5" aria-hidden="true" />}
+            {regenerate.isPending ? 'Building a preview…' : refused ? 'See why' : 'Preview changes'}
+          </Button>
         </div>
       </div>
       <p className="text-[11px] text-muted-foreground">
@@ -217,9 +197,9 @@ export function RegenerateFromWeekBanner() {
           : `Rebuilds the program's ${remaining} weeks with these settings; the days already behind you this week keep their sessions.`}
         {' '}The current plan stays in Program ▸ History.
       </p>
-      {regenerate.isError && (
+      {regenerate.error && (
         <p className="text-xs text-red-700 dark:text-red-300">
-          {regenerate.error instanceof Error ? regenerate.error.message : 'Could not regenerate'}
+          {regenerate.error.message || 'Could not regenerate'}
         </p>
       )}
     </div>

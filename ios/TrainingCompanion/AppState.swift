@@ -1218,16 +1218,36 @@ final class AppState: ObservableObject {
     /// difference to check, or what the last one came to.
     var showsRegenerateOffer: Bool { !constraintDifferences.isEmpty || profileOfferOutcome != nil }
 
-    /// Rebuild the remaining weeks from the current calendar week with the
-    /// profile's current settings, keeping the weeks already behind the
-    /// athlete; saved through the revision-checked PUT, so the old plan stays
-    /// in history. Returns how many weeks were regenerated.
-    @discardableResult
-    func regenerateFromCurrentWeek() async throws -> Int {
+    /// The remaining weeks from the current calendar week rebuilt with the
+    /// profile's current settings, for ProgramPreviewView(.regenerate) —
+    /// never saved here. Every regenerate is previewed and saved only by the
+    /// preview's Apply (`applyRegeneratedTail`); this one used to save the
+    /// moment the tail came back.
+    func previewRegenerateFromCurrentWeek() async throws
+        -> (request: GenerateProgramRequest, start: Int, draft: GeneratedProgram, changed: Set<String>) {
         guard let api else { throw APIError.unauthenticated }
         let (request, start, _) = try regenerateRequest()
-        let generated = try await api.generateProgramPreview(request)
-        return try applyRegeneratedTail(generated, from: start)
+        let preview = regeneratePreviewDraft(try await api.generateProgramPreview(request), from: start)
+        return (request, start, preview.draft, preview.changed)
+    }
+
+    /// A regenerated tail as the preview shows it: the days already behind
+    /// the athlete this week as planned (what Apply keeps), and the sessions
+    /// that differ from the plan it replaces marked.
+    func regeneratePreviewDraft(_ generated: GeneratedProgram, from start: Int)
+        -> (draft: GeneratedProgram, changed: Set<String>) {
+        guard let sp = serverProgram, let program = sp.currentProgram else { return (generated, []) }
+        let tail = Regeneration.previewTail(current: program, from: start, generated: generated,
+                                            programStartDate: sp.programStartDate, keepBefore: Self.athleteToday())
+        return (tail, Regeneration.changedSessions(current: program, tail: tail, from: start))
+    }
+
+    /// Today as YYYY-MM-DD in the device's zone — the athlete's day.
+    private static func athleteToday() -> String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "yyyy-MM-dd"
+        return f.string(from: Date())
     }
 
     /// The regenerate the profile asks for — the rest of the program from the
@@ -1277,13 +1297,10 @@ final class AppState: ObservableObject {
             throw APIError.serverErrorDetail(422, generated.validation?.errors.first?.message
                                              ?? "These settings cannot build the rest of the program.")
         }
-        let today = DateFormatter()
-        today.locale = Locale(identifier: "en_US_POSIX")
-        today.dateFormat = "yyyy-MM-dd"
         // The days already behind the athlete this week stay as they are.
         let spliced = Regeneration.splice(current: program, from: start, generated: generated,
                                           programStartDate: sp.programStartDate,
-                                          keepBefore: today.string(from: Date()))
+                                          keepBefore: Self.athleteToday())
         commit(weeks: spliced.weeks, to: sp, extra: spliced.extra)
         return program.weeks.count - start
     }

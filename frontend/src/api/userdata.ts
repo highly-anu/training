@@ -117,6 +117,13 @@ export async function saveUserProgram(program: ServerProgram): Promise<boolean> 
         console.warn('[program] save rejected — the server has a newer program. Reload to pick it up.')
         return false
       }
+      // start_date_changed: an edit may not move the start date (only
+      // starting a previewed program sets one). Retrying would be refused too.
+      if (message.includes('start_date_changed')) {
+        lastProgramSaveError = 'start_date_changed'
+        console.warn('[program] save rejected — an edit cannot move the program\'s start date.')
+        return false
+      }
       lastProgramSaveError = message
       if (attempt === 0) {
         await new Promise((r) => setTimeout(r, 800))

@@ -135,4 +135,29 @@ final class ProgramConstraintsDiffTests: XCTestCase {
         XCTAssertEqual(Regeneration.splice(current: current, from: 0, generated: generated).weeks[0].schedule.keys.sorted(),
                        ["Saturday", "Sunday", "Tuesday"], "without a cutoff the week is the generated one")
     }
+
+    /// "From tomorrow" on 2026-10-27, Tuesday of week 3: the preview shows
+    /// the tail with Monday and today as planned, and marks only what moved.
+    func testThePreviewShowsTheKeptDaysAndMarksWhatChanges() throws {
+        func week(_ n: Int, _ days: [String: String]) -> ProgramWeek {
+            ProgramWeek(weekNumber: n, weekInPhase: n, isDeload: false, phase: "base",
+                        schedule: days.mapValues {
+                            [ProgramSession(modality: $0, archetype: nil, isDeload: false, exercises: [])]
+                        })
+        }
+        let current = GeneratedProgram(weeks: [
+            week(1, ["Monday": "run"]), week(2, ["Monday": "run"]),
+            week(3, ["Monday": "run", "Tuesday": "lift", "Thursday": "lift"]), week(4, ["Monday": "run"]),
+        ], extra: [:])
+        let generated = GeneratedProgram(weeks: [
+            week(3, ["Monday": "bike", "Tuesday": "bike", "Thursday": "lift", "Saturday": "ruck"]),
+            week(4, ["Monday": "run"]),
+        ], extra: [:])
+        let tail = Regeneration.previewTail(current: current, from: 2, generated: generated,
+                                            programStartDate: "2026-10-12", keepBefore: "2026-10-28")
+        XCTAssertEqual(tail.weeks.count, 2, "the preview is the tail, never the kept head")
+        XCTAssertEqual(tail.weeks[0].schedule.mapValues { $0.map(\.modality) },
+                       ["Monday": ["run"], "Tuesday": ["lift"], "Thursday": ["lift"], "Saturday": ["ruck"]])
+        XCTAssertEqual(Regeneration.changedSessions(current: current, tail: tail, from: 2), ["0|Saturday|0"])
+    }
 }

@@ -1275,9 +1275,17 @@ session used asked to rebuild the plan. Left open:
    measured). Cached per body in the process; a deploy or a second machine starts cold.
    Consider running the relaxed generations only for the constraints the athlete has
    (already so) and fewer weeks for the comparison.
-4. **The Program page's injuries sheet and "From tomorrow onwards"** still regenerate
-   without a preview; route both through the regenerate preview. On the phone, Program
-   settings' "Regenerate from this week" does the same.
+4. **Every regenerate is previewed — fixed 2026-10-27.** "From tomorrow onwards", the
+   injuries sheet and the profile offer (web `hooks/useRegeneratePreview`), and on the
+   phone Program settings' "Preview from this week" and the offer card
+   (`AppState.previewRegenerateFromCurrentWeek`), open Program ▸ Preview in regenerate
+   mode with the days behind the athlete as planned and every changed session marked;
+   only its Apply saves. The offers' own "Apply from week N" is gone. It cost a block:
+   the web settings sheet's start-date field re-anchored the program to tomorrow in
+   memory, "From tomorrow" then counted from it, rebuilt all 16 weeks and saved them
+   (repaired with `scripts/restore_program_version.py`). The field is read-only now, and
+   `PUT /user/program` refuses an edit that moves the start date (409
+   `start_date_changed`); only a started program (`keepDaysBehind`) sets one.
 5. **The regenerate offer said nothing after Apply — fixed 2026-10-20.** Apply removes the
    difference the banner (web) and card (iOS) were shown for, so they vanished. Both now
    say "Rebuilt N weeks with these settings" until a new difference appears (web
