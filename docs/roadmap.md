@@ -1414,6 +1414,18 @@ reasoning for each is in `frontend-fix-plan.md`.
 
 Shipped items from the absorbed documents, so nobody re-plans them.
 
+**Compositions: several tracks, one program (2026-10-27)**: a program may run two
+or more tracks — of different philosophies, or two of one — each in its own phases
+and on its own engine, sharing the athlete's week by weight (`src/composition.py`,
+CLAUDE.md *Compositions*). A blend used to run one member's track and average the
+priorities, so it never mixed two methods' workouts (and dropped a contract
+member's modules). Web and iOS build them (track per methodology, weight, start
+phase), show each track's phases and cuts, and regenerate every track from its own
+phase. Open: when days are tight a template keeps its days in template order, not
+by which workouts fit (ATG Program #2's 60-minute Workout 1); a composition's
+phase summary on Overview is the lead track's (each track's is served as
+`lane_phase_summary`); fidelity reads one-track programs only.
+
 **The scheduler's day order and its high-cost window (2026-10-26)**: a day's
 sessions sort by the schema's `session_position` words (first, any/standalone,
 last), where `_POSITION_ORDER` knew only words no modality uses, so `last` was
