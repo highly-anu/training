@@ -10,6 +10,13 @@
 # the scheme lists them, not because the tests need them.
 set -euo pipefail
 
+# A git hook exports GIT_DIR (in a worktree, .git/worktrees/<name>), and
+# SwiftPM's own git checkouts of the package cache inherit it: every package
+# then fails "unable to read tree", because its objects are looked up in this
+# repository. The pre-push hook's ios-tests failed that way on every push from
+# a .claude/worktrees/ worktree.
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_COMMON_DIR GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES
+
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCHEME="TrainingCompanion"
 TESTS="TrainingCompanionTests"
