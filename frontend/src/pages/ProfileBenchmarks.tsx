@@ -16,6 +16,7 @@ import { useInjuryFlags } from '@/api/constraints'
 import { LoadingCard } from '@/components/shared/LoadingCard'
 import { RegenerateFromWeekBanner } from '@/components/program/RegenerateFromWeekBanner'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
+import { EQUIPMENT_CATEGORIES } from '@/lib/equipment'
 import { getEffectiveMaxHR, maxHRFromDOB, zoneBoundariesToBpm, DEFAULT_ZONE_BOUNDARIES } from '@/lib/hrZones'
 import type { BenchmarkStandard, Day, DaySchedule, EquipmentId, InjuryFlagId, SessionType, StandardResult, TrainingLevel, Sex } from '@/api/types'
 
@@ -38,46 +39,6 @@ const SUB_TABS: SubTabItem[] = [
 ]
 
 const SUB_TAB_IDS = SUB_TABS.map((t) => t.id)
-
-// ── Equipment by category ──────────────────────────────────────────────────────
-
-const EQUIPMENT_CATEGORIES = [
-  {
-    name: 'Strength',
-    color: MODALITY_COLORS.max_strength.hex,
-    items: ['barbell', 'rack', 'plates'] as EquipmentId[],
-  },
-  {
-    name: 'Power & Kettlebell',
-    color: MODALITY_COLORS.power.hex,
-    items: ['kettlebell', 'dumbbell'] as EquipmentId[],
-  },
-  {
-    name: 'Bodyweight & Gymnastics',
-    color: MODALITY_COLORS.relative_strength.hex,
-    items: ['pull_up_bar', 'rings', 'parallettes', 'dip_bar', 'hangboard'] as EquipmentId[],
-  },
-  {
-    name: 'Aerobic & Conditioning',
-    color: MODALITY_COLORS.aerobic_base.hex,
-    items: ['rower', 'assault_bike', 'ski_erg', 'jump_rope', 'pool'] as EquipmentId[],
-  },
-  {
-    name: 'GPP & Durability',
-    color: MODALITY_COLORS.durability.hex,
-    items: ['ruck_pack', 'sandbag', 'sled', 'tire', 'sledgehammer', 'medicine_ball', 'box'] as EquipmentId[],
-  },
-  {
-    name: 'Mobility & Prehab',
-    color: MODALITY_COLORS.rehab.hex,
-    items: ['resistance_band', 'foam_roller', 'ghd'] as EquipmentId[],
-  },
-  {
-    name: 'General',
-    color: '#6366f1',
-    items: ['rope', 'open_space', 'training_partner', 'cable_machine', 'hurdles', 'agility_ladder'] as EquipmentId[],
-  },
-]
 
 // ── Equipment Overview ─────────────────────────────────────────────────────────
 

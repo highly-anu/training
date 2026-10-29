@@ -198,7 +198,7 @@ def _contract_week(phase: dict, contract: dict, exercises: dict, archetypes: dic
                          'deload': bool(p.get('deload'))} for p in m.get('periods') or [] if p.get('weeks')],
             'variants': variants,
             'items': [] if variants else _contract_items(m.get('blocks') or [], exercises),
-            'advice': m.get('advice'),
+            **advice_fields(m.get('advice')),
         })
     return {'kind': 'contract', 'modules': modules}
 
@@ -207,6 +207,22 @@ def _framework_week(framework: dict) -> dict:
     per = framework.get('sessions_per_week') or {}
     return {'kind': 'framework',
             'sessions': [{'modality': m, 'perWeek': n} for m, n in per.items() if n]}
+
+
+_LEVELS = ('novice', 'intermediate', 'advanced', 'elite')
+
+
+def advice_fields(value) -> dict:
+    """A category's or module's `advice` for a page that knows no athlete:
+    `advice` is the one text, or null when it differs per level, and
+    `adviceByLevel` each level's (the framework schema allows either: Ido's
+    versions say a sentence per level). The generator picks the athlete's
+    (week_template.advice_for); the page shows them all. Sent raw, a per-level
+    `advice` reached the web as an object and took Explore down (React #31)."""
+    if isinstance(value, dict):
+        rows = [{'level': lvl, 'text': value[lvl]} for lvl in _LEVELS if value.get(lvl)]
+        return {'advice': None, 'adviceByLevel': rows or None}
+    return {'advice': value or None, 'adviceByLevel': None}
 
 
 def week_mix(week: dict) -> dict[str, float]:
@@ -410,7 +426,7 @@ def _sessions(phil: dict, track_docs: list, framework_ids: list, frameworks: dic
                 continue
             placed.update(ids)
             groups.append({'kind': 'category', 'id': cid, 'name': cat.get('name') or words(cid),
-                           'modality': cat.get('modality'), 'advice': cat.get('advice'),
+                           'modality': cat.get('modality'), **advice_fields(cat.get('advice')),
                            'warmUp': cid == fw.get('warm_up_category'), 'sessions': ids})
     for t in track_docs:
         for p in t['phases']:
@@ -422,7 +438,8 @@ def _sessions(phil: dict, track_docs: list, framework_ids: list, frameworks: dic
                 if ids:
                     placed.update(ids)
                     groups.append({'kind': 'module', 'id': m['id'], 'name': m['name'],
-                                   'modality': m['modality'], 'advice': m['advice'], 'warmUp': False,
+                                   'modality': m['modality'], 'advice': m['advice'],
+                                   'adviceByLevel': m['adviceByLevel'], 'warmUp': False,
                                    'sessions': ids})
     tests = [a['id'] for a in package_archetypes if a.get('test') and a['id'] not in placed]
     placed.update(tests)
@@ -432,10 +449,10 @@ def _sessions(phil: dict, track_docs: list, framework_ids: list, frameworks: dic
             by_modality.setdefault(a.get('modality'), []).append(a['id'])
     for mod, ids in sorted(by_modality.items(), key=lambda kv: -len(kv[1])):
         groups.append({'kind': 'modality', 'id': mod, 'name': None, 'modality': mod, 'advice': None,
-                       'warmUp': False, 'sessions': ids})
+                       'adviceByLevel': None, 'warmUp': False, 'sessions': ids})
     if tests:
         groups.append({'kind': 'tests', 'id': 'tests', 'name': 'Tests', 'modality': None, 'advice': None,
-                       'warmUp': False, 'sessions': tests})
+                       'adviceByLevel': None, 'warmUp': False, 'sessions': tests})
     return {'groups': groups,
             'sessions': {a['id']: _session(a, exercises, policy) for a in package_archetypes}}
 

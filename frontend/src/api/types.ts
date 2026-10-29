@@ -2302,7 +2302,9 @@ export interface DescribedModule {
   periods: Array<{ name: string; weeks: number; deload: boolean }>
   variants: Array<{ id: string; name: string; archetype: string | null; items: DescribedItem[] }>
   items: DescribedItem[]
+  /** One text, or null when the source says it per level (then `adviceByLevel`). */
   advice: string | null
+  adviceByLevel: Array<{ level: TrainingLevel; text: string }> | null
 }
 
 export type DescribedWeek =
@@ -2375,7 +2377,9 @@ export interface DescribedSessionGroup {
   id: string
   name: string | null
   modality: string | null
+  /** One text, or null when the source says it per level (then `adviceByLevel`). */
   advice: string | null
+  adviceByLevel: Array<{ level: TrainingLevel; text: string }> | null
   warmUp: boolean
   sessions: string[]
 }

@@ -17,6 +17,7 @@ import { SimilarItems } from '@/components/shared/SimilarItems'
 import { ErrorBanner } from '@/components/shared/ErrorBanner'
 import { lineageOf } from '@/lib/exploreLinks'
 import { modalityHex } from '@/lib/modalityColors'
+import { equipmentHex } from '@/lib/equipment'
 import type { PhilosophyDescription } from '@/api/types'
 import { ModalityMix } from './ModalityMix'
 import { InlinePanel, IntensityBar, LevelPips, MixLegend, ModalityGlyph, StatTile } from './Glance'
@@ -105,7 +106,9 @@ function Requirements({ doc }: { doc: PhilosophyDescription }) {
       <div className="space-y-1.5">
         <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">Equipment</p>
         <div className="flex flex-wrap gap-1">
-          {(allEquipment ? g.equipment : g.equipment.slice(0, 8)).map((e) => <Chip key={e.id}>{e.name}</Chip>)}
+          {/* In the colour Profile ▸ Equipment files each under (lib/equipment). */}
+          {(allEquipment ? g.equipment : g.equipment.slice(0, 8)).map((e) =>
+            <Chip key={e.id} hex={equipmentHex(e.id)}>{e.name}</Chip>)}
           {g.equipment.length > 8 && (
             <Chip onClick={() => setAllEquipment((a) => !a)}>{allEquipment ? 'fewer' : `+${g.equipment.length - 8}`}</Chip>
           )}
