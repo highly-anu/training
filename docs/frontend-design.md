@@ -2136,6 +2136,36 @@ by picking results (`components/explore/EquipmentPanel.tsx`, logic in
 - With nothing selected the lists show what bodyweight and open space alone
   enable, or nothing with bodyweight off.
 
+### 13.10 Explorer: Comparing Philosophies
+
+**Use case:** Explore ▸ Philosophies ▸ Compare
+(`components/explore/compare/ComparePage.tsx`), `?topic=philosophies&compare=a,b[,c]`.
+Reached from the landing's **Compare** toggle (the cards tick, numbered, up to three;
+a bar at the bottom says Compare 2 / 3), a philosophy's **Compare with…** (most alike
+first, by the landing's likeness) and the compare button on its Similar rows. Pushed, so
+Back returns; adding or removing a column replaces.
+
+- **Columns of the same rows**: a label column, then one column per philosophy
+  (`gridStyle`); each row is a glance piece of §13.7 as it is — `StatTile` numbers,
+  `LevelPips`, `ModalityMix` + `MixLegend`, `IntensityBar`, `PhaseBar` on one scale for
+  every track (`scale.trackWeeks`). Nothing is compared in the browser: the server says
+  what every column shares (a "Both" / "All three" line above the row), what one has alone
+  and what two of three hold, and which rows read alike (`same`).
+- **Only differences** hides the rows that read alike; a row that reads alike says
+  "same for all" under its label.
+- **Column head**: the name (opens the philosophy), a track menu when it has several (it
+  drives the tracks' emphasis, *You already own*, For you and Build), × while there are
+  three, **Build with this** (prefills the builder with that track); **+ Add** in the label
+  column while there are two.
+- **For you** runs on request (each column is a whole program): one column after another,
+  "Waiting…" → "Generating…" → the rows — runs or not (the server's reasons), a week's
+  days · sessions · minutes, mix, intensity, phases, your kit (what it lacks, sessions it
+  passes over for it), held back, tests. What the profile did not say is named once above
+  the rows, with a link to Profile.
+- **Phone width**: the grid scrolls sideways under a sticky label column; section titles
+  and the full-width lines stay in view (`WideLine`).
+- **How alike** ends the page: each pair's likeness bar with its two reasons.
+
 ## 14. Responsive Design
 
 ### 14.1 Breakpoint Usage

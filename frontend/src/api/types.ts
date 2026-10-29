@@ -2469,3 +2469,78 @@ export interface PhilosophyGlance {
   counts: { tracks: number; rules: number; sources: number; inventions: number; open: number; sessions: number }
   tracks: GlanceTrack[]
 }
+
+// GET /philosophies/compare?ids=a,b[,c] (src/explore_compare.compare): two or
+// three glances side by side, what they share and what only one has.
+
+export interface CompareGlance extends PhilosophyGlance {
+  models: { intensity: string | null; progression: string | null }
+}
+
+/** `shared` by every philosophy, `only` one (per id), and with three, what two hold (`some`). */
+export interface CompareSplit<T> {
+  shared: T[]
+  only: Record<string, T[]>
+  some: Array<{ item: T; ids: string[] }>
+}
+
+export interface CompareStandard {
+  id: string | null
+  name: string
+  domain: string | null
+  /** On `only`: one of its phases tests it. */
+  tested?: boolean
+  /** On `shared` and `some`: the philosophies whose phases test it. */
+  testedBy?: string[]
+}
+
+export interface ComparePair {
+  a: string
+  b: string
+  score: number
+  primary: { label: string; detail: string; value: number }
+  secondary: { label: string; detail: string; value: number }
+}
+
+export type CompareRow = 'weeks' | 'daysPerWeek' | 'sessionMinutes' | 'levels' | 'tracks' | 'mix' | 'intensity'
+  | 'intensityModel' | 'progression' | 'headline'
+
+export interface PhilosophyCompare {
+  ids: string[]
+  philosophies: CompareGlance[]
+  scale: { trackWeeks: number }
+  pairs: ComparePair[]
+  /** Which rows read alike across every column ("Only differences" hides them). */
+  same: Record<CompareRow, boolean>
+  bias: CompareSplit<string>
+  equipment: CompareSplit<{ id: string; name: string }>
+  standards: CompareSplit<CompareStandard>
+}
+
+// POST /philosophies/<id>/for-me (explore_compare.for_athlete): one track
+// generated on the athlete's profile, never saved, in the comparison's numbers.
+
+export interface PhilosophyForMe {
+  id: string
+  trackId: string
+  trackName: string
+  feasible: boolean
+  weeks: number
+  ofWeeks: number
+  trackWeeks: number | null
+  /** What the profile did not say and the run took for granted. */
+  assumed: Array<{ key: string; text: string }>
+  missingEquipment: Array<{ id: string; name: string }>
+  /** Why it cannot run; empty when it can. */
+  reasons: Array<{ code: string | null; message: string }>
+  perWeek?: { days: number; sessions: number; minutes: number | null }
+  intensity?: Record<string, number>
+  mix?: Array<{ modality: string; perWeek: number }>
+  heldBack?: { slots: number; sessions: number }
+  skippedForEquipment?: number
+  sessionCount?: number | null
+  gaps?: { sessions: number; slots: number; substituted: Array<{ week: number; modality: string; insteadOf: string; reason: string }> }
+  tests?: { placed: number; skipped: Array<{ week: number; why: string }> }
+  warnings?: Array<{ code: string; message: string }>
+  phases?: Array<{ id: string; name: string; kind: PhaseKind; weeks: number; sessions: number; minutes: number | null }>
+}

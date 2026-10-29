@@ -765,6 +765,72 @@ def philosophies_glance():
     return jsonify(explore_philosophy.glance_all())
 
 
+@app.get('/api/philosophies/compare')
+def compare_philosophies():
+    """Two or three philosophies side by side (`?ids=a,b[,c]`): each one's
+    glance, what they share and what only one has, and how alike each pair
+    is (src/explore_compare.py). Static data — no user; built per request,
+    since it is set work over cached glances."""
+    from src import explore_compare
+    try:
+        doc = explore_compare.compare(explore_compare.parse_ids(request.args.get('ids')))
+    except explore_compare.CompareError as err:
+        return jsonify({'detail': str(err)}), err.status
+    return jsonify(doc)
+
+
+@app.post('/api/philosophies/<philosophy_id>/for-me')
+@require_auth
+def philosophy_for_me(philosophy_id):
+    """The comparison's "for you": one philosophy's track (`track_id`, else
+    its primary) generated for its full length against the athlete's stored
+    profile (src/profile_constraints.py; `constraints` in the body overrides
+    it), never saved, and summarised (explore_compare.for_athlete) — days,
+    sessions and minutes a week, intensity, what the profile held back, the
+    equipment it lacks, or why it cannot run at all. One philosophy a request,
+    so a comparison fills column by column; a heavy run (429 while another is
+    in flight), its answer kept ten minutes."""
+    import copy as _copy
+    from src import explore_compare, profile_constraints, training_contract
+    from src.explore_philosophy import _loaded, glance_all
+    body = request.get_json(silent=True) or {}
+    glance = next((x for x in glance_all() if x['id'] == philosophy_id), None)
+    if glance is None:
+        return jsonify({'detail': f'Unknown philosophy: {philosophy_id}'}), 404
+    track = explore_compare.track_for(glance, body.get('track_id'))
+    if track is None:
+        return jsonify({'detail': f"{glance['name']} has no track '{body.get('track_id')}'"}), 404
+    try:
+        from src.db import get_user_profile
+        profile = get_user_profile(g.user_id) or {}
+    except Exception:
+        profile = {}
+    constraints, custom, assumed = profile_constraints.from_profile(profile)
+    override = body.get('constraints') if isinstance(body.get('constraints'), dict) else {}
+    constraints.update(override)
+    assumed = [a for a in assumed if a['key'] not in override
+               and not (a['key'] == 'schedule' and {'weekly_schedule', 'days_per_week'} & override.keys())]
+    try:
+        contract = training_contract.load_contract(philosophy_id, track['id'])
+    except training_contract.ContractError:
+        contract = None
+    names = {i: e.get('name') or i for i, e in _loaded()['exercises'].items()}
+    assumed += profile_constraints.with_contract_entry(constraints, contract, names)
+    generate_body = {'philosophy_id': philosophy_id, 'track_id': track['id'],
+                     'num_weeks': explore_compare.weeks_for(track),
+                     'constraints': constraints, 'custom_injury_flags': custom}
+
+    def run(b):
+        program, status = _generated_json(_generate_program_inner(_copy.deepcopy(b)))
+        if status != 200:
+            return program, status
+        used = (program.get('constraints') or {}).get('equipment')
+        return explore_compare.for_athlete(program, glance, track, assumed, used), 200
+
+    out, status = _heavy_run('for_me', generate_body, run, cache=True)
+    return jsonify(out), status
+
+
 @app.get('/api/philosophies/<philosophy_id>/describe')
 @static_json
 def describe_philosophy(philosophy_id):

@@ -249,6 +249,7 @@ struct BuilderStep1PhilosophyView: View {
     @EnvironmentObject var appState: AppState
     @State private var detail: PhilosophyCard? = nil
     @State private var loadFailed = false
+    @State private var comparing = false
 
     let columns = [GridItem(.flexible()), GridItem(.flexible())]
 
@@ -280,6 +281,17 @@ struct BuilderStep1PhilosophyView: View {
                             .padding()
                     }
                 } else {
+                    // Two or three picked: set them side by side before choosing (§6.42).
+                    if (2...3).contains(builder.lanes.count) {
+                        Button {
+                            comparing = true
+                        } label: {
+                            Label("Compare these \(builder.lanes.count)", systemImage: "rectangle.split.3x1")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
+                        .padding(.horizontal)
+                    }
                     LazyVGrid(columns: columns, spacing: 12) {
                         ForEach(appState.philosophies) { philosophy in
                             philosophyCard(philosophy)
@@ -292,7 +304,14 @@ struct BuilderStep1PhilosophyView: View {
         }
         .task { await load() }
         .sheet(item: $detail) { philosophy in
-            PhilosophyDetailSheet(philosophy: philosophy)
+            PhilosophyDetailSheet(philosophy: philosophy, compareWith: appState.philosophies)
+        }
+        .sheet(isPresented: $comparing) {
+            NavigationStack {
+                PhilosophyCompareView(ids: builder.lanes.map(\.philosophyId))
+                    .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { comparing = false } } }
+            }
+            .environmentObject(appState)
         }
     }
 

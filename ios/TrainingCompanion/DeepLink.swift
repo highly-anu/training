@@ -46,6 +46,8 @@ enum DeepLink: Equatable {
     /// `?demo=1` lines up the newest eight, one after another.
     case workoutComplete(String?)
     case workoutCompleteDemo
+    /// `compare?ids=a,b[,c]` — two or three philosophies side by side (§6.42).
+    case compare([String])
 
     static let scheme = "trainingcompanion"
     static let launchEnvironmentKey = "TC_ROUTE"
@@ -127,6 +129,13 @@ enum DeepLink: Equatable {
                 }
             }
             return .tab(.analytics)
+        case "compare":
+            var ids: [String] = []
+            for id in (query.first(where: { $0.name == "ids" })?.value ?? "").split(separator: ",")
+                .map({ $0.trimmingCharacters(in: .whitespaces) }) where !id.isEmpty && !ids.contains(id) {
+                ids.append(id)
+            }
+            return (2...3).contains(ids.count) ? .compare(ids) : nil
         case "workout-complete":
             if query.first(where: { $0.name == "demo" })?.value == "1" { return .workoutCompleteDemo }
             let id = query.first(where: { $0.name == "id" })?.value
@@ -153,6 +162,7 @@ extension AppRouter {
         case .programPhase(let phase): openProgramPhase(phase)
         case .workoutComplete(let id): showWorkoutComplete(id)
         case .workoutCompleteDemo: showWorkoutComplete(AppRouter.workoutCompleteDemo)
+        case .compare(let ids): openCompare(ids)
         }
     }
 }

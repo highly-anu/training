@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Compass, Search, X, Wand2 } from 'lucide-react'
+import { ArrowLeft, Columns3, Compass, Search, X, Wand2 } from 'lucide-react'
 import { LoadingCard } from '@/components/shared/LoadingCard'
 import { ErrorBanner } from '@/components/shared/ErrorBanner'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
@@ -20,6 +20,8 @@ import { ARCH_CAT_COLORS, EX_CATEGORY_COLORS, philosophyHex } from '@/lib/explor
 import { cn } from '@/lib/utils'
 import { ArchetypeCard } from '@/components/explore/ArchetypeCard'
 import { PhilosophyPage } from '@/components/explore/philosophy/PhilosophyPage'
+import { ComparePage } from '@/components/explore/compare/ComparePage'
+import { MAX_COMPARE, MIN_COMPARE, parseCompare } from '@/components/explore/compare/compareIds'
 import { usePhilosophyGlances } from '@/api/philosophyDescription'
 import { StandardsLanding } from '@/components/explore/StandardsLanding'
 import { MovementLanding, MovementDetail } from '@/components/explore/MovementPanel'
@@ -179,11 +181,17 @@ function TopicSelector({
 
 // ─── Philosophy overview (landing) ───────────────────────────────────────────
 
-function PhilosophyOverview({ philosophies, onSelect }: {
+function PhilosophyOverview({ philosophies, onSelect, onCompare }: {
   philosophies: Philosophy[]
   onSelect: (p: Philosophy) => void
+  onCompare: (ids: string[]) => void
 }) {
   const [sort, setSort] = useState<'alpha' | 'likeness'>('likeness')
+  // Compare mode: the cards tick instead of opening, up to three.
+  const [picking, setPicking] = useState(false)
+  const [picked, setPicked] = useState<string[]>([])
+  const toggle = (id: string) => setPicked((cur) => cur.includes(id) ? cur.filter((x) => x !== id)
+    : cur.length < MAX_COMPARE ? [...cur, id] : cur)
   const { data: matrix } = useSimilarity()
   const { data: glances = [] } = usePhilosophyGlances()
   const byId = useMemo(() => Object.fromEntries(glances.map((g) => [g.id, g])), [glances])
@@ -210,7 +218,25 @@ function PhilosophyOverview({ philosophies, onSelect }: {
           </p>
         </div>
 
-        <SortToggle sort={sort} onChange={setSort} />
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <SortToggle sort={sort} onChange={setSort} />
+          <button
+            type="button"
+            aria-pressed={picking}
+            onClick={() => { setPicking((p) => !p); setPicked([]) }}
+            className={cn(
+              'flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] border transition-colors',
+              picking ? 'bg-primary/15 border-primary/40 text-primary' : 'border-border/40 text-muted-foreground hover:bg-muted/40'
+            )}
+          >
+            <Columns3 className="size-3.5" /> {picking ? 'Cancel' : 'Compare'}
+          </button>
+        </div>
+        {picking && (
+          <p className="text-[11px] text-muted-foreground">
+            Pick {MIN_COMPARE} or {MAX_COMPARE} to set side by side.
+          </p>
+        )}
 
         <div className="grid grid-cols-2 gap-2">
           {sorted.map((p) => {
@@ -227,11 +253,25 @@ function PhilosophyOverview({ philosophies, onSelect }: {
               <button
                 key={p.id}
                 type="button"
-                onClick={() => onSelect(p)}
-                className="flex items-start gap-2.5 rounded-lg border border-border/30 bg-card/40 px-3 py-2.5 text-left
-                           transition-all hover:border-primary/40 hover:shadow-md hover:-translate-y-px hover:bg-muted/20 group cursor-pointer"
+                onClick={() => (picking ? toggle(p.id) : onSelect(p))}
+                aria-pressed={picking ? picked.includes(p.id) : undefined}
+                disabled={picking && !picked.includes(p.id) && picked.length >= MAX_COMPARE}
+                className={cn(
+                  'flex items-start gap-2.5 rounded-lg border border-border/30 bg-card/40 px-3 py-2.5 text-left',
+                  'transition-all hover:border-primary/40 hover:shadow-md hover:-translate-y-px hover:bg-muted/20 group cursor-pointer',
+                  'disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0 disabled:hover:shadow-none',
+                  picking && picked.includes(p.id) && 'border-primary/60 bg-primary/10',
+                )}
                 style={{ borderLeftColor: color, borderLeftWidth: 2 }}
               >
+                {picking && (
+                  <span aria-hidden className={cn(
+                    'mt-0.5 flex size-3.5 shrink-0 items-center justify-center rounded-sm border text-[9px] font-semibold',
+                    picked.includes(p.id) ? 'border-primary bg-primary text-primary-foreground' : 'border-border',
+                  )}>
+                    {picked.includes(p.id) ? picked.indexOf(p.id) + 1 : ''}
+                  </span>
+                )}
                 <div className="min-w-0 flex-1 space-y-1.5">
                   <p className="text-xs font-medium leading-snug truncate group-hover:text-primary transition-colors">{p.name}</p>
                   {g && (
@@ -264,6 +304,18 @@ function PhilosophyOverview({ philosophies, onSelect }: {
           Select a philosophy to explore its full structure
         </p>
       </div>
+      {picking && (
+        <div className="sticky bottom-0 border-t border-border/60 bg-background/95 px-8 py-3 backdrop-blur">
+          <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
+            <span className="text-[11px] text-muted-foreground">
+              {picked.length === 0 ? 'None picked yet' : picked.map((id) => philosophies.find((p) => p.id === id)?.name ?? id).join(' · ')}
+            </span>
+            <Button size="sm" disabled={picked.length < MIN_COMPARE} onClick={() => onCompare(picked)}>
+              <Columns3 className="mr-1.5 size-3.5" /> Compare {picked.length || ''}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -1753,6 +1805,7 @@ export function Explore() {
   const topicParam = searchParams.get('topic')
   const topic: Topic = topicParam && TOPIC_IDS.has(topicParam) ? topicParam as Topic : 'philosophies'
   const selectedId = searchParams.get('id')
+  const compareIds = parseCompare(searchParams.get('compare'))
 
   const { data: philosophies = [], isLoading: philLoading, error: philError } = usePhilosophies()
   const { data: frameworks = [], isLoading: fwLoading, error: fwError } = useFrameworks()
@@ -1773,6 +1826,12 @@ export function Explore() {
 
   function open(t: Topic, id: string) {
     setSearchParams({ topic: t, id })
+  }
+
+  // ?compare=a,b[,c]: philosophies side by side. Pushed like a detail, so
+  // Back returns to where it was opened from; editing the set replaces.
+  function compare(ids: string[], replace = false) {
+    setSearchParams({ topic: 'philosophies', compare: ids.join(',') }, { replace })
   }
 
   function backToList() {
@@ -1836,15 +1895,24 @@ export function Explore() {
           : (
             <div className="flex-1 min-h-0 overflow-hidden">
                 {topic === 'philosophies' && (
-                  selectedPhil
+                  compareIds.length >= MIN_COMPARE && !selectedId
+                    ? <ComparePage
+                        ids={compareIds}
+                        onChange={(ids) => compare(ids, true)}
+                        onOpen={(id) => open('philosophies', id)}
+                        onBack={backToList}
+                      />
+                  : selectedPhil
                     ? <PhilosophyPage
                         id={selectedPhil.id}
                         onSelect={(id) => open('philosophies', id)}
+                        onCompare={(ids) => compare(ids)}
                         onBack={backToList}
                       />
                     : <PhilosophyOverview
                         philosophies={philosophies}
                         onSelect={(p) => open('philosophies', p.id)}
+                        onCompare={(ids) => compare(ids)}
                       />
                 )}
                 {topic === 'modalities' && (

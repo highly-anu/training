@@ -1454,6 +1454,19 @@ chips, not the fingerprint. Noticed: Uphill's phase frameworks declare a 360-min
 "ideal session" (its long day), so its tiles read "60–360′"; a package-side
 `ideal_long_session_minutes` would fix it.
 
+**Compare** (2026-10-27, `feat/explore-compare`). Two or three philosophies side by side on
+both clients: `GET /api/philosophies/compare` sets their glances in rows and says what they
+share, what only one has and which rows read alike (`src/explore_compare.py`); "For you" runs
+each one's track on the athlete's stored profile (`POST /api/philosophies/<id>/for-me`, one
+column at a time, never saved) and says what it would give — or why it cannot run as they
+are. Web: Explore's landing Compare mode, "Compare with…" and the Similar rows
+(frontend-design §13.10); phone: the builder's methodology step with two or three picked, the
+methodology sheet's menu, `compare?ids=` (design-system §6.42). `src/profile_constraints.py`
+is the server's first copy of "the profile as constraints" — the builders still build their
+own, and a builder that read it would keep the two from parting. Noticed: at five days a week
+(the default with no schedule) Uphill, Gym Jones, Kelly Starrett, Starting Strength and Wildman
+all refuse; an empty profile makes the For you rows mostly "Not as you are".
+
 ## Later
 
 Larger items from the IA review. Each needs a backend step first; none is
