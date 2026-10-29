@@ -224,7 +224,7 @@ Resolved (verified by compiling against SDK 9.2.0):
   (each exercise's reps, hold, weight and RPE for the run), Training Calendar,
   Progress, Readiness, Settings, Sync. With the header focused START starts the
   workout at once (after Countdown Start); DOWN moves into the list, START opens a
-  row, BACK returns to the header. Once started, START pauses and opens Resume / Save / Discard (Discard asks with the system's
+  row, BACK returns to the header. Once started, START pauses and opens Resume / Save / Discard, in the red menu theme as the watch's own (`MENU_THEME_RED`, since 1.15.0) (Discard asks with the system's
   delete confirmation: the red trash at START, the white keep arrow at DOWN); BACK is LAP — it ends a set (then the rest runs), ends a
   rest early, counts a round or lap, or moves to the next step — after "Skip <step>?"
   (`SkipConfirmView`; START skips, DOWN or LAP again keeps it) when the step would have
@@ -238,11 +238,18 @@ Resolved (verified by compiling against SDK 9.2.0):
   "Activity Saved" in a green ring (red, "Activity Not Saved", when the recording's
   save failed), then the post-save list (`SummaryList.mc`): Done (the sync's state
   below it), All Stats, Training Effect, Heart Rate, Sets, each with its headline
-  number left of the rule. A row opens All Stats at its page: Summary, Heart Rate,
-  HR Zones (time and share per zone on the athlete's own zones), Training Effect
-  (aerobic only), Training Status (recovery time left and VO2 max — the status
-  word itself is a complication, which only watch faces may read), Exercises;
-  BACK returns to the list, Done or BACK there closes the app. Discard shows
+  number left of the rule. A row opens All Stats at its page, each laid out as the
+  watch's own (since 1.15.0, from the athlete's photos of 2026-10-29): the title
+  between two dashes (two lines when long), the next page named in light blue at
+  the foot, the page dots only for a moment after a turn. Summary (the session's
+  icon, the time, SETS | TOTAL CALORIES), Heart Rate (the line coloured by zone
+  over a filled area, a mark every 10 minutes), HR Zones (a bar per zone over the
+  average HR; time | share per zone, zone 5 on top), Training Effect (the benefit
+  word between blue rules, the aerobic TE in white), Training Status (VO2 max in
+  its band's colour — Garmin's ratings by sex and age — and "Recovery: 28hr."),
+  Exercises. The watch's anaerobic TE, load, acute load and status word are not
+  readable by a watch app (only the aerobic TE is in `Activity.Info`; complications
+  reach only watch faces). BACK returns to the list, Done or BACK there closes the app. Discard shows
   "Discarding" with a red sweep, then "Activity Discarded", and closes.
   Touch is off while recording. Icons and button hints are the Personality Library's
   (`resources/drawables/garmin.xml`); glyphs it lacks are drawn by `tools/gen_icons.py`.

@@ -47,7 +47,7 @@ class SummaryListView extends Ui.View {
         out.add([:summary, "All Stats", null, Text.mmss(_ctl.elapsedSec())]);
         var te = _ctl.trainingEffect();
         if (te != null && hasPage(:te)) {
-            out.add([:te, "Training Effect", SummaryView.benefit(te.toFloat())[0],
+            out.add([:te, "Training Effect", SummaryView.benefit(te.toFloat()),
                      te.toFloat().format("%.1f")]);
         }
         if (hasPage(:hr)) {

@@ -859,6 +859,7 @@ class WorkoutController {
     // The HR reservoir, for the summary's chart.
     function hrCount() { return _hrN; }
     function hrAt(i)   { return _hrVal[i]; }
+    function hrSecAt(i) { return _hrOff[i]; }   // the sample's second into the session
 
     // Where the live HR sits across the five-zone gauge, 0.0-1.0, or null.
     function hrGaugeFraction() {
