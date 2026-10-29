@@ -4,6 +4,7 @@ import type { DescribedItem, DescribedModule, DescribedTemplateDay, DescribedWee
 import { SessionsPerWeekRows } from '@/components/explore/SessionsPerWeekRows'
 import { useExploreNavigate } from '@/components/explore/topics'
 import { cn } from '@/lib/utils'
+import { Advice } from './Advice'
 import { modalityHex, modalityLabel } from '@/lib/modalityColors'
 
 /** A stripe in the colours of what the session holds, like a calendar card's. */
@@ -145,7 +146,7 @@ function ModuleCard({ module: m }: { module: DescribedModule }) {
           </div>
         )}
         {m.items.length > 0 && <Items items={m.items} />}
-        {m.advice && <p className="text-[10px] italic text-muted-foreground/80">{m.advice}</p>}
+        <Advice advice={m.advice} byLevel={m.adviceByLevel} className="text-[10px]" />
       </div>
     </div>
   )

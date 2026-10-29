@@ -1,4 +1,5 @@
 import type { EquipmentId } from '@/api/types'
+import { MODALITY_COLORS } from '@/lib/modalityColors'
 
 // The equipment an athlete can declare, grouped and named for pickers: the
 // builder's EquipmentPicker and Explore ▸ Equipment. Ids are the constraints
@@ -73,4 +74,55 @@ const LABELS: Record<string, string> = Object.fromEntries(
 
 export function equipmentLabel(id: string): string {
   return LABELS[id] ?? id.replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase())
+}
+
+// Equipment by category, each in the colour of the training it serves: Profile ▸
+// Equipment's sections, and the colour of an item wherever else it appears
+// (Explore ▸ Philosophies' Requirements).
+export const EQUIPMENT_CATEGORIES = [
+  {
+    name: 'Strength',
+    color: MODALITY_COLORS.max_strength.hex,
+    items: ['barbell', 'rack', 'plates'] as EquipmentId[],
+  },
+  {
+    name: 'Power & Kettlebell',
+    color: MODALITY_COLORS.power.hex,
+    items: ['kettlebell', 'dumbbell'] as EquipmentId[],
+  },
+  {
+    name: 'Bodyweight & Gymnastics',
+    color: MODALITY_COLORS.relative_strength.hex,
+    items: ['pull_up_bar', 'rings', 'parallettes', 'dip_bar', 'hangboard'] as EquipmentId[],
+  },
+  {
+    name: 'Aerobic & Conditioning',
+    color: MODALITY_COLORS.aerobic_base.hex,
+    items: ['rower', 'assault_bike', 'ski_erg', 'jump_rope', 'pool'] as EquipmentId[],
+  },
+  {
+    name: 'GPP & Durability',
+    color: MODALITY_COLORS.durability.hex,
+    items: ['ruck_pack', 'sandbag', 'sled', 'tire', 'sledgehammer', 'medicine_ball', 'box'] as EquipmentId[],
+  },
+  {
+    name: 'Mobility & Prehab',
+    color: MODALITY_COLORS.rehab.hex,
+    items: ['resistance_band', 'foam_roller', 'ghd'] as EquipmentId[],
+  },
+  {
+    name: 'General',
+    color: '#6366f1',
+    items: ['rope', 'open_space', 'training_partner', 'cable_machine', 'hurdles', 'agility_ladder'] as EquipmentId[],
+  },
+]
+
+const CATEGORY_HEX: Record<string, string> = Object.fromEntries(
+  EQUIPMENT_CATEGORIES.flatMap((c) => c.items.map((id) => [id, c.color])),
+)
+
+/** The colour of the category Profile ▸ Equipment files an item under; undefined
+ *  for an id it does not list. */
+export function equipmentHex(id: string): string | undefined {
+  return CATEGORY_HEX[id]
 }

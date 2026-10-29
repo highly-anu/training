@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ChevronDown, ChevronRight, ExternalLink, FlaskConical } from 'lucide-react'
 import { InlinePanel, ModalityGlyph } from './Glance'
+import { Advice } from './Advice'
 import type { DescribedSession, DescribedSessionGroup, PhilosophyDescription } from '@/api/types'
 import { useExploreNavigate } from '@/components/explore/topics'
 import { cn } from '@/lib/utils'
@@ -117,7 +118,7 @@ export function PhilosophySessions({ doc }: { doc: PhilosophyDescription }) {
             {open.name && open.modality ? ` · ${modalityLabel(open.modality)}` : ''}
             {open.warmUp ? ' · opens a day' : ''}
           </>}>
-          {open.advice && <p className="mb-2 text-[11px] italic text-muted-foreground">{open.advice}</p>}
+          <Advice advice={open.advice} byLevel={open.adviceByLevel} className="mb-2 text-[11px]" />
           <ul className="grid items-start gap-1 md:grid-cols-2">
             {open.sessions.map((id) => doc.sessions[id] && <Session key={id} session={doc.sessions[id]} />)}
           </ul>
