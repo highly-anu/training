@@ -10,7 +10,7 @@ JSON Schema (Draft-07) definitions for every data layer in the training system. 
 |------|-----------------|-----------------|
 | `philosophy.schema.json` | One entry per training source (SS, UA, Gym Jones, etc.) | `data/packages/{name}/philosophy.yaml` |
 | `framework.schema.json` | One entry per methodological framework | `data/packages/{name}/frameworks/{id}.yaml` |
-| `modality.schema.json` | One entry per training domain | `data/modalities/{id}.yaml` (shared, rarely edited) |
+| `modality.schema.json` | One entry per training domain | `data/commons/modalities/{id}.yaml` (shared, rarely edited) |
 | `archetype.schema.json` | One entry per workout shape | `data/packages/{name}/archetypes/{category}/{id}.yaml` |
 | `exercise.schema.json` | One entry per exercise | `data/packages/{name}/exercises.yaml` (list under `exercises:` key) |
 | `goal_profile.schema.json` | One entry per goal type | `data/goals/{id}.yaml` |
@@ -39,7 +39,7 @@ data/packages/{name}/
   watch.yaml               ← optional: its watch screens, per archetype and slot role
 ```
 
-Modalities are shared infrastructure (`data/modalities/`) — they are not owned by any package and almost never change.
+Modalities are shared infrastructure (`data/commons/modalities/`) — they are not owned by any package and almost never change.
 
 ---
 

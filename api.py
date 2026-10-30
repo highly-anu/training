@@ -1724,6 +1724,16 @@ def dev_constraint_impact():
     return jsonify(out), status
 
 
+@app.get('/api/dev/portability')
+@require_auth
+@require_authoring
+def dev_portability():
+    """What each package brings in its folder and what it still needs outside
+    it, with the gaps no package can close yet (for the Dev Lab; src/portability.py)."""
+    from src import portability
+    return jsonify(portability.report())
+
+
 # The impact and constraint-change routes run several generations each (up to
 # seven, a few seconds apiece) on a 256 MB machine serving four threads. One
 # runs at a time in the process and one per athlete; a request that finds the

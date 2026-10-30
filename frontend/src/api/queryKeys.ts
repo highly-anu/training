@@ -43,6 +43,9 @@ export const queryKeys = {
     development: ['analytics', 'development'] as const,
     specs: ['analytics', 'specs'] as const,
   },
+  dev: {
+    portability: ['dev', 'portability'] as const,
+  },
   philosophies: {
     all: ['philosophies'] as const,
   },

@@ -1,12 +1,16 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { ChevronRight, Code2, Database, AlertCircle, CheckCircle2, MinusCircle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import type { TracedProgram } from '@/api/types'
+import type { PortabilityGap, PortabilityPackage, PortabilityReport, TracedProgram } from '@/api/types'
 import { useOntology } from '@/api/ontology'
+import { usePortability } from '@/api/devlab'
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
+// The edges describe the engine, not a package, so they stay written here;
+// checked against src/ on 2026-10-30. What a package can and cannot bring is
+// the server's (GET /api/dev/portability, src/portability.py).
 
 interface Edge {
   id: string
@@ -27,27 +31,28 @@ const EDGES: Edge[] = [
     source: 'Philosophy',
     target: 'Framework',
     fn: 'goals.philosophy_to_goal(track_id) + generator._build_phase_entries()',
-    file: 'src/goals.py + src/phases.py + src/scheduler.py',
-    knowledgeRatio: 40,
+    file: 'src/goals.py + src/phases.py + src/generator.py',
+    knowledgeRatio: 30,
     yamlFromSource: [
       'tracks[] (ways to follow the philosophy; the builder picks one)',
-      'tracks[].phases[] (the philosophy\'s own phases: id, name, kind, weeks, framework_id, text)',
-      'primary_track_id (default track)',
-      'bias (fallback priorities)',
+      'tracks[].phases[] (id, name, kind, weeks, framework_id, text)',
+      'phase rules the generator reads: priority_override, exclude_exercises, rotate_main_lifts, tests, week_templates, drop_order',
+      'track_for_level, then primary_track_id, then the first track',
+      'bias (else scope) — fallback priorities',
+      'training_contract.yaml — the track\'s contract, when the package has one',
     ],
     yamlFromTarget: [
-      'applicable_when conditions',
-      'min/max days_per_week',
       'sessions_per_week',
-      'expectations (min/ideal weeks, days, session minutes, split support)',
+      'expectations (ideal days and session minutes are read)',
+      'applicable_when + days_per_week — only for a goal whose phase names no framework',
     ],
     bakedLogic: [
-      'Philosophy mode creates synthetic goal internally via api._philosophy_to_goal() (not exposed to user)',
-      'Track phases → phase timeline; every week runs the framework its phase names',
-      'Phase kind (data/commons/phase_kinds.yaml) drives archetype filters, multipliers and cadence',
-      'A legacy framework_id maps to the track and phase that run it',
-      'Priorities derived from the track\'s longest phase framework sessions_per_week, or philosophy.bias as fallback',
-      'No standalone goal YAML files — goals deprecated in favor of direct philosophy → framework flow',
+      'goals.philosophy_to_goal builds the synthetic goal (api._philosophy_to_goal wraps it; never shown to the user)',
+      'Track phases → phase timeline; every week runs the framework its phase names (phases.week_entry)',
+      'Phase kind (data/commons/phase_kinds.yaml) drives archetype filters, multipliers, cadence spreading and the deload reading',
+      'A legacy framework_id maps to the track and phase that run it (goals.owner_track_for_framework)',
+      'Priorities from the longest phase\'s framework sessions_per_week (the first wins a tie), else the bias',
+      'The goal carries the track\'s training contract; a blend drops it and composes lanes (src/composition.py)',
     ],
   },
   {
@@ -56,29 +61,36 @@ const EDGES: Edge[] = [
     target: 'Modality Schedule',
     fn: 'scheduler.allocate_sessions() + assign_to_days()',
     file: 'src/scheduler.py (week_template.plan_week, training_contract._placements place their own)',
-    knowledgeRatio: 70,
+    knowledgeRatio: 65,
     yamlFromSource: [
-      'synthetic_goal.priorities (modality weights, derived from philosophy.bias or framework)',
-      'synthetic_goal.phase_sequence[].priority_override',
-      'framework.sessions_per_week',
+      'synthetic_goal.priorities (modality weights)',
+      'phase_sequence[].priority_override — matched on the phase kind, so two phases of one kind share the first\'s',
+      'framework.sessions_per_week, allocation_mode, modality_priority (committed / core)',
+      'framework.cadence_options (rotating week to week)',
+      'framework.deload_protocol.frequency_weeks',
+      'framework.recovery.allow_consecutive (+ phases)',
     ],
     yamlFromTarget: [
       'recovery_cost (high/medium/low)',
       'recovery_hours_min',
       'incompatible_in_session_with',
       'session_position',
+      'priority_tier, typical_duration_minutes — set by code over the YAML (see below)',
     ],
     bakedLogic: [
       'Largest-remainder rounding converts priority weights → integer session counts',
-      '_RECOVERY_COST_RANK: {high:3, medium:2, low:1} — rank determines placement order',
-      'Recovery windows: a modality\'s recovery_hours_min from itself, 48 h between two high-cost modalities; checked both ways and against last week\'s end (_neighbours); framework recovery.allow_consecutive lifts a pair',
-      'Days come from framework.cadence_options (rotating week to week); phase kinds that spread_cadence take the first pattern; _DEFAULT_SPREAD without one',
+      '_RECOVERY_COST_RANK {high:3, medium:2, low:1} — placement order; an unknown cost counts as low',
+      'Recovery windows: a modality\'s own recovery_hours_min (24 h without one); two high-cost modalities max(48 h, either\'s); checked both ways and against last week\'s end (_neighbours)',
+      'recovery.allow_consecutive lifts a pair whose window is 24 h or less',
+      'Days from cadence_options; a phase kind that spreads cadence takes the first pattern; _DEFAULT_SPREAD without one',
       'Incompatibility: no two incompatible_in_session_with modalities share a day',
-      'Templated phases and training contracts place their own sessions (every shipped package)',
+      'Templated phases and training contracts place their own sessions — every shipped single-philosophy track',
     ],
     hardcodedValues: [
-      '_RECOVERY_COST_RANK dict — only 3 cost levels recognised',
-      'The 48 h high-cost window (the modality schema says recovery_hours_min governs it)',
+      '_RECOVERY_COST_RANK — only 3 cost levels recognised',
+      '_HIGH_COST_FLOOR_HOURS = 48 (the modality schema agrees: never under 48)',
+      'loader.MODALITY_PRIORITY_TIERS / MODALITY_TYPICAL_DURATIONS override the modality YAML (combat_sport missing; skill_work names nothing)',
+      'Day scoring (+3, −6, ×1.25, −12 a session), allocation thresholds 0.8 / 0.7, 75 ideal minutes',
     ],
   },
   {
@@ -88,22 +100,30 @@ const EDGES: Edge[] = [
     fn: 'selector.select_archetype()',
     file: 'src/selector.py',
     knowledgeRatio: 50,
-    yamlFromSource: ['modality id (primary filter)', 'recent sessions (archetype ids, heavy body regions)'],
+    yamlFromSource: ['modality id (primary filter)', 'recent sessions (the last 14 archetype ids, heavy body regions)'],
     yamlFromTarget: [
       'applicable_phases',
       'training_levels',
       'required_equipment',
       'scaling.equipment_limited',
       'scaling.time_limited',
-      'duration_estimate_minutes',
+      'duration_estimate_minutes (and scaling.deload\'s)',
+      'pool_only / test-only — never picked by modality',
       'slots → regional load (data/commons/recovery_regions.yaml; regional_load overrides)',
     ],
     bakedLogic: [
       'Runs only for a session left to choose: template days, contract modules and tests are placed, not scored',
-      'Scoring: +6 full equipment satisfied, −3 if used in the last 14 (flat), ±3/−2 day fit, up to −8 injury impact, −10 per slot whose category the equipment blocks, +10 the split day\'s mobility hint, −2/−1 per body region a session a day/two days before loaded heavily (cap −4)',
+      'Scoring: +6 full equipment, −3 if in the last 14, +3/−2 day fit, up to −8 injury impact, −10 per slot whose category the equipment blocks, +10 the preferred (split-day) archetype',
+      'Regional load: −2/−1 per body region a session a day/two days before loaded heavily, cap −4 (recovery_regions.yaml)',
       'Ties: the least recently used, then the first authored',
-      'Equipment-limited fallback: use archetype with scaling flag if preferred is blocked by equipment',
-      'Time-limited fallback: use shorter archetype variant if session time is insufficient',
+      'scaling.equipment_limited (or the generator\'s relaxed pass) lets an archetype past the equipment filter, without the +6',
+      'scaling.time_limited lets an over-long archetype through; with none fitting, the shortest is kept and trimmed to the session (populate_session)',
+      'No archetype for the phase: fall back aerobic_base → durability → mobility, recorded as substituted_for',
+    ],
+    hardcodedValues: [
+      '_blocked_categories_for_equipment — category → equipment ids',
+      'generator._FALLBACKS — the cross-modality fallback order',
+      'Short-day cap 50 min (api TIME_MAP short 40 / long 75)',
     ],
   },
   {
@@ -112,32 +132,34 @@ const EDGES: Edge[] = [
     target: 'Exercise',
     fn: 'selector.select_exercise()',
     file: 'src/selector.py',
-    knowledgeRatio: 60,
+    knowledgeRatio: 55,
     yamlFromSource: [
       'slot.slot_type',
-      'slot.movement_pattern',
-      'slot.category',
-      'slot.effort',
+      'slot.exercise_filter: exercise_ids, ordered, movement_pattern, category, bilateral, equipment_required, exclude_movement_pattern, intensity',
+      'slot.intensity (heavy sets × reps make a main lift)',
     ],
     yamlFromTarget: [
       'movement_patterns',
       'category',
       'equipment',
-      'training_level',
       'requires / unlocks',
       'contraindicated_with',
       'effort',
+      'named_only / test_only',
     ],
     bakedLogic: [
-      'Candidates: the archetype\'s own package plus those its philosophy borrows from (provenance); slot exercise_ids (in order when ordered), else movement_pattern aliases (data/commons/movement_patterns.yaml) and category',
-      'Level prerequisites: requires resolved transitively against the level\'s concepts (_LEVEL_CONCEPTS) and level_seeds.yaml',
-      'Slot constraints: AMRAP/for_time slots reject skill, mobility and rehab; zone1–2 aerobic slots keep low effort; phase exclude_exercises',
-      'Scoring: −2 per recent use (last 40), +0.5 for unlocks (not in a slot that names its exercises), +0.5 for defined movement_patterns; ties to the first authored (least recently used first in a slot that names its exercises)',
+      'Candidates: the goal\'s packages and those they borrow from (provenance), plus unattributed exercises; the whole library only under a non-strict policy',
+      'exercise_ids (in order when ordered), movement_pattern aliases (data/commons/movement_patterns.yaml) and category filter together',
+      'Level prerequisites: requires resolved transitively against data/commons/level_concepts.yaml and the package\'s level_seeds.yaml; elite unlocks everything',
+      'Slot constraints: AMRAP / for_time slots reject skill, mobility and rehab; zone1–2 aerobic slots keep low effort; phase exclude_exercises',
+      'Scoring: −2 per recent use (last 40), +0.5 for unlocks (not in a slot that names its exercises), +0.5 for defined movement_patterns; ties to the first authored',
       'Main lifts (heavy sets × reps) keep one exercise through a phase unless it rotate_main_lifts',
-      'Taper phase: max-effort exercises excluded entirely',
+      'A phase kind that excludes_max_effort (taper) drops effort: max exercises',
     ],
     hardcodedValues: [
-      '_LEVEL_CONCEPTS — the concepts each training level knows',
+      '_LEVEL_ORDER — the four training levels',
+      'MAIN_LIFT_INTENSITIES',
+      'generator._COMPLEMENTARY_PATTERNS',
     ],
   },
   {
@@ -146,57 +168,66 @@ const EDGES: Edge[] = [
     target: 'Load Prescription',
     fn: 'progression.calculate_load()',
     file: 'src/progression.py',
-    knowledgeRatio: 80,
+    knowledgeRatio: 75,
     yamlFromSource: [
       'slot.slot_type',
-      'slot.sets / reps / intensity',
-      'slot.rest_sec',
-      'slot.duration_minutes',
-      'slot.distance_km',
+      'slot.sets / reps / intensity / rpe_target',
+      'slot.rest_sec, work_sec, time_cap_sec, hold_seconds',
+      'slot.duration_minutes / duration_sec',
+      'slot.distance_m',
+      'slot.scaling.intensity_pct / volume_multiplier',
+      'slot.load (as written), slot.standard (a test\'s scored slot)',
+      'slot.switch_at_sec, rest_until_hr_pct (watch cues)',
     ],
     yamlFromTarget: [
       'exercise.starting_load_kg (by level) and weekly_increment_kg',
-      'exercise.category (gates RPE vs linear dispatch)',
+      'exercise.competition_pace',
+      'exercise.category — only for the no-start-load note',
     ],
     bakedLogic: [
-      'Model: the framework\'s progression_overrides for the modality, else the modality\'s progression_model',
-      'Loads from the exercise YAML; _DEFAULT_INCREMENT_KG (2.5 kg) is the only code default',
-      '_SESSIONS_PER_WEEK: assumed training frequency per exercise',
+      'Model (training_contract.resolve_model): the framework\'s progression_overrides for the modality, its own model when prescription_policy is framework, else the modality\'s, else linear_load',
+      'Dispatch by model and slot type',
       'Time and distance ceilings: the phase kind\'s volume_multiplier (data/commons/phase_kinds.yaml)',
-      'Deload: the framework\'s deload_protocol.volume_reduction_pct is the share kept (0.6 without one); a taper kind\'s share is the total',
-      'as_written slots (template days, tests) are prescribed exactly as the source writes them',
+      'Deload: deload_protocol.volume_reduction_pct is the share kept; a counts_as_deload kind\'s share is the total',
+      'as_written frameworks and a test\'s scored slot (standard_tests.protocol_load) are prescribed exactly as the source writes them',
     ],
     hardcodedValues: [
-      '_SESSIONS_PER_WEEK dict',
+      '_SESSIONS_PER_WEEK — how often six shared lifts are trained a week',
+      '_DEFAULT_INCREMENT_KG 2.5 and the other defaults: 3 × 5, deload share 0.6, density 0.70 / 0.75, ramps 10 % / 8 %, AMRAP 1200 s',
+      '_RPE_LOAD_FACTOR',
+      '_INTENSITY_ZONES — which intensity strings prescribe heart-rate zones',
     ],
   },
 ]
 
-// ─── Extensibility Matrix ─────────────────────────────────────────────────────
+// ─── Authoring ────────────────────────────────────────────────────────────────
 
 type ExtStatus = 'yes' | 'partial' | 'no' | 'n/a'
 
-interface ExtRow {
+interface AuthoringRow {
   type: string
   color: string
   create: ExtStatus
   edit: ExtStatus
-  autoUsed: ExtStatus
-  gaps: string[]
+  remove: ExtStatus
+  writes: string
+  notes: string[]
 }
 
-const EXTENSIBILITY: ExtRow[] = [
+// Every write route needs a signed-in user and AUTHORING_ENABLED (an empty
+// SUPABASE_URL — local dev — enables them without it) and is validated
+// against docs/schemas (422 with the errors). api.py.
+const AUTHORING: AuthoringRow[] = [
   {
-    type: 'Philosophy',
+    type: 'Philosophy (tracks, phases)',
     color: '#94a3b8',
     create: 'no',
     edit: 'no',
-    autoUsed: 'n/a',
-    gaps: [
-      'No POST /api/philosophies endpoint',
-      'Tracks replaced framework_groups and canonical_phase_sequence; validate_entities checks track/phase ids and ownership',
-      'No effect on program generation when used standalone — must be paired with frameworks',
-      'Fix: add POST endpoint with the same track validation (src/phases.validate_philosophy_tracks)',
+    remove: 'no',
+    writes: '—',
+    notes: [
+      'No route; the file is written by hand or through the MCP server',
+      'src/phases.validate_philosophy_tracks checks track and phase ids (validate_entities.py)',
     ],
   },
   {
@@ -204,25 +235,23 @@ const EXTENSIBILITY: ExtRow[] = [
     color: '#8b5cf6',
     create: 'no',
     edit: 'partial',
-    autoUsed: 'yes',
-    gaps: [
-      'No POST /api/frameworks endpoint — can only edit existing frameworks',
-      'PUT /api/frameworks/<id> ✅ exists for updates',
-      'cadence_options lives in the framework YAML (a framework without one gets the default spread)',
-      'expectations field is now REQUIRED per schema — must be present in YAML',
-      'Fix: add POST endpoint',
+    remove: 'no',
+    writes: 'the file in its own package',
+    notes: [
+      'PUT /api/frameworks/<id> ✅ — name, source_philosophy, sessions_per_week, cadence_options, deload_protocol, applicable_when, notes, recovery',
+      'No POST, no DELETE',
     ],
   },
   {
     type: 'Modality',
     color: '#06b6d4',
-    create: 'partial',
+    create: 'yes',
     edit: 'no',
-    autoUsed: 'yes',
-    gaps: [
-      'POST /api/modalities ✅ exists (authoring enabled)',
-      'Scheduler reads recovery_cost, recovery_hours_min, incompatible_in_session_with from YAML generically — new modalities with these fields are placed correctly with no code changes',
-      'No PUT endpoint for an existing modality',
+    remove: 'no',
+    writes: 'data/commons/modalities/ (shared)',
+    notes: [
+      'POST /api/modalities ✅',
+      'A new modality also needs every client\'s tables (colours, icons, outcome fields) — see the gaps',
     ],
   },
   {
@@ -230,13 +259,11 @@ const EXTENSIBILITY: ExtRow[] = [
     color: '#f97316',
     create: 'yes',
     edit: 'yes',
-    autoUsed: 'yes',
-    gaps: [
-      'POST /api/archetypes ✅ exists; stored in data/packages/custom/archetypes/',
-      'PUT /api/archetypes/<id> ✅ exists for updates',
-      'DELETE /api/archetypes/<id> ✅ (custom package only)',
-      'Regional load is derived from its slots; one that names no exercises needs regional_load',
-      'slot_type values not validated on create — unknown type falls back silently',
+    remove: 'partial',
+    writes: 'create: custom package; edit: any package',
+    notes: [
+      'POST, PUT, DELETE /api/archetypes ✅ — DELETE only in the custom package',
+      'slot_type is a schema enum, checked on create and edit',
     ],
   },
   {
@@ -244,27 +271,34 @@ const EXTENSIBILITY: ExtRow[] = [
     color: '#ef4444',
     create: 'yes',
     edit: 'yes',
-    autoUsed: 'yes',
-    gaps: [
-      'POST /api/exercises ✅ exists; stored in the custom package',
-      'PUT /api/exercises/<id> ✅ exists for updates',
-      'DELETE /api/exercises/<id> ✅ (custom package only)',
-      'Loads come from its starting_load_kg / weekly_increment_kg; without them, generic defaults',
-      'A movement pattern recovery_regions.yaml does not list loads no body region (test_recovery_regions.py fails on it)',
+    remove: 'partial',
+    writes: 'create: custom package; edit: any package',
+    notes: [
+      'POST, PUT, DELETE /api/exercises ✅ — DELETE only in the custom package',
+      'Loads come from starting_load_kg / weekly_increment_kg; without them, generic defaults',
     ],
   },
   {
-    type: 'Goal',
-    color: '#f59e0b',
+    type: 'Other package files',
+    color: '#64748b',
     create: 'no',
     edit: 'no',
-    autoUsed: 'no',
-    gaps: [
-      '⚠️ DEPRECATED — Goals removed from system (April 2026)',
-      'Programs now generated directly from philosophies (no goal intermediary)',
-      'Synthetic goals generated internally by api._philosophy_to_goal() for backward compatibility',
-      'All goal YAML files deleted; domain expertise preserved in docs/philosophy-blends.md',
-      'No API endpoints: POST/PUT/DELETE all removed',
+    remove: 'no',
+    writes: '—',
+    notes: [
+      'No route for analytics, watch, level_seeds, exercise_media, training_contract, fidelity, source_weeks or the standards',
+    ],
+  },
+  {
+    type: 'MCP server',
+    color: '#10b981',
+    create: 'yes',
+    edit: 'yes',
+    remove: 'yes',
+    writes: 'any file under data/packages/',
+    notes: [
+      'mcp_server.py: write_package_file, validate_package, delete_package — ungated',
+      'Validates philosophy, framework, archetype and exercise files only',
     ],
   },
 ]
@@ -299,13 +333,6 @@ function StatusIcon({ status }: { status: ExtStatus }) {
   return <span className="text-xs text-muted-foreground">—</span>
 }
 
-function StatusBadge({ status }: { status: ExtStatus }) {
-  if (status === 'yes') return <Badge className="text-[10px] bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/15">Yes</Badge>
-  if (status === 'partial') return <Badge className="text-[10px] bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 hover:bg-amber-500/15">Partial</Badge>
-  if (status === 'no') return <Badge className="text-[10px] bg-red-500/15 text-red-700 dark:text-red-300 border-red-500/30 hover:bg-red-500/15">No</Badge>
-  return <Badge variant="outline" className="text-[10px]">N/A</Badge>
-}
-
 function KnowledgeBar({ ratio }: { ratio: number }) {
   return (
     <div className="space-y-1">
@@ -331,6 +358,213 @@ function KnowledgeBar({ ratio }: { ratio: number }) {
   )
 }
 
+function SectionTitle({ children }: { children: ReactNode }) {
+  return (
+    <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+      {children}
+    </h2>
+  )
+}
+
+// ─── Portability ──────────────────────────────────────────────────────────────
+
+const SHAPE_LABEL: Record<string, string> = {
+  contract: 'contract',
+  templates: 'templates',
+  scheduler: 'scheduler',
+}
+
+const IMPACT_CLASS: Record<PortabilityGap['impact'], string> = {
+  blocks: 'bg-red-500/15 text-red-700 dark:text-red-300 border-red-500/30',
+  degrades: 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30',
+  cosmetic: 'bg-muted text-muted-foreground border-border',
+}
+
+const KIND_ORDER: PortabilityGap['kind'][] = ['gate', 'tooling', 'commons', 'code', 'client', 'watch', 'docs']
+const KIND_LABEL: Record<PortabilityGap['kind'], string> = {
+  gate: 'Push gates',
+  tooling: 'Tooling',
+  commons: 'Commons',
+  code: 'Engine code',
+  client: 'Clients',
+  watch: 'Watches',
+  docs: 'Docs',
+}
+
+function Tick({ done, title }: { done: boolean; title: string }) {
+  return done
+    ? <span title={title}><CheckCircle2 className="size-3.5 text-emerald-700 dark:text-emerald-300" aria-label={`${title}: yes`} /></span>
+    : <span title={title}><MinusCircle className="size-3.5 text-red-700 dark:text-red-300" aria-label={`${title}: missing`} /></span>
+}
+
+function PackageRow({ pkg, outsideIds }: { pkg: PortabilityPackage; outsideIds: string[] }) {
+  const shapes = [...new Set(pkg.tracks.map(t => t.shape))]
+  const optional = pkg.files.filter(f => !f.required)
+  const missingRequired = pkg.files.filter(f => f.required && !f.present)
+  const unknown = pkg.vocabulary.flatMap(v => v.unknown.map(u => `${v.kind}: ${u}`))
+  return (
+    <tr className="border-b border-border/50 last:border-0">
+      <td className="px-3 py-2">
+        <div className="font-medium">{pkg.name}</div>
+        <div className="font-mono text-[10px] text-muted-foreground">{pkg.id}</div>
+      </td>
+      <td className="px-3 py-2">
+        <div className="flex flex-wrap gap-1">
+          {shapes.map(s => (
+            <Badge key={s} variant="outline" className="text-[10px]">
+              {SHAPE_LABEL[s] ?? s} ×{pkg.tracks.filter(t => t.shape === s).length}
+            </Badge>
+          ))}
+        </div>
+      </td>
+      <td className="px-3 py-2 text-[11px]">
+        {missingRequired.length > 0
+          ? <span className="text-red-700 dark:text-red-300">missing {missingRequired.map(f => f.path).join(', ')}</span>
+          : <span className="text-muted-foreground" title={optional.filter(f => f.present).map(f => f.path).join(', ')}>
+              core + {optional.filter(f => f.present).length}/{optional.length} optional
+            </span>}
+      </td>
+      <td className="px-3 py-2">
+        <div className="flex gap-1">
+          {outsideIds.map(id => {
+            const o = pkg.outside.find(x => x.id === id)
+            return o ? <Tick key={id} done={o.done} title={o.done ? o.label : `${o.label} — ${o.how}`} /> : null
+          })}
+        </div>
+      </td>
+      <td className="px-3 py-2 text-[11px]">
+        {unknown.length
+          ? <span className="text-red-700 dark:text-red-300" title={unknown.join('\n')}>{unknown.length} unknown</span>
+          : <span className="text-muted-foreground">all in commons</span>}
+      </td>
+      <td className="px-3 py-2 text-[11px]">
+        {pkg.collisions
+          ? <span className="text-amber-700 dark:text-amber-300">{pkg.collisions}</span>
+          : <span className="text-muted-foreground">0</span>}
+      </td>
+      <td className="px-3 py-2 text-center">
+        <StatusIcon status={pkg.ready ? 'yes' : 'no'} />
+      </td>
+    </tr>
+  )
+}
+
+function GapItem({ gap }: { gap: PortabilityGap }) {
+  return (
+    <li className="space-y-1">
+      <div className="flex flex-wrap items-center gap-1.5">
+        <Badge className={cn('text-[10px] hover:bg-transparent', IMPACT_CLASS[gap.impact])}>{gap.impact}</Badge>
+        <span className="text-xs text-foreground">{gap.title}</span>
+        {gap.roadmap && (
+          <span className="text-[10px] font-mono text-muted-foreground">roadmap {gap.roadmap}</span>
+        )}
+      </div>
+      {gap.detail && <p className="text-[11px] text-muted-foreground leading-relaxed">{gap.detail}</p>}
+      <div className="flex flex-wrap gap-1">
+        {gap.anchors.map(a => (
+          <code key={a} className="bg-muted px-1 rounded text-[10px] font-mono text-muted-foreground break-all">{a}</code>
+        ))}
+      </div>
+    </li>
+  )
+}
+
+function PortabilitySection({ report }: { report: PortabilityReport }) {
+  const outsideIds = report.packages[0]?.outside.map(o => o.id) ?? []
+  const outsideLabels = report.packages[0]?.outside ?? []
+  const open = report.gaps.filter(g => g.status === 'open')
+  const byDesign = report.gaps.filter(g => g.status === 'by_design')
+  const ready = report.packages.filter(p => p.ready).length
+  return (
+    <div className="space-y-4">
+      <p className="text-xs text-foreground/80 leading-relaxed max-w-3xl">{report.verdict}</p>
+
+      <div className="rounded-lg border border-border overflow-x-auto">
+        <table className="w-full text-xs min-w-[720px]">
+          <thead>
+            <tr className="border-b border-border bg-muted/30 text-muted-foreground">
+              <th className="text-left px-3 py-2 font-medium">Package</th>
+              <th className="text-left px-3 py-2 font-medium">Engine shape (tracks)</th>
+              <th className="text-left px-3 py-2 font-medium">In its folder</th>
+              <th className="text-left px-3 py-2 font-medium" title={outsideLabels.map(o => o.label).join(' · ')}>
+                Outside its folder
+              </th>
+              <th className="text-left px-3 py-2 font-medium">Vocabulary</th>
+              <th className="text-left px-3 py-2 font-medium">Id collisions</th>
+              <th className="px-3 py-2 font-medium text-center">Drops in</th>
+            </tr>
+          </thead>
+          <tbody>
+            {report.packages.map(p => <PackageRow key={p.id} pkg={p} outsideIds={outsideIds} />)}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-[10px] text-muted-foreground">
+        {ready} of {report.packages.length} packages in <code className="bg-muted px-1 rounded">{report.packagesDir}</code> drop
+        in as they stand. Outside the folder, in order: {outsideLabels.map(o => o.label).join(' · ')}.{' '}
+        {report.sharedExercises} exercise ids are shared between packages by design; each keeps its own prescription.
+      </p>
+
+      {report.collisions.length > 0 && (
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-700/80 dark:text-amber-300/80 mb-1.5">
+            Ids two packages declare — resolved silently
+          </p>
+          <ul className="space-y-0.5">
+            {report.collisions.map(c => (
+              <li key={`${c.kind}:${c.id}`} className="text-[11px] text-muted-foreground">
+                <span className="font-mono text-foreground">{c.kind} {c.id}</span> in {c.packages.join(', ')} — keeps {c.kept}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {KIND_ORDER.map(kind => {
+          const gaps = open.filter(g => g.kind === kind)
+          if (!gaps.length) return null
+          return (
+            <div key={kind}>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+                {KIND_LABEL[kind]}
+              </p>
+              <ul className="space-y-2.5">
+                {gaps.map(g => <GapItem key={g.id} gap={g} />)}
+              </ul>
+            </div>
+          )
+        })}
+      </div>
+
+      {byDesign.length > 0 && (
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+            By design — the engine's vocabulary a package chooses from
+          </p>
+          <ul className="space-y-2.5">
+            {byDesign.map(g => <GapItem key={g.id} gap={g} />)}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function Portability() {
+  const { data, isLoading, error } = usePortability()
+  if (isLoading) return <p className="text-xs text-muted-foreground">Reading the packages…</p>
+  if (error || !data) {
+    return (
+      <p className="text-xs text-muted-foreground">
+        The portability report needs the local API (or AUTHORING_ENABLED):{' '}
+        <code className="bg-muted px-1 rounded">GET /api/dev/portability</code>.
+      </p>
+    )
+  }
+  return <PortabilitySection report={data} />
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 interface Props {
@@ -338,28 +572,23 @@ interface Props {
 }
 
 export function ModelInteractionPanel({ result }: Props) {
-  const [selectedEdge, setSelectedEdge] = useState<Edge | null>(EDGES[1]) // default: goal→framework
-  const [expandedGapRow, setExpandedGapRow] = useState<string | null>(null)
+  const [selectedEdge, setSelectedEdge] = useState<Edge | null>(EDGES[1])
+  const [expandedRow, setExpandedRow] = useState<string | null>(null)
 
   // Fetch ontology data for dynamic counts
   const { data: ontology } = useOntology()
 
-  // Compute dynamic counts with fallback to hardcoded values
-  const dynamicCounts: NodeCounts = ontology ? {
+  const counts: NodeCounts | null = ontology ? {
     Philosophy: ontology.philosophies.length,
     Framework: ontology.frameworks.length,
     Modality: ontology.modalities.length,
     Archetype: ontology.archetypes.length,
     Exercise: ontology.exercises.length,
-  } : {
-    Philosophy: 11,
-    Framework: 16,
-    Modality: 12,
-    Archetype: 25,
-    Exercise: 198,
-  }
+  } : null
 
-  const NODES = getNodes(dynamicCounts)
+  const NODES = counts
+    ? getNodes(counts)
+    : getNodes({ Philosophy: 0, Framework: 0, Modality: 0, Archetype: 0, Exercise: 0 }).map(n => ({ ...n, count: '—' }))
 
   // Extract live values from trace if available
   const traceWeek0 = result?.generation_trace?.weeks?.[0]
@@ -372,7 +601,13 @@ export function ModelInteractionPanel({ result }: Props) {
     : []
 
   return (
-    <div className="space-y-6 px-6 py-4 max-w-5xl">
+    <div className="space-y-6 px-4 md:px-6 py-4 max-w-5xl">
+
+      {/* ── Section 1: Portability ── */}
+      <div>
+        <SectionTitle>Packages — a folder that drops in?</SectionTitle>
+        <Portability />
+      </div>
 
       {/* ── Live program context banner ── */}
       {result && (
@@ -394,11 +629,9 @@ export function ModelInteractionPanel({ result }: Props) {
         </div>
       )}
 
-      {/* ── Section 1: Pipeline strip ── */}
+      {/* ── Section 2: Pipeline strip ── */}
       <div>
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-          Pipeline Interactions
-        </h2>
+        <SectionTitle>Pipeline Interactions</SectionTitle>
         <div className="overflow-x-auto pb-2">
           <div className="flex items-center gap-0 min-w-max">
             {NODES.map((node, i) => {
@@ -487,19 +720,19 @@ export function ModelInteractionPanel({ result }: Props) {
         </p>
       </div>
 
-      {/* ── Section 2: Edge detail ── */}
+      {/* ── Edge detail ── */}
       {selectedEdge && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm flex items-center gap-2">
+            <CardTitle className="text-sm flex flex-wrap items-center gap-2">
               <span className="text-muted-foreground">{selectedEdge.source}</span>
               <ChevronRight className="size-3 text-muted-foreground" />
               <span>{selectedEdge.target}</span>
-              <Badge variant="outline" className="ml-auto font-mono text-[10px]">
+              <Badge variant="outline" className="md:ml-auto font-mono text-[10px] whitespace-normal">
                 {selectedEdge.file}
               </Badge>
             </CardTitle>
-            <p className="text-xs font-mono text-primary mt-1">{selectedEdge.fn}</p>
+            <p className="text-xs font-mono text-primary mt-1 break-all">{selectedEdge.fn}</p>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
@@ -549,7 +782,7 @@ export function ModelInteractionPanel({ result }: Props) {
               {selectedEdge.hardcodedValues && (
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-700/80 dark:text-amber-300/80 mb-1.5">
-                    Hardcoded — blocks extensibility
+                    Hardcoded — the same for every package
                   </p>
                   <ul className="space-y-1">
                     {selectedEdge.hardcodedValues.map((v, i) => (
@@ -568,25 +801,24 @@ export function ModelInteractionPanel({ result }: Props) {
         </Card>
       )}
 
-      {/* ── Section 3: Extensibility matrix ── */}
+      {/* ── Section 3: Authoring ── */}
       <div>
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-          Extensibility — can users create new instances?
-        </h2>
-        <div className="rounded-lg border border-border overflow-hidden">
-          <table className="w-full text-xs">
+        <SectionTitle>Authoring — what the API can write</SectionTitle>
+        <div className="rounded-lg border border-border overflow-x-auto">
+          <table className="w-full text-xs min-w-[640px]">
             <thead>
               <tr className="border-b border-border bg-muted/30">
                 <th className="text-left px-3 py-2 text-muted-foreground font-medium">Model type</th>
-                <th className="px-3 py-2 text-muted-foreground font-medium text-center">Create via API</th>
-                <th className="px-3 py-2 text-muted-foreground font-medium text-center">Edit / Delete</th>
-                <th className="px-3 py-2 text-muted-foreground font-medium text-center">Auto-used in generation</th>
-                <th className="px-3 py-2 text-muted-foreground font-medium text-left">Gaps / Notes</th>
+                <th className="px-3 py-2 text-muted-foreground font-medium text-center">Create</th>
+                <th className="px-3 py-2 text-muted-foreground font-medium text-center">Edit</th>
+                <th className="px-3 py-2 text-muted-foreground font-medium text-center">Delete</th>
+                <th className="text-left px-3 py-2 text-muted-foreground font-medium">Writes to</th>
+                <th className="text-left px-3 py-2 text-muted-foreground font-medium">Notes</th>
               </tr>
             </thead>
             <tbody>
-              {EXTENSIBILITY.map((row, i) => {
-                const isExpanded = expandedGapRow === row.type
+              {AUTHORING.map((row, i) => {
+                const isExpanded = expandedRow === row.type
                 return (
                   <tr
                     key={row.type}
@@ -602,48 +834,28 @@ export function ModelInteractionPanel({ result }: Props) {
                         <span className="font-medium">{row.type}</span>
                       </div>
                     </td>
-                    <td className="px-3 py-2.5 text-center">
-                      <div className="flex justify-center"><StatusIcon status={row.create} /></div>
-                    </td>
-                    <td className="px-3 py-2.5 text-center">
-                      <div className="flex justify-center"><StatusIcon status={row.edit} /></div>
-                    </td>
-                    <td className="px-3 py-2.5 text-center">
-                      <div className="flex justify-center">
-                        {row.autoUsed === 'n/a'
-                          ? <span className="text-[10px] text-muted-foreground">N/A</span>
-                          : <StatusIcon status={row.autoUsed} />}
-                      </div>
-                    </td>
+                    <td className="px-3 py-2.5"><div className="flex justify-center"><StatusIcon status={row.create} /></div></td>
+                    <td className="px-3 py-2.5"><div className="flex justify-center"><StatusIcon status={row.edit} /></div></td>
+                    <td className="px-3 py-2.5"><div className="flex justify-center"><StatusIcon status={row.remove} /></div></td>
+                    <td className="px-3 py-2.5 text-[11px] text-muted-foreground">{row.writes}</td>
                     <td className="px-3 py-2.5">
                       <button
-                        className="flex items-start gap-1.5 text-left group w-full"
-                        onClick={() => setExpandedGapRow(isExpanded ? null : row.type)}
+                        className="text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => setExpandedRow(isExpanded ? null : row.type)}
                       >
-                        <div className="flex flex-wrap gap-1 flex-1">
-                          <StatusBadge status={row.create} />
-                          {(row.create === 'no' || row.create === 'partial' || row.edit === 'no') && (
-                            <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors">
-                              {isExpanded ? '▲ hide gaps' : '▼ show gaps'}
-                            </span>
-                          )}
-                        </div>
+                        {isExpanded ? '▲ hide' : '▼ show'}
                       </button>
                       {isExpanded && (
                         <ul className="mt-2 space-y-1 pl-1">
-                          {row.gaps.map((g, gi) => (
+                          {row.notes.map((n, ni) => (
                             <li
-                              key={gi}
+                              key={ni}
                               className={cn(
                                 'text-[11px] leading-relaxed',
-                                g.includes('✅') ? 'text-emerald-700 dark:text-emerald-300' :
-                                g.startsWith('Fix:') ? 'text-primary' :
-                                'text-muted-foreground'
+                                n.includes('✅') ? 'text-emerald-700 dark:text-emerald-300' : 'text-muted-foreground'
                               )}
                             >
-                              {g.startsWith('Fix:')
-                                ? <><span className="text-primary font-medium">Fix: </span>{g.slice(5)}</>
-                                : g}
+                              {n}
                             </li>
                           ))}
                         </ul>
@@ -656,7 +868,9 @@ export function ModelInteractionPanel({ result }: Props) {
           </table>
         </div>
         <p className="text-[10px] text-muted-foreground mt-2">
-          Full gap analysis and priority order: <code className="bg-muted px-1 rounded">docs/model-generalization-gaps.md</code>
+          Every write route needs a signed-in user and <code className="bg-muted px-1 rounded">AUTHORING_ENABLED</code> (local
+          dev enables them) and is checked against <code className="bg-muted px-1 rounded">docs/schemas</code>.
+          The gaps and the order they close in: <code className="bg-muted px-1 rounded">docs/roadmap.md</code> item 9.
         </p>
       </div>
 

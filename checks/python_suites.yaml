@@ -38,6 +38,7 @@ suites:
   - test_phase_summary.py
   - test_devlab_trace.py
   - test_constraint_impact.py
+  - test_portability.py               # the Dev Lab's portability report; the gaps' code anchors
   - test_recovery_schedule.py
   - test_recovery_regions.py
   - test_explore_links.py

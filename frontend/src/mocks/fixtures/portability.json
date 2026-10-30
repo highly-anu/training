@@ -1,0 +1,2300 @@
+{
+ "packagesDir": "data/packages",
+ "packages": [
+  {
+   "id": "atg",
+   "name": "ATG / Knees Over Toes Guy (Ben Patrick)",
+   "tracks": [
+    {
+     "track": "zero",
+     "name": "ATG Zero",
+     "shape": "templates"
+    },
+    {
+     "track": "program",
+     "name": "ATG Program #2",
+     "shape": "templates"
+    },
+    {
+     "track": "knee_ability_pro",
+     "name": "Knee Ability Pro",
+     "shape": "templates"
+    }
+   ],
+   "files": [
+    {
+     "id": "philosophy",
+     "path": "philosophy.yaml",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "frameworks",
+     "path": "frameworks",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "archetypes",
+     "path": "archetypes",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "exercises",
+     "path": "exercises.yaml",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "media",
+     "path": "exercise_media.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "level_seeds",
+     "path": "level_seeds.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "analytics",
+     "path": "analytics.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "watch",
+     "path": "watch.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "contract",
+     "path": "training_contract.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "fidelity",
+     "path": "fidelity.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "source_weeks",
+     "path": "source_weeks.yaml",
+     "required": false,
+     "present": true
+    }
+   ],
+   "outside": [
+    {
+     "id": "scorecard",
+     "label": "Scorecard baseline",
+     "file": "tools/scorecard_baseline.json",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "coverage",
+     "label": "Exercise coverage baseline",
+     "file": "tools/exercise_coverage_baseline.json",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "status",
+     "label": "status.yaml row",
+     "file": "docs/package-fidelity/status.yaml",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "golden",
+     "label": "Golden program hashes",
+     "file": "test_single_lane_golden.json",
+     "done": true,
+     "how": "SUPABASE_URL= .venv/bin/python test_single_lane_golden.py --record"
+    },
+    {
+     "id": "dossier",
+     "label": "Source dossier",
+     "file": "docs/package-fidelity/atg.md",
+     "done": true,
+     "how": "write it (docs/package-fidelity/README.md)"
+    }
+   ],
+   "vocabulary": [
+    {
+     "kind": "modalities",
+     "count": 2,
+     "unknown": []
+    },
+    {
+     "kind": "phase_kinds",
+     "count": 1,
+     "unknown": []
+    },
+    {
+     "kind": "equipment",
+     "count": 11,
+     "unknown": []
+    },
+    {
+     "kind": "standards",
+     "count": 0,
+     "unknown": []
+    },
+    {
+     "kind": "watch_templates",
+     "count": 0,
+     "unknown": []
+    }
+   ],
+   "collisions": 0,
+   "ready": true
+  },
+  {
+   "id": "bjj",
+   "name": "BJJ / Brazilian Jiu-Jitsu (Combat Sport Modality)",
+   "tracks": [
+    {
+     "track": "mat_support",
+     "name": "BJJ Performance",
+     "shape": "contract"
+    }
+   ],
+   "files": [
+    {
+     "id": "philosophy",
+     "path": "philosophy.yaml",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "frameworks",
+     "path": "frameworks",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "archetypes",
+     "path": "archetypes",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "exercises",
+     "path": "exercises.yaml",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "media",
+     "path": "exercise_media.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "level_seeds",
+     "path": "level_seeds.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "analytics",
+     "path": "analytics.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "watch",
+     "path": "watch.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "contract",
+     "path": "training_contract.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "fidelity",
+     "path": "fidelity.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "source_weeks",
+     "path": "source_weeks.yaml",
+     "required": false,
+     "present": true
+    }
+   ],
+   "outside": [
+    {
+     "id": "scorecard",
+     "label": "Scorecard baseline",
+     "file": "tools/scorecard_baseline.json",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "coverage",
+     "label": "Exercise coverage baseline",
+     "file": "tools/exercise_coverage_baseline.json",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "status",
+     "label": "status.yaml row",
+     "file": "docs/package-fidelity/status.yaml",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "golden",
+     "label": "Golden program hashes",
+     "file": "test_single_lane_golden.json",
+     "done": true,
+     "how": "SUPABASE_URL= .venv/bin/python test_single_lane_golden.py --record"
+    },
+    {
+     "id": "dossier",
+     "label": "Source dossier",
+     "file": "docs/package-fidelity/bjj.md",
+     "done": true,
+     "how": "write it (docs/package-fidelity/README.md)"
+    }
+   ],
+   "vocabulary": [
+    {
+     "kind": "modalities",
+     "count": 3,
+     "unknown": []
+    },
+    {
+     "kind": "phase_kinds",
+     "count": 6,
+     "unknown": []
+    },
+    {
+     "kind": "equipment",
+     "count": 7,
+     "unknown": []
+    },
+    {
+     "kind": "standards",
+     "count": 0,
+     "unknown": []
+    },
+    {
+     "kind": "watch_templates",
+     "count": 1,
+     "unknown": []
+    }
+   ],
+   "collisions": 0,
+   "ready": true
+  },
+  {
+   "id": "block_fixture",
+   "name": "Block fixture (test)",
+   "tracks": [
+    {
+     "track": "block_periodization",
+     "name": "Block Periodization Program",
+     "shape": "scheduler"
+    }
+   ],
+   "files": [
+    {
+     "id": "philosophy",
+     "path": "philosophy.yaml",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "frameworks",
+     "path": "frameworks",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "archetypes",
+     "path": "archetypes",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "exercises",
+     "path": "exercises.yaml",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "media",
+     "path": "exercise_media.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "level_seeds",
+     "path": "level_seeds.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "analytics",
+     "path": "analytics.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "watch",
+     "path": "watch.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "contract",
+     "path": "training_contract.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "fidelity",
+     "path": "fidelity.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "source_weeks",
+     "path": "source_weeks.yaml",
+     "required": false,
+     "present": false
+    }
+   ],
+   "outside": [
+    {
+     "id": "scorecard",
+     "label": "Scorecard baseline",
+     "file": "tools/scorecard_baseline.json",
+     "done": false,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "coverage",
+     "label": "Exercise coverage baseline",
+     "file": "tools/exercise_coverage_baseline.json",
+     "done": false,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "status",
+     "label": "status.yaml row",
+     "file": "docs/package-fidelity/status.yaml",
+     "done": false,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "golden",
+     "label": "Golden program hashes",
+     "file": "test_single_lane_golden.json",
+     "done": false,
+     "how": "SUPABASE_URL= .venv/bin/python test_single_lane_golden.py --record"
+    },
+    {
+     "id": "dossier",
+     "label": "Source dossier",
+     "file": "docs/package-fidelity/block_fixture.md",
+     "done": false,
+     "how": "write it (docs/package-fidelity/README.md)"
+    }
+   ],
+   "vocabulary": [
+    {
+     "kind": "modalities",
+     "count": 7,
+     "unknown": []
+    },
+    {
+     "kind": "phase_kinds",
+     "count": 8,
+     "unknown": []
+    },
+    {
+     "kind": "equipment",
+     "count": 14,
+     "unknown": []
+    },
+    {
+     "kind": "standards",
+     "count": 1,
+     "unknown": []
+    },
+    {
+     "kind": "watch_templates",
+     "count": 0,
+     "unknown": []
+    }
+   ],
+   "collisions": 11,
+   "ready": false
+  },
+  {
+   "id": "crossfit",
+   "name": "CrossFit (Glassman)",
+   "tracks": [
+    {
+     "track": "constantly_varied",
+     "name": "Three On, One Off",
+     "shape": "templates"
+    },
+    {
+     "track": "five_on_two_off",
+     "name": "Five On, Two Off",
+     "shape": "templates"
+    }
+   ],
+   "files": [
+    {
+     "id": "philosophy",
+     "path": "philosophy.yaml",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "frameworks",
+     "path": "frameworks",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "archetypes",
+     "path": "archetypes",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "exercises",
+     "path": "exercises.yaml",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "media",
+     "path": "exercise_media.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "level_seeds",
+     "path": "level_seeds.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "analytics",
+     "path": "analytics.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "watch",
+     "path": "watch.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "contract",
+     "path": "training_contract.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "fidelity",
+     "path": "fidelity.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "source_weeks",
+     "path": "source_weeks.yaml",
+     "required": false,
+     "present": true
+    }
+   ],
+   "outside": [
+    {
+     "id": "scorecard",
+     "label": "Scorecard baseline",
+     "file": "tools/scorecard_baseline.json",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "coverage",
+     "label": "Exercise coverage baseline",
+     "file": "tools/exercise_coverage_baseline.json",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "status",
+     "label": "status.yaml row",
+     "file": "docs/package-fidelity/status.yaml",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "golden",
+     "label": "Golden program hashes",
+     "file": "test_single_lane_golden.json",
+     "done": true,
+     "how": "SUPABASE_URL= .venv/bin/python test_single_lane_golden.py --record"
+    },
+    {
+     "id": "dossier",
+     "label": "Source dossier",
+     "file": "docs/package-fidelity/crossfit.md",
+     "done": true,
+     "how": "write it (docs/package-fidelity/README.md)"
+    }
+   ],
+   "vocabulary": [
+    {
+     "kind": "modalities",
+     "count": 4,
+     "unknown": []
+    },
+    {
+     "kind": "phase_kinds",
+     "count": 1,
+     "unknown": []
+    },
+    {
+     "kind": "equipment",
+     "count": 16,
+     "unknown": []
+    },
+    {
+     "kind": "standards",
+     "count": 7,
+     "unknown": []
+    },
+    {
+     "kind": "watch_templates",
+     "count": 0,
+     "unknown": []
+    }
+   ],
+   "collisions": 0,
+   "ready": true
+  },
+  {
+   "id": "gym_jones",
+   "name": "Gym Jones / Mark Twight",
+   "tracks": [
+    {
+     "track": "operator_fitness",
+     "name": "Operator Fitness",
+     "shape": "templates"
+    },
+    {
+     "track": "soldier_of_steel",
+     "name": "Soldier of Steel",
+     "shape": "templates"
+    }
+   ],
+   "files": [
+    {
+     "id": "philosophy",
+     "path": "philosophy.yaml",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "frameworks",
+     "path": "frameworks",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "archetypes",
+     "path": "archetypes",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "exercises",
+     "path": "exercises.yaml",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "media",
+     "path": "exercise_media.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "level_seeds",
+     "path": "level_seeds.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "analytics",
+     "path": "analytics.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "watch",
+     "path": "watch.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "contract",
+     "path": "training_contract.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "fidelity",
+     "path": "fidelity.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "source_weeks",
+     "path": "source_weeks.yaml",
+     "required": false,
+     "present": true
+    }
+   ],
+   "outside": [
+    {
+     "id": "scorecard",
+     "label": "Scorecard baseline",
+     "file": "tools/scorecard_baseline.json",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "coverage",
+     "label": "Exercise coverage baseline",
+     "file": "tools/exercise_coverage_baseline.json",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "status",
+     "label": "status.yaml row",
+     "file": "docs/package-fidelity/status.yaml",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "golden",
+     "label": "Golden program hashes",
+     "file": "test_single_lane_golden.json",
+     "done": true,
+     "how": "SUPABASE_URL= .venv/bin/python test_single_lane_golden.py --record"
+    },
+    {
+     "id": "dossier",
+     "label": "Source dossier",
+     "file": "docs/package-fidelity/gym_jones.md",
+     "done": true,
+     "how": "write it (docs/package-fidelity/README.md)"
+    }
+   ],
+   "vocabulary": [
+    {
+     "kind": "modalities",
+     "count": 7,
+     "unknown": []
+    },
+    {
+     "kind": "phase_kinds",
+     "count": 1,
+     "unknown": []
+    },
+    {
+     "kind": "equipment",
+     "count": 13,
+     "unknown": []
+    },
+    {
+     "kind": "standards",
+     "count": 0,
+     "unknown": []
+    },
+    {
+     "kind": "watch_templates",
+     "count": 1,
+     "unknown": []
+    }
+   ],
+   "collisions": 0,
+   "ready": true
+  },
+  {
+   "id": "horsemen_gpp",
+   "name": "Horsemen GPP / SOF-Style Training",
+   "tracks": [
+    {
+     "track": "four_month_macro",
+     "name": "4-Month Macro",
+     "shape": "templates"
+    }
+   ],
+   "files": [
+    {
+     "id": "philosophy",
+     "path": "philosophy.yaml",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "frameworks",
+     "path": "frameworks",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "archetypes",
+     "path": "archetypes",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "exercises",
+     "path": "exercises.yaml",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "media",
+     "path": "exercise_media.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "level_seeds",
+     "path": "level_seeds.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "analytics",
+     "path": "analytics.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "watch",
+     "path": "watch.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "contract",
+     "path": "training_contract.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "fidelity",
+     "path": "fidelity.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "source_weeks",
+     "path": "source_weeks.yaml",
+     "required": false,
+     "present": true
+    }
+   ],
+   "outside": [
+    {
+     "id": "scorecard",
+     "label": "Scorecard baseline",
+     "file": "tools/scorecard_baseline.json",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "coverage",
+     "label": "Exercise coverage baseline",
+     "file": "tools/exercise_coverage_baseline.json",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "status",
+     "label": "status.yaml row",
+     "file": "docs/package-fidelity/status.yaml",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "golden",
+     "label": "Golden program hashes",
+     "file": "test_single_lane_golden.json",
+     "done": true,
+     "how": "SUPABASE_URL= .venv/bin/python test_single_lane_golden.py --record"
+    },
+    {
+     "id": "dossier",
+     "label": "Source dossier",
+     "file": "docs/package-fidelity/horsemen_gpp.md",
+     "done": true,
+     "how": "write it (docs/package-fidelity/README.md)"
+    }
+   ],
+   "vocabulary": [
+    {
+     "kind": "modalities",
+     "count": 6,
+     "unknown": []
+    },
+    {
+     "kind": "phase_kinds",
+     "count": 4,
+     "unknown": []
+    },
+    {
+     "kind": "equipment",
+     "count": 29,
+     "unknown": []
+    },
+    {
+     "kind": "standards",
+     "count": 12,
+     "unknown": []
+    },
+    {
+     "kind": "watch_templates",
+     "count": 0,
+     "unknown": []
+    }
+   ],
+   "collisions": 0,
+   "ready": true
+  },
+  {
+   "id": "ido_portal",
+   "name": "Ido Portal / Movement Culture",
+   "tracks": [
+    {
+     "track": "floreio",
+     "name": "Floreio Routines",
+     "shape": "templates"
+    }
+   ],
+   "files": [
+    {
+     "id": "philosophy",
+     "path": "philosophy.yaml",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "frameworks",
+     "path": "frameworks",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "archetypes",
+     "path": "archetypes",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "exercises",
+     "path": "exercises.yaml",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "media",
+     "path": "exercise_media.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "level_seeds",
+     "path": "level_seeds.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "analytics",
+     "path": "analytics.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "watch",
+     "path": "watch.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "contract",
+     "path": "training_contract.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "fidelity",
+     "path": "fidelity.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "source_weeks",
+     "path": "source_weeks.yaml",
+     "required": false,
+     "present": true
+    }
+   ],
+   "outside": [
+    {
+     "id": "scorecard",
+     "label": "Scorecard baseline",
+     "file": "tools/scorecard_baseline.json",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "coverage",
+     "label": "Exercise coverage baseline",
+     "file": "tools/exercise_coverage_baseline.json",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "status",
+     "label": "status.yaml row",
+     "file": "docs/package-fidelity/status.yaml",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "golden",
+     "label": "Golden program hashes",
+     "file": "test_single_lane_golden.json",
+     "done": true,
+     "how": "SUPABASE_URL= .venv/bin/python test_single_lane_golden.py --record"
+    },
+    {
+     "id": "dossier",
+     "label": "Source dossier",
+     "file": "docs/package-fidelity/ido_portal.md",
+     "done": true,
+     "how": "write it (docs/package-fidelity/README.md)"
+    }
+   ],
+   "vocabulary": [
+    {
+     "kind": "modalities",
+     "count": 2,
+     "unknown": []
+    },
+    {
+     "kind": "phase_kinds",
+     "count": 1,
+     "unknown": []
+    },
+    {
+     "kind": "equipment",
+     "count": 3,
+     "unknown": []
+    },
+    {
+     "kind": "standards",
+     "count": 0,
+     "unknown": []
+    },
+    {
+     "kind": "watch_templates",
+     "count": 0,
+     "unknown": []
+    }
+   ],
+   "collisions": 0,
+   "ready": true
+  },
+  {
+   "id": "kelly_starrett",
+   "name": "Kelly Starrett / Built to Move",
+   "tracks": [
+    {
+     "track": "built_to_move",
+     "name": "Built to Move",
+     "shape": "templates"
+    }
+   ],
+   "files": [
+    {
+     "id": "philosophy",
+     "path": "philosophy.yaml",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "frameworks",
+     "path": "frameworks",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "archetypes",
+     "path": "archetypes",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "exercises",
+     "path": "exercises.yaml",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "media",
+     "path": "exercise_media.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "level_seeds",
+     "path": "level_seeds.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "analytics",
+     "path": "analytics.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "watch",
+     "path": "watch.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "contract",
+     "path": "training_contract.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "fidelity",
+     "path": "fidelity.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "source_weeks",
+     "path": "source_weeks.yaml",
+     "required": false,
+     "present": true
+    }
+   ],
+   "outside": [
+    {
+     "id": "scorecard",
+     "label": "Scorecard baseline",
+     "file": "tools/scorecard_baseline.json",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "coverage",
+     "label": "Exercise coverage baseline",
+     "file": "tools/exercise_coverage_baseline.json",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "status",
+     "label": "status.yaml row",
+     "file": "docs/package-fidelity/status.yaml",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "golden",
+     "label": "Golden program hashes",
+     "file": "test_single_lane_golden.json",
+     "done": true,
+     "how": "SUPABASE_URL= .venv/bin/python test_single_lane_golden.py --record"
+    },
+    {
+     "id": "dossier",
+     "label": "Source dossier",
+     "file": "docs/package-fidelity/kelly_starrett.md",
+     "done": true,
+     "how": "write it (docs/package-fidelity/README.md)"
+    }
+   ],
+   "vocabulary": [
+    {
+     "kind": "modalities",
+     "count": 1,
+     "unknown": []
+    },
+    {
+     "kind": "phase_kinds",
+     "count": 2,
+     "unknown": []
+    },
+    {
+     "kind": "equipment",
+     "count": 0,
+     "unknown": []
+    },
+    {
+     "kind": "standards",
+     "count": 0,
+     "unknown": []
+    },
+    {
+     "kind": "watch_templates",
+     "count": 0,
+     "unknown": []
+    }
+   ],
+   "collisions": 0,
+   "ready": true
+  },
+  {
+   "id": "marcus_filly",
+   "name": "Marcus Filly / Functional Bodybuilding",
+   "tracks": [
+    {
+     "track": "functional_bodybuilding",
+     "name": "Pump Condition (3x)",
+     "shape": "contract"
+    },
+    {
+     "track": "pump_lift",
+     "name": "Pump Lift (3x)",
+     "shape": "contract"
+    }
+   ],
+   "files": [
+    {
+     "id": "philosophy",
+     "path": "philosophy.yaml",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "frameworks",
+     "path": "frameworks",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "archetypes",
+     "path": "archetypes",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "exercises",
+     "path": "exercises.yaml",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "media",
+     "path": "exercise_media.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "level_seeds",
+     "path": "level_seeds.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "analytics",
+     "path": "analytics.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "watch",
+     "path": "watch.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "contract",
+     "path": "training_contract.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "fidelity",
+     "path": "fidelity.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "source_weeks",
+     "path": "source_weeks.yaml",
+     "required": false,
+     "present": true
+    }
+   ],
+   "outside": [
+    {
+     "id": "scorecard",
+     "label": "Scorecard baseline",
+     "file": "tools/scorecard_baseline.json",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "coverage",
+     "label": "Exercise coverage baseline",
+     "file": "tools/exercise_coverage_baseline.json",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "status",
+     "label": "status.yaml row",
+     "file": "docs/package-fidelity/status.yaml",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "golden",
+     "label": "Golden program hashes",
+     "file": "test_single_lane_golden.json",
+     "done": true,
+     "how": "SUPABASE_URL= .venv/bin/python test_single_lane_golden.py --record"
+    },
+    {
+     "id": "dossier",
+     "label": "Source dossier",
+     "file": "docs/package-fidelity/marcus_filly.md",
+     "done": true,
+     "how": "write it (docs/package-fidelity/README.md)"
+    }
+   ],
+   "vocabulary": [
+    {
+     "kind": "modalities",
+     "count": 3,
+     "unknown": []
+    },
+    {
+     "kind": "phase_kinds",
+     "count": 2,
+     "unknown": []
+    },
+    {
+     "kind": "equipment",
+     "count": 7,
+     "unknown": []
+    },
+    {
+     "kind": "standards",
+     "count": 0,
+     "unknown": []
+    },
+    {
+     "kind": "watch_templates",
+     "count": 0,
+     "unknown": []
+    }
+   ],
+   "collisions": 0,
+   "ready": true
+  },
+  {
+   "id": "starting_strength",
+   "name": "Starting Strength / Mark Rippetoe",
+   "tracks": [
+    {
+     "track": "linear_progression",
+     "name": "Linear Progression Program",
+     "shape": "contract"
+    },
+    {
+     "track": "texas_method",
+     "name": "Texas Method",
+     "shape": "contract"
+    }
+   ],
+   "files": [
+    {
+     "id": "philosophy",
+     "path": "philosophy.yaml",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "frameworks",
+     "path": "frameworks",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "archetypes",
+     "path": "archetypes",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "exercises",
+     "path": "exercises.yaml",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "media",
+     "path": "exercise_media.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "level_seeds",
+     "path": "level_seeds.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "analytics",
+     "path": "analytics.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "watch",
+     "path": "watch.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "contract",
+     "path": "training_contract.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "fidelity",
+     "path": "fidelity.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "source_weeks",
+     "path": "source_weeks.yaml",
+     "required": false,
+     "present": true
+    }
+   ],
+   "outside": [
+    {
+     "id": "scorecard",
+     "label": "Scorecard baseline",
+     "file": "tools/scorecard_baseline.json",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "coverage",
+     "label": "Exercise coverage baseline",
+     "file": "tools/exercise_coverage_baseline.json",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "status",
+     "label": "status.yaml row",
+     "file": "docs/package-fidelity/status.yaml",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "golden",
+     "label": "Golden program hashes",
+     "file": "test_single_lane_golden.json",
+     "done": true,
+     "how": "SUPABASE_URL= .venv/bin/python test_single_lane_golden.py --record"
+    },
+    {
+     "id": "dossier",
+     "label": "Source dossier",
+     "file": "docs/package-fidelity/starting_strength.md",
+     "done": true,
+     "how": "write it (docs/package-fidelity/README.md)"
+    }
+   ],
+   "vocabulary": [
+    {
+     "kind": "modalities",
+     "count": 1,
+     "unknown": []
+    },
+    {
+     "kind": "phase_kinds",
+     "count": 5,
+     "unknown": []
+    },
+    {
+     "kind": "equipment",
+     "count": 4,
+     "unknown": []
+    },
+    {
+     "kind": "standards",
+     "count": 2,
+     "unknown": []
+    },
+    {
+     "kind": "watch_templates",
+     "count": 0,
+     "unknown": []
+    }
+   ],
+   "collisions": 0,
+   "ready": true
+  },
+  {
+   "id": "uphill_athlete",
+   "name": "Uphill Athlete — Steve House & Scott Johnston",
+   "tracks": [
+    {
+     "track": "full_program",
+     "name": "Mountain Objective",
+     "shape": "contract"
+    }
+   ],
+   "files": [
+    {
+     "id": "philosophy",
+     "path": "philosophy.yaml",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "frameworks",
+     "path": "frameworks",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "archetypes",
+     "path": "archetypes",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "exercises",
+     "path": "exercises.yaml",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "media",
+     "path": "exercise_media.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "level_seeds",
+     "path": "level_seeds.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "analytics",
+     "path": "analytics.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "watch",
+     "path": "watch.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "contract",
+     "path": "training_contract.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "fidelity",
+     "path": "fidelity.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "source_weeks",
+     "path": "source_weeks.yaml",
+     "required": false,
+     "present": true
+    }
+   ],
+   "outside": [
+    {
+     "id": "scorecard",
+     "label": "Scorecard baseline",
+     "file": "tools/scorecard_baseline.json",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "coverage",
+     "label": "Exercise coverage baseline",
+     "file": "tools/exercise_coverage_baseline.json",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "status",
+     "label": "status.yaml row",
+     "file": "docs/package-fidelity/status.yaml",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "golden",
+     "label": "Golden program hashes",
+     "file": "test_single_lane_golden.json",
+     "done": true,
+     "how": "SUPABASE_URL= .venv/bin/python test_single_lane_golden.py --record"
+    },
+    {
+     "id": "dossier",
+     "label": "Source dossier",
+     "file": "docs/package-fidelity/uphill_athlete.md",
+     "done": true,
+     "how": "write it (docs/package-fidelity/README.md)"
+    }
+   ],
+   "vocabulary": [
+    {
+     "kind": "modalities",
+     "count": 5,
+     "unknown": []
+    },
+    {
+     "kind": "phase_kinds",
+     "count": 4,
+     "unknown": []
+    },
+    {
+     "kind": "equipment",
+     "count": 7,
+     "unknown": []
+    },
+    {
+     "kind": "standards",
+     "count": 0,
+     "unknown": []
+    },
+    {
+     "kind": "watch_templates",
+     "count": 0,
+     "unknown": []
+    }
+   ],
+   "collisions": 0,
+   "ready": true
+  },
+  {
+   "id": "wildman_kettlebell",
+   "name": "Mark Wildman Kettlebell",
+   "tracks": [
+    {
+     "track": "general_practice",
+     "name": "General Practice",
+     "shape": "contract"
+    },
+    {
+     "track": "pentathlon",
+     "name": "Pentathlon Prep",
+     "shape": "contract"
+    },
+    {
+     "track": "squat_practice",
+     "name": "Squat Practice",
+     "shape": "contract"
+    },
+    {
+     "track": "snatch_practice",
+     "name": "Snatch Practice",
+     "shape": "contract"
+    },
+    {
+     "track": "getup_mobility",
+     "name": "Get-Up and Loaded Mobility",
+     "shape": "contract"
+    },
+    {
+     "track": "double_bell_practice",
+     "name": "Double-Bell Practice",
+     "shape": "contract"
+    }
+   ],
+   "files": [
+    {
+     "id": "philosophy",
+     "path": "philosophy.yaml",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "frameworks",
+     "path": "frameworks",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "archetypes",
+     "path": "archetypes",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "exercises",
+     "path": "exercises.yaml",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "media",
+     "path": "exercise_media.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "level_seeds",
+     "path": "level_seeds.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "analytics",
+     "path": "analytics.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "watch",
+     "path": "watch.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "contract",
+     "path": "training_contract.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "fidelity",
+     "path": "fidelity.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "source_weeks",
+     "path": "source_weeks.yaml",
+     "required": false,
+     "present": true
+    }
+   ],
+   "outside": [
+    {
+     "id": "scorecard",
+     "label": "Scorecard baseline",
+     "file": "tools/scorecard_baseline.json",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "coverage",
+     "label": "Exercise coverage baseline",
+     "file": "tools/exercise_coverage_baseline.json",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "status",
+     "label": "status.yaml row",
+     "file": "docs/package-fidelity/status.yaml",
+     "done": true,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "golden",
+     "label": "Golden program hashes",
+     "file": "test_single_lane_golden.json",
+     "done": true,
+     "how": "SUPABASE_URL= .venv/bin/python test_single_lane_golden.py --record"
+    },
+    {
+     "id": "dossier",
+     "label": "Source dossier",
+     "file": "docs/package-fidelity/wildman_kettlebell.md",
+     "done": true,
+     "how": "write it (docs/package-fidelity/README.md)"
+    }
+   ],
+   "vocabulary": [
+    {
+     "kind": "modalities",
+     "count": 6,
+     "unknown": []
+    },
+    {
+     "kind": "phase_kinds",
+     "count": 6,
+     "unknown": []
+    },
+    {
+     "kind": "equipment",
+     "count": 2,
+     "unknown": []
+    },
+    {
+     "kind": "standards",
+     "count": 7,
+     "unknown": []
+    },
+    {
+     "kind": "watch_templates",
+     "count": 0,
+     "unknown": []
+    }
+   ],
+   "collisions": 0,
+   "ready": true
+  },
+  {
+   "id": "zz_collider",
+   "name": "Block fixture (test)",
+   "tracks": [
+    {
+     "track": "block_periodization",
+     "name": "Block Periodization Program",
+     "shape": "scheduler"
+    }
+   ],
+   "files": [
+    {
+     "id": "philosophy",
+     "path": "philosophy.yaml",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "frameworks",
+     "path": "frameworks",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "archetypes",
+     "path": "archetypes",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "exercises",
+     "path": "exercises.yaml",
+     "required": true,
+     "present": true
+    },
+    {
+     "id": "media",
+     "path": "exercise_media.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "level_seeds",
+     "path": "level_seeds.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "analytics",
+     "path": "analytics.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "watch",
+     "path": "watch.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "contract",
+     "path": "training_contract.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "fidelity",
+     "path": "fidelity.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "source_weeks",
+     "path": "source_weeks.yaml",
+     "required": false,
+     "present": false
+    }
+   ],
+   "outside": [
+    {
+     "id": "scorecard",
+     "label": "Scorecard baseline",
+     "file": "tools/scorecard_baseline.json",
+     "done": false,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "coverage",
+     "label": "Exercise coverage baseline",
+     "file": "tools/exercise_coverage_baseline.json",
+     "done": false,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "status",
+     "label": "status.yaml row",
+     "file": "docs/package-fidelity/status.yaml",
+     "done": false,
+     "how": ".venv/bin/python tools/evaluate_packages.py --update-baseline"
+    },
+    {
+     "id": "golden",
+     "label": "Golden program hashes",
+     "file": "test_single_lane_golden.json",
+     "done": false,
+     "how": "SUPABASE_URL= .venv/bin/python test_single_lane_golden.py --record"
+    },
+    {
+     "id": "dossier",
+     "label": "Source dossier",
+     "file": "docs/package-fidelity/zz_collider.md",
+     "done": false,
+     "how": "write it (docs/package-fidelity/README.md)"
+    }
+   ],
+   "vocabulary": [
+    {
+     "kind": "modalities",
+     "count": 8,
+     "unknown": [
+      "not_a_modality"
+     ]
+    },
+    {
+     "kind": "phase_kinds",
+     "count": 8,
+     "unknown": []
+    },
+    {
+     "kind": "equipment",
+     "count": 15,
+     "unknown": [
+      "not_an_implement"
+     ]
+    },
+    {
+     "kind": "standards",
+     "count": 1,
+     "unknown": []
+    },
+    {
+     "kind": "watch_templates",
+     "count": 0,
+     "unknown": []
+    }
+   ],
+   "collisions": 11,
+   "ready": false
+  }
+ ],
+ "collisions": [
+  {
+   "kind": "archetype",
+   "id": "barbell_power_complex",
+   "packages": [
+    "block_fixture",
+    "zz_collider"
+   ],
+   "kept": "the first (by folder name)"
+  },
+  {
+   "kind": "archetype",
+   "id": "emom_strength",
+   "packages": [
+    "block_fixture",
+    "zz_collider"
+   ],
+   "kept": "the first (by folder name)"
+  },
+  {
+   "kind": "archetype",
+   "id": "gym_jones_accumulation",
+   "packages": [
+    "block_fixture",
+    "zz_collider"
+   ],
+   "kept": "the first (by folder name)"
+  },
+  {
+   "kind": "archetype",
+   "id": "gym_jones_aerobic_recovery",
+   "packages": [
+    "block_fixture",
+    "zz_collider"
+   ],
+   "kept": "the first (by folder name)"
+  },
+  {
+   "kind": "archetype",
+   "id": "gym_jones_breathing_ladder",
+   "packages": [
+    "block_fixture",
+    "zz_collider"
+   ],
+   "kept": "the first (by folder name)"
+  },
+  {
+   "kind": "archetype",
+   "id": "gym_jones_circuit",
+   "packages": [
+    "block_fixture",
+    "zz_collider"
+   ],
+   "kept": "the first (by folder name)"
+  },
+  {
+   "kind": "archetype",
+   "id": "gym_jones_operator_strength",
+   "packages": [
+    "block_fixture",
+    "zz_collider"
+   ],
+   "kept": "the first (by folder name)"
+  },
+  {
+   "kind": "archetype",
+   "id": "gym_jones_row_2k_test",
+   "packages": [
+    "block_fixture",
+    "zz_collider"
+   ],
+   "kept": "the first (by folder name)"
+  },
+  {
+   "kind": "archetype",
+   "id": "gym_jones_row_intervals",
+   "packages": [
+    "block_fixture",
+    "zz_collider"
+   ],
+   "kept": "the first (by folder name)"
+  },
+  {
+   "kind": "archetype",
+   "id": "gym_jones_tgu_recovery",
+   "packages": [
+    "block_fixture",
+    "zz_collider"
+   ],
+   "kept": "the first (by folder name)"
+  },
+  {
+   "kind": "framework",
+   "id": "block_periodization",
+   "packages": [
+    "block_fixture",
+    "zz_collider"
+   ],
+   "kept": "load_all_frameworks keeps the last, load_framework the first"
+  }
+ ],
+ "sharedExercises": 80,
+ "_comment": "What a package still cannot bring in its own folder (src/portability.py serves this to Dev Lab ▸ Model Interactions). Each anchor is `path::text` and must still be in that file while the gap is open; test_portability.py fails when one is gone, so closing a gap means changing its status here in the same change. kind: gate | tooling | commons | code | client | watch | docs. impact on a dropped-in package: blocks (it fails a gate or cannot be written), degrades (it works, worse or silently wrong), cosmetic. status: open | by_design (the commons vocabulary is the contract between packages and the engine). roadmap: the step of docs/roadmap.md item 9 (9.1, 9.2, …) that closes it.",
+ "verdict": "The code is package-neutral: nothing in the server, the web, the phones or the watches names a package (tools/check_code_neutral.py), and test_package_dropin.py runs three packages under new ids with the repository unchanged. The repository is not yet drop-in: a new package needs records outside its folder before the push gates pass, and anything beyond the commons vocabulary is a shared edit.",
+ "gaps": [
+  {
+   "id": "outside_records",
+   "title": "Records outside the folder: the scorecard and coverage baselines, status.yaml, the golden program hashes and the dossier",
+   "kind": "gate",
+   "impact": "blocks",
+   "detail": "A package no baseline names fails tools/evaluate_packages.py and test_single_lane_golden.py until they are re-recorded; the dossier lives in docs/package-fidelity/. Each package's row in the matrix above shows which it has.",
+   "anchors": [
+    "tools/evaluate_packages.py::scorecard_baseline.json",
+    "test_single_lane_golden.py::GOLDEN_PATH",
+    "src/package_fidelity.py::DOSSIERS"
+   ],
+   "roadmap": "9.1",
+   "status": "open"
+  },
+  {
+   "id": "id_collisions",
+   "title": "No gate on ids two packages declare",
+   "kind": "tooling",
+   "impact": "degrades",
+   "detail": "The loader resolves them silently: archetypes keep the first by folder name, frameworks the last in the library and the first in load_framework, media the last. This report finds them; nothing fails on them.",
+   "anchors": [
+    "src/loader.py::seen_ids",
+    "src/loader.py::def load_all_frameworks"
+   ],
+   "roadmap": "9.1",
+   "status": "open"
+  },
+  {
+   "id": "dropin_alone",
+   "title": "The drop-in test runs its copies without the shipped packages",
+   "kind": "tooling",
+   "impact": "degrades",
+   "detail": "So it cannot catch collisions, the gates' baselines or the static reference cache (build_static_cache.py).",
+   "anchors": [
+    "test_package_dropin.py::TRAINING_PACKAGES_DIR"
+   ],
+   "roadmap": "9.1",
+   "status": "open"
+  },
+  {
+   "id": "suite_registry",
+   "title": "A package's own tests count only once listed in the shared suite registry",
+   "kind": "tooling",
+   "impact": "degrades",
+   "detail": "A fidelity rule enforced_by a test is debt (S3) until checks/python_suites.yaml lists the test, and tools/run_checks.py refuses an unlisted root test.",
+   "anchors": [
+    "src/package_fidelity.py::python_suites.yaml"
+   ],
+   "roadmap": "9.1",
+   "status": "open"
+  },
+  {
+   "id": "fixed_blends",
+   "title": "Blends are checked on five fixed pairs",
+   "kind": "tooling",
+   "impact": "cosmetic",
+   "detail": "A new package's tracks are generated on their own; it is never generated in a blend.",
+   "anchors": [
+    "tools/check_styles.py::COMPOSITIONS"
+   ],
+   "roadmap": "9.1",
+   "status": "open"
+  },
+  {
+   "id": "standards",
+   "title": "Standards come only from data/benchmarks/, from the files the code names",
+   "kind": "commons",
+   "impact": "blocks",
+   "detail": "A package may reference a standard (a test slot's standard, analytics benchmarks) but not ship one; a new file or category is a code change.",
+   "anchors": [
+    "src/analytics/benchmarks_data.py::BENCHMARK_FILES",
+    "src/analytics/benchmarks_data.py::CATEGORIES = ("
+   ],
+   "roadmap": "9.2",
+   "status": "open"
+  },
+  {
+   "id": "modality_tiers",
+   "title": "A modality's priority tier and typical duration are code, applied over its YAML",
+   "kind": "code",
+   "impact": "degrades",
+   "detail": "A modality file cannot set them; combat_sport is missing (tier 3, 60 min) and skill_work names no modality.",
+   "anchors": [
+    "src/loader.py::MODALITY_PRIORITY_TIERS",
+    "src/loader.py::MODALITY_TYPICAL_DURATIONS"
+   ],
+   "roadmap": "9.3",
+   "status": "open"
+  },
+  {
+   "id": "sessions_per_week_table",
+   "title": "How often an exercise is trained a week is a table keyed by shared lifts",
+   "kind": "code",
+   "impact": "degrades",
+   "anchors": [
+    "src/progression.py::_SESSIONS_PER_WEEK"
+   ],
+   "roadmap": "9.3",
+   "status": "open"
+  },
+  {
+   "id": "pattern_tables",
+   "title": "Complementary movement patterns and the category → equipment map are code",
+   "kind": "code",
+   "impact": "degrades",
+   "anchors": [
+    "src/generator.py::_COMPLEMENTARY_PATTERNS",
+    "src/selector.py::_blocked_categories_for_equipment"
+   ],
+   "roadmap": "9.3",
+   "status": "open"
+  },
+  {
+   "id": "fallback_modalities",
+   "title": "The cross-modality fallback order is code",
+   "kind": "code",
+   "impact": "degrades",
+   "detail": "aerobic_base → durability → mobility for every framework.",
+   "anchors": [
+    "src/generator.py::_FALLBACKS"
+   ],
+   "roadmap": "9.3",
+   "status": "open"
+  },
+  {
+   "id": "equipment_list",
+   "title": "Equipment is enumerated in four schemas and two code lists that disagree",
+   "kind": "client",
+   "impact": "blocks",
+   "detail": "A new implement is a schema edit in each, and the loader's own list is stale.",
+   "anchors": [
+    "src/loader.py::def load_equipment",
+    "frontend/src/lib/equipment.ts::EQUIPMENT_GROUPS"
+   ],
+   "roadmap": "9.4",
+   "status": "open"
+  },
+  {
+   "id": "client_modality_tables",
+   "title": "Each client keeps its own modality, phase-kind and outcome tables",
+   "kind": "client",
+   "impact": "degrades",
+   "detail": "A new modality, phase kind or slot type is code in the web, the phone and the authoring dialogs; unknown ids fall back to grey.",
+   "anchors": [
+    "frontend/src/lib/modalityColors.ts::MODALITY_COLORS",
+    "frontend/src/lib/phaseColors.ts::PHASE_COLORS",
+    "frontend/src/lib/outcomeFields.ts::outcomeFieldsFor",
+    "frontend/src/components/objectbrowser/AddArchetypeDialog.tsx::const MODALITIES",
+    "ios/TrainingCompanion/ModalityStyle.swift::struct ModalityStyle",
+    "ios/TrainingCompanion/PhaseStyle.swift::enum PhaseStyle",
+    "ios/TrainingCompanion/SessionLogging.swift::static func outcomeFields",
+    "mcp_server.py::VALID_MODALITIES"
+   ],
+   "roadmap": "9.4",
+   "status": "open"
+  },
+  {
+   "id": "contract_kettlebell",
+   "title": "A training contract's implement handling is kettlebell-specific",
+   "kind": "code",
+   "impact": "blocks",
+   "detail": "The bell pair and inventory wording; a contract for another implement needs engine work.",
+   "anchors": [
+    "src/training_contract.py::requires_kettlebell_pair"
+   ],
+   "roadmap": "9.5",
+   "status": "open"
+  },
+  {
+   "id": "watch_capture",
+   "title": "What each watch template records is not declared",
+   "kind": "watch",
+   "impact": "degrades",
+   "detail": "X2 checks every step has a screen, not that the package's lead measure is captured on the wrist.",
+   "anchors": [
+    "data/commons/watch_vocabulary.json::\"templates\""
+   ],
+   "roadmap": "9.6",
+   "status": "open"
+  },
+  {
+   "id": "mcp_authoring",
+   "title": "The MCP server's schema list is stale and it ignores TRAINING_PACKAGES_DIR",
+   "kind": "tooling",
+   "impact": "degrades",
+   "detail": "It names goal_profile.schema.json, which does not exist, and writes analytics, watch, contract, fidelity and source-week files unvalidated.",
+   "anchors": [
+    "mcp_server.py::goal_profile.schema.json"
+   ],
+   "roadmap": "9.7",
+   "status": "open"
+  },
+  {
+   "id": "extraction_guide",
+   "title": "The extraction guide puts standards and data outside the package",
+   "kind": "docs",
+   "impact": "cosmetic",
+   "anchors": [
+    "docs/extraction-guide.md::data/benchmarks/"
+   ],
+   "roadmap": "9.7",
+   "status": "open"
+  },
+  {
+   "id": "author_guide_schemas",
+   "title": "The author guide's schema sections predate tracks, week templates and contracts",
+   "kind": "docs",
+   "impact": "degrades",
+   "detail": "Sections 5–13 still teach framework_groups, goals_served and goal profiles; the schemas in docs/schemas/ are the reference.",
+   "anchors": [
+    "docs/author-guide.md::framework_groups"
+   ],
+   "roadmap": "9.7",
+   "status": "open"
+  },
+  {
+   "id": "engine_vocabulary",
+   "title": "Phase kinds, intensities, levels and progression and contract models are engine vocabulary",
+   "kind": "code",
+   "impact": "blocks",
+   "detail": "A package chooses among them; a new one is engine work.",
+   "anchors": [
+    "src/progression.py::_INTENSITY_ZONES",
+    "src/selector.py::_LEVEL_ORDER",
+    "src/training_contract.py::density_cycle",
+    "data/commons/phase_kinds.yaml::counts_as_deload"
+   ],
+   "roadmap": null,
+   "status": "by_design"
+  },
+  {
+   "id": "engine_constants",
+   "title": "Scheduling and load constants are code",
+   "kind": "code",
+   "impact": "cosmetic",
+   "detail": "Recovery-cost ranks, the 48 h floor between two high-cost modalities, RPE load factors and the progression defaults (2.5 kg increment, 3 × 5) are the engine's, the same for every package.",
+   "anchors": [
+    "src/scheduler.py::_RECOVERY_COST_RANK",
+    "src/scheduler.py::_HIGH_COST_FLOOR_HOURS",
+    "src/progression.py::_RPE_LOAD_FACTOR",
+    "src/progression.py::_DEFAULT_INCREMENT_KG"
+   ],
+   "roadmap": null,
+   "status": "by_design"
+  }
+ ]
+}

@@ -21,8 +21,15 @@ import { ValidationPanel } from './ValidationPanel'
 import { ModelInteractionPanel } from './ModelInteractionPanel'
 import { HeatmapPanel } from './heatmap/HeatmapPanel'
 import { WeekCalendar } from '@/components/program/WeekCalendar'
+import portability from '@/mocks/fixtures/portability.json'
 
 vi.mock('@/api/ontology', () => ({ useOntology: () => ({ data: undefined, isLoading: false }) }))
+// The server's portability report as test_portability.py records it (the
+// shipped packages, the scheduler's fixture and a copy colliding with it).
+vi.mock('@/api/devlab', async () => {
+  const report = (await import('@/mocks/fixtures/portability.json')).default
+  return { usePortability: () => ({ data: report, isLoading: false, error: null }) }
+})
 
 afterEach(cleanup)
 
@@ -66,5 +73,17 @@ describe.each(scenarios)('%s', (_name, program) => {
     } else {
       expect(screen.getAllByText("Named by the week's phase:")).toHaveLength(weeks.length)
     }
+  })
+})
+
+describe('Model Interactions: portability', () => {
+  it('lays out the server\'s report', () => {
+    mount(<ModelInteractionPanel />)
+    expect(screen.getByText(portability.verdict)).toBeTruthy()
+    for (const p of portability.packages) expect(screen.getByText(p.id)).toBeTruthy()
+    const ready = portability.packages.filter((p) => p.ready).length
+    expect(screen.getByText(new RegExp(`^${ready} of ${portability.packages.length} packages`))).toBeTruthy()
+    expect(screen.getByText(/resolved silently/)).toBeTruthy()
+    for (const g of portability.gaps) expect(screen.getByText(g.title)).toBeTruthy()
   })
 })
