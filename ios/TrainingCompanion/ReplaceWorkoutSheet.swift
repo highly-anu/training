@@ -38,6 +38,8 @@ struct ReplaceWorkoutSheet: View {
 
     // Shared
     @State private var preview: ProgramSession? = nil
+    /// The found (or picked) session's full screen, before anything is saved.
+    @State private var showPreview = false
     @State private var isGenerating = false
     @State private var generateError: String? = nil
 
@@ -66,7 +68,7 @@ struct ReplaceWorkoutSheet: View {
             VStack(spacing: 0) {
                 Picker("Mode", selection: $selectedTab) {
                     Text("Browse").tag(Tab.browse)
-                    Text("Generate").tag(Tab.generate)
+                    Text("Search").tag(Tab.generate)
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
@@ -80,13 +82,27 @@ struct ReplaceWorkoutSheet: View {
                     generateTab
                 }
 
-                if let preview {
-                    previewCard(preview)
-                } else if let error = generateError {
+                if let error = generateError {
                     errorBanner(error)
                 }
             }
             .navigationTitle(adding ? "Add a Session" : "Replace Workout")
+            .navigationDestination(isPresented: $showPreview) {
+                if let preview {
+                    SessionPreviewView(
+                        session: preview,
+                        confirmTitle: adding ? "Add Session" : "Replace Workout",
+                        note: adding ? "An extra: it counts once you do it, and you can remove it." : nil,
+                        // Searched: another of the kind; picked by hand: back to the list.
+                        onSearchAgain: selectedArchId == nil ? {
+                            generateError = nil
+                            Task { await generateSession(excluding: preview.archetype?.id) }
+                        } : nil,
+                        isSearching: isGenerating,
+                        error: generateError,
+                        onConfirm: { confirm(preview) })
+                }
+            }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -228,93 +244,31 @@ struct ReplaceWorkoutSheet: View {
             }
 
             Section {
+                // A fitting session from the library — found, not invented; its
+                // full screen comes next, before anything is saved.
                 Button {
                     selectedArchId = nil
                     preview = nil
                     generateError = nil
                     Task { await generateSession() }
                 } label: {
-                    if isGenerating {
-                        HStack {
-                            ProgressView().scaleEffect(0.8)
-                            Text("Generating…")
-                        }
-                    } else {
-                        Label(adding ? "Find a \(ModalityStyle.label(for: kind).lowercased()) session" : "Generate Session",
-                              systemImage: adding ? "plus.circle" : "arrow.2.circlepath")
+                    HStack(spacing: 6) {
+                        if isGenerating { ProgressView().controlSize(.small) }
+                        else { Image(systemName: "magnifyingglass") }
+                        Text(isGenerating ? "Searching…" : "Search")
                     }
+                    .frame(maxWidth: .infinity)
                 }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
                 .disabled(isGenerating)
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets())
             }
         }
     }
 
     // MARK: - Shared Preview + Error
-
-    private func previewCard(_ p: ProgramSession) -> some View {
-        VStack(spacing: 0) {
-            Divider()
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 10) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(p.archetype?.name
-                             ?? p.modality.replacingOccurrences(of: "_", with: " ").capitalized)
-                            .font(.subheadline.weight(.semibold))
-                        HStack(spacing: 8) {
-                            Text(p.modality.replacingOccurrences(of: "_", with: " ").capitalized)
-                                .font(.caption).foregroundStyle(.secondary)
-                            if let mins = p.archetype?.durationEstimateMinutes {
-                                Text("· \(mins) min").font(.caption).foregroundStyle(.secondary)
-                            }
-                            let count = p.exercises.filter { !$0.injurySkip }.count
-                            if count > 0 {
-                                Text("· \(count) exercises").font(.caption).foregroundStyle(.secondary)
-                            }
-                        }
-                        if let via = Self.borrowedLabel(p) {
-                            Text("via \(via)").font(.caption2).foregroundStyle(.secondary)
-                        }
-                    }
-                    Spacer()
-                }
-
-                HStack(spacing: 8) {
-                    Button {
-                        let current = p.archetype?.id
-                        preview = nil
-                        generateError = nil
-                        // Adding without a pick: another session of the kind straight away.
-                        if adding && selectedArchId == nil {
-                            Task { await generateSession(excluding: current) }
-                        }
-                        selectedArchId = nil
-                    } label: {
-                        Text("Try Again")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.bordered)
-
-                    Button {
-                        if adding {
-                            appState.addSession(weekIndex: weekIndex, day: dayName, session: p)
-                        } else {
-                            appState.replaceSession(weekIndex: weekIndex, day: dayName,
-                                                    sessionIndex: sessionIndex, session: p)
-                        }
-                        dismiss()
-                    } label: {
-                        Text(adding ? "Add Session" : "Confirm Replace")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                }
-            }
-            .padding()
-        }
-        .background(.background)
-    }
 
     private func errorBanner(_ message: String) -> some View {
         VStack(spacing: 0) {
@@ -330,6 +284,15 @@ struct ReplaceWorkoutSheet: View {
     static func borrowedLabel(_ p: ProgramSession) -> String? {
         guard case .object(let o)? = p.extra["provenance"], case .bool(true)? = o["borrowed"] else { return nil }
         return o["label"]?.stringValue ?? o["package"]?.stringValue?.replacingOccurrences(of: "_", with: " ")
+    }
+
+    private func confirm(_ p: ProgramSession) {
+        if adding {
+            appState.addSession(weekIndex: weekIndex, day: dayName, session: p)
+        } else {
+            appState.replaceSession(weekIndex: weekIndex, day: dayName, sessionIndex: sessionIndex, session: p)
+        }
+        dismiss()
     }
 
     private func message(_ error: Error) -> String {
@@ -370,6 +333,7 @@ struct ReplaceWorkoutSheet: View {
             preview = try await api.generateSession(
                 request(modality: arch.modality, archetypeId: arch.id,
                         minutes: arch.durationEstimateMinutes ?? Int(sessionMinutes)))
+            showPreview = true
         } catch {
             generateError = message(error)
             selectedArchId = nil
@@ -382,6 +346,7 @@ struct ReplaceWorkoutSheet: View {
         do {
             preview = try await api.generateSession(
                 request(modality: modality, archetypeId: nil, minutes: Int(sessionMinutes), excluding: excluding))
+            showPreview = true
         } catch {
             generateError = message(error)
         }

@@ -2025,12 +2025,17 @@ Session** — on a rest card too, whose menu holds only that. No screen shows an
 and `SessionDetailView` keeps only the exercise swap (one slot). A day with nothing to offer
 (a past rest day) has no menu.
 
-**Adding** is `ReplaceWorkoutSheet` with `mode: .add`: Generate comes first — a Kind picker
+**Adding** is `ReplaceWorkoutSheet` with `mode: .add`. Its tabs, as when replacing, are
+**Browse** (every archetype, picked by hand) and **Search** (first when adding): a Kind picker
 (Mobility, Movement / Skill, Aerobic Base, Durability, Rehab) under the day's name, its footer
-"An extra: it counts once you do it, and you can remove it.", then "Find a mobility session".
-The preview card names a borrowed source ("via Kelly Starrett / Built to Move"); Try Again
-asks for another; "Add Session" saves (`AppState.addSession`), and the Apple Watch is resynced
-once the save lands (`.programSaved` → `WatchSessionManager.syncProgram`). An added session
+"An extra: it counts once you do it, and you can remove it.", then one centered, prominent
+**Search** button — the server finds a fitting session from the library, never invents one.
+A found or picked session is pushed in full before anything is saved (`SessionPreviewView`):
+its kind, name, minutes, exercise count and source ("via Kelly Starrett / Built to Move"),
+every exercise with its prescription (`LoadFormat.describe`) and load note, then **Add
+Session** / **Replace Workout** and, for a searched one, **Search Again** (another of the
+kind; its refusal shows on this screen). "Add Session" saves (`AppState.addSession`), and the
+Apple Watch is resynced once the save lands (`.programSaved` → `WatchSessionManager.syncProgram`). An added session
 shows a dashed "Added" capsule on Today's card and "Added" in the calendar row. Week dots leave
 an undone one out (`WorkoutCompletion.weekDots`). A refusal shows the server's sentence
 (`APIError.serverErrorDetail`).
