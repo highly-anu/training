@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CheckCircle2, Circle, RefreshCw, Activity } from 'lucide-react'
+import { CheckCircle2, Circle, RefreshCw, Activity, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -37,6 +37,7 @@ interface SessionPanelProps {
  * in the other.
  */
 export function SessionPanel({ program, weekData, weekIndex, day, compact = false }: SessionPanelProps) {
+  const removeSession = useProgramStore((s) => s.removeSession)
   const sessions = weekData.schedule[day] ?? []
   const sessionKey = `${weekData.week_number}-${day}`
 
@@ -136,6 +137,14 @@ export function SessionPanel({ program, weekData, weekIndex, day, compact = fals
                       <Activity className="size-3.5" />
                       Workout
                     </Link>
+                  )}
+                  {session.added && !complete && (
+                    // Only an extra the athlete added can go; the plan's sessions stay.
+                    <Button variant="ghost" size="sm" onClick={() => removeSession(weekIndex, day, si)}
+                      aria-label="Remove this added session">
+                      <Trash2 className="size-3.5 mr-1.5" />
+                      Remove
+                    </Button>
                   )}
                   <Button variant="outline" size="sm" onClick={() => setReplaceTarget({ idx: si })}>
                     <RefreshCw className="size-3.5 mr-1.5" />

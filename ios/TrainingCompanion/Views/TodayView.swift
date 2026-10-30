@@ -6,6 +6,11 @@ struct TodayView: View {
     @EnvironmentObject var router: AppRouter
 
     @State private var selectedSession: (session: ProgramSession, key: String, weekIndex: Int, dayName: String, sessionIndex: Int)? = nil
+    /// A program day, for its long-press actions (design-system §6.43).
+    struct DayTarget {
+        let weekIndex: Int
+        let dayName: String
+    }
     @State private var dayOffset: Int = 0          // 0 = today, ±n = days from today
     @State private var dragOffset: CGFloat = 0
     @State private var lockedAdjacentOffset: Int? = nil  // the peek card's day, locked at drag start
@@ -270,7 +275,13 @@ struct TodayView: View {
             ScrollView(.vertical, showsIndicators: sessions.count > 2) {
                 VStack(spacing: 12) {
                     if sessions.isEmpty {
-                        restDayCardView(dayOff: dayOff)
+                        // A rest day can still take one (long press: Add Session).
+                        if interactive, let day = dayTarget(for: dayOff) {
+                            restDayCardView(dayOff: dayOff)
+                                .sessionActions(weekIndex: day.weekIndex, dayName: day.dayName)
+                        } else {
+                            restDayCardView(dayOff: dayOff)
+                        }
                     } else {
                         ForEach(sessions, id: \.sessionKey) { pair in
                             sessionCard(pair.session, key: pair.sessionKey)
@@ -281,6 +292,9 @@ struct TodayView: View {
                                                        weekIndex: pair.weekIndex, dayName: pair.dayName,
                                                        sessionIndex: pair.sessionIndex)
                                 }
+                                // Long press: Move, Replace, Remove (an added one), Add Session.
+                                .sessionActions(weekIndex: pair.weekIndex, dayName: pair.dayName,
+                                                sessionIndex: pair.sessionIndex)
                         }
                     }
                 }
@@ -290,6 +304,14 @@ struct TodayView: View {
             .scrollDisabled(sessions.count <= 2)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// The program day `dayOff` days from today, if the program covers it.
+    private func dayTarget(for dayOff: Int) -> DayTarget? {
+        let date = dateFor(dayOff)
+        guard let week = appState.week(for: date),
+              let wi = appState.allWeeks.firstIndex(where: { $0.weekNumber == week.weekNumber }) else { return nil }
+        return DayTarget(weekIndex: wi, dayName: weekdayNames[Calendar.current.component(.weekday, from: date) - 1])
     }
 
     private func restDayCardView(dayOff: Int) -> some View {
@@ -335,6 +357,12 @@ struct TodayView: View {
                         .padding(.horizontal, 8).padding(.vertical, 3)
                         .background(color.opacity(0.12))
                         .clipShape(Capsule())
+                    if session.isAdded {
+                        // An extra the athlete added: it counts once done.
+                        Text("Added").font(.caption2).foregroundStyle(.secondary)
+                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .overlay(Capsule().strokeBorder(.secondary.opacity(0.4), style: StrokeStyle(lineWidth: 1, dash: [3])))
+                    }
                     Spacer()
                     if linked {
                         Image(systemName: "link")

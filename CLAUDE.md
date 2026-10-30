@@ -148,7 +148,7 @@ All prefixed `/api/`:
 | GET | `/constraints/equipment-profiles` | `EquipmentProfile[]` |
 | GET | `/constraints/injury-flags` | `InjuryFlag[]` |
 | POST | `/programs/generate` | `GeneratedProgram` (`week_in_program` numbers a partial regenerate's tail from the kept head's length + 1) |
-| POST | `/sessions/generate` | `Session` (single session regeneration) |
+| POST | `/sessions/generate` | `Session` (single session regeneration). `add: true`: a session the athlete adds on the fly to today or a later day — any package (a borrowed one carries `provenance`), named workouts included, the ones that fit as written within the session's time, one at random (`current_archetype_id` asks for another); never refused by a training contract or a template day; the answer is marked `added` |
 | POST | `/dev/constraint-impact` | For the Dev Lab (no screen calls it yet): generate's body run against a reference with nothing in the way (the packages' equipment, no injuries, the framework's level, a training contract's mastery and bell pair for that level) and once per constraint lifted alone (equipment, injury, level, proficiency); every changed session or slot with what was planned, its `causes`, why, `knock_on` when an earlier direct change moved the rotation, and the equipment that would restore the most changes (`src/constraint_impact.py`). A refused request (200, no weeks) answers `feasible: false` and `unblocked_by`: the one constraint, or the framework's ideal days and minutes, that alone lets it generate, else `combined`; a reference that cannot generate answers `reference_generates: false`. At most 12 weeks and seven generations; local dev or `AUTHORING_ENABLED` only |
 | POST | `/exercises/substitute` | `{alternatives: [{assignment, score, reasons}]}` — ranked swaps for one slot, selector-scored, loads for the week; 422 when nothing fits |
 | POST | `/programs/impact` | The preview's Held back: `/dev/constraint-impact`'s answer for any signed-in athlete (`api._constraint_impact`, shared); ≤ 7 generations, 12 weeks; one run in the process at a time and one per athlete — a taken gate answers 429 `busy` at once, never waiting (the clients retry); small answers cached ten minutes per body and day. Clients send the draft's own first phase and length (`impactParams`, `impactRequest(for:)`), never its event date |
@@ -178,6 +178,20 @@ runs `selector.select_exercise(..., return_trace=True)` for one slot with the se
 exercises excluded and returns complete assignments with `calculate_load` for the week; the
 client replaces the entry (`programStore.replaceExercise`) and saves through the
 revision-checked PUT — nothing is persisted by the endpoint.
+
+**Added sessions are extras.** An athlete may add a session on the fly to today or a later
+day (web: Today's rest card and the calendar's rest days, `ReplaceSessionSheet` in add mode;
+iOS: the long-press menu on Today's cards and the calendar's day rows, `Views/SessionActions.swift`
+— which also holds Move, Replace and Remove, so no card or detail screen shows them —
+`ReplaceWorkoutSheet` in add mode; → `programStore.addSession` / `AppState.addSession` →
+the revision-checked PUT). It is marked `added`, appended after the day's others (indices
+already on the day keep their place), and only an added session can be removed. It counts
+**only once done** — logged complete or matched: `analytics.context.Context.sessions` (and
+through it the scorecard, completion and every primitive), the watch's week counts
+(`_watch_progress`), Today's week-done and the week dots leave an undone one out, and
+`phase_summary` and a program's own standards never include one. Adding to today or later
+keeps the block (`record_version` → `continued`); a past day would switch it, so neither
+client offers one (`test_added_sessions.py`).
 
 **A generated program is a draft until it is started** (Program ▸ Preview, since 2026-10-20).
 The builder's last step generates (`useGenerateDraft`, never a store write) and opens

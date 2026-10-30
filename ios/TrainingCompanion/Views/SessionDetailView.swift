@@ -16,8 +16,6 @@ struct SessionDetailView: View {
     @State private var fatigueRating: Double = 3
     @State private var showFatigue = false
     @State private var isSaving = false
-    @State private var showMove = false
-    @State private var showReplace = false
     @State private var saveTask: Task<Void, Never>? = nil
     @State private var exerciseSheet: ExerciseRowItem? = nil
     @State private var swapTarget: SwapTarget? = nil
@@ -64,7 +62,6 @@ struct SessionDetailView: View {
                 if !progressingExercises.isEmpty && (isDone || linkedWorkout != nil) {
                     if loadLifts.isEmpty { progressSection } else { liftProgressSection }
                 }
-                if canEditProgram { actionsSection }
                 if isDone { notesSection }
             }
             .navigationTitle(currentSession.archetype?.name ?? ModalityStyle.label(for: currentSession.modality))
@@ -78,22 +75,6 @@ struct SessionDetailView: View {
                 completionButton
                     .padding()
                     .background(.background)
-            }
-            .sheet(isPresented: $showMove) {
-                if let wi = weekIndex, let dn = dayName, let si = sessionIndex,
-                   let week = appState.serverProgram?.currentProgram?.weeks[safe: wi] {
-                    MoveWorkoutSheet(weekIndex: wi, fromDay: dn,
-                                    sessionIndex: si, weekSchedule: week.schedule)
-                        .environmentObject(appState)
-                }
-            }
-            .sheet(isPresented: $showReplace) {
-                if let wi = weekIndex, let dn = dayName, let si = sessionIndex,
-                   let api = appState.api {
-                    ReplaceWorkoutSheet(api: api, weekIndex: wi, dayName: dn,
-                                       sessionIndex: si, session: currentSession)
-                        .environmentObject(appState)
-                }
             }
             // The exercise reference (§6.14): what the movement is and how to
             // do it, without leaving the session.
@@ -136,20 +117,13 @@ struct SessionDetailView: View {
     }
 
     // MARK: - Program Actions
+    //
+    // Move, Replace and Remove are the long-press actions on Today's cards and
+    // Program ▸ Calendar's rows (SessionActions, design-system §6.43); this
+    // screen keeps the exercise swap, which edits one slot.
 
     private var canEditProgram: Bool {
         weekIndex != nil && dayName != nil && sessionIndex != nil && appState.api != nil
-    }
-
-    private var actionsSection: some View {
-        Section("Workout") {
-            Button { showMove = true } label: {
-                Label("Move to Another Day", systemImage: "arrow.left.arrow.right")
-            }
-            Button { showReplace = true } label: {
-                Label("Replace Workout", systemImage: "arrow.2.circlepath")
-            }
-        }
     }
 
     // MARK: - Header

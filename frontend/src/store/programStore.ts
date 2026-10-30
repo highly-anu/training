@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import type { AthleteConstraints, ExerciseAssignment, GeneratedProgram, Session } from '@/api/types'
 import { fetchUserProgram, saveUserProgram, lastProgramSaveError } from '@/api/userdata'
-import { withExerciseReplaced, withSessionReplaced } from '@/lib/programEdits'
+import { withExerciseReplaced, withSessionAdded, withSessionRemoved, withSessionReplaced } from '@/lib/programEdits'
 
 interface ProgramStore {
   currentProgram: GeneratedProgram | null
@@ -50,6 +50,10 @@ interface ProgramStore {
   moveSession: (weekIndex: number, fromDay: string, toDay: string, sessionIndex: number) => void
   /** Replace a single session at the given position with a new one. */
   replaceSession: (weekIndex: number, day: string, sessionIndex: number, newSession: Session) => void
+  /** A session the athlete adds on the fly (today or later), then saved. */
+  addSession: (weekIndex: number, day: string, newSession: Session) => void
+  /** Removes a session the athlete added, then saved. */
+  removeSession: (weekIndex: number, day: string, sessionIndex: number) => void
   /** Replace one exercise inside a session (the swap flow). */
   replaceExercise: (weekIndex: number, day: string, sessionIndex: number, exerciseIndex: number, assignment: ExerciseAssignment) => void
   /**
@@ -191,6 +195,40 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
   replaceSession: (weekIndex, day, sessionIndex, newSession) => {
     set((state) => state.currentProgram
       ? { currentProgram: withSessionReplaced(state.currentProgram, weekIndex, day, sessionIndex, newSession) }
+      : {})
+    const s = get()
+    if (s.currentProgram) {
+      void persistProgram(set, {
+        currentProgram:    s.currentProgram,
+        programStartDate:  s.programStartDate,
+        eventDate:         s.eventDate,
+        sourceGoalIds:     s.sourceGoalIds,
+        sourceGoalWeights: s.sourceGoalWeights,
+        revision:          s.revision,
+      })
+    }
+  },
+
+  addSession: (weekIndex, day, newSession) => {
+    set((state) => state.currentProgram
+      ? { currentProgram: withSessionAdded(state.currentProgram, weekIndex, day, newSession) }
+      : {})
+    const s = get()
+    if (s.currentProgram) {
+      void persistProgram(set, {
+        currentProgram:    s.currentProgram,
+        programStartDate:  s.programStartDate,
+        eventDate:         s.eventDate,
+        sourceGoalIds:     s.sourceGoalIds,
+        sourceGoalWeights: s.sourceGoalWeights,
+        revision:          s.revision,
+      })
+    }
+  },
+
+  removeSession: (weekIndex, day, sessionIndex) => {
+    set((state) => state.currentProgram
+      ? { currentProgram: withSessionRemoved(state.currentProgram, weekIndex, day, sessionIndex) }
       : {})
     const s = get()
     if (s.currentProgram) {

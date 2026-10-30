@@ -1,10 +1,12 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { format } from 'date-fns'
 import { motion } from 'framer-motion'
-import { ArrowRight, Clock, Dumbbell } from 'lucide-react'
+import { ArrowRight, Clock, Dumbbell, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { WorkoutIcon } from '@/components/icons/WorkoutIcon'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
+import { ReplaceSessionSheet } from '@/components/session/ReplaceSessionSheet'
 import { useProfileStore } from '@/store/profileStore'
 import type { GeneratedProgram } from '@/api/types'
 import { COMPLETION } from '@/lib/completionColors'
@@ -22,6 +24,20 @@ export function TodaySession({ program, weekIndex }: TodaySessionProps) {
   const weekData = program.weeks[weekIndex]
   const sessions = weekData?.schedule[today] ?? []
 
+  // A rest day, or a day whose sessions are done, can still take one more.
+  const [adding, setAdding] = useState(false)
+  const addButton = weekData && (
+    <>
+      <Button size="sm" variant="outline" className="mt-3" onClick={() => setAdding(true)}>
+        <Plus className="size-3.5 mr-1.5" /> Add a session
+      </Button>
+      {adding && (
+        <ReplaceSessionSheet open mode="add" onOpenChange={(o) => !o && setAdding(false)}
+          weekIndex={weekIndex} weekData={weekData} day={today} program={program} />
+      )}
+    </>
+  )
+
   const sessionKey = `${weekData?.week_number}-${today}`
   const firstIncompleteIdx = sessions.findIndex((_, i) => sessionLogs[sessionKey]?.[i] !== true)
   const session = firstIncompleteIdx >= 0 ? sessions[firstIncompleteIdx] : null
@@ -34,6 +50,7 @@ export function TodaySession({ program, weekIndex }: TodaySessionProps) {
         <p className="text-xs text-muted-foreground/60 mt-1">
           {format(new Date(), 'EEEE, MMMM d')}
         </p>
+        {addButton}
       </div>
     )
   }
@@ -50,6 +67,7 @@ export function TodaySession({ program, weekIndex }: TodaySessionProps) {
         <p className="text-xs text-muted-foreground/60 mt-1">
           {format(new Date(), 'EEEE, MMMM d')}
         </p>
+        {addButton}
       </div>
     )
   }

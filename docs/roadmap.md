@@ -1454,6 +1454,14 @@ chips, not the fingerprint. Noticed: Uphill's phase frameworks declare a 360-min
 "ideal session" (its long day), so its tiles read "60–360′"; a package-side
 `ideal_long_session_minutes` would fix it.
 
+**Added sessions** (2026-10-30, `feat/added-sessions`). A rest day can take a session on
+the fly — mobility, an easy run — on both clients: `POST /sessions/generate` with `add`
+picks one from any package (the library's mobility is all ATG's and Kelly Starrett's own
+named workouts, which the selector never picks by modality, so the add path takes named
+workouts that fit as written), and the session counts only once done. Not yet: adding from
+the watches themselves, and a Garmin-side resync after a phone add (the Garmin app reads the
+added session at its next sync).
+
 ## Later
 
 Larger items from the IA review. Each needs a backend step first; none is

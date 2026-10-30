@@ -70,6 +70,13 @@ export function SessionCard({ session, weekNumber, day, sessionIndex, className,
             <ModalityBadge modality={session.modality} size="sm" />
             {session.test && <TestBadge test={session.test} />}
             <TrackBadge session={session} />
+            {session.added && (
+              // An extra the athlete added: it counts once done.
+              <span title="Added by you — counts once done"
+                className="rounded-full border border-dashed border-border px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground">
+                Added
+              </span>
+            )}
             {session.provenance?.borrowed && (
               // This session came from a package the philosophy declares it
               // borrows from — say so rather than passing it off as its own.

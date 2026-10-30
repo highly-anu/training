@@ -589,6 +589,19 @@ The primary surface for contextual detail panels (replace session, day workout, 
 
 **Anatomy:** `p-0` on SheetContent + manual padding on children gives full control over what scrolls and what sticks.
 
+#### 7.6.1 Adding a session
+
+`ReplaceSessionSheet` with `mode="add"`: a session added on the fly to today or a later day.
+Opened from Today's rest card (and "All done today") — "Add a session" — and from the
+Program calendar's rest cells from today on ("+ Add"; under today's sessions too). The
+header names the day and says what it is ("an extra: it counts once you do it, and you can
+remove it"), then the kind as chips (Mobility first, Movement / Skill, Aerobic Base,
+Durability, Rehab) in their modality colours; Generate is the first tab ("Find a mobility
+session"), Browse lists every archetype. The preview names a borrowed source ("via Kelly
+Starrett / Built to Move"); Try Again asks for another of the kind; "Add session" saves. An
+added session carries a dashed "Added" badge on its card, and the session panel offers
+"Remove" while it is undone. A refusal shows the server's sentence.
+
 ### 7.7 Dialog
 
 For confirmations and focused actions. Smaller than sheets.

@@ -341,6 +341,11 @@ export interface GenerateSessionParams {
   }
   customInjuryFlags?: CustomInjuryFlag[]
   archetypeId?: string
+  /** An extra the athlete adds (a rest day's mobility): any package, never
+   *  refused by a contract or a template day; the answer comes back `added`. */
+  add?: boolean
+  /** Try Again in add mode: another than this one. */
+  currentArchetypeId?: string
   /** The week's phase and framework, so the server applies the phase's
    *  exclude_exercises and the framework's deload share. */
   phaseId?: string
@@ -364,6 +369,8 @@ export function useGenerateSession() {
         ...(p.phaseId ? { phase_id: p.phaseId } : {}),
         ...(p.frameworkId ? { framework_id: p.frameworkId } : {}),
         ...(p.laneKey ? { lane_key: p.laneKey } : {}),
+        ...(p.add ? { add: true } : {}),
+        ...(p.currentArchetypeId ? { current_archetype_id: p.currentArchetypeId } : {}),
       }) as unknown as Promise<Session>,
   })
 }

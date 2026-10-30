@@ -224,8 +224,9 @@ export function Dashboard() {
     if (!currentWeek) return false
     return DAYS.every((day) => {
       const sessions = currentWeek.schedule[day] ?? []
-      if (sessions.length === 0) return true
-      return sessions.every((_, i) => sessionLogs[`${currentWeek.week_number}-${day}`]?.[i] === true)
+      const logged = (i: number) => sessionLogs[`${currentWeek.week_number}-${day}`]?.[i] === true
+      // An extra the athlete added counts once done, never as one still to do.
+      return sessions.every((sess, i) => sess.added || logged(i))
     })
   }, [currentWeek, sessionLogs])
 

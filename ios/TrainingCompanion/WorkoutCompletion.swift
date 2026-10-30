@@ -172,9 +172,12 @@ enum WorkoutCompletion {
 
     static func weekDots(_ week: ProgramWeek, isComplete: (String) -> Bool) -> [WeekDot] {
         dayOrder.flatMap { day in
-            (week.schedule[day] ?? []).enumerated().map { i, s in
+            (week.schedule[day] ?? []).enumerated().compactMap { i, s in
                 let key = AppState.sessionKey(weekNumber: week.weekNumber, dayName: day, index: i)
-                return WeekDot(key: key, modality: s.modality, done: isComplete(key))
+                let done = isComplete(key)
+                // An extra the athlete added counts once done, never as one to do.
+                if s.isAdded && !done { return nil }
+                return WeekDot(key: key, modality: s.modality, done: done)
             }
         }
     }
