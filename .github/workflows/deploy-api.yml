@@ -13,6 +13,7 @@ on:
       - 'Dockerfile'
       - '.dockerignore'
       - 'docs/schemas/**'
+      - 'tools/portability_gaps.json'   # served by /api/dev/portability
       - 'fly.toml'
 
 jobs:

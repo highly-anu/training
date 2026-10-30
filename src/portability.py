@@ -126,9 +126,23 @@ def _read(pkg: str) -> dict:
     }
 
 
+# Package files the API image leaves out (.dockerignore): the scorecard reads
+# them, nothing at runtime does.
+_IMAGE_EXCLUDED = {'source_weeks'}
+
+
+def _in_checkout() -> bool:
+    """A checkout, not the API image: the image has no docs/ beyond the schemas."""
+    return os.path.isdir(_DOSSIERS)
+
+
 def _files(pkg: str) -> list[dict]:
+    """`present` is None for a file the API image leaves out, when this is the image."""
     base = os.path.join(loader._PACKAGES_DIR, pkg)
-    return [{'id': fid, 'path': name, 'required': required, 'present': os.path.exists(os.path.join(base, name))}
+    checkout = _in_checkout()
+    return [{'id': fid, 'path': name, 'required': required,
+             'present': (None if fid in _IMAGE_EXCLUDED and not checkout
+                         else os.path.exists(os.path.join(base, name)))}
             for fid, name, required in FILES]
 
 
@@ -150,23 +164,29 @@ def _shapes(pkg: str, docs: dict) -> list[dict]:
 
 
 def _outside(pkg: str) -> list[dict]:
-    """The records a push needs outside the folder, and whether this one has them."""
-    scorecard = _json(_SCORECARD) or {}
-    coverage = _json(_COVERAGE) or {}
-    golden = _json(_GOLDEN) or {}
-    status = ((_yaml(_STATUS) or {}).get('packages') or {})
+    """The records a push needs outside the folder, and whether this one has
+    them. `done` is None where the record's file is not in this deployment:
+    the API image leaves docs/ out (.dockerignore), so status.yaml and the
+    dossiers can only be read in a checkout."""
+    def held(path: str, has) -> bool | None:
+        return has() if os.path.exists(path) else None
+
     prefix = f'{pkg}/'
+    dossier = os.path.join(_DOSSIERS, f'{pkg}.md')
     return [
         {'id': 'scorecard', 'label': 'Scorecard baseline', 'file': 'tools/scorecard_baseline.json',
-         'done': any(k.startswith(prefix) for k in scorecard), 'how': _UPDATE_BASELINE},
+         'done': held(_SCORECARD, lambda: any(k.startswith(prefix) for k in _json(_SCORECARD) or {})),
+         'how': _UPDATE_BASELINE},
         {'id': 'coverage', 'label': 'Exercise coverage baseline', 'file': 'tools/exercise_coverage_baseline.json',
-         'done': pkg in coverage, 'how': _UPDATE_BASELINE},
+         'done': held(_COVERAGE, lambda: pkg in (_json(_COVERAGE) or {})), 'how': _UPDATE_BASELINE},
         {'id': 'status', 'label': 'status.yaml row', 'file': 'docs/package-fidelity/status.yaml',
-         'done': pkg in status, 'how': _UPDATE_BASELINE},
+         'done': held(_STATUS, lambda: pkg in ((_yaml(_STATUS) or {}).get('packages') or {})),
+         'how': _UPDATE_BASELINE},
         {'id': 'golden', 'label': 'Golden program hashes', 'file': 'test_single_lane_golden.json',
-         'done': any(k.startswith(prefix) for k in golden), 'how': _RECORD_GOLDEN},
+         'done': held(_GOLDEN, lambda: any(k.startswith(prefix) for k in _json(_GOLDEN) or {})),
+         'how': _RECORD_GOLDEN},
         {'id': 'dossier', 'label': 'Source dossier', 'file': f'docs/package-fidelity/{pkg}.md',
-         'done': os.path.exists(os.path.join(_DOSSIERS, f'{pkg}.md')),
+         'done': held(_DOSSIERS, lambda: os.path.exists(dossier)),
          'how': 'write it (docs/package-fidelity/README.md)'},
     ]
 
@@ -290,12 +310,18 @@ def report() -> dict:
             'vocabulary': vocabulary,
             'collisions': colliding[pkg],
             # Drops in as it stands: every required file, every record outside
-            # the folder, no id the commons lack and none another package owns.
+            # the folder this deployment can read, no id the commons lack and
+            # none another package owns.
             'ready': (all(f['present'] for f in files if f['required'])
-                      and all(o['done'] for o in outside) and not unknown and not colliding[pkg]),
+                      and all(o['done'] is not False for o in outside) and not unknown
+                      and not colliding[pkg]),
         })
     return {
         'packagesDir': os.path.relpath(loader._PACKAGES_DIR, ROOT),
+        # The records outside the folder this deployment cannot read (their
+        # files are not in it): `ready` says nothing about them.
+        'unchecked': sorted({o['id'] for row in rows for o in row['outside'] if o['done'] is None}
+                            | {f['id'] for row in rows for f in row['files'] if f['present'] is None}),
         'packages': rows,
         'collisions': found,
         'sharedExercises': shared,

@@ -132,6 +132,28 @@ def test_report():
     check('the gaps ride along', bool(report['gaps']) and bool(report['verdict']))
 
 
+def test_without_docs():
+    print('a deployment without docs/ (the API image leaves it out)')
+    saved = portability._STATUS, portability._DOSSIERS
+    missing = os.path.join(tempfile.gettempdir(), 'no-such-docs')
+    portability._STATUS = os.path.join(missing, 'status.yaml')
+    portability._DOSSIERS = missing
+    try:
+        report = portability.report()
+    finally:
+        portability._STATUS, portability._DOSSIERS = saved
+    rows = {p['id']: p for p in report['packages']}
+    check('status, dossiers and source weeks are unchecked, not missing',
+          report['unchecked'] == ['dossier', 'source_weeks', 'status'], report['unchecked'])
+    check('source weeks read None', all(f['present'] is None for p in rows.values() for f in p['files']
+                                        if f['id'] == 'source_weeks'))
+    check('each reads None', all(o['done'] is None for p in rows.values() for o in p['outside']
+                                 if o['id'] in ('dossier', 'status')))
+    check('the shipped packages still drop in', all(rows[n]['ready'] for n in SHIPPED),
+          [n for n in SHIPPED if not rows[n]['ready']])
+    check('the fixture still does not: its baselines are readable and lack it', rows[FIXTURE]['ready'] is False)
+
+
 def _shape(node):
     """The keys of a document, the first item standing for every list."""
     if isinstance(node, dict):
@@ -171,6 +193,7 @@ def test_route():
 def main() -> int:
     test_gaps()
     test_report()
+    test_without_docs()
     test_recording('--write' in sys.argv)
     test_route()
     if FAILURES:

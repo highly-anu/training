@@ -1,5 +1,6 @@
 {
  "packagesDir": "data/packages",
+ "unchecked": [],
  "packages": [
   {
    "id": "atg",

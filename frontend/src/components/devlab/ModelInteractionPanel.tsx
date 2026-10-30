@@ -391,7 +391,11 @@ const KIND_LABEL: Record<PortabilityGap['kind'], string> = {
   docs: 'Docs',
 }
 
-function Tick({ done, title }: { done: boolean; title: string }) {
+function Tick({ done, title }: { done: boolean | null; title: string }) {
+  if (done === null) {
+    return <span title={`${title} — not in this deployment`} aria-label={`${title}: not checkable here`}
+      className="inline-flex size-3.5 items-center justify-center text-[10px] text-muted-foreground">—</span>
+  }
   return done
     ? <span title={title}><CheckCircle2 className="size-3.5 text-emerald-700 dark:text-emerald-300" aria-label={`${title}: yes`} /></span>
     : <span title={title}><MinusCircle className="size-3.5 text-red-700 dark:text-red-300" aria-label={`${title}: missing`} /></span>
@@ -399,7 +403,8 @@ function Tick({ done, title }: { done: boolean; title: string }) {
 
 function PackageRow({ pkg, outsideIds }: { pkg: PortabilityPackage; outsideIds: string[] }) {
   const shapes = [...new Set(pkg.tracks.map(t => t.shape))]
-  const optional = pkg.files.filter(f => !f.required)
+  const optional = pkg.files.filter(f => !f.required && f.present !== null)
+  const unreadable = pkg.files.filter(f => f.present === null).length
   const missingRequired = pkg.files.filter(f => f.required && !f.present)
   const unknown = pkg.vocabulary.flatMap(v => v.unknown.map(u => `${v.kind}: ${u}`))
   return (
@@ -422,13 +427,14 @@ function PackageRow({ pkg, outsideIds }: { pkg: PortabilityPackage; outsideIds: 
           ? <span className="text-red-700 dark:text-red-300">missing {missingRequired.map(f => f.path).join(', ')}</span>
           : <span className="text-muted-foreground" title={optional.filter(f => f.present).map(f => f.path).join(', ')}>
               core + {optional.filter(f => f.present).length}/{optional.length} optional
+              {unreadable > 0 && ` (+${unreadable} not in this deployment)`}
             </span>}
       </td>
       <td className="px-3 py-2">
         <div className="flex gap-1">
           {outsideIds.map(id => {
             const o = pkg.outside.find(x => x.id === id)
-            return o ? <Tick key={id} done={o.done} title={o.done ? o.label : `${o.label} — ${o.how}`} /> : null
+            return o ? <Tick key={id} done={o.done} title={o.done === false ? `${o.label} — ${o.how}` : o.label} /> : null
           })}
         </div>
       </td>
@@ -472,6 +478,10 @@ function GapItem({ gap }: { gap: PortabilityGap }) {
 function PortabilitySection({ report }: { report: PortabilityReport }) {
   const outsideIds = report.packages[0]?.outside.map(o => o.id) ?? []
   const outsideLabels = report.packages[0]?.outside ?? []
+  const uncheckedLabels = report.unchecked.map(id =>
+    outsideLabels.find(o => o.id === id)?.label
+      ?? report.packages[0]?.files.find(f => f.id === id)?.path
+      ?? id)
   const open = report.gaps.filter(g => g.status === 'open')
   const byDesign = report.gaps.filter(g => g.status === 'by_design')
   const ready = report.packages.filter(p => p.ready).length
@@ -504,6 +514,12 @@ function PortabilitySection({ report }: { report: PortabilityReport }) {
         in as they stand. Outside the folder, in order: {outsideLabels.map(o => o.label).join(' · ')}.{' '}
         {report.sharedExercises} exercise ids are shared between packages by design; each keeps its own prescription.
       </p>
+      {report.unchecked.length > 0 && (
+        <p className="text-[10px] text-amber-700 dark:text-amber-300">
+          Not checkable here: {uncheckedLabels.join(' · ')} — their files are not in this deployment (the API
+          image leaves docs/ and source weeks out). Run the local API to check them; "drops in" covers the rest.
+        </p>
+      )}
 
       {report.collisions.length > 0 && (
         <div>
