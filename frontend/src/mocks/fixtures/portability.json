@@ -78,6 +78,12 @@
      "present": false
     },
     {
+     "id": "standards",
+     "path": "standards.yaml",
+     "required": false,
+     "present": false
+    },
+    {
      "id": "fidelity",
      "path": "fidelity.yaml",
      "required": false,
@@ -223,6 +229,12 @@
      "present": true
     },
     {
+     "id": "standards",
+     "path": "standards.yaml",
+     "required": false,
+     "present": false
+    },
+    {
      "id": "fidelity",
      "path": "fidelity.yaml",
      "required": false,
@@ -364,6 +376,12 @@
     {
      "id": "contract",
      "path": "training_contract.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "standards",
+     "path": "standards.yaml",
      "required": false,
      "present": false
     },
@@ -518,6 +536,12 @@
      "present": false
     },
     {
+     "id": "standards",
+     "path": "standards.yaml",
+     "required": false,
+     "present": false
+    },
+    {
      "id": "fidelity",
      "path": "fidelity.yaml",
      "required": false,
@@ -668,6 +692,12 @@
      "present": false
     },
     {
+     "id": "standards",
+     "path": "standards.yaml",
+     "required": false,
+     "present": false
+    },
+    {
      "id": "fidelity",
      "path": "fidelity.yaml",
      "required": false,
@@ -809,6 +839,12 @@
     {
      "id": "contract",
      "path": "training_contract.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "standards",
+     "path": "standards.yaml",
      "required": false,
      "present": false
     },
@@ -958,6 +994,12 @@
      "present": false
     },
     {
+     "id": "standards",
+     "path": "standards.yaml",
+     "required": false,
+     "present": false
+    },
+    {
      "id": "fidelity",
      "path": "fidelity.yaml",
      "required": false,
@@ -1099,6 +1141,12 @@
     {
      "id": "contract",
      "path": "training_contract.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "standards",
+     "path": "standards.yaml",
      "required": false,
      "present": false
     },
@@ -1253,6 +1301,12 @@
      "present": true
     },
     {
+     "id": "standards",
+     "path": "standards.yaml",
+     "required": false,
+     "present": false
+    },
+    {
      "id": "fidelity",
      "path": "fidelity.yaml",
      "required": false,
@@ -1403,6 +1457,12 @@
      "present": true
     },
     {
+     "id": "standards",
+     "path": "standards.yaml",
+     "required": false,
+     "present": false
+    },
+    {
      "id": "fidelity",
      "path": "fidelity.yaml",
      "required": false,
@@ -1546,6 +1606,12 @@
      "path": "training_contract.yaml",
      "required": false,
      "present": true
+    },
+    {
+     "id": "standards",
+     "path": "standards.yaml",
+     "required": false,
+     "present": false
     },
     {
      "id": "fidelity",
@@ -1718,6 +1784,12 @@
      "present": true
     },
     {
+     "id": "standards",
+     "path": "standards.yaml",
+     "required": false,
+     "present": false
+    },
+    {
      "id": "fidelity",
      "path": "fidelity.yaml",
      "required": false,
@@ -1859,6 +1931,12 @@
     {
      "id": "contract",
      "path": "training_contract.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "standards",
+     "path": "standards.yaml",
      "required": false,
      "present": false
     },
@@ -2050,7 +2128,7 @@
  ],
  "sharedExercises": 80,
  "_comment": "What a package still cannot bring in its own folder (src/portability.py serves this to Dev Lab ▸ Model Interactions). Each anchor is `path::text` and must still be in that file while the gap is open; test_portability.py fails when one is gone, so closing a gap means changing its status here in the same change. kind: gate | tooling | commons | code | client | watch | docs. impact on a dropped-in package: blocks (it fails a gate or cannot be written), degrades (it works, worse or silently wrong), cosmetic. status: open | by_design (the commons vocabulary is the contract between packages and the engine). roadmap: the step of docs/roadmap.md item 9 (9.1, 9.2, …) that closes it.",
- "verdict": "The code is package-neutral: nothing in the server, the web, the phones or the watches names a package (tools/check_code_neutral.py), and test_package_dropin.py runs three packages under new ids beside the shipped ones with the repository unchanged. A new folder is brought in with one command (tools/add_package.py <id>), which writes the records the push gates keep outside it; anything beyond the commons vocabulary is still a shared edit.",
+ "verdict": "The code is package-neutral: nothing in the server, the web, the phones or the watches names a package (tools/check_code_neutral.py), and test_package_dropin.py runs three packages under new ids beside the shipped ones with the repository unchanged. A new folder is brought in with one command (tools/add_package.py <id>), which writes the records the push gates keep outside it; a package may bring its own standards (standards.yaml); anything else beyond the commons vocabulary is still a shared edit.",
  "gaps": [
   {
    "id": "outside_records",
@@ -2088,19 +2166,6 @@
     "tools/check_styles.py::COMPOSITIONS"
    ],
    "roadmap": "9.1",
-   "status": "open"
-  },
-  {
-   "id": "standards",
-   "title": "Standards come only from data/benchmarks/, from the files the code names",
-   "kind": "commons",
-   "impact": "blocks",
-   "detail": "A package may reference a standard (a test slot's standard, analytics benchmarks) but not ship one; a new file or category is a code change.",
-   "anchors": [
-    "src/analytics/benchmarks_data.py::BENCHMARK_FILES",
-    "src/analytics/benchmarks_data.py::CATEGORIES = ("
-   ],
-   "roadmap": "9.2",
    "status": "open"
   },
   {

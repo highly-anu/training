@@ -282,6 +282,12 @@ def _report_analytics_specs(data: dict, installed: set) -> list:
             ex = data['exercises'].get(ex_id)
             return bool(ex) and bool(set(ex.get('_packages') or []) & allowed)
 
+        def foreign_standard(b_id: str) -> str | None:
+            # A package's own standard (its standards.yaml) is its, and its borrowers'.
+            from src.analytics.benchmarks_data import owner
+            other = owner(b_id)
+            return other if other and other not in allowed else None
+
         for entry in spec.get('progress') or []:
             scope = entry.get('scope') or {}
             where = f"{pkg}/analytics.yaml: {entry.get('id')!r}"
@@ -303,6 +309,8 @@ def _report_analytics_specs(data: dict, installed: set) -> list:
             for b in entry.get('benchmarks') or []:
                 if b not in benchmark_ids:
                     problems.append(f"{where} names unknown benchmark {b!r}")
+                elif foreign_standard(b):
+                    problems.append(f"{where} names {foreign_standard(b)}'s standard {b!r}, which it does not borrow")
         for b in spec.get('benchmarks') or []:
             if isinstance(b, dict):
                 for fw in b.get('frameworks') or []:
@@ -311,6 +319,9 @@ def _report_analytics_specs(data: dict, installed: set) -> list:
                 b = b.get('id')
             if b not in benchmark_ids:
                 problems.append(f"{pkg}/analytics.yaml: names unknown benchmark {b!r}")
+            elif foreign_standard(b):
+                problems.append(f"{pkg}/analytics.yaml: names {foreign_standard(b)}'s standard {b!r}, "
+                                'which it does not borrow')
     return problems
 
 

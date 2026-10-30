@@ -26,19 +26,52 @@ CATEGORY_OF_DOMAIN = {
     'strength_endurance': 'conditioning', 'aerobic_base': 'conditioning',
     'anaerobic_intervals': 'conditioning',
 }
-# One set of group names, in one order, for every screen that lists standards.
-# Web Profile, Explore and iOS each used to word and order these themselves.
-CATEGORIES = (
-    ('strength', 'Strength'),
-    ('conditioning', 'Conditioning'),
-    ('kettlebell', 'Kettlebell pentathlon'),
-    ('tactical', 'Ruck & PT tests'),
-    ('benchmark_wod', 'Benchmark workouts'),
-    ('skill', 'Movement & skill'),
-    ('cell', 'The Cell'),
-)
-CATEGORY_NAME = dict(CATEGORIES)
-CATEGORY_ORDER = {c: i for i, (c, _) in enumerate(CATEGORIES)}
+# One set of group names, in one order, for every screen that lists standards
+# (data/benchmarks/categories.yaml, then each package's own). Web Profile,
+# Explore and iOS each used to word and order these themselves.
+_CATEGORIES_FILE = 'categories.yaml'
+# The Cell's file keeps its own nested format (_cell_benchmarks).
+_CELL_FILE = 'cell_standards.yaml'
+# A package's own standards: data/packages/<id>/standards.yaml —
+# `categories` (optional, groups it adds) and `standards` (the list entries'
+# format). Owned by the package: only it, and a philosophy that borrows from
+# it, may reference them (validate_entities, check_provenance).
+PACKAGE_FILE = 'standards.yaml'
+
+
+def _package_documents() -> list[tuple[str, dict]]:
+    import glob
+    out = []
+    for path in sorted(glob.glob(os.path.join(loader._PACKAGES_DIR, '*', PACKAGE_FILE))):
+        doc = _load_yaml(path) or {}
+        out.append((os.path.basename(os.path.dirname(path)), doc if isinstance(doc, dict) else {}))
+    return out
+
+
+@lru_cache(maxsize=1)
+def categories() -> tuple:
+    """((id, name), …) in listing order: the commons', then each package's new ones."""
+    doc = _load_yaml(os.path.join(_DATA_DIR, 'benchmarks', _CATEGORIES_FILE)) or {}
+    out = [(c['id'], c['name']) for c in doc.get('categories') or []]
+    seen = {c for c, _ in out}
+    for _, pdoc in _package_documents():
+        for c in pdoc.get('categories') or []:
+            if c.get('id') and c['id'] not in seen:
+                seen.add(c['id'])
+                out.append((c['id'], c.get('name') or c['id']))
+    return tuple(out)
+
+
+def __getattr__(name: str):
+    # CATEGORIES, CATEGORY_NAME and CATEGORY_ORDER, read from the data on first use.
+    if name == 'CATEGORIES':
+        return categories()
+    if name == 'CATEGORY_NAME':
+        return dict(categories())
+    if name == 'CATEGORY_ORDER':
+        return {c: i for i, (c, _) in enumerate(categories())}
+    raise AttributeError(name)
+
 
 # Bodyweight is stored as a standard's series (`bodyweight_kg`) so a ×BW ratio
 # can be read against the weight on that day; it is a valid result id without
@@ -49,18 +82,16 @@ UNIT_OF_METRIC = {'bw_ratio': '×BW', 'reps': ' reps', 'time_minutes': ' min',
                   'metres': ' m', 'time_sec': ' s', 'time_seconds': ' s', 'kg': ' kg',
                   'score': ''}
 
-# The list-of-entries files under data/benchmarks. A file may set `category`
+# The list-of-entries files under data/benchmarks, found by glob: every
+# .yaml there but the categories and The Cell's. A file may set `category`
 # per entry (kettlebell, tactical, benchmark_wod, skill) where the domain's
 # default grouping would be misleading, and `unit` where the metric's default
 # unit is not the one the standard is read in.
-BENCHMARK_FILES = (
-    'strength_standards.yaml',
-    'conditioning_standards.yaml',
-    'kettlebell_pentathlon.yaml',
-    'ruck_and_pt_standards.yaml',
-    'crossfit_benchmark_wods.yaml',
-    'movement_skill_standards.yaml',
-)
+def commons_files() -> list[str]:
+    import glob
+    return sorted(os.path.basename(p) for p in glob.glob(os.path.join(_DATA_DIR, 'benchmarks', '*.yaml'))
+                  if os.path.basename(p) not in (_CATEGORIES_FILE, _CELL_FILE))
+
 
 # (domain, exercise_key) -> (value_key, unit, lower_is_better, display_name, metric_type)
 _CELL_EXTRACT = {
@@ -101,49 +132,75 @@ def parse_time(t) -> float:
     return round(int(parts[0]) + int(parts[1]) / 60, 3)
 
 
+def _entry(item: dict, package: str | None = None) -> dict | None:
+    levels = item.get('levels') or {}
+    norm = {}
+    for lvl in LEVELS:
+        d = levels.get(lvl)
+        if not isinstance(d, dict) or d.get('male') is None:
+            continue
+        norm[lvl] = {'male': float(d['male']),
+                     'female': float(d['female']) if d.get('female') is not None else None,
+                     'note': (d.get('note') or '').strip() or None}
+    if len(norm) < 4:
+        return None
+    metric = item.get('metric_type', '')
+    return {
+        'id': item['id'], 'name': item['name'],
+        'category': item.get('category') or CATEGORY_OF_DOMAIN.get(item.get('domain', ''), 'conditioning'),
+        'domain': item.get('domain'), 'metric_type': metric,
+        'unit': item.get('unit') if item.get('unit') is not None else UNIT_OF_METRIC.get(metric, ''),
+        'lower_is_better': bool(item.get('lower_is_better', False)),
+        'levels': norm,
+        'goal_relevance': list(item.get('goal_relevance') or []),
+        # A package's standard belongs to its philosophy unless it says otherwise.
+        'sources': list(item.get('sources') or ([package] if package else [])),
+        'notes': (item.get('notes') or '').strip() or None,
+        'test_protocol': (item.get('test_protocol') or '').strip() or None,
+        'description': (item.get('description') or '').strip() or None,
+        # Training that estimates it (est. 1RM ÷ bodyweight that day).
+        'derived_from': item.get('derived_from'),
+        # A distance an imported run's fastest window reads as.
+        'best_effort': item.get('best_effort'),
+        # The package that owns it; None for the commons'.
+        'package': package,
+    }
+
+
 @lru_cache(maxsize=1)
 def load_benchmarks() -> tuple:
+    """Every standard: the commons' (data/benchmarks), The Cell's, then each
+    package's own, listed by category and, within one, as authored. An id
+    already taken keeps its first owner (validate_entities fails on it)."""
     out: list[dict] = []
-    for fname in BENCHMARK_FILES:
-        path = os.path.join(_DATA_DIR, 'benchmarks', fname)
-        if not os.path.exists(path):
-            continue
-        for item in _load_yaml(path) or []:
-            levels = item.get('levels') or {}
-            norm = {}
-            for lvl in LEVELS:
-                d = levels.get(lvl)
-                if not isinstance(d, dict) or d.get('male') is None:
-                    continue
-                norm[lvl] = {'male': float(d['male']),
-                             'female': float(d['female']) if d.get('female') is not None else None,
-                             'note': (d.get('note') or '').strip() or None}
-            if len(norm) < 4:
-                continue
-            metric = item.get('metric_type', '')
-            out.append({
-                'id': item['id'], 'name': item['name'],
-                'category': item.get('category') or CATEGORY_OF_DOMAIN.get(item.get('domain', ''), 'conditioning'),
-                'domain': item.get('domain'), 'metric_type': metric,
-                'unit': item.get('unit') if item.get('unit') is not None else UNIT_OF_METRIC.get(metric, ''),
-                'lower_is_better': bool(item.get('lower_is_better', False)),
-                'levels': norm,
-                'goal_relevance': list(item.get('goal_relevance') or []),
-                'sources': list(item.get('sources') or []),
-                'notes': (item.get('notes') or '').strip() or None,
-                'test_protocol': (item.get('test_protocol') or '').strip() or None,
-                'description': (item.get('description') or '').strip() or None,
-                # Training that estimates it (est. 1RM ÷ bodyweight that day).
-                'derived_from': item.get('derived_from'),
-                # A distance an imported run's fastest window reads as.
-                'best_effort': item.get('best_effort'),
-            })
+    file_order: dict[str, int] = {}
+    for i, fname in enumerate(commons_files()):
+        for item in _load_yaml(os.path.join(_DATA_DIR, 'benchmarks', fname)) or []:
+            entry = _entry(item)
+            if entry:
+                out.append(entry)
+                file_order[entry['id']] = i
     out.extend(_cell_benchmarks())
-    return tuple(out)
+    seen = {b['id'] for b in out}
+    for pkg, doc in _package_documents():
+        for item in doc.get('standards') or []:
+            entry = _entry(item, pkg) if isinstance(item, dict) and item.get('id') else None
+            if entry and entry['id'] not in seen:
+                seen.add(entry['id'])
+                out.append(entry)
+    order = {c: i for i, (c, _) in enumerate(categories())}
+    first = len(file_order)
+    return tuple(sorted(out, key=lambda b: (order.get(b['category'], len(order)),
+                                            file_order.get(b['id'], first))))
+
+
+def owner(standard_id: str) -> str | None:
+    """The package a standard belongs to; None for the commons' (and unknown ids)."""
+    return (by_id().get(standard_id) or {}).get('package')
 
 
 def _cell_benchmarks() -> list[dict]:
-    path = os.path.join(_DATA_DIR, 'benchmarks', 'cell_standards.yaml')
+    path = os.path.join(_DATA_DIR, 'benchmarks', _CELL_FILE)
     if not os.path.exists(path):
         return []
     standards = (_load_yaml(path) or {}).get('standards') or {}
@@ -170,7 +227,7 @@ def _cell_benchmarks() -> list[dict]:
             'domain': _CELL_DOMAIN_MODALITY.get(domain, domain), 'metric_type': metric,
             'unit': unit, 'lower_is_better': lower, 'levels': norm,
             'goal_relevance': [], 'sources': ['the_cell'], 'notes': _CELL_NOTES.get((domain, exercise)),
-            'test_protocol': None, 'description': None,
+            'test_protocol': None, 'description': None, 'package': None,
         })
     return out
 
@@ -286,8 +343,9 @@ def to_client(b: dict, sex: str = 'male') -> dict:
     standards = thresholds(b, sex)
     out = {
         'id': b['id'], 'name': b['name'], 'category': b['category'],
-        'categoryName': CATEGORY_NAME.get(b['category'], b['category']),
-        'categoryOrder': CATEGORY_ORDER.get(b['category'], len(CATEGORIES)),
+        'categoryName': dict(categories()).get(b['category'], b['category']),
+        'categoryOrder': next((i for i, (c, _) in enumerate(categories()) if c == b['category']),
+                              len(categories())),
         'unit': b['unit'], 'standards': standards, 'lower_is_better': b['lower_is_better'],
         'standardsText': {lvl: format_value(b, v) for lvl, v in standards.items()},
         'inputHint': input_hint(b),

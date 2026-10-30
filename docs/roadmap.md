@@ -1013,9 +1013,13 @@ Today: the code is package-neutral, the repository is not yet drop-in. In order:
   records could live in the folder itself; a package's own tests count only once the
   shared registry lists them; blends are checked on `check_styles.COMPOSITIONS`' five
   pairs.
-- **9.2 Standards in the package (M).** `<id>/standards.yaml` beside `data/benchmarks/`,
-  found by glob instead of `benchmarks_data.BENCHMARK_FILES`, categories as data (The
-  Cell keeps its own loader).
+- **9.2 Standards in the package (M).** Done 2026-10-30 (branch `feat/package-standards`):
+  `data/packages/<id>/standards.yaml` brings a package's own standards and any group it
+  adds; `data/benchmarks/` is found by glob and its groups are
+  `data/benchmarks/categories.yaml` (the output, order included, is byte for byte what
+  the hard-coded lists gave). A package standard is its package's and its borrowers'
+  (`validate_entities`, `check_provenance`), a taken id collides, and code naming one
+  fails X1. The Cell keeps its own loader (`test_package_standards.py`).
 - **9.3 Engine tables to data (M).** A modality's priority tier and typical duration from
   its YAML (`loader.MODALITY_PRIORITY_TIERS` overrides it; `combat_sport` is missing,
   `skill_work` names nothing); an exercise's weekly frequency

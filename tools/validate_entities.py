@@ -66,10 +66,15 @@ def _detect_schema(path: str) -> tuple[str | None, bool]:
         return 'source_weeks.schema.json', False
     if basename == 'recovery_regions.yaml':
         return 'recovery_regions.schema.json', False
-    # The standards' list files (benchmarks_data.BENCHMARK_FILES); The Cell's
-    # file keeps its own nested format and stays unvalidated.
+    # The standards' list files (benchmarks_data.commons_files); the order of
+    # their categories; The Cell's file keeps its own nested format and stays
+    # unvalidated. A package's own standards: standards.yaml in its folder.
+    if '/data/benchmarks/' in norm and basename == 'categories.yaml':
+        return 'standard_categories.schema.json', False
     if '/data/benchmarks/' in norm and basename.endswith('.yaml') and basename != 'cell_standards.yaml':
         return 'benchmark.schema.json', True
+    if basename == 'standards.yaml' and os.path.exists(os.path.join(os.path.dirname(path), 'philosophy.yaml')):
+        return 'standards.schema.json', False
     for part in norm.split('/'):
         if part in _PATH_TO_SCHEMA:
             return _PATH_TO_SCHEMA[part], part in _LIST_SCHEMAS
@@ -174,6 +179,7 @@ def _extra_checks(data: dict, schema_filename: str, path: str | None = None) -> 
             if b is None:
                 errors.append(f"slot '{slot.get('role')}': unknown standard '{ref['id']}'")
                 continue
+            errors.extend(f"slot '{slot.get('role')}': {e}" for e in _standard_reference_errors(path, ref['id'], b))
             kind = ref.get('result')
             spec = standard_tests.RESULTS.get(kind or '')
             if spec is None:
@@ -233,6 +239,73 @@ def _extra_checks(data: dict, schema_filename: str, path: str | None = None) -> 
                 )
 
     return errors
+
+
+def _category_errors(item: dict, own: set) -> list[str]:
+    """A standard's category is one of data/benchmarks/categories.yaml, or one
+    its own package's standards.yaml declares (`own`)."""
+    if not item.get('category'):
+        return []
+    with open(os.path.join(_ROOT, 'data', 'benchmarks', 'categories.yaml'), encoding='utf-8') as f:
+        commons = {c['id'] for c in (yaml.safe_load(f) or {}).get('categories') or []}
+    if item['category'] in commons | own:
+        return []
+    return [f"category '{item['category']}' is in neither data/benchmarks/categories.yaml nor this "
+            "package's own categories"]
+
+
+def _package_standards_errors(data: dict, schema: dict, path: str) -> list[str]:
+    """A package's standards.yaml: the file's shape, each entry against
+    benchmark.schema.json, each category known, each id new. (An id another
+    package declares fails the --all collision gate.)"""
+    errors = []
+    try:
+        jsonschema.validate(instance=data, schema=schema)
+    except jsonschema.ValidationError as e:
+        return [e.message]
+    entry_schema = _load_schema('benchmark.schema.json')
+    own = {c['id'] for c in data.get('categories') or []}
+    with_commons = set()
+    for fname in sorted(glob.glob(os.path.join(_ROOT, 'data', 'benchmarks', '*.yaml'))):
+        if os.path.basename(fname) in ('categories.yaml', 'cell_standards.yaml'):
+            continue
+        with open(fname, encoding='utf-8') as f:
+            with_commons |= {e.get('id') for e in (yaml.safe_load(f) or [])}
+    for i, item in enumerate(data.get('standards') or []):
+        where = f"[{i}] ({item.get('id', '?')})"
+        try:
+            jsonschema.validate(instance=item, schema=entry_schema)
+        except jsonschema.ValidationError as e:
+            errors.append(f"{where}: {e.message}")
+            continue
+        errors.extend(f'{where}: {e}' for e in _category_errors(item, own))
+        if item['id'] in with_commons or item['id'].startswith('cell_'):
+            errors.append(f"{where}: the commons already define '{item['id']}' (data/benchmarks/); "
+                          'a package standard needs an id of its own')
+    return errors
+
+
+def _standard_reference_errors(path: str | None, sid: str, b: dict) -> list[str]:
+    """A package's standard may be referenced by that package and by a
+    philosophy that borrows from it, as its exercises may."""
+    owner = b.get('package')
+    if not owner or not path:
+        return []
+    parts = os.path.abspath(path).replace('\\', '/').split('/')
+    if 'archetypes' not in parts:
+        return []
+    pkg_dir = '/'.join(parts[:parts.index('archetypes')])
+    pkg = os.path.basename(pkg_dir)
+    if pkg == owner:
+        return []
+    try:
+        with open(os.path.join(pkg_dir, 'philosophy.yaml'), encoding='utf-8') as f:
+            borrows = (yaml.safe_load(f) or {}).get('borrows_from') or []
+    except OSError:
+        borrows = []
+    if owner in borrows:
+        return []
+    return [f"standard '{sid}' is {owner}'s, and {pkg} does not borrow from {owner}"]
 
 
 def _package_catalogs() -> dict[str, set]:
@@ -313,6 +386,10 @@ def validate_file(path: str, verbose: bool = True) -> list[str]:
                 errors.append(f"[{i}] ({item.get('id', '?')}): {e.message}")
             extra = _extra_checks(item, schema_filename)
             errors.extend(f"[{i}] ({item.get('id', '?')}): {e}" for e in extra)
+            if schema_filename == 'benchmark.schema.json':
+                errors.extend(f"[{i}] ({item.get('id', '?')}): {e}" for e in _category_errors(item, set()))
+    elif schema_filename == 'standards.schema.json':
+        errors.extend(_package_standards_errors(data, schema, path))
     else:
         try:
             jsonschema.validate(instance=data, schema=schema)
