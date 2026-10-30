@@ -13,6 +13,9 @@ sources:
 - http://www.giryagarage.com/powerbyparker/2022/8/10/kettlebell-sport-training-styles
 - https://breakingmuscle.com/a-12-week-gpp-programme-for-kettlebell-sport-athletes/
 - https://www.gsscience.com.au/anti-glycolytic-musings-part-1/
+# Every loaded block is chosen by the bell (src/implements.py): the athlete's
+# `kettlebell_weights_kg` bounds it, and the notes say "bell".
+implement: {equipment: kettlebell}
 tracks:
   general_practice:
     training_levels:
@@ -725,4 +728,4 @@ tracks:
         loaded: true
         notes: 'Brief sets of already-proficient double jerks, resting fully between sets.
           This six-minute window is not a continuous jerk set and is not an IKMF pentathlon event.'
-    requires_kettlebell_pair: true
+    implement: {count: 2}   # two matching bells (`kettlebell_count` of at least 2)

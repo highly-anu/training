@@ -100,7 +100,7 @@ function Goals({ doc, measuresOpen, onMeasures }: { doc: PhilosophyDescription; 
 function Requirements({ doc }: { doc: PhilosophyDescription }) {
   const g = doc.glance
   const [allEquipment, setAllEquipment] = useState(false)
-  const prereq = g.tracks.filter((t) => t.requires.length > 0 || t.kettlebellPair)
+  const prereq = g.tracks.filter((t) => t.requires.length > 0 || t.implement)
   return (
     <div className="space-y-3 rounded-lg border border-border/50 bg-card/40 p-3">
       <div className="space-y-1.5">
@@ -121,7 +121,7 @@ function Requirements({ doc }: { doc: PhilosophyDescription }) {
           <ul className="space-y-1">
             {prereq.map((t) => (
               <li key={t.id} className="text-[11px] text-muted-foreground">
-                <span className="text-foreground/80">{t.name}:</span> {[...t.requires, ...(t.kettlebellPair ? ['a pair of bells'] : [])].join(', ')}
+                <span className="text-foreground/80">{t.name}:</span> {[...t.requires, ...(t.implement ? [t.implement] : [])].join(', ')}
               </li>
             ))}
           </ul>

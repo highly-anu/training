@@ -89,10 +89,12 @@ ALL_EQUIPMENT = [
 
 
 def contract_entry(constraints: dict, contract: dict | None) -> dict:
-    """A contract athlete who qualifies: two bells and the level's mastery."""
+    """A contract athlete who qualifies: the implements the track asks for
+    (a pair of bells) and the level's mastery."""
     if not contract:
         return constraints
-    return {**constraints, 'kettlebell_count': constraints.get('kettlebell_count', 2),
+    from src import implements
+    return {**implements.confirm(constraints, contract),
             'mastered_exercises': sorted({eid for m in contract['modules']
                                           if constraints['training_level'] in m['training_levels']
                                           for eid in m.get('requires_mastery', [])})}

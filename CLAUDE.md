@@ -1458,6 +1458,7 @@ Run these after touching standards or results (the SQL one makes and drops its o
 ```bash
 SUPABASE_URL='' .venv/bin/python test_standards.py   # levels, text, input, days, blocks, routes
 SUPABASE_URL='' .venv/bin/python test_package_standards.py  # a package's own standards.yaml: loaded, served, owned, refused when taken
+SUPABASE_URL='' .venv/bin/python test_contract_implements.py  # a contract's implement is data: a copy of Wildman on a pair of dumbbells
 SUPABASE_URL='' .venv/bin/python test_standard_tests.py   # when a phase tests, what it replaces, skips, carry
 .venv/bin/python test_standard_results_sql.py         # the store on a production-shaped performance_logs
 SUPABASE_URL='' .venv/bin/python test_standard_suggestions.py  # a logged test → a suggestion → a result (SQL half on a scratch DB)

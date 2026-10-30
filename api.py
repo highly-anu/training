@@ -27,6 +27,7 @@ from src import fit_import as _fit_import
 from src import workout_ids as _workout_ids
 from src import watch_spec as _watch_spec
 from src import equipment as _equipment
+from src import implements as _implements
 from src import standards as _standards_mod
 from src.analytics import benchmarks_data as _bd
 from src import goals, loader, provenance
@@ -743,7 +744,16 @@ def get_philosophies():
                     # perform …" (they once stripped one package's id prefix).
                     'exercise_names': {eid: (exercises.get(eid) or {}).get('name', eid)
                                        for m in contract['modules'] for eid in m.get('requires_mastery', [])},
-                    'kettlebell_count': 2 if contract.get('requires_kettlebell_pair') else 1,
+                    # What the track's loaded blocks are done with and how
+                    # many matching ones it needs (src/implements.py); the
+                    # builders confirm `<equipment>_count`. `kettlebell_count`
+                    # is the same for a kettlebell track, for installed builds.
+                    'implements': [{'equipment': imp['equipment'], 'count': imp['count'],
+                                    'countKey': _implements.count_key(imp['equipment']),
+                                    'number': _implements.number(imp['count']),
+                                    'plural': _implements.plural_label(imp['equipment'])}
+                                   for imp in [contract.get('implement')] if imp and imp['count'] > 1],
+                    'kettlebell_count': _implements.requirement(contract).get('kettlebell_count', 1),
                     # Lifts the athlete may start from a weight they last made
                     # (`starting_loads_kg`); left empty, the first session
                     # works up to one. Optional — never a requirement.
@@ -1880,8 +1890,8 @@ def _constraint_impact(body: dict) -> tuple[dict, int]:
     if not programs['reference'].get('weeks'):
         # Nothing to compare against: every session would read as "added".
         return {'feasible': True, 'reference_generates': False, 'lifts': lifts,
-                'reference': {k: reference.get(k) for k in ('equipment', 'training_level',
-                                                             'mastered_exercises', 'kettlebell_count')
+                'reference': {k: reference.get(k) for k in ('equipment', 'training_level', 'mastered_exercises',
+                                                             *(key for _, key in _implements.count_keys(reference)))
                               if k in reference},
                 'detail': 'The reference with nothing in the way does not generate, so there is '
                           'nothing to compare the program with.'}, 200

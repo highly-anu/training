@@ -21,7 +21,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src import goals, loader, phases  # noqa: E402
+from src import goals, implements, loader, phases  # noqa: E402
 from src.generator import generate  # noqa: E402
 from src.validator import validate  # noqa: E402
 
@@ -152,7 +152,7 @@ def main() -> int:
                     levels = goal['training_contract']['training_levels']
                     if constraints['training_level'] not in levels:
                         constraints['training_level'] = levels[0]
-                    constraints['kettlebell_count'] = 2
+                    constraints = implements.confirm(constraints, goal['training_contract'])
                     constraints['mastered_exercises'] = sorted({eid for m in goal['training_contract']['modules']
                         for eid in m.get('requires_mastery', [])})
 

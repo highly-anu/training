@@ -263,7 +263,7 @@ def test_contract_rules():
     print('a training contract: proficiency, and what unblocks a refusal')
     goal = {'training_contract': {
         'modules': [{'requires_mastery': ['kb_clean', 'kb_jerk']}, {'requires_mastery': ['kb_press']}],
-        'requires_kettlebell_pair': True,
+        'implement': {'equipment': 'kettlebell', 'count': 2},
         'level_seeds': {'intermediate': ['kb_press']}}}
     check('every movement a module needs confirmed',
           ci.contract_requirements(goal) == {'mastered_exercises': ['kb_clean', 'kb_jerk', 'kb_press'],

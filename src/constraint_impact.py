@@ -35,7 +35,7 @@ from __future__ import annotations
 
 from collections import Counter
 
-from src import blockers
+from src import blockers, implements
 
 DIMENSIONS = ('equipment', 'injury', 'level', 'proficiency')
 LEVELS = ('novice', 'intermediate', 'advanced', 'elite')
@@ -75,8 +75,7 @@ def contract_requirements(goal: dict, level: str | None = None) -> dict:
                and not m.get('when_mastered')]
     out: dict = {'mastered_exercises': sorted({e for m in modules
                                                for e in m.get('requires_mastery') or []} - seeded)}
-    if contract.get('requires_kettlebell_pair'):
-        out['kettlebell_count'] = 2
+    out.update(implements.requirement(contract))   # a pair of bells, for Wildman's double track
     return out
 
 
@@ -105,18 +104,19 @@ def reference_constraints(constraints: dict, lib: dict, framework: dict | None,
         'training_level': override.get('training_level')
         or reference_level(constraints.get('training_level', 'intermediate'), written_for),
     }
-    out.pop('kettlebell_weights_kg', None)
+    for _, key in implements.weights_keys(out):
+        out.pop(key)
     if requirements.get('mastered_exercises'):
         out['mastered_exercises'] = sorted(set(constraints.get('mastered_exercises') or [])
                                            | set(requirements['mastered_exercises']))
-    if requirements.get('kettlebell_count'):
-        out['kettlebell_count'] = max(constraints.get('kettlebell_count') or 1, requirements['kettlebell_count'])
+    for _, key in implements.count_keys(requirements):
+        out[key] = max(constraints.get(key) or 1, requirements[key])
     return out
 
 
 def _proficiency_short(constraints: dict, reference: dict) -> bool:
     return bool(set(reference.get('mastered_exercises') or []) - set(constraints.get('mastered_exercises') or [])
-                or (reference.get('kettlebell_count') or 1) > (constraints.get('kettlebell_count') or 1))
+                or any((reference.get(k) or 1) > (constraints.get(k) or 1) for _, k in implements.count_keys(reference)))
 
 
 def relaxations(constraints: dict, reference: dict) -> dict[str, dict]:
@@ -124,9 +124,10 @@ def relaxations(constraints: dict, reference: dict) -> dict[str, dict]:
     one as the reference has it. A constraint that changes nothing is not run."""
     out: dict[str, dict] = {}
     if (set(reference['equipment']) - set(constraints.get('equipment') or [])
-            or constraints.get('kettlebell_weights_kg')):
+            or any(constraints.get(k) for _, k in implements.weights_keys(constraints))):
         lifted = {**constraints, 'equipment': reference['equipment']}
-        lifted.pop('kettlebell_weights_kg', None)
+        for _, key in implements.weights_keys(lifted):
+            lifted.pop(key)
         out['equipment'] = lifted
     if constraints.get('injury_flags'):
         out['injury'] = {**constraints, 'injury_flags': []}
@@ -134,7 +135,8 @@ def relaxations(constraints: dict, reference: dict) -> dict[str, dict]:
         out['level'] = {**constraints, 'training_level': reference['training_level']}
     if _proficiency_short(constraints, reference):
         out['proficiency'] = {**constraints,
-                              **{k: reference[k] for k in ('mastered_exercises', 'kettlebell_count') if k in reference}}
+                              **{k: reference[k] for k in ('mastered_exercises', *(key for _, key in implements.count_keys(reference)))
+                                 if k in reference}}
     return out
 
 
@@ -163,8 +165,9 @@ def describe_lifts(constraints: dict, runs: dict[str, dict], exercises: dict, in
         if dim == 'equipment':
             added = sorted(set(c['equipment']) - set(constraints.get('equipment') or []) - _NOT_EQUIPMENT)
             parts = [f"add {', '.join(added)}"] if added else []
-            if constraints.get('kettlebell_weights_kg'):
-                parts.append('any bell weight')
+            for eq, key in implements.weights_keys(constraints):
+                if constraints.get(key):
+                    parts.append(f'any {implements.noun(eq)[0]} weight')
             out[dim] = '; '.join(parts) or 'all equipment'
         elif dim == 'injury':
             out[dim] = 'without ' + ', '.join((injury_flags.get(f) or {}).get('name', f)
@@ -174,8 +177,9 @@ def describe_lifts(constraints: dict, runs: dict[str, dict], exercises: dict, in
         elif dim == 'proficiency':
             missing = sorted(set(c.get('mastered_exercises') or []) - set(constraints.get('mastered_exercises') or []))
             parts = [f"confirm mastery of {', '.join(name(e) for e in missing)}"] if missing else []
-            if (c.get('kettlebell_count') or 1) > (constraints.get('kettlebell_count') or 1):
-                parts.append(f"{c['kettlebell_count']} matching bells")
+            for eq, key in implements.count_keys(c):
+                if (c.get(key) or 1) > (constraints.get(key) or 1):
+                    parts.append(f"{c[key]} matching {implements.noun(eq)[1]}")
             out[dim] = '; '.join(parts)
         elif dim == 'schedule':
             out[dim] = f"{c['days_per_week']} days, {c['session_time_minutes']} min"
@@ -199,8 +203,9 @@ def explain_refusal(refused: dict, generated: dict[str, bool], lifts: dict[str, 
     return {
         'feasible': False,
         'refused': {'detail': refused.get('detail'), 'validation': refused.get('validation')},
-        'reference': {k: reference.get(k) for k in ('equipment', 'training_level', 'injury_flags',
-                                                     'mastered_exercises', 'kettlebell_count') if k in reference},
+        'reference': {k: reference.get(k) for k in ('equipment', 'training_level', 'injury_flags', 'mastered_exercises',
+                                                     *(key for _, key in implements.count_keys(reference)))
+                      if k in reference},
         'lifted': [dim for dim in (*DIMENSIONS, 'schedule') if dim in generated],
         'lifts': lifts,
         'unblocked_by': unblocked,
@@ -619,7 +624,8 @@ def analyse(actual: dict, reference: dict, relaxed: dict[str, dict], *,
 
     return {
         'reference': {k: reference_constraints.get(k) for k in (
-            'equipment', 'training_level', 'injury_flags', 'mastered_exercises', 'kettlebell_count')
+            'equipment', 'training_level', 'injury_flags', 'mastered_exercises',
+            *(key for _, key in implements.count_keys(reference_constraints)))
             if k in reference_constraints},
         'lifted': [dim for dim in DIMENSIONS if dim in relaxed],
         # `total` is every position either program has a session at, the set

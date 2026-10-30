@@ -10,12 +10,14 @@
 #
 #   aliases   ids a client once stored for the same thing; the server reads
 #             them as this id (src/equipment.canonical)
+#   noun      [one, many] as a training contract's notes say it, when the
+#             label is not it (src/implements.py: a kettlebell is a "bell")
 
 equipment:
   - {id: barbell, label: Barbell}
   - {id: rack, label: Rack}
   - {id: plates, label: Plates}
-  - {id: kettlebell, label: Kettlebell}
+  - {id: kettlebell, label: Kettlebell, noun: [bell, bells]}
   - {id: dumbbell, label: Dumbbell}
   - {id: pull_up_bar, label: Pull-up Bar}
   - {id: rings, label: Rings}

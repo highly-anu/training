@@ -22,7 +22,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from src import generator, goals, loader, selector  # noqa: E402
+from src import generator, goals, implements, loader, selector  # noqa: E402
 
 BASELINE = Path(__file__).with_name('exercise_coverage_baseline.json')
 PROFILES = ((4, 90), (6, 120))
@@ -62,11 +62,11 @@ def reachable(philosophy: dict, catalog: dict, frameworks: dict, archetypes: dic
         weeks = sum(p['weeks'] for p in goal['phase_sequence'])
         for level in levels:
             for days, minutes in PROFILES:
-                constraints = dict(
-                    equipment=equipment, kettlebell_count=2, training_level=level,
+                constraints = implements.confirm(dict(
+                    equipment=equipment, training_level=level,
                     days_per_week=days, session_time_minutes=minutes,
                     mastered_exercises=sorted({eid for m in (contract or {}).get('modules', [])
-                                               for eid in m.get('requires_mastery', [])}))
+                                               for eid in m.get('requires_mastery', [])})), contract)
                 program = generator.generate(None, constraints, num_weeks=weeks, goal_dict=goal, output_format='dict')
                 sessions = [s for w in program.get('weeks') or [] for day in w['schedule'].values() for s in day]
                 ids = {ea['exercise']['id'] for s in sessions for ea in s['exercises'] if ea.get('exercise')}
