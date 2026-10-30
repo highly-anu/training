@@ -1031,20 +1031,22 @@ Today: the code is package-neutral, the repository is not yet drop-in. In order:
   modalities' `fallback_rank`, which a framework's `fallback_modalities` overrides. Every
   program is what it was: 13 golden hashes changed only because each exercise now echoes
   its `sessions_per_week`, and were re-recorded for those packages.
-- **9.4 Client vocabulary from one file (M–L).** Modalities and phase kinds done
-  2026-10-30 (branch `feat/client-vocab`): each modality file and phase kind carries a
-  `display` block (label, complication word, order, colour, the web's tint and shade, the
-  web / phone / watch icons) and `tools/gen_client_vocab.py` writes the web's
-  `lib/gen/clientVocab.ts` and a `ClientVocab.swift` per Apple target, which the colour,
-  icon and phase maps, the builder's order, the authoring dialogs, the widgets and the
-  complication read (`test_client_vocab.py`). Every value is what each client drew, but the
-  phone says "Movement / Skill" (it said "Movement Skill") and the watch complication draws
-  the modality colours instead of the nearest system colours; `ModalityDonut` and the
-  builder's bars no longer crash on a modality the table lacks; `mcp_server.py` lists the
-  modality files. Left: one equipment list the four schemas `$ref` (they and
-  `loader.load_equipment` disagree, the web's `equipment.ts` keeps its own groups), and
-  the slot-type outcome tables (`outcomeFields.ts` / `SessionLogging.swift`, rules
-  beside the table).
+- **9.4 Client vocabulary from one file (M–L).** Done 2026-10-30 (branches
+  `feat/client-vocab`, `feat/client-vocab-2`). Each modality file and phase kind carries
+  a `display` block (label, complication word, order, colour, the web's tint and shade,
+  the web / phone / watch icons); the equipment an athlete can have is one list
+  (`data/commons/constraints/equipment.yaml`: ids, labels, the pickers' groups,
+  Profile's sections) and what a slot logs one table (`data/commons/outcome_fields.yaml`:
+  fields by slot type, the exercise rules, the clock, the result kinds).
+  `tools/gen_client_vocab.py` writes the web's `lib/gen/clientVocab.ts`, a
+  `ClientVocab.swift` per Apple target and the four schemas' equipment enums (which had
+  22 to 31 ids); the colour, icon, phase, equipment and outcome code on both clients reads
+  them (`test_client_vocab.py`). Every value is what each client drew, but the phone says
+  "Movement / Skill", the complication draws the modality colours, the phone's General
+  equipment section is indigo like the web's, and the pickers no longer offer
+  `assault_bike`, `dip_bar` or `foam_roller`, which nothing named — a stored
+  `assault_bike` reads as `bike` (`src/equipment.canonical`, on generate, one session,
+  substitute and the profile); `/api/equipment` lists all 30 ids, not 22.
 - **9.5 A contract for any implement (M).** The bell-pair wording and
   `requires_kettlebell_pair` generalised to an implement the contract declares.
 - **9.6 Watch capture declared (S–M).** What each template in `watch_vocabulary.json`

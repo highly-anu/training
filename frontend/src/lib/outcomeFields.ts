@@ -1,7 +1,9 @@
+import { OUTCOME_RESULT_FIELD, OUTCOME_SLOT_TYPES, type OutcomeField } from '@/lib/gen/clientVocab'
+
 /**
  * Which outcome fields a slot can log. Shared by the OutcomeLogger and by
- * ExerciseRow, which decides whether to mount it; the phone's copy is
- * `SessionLogging.outcomeFields` — change both.
+ * ExerciseRow, which decides whether to mount it; the phone's
+ * `SessionLogging.outcomeFields` reads the same generated table.
  *
  * Mostly the slot type decides. Two exercise rules on top, so each package's
  * declared measures can be fed (tools/check_analytics.py proves they apply;
@@ -16,36 +18,25 @@
  * push-ups in three minutes, which a timed bodyweight slot would otherwise
  * log as minutes and km.
  */
-export type OutcomeField = 'rounds' | 'minutes' | 'time' | 'km' | 'reps' | 'seconds'
-
-/** The field a standard's result kind is logged in. */
-const RESULT_FIELD: Record<string, OutcomeField> = {
-  duration: 'time', rounds: 'rounds', reps: 'reps', hold: 'seconds', distance: 'km',
-}
-
-const FIELDS_FOR: Record<string, OutcomeField[]> = {
-  time_domain:     ['minutes', 'km'],
-  skill_practice:  ['minutes'],
-  for_time:        ['minutes'],
-  distance:        ['km', 'minutes'],
-  amrap:           ['rounds', 'reps'],
-  emom:            ['rounds'],
-  rounds_for_time: ['minutes', 'rounds'],
-  amrap_movement:  ['reps'],
-}
+export type { OutcomeField } from '@/lib/gen/clientVocab'
 
 export interface OutcomeExercise {
   category?: string | null
   movement_patterns?: string[] | null
 }
 
+// The table and its rules are data: data/commons/outcome_fields.yaml, through
+// tools/gen_client_vocab.py, which writes the phone's SessionLogging table too.
 export function outcomeFieldsFor(slotType: string | undefined, exercise?: OutcomeExercise | null,
                                  standard?: { result?: string | null } | null): OutcomeField[] {
-  let base = FIELDS_FOR[slotType ?? ''] ?? []
-  if (slotType === 'time_domain' && exercise?.category === 'kettlebell') base = ['minutes', 'reps']
-  else if (slotType === 'skill_practice' && exercise?.movement_patterns?.includes('isometric')) base = ['minutes', 'seconds']
-  if (slotType === 'for_time' || slotType === 'rounds_for_time') base = base.map((f) => (f === 'minutes' ? 'time' : f))
-  const want = standard?.result ? RESULT_FIELD[standard.result] : undefined
+  const slot = OUTCOME_SLOT_TYPES[slotType ?? '']
+  let base: OutcomeField[] = slot?.fields ?? []
+  const rule = slot?.when.find((r) =>
+    (!r.exerciseCategory || exercise?.category === r.exerciseCategory)
+    && (!r.movementPattern || !!exercise?.movement_patterns?.includes(r.movementPattern)))
+  if (rule) base = rule.fields
+  if (slot?.clock) base = base.map((f) => (f === 'minutes' ? 'time' : f))
+  const want = standard?.result ? OUTCOME_RESULT_FIELD[standard.result] : undefined
   if (!want) return base
   if (want === 'time') base = base.map((f) => (f === 'minutes' ? 'time' : f))
   return [want, ...base.filter((f) => f !== want && (f !== 'km' || want === 'km'))]

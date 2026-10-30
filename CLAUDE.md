@@ -654,10 +654,13 @@ is the source of the patterns, not the neighbouring screen:
   list; prescriptions are formatted by `LoadFormat` only. Local session reminders come
   from `NotificationManager` (`NotificationPlan` is pure and tested); there is no push.
 
-Modality and phase-kind colours, labels and icons are generated, not written: each
-modality file's and phase kind's `display` block → `tools/gen_client_vocab.py` →
-`frontend/src/lib/gen/clientVocab.ts` and `ClientVocab.swift` in each Apple target folder
-(frontend-design §8.9). Never edit a generated file.
+Modality and phase-kind colours, labels and icons, the equipment list and what each slot
+type logs are generated, not written: each modality file's and phase kind's `display`
+block, `data/commons/constraints/equipment.yaml` and `data/commons/outcome_fields.yaml` →
+`tools/gen_client_vocab.py` → `frontend/src/lib/gen/clientVocab.ts`, `ClientVocab.swift` in
+each Apple target folder and the four schemas' equipment enums (frontend-design §8.9). A
+stored equipment alias (`assault_bike`) is read as its id by `src/equipment.canonical`.
+Never edit a generated file.
 
 Shared iOS style primitives live in `AppAnimationSettings.swift`
 (`AppAnimation`, `AppHaptics`, `AppMetrics`, `appTabStyle()`) and
@@ -1386,7 +1389,7 @@ Run these after touching engine code or package data:
 ```bash
 .venv/bin/python tools/validate_entities.py --all -q     # YAML vs docs/schemas (packages, commons, standards); no id two packages declare
 .venv/bin/python tools/add_package.py <id> [--check]     # a new package folder: check it, record its baselines and golden hashes, stub its dossier
-.venv/bin/python tools/gen_client_vocab.py [--check]       # the clients' modality / phase-kind tables from the commons' display blocks
+.venv/bin/python tools/gen_client_vocab.py [--check]       # the clients' vocabulary tables and the schemas' equipment enums, from the commons
 .venv/bin/python test_client_vocab.py                    # those tables are current and no client keeps its own
 .venv/bin/python tools/check_provenance.py               # no package leaks; 11 philosophies x 3 profiles
 .venv/bin/python tools/check_provenance.py --coverage    # coverage gaps + authoring problems

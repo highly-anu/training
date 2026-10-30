@@ -133,17 +133,11 @@ def load_injury_flags() -> dict:
 
 
 def load_equipment() -> list[dict]:
-    """Return list of all equipment items (from constraints schema)."""
-    # Equipment is centrally defined in constraints.schema.json
-    # This list matches the schema enum
-    equipment_ids = [
-        'barbell', 'rack', 'plates', 'kettlebell', 'dumbbell',
-        'pull_up_bar', 'rings', 'parallettes', 'rower', 'bike',
-        'ski_erg', 'ruck_pack', 'sandbag', 'sled', 'tire',
-        'medicine_ball', 'resistance_band', 'rope', 'box',
-        'ghd', 'jump_rope', 'open_space'
-    ]
-    return [{'id': eq_id} for eq_id in equipment_ids]
+    """Every equipment item, [{id, label}], from the one list
+    (data/commons/constraints/equipment.yaml; src/equipment.py). It used to be
+    a copy here, eight ids short of the constraints schema."""
+    from . import equipment
+    return [{'id': e['id'], 'label': e['label']} for e in equipment.items()]
 
 
 def load_equipment_profiles() -> list:

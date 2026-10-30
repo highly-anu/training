@@ -48,6 +48,96 @@ enum ClientVocab {
         "active": Phase(label: "Active", hex: 0x94a3b8),
     ]
 
+    struct Equipment {
+        let id: String
+        let label: String
+    }
+
+    struct EquipmentSection {
+        let id: String
+        let name: String
+        let hex: UInt32
+        let items: [String]
+    }
+
+    /// The equipment an athlete can say they have, in order (equipment.yaml).
+    static let equipment: [Equipment] = [
+        Equipment(id: "barbell", label: "Barbell"),
+        Equipment(id: "rack", label: "Rack"),
+        Equipment(id: "plates", label: "Plates"),
+        Equipment(id: "kettlebell", label: "Kettlebell"),
+        Equipment(id: "dumbbell", label: "Dumbbell"),
+        Equipment(id: "pull_up_bar", label: "Pull-up Bar"),
+        Equipment(id: "rings", label: "Rings"),
+        Equipment(id: "parallettes", label: "Parallettes"),
+        Equipment(id: "hangboard", label: "Hangboard"),
+        Equipment(id: "rope", label: "Rope Climb"),
+        Equipment(id: "box", label: "Box"),
+        Equipment(id: "dip_belt", label: "Dip Belt"),
+        Equipment(id: "rower", label: "Rower"),
+        Equipment(id: "bike", label: "Assault Bike"),
+        Equipment(id: "ski_erg", label: "Ski Erg"),
+        Equipment(id: "pool", label: "Pool (Swimming)"),
+        Equipment(id: "ruck_pack", label: "Ruck Pack"),
+        Equipment(id: "sandbag", label: "Sandbag"),
+        Equipment(id: "jump_rope", label: "Jump Rope"),
+        Equipment(id: "resistance_band", label: "Resistance Band"),
+        Equipment(id: "ghd", label: "GHD"),
+        Equipment(id: "medicine_ball", label: "Medicine Ball"),
+        Equipment(id: "sled", label: "Sled"),
+        Equipment(id: "tire", label: "Tire"),
+        Equipment(id: "sledgehammer", label: "Sledgehammer"),
+        Equipment(id: "cable_machine", label: "Cable Machine"),
+        Equipment(id: "hurdles", label: "Hurdles"),
+        Equipment(id: "agility_ladder", label: "Agility Ladder"),
+        Equipment(id: "training_partner", label: "Training Partner"),
+        Equipment(id: "open_space", label: "Open Space"),
+    ]
+
+    /// Profile ▸ Equipment's sections, each in the colour of the training it serves.
+    static let equipmentSections: [EquipmentSection] = [
+        EquipmentSection(id: "strength", name: "Strength", hex: 0xef4444, items: ["barbell", "rack", "plates"]),
+        EquipmentSection(id: "power_kettlebell", name: "Power & Kettlebell", hex: 0xeab308, items: ["kettlebell", "dumbbell"]),
+        EquipmentSection(id: "bodyweight", name: "Bodyweight & Gymnastics", hex: 0xf43f5e, items: ["pull_up_bar", "rings", "parallettes", "dip_belt", "hangboard"]),
+        EquipmentSection(id: "aerobic", name: "Aerobic & Conditioning", hex: 0x0ea5e9, items: ["rower", "bike", "ski_erg", "jump_rope", "pool"]),
+        EquipmentSection(id: "gpp", name: "GPP & Durability", hex: 0xf59e0b, items: ["ruck_pack", "sandbag", "sled", "tire", "sledgehammer", "medicine_ball", "box"]),
+        EquipmentSection(id: "mobility", name: "Mobility & Prehab", hex: 0x84cc16, items: ["resistance_band", "ghd"]),
+        EquipmentSection(id: "general", name: "General", hex: 0x6366f1, items: ["rope", "open_space", "training_partner", "cable_machine", "hurdles", "agility_ladder"]),
+    ]
+
+    struct OutcomeRule {
+        let exerciseCategory: String?
+        let movementPattern: String?
+        let fields: [String]
+    }
+
+    struct OutcomeSlot {
+        let fields: [String]
+        let clock: Bool
+        let when: [OutcomeRule]
+    }
+
+    /// What a slot logs, by slot type (outcome_fields.yaml; SessionLogging reads it).
+    static let outcomeSlotTypes: [String: OutcomeSlot] = [
+        "time_domain": OutcomeSlot(fields: ["minutes", "km"], clock: false, when: [OutcomeRule(exerciseCategory: "kettlebell", movementPattern: nil, fields: ["minutes", "reps"])]),
+        "skill_practice": OutcomeSlot(fields: ["minutes"], clock: false, when: [OutcomeRule(exerciseCategory: nil, movementPattern: "isometric", fields: ["minutes", "seconds"])]),
+        "for_time": OutcomeSlot(fields: ["minutes"], clock: true, when: []),
+        "distance": OutcomeSlot(fields: ["km", "minutes"], clock: false, when: []),
+        "amrap": OutcomeSlot(fields: ["rounds", "reps"], clock: false, when: []),
+        "emom": OutcomeSlot(fields: ["rounds"], clock: false, when: []),
+        "rounds_for_time": OutcomeSlot(fields: ["minutes", "rounds"], clock: true, when: []),
+        "amrap_movement": OutcomeSlot(fields: ["reps"], clock: false, when: []),
+    ]
+
+    /// The field a test's standard result kind is asked first in.
+    static let outcomeResultField: [String: String] = [
+        "duration": "time",
+        "rounds": "rounds",
+        "reps": "reps",
+        "hold": "seconds",
+        "distance": "km",
+    ]
+
     /// An sRGB colour from 0xRRGGBB.
     static func color(_ hex: UInt32) -> Color {
         Color(red: Double((hex >> 16) & 0xff) / 255,

@@ -2,7 +2,7 @@ import Foundation
 
 /// What a slot type lets the athlete log, and how a log reads back.
 ///
-/// Mirrors `frontend/src/lib/outcomeFields.ts`: a sets × reps (or hold) slot
+/// The same generated table as `frontend/src/lib/outcomeFields.ts`: a sets × reps (or hold) slot
 /// logs sets; everything else logs its currency — rounds, minutes,
 /// kilometres, reps — which is what the analytics primitives read. Until the
 /// phone could log, the only logger it had was the watch, and only for sets.
@@ -23,37 +23,26 @@ enum OutcomeField: String, CaseIterable {
 
 enum SessionLogging {
 
-    private static let fieldsFor: [String: [OutcomeField]] = [
-        "time_domain":     [.minutes, .km],
-        "skill_practice":  [.minutes],
-        "for_time":        [.minutes],
-        "distance":        [.km, .minutes],
-        "amrap":           [.rounds, .reps],
-        "emom":            [.rounds],
-        "rounds_for_time": [.minutes, .rounds],
-        "amrap_movement":  [.reps],
-    ]
-
-    /// The field a standard's result kind is logged in (src/standard_tests.RESULTS).
-    private static let resultField: [String: OutcomeField] = [
-        "duration": .time, "rounds": .rounds, "reps": .reps, "hold": .seconds, "distance": .km,
-    ]
-
-    /// The currency fields a slot can log; empty for a sets slot. Two rules on
-    /// the exercise, as `lib/outcomeFields.ts` has them — change both: a
-    /// kettlebell in a timed slot logs reps beside minutes (Wildman's cadence
-    /// is reps per minute), and an isometric in a skill-practice slot logs the
-    /// hold in seconds (Ido's handstand and L-sit holds). A for-time slot logs
-    /// a clock, and a test's scored slot asks first for the number its
-    /// standard needs (`standardResult`): reps for push-ups in three minutes.
+    /// The currency fields a slot can log; empty for a sets slot. The table and
+    /// its rules are data (data/commons/outcome_fields.yaml, through
+    /// ClientVocab.swift), read alike by the web's `lib/outcomeFields.ts`: a
+    /// kettlebell in a timed slot logs reps beside minutes (Wildman's cadence is
+    /// reps per minute), an isometric in a skill-practice slot logs the hold in
+    /// seconds (Ido's handstand and L-sit holds), a for-time slot logs a clock,
+    /// and a test's scored slot asks first for the number its standard needs
+    /// (`standardResult`): reps for push-ups in three minutes.
     static func outcomeFields(for slotType: String?, category: String? = nil,
                               patterns: [String] = [], standardResult: String? = nil) -> [OutcomeField] {
-        var base: [OutcomeField]
-        if slotType == "time_domain", category == "kettlebell" { base = [.minutes, .reps] }
-        else if slotType == "skill_practice", patterns.contains("isometric") { base = [.minutes, .seconds] }
-        else { base = fieldsFor[slotType ?? ""] ?? [] }
-        if slotType == "for_time" || slotType == "rounds_for_time" { base = base.map { $0 == .minutes ? .time : $0 } }
-        guard let want = standardResult.flatMap({ resultField[$0] }) else { return base }
+        let slot = ClientVocab.outcomeSlotTypes[slotType ?? ""]
+        var names = slot?.fields ?? []
+        if let rule = slot?.when.first(where: { rule in
+            (rule.exerciseCategory.map { $0 == category } ?? true)
+                && (rule.movementPattern.map { patterns.contains($0) } ?? true)
+        }) { names = rule.fields }
+        var base = names.compactMap(OutcomeField.init(rawValue:))
+        if slot?.clock == true { base = base.map { $0 == .minutes ? .time : $0 } }
+        guard let want = standardResult.flatMap({ ClientVocab.outcomeResultField[$0] })
+            .flatMap(OutcomeField.init(rawValue:)) else { return base }
         if want == .time { base = base.map { $0 == .minutes ? .time : $0 } }
         return [want] + base.filter { $0 != want && ($0 != .km || want == .km) }
     }

@@ -56,3 +56,90 @@ export const PHASE_DISPLAY: Record<PhaseKind, PhaseDisplay> = {
   post_op: { hex: '#a855f7', bg: 'bg-purple-500/15', text: 'text-purple-700 dark:text-purple-300', label: 'Post-Op' },
   active: { hex: '#94a3b8', bg: 'bg-slate-500/15', text: 'text-slate-700 dark:text-slate-300', label: 'Active' },
 }
+
+/** The equipment an athlete can say they have (data/commons/constraints/equipment.yaml). */
+export const EQUIPMENT_IDS = ['barbell', 'rack', 'plates', 'kettlebell', 'dumbbell', 'pull_up_bar', 'rings', 'parallettes', 'hangboard', 'rope', 'box', 'dip_belt', 'rower', 'bike', 'ski_erg', 'pool', 'ruck_pack', 'sandbag', 'jump_rope', 'resistance_band', 'ghd', 'medicine_ball', 'sled', 'tire', 'sledgehammer', 'cable_machine', 'hurdles', 'agility_ladder', 'training_partner', 'open_space'] as const
+export type EquipmentId = (typeof EQUIPMENT_IDS)[number]
+
+export const EQUIPMENT_LABELS: Record<EquipmentId, string> = {
+  barbell: 'Barbell',
+  rack: 'Rack',
+  plates: 'Plates',
+  kettlebell: 'Kettlebell',
+  dumbbell: 'Dumbbell',
+  pull_up_bar: 'Pull-up Bar',
+  rings: 'Rings',
+  parallettes: 'Parallettes',
+  hangboard: 'Hangboard',
+  rope: 'Rope Climb',
+  box: 'Box',
+  dip_belt: 'Dip Belt',
+  rower: 'Rower',
+  bike: 'Assault Bike',
+  ski_erg: 'Ski Erg',
+  pool: 'Pool (Swimming)',
+  ruck_pack: 'Ruck Pack',
+  sandbag: 'Sandbag',
+  jump_rope: 'Jump Rope',
+  resistance_band: 'Resistance Band',
+  ghd: 'GHD',
+  medicine_ball: 'Medicine Ball',
+  sled: 'Sled',
+  tire: 'Tire',
+  sledgehammer: 'Sledgehammer',
+  cable_machine: 'Cable Machine',
+  hurdles: 'Hurdles',
+  agility_ladder: 'Agility Ladder',
+  training_partner: 'Training Partner',
+  open_space: 'Open Space',
+}
+
+/** The pickers' groups, in order (open space is always assumed). */
+export const EQUIPMENT_GROUPS: { id: string; name: string; items: EquipmentId[] }[] = [
+  { id: 'free_weights', name: 'Free Weights', items: ['barbell', 'rack', 'plates', 'kettlebell', 'dumbbell'] },
+  { id: 'gymnastics', name: 'Gymnastics / Bodyweight', items: ['pull_up_bar', 'rings', 'parallettes', 'hangboard', 'rope', 'box', 'dip_belt'] },
+  { id: 'cardio', name: 'Cardio Machines', items: ['rower', 'bike', 'ski_erg', 'pool'] },
+  { id: 'field', name: 'Field / Load', items: ['ruck_pack', 'sandbag', 'jump_rope', 'resistance_band'] },
+  { id: 'specialty', name: 'Specialty', items: ['ghd', 'medicine_ball', 'sled', 'tire', 'sledgehammer', 'cable_machine', 'hurdles', 'agility_ladder', 'training_partner'] },
+]
+
+/** Profile ▸ Equipment's sections, each in the colour of the training it serves. */
+export const EQUIPMENT_SECTIONS: { id: string; name: string; hex: string; items: EquipmentId[] }[] = [
+  { id: 'strength', name: 'Strength', hex: '#ef4444', items: ['barbell', 'rack', 'plates'] },
+  { id: 'power_kettlebell', name: 'Power & Kettlebell', hex: '#eab308', items: ['kettlebell', 'dumbbell'] },
+  { id: 'bodyweight', name: 'Bodyweight & Gymnastics', hex: '#f43f5e', items: ['pull_up_bar', 'rings', 'parallettes', 'dip_belt', 'hangboard'] },
+  { id: 'aerobic', name: 'Aerobic & Conditioning', hex: '#0ea5e9', items: ['rower', 'bike', 'ski_erg', 'jump_rope', 'pool'] },
+  { id: 'gpp', name: 'GPP & Durability', hex: '#f59e0b', items: ['ruck_pack', 'sandbag', 'sled', 'tire', 'sledgehammer', 'medicine_ball', 'box'] },
+  { id: 'mobility', name: 'Mobility & Prehab', hex: '#84cc16', items: ['resistance_band', 'ghd'] },
+  { id: 'general', name: 'General', hex: '#6366f1', items: ['rope', 'open_space', 'training_partner', 'cable_machine', 'hurdles', 'agility_ladder'] },
+]
+
+/** What a slot logs (data/commons/outcome_fields.yaml; lib/outcomeFields.ts reads it). */
+export const OUTCOME_FIELDS = ['rounds', 'minutes', 'time', 'km', 'reps', 'seconds'] as const
+export type OutcomeField = (typeof OUTCOME_FIELDS)[number]
+
+export interface OutcomeRule {
+  exerciseCategory?: string
+  movementPattern?: string
+  fields: OutcomeField[]
+}
+
+export const OUTCOME_SLOT_TYPES: Record<string, { fields: OutcomeField[]; clock: boolean; when: OutcomeRule[] }> = {
+  time_domain: { fields: ['minutes', 'km'], clock: false, when: [{ exerciseCategory: 'kettlebell', fields: ['minutes', 'reps'] }] },
+  skill_practice: { fields: ['minutes'], clock: false, when: [{ movementPattern: 'isometric', fields: ['minutes', 'seconds'] }] },
+  for_time: { fields: ['minutes'], clock: true, when: [] },
+  distance: { fields: ['km', 'minutes'], clock: false, when: [] },
+  amrap: { fields: ['rounds', 'reps'], clock: false, when: [] },
+  emom: { fields: ['rounds'], clock: false, when: [] },
+  rounds_for_time: { fields: ['minutes', 'rounds'], clock: true, when: [] },
+  amrap_movement: { fields: ['reps'], clock: false, when: [] },
+}
+
+/** The field a test's standard result kind is asked first in. */
+export const OUTCOME_RESULT_FIELD: Record<string, OutcomeField> = {
+  duration: 'time',
+  rounds: 'rounds',
+  reps: 'reps',
+  hold: 'seconds',
+  distance: 'km',
+}

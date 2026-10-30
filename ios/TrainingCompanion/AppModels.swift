@@ -1055,47 +1055,17 @@ struct EquipmentItem: Identifiable {
 }
 
 extension EquipmentItem {
-    // IDs and group names must exactly match ConstraintsForm.tsx (frontend/src/components/builder/ConstraintsForm.tsx)
-    static let all: [EquipmentItem] = [
-        // Strength
-        EquipmentItem(id: "barbell", label: "Barbell", group: "Strength"),
-        EquipmentItem(id: "rack",    label: "Rack",    group: "Strength"),
-        EquipmentItem(id: "plates",  label: "Plates",  group: "Strength"),
-        // Power & Kettlebell
-        EquipmentItem(id: "kettlebell", label: "Kettlebell", group: "Power & Kettlebell"),
-        EquipmentItem(id: "dumbbell",   label: "Dumbbell",   group: "Power & Kettlebell"),
-        // Bodyweight & Gymnastics
-        EquipmentItem(id: "pull_up_bar", label: "Pull-up Bar", group: "Bodyweight & Gymnastics"),
-        EquipmentItem(id: "rings",       label: "Rings",       group: "Bodyweight & Gymnastics"),
-        EquipmentItem(id: "parallettes", label: "Parallettes", group: "Bodyweight & Gymnastics"),
-        EquipmentItem(id: "dip_bar",     label: "Dip Bar",     group: "Bodyweight & Gymnastics"),
-        EquipmentItem(id: "hangboard",   label: "Hangboard",   group: "Bodyweight & Gymnastics"),
-        // Aerobic & Conditioning
-        EquipmentItem(id: "rower",        label: "Rower",        group: "Aerobic & Conditioning"),
-        EquipmentItem(id: "assault_bike", label: "Assault Bike", group: "Aerobic & Conditioning"),
-        EquipmentItem(id: "ski_erg",      label: "Ski Erg",      group: "Aerobic & Conditioning"),
-        EquipmentItem(id: "jump_rope",    label: "Jump Rope",    group: "Aerobic & Conditioning"),
-        EquipmentItem(id: "pool",         label: "Pool",         group: "Aerobic & Conditioning"),
-        // GPP & Durability
-        EquipmentItem(id: "ruck_pack",     label: "Ruck Pack",     group: "GPP & Durability"),
-        EquipmentItem(id: "sandbag",       label: "Sandbag",       group: "GPP & Durability"),
-        EquipmentItem(id: "sled",          label: "Sled",          group: "GPP & Durability"),
-        EquipmentItem(id: "tire",          label: "Tire",          group: "GPP & Durability"),
-        EquipmentItem(id: "sledgehammer",  label: "Sledgehammer",  group: "GPP & Durability"),
-        EquipmentItem(id: "medicine_ball", label: "Medicine Ball", group: "GPP & Durability"),
-        EquipmentItem(id: "box",           label: "Box",           group: "GPP & Durability"),
-        // Mobility & Prehab
-        EquipmentItem(id: "resistance_band", label: "Resistance Band", group: "Mobility & Prehab"),
-        EquipmentItem(id: "foam_roller",     label: "Foam Roller",     group: "Mobility & Prehab"),
-        EquipmentItem(id: "ghd",             label: "GHD",             group: "Mobility & Prehab"),
-        // General
-        EquipmentItem(id: "rope",       label: "Rope",       group: "General"),
-        EquipmentItem(id: "open_space", label: "Open Space", group: "General"),
-        EquipmentItem(id: "training_partner", label: "Training Partner", group: "General"),
-        EquipmentItem(id: "cable_machine",    label: "Cable Machine",    group: "General"),
-        EquipmentItem(id: "hurdles",          label: "Hurdles",          group: "General"),
-        EquipmentItem(id: "agility_ladder",   label: "Agility Ladder",   group: "General"),
-    ]
+    /// Every item, filed under its Profile section: the one list
+    /// (data/commons/constraints/equipment.yaml, through ClientVocab.swift — the
+    /// web's sections are the same data). It used to be a copy here, and offered
+    /// `dip_bar`, `assault_bike` and `foam_roller`, which no archetype names.
+    static let all: [EquipmentItem] = ClientVocab.equipmentSections.flatMap { section in
+        section.items.compactMap { id in
+            ClientVocab.equipment.first { $0.id == id }.map {
+                EquipmentItem(id: $0.id, label: $0.label, group: section.name)
+            }
+        }
+    }
 }
 
 

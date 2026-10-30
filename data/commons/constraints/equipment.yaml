@@ -1,0 +1,97 @@
+# Every piece of equipment an athlete can say they have: the one list.
+#
+# The four schemas' equipment enums (constraints, archetype, exercise —
+# which adds `none` — and philosophy), the server's /api/equipment, and the
+# web's, the phone's pickers and Profile sections are all written from it by
+# tools/gen_client_vocab.py; src/equipment.py reads it on the server. Until
+# 2026-10-30 each kept its own list: the schemas disagreed (22 to 31 ids), and
+# the phone and the web's Profile offered `assault_bike`, `dip_bar` and
+# `foam_roller`, which no archetype or exercise names.
+#
+#   aliases   ids a client once stored for the same thing; the server reads
+#             them as this id (src/equipment.canonical)
+
+equipment:
+  - {id: barbell, label: Barbell}
+  - {id: rack, label: Rack}
+  - {id: plates, label: Plates}
+  - {id: kettlebell, label: Kettlebell}
+  - {id: dumbbell, label: Dumbbell}
+  - {id: pull_up_bar, label: Pull-up Bar}
+  - {id: rings, label: Rings}
+  - {id: parallettes, label: Parallettes}
+  - {id: hangboard, label: Hangboard}
+  - {id: rope, label: Rope Climb}
+  - {id: box, label: Box}
+  - {id: dip_belt, label: Dip Belt}
+  - {id: rower, label: Rower}
+  - {id: bike, label: Assault Bike, aliases: [assault_bike]}
+  - {id: ski_erg, label: Ski Erg}
+  - {id: pool, label: Pool (Swimming)}
+  - {id: ruck_pack, label: Ruck Pack}
+  - {id: sandbag, label: Sandbag}
+  - {id: jump_rope, label: Jump Rope}
+  - {id: resistance_band, label: Resistance Band}
+  - {id: ghd, label: GHD}
+  - {id: medicine_ball, label: Medicine Ball}
+  - {id: sled, label: Sled}
+  - {id: tire, label: Tire}
+  - {id: sledgehammer, label: Sledgehammer}
+  - {id: cable_machine, label: Cable Machine}
+  - {id: hurdles, label: Hurdles}
+  - {id: agility_ladder, label: Agility Ladder}
+  - {id: training_partner, label: Training Partner}
+  - {id: open_space, label: Open Space}
+
+# The pickers' groups (the builder's EquipmentPicker, Explore ▸ Equipment), in
+# order. Open space is always assumed, so no group offers it.
+groups:
+  - id: free_weights
+    name: Free Weights
+    items: [barbell, rack, plates, kettlebell, dumbbell]
+  - id: gymnastics
+    name: Gymnastics / Bodyweight
+    items: [pull_up_bar, rings, parallettes, hangboard, rope, box, dip_belt]
+  - id: cardio
+    name: Cardio Machines
+    items: [rower, bike, ski_erg, pool]
+  - id: field
+    name: Field / Load
+    items: [ruck_pack, sandbag, jump_rope, resistance_band]
+  - id: specialty
+    name: Specialty
+    items: [ghd, medicine_ball, sled, tire, sledgehammer, cable_machine, hurdles, agility_ladder, training_partner]
+
+# Profile ▸ Equipment's sections (the web's and the phone's, and the builder's
+# constraints form), each in the colour of the training it serves — a
+# modality's, or its own — which is also an item's colour wherever else it
+# appears (Explore ▸ Philosophies' requirements).
+sections:
+  - id: strength
+    name: Strength
+    modality: max_strength
+    items: [barbell, rack, plates]
+  - id: power_kettlebell
+    name: Power & Kettlebell
+    modality: power
+    items: [kettlebell, dumbbell]
+  - id: bodyweight
+    name: Bodyweight & Gymnastics
+    modality: relative_strength
+    items: [pull_up_bar, rings, parallettes, dip_belt, hangboard]
+  - id: aerobic
+    name: Aerobic & Conditioning
+    modality: aerobic_base
+    items: [rower, bike, ski_erg, jump_rope, pool]
+  - id: gpp
+    name: GPP & Durability
+    modality: durability
+    items: [ruck_pack, sandbag, sled, tire, sledgehammer, medicine_ball, box]
+  - id: mobility
+    name: Mobility & Prehab
+    modality: rehab
+    items: [resistance_band, ghd]
+  - id: general
+    name: General
+    color: '#6366f1'
+    items: [rope, open_space, training_partner, cable_machine, hurdles, agility_ladder]

@@ -249,7 +249,7 @@ const AUTHORING: AuthoringRow[] = [
     writes: 'data/commons/modalities/ (shared)',
     notes: [
       'POST /api/modalities ✅',
-      'A new modality needs its display block and tools/gen_client_vocab.py for the clients\' colours, labels and icons; the slot-type outcome tables are still each client\'s — see the gaps',
+      'A new modality needs its display block and tools/gen_client_vocab.py for every client\'s colours, labels and icons',
     ],
   },
   {
