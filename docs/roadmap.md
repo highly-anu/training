@@ -999,13 +999,20 @@ The list is `tools/portability_gaps.json` (each gap anchored in the code;
 there), shown per package beside the matrix of what each has in and outside its folder
 on Dev Lab ▸ Model Interactions (`GET /api/dev/portability`, `src/portability.py`).
 Today: the code is package-neutral, the repository is not yet drop-in. In order:
-- **9.1 One command to onboard a folder (S).** `tools/add_package.py <id>`: validate, run
-  every gate, record the scorecard, coverage, status and golden baselines for that package
-  only, stub its dossier. An id-collision gate in `validate_entities.py --all` (the loader
-  keeps the first archetype, the last framework in the library and the first in
-  `load_framework`, the last media entry); `test_package_dropin.py` beside the shipped
-  packages and through `build_static_cache.py`; a package's own tests without the shared
-  registry; blends beyond `check_styles.COMPOSITIONS`' five pairs.
+- **9.1 One command to onboard a folder (S).** Done 2026-10-30 (branch `feat/add-package`):
+  `tools/add_package.py <id>` checks the folder (schemas, no id another package declares,
+  every id in the commons), stubs its dossier, and records its scorecard, fidelity and
+  coverage baselines, its `status.yaml` row and its golden hashes for that package only
+  (`evaluate_packages.py --update-baseline --package`, `--dry-run`;
+  `test_single_lane_golden.py --record --package`), refusing a fidelity finding, an orphan
+  or a worse grade; `--check` writes nothing. `validate_entities.py --all` fails on an id
+  two packages declare (the loader kept the first archetype, the last framework in the
+  library and the first in `load_framework`, the last media entry, silently);
+  `test_package_dropin.py` runs its copies beside the shipped packages, through the
+  static reference cache and `add_package.py --check` (`test_add_package.py`). Left: the
+  records could live in the folder itself; a package's own tests count only once the
+  shared registry lists them; blends are checked on `check_styles.COMPOSITIONS`' five
+  pairs.
 - **9.2 Standards in the package (M).** `<id>/standards.yaml` beside `data/benchmarks/`,
   found by glob instead of `benchmarks_data.BENCHMARK_FILES`, categories as data (The
   Cell keeps its own loader).

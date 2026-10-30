@@ -1363,7 +1363,8 @@ with no weight works up on the day; layoff resets are the module's `advice`; the
 Run these after touching engine code or package data:
 
 ```bash
-.venv/bin/python tools/validate_entities.py --all -q     # YAML vs docs/schemas (packages, commons, standards)
+.venv/bin/python tools/validate_entities.py --all -q     # YAML vs docs/schemas (packages, commons, standards); no id two packages declare
+.venv/bin/python tools/add_package.py <id> [--check]     # a new package folder: check it, record its baselines and golden hashes, stub its dossier
 .venv/bin/python tools/check_provenance.py               # no package leaks; 11 philosophies x 3 profiles
 .venv/bin/python tools/check_provenance.py --coverage    # coverage gaps + authoring problems
 .venv/bin/python tools/check_styles.py                   # every philosophy x track x phase generates on its framework
@@ -1390,6 +1391,7 @@ SUPABASE_URL='' .venv/bin/python test_phase_summary.py   # Program ▸ Overview'
 SUPABASE_URL='' .venv/bin/python test_devlab_trace.py    # the Dev Lab's recorded trace has the server's shape; --record after a trace change
 SUPABASE_URL='' .venv/bin/python test_constraint_impact.py  # what each constraint changes against the reference, and which (Dev Lab ▸ Impact)
 SUPABASE_URL='' .venv/bin/python test_portability.py     # Dev Lab ▸ Model Interactions' report; every open gap still anchored in the code; --write re-records the web's copy
+.venv/bin/python test_add_package.py                     # one package's baselines recorded, every other's kept; add_package's refusals
 SUPABASE_URL='' .venv/bin/python test_explore_links.py     # Explore's lineage: slot links by the selector's rule, progression, movements
 SUPABASE_URL='' .venv/bin/python test_explore_philosophy.py  # Explore's philosophy page: weeks from contracts and templates, mixes, rules, sessions
 ```

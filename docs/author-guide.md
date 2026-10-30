@@ -52,7 +52,7 @@ Philosophy
 1. **Read the sources and keep a record** — `fidelity.yaml` and `docs/package-fidelity/<id>.md` (the README says what each holds).
 2. **Write the folder** — philosophy with its tracks, frameworks, archetypes, exercises; the optional files below as the method needs them.
 3. **Use the commons** — modalities, phase kinds, movement patterns, equipment, injury flags, standards and watch templates are shared vocabulary; reference them, do not redefine them.
-4. **Validate and run the gates** — `validate_entities.py --all`, then the gates the package-fidelity README lists; a new package needs its baselines recorded (`tools/evaluate_packages.py --update-baseline`, `test_single_lane_golden.py --record`).
+4. **Bring it in** — `tools/add_package.py <id> --check`, then without `--check`: the folder's schemas, no id another package declares, every id in the commons, then its dossier stubbed and its baselines and golden hashes recorded. Then the gates the package-fidelity README lists (`tools/run_checks.py`; the pre-push hook runs them).
 
 ---
 

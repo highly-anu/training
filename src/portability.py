@@ -54,13 +54,14 @@ _COVERAGE = os.path.join(ROOT, 'tools', 'exercise_coverage_baseline.json')
 _GOLDEN = os.path.join(ROOT, 'test_single_lane_golden.json')
 _STATUS = os.path.join(ROOT, 'docs', 'package-fidelity', 'status.yaml')
 _DOSSIERS = os.path.join(ROOT, 'docs', 'package-fidelity')
-_UPDATE_BASELINE = '.venv/bin/python tools/evaluate_packages.py --update-baseline'
-_RECORD_GOLDEN = 'SUPABASE_URL= .venv/bin/python test_single_lane_golden.py --record'
+# One command records them all, for that package only.
+_ADD = '.venv/bin/python tools/add_package.py {pkg}'
 
 # Which copy wins when two packages declare one id (src/loader.py).
+# Read as "the loader keeps …".
 _KEPT = {
-    'philosophy': 'both are listed; load_philosophy returns the first',
-    'framework': 'load_all_frameworks keeps the last, load_framework the first',
+    'philosophy': 'both in the list, and load_philosophy the first',
+    'framework': 'the last in the library and the first in load_framework',
     'archetype': 'the first (by folder name)',
     'media': 'the last (by folder name)',
 }
@@ -173,21 +174,22 @@ def _outside(pkg: str) -> list[dict]:
 
     prefix = f'{pkg}/'
     dossier = os.path.join(_DOSSIERS, f'{pkg}.md')
+    add = _ADD.format(pkg=pkg)
     return [
         {'id': 'scorecard', 'label': 'Scorecard baseline', 'file': 'tools/scorecard_baseline.json',
          'done': held(_SCORECARD, lambda: any(k.startswith(prefix) for k in _json(_SCORECARD) or {})),
-         'how': _UPDATE_BASELINE},
+         'how': add},
         {'id': 'coverage', 'label': 'Exercise coverage baseline', 'file': 'tools/exercise_coverage_baseline.json',
-         'done': held(_COVERAGE, lambda: pkg in (_json(_COVERAGE) or {})), 'how': _UPDATE_BASELINE},
+         'done': held(_COVERAGE, lambda: pkg in (_json(_COVERAGE) or {})), 'how': add},
         {'id': 'status', 'label': 'status.yaml row', 'file': 'docs/package-fidelity/status.yaml',
          'done': held(_STATUS, lambda: pkg in ((_yaml(_STATUS) or {}).get('packages') or {})),
-         'how': _UPDATE_BASELINE},
+         'how': add},
         {'id': 'golden', 'label': 'Golden program hashes', 'file': 'test_single_lane_golden.json',
          'done': held(_GOLDEN, lambda: any(k.startswith(prefix) for k in _json(_GOLDEN) or {})),
-         'how': _RECORD_GOLDEN},
+         'how': add},
         {'id': 'dossier', 'label': 'Source dossier', 'file': f'docs/package-fidelity/{pkg}.md',
          'done': held(_DOSSIERS, lambda: os.path.exists(dossier)),
-         'how': 'write it (docs/package-fidelity/README.md)'},
+         'how': f'{add} stubs it; write it from the sources (docs/package-fidelity/README.md)'},
     ]
 
 
@@ -278,6 +280,12 @@ def collisions(owned: dict[str, dict[str, dict]]) -> tuple[list[dict], int]:
             continue
         found.append({'kind': kind, 'id': i, 'packages': sorted(by_pkg), 'kept': _KEPT[kind]})
     return found, shared
+
+
+def id_collisions() -> list[dict]:
+    """The ids two packages declare that the loader resolves silently — the
+    gate tools/validate_entities.py --all holds every package to."""
+    return collisions({pkg: _owned_ids(_read(pkg)) for pkg in packages()})[0]
 
 
 def gaps() -> dict:

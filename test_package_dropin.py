@@ -5,11 +5,16 @@ Copies three packages — one per engine shape: Wildman (a training contract,
 with its own watch screens and source weeks), Horsemen (week templates) and the
 test fixture block_fixture (the modality scheduler, which no shipped package
 uses any more) — under ids no code has ever seen, into a packages
-folder of their own (`TRAINING_PACKAGES_DIR`, src/loader.py), and runs them
-through everything a package reaches: schema validation, generation of every
-track, the API's philosophies and generate routes, the watch payload with its
-screens, the program analytics, the source weeks and the scorecard. Then checks
-that nothing in the repository changed.
+folder of their own (`TRAINING_PACKAGES_DIR`, src/loader.py), beside the
+shipped packages, and runs them through everything a package reaches: schema
+validation, the id-collision gate, generation of every track, the API's
+philosophies and generate routes, the static reference cache the image
+builds, the watch payload with its screens, the program analytics, the source
+weeks, the scorecard and `tools/add_package.py --check`. Then checks that
+nothing in the repository changed.
+
+Each copy takes its own archetype and framework ids (`dx_` before each), as a
+new package must: the shipped package it was copied from is beside it.
 
 A package that only these needed — and no edit to src/, api.py, the clients or
 the watches — is one the owner can add by writing a folder.
@@ -40,21 +45,46 @@ def check(label: str, condition: bool, detail: str = '') -> None:
         FAILURES.append(label)
 
 
+def _own_ids(source: str) -> list[str]:
+    """The archetype and framework ids a package declares."""
+    import yaml
+    ids = []
+    for sub in ('archetypes', 'frameworks'):
+        for dirpath, _, files in os.walk(os.path.join(source, sub)):
+            for name in files:
+                if name.endswith('.yaml'):
+                    with open(os.path.join(dirpath, name), encoding='utf-8') as fh:
+                        ids.append((yaml.safe_load(fh) or {})['id'])
+    return ids
+
+
 def make_packages(folder: str) -> None:
-    """Each source package under its new id: the folder, and its own id
-    wherever its files name it (a word, so `block_fixture_x` stays)."""
+    """The shipped packages, then each source package under its new id: the
+    folder, its own id wherever its files name it (a word, so
+    `block_fixture_x` stays), and its archetype and framework ids, files
+    included, so none is another package's."""
+    for name in sorted(os.listdir(os.path.join(ROOT, 'data', 'packages'))):
+        path = os.path.join(ROOT, 'data', 'packages', name)
+        if os.path.isdir(path):
+            shutil.copytree(path, os.path.join(folder, name))
     for new, source in COPIES.items():
         old = os.path.basename(source)
         dest = os.path.join(folder, new)
+        renames = {old: new, **{i: f'dx_{i}' for i in _own_ids(os.path.join(ROOT, source))}}
+        word = re.compile(r'\b(' + '|'.join(sorted(map(re.escape, renames), key=len, reverse=True)) + r')\b')
         shutil.copytree(os.path.join(ROOT, source), dest)
         for dirpath, _, files in os.walk(dest):
             for name in files:
-                if name.endswith('.yaml'):
-                    path = os.path.join(dirpath, name)
-                    with open(path, encoding='utf-8') as fh:
-                        text = fh.read()
-                    with open(path, 'w', encoding='utf-8') as fh:
-                        fh.write(re.sub(rf'\b{re.escape(old)}\b', new, text))
+                if not name.endswith('.yaml'):
+                    continue
+                path = os.path.join(dirpath, name)
+                with open(path, encoding='utf-8') as fh:
+                    text = fh.read()
+                with open(path, 'w', encoding='utf-8') as fh:
+                    fh.write(word.sub(lambda m: renames[m.group(1)], text))
+                stem = name[:-len('.yaml')]
+                if stem in renames:
+                    os.rename(path, os.path.join(dirpath, f'{renames[stem]}.yaml'))
 
 
 def _status() -> str:
@@ -73,12 +103,19 @@ def child(folder: str) -> int:
     from tools import check_fidelity as cf, validate_entities as ve
     from datetime import date, timedelta
 
+    from src import portability
+
     print('the packages')
     check('the loader reads the copies, by folder', loader._PACKAGES_DIR == folder)
     phils = {p['id']: p for p in loader.load_philosophies()}
-    check('three philosophies, under ids no code names', set(phils) == set(COPIES), str(sorted(phils)))
+    shipped = {n for n in os.listdir(os.path.join(ROOT, 'data', 'packages'))
+               if os.path.isdir(os.path.join(ROOT, 'data', 'packages', n))}
+    check('three philosophies under ids no code names, beside the shipped ones',
+          set(phils) == set(COPIES) | shipped, str(sorted(set(phils) - shipped)))
     errors = {os.path.relpath(p, folder): e for p, e in ve.validate_path(folder, verbose=False).items() if e}
     check('every file is valid against its schema', not errors, str(errors)[:400])
+    collided = portability.id_collisions()
+    check('no archetype, framework or media id is another package\'s', not collided, str(collided)[:300])
 
     print('generation, every track')
     frameworks = loader.load_all_frameworks()
@@ -128,6 +165,12 @@ def child(folder: str) -> int:
         check(f'POST /api/programs/generate builds {pkg}', resp.status_code == 200 and bool(body.get('weeks')),
               f'{resp.status_code} {str(body)[:200]}')
 
+    static = os.path.join(folder, '..', 'static')
+    manifest = api.build_static(static)
+    check('the static reference cache builds, every route answering',
+          all(any(f'/api/philosophies/{pkg}/' in k for k in manifest) for pkg in COPIES),
+          str(sorted(k for k in manifest if 'philosophies/' in k))[:300])
+
     print('the watches')
     for (pkg, tid), (_, _, program) in sorted(programs.items()):
         sessions = [s for w in program['weeks'] for ss in w['schedule'].values() for s in ss]
@@ -167,6 +210,12 @@ def child(folder: str) -> int:
     archetypes = ep._package_archetypes(os.path.join(folder, 'dropin_scheduler'))
     check('its data grades read its own folder', shared['D1'][0] == 'pass' and archetypes
           and 'no archetypes' not in shared['D4'][1], str({k: shared[k] for k in ('D1', 'D3', 'D4')}))
+
+    print('bringing one in')
+    done = subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'add_package.py'), 'dropin_contract',
+                           '--check'], cwd=ROOT, capture_output=True, text=True)
+    check('tools/add_package.py --check finds nothing to fix', done.returncode == 0
+          and 'can be brought in' in done.stdout, (done.stdout + done.stderr)[-600:])
     print()
     if FAILURES:
         print(f'{len(FAILURES)} failure(s)')
