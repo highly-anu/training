@@ -1,37 +1,14 @@
 // ─── Enumerations ─────────────────────────────────────────────────────────────
 
-export type ModalityId =
-  | 'max_strength'
-  | 'strength_endurance'
-  | 'relative_strength'
-  | 'aerobic_base'
-  | 'anaerobic_intervals'
-  | 'mixed_modal_conditioning'
-  | 'power'
-  | 'mobility'
-  | 'movement_skill'
-  | 'durability'
-  | 'combat_sport'
-  | 'rehab'
-
 /**
- * Shared phase kinds (data/commons/phase_kinds.yaml). A philosophy names and
- * describes its own phases; each declares one of these kinds, which is what the
- * engine and the colour palette key on. Never shown as a phase's description.
+ * The modality ids and the shared phase kinds (data/commons/modalities,
+ * data/commons/phase_kinds.yaml), generated from the commons by
+ * tools/gen_client_vocab.py. A philosophy names and describes its own phases;
+ * each declares one of these kinds, which is what the engine and the colour
+ * palette key on. Never shown as a phase's description.
  */
-export type PhaseKind =
-  | 'transition'
-  | 'base'
-  | 'build'
-  | 'specific'
-  | 'peak'
-  | 'taper'
-  | 'maintenance'
-  | 'deload'
-  | 'recovery'
-  | 'rehab'
-  | 'post_op'
-  | 'active'
+export type { ModalityId, PhaseKind } from '@/lib/gen/clientVocab'
+import type { ModalityId, PhaseKind } from '@/lib/gen/clientVocab'
 
 /** @deprecated the phase kind; use PhaseKind. */
 export type TrainingPhase = PhaseKind

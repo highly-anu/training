@@ -50,3 +50,17 @@ notes: >
   the same session — as warm-up joint prep or post-session tissue work.
   Weekly volume ceiling of 420 min (7h) reflects serious competitor load;
   recreational practitioners should cap at 180-240 min.
+
+# How the clients draw it: tools/gen_client_vocab.py writes the web's and the
+# Apple apps' tables from this (docs/frontend-design.md §8.1; design-system §3).
+# `tint` is the Tailwind colour family of the web's tint classes, `text_shade`
+# its light-mode text shade (700 or 800: WCAG AA at text-xs on a /15 tint);
+# `short` the word a watch complication has room for; `order` where it is listed.
+display:
+  label: Combat Sport
+  short: Combat
+  order: 11
+  color: '#ec4899'
+  tint: pink
+  text_shade: 800
+  icon: {web: Swords, ios: figure.boxing, watch: figure.boxing}

@@ -50,3 +50,17 @@ notes: >
   on the same muscle groups. Novices can recover in 48h; intermediate and advanced
   athletes may need 72h at higher intensities. Hard/easy patterning (Gym Jones)
   applies: every heavy strength day should be followed by a low-recovery-cost day.
+
+# How the clients draw it: tools/gen_client_vocab.py writes the web's and the
+# Apple apps' tables from this (docs/frontend-design.md §8.1; design-system §3).
+# `tint` is the Tailwind colour family of the web's tint classes, `text_shade`
+# its light-mode text shade (700 or 800: WCAG AA at text-xs on a /15 tint);
+# `short` the word a watch complication has room for; `order` where it is listed.
+display:
+  label: Max Strength
+  short: Strength
+  order: 1
+  color: '#ef4444'
+  tint: red
+  text_shade: 700
+  icon: {web: Dumbbell, ios: figure.strengthtraining.traditional, watch: figure.strengthtraining.traditional}

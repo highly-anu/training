@@ -5,7 +5,7 @@ import { usePhilosophies } from '@/api/philosophies'
 import { useFrameworks } from '@/api/frameworks'
 import { useBuilderStore } from '@/store/builderStore'
 import { cn } from '@/lib/utils'
-import { MODALITY_COLORS } from '@/lib/modalityColors'
+import { MODALITY_COLORS, modalityHex, modalityLabel } from '@/lib/modalityColors'
 import {
   MODALITY_ORDER, DEFAULT_PRIORITIES, derivePhilosophyPriorities,
 } from '@/lib/philosophyPriorities'
@@ -226,16 +226,16 @@ function PriorityBuilder({
           {nonZero.map((id) => (
             <div
               key={id}
-              title={MODALITY_COLORS[id].label}
-              style={{ flex: (priorities[id] ?? 0) * 100, backgroundColor: MODALITY_COLORS[id].hex, opacity: 0.8 }}
+              title={modalityLabel(id)}
+              style={{ flex: (priorities[id] ?? 0) * 100, backgroundColor: modalityHex(id), opacity: 0.8 }}
             />
           ))}
         </div>
         <div className="flex flex-wrap gap-x-3 gap-y-1 pt-2">
           {nonZero.filter((id) => (priorities[id] ?? 0) > 0.02).map((id) => (
             <div key={id} className="flex items-center gap-1">
-              <div className="size-1.5 rounded-full" style={{ backgroundColor: MODALITY_COLORS[id].hex }} />
-              <span className="text-[9px] text-muted-foreground/60">{MODALITY_COLORS[id].label}</span>
+              <div className="size-1.5 rounded-full" style={{ backgroundColor: modalityHex(id) }} />
+              <span className="text-[9px] text-muted-foreground/60">{modalityLabel(id)}</span>
             </div>
           ))}
         </div>
@@ -244,13 +244,13 @@ function PriorityBuilder({
       <div className="space-y-1.5">
         {MODALITY_ORDER.map((id) => {
           const pct = Math.round((priorities[id] ?? 0) * 100)
-          const hex = MODALITY_COLORS[id].hex
+          const hex = modalityHex(id)
           return (
             <div key={id} className="flex items-center gap-3">
               <div className="w-36 shrink-0 flex items-center gap-1.5">
                 <span className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: hex }} />
                 <span className="text-[10px] text-muted-foreground truncate">
-                  {MODALITY_COLORS[id].label}
+                  {modalityLabel(id)}
                 </span>
               </div>
               <input
@@ -523,12 +523,12 @@ export function ProgramSource() {
                           key={id}
                           className="text-[10px] font-mono px-2 py-0.5 rounded-full"
                           style={{
-                            backgroundColor: `${MODALITY_COLORS[id].hex}20`,
-                            color: MODALITY_COLORS[id].hex,
-                            border: `1px solid ${MODALITY_COLORS[id].hex}40`,
+                            backgroundColor: `${modalityHex(id)}20`,
+                            color: modalityHex(id),
+                            border: `1px solid ${modalityHex(id)}40`,
                           }}
                         >
-                          {MODALITY_COLORS[id].label} {pct}%
+                          {modalityLabel(id)} {pct}%
                         </span>
                       ))}
                     </div>

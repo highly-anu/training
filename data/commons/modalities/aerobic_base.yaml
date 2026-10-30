@@ -59,3 +59,17 @@ notes: >
   should not be combined with other high-demand modalities. Progression model is
   intensity_split_shift: as the base builds, the Z1/Z2 proportion gives way to
   more Z3-Z4 work (base → build transition).
+
+# How the clients draw it: tools/gen_client_vocab.py writes the web's and the
+# Apple apps' tables from this (docs/frontend-design.md §8.1; design-system §3).
+# `tint` is the Tailwind colour family of the web's tint classes, `text_shade`
+# its light-mode text shade (700 or 800: WCAG AA at text-xs on a /15 tint);
+# `short` the word a watch complication has room for; `order` where it is listed.
+display:
+  label: Aerobic Base
+  short: Zone 2
+  order: 5
+  color: '#0ea5e9'
+  tint: sky
+  text_shade: 700
+  icon: {web: Footprints, ios: figure.run, watch: figure.run}

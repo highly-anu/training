@@ -977,14 +977,20 @@ This applies to every semantic system in §8 — modality, phase, completion, fa
 
 ### 8.9 Cross-Platform Color Parity
 
-The `hex` values in §8.1 and §8.2 are **not web-only**. They are mirrored by hand into:
+The `hex` values in §8.1 and §8.2 are **not web-only**, and since 2026-10-30 they are
+not copied by hand either. Each modality's file (`data/commons/modalities/<id>.yaml`) and
+each phase kind (`data/commons/phase_kinds.yaml`) carries a `display` block — label,
+complication word (`short`), listing `order`, the one `color`, the web's Tailwind `tint`
+and `text_shade`, and the modality's icon on the web (lucide), the phone and the watch
+(SF Symbols). `tools/gen_client_vocab.py` writes `frontend/src/lib/gen/clientVocab.ts`
+(read by `lib/modalityColors.ts`, `modalityIcons.ts`, `phaseColors.ts`, the builder's
+`MODALITY_ORDER` and the authoring dialogs) and one `ClientVocab.swift` into each Apple
+target folder (the phone's `ModalityStyle` / `PhaseStyle`, the widgets'
+`WidgetModalityStyle`, the watch's `ModalityStyle`, the complications).
 
-- `ios/TrainingCompanion/ModalityStyle.swift` (iPhone)
-- `ios/TrainingCompanionWatch Watch App/ModalityStyle.swift` (watchOS)
-
-Both Swift files carry the web hex in a trailing comment on every line (`// #ef4444`) so a mismatch is visible in review.
-
-**Rule:** changing a modality or phase hex is a three-file change. Update the web map and both Swift files in the same commit, or the platforms drift silently — nothing enforces this at build time.
+**Rule:** change the commons and rerun the generator; never edit a generated file.
+`test_client_vocab.py` fails when one is stale or a client names a modality table again.
+§8.10's contrast guard still reads `MODALITY_COLORS` and `PHASE_COLORS`, now built from it.
 
 ### 8.10 The Contrast Guard
 

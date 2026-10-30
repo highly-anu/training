@@ -47,3 +47,17 @@ notes: >
   individual loads are moderate. Gym Jones circuit days and accumulation days fall
   here. Do not follow with max strength within 48h. Mobility as a cool-down
   is appropriate and encouraged.
+
+# How the clients draw it: tools/gen_client_vocab.py writes the web's and the
+# Apple apps' tables from this (docs/frontend-design.md §8.1; design-system §3).
+# `tint` is the Tailwind colour family of the web's tint classes, `text_shade`
+# its light-mode text shade (700 or 800: WCAG AA at text-xs on a /15 tint);
+# `short` the word a watch complication has room for; `order` where it is listed.
+display:
+  label: Mixed Modal
+  short: Mixed Modal
+  order: 7
+  color: '#8b5cf6'
+  tint: violet
+  text_shade: 700
+  icon: {web: Activity, ios: bolt.heart.fill, watch: bolt.heart}

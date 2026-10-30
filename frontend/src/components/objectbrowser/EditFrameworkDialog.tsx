@@ -8,8 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useUpdateFramework } from '@/api/frameworks'
 import { usePhilosophies } from '@/api/philosophies'
 import type { Framework, ModalityId } from '@/api/types'
+import { MODALITY_IDS } from '@/lib/gen/clientVocab'
 
-const MODALITIES: ModalityId[] = ['max_strength', 'relative_strength', 'strength_endurance', 'power', 'aerobic_base', 'anaerobic_intervals', 'mixed_modal_conditioning', 'durability', 'mobility', 'movement_skill', 'combat_sport', 'rehab']
+// Every modality the commons define (tools/gen_client_vocab.py).
+const MODALITIES: readonly ModalityId[] = MODALITY_IDS
 
 interface SessionRow {
   modality: ModalityId | ''

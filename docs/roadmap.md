@@ -1031,12 +1031,20 @@ Today: the code is package-neutral, the repository is not yet drop-in. In order:
   modalities' `fallback_rank`, which a framework's `fallback_modalities` overrides. Every
   program is what it was: 13 golden hashes changed only because each exercise now echoes
   its `sessions_per_week`, and were re-recorded for those packages.
-- **9.4 Client vocabulary from one file (M–L).** Modality, phase-kind and equipment label,
-  colour and icon in the commons, the TS and Swift tables generated from it as
-  `gen_vocab.py` does the watch's; one equipment enum the four schemas `$ref` (today
-  they and `loader.load_equipment` disagree). Retires the dialogs' `MODALITIES` copies,
-  `outcomeFields.ts` / `SessionLogging.swift`'s slot-type tables and the colour maps —
-  `ModalityDonut` reads `MODALITY_COLORS[m].label` unguarded.
+- **9.4 Client vocabulary from one file (M–L).** Modalities and phase kinds done
+  2026-10-30 (branch `feat/client-vocab`): each modality file and phase kind carries a
+  `display` block (label, complication word, order, colour, the web's tint and shade, the
+  web / phone / watch icons) and `tools/gen_client_vocab.py` writes the web's
+  `lib/gen/clientVocab.ts` and a `ClientVocab.swift` per Apple target, which the colour,
+  icon and phase maps, the builder's order, the authoring dialogs, the widgets and the
+  complication read (`test_client_vocab.py`). Every value is what each client drew, but the
+  phone says "Movement / Skill" (it said "Movement Skill") and the watch complication draws
+  the modality colours instead of the nearest system colours; `ModalityDonut` and the
+  builder's bars no longer crash on a modality the table lacks; `mcp_server.py` lists the
+  modality files. Left: one equipment list the four schemas `$ref` (they and
+  `loader.load_equipment` disagree, the web's `equipment.ts` keeps its own groups), and
+  the slot-type outcome tables (`outcomeFields.ts` / `SessionLogging.swift`, rules
+  beside the table).
 - **9.5 A contract for any implement (M).** The bell-pair wording and
   `requires_kettlebell_pair` generalised to an implement the contract declares.
 - **9.6 Watch capture declared (S–M).** What each template in `watch_vocabulary.json`
