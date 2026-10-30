@@ -30,6 +30,22 @@
       "description": "Minimum hours before this modality can be repeated; between two high-cost modalities the larger of their two, and never under 48 (scheduler.recovery_window, which fidelity audits by).",
       "minimum": 0
     },
+    "priority_tier": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4,
+      "description": "Which modality the scheduler keeps when days are scarce: 1 is kept first, 4 dropped first (3 without one). Read by src/loader.py; it used to be a table in code."
+    },
+    "typical_duration_minutes": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "The session length the scheduler matches to the athlete's long and short days (60 without one)."
+    },
+    "fallback_rank": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Present on the modalities that stand in for a session no archetype serves, in this order (generator._resolve_session). A framework's fallback_modalities overrides the order."
+    },
     "session_position": {
       "type": "string",
       "enum": ["first", "last", "any", "standalone"],

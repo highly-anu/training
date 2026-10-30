@@ -10,20 +10,9 @@ from .output import format_program
 from typing import NamedTuple
 
 
-# Movement patterns → recovery/mobility patterns that address them
-_COMPLEMENTARY_PATTERNS: dict[str, list[str]] = {
-    'squat':            ['hip_flexion', 'knee_extension'],
-    'hip_hinge':        ['hip_flexion', 'hip_hinge'],
-    'horizontal_push':  ['horizontal_pull', 'rotation'],
-    'vertical_push':    ['horizontal_pull', 'rotation'],
-    'horizontal_pull':  ['horizontal_push', 'rotation'],
-    'vertical_pull':    ['vertical_push', 'rotation'],
-    'loaded_carry':     ['rotation', 'hip_flexion'],
-    'locomotion':       ['hip_flexion', 'knee_extension'],
-    'ballistic':        ['hip_flexion', 'knee_extension'],
-    'olympic_lift':     ['hip_flexion', 'rotation'],
-    'isometric':        ['rotation', 'hip_flexion'],
-}
+# Movement patterns → the patterns that recover them (data/commons/movement_patterns.yaml).
+_COMPLEMENTS: dict[str, list[str]] = loader._load_yaml(
+    loader._data_path('commons', 'movement_patterns.yaml')).get('complements') or {}
 
 
 def _select_complementary(
@@ -44,7 +33,7 @@ def _select_complementary(
     # Map to recovery-relevant patterns
     recovery_targets: set[str] = set()
     for p in used_patterns:
-        recovery_targets.update(_COMPLEMENTARY_PATTERNS.get(p, []))
+        recovery_targets.update(_COMPLEMENTS.get(p, []))
 
     if not recovery_targets:
         return []
@@ -131,8 +120,20 @@ def _build_phase_entries(
     return entries
 
 
+def fallback_order(framework: dict | None, modalities: dict) -> tuple:
+    """The modalities that stand in for a session no archetype serves, in
+    order: the framework's `fallback_modalities`, else every modality with a
+    `fallback_rank`, by rank (data/commons/modalities: aerobic base, durability,
+    mobility)."""
+    own = (framework or {}).get('fallback_modalities')
+    if own:
+        return tuple(own)
+    ranked = [(m.get('fallback_rank'), mid) for mid, m in modalities.items() if m.get('fallback_rank')]
+    return tuple(mid for _, mid in sorted(ranked))
+
+
 def _resolve_session(sessions: list, archetypes: list, fallback_archetypes: list,
-                     constraints: dict, phase: str) -> list:
+                     constraints: dict, phase: str, fallbacks: tuple = ()) -> list:
     """
     Replace sessions whose modality has no archetype for the current phase
     with the best available substitute.
@@ -143,14 +144,14 @@ def _resolve_session(sessions: list, archetypes: list, fallback_archetypes: list
               bodyweight/equipment-limited alternative. Marks '_commons_fallback'.
               NOTE: data/commons/ holds no archetypes, so this is NOT a commons pool:
               it is the policy-allowed packages when strict, else the whole library.
-      Pass 3: cross-modality substitution from primary-sources archetypes only.
-              Fallback order: aerobic_base → durability → mobility. Marks
+      Pass 3: cross-modality substitution from primary-sources archetypes only,
+              in `fallbacks`' order (fallback_order: the framework's, else the
+              modalities' fallback_rank — aerobic_base → durability → mobility). Marks
               '_substituted_for' with the modality it replaced, so the session,
               the compromises and the coverage report can say so — it used to
               change the modality and leave no trace.
     If no pass resolves, the session is passed through (produces null archetype output).
     """
-    _FALLBACKS = ('aerobic_base', 'durability', 'mobility')
     resolved = []
     for session in sessions:
         modality = session['modality']
@@ -171,7 +172,7 @@ def _resolve_session(sessions: list, archetypes: list, fallback_archetypes: list
 
         # Pass 3: cross-modality substitution (primary-sources only)
         substituted = False
-        for fallback in _FALLBACKS:
+        for fallback in fallbacks:
             if fallback == modality:
                 continue
             if _has_archetype(fallback, archetypes, constraints, phase):
@@ -682,8 +683,9 @@ def start(goal: dict, constraints: dict, data: dict, lib: dict, policy, injury_f
 
         # Resolve every day first (pure), so the week's tests can be put in
         # place of the sessions they replace before anything is populated.
+        fallbacks = fallback_order(framework, modalities)
         resolved_by_day = {day: _resolve_session(week_schedule[day], archetypes, fallback_archetypes,
-                                                 constraints, phase)
+                                                 constraints, phase, fallbacks)
                            for day in sorted(week_schedule.keys())}
 
         def _populate_test(test_session: dict, arch: dict) -> dict:

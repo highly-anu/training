@@ -317,6 +317,7 @@ exercises:
     advanced: 120
     elite: 150
   weekly_increment_kg: 2.5
+  sessions_per_week: 3
 - id: front_squat
   name: Front Squat
   category: barbell
@@ -369,6 +370,7 @@ exercises:
     advanced: 80
     elite: 110
   weekly_increment_kg: 2.5
+  sessions_per_week: 2
 - id: overhead_squat
   name: Overhead Squat
   category: barbell
@@ -463,6 +465,7 @@ exercises:
     advanced: 150
     elite: 190
   weekly_increment_kg: 5.0
+  sessions_per_week: 1
 - id: romanian_deadlift
   name: Romanian Deadlift
   category: barbell
@@ -728,6 +731,7 @@ exercises:
     advanced: 85
     elite: 110
   weekly_increment_kg: 2.5
+  sessions_per_week: 2
 - id: hang_power_clean
   name: Hang Power Clean
   category: barbell

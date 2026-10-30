@@ -784,6 +784,7 @@ exercises:
 
 # ── The barbell lifts and the rest of the workouts' movements ──────────────────
 - id: deadlift
+  sessions_per_week: 1
   name: Deadlift
   category: barbell
   modality:
@@ -866,6 +867,7 @@ exercises:
   notes: 'A dip and drive of the legs, then press to lockout.'
 
 - id: bench_press
+  sessions_per_week: 2
   name: Bench Press
   category: barbell
   modality:
@@ -954,6 +956,7 @@ exercises:
   notes: 'A wide grip, the bar locked overhead, a full squat.'
 
 - id: front_squat
+  sessions_per_week: 2
   name: Front Squat
   category: barbell
   modality:
@@ -973,6 +976,7 @@ exercises:
   notes: 'The bar in the front rack, a full squat.'
 
 - id: back_squat
+  sessions_per_week: 3
   name: Back Squat
   category: barbell
   modality:

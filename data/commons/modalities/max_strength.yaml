@@ -7,6 +7,11 @@ recovery_hours_min: 48
 
 session_position: first
 
+# Kept when days are scarce: 1 first, 4 dropped first (scheduler.allocate_sessions).
+priority_tier: 1
+# The session length it is matched to a long or short day by (scheduler).
+typical_duration_minutes: 60
+
 compatible_in_session_with:
   - mobility
   - movement_skill

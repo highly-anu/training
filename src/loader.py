@@ -50,61 +50,17 @@ def load_all_frameworks() -> dict:
     return result
 
 
-# Modality priority tiers for intelligent dropping when availability is limited
-# Lower tier number = higher priority (kept when days are scarce)
-MODALITY_PRIORITY_TIERS = {
-    # Tier 1: Foundational - never drop (aerobic capacity, progressive overload)
-    'aerobic_base': 1,
-    'max_strength': 1,
-
-    # Tier 2: Progressive overload - drop only if <3 days
-    'power': 2,
-    'relative_strength': 2,
-    'strength_endurance': 2,
-    'anaerobic_intervals': 2,
-
-    # Tier 3: Supportive - drop if <4 days
-    'durability': 3,
-    'mixed_modal_conditioning': 3,
-
-    # Tier 4: Accessory - drop if <5 days
-    'mobility': 4,
-    'movement_skill': 4,
-    'rehab': 4,
-    'skill_work': 4,
-}
-
-# Typical session durations per modality (for matching to user's long/short slots)
-MODALITY_TYPICAL_DURATIONS = {
-    'aerobic_base': 75,          # Long endurance sessions
-    'anaerobic_intervals': 45,   # Time-efficient conditioning
-    'max_strength': 60,          # Moderate gym sessions
-    'power': 45,                 # Shorter explosive work
-    'relative_strength': 50,     # Bodyweight strength
-    'strength_endurance': 50,    # Moderate endurance work
-    'durability': 60,            # Loaded carries, rucks
-    'mixed_modal_conditioning': 50,  # Mixed work
-    'mobility': 30,              # Accessory work
-    'movement_skill': 30,        # Skill practice
-    'rehab': 20,                 # Prehab/recovery
-    'skill_work': 30,            # Technical practice
-}
-
-
 def load_all_modalities() -> dict:
-    """Return dict of modality_id -> modality data with priority_tier and typical_duration_minutes."""
+    """Return dict of modality_id -> modality data. A modality's file says its
+    `priority_tier` (kept when days are scarce, 1 first; 3 without one) and its
+    `typical_duration_minutes` (60 without one) — a table in this module used to
+    set them over the file."""
     result = {}
     for path in sorted(glob.glob(os.path.join(_COMMONS_DIR, 'modalities', '*.yaml'))):
         mod = _load_yaml(path)
-        mod_id = mod['id']
-
-        # Add priority tier (default to 3 if not specified)
-        mod['priority_tier'] = MODALITY_PRIORITY_TIERS.get(mod_id, 3)
-
-        # Add typical duration (default to 60min if not specified)
-        mod['typical_duration_minutes'] = MODALITY_TYPICAL_DURATIONS.get(mod_id, 60)
-
-        result[mod_id] = mod
+        mod.setdefault('priority_tier', 3)
+        mod.setdefault('typical_duration_minutes', 60)
+        result[mod['id']] = mod
     return result
 
 

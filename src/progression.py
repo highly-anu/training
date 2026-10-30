@@ -11,16 +11,10 @@ from . import phases
 # every exercise they named carries the fields in its package.
 _DEFAULT_INCREMENT_KG = 2.5
 
-# Sessions/week that drive load progression for each exercise (approx)
-_SESSIONS_PER_WEEK: dict[str, int] = {
-    'back_squat': 3,
-    'front_squat': 2,
-    'deadlift': 1,
-    'strict_press': 2,
-    'bench_press': 2,
-    'power_clean': 2,
-    '_default': 2,
-}
+# How often a lift is trained a week, which multiplies its weekly increment
+# into a linear load: the exercise's `sessions_per_week` in its package, this
+# without one (a table here keyed six shared lifts until 2026-10-30).
+_DEFAULT_SESSIONS_PER_WEEK = 2
 
 # RPE → load factor relative to a "comfortable working weight" baseline (RPE 8)
 # Used to suggest a starting weight when exercise has starting_load_kg data
@@ -43,10 +37,9 @@ def _round_kg(kg: float, step: float = 2.5) -> float:
 
 def _linear_load(exercise: dict, slot: dict, week: int,
                  level: str, is_deload: bool, deload_keep: float | None = None) -> dict:
-    ex_id = exercise.get('id', '')
     start = (exercise.get('starting_load_kg') or {}).get(level)
     increment = exercise.get('weekly_increment_kg') or _DEFAULT_INCREMENT_KG
-    sessions_pw = _SESSIONS_PER_WEEK.get(ex_id, _SESSIONS_PER_WEEK['_default'])
+    sessions_pw = exercise.get('sessions_per_week') or _DEFAULT_SESSIONS_PER_WEEK
 
     sets = slot.get('sets', 3)
     reps = slot.get('reps', 5)

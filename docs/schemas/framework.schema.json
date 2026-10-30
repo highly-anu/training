@@ -369,6 +369,12 @@
         }
       }
     },
+    "fallback_modalities": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1,
+      "description": "The modalities that stand in, in order, for a session no archetype of its own modality serves (src/generator.py fallback_order). Without it, every modality with a fallback_rank, by rank."
+    },
     "allocation_mode": {
       "type": "string",
       "description": "How sessions_per_week is applied. 'exclusive' allocates only the listed modalities. Read by src/scheduler.py.",

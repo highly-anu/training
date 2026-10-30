@@ -41,54 +41,6 @@
       "status": "open"
     },
     {
-      "id": "modality_tiers",
-      "title": "A modality's priority tier and typical duration are code, applied over its YAML",
-      "kind": "code",
-      "impact": "degrades",
-      "detail": "A modality file cannot set them; combat_sport is missing (tier 3, 60 min) and skill_work names no modality.",
-      "anchors": [
-        "src/loader.py::MODALITY_PRIORITY_TIERS",
-        "src/loader.py::MODALITY_TYPICAL_DURATIONS"
-      ],
-      "roadmap": "9.3",
-      "status": "open"
-    },
-    {
-      "id": "sessions_per_week_table",
-      "title": "How often an exercise is trained a week is a table keyed by shared lifts",
-      "kind": "code",
-      "impact": "degrades",
-      "anchors": [
-        "src/progression.py::_SESSIONS_PER_WEEK"
-      ],
-      "roadmap": "9.3",
-      "status": "open"
-    },
-    {
-      "id": "pattern_tables",
-      "title": "Complementary movement patterns and the category → equipment map are code",
-      "kind": "code",
-      "impact": "degrades",
-      "anchors": [
-        "src/generator.py::_COMPLEMENTARY_PATTERNS",
-        "src/selector.py::_blocked_categories_for_equipment"
-      ],
-      "roadmap": "9.3",
-      "status": "open"
-    },
-    {
-      "id": "fallback_modalities",
-      "title": "The cross-modality fallback order is code",
-      "kind": "code",
-      "impact": "degrades",
-      "detail": "aerobic_base → durability → mobility for every framework.",
-      "anchors": [
-        "src/generator.py::_FALLBACKS"
-      ],
-      "roadmap": "9.3",
-      "status": "open"
-    },
-    {
       "id": "equipment_list",
       "title": "Equipment is enumerated in four schemas and two code lists that disagree",
       "kind": "client",
@@ -199,12 +151,13 @@
       "title": "Scheduling and load constants are code",
       "kind": "code",
       "impact": "cosmetic",
-      "detail": "Recovery-cost ranks, the 48 h floor between two high-cost modalities, RPE load factors and the progression defaults (2.5 kg increment, 3 × 5) are the engine's, the same for every package.",
+      "detail": "Recovery-cost ranks, the 48 h floor between two high-cost modalities, RPE load factors and the progression defaults (2.5 kg increment, 3 × 5, two sessions a week) are the engine's, the same for every package.",
       "anchors": [
         "src/scheduler.py::_RECOVERY_COST_RANK",
         "src/scheduler.py::_HIGH_COST_FLOOR_HOURS",
         "src/progression.py::_RPE_LOAD_FACTOR",
-        "src/progression.py::_DEFAULT_INCREMENT_KG"
+        "src/progression.py::_DEFAULT_INCREMENT_KG",
+        "src/progression.py::_DEFAULT_SESSIONS_PER_WEEK"
       ],
       "roadmap": null,
       "status": "by_design"

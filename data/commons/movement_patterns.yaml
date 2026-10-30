@@ -40,3 +40,19 @@ aliases:
   step_up:         {mode: or,       patterns: [step_up]}
   # Ruck: locomotion-based loaded carry (excludes static farmer/rack carries)
   ruck:            {mode: and,      patterns: [locomotion, loaded_carry]}
+
+# The patterns that recover a pattern a session loaded: a session's
+# complementary mobility block takes mobility and rehab exercises that move
+# these (src/generator.py _select_complementary).
+complements:
+  squat:           [hip_flexion, knee_extension]
+  hip_hinge:       [hip_flexion, hip_hinge]
+  horizontal_push: [horizontal_pull, rotation]
+  vertical_push:   [horizontal_pull, rotation]
+  horizontal_pull: [horizontal_push, rotation]
+  vertical_pull:   [vertical_push, rotation]
+  loaded_carry:    [rotation, hip_flexion]
+  locomotion:      [hip_flexion, knee_extension]
+  ballistic:       [hip_flexion, knee_extension]
+  olympic_lift:    [hip_flexion, rotation]
+  isometric:       [rotation, hip_flexion]
