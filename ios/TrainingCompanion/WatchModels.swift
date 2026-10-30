@@ -191,6 +191,10 @@ struct ProgramSession: Codable {
     /// by the server on every read and never stored, so it rides in `extra`.
     var icon: String? { extra["icon"]?.stringValue }
 
+    /// Added by the athlete on the fly (`POST /sessions/generate` `add`): an
+    /// extra that counts only once done, and the only kind that can be removed.
+    var isAdded: Bool { if case .bool(true)? = extra["added"] { return true }; return false }
+
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         modality = try c.decode(String.self, forKey: .modality)
@@ -589,6 +593,11 @@ struct GenerateSessionRequest: Encodable {
     var frameworkId: String? = nil
     /// A composed program's session's track (`SubstituteRequest.laneKey`).
     var laneKey: String? = nil
+    /// An extra the athlete adds (a rest day's mobility): any package, never
+    /// refused by a contract or a template day; the answer comes back `added`.
+    var add: Bool? = nil
+    /// Try Again when adding: another session than this one.
+    var currentArchetypeId: String? = nil
     enum CodingKeys: String, CodingKey {
         case primarySources = "primary_sources"
         case modality, phase
@@ -599,6 +608,8 @@ struct GenerateSessionRequest: Encodable {
         case phaseId        = "phase_id"
         case frameworkId    = "framework_id"
         case laneKey        = "lane_key"
+        case add
+        case currentArchetypeId = "current_archetype_id"
     }
 }
 

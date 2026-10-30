@@ -1984,9 +1984,32 @@ def _week_phase_rules(body: dict, philosophy_ids) -> tuple[frozenset, float | No
     return frozenset(rules['exclude_exercises']), keep
 
 
+def _added_provenance(arch: dict) -> dict | None:
+    """The package an added session came from, borrowed when it is not one of
+    the stored program's (the web badges it "via <label>")."""
+    pkg = (arch or {}).get('_package')
+    if not pkg:
+        return None
+    try:
+        from src.db import get_user_program
+        goal = ((get_user_program(g.user_id) or {}).get('currentProgram') or {}).get('goal') or {}
+    except Exception:
+        goal = {}
+    if pkg in (goal.get('primary_sources') or []):
+        return {'package': pkg, 'borrowed': False}
+    name = next((p.get('name') for p in loader.load_philosophies() if p.get('id') == pkg), None)
+    return {'package': pkg, 'borrowed': True, **({'label': name} if name else {})}
+
+
 def _generate_session_inner(body):
+    # `add`: a session the athlete adds on the fly (a rest day's mobility).
+    # It touches no contract module and no template day, so neither refuses
+    # it, and it may come from any package (badged when not the program's).
+    add = bool(body.get('add'))
     primary_sources = body.get('primary_sources', [])  # Philosophy IDs
-    if body.get('lane_key'):
+    if add:
+        primary_sources = []
+    elif body.get('lane_key'):
         # A composed program's session: its own track's package.
         primary_sources = [body['lane_key'].split('/')[0]]
     modality = body.get('modality')
@@ -2045,12 +2068,42 @@ def _generate_session_inner(body):
         # Use the archetype's own modality — the request modality is the session being replaced
         modality = forced_arch.get('modality', modality)
 
-    if _stored_contract(body.get('lane_key'), (forced_arch or {}).get('_package')):
+    if not add and _stored_contract(body.get('lane_key'), (forced_arch or {}).get('_package')):
         return jsonify({'detail': 'Regenerate this contract program to replace a module while preserving its progression.'}), 422
     phase_excluded, deload_keep = _week_phase_rules(body, primary_sources)
     session_stub = {'modality': modality, 'is_deload': is_deload}
     framework = loader.load_all_frameworks().get(body.get('framework_id')) or {}
-    if forced_arch is None and framework.get('categories'):
+    pick_phase = phase
+    if add and forced_arch is None:
+        # Every session of the kind, named workouts included (the library's
+        # mobility is all ATG's and Kelly Starrett's own days, which the
+        # selector never picks by modality): those the athlete can do as
+        # written, in any phase they name, within the session's time (else the
+        # shortest), one at random so Try Again offers another.
+        import random
+        from src import standard_tests
+        from src.generator import _fits_as_written
+        def _probe_add(a, kind):
+            return populate_session({'modality': a.get('modality')}, goal, constraints, lib['exercises'],
+                                    archetypes_filtered, merged_injury_flags, kind, week_in_phase,
+                                    forced_archetype=a, exercises_by_package=lib.get('exercises_by_package'),
+                                    policy=policy, level_seeds=lib.get('level_seeds'),
+                                    exclude_exercise_ids=phase_excluded, pinned_lifts=None, unfilled_cache={})
+        fits = []
+        for a in archetypes_filtered:
+            if a.get('modality') != modality or standard_tests.is_test_only(a):
+                continue
+            kinds = a.get('applicable_phases') or [phase]
+            kind = phase if phase in kinds else kinds[0]
+            if _fits_as_written(a, constraints, kind, lambda x, k=kind: _probe_add(x, k)):
+                fits.append((a, kind))
+        if fits:
+            minutes = constraints.get('session_time_minutes') or 75
+            pool = [f for f in fits if (f[0].get('duration_estimate_minutes') or 0) <= minutes] \
+                or [min(fits, key=lambda f: f[0].get('duration_estimate_minutes') or 0)]
+            pool = [f for f in pool if f[0].get('id') != body.get('current_archetype_id')] or pool
+            forced_arch, pick_phase = random.choice(pool)
+    if not add and forced_arch is None and framework.get('categories'):
         # A templated day (Horsemen's): another named workout of its category,
         # as written, never a generic session of the modality.
         import random
@@ -2076,7 +2129,7 @@ def _generate_session_inner(body):
     populated = populate_session(
         session_stub, goal, constraints,
         lib['exercises'], archetypes_filtered,
-        merged_injury_flags, phase, week_in_phase,
+        merged_injury_flags, pick_phase, week_in_phase,
         forced_archetype=forced_arch,
         exercises_by_package=lib.get('exercises_by_package'),
         policy=policy,
@@ -2086,10 +2139,15 @@ def _generate_session_inner(body):
     )
 
     if populated.get('archetype') is None:
+        if add:
+            return jsonify({'detail': f"No {modality.replace('_', ' ')} session fits your level, "
+                                      f"equipment, injuries and time."}), 422
         return jsonify({'detail': f'No archetype found for {modality!r} in phase {phase!r}'}), 422
 
     # Apply progression loads
     prog_model = _prog_model_for(modality, body, data)
+    if add and (populated.get('archetype') or {}).get('pool_only'):
+        prog_model = 'as_written'   # another package's named workout: its own load text
     if prog_model == 'as_written' and not (populated.get('archetype') or {}).get('pool_only'):
         # As written means the source's own workouts; any other archetype
         # keeps its modality's model (it has no load text to show).
@@ -2115,6 +2173,8 @@ def _generate_session_inner(body):
         'modality':  modality,
         'archetype': arch,
         **({'icon': icon} if icon else {}),
+        # An extra: counted only once done (analytics.context.Context.sessions).
+        **({'added': True, 'provenance': _added_provenance(arch)} if add else {}),
         'is_deload': is_deload,
         **{k: populated[k] for k in ('category', 'category_name', 'pieces', 'warm_up') if populated.get(k)},
         'duration_min': arch.get('duration_estimate_minutes') if arch else None,
@@ -4222,8 +4282,10 @@ def _watch_progress(user_id: str, program: dict, weeks: list, start: _date, toda
             d = start + _timedelta(days=w_index * 7 + offset)
             d_name = _DAY_NAMES[d.weekday()]
             for i, _s in enumerate((w.get('schedule') or {}).get(d_name) or []):
-                total += 1
                 finished = is_done(w_index, d_name, i)
+                if (_s or {}).get('added') and not finished:
+                    continue   # an extra counts once done (analytics.context.Context.sessions)
+                total += 1
                 done += int(finished)
                 if until is None or d <= until or finished:
                     due += 1

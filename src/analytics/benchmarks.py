@@ -106,8 +106,8 @@ def scheduled_exercises(weeks: list[dict]) -> set[str]:
     for w in weeks:
         for sessions in (w.get('schedule') or {}).values():
             for sess in sessions or []:
-                if not isinstance(sess, dict):
-                    continue
+                if not isinstance(sess, dict) or sess.get('added'):
+                    continue   # an extra the athlete added is not the program's
                 for ea in sess.get('exercises') or []:
                     ex = (ea or {}).get('exercise') if isinstance(ea, dict) else None
                     if isinstance(ex, dict) and ex.get('id') and not ea.get('injury_skip'):
@@ -135,8 +135,8 @@ def program_standards(goal: dict, weeks: list[dict], specs: list,
     for w in weeks:
         for sessions in (w.get('schedule') or {}).values():
             for sess in sessions or []:
-                if not isinstance(sess, dict):
-                    continue
+                if not isinstance(sess, dict) or sess.get('added'):
+                    continue   # an extra the athlete added is not the program's
                 ids = [_standard_ref(x) for x in ((sess.get('test') or {}).get('standards') or [])]
                 ids += [_standard_ref(ea.get('standard')) for ea in (sess.get('exercises') or []) if isinstance(ea, dict)]
                 for sid in filter(None, ids):

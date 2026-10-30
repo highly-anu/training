@@ -1,11 +1,24 @@
 import SwiftUI
 
+/// Replace a planned session, or (`mode: .add`) add one on the fly to today or
+/// a later day — a rest day's mobility (design-system §6.43). An added session
+/// may come from any package, and counts only once it is done.
 struct ReplaceWorkoutSheet: View {
+    enum Mode { case replace, add }
+
     let api: APIClient
     let weekIndex: Int
     let dayName: String
-    let sessionIndex: Int
-    let session: ProgramSession
+    var sessionIndex: Int = 0
+    /// The session replaced; none when adding.
+    var session: ProgramSession? = nil
+    var mode: Mode = .replace
+
+    /// The kinds offered when adding: what a rest day usually takes.
+    static let addKinds = ["mobility", "movement_skill", "aerobic_base", "durability", "rehab"]
+    @State private var kind = "mobility"
+    private var adding: Bool { mode == .add }
+    private var modality: String { adding ? kind : (session?.modality ?? kind) }
 
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
@@ -39,11 +52,11 @@ struct ReplaceWorkoutSheet: View {
     private var filtered: [AppArchetype] {
         let q = searchQuery.lowercased()
         return archetypes
-            .filter { !sameModalityOnly || $0.modality == session.modality }
+            .filter { !sameModalityOnly || $0.modality == modality }
             .filter { q.isEmpty || $0.name.lowercased().contains(q) || $0.category.lowercased().contains(q) }
             .sorted {
-                let aMatch = $0.modality == session.modality ? 0 : 1
-                let bMatch = $1.modality == session.modality ? 0 : 1
+                let aMatch = $0.modality == modality ? 0 : 1
+                let bMatch = $1.modality == modality ? 0 : 1
                 return aMatch != bMatch ? aMatch < bMatch : $0.name < $1.name
             }
     }
@@ -73,7 +86,7 @@ struct ReplaceWorkoutSheet: View {
                     errorBanner(error)
                 }
             }
-            .navigationTitle("Replace Workout")
+            .navigationTitle(adding ? "Add a Session" : "Replace Workout")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -81,6 +94,7 @@ struct ReplaceWorkoutSheet: View {
                 }
             }
             .task {
+                if adding { selectedTab = .generate }
                 guard archetypes.isEmpty else { return }
                 isLoadingArchetypes = true
                 archetypes = (try? await api.fetchArchetypes()) ?? []
@@ -174,10 +188,25 @@ struct ReplaceWorkoutSheet: View {
 
     private var generateTab: some View {
         Form {
-            Section("Current Workout") {
-                Text(session.archetype?.name
-                     ?? session.modality.replacingOccurrences(of: "_", with: " ").capitalized)
-                    .foregroundStyle(.secondary)
+            if adding {
+                Section {
+                    Picker("Kind", selection: $kind) {
+                        ForEach(Self.addKinds, id: \.self) { k in
+                            Label(ModalityStyle.label(for: k), systemImage: ModalityStyle.icon(for: k)).tag(k)
+                        }
+                    }
+                    .onChange(of: kind) { _, _ in preview = nil; generateError = nil; selectedArchId = nil }
+                } header: {
+                    Text(dayName)
+                } footer: {
+                    Text("An extra: it counts once you do it, and you can remove it.")
+                }
+            } else if let session {
+                Section("Current Workout") {
+                    Text(session.archetype?.name
+                         ?? session.modality.replacingOccurrences(of: "_", with: " ").capitalized)
+                        .foregroundStyle(.secondary)
+                }
             }
 
             Section("Settings") {
@@ -211,7 +240,8 @@ struct ReplaceWorkoutSheet: View {
                             Text("Generating…")
                         }
                     } else {
-                        Label("Generate Session", systemImage: "arrow.2.circlepath")
+                        Label(adding ? "Find a \(ModalityStyle.label(for: kind).lowercased()) session" : "Generate Session",
+                              systemImage: adding ? "plus.circle" : "arrow.2.circlepath")
                     }
                 }
                 .disabled(isGenerating)
@@ -243,15 +273,23 @@ struct ReplaceWorkoutSheet: View {
                                 Text("· \(count) exercises").font(.caption).foregroundStyle(.secondary)
                             }
                         }
+                        if let via = Self.borrowedLabel(p) {
+                            Text("via \(via)").font(.caption2).foregroundStyle(.secondary)
+                        }
                     }
                     Spacer()
                 }
 
                 HStack(spacing: 8) {
                     Button {
+                        let current = p.archetype?.id
                         preview = nil
-                        selectedArchId = nil
                         generateError = nil
+                        // Adding without a pick: another session of the kind straight away.
+                        if adding && selectedArchId == nil {
+                            Task { await generateSession(excluding: current) }
+                        }
+                        selectedArchId = nil
                     } label: {
                         Text("Try Again")
                             .frame(maxWidth: .infinity)
@@ -259,11 +297,15 @@ struct ReplaceWorkoutSheet: View {
                     .buttonStyle(.bordered)
 
                     Button {
-                        appState.replaceSession(weekIndex: weekIndex, day: dayName,
-                                                sessionIndex: sessionIndex, session: p)
+                        if adding {
+                            appState.addSession(weekIndex: weekIndex, day: dayName, session: p)
+                        } else {
+                            appState.replaceSession(weekIndex: weekIndex, day: dayName,
+                                                    sessionIndex: sessionIndex, session: p)
+                        }
                         dismiss()
                     } label: {
-                        Text("Confirm Replace")
+                        Text(adding ? "Add Session" : "Confirm Replace")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
@@ -284,60 +326,64 @@ struct ReplaceWorkoutSheet: View {
         }
     }
 
+    /// "Kelly Starrett / Built to Move" for a session borrowed from another package.
+    static func borrowedLabel(_ p: ProgramSession) -> String? {
+        guard case .object(let o)? = p.extra["provenance"], case .bool(true)? = o["borrowed"] else { return nil }
+        return o["label"]?.stringValue ?? o["package"]?.stringValue?.replacingOccurrences(of: "_", with: " ")
+    }
+
+    private func message(_ error: Error) -> String {
+        if case APIError.serverErrorDetail(_, let text) = error { return text }
+        return error.localizedDescription
+    }
+
     // MARK: - Network
+
+    private func request(modality: String, archetypeId: String?, minutes: Int,
+                         excluding: String? = nil) -> GenerateSessionRequest {
+        let week = appState.serverProgram?.currentProgram?.weeks[safe: weekIndex]
+        var r = GenerateSessionRequest(
+            primarySources: [],
+            modality: modality,
+            // A composed program's session runs its own track's phase.
+            phase: session?.lanePhase ?? week?.phase ?? "base",
+            weekInPhase: session?.laneWeekInPhase ?? weekIndex + 1,
+            isDeload: session?.laneKey != nil ? (session?.isDeload ?? false) : (week?.isDeload ?? false),
+            constraints: GenerateSessionConstraints(sessionTimeMinutes: minutes,
+                                                    fatigueState: fatigueState.rawValue),
+            archetypeId: archetypeId,
+            phaseId: session?.lanePhaseId ?? week?.phaseId,
+            frameworkId: session?.laneFramework ?? week?.frameworkId,
+            laneKey: adding ? nil : session?.laneKey
+        )
+        if adding {
+            r.add = true
+            r.currentArchetypeId = excluding
+        }
+        return r
+    }
 
     private func generateWithArchetype(_ arch: AppArchetype) async {
         isGenerating = true
         defer { isGenerating = false }
-        let week = appState.serverProgram?.currentProgram?.weeks[safe: weekIndex]
-        let request = GenerateSessionRequest(
-            primarySources: [],
-            modality: arch.modality,
-            // A composed program's session runs its own track's phase.
-            phase: session.lanePhase ?? week?.phase ?? "base",
-            weekInPhase: session.laneWeekInPhase ?? weekIndex + 1,
-            isDeload: session.laneKey != nil ? session.isDeload : (week?.isDeload ?? false),
-            constraints: GenerateSessionConstraints(
-                sessionTimeMinutes: arch.durationEstimateMinutes ?? Int(sessionMinutes),
-                fatigueState: fatigueState.rawValue
-            ),
-            archetypeId: arch.id,
-            phaseId: session.lanePhaseId ?? week?.phaseId,
-            frameworkId: session.laneFramework ?? week?.frameworkId,
-            laneKey: session.laneKey
-        )
         do {
-            preview = try await api.generateSession(request)
+            preview = try await api.generateSession(
+                request(modality: arch.modality, archetypeId: arch.id,
+                        minutes: arch.durationEstimateMinutes ?? Int(sessionMinutes)))
         } catch {
-            generateError = error.localizedDescription
+            generateError = message(error)
             selectedArchId = nil
         }
     }
 
-    private func generateSession() async {
+    private func generateSession(excluding: String? = nil) async {
         isGenerating = true
         defer { isGenerating = false }
-        let week = appState.serverProgram?.currentProgram?.weeks[safe: weekIndex]
-        let request = GenerateSessionRequest(
-            primarySources: [],
-            modality: session.modality,
-            // A composed program's session runs its own track's phase.
-            phase: session.lanePhase ?? week?.phase ?? "base",
-            weekInPhase: session.laneWeekInPhase ?? weekIndex + 1,
-            isDeload: session.laneKey != nil ? session.isDeload : (week?.isDeload ?? false),
-            constraints: GenerateSessionConstraints(
-                sessionTimeMinutes: Int(sessionMinutes),
-                fatigueState: fatigueState.rawValue
-            ),
-            archetypeId: nil,
-            phaseId: session.lanePhaseId ?? week?.phaseId,
-            frameworkId: session.laneFramework ?? week?.frameworkId,
-            laneKey: session.laneKey
-        )
         do {
-            preview = try await api.generateSession(request)
+            preview = try await api.generateSession(
+                request(modality: modality, archetypeId: nil, minutes: Int(sessionMinutes), excluding: excluding))
         } catch {
-            generateError = error.localizedDescription
+            generateError = message(error)
         }
     }
 }

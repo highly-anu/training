@@ -16,9 +16,12 @@ interface WeekCalendarProps {
   /** A draft program (the preview): sessions open through this, logs are not read. */
   onOpenSession?: (day: string, sessionIndex: number) => void
   isHighlighted?: (day: string, sessionIndex: number) => boolean
+  /** The days that may take an added session (today and later), and what adds one. */
+  canAdd?: (day: string) => boolean
+  onAddSession?: (day: string) => void
 }
 
-export function WeekCalendar({ weekData, isCurrentWeek, onOpenSession, isHighlighted }: WeekCalendarProps) {
+export function WeekCalendar({ weekData, isCurrentWeek, onOpenSession, isHighlighted, canAdd, onAddSession }: WeekCalendarProps) {
   const today = getTodayName()
 
   return (
@@ -33,6 +36,7 @@ export function WeekCalendar({ weekData, isCurrentWeek, onOpenSession, isHighlig
             isToday={isCurrentWeek && day === today}
             onOpenSession={onOpenSession ? (i) => onOpenSession(day, i) : undefined}
             isHighlighted={isHighlighted ? (i) => isHighlighted(day, i) : undefined}
+            onAdd={onAddSession && canAdd?.(day) ? () => onAddSession(day) : undefined}
           />
         ))}
       </div>

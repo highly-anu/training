@@ -31,6 +31,10 @@ final class WatchSessionManager: NSObject, ObservableObject {
             WCSession.default.delegate = self
             WCSession.default.activate()
         }
+        // A saved edit (an added session, a move) goes to the Watch at once.
+        NotificationCenter.default.addObserver(forName: .programSaved, object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor in await self?.syncProgram() }
+        }
     }
 
     // MARK: - Program sync
@@ -351,4 +355,6 @@ extension Notification.Name {
     static let watchStateDidChange = Notification.Name("watchStateDidChange")
     /// The server has a session the Apple Watch recorded (object: its key).
     static let watchWorkoutStored = Notification.Name("watchWorkoutStored")
+    /// The program was saved to the server (an edit): the Watch's day may have changed.
+    static let programSaved = Notification.Name("programSaved")
 }

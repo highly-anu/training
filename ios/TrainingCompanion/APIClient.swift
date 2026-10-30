@@ -738,8 +738,14 @@ final class APIClient {
         _ = try await putRaw("/health/sessions/\(sessionKey)", body: body)
     }
 
+    /// One session for a slot, or an added one (`request.add`). A refusal
+    /// carries the server's sentence ("No mobility session fits your level…").
     func generateSession(_ request: GenerateSessionRequest) async throws -> ProgramSession {
-        return try await post("/sessions/generate", body: request)
+        let (data, status) = try await postForStatus("/sessions/generate", body: try JSONEncoder().encode(request))
+        guard (200..<300).contains(status) else {
+            throw APIError.serverErrorDetail(status, Self.detail(from: data) ?? "Could not generate a session")
+        }
+        return try JSONDecoder().decode(ProgramSession.self, from: data)
     }
 
     /// Thrown when the server rejects a program write as based on a stale read.

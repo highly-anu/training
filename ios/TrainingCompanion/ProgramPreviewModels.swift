@@ -224,6 +224,44 @@ enum ProgramEdits {
         return GeneratedProgram(weeks: weeks, extra: program.extra)
     }
 
+    /// A session the athlete adds on the fly, after the day's others (an empty
+    /// day's first), marked `added`. Indices already on the day keep their
+    /// place, so logs keyed by them still point at their sessions.
+    static func addingSession(in program: GeneratedProgram, weekIndex: Int, day: String,
+                              session: ProgramSession) -> GeneratedProgram {
+        guard program.weeks.indices.contains(weekIndex) else { return program }
+        var extra = session.extra
+        extra["added"] = .bool(true)
+        let added = ProgramSession(modality: session.modality, archetype: session.archetype,
+                                   isDeload: session.isDeload, exercises: session.exercises, extra: extra)
+        return withSessions(in: program, weekIndex: weekIndex, day: day) { $0 + [added] }
+    }
+
+    /// Removes a session the athlete added; a planned session is never removed.
+    static func removingSession(in program: GeneratedProgram, weekIndex: Int, day: String,
+                                sessionIndex: Int) -> GeneratedProgram {
+        guard program.weeks[safe: weekIndex]?.schedule[day]?[safe: sessionIndex]?.isAdded == true else {
+            return program
+        }
+        return withSessions(in: program, weekIndex: weekIndex, day: day) { sessions in
+            var out = sessions
+            out.remove(at: sessionIndex)
+            return out
+        }
+    }
+
+    private static func withSessions(in program: GeneratedProgram, weekIndex: Int, day: String,
+                                     _ change: ([ProgramSession]) -> [ProgramSession]) -> GeneratedProgram {
+        var weeks = program.weeks
+        let week = weeks[weekIndex]
+        var schedule = week.schedule
+        schedule[day] = change(week.schedule[day] ?? [])
+        weeks[weekIndex] = ProgramWeek(weekNumber: week.weekNumber, weekInPhase: week.weekInPhase,
+                                       isDeload: week.isDeload, phase: week.phase, schedule: schedule,
+                                       extra: week.extra)
+        return GeneratedProgram(weeks: weeks, extra: program.extra)
+    }
+
     static func replacingExercise(in program: GeneratedProgram, weekIndex: Int, day: String,
                                   sessionIndex: Int, exerciseIndex: Int,
                                   with assignment: ProgramExerciseAssignment) -> GeneratedProgram {

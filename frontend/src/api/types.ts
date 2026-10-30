@@ -505,6 +505,9 @@ export interface Session {
   provenance?: SessionProvenance | null
   /** A test of the phase's standards, put in place of a session (src/generator._plan_week_tests). */
   test?: SessionTest
+  /** Added by the athlete on the fly (POST /sessions/generate `add`): an extra that
+   *  counts only once done, and the only kind of session that can be removed. */
+  added?: boolean
   /** The modality this session was scheduled in place of (no archetype for it). */
   substituted_for?: string
   /** Why: no archetype of that modality for the athlete's level, or for this phase. */

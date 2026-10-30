@@ -23,6 +23,8 @@ import { usePhilosophies } from '@/api/philosophies'
 import { cn } from '@/lib/utils'
 import type { CustomInjuryFlag, InjuryFlagId, TrainingPhase } from '@/api/types'
 import { regenerateSource, tailResume } from '@/lib/programSource'
+import { sessionCalendarDate } from '@/lib/workoutMatcher'
+import { ReplaceSessionSheet } from '@/components/session/ReplaceSessionSheet'
 
 type ProgramTab = 'overview' | 'calendar' | 'history'
 // Overview leads since 2026-10-17, the same order as the phone's (information-architecture.md §2).
@@ -74,6 +76,12 @@ export function ProgramView() {
   const currentWeekData = program?.weeks[weekIndex]
   const { segments, totalWeeks } = usePhaseCalendar(program ?? undefined, weekIndex + 1)
   const regenerate = useRegeneratePreview()
+  // A session added on the fly: today or a later day (a past day would switch
+  // the program's version; src/program_history.carry_over_until).
+  const [addTarget, setAddTarget] = useState<{ weekIndex: number; day: string } | null>(null)
+  const todayIso = format(new Date(), 'yyyy-MM-dd')
+  const canAddOn = (weekIdx: number, day: string) =>
+    !!programStartDate && sessionCalendarDate(programStartDate, weekIdx, day) >= todayIso
 
   // Which array index is the real current calendar week?
   const currentCalendarWeekIdx = useMemo(() => {
@@ -248,7 +256,9 @@ export function ProgramView() {
                     </span>
                   )}
                 </div>
-                <WeekCalendar weekData={weekData} isCurrentWeek={idx === currentCalendarWeekIdx} />
+                <WeekCalendar weekData={weekData} isCurrentWeek={idx === currentCalendarWeekIdx}
+                  canAdd={(day) => canAddOn(idx, day)}
+                  onAddSession={(day) => setAddTarget({ weekIndex: idx, day })} />
               </div>
             ))}
           </div>
@@ -305,6 +315,11 @@ export function ProgramView() {
           </div>
         </SheetContent>
       </Sheet>
+      {addTarget && program.weeks[addTarget.weekIndex] && (
+        <ReplaceSessionSheet open mode="add" onOpenChange={(o) => !o && setAddTarget(null)}
+          weekIndex={addTarget.weekIndex} weekData={program.weeks[addTarget.weekIndex]}
+          day={addTarget.day} program={program} />
+      )}
     </motion.div>
   )
 }

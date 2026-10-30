@@ -55,6 +55,7 @@ suites:
   - test_progression_review.py
   # The watches
   - test_today_session.py
+  - test_added_sessions.py
   - test_last_time.py
   # Standards
   - test_standards.py

@@ -2013,3 +2013,24 @@ replaced, on 2026-10-23, the measure cards' sparklines, `MeasureDetailView`'s
 chart, and the Exercises section with its `ExerciseHistoryView` screen
 (`/progression/exercises`, which stays for installed builds).
 
+### 6.43 Session Actions (long press)
+
+`Views/SessionActions.swift`, applied with `.sessionActions(weekIndex:dayName:sessionIndex:)`:
+the program's edits live in a long-press context menu, not on cards or the detail screen.
+On Today's session card and Program ▸ Calendar's day row it offers, per session, **Move to
+Another Day** (`MoveWorkoutSheet`), **Replace** (`ReplaceWorkoutSheet`) and, for a session the
+athlete added that is not done, **Remove Added Session** (destructive); a calendar row with
+several sessions groups them in sections by name. Today or a later day also offers **Add
+Session** — on a rest card too, whose menu holds only that. No screen shows an Add button,
+and `SessionDetailView` keeps only the exercise swap (one slot). A day with nothing to offer
+(a past rest day) has no menu.
+
+**Adding** is `ReplaceWorkoutSheet` with `mode: .add`: Generate comes first — a Kind picker
+(Mobility, Movement / Skill, Aerobic Base, Durability, Rehab) under the day's name, its footer
+"An extra: it counts once you do it, and you can remove it.", then "Find a mobility session".
+The preview card names a borrowed source ("via Kelly Starrett / Built to Move"); Try Again
+asks for another; "Add Session" saves (`AppState.addSession`), and the Apple Watch is resynced
+once the save lands (`.programSaved` → `WatchSessionManager.syncProgram`). An added session
+shows a dashed "Added" capsule on Today's card and "Added" in the calendar row. Week dots leave
+an undone one out (`WorkoutCompletion.weekDots`). A refusal shows the server's sentence
+(`APIError.serverErrorDetail`).

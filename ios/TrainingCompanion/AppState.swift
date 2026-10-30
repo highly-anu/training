@@ -1002,6 +1002,20 @@ final class AppState: ObservableObject {
         return weeks[idx]
     }
 
+    /// Whether a session may be added to that day: today or later (a past
+    /// day would switch the program's version). The day's date follows the
+    /// server's rule — start + week index × 7 + the weekday's place from
+    /// Monday (`workout_matcher.session_calendar_date`).
+    func canAddSession(weekIndex: Int, dayName: String) -> Bool {
+        let days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        guard let startStr = serverProgram?.programStartDate, let start = dayFormatter.date(from: startStr),
+              let dayIdx = days.firstIndex(of: dayName),
+              let date = Calendar.current.date(byAdding: .day, value: weekIndex * 7 + dayIdx, to: start) else {
+            return false
+        }
+        return Calendar.current.startOfDay(for: date) >= Calendar.current.startOfDay(for: Date())
+    }
+
     /// Returns the program week that contains `date`, or nil if out of range.
     func week(for date: Date) -> ProgramWeek? {
         guard let program = serverProgram?.currentProgram,
@@ -1051,6 +1065,23 @@ final class AppState: ObservableObject {
         commit(weeks: ProgramEdits.replacingSession(in: program, weekIndex: weekIndex, day: day,
                                                     sessionIndex: sessionIndex, with: session).weeks,
                to: sp)
+    }
+
+    /// A session the athlete adds on the fly to today or a later day (a rest
+    /// day's mobility): an extra that counts once done. Saved like a replace.
+    func addSession(weekIndex: Int, day: String, session: ProgramSession) {
+        guard let sp = serverProgram, let program = sp.currentProgram,
+              program.weeks.indices.contains(weekIndex) else { return }
+        commit(weeks: ProgramEdits.addingSession(in: program, weekIndex: weekIndex, day: day,
+                                                 session: session).weeks, to: sp)
+    }
+
+    /// Removes a session the athlete added (never a planned one).
+    func removeSession(weekIndex: Int, day: String, sessionIndex: Int) {
+        guard let sp = serverProgram, let program = sp.currentProgram,
+              program.weeks[safe: weekIndex]?.schedule[day]?[safe: sessionIndex]?.isAdded == true else { return }
+        commit(weeks: ProgramEdits.removingSession(in: program, weekIndex: weekIndex, day: day,
+                                                   sessionIndex: sessionIndex).weeks, to: sp)
     }
 
     /// Swap one exercise for an alternative the server ranked for its slot —
@@ -1410,6 +1441,9 @@ final class AppState: ObservableObject {
         do {
             let summary = try await api.saveProgram(payload)
             programSaveConflict = nil
+            // The watches read today from the server: an added or moved session
+            // reaches the Apple Watch now, not at its next sync.
+            NotificationCenter.default.post(name: .programSaved, object: nil)
             // The summary of the weeks just saved (a move, a swap, a replaced
             // session), so Overview's phase changes follow the edit.
             if let summary, let now = serverProgram, let current = now.currentProgram {

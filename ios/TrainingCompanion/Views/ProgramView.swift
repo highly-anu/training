@@ -32,6 +32,7 @@ struct ProgramView: View {
     /// Debug builds: a draft opened by `TC_PREVIEW` (ProgramPreviewDebugLaunch).
     @State private var debugPreview: PreviewDraft? = nil
     @State private var selectedDay: DaySelection? = nil
+
     @State private var section: ProgramTab = .overview
 
     @ViewBuilder
@@ -326,6 +327,9 @@ struct ProgramView: View {
                                     .font(.subheadline)
                                     .foregroundStyle(done ? .secondary : .primary)
                                 if session.testInfo != nil { TestBadge() }
+                                if session.isAdded {
+                                    Text("Added").font(.caption2).foregroundStyle(.secondary)
+                                }
                             }
                         }
                     }
@@ -339,8 +343,12 @@ struct ProgramView: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
             .background(isToday ? Color.blue.opacity(0.06) : Color.clear)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        // Long press: each session's Move, Replace, Remove (an added one); Add
+        // Session on today or a later day (design-system §6.43).
+        .sessionActions(weekIndex: weekIdx, dayName: day)
     }
 
     // MARK: - Empty States

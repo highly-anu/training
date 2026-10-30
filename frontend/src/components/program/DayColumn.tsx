@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Check, BatteryCharging } from 'lucide-react'
+import { Check, BatteryCharging, Plus } from 'lucide-react'
 import { SessionCard } from './SessionCard'
 import { cn } from '@/lib/utils'
 import { useProfileStore } from '@/store/profileStore'
@@ -20,14 +20,24 @@ interface DayColumnProps {
   /** A draft program (SessionCard's onOpen): opens a session, never reads logs. */
   onOpenSession?: (sessionIndex: number) => void
   isHighlighted?: (sessionIndex: number) => boolean
+  /** Today or a later day of the active program: a session can be added. */
+  onAdd?: () => void
 }
 
-export function DayColumn({ day, sessions, weekNumber, isToday, onOpenSession, isHighlighted }: DayColumnProps) {
+export function DayColumn({ day, sessions, weekNumber, isToday, onOpenSession, isHighlighted, onAdd }: DayColumnProps) {
   const dayIndex = DAYS.indexOf(day)
   const isWeekend = dayIndex >= 5
   const sessionLogs = useProfileStore((s) => s.sessionLogs)
-  const isComplete = !onOpenSession && sessions.length > 0
-    && sessions.every((_, i) => sessionLogs[`${weekNumber}-${day}`]?.[i] === true)
+  const logged = (i: number) => sessionLogs[`${weekNumber}-${day}`]?.[i] === true
+  // An extra the athlete added counts once done, never as one still to do.
+  const counted = sessions.map((_, i) => i).filter((i) => !sessions[i].added || logged(i))
+  const isComplete = !onOpenSession && counted.length > 0 && counted.every(logged)
+  const addButton = onAdd && (
+    <button type="button" onClick={onAdd} aria-label={`Add a session on ${day}`}
+      className="w-full rounded-md border border-dashed border-border/50 py-1 text-[10px] text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors flex items-center justify-center gap-1">
+      <Plus className="size-3" /> Add
+    </button>
+  )
 
   return (
     <motion.div
@@ -65,8 +75,11 @@ export function DayColumn({ day, sessions, weekNumber, isToday, onOpenSession, i
           <div className="rounded-lg border border-dashed border-border/50 p-3 flex flex-col items-center justify-center gap-1.5">
             <BatteryCharging className="size-[30px] text-muted-foreground/50" />
             <span className="text-[10px] text-muted-foreground">Rest</span>
+            {onAdd && addButton}
           </div>
         )}
+        {/* Today can take one more after its sessions; other days only when resting. */}
+        {onAdd && sessions.length > 0 && isToday && addButton}
       </div>
     </motion.div>
   )
