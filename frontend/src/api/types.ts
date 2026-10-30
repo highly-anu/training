@@ -2472,3 +2472,42 @@ export interface PhilosophyGlance {
   counts: { tracks: number; rules: number; sources: number; inventions: number; open: number; sessions: number }
   tracks: GlanceTrack[]
 }
+
+// ─── Dev Lab: package portability (GET /api/dev/portability, src/portability.py) ──
+
+export type PortabilityShape = 'contract' | 'templates' | 'scheduler'
+
+export interface PortabilityPackage {
+  id: string
+  name: string
+  tracks: Array<{ track: string; name: string | null; shape: PortabilityShape }>
+  /** present is null for a file the API image leaves out, when this is the image. */
+  files: Array<{ id: string; path: string; required: boolean; present: boolean | null }>
+  /** done is null where the record's file is not in this deployment (the API image has no docs/). */
+  outside: Array<{ id: string; label: string; file: string; done: boolean | null; how: string }>
+  vocabulary: Array<{ kind: string; count: number; unknown: string[] }>
+  collisions: number
+  ready: boolean
+}
+
+export interface PortabilityGap {
+  id: string
+  title: string
+  kind: 'gate' | 'tooling' | 'commons' | 'code' | 'client' | 'watch' | 'docs'
+  impact: 'blocks' | 'degrades' | 'cosmetic'
+  detail?: string
+  anchors: string[]
+  roadmap: string | null
+  status: 'open' | 'by_design'
+}
+
+export interface PortabilityReport {
+  packagesDir: string
+  /** Records outside the folder this deployment cannot read; `ready` says nothing about them. */
+  unchecked: string[]
+  verdict: string
+  packages: PortabilityPackage[]
+  collisions: Array<{ kind: string; id: string; packages: string[]; kept: string }>
+  sharedExercises: number
+  gaps: PortabilityGap[]
+}

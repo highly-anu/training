@@ -1,6 +1,14 @@
 # Training System — Ontology Author Guide
 
-**Audience:** AI agents or humans adding new training content (philosophies, frameworks, goals, archetypes, exercises) to the system. This document is designed to be self-contained — you should be able to produce correct YAML files with only this guide and your research notes.
+**Audience:** AI agents or humans adding a training methodology to the system as a
+package: a folder under `data/packages/` that the app picks up without a code change.
+
+**Read with:** `docs/package-fidelity/README.md` — how a package is built from its
+sources, recorded (`fidelity.yaml`, the dossier) and graded, and the gates it must pass.
+The JSON schemas in `docs/schemas/` are the field reference; where this guide's
+sections 5–13 disagree with them (they predate tracks, week templates and training
+contracts), the schemas win. What a package still cannot bring in its own folder is on
+Dev Lab ▸ Model Interactions and in `docs/roadmap.md` item 9.
 
 **Validation:** After writing YAML files, run:
 ```
@@ -12,88 +20,67 @@ python tools/validate_entities.py --all    # validate everything
 
 ## 1. The Ontology — What Each Entity Is
 
-This system has 8 layers. Each layer depends on the ones below it. When adding a new methodology, you typically add from the bottom up.
-
 ```
 Philosophy
-    └─ Framework          (how to structure a week of training)
-         └─ Modality      (what physical quality is being trained)
-              └─ Archetype (what a single session looks like)
-                   └─ Exercise (individual movements)
-                        └─ Progression (how load/complexity increases)
-                             └─ Constraints (athlete-specific limits)
-                                  └─ Goal Profile (the athlete's objective)
+    └─ Tracks → Phases     (ways to follow it; each phase names a framework and a kind)
+         └─ Framework      (how a week of a phase is built)
+              └─ Modality  (what physical quality is trained — shared, in the commons)
+                   └─ Archetype (what a single session looks like)
+                        └─ Exercise (individual movements)
+                             └─ Progression (how load/complexity increases)
+                                  └─ Constraints (athlete-specific limits)
 ```
 
 ### What each entity means in plain English
 
-**Philosophy** — A named training source or methodology. Examples: Starting Strength, CrossFit, Kelly Starrett's mobility system. A philosophy describes beliefs about training: what matters, what to avoid, how to measure progress. It doesn't describe what to do week-by-week — that's the framework.
+**Philosophy** — A named training source or methodology. Examples: Starting Strength, CrossFit, Kelly Starrett's mobility system. A philosophy describes beliefs about training and declares one or more **tracks**: ordered lists of its own **phases**. Each phase has an id, a name, a **kind** from `data/commons/phase_kinds.yaml` (the engine reads the kind, never the words), weeks, the `framework_id` that builds its weeks, and its own text.
 
-**Framework** — A weekly session structure. It answers: "Given this methodology, how many times per week do we train each quality, and how hard?" A framework maps modalities to session counts and distributes intensity across zones. Examples: linear progression (3×/week barbell), polarized 80/20 (mostly easy aerobic + one hard interval session), concurrent training (mix of strength + conditioning).
+**Framework** — A weekly session structure: how many sessions of each modality, how hard, which days, how it deloads. A week is built one of three ways, decided by the data: a **training contract** (`training_contract.yaml`, per track) places its own modules; a phase's **week templates** write the source's week day by day from the framework's `categories`; otherwise the **modality scheduler** allocates `sessions_per_week`.
 
-**Modality** — A physical quality domain. The 12 modalities are fixed: `max_strength`, `aerobic_base`, `strength_endurance`, `power`, `mobility`, `durability`, `rehab`, `movement_skill`, `mixed_modal_conditioning`, `anaerobic_intervals`, `relative_strength`, `combat_sport`. You almost never add a new modality — instead, map new methodology to existing ones.
+**Modality** — A physical quality domain, shared by every package (`data/commons/modalities/`). Map a methodology onto the existing ones; a new modality is a shared edit and, today, client code.
 
-**Archetype** — A reusable workout template. An archetype belongs to one modality and defines the structure of a session (slots, sets/reps/duration, intensity, movement pattern filters). Examples: 5×5 strength session, 20-min AMRAP conditioning, joint prep circuit.
+**Archetype** — A reusable session template. An archetype belongs to one modality and defines the session's slots (slot type, sets/reps/duration, intensity, `exercise_filter`).
 
-**Exercise** — A single movement (e.g. back squat, hip circle, reverse sled drag). Exercises have categories, equipment requirements, movement patterns, prerequisites, and contraindications.
+**Exercise** — A single movement (e.g. back squat, hip circle, reverse sled drag). Exercises have categories, equipment, movement patterns, prerequisites, contraindications and the package's own starting loads.
 
-**Goal Profile** — What the athlete is training toward. A goal profile has priority weights across modalities (e.g. 60% aerobic base, 20% mobility, 20% strength) and a phase sequence (base → build → peak → taper). The goal is what drives program generation.
+**Goal** — Not authored. `src/goals.py:philosophy_to_goal` builds one per request from the chosen track.
 
 ---
 
 ## 2. Authoring Workflow
 
-When adding a new methodology (e.g. Theragun recovery, triathlon prep, mountaineering):
-
-1. **Identify what's needed** — does the methodology introduce a new philosophy? A new framework? New archetypes/exercises? Or just a new goal profile that uses existing entities?
-2. **Create files bottom-up** — philosophy first, then framework, then archetypes + exercises, then goal profile last.
-3. **Use existing modalities** — never add a new modality unless the methodology targets something genuinely absent from the 12 existing ones.
-4. **Cross-reference accurately** — every framework references a philosophy by ID; every archetype references a modality by ID.
-5. **Validate** — run `python tools/validate_entities.py` on each file before finalizing.
-
-### Minimal addition for a new methodology
-
-| New methodology type | Files needed |
-|---|---|
-| Recovery/prehab tool (e.g. Theragun) | 1 philosophy + 1 framework + 2–3 archetypes + N exercises |
-| New sport goal (e.g. triathlon) | 1 philosophy + 1 framework + N archetypes + 1 goal profile |
-| Extension of existing methodology | Just archetypes and/or exercises — reference existing philosophy/framework |
+1. **Read the sources and keep a record** — `fidelity.yaml` and `docs/package-fidelity/<id>.md` (the README says what each holds).
+2. **Write the folder** — philosophy with its tracks, frameworks, archetypes, exercises; the optional files below as the method needs them.
+3. **Use the commons** — modalities, phase kinds, movement patterns, equipment, injury flags, standards and watch templates are shared vocabulary; reference them, do not redefine them.
+4. **Validate and run the gates** — `validate_entities.py --all`, then the gates the package-fidelity README lists; a new package needs its baselines recorded (`tools/evaluate_packages.py --update-baseline`, `test_single_lane_golden.py --record`).
 
 ---
 
 ## 3. File Placement
 
-Each training methodology lives in its own **self-contained package** under `data/packages/`:
+Each methodology is one **self-contained package** under `data/packages/`:
 
 ```
 data/
   packages/
-    {your_package_name}/         ← one directory per methodology
-      philosophy.yaml            ← the package's philosophy (exactly one)
-      frameworks/
-        {id}.yaml                ← one file per framework (usually one)
-      archetypes/
-        strength/                ← barbell/free weight strength sessions
-        conditioning/            ← aerobic, intervals, AMRAPs, circuits
-        kettlebell/              ← KB-specific sessions
-        gpp_durability/          ← carries, sandbag, rucking
-        movement_skill/          ← mobility, joint prep, skill practice, recovery tools
-      exercises.yaml             ← all exercises for this package (top-level list: exercises: [...])
-  modalities/                    ← shared, rarely edited — do not add new ones
-  goals/                         ← one file per goal:  {id}.yaml
-  goals/custom/                  ← user-created goals (same format, auto-discovered)
+    {your_package_id}/           ← one directory per methodology; the id is the folder name
+      philosophy.yaml            ← the philosophy with its tracks and phases (exactly one)
+      frameworks/{id}.yaml       ← one file per framework
+      archetypes/<group>/{id}.yaml  ← any subfolders; strength/, conditioning/, kettlebell/, …
+      exercises.yaml             ← exercises: [...]
+      exercise_media.yaml        ← optional: demo links per exercise id
+      level_seeds.yaml           ← optional: what an athlete at each level already knows
+      analytics.yaml             ← optional: what progress means for the method
+      watch.yaml                 ← optional: how its sessions look on the watches
+      training_contract.yaml     ← optional: per track, modules the engine places as written
+      fidelity.yaml              ← its sources, rules, inventions (docs/package-fidelity/README.md)
+      source_weeks.yaml          ← optional: the source's own weeks, compared with generation
+  commons/                       ← shared by every package: modalities, phase kinds,
+                                 #   movement patterns, constraints, watch vocabulary, icons
+  benchmarks/                    ← the standards (a package references them; see roadmap 9.2)
 ```
 
-**Archetypes are package-scoped.** A "Long Zone 2 Run" in the Uphill Athlete package and a "Long Zone 2 Run" in the CrossFit Endurance package are separate files with separate IDs. Do not share archetypes across packages — each package defines the protocols that belong to its methodology.
-
-**Which archetype category subdirectory?**
-- Recovery tools, foam rolling, soft tissue → `movement_skill/`
-- Mobility circuits, joint prep → `movement_skill/`
-- Skill drills, deliberate practice → `movement_skill/`
-- Barbell strength → `strength/`
-- Aerobic, intervals, AMRAPs, circuits → `conditioning/`
-- Carries, rucking, sandbag → `gpp_durability/`
-- Kettlebell-primary sessions → `kettlebell/`
+**Ids are package-scoped by convention, not by the loader.** Prefix archetype and framework ids with something your package owns: when two packages declare one id the loader keeps one copy silently (Dev Lab ▸ Model Interactions lists any). Exercise ids may be shared on purpose — each package keeps its own prescription.
 
 ---
 

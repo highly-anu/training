@@ -993,16 +993,47 @@ both builders' `wk_kb_` stripping the server's `exercise_names`); X2, every step
 to a watch screen. `test_package_dropin.py` drops three packages in under new ids
 (`TRAINING_PACKAGES_DIR`) and runs them end to end with the repository unchanged.
 `tools/print_package.py` and the record's `reviews` (S6) are the output review.
-Left — what a package still cannot bring in its folder, none of it naming a package:
-- its own standards (`benchmarks_data.BENCHMARK_FILES` lists `data/benchmarks/` files;
-  The Cell has its own loader);
-- per-exercise constants in code (`progression._SESSIONS_PER_WEEK` keys shared lifts);
-- a non-kettlebell implement in a contract (the wording and `requires_kettlebell_pair`);
-- a new slot type, modality, phase kind or equipment id (each client keeps its own
-  table: `outcomeFields.ts` / `SessionLogging.swift`, the colour maps — `ModalityDonut`
-  reads `MODALITY_COLORS[m].label` unguarded);
-- what each watch template captures, declared in `watch_vocabulary.json` so a package's
-  lead measure can be checked as recorded on the wrist (X2 checks only the screens).
+Left — what a package still cannot bring in its folder, none of it naming a package.
+The list is `tools/portability_gaps.json` (each gap anchored in the code;
+`test_portability.py` fails when an anchor goes, so a closed gap changes its status
+there), shown per package beside the matrix of what each has in and outside its folder
+on Dev Lab ▸ Model Interactions (`GET /api/dev/portability`, `src/portability.py`).
+Today: the code is package-neutral, the repository is not yet drop-in. In order:
+- **9.1 One command to onboard a folder (S).** `tools/add_package.py <id>`: validate, run
+  every gate, record the scorecard, coverage, status and golden baselines for that package
+  only, stub its dossier. An id-collision gate in `validate_entities.py --all` (the loader
+  keeps the first archetype, the last framework in the library and the first in
+  `load_framework`, the last media entry); `test_package_dropin.py` beside the shipped
+  packages and through `build_static_cache.py`; a package's own tests without the shared
+  registry; blends beyond `check_styles.COMPOSITIONS`' five pairs.
+- **9.2 Standards in the package (M).** `<id>/standards.yaml` beside `data/benchmarks/`,
+  found by glob instead of `benchmarks_data.BENCHMARK_FILES`, categories as data (The
+  Cell keeps its own loader).
+- **9.3 Engine tables to data (M).** A modality's priority tier and typical duration from
+  its YAML (`loader.MODALITY_PRIORITY_TIERS` overrides it; `combat_sport` is missing,
+  `skill_work` names nothing); an exercise's weekly frequency
+  (`progression._SESSIONS_PER_WEEK` keys shared lifts); `generator._COMPLEMENTARY_PATTERNS`
+  and `selector._blocked_categories_for_equipment` into the commons; the fallback order
+  (`generator._FALLBACKS`) per framework.
+- **9.4 Client vocabulary from one file (M–L).** Modality, phase-kind and equipment label,
+  colour and icon in the commons, the TS and Swift tables generated from it as
+  `gen_vocab.py` does the watch's; one equipment enum the four schemas `$ref` (today
+  they and `loader.load_equipment` disagree). Retires the dialogs' `MODALITIES` copies,
+  `outcomeFields.ts` / `SessionLogging.swift`'s slot-type tables and the colour maps —
+  `ModalityDonut` reads `MODALITY_COLORS[m].label` unguarded.
+- **9.5 A contract for any implement (M).** The bell-pair wording and
+  `requires_kettlebell_pair` generalised to an implement the contract declares.
+- **9.6 Watch capture declared (S–M).** What each template in `watch_vocabulary.json`
+  records, so a package's lead measure can be checked as recorded on the wrist (X2
+  checks only the screens).
+- **9.7 Authoring tools (S–M).** `mcp_server.py`'s schema list (it names a
+  `goal_profile` schema that does not exist and writes analytics, watch, contract,
+  fidelity and source weeks unvalidated), `TRAINING_PACKAGES_DIR` there,
+  `docs/mcp/README.md`, the extraction guide and the author guide's schema sections
+  (5–13); and whether the three PUTs may edit a shipped package or only `custom`.
+
+By design, not gaps to close: phase kinds, intensities, levels, and progression and
+contract models are the engine's vocabulary — a package chooses among them.
 
 **5. Wildman follow-ups (from the handoff).** General Practice runs Wildman's Phase II
 since 2026-10-20 (the Nerd Math swing approaches, get-up and deck squat stacked as time
