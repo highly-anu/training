@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { CheckCircle2, ChevronDown, ChevronUp, Clock, Loader2, Plus, RefreshCw } from 'lucide-react'
+import { ChevronDown, ChevronUp, Clock, Loader2, Plus, RefreshCw, Search } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
@@ -12,6 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
+import { SessionPreviewPanel } from '@/components/session/SessionPreviewPanel'
 import { EquipmentPicker } from '@/components/builder/EquipmentPicker'
 import { InjuryPicker } from '@/components/builder/InjuryPicker'
 import { useArchetypes } from '@/api/archetypes'
@@ -20,7 +21,6 @@ import { useProgramStore } from '@/store/programStore'
 import { cn } from '@/lib/utils'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import type { Archetype, EquipmentId, FatigueState, GeneratedProgram, InjuryFlagId, ModalityId, Session, WeekData } from '@/api/types'
-import { COMPLETION } from '@/lib/completionColors'
 
 interface ReplaceSessionSheetProps {
   open: boolean
@@ -58,6 +58,7 @@ export function ReplaceSessionSheet({
   const storeReplaceSession = useProgramStore((s) => s.replaceSession)
   const addSession = useProgramStore((s) => s.addSession)
   const [kind, setKind] = useState<ModalityId>(session?.modality ?? 'mobility')
+  const [tab, setTab] = useState(adding ? 'generate' : 'browse')
   const modality = adding ? kind : (session?.modality ?? kind)
   const replaceSession = (w: number, d: string, i: number, s: Session) =>
     onReplace ? onReplace(s) : storeReplaceSession(w, d, i, s)
@@ -155,19 +156,20 @@ export function ReplaceSessionSheet({
     onOpenChange(false)
   }
 
-  function handleTryAgain() {
-    // Adding without a pick: another session of the kind straight away.
-    if (adding && !selectedArchId && pendingSession?.archetype) {
-      const current = pendingSession.archetype.id
-      setPendingSession(null)
-      generateSession.mutate({ ...baseParams, currentArchetypeId: current },
-                             { onSuccess: (data) => setPendingSession(data) })
-      return
-    }
+  /** Back to the list or the search, nothing saved. */
+  function handleBack() {
     setPendingSession(null)
     setSelectedArchId(null)
     generateSession.reset()
   }
+
+  /** Another session of the kind than the one shown. */
+  function handleSearchAgain() {
+    const current = pendingSession?.archetype?.id
+    generateSession.mutate({ ...baseParams, ...(current ? { currentArchetypeId: current } : {}) },
+                           { onSuccess: (data) => setPendingSession(data) })
+  }
+
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -206,10 +208,11 @@ export function ReplaceSessionSheet({
         </SheetHeader>
 
         <div className="flex-1 flex flex-col overflow-hidden">
-          <Tabs defaultValue={adding ? 'generate' : 'browse'} className="flex-1 flex flex-col overflow-hidden">
+          {!pendingSession && (<>
+          <Tabs value={tab} onValueChange={setTab} className="flex-1 flex flex-col overflow-hidden">
             <TabsList className="mx-5 mt-4 shrink-0">
               <TabsTrigger value="browse" className="flex-1">Browse</TabsTrigger>
-              <TabsTrigger value="generate" className="flex-1">Generate</TabsTrigger>
+              <TabsTrigger value="generate" className="flex-1">Search</TabsTrigger>
             </TabsList>
 
             {/* Browse Tab */}
@@ -385,11 +388,12 @@ export function ReplaceSessionSheet({
                   onClick={handleGenerate}
                   disabled={generateSession.isPending}
                 >
+                  {/* A fitting session from the library — found, not invented;
+                      its full preview comes next, before anything is saved. */}
                   {generateSession.isPending ? (
-                    <><Loader2 className="size-4 mr-2 animate-spin" /> Generating…</>
+                    <><Loader2 className="size-4 mr-2 animate-spin" /> Searching…</>
                   ) : (
-                    <>{adding ? <Plus className="size-4 mr-2" /> : <RefreshCw className="size-4 mr-2" />}
-                      {adding ? `Find a ${MODALITY_COLORS[kind].label.toLowerCase()} session` : 'Generate Session'}</>
+                    <><Search className="size-4 mr-2" /> Search</>
                   )}
                 </Button>
               </div>
@@ -405,54 +409,19 @@ export function ReplaceSessionSheet({
             </div>
           )}
 
-          {/* Pending session preview */}
-          {pendingSession && (
-            <div className="border-t shrink-0">
-              <div className="px-5 py-4 space-y-3">
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className={cn('size-4 mt-0.5 shrink-0', COMPLETION.text)} />
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold truncate">
-                      {pendingSession.archetype?.name}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      <ModalityBadge modality={pendingSession.modality} size="sm" />
-                      {pendingSession.archetype?.duration_estimate_minutes && (
-                        <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                          <Clock className="size-3" />
-                          ~{pendingSession.archetype.duration_estimate_minutes} min
-                        </span>
-                      )}
-                      {pendingSession.provenance?.borrowed && (
-                        <span className="text-[10px] text-muted-foreground">
-                          via {pendingSession.provenance.label ?? pendingSession.provenance.package.replace(/_/g, ' ')}
-                        </span>
-                      )}
-                      <span className="text-[10px] text-muted-foreground">
-                        {pendingSession.exercises.filter((e) => e.exercise).length || 'Coach-led'} {pendingSession.exercises.filter((e) => e.exercise).length ? 'exercises' : ''}
-                      </span>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mt-1 truncate">
-                      {pendingSession.exercises
-                        .filter((e) => e.exercise)
-                        .slice(0, 4)
-                        .map((e) => e.exercise?.name)
-                        .join(', ')}
-                      {pendingSession.exercises.filter((e) => e.exercise).length > 4 && '…'}
-                    </p>
-                  </div>
-                </div>
+          </>)}
 
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1" onClick={handleTryAgain}>
-                    Try Again
-                  </Button>
-                  <Button size="sm" className="flex-1" onClick={handleConfirm}>
-                    {adding ? 'Add session' : 'Confirm Replace'}
-                  </Button>
-                </div>
-              </div>
-            </div>
+          {/* The found (or picked) session in full, before anything is saved */}
+          {pendingSession && (
+            <SessionPreviewPanel
+              session={pendingSession}
+              confirmLabel={adding ? 'Add session' : 'Replace session'}
+              onConfirm={handleConfirm}
+              onBack={handleBack}
+              onSearchAgain={selectedArchId ? undefined : handleSearchAgain}
+              searching={generateSession.isPending}
+              error={generateSession.isError && generateSession.error instanceof Error ? generateSession.error.message : null}
+            />
           )}
         </div>
       </SheetContent>
