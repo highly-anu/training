@@ -1,4 +1,4 @@
-"""What each package brings in its own folder, and what it still needs outside it.
+"""What each package brings in its own folder, and what the gates record there.
 
 The Dev Lab's Model Interactions tab asks of every package the question
 test_package_dropin.py answers for three copies: is it a folder that works end
@@ -8,9 +8,9 @@ package: tools/check_code_neutral.py). This reads the other half, per package:
 - its engine shape per track (a training contract, week templates, or the
   modality scheduler), decided as generation decides it;
 - which of the files a package may carry it has;
-- the steps that still live outside the folder: the scorecard and coverage
-  baselines, the golden program hashes, status.yaml and the dossier — without
-  them the push gates fail for a new package;
+- the records the push gates keep, in its folder (records/ and dossier.md,
+  src/package_records.py) — without them the gates fail for a new package,
+  and tools/add_package.py writes them;
 - the commons vocabulary it references, and any id it names that the commons
   do not define;
 - ids another package also declares, and which copy the loader keeps.
@@ -50,11 +50,9 @@ FILES = (
 
 # Outside the folder: what each push gate keeps per package, and the command
 # that records it.
-_SCORECARD = os.path.join(ROOT, 'tools', 'scorecard_baseline.json')
-_COVERAGE = os.path.join(ROOT, 'tools', 'exercise_coverage_baseline.json')
-_GOLDEN = os.path.join(ROOT, 'test_single_lane_golden.json')
-_STATUS = os.path.join(ROOT, 'docs', 'package-fidelity', 'status.yaml')
-_DOSSIERS = os.path.join(ROOT, 'docs', 'package-fidelity')
+# The checkout's docs, which the API image leaves out with every package's
+# records (.dockerignore).
+_DOCS = os.path.join(ROOT, 'docs', 'package-fidelity')
 # One command records them all, for that package only.
 _ADD = '.venv/bin/python tools/add_package.py {pkg}'
 
@@ -139,7 +137,7 @@ _IMAGE_EXCLUDED = {'source_weeks'}
 
 def _in_checkout() -> bool:
     """A checkout, not the API image: the image has no docs/ beyond the schemas."""
-    return os.path.isdir(_DOSSIERS)
+    return os.path.isdir(_DOCS)
 
 
 def _files(pkg: str) -> list[dict]:
@@ -169,33 +167,28 @@ def _shapes(pkg: str, docs: dict) -> list[dict]:
     return out
 
 
-def _outside(pkg: str) -> list[dict]:
-    """The records a push needs outside the folder, and whether this one has
-    them. `done` is None where the record's file is not in this deployment:
-    the API image leaves docs/ out (.dockerignore), so status.yaml and the
-    dossiers can only be read in a checkout."""
-    def held(path: str, has) -> bool | None:
-        return has() if os.path.exists(path) else None
-
-    prefix = f'{pkg}/'
-    dossier = os.path.join(_DOSSIERS, f'{pkg}.md')
+def _records(pkg: str) -> list[dict]:
+    """The records the push gates keep in the package's folder, and whether
+    this one has them. `done` is None outside a checkout: the API image leaves
+    every package's records/ and dossier.md out (.dockerignore)."""
+    from . import package_records
+    checkout = _in_checkout()
     add = _ADD.format(pkg=pkg)
-    return [
-        {'id': 'scorecard', 'label': 'Scorecard baseline', 'file': 'tools/scorecard_baseline.json',
-         'done': held(_SCORECARD, lambda: any(k.startswith(prefix) for k in _json(_SCORECARD) or {})),
-         'how': add},
-        {'id': 'coverage', 'label': 'Exercise coverage baseline', 'file': 'tools/exercise_coverage_baseline.json',
-         'done': held(_COVERAGE, lambda: pkg in (_json(_COVERAGE) or {})), 'how': add},
-        {'id': 'status', 'label': 'status.yaml row', 'file': 'docs/package-fidelity/status.yaml',
-         'done': held(_STATUS, lambda: pkg in ((_yaml(_STATUS) or {}).get('packages') or {})),
-         'how': add},
-        {'id': 'golden', 'label': 'Golden program hashes', 'file': 'test_single_lane_golden.json',
-         'done': held(_GOLDEN, lambda: any(k.startswith(prefix) for k in _json(_GOLDEN) or {})),
-         'how': add},
-        {'id': 'dossier', 'label': 'Source dossier', 'file': f'docs/package-fidelity/{pkg}.md',
-         'done': held(_DOSSIERS, lambda: os.path.exists(dossier)),
-         'how': f'{add} stubs it; write it from the sources (docs/package-fidelity/README.md)'},
-    ]
+
+    def held(path: str) -> bool | None:
+        return os.path.exists(path) if checkout else None
+
+    rows = [('scorecard', 'Scorecard grades', 'scorecard.json'),
+            ('fidelity', 'Fidelity findings', 'fidelity.json'),
+            ('coverage', 'Exercise coverage', 'coverage.json'),
+            ('golden', 'Golden program hashes', 'golden.json'),
+            ('status', 'Status', 'status.yaml')]
+    out = [{'id': rid, 'label': label, 'file': f'{package_records.RECORDS}/{name}',
+            'done': held(package_records.path(pkg, name)), 'how': add} for rid, label, name in rows]
+    out.append({'id': 'dossier', 'label': 'Source dossier', 'file': package_records.DOSSIER,
+                'done': held(package_records.dossier_path(pkg)),
+                'how': f'{add} stubs it; write it from the sources (docs/package-fidelity/README.md)'})
+    return out
 
 
 def _known() -> dict[str, set]:
@@ -324,7 +317,7 @@ def report() -> dict:
     for pkg in names:
         docs = read[pkg]
         files = _files(pkg)
-        outside = _outside(pkg)
+        records = _records(pkg)
         vocabulary = _vocabulary(_references(docs), known)
         unknown = sum(len(v['unknown']) for v in vocabulary)
         rows.append({
@@ -332,21 +325,21 @@ def report() -> dict:
             'name': docs['philosophy'].get('name', pkg),
             'tracks': _shapes(pkg, docs),
             'files': files,
-            'outside': outside,
+            'records': records,
             'vocabulary': vocabulary,
             'collisions': colliding[pkg],
-            # Drops in as it stands: every required file, every record outside
-            # the folder this deployment can read, no id the commons lack and
-            # none another package owns.
+            # Drops in as it stands: every required file, every record the
+            # gates keep that this deployment can read, no id the commons lack
+            # and none another package owns.
             'ready': (all(f['present'] for f in files if f['required'])
-                      and all(o['done'] is not False for o in outside) and not unknown
+                      and all(o['done'] is not False for o in records) and not unknown
                       and not colliding[pkg]),
         })
     return {
         'packagesDir': os.path.relpath(loader._PACKAGES_DIR, ROOT),
-        # The records outside the folder this deployment cannot read (their
-        # files are not in it): `ready` says nothing about them.
-        'unchecked': sorted({o['id'] for row in rows for o in row['outside'] if o['done'] is None}
+        # The records and files this deployment cannot read (they are not
+        # in it): `ready` says nothing about them.
+        'unchecked': sorted({o['id'] for row in rows for o in row['records'] if o['done'] is None}
                             | {f['id'] for row in rows for f in row['files'] if f['present'] is None}),
         'packages': rows,
         'collisions': found,

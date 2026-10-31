@@ -1340,7 +1340,7 @@ with what they `cite` and what they are `enforced_by` — `data:<file>#<path>`,
 with where they are `implemented_by`; `currency`; `excluded_tracks`; the shape) and
 `source_weeks.yaml` (the source's own example weeks and progressions, transcribed;
 `src/source_weeks.py` generates and compares only the fields written), beside the
-prose dossier `docs/package-fidelity/<id>.md`, which names every id. The status is
+prose dossier `data/packages/<id>/dossier.md`, which names every id. The status is
 **earned, not chosen**: `tools/evaluate_packages.py` grades every package × track on six
 dimensions — Source, Execution, Robustness, Data, Measurement, Portability — each criterion pass,
 partial or fail (`src/package_eval.py`, the table in the README, today's grades in
@@ -1350,12 +1350,15 @@ hand-entered standard or lead measure counts only when a rule or invention names
 is the source weeks reproducing), never declared. It generates the fidelity profiles and
 its own (every level, a knee flag, three days, 30 minutes, one bell) in one parallel pass
 with the exercise reach (D2) and the source weeks, runs `check_fidelity.gate` on the same
-programs, ratchets `tools/scorecard_baseline.json` — a worse grade fails, and so does a
+programs, ratchets each package's `records/scorecard.json` — a worse grade fails, and so does a
 better one left unrecorded (`--update-baseline`; `--accept-worse` for a stricter grader)
-— and writes `status.yaml` from the records and the grades: never edit it by hand
+— and writes each package's `records/status.yaml` from its record and grades: never edit it by hand
 (`audited`: every criterion but hygiene passes on every track not in `excluded_tracks`).
 CI (`.github/workflows/training-contract.yml`) runs every gate the README's table names;
 `check_package_status.py` fails when the two part.
+**A package's records are its own** (since 2026-10-31): the gates' baselines, golden hashes
+and status live in `data/packages/<id>/records/`, the dossier beside them
+(`src/package_records.py`); nothing outside the folder names a package.
 **No code names a package** (Portability, X1/X2; X3, hygiene, whether the lead measure is recorded on the wrist — each watch template's `records` in `watch_vocabulary.json`, docs/watch.md): `tools/check_code_neutral.py` fails on
 any string literal in `src/`, `api.py`, `mcp_server.py`, `frontend/src`, the iOS, Apple
 Watch and widget sources or `garmin/core/source` that is an id one package owns (or a
@@ -1411,7 +1414,7 @@ SUPABASE_URL='' .venv/bin/python tools/evaluate_packages.py   # the scorecard, t
 SUPABASE_URL='' .venv/bin/python tools/print_package.py <id> [--profile ideal]  # its programs beside its rules, for the output review
 .venv/bin/python tools/check_fidelity.py                 # the fidelity rules alone (evaluate_packages runs the same gate); --report docs/fidelity-report.md
 SUPABASE_URL='' .venv/bin/python tools/check_exercise_coverage.py -v  # each package's reach by track and level (evaluate_packages gates the orphans)
-.venv/bin/python tools/check_package_status.py           # records name their own tracks; status.yaml is what records + recorded grades write; README gates = CI
+.venv/bin/python tools/check_package_status.py           # records name their own tracks; each records/status.yaml is what its record + recorded grades write; README gates = CI
 .venv/bin/python tools/check_analytics.py                # every declared analytics measure applies in some track; every headline leads somewhere
 .venv/bin/python test_fidelity.py                        # each fidelity rule on hand-built weeks (no generation)
 SUPABASE_URL='' .venv/bin/python test_selection.py       # what the generator picks: SS A/B, pinned lifts, deloads, gaps, cadence

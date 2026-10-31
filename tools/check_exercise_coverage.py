@@ -10,21 +10,19 @@ reaches only part of Horsemen's ~190 workouts, which rotate over a macro run
 two or three times.
 
 An exercise nothing reaches is an orphan: a movement the package describes and
-never prescribes. tools/exercise_coverage_baseline.json records today's per
+never prescribes. Each package's records/coverage.json records today's per
 package; a new one fails, and --update-baseline records a shrunk list. This
 checks reachability, not whether an arbitrary athlete should do every lift. No
 logs, persistence or server; the generator only.
 
     python tools/check_exercise_coverage.py [package ...] [--update-baseline]
 """
-import json
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from src import generator, goals, implements, loader, selector  # noqa: E402
 
-BASELINE = Path(__file__).with_name('exercise_coverage_baseline.json')
 PROFILES = ((4, 90), (6, 120))
 
 
@@ -128,7 +126,8 @@ def run(packages: list[str] | None = None, update: bool = False) -> dict:
     _, catalogs = loader.load_all_exercises()
     frameworks = loader.load_all_frameworks()
     archetypes = {a['id']: a for a in loader.load_all_archetypes()}
-    baseline = json.loads(BASELINE.read_text()) if BASELINE.exists() else {}
+    from src import package_records
+    baseline = package_records.all_orphans()
     orphans: dict = {}
     new: dict = {}
     philosophies = loader.load_philosophies()
@@ -156,9 +155,9 @@ def run(packages: list[str] | None = None, update: bool = False) -> dict:
         if '-v' in sys.argv:
             print('\n'.join(lines))
     if update:
-        merged = {**baseline, **orphans}
-        BASELINE.write_text(json.dumps(merged, indent=2, sort_keys=True) + '\n')
-        print(f'baseline written: {sum(len(v) for v in merged.values())} orphan(s)')
+        for pkg, ids in orphans.items():
+            package_records.write_orphans(pkg, ids)
+        print(f'records written: {sum(len(v) for v in orphans.values())} orphan(s)')
         return orphans
     gone = {pkg: sorted(set(baseline.get(pkg, [])) - set(o)) for pkg, o in orphans.items()}
     if any(gone.values()):

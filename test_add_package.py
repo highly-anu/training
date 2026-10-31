@@ -1,18 +1,18 @@
-#!/usr/bin/env python
 """tools/add_package.py and the per-package recording it runs.
 
-`evaluate_packages.py --update-baseline --package <id>` replaces that
-package's rows in the scorecard, fidelity and coverage baselines and its
-status.yaml entry, and keeps every other package's as recorded — on copies
-of the baselines, never the repository's. Re-recording a shipped package
-writes the files it read, byte for byte. add_package's refusals: a missing
-file, an id another package declares, an id the commons lack.
-(test_package_dropin.py runs `add_package.py --check` on a dropped-in copy.)
+`evaluate_packages.py --update-baseline --package <id>` writes that package's
+records in its own folder (records/: grades, fidelity findings, orphans,
+status; src/package_records.py) and touches no other package's — on a copy of
+the packages (`TRAINING_PACKAGES_DIR`), never the repository's. Re-recording a
+shipped package writes the files it read, byte for byte. add_package's
+refusals: a missing file, an id another package declares, an id the commons
+lack. (test_package_dropin.py runs `add_package.py --check` on a dropped-in copy.)
 
     .venv/bin/python test_add_package.py
 """
 from __future__ import annotations
 
+import atexit
 import json
 import os
 import shutil
@@ -24,8 +24,22 @@ sys.path.insert(0, ROOT)
 os.environ.setdefault('SUPABASE_URL', '')
 os.environ.setdefault('DATABASE_URL', '')
 
+
+def _stage() -> str:
+    folder = tempfile.mkdtemp(prefix='packages-')
+    atexit.register(shutil.rmtree, folder, True)
+    for name in sorted(os.listdir(os.path.join(ROOT, 'data', 'packages'))):
+        if os.path.isdir(os.path.join(ROOT, 'data', 'packages', name)):
+            shutil.copytree(os.path.join(ROOT, 'data', 'packages', name), os.path.join(folder, name))
+    os.environ['TRAINING_PACKAGES_DIR'] = folder
+    return folder
+
+
+FOLDER = _stage()
 FAILURES: list[str] = []
 PKG = 'kelly_starrett'
+OTHER = 'atg'
+NAMES = ('scorecard.json', 'fidelity.json', 'coverage.json', 'status.yaml')
 
 
 def check(label: str, condition: bool, detail='') -> None:
@@ -36,51 +50,36 @@ def check(label: str, condition: bool, detail='') -> None:
         FAILURES.append(label)
 
 
+def _text(pkg: str, name: str) -> str:
+    with open(os.path.join(FOLDER, pkg, 'records', name), encoding='utf-8') as fh:
+        return fh.read()
+
+
 def test_record_one_package():
-    print('recording one package')
-    from tools import check_exercise_coverage as coverage, check_fidelity as cf, evaluate_packages as ep
-    from pathlib import Path
-    tmp = tempfile.mkdtemp(prefix='baselines-')
-    try:
-        paths = {'grades': os.path.join(tmp, 'scorecard.json'), 'findings': os.path.join(tmp, 'fidelity.json'),
-                 'orphans': os.path.join(tmp, 'coverage.json'), 'status': os.path.join(tmp, 'status.yaml')}
-        for key, src in (('grades', ep.BASELINE), ('findings', cf.BASELINE), ('orphans', str(coverage.BASELINE)),
-                         ('status', ep.STATUS)):
-            shutil.copy(src, paths[key])
-        saved = ep.BASELINE, cf.BASELINE, coverage.BASELINE, ep.STATUS
-        ep.BASELINE, cf.BASELINE, coverage.BASELINE, ep.STATUS = (
-            paths['grades'], paths['findings'], Path(paths['orphans']), paths['status'])
-        try:
-            scorecard, fid_rows, orphans = ep.run([PKG])
-            current = {f"{PKG}/{tid}|{c}": g[0] for tid, crit in scorecard[PKG].items() for c, g in crit.items()}
-            gated = cf.gate(fid_rows, [PKG])[0]
-            originals = {k: open(p, encoding='utf-8').read() for k, p in paths.items()}
+    print('recording one package, in its own folder')
+    from tools import check_fidelity as cf, evaluate_packages as ep
+    scorecard, fid_rows, orphans = ep.run([PKG])
+    current = {f"{PKG}/{tid}|{c}": g[0] for tid, crit in scorecard[PKG].items() for c, g in crit.items()}
+    gated = cf.gate(fid_rows, [PKG])[0]
+    originals = {n: _text(PKG, n) for n in NAMES}
+    others = {n: _text(OTHER, n) for n in NAMES}
 
-            ep.record_packages([PKG], scorecard, current, gated, orphans)
-            for k, p in paths.items():
-                check(f're-recording {PKG} writes the {k} it read', open(p, encoding='utf-8').read() == originals[k])
+    ep.record_packages([PKG], scorecard, current, gated, orphans)
+    for n in NAMES:
+        check(f're-recording {PKG} writes the {n} it read', _text(PKG, n) == originals[n])
 
-            # Another package's rows stay; this one's are replaced, not added to.
-            grades = json.load(open(paths['grades']))
-            grades = {k: v for k, v in grades.items() if not k.startswith(f'{PKG}/')}
-            grades['zz_other/track|E1'] = 'fail'
-            grades[f'{PKG}/gone_track|E1'] = 'pass'
-            json.dump(grades, open(paths['grades'], 'w'))
-            orphans_doc = json.load(open(paths['orphans']))
-            orphans_doc['zz_other'] = ['an_exercise']
-            json.dump(orphans_doc, open(paths['orphans'], 'w'))
-            ep.record_packages([PKG], scorecard, current, gated, orphans)
-            after = json.load(open(paths['grades']))
-            check("another package's grade is kept", after.get('zz_other/track|E1') == 'fail')
-            check("this package's stale row is dropped", f'{PKG}/gone_track|E1' not in after)
-            check("this package's rows are this run's",
-                  {k: v for k, v in after.items() if k.startswith(f'{PKG}/')} == current)
-            check("another package's orphans are kept", json.load(open(paths['orphans'])).get('zz_other') == ['an_exercise'])
-        finally:
-            ep.BASELINE, cf.BASELINE, coverage.BASELINE, ep.STATUS = saved
-    finally:
-        shutil.rmtree(tmp, ignore_errors=True)
-    check('the repository baselines are untouched', not _changed())
+    # A stale row of this package's is dropped; another package's file is never opened.
+    path = os.path.join(FOLDER, PKG, 'records', 'scorecard.json')
+    rows = json.load(open(path))
+    rows['gone_track|E1'] = 'pass'
+    json.dump(rows, open(path, 'w'))
+    ep.record_packages([PKG], scorecard, current, gated, orphans)
+    after = json.load(open(path))
+    check("this package's stale row is dropped", 'gone_track|E1' not in after)
+    check("its rows are this run's, without the package in the key",
+          {f'{PKG}/{k}': v for k, v in after.items()} == current)
+    check("another package's records are untouched", all(_text(OTHER, n) == others[n] for n in NAMES))
+    check('the repository is untouched', not _changed())
 
 
 def test_refusals():
@@ -103,12 +102,17 @@ def test_refusals():
     check('an id the commons lack', any("'not_a_modality'" in p for p in problems), problems)
 
 
-def _changed() -> bool:
+def _status() -> str:
     import subprocess
-    out = subprocess.run(['git', 'status', '--porcelain', '--', 'tools/scorecard_baseline.json',
-                          'tools/fidelity_baseline.json', 'tools/exercise_coverage_baseline.json',
-                          'docs/package-fidelity/status.yaml'], cwd=ROOT, capture_output=True, text=True).stdout
-    return bool(out.strip())
+    return subprocess.run(['git', 'status', '--porcelain', '--', 'data/packages'], cwd=ROOT,
+                          capture_output=True, text=True).stdout
+
+
+BEFORE = _status()
+
+
+def _changed() -> bool:
+    return _status() != BEFORE
 
 
 def main() -> int:

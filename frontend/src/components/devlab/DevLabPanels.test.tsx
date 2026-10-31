@@ -102,11 +102,11 @@ describe('Model Interactions: a deployment without docs/', () => {
       packages: portability.packages.map((p) => ({
         ...p,
         files: p.files.map((f) => (f.id === 'source_weeks' ? { ...f, present: null } : f)),
-        outside: p.outside.map((o) => (unread.has(o.id) ? { ...o, done: null } : o)),
+        records: p.records.map((o) => (unread.has(o.id) ? { ...o, done: null } : o)),
       })),
     }
     mount(<ModelInteractionPanel />)
-    expect(screen.getByText(/Not checkable here: Source dossier · source_weeks.yaml · status.yaml row/)).toBeTruthy()
+    expect(screen.getByText(/Not checkable here: Source dossier · source_weeks.yaml · Status/)).toBeTruthy()
     expect(screen.getAllByText(/\(\+1 not in this deployment\)/).length).toBe(portability.packages.length)
     expect(screen.getAllByLabelText('Source dossier: not checkable here').length).toBe(portability.packages.length)
     expect(screen.queryAllByLabelText('Source dossier: missing')).toHaveLength(0)

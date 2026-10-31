@@ -3,15 +3,15 @@
 
 A package is a folder under data/packages/ (or TRAINING_PACKAGES_DIR) that
 needs no code change (test_package_dropin.py). What it does still need is
-outside the folder — the push gates keep a record per package: the scorecard,
-fidelity and coverage baselines, its row in docs/package-fidelity/status.yaml,
-the golden program hashes and the source dossier. This checks the folder and
-writes those, for this package only, every other package's rows untouched:
+in its folder too — the push gates keep a record per package (records/: the
+scorecard, fidelity and coverage baselines, the golden program hashes, its
+status; src/package_records.py) and its source dossier (dossier.md). This
+checks the folder and writes those, in it, touching no other package:
 
 1. the folder's files against their schemas (tools/validate_entities.py);
 2. no id another package declares, no id the commons do not define
    (src/portability.py — Dev Lab ▸ Model Interactions shows the same);
-3. a dossier stub, docs/package-fidelity/<id>.md, when there is none;
+3. a dossier stub, data/packages/<id>/dossier.md, when there is none;
 4. its scorecard, recorded (tools/evaluate_packages.py --update-baseline
    --package): refused when it has a fidelity finding, an orphaned exercise
    or, for a package already recorded, a worse grade — fix the package;
@@ -41,7 +41,7 @@ DOSSIER_STUB = """# {name} — source dossier
 
 Engine shape: {shapes}. The record (sources, rules with what enforces each, inventions) is
 `data/packages/{pkg}/fidelity.yaml`; this page is its prose, under the same ids. The status
-is the scorecard's (status.yaml).
+is the scorecard's (records/status.yaml).
 
 Written by `tools/add_package.py` as a stub: until this page names every rule and invention
 of the record by its id, the scorecard's S4 says which it lacks
@@ -134,9 +134,7 @@ def main() -> int:
         print(f'  - write data/packages/{pkg}/fidelity.yaml (docs/schemas/fidelity.schema.json)')
     print(f'  - write {os.path.relpath(dossier, ROOT)} from the sources (docs/package-fidelity/README.md)')
     print('  - run the gates: .venv/bin/python tools/run_checks.py (the pre-push hook runs them too)')
-    print('  - commit the folder with tools/scorecard_baseline.json, tools/exercise_coverage_baseline.json,')
-    print('    tools/fidelity_baseline.json, docs/package-fidelity/status.yaml, test_single_lane_golden.json')
-    print('    and the dossier')
+    print(f'  - commit the folder: data/packages/{pkg}/ holds everything, its records included')
     return 0
 
 

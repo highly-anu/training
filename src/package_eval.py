@@ -9,7 +9,7 @@ every slot was empty. The scorecard grades each package × track on six
 dimensions — Source, Execution, Robustness, Data, Measurement, Portability —
 each pass, partial or fail against named criteria, never a blended number
 (docs/package-fidelity/README.md has the table). `audited` in
-docs/package-fidelity/status.yaml is derived from it.
+each package's records/status.yaml is derived from it.
 
 This module is pure: it grades programs and files already read. Generation,
 the matrix of athlete profiles and the ratchet live in

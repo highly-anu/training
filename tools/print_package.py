@@ -6,7 +6,7 @@ For each track: the record's rules with what enforces each, whether the
 source weeks reproduce, then the weeks the package generates under the
 fidelity profiles (the track's ideal athlete, its lowest and highest days, a
 kettlebell home, bodyweight, 45 minutes, two injuries) — refused profiles say
-why. Read it against docs/package-fidelity/<package>.md and list each
+why. Read it against data/packages/<package>/dossier.md and list each
 difference; record the review in the package's fidelity.yaml (`reviews`).
 
     .venv/bin/python tools/print_package.py wildman_kettlebell [--weeks 2] [--track general_practice]
