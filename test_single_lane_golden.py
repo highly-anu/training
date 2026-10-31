@@ -9,6 +9,7 @@ tracks; a single-track request must reproduce them byte for byte, both as
 
     .venv/bin/python test_single_lane_golden.py            # check
     .venv/bin/python test_single_lane_golden.py --record   # rewrite the .json (only before an intended change)
+    .venv/bin/python test_single_lane_golden.py --record --package <id>   # that package's hashes only
 """
 import hashlib
 import json
@@ -112,8 +113,13 @@ def main():
     client = api.app.test_client()
     record = '--record' in sys.argv
     lanes_too = '--no-lanes' not in sys.argv and not record
+    # --package <id> (repeatable): only that package's tracks; a recording
+    # keeps every other package's hashes (tools/add_package.py records one).
+    only = {sys.argv[i + 1] for i, a in enumerate(sys.argv[:-1]) if a == '--package'}
     got, failures = {}, []
     for name, body in _cases():
+        if only and name.split('/')[0] not in only:
+            continue
         got[name] = _digest(client, body)
         if record:
             continue
@@ -125,10 +131,13 @@ def main():
         elif lanes_too and _digest(client, _as_lanes(body)) != want:
             failures.append(f'{name}: a one-element lanes request differs')
     if record:
+        recorded = len(got)
+        if only:
+            got = {**{k: v for k, v in GOLDEN.items() if k.split('/')[0] not in only}, **got}
         with open(GOLDEN_PATH, 'w') as f:
             json.dump(got, f, indent=1, sort_keys=True)
             f.write('\n')
-        print(f'recorded {len(got)} programs')
+        print(f'recorded {recorded} programs')
         return 0
     for f in failures:
         print('FAIL', f)

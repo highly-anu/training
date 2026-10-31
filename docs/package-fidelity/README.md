@@ -149,7 +149,7 @@ commit (`tools/run_checks.py`). Every command in the first column is in that lis
 
 | Gate | What it holds |
 |---|---|
-| `tools/validate_entities.py --all` | every file against its schema; template, pool and test wiring; injury-flag ids resolve, each substitution pair inside one package |
+| `tools/validate_entities.py --all` | every file against its schema; template, pool and test wiring; injury-flag ids resolve, each substitution pair inside one package; no archetype, framework or media id two packages declare |
 | `tools/check_provenance.py` | no package draws on another it does not declare |
 | `tools/check_provenance.py --coverage` | coverage gaps and authoring problems, watch specs included |
 | `tools/check_styles.py` | every philosophy × track × phase generates on its own framework |
@@ -186,4 +186,8 @@ commit (`tools/run_checks.py`). Every command in the first column is in that lis
 6. `tools/evaluate_packages.py --update-baseline --report
    docs/package-fidelity/scorecard.md`: the grades, the orphans, the fidelity
    findings and `status.yaml` are written together, from what the package
-   earns.
+   earns. A **new** package is brought in with `tools/add_package.py <id>`
+   (`--check` first): its schemas, no id another package declares, every id in
+   the commons, then its dossier stubbed and its rows in every baseline and the
+   golden hashes recorded — that package's only, refused on a fidelity finding
+   or an orphan.

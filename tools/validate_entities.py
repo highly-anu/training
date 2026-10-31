@@ -414,12 +414,26 @@ def main():
         elif not args.quiet:
             _safe_print(f"  OK    {rel}")
 
+    # Ids two packages declare: the loader keeps one copy without a word
+    # (the first archetype, the last framework in the library, the last media
+    # entry), so a dropped-in package could reshape another's sessions.
+    # Exercise ids are shared by design; each package keeps its prescription.
+    collided = []
+    if args.all:
+        sys.path.insert(0, _ROOT)
+        from src import portability
+        collided = portability.id_collisions()
+        for c in collided:
+            _safe_print(f"  FAIL  {c['kind']} '{c['id']}' is declared by {', '.join(c['packages'])} "
+                        f"(the loader keeps {c['kept']}); give each package its own id")
+
     print()
     ok_files = total_files - error_files
     print(f"Results: {ok_files}/{total_files} files valid"
-          + (f", {skip_files} skipped" if skip_files else ""))
+          + (f", {skip_files} skipped" if skip_files else "")
+          + (f"; {len(collided)} id(s) two packages declare" if collided else ""))
 
-    if error_files:
+    if error_files or collided:
         sys.exit(1)
 
 

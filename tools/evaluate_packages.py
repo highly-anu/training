@@ -22,6 +22,8 @@ Usage:
   .venv/bin/python tools/evaluate_packages.py --package bjj
   .venv/bin/python tools/evaluate_packages.py --report docs/package-fidelity/scorecard.md
   .venv/bin/python tools/evaluate_packages.py --update-baseline
+  .venv/bin/python tools/evaluate_packages.py --update-baseline --package bjj    # that package's rows only
+  .venv/bin/python tools/evaluate_packages.py --update-baseline --dry-run        # what it would record
   .venv/bin/python tools/evaluate_packages.py --update-baseline --accept-worse   # a stricter grader
 
 Exits 1 when a grade is worse than tools/scorecard_baseline.json records, a
@@ -419,6 +421,43 @@ def write_report(scorecard: dict, path: str) -> None:
         fh.write('\n'.join(lines))
 
 
+def record_packages(packages: list[str], scorecard: dict, current: dict, gated: list, orphans: dict) -> None:
+    """--update-baseline --package: each baseline keeps every other package's
+    rows and takes these packages' from this run; status.yaml likewise."""
+    def mine(key: str) -> bool:
+        return key.split('/')[0] in packages
+
+    grades = {}
+    if os.path.exists(BASELINE):
+        with open(BASELINE) as fh:
+            grades = {k: v for k, v in json.load(fh).items() if not mine(k)}
+    with open(BASELINE, 'w') as fh:
+        json.dump(dict(sorted({**grades, **current}.items())), fh, indent=1)
+        fh.write('\n')
+
+    findings = []
+    if os.path.exists(cf.BASELINE):
+        with open(cf.BASELINE) as fh:
+            findings = [k for k in json.load(fh) if not mine(k)]
+    with open(cf.BASELINE, 'w') as fh:
+        json.dump(sorted(set(findings) | set(gated)), fh, indent=1)
+        fh.write('\n')
+
+    known = json.loads(coverage.BASELINE.read_text()) if coverage.BASELINE.exists() else {}
+    known = {p: o for p, o in known.items() if p not in packages}
+    coverage.BASELINE.write_text(json.dumps(dict(sorted({**known, **orphans}.items())), indent=2,
+                                            sort_keys=True) + '\n')
+
+    entries = {}
+    if os.path.exists(STATUS):
+        with open(STATUS, encoding='utf-8') as fh:
+            entries = dict((yaml.safe_load(fh) or {}).get('packages') or {})
+    for pkg in packages:
+        entries[pkg] = pf.status_entry(pkg, pf.load(pkg), derive(pkg, scorecard[pkg]))
+    with open(STATUS, 'w', encoding='utf-8') as fh:
+        fh.write(pf.status_document(entries))
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument('--package', action='append')
@@ -426,6 +465,8 @@ def main() -> int:
     ap.add_argument('--update-baseline', action='store_true')
     ap.add_argument('--accept-worse', action='store_true',
                     help='with --update-baseline: record worse grades too (a stricter grader, never a worse package)')
+    ap.add_argument('--dry-run', action='store_true',
+                    help='with --update-baseline: refuse or accept as it would, write nothing')
     ap.add_argument('--json', help='write the scorecard as JSON to this path')
     args = ap.parse_args()
 
@@ -462,9 +503,6 @@ def main() -> int:
     reached_orphans = {p: o for p, o in reached_orphans.items() if o}
 
     if args.update_baseline:
-        if args.package:
-            print('--update-baseline needs the whole run (no --package)')
-            return 2
         if (worse and not args.accept_worse) or new_fid or new_orphans:
             print('Refusing to record a worse scorecard, a new fidelity finding or a new orphan:')
             for k in worse:
@@ -478,15 +516,25 @@ def main() -> int:
             return 1
         for k in worse:
             print(f'  accepted worse: {k}: {baseline[k]} -> {current[k]}')
-        with open(BASELINE, 'w') as fh:
-            json.dump(dict(sorted(current.items())), fh, indent=1)
-            fh.write('\n')
-        cf.write_baseline(gated)
-        coverage.BASELINE.write_text(json.dumps(dict(sorted(orphans.items())), indent=2, sort_keys=True) + '\n')
-        with open(STATUS, 'w', encoding='utf-8') as fh:
-            fh.write(status_text(scorecard))
+        if args.dry_run:
+            print(f'would record {len(current)} grades ({len(new)} new), {len(gated)} fidelity findings, '
+                  f'{sum(len(o) for o in orphans.values())} orphans; nothing written')
+            return 0
+        if args.package:
+            # These packages' rows replace their old ones; every other
+            # package's stay as recorded (tools/add_package.py records one).
+            record_packages(packages, scorecard, current, gated, orphans)
+        else:
+            with open(BASELINE, 'w') as fh:
+                json.dump(dict(sorted(current.items())), fh, indent=1)
+                fh.write('\n')
+            cf.write_baseline(gated)
+            coverage.BASELINE.write_text(json.dumps(dict(sorted(orphans.items())), indent=2, sort_keys=True) + '\n')
+            with open(STATUS, 'w', encoding='utf-8') as fh:
+                fh.write(status_text(scorecard))
         print(f'baselines written: {len(current)} grades, {len(gated)} fidelity findings, '
-              f'{sum(len(o) for o in orphans.values())} orphans; {os.path.relpath(STATUS, ROOT)}')
+              f'{sum(len(o) for o in orphans.values())} orphans; {os.path.relpath(STATUS, ROOT)}'
+              + (f" (for {', '.join(packages)})" if args.package else ''))
         return 0
 
     failed = False
