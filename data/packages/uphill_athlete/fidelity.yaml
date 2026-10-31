@@ -137,7 +137,7 @@ rules:
     cites: [{source: mtn, at: '"the longest duration workout should make up 50% of the total weekly aerobic training volume"'}]
     enforced_by:
       - data:training_contract.yaml#tracks.full_program.modules.long_day.progression.share
-      - test:test_training_contract.py::test_uphill_volume_ramps_recovers_and_holds
+      - test:tests/test_contract.py::test_uphill_volume_ramps_recovers_and_holds
   - id: R4
     text: Build three weeks, then an easy week at about half the time of the hardest; every third or fourth week.
     cites: [{source: mtn, at: '"we progress training load for 3 weeks in a row"; "an easy week that is typically 50% of the training volume (time) of the most difficult week"'}]
@@ -145,7 +145,7 @@ rules:
       - data:training_contract.yaml#tracks.full_program.modules.aerobic.progression.build_weeks
       - data:training_contract.yaml#tracks.full_program.modules.aerobic.progression.recovery_pct
       - data:frameworks/uphill_base_phase.yaml#deload_protocol
-      - test:test_training_contract.py::test_uphill_volume_ramps_recovers_and_holds
+      - test:tests/test_contract.py::test_uphill_volume_ramps_recovers_and_holds
   - id: R5
     text: The weekly aerobic time rises about 10 % a week.
     cites: [{source: plan_use, at: '"about 10 percent per week"'}]
@@ -153,7 +153,7 @@ rules:
       - data:training_contract.yaml#tracks.full_program.modules.aerobic.progression.ramp_pct
       - checks:full_program/base.volume_change_per_week
       - checks:full_program/base_intensity.volume_change_per_week
-      - test:test_training_contract.py::test_uphill_volume_ramps_recovers_and_holds
+      - test:tests/test_contract.py::test_uphill_volume_ramps_recovers_and_holds
   - id: R6
     text: "The first week's time, strength included: about 5 hours over six days untrained, 7 lean and active, 8–10 for someone who can jog 10 miles."
     cites: [{source: mtn, at: '"typically start with 5 hours"; "can start with 7 hours"; "8-10 hours per week"'}]
@@ -165,7 +165,7 @@ rules:
     enforced_by:
       - data:training_contract.yaml#tracks.full_program.modules.aerobic.progression.pack_pct
       - data:training_contract.yaml#tracks.full_program.modules.long_day.blocks.long.notes
-      - test:test_training_contract.py::test_uphill_volume_ramps_recovers_and_holds
+      - test:tests/test_contract.py::test_uphill_volume_ramps_recovers_and_holds
   - id: R8
     text: No high intensity in the first eight to twelve weeks; the first such workout in week 13 of the 24-week plan.
     cites:
@@ -203,7 +203,7 @@ rules:
       - data:training_contract.yaml#tracks.full_program.modules.general_strength.phases
       - data:training_contract.yaml#tracks.full_program.modules.max_strength.phases
       - data:training_contract.yaml#tracks.full_program.modules.muscular_endurance.phases
-      - test:test_training_contract.py::test_uphill_strength_goes_general_max_then_muscular_endurance
+      - test:tests/test_contract.py::test_uphill_strength_goes_general_max_then_muscular_endurance
   - id: R13
     text: Max strength is three or four reps at 90–95 % of the one-rep max, never past twice bodyweight in the squat or deadlift.
     cites:
@@ -238,7 +238,7 @@ rules:
       - data:training_contract.yaml#tracks.full_program.modules.aerobic.progression.ramp_phases
       - checks:full_program/specific.modalities_required
       - week:specific_week
-      - test:test_training_contract.py::test_uphill_volume_ramps_recovers_and_holds
+      - test:tests/test_contract.py::test_uphill_volume_ramps_recovers_and_holds
   - id: R18
     text: Base runs at least twelve weeks; Specific two to eight.
     cites: [{source: pod_spec, at: '"at least twelve weeks and probably sixteen weeks of base"; "it can range from 2 to 8 weeks"'}]
@@ -252,13 +252,13 @@ rules:
     enforced_by:
       - data:philosophy.yaml#tracks.full_program.phases.taper.weeks
       - data:training_contract.yaml#tracks.full_program.deload_phases
-      - test:test_training_contract.py::test_uphill_volume_ramps_recovers_and_holds
+      - test:tests/test_contract.py::test_uphill_volume_ramps_recovers_and_holds
   - id: R20
     text: In Specific the long day's time is split over back-to-back days.
     cites: [{source: pod_spec, at: "the specific week's back-to-back long days"}]
     enforced_by:
       - data:training_contract.yaml#tracks.full_program.modules.aerobic.adjacent_to_by_phase
-      - test:test_training_contract.py::test_uphill_volume_ramps_recovers_and_holds
+      - test:tests/test_contract.py::test_uphill_volume_ramps_recovers_and_holds
 
 open:
   - "The books (Training for the Uphill Athlete, Training for the New Alpinism) could not be read; every rule rests on Uphill Athlete's public articles, PDFs and podcasts."
@@ -277,7 +277,7 @@ inventions:
     text: "Each build block starts one step above the last; the ramp stops at the end of Base and holds through Specific and Taper (R17), its recovery weeks still at half. The published plans peak near 11 hours; this one peaks near 11.4."
     implemented_by:
       - data:training_contract.yaml#tracks.full_program.modules.aerobic.progression
-      - test:test_training_contract.py::test_uphill_volume_ramps_recovers_and_holds
+      - test:tests/test_contract.py::test_uphill_volume_ramps_recovers_and_holds
   - id: I3
     text: "The first week's aerobic minutes by level, from R6's hours less about 1.5 hours of strength: intermediate 5.5 hours (lean and active), advanced 7 (can jog 10 miles), elite 8.5. No novice: that track comes separately."
     implemented_by:
@@ -285,7 +285,7 @@ inventions:
   - id: I4
     text: A session longer than the athlete's longest day is capped there, and the program says so; the sources set the long day by the week's time, not by the athlete's days.
     implemented_by:
-      - test:test_training_contract.py::test_uphill_caps_the_long_day_and_refuses_what_it_is_not_for
+      - test:tests/test_contract.py::test_uphill_caps_the_long_day_and_refuses_what_it_is_not_for
   - id: I5
     text: "The max-strength session: four sets of the squat or the deadlift (alternating), four of weighted pull-ups, and the core routine (two sets of four to six, from the ME workout's core). The sources give the reps and the intensity, not the sets or the session."
     implemented_by:

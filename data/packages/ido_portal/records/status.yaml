@@ -8,7 +8,7 @@ debt: []
 currency:
   floreio: plan_completion
 source_tests:
-- test_week_template.py::test_ido_portal_runs_the_floreio_routines_at_each_level
+- tests/test_week_template.py::test_ido_portal_runs_the_floreio_routines_at_each_level
 inventions:
 - 'I1: Six training days a week, Sunday a rest day, fewer days dropping from the end of the week: the
   PDF names no frequency (only a "Preparations For Our Daily Training" post).'

@@ -28,6 +28,7 @@ PACKAGES = loader._PACKAGES_DIR
 CHECKS = os.path.join(ROOT, 'checks', 'python_suites.yaml')
 FILE = 'fidelity.yaml'
 SOURCE_WEEKS = 'source_weeks.yaml'
+TESTS = 'tests'
 READ = ('full', 'partial')
 
 
@@ -66,8 +67,9 @@ def _yaml(pkg: str, name: str):
 
 def _workflow() -> str:
     """The commands the pre-push checks run (checks/python_suites.yaml), one
-    `python <command>` a line: a package's cited test counts as enforced only
-    when it runs there. (Until 2026-10-26 the GitHub workflow was the list.)"""
+    `python <command>` a line: a cited test at the root counts as enforced only
+    when it runs there; the package's own (tests/) always runs. (Until
+    2026-10-26 the GitHub workflow was the list.)"""
     with open(CHECKS, encoding='utf-8') as fh:
         doc = yaml.safe_load(fh) or {}
     run = (doc.get('suites') or []) + (doc.get('exclusive') or []) + (doc.get('scratch_db') or [])
@@ -75,6 +77,13 @@ def _workflow() -> str:
 
 
 # ── References ───────────────────────────────────────────────────────────────
+
+def _package_test(file: str) -> bool:
+    """`tests/test_<x>.py` names a test in the package's own folder — one the
+    checks find (tools/run_checks.py) — rather than one at the repository root."""
+    head, base = os.path.split(file)
+    return head == TESTS and base.startswith('test_') and base.endswith('.py')
+
 
 def _walk(node, path: str):
     """Follow a dotted key path; a list step matches an item's id (a slot's
@@ -114,13 +123,16 @@ def ref_error(pkg: str, ref: str, workflow: str | None = None) -> str | None:
         return f'{ref}: no {missing!r} in philosophy.yaml' if missing else None
     if kind == 'test':
         file, _, name = rest.partition('::')
-        path = os.path.join(ROOT, file)
+        own = _package_test(file)
+        path = os.path.join(PACKAGES, pkg, file) if own else os.path.join(ROOT, file)
         if not os.path.exists(path):
-            return f'{ref}: no file {file}'
+            return f'{ref}: no file {file}' + (' in the package' if own else '')
         with open(path, encoding='utf-8') as fh:
             if f'def {name}(' not in fh.read():
                 return f'{ref}: {file} has no {name}'
-        if f'python {file}' not in (workflow if workflow is not None else _workflow()):
+        # The package's own tests are found by the checks (tools/run_checks.py);
+        # a test at the root runs only once the registry lists it.
+        if not own and f'python {file}' not in (workflow if workflow is not None else _workflow()):
             return f'{ref}: the checks do not run {file} (checks/python_suites.yaml)'
         return None
     if kind == 'week':

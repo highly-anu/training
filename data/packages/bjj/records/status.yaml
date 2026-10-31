@@ -8,9 +8,9 @@ debt: []
 currency:
   mat_support: mat_time
 source_tests:
-- test_training_contract.py::test_bjj_conditioning_is_optional_and_never_outnumbers_the_mat
-- test_training_contract.py::test_bjj_mat_time_leads_the_week
-- test_training_contract.py::test_bjj_strength_runs_strengthlogs_cycle_and_the_mat_carries_on
+- tests/test_contract.py::test_bjj_conditioning_is_optional_and_never_outnumbers_the_mat
+- tests/test_contract.py::test_bjj_mat_time_leads_the_week
+- tests/test_contract.py::test_bjj_strength_runs_strengthlogs_cycle_and_the_mat_carries_on
 inventions:
 - 'I1: The class''s blocks and minutes (warm-up, drilling, positional, rolling) are the shape of a typical
   class, not the coach''s plan.'

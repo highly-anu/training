@@ -9,13 +9,13 @@ currency:
   linear_progression: bar_load
   texas_method: five_rep_max
 source_tests:
-- test_training_contract.py::test_ss_adds_weight_each_confirmed_session
-- test_training_contract.py::test_ss_alternates_a_and_b_across_weeks
-- test_training_contract.py::test_ss_first_session_works_up
-- test_training_contract.py::test_ss_intermediate_routes_to_texas_method
-- test_training_contract.py::test_ss_refuses_with_the_unblocking_constraint
-- test_training_contract.py::test_ss_stall_resets_lightens_the_squat_then_triples
-- test_training_contract.py::test_texas_method_volume_light_intensity_week
+- tests/test_contract.py::test_ss_adds_weight_each_confirmed_session
+- tests/test_contract.py::test_ss_alternates_a_and_b_across_weeks
+- tests/test_contract.py::test_ss_first_session_works_up
+- tests/test_contract.py::test_ss_intermediate_routes_to_texas_method
+- tests/test_contract.py::test_ss_refuses_with_the_unblocking_constraint
+- tests/test_contract.py::test_ss_stall_resets_lightens_the_squat_then_triples
+- tests/test_contract.py::test_texas_method_volume_light_intensity_week
 inventions:
 - 'I1: Chin-ups are left out, and said so, when there is no pull-up bar; the article lists them in Workout
   A.'

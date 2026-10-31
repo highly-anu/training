@@ -94,6 +94,12 @@
      "path": "source_weeks.yaml",
      "required": false,
      "present": true
+    },
+    {
+     "id": "tests",
+     "path": "tests",
+     "required": false,
+     "present": true
     }
    ],
    "records": [
@@ -252,6 +258,12 @@
      "path": "source_weeks.yaml",
      "required": false,
      "present": true
+    },
+    {
+     "id": "tests",
+     "path": "tests",
+     "required": false,
+     "present": true
     }
    ],
    "records": [
@@ -408,6 +420,12 @@
     {
      "id": "source_weeks",
      "path": "source_weeks.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "tests",
+     "path": "tests",
      "required": false,
      "present": false
     }
@@ -573,6 +591,12 @@
      "path": "source_weeks.yaml",
      "required": false,
      "present": true
+    },
+    {
+     "id": "tests",
+     "path": "tests",
+     "required": false,
+     "present": true
     }
    ],
    "records": [
@@ -736,6 +760,12 @@
      "path": "source_weeks.yaml",
      "required": false,
      "present": true
+    },
+    {
+     "id": "tests",
+     "path": "tests",
+     "required": false,
+     "present": true
     }
    ],
    "records": [
@@ -892,6 +922,12 @@
     {
      "id": "source_weeks",
      "path": "source_weeks.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "tests",
+     "path": "tests",
      "required": false,
      "present": true
     }
@@ -1052,6 +1088,12 @@
      "path": "source_weeks.yaml",
      "required": false,
      "present": true
+    },
+    {
+     "id": "tests",
+     "path": "tests",
+     "required": false,
+     "present": true
     }
    ],
    "records": [
@@ -1208,6 +1250,12 @@
     {
      "id": "source_weeks",
      "path": "source_weeks.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "tests",
+     "path": "tests",
      "required": false,
      "present": true
     }
@@ -1373,6 +1421,12 @@
      "path": "source_weeks.yaml",
      "required": false,
      "present": true
+    },
+    {
+     "id": "tests",
+     "path": "tests",
+     "required": false,
+     "present": true
     }
    ],
    "records": [
@@ -1536,6 +1590,12 @@
      "path": "source_weeks.yaml",
      "required": false,
      "present": true
+    },
+    {
+     "id": "tests",
+     "path": "tests",
+     "required": false,
+     "present": true
     }
    ],
    "records": [
@@ -1692,6 +1752,12 @@
     {
      "id": "source_weeks",
      "path": "source_weeks.yaml",
+     "required": false,
+     "present": true
+    },
+    {
+     "id": "tests",
+     "path": "tests",
      "required": false,
      "present": true
     }
@@ -1877,6 +1943,12 @@
      "path": "source_weeks.yaml",
      "required": false,
      "present": true
+    },
+    {
+     "id": "tests",
+     "path": "tests",
+     "required": false,
+     "present": true
     }
    ],
    "records": [
@@ -2033,6 +2105,12 @@
     {
      "id": "source_weeks",
      "path": "source_weeks.yaml",
+     "required": false,
+     "present": false
+    },
+    {
+     "id": "tests",
+     "path": "tests",
      "required": false,
      "present": false
     }
@@ -2221,18 +2299,6 @@
  "_comment": "What a package still cannot bring in its own folder (src/portability.py serves this to Dev Lab ▸ Model Interactions). Each anchor is `path::text` and must still be in that file while the gap is open; test_portability.py fails when one is gone, so closing a gap means changing its status here in the same change. kind: gate | tooling | commons | code | client | watch | docs. impact on a dropped-in package: blocks (it fails a gate or cannot be written), degrades (it works, worse or silently wrong), cosmetic. status: open | by_design (the commons vocabulary is the contract between packages and the engine). roadmap: the step of docs/roadmap.md item 9 (9.1, 9.2, …) that closes it.",
  "verdict": "The code is package-neutral: nothing in the server, the web, the phones or the watches names a package (tools/check_code_neutral.py), and test_package_dropin.py runs three packages under new ids beside the shipped ones with the repository unchanged. A package is one folder: its files, its standards, and the records the push gates keep (records/, dossier.md), which tools/add_package.py <id> writes. Anything beyond the commons vocabulary is still a shared edit.",
  "gaps": [
-  {
-   "id": "suite_registry",
-   "title": "A package's own tests count only once listed in the shared suite registry",
-   "kind": "tooling",
-   "impact": "degrades",
-   "detail": "A fidelity rule enforced_by a test is debt (S3) until checks/python_suites.yaml lists the test, and tools/run_checks.py refuses an unlisted root test.",
-   "anchors": [
-    "src/package_fidelity.py::python_suites.yaml"
-   ],
-   "roadmap": "9.1",
-   "status": "open"
-  },
   {
    "id": "fixed_blends",
    "title": "Blends are checked on five fixed pairs",

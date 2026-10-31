@@ -8,8 +8,8 @@ debt: []
 currency:
   full_program: aerobic_volume
 source_tests:
-- test_training_contract.py::test_uphill_strength_goes_general_max_then_muscular_endurance
-- test_training_contract.py::test_uphill_volume_ramps_recovers_and_holds
+- tests/test_contract.py::test_uphill_strength_goes_general_max_then_muscular_endurance
+- tests/test_contract.py::test_uphill_volume_ramps_recovers_and_holds
 inventions:
 - 'I1: A 29-week plan: eight weeks of Transition (the 24-week plan''s eight), Base split into four weeks
   without intensity and eight with one Zone 3 session (so the first is in week 13), eight of Specific

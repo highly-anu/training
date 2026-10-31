@@ -65,7 +65,12 @@ back to a primary source. The engine's part was that it could only express
    text), a fidelity `checks:` claim tools/check_fidelity.py tests, a source
    week the scorecard reproduces, or a test the checks run — its `enforced_by`:
    `data:<file>#<key path>`, `checks:<track>/<phase>.<key>`, `week:<id>`,
-   `test:<file>::<function>`, every one resolved by the scorecard. A rule
+   `test:<file>::<function>`, every one resolved by the scorecard. A test of
+   the package's own is `test:tests/<file>::<function>`: it lives in the
+   package's folder (`tests/test_*.py`), takes the package from that folder
+   (`PKG = Path(__file__).resolve().parents[1].name`) so it follows a copy or a
+   rename, and the checks find it without a line in the registry. A test at the
+   root that reaches several packages counts once the registry lists it. A rule
    with none is debt; the scorecard counts it, nobody declares it.
    A claim, a contract, a week template, a hand-entered standard
    (`data:analytics.yaml#benchmarks.<id>`) or the lead measure counts only
@@ -161,7 +166,8 @@ scorecard, with nothing in the repository changed.
 Run before every push that changes the engine, the data, the schemas, the tools,
 the tests or the watch code: the pre-push hook (`checks.sh`, `../code-checks`) runs
 every command of `checks/python_suites.yaml` in a clean checkout of the pushed
-commit (`tools/run_checks.py`). Every command in the first column is in that list;
+commit (`tools/run_checks.py`), and each package's own tests
+(`data/packages/<id>/tests/test_*.py`, found, not listed). Every command in the first column is in that list;
 `tools/check_package_status.py` fails when the table and the list part. (Until
 2026-10-26 they ran in GitHub's `training-contract.yml` workflow.)
 

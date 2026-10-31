@@ -1,7 +1,8 @@
 """Tests of the standards in generated programs (src/standard_tests.py,
 src/generator._plan_week_tests): when a phase tests, what a test replaces, how
 it is prescribed, when it is skipped, and that everything else in the program
-is left as it would have been. No database.
+is left as it would have been. No database. A package's own tests of its
+standards are in its folder (data/packages/<id>/tests/).
 
     SUPABASE_URL='' .venv/bin/python test_standard_tests.py
 """
@@ -18,6 +19,8 @@ from src.generator import generate
 from src.selector import select_archetype
 
 FRAMEWORKS = list(loader.load_all_frameworks().values())
+
+
 ALL_EQUIPMENT = ['barbell', 'rack', 'plates', 'kettlebell', 'pull_up_bar', 'open_space', 'rower',
                  'jump_rope', 'ruck_pack', 'sandbag', 'box', 'dumbbell', 'bench']
 
@@ -121,22 +124,6 @@ def test_a_test_is_prescribed_as_written():
     clean = next(e for e in pent['exercises'] if e['slot_role'] == 'clean')
     assert clean['load']['duration_minutes'] == 6 and clean['load']['target_rpm'] == 20, clean['load']
     assert pent['archetype']['duration_estimate_minutes'] == 60, 'the test runs its full length'
-
-
-def test_crossfit_benchmarks_recur_in_its_pools():
-    # The Girls recur irregularly among the day's workouts (Benchmark Workouts,
-    # 2003), each a selectable test of its standard; one the athlete cannot do
-    # as written is passed over.
-    raw = _gen('crossfit', weeks=12, days_per_week=6, session_time_minutes=60)
-    girls = {s['archetype']['id']: s for w in raw['weeks'] for _, _, s in _sessions(w)
-             if any(ea.get('standard') for ea in s['exercises'])}
-    assert {'cf_fran', 'cf_cindy', 'cf_helen'} <= girls.keys(), sorted(girls)
-    archetypes = {a['id']: a for a in loader.load_all_archetypes()}
-    assert all(standard_tests.is_test(archetypes[aid]) for aid in girls), 'each a selectable test of its standard'
-    no_barbell = _gen('crossfit', weeks=12, days_per_week=6, session_time_minutes=60,
-                      equipment=['pull_up_bar', 'kettlebell', 'open_space', 'rower', 'jump_rope', 'box'])
-    ids = {s['archetype']['id'] for w in no_barbell['weeks'] for _, _, s in _sessions(w)}
-    assert 'cf_fran' not in ids and {'cf_cindy', 'cf_helen'} <= ids, ids
 
 
 # ── when it is skipped ───────────────────────────────────────────────────────

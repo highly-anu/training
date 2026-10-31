@@ -83,7 +83,7 @@ rules:
     enforced_by:
       - data:frameworks/operator_fitness.yaml#categories
       - week:operator_fitness_month
-      - test:test_week_template.py::test_gym_jones_runs_its_two_months_as_written
+      - test:tests/test_week_template.py::test_gym_jones_runs_its_two_months_as_written
   - id: R5
     text: An emphasis on single-leg and core strength.
     cites: [{source: of1, at: '"there is an emphasis placed upon single leg strength and so-called core strength"'}]
@@ -111,13 +111,13 @@ rules:
     enforced_by:
       - data:frameworks/soldier_of_steel.yaml#categories
       - week:soldier_of_steel_month
-      - test:test_week_template.py::test_gym_jones_runs_its_two_months_as_written
+      - test:tests/test_week_template.py::test_gym_jones_runs_its_two_months_as_written
   - id: R10
     text: "Soldier of Steel is for the newly training: fundamental movements and the habit of daily exercise, most of it needing only open space."
     cites: [{source: sos, at: '"will teach the trainee fundamental and universal movements, and begin to instill the habit of daily exercise"; "Approximately 80% of the workouts may be done without special equipment"'}]
     enforced_by:
       - data:philosophy.yaml#track_for_level
-      - test:test_week_template.py::test_gym_jones_runs_its_two_months_as_written
+      - test:tests/test_week_template.py::test_gym_jones_runs_its_two_months_as_written
   - id: R11
     text: Repeat the month as written, or make it harder by less rest on bodyweight work or more weight on loaded work, and by strict form, full range and speed.
     cites: [{source: sos, at: '"repeat the schedule exactly or increase the difficulty by either reducing the amount of rest … or by increasing the weight"'}]
@@ -128,7 +128,7 @@ rules:
     cites: [{source: of1}, {source: sos}]
     enforced_by:
       - data:frameworks/operator_fitness.yaml#categories.recovery
-      - test:test_week_template.py::test_gym_jones_runs_its_two_months_as_written
+      - test:tests/test_week_template.py::test_gym_jones_runs_its_two_months_as_written
 
 open:
   - "Operator Fitness II: the repository's copy ends at day 17, so it is not run; the source says the two months are interchangeable."

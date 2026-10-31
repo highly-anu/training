@@ -9,8 +9,8 @@ currency:
   constantly_varied: benchmark_wods
   five_on_two_off: benchmark_wods
 source_tests:
-- test_standard_tests.py::test_crossfit_benchmarks_recur_in_its_pools
-- test_week_template.py::test_crossfit_runs_glassmans_cycle_and_the_girls_as_written
+- tests/test_standard_tests.py::test_crossfit_benchmarks_recur_in_its_pools
+- tests/test_week_template.py::test_crossfit_runs_glassmans_cycle_and_the_girls_as_written
 inventions:
 - 'I1: A couplet or triplet is filed by how many elements it has; a couplet by which two (GW, WM, MG),
   every workout of three or more elements as a triplet (Cindy''s three gymnastics movements among them).

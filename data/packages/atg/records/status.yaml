@@ -10,7 +10,7 @@ currency:
   program: plan_completion
   knee_ability_pro: plan_completion
 source_tests:
-- test_week_template.py::test_atg_runs_its_programs_as_written
+- tests/test_week_template.py::test_atg_runs_its_programs_as_written
 inventions:
 - 'I1: With no track named, the level picks one: novice ATG Zero (where Patrick starts everyone), intermediate
   Program #2, advanced and elite Knee Ability Pro. The sources route by age and goal, not level.'

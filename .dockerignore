@@ -50,6 +50,8 @@ data/packages/*/source_weeks.yaml
 # runtime. `*.md` above matches only the top level, so the dossier is named.
 data/packages/*/records/
 data/packages/*/dossier.md
+# A package's own tests (tools/run_checks.py finds them): the checks run them, nothing at runtime.
+data/packages/*/tests/
 
 # The modality scheduler's test fixture package (fixture_packages.py).
 test_packages/

@@ -55,7 +55,7 @@ rules:
       - checks:mat_support/mat_support.modality_outnumbers
       - data:training_contract.yaml#tracks.mat_support.modules.mat_class.exposures_by_days
       - week:bjjee_training_mix
-      - test:test_training_contract.py::test_bjj_mat_time_leads_the_week
+      - test:tests/test_contract.py::test_bjj_mat_time_leads_the_week
   - id: R2
     text: Strength supports the mat — two full-body workouts a week beside the classes.
     cites: [{source: strengthlog, at: '"2 full-body workouts with upper- or lower-body focus per week"'}]
@@ -76,13 +76,13 @@ rules:
       - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.variants.deload_1
       - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.variants.deload_2
       - week:strengthlog_cycle
-      - test:test_training_contract.py::test_bjj_strength_runs_strengthlogs_cycle_and_the_mat_carries_on
+      - test:tests/test_contract.py::test_bjj_strength_runs_strengthlogs_cycle_and_the_mat_carries_on
   - id: R5
     text: "A competitor's conditioning: ten-minute rounds of 15–30-second efforts with sprints or animal movements between; shuttle runs of 30–40 m and partner drills for takedown entries in short bursts."
     cites: [{source: juggernaut_circuits}, {source: vitruve, at: Phase 2 functional circuits}]
     enforced_by:
       - data:training_contract.yaml#tracks.mat_support.modules.competition_conditioning
-      - test:test_training_contract.py::test_bjj_conditioning_is_optional_and_never_outnumbers_the_mat
+      - test:tests/test_contract.py::test_bjj_conditioning_is_optional_and_never_outnumbers_the_mat
 
   - id: R6
     text: "Twelve weeks: six of strength and hypertrophy (Workout 1: trap bar deadlift 4×5, pull-ups 3 × max, Bulgarian split squat 3×8, barbell row 4×8, farmer's carry 3 × 20 m, hanging leg raise 3 × 12–15; Workout 2: bench press 3×5, overhead press 3 × 6–8, front squat 3×8, inverted row 4×10, plate pinch 3 × 20–30 s, weighted plank 3 × 45 s), the deload week, five of power and explosive strength (Workout 1: trap bar deadlift 5×3, box jump 4×4, front squat 4×5, pull-up 3×5, farmer's carry 3 × 20 s, hanging windshield wiper 3 × 8 a side; Workout 2: overhead press 5×3, barbell row 4×6, Bulgarian split squat 3×6, inverted row 3×8, plate pinch 3 × 20–30 s, weighted plank 3 × 60 s)."
@@ -91,19 +91,19 @@ rules:
       - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.periods
       - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.variants
       - week:strengthlog_cycle
-      - test:test_training_contract.py::test_bjj_strength_runs_strengthlogs_cycle_and_the_mat_carries_on
+      - test:tests/test_contract.py::test_bjj_strength_runs_strengthlogs_cycle_and_the_mat_carries_on
   - id: R7
     text: Try to add weight or a rep each workout; once every set makes its reps, add weight next time.
     cites: [{source: strengthlog, at: '"When you can do the designated number of reps for each set, increase the load the next time you hit the gym."'}]
     enforced_by:
       - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.variants.strength_1.blocks.deadlift.load_note
-      - test:test_training_contract.py::test_bjj_strength_runs_strengthlogs_cycle_and_the_mat_carries_on
+      - test:tests/test_contract.py::test_bjj_strength_runs_strengthlogs_cycle_and_the_mat_carries_on
   - id: R8
     text: "The power block: up to 75 % of the one-rep max, each rep as explosive as possible; a set ends when the weight slows, not at failure."
     cites: [{source: strengthlog, at: Block 2}]
     enforced_by:
       - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.variants.power_1.blocks.deadlift.load_note
-      - test:test_training_contract.py::test_bjj_strength_runs_strengthlogs_cycle_and_the_mat_carries_on
+      - test:tests/test_contract.py::test_bjj_strength_runs_strengthlogs_cycle_and_the_mat_carries_on
   - id: R9
     text: Two to four minutes' rest on the compound lifts, one to two on isolation work.
     cites: [{source: strengthlog, at: rest}]
@@ -131,12 +131,12 @@ inventions:
       - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.periods
       - data:training_contract.yaml#tracks.mat_support.modules.competition_conditioning.periods
       - data:training_contract.yaml#tracks.mat_support.modules.mat_class.blocks
-      - test:test_training_contract.py::test_bjj_strength_runs_strengthlogs_cycle_and_the_mat_carries_on
+      - test:tests/test_contract.py::test_bjj_strength_runs_strengthlogs_cycle_and_the_mat_carries_on
   - id: I4
     text: "Declared substitutes: positional work or drilling for rolling under an injury; inverted rows for pull-ups and the barbell row, Bulgarian split squats for the front squat, a dead hang for the plate pinch, a hollow hold for the plank. A lift an injury rules out with no substitute is left out and said, the rest of the workout kept (owner, 2026-10-21); a lift missing its equipment refuses, naming it."
     implemented_by:
       - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.drop_when_injured
-      - test:test_training_contract.py::test_bjj_substitutes_are_declared_and_refusals_name_the_way_out
+      - test:tests/test_contract.py::test_bjj_substitutes_are_declared_and_refusals_name_the_way_out
   - id: I5
     text: "Up to four training days, one of the two workouts a week beside the classes, alternating week to week: StrengthLog's two need five days."
     implemented_by:

@@ -126,7 +126,7 @@ rules:
     cites: [{source: pc3, at: the sections' minutes}, {source: basecamp, at: '"60-minute sessions"'}]
     enforced_by:
       - data:frameworks/rpe_autoregulation.yaml#expectations.ideal_session_minutes
-      - test:test_training_contract.py::test_filly_runs_the_sample_weeks_in_cycles_and_a_bridge_week
+      - test:tests/test_contract.py::test_filly_runs_the_sample_weeks_in_cycles_and_a_bridge_week
   - id: R3
     text: Each session is a warm-up, strength intensity, strength balance, conditioning or a finisher, and a cooldown.
     cites: [{source: pc3}, {source: pl3}]
@@ -155,7 +155,7 @@ rules:
       - data:training_contract.yaml#tracks.pump_lift.modules.persist_session.variants
       - week:pump_condition_3x
       - week:pump_lift_3x
-      - test:test_training_contract.py::test_filly_runs_the_sample_weeks_in_cycles_and_a_bridge_week
+      - test:tests/test_contract.py::test_filly_runs_the_sample_weeks_in_cycles_and_a_bridge_week
   - id: R7
     text: "Loads are the athlete's: work to the top of the reps, then add a little; RPE 7 leaves three reps in reserve."
     cites: [{source: loads_hc}, {source: rpe_hc}]
@@ -174,7 +174,7 @@ rules:
     enforced_by:
       - data:training_contract.yaml#tracks.functional_bodybuilding.modules.persist_session.periods.1
       - data:training_contract.yaml#tracks.pump_lift.modules.persist_session.periods.1
-      - test:test_training_contract.py::test_filly_runs_the_sample_weeks_in_cycles_and_a_bridge_week
+      - test:tests/test_contract.py::test_filly_runs_the_sample_weeks_in_cycles_and_a_bridge_week
   - id: R10
     text: "In the first week: a set or two fewer and loads 10–20 lb lighter."
     cites: [{source: start_hc, at: '"Lower your set count by 1-2 sets"; "Lower your loads … by 10-20 pounds"'}]

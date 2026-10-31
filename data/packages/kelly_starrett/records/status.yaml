@@ -8,7 +8,7 @@ debt: []
 currency:
   built_to_move: plan_completion
 source_tests:
-- test_week_template.py::test_kelly_starrett_runs_the_21_day_challenge_as_written
+- tests/test_week_template.py::test_kelly_starrett_runs_the_21_day_challenge_as_written
 inventions:
 - 'I1: Floor sitting is five minutes in the session; the challenge asks for it "throughout your day".'
 - 'I2: Each follow-along mobilization counts as three minutes, a test as four, a balance practice as three,

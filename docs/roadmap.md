@@ -1011,9 +1011,12 @@ Today: the code is package-neutral, the repository is not yet drop-in. In order:
   `test_package_dropin.py` runs its copies beside the shipped packages, through the
   static reference cache and `add_package.py --check` (`test_add_package.py`). Since 2026-10-31
   the records live in the package's folder (`records/`, `dossier.md`;
-  `src/package_records.py`), so a new package touches nothing outside it. Left: a
-  package's own tests count only once the shared registry lists them; blends are checked
-  on `check_styles.COMPOSITIONS`' five pairs.
+  `src/package_records.py`), so a new package touches nothing outside it, and so do its
+  own tests (`data/packages/<id>/tests/test_*.py`): `run_checks.py` finds them, a rule
+  cites one as `test:tests/<file>::<fn>`, and they take the package from their folder, so
+  `test_package_dropin.py` runs its renamed copies' tests too. Eleven packages' tests moved
+  out of `test_training_contract.py`, `test_week_template.py`, `test_standard_tests.py` and
+  `test_wildman.py`. Left: blends are checked on `check_styles.COMPOSITIONS`' five pairs.
 - **9.2 Standards in the package (M).** Done 2026-10-30 (branch `feat/package-standards`):
   `data/packages/<id>/standards.yaml` brings a package's own standards and any group it
   adds; `data/benchmarks/` is found by glob and its groups are

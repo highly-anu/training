@@ -1291,8 +1291,14 @@ pushed commits touch:
   that drop tables each on a database made and dropped for the run, skipped — never run
   on `training_test` — without a local Postgres. The list is the registry:
   `run_checks.py` fails while a root `test_*.py` is in none of its sections,
-  `package_fidelity` counts a package's cited test only when it is listed, and
-  `check_package_status.py` holds the package README's gate table to it.
+  `package_fidelity` counts a cited root test only when it is listed, and
+  `check_package_status.py` holds the package README's gate table to it. A package's
+  own tests (`data/packages/<id>/tests/test_*.py`, since 2026-10-31) are found, not
+  listed, run beside the suites with the checkout on `PYTHONPATH`, and take the
+  package from their folder (`PKG`), so a copied or renamed package's tests still run
+  (`test_package_dropin.py` runs its copies'); a rule cites one as
+  `test:tests/<file>::<fn>`. Engine tests, and a test reaching several packages, stay
+  at the root.
 - **frontend** — lint, `npm run build` (tsc + vite), vitest (`npm ci` first in a
   worktree without `node_modules`).
 - **ios** — `./ios/run_tests.sh` on a booted simulator.
@@ -1336,7 +1342,8 @@ package against its source — every rule into data, no invented structure, an i
 ledger. Each package keeps its **record** in its own folder (since 2026-10-21):
 `data/packages/<id>/fidelity.yaml` (sources with how much was read and when; rules `R1…`
 with what they `cite` and what they are `enforced_by` — `data:<file>#<path>`,
-`checks:<track>/<phase>.<key>`, `week:<id>`, `test:<file>::<fn>`; inventions `I1…`
+`checks:<track>/<phase>.<key>`, `week:<id>`, `test:<file>::<fn>` (`tests/<file>` in
+the package's own folder); inventions `I1…`
 with where they are `implemented_by`; `currency`; `excluded_tracks`; the shape) and
 `source_weeks.yaml` (the source's own example weeks and progressions, transcribed;
 `src/source_weeks.py` generates and compares only the fields written), beside the
