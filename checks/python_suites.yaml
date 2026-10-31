@@ -40,6 +40,7 @@ suites:
   - test_constraint_impact.py
   - test_portability.py               # the Dev Lab's portability report; the gaps' code anchors
   - test_add_package.py               # one package's baselines recorded, every other's kept
+  - test_package_standards.py         # a package's own standards: loaded, served, owned, refused when taken
   - test_recovery_schedule.py
   - test_recovery_regions.py
   - test_explore_links.py

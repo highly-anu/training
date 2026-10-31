@@ -43,6 +43,7 @@ FILES = (
     ('analytics', 'analytics.yaml', False),
     ('watch', 'watch.yaml', False),
     ('contract', 'training_contract.yaml', False),
+    ('standards', 'standards.yaml', False),
     ('fidelity', 'fidelity.yaml', False),
     ('source_weeks', 'source_weeks.yaml', False),
 )
@@ -64,7 +65,10 @@ _KEPT = {
     'framework': 'the last in the library and the first in load_framework',
     'archetype': 'the first (by folder name)',
     'media': 'the last (by folder name)',
+    'standard': "data/benchmarks' copy, else the first package's (by folder name)",
 }
+# The commons' standards, as an owner beside the packages.
+_COMMONS_STANDARDS = 'data/benchmarks'
 
 
 def _json(path: str):
@@ -124,6 +128,7 @@ def _read(pkg: str) -> dict:
         'analytics': _yaml(os.path.join(base, 'analytics.yaml')) or {},
         'watch': _yaml(os.path.join(base, 'watch.yaml')) or {},
         'contract': _yaml(os.path.join(base, 'training_contract.yaml')) or {},
+        'standards': _yaml(os.path.join(base, 'standards.yaml')) or {},
     }
 
 
@@ -255,6 +260,8 @@ def _owned_ids(docs: dict) -> dict[str, dict[str, object]]:
         'archetype': {a['id']: None for a in docs['archetypes'] if a.get('id')},
         'exercise': {e['id']: None for e in docs['exercises'] if e.get('id')},
         'media': {k: json.dumps(v, sort_keys=True, default=str) for k, v in media.items()},
+        'standard': {b['id']: None for b in (docs['standards'] or {}).get('standards') or []
+                     if isinstance(b, dict) and b.get('id')},
     }
 
 
@@ -282,10 +289,21 @@ def collisions(owned: dict[str, dict[str, dict]]) -> tuple[list[dict], int]:
     return found, shared
 
 
+def _commons_standards() -> dict[str, dict]:
+    from .analytics import benchmarks_data
+    return {'standard': {b['id']: None for b in benchmarks_data.load_benchmarks() if not b.get('package')}}
+
+
+def _all_owned() -> dict[str, dict]:
+    """Every package's ids, and the commons' standards as one more owner, so a
+    package standard that takes a commons id collides like any other."""
+    return {**{pkg: _owned_ids(_read(pkg)) for pkg in packages()}, _COMMONS_STANDARDS: _commons_standards()}
+
+
 def id_collisions() -> list[dict]:
     """The ids two packages declare that the loader resolves silently — the
     gate tools/validate_entities.py --all holds every package to."""
-    return collisions({pkg: _owned_ids(_read(pkg)) for pkg in packages()})[0]
+    return collisions(_all_owned())[0]
 
 
 def gaps() -> dict:
@@ -296,7 +314,7 @@ def report() -> dict:
     known = _known()
     names = packages()
     read = {pkg: _read(pkg) for pkg in names}
-    owned = {pkg: _owned_ids(docs) for pkg, docs in read.items()}
+    owned = {**{pkg: _owned_ids(docs) for pkg, docs in read.items()}, _COMMONS_STANDARDS: _commons_standards()}
     found, shared = collisions(owned)
     colliding = defaultdict(int)
     for c in found:

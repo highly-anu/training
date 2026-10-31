@@ -15,7 +15,9 @@ JSON Schema (Draft-07) definitions for every data layer in the training system. 
 | `exercise.schema.json` | One entry per exercise | `data/packages/{name}/exercises.yaml` (list under `exercises:` key) |
 | `goal_profile.schema.json` | One entry per goal type | `data/goals/{id}.yaml` |
 | `constraints.schema.json` | Runtime athlete input (not a library) | Input to generator |
-| `benchmark.schema.json` | One entry per measurable standard | `data/benchmarks/*.yaml` |
+| `benchmark.schema.json` | One entry per measurable standard | `data/benchmarks/*.yaml`, and each entry of a package's `standards.yaml` |
+| `standards.schema.json` | A package's own standards and the groups it adds | `data/packages/{id}/standards.yaml` (optional) |
+| `standard_categories.schema.json` | The groups standards are listed in, in order | `data/benchmarks/categories.yaml` |
 | `analytics.schema.json` | What progress means for one methodology (optional) | `data/packages/{name}/analytics.yaml` |
 | `watch.schema.json` | How the methodology's sessions look on the watch (optional); ids from `data/commons/watch_vocabulary.json` | `data/packages/{name}/watch.yaml` |
 

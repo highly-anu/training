@@ -954,7 +954,8 @@ export type Sex = 'male' | 'female'
 export interface BenchmarkStandard {
   id: string
   name: string
-  category: 'strength' | 'conditioning' | 'kettlebell' | 'tactical' | 'benchmark_wod' | 'skill' | 'cell'
+  /** data/benchmarks/categories.yaml's ids, or one a package adds (its standards.yaml). */
+  category: string
   /** The group's name and place, the same on every screen and both clients. */
   categoryName?: string
   categoryOrder?: number

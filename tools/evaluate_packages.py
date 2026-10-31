@@ -142,15 +142,15 @@ def _lead(rec: dict) -> tuple[str | None, str | None]:
 
 
 def _standards_known() -> tuple[set, dict]:
-    """Every commons standard id, and each one's derived_from lifts."""
+    """Every standard id but The Cell's — the commons' and each package's own
+    (benchmarks_data, the one reader) — and each one's derived_from lifts."""
+    from src.analytics import benchmarks_data
     known, derived = set(), {}
-    for name in sorted(os.listdir(os.path.join(ROOT, 'data', 'benchmarks'))):
-        if not name.endswith('.yaml') or name == 'cell_standards.yaml':
+    for b in benchmarks_data.load_benchmarks():
+        if b['category'] == 'cell':
             continue
-        with open(os.path.join(ROOT, 'data', 'benchmarks', name)) as fh:
-            for item in yaml.safe_load(fh) or []:
-                known.add(item['id'])
-                derived[item['id']] = set((item.get('derived_from') or {}).get('exercises') or [])
+        known.add(b['id'])
+        derived[b['id']] = set((b.get('derived_from') or {}).get('exercises') or [])
     return known, derived
 
 

@@ -115,8 +115,10 @@ training/
 │   │       ├── injury_flags.yaml    # 12 flags with patterns + substitutions
 │   │       └── equipment_profiles.yaml
 │   └── benchmarks/           # Six list files (strength, conditioning, kettlebell
-│                             #   pentathlon, ruck & PT tests, benchmark WODs, skill)
-│                             #   + the Cell standards; `benchmarks_data.BENCHMARK_FILES`
+│                             #   pentathlon, ruck & PT tests, benchmark WODs, skill),
+│                             #   found by glob, + the Cell standards; categories.yaml
+│                             #   (the groups, in order). A package adds its own in
+│                             #   data/packages/<id>/standards.yaml
 ├── docs/plan.md              # Original design document (ontology reference)
 └── frontend/                 # React app (see below)
 ```
@@ -304,6 +306,15 @@ wire identifiers keep *benchmark* — `performance_logs.benchmark_id`, `benchmar
 would break stored rows and installed builds. "Benchmark workouts" is only the CrossFit
 group's name.
 
+- **A package may bring its own** (since 2026-10-30, roadmap 9.2):
+  `data/packages/<id>/standards.yaml` — `standards` (benchmark.schema.json entries) and
+  `categories` it adds after `data/benchmarks/categories.yaml`'s
+  (`docs/schemas/standards.schema.json`). `benchmarks_data.load_benchmarks` reads the
+  commons' files by glob, The Cell, then each package's, ordered by category and as
+  authored; each carries `package` (None for the commons'), and `sources` defaults to the
+  package. Only the package and a philosophy that borrows from it may reference one
+  (`validate_entities` for a test slot, `check_provenance` for `analytics.yaml`); an id the
+  commons or another package has fails the collision gate. `test_package_standards.py`.
 - **The server places every value.** `benchmarks_data.level_of` (the level; `None` is
   below entry), `format_value` ("4:58", "3:20:00", "1.62×BW", "45 s") and `parse_input`
   (its inverse, so a field takes what it shows) are the only copies; no client computes a
@@ -1431,6 +1442,7 @@ Run these after touching standards or results (the SQL one makes and drops its o
 
 ```bash
 SUPABASE_URL='' .venv/bin/python test_standards.py   # levels, text, input, days, blocks, routes
+SUPABASE_URL='' .venv/bin/python test_package_standards.py  # a package's own standards.yaml: loaded, served, owned, refused when taken
 SUPABASE_URL='' .venv/bin/python test_standard_tests.py   # when a phase tests, what it replaces, skips, carry
 .venv/bin/python test_standard_results_sql.py         # the store on a production-shaped performance_logs
 SUPABASE_URL='' .venv/bin/python test_standard_suggestions.py  # a logged test → a suggestion → a result (SQL half on a scratch DB)

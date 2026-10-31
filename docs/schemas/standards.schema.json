@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "standards.schema.json",
+  "title": "A package's own standards",
+  "description": "data/packages/<id>/standards.yaml: the standards a package brings with it, beside the commons' (data/benchmarks/). Each entry is a benchmark.schema.json entry; tools/validate_entities.py checks them against it. Owned by the package: only it, and a philosophy that borrows from it, may reference them. An id must be new — neither the commons' nor another package's.",
+  "type": "object",
+  "required": ["standards"],
+  "additionalProperties": false,
+  "properties": {
+    "categories": {
+      "type": "array",
+      "description": "Groups this package adds to data/benchmarks/categories.yaml, listed after the commons' ones.",
+      "items": {"$ref": "#/definitions/category"}
+    },
+    "standards": {
+      "type": "array",
+      "minItems": 1,
+      "description": "benchmark.schema.json entries.",
+      "items": {"type": "object"}
+    }
+  },
+  "definitions": {
+    "category": {
+      "type": "object",
+      "required": ["id", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9_]+$"},
+        "name": {"type": "string"}
+      }
+    }
+  }
+}

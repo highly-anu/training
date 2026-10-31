@@ -75,9 +75,10 @@ data/
       training_contract.yaml     ← optional: per track, modules the engine places as written
       fidelity.yaml              ← its sources, rules, inventions (docs/package-fidelity/README.md)
       source_weeks.yaml          ← optional: the source's own weeks, compared with generation
+      standards.yaml             ← optional: standards the method tests that the commons lack
   commons/                       ← shared by every package: modalities, phase kinds,
                                  #   movement patterns, constraints, watch vocabulary, icons
-  benchmarks/                    ← the standards (a package references them; see roadmap 9.2)
+  benchmarks/                    ← the shared standards and their groups (categories.yaml)
 ```
 
 **Ids are package-scoped by convention, not by the loader.** Prefix archetype and framework ids with something your package owns: when two packages declare one id the loader keeps one copy silently (Dev Lab ▸ Model Interactions lists any). Exercise ids may be shared on purpose — each package keeps its own prescription.
