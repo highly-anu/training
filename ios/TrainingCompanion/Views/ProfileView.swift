@@ -17,23 +17,18 @@ enum ProfileTab: Int, AppSubTab {
     }
 }
 
-// MARK: - Equipment categories (mirrors web EQUIPMENT_CATEGORIES)
+// MARK: - Equipment categories (Profile's sections, the same data as the web's)
 
 private struct EquipmentCategory {
     let name: String       // matches EquipmentItem.group exactly
-    let modalityId: String // for accent color only
+    let color: Color       // the colour of the training the section serves
 }
 
-// Group names and order match ConstraintsForm.tsx exactly.
-private let equipmentCategories: [EquipmentCategory] = [
-    EquipmentCategory(name: "Strength",               modalityId: "max_strength"),
-    EquipmentCategory(name: "Power & Kettlebell",     modalityId: "power"),
-    EquipmentCategory(name: "Bodyweight & Gymnastics",modalityId: "relative_strength"),
-    EquipmentCategory(name: "Aerobic & Conditioning", modalityId: "aerobic_base"),
-    EquipmentCategory(name: "GPP & Durability",       modalityId: "durability"),
-    EquipmentCategory(name: "Mobility & Prehab",      modalityId: "rehab"),
-    EquipmentCategory(name: "General",                modalityId: "movement_skill"),
-]
+/// Profile's sections, in order, from data/commons/constraints/equipment.yaml
+/// (ClientVocab.equipmentSections).
+private let equipmentCategories: [EquipmentCategory] = ClientVocab.equipmentSections.map {
+    EquipmentCategory(name: $0.name, color: ClientVocab.color($0.hex))
+}
 
 // MARK: - Shared selection card
 
@@ -108,7 +103,7 @@ private struct EquipmentTab: View {
                                     title: item.label,
                                     subtitle: isSelected ? "Available" : "Not selected",
                                     isSelected: isSelected,
-                                    accentColor: ModalityStyle.color(for: category.modalityId)
+                                    accentColor: category.color
                                 ) {
                                     if isSelected {
                                         appState.profile.equipment.removeAll { $0 == item.id }

@@ -8,7 +8,7 @@
  * palette key on. Never shown as a phase's description.
  */
 export type { ModalityId, PhaseKind } from '@/lib/gen/clientVocab'
-import type { ModalityId, PhaseKind } from '@/lib/gen/clientVocab'
+import type { EquipmentId, ModalityId, PhaseKind } from '@/lib/gen/clientVocab'
 
 /** @deprecated the phase kind; use PhaseKind. */
 export type TrainingPhase = PhaseKind
@@ -17,37 +17,8 @@ export type TrainingLevel = 'novice' | 'intermediate' | 'advanced' | 'elite'
 
 export type FatigueState = 'fresh' | 'normal' | 'accumulated' | 'overreached'
 
-export type EquipmentId =
-  | 'barbell'
-  | 'rack'
-  | 'plates'
-  | 'kettlebell'
-  | 'dumbbell'
-  | 'pull_up_bar'
-  | 'rings'
-  | 'parallettes'
-  | 'rower'
-  | 'bike'
-  | 'ski_erg'
-  | 'ruck_pack'
-  | 'sandbag'
-  | 'sled'
-  | 'tire'
-  | 'medicine_ball'
-  | 'resistance_band'
-  | 'rope'
-  | 'box'
-  | 'ghd'
-  | 'jump_rope'
-  | 'open_space'
-  | 'pool'
-  | 'dip_belt'
-  | 'hangboard'
-  | 'sledgehammer'
-  | 'cable_machine'
-  | 'hurdles'
-  | 'agility_ladder'
-  | 'training_partner'
+/** The equipment ids (data/commons/constraints/equipment.yaml), generated. */
+export type { EquipmentId } from '@/lib/gen/clientVocab'
 
 export type InjuryFlagId =
   | 'knee_meniscus_post_op'

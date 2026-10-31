@@ -2169,32 +2169,6 @@
    "status": "open"
   },
   {
-   "id": "equipment_list",
-   "title": "Equipment is enumerated in four schemas and two code lists that disagree",
-   "kind": "client",
-   "impact": "blocks",
-   "detail": "A new implement is a schema edit in each, and the loader's own list is stale.",
-   "anchors": [
-    "src/loader.py::def load_equipment",
-    "frontend/src/lib/equipment.ts::EQUIPMENT_GROUPS"
-   ],
-   "roadmap": "9.4",
-   "status": "open"
-  },
-  {
-   "id": "client_outcome_tables",
-   "title": "Each client keeps its own slot-type outcome table",
-   "kind": "client",
-   "impact": "degrades",
-   "detail": "What a slot logs (rounds, minutes, a clock, km, reps, seconds) is a table and rules in the web and the phone, changed in both. Modalities and phase kinds come from the commons since 2026-10-30 (tools/gen_client_vocab.py).",
-   "anchors": [
-    "frontend/src/lib/outcomeFields.ts::outcomeFieldsFor",
-    "ios/TrainingCompanion/SessionLogging.swift::static func outcomeFields"
-   ],
-   "roadmap": "9.4",
-   "status": "open"
-  },
-  {
    "id": "contract_kettlebell",
    "title": "A training contract's implement handling is kettlebell-specific",
    "kind": "code",

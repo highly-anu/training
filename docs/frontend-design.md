@@ -988,6 +988,11 @@ and `text_shade`, and the modality's icon on the web (lucide), the phone and the
 target folder (the phone's `ModalityStyle` / `PhaseStyle`, the widgets'
 `WidgetModalityStyle`, the watch's `ModalityStyle`, the complications).
 
+The same generator writes the equipment list (`data/commons/constraints/equipment.yaml` →
+`lib/equipment.ts`, the builder's constraints form, the phone's `EquipmentItem` and Profile
+sections, the four schemas' enums) and what each slot type logs
+(`data/commons/outcome_fields.yaml` → `lib/outcomeFields.ts`, `SessionLogging.swift`).
+
 **Rule:** change the commons and rerun the generator; never edit a generated file.
 `test_client_vocab.py` fails when one is stale or a client names a modality table again.
 §8.10's contrast guard still reads `MODALITY_COLORS` and `PHASE_COLORS`, now built from it.

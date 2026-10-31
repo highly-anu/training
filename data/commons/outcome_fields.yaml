@@ -1,0 +1,51 @@
+# What a slot lets the athlete log, by slot type — the fields the analytics
+# primitives read (rounds, minutes, a clock, km, reps, a hold's seconds). A
+# sets × reps slot and a static hold log per set and are not listed.
+#
+# tools/gen_client_vocab.py writes it into the web's lib/gen/clientVocab.ts and
+# the phone's ClientVocab.swift; lib/outcomeFields.ts and SessionLogging.swift
+# read it alike (they kept the same table and rules apart until 2026-10-30).
+#
+#   fields   in the order the logger asks for them
+#   when     an exercise rule, the first that matches replacing `fields`:
+#            a kettlebell in a timed slot logs reps beside minutes (Wildman's
+#            cadence is reps per minute; km of a swing means nothing); an
+#            isometric in skill practice logs the hold (Ido's handstand and
+#            L-sit holds)
+#   clock    scored to the second: minutes are logged as a clock (m:ss)
+#
+# `results`: the field a test's standard result kind is asked first in
+# (src/standard_tests.RESULTS): reps for push-ups in three minutes.
+
+fields: [rounds, minutes, time, km, reps, seconds]
+
+slot_types:
+  time_domain:
+    fields: [minutes, km]
+    when:
+      - {exercise_category: kettlebell, fields: [minutes, reps]}
+  skill_practice:
+    fields: [minutes]
+    when:
+      - {movement_pattern: isometric, fields: [minutes, seconds]}
+  for_time:
+    fields: [minutes]
+    clock: true
+  distance:
+    fields: [km, minutes]
+  amrap:
+    fields: [rounds, reps]
+  emom:
+    fields: [rounds]
+  rounds_for_time:
+    fields: [minutes, rounds]
+    clock: true
+  amrap_movement:
+    fields: [reps]
+
+results:
+  duration: time
+  rounds: rounds
+  reps: reps
+  hold: seconds
+  distance: km

@@ -1,0 +1,26 @@
+{
+  "trainingLevel": "intermediate",
+  "equipment": [],
+  "injuryFlags": [],
+  "customInjuryFlags": [],
+  "activeGoalId": null,
+  "dateOfBirth": null,
+  "sex": null,
+  "timezone": "Europe/Zurich",
+  "weeklySchedule": null,
+  "hrConfig": {},
+  "integrations": {
+    "autoImport": true,
+    "sources": {
+      "garmin": {
+        "enabled": true
+      },
+      "strava": {
+        "enabled": true
+      },
+      "appleHealth": {
+        "enabled": true
+      }
+    }
+  }
+}

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the clients' modality and phase-kind tables from the commons.
+"""Generate the clients' vocabulary tables, and the schemas' equipment enums, from the commons.
 
 Each modality's file (data/commons/modalities/<id>.yaml) and each phase kind
 (data/commons/phase_kinds.yaml) carries a `display` block — its label, its one
@@ -16,6 +16,16 @@ this, with no client edit:
     ios/TrainingWidgets/ClientVocab.swift        (WidgetModalityStyle)
     ios/TrainingCompanionWatch Watch App/ClientVocab.swift   (the watch's ModalityStyle)
     ios/TrainingWatchWidgets/ClientVocab.swift   (the complications)
+
+It writes two more tables beside them: the equipment an athlete can say they
+have (data/commons/constraints/equipment.yaml — ids, labels, the pickers'
+groups and Profile's sections, which the web, the phone and the four schemas'
+enums each kept apart and which had drifted), and what each slot type logs
+(data/commons/outcome_fields.yaml, which lib/outcomeFields.ts and
+SessionLogging.swift each kept). The schemas' equipment enums are rewritten
+in place, so each stays a standalone file:
+
+    docs/schemas/{constraints,archetype,exercise,philosophy}.schema.json
 
 One Swift file per target folder: each folder is its own target's
 (synchronized groups), so a copy in each needs no project edit.
@@ -61,6 +71,42 @@ def load() -> tuple[list[tuple[str, dict]], list[tuple[str, dict]]]:
     return modalities, phases
 
 
+def load_equipment(modalities: dict) -> dict:
+    """The equipment list with its groups and sections, every id checked."""
+    with open(os.path.join(COMMONS, 'constraints', 'equipment.yaml'), encoding='utf-8') as fh:
+        doc = yaml.safe_load(fh) or {}
+    ids = [e['id'] for e in doc['equipment']]
+    known = set(ids)
+    for kind in ('groups', 'sections'):
+        for g in doc.get(kind) or []:
+            bad = [i for i in g['items'] if i not in known]
+            if bad:
+                raise SystemExit(f"equipment.yaml {kind} {g['id']}: unknown {bad}")
+    grouped = {i for g in doc['groups'] for i in g['items']}
+    if known - grouped - {'open_space'}:
+        raise SystemExit(f'equipment.yaml: in no group {sorted(known - grouped - {"open_space"})}')
+    sectioned = {i for g in doc['sections'] for i in g['items']}
+    if known - sectioned:
+        raise SystemExit(f'equipment.yaml: in no section {sorted(known - sectioned)}')
+    for sec in doc['sections']:
+        sec['hex'] = sec.get('color') or modalities[sec['modality']]['color']
+    return doc
+
+
+def load_outcomes() -> dict:
+    with open(os.path.join(COMMONS, 'outcome_fields.yaml'), encoding='utf-8') as fh:
+        doc = yaml.safe_load(fh) or {}
+    fields = set(doc['fields'])
+    for st, body in doc['slot_types'].items():
+        for f in body['fields'] + [f for r in body.get('when') or [] for f in r['fields']]:
+            if f not in fields:
+                raise SystemExit(f'outcome_fields.yaml {st}: unknown field {f}')
+    for kind, f in doc['results'].items():
+        if f not in fields:
+            raise SystemExit(f'outcome_fields.yaml results {kind}: unknown field {f}')
+    return doc
+
+
 def _classes(d: dict, border: bool) -> dict:
     t = d['tint']
     out = {'bg': f'bg-{t}-500/15', 'text': f"text-{t}-{d['text_shade']} dark:text-{t}-300"}
@@ -73,7 +119,7 @@ def _ts(value: str) -> str:
     return "'" + value.replace('\\', '\\\\').replace("'", "\\'") + "'"
 
 
-def render_ts(modalities, phases) -> str:
+def render_ts(modalities, phases, equipment, outcomes) -> str:
     icons = sorted({d['icon']['web'] for _, d in modalities})
     q = _ts
     lines = [f'// {HEADER[0]}', f'// {HEADER[1]}', '',
@@ -99,6 +145,44 @@ def render_ts(modalities, phases) -> str:
         lines.append(f"  {kind}: {{ hex: {q(d['color'])}, bg: {q(c['bg'])}, text: {q(c['text'])}, "
                      f"label: {q(d['label'])} }},")
     lines += ['}', '']
+
+    def ids(items) -> str:
+        return '[' + ', '.join(q(i) for i in items) + ']'
+    lines += ['/** The equipment an athlete can say they have (data/commons/constraints/equipment.yaml). */',
+              'export const EQUIPMENT_IDS = ' + ids(e['id'] for e in equipment['equipment']) + ' as const',
+              'export type EquipmentId = (typeof EQUIPMENT_IDS)[number]', '',
+              'export const EQUIPMENT_LABELS: Record<EquipmentId, string> = {']
+    lines += [f"  {e['id']}: {q(e['label'])}," for e in equipment['equipment']]
+    lines += ['}', '', "/** The pickers' groups, in order (open space is always assumed). */",
+              'export const EQUIPMENT_GROUPS: { id: string; name: string; items: EquipmentId[] }[] = [']
+    lines += [f"  {{ id: {q(g['id'])}, name: {q(g['name'])}, items: {ids(g['items'])} }},"
+              for g in equipment['groups']]
+    lines += [']', '', "/** Profile ▸ Equipment's sections, each in the colour of the training it serves. */",
+              'export const EQUIPMENT_SECTIONS: { id: string; name: string; hex: string; items: EquipmentId[] }[] = [']
+    lines += [f"  {{ id: {q(g['id'])}, name: {q(g['name'])}, hex: {q(g['hex'])}, items: {ids(g['items'])} }},"
+              for g in equipment['sections']]
+    lines += [']', '', '/** What a slot logs (data/commons/outcome_fields.yaml; lib/outcomeFields.ts reads it). */',
+              'export const OUTCOME_FIELDS = ' + ids(outcomes['fields']) + ' as const',
+              'export type OutcomeField = (typeof OUTCOME_FIELDS)[number]', '',
+              'export interface OutcomeRule {', '  exerciseCategory?: string', '  movementPattern?: string',
+              '  fields: OutcomeField[]', '}', '',
+              'export const OUTCOME_SLOT_TYPES: Record<string, { fields: OutcomeField[]; clock: boolean; when: OutcomeRule[] }> = {']
+    for st, b in outcomes['slot_types'].items():
+        rules = []
+        for r in b.get('when') or []:
+            parts = []
+            if r.get('exercise_category'):
+                parts.append(f"exerciseCategory: {q(r['exercise_category'])}")
+            if r.get('movement_pattern'):
+                parts.append(f"movementPattern: {q(r['movement_pattern'])}")
+            parts.append(f"fields: {ids(r['fields'])}")
+            rules.append('{ ' + ', '.join(parts) + ' }')
+        lines.append(f"  {st}: {{ fields: {ids(b['fields'])}, clock: {'true' if b.get('clock') else 'false'}, "
+                     f"when: [{', '.join(rules)}] }},")
+    lines += ['}', '', "/** The field a test's standard result kind is asked first in. */",
+              'export const OUTCOME_RESULT_FIELD: Record<string, OutcomeField> = {']
+    lines += [f"  {k}: {q(v)}," for k, v in outcomes['results'].items()]
+    lines += ['}', '']
     return '\n'.join(lines)
 
 
@@ -106,7 +190,7 @@ def _hex(color: str) -> str:
     return '0x' + color.lstrip('#').lower()
 
 
-def render_swift(modalities, phases) -> str:
+def render_swift(modalities, phases, equipment, outcomes) -> str:
     q = json.dumps
     lines = [f'// {HEADER[0]}', f'// {HEADER[1]}', 'import SwiftUI', '',
              '/// The modality and phase-kind vocabulary every client draws alike: one',
@@ -133,6 +217,35 @@ def render_swift(modalities, phases) -> str:
     for kind, d in phases:
         lines.append(f"        {q(kind)}: Phase(label: {q(d['label'])}, hex: {_hex(d['color'])}),")
     lines += ['    ]', '',
+              '    struct Equipment {', '        let id: String', '        let label: String', '    }', '',
+              '    struct EquipmentSection {', '        let id: String', '        let name: String',
+              '        let hex: UInt32', '        let items: [String]', '    }', '',
+              '    /// The equipment an athlete can say they have, in order (equipment.yaml).',
+              '    static let equipment: [Equipment] = [']
+    lines += [f"        Equipment(id: {q(e['id'])}, label: {q(e['label'])})," for e in equipment['equipment']]
+    lines += ['    ]', '', "    /// Profile ▸ Equipment's sections, each in the colour of the training it serves.",
+              '    static let equipmentSections: [EquipmentSection] = [']
+    lines += [f"        EquipmentSection(id: {q(g['id'])}, name: {q(g['name'])}, hex: {_hex(g['hex'])}, "
+              f"items: [{', '.join(q(i) for i in g['items'])}]),"
+              for g in equipment['sections']]
+    lines += ['    ]', '',
+              '    struct OutcomeRule {', '        let exerciseCategory: String?', '        let movementPattern: String?',
+              '        let fields: [String]', '    }', '',
+              '    struct OutcomeSlot {', '        let fields: [String]', '        let clock: Bool',
+              '        let when: [OutcomeRule]', '    }', '',
+              '    /// What a slot logs, by slot type (outcome_fields.yaml; SessionLogging reads it).',
+              '    static let outcomeSlotTypes: [String: OutcomeSlot] = [']
+    for st, b in outcomes['slot_types'].items():
+        rules = ', '.join(
+            f"OutcomeRule(exerciseCategory: {q(r['exercise_category']) if r.get('exercise_category') else 'nil'}, "
+            f"movementPattern: {q(r['movement_pattern']) if r.get('movement_pattern') else 'nil'}, "
+            f"fields: [{', '.join(q(f) for f in r['fields'])}])" for r in b.get('when') or [])
+        lines.append(f"        {q(st)}: OutcomeSlot(fields: [{', '.join(q(f) for f in b['fields'])}], "
+                     f"clock: {'true' if b.get('clock') else 'false'}, when: [{rules}]),")
+    lines += ['    ]', '', "    /// The field a test's standard result kind is asked first in.",
+              '    static let outcomeResultField: [String: String] = [']
+    lines += [f"        {q(k)}: {q(v)}," for k, v in outcomes['results'].items()]
+    lines += ['    ]', '',
               '    /// An sRGB colour from 0xRRGGBB.',
               '    static func color(_ hex: UInt32) -> Color {',
               '        Color(red: Double((hex >> 16) & 0xff) / 255,',
@@ -143,10 +256,35 @@ def render_swift(modalities, phases) -> str:
     return '\n'.join(lines)
 
 
+# Each schema's equipment enum, found after the property that holds it; the
+# exercise schema's adds `none` (an exercise that needs nothing).
+SCHEMA_ENUMS = (('constraints', '"equipment": {', False), ('archetype', '"required_equipment": {', False),
+                ('exercise', '"equipment": {', True), ('philosophy', '"required_equipment": {', False))
+
+
+def render_schema(text: str, anchor: str, ids: list[str]) -> str:
+    """The schema with the enum after `anchor` listing `ids`, one a line."""
+    at = text.index(anchor)
+    start = text.index('"enum": [', at) + len('"enum": [')
+    end = text.index(']', start)
+    line_start = text.rfind('\n', 0, start) + 1
+    indent = text[line_start:len(text[:line_start]) + (len(text[line_start:]) - len(text[line_start:].lstrip()))]
+    body = ',\n'.join(f'{indent}  "{i}"' for i in ids)
+    return text[:start] + '\n' + body + '\n' + indent + text[end:]
+
+
 def outputs() -> dict[str, str]:
     modalities, phases = load()
-    swift = render_swift(modalities, phases)
-    return {TS_OUT: render_ts(modalities, phases), **{p: swift for p in SWIFT_OUT}}
+    equipment = load_equipment(dict(modalities))
+    outcomes = load_outcomes()
+    swift = render_swift(modalities, phases, equipment, outcomes)
+    out = {TS_OUT: render_ts(modalities, phases, equipment, outcomes), **{p: swift for p in SWIFT_OUT}}
+    ids = [e['id'] for e in equipment['equipment']]
+    for name, anchor, with_none in SCHEMA_ENUMS:
+        path = os.path.join(ROOT, 'docs', 'schemas', f'{name}.schema.json')
+        with open(path, encoding='utf-8') as fh:
+            out[path] = render_schema(fh.read(), anchor, ids + (['none'] if with_none else []))
+    return out
 
 
 def main() -> int:

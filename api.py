@@ -26,6 +26,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from src import fit_import as _fit_import
 from src import workout_ids as _workout_ids
 from src import watch_spec as _watch_spec
+from src import equipment as _equipment
 from src import standards as _standards_mod
 from src.analytics import benchmarks_data as _bd
 from src import goals, loader, provenance
@@ -1364,6 +1365,8 @@ def _generate_program_inner(body):
 
     # Normalize weekly_schedule into scheduler-compatible constraints (BEFORE defaults)
     constraints = _normalize_schedule_constraints(constraints)
+    if 'equipment' in constraints:
+        constraints['equipment'] = _equipment.canonical(constraints['equipment'])
 
     # Normalise constraints — fill in any missing fields with sensible defaults
     constraints.setdefault('days_per_week', 5)
@@ -2033,6 +2036,8 @@ def _generate_session_inner(body):
         return jsonify({'detail': 'phase is required'}), 400
 
     constraints = dict(body.get('constraints', {}))
+    if 'equipment' in constraints:
+        constraints['equipment'] = _equipment.canonical(constraints['equipment'])
     constraints.setdefault('session_time_minutes', 75)
     constraints.setdefault('training_level', 'intermediate')
     constraints.setdefault('equipment', ['barbell', 'rack', 'plates', 'kettlebell',
@@ -2213,6 +2218,8 @@ def substitute_exercise():
         return jsonify({'detail': 'archetype_id and slot_role are required'}), 400
 
     constraints = dict(body.get('constraints') or {})
+    if 'equipment' in constraints:
+        constraints['equipment'] = _equipment.canonical(constraints['equipment'])
     constraints.setdefault('session_time_minutes', 75)
     constraints.setdefault('training_level', 'intermediate')
     constraints.setdefault('equipment', ['barbell', 'rack', 'plates', 'kettlebell',
@@ -3056,7 +3063,9 @@ def _sanitize_profile(profile: dict) -> dict:
     """Coerce the nullable fields to their empty values — a client may have
     stored null where a list or object is expected."""
     profile['trainingLevel'] = profile.get('trainingLevel') or 'intermediate'
-    profile['equipment'] = profile.get('equipment') or []
+    # An id a client once stored under another name reads as the one the
+    # engine knows (src/equipment.py: the phone saved `assault_bike`).
+    profile['equipment'] = _equipment.canonical(profile.get('equipment') or [])
     profile['injuryFlags'] = profile.get('injuryFlags') or []
     profile['customInjuryFlags'] = profile.get('customInjuryFlags') or []
     profile['hrConfig'] = profile.get('hrConfig') or {}

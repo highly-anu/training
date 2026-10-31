@@ -1,11 +1,13 @@
 #!/usr/bin/env python
-"""The clients' modality and phase-kind tables come from the commons.
+"""The clients' vocabulary tables come from the commons.
 
 tools/gen_client_vocab.py writes the web's (frontend/src/lib/gen/clientVocab.ts)
 and the Apple targets' (ClientVocab.swift in each target folder) from each
-modality's and phase kind's `display` block. This fails when a generated file
-is stale, when a modality or kind has no display, and when a hand-written
-client table names a modality again instead of reading the generated one.
+modality's and phase kind's `display` block, the equipment list and the
+slot-type outcome table, and rewrites the four schemas' equipment enums from
+the list. This fails when a generated file is stale, when a modality or kind
+has no display, when a hand-written client table comes back, and when the
+server does not read a stored alias as its equipment id.
 
     .venv/bin/python test_client_vocab.py
 """
@@ -70,6 +72,44 @@ def main() -> int:
                 if sum(f"'{i}'" in text for i in ids) == len(ids):
                     listed.append(os.path.relpath(os.path.join(dirpath, name), ROOT))
     check('no web file lists every modality by hand', not listed, listed)
+
+    print('equipment and outcomes')
+    sys.path.insert(0, ROOT)
+    os.environ.setdefault('SUPABASE_URL', '')
+    os.environ.setdefault('DATABASE_URL', '')
+    from src import equipment
+    check('an alias reads as its id, each once, an unknown id kept',
+          equipment.canonical(['assault_bike', 'bike', 'rower', 'dip_bar']) == ['bike', 'rower', 'dip_bar'])
+    import json
+    for name, _, with_none in gen.SCHEMA_ENUMS:
+        schema = json.load(open(os.path.join(ROOT, 'docs', 'schemas', f'{name}.schema.json'), encoding='utf-8'))
+        prop = (schema['properties'].get('required_equipment') or schema['properties']['equipment'])
+        want = equipment.ids() + (['none'] if with_none else [])
+        check(f'{name}.schema.json enumerates the one list', prop['items']['enum'] == want)
+    stale_copies = []
+    for rel, needle in (('ios/TrainingCompanion/AppModels.swift', 'EquipmentItem(id: "barbell"'),
+                        ('ios/TrainingCompanion/SessionLogging.swift', 'fieldsFor: [String'),
+                        ('frontend/src/lib/outcomeFields.ts', 'const FIELDS_FOR'),
+                        ('frontend/src/lib/equipment.ts', "{ id: 'barbell'"),
+                        ('frontend/src/components/builder/ConstraintsForm.tsx', 'const EQUIPMENT_CATEGORIES'),
+                        ('src/loader.py', "'pull_up_bar', 'rings'")):
+        if needle in open(os.path.join(ROOT, rel), encoding='utf-8').read():
+            stale_copies.append(rel)
+    check('no client keeps its own equipment or outcome table', not stale_copies, stale_copies)
+
+    import api
+    from unittest.mock import patch
+    client = api.app.test_client()
+    with patch('src.db.get_user_program', return_value=None), patch('src.db.save_user_program'):
+        r = client.post('/api/sessions/generate', json={
+            'modality': 'aerobic_base', 'phase': 'base', 'week_number': 1,
+            'constraints': {'equipment': ['assault_bike'], 'session_time_minutes': 60,
+                            'training_level': 'intermediate', 'injury_flags': []}})
+    check('a session for a stored assault_bike is generated against the bike',
+          r.status_code == 200, (r.status_code, str(r.get_json())[:200]))
+    profile = api._sanitize_profile({'equipment': ['assault_bike', 'rower']})
+    check('the profile reads back the id the engine knows', profile['equipment'] == ['bike', 'rower'],
+          profile['equipment'])
     if FAILURES:
         print(f'{len(FAILURES)} failed')
         return 1
