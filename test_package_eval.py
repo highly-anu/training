@@ -7,6 +7,7 @@ Run: .venv/bin/python test_package_eval.py
 """
 from __future__ import annotations
 
+import os
 import sys
 from types import SimpleNamespace
 
@@ -219,8 +220,34 @@ def test_source_and_status() -> None:
     check('no dossier is not started', pe.derived_status({'t': passing}, set(), False) == 'not_started')
 
 
+def test_wrist_capture() -> None:
+    print('X3: the lead measure is recorded on the wrist')
+    import json
+    from src.analytics import vocabulary
+    vocab = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                        'data', 'commons', 'watch_vocabulary.json'), encoding='utf-8'))
+    declared = {n for t in vocab['templates'].values() for n in t['records']} | set(vocab['capture']['session'])
+    check('every template says what it records, in the analytics need ids',
+          all('records' in t for t in vocab['templates'].values()) and declared <= set(vocabulary.NEEDS),
+          declared - set(vocabulary.NEEDS))
+    prims = {'set_load': {'needs': ['sets']}, 'rounds': {'needs': ['rounds', 'completion']},
+             'load_at_rpe': {'needs': ['sets', 'rpe', 'rpe_target']}, 'plan': {'needs': ['completion']}}
+    session = {'completion', 'hr', 'minutes'}
+    check('a need every session records passes', pe.grade_x3('plan', prims, session, [])[0] == pe.PASS)
+    check('a prescribed RPE is the program\'s, not the wrist\'s',
+          pe.grade_x3('load_at_rpe', prims, session, [('a:squat (sets)', {'sets', 'rpe'})])[0] == pe.PASS)
+    grade, detail = pe.grade_x3('rounds', prims, session, [('a:swing (interval)', set())])
+    check('a currency no in-scope screen records fails, naming the step', grade == pe.FAIL
+          and 'rounds' in detail and 'a:swing (interval)' in detail, detail)
+    grade, detail = pe.grade_x3('set_load', prims, session, [('a:squat (sets)', {'sets'}), ('a:carry (distance)', {'km'})])
+    check('some steps but not all is partial', grade == pe.PARTIAL and '1 of 2' in detail, detail)
+    check('no step in scope is partial', pe.grade_x3('set_load', prims, session, [])[0] == pe.PARTIAL)
+    check('no lead measure is M2\'s to say', pe.grade_x3(None, prims, session, [])[0] == pe.PASS)
+    check('X3 is hygiene: the watches, not the method', 'X3' in pe.HYGIENE)
+
+
 def main() -> int:
-    for t in (test_execution, test_robustness, test_data_and_measurement, test_source_and_status):
+    for t in (test_execution, test_robustness, test_data_and_measurement, test_source_and_status, test_wrist_capture):
         t()
     print()
     if FAILURES:

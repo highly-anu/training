@@ -1058,9 +1058,15 @@ Today: the code is package-neutral, the repository is not yet drop-in. In order:
   `<equipment>_count`). Wildman's programs and wording are unchanged (36 golden hashes
   moved only for the contract's own echo); `test_contract_implements.py` runs a copy on
   a pair of dumbbells.
-- **9.6 Watch capture declared (S–M).** What each template in `watch_vocabulary.json`
-  records, so a package's lead measure can be checked as recorded on the wrist (X2
-  checks only the screens).
+- **9.6 Watch capture declared (S–M).** Done 2026-10-31 (branch `feat/watch-capture`):
+  each template in `watch_vocabulary.json` says what a step on it records, in the
+  analytics' need ids (`records`), and `capture.session` what every session does; the
+  scorecard's X3 (hygiene) reads each track's lead measure against the screens of the steps
+  in its scope (docs/watch.md, "What they record"). Every lead is recorded on the wrist but
+  Wildman's — rounds in an EMOM (`interval`) and cadence in a timed set (`timed`), screens
+  that record only the step's window — and CrossFit's standards outside test days. Left:
+  record a count on those two screens, on both watches (`Wire.countsRounds`,
+  `WorkoutSessionState`).
 - **9.7 Authoring tools (S–M).** `mcp_server.py`'s schema list (it names a
   `goal_profile` schema that does not exist and writes analytics, watch, contract,
   fidelity and source weeks unvalidated), `TRAINING_PACKAGES_DIR` there,

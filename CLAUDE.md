@@ -1354,7 +1354,7 @@ better one left unrecorded (`--update-baseline`; `--accept-worse` for a stricter
 (`audited`: every criterion but hygiene passes on every track not in `excluded_tracks`).
 CI (`.github/workflows/training-contract.yml`) runs every gate the README's table names;
 `check_package_status.py` fails when the two part.
-**No code names a package** (Portability, X1/X2): `tools/check_code_neutral.py` fails on
+**No code names a package** (Portability, X1/X2; X3, hygiene, whether the lead measure is recorded on the wrist — each watch template's `records` in `watch_vocabulary.json`, docs/watch.md): `tools/check_code_neutral.py` fails on
 any string literal in `src/`, `api.py`, `mcp_server.py`, `frontend/src`, the iOS, Apple
 Watch and widget sources or `garmin/core/source` that is an id one package owns (or a
 two-part prefix of its ids) — no baseline, there are none left. What used to: the level
