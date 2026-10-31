@@ -57,7 +57,7 @@
           "enforced_by": {
             "type": "array",
             "items": { "type": "string", "pattern": "^(data:[^#]+#.+|checks:[a-z0-9_]+/[a-z0-9_]+\\.[a-z_]+|test:[^:]+::[A-Za-z0-9_]+|week:[a-z0-9_]+)$" },
-            "description": "What makes the rule executable: data:<file in the package>#<key path> (a list item by its id or index), checks:<track>/<phase>.<key> (a philosophy.yaml claim), test:<file>::<function> (a test CI runs), week:<source_weeks.yaml id>. None: the rule is debt — it lives only in prose."
+            "description": "What makes the rule executable: data:<file in the package>#<key path> (a list item by its id or index), checks:<track>/<phase>.<key> (a philosophy.yaml claim), test:<file>::<function> (a test the checks run: tests/<file> in the package, found by tools/run_checks.py, or a root file the registry lists), week:<source_weeks.yaml id>. None: the rule is debt — it lives only in prose."
           }
         }
       }

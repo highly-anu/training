@@ -10,7 +10,8 @@ shipped packages, and runs them through everything a package reaches: schema
 validation, the id-collision gate, generation of every track, the API's
 philosophies and generate routes, the static reference cache the image
 builds, the watch payload with its screens, the program analytics, the source
-weeks, the scorecard and `tools/add_package.py --check`. Then checks that
+weeks, the scorecard and `tools/add_package.py --check` — and each copy's own
+tests (tests/), which take the package from their folder. Then checks that
 nothing in the repository changed.
 
 Each copy takes its own archetype and framework ids (`dx_` before each), as a
@@ -77,7 +78,10 @@ def make_packages(folder: str, copies: dict | None = None) -> None:
         shutil.copytree(os.path.join(ROOT, source), dest, ignore=shutil.ignore_patterns('records', 'dossier.md'))
         for dirpath, _, files in os.walk(dest):
             for name in files:
-                if not name.endswith('.yaml'):
+                # Its own tests name its own ids too (tests/, which take the
+                # package's id from their folder).
+                own_test = os.path.basename(dirpath) == 'tests' and name.endswith('.py')
+                if not (name.endswith('.yaml') or own_test):
                     continue
                 path = os.path.join(dirpath, name)
                 with open(path, encoding='utf-8') as fh:
@@ -85,7 +89,7 @@ def make_packages(folder: str, copies: dict | None = None) -> None:
                 with open(path, 'w', encoding='utf-8') as fh:
                     fh.write(word.sub(lambda m: renames[m.group(1)], text))
                 stem = name[:-len('.yaml')]
-                if stem in renames:
+                if not own_test and stem in renames:
                     os.rename(path, os.path.join(dirpath, f'{renames[stem]}.yaml'))
 
 
@@ -245,6 +249,16 @@ def main() -> int:
         make_packages(folder)
         env = {**os.environ, 'TRAINING_PACKAGES_DIR': folder, 'SUPABASE_URL': '', 'DATABASE_URL': ''}
         rc = subprocess.run([sys.executable, os.path.abspath(__file__), '--child', folder], env=env, cwd=ROOT).returncode
+        print("each copy's own tests, under its new id")
+        tests = sorted(os.path.join(dirpath, n) for new in COPIES
+                       for dirpath, _, files in os.walk(os.path.join(folder, new, 'tests'))
+                       for n in files if n.startswith('test_') and n.endswith('.py'))
+        check('the copies bring tests of their own', any('dropin_contract' in t for t in tests)
+              and any('dropin_templates' in t for t in tests), str(tests))
+        for test in tests:
+            p = subprocess.run([sys.executable, test], env={**env, 'PYTHONPATH': ROOT}, cwd=tmp,
+                               capture_output=True, text=True)
+            check(os.path.relpath(test, folder), p.returncode == 0, (p.stdout + p.stderr)[-1500:])
     after = _status()
     print('the repository')
     check('nothing outside the packages folder changed', before == after,

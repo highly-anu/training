@@ -141,11 +141,12 @@ def test_without_docs():
     finally:
         portability._DOCS = saved
     rows = {p['id']: p for p in report['packages']}
-    check("every package's records and source weeks are unchecked, not missing",
-          report['unchecked'] == ['coverage', 'dossier', 'fidelity', 'golden', 'scorecard', 'source_weeks', 'status'],
+    check("every package's records, source weeks and tests are unchecked, not missing",
+          report['unchecked'] == ['coverage', 'dossier', 'fidelity', 'golden', 'scorecard', 'source_weeks', 'status',
+                                  'tests'],
           report['unchecked'])
-    check('source weeks read None', all(f['present'] is None for p in rows.values() for f in p['files']
-                                        if f['id'] == 'source_weeks'))
+    check('source weeks and tests read None', all(f['present'] is None for p in rows.values() for f in p['files']
+                                                  if f['id'] in ('source_weeks', 'tests')))
     check('each reads None', all(o['done'] is None for p in rows.values() for o in p['records']))
     check('the shipped packages still drop in', all(rows[n]['ready'] for n in SHIPPED),
           [n for n in SHIPPED if not rows[n]['ready']])

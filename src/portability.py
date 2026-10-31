@@ -7,7 +7,8 @@ package: tools/check_code_neutral.py). This reads the other half, per package:
 
 - its engine shape per track (a training contract, week templates, or the
   modality scheduler), decided as generation decides it;
-- which of the files a package may carry it has;
+- which of the files a package may carry it has, its own tests among them
+  (tests/, found by tools/run_checks.py);
 - the records the push gates keep, in its folder (records/ and dossier.md,
   src/package_records.py) — without them the gates fail for a new package,
   and tools/add_package.py writes them;
@@ -46,12 +47,11 @@ FILES = (
     ('standards', 'standards.yaml', False),
     ('fidelity', 'fidelity.yaml', False),
     ('source_weeks', 'source_weeks.yaml', False),
+    ('tests', 'tests', False),
 )
 
-# Outside the folder: what each push gate keeps per package, and the command
-# that records it.
 # The checkout's docs, which the API image leaves out with every package's
-# records (.dockerignore).
+# records (.dockerignore): their presence says this is a checkout.
 _DOCS = os.path.join(ROOT, 'docs', 'package-fidelity')
 # One command records them all, for that package only.
 _ADD = '.venv/bin/python tools/add_package.py {pkg}'
@@ -130,9 +130,9 @@ def _read(pkg: str) -> dict:
     }
 
 
-# Package files the API image leaves out (.dockerignore): the scorecard reads
+# Package files the API image leaves out (.dockerignore): the gates read
 # them, nothing at runtime does.
-_IMAGE_EXCLUDED = {'source_weeks'}
+_IMAGE_EXCLUDED = {'source_weeks', 'tests'}
 
 
 def _in_checkout() -> bool:

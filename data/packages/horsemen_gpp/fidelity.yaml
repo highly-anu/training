@@ -22,7 +22,7 @@ rules:
       - data:philosophy.yaml#tracks.four_month_macro.phases.job_specific.week_templates
       - data:philosophy.yaml#tracks.four_month_macro.phases.maintenance.week_templates
       - week:four_month_macro
-      - test:test_week_template.py::test_horsemen_runs_the_source_weeks_as_written
+      - test:tests/test_week_template.py::test_horsemen_runs_the_source_weeks_as_written
   - id: R2
     text: Six training days and a rest day; recovery days at no more than 65 % of max heart rate.
     cites: [{source: horsemen_2008}]
@@ -33,7 +33,7 @@ rules:
     cites: [{source: horsemen_2008}]
     enforced_by:
       - data:frameworks/concurrent_training.yaml#categories
-      - test:test_week_template.py::test_a_regenerate_from_mid_track_carries_on_the_rotation
+      - test:tests/test_week_template.py::test_a_regenerate_from_mid_track_carries_on_the_rotation
   - id: R4
     text: Every day opens with a warm-up from its list.
     cites: [{source: horsemen_2008}]
@@ -50,7 +50,7 @@ rules:
     cites: [{source: horsemen_2008}]
     enforced_by:
       - data:archetypes/source/circuit_short/hm_bad_bush.yaml#slots.rope_climb.exercise_filter.ordered
-      - test:test_week_template.py::test_horsemen_without_the_equipment_passes_workouts_over
+      - test:tests/test_week_template.py::test_horsemen_without_the_equipment_passes_workouts_over
   - id: R7
     text: '"Light, work on form" days.'
     cites: [{source: horsemen_2008}]

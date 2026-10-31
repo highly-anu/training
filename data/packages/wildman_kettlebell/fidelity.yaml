@@ -60,7 +60,7 @@ rules:
     cites: [{source: wildman_programs, at: /kettlebell-programs}]
     enforced_by:
       - data:training_contract.yaml#tracks.general_practice.modules
-      - test:test_training_contract.py::test_general_practice_runs_wildmans_phase_two
+      - test:tests/test_contract.py::test_general_practice_runs_wildmans_phase_two
   - id: R3
     text: Each program twice a week (two or three days, in the swing PDF), never on consecutive days, stacked into the week as time allows.
     cites: [{source: wildman_programming, at: "Most of our programs work best if done 2x per week"}, {source: nerd_math_pdf, at: How to use}]
@@ -71,19 +71,19 @@ rules:
       - data:training_contract.yaml#tracks.snatch_practice.modules.snatch.min_spacing_days
       - week:deck_squat_program_week
       - week:snatch_program_week
-      - test:test_training_contract.py::test_source_cycle_retains_movements_and_spacing
+      - test:tests/test_contract.py::test_source_cycle_retains_movements_and_spacing
   - id: R4
     text: "The swing: a 10-minute EMOM from 6 to 20 reps, two more each session; then a 20-minute EMOM; then start/stop swings in 10 and 20 rounds of 90 seconds; sixteen weeks to a bell, then a heavier one."
     cites: [{source: nerd_math_pdf, at: Approaches 1–4 and the progression table}]
     enforced_by:
       - data:training_contract.yaml#tracks.general_practice.modules.swing.progression
       - week:nerd_math_swing_bell
-      - test:test_training_contract.py::test_source_cycle_retains_movements_and_spacing
+      - test:tests/test_contract.py::test_source_cycle_retains_movements_and_spacing
   - id: R5
     text: '"If pressed for time ... do the short version": a session too short for a stage takes the longest earlier stage that fits.'
     cites: [{source: nerd_math_pdf, at: Training session}]
     enforced_by:
-      - test:test_training_contract.py::test_general_practice_runs_wildmans_phase_two
+      - test:tests/test_contract.py::test_general_practice_runs_wildmans_phase_two
   - id: R6
     text: Clean and press before the snatch.
     cites: [{source: wildman_programs, at: /snatch FAQ}]
@@ -105,24 +105,24 @@ rules:
     text: No deload week; "lighter" is the next cycle with a heavier bell.
     cites: [{source: nerd_math_pdf}, {source: wildman_phases}]
     enforced_by:
-      - test:test_training_contract.py::test_source_cycle_retains_movements_and_spacing
+      - test:tests/test_contract.py::test_source_cycle_retains_movements_and_spacing
   - id: R10
     text: The program is self-paced; progress is each workout completed, tracked by date.
     cites: [{source: nerd_math_pdf, at: Program contents; Tracking your progress}]
     enforced_by:
-      - test:test_training_contract.py::test_one_tap_confirmation_earns_the_exposure
+      - test:tests/test_contract.py::test_one_tap_confirmation_earns_the_exposure
   - id: R11
     text: Repeat workouts when training is interrupted for more than a week.
     cites: [{source: nerd_math_pdf, at: Tracking your progress}]
     enforced_by:
       - data:training_contract.yaml#tracks.general_practice.modules.swing.advice
-      - test:test_training_contract.py::test_swing_recommends_repeating_after_a_layoff_and_never_enforces_it
+      - test:tests/test_contract.py::test_swing_recommends_repeating_after_a_layoff_and_never_enforces_it
   - id: R12
     text: "The pentathlon: clean, long-cycle press, jerk, half snatch and strict push press, six minutes each with five minutes between; reps past 120, 60, 120, 108 and 120 score nothing."
     cites: [{source: ikmf_pentathlon}]
     enforced_by:
       - data:training_contract.yaml#tracks.pentathlon.modules.pentathlon_events
-      - test:test_training_contract.py::test_pentathlon_keeps_the_five_events_and_test_protocol
+      - test:tests/test_contract.py::test_pentathlon_keeps_the_five_events_and_test_protocol
   - id: R13
     text: "The get-up's goal is a bodyweight ratio; no session tests it."
     cites: [{source: wildman_programs, at: /tgu}]

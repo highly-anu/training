@@ -94,7 +94,7 @@ rules:
       - data:archetypes/plan/atg_zero.yaml#slots
       - data:philosophy.yaml#tracks.zero.phases.zero.week_templates
       - week:zero_week
-      - test:test_week_template.py::test_atg_runs_its_programs_as_written
+      - test:tests/test_week_template.py::test_atg_runs_its_programs_as_written
   - id: R2
     text: "ATG Program #2: two workouts, each once a week, as written — 3 days of sport and 2 days of ATG."
     cites: [{source: p12, at: '"intended to be done once per week"; "3 DAYS OF SPORT AND 2 DAYS OF ATG - NOT 5 DAYS OF SPORT"'}]
@@ -119,7 +119,7 @@ rules:
       - {source: p12}
     enforced_by:
       - data:archetypes/plan/atg_p2_w1.yaml#slots
-      - test:test_week_template.py::test_atg_runs_its_programs_as_written
+      - test:tests/test_week_template.py::test_atg_runs_its_programs_as_written
   - id: R5
     text: "The sled leads, backward first; a resisted treadmill or walking backward replaces it — \"You don't have to sled!\""
     cites:
@@ -149,7 +149,7 @@ rules:
       - {source: mfb}
     enforced_by:
       - data:philosophy.yaml#tracks.zero.phases.zero.repeatable
-      - test:test_week_template.py::test_atg_runs_its_programs_as_written
+      - test:tests/test_week_template.py::test_atg_runs_its_programs_as_written
 
 open:
   - "Knee Ability Zero (the 2021 book) was not found to read, and the ATG app's programs and Ability Protocols are behind the subscription."

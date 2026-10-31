@@ -9,7 +9,7 @@ currency:
   operator_fitness: plan_completion
   soldier_of_steel: plan_completion
 source_tests:
-- test_week_template.py::test_gym_jones_runs_its_two_months_as_written
+- tests/test_week_template.py::test_gym_jones_runs_its_two_months_as_written
 inventions:
 - 'I1: The plans'' days start on a Monday: Operator Fitness numbers its days 1 to 28 without weekdays;
   Soldier of Steel''s are Monday to Sunday.'

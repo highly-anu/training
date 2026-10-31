@@ -28,21 +28,21 @@ rules:
       - data:frameworks/floreio_routines.yaml#categories.floreio
       - data:archetypes/plan/ido_basic_b.yaml#slots
       - week:floreio_weeks
-      - test:test_week_template.py::test_ido_portal_runs_the_floreio_routines_at_each_level
+      - test:tests/test_week_template.py::test_ido_portal_runs_the_floreio_routines_at_each_level
   - id: R2
     text: "Each routine is written for beginners, intermediates and the advanced (a few for beginners and intermediates together, one for all); the athlete does the version written for their level."
     cites: [{source: floreio, at: '"Floreio Basic Workout - beginner", "- intermidiate", "- advanced"; "Floreio Workout Number 3 - Beginners, Intermidiates and Advanced"'}]
     enforced_by:
       - data:archetypes/plan/ido_basic_b.yaml#training_levels
       - data:archetypes/plan/ido_w2_bi.yaml#training_levels
-      - test:test_week_template.py::test_ido_portal_runs_the_floreio_routines_at_each_level
+      - test:tests/test_week_template.py::test_ido_portal_runs_the_floreio_routines_at_each_level
   - id: R3
     text: "The preparation opens every routine — jump rope or joint mobility, the wrists routine, Ido's squat clinic, the shoulder ROM and stabilization routine — and prehab of the shoulders, scapulae or wrists closes most."
     cites: [{source: floreio, at: '"Warm Up - Mobility"; "Extra Mobility Cool Down"; "PreHab Cool Down"; "Rehab: Wrists Routine X 2 subsequent sets"'}]
     enforced_by:
       - data:archetypes/plan/ido_basic_b.yaml#slots.jump_rope
       - data:archetypes/plan/ido_bridge_b.yaml#slots.rehab_wrists
-      - test:test_week_template.py::test_ido_portal_runs_the_floreio_routines_at_each_level
+      - test:tests/test_week_template.py::test_ido_portal_runs_the_floreio_routines_at_each_level
   - id: R4
     text: "Single movements are polished, then sequenced, then expressed in role work, improvised at the advanced level."
     cites: [{source: floreio, at: '"Singular Movement Polish"; "Sequence Work"; "Role work + other Floreio movements you have down for 1 minute straight … Improvisation exercise."'}]
@@ -61,7 +61,7 @@ rules:
     cites: [{source: floreio}]
     enforced_by:
       - data:philosophy.yaml#tracks.floreio.phases.floreio.repeatable
-      - test:test_week_template.py::test_ido_portal_runs_the_floreio_routines_at_each_level
+      - test:tests/test_week_template.py::test_ido_portal_runs_the_floreio_routines_at_each_level
 
 open:
   - "The routines the sessions name (the wrists routine, the squat clinic, the shoulder ROM and stabilization routine, the scapula mobilization) and every movement are linked videos and posts, not read; the exercise notes describe the movements, not Ido's cues."

@@ -9,7 +9,7 @@ currency:
   functional_bodybuilding: working_load
   pump_lift: working_load
 source_tests:
-- test_training_contract.py::test_filly_runs_the_sample_weeks_in_cycles_and_a_bridge_week
+- tests/test_contract.py::test_filly_runs_the_sample_weeks_in_cycles_and_a_bridge_week
 inventions:
 - 'I1: The published week repeats every cycle; Persist changes the days each cycle, but only one week
   of each 3x track is public.'
