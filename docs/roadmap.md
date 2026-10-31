@@ -1074,9 +1074,13 @@ Today: the code is package-neutral, the repository is not yet drop-in. In order:
   scorecard's X3 (hygiene) reads each track's lead measure against the screens of the steps
   in its scope (docs/watch.md, "What they record"). Every lead is recorded on the wrist but
   Wildman's — rounds in an EMOM (`interval`) and cadence in a timed set (`timed`), screens
-  that record only the step's window — and CrossFit's standards outside test days. Left:
-  record a count on those two screens, on both watches (`Wire.countsRounds`,
-  `WorkoutSessionState`).
+  that record only the step's window — and CrossFit's standards outside test days. Since
+  2026-10-31 (branch `watch/record-counts`; Garmin 1.16.0, iOS 1.33.0) both watches record
+  them: an interval step its finished rounds and seconds, a timed step its seconds, and a
+  step whose slot logs what its screen cannot see carries it in `?spec=1` as `logs`
+  (`src/outcome_fields.py`, `capture.asked`) — a timed kettlebell set's reps, which the
+  athlete enters at the end (the Garmin's Results menu, the Apple Watch's completion
+  screen) as its one set. X3 counts `logs`; Wildman's five tracks now pass.
 - **9.7 Authoring tools (S–M).** Done 2026-10-31 (branch `feat/authoring-tools`):
   `mcp_server.py` checks every file kind a package carries with the gates' own validator
   (`validate_entities`; it knew four schemas, one of them gone, and wrote analytics, watch,

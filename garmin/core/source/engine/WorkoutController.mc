@@ -1075,10 +1075,26 @@ class WorkoutController {
         _stepTimes[_exIndex] = [ex, start, _elapsed];
         if (_entered.hasKey(ex.name())) { return; }
         var out = _outcomes.hasKey(ex.name()) ? _outcomes[ex.name()] : {};
-        if (ex.isTemplate("for_time")) { out["durationSec"] = exerciseElapsedSec(); }
+        // A clock, a timed block's seconds (a cadence is its reps over them)
+        // and an interval's seconds.
+        if (ex.isTemplate("for_time") || ex.isTemplate("timed") || ex.isTemplate("interval")) {
+            out["durationSec"] = exerciseElapsedSec();
+        }
+        // An interval's rounds: those whose work was done — the one in progress
+        // when the step was left mid-work does not count.
+        if (ex.isTemplate("interval") && _workSec > 0) {
+            out["rounds"] = intervalRoundsDone(_emomRound, _intPhase == PHASE_WORK, _intPhaseLeft);
+        }
         var d = _distanceM - _exStartDistM;
         if ((ex.isTemplate("distance") || isLocomotion(ex)) && d > 0) { out["distanceKm"] = d / 1000.0; }
         if (out.size() > 0) { _outcomes[ex.name()] = out; }
+    }
+
+    // The rounds of an interval step done when it was left: the current round,
+    // less one when its work was still running.
+    static function intervalRoundsDone(round, inWork, phaseLeft) {
+        var done = (inWork && phaseLeft > 0) ? round - 1 : round;
+        return (done > 0) ? done : 0;
     }
 
     // ── test results (the standards a session tests) ─────────────────────────────
@@ -1165,6 +1181,33 @@ class WorkoutController {
     }
 
     function setResultDecision(d) { _resultDecision = d; }
+
+    // ── counts asked at the end (a step's `logs`) ─────────────────────────────
+
+    // The steps whose reps the athlete counts and enters at the end — a timed
+    // kettlebell set's, whose cadence is its reps over its seconds. A test step
+    // asks for its result instead.
+    function countSteps() {
+        var out = [];
+        var list = _session.exercises();
+        for (var i = 0; i < list.size(); i += 1) {
+            if (list[i].standard() == null && list[i].asksReps()) { out.add(list[i]); }
+        }
+        return out;
+    }
+
+    // The reps entered for a count step, or null before they are.
+    function countValue(ex) {
+        var name = ex.name();
+        if (!_entered.hasKey(name) || !_setLogs.hasKey(name) || _setLogs[name].size() == 0) { return null; }
+        return _setLogs[name][0]["reps"];
+    }
+
+    // The count as the step's one set, as a timed test's reps are.
+    function setCount(ex, v) {
+        _entered[ex.name()] = true;
+        _setLogs[ex.name()] = [ { "reps" => v, "weightKg" => ex.weightKg(), "rpe" => null } ];
+    }
 
     // ── progression ────────────────────────────────────────────────────────────────    // ── progression ────────────────────────────────────────────────────────────────
 

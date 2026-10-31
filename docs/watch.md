@@ -51,17 +51,27 @@ draws every step with it (design-system §9.6).
 
 Each template in `watch_vocabulary.json` says what a step on it sends the server
 (`records`, in the analytics' need ids: `sets` and `rpe` for sets, `hold`, `rounds` for
-the round-counting screens, `minutes` for a for-time clock, `km` for distance), and
+the round-counting screens and an `interval`'s finished rounds, `minutes` for a for-time
+clock, a `timed` block's and an interval's seconds, `km` for distance), and
 `capture.session` what every session sends (the log, the heart rate, the minutes). It is
 what both watches send — `Wire.mc` on the Garmin, `WorkoutSessionState` and `WatchUpload`
 on the Apple Watch — so a template that starts recording something changes on both and
 here. A test step also asks for its standard's result at the end, whatever its template.
 
-The scorecard reads a methodology's lead measure against it (X3,
-`tools/evaluate_packages.py`): on 2026-10-30 every package's lead is recorded on the wrist
-but two. Wildman's are not: rounds in an EMOM and cadence in a timed set run on the
-`interval` and `timed` screens, which record only the step's window — the athlete logs
-them on the phone. CrossFit's standards are recorded only where a session tests them.
+What a step's screen cannot see the athlete enters at the end: `capture.asked` lists the
+outcome fields a watch asks for (`reps` today), and with `?spec=1` each step whose slot
+logs one its screen does not record carries it as `logs` (`src/outcome_fields.py`, from
+`data/commons/outcome_fields.yaml`, the table the web and the phone log from). A timed
+kettlebell set logs `["reps"]`: its reps over its seconds are Wildman's cadence. The
+Garmin's Results menu (Save) and the Apple Watch's completion screen list those steps
+after the tests; the count goes up as the step's one set (`repsActual`). An interval left
+mid-work counts the rounds whose work was done (`intervalRoundsDone` on both).
+
+The scorecard reads a methodology's lead measure against it, a step's `logs` included
+(X3, `tools/evaluate_packages.py`): since 2026-10-31 every package's lead is recorded on
+the wrist but CrossFit's standards, which are recorded only where a session tests them.
+Until then Wildman's were not — rounds in an EMOM and cadence in a timed set ran on
+screens that recorded only the step's window, and the athlete logged them on the phone.
 
 ## Where they stand
 
@@ -92,6 +102,7 @@ As of 2026-10-18. *Server* is the payload key; *—* means the server has no par
 | Session icon (its main exercise, in its modality's colour) | `icon` (src/session_icon.py; also on `tomorrow`) | the session hero, activity header and summary: `Icons.forSession` (`cat_kettlebell`), else the archetype category's | the session list (`SessionIcon`, the `kettlebell` symbol in the watch's catalog), the complication; else the modality's |
 | Double bells | `bells` (exercises.yaml) | 2x24 and both bells in the volume | the same; neither watch reads it off the id any more |
 | Upload: sets by id, rounds, clock, distance | — | `Wire.mc` | `WatchUpload` |
+| Interval rounds, timed seconds; reps counted at the end | `logs` | `noteStepEnd`, Results menu | `stepLeft`, completion screen |
 | **Native, not shared** | | glance (64 KB; Next up or Day bar, `glanceStyle`; a press opens Today), wellness posting, pairing QR | HealthKit workout and route, complication, overtime prompt |
 
 ## Tests

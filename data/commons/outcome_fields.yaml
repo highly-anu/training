@@ -49,3 +49,15 @@ results:
   reps: reps
   hold: seconds
   distance: km
+
+# The analytics need each field feeds (src/analytics/vocabulary.PRIMITIVES
+# `needs`). Reps logged on a step are timed reps: the rate primitive reads them
+# over the step's seconds (Wildman's cadence). src/outcome_fields.py reads it
+# for the watches' `logs` and the scorecard's X3.
+needs:
+  rounds: rounds
+  minutes: minutes
+  time: minutes
+  km: km
+  reps: timed_reps
+  seconds: hold

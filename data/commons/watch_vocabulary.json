@@ -16,8 +16,9 @@
     "pink": "0xEC4899"
   },
   "capture": {
-    "_comment": "What a session run on either watch sends the server, by the analytics' need ids (src/analytics/vocabulary.NEEDS): `session` for every session (the log itself, the heart rate and the recorded minutes), each template's `records` for its steps — what both the Garmin (garmin/core/source/engine/Wire.mc) and the Apple Watch (WorkoutSessionState, WatchUpload) send. A test step also asks for its standard's result at the end (Save results), whatever its template. The scorecard's X3 reads a methodology's lead measure against it (tools/evaluate_packages.py).",
-    "session": ["completion", "hr", "minutes"]
+    "_comment": "What a session run on either watch sends the server, by the analytics' need ids (src/analytics/vocabulary.NEEDS): `session` for every session (the log itself, the heart rate and the recorded minutes), each template's `records` for its steps — what both the Garmin (garmin/core/source/engine/Wire.mc) and the Apple Watch (WorkoutSessionState, WatchUpload) send. A test step also asks for its standard's result at the end (Save results), whatever its template; `asked` are the outcome fields (data/commons/outcome_fields.yaml) a watch asks for at the end of a step whose screen does not record them — a timed kettlebell set's reps, its cadence — sent with ?spec=1 as the step's `logs`. The scorecard's X3 reads a methodology's lead measure against it (tools/evaluate_packages.py).",
+    "session": ["completion", "hr", "minutes"],
+    "asked": ["reps"]
   },
   "templates": {
     "sets": {
@@ -35,7 +36,7 @@
     "interval": {
       "doc": "Work/rest phases that run themselves (EMOM, Tabata, repeats).",
       "actions": ["skip"],
-      "records": [],
+      "records": ["rounds", "minutes"],
       "defaults": { "title": ["name", "wave_pct", "switch_side", "zone_or_load"], "a": "interval", "b": "interval_left", "gauge": "interval_round", "lines": "interval_next", "lap": "skip" }
     },
     "rounds": {
@@ -59,7 +60,7 @@
     "timed": {
       "doc": "A block held for a time, often in a zone; counts down and ends itself, switching hands at switchAtSec.",
       "actions": ["skip", "next_side"],
-      "records": [],
+      "records": ["minutes"],
       "defaults": { "title": ["name", "switch_side", "load"], "a": "time_left", "b": "zone_or_time", "lines": "focus", "lap": "skip" }
     },
     "round_timer": {

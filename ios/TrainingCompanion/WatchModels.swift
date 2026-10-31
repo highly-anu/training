@@ -800,6 +800,13 @@ struct WatchExercise: Codable, Hashable {
     var restUntilHr: Int? = nil
     /// The key of its screen in the session's `screens`.
     var screen: String? = nil
+    /// What the step's screen does not record and the athlete is asked at
+    /// the end (["reps"] for a timed kettlebell set: its cadence), the
+    /// server's outcome fields (src/outcome_fields.py); nil on most steps.
+    var logs: [String]? = nil
+
+    /// Its reps are counted by the athlete and entered at the end.
+    var asksReps: Bool { standard == nil && (logs ?? []).contains("reps") }
 
     enum CodingKeys: String, CodingKey {
         case exerciseId, name, slotType, slotRole, isMeta, loadDescription, loadNote, coachingCue
@@ -808,6 +815,7 @@ struct WatchExercise: Codable, Hashable {
         case lastTime = "last", standard
         case category, movementPattern, bilateral, targetRpm, workSec, intervalRestSec, distanceM
         case repsPerRound, repScheme, packLoadKg, focus, parentSlotRole, bells, switchAtSec, restUntilHr, screen
+        case logs
     }
 }
 
@@ -859,6 +867,7 @@ extension WatchExercise {
         switchAtSec = c.lenientInt(.switchAtSec)
         restUntilHr = c.lenientInt(.restUntilHr)
         screen = try? c.decodeIfPresent(String.self, forKey: .screen)
+        logs = try? c.decodeIfPresent([String].self, forKey: .logs)
     }
 }
 

@@ -273,10 +273,11 @@ def _wrist_capture(rec: dict, lead: str | None) -> tuple[set, list[tuple[str, se
     """(what every watch session records, [(step, what its screen records)] for
     each step the lead entry reads) — the steps as the watches' encoder sends
     them (api.encode_watch_session, ?spec=1), each read through its screen's
-    template (data/commons/watch_vocabulary.json `capture`, `records`). A test
-    step also takes its standard's result at the end (`prs`)."""
+    template (data/commons/watch_vocabulary.json `capture`, `records`) and what
+    the watch asks at its end (`logs`, src/outcome_fields.py). A test step also
+    takes its standard's result at the end (`prs`)."""
     import api
-    from src import watch_spec
+    from src import outcome_fields, watch_spec
     vocab = watch_spec.vocabulary()
     session = set((vocab.get('capture') or {}).get('session') or [])
     entry = next((e for s in spec_mod.compose(rec['goal']) for e in s.entries if e.id == lead), None) if lead else None
@@ -295,6 +296,9 @@ def _wrist_capture(rec: dict, lead: str | None) -> tuple[set, list[tuple[str, se
                     continue
                 template = (payload['screens'].get(step.get('screen')) or {}).get('template')
                 got = set(((vocab['templates'].get(template) or {}).get('records')) or [])
+                # What the watch asks at the end of the step (its `logs`: a
+                # timed set's reps), as the analytics needs they feed.
+                got |= outcome_fields.needs(step.get('logs') or [])
                 if step.get('standard'):
                     got.add('prs')
                 steps.append((f"{payload.get('archetypeId')}:{step.get('slotRole')} ({template})", got))

@@ -22,7 +22,7 @@
  "double_bell_practice|S6": "pass",
  "double_bell_practice|X1": "pass",
  "double_bell_practice|X2": "pass",
- "double_bell_practice|X3": "fail",
+ "double_bell_practice|X3": "pass",
  "general_practice|D1": "pass",
  "general_practice|D2": "pass",
  "general_practice|D3": "pass",
@@ -46,7 +46,7 @@
  "general_practice|S6": "pass",
  "general_practice|X1": "pass",
  "general_practice|X2": "pass",
- "general_practice|X3": "fail",
+ "general_practice|X3": "pass",
  "getup_mobility|D1": "pass",
  "getup_mobility|D2": "pass",
  "getup_mobility|D3": "pass",
@@ -94,7 +94,7 @@
  "pentathlon|S6": "pass",
  "pentathlon|X1": "pass",
  "pentathlon|X2": "pass",
- "pentathlon|X3": "fail",
+ "pentathlon|X3": "pass",
  "snatch_practice|D1": "pass",
  "snatch_practice|D2": "pass",
  "snatch_practice|D3": "pass",
@@ -118,7 +118,7 @@
  "snatch_practice|S6": "pass",
  "snatch_practice|X1": "pass",
  "snatch_practice|X2": "pass",
- "snatch_practice|X3": "fail",
+ "snatch_practice|X3": "pass",
  "squat_practice|D1": "pass",
  "squat_practice|D2": "pass",
  "squat_practice|D3": "pass",
@@ -142,5 +142,5 @@
  "squat_practice|S6": "pass",
  "squat_practice|X1": "pass",
  "squat_practice|X2": "pass",
- "squat_practice|X3": "fail"
+ "squat_practice|X3": "pass"
 }

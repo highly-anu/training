@@ -245,6 +245,36 @@ def test_wrist_capture() -> None:
     check('no lead measure is M2\'s to say', pe.grade_x3(None, prims, session, [])[0] == pe.PASS)
     check('X3 is hygiene: the watches, not the method', 'X3' in pe.HYGIENE)
 
+    print('X3: what a watch asks at the end of a step (its `logs`)')
+    import api
+    from src import outcome_fields as of
+    check('every field a slot logs feeds a need the analytics know',
+          set(of.table()['needs']) == set(of.table()['fields'])
+          and set(of.table()['needs'].values()) <= set(vocabulary.NEEDS), of.table()['needs'])
+    check('the asked fields are outcome fields', set(vocab['capture']['asked']) <= set(of.table()['fields']))
+    kb = {'category': 'kettlebell'}
+    check("a timed kettlebell set logs reps beside minutes (the clients' rule)",
+          of.fields_for('time_domain', kb) == ['minutes', 'reps'] and of.fields_for('time_domain') == ['minutes', 'km'])
+    check('a for-time slot logs a clock', of.fields_for('for_time') == ['time'])
+    session = {'modality': 'kettlebell', 'archetype': {'id': 'x', 'name': 'X'}, 'exercises': [
+        {'exercise': {'id': 'kb_snatch', 'name': 'Snatch', **kb}, 'slot_type': 'time_domain', 'slot_role': 'set',
+         'load': {'duration_minutes': 10}},
+        {'exercise': {'id': 'kb_swing', 'name': 'Swing', **kb}, 'slot_type': 'emom', 'slot_role': 'swing',
+         'load': {'target_rounds': 10, 'work_sec': 60}},
+        {'exercise': {'id': 'run', 'name': 'Run'}, 'slot_type': 'time_domain', 'slot_role': 'run',
+         'load': {'duration_minutes': 30}},
+        {'exercise': {'id': 'push_up', 'name': 'Push-up', **kb}, 'slot_type': 'time_domain', 'slot_role': 'test',
+         'load': {'duration_minutes': 3}, 'standard': {'id': 'push_ups_3min', 'result': 'reps'}}]}
+    steps = {e['exerciseId']: e for e in api.encode_watch_session(session, 'k', spec_level=1)['exercises']}
+    check('a timed kettlebell set asks for its reps at the end', steps['kb_snatch'].get('logs') == ['reps'],
+          steps['kb_snatch'].get('logs'))
+    check('an interval asks nothing: its screen records the rounds', 'logs' not in steps['kb_swing'])
+    check('a run asks nothing: km are not asked', 'logs' not in steps['run'])
+    check('a test step asks for its result instead', 'logs' not in steps['push_up'])
+    check('without ?spec=1 there are no logs',
+          not any('logs' in e for e in api.encode_watch_session(session, 'k')['exercises']))
+    check('logged reps are timed reps, the rate primitive\'s need', of.needs(['reps']) == {'timed_reps'})
+
 
 def main() -> int:
     for t in (test_execution, test_robustness, test_data_and_measurement, test_source_and_status, test_wrist_capture):
