@@ -102,6 +102,25 @@ def test_general_practice_runs_wildmans_phase_two():
     assert 'wk_kb_snatch' not in (reqs(g, 'intermediate').get('mastered_exercises') or [])
 
 
+def test_swing_minutes_alternate_hands_unless_the_athlete_keeps_two_hands():
+    # The swing PDF's Option C, its most common: minutes alternate two-hand and
+    # hand-to-hand swings. The default (owner, 2026-10-31); two-hand only is
+    # the athlete's choice, and an option it does not offer is the default.
+    goal, _ = setup()
+    option = next(o for o in goal['training_contract']['options'] if o['id'] == 'swing_style')
+    assert option['default'] == 'alternating' and {c['id'] for c in option['choices']} == {'alternating', 'two_hand'}
+    p, _, _ = plan(weeks=2)
+    loads = swings(p)
+    assert loads and all(l['alternate']['exercise_id'] == 'wk_kb_swing_hand_to_hand' for l in loads)
+    assert all(l['load_note'].startswith('Alternate minutes: Kettlebell Swing (Two-Hand), then '
+                                         'Kettlebell Swing (Hand-to-Hand).') for l in loads)
+    assert [l['reps_per_round'] for l in loads] == [6, 8, 10, 12], 'the cursor is the same either way'
+    two, _, _ = plan(weeks=2, contract_options={'swing_style': 'two_hand'})
+    assert swings(two) and not any(l.get('alternate') for l in swings(two))
+    odd, _, _ = plan(weeks=2, contract_options={'swing_style': 'one_hand_only'})
+    assert all(l.get('alternate') for l in swings(odd)), 'an unknown choice is the default'
+
+
 def test_programs_alternate_on_wildmans_days():
     # "Kettlebell Swings on Monday & Thursday, Clean & Press on Wednesday &
     # Saturday": the two programs alternate, never swing, swing, press, press.

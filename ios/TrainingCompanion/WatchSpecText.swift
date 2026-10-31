@@ -234,11 +234,19 @@ enum WatchSpecText {
         return parts.isEmpty ? ex.name : parts.joined(separator: "  ")
     }
 
+    /// The movement of the round in progress: an alternating interval's even
+    /// rounds are its alternate (`alternateName`: Option C's hand-to-hand
+    /// swings), as the Garmin's `WorkoutController.roundName` draws them.
+    static func roundName(_ ex: WatchExercise, _ screen: WatchScreen, _ st: WatchStepState) -> String {
+        guard let alt = ex.alternateName, screen.template == .interval, st.intervalRound % 2 == 0 else { return ex.name }
+        return alt
+    }
+
     private static func titlePart(_ id: WatchVocab.TitlePart, _ ex: WatchExercise, _ screen: WatchScreen,
                                   _ st: WatchStepState) -> String? {
         switch id {
         case .name:
-            return ex.name
+            return roundName(ex, screen, st)
         case .load:
             // Sets show the working weight (Edit Set changes it); the rest the plan's.
             let w = screen.template == .sets ? st.weightKg : ex.weightKg

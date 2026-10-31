@@ -805,6 +805,10 @@ struct WatchExercise: Codable, Hashable {
     /// server's outcome fields (src/outcome_fields.py); nil on most steps.
     var logs: [String]? = nil
 
+    /// An interval whose even rounds are another movement (Option C: two-hand,
+    /// then hand-to-hand swings): that movement's name; nil on every other step.
+    var alternateName: String? = nil
+
     /// Its reps are counted by the athlete and entered at the end.
     var asksReps: Bool { standard == nil && (logs ?? []).contains("reps") }
 
@@ -815,7 +819,7 @@ struct WatchExercise: Codable, Hashable {
         case lastTime = "last", standard
         case category, movementPattern, bilateral, targetRpm, workSec, intervalRestSec, distanceM
         case repsPerRound, repScheme, packLoadKg, focus, parentSlotRole, bells, switchAtSec, restUntilHr, screen
-        case logs
+        case logs, alternateName
     }
 }
 
@@ -868,6 +872,7 @@ extension WatchExercise {
         restUntilHr = c.lenientInt(.restUntilHr)
         screen = try? c.decodeIfPresent(String.self, forKey: .screen)
         logs = try? c.decodeIfPresent([String].self, forKey: .logs)
+        alternateName = try? c.decodeIfPresent(String.self, forKey: .alternateName)
     }
 }
 

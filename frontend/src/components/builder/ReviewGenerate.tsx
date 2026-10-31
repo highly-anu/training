@@ -354,6 +354,25 @@ export function ReviewGenerate() {
               I have {imp.number} matching {imp.plural} appropriate for these exercises.
             </label>
           ))}
+          {(requirements.options ?? []).map((opt) => {
+            const chosen = constraints.contract_options?.[opt.id] ?? opt.default
+            return (
+              <fieldset key={opt.id} className="space-y-1 pt-1">
+                <legend className="text-muted-foreground">{opt.label}</legend>
+                {opt.choices.map((c) => (
+                  <label key={c.id} className="flex items-start gap-2">
+                    <input type="radio" name={`option-${opt.id}`} className="mt-1" checked={chosen === c.id}
+                      onChange={() => useBuilderStore.getState().updateConstraints({
+                        contract_options: { ...(constraints.contract_options ?? {}), [opt.id]: c.id } })} />
+                    <span>
+                      {c.label}{c.id === opt.default && <span className="text-muted-foreground"> (default)</span>}
+                      {c.description && <span className="block text-xs text-muted-foreground">{c.description}</span>}
+                    </span>
+                  </label>
+                ))}
+              </fieldset>
+            )
+          })}
           {(requirements.starting_loads?.length ?? 0) > 0 && (
             <div className="space-y-1.5 pt-1">
               <p className="text-muted-foreground">

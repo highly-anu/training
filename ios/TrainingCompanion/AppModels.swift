@@ -235,6 +235,14 @@ struct PhilosophyTrack: Codable, Identifiable, Hashable {
     let description: String?
     let phases: [PhilosophyPhase]
     var entryRequirements: TrackEntryRequirements? = nil
+    /// A track the app made up rather than the source (the fidelity record's
+    /// invention): the builders label it as the app's own.
+    var invention: TrackInvention? = nil
+
+    struct TrackInvention: Codable, Hashable {
+        let id: String
+        let text: String
+    }
 
     /// Every phase's default length, summed — the track run end to end.
     var totalWeeks: Int { phases.reduce(0) { $0 + $1.weeks } }
@@ -243,7 +251,7 @@ struct PhilosophyTrack: Codable, Identifiable, Hashable {
     // plain JSONDecoder: without these the requirements never decoded and a
     // contract track could not be confirmed from the phone.
     enum CodingKeys: String, CodingKey {
-        case id, name, description, phases
+        case id, name, description, phases, invention
         case entryRequirements = "entry_requirements"
     }
 }
@@ -261,6 +269,22 @@ struct TrackEntryRequirements: Codable, Hashable {
     /// What the track's loaded blocks need more than one of, matching (a pair
     /// of bells); the athlete confirms each `countKey`.
     var implements: [TrackImplement]? = nil
+    /// Choices the athlete makes for the track (Wildman's swing minutes),
+    /// each with its default; sent as `contract_options`.
+    var options: [TrackOption]? = nil
+
+    struct TrackOption: Codable, Hashable, Identifiable {
+        let id: String
+        let label: String
+        let `default`: String
+        let choices: [Choice]
+
+        struct Choice: Codable, Hashable, Identifiable {
+            let id: String
+            let label: String
+            var description: String? = nil
+        }
+    }
 
     /// What the track asks the athlete to confirm they have; a server that
     /// predates `implements` said only `kettlebell_count`.
@@ -294,7 +318,7 @@ struct TrackEntryRequirements: Codable, Hashable {
         case exerciseNames = "exercise_names"
         case kettlebellCount = "kettlebell_count"
         case startingLoads = "starting_loads"
-        case implements
+        case implements, options
     }
 }
 
@@ -1055,6 +1079,9 @@ struct GenerateConstraints: Encodable {
     /// more than one of, other than the kettlebell (`kettlebellCount`), by its
     /// constraint key: `dumbbell_count` (src/implements.py).
     var implementCounts: [String: Int] = [:]
+    /// A track option's id → the athlete's choice (`TrackEntryRequirements.options`);
+    /// an option left out takes its default.
+    var contractOptions: [String: String] = [:]
 
     /// How many of the implement `key` names the athlete has said they have.
     func count(for key: String) -> Int {
@@ -1080,6 +1107,7 @@ struct GenerateConstraints: Encodable {
         case startPhase = "start_phase"
         case periodizationWeek = "periodization_week"
         case preferredDays = "preferred_days"
+        case contractOptions = "contract_options"
     }
 
     private struct ImplementKey: CodingKey {
@@ -1107,6 +1135,7 @@ struct GenerateConstraints: Encodable {
         try c.encodeIfPresent(startPhase, forKey: .startPhase)
         try c.encodeIfPresent(periodizationWeek, forKey: .periodizationWeek)
         try c.encodeIfPresent(preferredDays, forKey: .preferredDays)
+        if !contractOptions.isEmpty { try c.encode(contractOptions, forKey: .contractOptions) }
         var extra = encoder.container(keyedBy: ImplementKey.self)
         for (key, n) in implementCounts where CodingKeys(rawValue: key) == nil {
             try extra.encode(n, forKey: ImplementKey(stringValue: key))

@@ -499,6 +499,11 @@ struct TrackChoiceRow: View {
                     .lineLimit(3)
                     .multilineTextAlignment(.leading)
             }
+            if track.invention != nil {
+                // A track the app made up, not the method's own program.
+                Label("The app's own track, not the method's", systemImage: "info.circle")
+                    .font(.caption2).foregroundStyle(.secondary)
+            }
             TrackPhaseList(track: track)
         }
         .padding(.vertical, 4)
@@ -782,6 +787,21 @@ struct BuilderStep4ReviewView: View {
                             set: { builder.constraints.setCount($0 ? imp.count : 1, for: imp.countKey) }))
                     }
                 }
+                ForEach(r.options ?? []) { opt in
+                    Section {
+                        Picker(opt.label, selection: Binding(
+                            get: { builder.constraints.contractOptions[opt.id] ?? opt.default },
+                            set: { builder.constraints.contractOptions[opt.id] = $0 })) {
+                            ForEach(opt.choices) { c in
+                                Text(c.id == opt.default ? "\(c.label) (default)" : c.label).tag(c.id)
+                            }
+                        }
+                        .pickerStyle(.inline)
+                    } footer: {
+                        let chosen = builder.constraints.contractOptions[opt.id] ?? opt.default
+                        if let text = opt.choices.first(where: { $0.id == chosen })?.description { Text(text) }
+                    }
+                }
                 if let lifts = r.startingLoads, !lifts.isEmpty {
                     Section {
                         ForEach(lifts) { lift in
@@ -902,6 +922,10 @@ private final class SettingsState: ObservableObject {
                 c.masteredExercises = ids.compactMap(\.stringValue)
             }
             if case .int(let count)? = saved["kettlebell_count"] { c.kettlebellCount = count }
+            // The track's options the program was built with (Wildman's swing minutes).
+            if case .object(let options)? = saved["contract_options"] {
+                for (key, value) in options { if let s = value.stringValue { c.contractOptions[key] = s } }
+            }
             // Any other implement the track asked for (`dumbbell_count`).
             for (key, value) in saved where key.hasSuffix("_count") && key != "kettlebell_count" {
                 if case .int(let count) = value { c.implementCounts[key] = count }

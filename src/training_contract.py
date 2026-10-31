@@ -115,8 +115,50 @@ def load_contract(package: str, track: str) -> dict | None:
                              for b in m['blocks']):
         raise ContractError(f'{package}/{track}: a loaded block chosen by weight needs the implement it uses '
                             '(`implement: {equipment, count}`).')
-    return {**deepcopy(contract), 'version': document['version'], 'package': package, 'track_id': track,
-            **({'implement': implement} if implement else {})}
+    options = {o['id']: o for o in contract.get('options') or []}
+    for o in options.values():
+        if o['default'] not in {c['id'] for c in o['choices']}:
+            raise ContractError(f"{package}/{track}: option {o['id']}'s default {o['default']!r} is not one of its choices.")
+    for module in contract['modules']:
+        for b in module['blocks']:
+            for opt, choice in ((b.get('alternate') or {}).get('when') or {}).items():
+                if opt not in options or choice not in {c['id'] for c in options[opt]['choices']}:
+                    raise ContractError(f"{module['id']}: its alternate asks for {opt} = {choice!r}, "
+                                        'which the track\'s options do not offer.')
+            if b.get('alternate') and b['slot_type'] != 'emom':
+                raise ContractError(f"{module['id']}: only an EMOM block's rounds alternate.")
+    out = {**deepcopy(contract), 'version': document['version'], 'package': package, 'track_id': track,
+           **({'implement': implement} if implement else {})}
+    # An alternation reads the athlete's options where the block is built:
+    # each option it asks about, with its choices and default.
+    for module in out['modules']:
+        for b in module['blocks']:
+            if b.get('alternate'):
+                b['alternate']['options'] = {k: {'default': options[k]['default'],
+                                                 'choices': [c['id'] for c in options[k]['choices']]}
+                                             for k in (b['alternate'].get('when') or {})}
+    return out
+
+
+def _alternate(block: dict, exercises: dict, constraints: dict, blocked: tuple | None) -> str | None:
+    """The movement an EMOM block's even rounds take (Wildman's Option C: odd
+    minutes two-hand, even minutes hand-to-hand), when the athlete's options
+    (`contract_options`, else each option's default) say so and their
+    equipment and injuries allow it; else None — one movement."""
+    alt = block.get('alternate')
+    if not alt:
+        return None
+    chosen = constraints.get('contract_options') or {}
+    for opt, want in (alt.get('when') or {}).items():
+        spec = (alt.get('options') or {}).get(opt) or {}
+        value = chosen.get(opt) if chosen.get(opt) in (spec.get('choices') or []) else spec.get('default')
+        if value != want:
+            return None
+    ex = exercises.get(alt['exercise_id'])
+    if ex is None or _ruled_out(ex, constraints, blocked) \
+            or not _equipment_ok(ex, set(constraints.get('equipment') or [])):
+        return None
+    return alt['exercise_id']
 
 
 def period_of(module: dict, week_number: int | None) -> dict | None:
@@ -746,6 +788,12 @@ def _assignment(block: dict, module: dict, exercises: dict, constraints: dict,
                 'duration_minutes': seconds // 60}
         if cue:
             load['focus'] = cue
+        alt = _alternate(block, exercises, constraints, blocked)
+        if alt:
+            # Odd rounds the block's movement, even rounds this one; the
+            # watches name each round's (`alternateName`).
+            name = exercises[alt].get('name', alt)
+            load['alternate'] = {'exercise_id': alt, 'name': name}
     else:
         seconds = block['duration_sec']
         if _progresses(block) and not block.get('standard') and module['progression']['model'] == 'timed_cycle':
@@ -797,6 +845,10 @@ def _assignment(block: dict, module: dict, exercises: dict, constraints: dict,
     if block['slot_type'] == 'emom' and load.get('focus'):
         # The stage's cue leads the note both clients show (start/stop).
         load['load_note'] = f"{load['focus']} {load.get('load_note') or ''}".strip()
+    if load.get('alternate'):
+        # Option C leads the note: which movement each minute is.
+        load['load_note'] = (f"Alternate minutes: {ex.get('name', eid)}, then {load['alternate']['name']}. "
+                             f"{load.get('load_note') or ''}").strip()
     load.update(prescription_version=1, progression_model=module['progression']['model'],
                 module_id=module['id'], forecast_step=step,
                 advances_module=_advancing(block) if by_load else _progresses(block),
