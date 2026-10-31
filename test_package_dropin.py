@@ -222,6 +222,19 @@ def child(folder: str) -> int:
                            '--check'], cwd=ROOT, capture_output=True, text=True)
     check('tools/add_package.py --check finds nothing to fix', done.returncode == 0
           and 'can be brought in' in done.stdout, (done.stdout + done.stderr)[-600:])
+
+    print('blended with the others')
+    from tools import check_styles
+    tracks = check_styles.composable_tracks()
+    pairs = check_styles.blend_pairs(tracks)
+    for pkg in ('dropin_contract', 'dropin_templates'):
+        own = [t['key'] for t in tracks if t['philosophy_id'] == pkg]
+        paired = {t['key'] for pair in pairs for t in pair if t['philosophy_id'] == pkg}
+        check(f'check_styles pairs every track of {pkg}', own and paired == set(own),
+              str(sorted(set(own) - paired)))
+        pair = next(p for p in pairs if pkg in (p[0]['philosophy_id'], p[1]['philosophy_id']))
+        problems, refused = check_styles._compose(*check_styles._blend(*pair))
+        check(f"{pair[0]['key']} + {pair[1]['key']} composes", not problems and not refused, problems or refused)
     print()
     if FAILURES:
         print(f'{len(FAILURES)} failure(s)')

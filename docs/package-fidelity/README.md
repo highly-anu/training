@@ -176,7 +176,7 @@ commit (`tools/run_checks.py`), and each package's own tests
 | `tools/validate_entities.py --all` | every file against its schema; template, pool and test wiring; injury-flag ids resolve, each substitution pair inside one package; no archetype, framework or media id two packages declare |
 | `tools/check_provenance.py` | no package draws on another it does not declare |
 | `tools/check_provenance.py --coverage` | coverage gaps and authoring problems, watch specs included |
-| `tools/check_styles.py` | every philosophy × track × phase generates on its own framework |
+| `tools/check_styles.py` | every philosophy × track × phase generates on its own framework; every contract and templated track composes, paired round-robin with others on constraints from both tracks' data (`blend_pairs`) |
 | `tools/evaluate_packages.py` | the scorecard may not get worse, `status` is the one it earns, every fidelity finding is in the baseline (`check_fidelity.gate`, in the same pass) and every catalog exercise reaches a program (`check_exercise_coverage`, in the same pass); a baseline that a change has made stale fails until it is updated in that change |
 | `tools/check_analytics.py` | every declared measure applies somewhere |
 | `tools/check_package_status.py` | each record names its own tracks; each `records/status.yaml` is what the record and the recorded scorecard write; this table matches `checks/python_suites.yaml` |

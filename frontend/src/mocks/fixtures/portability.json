@@ -2300,18 +2300,6 @@
  "verdict": "The code is package-neutral: nothing in the server, the web, the phones or the watches names a package (tools/check_code_neutral.py), and test_package_dropin.py runs three packages under new ids beside the shipped ones with the repository unchanged. A package is one folder: its files, its standards, and the records the push gates keep (records/, dossier.md), which tools/add_package.py <id> writes. Anything beyond the commons vocabulary is still a shared edit.",
  "gaps": [
   {
-   "id": "fixed_blends",
-   "title": "Blends are checked on five fixed pairs",
-   "kind": "tooling",
-   "impact": "cosmetic",
-   "detail": "A new package's tracks are generated on their own; it is never generated in a blend.",
-   "anchors": [
-    "tools/check_styles.py::COMPOSITIONS"
-   ],
-   "roadmap": "9.1",
-   "status": "open"
-  },
-  {
    "id": "wrist_capture",
    "title": "The interval and timed watch screens record no count",
    "kind": "watch",
