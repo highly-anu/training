@@ -1,0 +1,26 @@
+# The athlete's training levels, in order (src/levels.py). The engine reads the
+# order (seeds cascade upward, a level sorts by it), the default, which level
+# unlocks every exercise and each level's share of a distance slot's metres;
+# tools/gen_client_vocab.py writes the list into the web's and the phone's
+# pickers and the schemas' enums. A level's assumed concepts are
+# level_concepts.yaml's; a package's are its level_seeds.yaml.
+#
+#   distance_multiplier  a distance slot's metres at this level (progression._distance_slot)
+#   unlocks_all          every exercise is open, prerequisites or not (selector._get_unlocked)
+
+default: intermediate
+
+levels:
+  - id: novice
+    label: Novice
+    distance_multiplier: 0.5
+  - id: intermediate
+    label: Intermediate
+    distance_multiplier: 0.75
+  - id: advanced
+    label: Advanced
+    distance_multiplier: 1.0
+  - id: elite
+    label: Elite
+    distance_multiplier: 1.25
+    unlocks_all: true

@@ -18,7 +18,7 @@ from typing import NamedTuple
 import math
 import os
 
-from . import provenance, recovery_regions
+from . import levels as _levels, provenance, recovery_regions
 from .selector import _equipment_ok, _injury_exclusions
 
 
@@ -1056,7 +1056,7 @@ def _level_refusal(contract: dict, level: str) -> str:
     if fits:
         return f"{this} is written for {who} athletes; at {level}, {names.get(fits[0], fits[0])} is the track for you."
     written = sorted({lv for t in (document.get('tracks') or {}).values() for lv in t.get('training_levels') or []},
-                     key=['novice', 'intermediate', 'advanced', 'elite'].index)
+                     key=_levels.rank)
     return (f"{this} is written for {who} athletes, and no track of this "
             f"program is written for {level} (they cover {', '.join(written)}).")
 

@@ -430,18 +430,18 @@
       "items": {
         "type": "string",
         "enum": [
-          "active",
           "transition",
-          "specific",
           "base",
           "build",
+          "specific",
           "peak",
           "taper",
-          "deload",
           "maintenance",
+          "deload",
+          "recovery",
           "rehab",
           "post_op",
-          "recovery"
+          "active"
         ]
       },
       "default": []

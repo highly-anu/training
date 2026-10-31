@@ -146,20 +146,19 @@ const EDGES: Edge[] = [
       'effort',
       'named_only / test_only',
       'data/commons/movement_patterns.yaml complements — what a complementary mobility block recovers',
+      'data/commons/training_levels.yaml — the level order, and the level that unlocks everything',
+      'data/commons/intensities.yaml — the intensities that make a main lift',
     ],
     bakedLogic: [
       'Candidates: the goal\'s packages and those they borrow from (provenance), plus unattributed exercises; the whole library only under a non-strict policy',
       'exercise_ids (in order when ordered), movement_pattern aliases (data/commons/movement_patterns.yaml) and category filter together',
-      'Level prerequisites: requires resolved transitively against data/commons/level_concepts.yaml and the package\'s level_seeds.yaml; elite unlocks everything',
+      'Level prerequisites: requires resolved transitively against data/commons/level_concepts.yaml and the package\'s level_seeds.yaml',
       'Slot constraints: AMRAP / for_time slots reject skill, mobility and rehab; zone1–2 aerobic slots keep low effort; phase exclude_exercises',
       'Scoring: −2 per recent use (last 40), +0.5 for unlocks (not in a slot that names its exercises), +0.5 for defined movement_patterns; ties to the first authored',
       'Main lifts (heavy sets × reps) keep one exercise through a phase unless it rotate_main_lifts',
       'A phase kind that excludes_max_effort (taper) drops effort: max exercises',
     ],
-    hardcodedValues: [
-      '_LEVEL_ORDER — the four training levels',
-      'MAIN_LIFT_INTENSITIES',
-    ],
+    hardcodedValues: [],
   },
   {
     id: 'exercise-progression',
@@ -182,6 +181,9 @@ const EDGES: Edge[] = [
       'exercise.starting_load_kg (by level), weekly_increment_kg and sessions_per_week',
       'exercise.competition_pace',
       'exercise.category — only for the no-start-load note',
+      'data/commons/progression.yaml — RPE load factors and the weekly ramps (a framework\'s progression_defaults overrides them)',
+      'data/commons/training_levels.yaml — each level\'s share of a distance slot',
+      'data/commons/intensities.yaml — which intensities prescribe heart-rate zones, and their bands',
     ],
     bakedLogic: [
       'Model (training_contract.resolve_model): the framework\'s progression_overrides for the modality, its own model when prescription_policy is framework, else the modality\'s, else linear_load',
@@ -191,9 +193,7 @@ const EDGES: Edge[] = [
       'as_written frameworks and a test\'s scored slot (standard_tests.protocol_load) are prescribed exactly as the source writes them',
     ],
     hardcodedValues: [
-      '_DEFAULT_INCREMENT_KG 2.5 and the other defaults: 3 × 5, deload share 0.6, density 0.70 / 0.75, ramps 10 % / 8 %, AMRAP 1200 s',
-      '_RPE_LOAD_FACTOR',
-      '_INTENSITY_ZONES — which intensity strings prescribe heart-rate zones',
+      '_DEFAULT_INCREMENT_KG 2.5 and the other defaults: 3 × 5, deload share 0.6, density 0.70 / 0.75, AMRAP 1200 s',
     ],
   },
 ]

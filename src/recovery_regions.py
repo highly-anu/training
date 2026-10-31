@@ -18,7 +18,7 @@ from __future__ import annotations
 import os
 from functools import lru_cache
 
-from src import loader
+from src import intensities, loader
 
 _PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                      'data', 'commons', 'recovery_regions.yaml')
@@ -72,7 +72,7 @@ def _load(cost: str | None, slots: list[tuple[float, dict]]) -> dict[str, float]
 
 def _intensity(slot: dict, slot_type: str | None = None) -> float:
     cfg = config()
-    return (cfg['intensity_weight'].get(str(slot.get('intensity')), 1)
+    return (intensities.recovery_weights().get(str(slot.get('intensity')), 1)
             * (cfg.get('slot_type_weight') or {}).get(slot_type or slot.get('slot_type'), 1))
 
 

@@ -2,9 +2,13 @@
 from __future__ import annotations
 
 import math
+import os
+from functools import lru_cache
 from typing import Optional
 
-from . import phases
+import yaml
+
+from . import intensities, levels, phases
 
 # Loads come from the exercise YAML: `starting_load_kg` by level and
 # `weekly_increment_kg`. The Python tables that used to shadow them are gone —
@@ -16,15 +20,24 @@ _DEFAULT_INCREMENT_KG = 2.5
 # without one (a table here keyed six shared lifts until 2026-10-30).
 _DEFAULT_SESSIONS_PER_WEEK = 2
 
-# RPE → load factor relative to a "comfortable working weight" baseline (RPE 8)
-# Used to suggest a starting weight when exercise has starting_load_kg data
-_RPE_LOAD_FACTOR: dict[int, float] = {
-    10: 1.09,   # 0 RIR — maximal
-    9:  1.05,   # 1 RIR
-    8:  1.00,   # 2 RIR — standard working set
-    7:  0.95,   # 3 RIR
-    6:  0.90,   # 4 RIR — deload / technique
-}
+# The progression constants (data/commons/progression.yaml): RPE -> load
+# factor against a working weight at RPE 8, and the weekly ramps a framework's
+# `progression_defaults` may override for its own weeks.
+@lru_cache(maxsize=1)
+def _constants() -> dict:
+    path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                        'data', 'commons', 'progression.yaml')
+    with open(path, encoding='utf-8') as fh:
+        doc = yaml.safe_load(fh) or {}
+    return {'rpe': {int(k): float(v) for k, v in (doc.get('rpe_load_factors') or {}).items()},
+            'ramps': {k: float(v) for k, v in (doc.get('ramps') or {}).items()}}
+
+
+def ramps_for(framework: dict | None) -> dict:
+    """The weekly ramps a framework's weeks use: the commons', each overridden
+    by its `progression_defaults`."""
+    own = ((framework or {}).get('progression_defaults') or {}).get('ramps') or {}
+    return {**_constants()['ramps'], **{k: float(v) for k, v in own.items()}}
 
 
 def _round_kg(kg: float, step: float = 2.5) -> float:
@@ -94,7 +107,7 @@ def _rpe_autoregulation(exercise: dict, slot: dict, level: str, is_deload: bool,
     }
 
     if base_load is not None:
-        factor = _RPE_LOAD_FACTOR.get(target_rpe, 1.00)
+        factor = _constants()['rpe'].get(target_rpe, 1.00)
         result['suggested_weight_kg'] = _round_kg(base_load * factor)
         result['load_note'] = (
             f'RPE {target_rpe} ({rir} RIR) — '
@@ -113,22 +126,7 @@ def _rpe_autoregulation(exercise: dict, slot: dict, level: str, is_deload: bool,
 # (the watch HR band, the web zone chip) needs a real 1-5 zone range, not the raw
 # token. Previously only 'zone2' produced a parseable label, so every Z3/Z4/Z5
 # prescription reached the client with no HR bounds at all.
-_INTENSITY_ZONES: dict[str, tuple[int, int, str]] = {
-    'zone1':       (1, 1, 'Zone 1 (recovery)'),
-    'zone2':       (1, 2, 'Zone 1-2 (conversational pace)'),
-    'zone3':       (3, 3, 'Zone 3 (tempo)'),
-    'zone4':       (4, 4, 'Zone 4 (threshold)'),
-    'zone4_5':     (4, 5, 'Zone 4-5 (VO2max)'),
-    'zone5':       (5, 5, 'Zone 5 (maximal)'),
-    'light':       (1, 2, 'Zone 1-2 (light)'),
-    'low':         (1, 2, 'Zone 1-2 (easy)'),
-    'moderate':    (2, 3, 'Zone 2-3 (moderate)'),
-    'work_pace':   (2, 3, 'Zone 2-3 (work pace)'),
-    'high':        (3, 4, 'Zone 3-4 (hard)'),
-    'hard':        (3, 4, 'Zone 3-4 (hard)'),
-    'max':         (4, 5, 'Zone 4-5 (max effort)'),
-    'progressing': (2, 4, 'Zone 2-4 (progressive)'),
-}
+_INTENSITY_ZONES: dict[str, tuple[int, int, str]] = intensities.zones()   # data/commons/intensities.yaml
 
 
 def zone_band(intensity) -> tuple[Optional[int], Optional[int], Optional[str]]:
@@ -158,7 +156,8 @@ def _kind_adjusted_keep(phase: str, deload_keep: float | None, default: float) -
 
 
 def _time_to_task(slot: dict, week: int, phase: str, is_deload: bool,
-                  max_minutes: int | None = None, deload_keep: float | None = None) -> dict:
+                  max_minutes: int | None = None, deload_keep: float | None = None,
+                  ramps: dict | None = None) -> dict:
     # Use slot's duration_minutes if defined, otherwise duration_sec, otherwise default 90 min
     if 'duration_minutes' in slot:
         base_sec = slot['duration_minutes'] * 60
@@ -168,8 +167,8 @@ def _time_to_task(slot: dict, week: int, phase: str, is_deload: bool,
     # The phase kind sets the ceiling (data/commons/phase_kinds.yaml).
     target_sec = int(base_sec * phases.volume_multiplier(phase))
 
-    # 10% weekly ramp up to target
-    current_sec = min(base_sec * (1 + (week - 1) * 0.10), target_sec)
+    # The weekly ramp (10 % by default) up to target
+    current_sec = min(base_sec * (1 + (week - 1) * (ramps or ramps_for(None))['time']), target_sec)
     if is_deload:
         current_sec *= _kind_adjusted_keep(phase, deload_keep, 0.60)
 
@@ -189,7 +188,7 @@ def _time_to_task(slot: dict, week: int, phase: str, is_deload: bool,
 
 
 def _distance_slot(slot: dict, week: int, level: str, phase: str, is_deload: bool,
-                   deload_keep: float | None = None) -> dict:
+                   deload_keep: float | None = None, ramps: dict | None = None) -> dict:
     base_m = slot.get('distance_m', 8000)
     intensity = slot.get('intensity', 'zone2')
 
@@ -206,12 +205,10 @@ def _distance_slot(slot: dict, week: int, level: str, phase: str, is_deload: boo
             short['zone_upper'] = hi
         return short
 
-    level_mult = {'novice': 0.5, 'intermediate': 0.75, 'advanced': 1.0, 'elite': 1.25}
-
     distance_m = (base_m
-                  * level_mult.get(level, 0.75)
+                  * levels.distance_multiplier(level)       # data/commons/training_levels.yaml
                   * phases.volume_multiplier(phase)
-                  * (1 + (week - 1) * 0.08))
+                  * (1 + (week - 1) * (ramps or ramps_for(None))['distance']))
 
     if is_deload:
         distance_m *= _kind_adjusted_keep(phase, deload_keep, 0.60)
@@ -227,14 +224,14 @@ def _distance_slot(slot: dict, week: int, level: str, phase: str, is_deload: boo
 
 
 def _gated_rounds(rounds: int, cycle: int, week: int, phase: str | None, is_deload: bool,
-                  max_minutes: int | None, deload_keep: float | None) -> int:
+                  max_minutes: int | None, deload_keep: float | None, ramps: dict | None = None) -> int:
     """An interval whose rest ends on heart rate is a volume of work, not a
     protocol on the clock (Tabata's 8 x 20s/10s keeps its rounds): its rounds
     follow the phase kind, the weekly ramp, a deload and the session limit as
     the minutes of the timed block it stands for do (_time_to_task), so a
     competition phase still comes down."""
     target = rounds * phases.volume_multiplier(phase)
-    current = min(rounds * (1 + (week - 1) * 0.10), target)
+    current = min(rounds * (1 + (week - 1) * (ramps or ramps_for(None))['time']), target)
     if is_deload:
         current *= _kind_adjusted_keep(phase, deload_keep, 0.60)
     n = max(1, round(current))
@@ -244,7 +241,7 @@ def _gated_rounds(rounds: int, cycle: int, week: int, phase: str | None, is_delo
 
 
 def _density_slot(slot: dict, week: int, is_deload: bool, deload_keep: float | None = None,
-                  phase: str | None = None, max_minutes: int | None = None) -> dict:
+                  phase: str | None = None, max_minutes: int | None = None, ramps: dict | None = None) -> dict:
     keep = deload_keep if deload_keep is not None else 0.70
     duration_sec = slot.get('duration_sec', slot.get('time_cap_sec', 1200))
     slot_type = slot.get('slot_type', 'amrap')
@@ -263,7 +260,7 @@ def _density_slot(slot: dict, week: int, is_deload: bool, deload_keep: float | N
         cycle = work_sec + (rest_sec or 0)
         gated = bool(slot.get('rest_until_hr_pct') and rest_sec)
         if gated:
-            rounds = _gated_rounds(rounds, cycle, week, phase, is_deload, max_minutes, deload_keep)
+            rounds = _gated_rounds(rounds, cycle, week, phase, is_deload, max_minutes, deload_keep, ramps)
         elif is_deload:
             rounds = max(1, round(rounds * keep))
         out = {
@@ -422,13 +419,15 @@ def calculate_load(
     is_deload: bool,
     session_time_minutes: int | None = None,
     deload_keep: float | None = None,
+    ramps: dict | None = None,
 ) -> dict:
     """Calculate the load prescription for one exercise in one slot.
 
     `deload_keep` is the framework's `deload_protocol.volume_reduction_pct`,
     the share of volume a deload week keeps; None keeps the model defaults
     (0.6 of time, distance and sets, 0.7 of rounds). An archetype's own
-    `scaling.deload.volume_multiplier` still wins for its sets.
+    `scaling.deload.volume_multiplier` still wins for its sets. `ramps` are
+    the week's framework's (`ramps_for`); None takes the commons'.
     """
     if slot.get('standard'):
         # A test of a standard is a protocol: prescribed exactly as written
@@ -439,7 +438,7 @@ def calculate_load(
         load = _as_written(slot)
     else:
         load = _calculate_load(exercise, slot, progression_model, week_number, phase,
-                               training_level, is_deload, session_time_minutes, deload_keep)
+                               training_level, is_deload, session_time_minutes, deload_keep, ramps)
     rpm = paced_rpm(exercise, slot)
     if rpm is not None and isinstance(load, dict):
         load['target_rpm'] = rpm
@@ -481,6 +480,7 @@ def _calculate_load(
     is_deload: bool,
     session_time_minutes: int | None = None,
     deload_keep: float | None = None,
+    ramps: dict | None = None,
 ) -> dict:
     slot_type = slot.get('slot_type', 'sets_reps')
 
@@ -495,22 +495,24 @@ def _calculate_load(
             return {'sets': sets, 'reps': reps}
 
     elif slot_type == 'time_domain':
-        return _time_to_task(slot, week_number, phase, is_deload, session_time_minutes, deload_keep)
+        return _time_to_task(slot, week_number, phase, is_deload, session_time_minutes, deload_keep, ramps)
 
     elif slot_type == 'distance':
-        return _distance_slot(slot, week_number, training_level, phase, is_deload, deload_keep)
+        return _distance_slot(slot, week_number, training_level, phase, is_deload, deload_keep, ramps)
 
     elif slot_type in ('amrap', 'emom'):
-        return _density_slot(slot, week_number, is_deload, deload_keep, phase, session_time_minutes)
+        return _density_slot(slot, week_number, is_deload, deload_keep, phase, session_time_minutes, ramps)
 
     elif slot_type == 'amrap_movement':
         # Component movement within an AMRAP — show reps per round only
         return round_count(slot) or {'reps_per_round': 10}
 
-    elif slot_type == 'for_time':
+    elif slot_type in ('for_time', 'rounds_for_time'):
+        # Rounds for time is a for-time piece scored by rounds (it fell to the
+        # 3x5 default below until 2026-10-31; only as-written slots use it).
         if 'distance_m' in slot:
-            return _distance_slot(slot, week_number, training_level, phase, is_deload, deload_keep)
-        return _density_slot(slot, week_number, is_deload, deload_keep)
+            return _distance_slot(slot, week_number, training_level, phase, is_deload, deload_keep, ramps)
+        return _density_slot(slot, week_number, is_deload, deload_keep, ramps=ramps)
 
     elif slot_type == 'skill_practice':
         return _skill_slot(slot)

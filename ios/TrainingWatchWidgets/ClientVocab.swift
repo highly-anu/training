@@ -138,6 +138,9 @@ enum ClientVocab {
         "distance": "km",
     ]
 
+    /// The training levels, lowest first (data/commons/training_levels.yaml).
+    static let trainingLevels: [String] = ["novice", "intermediate", "advanced", "elite"]
+
     /// An sRGB colour from 0xRRGGBB.
     static func color(_ hex: UInt32) -> Color {
         Color(red: Double((hex >> 16) & 0xff) / 255,

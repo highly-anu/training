@@ -7,6 +7,7 @@ import { modalityHex, modalityLabel } from '@/lib/modalityColors'
 import { modalityIcon } from '@/lib/modalityIcons'
 import { PHASE_COLORS } from '@/lib/phaseColors'
 import { cn } from '@/lib/utils'
+import { TRAINING_LEVELS } from '@/lib/gen/clientVocab'
 
 /**
  * The glance vocabulary: the same few marks for every philosophy, so a header,
@@ -15,7 +16,7 @@ import { cn } from '@/lib/utils'
  * phase kind (§8.2), heart-rate zone (§8.7); levels have none (§8.1).
  */
 
-const LEVELS: TrainingLevel[] = ['novice', 'intermediate', 'advanced', 'elite']
+const LEVELS: readonly TrainingLevel[] = TRAINING_LEVELS
 const LEVEL_LETTER: Record<TrainingLevel, string> = { novice: 'N', intermediate: 'I', advanced: 'A', elite: 'E' }
 
 /** Four pips, novice → elite, filled where the method is written for it. */

@@ -38,12 +38,12 @@ from collections import defaultdict
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
-from src import fidelity, goals, loader, phases, provenance  # noqa: E402
+from src import fidelity, goals, levels as _levels, loader, phases, provenance  # noqa: E402
 from src.generator import generate  # noqa: E402
 from src.validator import validate  # noqa: E402
 from src.package_eval import ALL_EQUIPMENT, contract_entry  # noqa: E402
 
-LEVEL_ORDER = ['novice', 'intermediate', 'advanced', 'elite']
+LEVEL_ORDER = list(_levels.order())   # data/commons/training_levels.yaml
 
 
 def _profiles_of(name: str) -> dict:

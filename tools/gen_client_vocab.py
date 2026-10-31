@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the clients' vocabulary tables, and the schemas' equipment enums, from the commons.
+"""Generate the clients' vocabulary tables, and the schemas' equipment, training-level and phase-kind enums, from the commons.
 
 Each modality's file (data/commons/modalities/<id>.yaml) and each phase kind
 (data/commons/phase_kinds.yaml) carries a `display` block — its label, its one
@@ -182,7 +182,12 @@ def render_ts(modalities, phases, equipment, outcomes) -> str:
     lines += ['}', '', "/** The field a test's standard result kind is asked first in. */",
               'export const OUTCOME_RESULT_FIELD: Record<string, OutcomeField> = {']
     lines += [f"  {k}: {q(v)}," for k, v in outcomes['results'].items()]
-    lines += ['}', '']
+    lines += ['}', '', '/** The training levels, lowest first, with their labels (data/commons/training_levels.yaml). */',
+              f"export const TRAINING_LEVELS = [{', '.join(q(lv['id']) for lv in load_levels())}] as const",
+              'export const TRAINING_LEVEL_LABELS: Record<string, string> = {']
+    lines += [f"  {lv['id']}: {q(lv['label'])}," for lv in load_levels()]
+    lines += ['}', '', '/** The slot intensities an author may write (data/commons/intensities.yaml). */',
+              f"export const INTENSITIES = [{', '.join(q(t) for t in load_intensities())}] as const", '']
     return '\n'.join(lines)
 
 
@@ -246,6 +251,9 @@ def render_swift(modalities, phases, equipment, outcomes) -> str:
               '    static let outcomeResultField: [String: String] = [']
     lines += [f"        {q(k)}: {q(v)}," for k, v in outcomes['results'].items()]
     lines += ['    ]', '',
+              '    /// The training levels, lowest first (data/commons/training_levels.yaml).',
+              f"    static let trainingLevels: [String] = [{', '.join(q(lv['id']) for lv in load_levels())}]",
+              '',
               '    /// An sRGB colour from 0xRRGGBB.',
               '    static func color(_ hex: UInt32) -> Color {',
               '        Color(red: Double((hex >> 16) & 0xff) / 255,',
@@ -262,11 +270,39 @@ SCHEMA_ENUMS = (('constraints', '"equipment": {', False), ('archetype', '"requir
                 ('exercise', '"equipment": {', True), ('philosophy', '"required_equipment": {', False))
 
 
+# The schemas' training-level and phase-kind enums, by the same anchors: the
+# levels from data/commons/training_levels.yaml, the kinds from phase_kinds.yaml
+# (the authoring dialogs offered a stale list of kinds; the schemas had three).
+LEVEL_ENUMS = (('constraints', '"training_level": {'), ('philosophy', '"track_for_level": {'),
+               ('training_contract', '"levels": {"type": "array"'), ('archetype', '"training_levels": {'),
+               ('framework', '"applicable_when": {'))
+KIND_ENUMS = (('constraints', '"training_phase": {'), ('philosophy', '"kind": {'),
+              ('archetype', '"applicable_phases": {'))
+
+
+INTENSITY_ENUMS = (('archetype', '"intensity": {'),)
+
+
+def load_intensities() -> list[str]:
+    """The intensities an author may write (data/commons/intensities.yaml)."""
+    with open(os.path.join(COMMONS, 'intensities.yaml'), encoding='utf-8') as fh:
+        table = yaml.safe_load(fh)['intensities']
+    return [t for t, e in table.items() if (e or {}).get('authoring', True)]
+
+
+def load_levels() -> list[dict]:
+    with open(os.path.join(COMMONS, 'training_levels.yaml'), encoding='utf-8') as fh:
+        return yaml.safe_load(fh)['levels']
+
+
 def render_schema(text: str, anchor: str, ids: list[str]) -> str:
-    """The schema with the enum after `anchor` listing `ids`, one a line."""
+    """The schema with the enum after `anchor` listing `ids`, one a line — or
+    on its one line, where it was written that way."""
     at = text.index(anchor)
     start = text.index('"enum": [', at) + len('"enum": [')
     end = text.index(']', start)
+    if '\n' not in text[start:end]:
+        return text[:start] + ', '.join(f'"{i}"' for i in ids) + text[end:]
     line_start = text.rfind('\n', 0, start) + 1
     indent = text[line_start:len(text[:line_start]) + (len(text[line_start:]) - len(text[line_start:].lstrip()))]
     body = ',\n'.join(f'{indent}  "{i}"' for i in ids)
@@ -284,6 +320,15 @@ def outputs() -> dict[str, str]:
         path = os.path.join(ROOT, 'docs', 'schemas', f'{name}.schema.json')
         with open(path, encoding='utf-8') as fh:
             out[path] = render_schema(fh.read(), anchor, ids + (['none'] if with_none else []))
+    levels = [lv['id'] for lv in load_levels()]
+    kinds = [k for k, _ in phases]
+    for enums, values in ((LEVEL_ENUMS, levels), (KIND_ENUMS, kinds), (INTENSITY_ENUMS, load_intensities())):
+        for name, anchor in enums:
+            path = os.path.join(ROOT, 'docs', 'schemas', f'{name}.schema.json')
+            if path not in out:
+                with open(path, encoding='utf-8') as fh:
+                    out[path] = fh.read()
+            out[path] = render_schema(out[path], anchor, values)
     return out
 
 

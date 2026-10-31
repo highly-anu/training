@@ -66,6 +66,8 @@ def _detect_schema(path: str) -> tuple[str | None, bool]:
         return 'source_weeks.schema.json', False
     if basename == 'recovery_regions.yaml':
         return 'recovery_regions.schema.json', False
+    if basename in ('intensities.yaml', 'training_levels.yaml', 'progression.yaml') and '/commons/' in norm:
+        return basename.replace('.yaml', '.schema.json'), False
     # The standards' list files (benchmarks_data.commons_files); the order of
     # their categories; The Cell's file keeps its own nested format and stays
     # unvalidated. A package's own standards: standards.yaml in its folder.

@@ -1,0 +1,19 @@
+# The progression constants the engine reads (src/progression.py), as data.
+# What they mean — a linear load, a ramp, a deload — is the engine's; how much
+# is this file's, and a framework's `progression_defaults` overrides `ramps`
+# for its own weeks (a block that builds faster or slower than 10 % a week).
+
+# RPE -> load factor against a comfortable working weight (RPE 8, two reps in
+# reserve): an RPE-prescribed lift's suggested weight from its starting load.
+rpe_load_factors:
+  10: 1.09   # 0 RIR — maximal
+  9: 1.05    # 1 RIR
+  8: 1.00    # 2 RIR — the working set
+  7: 0.95    # 3 RIR
+  6: 0.90    # 4 RIR — deload / technique
+
+# The weekly ramps, each the share added per week up to the phase kind's
+# ceiling (data/commons/phase_kinds.yaml).
+ramps:
+  time: 0.10       # a timed block's minutes; a heart-rate-gated interval's rounds
+  distance: 0.08   # a distance slot's metres

@@ -1081,6 +1081,19 @@ Today: the code is package-neutral, the repository is not yet drop-in. In order:
   (`src/outcome_fields.py`, `capture.asked`) — a timed kettlebell set's reps, which the
   athlete enters at the end (the Garmin's Results menu, the Apple Watch's completion
   screen) as its one set. X3 counts `logs`; Wildman's five tracks now pass.
+- **Engine tables to data (M).** Done 2026-10-31 (branch `feat/engine-data`): the training
+  levels (`training_levels.yaml`, eleven server copies and seven client ones), the
+  intensities (`intensities.yaml`, five server tables, the schema enum and two dialogs that
+  disagreed) and the progression constants (`progression.yaml`: RPE load factors, the 10 % /
+  8 % ramps, which a framework's `progression_defaults` overrides) are commons data read
+  through one module each; the schemas' level, phase-kind and intensity enums and the
+  clients' lists are generated (the authoring dialogs offered eight of twelve phase kinds).
+  Every program is what it was (131 golden hashes). A `rounds_for_time` slot is now prescribed
+  as a for-time piece (it fell to 3 × 5). For the owner: `medium`, `submaximal` and
+  `bodyweight` have no zone band; `hard` and `work_pace` have one but are not authorable;
+  `progressing` has a band yet counts as load (intensities.yaml says so at its top). What
+  stays engine: progression and contract models, slot types, recovery ranking and the 48 h
+  floor (`tools/portability_gaps.json`).
 - **9.7 Authoring tools (S–M).** Done 2026-10-31 (branch `feat/authoring-tools`):
   `mcp_server.py` checks every file kind a package carries with the gates' own validator
   (`validate_entities`; it knew four schemas, one of them gone, and wrote analytics, watch,

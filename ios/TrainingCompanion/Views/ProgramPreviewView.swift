@@ -658,7 +658,7 @@ private struct PreviewAdjustSheet: View {
             Form {
                 Section {
                     Picker("Level", selection: $constraints.trainingLevel) {
-                        ForEach(["novice", "intermediate", "advanced", "elite"], id: \.self) {
+                        ForEach(ClientVocab.trainingLevels, id: \.self) {
                             Text($0.capitalized).tag($0)
                         }
                     }

@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Progression constants",
+  "description": "data/commons/progression.yaml: RPE load factors and the weekly ramps (src/progression.py).",
+  "type": "object",
+  "required": ["rpe_load_factors", "ramps"],
+  "additionalProperties": false,
+  "properties": {
+    "rpe_load_factors": {"type": "object", "propertyNames": {"pattern": "^[0-9]+$"},
+                         "additionalProperties": {"type": "number", "exclusiveMinimum": 0}},
+    "ramps": {"type": "object", "required": ["time", "distance"], "additionalProperties": false,
+              "properties": {"time": {"type": "number", "minimum": 0, "maximum": 1},
+                             "distance": {"type": "number", "minimum": 0, "maximum": 1}}}
+  }
+}
