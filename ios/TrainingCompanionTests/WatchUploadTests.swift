@@ -7,14 +7,14 @@ import XCTest
 /// would be a silently dropped field, and nothing else would notice.
 final class WatchUploadTests: XCTestCase {
 
-    private func summary(gps: Bool = true) -> WatchWorkoutSummary {
+    private func summary(gps: Bool = true, more: [String: [WatchSetLog]] = [:]) -> WatchWorkoutSummary {
         WatchWorkoutSummary(
             sessionId: "3-Tuesday-0", date: "2026-09-29",
             startedAt: "2026-09-29T06:30:00Z", endedAt: "2026-09-29T07:35:00Z",
             durationMinutes: 65, avgHR: 142, peakHR: 171,
             setLogs: ["back_squat": [WatchSetLog(setIndex: 0, repsActual: 5, weightKg: 100, rpe: 8,
                                                   completed: true, durationSeconds: 40,
-                                                  startOffset: 600, endOffset: 640)]],
+                                                  startOffset: 600, endOffset: 640)]].merging(more) { a, _ in a },
             exercisesCompleted: 1, source: "apple_watch_live",
             hrSamples: [HRSamplePoint(t: 0, b: 90), HRSamplePoint(t: 60, b: 131)],
             gpsTrack: gps ? [GPSTrackPoint(lat: 47.37, lng: 8.54, alt: 410, t: 0, b: 90),
@@ -156,6 +156,44 @@ final class WatchUploadTests: XCTestCase {
         XCTAssertEqual((log["standardResults"] as? [String: [String: String]])?["row_2km_minutes"]?["decision"], "save")
         XCTAssertEqual(log["sessionKey"] as? String, "3-Tuesday-0")
         XCTAssertNil(WatchUpload.sessionLog(summary: summary())["standardResults"], "no answer, no key")
+    }
+
+    /// An interval's rounds and seconds, and a timed kettlebell set's reps
+    /// counted at the end beside its seconds, go up in the keys the rounds and
+    /// rate primitives read (src/analytics/primitives/outcome.py): Wildman's
+    /// EMOM rounds and cadence, which the watch kept only as the step's window.
+    func testIntervalRoundsAndCountedRepsGoUp() throws {
+        let snatch = WatchSetLog(setIndex: 0, repsActual: 84, weightKg: 16, rpe: nil, completed: true,
+                                 durationSeconds: nil, startOffset: nil, endOffset: nil)
+        var s = summary(gps: false, more: ["kb_snatch": [snatch]])
+        s.outcomes = ["kb_swing": WatchOutcome(rounds: 10, durationSec: 600),
+                      "kb_snatch": WatchOutcome(durationSec: 360)]
+        let ex = try XCTUnwrap(WatchUpload.sessionLog(summary: s)["exercises"] as? [String: [String: Any]])
+        XCTAssertEqual(ex["kb_swing"]?["rounds"] as? Int, 10)
+        XCTAssertEqual(ex["kb_swing"]?["durationSec"] as? Int, 600)
+        XCTAssertEqual((ex["kb_snatch"]?["sets"] as? [[String: Any]])?.first?["repsActual"] as? Int, 84)
+        XCTAssertEqual(ex["kb_snatch"]?["durationSec"] as? Int, 360)
+    }
+
+    /// An interval left mid-work does not count the round in progress; left
+    /// in a rest, or in its last second, it does — as the Garmin counts them.
+    func testIntervalRoundsCountOnlyFinishedWork() {
+        XCTAssertEqual(WatchSteps.intervalRoundsDone(round: 4, inWork: true, remaining: 23), 3)
+        XCTAssertEqual(WatchSteps.intervalRoundsDone(round: 4, inWork: false, remaining: 10), 4)
+        XCTAssertEqual(WatchSteps.intervalRoundsDone(round: 10, inWork: true, remaining: 1), 10)
+        XCTAssertEqual(WatchSteps.intervalRoundsDone(round: 1, inWork: true, remaining: 40), 0)
+    }
+
+    /// A step asks for its reps at the end when the server's `logs` say so,
+    /// and a test step asks for its result instead.
+    func testAStepAsksForRepsWhenItsLogsSaySo() throws {
+        func decode(_ json: String) throws -> WatchExercise {
+            try JSONDecoder().decode(WatchExercise.self, from: Data(json.utf8))
+        }
+        XCTAssertTrue(try decode(#"{"exerciseId":"kb_snatch","slotType":"time_domain","logs":["reps"]}"#).asksReps)
+        XCTAssertFalse(try decode(#"{"exerciseId":"kb_swing","slotType":"emom"}"#).asksReps)
+        XCTAssertFalse(try decode(#"{"exerciseId":"x","logs":["reps"],"standard":{"id":"s","name":"S","result":"reps"}}"#)
+            .asksReps, "a test asks for its result")
     }
 
     /// A test step's value is read as the server reads it; a count entered

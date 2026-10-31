@@ -3,19 +3,6 @@
   "verdict": "The code is package-neutral: nothing in the server, the web, the phones or the watches names a package (tools/check_code_neutral.py), and test_package_dropin.py runs three packages under new ids beside the shipped ones with the repository unchanged. A package is one folder: its files, its standards, and the records the push gates keep (records/, dossier.md), which tools/add_package.py <id> writes. Anything beyond the commons vocabulary is still a shared edit.",
   "gaps": [
     {
-      "id": "wrist_capture",
-      "title": "The interval and timed watch screens record no count",
-      "kind": "watch",
-      "impact": "degrades",
-      "detail": "Each template now says what it records (watch_vocabulary.json `capture`) and the scorecard's X3 reads the lead measure against it: Wildman's rounds in an EMOM and cadence in a timed set run on screens that record only the step's window, so they are logged on the phone. Recording them is a change to both watches.",
-      "anchors": [
-        "garmin/core/source/engine/Wire.mc::function countsRounds",
-        "data/commons/watch_vocabulary.json::\"interval\""
-      ],
-      "roadmap": "9.6",
-      "status": "open"
-    },
-    {
       "id": "engine_vocabulary",
       "title": "Phase kinds, intensities, levels and progression and contract models are engine vocabulary",
       "kind": "code",

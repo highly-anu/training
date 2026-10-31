@@ -26,6 +26,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from src import fit_import as _fit_import
 from src import workout_ids as _workout_ids
 from src import watch_spec as _watch_spec
+from src import outcome_fields as _outcome_fields
 from src import equipment as _equipment
 from src import implements as _implements
 from src import standards as _standards_mod
@@ -4196,6 +4197,9 @@ def _encode_watch_exercise(ea: dict, modality: str, max_hr: int | None = None) -
         # A test's scored slot ({id, result}); encode_watch_session turns it
         # into the compact `standard` with `?spec=1` and drops it otherwise.
         '_standard': ea.get('standard'),
+        # What the slot logs (src/outcome_fields.py); encode_watch_session
+        # turns it into the step's `logs` with `?spec=1`.
+        '_fields': [] if is_meta else _outcome_fields.fields_for(slot_type, ex),
     }
     # Bells held at once (2 for a double; the weight is one bell's), a hand
     # switch so many seconds into the work, and an interval rest that ends
@@ -4227,6 +4231,10 @@ def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
     exercise names its spec by `screen`. garmin/tools/gen_watch_demo.py encodes
     the demo programmes through this too, so demo and real sessions agree.
 
+    A step whose screen does not record what its slot logs, and that the
+    watches ask for at the end (the vocabulary's `capture.asked`: a timed
+    kettlebell set's reps), carries it as `logs` (src/outcome_fields.py).
+
     A test's scored slot also carries `standard` — its short name, result
     kind, best and the number for the next level (`standards.watch_standard`,
     from `results`, summarise()'s standards; the entry level without one) —
@@ -4239,6 +4247,7 @@ def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
     exercises = [e for e in (_encode_watch_exercise(ea, modality, max_hr)
                              for ea in (s.get('exercises') or [])) if e is not None]
     refs = [e.pop('_standard', None) for e in exercises]
+    fields = [e.pop('_fields', None) or [] for e in exercises]
     out = {
         'sessionId': session_key,
         'completed': completed,
@@ -4264,8 +4273,18 @@ def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
             [(e['slotRole'] or None, e['slotType']) for e in exercises],
         )
         by_id = _bd.by_id() if any(refs) else {}
-        for e, key, ref in zip(exercises, keys, refs):
+        vocab = _watch_spec.vocabulary()
+        asked = (vocab.get('capture') or {}).get('asked') or []
+        for e, key, ref, logged in zip(exercises, keys, refs, fields):
             e['screen'] = key
+            # What the watch asks at the end because the screen does not
+            # record it (a timed kettlebell set's reps); a test asks for its
+            # result instead.
+            template = (table.get(key) or {}).get('template')
+            ask = [] if ref else _outcome_fields.logs(
+                logged, asked, (vocab['templates'].get(template) or {}).get('records'))
+            if ask:
+                e['logs'] = ask
             # What was done last time ("24kg × 10"), src/last_time.py.
             if last and e.get('exerciseId') in last:
                 e['last'] = last[e['exerciseId']]

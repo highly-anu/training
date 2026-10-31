@@ -29,7 +29,37 @@ final class WorkoutSessionState: ObservableObject {
     }
 
     @Published var phase: Phase = .idle {
-        didSet { noteStep(phase.exerciseIndex) }
+        didSet {
+            if let left = Self.stepLeft(oldValue, for: phase, windowSec: windowSeconds(oldValue.exerciseIndex)),
+               let exercises = session?.exercises, exercises.indices.contains(left.index) {
+                recordOutcome(exercises[left.index].exerciseId, rounds: left.rounds, durationSec: left.durationSec)
+            }
+            noteStep(phase.exerciseIndex)
+        }
+    }
+
+    /// What a timed or interval step produced, read as the athlete leaves it
+    /// (its time ran out, Next, Skip, the session's end): a timed block's
+    /// seconds — its cadence is its reps over them — and an interval's
+    /// seconds and the rounds whose work was done, the one in progress when
+    /// it was left mid-work not counted. nil while the step runs on.
+    static func stepLeft(_ old: Phase, for new: Phase, windowSec: Int?)
+        -> (index: Int, rounds: Int?, durationSec: Int)? {
+        guard let index = old.exerciseIndex, new.exerciseIndex != index else { return nil }
+        switch old {
+        case let .timedWork(_, elapsed):
+            return (index, nil, elapsed)
+        case let .emomInterval(_, round, isWork, remaining):
+            return (index, WatchSteps.intervalRoundsDone(round: round, inWork: isWork, remaining: remaining),
+                    windowSec ?? 0)
+        default:
+            return nil
+        }
+    }
+
+    private func windowSeconds(_ index: Int?) -> Int? {
+        guard let index, let start = stepWindows[index]?.start else { return nil }
+        return max(0, Int(Date().timeIntervalSince(start)))
     }
 
     /// Exercise index → when it became current and when the athlete moved
@@ -324,6 +354,14 @@ final class WorkoutSessionState: ObservableObject {
                                                   rpe: nil, completed: true, durationSeconds: nil,
                                                   startOffset: nil, endOffset: nil)]
         }
+    }
+
+    /// A count step's reps entered at the end: the step's one set, as a
+    /// timed test's reps are (the rate reads them over the step's seconds).
+    func setCount(_ ex: WatchExercise, reps: Int) {
+        setLogs[ex.exerciseId] = [WatchSetLog(setIndex: 0, repsActual: reps, weightKg: ex.weightKg, rpe: nil,
+                                              completed: true, durationSeconds: nil,
+                                              startOffset: nil, endOffset: nil)]
     }
 
     func markExerciseComplete(id: String) {

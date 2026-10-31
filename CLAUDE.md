@@ -1069,6 +1069,15 @@ way they own their analytics. Layout and the add-a-philosophy walk-through:
   the Apple Watch's completion screen has the same choice. The answer rides in the
   session log as `standardResults` (src/standard_results.py), so it travels with a
   buffered upload.
+- **What a screen cannot see is asked at the end** (since 2026-10-31). With `?spec=1` a
+  step whose slot logs an outcome field its screen's template does not record, and that
+  the vocabulary's `capture.asked` lists (`reps` today), carries it as `logs`
+  (`src/outcome_fields.py`, reading `data/commons/outcome_fields.yaml` like the clients):
+  a timed kettlebell set's reps, Wildman's cadence. The Garmin's Results menu and the
+  Apple Watch's completion screen list those steps after the tests, and the count goes
+  up as the step's one set. An interval step sends its finished rounds and seconds, a
+  timed step its seconds (`intervalRoundsDone` on both). The scorecard's X3 counts `logs`
+  through the table's `needs` (reps → `timed_reps`).
 - **Cues come from the package, in the load** (since 2026-10-18). A slot's
   `switch_at_sec` (a hand switch so many seconds into the work) and an interval
   slot's `rest_until_hr_pct` (its rest ends once HR is under that share of max HR;

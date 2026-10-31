@@ -125,6 +125,11 @@ class WorkoutExercise {
     // A test's scored slot: { id, name, result, best, target }, the server's
     // words (standards.watch_standard); null on every other step.
     function standard()        { return g("standard"); }
+    // What the step's screen does not record and the athlete is asked at the
+    // end (["reps"] for a timed kettlebell set: its cadence), the server's
+    // outcome fields; null on most steps and on an older server.
+    function logs()            { return g("logs"); }
+    function asksReps()        { var l = logs(); return l != null && l.indexOf("reps") >= 0; }
     function rir()             { return g("rir"); }
     // Set on an amrap_movement to name the amrap slot it belongs to.
     function parentSlotRole()  { return g("parentSlotRole"); }

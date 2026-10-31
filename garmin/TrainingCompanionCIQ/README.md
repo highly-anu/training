@@ -83,10 +83,14 @@ are (`data/packages/<id>/analytics.yaml`):
    **Results** menu first (`views/ResultsMenu.mc`): each standard with what the
    watch captured, select one to enter or correct it (a timed step's reps are the
    athlete's count), then *Save results* or *Not a test* — sent as
-   `standardResults` in the session log. The session log goes up in the server's
+   `standardResults` in the session log. A step whose `logs` hold `reps` (a timed
+   kettlebell set: its cadence, since 1.16.0) is listed there too, after the
+   tests — the athlete's count, its one set — and a day with counts and no test
+   has just *Save*. The session log goes up in the server's
    shape (`engine/Wire.mc`: keyed by exercise id, `repsActual` on completed sets,
-   a hold's seconds as `durationSeconds`, a round step's `rounds`, a for-time
-   clock as `durationSec`); in memory sets stay keyed by name, where Edit Set and
+   a hold's seconds as `durationSeconds`, a round step's `rounds`, an interval's
+   finished rounds, a for-time clock and a timed or interval step's seconds as
+   `durationSec`); in memory sets stay keyed by name, where Edit Set and
    the summary read them.
 5. **A compiled module** is the escape hatch for what the vocabulary cannot say:
    `garmin/packages/<id>/`, then `gen_registry.py`; the package's `watch.yaml`

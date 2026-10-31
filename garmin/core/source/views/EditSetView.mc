@@ -106,6 +106,14 @@ function editResult(ctl, ex, item) {
     Ui.pushView(view, new EditSetDelegate(view), Ui.SLIDE_LEFT);
 }
 
+// Results > a count step: the reps the athlete counted.
+function editCount(ctl, ex, item) {
+    var v = ctl.countValue(ex);
+    var fs = [["reps", "REPS", (v != null) ? v : 0, 1, 0, 999]];
+    var view = new EditSetView("Reps", ex.name(), fs, new CountTarget(ctl, ex, item), "Reps kept");
+    Ui.pushView(view, new EditSetDelegate(view), Ui.SLIDE_LEFT);
+}
+
 function editLastSet(ctl) {
     var set = ctl.lastSet();
     if (set == null) { return; }
@@ -157,6 +165,17 @@ class ResultTarget {
         else                          { v = vals["reps"]; }
         _ctl.setResult(_ex, v);
         if (_item != null) { _item.setSubLabel($.resultLabel(_ctl, _ex)); }
+    }
+}
+
+class CountTarget {
+    hidden var _ctl;
+    hidden var _ex;
+    hidden var _item;
+    function initialize(ctl, ex, item) { _ctl = ctl; _ex = ex; _item = item; }
+    function applyEdit(vals) {
+        _ctl.setCount(_ex, vals["reps"]);
+        if (_item != null) { _item.setSubLabel($.countLabel(_ctl, _ex)); }
     }
 }
 
