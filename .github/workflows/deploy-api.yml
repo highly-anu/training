@@ -16,6 +16,16 @@ on:
       - 'tools/portability_gaps.json'   # served by /api/dev/portability
       - 'fly.toml'
 
+# One deploy at a time. Merging a stack pushes master several times in a row,
+# and parallel runs fought over the Fly machines' lease: on 2026-10-31 8 of 13
+# failed and production was left on a commit from the middle of the stack. A
+# run now waits for the one in flight, and a newer push replaces any run still
+# waiting, so the last commit deploys last. A deploy in flight is never
+# cancelled, which could leave a release half rolled out.
+concurrency:
+  group: deploy-api
+  cancel-in-progress: false
+
 jobs:
   deploy:
     name: Deploy to fly.io
