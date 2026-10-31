@@ -30,7 +30,7 @@ DIMENSIONS = {
     'robustness': ('R1',),
     'data': ('D1', 'D2', 'D3', 'D4'),
     'measurement': ('M1', 'M2', 'M3', 'M4'),
-    'portability': ('X1', 'X2'),
+    'portability': ('X1', 'X2', 'X3'),
 }
 CRITERIA = {
     'S1': 'A fidelity record with sources and rules, and a dossier',
@@ -56,9 +56,12 @@ CRITERIA = {
     'M4': 'Every referenced standard exists',
     'X1': 'No code names the package',
     'X2': "Every step shows on the watches as the package's own screen",
+    'X3': 'The lead measure is recorded on the wrist',
 }
-# Hygiene: reported, but never what keeps a package from `audited`.
-HYGIENE = {'D3', 'D4', 'S6'}
+# Hygiene: reported, but never what keeps a package from `audited`. X3 grades
+# what the watches record as much as the package: a method whose currency the
+# wrist cannot take is still followed, logged on the phone.
+HYGIENE = {'D3', 'D4', 'S6', 'X3'}
 
 SUBSTITUTE_PARTIAL = 0.25
 SHARE_PASS, SHARE_PARTIAL = 0.40, 0.60
@@ -503,6 +506,31 @@ def grade_x2(errors: list[str], fallbacks: list[str]) -> tuple[str, str]:
     if fallbacks:
         return PARTIAL, 'the generic screen for ' + _first(fallbacks)
     return PASS, ''
+
+
+def grade_x3(primitive: str | None, primitives: dict, session_records: set,
+             steps: list[tuple[str, set]]) -> tuple[str, str]:
+    """The lead measure's needs against what a watch records
+    (data/commons/watch_vocabulary.json `capture`): `session_records` for every
+    session, and per step of the lead entry's scope (its label, what its screen's
+    template records). A need the program carries (`rpe_target`) is never the
+    wrist's."""
+    if not primitive:
+        return PASS, ''          # M2 says there is no lead measure
+    needs = set((primitives.get(primitive) or {}).get('needs') or []) - set(session_records) - {'rpe_target'}
+    if not needs:
+        return PASS, ''
+    if not steps:
+        return PARTIAL, f"{primitive}: no step of the ideal program is in its scope"
+    short = [(label, sorted(needs - got)) for label, got in steps if needs - got]
+    if not short:
+        return PASS, ''
+    label, missing = short[0]
+    detail = f"{primitive} needs {', '.join(missing)}, which the watch does not record on {label}"
+    if len(short) < len(steps):
+        detail += f' ({len(short)} of {len(steps)} steps)'
+        return PARTIAL, detail
+    return FAIL, detail
 
 
 # ── Status ───────────────────────────────────────────────────────────────────

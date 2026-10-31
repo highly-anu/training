@@ -123,6 +123,7 @@ grade fails the checks, and so does a better one left unrecorded), and
 | | M4 | Referenced standards exist | yes | — | no |
 | Portability | X1 | String literals in `src/`, `api.py`, the web, the iOS and Apple Watch apps and the Garmin core that name the package (`tools/check_code_neutral.py`) | none | — | any |
 | | X2 | Every step of the ideal program resolved to a watch screen, as the watches' payload resolves it (`src/watch_spec.py`) | the package's own | the generic screen for an unclaimed slot type | one the vocabulary cannot draw |
+| | X3 *hygiene* | The lead measure's needs recorded on the wrist: each step of the lead entry's scope, through its screen's template, records them (`watch_vocabulary.json` `capture`, `records`) | every step | some steps | none |
 
 The execution criteria are the audit's findings made executable: E2 sees a
 novice Gym Jones program that is half substitutes, E4 CrossFit's one AMRAP
@@ -132,7 +133,9 @@ awaiting the owner) is graded but does not count toward the status.
 
 Portability is the second goal of every package: one the owner adds by
 writing a folder, with no change to the server, the clients or the watches.
-X1 and X2 grade it per package; `test_package_dropin.py` proves it end to end
+X1 and X2 grade it per package, and X3 (hygiene: it grades the watches as much
+as the package) whether the method's own currency is recorded on the wrist or
+must be logged on the phone; `test_package_dropin.py` proves it end to end
 — three packages copied under ids no code has seen, into a packages folder of
 their own (`TRAINING_PACKAGES_DIR`), validated, generated, served by the API,
 encoded for the watches with their screens, read by the analytics and the

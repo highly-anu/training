@@ -15,45 +15,57 @@
     "violet": "0x8B5CF6",
     "pink": "0xEC4899"
   },
+  "capture": {
+    "_comment": "What a session run on either watch sends the server, by the analytics' need ids (src/analytics/vocabulary.NEEDS): `session` for every session (the log itself, the heart rate and the recorded minutes), each template's `records` for its steps — what both the Garmin (garmin/core/source/engine/Wire.mc) and the Apple Watch (WorkoutSessionState, WatchUpload) send. A test step also asks for its standard's result at the end (Save results), whatever its template. The scorecard's X3 reads a methodology's lead measure against it (tools/evaluate_packages.py).",
+    "session": ["completion", "hr", "minutes"]
+  },
   "templates": {
     "sets": {
       "doc": "Counted sets: LAP ends a set, rest follows.",
       "actions": ["complete_set", "skip"],
+      "records": ["sets", "rpe"],
       "defaults": { "title": ["name", "side", "load"], "a": "reps", "b": "rpe_or_set", "gauge": "set", "lines": "last_then_next", "lap": "complete_set" }
     },
     "hold": {
       "doc": "Timed holds: LAP starts the hold and ends it early.",
       "actions": ["toggle_hold", "skip"],
+      "records": ["hold"],
       "defaults": { "title": ["name", "side", "load"], "a": "hold", "b": "set", "lines": "hold_prompt", "lap": "toggle_hold" }
     },
     "interval": {
       "doc": "Work/rest phases that run themselves (EMOM, Tabata, repeats).",
       "actions": ["skip"],
+      "records": [],
       "defaults": { "title": ["name", "wave_pct", "switch_side", "zone_or_load"], "a": "interval", "b": "interval_left", "gauge": "interval_round", "lines": "interval_next", "lap": "skip" }
     },
     "rounds": {
       "doc": "Rounds against a time cap (AMRAP).",
       "actions": ["log_round", "skip"],
+      "records": ["rounds"],
       "defaults": { "title": ["name", "load"], "a": "rounds", "b": "cap_left", "lines": "components", "lap": "log_round" }
     },
     "for_time": {
       "doc": "Rounds against the clock; the last round moves on.",
       "actions": ["log_round", "skip"],
+      "records": ["rounds", "minutes"],
       "defaults": { "title": ["name", "load"], "a": "rounds_of_target", "b": "elapsed", "lines": "components", "lap": "log_round" }
     },
     "distance": {
       "doc": "Distance: live km against the target, or laps of a short carry.",
       "actions": ["log_round", "skip"],
+      "records": ["km", "rounds"],
       "defaults": { "title": ["name", "load", "pack"], "a": "distance", "b": "distance_target", "lines": "next_step", "lap": "log_round" }
     },
     "timed": {
       "doc": "A block held for a time, often in a zone; counts down and ends itself, switching hands at switchAtSec.",
       "actions": ["skip", "next_side"],
+      "records": [],
       "defaults": { "title": ["name", "switch_side", "load"], "a": "time_left", "b": "zone_or_time", "lines": "focus", "lap": "skip" }
     },
     "round_timer": {
       "doc": "A named block with no exercise content (a class): LAP counts rounds.",
       "actions": ["log_round", "skip"],
+      "records": ["rounds"],
       "defaults": { "title": ["name"], "a": "block_left", "b": "rounds", "lines": "next_step", "lap": "log_round" }
     }
   },

@@ -41,13 +41,14 @@
       "status": "open"
     },
     {
-      "id": "watch_capture",
-      "title": "What each watch template records is not declared",
+      "id": "wrist_capture",
+      "title": "The interval and timed watch screens record no count",
       "kind": "watch",
       "impact": "degrades",
-      "detail": "X2 checks every step has a screen, not that the package's lead measure is captured on the wrist.",
+      "detail": "Each template now says what it records (watch_vocabulary.json `capture`) and the scorecard's X3 reads the lead measure against it: Wildman's rounds in an EMOM and cadence in a timed set run on screens that record only the step's window, so they are logged on the phone. Recording them is a change to both watches.",
       "anchors": [
-        "data/commons/watch_vocabulary.json::\"templates\""
+        "garmin/core/source/engine/Wire.mc::function countsRounds",
+        "data/commons/watch_vocabulary.json::\"interval\""
       ],
       "roadmap": "9.6",
       "status": "open"

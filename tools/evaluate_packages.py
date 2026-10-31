@@ -245,6 +245,7 @@ def grade_track(pkg: str, track: dict, recs: dict, fid_rows: list, record: dict 
     grades['M3'] = pe.grade_m3(declared, tested, estimated, manual)
     grades['M4'] = pe.grade_m4(set(declared) | tested, known)
     grades['X2'] = pe.grade_x2(*_watch_screens(ideal['program']))
+    grades['X3'] = pe.grade_x3(prim, vocabulary.PRIMITIVES, *_wrist_capture(ideal, lead))
     return {c: list(g) for c, g in grades.items()}
 
 
@@ -266,6 +267,38 @@ def _watch_screens(program: dict | None) -> tuple[list[str], list[str]]:
             if slot_type not in known and not any(f.startswith(f'{slot_type} ') for f in fallbacks):
                 fallbacks.append(f"{slot_type} ({aid}:{step.get('slotRole')})")
     return errors, fallbacks
+
+
+def _wrist_capture(rec: dict, lead: str | None) -> tuple[set, list[tuple[str, set]]]:
+    """(what every watch session records, [(step, what its screen records)] for
+    each step the lead entry reads) — the steps as the watches' encoder sends
+    them (api.encode_watch_session, ?spec=1), each read through its screen's
+    template (data/commons/watch_vocabulary.json `capture`, `records`). A test
+    step also takes its standard's result at the end (`prs`)."""
+    import api
+    from src import watch_spec
+    vocab = watch_spec.vocabulary()
+    session = set((vocab.get('capture') or {}).get('session') or [])
+    entry = next((e for s in spec_mod.compose(rec['goal']) for e in s.entries if e.id == lead), None) if lead else None
+    if entry is None or pe.refused(rec['program'], rec['validation']):
+        return session, []
+    steps = []
+    for w in (rec['program'] or {}).get('weeks') or []:
+        for _, s in pe.fidelity._sessions(w):
+            if not spec_mod.session_in_scope(entry, w, s):
+                continue
+            wanted = {((ea.get('exercise') or {}).get('id'), ea.get('slot_role'))
+                      for ea in spec_mod.assignments_in_scope(entry, s)}
+            payload = api.encode_watch_session(s, 'scorecard', spec_level=1)
+            for step in payload['exercises']:
+                if (step.get('exerciseId'), step.get('slotRole')) not in wanted:
+                    continue
+                template = (payload['screens'].get(step.get('screen')) or {}).get('template')
+                got = set(((vocab['templates'].get(template) or {}).get('records')) or [])
+                if step.get('standard'):
+                    got.add('prs')
+                steps.append((f"{payload.get('archetypeId')}:{step.get('slotRole')} ({template})", got))
+    return session, steps
 
 
 def evaluate_package(pkg: str) -> dict:
