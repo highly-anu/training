@@ -3,7 +3,7 @@
 How to read a training source before it becomes a package. Use this to brief an LLM or AI
 agent. It is step 1 of `docs/package-fidelity/README.md` ("The method"): the notes it produces
 are what the package's record (`fidelity.yaml`: sources, how much of each was read, every rule)
-and its dossier (`docs/package-fidelity/<id>.md`) are written from. A package is then written
+and its dossier (`data/packages/<id>/dossier.md`) are written from. A package is then written
 as a folder (`docs/author-guide.md`) and brought in with `tools/add_package.py <id>`.
 
 ---
@@ -206,5 +206,5 @@ what was inferred.
 | The Cell Standards | `data/benchmarks/cell_standards.yaml` | Full Level I–V across all domains |
 
 Every shipped package now has a fidelity record whose `sources` say what was read and how
-much (`docs/package-fidelity/status.yaml` lists them); a source read for a package since is
+much (each package's `records/status.yaml` and the scorecard list them); a source read for a package since is
 listed there, not here.

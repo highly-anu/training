@@ -14,7 +14,7 @@ partial or fail (src/package_eval.py; docs/package-fidelity/README.md has
 the table), and `audited` is derived: every criterion that is not hygiene
 passes on every track the package does not exclude. The Source criteria
 read each package's record (data/packages/<id>/fidelity.yaml,
-src/package_fidelity.py), and docs/package-fidelity/status.yaml is written
+src/package_fidelity.py), and each package's records/status.yaml is written
 from the records and the grades (--update-baseline), never by hand.
 
 Usage:
@@ -26,15 +26,17 @@ Usage:
   .venv/bin/python tools/evaluate_packages.py --update-baseline --dry-run        # what it would record
   .venv/bin/python tools/evaluate_packages.py --update-baseline --accept-worse   # a stricter grader
 
-Exits 1 when a grade is worse than tools/scorecard_baseline.json records, a
+Every record is the package's own, in data/packages/<id>/records/
+(src/package_records.py). Exits 1 when a grade is worse than its
+records/scorecard.json says, a
 package x track x criterion is new, a fidelity finding is not in
-tools/fidelity_baseline.json (tools/check_fidelity.gate, run here), an
+records/fidelity.json (tools/check_fidelity.gate, run here), an
 exercise is newly orphaned (tools/check_exercise_coverage, run here; D2 reads
-it), status.yaml is not what the records and the grades write — or a
+it), a records/status.yaml is not what the record and the grades write — or a
 baseline is stale: a better grade, a finding that stopped firing or an
 exercise no longer orphaned is recorded in the change that earns it, or the
 next change may lose it unnoticed. --update-baseline records better grades
-(and writes status.yaml) and refuses worse ones; --accept-worse records them
+(and writes each status) and refuses worse ones; --accept-worse records them
 too, for a grader made stricter.
 """
 from __future__ import annotations
@@ -53,14 +55,12 @@ os.environ.setdefault('SUPABASE_URL', '')
 
 import yaml  # noqa: E402
 
-from src import constraint_impact, loader, package_eval as pe, package_fidelity as pf, source_weeks  # noqa: E402
+from src import constraint_impact, loader, package_eval as pe, package_fidelity as pf, package_records as pr, source_weeks  # noqa: E402
 from src.analytics import spec as spec_mod, vocabulary  # noqa: E402
 from src.generator import generate  # noqa: E402
 from src.validator import validate  # noqa: E402
 from tools import check_code_neutral as neutral, check_exercise_coverage as coverage, check_fidelity as cf  # noqa: E402
 
-BASELINE = os.path.join(ROOT, 'tools', 'scorecard_baseline.json')
-STATUS = os.path.join(ROOT, 'docs', 'package-fidelity', 'status.yaml')
 EVAL_WEEKS = 8
 PROBE_WEEKS = 2
 # The fidelity profiles that constrain the athlete, and the scorecard's own.
@@ -406,10 +406,9 @@ def derive(pkg: str, tracks: dict) -> str:
                              set((record or {}).get('excluded_tracks') or {}), has_dossier)
 
 
-def status_text(scorecard: dict) -> str:
-    """docs/package-fidelity/status.yaml as this run's grades write it."""
-    return pf.status_document({pkg: pf.status_entry(pkg, pf.load(pkg), derive(pkg, scorecard[pkg]))
-                               for pkg in scorecard})
+def status_entries(scorecard: dict) -> dict:
+    """package -> its status entry as this run's grades write it."""
+    return {pkg: pf.status_entry(pkg, pf.load(pkg), derive(pkg, scorecard[pkg])) for pkg in scorecard}
 
 
 def write_report(scorecard: dict, path: str) -> None:
@@ -455,40 +454,15 @@ def write_report(scorecard: dict, path: str) -> None:
 
 
 def record_packages(packages: list[str], scorecard: dict, current: dict, gated: list, orphans: dict) -> None:
-    """--update-baseline --package: each baseline keeps every other package's
-    rows and takes these packages' from this run; status.yaml likewise."""
-    def mine(key: str) -> bool:
-        return key.split('/')[0] in packages
-
-    grades = {}
-    if os.path.exists(BASELINE):
-        with open(BASELINE) as fh:
-            grades = {k: v for k, v in json.load(fh).items() if not mine(k)}
-    with open(BASELINE, 'w') as fh:
-        json.dump(dict(sorted({**grades, **current}.items())), fh, indent=1)
-        fh.write('\n')
-
-    findings = []
-    if os.path.exists(cf.BASELINE):
-        with open(cf.BASELINE) as fh:
-            findings = [k for k in json.load(fh) if not mine(k)]
-    with open(cf.BASELINE, 'w') as fh:
-        json.dump(sorted(set(findings) | set(gated)), fh, indent=1)
-        fh.write('\n')
-
-    known = json.loads(coverage.BASELINE.read_text()) if coverage.BASELINE.exists() else {}
-    known = {p: o for p, o in known.items() if p not in packages}
-    coverage.BASELINE.write_text(json.dumps(dict(sorted({**known, **orphans}.items())), indent=2,
-                                            sort_keys=True) + '\n')
-
-    entries = {}
-    if os.path.exists(STATUS):
-        with open(STATUS, encoding='utf-8') as fh:
-            entries = dict((yaml.safe_load(fh) or {}).get('packages') or {})
+    """--update-baseline: each package's records take this run's rows — its
+    grades, its fidelity findings, its orphans and its status — in its own
+    folder (src/package_records.py); every other package's are its own."""
     for pkg in packages:
-        entries[pkg] = pf.status_entry(pkg, pf.load(pkg), derive(pkg, scorecard[pkg]))
-    with open(STATUS, 'w', encoding='utf-8') as fh:
-        fh.write(pf.status_document(entries))
+        prefix = f'{pkg}/'
+        pr.write_grades(pkg, {k[len(prefix):]: v for k, v in current.items() if k.startswith(prefix)})
+        pr.write_findings(pkg, [k[len(prefix):] for k in gated if k.startswith(prefix)])
+        pr.write_orphans(pkg, orphans.get(pkg, []))
+        pr.write_status(pkg, pf.status_entry(pkg, pf.load(pkg), derive(pkg, scorecard[pkg])))
 
 
 def main() -> int:
@@ -515,12 +489,7 @@ def main() -> int:
 
     current = {f"{pkg}/{tid}|{c}": g[0] for pkg, tracks in scorecard.items()
                for tid, crit in tracks.items() for c, g in crit.items()}
-    baseline = {}
-    if os.path.exists(BASELINE):
-        with open(BASELINE) as fh:
-            baseline = json.load(fh)
-    if args.package:
-        baseline = {k: v for k, v in baseline.items() if k.split('/')[0] in packages}
+    baseline = pr.all_grades(packages)
     worse = sorted(k for k, g in current.items() if k in baseline and pe.RANK[g] > pe.RANK[baseline[k]])
     new = sorted(k for k in current if k not in baseline)
     better = sorted(k for k, g in current.items() if k in baseline and pe.RANK[g] < pe.RANK[baseline[k]])
@@ -528,8 +497,7 @@ def main() -> int:
 
     gated, new_fid, fixed_fid = cf.gate(fid_rows, packages if args.package else None)
 
-    with open(coverage.BASELINE) as fh:
-        known_orphans = json.load(fh)
+    known_orphans = pr.all_orphans(packages)
     new_orphans = {p: sorted(set(o) - set(known_orphans.get(p, []))) for p, o in orphans.items()}
     reached_orphans = {p: sorted(set(known_orphans.get(p, [])) - set(o)) for p, o in orphans.items()}
     new_orphans = {p: o for p, o in new_orphans.items() if o}
@@ -553,30 +521,18 @@ def main() -> int:
             print(f'would record {len(current)} grades ({len(new)} new), {len(gated)} fidelity findings, '
                   f'{sum(len(o) for o in orphans.values())} orphans; nothing written')
             return 0
-        if args.package:
-            # These packages' rows replace their old ones; every other
-            # package's stay as recorded (tools/add_package.py records one).
-            record_packages(packages, scorecard, current, gated, orphans)
-        else:
-            with open(BASELINE, 'w') as fh:
-                json.dump(dict(sorted(current.items())), fh, indent=1)
-                fh.write('\n')
-            cf.write_baseline(gated)
-            coverage.BASELINE.write_text(json.dumps(dict(sorted(orphans.items())), indent=2, sort_keys=True) + '\n')
-            with open(STATUS, 'w', encoding='utf-8') as fh:
-                fh.write(status_text(scorecard))
-        print(f'baselines written: {len(current)} grades, {len(gated)} fidelity findings, '
-              f'{sum(len(o) for o in orphans.values())} orphans; {os.path.relpath(STATUS, ROOT)}'
-              + (f" (for {', '.join(packages)})" if args.package else ''))
+        record_packages(packages, scorecard, current, gated, orphans)
+        print(f'records written: {len(current)} grades, {len(gated)} fidelity findings, '
+              f'{sum(len(o) for o in orphans.values())} orphans and a status, '
+              f"in each package's records/ ({', '.join(packages)})")
         return 0
 
     failed = False
-    if not args.package:
-        with open(STATUS, encoding='utf-8') as fh:
-            if fh.read() != status_text(scorecard):
-                print(f'{os.path.relpath(STATUS, ROOT)} is not what the records and these grades write '
-                      '(run --update-baseline)')
-                failed = True
+    for pkg, entry in status_entries(scorecard).items():
+        if not pr.status_current(pkg, entry):
+            print(f'{pkg}: records/status.yaml is not what its record and these grades write '
+                  '(run --update-baseline)')
+            failed = True
     counts = defaultdict(int)
     for g in current.values():
         counts[g] += 1

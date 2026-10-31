@@ -5,7 +5,8 @@ the package's own contents, built into weeks as the method prescribes them,
 under the athlete's days, minutes, equipment, injuries and level. This is the
 method for getting a package there and keeping it there. It came out of
 rebuilding Wildman, BJJ, Horsemen and Starting Strength (October 2026);
-`status.yaml` says where every package stands.
+each package's `records/status.yaml` says where it stands, and
+[scorecard.md](scorecard.md) shows them all.
 
 ## What went wrong before
 
@@ -31,7 +32,7 @@ back to a primary source. The engine's part was that it could only express
      is `enforced_by`; `open`; each invention (`I1` …) with where it is
      `implemented_by`; the track's `currency`; the shape. It lives in the
      package folder, so a new package touches nothing outside it;
-   - the **dossier**, `docs/package-fidelity/<package>.md`: the same in
+   - the **dossier**, `data/packages/<package>/dossier.md`: the same in
      prose, naming every rule and invention by its id.
 2. **Choose the engine shape the method has.** The unit of prescription decides:
    - fixed modules progressed by cycles (Wildman, BJJ's strength work) →
@@ -77,7 +78,7 @@ back to a primary source. The engine's part was that it could only express
    Horsemen: which days go first) and the program says what changed.
 6. **Inventions are a ledger, not a habit.** Anything the app adds that the
    source does not contain is an invention in the record (and so in the
-   generated `status.yaml`), decided by the owner case by case — Pentathlon
+   generated status), decided by the owner case by case — Pentathlon
    Prep is built from kettlebell-sport practice because Wildman publishes
    none. A track that is itself an invention awaiting a decision is named in
    `excluded_tracks` by its invention id.
@@ -93,10 +94,24 @@ How far a package is from its method, graded per package × track
 grades in [scorecard.md](scorecard.md)). Six dimensions, each criterion pass
 (✓), partial (◐) or fail (✗) — never a blended number, because a weighted sum
 hides the one failure that matters. A dimension reads its worst criterion that
-is not hygiene; the grades ratchet in `tools/scorecard_baseline.json` (a worse
-grade fails the checks, and so does a better one left unrecorded), and
-`status.yaml` is written from the records and the grades
+is not hygiene; the grades ratchet in each package's `records/scorecard.json` (a
+worse grade fails the checks, and so does a better one left unrecorded), and its
+`records/status.yaml` is written from the record and the grades
 (`--update-baseline`) — a status is earned, never typed.
+
+**A package's records are its own** (`src/package_records.py`): `records/` holds
+its scorecard grades, the fidelity findings it is allowed, its orphaned
+exercises, its golden program hashes and its status, keyed without the package's
+id, and `dossier.md` sits beside the record. A new package touches nothing
+outside its folder; `tools/add_package.py <id>` writes its records. The API image
+leaves them out (`.dockerignore`): nothing at runtime reads them.
+
+**The status** (`records/status.yaml`, generated): `status` audited · partial ·
+not_started — audited when every criterion but hygiene passes on every track not
+excluded, partial once a record and a dossier exist; `shape` contract · templates
+· scheduler; `sources_kind` primary · consensus · secondary; `debt` (rules nothing
+enforces, S3); `currency` (track → the analytics entry progress is counted in,
+M1); `excluded_tracks`; `source_tests`; `inventions`; `last_review` (S6).
 
 | Dim | | Criterion | ✓ | ◐ | ✗ |
 |---|---|---|---|---|---|
@@ -158,7 +173,7 @@ commit (`tools/run_checks.py`). Every command in the first column is in that lis
 | `tools/check_styles.py` | every philosophy × track × phase generates on its own framework |
 | `tools/evaluate_packages.py` | the scorecard may not get worse, `status` is the one it earns, every fidelity finding is in the baseline (`check_fidelity.gate`, in the same pass) and every catalog exercise reaches a program (`check_exercise_coverage`, in the same pass); a baseline that a change has made stale fails until it is updated in that change |
 | `tools/check_analytics.py` | every declared measure applies somewhere |
-| `tools/check_package_status.py` | each record names its own tracks; `status.yaml` is what the records and the recorded scorecard write; this table matches `checks/python_suites.yaml` |
+| `tools/check_package_status.py` | each record names its own tracks; each `records/status.yaml` is what the record and the recorded scorecard write; this table matches `checks/python_suites.yaml` |
 | `test_watch_spec.py` | a package's `watch.yaml` resolves; the watches' generated tables are current; `garmin/core` names no package |
 | `test_program_analytics.py` | a package's analytics, including one written to disk as a throwaway package, need no engine change |
 | `test_source_weeks.py` | a source week against hand-built programs: what is structure, what is a number, what is never compared |
@@ -188,9 +203,8 @@ commit (`tools/run_checks.py`). Every command in the first column is in that lis
    scope, what it found and where each finding went; S6).
 6. `tools/evaluate_packages.py --update-baseline --report
    docs/package-fidelity/scorecard.md`: the grades, the orphans, the fidelity
-   findings and `status.yaml` are written together, from what the package
-   earns. A **new** package is brought in with `tools/add_package.py <id>`
+   findings and each status are written together, in each package's
+   `records/`, from what the package earns. A **new** package is brought in with `tools/add_package.py <id>`
    (`--check` first): its schemas, no id another package declares, every id in
-   the commons, then its dossier stubbed and its rows in every baseline and the
-   golden hashes recorded — that package's only, refused on a fidelity finding
-   or an orphan.
+   the commons, then its dossier stubbed and its records written — in its own
+   folder, refused on a fidelity finding or an orphan.

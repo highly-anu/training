@@ -72,7 +72,9 @@ def make_packages(folder: str, copies: dict | None = None) -> None:
         dest = os.path.join(folder, new)
         renames = {old: new, **{i: f'dx_{i}' for i in _own_ids(os.path.join(ROOT, source))}}
         word = re.compile(r'\b(' + '|'.join(sorted(map(re.escape, renames), key=len, reverse=True)) + r')\b')
-        shutil.copytree(os.path.join(ROOT, source), dest)
+        # A new package has no records yet (src/package_records.py): the copy
+        # starts without the source's, as one written by hand would.
+        shutil.copytree(os.path.join(ROOT, source), dest, ignore=shutil.ignore_patterns('records', 'dossier.md'))
         for dirpath, _, files in os.walk(dest):
             for name in files:
                 if not name.endswith('.yaml'):

@@ -21,7 +21,7 @@ Usage:
   .venv/bin/python tools/check_fidelity.py --report docs/fidelity-report.md
   .venv/bin/python tools/check_fidelity.py --update-baseline
 
-Exits 1 when an error or warning appears that tools/fidelity_baseline.json
+Exits 1 when an error or warning appears that the package's records/fidelity.json
 does not list, or one it lists no longer fires. The baseline only shrinks,
 and in the change that shrinks it: fix the cause, rerun with
 --update-baseline, and commit the smaller file. tools/evaluate_packages.py
@@ -43,7 +43,6 @@ from src.generator import generate  # noqa: E402
 from src.validator import validate  # noqa: E402
 from src.package_eval import ALL_EQUIPMENT, contract_entry  # noqa: E402
 
-BASELINE = os.path.join(ROOT, 'tools', 'fidelity_baseline.json')
 LEVEL_ORDER = ['novice', 'intermediate', 'advanced', 'elite']
 
 
@@ -193,26 +192,22 @@ def gate(rows: list[dict], packages: list[str] | None = None) -> tuple[list, lis
     """(gated keys, keys the baseline lacks, baseline keys that no longer fire)
     for the run's errors and warnings. The one gate: tools/evaluate_packages.py
     runs it over the same rows."""
+    from src import package_records
     gated = sorted({_gate_key(r) for r in rows if r['finding']['severity'] in ('error', 'warn')})
-    known = set()
-    if os.path.exists(BASELINE):
-        with open(BASELINE) as fh:
-            known = set(json.load(fh))
-    if packages:
-        known = {k for k in known if k.split('/')[0] in packages}
+    known = set(package_records.all_findings(packages))
     return gated, [k for k in gated if k not in known], sorted(known - set(gated))
 
 
-def write_baseline(gated: list) -> list:
-    """Record the gated findings; refuses (and returns) any the baseline lacks."""
-    if os.path.exists(BASELINE):
-        with open(BASELINE) as fh:
-            additions = sorted(set(gated) - set(json.load(fh)))
-        if additions:
-            return additions
-    with open(BASELINE, 'w') as fh:
-        json.dump(gated, fh, indent=1)
-        fh.write('\n')
+def write_baseline(gated: list, packages: list[str]) -> list:
+    """Record each package's gated findings in its records/fidelity.json;
+    refuses (and returns) any its record lacks."""
+    from src import package_records
+    additions = sorted(set(gated) - set(package_records.all_findings(packages)))
+    if additions:
+        return additions
+    for pkg in packages:
+        prefix = f'{pkg}/'
+        package_records.write_findings(pkg, [k[len(prefix):] for k in gated if k.startswith(prefix)])
     return []
 
 
@@ -272,10 +267,8 @@ def main() -> int:
             json.dump(rows, fh, indent=1)
 
     if args.update_baseline:
-        if args.package:
-            print('--update-baseline needs the whole run (no --package)')
-            return 2
-        additions = write_baseline(gated)
+        from src import package_records
+        additions = write_baseline(gated, [args.package] if args.package else package_records.packages())
         if additions:
             print('Refusing to grow the fidelity baseline; fix the new findings:')
             for key in additions:

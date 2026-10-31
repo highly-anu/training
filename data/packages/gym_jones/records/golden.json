@@ -1,0 +1,15 @@
+{
+ "extra:gym_jones_trace": "0263c22f35e43726e4633341485ae3004242a8efbfa5608cdc9abd2fa0783e93",
+ "operator_fitness/intermediate/four_60": "330b3b04de7424444c32ad16ba18ca96d912ae26e71c310da63d8f68129237f8",
+ "operator_fitness/intermediate/six_long": "b03f97b1c138b87a37e09996e408d2ac79c4b3cdb3891ce3225afe024251af1a",
+ "operator_fitness/intermediate/three_45": "335380a7533c12c7798c1d3cfe9ce5b15db8cf75668db536c15195afdc41fa90",
+ "operator_fitness/novice/four_60": "f060c097a928d3c74d28a241a1785b40e6555df2a0b47bc3be41891f69419142",
+ "operator_fitness/novice/six_long": "ed533a67e294cdfa88b1dc78761887faf668c4d53c820c8c74531c5dcce2dcd3",
+ "operator_fitness/novice/three_45": "9c49b3ceeaed1b0dfc9664b6e2b8183f777dfda9f61f1ac84253cf606eff4dec",
+ "soldier_of_steel/intermediate/four_60": "95f783cd8dc94997a7424ebe2633aba9c8ab93f41939cd964375ddb4f6b6eca3",
+ "soldier_of_steel/intermediate/six_long": "999d8ca4053b41583d9910f4cd5a08941977995ded73409de6c39354accee3aa",
+ "soldier_of_steel/intermediate/three_45": "64a1cedf8287fb24bd30a6c4c3a55c534e1ced65b0abd609ea13255f7d4c8938",
+ "soldier_of_steel/novice/four_60": "1836060788e560eedd313cf827074e69d01ae449aa433d2fd6359ce68394da6e",
+ "soldier_of_steel/novice/six_long": "1db541d34613dbbfddd7c948c4f41cdf9bc474186374bec8471d479058adc420",
+ "soldier_of_steel/novice/three_45": "ab4ad787f87fcaeb3001a2f82bda881ba4dd4d4f724c9375ed48a3850407a7e6"
+}

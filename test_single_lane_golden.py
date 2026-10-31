@@ -10,6 +10,9 @@ tracks; a single-track request must reproduce them byte for byte, both as
     .venv/bin/python test_single_lane_golden.py            # check
     .venv/bin/python test_single_lane_golden.py --record   # rewrite the .json (only before an intended change)
     .venv/bin/python test_single_lane_golden.py --record --package <id>   # that package's hashes only
+
+Each package's hashes are its own: data/packages/<id>/records/golden.json
+(src/package_records.py), the stateful extras with the package they run.
 """
 import hashlib
 import json
@@ -116,14 +119,19 @@ def main():
     # --package <id> (repeatable): only that package's tracks; a recording
     # keeps every other package's hashes (tools/add_package.py records one).
     only = {sys.argv[i + 1] for i, a in enumerate(sys.argv[:-1]) if a == '--package'}
+    from collections import defaultdict
+    from src import package_records
+    golden = package_records.all_golden()
     got, failures = {}, []
+    owner = {}
     for name, body in _cases():
-        if only and name.split('/')[0] not in only:
+        owner[name] = body['philosophy_id']      # an extra case belongs to the package it runs
+        if only and owner[name] not in only:
             continue
         got[name] = _digest(client, body)
         if record:
             continue
-        want = GOLDEN.get(name)
+        want = golden.get(name)
         if want is None:
             failures.append(f'{name}: no recorded hash')
         elif got[name] != want:
@@ -131,13 +139,12 @@ def main():
         elif lanes_too and _digest(client, _as_lanes(body)) != want:
             failures.append(f'{name}: a one-element lanes request differs')
     if record:
-        recorded = len(got)
-        if only:
-            got = {**{k: v for k, v in GOLDEN.items() if k.split('/')[0] not in only}, **got}
-        with open(GOLDEN_PATH, 'w') as f:
-            json.dump(got, f, indent=1, sort_keys=True)
-            f.write('\n')
-        print(f'recorded {recorded} programs')
+        by_package = defaultdict(dict)
+        for name, digest in got.items():
+            by_package[owner[name]][package_records.golden_key(name)] = digest
+        for pkg, hashes in by_package.items():
+            package_records.write_golden(pkg, hashes)
+        print(f"recorded {len(got)} programs in {len(by_package)} package(s)' records/golden.json")
         return 0
     for f in failures:
         print('FAIL', f)
@@ -145,8 +152,6 @@ def main():
     return 1 if failures else 0
 
 
-GOLDEN_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_single_lane_golden.json')
-GOLDEN = json.load(open(GOLDEN_PATH)) if os.path.exists(GOLDEN_PATH) else {}
 
 if __name__ == '__main__':
     sys.exit(main())

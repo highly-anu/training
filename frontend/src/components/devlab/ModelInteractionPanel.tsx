@@ -399,7 +399,7 @@ function Tick({ done, title }: { done: boolean | null; title: string }) {
     : <span title={title}><MinusCircle className="size-3.5 text-red-700 dark:text-red-300" aria-label={`${title}: missing`} /></span>
 }
 
-function PackageRow({ pkg, outsideIds }: { pkg: PortabilityPackage; outsideIds: string[] }) {
+function PackageRow({ pkg, recordIds }: { pkg: PortabilityPackage; recordIds: string[] }) {
   const shapes = [...new Set(pkg.tracks.map(t => t.shape))]
   const optional = pkg.files.filter(f => !f.required && f.present !== null)
   const unreadable = pkg.files.filter(f => f.present === null).length
@@ -430,8 +430,8 @@ function PackageRow({ pkg, outsideIds }: { pkg: PortabilityPackage; outsideIds: 
       </td>
       <td className="px-3 py-2">
         <div className="flex gap-1">
-          {outsideIds.map(id => {
-            const o = pkg.outside.find(x => x.id === id)
+          {recordIds.map(id => {
+            const o = pkg.records.find(x => x.id === id)
             return o ? <Tick key={id} done={o.done} title={o.done === false ? `${o.label} — ${o.how}` : o.label} /> : null
           })}
         </div>
@@ -474,10 +474,10 @@ function GapItem({ gap }: { gap: PortabilityGap }) {
 }
 
 function PortabilitySection({ report }: { report: PortabilityReport }) {
-  const outsideIds = report.packages[0]?.outside.map(o => o.id) ?? []
-  const outsideLabels = report.packages[0]?.outside ?? []
+  const recordIds = report.packages[0]?.records.map(o => o.id) ?? []
+  const recordLabels = report.packages[0]?.records ?? []
   const uncheckedLabels = report.unchecked.map(id =>
-    outsideLabels.find(o => o.id === id)?.label
+    recordLabels.find(o => o.id === id)?.label
       ?? report.packages[0]?.files.find(f => f.id === id)?.path
       ?? id)
   const open = report.gaps.filter(g => g.status === 'open')
@@ -494,8 +494,8 @@ function PortabilitySection({ report }: { report: PortabilityReport }) {
               <th className="text-left px-3 py-2 font-medium">Package</th>
               <th className="text-left px-3 py-2 font-medium">Engine shape (tracks)</th>
               <th className="text-left px-3 py-2 font-medium">In its folder</th>
-              <th className="text-left px-3 py-2 font-medium" title={outsideLabels.map(o => o.label).join(' · ')}>
-                Outside its folder
+              <th className="text-left px-3 py-2 font-medium" title={recordLabels.map(o => o.label).join(' · ')}>
+                Its records
               </th>
               <th className="text-left px-3 py-2 font-medium">Vocabulary</th>
               <th className="text-left px-3 py-2 font-medium">Id collisions</th>
@@ -503,19 +503,20 @@ function PortabilitySection({ report }: { report: PortabilityReport }) {
             </tr>
           </thead>
           <tbody>
-            {report.packages.map(p => <PackageRow key={p.id} pkg={p} outsideIds={outsideIds} />)}
+            {report.packages.map(p => <PackageRow key={p.id} pkg={p} recordIds={recordIds} />)}
           </tbody>
         </table>
       </div>
       <p className="text-[10px] text-muted-foreground">
         {ready} of {report.packages.length} packages in <code className="bg-muted px-1 rounded">{report.packagesDir}</code> drop
-        in as they stand. Outside the folder, in order: {outsideLabels.map(o => o.label).join(' · ')}.{' '}
+        in as they stand. The records the gates keep in each folder, in order: {recordLabels.map(o => o.label).join(' · ')}.{' '}
         {report.sharedExercises} exercise ids are shared between packages by design; each keeps its own prescription.
       </p>
       {report.unchecked.length > 0 && (
         <p className="text-[10px] text-amber-700 dark:text-amber-300">
           Not checkable here: {uncheckedLabels.join(' · ')} — their files are not in this deployment (the API
-          image leaves docs/ and source weeks out). Run the local API to check them; "drops in" covers the rest.
+          image leaves every package's records, dossier and source weeks out). Run the local API to check them;
+          "drops in" covers the rest.
         </p>
       )}
 

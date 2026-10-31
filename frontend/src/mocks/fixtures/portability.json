@@ -96,39 +96,46 @@
      "present": true
     }
    ],
-   "outside": [
+   "records": [
     {
      "id": "scorecard",
-     "label": "Scorecard baseline",
-     "file": "tools/scorecard_baseline.json",
+     "label": "Scorecard grades",
+     "file": "records/scorecard.json",
+     "done": true,
+     "how": ".venv/bin/python tools/add_package.py atg"
+    },
+    {
+     "id": "fidelity",
+     "label": "Fidelity findings",
+     "file": "records/fidelity.json",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py atg"
     },
     {
      "id": "coverage",
-     "label": "Exercise coverage baseline",
-     "file": "tools/exercise_coverage_baseline.json",
-     "done": true,
-     "how": ".venv/bin/python tools/add_package.py atg"
-    },
-    {
-     "id": "status",
-     "label": "status.yaml row",
-     "file": "docs/package-fidelity/status.yaml",
+     "label": "Exercise coverage",
+     "file": "records/coverage.json",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py atg"
     },
     {
      "id": "golden",
      "label": "Golden program hashes",
-     "file": "test_single_lane_golden.json",
+     "file": "records/golden.json",
+     "done": true,
+     "how": ".venv/bin/python tools/add_package.py atg"
+    },
+    {
+     "id": "status",
+     "label": "Status",
+     "file": "records/status.yaml",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py atg"
     },
     {
      "id": "dossier",
      "label": "Source dossier",
-     "file": "docs/package-fidelity/atg.md",
+     "file": "dossier.md",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py atg stubs it; write it from the sources (docs/package-fidelity/README.md)"
     }
@@ -247,39 +254,46 @@
      "present": true
     }
    ],
-   "outside": [
+   "records": [
     {
      "id": "scorecard",
-     "label": "Scorecard baseline",
-     "file": "tools/scorecard_baseline.json",
+     "label": "Scorecard grades",
+     "file": "records/scorecard.json",
+     "done": true,
+     "how": ".venv/bin/python tools/add_package.py bjj"
+    },
+    {
+     "id": "fidelity",
+     "label": "Fidelity findings",
+     "file": "records/fidelity.json",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py bjj"
     },
     {
      "id": "coverage",
-     "label": "Exercise coverage baseline",
-     "file": "tools/exercise_coverage_baseline.json",
-     "done": true,
-     "how": ".venv/bin/python tools/add_package.py bjj"
-    },
-    {
-     "id": "status",
-     "label": "status.yaml row",
-     "file": "docs/package-fidelity/status.yaml",
+     "label": "Exercise coverage",
+     "file": "records/coverage.json",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py bjj"
     },
     {
      "id": "golden",
      "label": "Golden program hashes",
-     "file": "test_single_lane_golden.json",
+     "file": "records/golden.json",
+     "done": true,
+     "how": ".venv/bin/python tools/add_package.py bjj"
+    },
+    {
+     "id": "status",
+     "label": "Status",
+     "file": "records/status.yaml",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py bjj"
     },
     {
      "id": "dossier",
      "label": "Source dossier",
-     "file": "docs/package-fidelity/bjj.md",
+     "file": "dossier.md",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py bjj stubs it; write it from the sources (docs/package-fidelity/README.md)"
     }
@@ -398,39 +412,46 @@
      "present": false
     }
    ],
-   "outside": [
+   "records": [
     {
      "id": "scorecard",
-     "label": "Scorecard baseline",
-     "file": "tools/scorecard_baseline.json",
+     "label": "Scorecard grades",
+     "file": "records/scorecard.json",
+     "done": false,
+     "how": ".venv/bin/python tools/add_package.py block_fixture"
+    },
+    {
+     "id": "fidelity",
+     "label": "Fidelity findings",
+     "file": "records/fidelity.json",
      "done": false,
      "how": ".venv/bin/python tools/add_package.py block_fixture"
     },
     {
      "id": "coverage",
-     "label": "Exercise coverage baseline",
-     "file": "tools/exercise_coverage_baseline.json",
-     "done": false,
-     "how": ".venv/bin/python tools/add_package.py block_fixture"
-    },
-    {
-     "id": "status",
-     "label": "status.yaml row",
-     "file": "docs/package-fidelity/status.yaml",
+     "label": "Exercise coverage",
+     "file": "records/coverage.json",
      "done": false,
      "how": ".venv/bin/python tools/add_package.py block_fixture"
     },
     {
      "id": "golden",
      "label": "Golden program hashes",
-     "file": "test_single_lane_golden.json",
+     "file": "records/golden.json",
+     "done": false,
+     "how": ".venv/bin/python tools/add_package.py block_fixture"
+    },
+    {
+     "id": "status",
+     "label": "Status",
+     "file": "records/status.yaml",
      "done": false,
      "how": ".venv/bin/python tools/add_package.py block_fixture"
     },
     {
      "id": "dossier",
      "label": "Source dossier",
-     "file": "docs/package-fidelity/block_fixture.md",
+     "file": "dossier.md",
      "done": false,
      "how": ".venv/bin/python tools/add_package.py block_fixture stubs it; write it from the sources (docs/package-fidelity/README.md)"
     }
@@ -554,39 +575,46 @@
      "present": true
     }
    ],
-   "outside": [
+   "records": [
     {
      "id": "scorecard",
-     "label": "Scorecard baseline",
-     "file": "tools/scorecard_baseline.json",
+     "label": "Scorecard grades",
+     "file": "records/scorecard.json",
+     "done": true,
+     "how": ".venv/bin/python tools/add_package.py crossfit"
+    },
+    {
+     "id": "fidelity",
+     "label": "Fidelity findings",
+     "file": "records/fidelity.json",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py crossfit"
     },
     {
      "id": "coverage",
-     "label": "Exercise coverage baseline",
-     "file": "tools/exercise_coverage_baseline.json",
-     "done": true,
-     "how": ".venv/bin/python tools/add_package.py crossfit"
-    },
-    {
-     "id": "status",
-     "label": "status.yaml row",
-     "file": "docs/package-fidelity/status.yaml",
+     "label": "Exercise coverage",
+     "file": "records/coverage.json",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py crossfit"
     },
     {
      "id": "golden",
      "label": "Golden program hashes",
-     "file": "test_single_lane_golden.json",
+     "file": "records/golden.json",
+     "done": true,
+     "how": ".venv/bin/python tools/add_package.py crossfit"
+    },
+    {
+     "id": "status",
+     "label": "Status",
+     "file": "records/status.yaml",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py crossfit"
     },
     {
      "id": "dossier",
      "label": "Source dossier",
-     "file": "docs/package-fidelity/crossfit.md",
+     "file": "dossier.md",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py crossfit stubs it; write it from the sources (docs/package-fidelity/README.md)"
     }
@@ -710,39 +738,46 @@
      "present": true
     }
    ],
-   "outside": [
+   "records": [
     {
      "id": "scorecard",
-     "label": "Scorecard baseline",
-     "file": "tools/scorecard_baseline.json",
+     "label": "Scorecard grades",
+     "file": "records/scorecard.json",
+     "done": true,
+     "how": ".venv/bin/python tools/add_package.py gym_jones"
+    },
+    {
+     "id": "fidelity",
+     "label": "Fidelity findings",
+     "file": "records/fidelity.json",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py gym_jones"
     },
     {
      "id": "coverage",
-     "label": "Exercise coverage baseline",
-     "file": "tools/exercise_coverage_baseline.json",
-     "done": true,
-     "how": ".venv/bin/python tools/add_package.py gym_jones"
-    },
-    {
-     "id": "status",
-     "label": "status.yaml row",
-     "file": "docs/package-fidelity/status.yaml",
+     "label": "Exercise coverage",
+     "file": "records/coverage.json",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py gym_jones"
     },
     {
      "id": "golden",
      "label": "Golden program hashes",
-     "file": "test_single_lane_golden.json",
+     "file": "records/golden.json",
+     "done": true,
+     "how": ".venv/bin/python tools/add_package.py gym_jones"
+    },
+    {
+     "id": "status",
+     "label": "Status",
+     "file": "records/status.yaml",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py gym_jones"
     },
     {
      "id": "dossier",
      "label": "Source dossier",
-     "file": "docs/package-fidelity/gym_jones.md",
+     "file": "dossier.md",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py gym_jones stubs it; write it from the sources (docs/package-fidelity/README.md)"
     }
@@ -861,39 +896,46 @@
      "present": true
     }
    ],
-   "outside": [
+   "records": [
     {
      "id": "scorecard",
-     "label": "Scorecard baseline",
-     "file": "tools/scorecard_baseline.json",
+     "label": "Scorecard grades",
+     "file": "records/scorecard.json",
+     "done": true,
+     "how": ".venv/bin/python tools/add_package.py horsemen_gpp"
+    },
+    {
+     "id": "fidelity",
+     "label": "Fidelity findings",
+     "file": "records/fidelity.json",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py horsemen_gpp"
     },
     {
      "id": "coverage",
-     "label": "Exercise coverage baseline",
-     "file": "tools/exercise_coverage_baseline.json",
-     "done": true,
-     "how": ".venv/bin/python tools/add_package.py horsemen_gpp"
-    },
-    {
-     "id": "status",
-     "label": "status.yaml row",
-     "file": "docs/package-fidelity/status.yaml",
+     "label": "Exercise coverage",
+     "file": "records/coverage.json",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py horsemen_gpp"
     },
     {
      "id": "golden",
      "label": "Golden program hashes",
-     "file": "test_single_lane_golden.json",
+     "file": "records/golden.json",
+     "done": true,
+     "how": ".venv/bin/python tools/add_package.py horsemen_gpp"
+    },
+    {
+     "id": "status",
+     "label": "Status",
+     "file": "records/status.yaml",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py horsemen_gpp"
     },
     {
      "id": "dossier",
      "label": "Source dossier",
-     "file": "docs/package-fidelity/horsemen_gpp.md",
+     "file": "dossier.md",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py horsemen_gpp stubs it; write it from the sources (docs/package-fidelity/README.md)"
     }
@@ -1012,39 +1054,46 @@
      "present": true
     }
    ],
-   "outside": [
+   "records": [
     {
      "id": "scorecard",
-     "label": "Scorecard baseline",
-     "file": "tools/scorecard_baseline.json",
+     "label": "Scorecard grades",
+     "file": "records/scorecard.json",
+     "done": true,
+     "how": ".venv/bin/python tools/add_package.py ido_portal"
+    },
+    {
+     "id": "fidelity",
+     "label": "Fidelity findings",
+     "file": "records/fidelity.json",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py ido_portal"
     },
     {
      "id": "coverage",
-     "label": "Exercise coverage baseline",
-     "file": "tools/exercise_coverage_baseline.json",
-     "done": true,
-     "how": ".venv/bin/python tools/add_package.py ido_portal"
-    },
-    {
-     "id": "status",
-     "label": "status.yaml row",
-     "file": "docs/package-fidelity/status.yaml",
+     "label": "Exercise coverage",
+     "file": "records/coverage.json",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py ido_portal"
     },
     {
      "id": "golden",
      "label": "Golden program hashes",
-     "file": "test_single_lane_golden.json",
+     "file": "records/golden.json",
+     "done": true,
+     "how": ".venv/bin/python tools/add_package.py ido_portal"
+    },
+    {
+     "id": "status",
+     "label": "Status",
+     "file": "records/status.yaml",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py ido_portal"
     },
     {
      "id": "dossier",
      "label": "Source dossier",
-     "file": "docs/package-fidelity/ido_portal.md",
+     "file": "dossier.md",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py ido_portal stubs it; write it from the sources (docs/package-fidelity/README.md)"
     }
@@ -1163,39 +1212,46 @@
      "present": true
     }
    ],
-   "outside": [
+   "records": [
     {
      "id": "scorecard",
-     "label": "Scorecard baseline",
-     "file": "tools/scorecard_baseline.json",
+     "label": "Scorecard grades",
+     "file": "records/scorecard.json",
+     "done": true,
+     "how": ".venv/bin/python tools/add_package.py kelly_starrett"
+    },
+    {
+     "id": "fidelity",
+     "label": "Fidelity findings",
+     "file": "records/fidelity.json",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py kelly_starrett"
     },
     {
      "id": "coverage",
-     "label": "Exercise coverage baseline",
-     "file": "tools/exercise_coverage_baseline.json",
-     "done": true,
-     "how": ".venv/bin/python tools/add_package.py kelly_starrett"
-    },
-    {
-     "id": "status",
-     "label": "status.yaml row",
-     "file": "docs/package-fidelity/status.yaml",
+     "label": "Exercise coverage",
+     "file": "records/coverage.json",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py kelly_starrett"
     },
     {
      "id": "golden",
      "label": "Golden program hashes",
-     "file": "test_single_lane_golden.json",
+     "file": "records/golden.json",
+     "done": true,
+     "how": ".venv/bin/python tools/add_package.py kelly_starrett"
+    },
+    {
+     "id": "status",
+     "label": "Status",
+     "file": "records/status.yaml",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py kelly_starrett"
     },
     {
      "id": "dossier",
      "label": "Source dossier",
-     "file": "docs/package-fidelity/kelly_starrett.md",
+     "file": "dossier.md",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py kelly_starrett stubs it; write it from the sources (docs/package-fidelity/README.md)"
     }
@@ -1319,39 +1375,46 @@
      "present": true
     }
    ],
-   "outside": [
+   "records": [
     {
      "id": "scorecard",
-     "label": "Scorecard baseline",
-     "file": "tools/scorecard_baseline.json",
+     "label": "Scorecard grades",
+     "file": "records/scorecard.json",
+     "done": true,
+     "how": ".venv/bin/python tools/add_package.py marcus_filly"
+    },
+    {
+     "id": "fidelity",
+     "label": "Fidelity findings",
+     "file": "records/fidelity.json",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py marcus_filly"
     },
     {
      "id": "coverage",
-     "label": "Exercise coverage baseline",
-     "file": "tools/exercise_coverage_baseline.json",
-     "done": true,
-     "how": ".venv/bin/python tools/add_package.py marcus_filly"
-    },
-    {
-     "id": "status",
-     "label": "status.yaml row",
-     "file": "docs/package-fidelity/status.yaml",
+     "label": "Exercise coverage",
+     "file": "records/coverage.json",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py marcus_filly"
     },
     {
      "id": "golden",
      "label": "Golden program hashes",
-     "file": "test_single_lane_golden.json",
+     "file": "records/golden.json",
+     "done": true,
+     "how": ".venv/bin/python tools/add_package.py marcus_filly"
+    },
+    {
+     "id": "status",
+     "label": "Status",
+     "file": "records/status.yaml",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py marcus_filly"
     },
     {
      "id": "dossier",
      "label": "Source dossier",
-     "file": "docs/package-fidelity/marcus_filly.md",
+     "file": "dossier.md",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py marcus_filly stubs it; write it from the sources (docs/package-fidelity/README.md)"
     }
@@ -1475,39 +1538,46 @@
      "present": true
     }
    ],
-   "outside": [
+   "records": [
     {
      "id": "scorecard",
-     "label": "Scorecard baseline",
-     "file": "tools/scorecard_baseline.json",
+     "label": "Scorecard grades",
+     "file": "records/scorecard.json",
+     "done": true,
+     "how": ".venv/bin/python tools/add_package.py starting_strength"
+    },
+    {
+     "id": "fidelity",
+     "label": "Fidelity findings",
+     "file": "records/fidelity.json",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py starting_strength"
     },
     {
      "id": "coverage",
-     "label": "Exercise coverage baseline",
-     "file": "tools/exercise_coverage_baseline.json",
-     "done": true,
-     "how": ".venv/bin/python tools/add_package.py starting_strength"
-    },
-    {
-     "id": "status",
-     "label": "status.yaml row",
-     "file": "docs/package-fidelity/status.yaml",
+     "label": "Exercise coverage",
+     "file": "records/coverage.json",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py starting_strength"
     },
     {
      "id": "golden",
      "label": "Golden program hashes",
-     "file": "test_single_lane_golden.json",
+     "file": "records/golden.json",
+     "done": true,
+     "how": ".venv/bin/python tools/add_package.py starting_strength"
+    },
+    {
+     "id": "status",
+     "label": "Status",
+     "file": "records/status.yaml",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py starting_strength"
     },
     {
      "id": "dossier",
      "label": "Source dossier",
-     "file": "docs/package-fidelity/starting_strength.md",
+     "file": "dossier.md",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py starting_strength stubs it; write it from the sources (docs/package-fidelity/README.md)"
     }
@@ -1626,39 +1696,46 @@
      "present": true
     }
    ],
-   "outside": [
+   "records": [
     {
      "id": "scorecard",
-     "label": "Scorecard baseline",
-     "file": "tools/scorecard_baseline.json",
+     "label": "Scorecard grades",
+     "file": "records/scorecard.json",
+     "done": true,
+     "how": ".venv/bin/python tools/add_package.py uphill_athlete"
+    },
+    {
+     "id": "fidelity",
+     "label": "Fidelity findings",
+     "file": "records/fidelity.json",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py uphill_athlete"
     },
     {
      "id": "coverage",
-     "label": "Exercise coverage baseline",
-     "file": "tools/exercise_coverage_baseline.json",
-     "done": true,
-     "how": ".venv/bin/python tools/add_package.py uphill_athlete"
-    },
-    {
-     "id": "status",
-     "label": "status.yaml row",
-     "file": "docs/package-fidelity/status.yaml",
+     "label": "Exercise coverage",
+     "file": "records/coverage.json",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py uphill_athlete"
     },
     {
      "id": "golden",
      "label": "Golden program hashes",
-     "file": "test_single_lane_golden.json",
+     "file": "records/golden.json",
+     "done": true,
+     "how": ".venv/bin/python tools/add_package.py uphill_athlete"
+    },
+    {
+     "id": "status",
+     "label": "Status",
+     "file": "records/status.yaml",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py uphill_athlete"
     },
     {
      "id": "dossier",
      "label": "Source dossier",
-     "file": "docs/package-fidelity/uphill_athlete.md",
+     "file": "dossier.md",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py uphill_athlete stubs it; write it from the sources (docs/package-fidelity/README.md)"
     }
@@ -1802,39 +1879,46 @@
      "present": true
     }
    ],
-   "outside": [
+   "records": [
     {
      "id": "scorecard",
-     "label": "Scorecard baseline",
-     "file": "tools/scorecard_baseline.json",
+     "label": "Scorecard grades",
+     "file": "records/scorecard.json",
+     "done": true,
+     "how": ".venv/bin/python tools/add_package.py wildman_kettlebell"
+    },
+    {
+     "id": "fidelity",
+     "label": "Fidelity findings",
+     "file": "records/fidelity.json",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py wildman_kettlebell"
     },
     {
      "id": "coverage",
-     "label": "Exercise coverage baseline",
-     "file": "tools/exercise_coverage_baseline.json",
-     "done": true,
-     "how": ".venv/bin/python tools/add_package.py wildman_kettlebell"
-    },
-    {
-     "id": "status",
-     "label": "status.yaml row",
-     "file": "docs/package-fidelity/status.yaml",
+     "label": "Exercise coverage",
+     "file": "records/coverage.json",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py wildman_kettlebell"
     },
     {
      "id": "golden",
      "label": "Golden program hashes",
-     "file": "test_single_lane_golden.json",
+     "file": "records/golden.json",
+     "done": true,
+     "how": ".venv/bin/python tools/add_package.py wildman_kettlebell"
+    },
+    {
+     "id": "status",
+     "label": "Status",
+     "file": "records/status.yaml",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py wildman_kettlebell"
     },
     {
      "id": "dossier",
      "label": "Source dossier",
-     "file": "docs/package-fidelity/wildman_kettlebell.md",
+     "file": "dossier.md",
      "done": true,
      "how": ".venv/bin/python tools/add_package.py wildman_kettlebell stubs it; write it from the sources (docs/package-fidelity/README.md)"
     }
@@ -1953,39 +2037,46 @@
      "present": false
     }
    ],
-   "outside": [
+   "records": [
     {
      "id": "scorecard",
-     "label": "Scorecard baseline",
-     "file": "tools/scorecard_baseline.json",
+     "label": "Scorecard grades",
+     "file": "records/scorecard.json",
+     "done": false,
+     "how": ".venv/bin/python tools/add_package.py zz_collider"
+    },
+    {
+     "id": "fidelity",
+     "label": "Fidelity findings",
+     "file": "records/fidelity.json",
      "done": false,
      "how": ".venv/bin/python tools/add_package.py zz_collider"
     },
     {
      "id": "coverage",
-     "label": "Exercise coverage baseline",
-     "file": "tools/exercise_coverage_baseline.json",
-     "done": false,
-     "how": ".venv/bin/python tools/add_package.py zz_collider"
-    },
-    {
-     "id": "status",
-     "label": "status.yaml row",
-     "file": "docs/package-fidelity/status.yaml",
+     "label": "Exercise coverage",
+     "file": "records/coverage.json",
      "done": false,
      "how": ".venv/bin/python tools/add_package.py zz_collider"
     },
     {
      "id": "golden",
      "label": "Golden program hashes",
-     "file": "test_single_lane_golden.json",
+     "file": "records/golden.json",
+     "done": false,
+     "how": ".venv/bin/python tools/add_package.py zz_collider"
+    },
+    {
+     "id": "status",
+     "label": "Status",
+     "file": "records/status.yaml",
      "done": false,
      "how": ".venv/bin/python tools/add_package.py zz_collider"
     },
     {
      "id": "dossier",
      "label": "Source dossier",
-     "file": "docs/package-fidelity/zz_collider.md",
+     "file": "dossier.md",
      "done": false,
      "how": ".venv/bin/python tools/add_package.py zz_collider stubs it; write it from the sources (docs/package-fidelity/README.md)"
     }
@@ -2128,22 +2219,8 @@
  ],
  "sharedExercises": 80,
  "_comment": "What a package still cannot bring in its own folder (src/portability.py serves this to Dev Lab ▸ Model Interactions). Each anchor is `path::text` and must still be in that file while the gap is open; test_portability.py fails when one is gone, so closing a gap means changing its status here in the same change. kind: gate | tooling | commons | code | client | watch | docs. impact on a dropped-in package: blocks (it fails a gate or cannot be written), degrades (it works, worse or silently wrong), cosmetic. status: open | by_design (the commons vocabulary is the contract between packages and the engine). roadmap: the step of docs/roadmap.md item 9 (9.1, 9.2, …) that closes it.",
- "verdict": "The code is package-neutral: nothing in the server, the web, the phones or the watches names a package (tools/check_code_neutral.py), and test_package_dropin.py runs three packages under new ids beside the shipped ones with the repository unchanged. A new folder is brought in with one command (tools/add_package.py <id>), which writes the records the push gates keep outside it; a package may bring its own standards (standards.yaml); anything else beyond the commons vocabulary is still a shared edit.",
+ "verdict": "The code is package-neutral: nothing in the server, the web, the phones or the watches names a package (tools/check_code_neutral.py), and test_package_dropin.py runs three packages under new ids beside the shipped ones with the repository unchanged. A package is one folder: its files, its standards, and the records the push gates keep (records/, dossier.md), which tools/add_package.py <id> writes. Anything beyond the commons vocabulary is still a shared edit.",
  "gaps": [
-  {
-   "id": "outside_records",
-   "title": "A package's records live outside its folder: the scorecard and coverage baselines, status.yaml, the golden program hashes and the dossier",
-   "kind": "gate",
-   "impact": "degrades",
-   "detail": "One command writes them for that package only (tools/add_package.py <id>), refusing a fidelity finding, an orphaned exercise, an id another package declares or one the commons lack; until it runs, the push gates fail on the new package. They could live in the folder itself.",
-   "anchors": [
-    "tools/evaluate_packages.py::scorecard_baseline.json",
-    "test_single_lane_golden.py::GOLDEN_PATH",
-    "src/package_fidelity.py::DOSSIERS"
-   ],
-   "roadmap": "9.1",
-   "status": "open"
-  },
   {
    "id": "suite_registry",
    "title": "A package's own tests count only once listed in the shared suite registry",

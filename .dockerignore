@@ -45,6 +45,12 @@ docs/*
 # rules, inventions and open questions (src/explore_philosophy.py).
 data/packages/*/source_weeks.yaml
 
+# A package's records (the push gates' baselines, golden hashes and status;
+# src/package_records.py) and its dossier: the gates read them, nothing at
+# runtime. `*.md` above matches only the top level, so the dossier is named.
+data/packages/*/records/
+data/packages/*/dossier.md
+
 # The modality scheduler's test fixture package (fixture_packages.py).
 test_packages/
 fixture_packages.py

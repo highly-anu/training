@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """src/portability.py and GET /api/dev/portability: what each package brings in
-its folder, what it still needs outside it, and the gaps no package can close.
+its folder, the records the gates keep there, and the gaps no package can close.
 
 The gaps list (tools/portability_gaps.json) is checked against the code: every
 anchor of a gap must still be in its file, so closing a gap without changing
@@ -105,15 +105,15 @@ def test_report():
     for name in SHIPPED:
         p = rows[name]
         check(f'{name} drops in as it stands', p['ready'],
-              {'outside': [o['id'] for o in p['outside'] if not o['done']],
+              {'records': [o['id'] for o in p['records'] if not o['done']],
                'unknown': [v for v in p['vocabulary'] if v['unknown']], 'collisions': p['collisions']})
     fixture = rows[FIXTURE]
     check('the fixture runs on the scheduler', {t['shape'] for t in fixture['tracks']} == {'scheduler'},
           fixture['tracks'])
-    check('the fixture has no record outside its folder', not any(o['done'] for o in fixture['outside']),
-          fixture['outside'])
+    check('the fixture has no records in its folder yet', not any(o['done'] for o in fixture['records']),
+          fixture['records'])
     check('so it is not ready', fixture['ready'] is False)
-    check('each missing record says how', all(o['how'] for o in fixture['outside']))
+    check('each missing record says how', all(o['how'] for o in fixture['records']))
     files = {f['id']: f['present'] for f in fixture['files']}
     check('its files', files['philosophy'] and files['archetypes'] and not files['contract'], files)
 
@@ -134,24 +134,22 @@ def test_report():
 
 def test_without_docs():
     print('a deployment without docs/ (the API image leaves it out)')
-    saved = portability._STATUS, portability._DOSSIERS
-    missing = os.path.join(tempfile.gettempdir(), 'no-such-docs')
-    portability._STATUS = os.path.join(missing, 'status.yaml')
-    portability._DOSSIERS = missing
+    saved = portability._DOCS
+    portability._DOCS = os.path.join(tempfile.gettempdir(), 'no-such-docs')
     try:
         report = portability.report()
     finally:
-        portability._STATUS, portability._DOSSIERS = saved
+        portability._DOCS = saved
     rows = {p['id']: p for p in report['packages']}
-    check('status, dossiers and source weeks are unchecked, not missing',
-          report['unchecked'] == ['dossier', 'source_weeks', 'status'], report['unchecked'])
+    check("every package's records and source weeks are unchecked, not missing",
+          report['unchecked'] == ['coverage', 'dossier', 'fidelity', 'golden', 'scorecard', 'source_weeks', 'status'],
+          report['unchecked'])
     check('source weeks read None', all(f['present'] is None for p in rows.values() for f in p['files']
                                         if f['id'] == 'source_weeks'))
-    check('each reads None', all(o['done'] is None for p in rows.values() for o in p['outside']
-                                 if o['id'] in ('dossier', 'status')))
+    check('each reads None', all(o['done'] is None for p in rows.values() for o in p['records']))
     check('the shipped packages still drop in', all(rows[n]['ready'] for n in SHIPPED),
           [n for n in SHIPPED if not rows[n]['ready']])
-    check('the fixture still does not: its baselines are readable and lack it', rows[FIXTURE]['ready'] is False)
+    check('the fixture still does not: it collides with its copy', rows[FIXTURE]['ready'] is False)
 
 
 def _shape(node):

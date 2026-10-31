@@ -2449,7 +2449,8 @@ export interface PortabilityPackage {
   /** present is null for a file the API image leaves out, when this is the image. */
   files: Array<{ id: string; path: string; required: boolean; present: boolean | null }>
   /** done is null where the record's file is not in this deployment (the API image has no docs/). */
-  outside: Array<{ id: string; label: string; file: string; done: boolean | null; how: string }>
+  /** The records the gates keep in the package's folder (records/, dossier.md). */
+  records: Array<{ id: string; label: string; file: string; done: boolean | null; how: string }>
   vocabulary: Array<{ kind: string; count: number; unknown: string[] }>
   collisions: number
   ready: boolean
@@ -2468,7 +2469,7 @@ export interface PortabilityGap {
 
 export interface PortabilityReport {
   packagesDir: string
-  /** Records outside the folder this deployment cannot read; `ready` says nothing about them. */
+  /** Records and files this deployment cannot read; `ready` says nothing about them. */
   unchecked: string[]
   verdict: string
   packages: PortabilityPackage[]
