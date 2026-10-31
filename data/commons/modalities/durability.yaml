@@ -55,3 +55,17 @@ notes: >
   on the same day if total volume is managed. Rucking benchmarks from plan.md:
   entry = 2km with pack, advanced = 20km in 2h20, elite = Fan Dance (22km +1000m,
   30kg, 4h).
+
+# How the clients draw it: tools/gen_client_vocab.py writes the web's and the
+# Apple apps' tables from this (docs/frontend-design.md §8.1; design-system §3).
+# `tint` is the Tailwind colour family of the web's tint classes, `text_shade`
+# its light-mode text shade (700 or 800: WCAG AA at text-xs on a /15 tint);
+# `short` the word a watch complication has room for; `order` where it is listed.
+display:
+  label: Durability
+  short: Durability
+  order: 8
+  color: '#f59e0b'
+  tint: amber
+  text_shade: 800
+  icon: {web: Backpack, ios: backpack.fill, watch: backpack}

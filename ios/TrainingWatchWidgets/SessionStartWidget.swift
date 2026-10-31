@@ -219,21 +219,11 @@ struct SessionStartWidgetView: View {
     // MARK: - Helpers
 
     /// watchOS prefers system semantic colors over custom RGB values for readability.
+    /// The modality's colour, the same as the watch app's and the phone's
+    /// (ClientVocab.swift, tools/gen_client_vocab.py); it used to be the nearest
+    /// system colour.
     private func modalityColor(_ id: String) -> Color {
-        switch id {
-        case "max_strength", "relative_strength":  return .red
-        case "strength_endurance":                  return .orange
-        case "power":                               return .yellow
-        case "aerobic_base":                        return .blue
-        case "anaerobic_intervals":                 return .cyan
-        case "mixed_modal_conditioning":            return .purple
-        case "movement_skill":                      return .teal
-        case "mobility":                            return .mint
-        case "durability":                          return .orange
-        case "combat_sport":                        return .pink
-        case "rehab":                               return .green
-        default:                                    return .blue
-        }
+        ClientVocab.modalities[id].map { ClientVocab.color($0.hex) } ?? .blue
     }
 
     /// A session's workout icon, else its modality's. The inline complication
@@ -243,38 +233,13 @@ struct SessionStartWidgetView: View {
         return watchIcon(s.modalityId)
     }
 
+    /// The phone's modality icon: the complication renders system symbols.
     private func watchIcon(_ id: String) -> String {
-        switch id {
-        case "max_strength", "relative_strength": return "figure.strengthtraining.traditional"
-        case "strength_endurance":       return "dumbbell.fill"
-        case "aerobic_base":             return "figure.run"
-        case "anaerobic_intervals":      return "heart.circle.fill"
-        case "mixed_modal_conditioning": return "bolt.heart.fill"
-        case "power":                    return "bolt.fill"
-        case "movement_skill":           return "figure.flexibility"
-        case "mobility":                 return "figure.cooldown"
-        case "durability":               return "backpack.fill"
-        case "combat_sport":             return "figure.boxing"
-        case "rehab":                    return "cross.case.fill"
-        default:                         return "figure.strengthtraining.traditional"
-        }
+        ClientVocab.modalities[id]?.icon ?? "figure.strengthtraining.traditional"
     }
 
+    /// The word a complication has room for ("Zone 2"; the modality's `display.short`).
     private func modalityShortLabel(_ id: String) -> String {
-        switch id {
-        case "max_strength":             return "Strength"
-        case "relative_strength":        return "Strength"
-        case "strength_endurance":       return "Str. Endurance"
-        case "power":                    return "Power"
-        case "aerobic_base":             return "Zone 2"
-        case "anaerobic_intervals":      return "Intervals"
-        case "mixed_modal_conditioning": return "Mixed Modal"
-        case "movement_skill":           return "Skill"
-        case "mobility":                 return "Mobility"
-        case "durability":               return "Durability"
-        case "combat_sport":             return "Combat"
-        case "rehab":                    return "Rehab"
-        default:                         return id.replacingOccurrences(of: "_", with: " ").capitalized
-        }
+        ClientVocab.modalities[id]?.short ?? id.replacingOccurrences(of: "_", with: " ").capitalized
     }
 }

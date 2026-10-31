@@ -2182,20 +2182,14 @@
    "status": "open"
   },
   {
-   "id": "client_modality_tables",
-   "title": "Each client keeps its own modality, phase-kind and outcome tables",
+   "id": "client_outcome_tables",
+   "title": "Each client keeps its own slot-type outcome table",
    "kind": "client",
    "impact": "degrades",
-   "detail": "A new modality, phase kind or slot type is code in the web, the phone and the authoring dialogs; unknown ids fall back to grey.",
+   "detail": "What a slot logs (rounds, minutes, a clock, km, reps, seconds) is a table and rules in the web and the phone, changed in both. Modalities and phase kinds come from the commons since 2026-10-30 (tools/gen_client_vocab.py).",
    "anchors": [
-    "frontend/src/lib/modalityColors.ts::MODALITY_COLORS",
-    "frontend/src/lib/phaseColors.ts::PHASE_COLORS",
     "frontend/src/lib/outcomeFields.ts::outcomeFieldsFor",
-    "frontend/src/components/objectbrowser/AddArchetypeDialog.tsx::const MODALITIES",
-    "ios/TrainingCompanion/ModalityStyle.swift::struct ModalityStyle",
-    "ios/TrainingCompanion/PhaseStyle.swift::enum PhaseStyle",
-    "ios/TrainingCompanion/SessionLogging.swift::static func outcomeFields",
-    "mcp_server.py::VALID_MODALITIES"
+    "ios/TrainingCompanion/SessionLogging.swift::static func outcomeFields"
    ],
    "roadmap": "9.4",
    "status": "open"

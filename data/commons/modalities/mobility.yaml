@@ -59,3 +59,17 @@ notes: >
   under stretch increase incrementally over weeks. Ido Portal recommends daily
   practice habits over occasional focused sessions. Never contributes to
   accumulated fatigue — can be performed daily.
+
+# How the clients draw it: tools/gen_client_vocab.py writes the web's and the
+# Apple apps' tables from this (docs/frontend-design.md §8.1; design-system §3).
+# `tint` is the Tailwind colour family of the web's tint classes, `text_shade`
+# its light-mode text shade (700 or 800: WCAG AA at text-xs on a /15 tint);
+# `short` the word a watch complication has room for; `order` where it is listed.
+display:
+  label: Mobility
+  short: Mobility
+  order: 9
+  color: '#10b981'
+  tint: emerald
+  text_shade: 800
+  icon: {web: Accessibility, ios: figure.cooldown, watch: figure.cooldown}

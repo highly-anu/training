@@ -47,3 +47,17 @@ notes: >
   the metabolic fatigue from strength endurance work degrades motor unit recruitment
   needed for heavy singles and triples. Works well as a standalone day or as a
   second session 8+ hours after a morning aerobic session.
+
+# How the clients draw it: tools/gen_client_vocab.py writes the web's and the
+# Apple apps' tables from this (docs/frontend-design.md §8.1; design-system §3).
+# `tint` is the Tailwind colour family of the web's tint classes, `text_shade`
+# its light-mode text shade (700 or 800: WCAG AA at text-xs on a /15 tint);
+# `short` the word a watch complication has room for; `order` where it is listed.
+display:
+  label: Strength Endurance
+  short: Str. Endurance
+  order: 3
+  color: '#f97316'
+  tint: orange
+  text_shade: 800
+  icon: {web: Weight, ios: dumbbell.fill, watch: figure.strengthtraining.traditional}

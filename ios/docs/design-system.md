@@ -159,7 +159,7 @@ These use literal `Color(hex:)` values (not named assets) because the specific c
 
 ### 3.1 Modality Colors
 
-Exact values match the web `MODALITY_COLORS` table. All iOS screens that show modality identity use these — no approximations.
+Exact values match the web `MODALITY_COLORS` table because both are generated from the modality files' `display` blocks (`tools/gen_client_vocab.py` → `ClientVocab.swift` in each target folder; frontend-design §8.9). All iOS screens that show modality identity use these — no approximations; the watch complication now does too (it drew the nearest system colours).
 
 ```swift
 // ios/TrainingCompanion/ModalityStyle.swift
@@ -226,8 +226,8 @@ Image(systemName: style.icon)
 A phase has two parts. Its **name** is its methodology's own ("Foundations",
 "Transmutation", "Specific"): `ProgramWeek.phaseLabel`, `PhilosophyPhase.name`.
 Its **colour** comes from its **kind**, the shared vocabulary in
-`data/commons/phase_kinds.yaml`. `PhaseStyle.color(for:)` is the one mapping,
-with the same hex values as the web's `lib/phaseColors.ts`:
+`data/commons/phase_kinds.yaml`. `PhaseStyle.color(for:)` is the one mapping, read
+from the generated `ClientVocab.phases` — the same data as the web's `lib/phaseColors.ts`:
 
 | Kind | Hex | | Kind | Hex |
 |---|---|---|---|---|

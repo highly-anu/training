@@ -52,3 +52,17 @@ notes: >
   before fatigue degrades motor learning, or as a standalone practice. Avoid
   pairing with heavy lifting or high-intensity conditioning — accumulated
   fatigue blocks motor learning.
+
+# How the clients draw it: tools/gen_client_vocab.py writes the web's and the
+# Apple apps' tables from this (docs/frontend-design.md §8.1; design-system §3).
+# `tint` is the Tailwind colour family of the web's tint classes, `text_shade`
+# its light-mode text shade (700 or 800: WCAG AA at text-xs on a /15 tint);
+# `short` the word a watch complication has room for; `order` where it is listed.
+display:
+  label: Movement / Skill
+  short: Skill
+  order: 10
+  color: '#14b8a6'
+  tint: teal
+  text_shade: 800
+  icon: {web: PersonStanding, ios: figure.flexibility, watch: figure.flexibility}

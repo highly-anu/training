@@ -1,5 +1,6 @@
 import type { Framework, ModalityId, Philosophy } from '@/api/types'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
+import { MODALITY_IDS } from '@/lib/gen/clientVocab'
 import { mainFramework, resolveTrack } from '@/lib/tracks'
 
 /**
@@ -8,11 +9,8 @@ import { mainFramework, resolveTrack } from '@/lib/tracks'
  * is one function now.
  */
 
-export const MODALITY_ORDER: ModalityId[] = [
-  'max_strength', 'relative_strength', 'strength_endurance', 'power',
-  'aerobic_base', 'anaerobic_intervals', 'mixed_modal_conditioning',
-  'durability', 'mobility', 'movement_skill', 'combat_sport', 'rehab',
-]
+/** The modalities in their listed order (each modality file's `display.order`). */
+export const MODALITY_ORDER: readonly ModalityId[] = MODALITY_IDS
 
 export const DEFAULT_PRIORITIES = Object.fromEntries(
   MODALITY_ORDER.map((id) => [id, 1 / MODALITY_ORDER.length])

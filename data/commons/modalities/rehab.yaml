@@ -53,3 +53,17 @@ notes: >
   slides → step-ups → Bulgarian split squat → partial squat); shoulder rehab
   (band pull-aparts → face pulls → landmine press → TGU rack hold). Always
   operates within the constraints of active injury flags.
+
+# How the clients draw it: tools/gen_client_vocab.py writes the web's and the
+# Apple apps' tables from this (docs/frontend-design.md §8.1; design-system §3).
+# `tint` is the Tailwind colour family of the web's tint classes, `text_shade`
+# its light-mode text shade (700 or 800: WCAG AA at text-xs on a /15 tint);
+# `short` the word a watch complication has room for; `order` where it is listed.
+display:
+  label: Rehab
+  short: Rehab
+  order: 12
+  color: '#84cc16'
+  tint: lime
+  text_shade: 800
+  icon: {web: Cross, ios: cross.case.fill, watch: figure.strengthtraining.traditional}

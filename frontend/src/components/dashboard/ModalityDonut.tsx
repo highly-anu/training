@@ -1,6 +1,6 @@
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { sortPriorities } from '@/lib/prioritySort'
-import { MODALITY_COLORS } from '@/lib/modalityColors'
+import { modalityHex, modalityLabel } from '@/lib/modalityColors'
 import type { GoalPriorities } from '@/api/types'
 
 interface ModalityDonutProps {
@@ -10,9 +10,9 @@ interface ModalityDonutProps {
 export function ModalityDonut({ priorities }: ModalityDonutProps) {
   const sorted = sortPriorities(priorities)
   const data = sorted.map(({ modality, weight }) => ({
-    name: MODALITY_COLORS[modality].label,
+    name: modalityLabel(modality),
     value: Math.round(weight * 100),
-    hex: MODALITY_COLORS[modality].hex,
+    hex: modalityHex(modality),
   }))
 
   const dominant = sorted[0]
@@ -56,7 +56,7 @@ export function ModalityDonut({ priorities }: ModalityDonutProps) {
             {Math.round(dominant.weight * 100)}%
           </span>
           <span className="text-[10px] text-muted-foreground text-center max-w-[60px] leading-tight">
-            {MODALITY_COLORS[dominant.modality].label}
+            {modalityLabel(dominant.modality)}
           </span>
         </div>
       )}

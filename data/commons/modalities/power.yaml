@@ -51,3 +51,17 @@ notes: >
   together with appropriate rest. High recovery cost because near-max velocity
   work is neurologically expensive even when loads are moderate. Weekly volume
   cap is low — quality over quantity.
+
+# How the clients draw it: tools/gen_client_vocab.py writes the web's and the
+# Apple apps' tables from this (docs/frontend-design.md §8.1; design-system §3).
+# `tint` is the Tailwind colour family of the web's tint classes, `text_shade`
+# its light-mode text shade (700 or 800: WCAG AA at text-xs on a /15 tint);
+# `short` the word a watch complication has room for; `order` where it is listed.
+display:
+  label: Power
+  short: Power
+  order: 4
+  color: '#eab308'
+  tint: yellow
+  text_shade: 800
+  icon: {web: Zap, ios: bolt.fill, watch: bolt.fill}

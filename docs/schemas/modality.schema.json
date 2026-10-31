@@ -46,6 +46,30 @@
       "minimum": 1,
       "description": "Present on the modalities that stand in for a session no archetype serves, in this order (generator._resolve_session). A framework's fallback_modalities overrides the order."
     },
+    "display": {
+      "type": "object",
+      "description": "How the clients draw the modality. tools/gen_client_vocab.py writes the web's and the Apple apps' tables from it.",
+      "required": ["label", "short", "order", "color", "tint", "text_shade", "icon"],
+      "additionalProperties": false,
+      "properties": {
+        "label": {"type": "string", "description": "The short name every screen shows."},
+        "short": {"type": "string", "description": "The word a watch complication has room for (\"Zone 2\")."},
+        "order": {"type": "integer", "minimum": 1, "description": "Where the modality is listed among the others (the builder's priority bars, the authoring dialogs)."},
+        "color": {"type": "string", "pattern": "^#[0-9a-f]{6}$", "description": "The one colour every client draws it in."},
+        "tint": {"type": "string", "pattern": "^[a-z]+$", "description": "The Tailwind colour family of the web's tint classes (bg-<tint>-500/15 …)."},
+        "text_shade": {"type": "integer", "enum": [700, 800], "description": "The web's light-mode text shade on its /15 tint (WCAG AA at text-xs)."},
+        "icon": {
+          "type": "object",
+          "required": ["web", "ios", "watch"],
+          "additionalProperties": false,
+          "properties": {
+            "web": {"type": "string", "description": "A lucide-react icon name."},
+            "ios": {"type": "string", "description": "An SF Symbol for the phone and its widgets."},
+            "watch": {"type": "string", "description": "An SF Symbol for the Apple Watch."}
+          }
+        }
+      }
+    },
     "session_position": {
       "type": "string",
       "enum": ["first", "last", "any", "standalone"],

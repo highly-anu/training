@@ -37,12 +37,8 @@ from mcp.server.fastmcp import FastMCP  # noqa: E402
 SCHEMAS_DIR  = ROOT / 'docs' / 'schemas'
 PACKAGES_DIR = ROOT / 'data' / 'packages'
 
-VALID_MODALITIES = [
-    'max_strength', 'strength_endurance', 'relative_strength',
-    'aerobic_base', 'anaerobic_intervals', 'mixed_modal_conditioning',
-    'power', 'mobility', 'movement_skill', 'durability',
-    'combat_sport', 'rehab',
-]
+# Every modality the commons define, by its file (data/commons/modalities).
+VALID_MODALITIES = sorted(p.stem for p in (ROOT / 'data' / 'commons' / 'modalities').glob('*.yaml'))
 
 SCHEMA_FILES = {
     'philosophy':   'philosophy.schema.json',
