@@ -535,8 +535,13 @@ group's name.
   each exposure as clean; a regenerate starts every unconfirmed cycle again.
 - **Cadence, loads and recovery live in YAML.** A framework's `cadence_options`
   (keyed by days per week, several patterns rotating week to week) is the only source of
-  day patterns; an exercise's `starting_load_kg` / `weekly_increment_kg` the only source of
-  loads (`progression._DEFAULT_INCREMENT_KG` is the sole code default). A framework may
+  day patterns; an exercise's `starting_load_kg` / `weekly_increment_kg` /
+  `sessions_per_week` the only source of loads (`progression._DEFAULT_INCREMENT_KG` and
+  `_DEFAULT_SESSIONS_PER_WEEK` the code defaults). A modality's file says its
+  `priority_tier`, `typical_duration_minutes` and, for the stand-ins, `fallback_rank` (a
+  framework's `fallback_modalities` overrides the order; `generator.fallback_order`); what
+  recovers a pattern is `movement_patterns.yaml`'s `complements`, what equipment an exercise
+  category needs `data/commons/constraints/category_equipment.yaml` (roadmap 9.3). A framework may
   declare `recovery.allow_consecutive: [[a, b], …]` (+ `phases`) to let a modality pair sit
   on back-to-back days despite the recovery windows — Uphill's specific phase does, for
   its two ME long days (`scheduler.consecutive_allowances`). The windows

@@ -161,23 +161,20 @@ def _injury_exclusions(constraints: dict, injury_flags_data: dict) -> tuple[set,
     return excl_patterns, excl_ids
 
 
+# Category → the equipment that serves it (data/commons/constraints/category_equipment.yaml).
+_CATEGORY_EQUIPMENT: dict[str, set] = {
+    cat: set(ids or ())
+    for cat, ids in ((_loader._load_yaml(_loader._data_path('commons', 'constraints', 'category_equipment.yaml'))
+                      or {}).get('blocked_without') or {}).items()
+}
+
+
 def _blocked_categories_for_equipment(available_equip: set) -> set:
     """Return exercise categories that are unlikely to have any matches given available equipment.
 
     This is a fast proxy — used for archetype scoring, not for hard filtering.
     """
-    blocked: set[str] = set()
-    if not available_equip.intersection({'barbell', 'rack', 'plates'}):
-        blocked.add('barbell')
-    if 'kettlebell' not in available_equip:
-        blocked.add('kettlebell')
-    if 'sandbag' not in available_equip:
-        blocked.add('sandbag')
-    if 'dumbbells' not in available_equip:
-        blocked.add('dumbbells')
-    if not available_equip.intersection({'ruck_pack', 'weight_vest'}):
-        blocked.add('carries')
-    return blocked
+    return {cat for cat, serves in _CATEGORY_EQUIPMENT.items() if not available_equip & serves}
 
 
 # Slot intensities that mark a loaded main lift, as opposed to a warm-up, an

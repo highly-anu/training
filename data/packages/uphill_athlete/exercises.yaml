@@ -144,6 +144,7 @@ exercises:
     notes: "Full hang to chin over the bar. At fifteen, a variation or weight."
 
   - id: front_squat
+    sessions_per_week: 2
     name: "Front Squat"
     category: barbell
     modality:
@@ -184,6 +185,7 @@ exercises:
 
   # ── Max strength and core ───────────────────────────────────────────────────
   - id: back_squat
+    sessions_per_week: 3
     name: "Back Squat"
     category: barbell
     modality:
@@ -204,6 +206,7 @@ exercises:
     notes: "Heavy and few: three or four reps at 90–95 % of your one-rep max. Never past twice your bodyweight."
 
   - id: deadlift
+    sessions_per_week: 1
     name: "Deadlift"
     category: barbell
     modality:

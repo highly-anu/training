@@ -9,7 +9,7 @@ import { usePortability } from '@/api/devlab'
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 // The edges describe the engine, not a package, so they stay written here;
-// checked against src/ on 2026-10-30. What a package can and cannot bring is
+// checked against src/ on 2026-10-30 (and after roadmap 9.3 moved four tables to data). What a package can and cannot bring is
 // the server's (GET /api/dev/portability, src/portability.py).
 
 interface Edge {
@@ -75,7 +75,7 @@ const EDGES: Edge[] = [
       'recovery_hours_min',
       'incompatible_in_session_with',
       'session_position',
-      'priority_tier, typical_duration_minutes — set by code over the YAML (see below)',
+      'priority_tier (kept when days are scarce), typical_duration_minutes',
     ],
     bakedLogic: [
       'Largest-remainder rounding converts priority weights → integer session counts',
@@ -89,7 +89,6 @@ const EDGES: Edge[] = [
     hardcodedValues: [
       '_RECOVERY_COST_RANK — only 3 cost levels recognised',
       '_HIGH_COST_FLOOR_HOURS = 48 (the modality schema agrees: never under 48)',
-      'loader.MODALITY_PRIORITY_TIERS / MODALITY_TYPICAL_DURATIONS override the modality YAML (combat_sport missing; skill_work names nothing)',
       'Day scoring (+3, −6, ×1.25, −12 a session), allocation thresholds 0.8 / 0.7, 75 ideal minutes',
     ],
   },
@@ -109,6 +108,8 @@ const EDGES: Edge[] = [
       'scaling.time_limited',
       'duration_estimate_minutes (and scaling.deload\'s)',
       'pool_only / test-only — never picked by modality',
+      'modality fallback_rank, or the framework\'s fallback_modalities — the cross-modality fallback order',
+      'data/commons/constraints/category_equipment.yaml — the equipment each exercise category needs',
       'slots → regional load (data/commons/recovery_regions.yaml; regional_load overrides)',
     ],
     bakedLogic: [
@@ -118,11 +119,9 @@ const EDGES: Edge[] = [
       'Ties: the least recently used, then the first authored',
       'scaling.equipment_limited (or the generator\'s relaxed pass) lets an archetype past the equipment filter, without the +6',
       'scaling.time_limited lets an over-long archetype through; with none fitting, the shortest is kept and trimmed to the session (populate_session)',
-      'No archetype for the phase: fall back aerobic_base → durability → mobility, recorded as substituted_for',
+      'No archetype for the phase: fall back in the framework\'s or the modalities\' order (aerobic_base → durability → mobility), recorded as substituted_for',
     ],
     hardcodedValues: [
-      '_blocked_categories_for_equipment — category → equipment ids',
-      'generator._FALLBACKS — the cross-modality fallback order',
       'Short-day cap 50 min (api TIME_MAP short 40 / long 75)',
     ],
   },
@@ -146,6 +145,7 @@ const EDGES: Edge[] = [
       'contraindicated_with',
       'effort',
       'named_only / test_only',
+      'data/commons/movement_patterns.yaml complements — what a complementary mobility block recovers',
     ],
     bakedLogic: [
       'Candidates: the goal\'s packages and those they borrow from (provenance), plus unattributed exercises; the whole library only under a non-strict policy',
@@ -159,7 +159,6 @@ const EDGES: Edge[] = [
     hardcodedValues: [
       '_LEVEL_ORDER — the four training levels',
       'MAIN_LIFT_INTENSITIES',
-      'generator._COMPLEMENTARY_PATTERNS',
     ],
   },
   {
@@ -180,7 +179,7 @@ const EDGES: Edge[] = [
       'slot.switch_at_sec, rest_until_hr_pct (watch cues)',
     ],
     yamlFromTarget: [
-      'exercise.starting_load_kg (by level) and weekly_increment_kg',
+      'exercise.starting_load_kg (by level), weekly_increment_kg and sessions_per_week',
       'exercise.competition_pace',
       'exercise.category — only for the no-start-load note',
     ],
@@ -192,7 +191,6 @@ const EDGES: Edge[] = [
       'as_written frameworks and a test\'s scored slot (standard_tests.protocol_load) are prescribed exactly as the source writes them',
     ],
     hardcodedValues: [
-      '_SESSIONS_PER_WEEK — how often six shared lifts are trained a week',
       '_DEFAULT_INCREMENT_KG 2.5 and the other defaults: 3 × 5, deload share 0.6, density 0.70 / 0.75, ramps 10 % / 8 %, AMRAP 1200 s',
       '_RPE_LOAD_FACTOR',
       '_INTENSITY_ZONES — which intensity strings prescribe heart-rate zones',
@@ -275,7 +273,7 @@ const AUTHORING: AuthoringRow[] = [
     writes: 'create: custom package; edit: any package',
     notes: [
       'POST, PUT, DELETE /api/exercises ✅ — DELETE only in the custom package',
-      'Loads come from starting_load_kg / weekly_increment_kg; without them, generic defaults',
+      'Loads come from starting_load_kg / weekly_increment_kg / sessions_per_week; without them, generic defaults',
     ],
   },
   {

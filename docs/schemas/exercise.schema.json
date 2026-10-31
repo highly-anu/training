@@ -219,6 +219,11 @@
     "notes": {
       "type": "string"
     },
+    "sessions_per_week": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "How often the package trains this lift a week: a linear load adds weekly_increment_kg this many times a week (src/progression.py; 2 without one)."
+    },
     "competition_pace": {
       "type": "object",
       "description": "A competition event's scoring cap, which sets the pace of a slot marked `paced: true` (target RPM = max_reps / minutes). Only for an event whose rules publish a cap.",

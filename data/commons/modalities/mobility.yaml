@@ -7,6 +7,14 @@ recovery_hours_min: 0
 
 session_position: any
 
+# Kept when days are scarce: 1 first, 4 dropped first (scheduler.allocate_sessions).
+priority_tier: 4
+# The session length it is matched to a long or short day by (scheduler).
+typical_duration_minutes: 30
+# Stands in for a session no archetype serves, in this order
+# (generator._resolve_session; a framework may set fallback_modalities).
+fallback_rank: 3
+
 compatible_in_session_with:
   - max_strength
   - strength_endurance

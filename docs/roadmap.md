@@ -1020,12 +1020,17 @@ Today: the code is package-neutral, the repository is not yet drop-in. In order:
   the hard-coded lists gave). A package standard is its package's and its borrowers'
   (`validate_entities`, `check_provenance`), a taken id collides, and code naming one
   fails X1. The Cell keeps its own loader (`test_package_standards.py`).
-- **9.3 Engine tables to data (M).** A modality's priority tier and typical duration from
-  its YAML (`loader.MODALITY_PRIORITY_TIERS` overrides it; `combat_sport` is missing,
-  `skill_work` names nothing); an exercise's weekly frequency
-  (`progression._SESSIONS_PER_WEEK` keys shared lifts); `generator._COMPLEMENTARY_PATTERNS`
-  and `selector._blocked_categories_for_equipment` into the commons; the fallback order
-  (`generator._FALLBACKS`) per framework.
+- **9.3 Engine tables to data (M).** Done 2026-10-30 (branch `feat/engine-tables`): a
+  modality's `priority_tier` and `typical_duration_minutes` are its file's (the loader's
+  table overrode them; `combat_sport` now says its 3 and 60, the phantom `skill_work` is
+  gone); an exercise's `sessions_per_week` is its package's (the six lifts the table keyed
+  carry it in all seven packages that declare them); what recovers a pattern is
+  `movement_patterns.yaml`'s `complements`, what equipment a category needs is
+  `data/commons/constraints/category_equipment.yaml` (the table's `dumbbells` category and
+  `weight_vest`, neither ever present, are gone); the cross-modality fallback order is the
+  modalities' `fallback_rank`, which a framework's `fallback_modalities` overrides. Every
+  program is what it was: 13 golden hashes changed only because each exercise now echoes
+  its `sessions_per_week`, and were re-recorded for those packages.
 - **9.4 Client vocabulary from one file (M–L).** Modality, phase-kind and equipment label,
   colour and icon in the commons, the TS and Swift tables generated from it as
   `gen_vocab.py` does the watch's; one equipment enum the four schemas `$ref` (today

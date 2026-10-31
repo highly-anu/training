@@ -7,6 +7,11 @@ recovery_hours_min: 0
 
 session_position: any
 
+# Kept when days are scarce: 1 first, 4 dropped first (scheduler.allocate_sessions).
+priority_tier: 4
+# The session length it is matched to a long or short day by (scheduler).
+typical_duration_minutes: 20
+
 compatible_in_session_with:
   - mobility
   - aerobic_base

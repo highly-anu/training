@@ -91,6 +91,7 @@ exercises:
     advanced: 100
     elite: 130
   weekly_increment_kg: 2.5
+  sessions_per_week: 3
 - id: front_squat
   name: Front Squat
   category: barbell
@@ -143,6 +144,7 @@ exercises:
     advanced: 80
     elite: 110
   weekly_increment_kg: 2.5
+  sessions_per_week: 2
 - id: overhead_squat
   name: Overhead Squat
   category: barbell
@@ -236,6 +238,7 @@ exercises:
     advanced: 130
     elite: 170
   weekly_increment_kg: 5.0
+  sessions_per_week: 1
 - id: bench_press
   name: Bench Press
   category: barbell
@@ -281,6 +284,7 @@ exercises:
     advanced: 90
     elite: 120
   weekly_increment_kg: 2.5
+  sessions_per_week: 2
 - id: strict_press
   name: Strict Press (Overhead)
   category: barbell
@@ -328,6 +332,7 @@ exercises:
     advanced: 60
     elite: 80
   weekly_increment_kg: 1.25
+  sessions_per_week: 2
 - id: push_press
   name: Push Press
   category: barbell
@@ -510,6 +515,7 @@ exercises:
     advanced: 75
     elite: 100
   weekly_increment_kg: 2.5
+  sessions_per_week: 2
 - id: hang_power_clean
   name: Hang Power Clean
   category: barbell

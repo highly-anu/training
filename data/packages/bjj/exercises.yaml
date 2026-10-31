@@ -543,6 +543,7 @@ exercises:
     closed guard and of pulling an opponent into it.'
 
 - id: bench_press
+  sessions_per_week: 2
   name: Bench Press
   category: barbell
   modality:
@@ -601,6 +602,7 @@ exercises:
   notes: 'Standing, from the shoulders to locked out overhead, ribs down.'
 
 - id: front_squat
+  sessions_per_week: 2
   name: Front Squat
   category: barbell
   modality:
