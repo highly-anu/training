@@ -83,10 +83,22 @@ def _invalid(kind: str, errors: list[str]):
                     'errors': errors}), 422
 
 
+def _packages_dir() -> str:
+    """The packages folder the loader reads (TRAINING_PACKAGES_DIR in a test)."""
+    return loader._PACKAGES_DIR
+
+
 def _is_custom_package_path(path: str) -> bool:
-    """Only the `custom` package is the API's to delete from; authored packages
-    are edited as YAML and validated with the CLI."""
-    return os.path.join('packages', 'custom') in os.path.normpath(path)
+    """Only the `custom` package is the API's to change: it creates there, and
+    edits and deletes only there. An authored package is edited as files in a
+    branch, where the gates, the baselines and its dossier check it
+    (tools/add_package.py, docs/package-fidelity/README.md)."""
+    rel = os.path.relpath(os.path.abspath(path), os.path.abspath(_packages_dir()))
+    return rel.split(os.sep)[0] == 'custom'
+
+
+_NOT_CUSTOM = ('only the custom package is edited through the API; an authored package is '
+               'edited as YAML in a branch, where the gates check it')
 
 
 def require_authoring(f):
@@ -911,7 +923,7 @@ def create_exercise():
     existing_ids = {ex['id'] for ex in _all_exercises()}
     if body['id'] in existing_ids:
         return jsonify({'detail': f"Exercise id '{body['id']}' already exists"}), 409
-    custom_pkg_dir = os.path.join(_DATA_DIR, 'packages', 'custom')
+    custom_pkg_dir = os.path.join(_packages_dir(), 'custom')
     os.makedirs(custom_pkg_dir, exist_ok=True)
     custom_path = os.path.join(custom_pkg_dir, 'exercises.yaml')
     if os.path.exists(custom_path):
@@ -925,8 +937,12 @@ def create_exercise():
 
 
 def _find_exercise_file_and_index(ex_id: str):
-    """Return (path, index, data) for an exercise by id, or (None, None, None)."""
-    for path in sorted(glob.glob(os.path.join(_DATA_DIR, 'packages', '*', 'exercises.yaml'))):
+    """Return (path, index, data) for an exercise by id, or (None, None, None):
+    the custom package's copy first — an id may be declared by several
+    packages, and only that copy is the API's to change."""
+    paths = sorted(glob.glob(os.path.join(_packages_dir(), '*', 'exercises.yaml')))
+    paths.sort(key=lambda p: not _is_custom_package_path(p))
+    for path in paths:
         data = _load_yaml(path) or {}
         for i, ex in enumerate(data.get('exercises', [])):
             if ex.get('id') == ex_id:
@@ -942,6 +958,8 @@ def update_exercise(ex_id: str):
     path, idx, data = _find_exercise_file_and_index(ex_id)
     if path is None:
         return jsonify({'detail': f"Exercise '{ex_id}' not found"}), 404
+    if not _is_custom_package_path(path):
+        return jsonify({'detail': _NOT_CUSTOM}), 403
     merged = {**data['exercises'][idx], **{k: v for k, v in body.items() if k != 'id'}}
     errors = _schema_errors('exercise', merged)
     if errors:
@@ -961,8 +979,7 @@ def delete_exercise(ex_id: str):
     if path is None:
         return jsonify({'detail': f"Exercise '{ex_id}' not found"}), 404
     if not _is_custom_package_path(path):
-        return jsonify({'detail': 'only exercises in the custom package can be deleted through the API; '
-                                  'authored packages are edited as YAML'}), 403
+        return jsonify({'detail': _NOT_CUSTOM}), 403
     del data['exercises'][idx]
     with open(path, 'w', encoding='utf-8') as f:
         yaml.dump(data, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
@@ -972,7 +989,7 @@ def delete_exercise(ex_id: str):
 def _find_archetype_file(arch_id: str) -> str | None:
     """Return the YAML file path for an archetype by id, or None."""
     for path in glob.glob(
-        os.path.join(_DATA_DIR, 'packages', '*', 'archetypes', '**', '*.yaml'),
+        os.path.join(_packages_dir(), '*', 'archetypes', '**', '*.yaml'),
         recursive=True,
     ):
         try:
@@ -992,6 +1009,8 @@ def update_archetype(arch_id: str):
     path = _find_archetype_file(arch_id)
     if not path:
         return jsonify({'detail': f"Archetype '{arch_id}' not found"}), 404
+    if not _is_custom_package_path(path):
+        return jsonify({'detail': _NOT_CUSTOM}), 403
     data = _load_yaml(path)
     merged = {**data, **{k: v for k, v in body.items() if v is not None}}
     errors = _schema_errors('archetype', merged)
@@ -1012,8 +1031,7 @@ def delete_archetype(arch_id: str):
     if not path:
         return jsonify({'detail': f"Archetype '{arch_id}' not found"}), 404
     if not _is_custom_package_path(path):
-        return jsonify({'detail': 'only archetypes in the custom package can be deleted through the API; '
-                                  'authored packages are edited as YAML'}), 403
+        return jsonify({'detail': _NOT_CUSTOM}), 403
     os.remove(path)
     _watch_spec.clear_cache()
     return jsonify({'deleted': arch_id}), 200
@@ -1024,10 +1042,12 @@ def delete_archetype(arch_id: str):
 @require_authoring
 def update_framework(fw_id: str):
     body = request.get_json(silent=True) or {}
-    matches = glob.glob(os.path.join(_DATA_DIR, 'packages', '*', 'frameworks', f'{fw_id}.yaml'))
+    matches = glob.glob(os.path.join(_packages_dir(), '*', 'frameworks', f'{fw_id}.yaml'))
     if not matches:
         return jsonify({'detail': f"Framework '{fw_id}' not found"}), 404
     path = matches[0]
+    if not _is_custom_package_path(path):
+        return jsonify({'detail': _NOT_CUSTOM}), 403
     data = _load_yaml(path)
     allowed = {'name', 'source_philosophy', 'sessions_per_week', 'cadence_options',
                'deload_protocol', 'applicable_when', 'notes', 'recovery'}
@@ -1058,7 +1078,7 @@ def create_archetype():
     existing_ids = {a.get('id') for a in loader.load_all_archetypes()}
     if arch_id in existing_ids:
         return jsonify({'detail': f"Archetype id '{arch_id}' already exists"}), 409
-    custom_dir = os.path.join(_DATA_DIR, 'packages', 'custom', 'archetypes')
+    custom_dir = os.path.join(_packages_dir(), 'custom', 'archetypes')
     os.makedirs(custom_dir, exist_ok=True)
     out_path = os.path.join(custom_dir, f"{arch_id}.yaml")
     with open(out_path, 'w', encoding='utf-8') as f:

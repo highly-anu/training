@@ -1067,11 +1067,16 @@ Today: the code is package-neutral, the repository is not yet drop-in. In order:
   that record only the step's window — and CrossFit's standards outside test days. Left:
   record a count on those two screens, on both watches (`Wire.countsRounds`,
   `WorkoutSessionState`).
-- **9.7 Authoring tools (S–M).** `mcp_server.py`'s schema list (it names a
-  `goal_profile` schema that does not exist and writes analytics, watch, contract,
-  fidelity and source weeks unvalidated), `TRAINING_PACKAGES_DIR` there,
-  `docs/mcp/README.md`, the extraction guide and the author guide's schema sections
-  (5–13); and whether the three PUTs may edit a shipped package or only `custom`.
+- **9.7 Authoring tools (S–M).** Done 2026-10-31 (branch `feat/authoring-tools`):
+  `mcp_server.py` checks every file kind a package carries with the gates' own validator
+  (`validate_entities`; it knew four schemas, one of them gone, and wrote analytics, watch,
+  contract, fidelity and source weeks unchecked), a package with `add_package`'s checks,
+  writes where the loader reads (`TRAINING_PACKAGES_DIR`), imports without the SDK;
+  `docs/mcp/README.md`, the extraction guide (standards in the package, the fidelity record)
+  and the author guide's reference sections (valid values pointed at, not copied; the files;
+  the cross-reference rules) are current. Decided by the owner the same day: the API's PUTs
+  edit only the `custom` package, as its POSTs and DELETEs did — an authored package is
+  changed as files in a branch, where the gates check it (`test_authoring.py`).
 
 By design, not gaps to close: phase kinds, intensities, levels, and progression and
 contract models are the engine's vocabulary — a package chooses among them.

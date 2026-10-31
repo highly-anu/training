@@ -2182,41 +2182,6 @@
    "status": "open"
   },
   {
-   "id": "mcp_authoring",
-   "title": "The MCP server's schema list is stale and it ignores TRAINING_PACKAGES_DIR",
-   "kind": "tooling",
-   "impact": "degrades",
-   "detail": "It names goal_profile.schema.json, which does not exist, and writes analytics, watch, contract, fidelity and source-week files unvalidated.",
-   "anchors": [
-    "mcp_server.py::goal_profile.schema.json"
-   ],
-   "roadmap": "9.7",
-   "status": "open"
-  },
-  {
-   "id": "extraction_guide",
-   "title": "The extraction guide puts standards and data outside the package",
-   "kind": "docs",
-   "impact": "cosmetic",
-   "anchors": [
-    "docs/extraction-guide.md::data/benchmarks/"
-   ],
-   "roadmap": "9.7",
-   "status": "open"
-  },
-  {
-   "id": "author_guide_schemas",
-   "title": "The author guide's schema sections predate tracks, week templates and contracts",
-   "kind": "docs",
-   "impact": "degrades",
-   "detail": "Sections 5–13 still teach framework_groups, goals_served and goal profiles; the schemas in docs/schemas/ are the reference.",
-   "anchors": [
-    "docs/author-guide.md::framework_groups"
-   ],
-   "roadmap": "9.7",
-   "status": "open"
-  },
-  {
    "id": "engine_vocabulary",
    "title": "Phase kinds, intensities, levels and progression and contract models are engine vocabulary",
    "kind": "code",

@@ -43,6 +43,7 @@ suites:
   - test_package_standards.py         # a package's own standards: loaded, served, owned, refused when taken
   - test_client_vocab.py              # the clients' modality and phase-kind tables, generated and current
   - test_contract_implements.py       # a training contract on a pair of dumbbells: asked, refused, bounded, worded
+  - test_authoring.py                 # the API's writes stay in custom; the MCP tools check every file kind
   - test_recovery_schedule.py
   - test_recovery_regions.py
   - test_explore_links.py

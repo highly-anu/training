@@ -1,6 +1,10 @@
 # Source Extraction Guide
 
-How to add a new training source to the system. Use this to brief an LLM or AI agent.
+How to read a training source before it becomes a package. Use this to brief an LLM or AI
+agent. It is step 1 of `docs/package-fidelity/README.md` ("The method"): the notes it produces
+are what the package's record (`fidelity.yaml`: sources, how much of each was read, every rule)
+and its dossier (`docs/package-fidelity/<id>.md`) are written from. A package is then written
+as a folder (`docs/author-guide.md`) and brought in with `tools/add_package.py <id>`.
 
 ---
 
@@ -12,9 +16,11 @@ Every source gets one file:
 
 If the source includes explicit performance standards or benchmark tables, also produce:
 
-- `data/benchmarks/[source-name].yaml` — structured standards data keyed by level/tier
-
-Then update the Phase 0 table in `docs/roadmap.md` to mark the row done.
+- `data/packages/<id>/standards.yaml` — the method's own standards, keyed by level
+  (`docs/schemas/standards.schema.json`; each entry as `benchmark.schema.json`). A standard
+  several methods share (a 5 km run, a bodyweight squat ratio) belongs in `data/benchmarks/`
+  instead — check `GET /api/standards` (or the MCP server's `check_id_available('standard', …)`)
+  before adding one.
 
 ---
 
@@ -88,8 +94,8 @@ Instructions:
 - Work from the actual content of the file. Do not fill gaps from general knowledge.
 - Be specific: include numbers (weights, reps, times, distances, percentages) wherever the source provides them.
 - If the source uses named workouts or protocols, list them by name with their full format.
-- If the source includes benchmark standards or performance tiers, also produce data/benchmarks/[source-name].yaml using the format from data/benchmarks/cell_standards.yaml as a reference.
-- After writing the file(s), update the Phase 0 table in docs/roadmap.md to mark this source as done.
+- If the source includes benchmark standards or performance tiers, also produce data/packages/[package-id]/standards.yaml (docs/schemas/standards.schema.json), unless a shared standard in data/benchmarks/ already measures it.
+- Record how much of the source you read (in full, partly) — the package's fidelity.yaml lists it.
 ```
 
 ---
@@ -114,8 +120,8 @@ Instructions:
 - If different editions or iterations of the methodology exist, note which version you are drawing from.
 - Mark any section where you are inferring from general knowledge rather than a specific source claim — use "(inferred)" at the end of that line.
 - Output file: docs/extracted/[source-name].md
-- If benchmark standards exist, also produce: data/benchmarks/[source-name].yaml
-- After writing, add a row to the Phase 0 table in docs/roadmap.md.
+- If benchmark standards exist, also produce: data/packages/[package-id]/standards.yaml (docs/schemas/standards.schema.json)
+- Lines marked "(inferred)" are never rules: they go in the record's `open`, or as an invention.
 ```
 
 ---
@@ -141,8 +147,8 @@ Instructions:
 - Focus on what is unique or distinctive about this domain vs. what is already covered by existing sources in docs/extracted/.
 - Mark consensus vs. contested positions clearly.
 - Output file: docs/extracted/[domain-name].md
-- If benchmark standards exist (e.g. race finish times, gymnastics skill levels), also produce: data/benchmarks/[domain-name].yaml
-- After writing, add a row to the Phase 0 table in docs/roadmap.md.
+- If benchmark standards exist (e.g. race finish times, gymnastics skill levels), also produce: data/packages/[package-id]/standards.yaml (docs/schemas/standards.schema.json)
+- A consensus counts as a source kind of its own (three or more read); say which sources agree.
 ```
 
 ---
@@ -162,12 +168,18 @@ Instructions:
 
 ## What to do with the file after extraction
 
-1. Read `docs/plan.md` sections 1–4 and note which parts of the new source fill gaps identified there
-2. If the source adds a new modality not in `plan.md`, add it to the modalities list
-3. If the source adds a new workout archetype shape, add it to the archetypes table
-4. If the source changes your understanding of an existing philosophy schema, update `plan.md` accordingly
+Follow `docs/package-fidelity/README.md`, "Working a package":
 
-Extraction files are inputs to Phase 1 (schema design) and Phase 2 (data population). They don't need to be perfect — they need to be honest about what the source says vs. what was inferred.
+1. Write the record (`data/packages/<id>/fidelity.yaml`: each source with how much of it was
+   read and when, every rule with what it cites) and the dossier from these notes, and
+   transcribe what the source shows into `source_weeks.yaml` before looking at what the
+   package generates.
+2. Choose the engine shape the method has (a training contract, week templates, or the
+   modality scheduler) and write the folder (`docs/author-guide.md`).
+3. Bring it in: `.venv/bin/python tools/add_package.py <id> --check`, then without `--check`.
+
+The notes don't need to be perfect — they need to be honest about what the source says vs.
+what was inferred.
 
 ---
 
@@ -176,8 +188,9 @@ Extraction files are inputs to Phase 1 (schema design) and Phase 2 (data populat
 | Type | Convention | Example |
 |------|-----------|---------|
 | Extraction notes | `docs/extracted/[kebab-case].md` | `docs/extracted/uphill-athlete.md` |
-| Benchmark standards | `data/benchmarks/[kebab-case].yaml` | `data/benchmarks/uphill-athlete.yaml` |
-| Source files (PDFs etc.) | `data/[domain]/[original-filename]` | `data/ultra-running/uphill-athlete-ch4.pdf` |
+| A method's own standards | `data/packages/<id>/standards.yaml` | one file per package |
+| Standards several methods share | `data/benchmarks/[snake_case].yaml` | `data/benchmarks/conditioning_standards.yaml` |
+| Source files (PDFs etc.) | kept outside the repository; the record names each | `fidelity.yaml` `sources` |
 
 ---
 
@@ -192,10 +205,6 @@ Extraction files are inputs to Phase 1 (schema design) and Phase 2 (data populat
 | Kettlebell (personal log) | `docs/extracted/kettlebell.md` | From XLSX; small personal workout log, not a canonical source |
 | The Cell Standards | `data/benchmarks/cell_standards.yaml` | Full Level I–V across all domains |
 
-**Not yet extracted (in plan.md):**
-- Starting Strength (Rippetoe) — only JSON schema stub exists; no extraction notes
-- Uphill Athlete (House/Johnston) — no source file; can be done from book via Template B
-- Marcus Filly / Functional Bodybuilding — no source file; Template B
-- ATG / Knees Over Toes — no source file; Template B
-- Kelly Starrett / Supple Leopard — no source file; Template B
-- BJJ conditioning — no single canonical source; Template C
+Every shipped package now has a fidelity record whose `sources` say what was read and how
+much (`docs/package-fidelity/status.yaml` lists them); a source read for a package since is
+listed there, not here.

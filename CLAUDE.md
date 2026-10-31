@@ -19,8 +19,10 @@ A training logic system that algorithmically generates periodized training progr
   The YAML authoring routes (`POST/PUT/DELETE /api/exercises`, `/api/archetypes`,
   `POST /api/modalities`, `PUT /api/frameworks/<id>`) require a signed-in user and
   `AUTHORING_ENABLED=1`; an empty `SUPABASE_URL` (local dev) enables them without it. They
-  validate against `docs/schemas/*.schema.json` (422 with the error list) and DELETE only
-  touches the `custom` package.
+  validate against `docs/schemas/*.schema.json` (422 with the error list) and change only
+  the `custom` package — PUT and DELETE on another package's id answer 403 (an authored
+  package is edited as files in a branch). `mcp_server.py` is the agent's authoring path,
+  through the gates' own checks (`docs/mcp/README.md`, `test_authoring.py`).
   Bring the local DB up with `python run_migration.py <name>` for each file in `migrations/`
   (`--list` shows them; one migration per call, all `IF NOT EXISTS`).
 - Frontend uses real API when `frontend/.env.local` contains `VITE_API_BASE_URL=http://localhost:8000/api`;
