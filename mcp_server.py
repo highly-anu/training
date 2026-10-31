@@ -1,22 +1,18 @@
 #!/usr/bin/env python3
 """MCP server for the training system package authoring workflow.
 
-Lets AI agents create data/packages/ without reading documentation.
-Query valid values → get templates → write files → validate → fix → done.
+Lets AI agents write a package folder (data/packages/<id>/, or
+TRAINING_PACKAGES_DIR) without reading documentation: query valid values → get
+templates → write files → validate → fix → bring it in with
+tools/add_package.py. Every file is checked by the one validator
+(tools/validate_entities.py — the schemas in docs/schemas/ and the checks
+beside them, for every kind a package carries), and a package by add_package's
+checks too (no id another package declares, every id in the commons).
 
-Setup (Claude Desktop):
-  Windows: %APPDATA%\\Claude\\claude_desktop_config.json
-  {
-    "mcpServers": {
-      "training": {
-        "command": "python",
-        "args": ["C:/Users/65469/programming/training/mcp_server.py"]
-      }
-    }
-  }
-
-Setup (Claude Code CLI):
-  claude mcp add --transport stdio training -- python C:/Users/65469/programming/training/mcp_server.py
+Setup (Claude Code CLI), from the checkout:
+  claude mcp add --transport stdio training -- .venv/bin/python mcp_server.py
+It needs the MCP SDK (`pip install mcp`); without it the tools still import,
+which is how test_mcp_server.py runs them. docs/mcp/README.md lists the tools.
 """
 
 import json
@@ -28,24 +24,50 @@ from typing import Any
 
 # ── Path setup ────────────────────────────────────────────────────────────────
 ROOT = Path(__file__).resolve().parent
-sys.path.insert(0, str(ROOT / 'src'))
-import loader  # noqa: E402
+sys.path.insert(0, str(ROOT))
+from src import loader  # noqa: E402
+from tools import validate_entities as ve  # noqa: E402
 
-from mcp.server.fastmcp import FastMCP  # noqa: E402
+try:
+    from mcp.server.fastmcp import FastMCP  # noqa: E402
+except ImportError:  # the tools stay importable (test_mcp_server.py) without the SDK
+    class FastMCP:  # type: ignore[no-redef]
+        def __init__(self, name: str):
+            self.name = name
+
+        def tool(self):
+            return lambda f: f
+
+        def run(self):
+            raise SystemExit('The MCP SDK is not installed: pip install mcp')
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 SCHEMAS_DIR  = ROOT / 'docs' / 'schemas'
-PACKAGES_DIR = ROOT / 'data' / 'packages'
+# The folder the loader reads, so a test or a scratch run can point it elsewhere.
+PACKAGES_DIR = Path(loader._PACKAGES_DIR)
 
 # Every modality the commons define, by its file (data/commons/modalities).
 VALID_MODALITIES = sorted(p.stem for p in (ROOT / 'data' / 'commons' / 'modalities').glob('*.yaml'))
 
 SCHEMA_FILES = {
-    'philosophy':   'philosophy.schema.json',
-    'framework':    'framework.schema.json',
-    'archetype':    'archetype.schema.json',
-    'exercise':     'exercise.schema.json',
-    'goal_profile': 'goal_profile.schema.json',
+    'philosophy':        'philosophy.schema.json',
+    'framework':         'framework.schema.json',
+    'archetype':         'archetype.schema.json',
+    'exercise':          'exercise.schema.json',
+    'analytics':         'analytics.schema.json',
+    'watch':             'watch.schema.json',
+    'training_contract': 'training_contract.schema.json',
+    'fidelity':          'fidelity.schema.json',
+    'source_weeks':      'source_weeks.schema.json',
+    'standards':         'standards.schema.json',
+}
+# Where each kind lives in a package folder: validate_entities finds its schema
+# (and the checks beside it) by the file's place.
+KIND_PATHS = {
+    'philosophy': 'philosophy.yaml', 'framework': 'frameworks/{id}.yaml',
+    'archetype': 'archetypes/{id}.yaml', 'exercise': 'exercises.yaml',
+    'analytics': 'analytics.yaml', 'watch': 'watch.yaml', 'training_contract': 'training_contract.yaml',
+    'fidelity': 'fidelity.yaml', 'source_weeks': 'source_weeks.yaml', 'standards': 'standards.yaml',
 }
 
 mcp = FastMCP("training")
@@ -59,15 +81,6 @@ def _load_schema(entity_type: str) -> dict:
         raise ValueError(f"Unknown entity_type '{entity_type}'. Valid: {list(SCHEMA_FILES)}")
     with open(SCHEMAS_DIR / filename, encoding='utf-8') as f:
         return json.load(f)
-
-
-def _schema_errors(schema: dict, data: dict) -> list[dict]:
-    """Return list of {path, message} dicts for all validation errors."""
-    errors = []
-    for err in jsonschema.Draft7Validator(schema).iter_errors(data):
-        path = ' -> '.join(str(p) for p in err.absolute_path) or '(root)'
-        errors.append({'path': path, 'message': err.message})
-    return errors
 
 
 # ── Query tools ───────────────────────────────────────────────────────────────
@@ -250,7 +263,7 @@ name: "{title} Framework"
 source_philosophy: {slug}
 
 goals_served:
-  - mobility             # goal profile IDs or modality IDs
+  - mobility             # modality IDs
 
 sessions_per_week:
   mobility: 3            # modality_id: sessions (0–7)
@@ -449,55 +462,72 @@ slots:
 # ── Validation tools ──────────────────────────────────────────────────────────
 
 @mcp.tool()
-def validate_yaml(entity_type: str, yaml_content: str) -> dict:
+def validate_yaml(entity_type: str, yaml_content: str, package_name: str | None = None) -> dict:
     """
-    Validate a YAML string against the JSON schema for entity_type.
+    Validate a YAML string as one package file of entity_type, with the same
+    checks the push gates run (tools/validate_entities.py).
 
-    entity_type: philosophy | framework | archetype | exercise | goal_profile
+    entity_type: philosophy | framework | archetype | exercise | analytics |
+      watch | training_contract | fidelity | source_weeks | standards
+    package_name: the package it belongs to, when a check reads its other
+      files (an archetype's standard is checked against what it borrows).
 
-    For exercises, pass the full file content (with top-level 'exercises:' key)
-    and each item will be validated individually.
+    For exercises, pass the full file content (with its top-level 'exercises:' key).
 
     Returns: {"valid": bool, "errors": [{"path": str, "message": str}]}
     """
+    rel = KIND_PATHS.get(entity_type)
+    if not rel:
+        return {'valid': False, 'errors': [{'path': '(setup)', 'message':
+                f"Unknown entity_type '{entity_type}'. Valid: {sorted(KIND_PATHS)}"}]}
+    if not package_name and entity_type == 'philosophy':
+        try:   # a philosophy names its package
+            package_name = (yaml.safe_load(yaml_content) or {}).get('id')
+        except yaml.YAMLError:
+            pass
+    return _validate_text(package_name or '_draft', rel.format(id='draft'), yaml_content)
+
+
+def _validate_text(package_name: str, relative_path: str, content: str) -> dict:
+    """The content checked as the file it would be: written into a scratch copy
+    of its package (whose other files some checks read — a philosophy's
+    frameworks, an archetype's borrows) and run through
+    validate_entities.validate_file."""
+    import shutil
+    import tempfile
     try:
-        data = yaml.safe_load(yaml_content)
+        yaml.safe_load(content)
     except yaml.YAMLError as e:
         return {'valid': False, 'errors': [{'path': '(yaml parse)', 'message': str(e)}]}
-
-    if not isinstance(data, dict):
-        return {'valid': False, 'errors': [{'path': '(root)', 'message': 'YAML must be a mapping, not a list or scalar.'}]}
-
-    try:
-        schema = _load_schema(entity_type)
-    except ValueError as e:
-        return {'valid': False, 'errors': [{'path': '(setup)', 'message': str(e)}]}
-
-    # Exercise files wrap items in {exercises: [...]}
-    if entity_type == 'exercise' and 'exercises' in data:
-        all_errors = []
-        for i, ex in enumerate(data['exercises']):
-            for err in _schema_errors(schema, ex):
-                err['path'] = f'exercises[{i}] -> {err["path"]}'
-                all_errors.append(err)
-        return {'valid': len(all_errors) == 0, 'errors': all_errors}
-
-    errors = _schema_errors(schema, data)
-    return {'valid': len(errors) == 0, 'errors': errors}
+    with tempfile.TemporaryDirectory() as tmp:
+        pkg = Path(tmp) / 'packages' / package_name
+        if (PACKAGES_DIR / package_name).is_dir():
+            shutil.copytree(PACKAGES_DIR / package_name, pkg)
+        target = pkg / relative_path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if not (pkg / 'philosophy.yaml').exists():
+            (pkg / 'philosophy.yaml').write_text(f'id: {package_name}\n', encoding='utf-8')
+        target.write_text(content, encoding='utf-8')
+        errors = ve.validate_file(str(target), verbose=False) or []
+    return {'valid': not errors, 'errors': [{'path': relative_path, 'message': e} for e in errors]}
 
 
 @mcp.tool()
 def validate_package(package_path: str) -> dict:
     """
-    Validate all files in a package directory.
+    Validate a package folder with the gates' own checks.
 
     package_path: package name ('yoga') or path ('data/packages/yoga').
 
     Checks:
-      - philosophy.yaml: schema conformance
-      - frameworks/*.yaml: schema conformance, source_philosophy cross-ref
-      - archetypes/**/*.yaml: schema conformance, ID uniqueness across packages
-      - exercises.yaml: schema conformance per item, ID uniqueness across packages
+      - every file against its schema and the checks beside it
+        (tools/validate_entities.py: tracks and phases, templates and pools,
+        tests and standards, contracts, analytics, watch screens, fidelity);
+      - no id another package declares, every id in the commons, the files a
+        package needs (tools/add_package.py, src/portability.py);
+      - a warning for a modality in the philosophy's scope that no archetype serves.
+
+    Then bring it in: .venv/bin/python tools/add_package.py <id> (--check first).
 
     Returns: {"valid": bool, "files": {filename: [error strings]}}
     """
@@ -507,111 +537,35 @@ def validate_package(package_path: str) -> dict:
         return {'valid': False, 'files': {'(setup)': [f'Directory not found: {pkg_dir}']}}
 
     file_errors: dict[str, list[str]] = {}
+    for path, errors in ve.validate_path(str(pkg_dir), verbose=False).items():
+        if errors:
+            file_errors[Path(path).relative_to(pkg_dir).as_posix()] = list(errors)
 
-    def add_err(filename: str, msg: str) -> None:
-        file_errors.setdefault(filename, []).append(msg)
+    if pkg_dir.resolve().parent == PACKAGES_DIR.resolve():
+        from src import portability
+        from tools.add_package import _problems
+        problems = _problems(pkg_dir.name, portability.report()) \
+            if any(p['id'] == pkg_dir.name for p in portability.report()['packages']) else []
+        if problems:
+            file_errors['(package)'] = problems
 
-    # Collect IDs from all OTHER installed packages (for conflict detection)
-    pkg_name = pkg_dir.name
-    other_arch_ids: set[str] = set()
-    for a in loader.load_all_archetypes():
-        if a.get('_package') != pkg_name:
-            other_arch_ids.add(a['id'])
-
-    ex_global, ex_by_pkg = loader.load_all_exercises()
-    other_exercise_ids: set[str] = {
-        ex_id for pkg_id, pkg_exs in ex_by_pkg.items()
-        if pkg_id != pkg_name
-        for ex_id in pkg_exs
-    }
-
-    existing_phil_ids = {p['id'] for p in loader.load_philosophies()}
-
-    # ── philosophy.yaml ──────────────────────────────────────────────────────
     phil_file = pkg_dir / 'philosophy.yaml'
-    own_phil_id: str | None = None
-    if not phil_file.exists():
-        add_err('philosophy.yaml', 'File not found — required.')
-    else:
+    if phil_file.exists():
         try:
-            phil_data = yaml.safe_load(phil_file.read_text(encoding='utf-8'))
-            own_phil_id = phil_data.get('id')
-            for err in _schema_errors(_load_schema('philosophy'), phil_data):
-                add_err('philosophy.yaml', f"{err['path']}: {err['message']}")
-        except Exception as e:
-            add_err('philosophy.yaml', f'Parse error: {e}')
-
-    # ── frameworks/*.yaml ────────────────────────────────────────────────────
-    for fw_path in sorted(pkg_dir.glob('frameworks/*.yaml')):
-        rel = f'frameworks/{fw_path.name}'
-        try:
-            fw_data = yaml.safe_load(fw_path.read_text(encoding='utf-8'))
-            for err in _schema_errors(_load_schema('framework'), fw_data):
-                add_err(rel, f"{err['path']}: {err['message']}")
-            sp = fw_data.get('source_philosophy')
-            if sp and sp not in existing_phil_ids and sp != own_phil_id:
-                add_err(rel, f"source_philosophy '{sp}' does not match any installed philosophy ID.")
-        except Exception as e:
-            add_err(rel, f'Parse error: {e}')
-
-    # ── archetypes/**/*.yaml ─────────────────────────────────────────────────
-    seen_arch_ids: set[str] = set()
-    for arch_path in sorted(pkg_dir.glob('archetypes/**/*.yaml')):
-        rel = arch_path.relative_to(pkg_dir).as_posix()
-        try:
-            arch_data = yaml.safe_load(arch_path.read_text(encoding='utf-8'))
-            for err in _schema_errors(_load_schema('archetype'), arch_data):
-                add_err(rel, f"{err['path']}: {err['message']}")
-            arch_id = arch_data.get('id')
-            if arch_id in other_arch_ids:
-                add_err(rel, f"Archetype ID '{arch_id}' already exists in another package.")
-            if arch_id in seen_arch_ids:
-                add_err(rel, f"Archetype ID '{arch_id}' is duplicated within this package.")
-            seen_arch_ids.add(arch_id)
-        except Exception as e:
-            add_err(rel, f'Parse error: {e}')
-
-    # ── exercises.yaml ───────────────────────────────────────────────────────
-    ex_file = pkg_dir / 'exercises.yaml'
-    if ex_file.exists():
-        try:
-            ex_data = yaml.safe_load(ex_file.read_text(encoding='utf-8'))
-            schema = _load_schema('exercise')
-            seen_ex_ids: set[str] = set()
-            for i, ex in enumerate(ex_data.get('exercises', [])):
-                for err in _schema_errors(schema, ex):
-                    add_err('exercises.yaml', f"exercises[{i}] -> {err['path']}: {err['message']}")
-                ex_id = ex.get('id')
-                if ex_id in other_exercise_ids:
-                    add_err('exercises.yaml', f"Exercise ID '{ex_id}' already exists in another package.")
-                if ex_id in seen_ex_ids:
-                    add_err('exercises.yaml', f"Exercise ID '{ex_id}' is duplicated within this file.")
-                seen_ex_ids.add(ex_id)
-        except Exception as e:
-            add_err('exercises.yaml', f'Parse error: {e}')
-
-    # ── Modality coverage check ──────────────────────────────────────────────
-    # Warn if a modality appears in philosophy scope but has no archetype.
-    if phil_file.exists() and own_phil_id:
-        try:
-            phil_data = yaml.safe_load(phil_file.read_text(encoding='utf-8'))
-            scope_modalities = set(phil_data.get('scope', []))
+            phil_data = yaml.safe_load(phil_file.read_text(encoding='utf-8')) or {}
             arch_modalities = set()
             for arch_path in pkg_dir.glob('archetypes/**/*.yaml'):
-                try:
-                    arch_data = yaml.safe_load(arch_path.read_text(encoding='utf-8'))
-                    if arch_data.get('modality'):
-                        arch_modalities.add(arch_data['modality'])
-                except Exception:
-                    pass
-            uncovered = scope_modalities - arch_modalities
-            for mod in sorted(uncovered):
-                add_err('philosophy.yaml',
-                        f"Warning: modality '{mod}' is in scope but has no archetype in this package.")
+                arch = yaml.safe_load(arch_path.read_text(encoding='utf-8')) or {}
+                if arch.get('modality'):
+                    arch_modalities.add(arch['modality'])
+            warnings = [f"Warning: modality '{m}' is in scope but has no archetype in this package."
+                        for m in sorted(set(phil_data.get('scope') or []) - arch_modalities)]
+            if warnings:
+                file_errors.setdefault('philosophy.yaml', []).extend(warnings)
         except Exception:
             pass
 
-    valid = not any(file_errors.values())
+    valid = not any(e for f, errs in file_errors.items() for e in errs if not e.startswith('Warning:'))
     return {'valid': valid, 'files': file_errors}
 
 
@@ -620,7 +574,7 @@ def check_id_available(entity_type: str, proposed_id: str) -> dict:
     """
     Check whether a proposed ID is already in use across all installed packages.
 
-    entity_type: philosophy | framework | archetype | exercise
+    entity_type: philosophy | framework | archetype | exercise | standard
     Returns: {"available": bool, "conflict": str | null}
     """
     if entity_type == 'philosophy':
@@ -632,8 +586,12 @@ def check_id_available(entity_type: str, proposed_id: str) -> dict:
     elif entity_type == 'exercise':
         ex_global, _ = loader.load_all_exercises()
         ids = {k: v.get('name', '') for k, v in ex_global.items()}
+    elif entity_type == 'standard':
+        from src.analytics import benchmarks_data
+        ids = {b['id']: b.get('name', '') for b in benchmarks_data.load_benchmarks()}
     else:
-        return {'available': False, 'conflict': f"Unknown entity_type '{entity_type}'. Valid: philosophy | framework | archetype | exercise"}
+        return {'available': False, 'conflict': f"Unknown entity_type '{entity_type}'. "
+                'Valid: philosophy | framework | archetype | exercise | standard'}
 
     if proposed_id in ids:
         return {'available': False, 'conflict': f"'{proposed_id}' is already used by: {ids[proposed_id]}"}
@@ -754,12 +712,12 @@ def write_package_file(
     pkg_dir = PACKAGES_DIR / package_name
     target = (pkg_dir / relative_path).resolve()
 
-    # Reject any path that escapes data/packages/
+    # Reject any path that escapes the packages folder
     try:
         target.relative_to(PACKAGES_DIR.resolve())
     except ValueError:
         return {'written': False, 'path': str(target),
-                'errors': ['Path escapes data/packages/ — write rejected.']}
+                'errors': ['Path escapes the packages folder — write rejected.']}
 
     # Refuse to overwrite without explicit flag
     if target.exists() and not overwrite:
@@ -772,25 +730,11 @@ def write_package_file(
             ],
         }
 
-    # Infer entity type from path for validation
-    name = target.name
-    rel = relative_path.replace('\\', '/')
-    if name == 'philosophy.yaml':
-        entity_type = 'philosophy'
-    elif 'frameworks/' in rel:
-        entity_type = 'framework'
-    elif 'archetypes/' in rel:
-        entity_type = 'archetype'
-    elif name == 'exercises.yaml':
-        entity_type = 'exercise'
-    else:
-        entity_type = None
-
-    # Validate before writing
-    if entity_type:
-        result = validate_yaml(entity_type, content)
-        if not result['valid']:
-            return {'written': False, 'path': str(target), 'errors': result['errors']}
+    # Validate as the file it will be, every kind a package carries (a file
+    # the validator has no schema for — media, level seeds — is written as is)
+    result = _validate_text(package_name, relative_path.replace('\\', '/'), content)
+    if not result['valid']:
+        return {'written': False, 'path': str(target), 'errors': result['errors']}
 
     # Write
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -801,14 +745,16 @@ def write_package_file(
 @mcp.tool()
 def delete_package(package_name: str) -> dict:
     """
-    Delete an entire package directory from data/packages/.
+    Delete an entire package directory from the packages folder.
 
-    This is irreversible — use only when replacing a package wholesale.
-    The legacy backup at data/legacy/ is unaffected.
+    Irreversible outside version control — use only when replacing a package
+    wholesale; a shipped package is removed in a branch, where git keeps it.
 
     Returns: {"deleted": bool, "path": str, "error": str | null}
     """
     pkg_dir = PACKAGES_DIR / package_name
+    if pkg_dir.resolve().parent != PACKAGES_DIR.resolve():
+        return {'deleted': False, 'path': str(pkg_dir), 'error': 'Not a package folder — delete rejected.'}
     if not pkg_dir.exists():
         return {'deleted': False, 'path': str(pkg_dir),
                 'error': f"Package '{package_name}' not found."}
