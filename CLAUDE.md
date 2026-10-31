@@ -1086,6 +1086,14 @@ way they own their analytics. Layout and the add-a-philosophy walk-through:
   up as the step's one set. An interval step sends its finished rounds and seconds, a
   timed step its seconds (`intervalRoundsDone` on both). The scorecard's X3 counts `logs`
   through the table's `needs` (reps → `timed_reps`).
+- **An interval may alternate two movements** (since 2026-10-31). A contract track may
+  declare `options` (the athlete's choices, each with a default; both builders ask, the
+  answer rides as `contract_options`), and an EMOM block's `alternate: {exercise_id, when}`
+  gives its even rounds another movement when the options say so — Wildman's Option C,
+  two-hand then hand-to-hand swings, the default. The load carries `alternate`, the note
+  leads with it, and `?spec=1` sends `alternateName`; both watches title each round with
+  its movement (`roundName`). `/api/philosophies` labels a track the app made up
+  (`invention`, from the fidelity record) and both builders say so.
 - **Cues come from the package, in the load** (since 2026-10-18). A slot's
   `switch_at_sec` (a hand switch so many seconds into the work) and an interval
   slot's `rest_until_hr_pct` (its rest ends once HR is under that share of max HR;

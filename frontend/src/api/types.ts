@@ -143,6 +143,9 @@ export interface AthleteConstraints {
   kettlebell_count?: number
   /** A training contract's lift → the weight last made on it (Starting Strength). */
   starting_loads_kg?: Record<string, number>
+  /** A track option's id → the athlete's choice (`entry_requirements.options`);
+   *  an option left out takes its default. */
+  contract_options?: Record<string, string>
   module_progression_state?: Record<string, { completed?: number; weight_kg?: number }>
   equipment: EquipmentId[]
   equipment_profile?: EquipmentProfileId | 'custom'
@@ -1084,6 +1087,9 @@ export interface Track {
   name: string
   description?: string
   phases: Phase[]
+  /** A track the app made up rather than the source (its fidelity record's
+   *  invention): the builders label it as the app's own. */
+  invention?: { id: string; text: string }
   entry_requirements?: {
     training_levels: string[]
     mastered_exercises: string[]
@@ -1097,7 +1103,17 @@ export interface Track {
     kettlebell_count: number
     /** Lifts that may start from the weight last made (optional; else a work-up). */
     starting_loads?: { id: string; name: string }[]
+    /** Choices the athlete makes for the track (Wildman's swing minutes), each
+     *  with its default; sent as `contract_options`. */
+    options?: TrackOption[]
   }
+}
+
+export interface TrackOption {
+  id: string
+  label: string
+  default: string
+  choices: { id: string; label: string; description?: string }[]
 }
 
 export interface TrackImplement {

@@ -27,6 +27,7 @@ from src import fit_import as _fit_import
 from src import workout_ids as _workout_ids
 from src import watch_spec as _watch_spec
 from src import outcome_fields as _outcome_fields
+from src import package_fidelity as _package_fidelity
 from src import equipment as _equipment
 from src import implements as _implements
 from src import standards as _standards_mod
@@ -774,7 +775,24 @@ def get_philosophies():
                                        for m in contract['modules']
                                        if m['progression']['model'] == 'load_per_exposure'
                                        for lift in m['progression'].get('lifts') or {}],
+                    # Choices the athlete makes for the track (Wildman's swing
+                    # minutes), each with its default; the builders ask and send
+                    # the answer as `contract_options` ({option id: choice id}).
+                    'options': [{'id': o['id'], 'label': o['label'], 'default': o['default'],
+                                 'choices': [{'id': c['id'], 'label': c['label'],
+                                              **({'description': c['description']} if c.get('description') else {})}
+                                             for c in o['choices']]}
+                                for o in contract.get('options') or []],
                 }
+        # A track the app made up rather than the source (an invention whose
+        # implemented_by is the track itself: Wildman's Codex tracks): the
+        # builders label it, so nobody takes it for the method's own program.
+        record = _package_fidelity.load(philosophy['id'])
+        inventions = {i['id']: i['text'] for i in (record or {}).get('inventions') or []}
+        for track in philosophy.get('tracks', []):
+            inv = _package_fidelity.invented_track(record, track['id'])
+            if inv:
+                track['invention'] = {'id': inv, 'text': inventions.get(inv, '')}
     return jsonify(philosophies)
 
 
@@ -4217,6 +4235,11 @@ def _encode_watch_exercise(ea: dict, modality: str, max_hr: int | None = None) -
     scheme = _pick(load, 'rep_scheme', 'repScheme')
     if scheme:
         out['repScheme'] = list(scheme)
+    # An interval whose even rounds are another movement (Wildman's Option C:
+    # two-hand, then hand-to-hand): the watches name each round's.
+    alternate = (load.get('alternate') or {}).get('name')
+    if alternate:
+        out['alternateName'] = alternate
     return out
 
 

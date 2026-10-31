@@ -1047,6 +1047,18 @@ class WorkoutController {
     }
 
     function emomRound()          { return _emomRound; }
+
+    // The movement of the round in progress: an alternating interval's even
+    // rounds are its alternate (the payload's alternateName); every other step,
+    // and a step not the current one, is its own name.
+    function roundName(ex) {
+        var alt = ex.alternateName();
+        if (alt == null || !ex.isTemplate("interval") || ex != currentExercise()) { return ex.name(); }
+        return WorkoutController.alternatesAt(_emomRound) ? alt : ex.name();
+    }
+
+    // Odd rounds the step's own movement, even rounds its alternate.
+    static function alternatesAt(round) { return round % 2 == 0; }
     function emomTotal()          { return _emomTotal; }
     function amrapRounds()        { return _amrapRounds; }
     function exerciseElapsedSec() { return _elapsed - _exStartSec; }

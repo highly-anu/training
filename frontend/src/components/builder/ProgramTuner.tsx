@@ -295,6 +295,11 @@ export function ProgramTuner() {
                         {isPrimary && (
                           <span className="text-[9px] text-primary font-medium">Primary for this methodology</span>
                         )}
+                        {track.invention && (
+                          <span className="text-[9px] text-muted-foreground font-medium" title={track.invention.text}>
+                            The app's own track, not {philosophy.name}'s
+                          </span>
+                        )}
                       </div>
                       {track.description && (
                         <p className="text-[10px] text-muted-foreground leading-relaxed mt-1 line-clamp-3">

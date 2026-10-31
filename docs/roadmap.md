@@ -1110,10 +1110,12 @@ contract models are the engine's vocabulary — a package chooses among them.
 
 **5. Wildman follow-ups (from the handoff).** General Practice runs Wildman's Phase II
 since 2026-10-20 (the Nerd Math swing approaches, get-up and deck squat stacked as time
-allows, the snatch once confirmed). Left: his hand-to-hand option (alternating minutes
-needs a block that alternates two movements), his get-up and deck-squat numbers (paid
-programs; the cycles here are the Nerd Math pattern), Double-Bell Practice (his double
-bells are Phase III, deliberately non-repeating). Review the double-jerk block (an app
+allows, the snatch once confirmed). Since 2026-10-31 the swing minutes alternate two-hand
+and hand-to-hand swings by default (the PDF's Option C, R14; two-hand only is the track
+option `swing_style`, asked in both builders; both watches name each minute's swing), and
+the Codex tracks (I2 Get-Up & Loaded Mobility, I3 Double-Bell Practice) stay, labelled in
+both builders as the app's own, as is I1 (owner, 2026-10-31). Left: his get-up and
+deck-squat numbers (paid programs; the cycles here are the Nerd Math pattern). Review the double-jerk block (an app
 invention) and whether advanced and elite should differ from intermediate; test
 the new tracks in both builders and on both watches; close editing paths (moving a
 session) that can break module spacing; generalise catalog reachability

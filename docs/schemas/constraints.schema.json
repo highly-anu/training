@@ -103,6 +103,11 @@
       "minimum": 15,
       "description": "Maximum session length in minutes. Filters out archetypes longer than this value."
     },
+    "contract_options": {
+      "type": "object",
+      "description": "A training contract track's options, by option id -> the athlete's choice (the track's entry_requirements.options); an option left out takes its default.",
+      "additionalProperties": {"type": "string"}
+    },
     "training_level": {
       "type": "string",
       "enum": ["novice", "intermediate", "advanced", "elite"],

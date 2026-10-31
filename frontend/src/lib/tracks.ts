@@ -161,6 +161,8 @@ export function mergedEntryRequirements(
   const mastered = Array.from(new Set(reqs.flatMap((r) => r.mastered_exercises_by_level?.[level] ?? r.mastered_exercises)))
   const loads = new Map<string, { id: string; name: string }>()
   for (const r of reqs) for (const l of r.starting_loads ?? []) loads.set(l.id, l)
+  const options = new Map<string, NonNullable<EntryRequirements['options']>[number]>()
+  for (const r of reqs) for (const o of r.options ?? []) if (!options.has(o.id)) options.set(o.id, o)
   return {
     training_levels: reqs.slice(1).reduce((acc, r) => acc.filter((lv) => r.training_levels.includes(lv)),
       reqs[0].training_levels),
@@ -170,5 +172,6 @@ export function mergedEntryRequirements(
     implements: mergedImplements(reqs),
     kettlebell_count: Math.max(...reqs.map((r) => r.kettlebell_count)),
     starting_loads: Array.from(loads.values()),
+    options: Array.from(options.values()),
   }
 }

@@ -23,6 +23,20 @@ tracks:
     - intermediate
     - advanced
     - elite
+    # The swing PDF's options: two-hand swings throughout, or minutes that
+    # alternate two-hand and hand-to-hand swings (Option C, "the most common").
+    # Option C is the default (owner, 2026-10-31); the builders ask.
+    options:
+    - id: swing_style
+      label: Swing minutes
+      choices:
+      - id: alternating
+        label: Alternate two-hand and hand-to-hand
+        description: Wildman's most common option; the pass needs a clean one-arm swing.
+      - id: two_hand
+        label: Two-hand only
+        description: Every minute two-hand, until the hand-to-hand pass is clean.
+      default: alternating
     level_seeds:
       intermediate:
       - wk_kb_clean_single
@@ -92,6 +106,10 @@ tracks:
         exercise_id: wk_kb_swing_two_hand
         slot_type: emom
         loaded: true
+        # Option C: odd minutes two-hand, even minutes hand-to-hand.
+        alternate:
+          exercise_id: wk_kb_swing_hand_to_hand
+          when: {swing_style: alternating}
         notes: Swings at the top of each minute (or round); rest for its remainder. Wildman's most
           common option alternates minutes of two-hand and hand-to-hand swings once both are clean.
           Stop if technique or breathing deteriorates.

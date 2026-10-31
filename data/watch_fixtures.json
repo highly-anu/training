@@ -84,6 +84,24 @@
                  "lines": ["Next: Work", "1:00  12 RPM"], "lap": "skip", "outcome": "next"}
     },
     {
+      "name": "an alternating interval's odd round: the step's own movement",
+      "exercise": {"exerciseId": "wk_kb_swing_two_hand", "name": "Two-Hand Swing", "slotType": "emom", "category": "kettlebell", "weightKg": 24, "targetRounds": 10, "workSec": 60, "intervalRestSec": 0, "alternateName": "Hand-to-Hand Swing"},
+      "screen": {"template": "interval", "title": ["name", "load"], "a": "interval", "b": "interval_left", "gauge": "interval_round",
+                 "lines": "interval_next", "lap": "skip"},
+      "state": {"intervalWorking": true, "intervalRound": 3, "intervalTotal": 10, "intervalLeftSec": 31, "intervalWorkSec": 60, "intervalRestSec": 0},
+      "expect": {"title": "Two-Hand Swing  24 kg", "a": ["ROUND", "3/10"], "b": ["TIME LEFT", ":31"], "gauge": ["ROUND", "3/10"],
+                 "lines": ["Next: Work", "1:00"], "lap": "skip", "outcome": "next"}
+    },
+    {
+      "name": "an alternating interval's even round: its alternate (Option C)",
+      "exercise": {"exerciseId": "wk_kb_swing_two_hand", "name": "Two-Hand Swing", "slotType": "emom", "category": "kettlebell", "weightKg": 24, "targetRounds": 10, "workSec": 60, "intervalRestSec": 0, "alternateName": "Hand-to-Hand Swing"},
+      "screen": {"template": "interval", "title": ["name", "load"], "a": "interval", "b": "interval_left", "gauge": "interval_round",
+                 "lines": "interval_next", "lap": "skip"},
+      "state": {"intervalWorking": true, "intervalRound": 4, "intervalTotal": 10, "intervalLeftSec": 31, "intervalWorkSec": 60, "intervalRestSec": 0},
+      "expect": {"title": "Hand-to-Hand Swing  24 kg", "a": ["ROUND", "4/10"], "b": ["TIME LEFT", ":31"], "gauge": ["ROUND", "4/10"],
+                 "lines": ["Next: Work", "1:00"], "lap": "skip", "outcome": "next"}
+    },
+    {
       "name": "an AMRAP shows one round's movements",
       "exercise": {"exerciseId": "cindy", "name": "Cindy", "slotType": "amrap", "timeMinutes": 20},
       "state": {"rounds": 7, "capLeftSec": 534, "components": [{"name": "Pull-up", "repsPerRound": 5}, {"name": "Push-up", "repsPerRound": 10}, {"name": "Air Squat", "repsPerRound": 15}]},

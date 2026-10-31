@@ -68,6 +68,9 @@ def reachable(philosophy: dict, catalog: dict, frameworks: dict, archetypes: dic
                 program = generator.generate(None, constraints, num_weeks=weeks, goal_dict=goal, output_format='dict')
                 sessions = [s for w in program.get('weeks') or [] for day in w['schedule'].values() for s in day]
                 ids = {ea['exercise']['id'] for s in sessions for ea in s['exercises'] if ea.get('exercise')}
+                # An alternating interval's even rounds (Wildman's hand-to-hand swings).
+                ids |= {ea['load']['alternate']['exercise_id'] for s in sessions for ea in s['exercises']
+                        if ((ea.get('load') or {}).get('alternate') or {}).get('exercise_id')}
                 if contract:
                     placed = {m['id'] for s in sessions for m in s.get('modules') or []}
                     ids |= {alt for m in contract['modules'] if m['id'] in placed

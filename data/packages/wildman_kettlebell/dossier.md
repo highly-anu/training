@@ -36,11 +36,10 @@ ids. The status is the scorecard's (records/status.yaml).
 | R11 | Repeat workouts when training is interrupted for more than a week (PDF, "Tracking your progress") | the swing module's `advice`, said in every swing session's note and never enforced (I5) |
 | R12 | The pentathlon's five events, six minutes each with five between, and the rep caps (IKMF) | the `pentathlon_events` module; the test protocol |
 | R13 | The get-up's goal is a bodyweight ratio no session tests (/tgu) | the `turkish_get_up_bw_ratio` standard, entered by hand |
+| R14 | Option C, "alternating minutes of 2HS and H2H", the PDF's most common | the swing block's `alternate` (`wk_kb_swing_hand_to_hand` on even minutes) under the track option `swing_style`; both watches name each minute's swing |
 
 ## Open (the source does not say, or it is paid)
 
-- The hand-to-hand option ("Option C: alternating minutes of 2HS and H2H", the PDF's
-  most common) — needs a block that alternates two movements minute by minute.
 - Clean & press, get-up and deck-squat numbers: his own are in the paid programs.
 - Bell sizes: the athlete chooses; the contract never infers a weight.
 - The PDF allows two or three days a week; the contract runs the website's twice.
@@ -55,6 +54,10 @@ ids. The status is the scorecard's (records/status.yaml).
   own numbers are in the paid programs.
 - I5: the repeat after a layoff (R11) is recommended, not enforced — decided by the
   owner on 2026-10-21: the athlete decides and takes responsibility.
+- I6: Option C (R14) is the default and two-hand only the athlete's choice in the
+  builder — decided by the owner on 2026-10-31; the PDF offers the options without a
+  default. The same day the owner kept I2 and I3, labelled in both builders as the
+  app's own tracks (as is I1's Pentathlon Prep).
 
 ## Measurement
 

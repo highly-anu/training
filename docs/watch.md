@@ -103,6 +103,7 @@ As of 2026-10-18. *Server* is the payload key; *—* means the server has no par
 | Double bells | `bells` (exercises.yaml) | 2x24 and both bells in the volume | the same; neither watch reads it off the id any more |
 | Upload: sets by id, rounds, clock, distance | — | `Wire.mc` | `WatchUpload` |
 | Interval rounds, timed seconds; reps counted at the end | `logs` | `noteStepEnd`, Results menu | `stepLeft`, completion screen |
+| An alternating interval names each round's movement (Option C) | `alternateName` | `roundName` | `WatchSpecText.roundName` |
 | **Native, not shared** | | glance (64 KB; Next up or Day bar, `glanceStyle`; a press opens Today), wellness posting, pairing QR | HealthKit workout and route, complication, overtime prompt |
 
 ## Tests
