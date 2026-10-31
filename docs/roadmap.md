@@ -1016,7 +1016,13 @@ Today: the code is package-neutral, the repository is not yet drop-in. In order:
   cites one as `test:tests/<file>::<fn>`, and they take the package from their folder, so
   `test_package_dropin.py` runs its renamed copies' tests too. Eleven packages' tests moved
   out of `test_training_contract.py`, `test_week_template.py`, `test_standard_tests.py` and
-  `test_wildman.py`. Left: blends are checked on `check_styles.COMPOSITIONS`' five pairs.
+  `test_wildman.py`. And every composable track is blended: `check_styles.py` pairs each
+  contract and templated track round-robin with its own kind and the other (23 pairs
+  today, `blend_pairs`), each pair's level, days, minutes, mastery and implements taken
+  from the two tracks' data, and fails a pair that composes wrongly or a track that
+  composes in none of its pairs; the five named compositions stay for what they pin
+  (an event date, two tracks of one package). `test_package_dropin.py` sees its copies
+  paired and composed.
 - **9.2 Standards in the package (M).** Done 2026-10-30 (branch `feat/package-standards`):
   `data/packages/<id>/standards.yaml` brings a package's own standards and any group it
   adds; `data/benchmarks/` is found by glob and its groups are

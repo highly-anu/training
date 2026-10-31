@@ -621,7 +621,11 @@ group's name.
     `PhaseTrackTests`).
   - `tools/check_styles.py` generates every phase of every track and fails if a week
     runs another framework, and generates a phase that tests at full length and fails
-    unless every declared test is placed; `check_provenance.py --coverage` fails if a phase's
+    unless every declared test is placed, then composes five named compositions and every
+    contract and templated track paired round-robin with others (`blend_pairs`: its own
+    kind and the other, a level both are written for, the busier track's days + 1, both
+    tracks' minutes), failing a pair that composes wrongly and a track that composes in
+    none of its pairs; `check_provenance.py --coverage` fails if a phase's
     framework schedules a modality no package archetype applies to for its kind;
     `validate_entities.py` checks track/phase ids and framework ownership;
     `test_phases.py` covers the rest.
@@ -1405,7 +1409,7 @@ Run these after touching engine code or package data:
 .venv/bin/python test_client_vocab.py                    # those tables are current and no client keeps its own
 .venv/bin/python tools/check_provenance.py               # no package leaks; 11 philosophies x 3 profiles
 .venv/bin/python tools/check_provenance.py --coverage    # coverage gaps + authoring problems
-.venv/bin/python tools/check_styles.py                   # every philosophy x track x phase generates on its framework
+.venv/bin/python tools/check_styles.py                   # every philosophy x track x phase generates on its framework; every track blends
 SUPABASE_URL='' .venv/bin/python test_phases.py          # tracks, phase text ownership, start phase, event date, legacy picks
 SUPABASE_URL='' .venv/bin/python test_composition.py     # several tracks: request, shares, cuts, real compositions, the API
 .venv/bin/python test_single_lane_golden.py              # every one-track program unchanged (~6 min; --record only on purpose)
