@@ -140,15 +140,15 @@
       },
       {
        "code": "EQUIPMENT_SCALED",
-       "message": "'Gym Jones Operator Circuit' will use equipment-limited scaling (missing: {'plates', 'pull_up_bar', 'barbell', 'rower'})."
+       "message": "'Gym Jones Operator Circuit' will use equipment-limited scaling (missing: {'barbell', 'plates', 'pull_up_bar', 'rower'})."
       },
       {
        "code": "EQUIPMENT_SCALED",
-       "message": "'Barbell Power Complex (Olympic Lift Derivatives)' will use equipment-limited scaling (missing: {'plates', 'barbell'})."
+       "message": "'Barbell Power Complex (Olympic Lift Derivatives)' will use equipment-limited scaling (missing: {'barbell', 'plates'})."
       },
       {
        "code": "EQUIPMENT_SCALED",
-       "message": "'EMOM Strength Wave (10×1)' will use equipment-limited scaling (missing: {'plates', 'barbell', 'rack'})."
+       "message": "'EMOM Strength Wave (10×1)' will use equipment-limited scaling (missing: {'barbell', 'plates', 'rack'})."
       }
      ]
     },
@@ -2740,22 +2740,22 @@
      "warnings": [
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype '2 Minutes' requires {'hurdles', 'sandbag', 'box', 'cable_machine', 'resistance_band', 'medicine_ball', 'jump_rope', 'tire'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype '2 Minutes' requires {'box', 'cable_machine', 'hurdles', 'jump_rope', 'medicine_ball', 'resistance_band', 'sandbag', 'tire'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Bannister' requires {'hurdles', 'cable_machine', 'tire'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Bannister' requires {'cable_machine', 'hurdles', 'tire'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Crazy 8' requires {'agility_ladder', 'box', 'medicine_ball', 'dumbbell', 'parallettes'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Crazy 8' requires {'agility_ladder', 'box', 'dumbbell', 'medicine_ball', 'parallettes'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Double/Doubles' requires {'cable_machine', 'box', 'rope', 'jump_rope', 'tire'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Double/Doubles' requires {'box', 'cable_machine', 'jump_rope', 'rope', 'tire'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2780,12 +2780,12 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Tens' requires {'ghd', 'box', 'medicine_ball', 'dumbbell', 'parallettes'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Tens' requires {'box', 'dumbbell', 'ghd', 'medicine_ball', 'parallettes'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Triples' requires {'sandbag', 'rope', 'cable_machine', 'medicine_ball'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Triples' requires {'cable_machine', 'medicine_ball', 'rope', 'sandbag'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2795,7 +2795,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Death to Infidels' requires {'rings', 'ghd', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Death to Infidels' requires {'box', 'ghd', 'rings'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2835,7 +2835,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Appeal to God' requires {'rings', 'ghd'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Appeal to God' requires {'ghd', 'rings'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2860,7 +2860,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Slam and Step' requires {'medicine_ball', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Slam and Step' requires {'box', 'medicine_ball'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2870,7 +2870,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Twister' requires {'medicine_ball', 'box', 'parallettes'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Twister' requires {'box', 'medicine_ball', 'parallettes'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -2965,12 +2965,12 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'D-Day' requires {'ghd', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'D-Day' requires {'box', 'ghd'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Drunken Lullaby' requires {'sandbag', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Drunken Lullaby' requires {'box', 'sandbag'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3000,7 +3000,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Lovely Turd' requires {'sandbag', 'box', 'parallettes'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Lovely Turd' requires {'box', 'parallettes', 'sandbag'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3015,7 +3015,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Start Your Face' requires {'dumbbell', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Start Your Face' requires {'box', 'dumbbell'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3050,7 +3050,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'George Washington' requires {'rings', 'ghd', 'rower', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'George Washington' requires {'box', 'ghd', 'rings', 'rower'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3065,7 +3065,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Till U Collapse' requires {'medicine_ball', 'ghd', 'rower', 'tire'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Till U Collapse' requires {'ghd', 'medicine_ball', 'rower', 'tire'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3085,32 +3085,32 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Winter in August' requires {'rower', 'parallettes'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Winter in August' requires {'parallettes', 'rower'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Act With a Purpose' requires {'ghd', 'box', 'dumbbell', 'tire', 'parallettes'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Act With a Purpose' requires {'box', 'dumbbell', 'ghd', 'parallettes', 'tire'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Ben Franklin' requires {'dumbbell', 'ghd', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Ben Franklin' requires {'box', 'dumbbell', 'ghd'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Bloody Nose' requires {'rings', 'ghd'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Bloody Nose' requires {'ghd', 'rings'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Chin Up. Soldier On.' requires {'sandbag', 'tire', 'dumbbell', 'rings'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Chin Up. Soldier On.' requires {'dumbbell', 'rings', 'sandbag', 'tire'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Family Friendly Violence' requires {'dumbbell', 'tire', 'parallettes'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Family Friendly Violence' requires {'dumbbell', 'parallettes', 'tire'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3120,7 +3120,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Honey Butter' requires {'sandbag', 'box', 'ghd', 'dumbbell'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Honey Butter' requires {'box', 'dumbbell', 'ghd', 'sandbag'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3135,17 +3135,17 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Max Out!' requires {'sandbag', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Max Out!' requires {'box', 'sandbag'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Russian Aggression' requires {'dumbbell', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Russian Aggression' requires {'box', 'dumbbell'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Soviet Capitalists' requires {'sandbag', 'ghd', 'parallettes'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Soviet Capitalists' requires {'ghd', 'parallettes', 'sandbag'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3155,7 +3155,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Wasted Love' requires {'sandbag', 'medicine_ball'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Wasted Love' requires {'medicine_ball', 'sandbag'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3170,7 +3170,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype 'Get-ups, Burpees and Step-ups' requires {'dumbbell', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype 'Get-ups, Burpees and Step-ups' requires {'box', 'dumbbell'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3205,7 +3205,7 @@
       },
       {
        "code": "EQUIPMENT_MISSING",
-       "message": "Archetype '10-Minute Step-ups' requires {'dumbbell', 'box'} — not available. This archetype will be skipped in selection.",
+       "message": "Archetype '10-Minute Step-ups' requires {'box', 'dumbbell'} — not available. This archetype will be skipped in selection.",
        "suggested_fix": null
       },
       {
@@ -3851,6 +3851,25 @@
        "advanced",
        "elite"
       ],
+      "options": [
+       {
+        "id": "swing_style",
+        "label": "Swing minutes",
+        "choices": [
+         {
+          "id": "alternating",
+          "label": "Alternate two-hand and hand-to-hand",
+          "description": "Wildman's most common option; the pass needs a clean one-arm swing."
+         },
+         {
+          "id": "two_hand",
+          "label": "Two-hand only",
+          "description": "Every minute two-hand, until the hand-to-hand pass is clean."
+         }
+        ],
+        "default": "alternating"
+       }
+      ],
       "level_seeds": {
        "intermediate": [
         "wk_kb_clean_single",
@@ -3920,6 +3939,21 @@
           "exercise_id": "wk_kb_swing_two_hand",
           "slot_type": "emom",
           "loaded": true,
+          "alternate": {
+           "exercise_id": "wk_kb_swing_hand_to_hand",
+           "when": {
+            "swing_style": "alternating"
+           },
+           "options": {
+            "swing_style": {
+             "default": "alternating",
+             "choices": [
+              "alternating",
+              "two_hand"
+             ]
+            }
+           }
+          },
           "notes": "Swings at the top of each minute (or round); rest for its remainder. Wildman's most common option alternates minutes of two-hand and hand-to-hand swings once both are clean. Stop if technique or breathing deteriorates."
          },
          {
@@ -4145,7 +4179,11 @@
       ],
       "version": 1,
       "package": "wildman_kettlebell",
-      "track_id": "general_practice"
+      "track_id": "general_practice",
+      "implement": {
+       "count": 1,
+       "equipment": "kettlebell"
+      }
      },
      "incompatible_with": [],
      "notes": "Executable rules live in training_contract.yaml. General Practice repeats stable single-bell modules; density and volume advance after clean successful exposures. The calendar never earns a harder movement. Forecasts are conditional. Pentathlon is a separate sport-specific track requiring demonstrated event proficiency."
@@ -4431,6 +4469,10 @@
             "time_minutes": 10,
             "format": "EMOM",
             "duration_minutes": 10,
+            "alternate": {
+             "exercise_id": "wk_kb_swing_hand_to_hand",
+             "name": "Kettlebell Swing (Hand-to-Hand)"
+            },
             "prescription_version": 1,
             "progression_model": "density_cycle",
             "module_id": "swing",
@@ -4449,7 +4491,7 @@
            "gap_reason": null,
            "substituted_for": null,
            "error": null,
-           "load_note": "Choose a bell you can control throughout. Record its weight before increasing load. Away more than a week? Wildman repeats the last workouts before moving on — repeat them if you need to; the program carries on either way.",
+           "load_note": "Alternate minutes: Kettlebell Swing (Two-Hand), then Kettlebell Swing (Hand-to-Hand). Choose a bell you can control throughout. Record its weight before increasing load. Away more than a week? Wildman repeats the last workouts before moving on — repeat them if you need to; the program carries on either way.",
            "notes": "Swings at the top of each minute (or round); rest for its remainder. Wildman's most common option alternates minutes of two-hand and hand-to-hand swings once both are clean. Stop if technique or breathing deteriorates.",
            "parent_slot_role": null,
            "skip_exercise": false
@@ -5330,6 +5372,10 @@
             "time_minutes": 10,
             "format": "EMOM",
             "duration_minutes": 10,
+            "alternate": {
+             "exercise_id": "wk_kb_swing_hand_to_hand",
+             "name": "Kettlebell Swing (Hand-to-Hand)"
+            },
             "prescription_version": 1,
             "progression_model": "density_cycle",
             "module_id": "swing",
@@ -5348,7 +5394,7 @@
            "gap_reason": null,
            "substituted_for": null,
            "error": null,
-           "load_note": "Choose a bell you can control throughout. Record its weight before increasing load. Away more than a week? Wildman repeats the last workouts before moving on — repeat them if you need to; the program carries on either way.",
+           "load_note": "Alternate minutes: Kettlebell Swing (Two-Hand), then Kettlebell Swing (Hand-to-Hand). Choose a bell you can control throughout. Record its weight before increasing load. Away more than a week? Wildman repeats the last workouts before moving on — repeat them if you need to; the program carries on either way.",
            "notes": "Swings at the top of each minute (or round); rest for its remainder. Wildman's most common option alternates minutes of two-hand and hand-to-hand swings once both are clean. Stop if technique or breathing deteriorates.",
            "parent_slot_role": null,
            "skip_exercise": false
@@ -6265,7 +6311,11 @@
              "time_minutes": 10,
              "format": "EMOM",
              "duration_minutes": 10,
-             "load_note": "Choose a bell you can control throughout. Record its weight before increasing load. Away more than a week? Wildman repeats the last workouts before moving on — repeat them if you need to; the program carries on either way.",
+             "alternate": {
+              "exercise_id": "wk_kb_swing_hand_to_hand",
+              "name": "Kettlebell Swing (Hand-to-Hand)"
+             },
+             "load_note": "Alternate minutes: Kettlebell Swing (Two-Hand), then Kettlebell Swing (Hand-to-Hand). Choose a bell you can control throughout. Record its weight before increasing load. Away more than a week? Wildman repeats the last workouts before moving on — repeat them if you need to; the program carries on either way.",
              "prescription_version": 1,
              "progression_model": "density_cycle",
              "module_id": "swing",
@@ -6604,7 +6654,11 @@
              "time_minutes": 10,
              "format": "EMOM",
              "duration_minutes": 10,
-             "load_note": "Choose a bell you can control throughout. Record its weight before increasing load. Away more than a week? Wildman repeats the last workouts before moving on — repeat them if you need to; the program carries on either way.",
+             "alternate": {
+              "exercise_id": "wk_kb_swing_hand_to_hand",
+              "name": "Kettlebell Swing (Hand-to-Hand)"
+             },
+             "load_note": "Alternate minutes: Kettlebell Swing (Two-Hand), then Kettlebell Swing (Hand-to-Hand). Choose a bell you can control throughout. Record its weight before increasing load. Away more than a week? Wildman repeats the last workouts before moving on — repeat them if you need to; the program carries on either way.",
              "prescription_version": 1,
              "progression_model": "density_cycle",
              "module_id": "swing",
