@@ -68,20 +68,9 @@ unloaded:
   - hip_external_rotation
   - hip_abduction
 
-# The modality's recovery_cost, and the slot's intensity; an intensity not
-# listed counts 1.
+# The modality's recovery_cost; the slot's intensity weighs by its
+# `recovery_weight` in intensities.yaml (1 when it has none).
 cost_weight: {high: 1, medium: 0.5, low: 0.1}
-intensity_weight:
-  max_effort: 1.25
-  max: 1.25
-  heavy: 1.25
-  high: 1.25
-  zone4_5: 1.25
-  zone4: 1.25
-  light: 0.5
-  low: 0.5
-  zone1: 0.5
-  zone2: 0.5
 
 # Slots that are not the session's work: their role contains one of these.
 warm_up_roles: [warm_up, warmup, cool_down, cooldown, prep, primer, mobility]

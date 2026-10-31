@@ -27,6 +27,7 @@ import { ObjectBrowser } from '@/components/objectbrowser/ObjectBrowser'
 import { HeatmapPanel } from '@/components/devlab/heatmap/HeatmapPanel'
 import { ModelInteractionPanel } from '@/components/devlab/ModelInteractionPanel'
 import type { EquipmentId, FatigueState, InjuryFlagId, TrainingLevel, TracedProgram, WeekData } from '@/api/types'
+import { TRAINING_LEVELS } from '@/lib/gen/clientVocab'
 
 // ─── Equipment picker options ─────────────────────────────────────────────────
 
@@ -438,7 +439,7 @@ export function DevLab() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {(['novice', 'intermediate', 'advanced', 'elite'] as TrainingLevel[]).map(l => (
+                    {TRAINING_LEVELS.map(l => (
                       <SelectItem key={l} value={l} className="text-xs">{l}</SelectItem>
                     ))}
                   </SelectContent>

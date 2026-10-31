@@ -28,7 +28,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src import goals, implements, loader, phases  # noqa: E402
+from src import goals, implements, levels, loader, phases  # noqa: E402
 from src.generator import generate  # noqa: E402
 from src.validator import validate  # noqa: E402
 
@@ -79,7 +79,7 @@ COMPOSITIONS = [
     ([('bjj', None, 0.6), ('kelly_starrett', None, 0.4)], 5, 75, {}, None),
     ([('crossfit', None, 0.5), ('starting_strength', None, 0.5)], 5, 75, {}, 12),
 ]
-LEVELS = ['novice', 'intermediate', 'advanced', 'elite']
+LEVELS = list(levels.order())   # data/commons/training_levels.yaml
 
 
 def composable_tracks() -> list[dict]:

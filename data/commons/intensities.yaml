@@ -1,0 +1,85 @@
+# The slot intensities an archetype may name, and what each reader of one makes
+# of it (src/intensities.py). Until 2026-10-31 five tables kept these apart —
+# progression's zone bands, the selector's main-lift words, fidelity's buckets,
+# the heart-rate plan's load words and recovery_regions' weights — and the
+# schema's enum and the authoring dialogs a sixth list. Each column reproduces
+# its reader exactly; where they disagree it is written here, not settled:
+#   - `medium`, `submaximal` and `bodyweight` have no zone band, so a slot with
+#     one shows no heart-rate window;
+#   - `hard` and `work_pace` have a band but are not in the schema (`authoring: false`);
+#   - `progressing` has a band (2-4) but the heart-rate plan counts it as load.
+#
+#   zone              [lower, upper, label]: the heart-rate band a slot shows (progression.zone_band)
+#   main_lift         a lift the phase keeps one exercise for (selector.is_main_lift_slot)
+#   fidelity_bucket   where the intensity split counts it (fidelity)
+#   hr_load           counted as load, never in zones, whatever its band (analytics.hr_plan)
+#   recovery_weight   its weight on the body regions a session loads (recovery_regions); 1 when absent
+#   authoring         offered by the schema and the dialogs (false: the engine reads it, authors cannot write it)
+
+intensities:
+  max:
+    zone: [4, 5, "Zone 4-5 (max effort)"]
+    main_lift: true
+    fidelity_bucket: max_effort_pct
+    recovery_weight: 1.25
+  max_effort:
+    main_lift: true
+    fidelity_bucket: max_effort_pct
+    recovery_weight: 1.25
+  heavy:
+    main_lift: true
+    fidelity_bucket: max_effort_pct
+    recovery_weight: 1.25
+  submaximal:
+    fidelity_bucket: zone3_pct
+  progressing:
+    zone: [2, 4, "Zone 2-4 (progressive)"]
+    fidelity_bucket: zone3_pct
+    hr_load: true
+  moderate:
+    zone: [2, 3, "Zone 2-3 (moderate)"]
+    fidelity_bucket: zone3_pct
+  medium:
+    fidelity_bucket: zone3_pct
+  light:
+    zone: [1, 2, "Zone 1-2 (light)"]
+    fidelity_bucket: zone1_2_pct
+    recovery_weight: 0.5
+  low:
+    zone: [1, 2, "Zone 1-2 (easy)"]
+    fidelity_bucket: zone1_2_pct
+    recovery_weight: 0.5
+  high:
+    zone: [3, 4, "Zone 3-4 (hard)"]
+    fidelity_bucket: zone4_5_pct
+    recovery_weight: 1.25
+  bodyweight:
+    fidelity_bucket: zone1_2_pct
+  zone1:
+    zone: [1, 1, "Zone 1 (recovery)"]
+    fidelity_bucket: zone1_2_pct
+    recovery_weight: 0.5
+  zone2:
+    zone: [1, 2, "Zone 1-2 (conversational pace)"]
+    fidelity_bucket: zone1_2_pct
+    recovery_weight: 0.5
+  zone3:
+    zone: [3, 3, "Zone 3 (tempo)"]
+    fidelity_bucket: zone3_pct
+  zone4:
+    zone: [4, 4, "Zone 4 (threshold)"]
+    fidelity_bucket: zone4_5_pct
+    recovery_weight: 1.25
+  zone4_5:
+    zone: [4, 5, "Zone 4-5 (VO2max)"]
+    fidelity_bucket: zone4_5_pct
+    recovery_weight: 1.25
+  zone5:
+    zone: [5, 5, "Zone 5 (maximal)"]
+    fidelity_bucket: zone4_5_pct
+  work_pace:
+    zone: [2, 3, "Zone 2-3 (work pace)"]
+    authoring: false
+  hard:
+    zone: [3, 4, "Zone 3-4 (hard)"]
+    authoring: false

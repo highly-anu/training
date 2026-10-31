@@ -76,6 +76,21 @@
       },
       "additionalProperties": false
     },
+    "progression_defaults": {
+      "type": "object",
+      "description": "This framework's weekly ramps, over the commons' (data/commons/progression.yaml): the share added each week up to the phase kind's ceiling — `time` a timed block's minutes and a heart-rate-gated interval's rounds (0.10), `distance` a distance slot's metres (0.08). src/progression.ramps_for.",
+      "additionalProperties": false,
+      "properties": {
+        "ramps": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "time": {"type": "number", "minimum": 0, "maximum": 1},
+            "distance": {"type": "number", "minimum": 0, "maximum": 1}
+          }
+        }
+      }
+    },
     "progression_overrides": {
       "type": "object",
       "description": "Modality id -> progression model that writes the load for that modality's sessions in this framework's weeks. Without an entry the modality's own progression_model does, as for every other framework (src/generator.py). Marcus Filly's RPE framework prescribes its strength work as RPE targets this way; the framework-level progression_model never drove a prescription.",

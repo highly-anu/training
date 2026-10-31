@@ -4,6 +4,8 @@ import os as _os
 from typing import Optional
 from src.progression import zone_band as _zone_band
 from . import blockers, phases, provenance, recovery_regions, standard_tests
+from . import intensities as _intensities
+from . import levels as _levels
 from . import loader as _loader
 
 # ---------------------------------------------------------------------------
@@ -32,8 +34,6 @@ _LEVEL_CONCEPTS: dict[str, set] = {
 }
 
 
-_LEVEL_ORDER = ['novice', 'intermediate', 'advanced', 'elite']
-
 
 def _level_known(training_level: str, level_seeds: dict | None = None) -> set:
     """The concepts and exercise ids assumed known at a level: the built-in
@@ -41,9 +41,8 @@ def _level_known(training_level: str, level_seeds: dict | None = None) -> set:
     known = set(_LEVEL_CONCEPTS.get(training_level, set()))
     if level_seeds:
         # Seeds cascade upward: what a novice knows, an advanced athlete knows.
-        cutoff = _LEVEL_ORDER.index(training_level) if training_level in _LEVEL_ORDER else 0
         for seeds in level_seeds.values():
-            for level in _LEVEL_ORDER[:cutoff + 1]:
+            for level in _levels.up_to(training_level):
                 known |= set(seeds.get(level, ()))
     return known
 
@@ -62,7 +61,7 @@ def _get_unlocked(training_level: str, exercises: dict, level_seeds: dict | None
     analytics' "movements earned" passes what has been practised, to ask what
     that practice opens.
     """
-    if training_level == 'elite':
+    if _levels.unlocks_all(training_level):     # elite (data/commons/training_levels.yaml)
         return set(exercises.keys())
 
     known = _level_known(training_level, level_seeds) | set(also_known or ())
@@ -179,7 +178,7 @@ def _blocked_categories_for_equipment(available_equip: set) -> set:
 
 # Slot intensities that mark a loaded main lift, as opposed to a warm-up, an
 # accessory or a carry. A slot that names a %1RM is one too.
-MAIN_LIFT_INTENSITIES = frozenset({'heavy', 'max', 'max_effort'})
+MAIN_LIFT_INTENSITIES = _intensities.main_lift()   # data/commons/intensities.yaml
 
 
 def is_main_lift_slot(slot: dict) -> bool:

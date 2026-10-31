@@ -143,3 +143,15 @@ export const OUTCOME_RESULT_FIELD: Record<string, OutcomeField> = {
   hold: 'seconds',
   distance: 'km',
 }
+
+/** The training levels, lowest first, with their labels (data/commons/training_levels.yaml). */
+export const TRAINING_LEVELS = ['novice', 'intermediate', 'advanced', 'elite'] as const
+export const TRAINING_LEVEL_LABELS: Record<string, string> = {
+  novice: 'Novice',
+  intermediate: 'Intermediate',
+  advanced: 'Advanced',
+  elite: 'Elite',
+}
+
+/** The slot intensities an author may write (data/commons/intensities.yaml). */
+export const INTENSITIES = ['max', 'max_effort', 'heavy', 'submaximal', 'progressing', 'moderate', 'medium', 'light', 'low', 'high', 'bodyweight', 'zone1', 'zone2', 'zone3', 'zone4', 'zone4_5', 'zone5'] as const

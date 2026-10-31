@@ -35,10 +35,10 @@ from __future__ import annotations
 
 from collections import Counter
 
-from src import blockers, implements
+from src import blockers, implements, levels as _levels
 
 DIMENSIONS = ('equipment', 'injury', 'level', 'proficiency')
-LEVELS = ('novice', 'intermediate', 'advanced', 'elite')
+LEVELS = _levels.order()   # data/commons/training_levels.yaml
 DAY_ORDER = ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
 _NOT_EQUIPMENT = {'none', 'open_space'}
 

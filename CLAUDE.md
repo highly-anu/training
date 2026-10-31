@@ -543,7 +543,15 @@ group's name.
   `priority_tier`, `typical_duration_minutes` and, for the stand-ins, `fallback_rank` (a
   framework's `fallback_modalities` overrides the order; `generator.fallback_order`); what
   recovers a pattern is `movement_patterns.yaml`'s `complements`, what equipment an exercise
-  category needs `data/commons/constraints/category_equipment.yaml` (roadmap 9.3). A framework may
+  category needs `data/commons/constraints/category_equipment.yaml` (roadmap 9.3). Since
+  2026-10-31 the levels (`training_levels.yaml`: order, default, each level's distance share,
+  the level that unlocks every exercise; `src/levels.py`), the intensities
+  (`intensities.yaml`: each token's zone band, main-lift flag, fidelity bucket, heart-rate
+  reading and recovery weight, with where those readers disagree written at its top;
+  `src/intensities.py`) and the RPE load factors and weekly ramps (`progression.yaml`; a
+  framework's `progression_defaults` overrides the ramps, `progression.ramps_for`) are
+  commons data, and `tools/gen_client_vocab.py` writes the levels, phase kinds and
+  intensities into the clients and the schemas' enums (`test_engine_tables.py`). A framework may
   declare `recovery.allow_consecutive: [[a, b], …]` (+ `phases`) to let a modality pair sit
   on back-to-back days despite the recovery windows — Uphill's specific phase does, for
   its two ME long days (`scheduler.consecutive_allowances`). The windows

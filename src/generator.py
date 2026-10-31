@@ -4,7 +4,7 @@ from __future__ import annotations
 from . import blockers, loader, phases, provenance, recovery_regions, standard_tests, week_template
 from .scheduler import schedule_week, select_framework
 from .selector import populate_session, select_archetype
-from .progression import calculate_load
+from .progression import calculate_load, ramps_for
 from .validator import validate
 from .output import format_program
 from typing import NamedTuple
@@ -645,6 +645,7 @@ def start(goal: dict, constraints: dict, data: dict, lib: dict, policy, injury_f
         is_deload     = sched_result['is_deload']
         framework     = sched_result['framework']
         deload_keep   = (framework.get('deload_protocol') or {}).get('volume_reduction_pct')
+        ramps         = ramps_for(framework)
 
         # Collect compromises from this week (only unique ones)
         week_compromises = sched_result.get('compromises', [])
@@ -818,7 +819,7 @@ def start(goal: dict, constraints: dict, data: dict, lib: dict, policy, injury_f
                                 ea['exercise'], ea['slot'], prog, week_in_phase, phase,
                                 constraints.get('training_level', 'intermediate'), is_deload,
                                 session_time_minutes=constraints.get('session_time_minutes', 75),
-                                deload_keep=deload_keep)
+                                deload_keep=deload_keep, ramps=ramps)
                     populated['test']['instead_of'] = _stand_in(rotation_source)
 
                 for ea in populated.get('exercises', []):
@@ -834,6 +835,7 @@ def start(goal: dict, constraints: dict, data: dict, lib: dict, policy, injury_f
                         is_deload,
                         session_time_minutes=constraints.get('session_time_minutes', 75),
                         deload_keep=deload_keep,
+                        ramps=ramps,
                     )
                     ea['load'] = load
 

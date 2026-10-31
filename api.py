@@ -39,7 +39,7 @@ from src.phases import PhaseResolutionError
 from src.similarity import compute_all_similarities
 from src.generator import generate
 from src.phase_calendar import compute_phase_from_date
-from src.progression import calculate_load, rep_scheme_text
+from src.progression import calculate_load, ramps_for, rep_scheme_text
 from src.training_contract import ContractError
 from src.selector import populate_session
 from src.validator import check_level_coverage, validate
@@ -2011,8 +2011,8 @@ def _prog_model_for(modality: str, body: dict, data: dict) -> str:
     return resolve_model(fw or {}, modality, data['modalities'])
 
 
-def _week_phase_rules(body: dict, philosophy_ids) -> tuple[frozenset, float | None]:
-    """(exclude_exercises, deload share) for the week a single-session route edits.
+def _week_phase_rules(body: dict, philosophy_ids) -> tuple[frozenset, float | None, dict]:
+    """(exclude_exercises, deload share, weekly ramps) for the week a single-session route edits.
 
     The client sends the week's `phase_id` and `framework_id`; without them
     (an older client) nothing is excluded and the model defaults apply, as
@@ -2025,7 +2025,7 @@ def _week_phase_rules(body: dict, philosophy_ids) -> tuple[frozenset, float | No
     rules = phases.phase_rules(wanted, phase_id, framework_id)
     fw = loader.load_all_frameworks().get(framework_id) if framework_id else None
     keep = ((fw or {}).get('deload_protocol') or {}).get('volume_reduction_pct')
-    return frozenset(rules['exclude_exercises']), keep
+    return frozenset(rules['exclude_exercises']), keep, ramps_for(fw)
 
 
 def _added_provenance(arch: dict) -> dict | None:
@@ -2116,7 +2116,7 @@ def _generate_session_inner(body):
 
     if not add and _stored_contract(body.get('lane_key'), (forced_arch or {}).get('_package')):
         return jsonify({'detail': 'Regenerate this contract program to replace a module while preserving its progression.'}), 422
-    phase_excluded, deload_keep = _week_phase_rules(body, primary_sources)
+    phase_excluded, deload_keep, ramps = _week_phase_rules(body, primary_sources)
     session_stub = {'modality': modality, 'is_deload': is_deload}
     framework = loader.load_all_frameworks().get(body.get('framework_id')) or {}
     pick_phase = phase
@@ -2211,6 +2211,7 @@ def _generate_session_inner(body):
             is_deload,
             session_time_minutes=constraints.get('session_time_minutes', 75),
             deload_keep=deload_keep,
+            ramps=ramps,
         )
 
     arch = populated.get('archetype', {})
@@ -2291,7 +2292,7 @@ def substitute_exercise():
     limit = max(1, min(int(body.get('limit') or 8), 10))
 
     excl_patterns, excl_ids = _selector._injury_exclusions(constraints, data['injury_flags'])
-    phase_excluded, deload_keep = _week_phase_rules(body, goal['primary_sources'])
+    phase_excluded, deload_keep, ramps = _week_phase_rules(body, goal['primary_sources'])
     unlocked = (_selector._get_unlocked(level, lib['exercises'], lib.get('level_seeds'))
                 - excl_ids - phase_excluded)
     _selected, trace = _selector.select_exercise(
@@ -2311,7 +2312,7 @@ def substitute_exercise():
             continue
         load = calculate_load(ex, slot, prog_model, week_in_phase, phase, level, is_deload,
                               session_time_minutes=constraints.get('session_time_minutes', 75),
-                              deload_keep=deload_keep)
+                              deload_keep=deload_keep, ramps=ramps)
         ea = {'slot_index': slot_index, 'slot_role': session_role,
               'slot_type': slot.get('slot_type', 'sets_reps'),
               'exercise': ex, 'slot': slot, 'load': load}

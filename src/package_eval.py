@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from collections import Counter
 
-from src import fidelity, package_fidelity as pf
+from src import fidelity, levels as _levels, package_fidelity as pf
 
 PASS, PARTIAL, FAIL = 'pass', 'partial', 'fail'
 RANK = {PASS: 0, PARTIAL: 1, FAIL: 2}
@@ -65,7 +65,7 @@ HYGIENE = {'D3', 'D4', 'S6', 'X3'}
 
 SUBSTITUTE_PARTIAL = 0.25
 SHARE_PASS, SHARE_PARTIAL = 0.40, 0.60
-LEVELS = ('novice', 'intermediate', 'advanced', 'elite')
+LEVELS = _levels.order()   # data/commons/training_levels.yaml
 # Fidelity rules that are a declared claim of the method breaking, at any
 # gated severity: the volume bands fire only where a phase declares them.
 CLAIM_RULES = {'substituted_share', 'modality_outnumbers', 'archetype_share', 'distinct_archetypes',

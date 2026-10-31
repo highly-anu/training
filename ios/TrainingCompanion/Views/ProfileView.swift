@@ -393,7 +393,7 @@ private struct AthleteTab: View {
     @State private var bodyweightInput: String = ""
     @State private var maxHRInput: String = ""
 
-    private let trainingLevels = ["novice", "intermediate", "advanced", "elite"]
+    private let trainingLevels = ClientVocab.trainingLevels
     private let zoneNames = ["Zone 1 ends", "Zone 2 ends", "Zone 3 ends", "Zone 4 ends"]
 
     private var boundaries: [Double] {

@@ -21,7 +21,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from src import generator, goals, implements, loader, selector  # noqa: E402
+from src import generator, goals, implements, levels as _levels, loader, selector  # noqa: E402
 
 PROFILES = ((4, 90), (6, 120))
 
@@ -56,7 +56,7 @@ def reachable(philosophy: dict, catalog: dict, frameworks: dict, archetypes: dic
     for track in philosophy.get('tracks') or []:
         goal = goals.philosophy_to_goal(philosophy['id'], list(frameworks.values()), track['id'])
         contract = goal.get('training_contract')
-        levels = contract['training_levels'] if contract else ['novice', 'intermediate', 'advanced', 'elite']
+        levels = contract['training_levels'] if contract else list(_levels.order())
         weeks = sum(p['weeks'] for p in goal['phase_sequence'])
         for level in levels:
             for days, minutes in PROFILES:

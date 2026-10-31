@@ -2301,29 +2301,27 @@
  "gaps": [
   {
    "id": "engine_vocabulary",
-   "title": "Phase kinds, intensities, levels and progression and contract models are engine vocabulary",
+   "title": "Progression models, contract models and slot types are engine vocabulary",
    "kind": "code",
    "impact": "blocks",
-   "detail": "A package chooses among them; a new one is engine work.",
+   "detail": "A package chooses among them; a new one is engine work: how a load progresses (linear, RPE, time to task, density, as written…), how a contract module schedules (a density cycle, a ladder…) and what a slot type means to the dispatcher. The rest of the vocabulary is data since 2026-10-31: phase kinds (phase_kinds.yaml), training levels (training_levels.yaml) and intensities (intensities.yaml), each read through one module and generated into the clients and the schemas.",
    "anchors": [
-    "src/progression.py::_INTENSITY_ZONES",
-    "src/selector.py::_LEVEL_ORDER",
+    "src/progression.py::def _calculate_load",
     "src/training_contract.py::density_cycle",
-    "data/commons/phase_kinds.yaml::counts_as_deload"
+    "src/progression.py::slot_type =="
    ],
    "roadmap": null,
    "status": "by_design"
   },
   {
    "id": "engine_constants",
-   "title": "Scheduling and load constants are code",
+   "title": "Recovery ranking, the high-cost floor and the load defaults are engine semantics",
    "kind": "code",
    "impact": "cosmetic",
-   "detail": "Recovery-cost ranks, the 48 h floor between two high-cost modalities, RPE load factors and the progression defaults (2.5 kg increment, 3 × 5, two sessions a week) are the engine's, the same for every package.",
+   "detail": "What a recovery cost means (its rank, and the 48 h between two high-cost modalities, which a framework can waive per pair: recovery.allow_consecutive) and the defaults a slot falls back to when its package says nothing (2.5 kg a week, 3 × 5, two sessions a week). The numbers that vary are data since 2026-10-31: the RPE load factors and the weekly ramps (progression.yaml; a framework's progression_defaults overrides the ramps), each level's distance share (training_levels.yaml) and each intensity's recovery weight (intensities.yaml).",
    "anchors": [
     "src/scheduler.py::_RECOVERY_COST_RANK",
     "src/scheduler.py::_HIGH_COST_FLOOR_HOURS",
-    "src/progression.py::_RPE_LOAD_FACTOR",
     "src/progression.py::_DEFAULT_INCREMENT_KG",
     "src/progression.py::_DEFAULT_SESSIONS_PER_WEEK"
    ],

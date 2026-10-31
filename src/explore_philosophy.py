@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import os
 
-from src import goals, implements, loader, phases, training_contract
+from src import goals, implements, levels as _levels, loader, phases, training_contract
 from src.analytics import benchmarks_data
 from src.explore_links import policy_for, slot_exercises
 
@@ -209,7 +209,7 @@ def _framework_week(framework: dict) -> dict:
             'sessions': [{'modality': m, 'perWeek': n} for m, n in per.items() if n]}
 
 
-_LEVELS = ('novice', 'intermediate', 'advanced', 'elite')
+_LEVELS = _levels.order()   # data/commons/training_levels.yaml
 
 
 def advice_fields(value) -> dict:
@@ -503,7 +503,6 @@ def _core(phil: dict, *, frameworks: dict, archetypes: list, exercises: dict, co
     levels = []
     for t in track_docs:
         levels += [lvl for lvl in t['levels'] if lvl not in levels]
-    order = ('novice', 'intermediate', 'advanced', 'elite')
     return {
         'id': phil['id'],
         'name': phil.get('name') or words(phil['id']),
@@ -515,7 +514,7 @@ def _core(phil: dict, *, frameworks: dict, archetypes: list, exercises: dict, co
         'principles': [words(p) for p in phil.get('core_principles') or []],
         'models': {'intensity': words(phil.get('intensity_model')) or None,
                    'progression': words(phil.get('progression_philosophy')) or None},
-        'levels': sorted(levels, key=lambda lvl: order.index(lvl) if lvl in order else len(order)),
+        'levels': sorted(levels, key=_levels.rank),
         'equipment': [{'id': e, 'name': words(e)} for e in phil.get('required_equipment') or []
                       if e != 'open_space'],
         'expectations': expectations,

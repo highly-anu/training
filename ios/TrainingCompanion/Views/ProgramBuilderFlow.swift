@@ -598,7 +598,7 @@ struct BuilderStep3ConstraintsView: View {
     @ObservedObject var builder: BuilderState
     @EnvironmentObject var appState: AppState
 
-    private let trainingLevels = ["novice", "intermediate", "advanced", "elite"]
+    private let trainingLevels = ClientVocab.trainingLevels
 
     /// The chosen track's own phases — the only places a program can start.
     private var trackPhases: [PhilosophyPhase] {
@@ -949,7 +949,7 @@ struct ProgramSettingsSheet: View {
         _settings = StateObject(wrappedValue: SettingsState(program: program, weeks: weeks, profile: profile))
     }
 
-    private let trainingLevels = ["novice", "intermediate", "advanced", "elite"]
+    private let trainingLevels = ClientVocab.trainingLevels
 
     private var philosophy: PhilosophyCard? {
         appState.philosophies.first { $0.id == settings.selectedPhilosophyId }
