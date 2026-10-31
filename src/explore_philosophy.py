@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import os
 
-from src import goals, loader, phases, training_contract
+from src import goals, implements, loader, phases, training_contract
 from src.analytics import benchmarks_data
 from src.explore_links import policy_for, slot_exercises
 
@@ -368,7 +368,9 @@ def _track(phil: dict, track: dict, contract: dict | None, frameworks: dict, arc
         'weeks': weeks,
         'repeatable': len(phase_docs) == 1 and phase_docs[0]['repeatable'],
         'notes': ((contract or {}).get('notes') or '').strip() or None,
-        'kettlebellPair': bool(contract and contract.get('requires_kettlebell_pair')),
+        # What the track needs beyond the equipment, in words ("a pair of
+        # bells"; src/implements.py), so any implement reads right.
+        'implement': implements.words(contract),
         'mix': _mix_list(mix),
         'intensity': {k: round(v, 3) for k, v in intensity.items() if v},
         'daysPerWeek': _span(p['daysPerWeek'] for p in phase_docs),
@@ -573,7 +575,7 @@ def glance(core: dict, measures: dict | None = None) -> dict:
                    'inventions': len(core['inventions']), 'open': len(core['open']),
                    'sessions': core['sessionCount']},
         'tracks': [{**{k: t[k] for k in ('id', 'name', 'primary', 'forLevels', 'levels', 'builtBy', 'weeks',
-                                        'repeatable', 'kettlebellPair', 'requires', 'daysPerWeek', 'minutes',
+                                        'repeatable', 'implement', 'requires', 'daysPerWeek', 'minutes',
                                         'mix', 'intensity', 'tests', 'goals')},
                     'phases': [{k: p[k] for k in phase_keys} | {'tests': len(p['tests'])} for p in t['phases']]}
                    for t in core['tracks']],

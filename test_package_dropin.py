@@ -58,7 +58,7 @@ def _own_ids(source: str) -> list[str]:
     return ids
 
 
-def make_packages(folder: str) -> None:
+def make_packages(folder: str, copies: dict | None = None) -> None:
     """The shipped packages, then each source package under its new id: the
     folder, its own id wherever its files name it (a word, so
     `block_fixture_x` stays), and its archetype and framework ids, files
@@ -67,7 +67,7 @@ def make_packages(folder: str) -> None:
         path = os.path.join(ROOT, 'data', 'packages', name)
         if os.path.isdir(path):
             shutil.copytree(path, os.path.join(folder, name))
-    for new, source in COPIES.items():
+    for new, source in (copies or COPIES).items():
         old = os.path.basename(source)
         dest = os.path.join(folder, new)
         renames = {old: new, **{i: f'dx_{i}' for i in _own_ids(os.path.join(ROOT, source))}}

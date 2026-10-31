@@ -137,7 +137,8 @@ extension GeneratedProgram {
 extension TrackEntryRequirements {
     /// What every one of several tracks asks before it runs, as one track's:
     /// the levels all are written for, every movement any needs mastered at
-    /// `level`, the most bells, every lift any may start from a known weight.
+    /// `level`, the most of each implement any needs (a pair of bells), every
+    /// lift any may start from a known weight.
     static func merged(_ all: [TrackEntryRequirements], level: String) -> TrackEntryRequirements? {
         guard let first = all.first else { return nil }
         if all.count == 1 { return first }
@@ -152,9 +153,14 @@ extension TrackEntryRequirements {
             names.merge(r.exerciseNames ?? [:]) { a, _ in a }
         }
         let levels = all.dropFirst().reduce(first.trainingLevels) { acc, r in acc.filter(r.trainingLevels.contains) }
+        var implements: [String: TrackEntryRequirements.TrackImplement] = [:]
+        for imp in all.flatMap(\.neededImplements) where imp.count > (implements[imp.countKey]?.count ?? 0) {
+            implements[imp.countKey] = imp
+        }
         return TrackEntryRequirements(trainingLevels: levels, masteredExercises: mastered,
                                       masteredExercisesByLevel: [level: mastered], exerciseNames: names,
                                       kettlebellCount: all.map(\.kettlebellCount).max() ?? 1,
-                                      startingLoads: loads)
+                                      startingLoads: loads,
+                                      implements: implements.values.sorted { $0.countKey < $1.countKey })
     }
 }

@@ -7,6 +7,7 @@
   "properties": {
     "version": {"const": 1},
     "sources": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    "implement": {"$ref": "#/definitions/implement", "description": "What the loaded blocks chosen by weight are done with (an id of data/commons/constraints/equipment.yaml) and how many matching ones a session needs (1 without it); a track may override either. The athlete says theirs as <equipment>_count and <equipment>_weights_kg (src/implements.py)."},
     "tracks": {"type": "object", "additionalProperties": {"$ref": "#/definitions/track"}}
   },
   "definitions": {
@@ -16,11 +17,18 @@
       "properties": {
         "training_levels": {"$ref": "#/definitions/levels"},
         "notes": {"type": "string"},
-        "requires_kettlebell_pair": {"type": "boolean"},
+        "implement": {"$ref": "#/definitions/implement", "description": "The track's implement over the document's: its own equipment, or a count (Wildman's double-bell track: 2)."},
         "test_module": {"type": "string"},
         "deload_phases": {"type": "array", "items": {"type": "string"}},
         "level_seeds": {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "string"}}},
         "modules": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/module"}}
+      }
+    },
+    "implement": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "equipment": {"type": "string", "pattern": "^[a-z0-9_]+$"},
+        "count": {"type": "integer", "minimum": 1, "maximum": 4}
       }
     },
     "levels": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["novice", "intermediate", "advanced", "elite"]}},

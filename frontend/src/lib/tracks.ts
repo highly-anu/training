@@ -1,4 +1,4 @@
-import type { Framework, GoalProfile, PhaseEntry, Philosophy, Track, WeekData } from '@/api/types'
+import type { Framework, GoalProfile, PhaseEntry, Philosophy, Track, TrackImplement, WeekData } from '@/api/types'
 
 /**
  * Tracks and phases on the client. A philosophy offers one or more tracks;
@@ -116,6 +116,34 @@ export function builderTrack(
 
 type EntryRequirements = NonNullable<Track['entry_requirements']>
 
+/** Each implement any track asks for, at the most any asks (a pair of bells). */
+export function mergedImplements(reqs: EntryRequirements[]): TrackImplement[] {
+  const byKey = new Map<string, TrackImplement>()
+  for (const r of reqs) {
+    for (const imp of trackImplements(r)) {
+      const seen = byKey.get(imp.countKey)
+      if (!seen || imp.count > seen.count) byKey.set(imp.countKey, imp)
+    }
+  }
+  return Array.from(byKey.values())
+}
+
+/** What a track asks the athlete to confirm they have; a build of the server
+ *  that predates `implements` said only `kettlebell_count`. */
+export function trackImplements(r: EntryRequirements | undefined): TrackImplement[] {
+  if (!r) return []
+  if (r.implements) return r.implements
+  return r.kettlebell_count >= 2
+    ? [{ equipment: 'kettlebell', count: r.kettlebell_count, countKey: 'kettlebell_count', number: 'two', plural: 'kettlebells' }]
+    : []
+}
+
+/** How many of an implement the athlete has said they have (`<equipment>_count`). */
+export function implementCount(constraints: object, countKey: string): number {
+  const n = (constraints as Record<string, unknown>)[countKey]
+  return typeof n === 'number' ? n : 0
+}
+
 /**
  * What every one of several tracks asks of the athlete before it runs, as one
  * track's requirements: the levels all of them are written for, every
@@ -139,6 +167,7 @@ export function mergedEntryRequirements(
     mastered_exercises: mastered,
     mastered_exercises_by_level: { [level]: mastered },
     exercise_names: Object.assign({}, ...reqs.map((r) => r.exercise_names ?? {})),
+    implements: mergedImplements(reqs),
     kettlebell_count: Math.max(...reqs.map((r) => r.kettlebell_count)),
     starting_loads: Array.from(loads.values()),
   }

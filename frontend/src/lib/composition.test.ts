@@ -5,7 +5,7 @@ vi.mock('@/api/client', () => ({ apiClient: { get: vi.fn(), post: vi.fn(), put: 
 import { buildPostBody, sourcesOf } from '@/api/programs'
 import { builderGenerateParams } from '@/lib/builderParams'
 import { compositionLanes, regenerateSource, tailResume } from '@/lib/programSource'
-import { mergedEntryRequirements } from '@/lib/tracks'
+import { mergedEntryRequirements, trackImplements, implementCount } from '@/lib/tracks'
 import { laneSegments } from '@/hooks/usePhaseCalendar'
 import type { AthleteConstraints, GeneratedProgram, Track, WeekData } from '@/api/types'
 
@@ -109,5 +109,19 @@ describe('a composition on the page', () => {
                                    kettlebell_count: 2 })
     expect(merged?.starting_loads?.map((l) => l.id)).toEqual(['squat', 'deadlift'])
     expect(mergedEntryRequirements([undefined], 'intermediate')).toBeUndefined()
+  })
+
+  it('asks for every implement any track needs, at the most any asks', () => {
+    const dumbbells = { equipment: 'dumbbell', count: 2, countKey: 'dumbbell_count', number: 'two', plural: 'dumbbells' }
+    const tracks = [
+      // A build of the server that said only kettlebell_count.
+      { entry_requirements: { training_levels: ['intermediate'], mastered_exercises: [], kettlebell_count: 2 } },
+      { entry_requirements: { training_levels: ['intermediate'], mastered_exercises: [], kettlebell_count: 1,
+                              implements: [dumbbells] } },
+    ] as unknown as Track[]
+    const merged = mergedEntryRequirements(tracks, 'intermediate')
+    expect(trackImplements(merged).map((i) => i.countKey).sort()).toEqual(['dumbbell_count', 'kettlebell_count'])
+    expect(implementCount({ dumbbell_count: 2 }, 'dumbbell_count')).toBe(2)
+    expect(implementCount({}, 'dumbbell_count')).toBe(0)
   })
 })

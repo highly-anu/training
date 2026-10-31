@@ -107,7 +107,16 @@ def load_contract(package: str, track: str) -> dict | None:
             raise ContractError('Timed cycles must start at or below their duration ceiling.')
         if any(b['slot_type'] == 'emom' for b in module['blocks']) and p['model'] != 'density_cycle':
             raise ContractError('EMOM contract blocks require a density_cycle prescription.')
-    return {**deepcopy(contract), 'version': document['version'], 'package': package, 'track_id': track}
+    from . import equipment, implements
+    implement = implements.merged(document, contract)
+    if implement and implement.get('equipment') not in equipment.ids():
+        raise ContractError(f"{package}/{track}: its implement {implement.get('equipment')!r} is not in the equipment list.")
+    if not implement and any(b.get('loaded') for m in contract['modules'] if m['progression']['model'] != 'load_per_exposure'
+                             for b in m['blocks']):
+        raise ContractError(f'{package}/{track}: a loaded block chosen by weight needs the implement it uses '
+                            '(`implement: {equipment, count}`).')
+    return {**deepcopy(contract), 'version': document['version'], 'package': package, 'track_id': track,
+            **({'implement': implement} if implement else {})}
 
 
 def period_of(module: dict, week_number: int | None) -> dict | None:
@@ -595,19 +604,32 @@ def _interval_budget(module: dict, constraints: dict) -> float:
     return constraints.get('session_time_minutes', 60) * 60 - other
 
 
+def _inventory(module: dict, constraints: dict) -> list | None:
+    """The weights the athlete owns of the module's implement
+    (`<equipment>_weights_kg`), or None when they did not say."""
+    from . import implements
+    eq = (module.get('implement') or {}).get('equipment')
+    return constraints.get(implements.weights_key(eq)) if eq else None
+
+
 def _bell(module: dict, constraints: dict, state: dict) -> float | None:
-    inventory = constraints.get('kettlebell_weights_kg')
+    """The module's weight of its implement (a bell, for Wildman), checked
+    against what the athlete owns."""
+    from . import implements
+    eq = (module.get('implement') or {}).get('equipment')
+    one = implements.noun(eq)[0] if eq else 'implement'
+    inventory = _inventory(module, constraints)
     if inventory is not None and (not isinstance(inventory, list) or not inventory or any(isinstance(w, bool) or not isinstance(w, (int, float))
                                                      or not math.isfinite(w) or w <= 0 for w in inventory)):
-        raise ContractError('kettlebell_weights_kg must contain positive bell weights.')
+        raise ContractError(f'{implements.weights_key(eq)} must contain positive {one} weights.')
     weight = state.get('weight_kg')
     if weight is not None and (isinstance(weight, bool) or not isinstance(weight, (int, float))
                                or not math.isfinite(weight) or weight <= 0):
         raise ContractError('A module weight must be a positive number.')
     if weight is not None and inventory is not None and weight not in inventory:
-        raise ContractError(f"{module['id']}: the selected bell is not in the available inventory.")
-    # A category such as 'kettlebell' says nothing about owned sizes. Never invent
-    # a fractional bell or infer a safe working load from an athlete's level.
+        raise ContractError(f"{module['id']}: the selected {one} is not in the available inventory.")
+    # An equipment item says nothing about owned sizes. Never invent a
+    # fractional weight or infer a safe working load from an athlete's level.
     return weight
 
 
@@ -762,11 +784,16 @@ def _assignment(block: dict, module: dict, exercises: dict, constraints: dict,
     elif block.get('loaded'):
         if weight is not None:
             load['weight_kg'] = weight
-        load['load_note'] = (('Use two matching bells; selected weight is per bell. Finish repetitions cleanly, then rest.'
-                              if module.get('bell_count') == 2 else
-                              'Use the selected single bell; finish repetitions with clean mechanics, then rest.')
+        from . import implements
+        implement = module.get('implement') or {}
+        one, many = implements.noun(implement['equipment']) if implement.get('equipment') else ('implement', 'implements')
+        count = implement.get('count', 1)
+        load['load_note'] = ((f'Use {implements.number(count)} matching {many}; selected weight is per {one}. '
+                              'Finish repetitions cleanly, then rest.'
+                              if count > 1 else
+                              f'Use the selected single {one}; finish repetitions with clean mechanics, then rest.')
                              if weight is not None else
-                             'Choose a bell you can control throughout. Record its weight before increasing load.')
+                             f'Choose a {one} you can control throughout. Record its weight before increasing load.')
     if block['slot_type'] == 'emom' and load.get('focus'):
         # The stage's cue leads the note both clients show (start/stop).
         load['load_note'] = f"{load['focus']} {load.get('load_note') or ''}".strip()
@@ -986,8 +1013,10 @@ def _optional_blocker(module: dict, exercises: dict, constraints: dict, state: d
 def active_modules(contract: dict, constraints: dict) -> list[dict]:
     """The modules this athlete runs: those written for their level, each with
     its weekly exposures for the days they train (`exposures_by_days` — BJJ's
-    mat sessions grow with the week; 0 leaves a module out), and the bell pair
-    a track asks for. The compiler and the verifier read the same list."""
+    mat sessions grow with the week; 0 leaves a module out), and the
+    implement the track's loaded blocks use (`implement`: a pair of bells for
+    Wildman's double-bell track). The compiler and the verifier read the same
+    list."""
     level = constraints.get('training_level', 'intermediate')
     days = constraints.get('days_per_week', 4)
     learned = set(constraints.get('mastered_exercises') or []) | set((contract.get('level_seeds') or {}).get(level, []))
@@ -1006,8 +1035,8 @@ def active_modules(contract: dict, constraints: dict) -> list[dict]:
             if not n:
                 continue
             m = {**m, 'exposures_per_week': n}
-        if contract.get('requires_kettlebell_pair'):
-            m = {**m, 'bell_count': 2}
+        if contract.get('implement'):
+            m = {**m, 'implement': contract['implement']}
         out.append(m)
     return out
 
@@ -1044,10 +1073,14 @@ def start(contract: dict, entries: list, constraints: dict, data: dict, policy,
     level = constraints.get('training_level', 'intermediate')
     if level not in contract['training_levels']:
         raise ContractError(_level_refusal(contract, level))
-    if contract.get('requires_kettlebell_pair'):
-        count = constraints.get('kettlebell_count', 0)
-        if isinstance(count, bool) or not isinstance(count, int) or count < 2:
-            raise ContractError('This track requires two matching kettlebells; confirm kettlebell_count of at least 2.')
+    implement = contract.get('implement') or {}
+    if implement.get('count', 1) > 1:
+        from . import implements
+        need, key = implement['count'], implements.count_key(implement['equipment'])
+        count = constraints.get(key, 0)
+        if isinstance(count, bool) or not isinstance(count, int) or count < need:
+            raise ContractError(f'This track requires {implements.number(need)} matching '
+                                f"{implements.plural_label(implement['equipment'])}; confirm {key} of at least {need}.")
     modules = active_modules(contract, constraints)
     if not modules:
         raise ContractError('No training modules are defined for this level.')
@@ -1505,7 +1538,6 @@ def verify(program: dict, contract: dict, constraints: dict) -> None:
     if longest > constraints['session_time_minutes']:
         raise ContractError('A volume session is budgeted past the session limit.')
     last_day = {}
-    inventory = constraints.get('kettlebell_weights_kg')
     cursors = {mid: (program.get('module_state', {}).get(mid) or {}).get('completed', 0) for mid in every}
     light_seen: dict[str, set] = {mid: set() for mid in every}
     held: dict = {}
@@ -1591,8 +1623,12 @@ def verify(program: dict, contract: dict, constraints: dict) -> None:
                             continue
                         if load['forecast_step'] != record['forecast_step']:
                             raise ContractError('An assignment lost its module progression position.')
+                        inventory = _inventory(expected[mid], constraints)
                         if load.get('weight_kg') is not None and inventory is not None and load['weight_kg'] not in inventory:
-                            raise ContractError('A prescription uses a bell outside the available inventory.')
+                            from . import implements
+                            eq = (expected[mid].get('implement') or {}).get('equipment')
+                            one = implements.noun(eq)[0] if eq else 'implement'
+                            raise ContractError(f'A prescription uses a {one} outside the available inventory.')
                         if load['progression_model'] != spec['model']:
                             raise ContractError('A prescription lost its resolved progression policy.')
                         if spec['model'] == 'weekly_volume' and ea.get('exercise'):

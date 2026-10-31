@@ -42,6 +42,7 @@ suites:
   - test_add_package.py               # one package's baselines recorded, every other's kept
   - test_package_standards.py         # a package's own standards: loaded, served, owned, refused when taken
   - test_client_vocab.py              # the clients' modality and phase-kind tables, generated and current
+  - test_contract_implements.py       # a training contract on a pair of dumbbells: asked, refused, bounded, worded
   - test_recovery_schedule.py
   - test_recovery_regions.py
   - test_explore_links.py

@@ -2169,18 +2169,6 @@
    "status": "open"
   },
   {
-   "id": "contract_kettlebell",
-   "title": "A training contract's implement handling is kettlebell-specific",
-   "kind": "code",
-   "impact": "blocks",
-   "detail": "The bell pair and inventory wording; a contract for another implement needs engine work.",
-   "anchors": [
-    "src/training_contract.py::requires_kettlebell_pair"
-   ],
-   "roadmap": "9.5",
-   "status": "open"
-  },
-  {
    "id": "watch_capture",
    "title": "What each watch template records is not declared",
    "kind": "watch",

@@ -119,6 +119,9 @@ enum ProgramConstraintsDiff {
         // rebuild of a contract program asks again and is refused.
         c.masteredExercises = strings(program["mastered_exercises"])
         c.kettlebellCount = int(program["kettlebell_count"])
+        for (key, value) in program where key.hasSuffix("_count") && key != "kettlebell_count" {
+            if let count = int(value) { c.implementCounts[key] = count }
+        }
         return c
     }
 

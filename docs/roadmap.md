@@ -1047,8 +1047,17 @@ Today: the code is package-neutral, the repository is not yet drop-in. In order:
   `assault_bike`, `dip_bar` or `foam_roller`, which nothing named — a stored
   `assault_bike` reads as `bike` (`src/equipment.canonical`, on generate, one session,
   substitute and the profile); `/api/equipment` lists all 30 ids, not 22.
-- **9.5 A contract for any implement (M).** The bell-pair wording and
-  `requires_kettlebell_pair` generalised to an implement the contract declares.
+- **9.5 A contract for any implement (M).** Done 2026-10-30 (branch
+  `feat/contract-implements`): a contract declares `implement: {equipment, count}` (the
+  document's, a track overriding it) instead of `requires_kettlebell_pair`; the engine's
+  counts, inventory, notes and refusals read it (`src/implements.py`), as do the API's
+  `entry_requirements.implements`, the impact tool, Explore's track card ("a pair of
+  bells") and the check tools; the athlete's side is `<equipment>_count` /
+  `<equipment>_weights_kg`, so `kettlebell_count` and `kettlebell_weights_kg` keep working.
+  Both builders ask for whatever a track needs (the phone's constraints encode any
+  `<equipment>_count`). Wildman's programs and wording are unchanged (36 golden hashes
+  moved only for the contract's own echo); `test_contract_implements.py` runs a copy on
+  a pair of dumbbells.
 - **9.6 Watch capture declared (S–M).** What each template in `watch_vocabulary.json`
   records, so a package's lead measure can be checked as recorded on the wrist (X2
   checks only the screens).

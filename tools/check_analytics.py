@@ -24,7 +24,7 @@ from datetime import date, timedelta
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault('SUPABASE_URL', '')
 
-from src import generator, goals, loader, phases  # noqa: E402
+from src import generator, goals, implements, loader, phases  # noqa: E402
 from src.analytics.context import AnalyticsInputs  # noqa: E402
 from src.analytics.document import compute_program_analytics  # noqa: E402
 
@@ -66,7 +66,7 @@ def run(only: str | None = None) -> int:
                 levels = goal['training_contract']['training_levels']
                 if cons['training_level'] not in levels:
                     cons['training_level'] = levels[0]
-                cons['kettlebell_count'] = 2
+                cons = implements.confirm(cons, goal['training_contract'])
                 cons['mastered_exercises'] = sorted({eid for m in goal['training_contract']['modules'] for eid in m.get('requires_mastery', [])})
             prog = generator.generate(goal_id=goal['id'], goal_dict=goal, constraints=cons,
                                       # The whole track, at least WEEKS: a measure of a late phase

@@ -26,6 +26,31 @@ final class TrainingContractTests: XCTestCase {
         XCTAssertNil(try JSONDecoder().decode(TrackEntryRequirements.self, from: older).exerciseNames,
                      "a server before the names decodes as before")
     }
+    func testAnyImplementIsAskedForAndSent() throws {
+        // A track that needs a pair of dumbbells says so in `implements`; the
+        // builder confirms `dumbbell_count`, which the constraints send beside
+        // the keys they always sent.
+        let data = Data(#"{"training_levels":["intermediate"],"mastered_exercises":[],"kettlebell_count":1,"implements":[{"equipment":"dumbbell","count":2,"countKey":"dumbbell_count","number":"two","plural":"dumbbells"}]}"#.utf8)
+        let r = try JSONDecoder().decode(TrackEntryRequirements.self, from: data)
+        XCTAssertEqual(r.neededImplements.map(\.countKey), ["dumbbell_count"])
+        var constraints = GenerateConstraints()
+        XCTAssertEqual(constraints.count(for: "dumbbell_count"), 0)
+        constraints.setCount(2, for: "dumbbell_count")
+        constraints.setCount(2, for: "kettlebell_count")
+        XCTAssertEqual(constraints.kettlebellCount, 2, "the kettlebell keeps its own property")
+        let object = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(constraints)) as? [String: Any])
+        XCTAssertEqual(object["dumbbell_count"] as? Int, 2)
+        XCTAssertEqual(object["kettlebell_count"] as? Int, 2)
+        XCTAssertNil(object["phase"], "a nil optional is still left out")
+        XCTAssertNil(object["implementCounts"])
+        XCTAssertEqual(Set(object.keys), ["training_level", "days_per_week", "session_time_minutes", "equipment",
+                                          "injury_flags", "mastered_exercises", "kettlebell_count", "dumbbell_count"])
+
+        // A server before `implements` asked for bells by kettlebell_count alone.
+        let older = Data(#"{"training_levels":["intermediate"],"mastered_exercises":[],"kettlebell_count":2}"#.utf8)
+        let legacy = try JSONDecoder().decode(TrackEntryRequirements.self, from: older)
+        XCTAssertEqual(legacy.neededImplements.map(\.plural), ["kettlebells"])
+    }
     func testModulePrescriptionSurvivesRoundTripAndShowsRepetitions() throws {
         let data = Data(#"""
         {"exercise":{"id":"swing","name":"Swing","category":"kettlebell"},

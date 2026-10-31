@@ -1090,10 +1090,24 @@ export interface Track {
     mastered_exercises_by_level?: Record<string, string[]>
     /** Each required movement's name, by exercise id. */
     exercise_names?: Record<string, string>
+    /** What the track's loaded blocks need more than one of, matching: the
+     *  athlete confirms `countKey` (`kettlebell_count`: a pair of bells). */
+    implements?: TrackImplement[]
+    /** The kettlebell's count from `implements`, for builds that predate it. */
     kettlebell_count: number
     /** Lifts that may start from the weight last made (optional; else a work-up). */
     starting_loads?: { id: string; name: string }[]
   }
+}
+
+export interface TrackImplement {
+  equipment: string
+  count: number
+  /** The constraint that says how many the athlete has: `<equipment>_count`. */
+  countKey: string
+  /** "two", "kettlebells": the builders' "I have two matching kettlebells". */
+  number: string
+  plural: string
 }
 
 export interface Philosophy {
@@ -2294,7 +2308,8 @@ export interface DescribedTrack {
   weeks: number
   repeatable: boolean
   notes: string | null
-  kettlebellPair: boolean
+  /** What the track needs beyond its equipment, in words ("a pair of bells"). */
+  implement: string | null
   mix: DescribedMix[]
   phases: DescribedPhase[]
 }
@@ -2391,7 +2406,8 @@ export interface GlanceTrack {
   builtBy: 'contract' | 'template' | 'framework'
   weeks: number
   repeatable: boolean
-  kettlebellPair: boolean
+  /** What the track needs beyond its equipment, in words ("a pair of bells"). */
+  implement: string | null
   requires: string[]
   daysPerWeek: { min: number; max: number } | null
   minutes: { min: number; max: number } | null

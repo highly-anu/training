@@ -258,6 +258,29 @@ struct TrackEntryRequirements: Codable, Hashable {
     /// Lifts that may start from the weight last made (optional; else the
     /// first session works up to one).
     var startingLoads: [StartingLoad]? = nil
+    /// What the track's loaded blocks need more than one of, matching (a pair
+    /// of bells); the athlete confirms each `countKey`.
+    var implements: [TrackImplement]? = nil
+
+    /// What the track asks the athlete to confirm they have; a server that
+    /// predates `implements` said only `kettlebell_count`.
+    var neededImplements: [TrackImplement] {
+        if let implements { return implements }
+        return kettlebellCount >= 2
+            ? [TrackImplement(equipment: "kettlebell", count: kettlebellCount, countKey: "kettlebell_count",
+                              number: "two", plural: "kettlebells")]
+            : []
+    }
+
+    struct TrackImplement: Codable, Hashable {
+        let equipment: String
+        let count: Int
+        /// The constraint that says how many the athlete has: `<equipment>_count`.
+        let countKey: String
+        /// "two", "kettlebells": "I have two appropriate matching kettlebells".
+        let number: String
+        let plural: String
+    }
 
     struct StartingLoad: Codable, Hashable, Identifiable {
         let id: String
@@ -271,6 +294,7 @@ struct TrackEntryRequirements: Codable, Hashable {
         case exerciseNames = "exercise_names"
         case kettlebellCount = "kettlebell_count"
         case startingLoads = "starting_loads"
+        case implements
     }
 }
 
@@ -1027,6 +1051,19 @@ struct GenerateConstraints: Encodable {
     /// Week within the phase a partial regenerate continues from.
     var periodizationWeek: Int? = nil
     var preferredDays: [String]? = nil
+    /// How many matching ones the athlete has of an implement a track needs
+    /// more than one of, other than the kettlebell (`kettlebellCount`), by its
+    /// constraint key: `dumbbell_count` (src/implements.py).
+    var implementCounts: [String: Int] = [:]
+
+    /// How many of the implement `key` names the athlete has said they have.
+    func count(for key: String) -> Int {
+        key == CodingKeys.kettlebellCount.rawValue ? (kettlebellCount ?? 0) : (implementCounts[key] ?? 0)
+    }
+
+    mutating func setCount(_ n: Int, for key: String) {
+        if key == CodingKeys.kettlebellCount.rawValue { kettlebellCount = n } else { implementCounts[key] = n }
+    }
 
     enum CodingKeys: String, CodingKey {
         case trainingLevel = "training_level"
@@ -1043,6 +1080,37 @@ struct GenerateConstraints: Encodable {
         case startPhase = "start_phase"
         case periodizationWeek = "periodization_week"
         case preferredDays = "preferred_days"
+    }
+
+    private struct ImplementKey: CodingKey {
+        var stringValue: String
+        var intValue: Int? { nil }
+        init(stringValue: String) { self.stringValue = stringValue }
+        init?(intValue: Int) { nil }
+    }
+
+    /// The keys the synthesized encoder wrote (a nil optional left out), then
+    /// each implement's count under its own key.
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(trainingLevel, forKey: .trainingLevel)
+        try c.encode(daysPerWeek, forKey: .daysPerWeek)
+        try c.encode(sessionTimeMinutes, forKey: .sessionTimeMinutes)
+        try c.encode(equipment, forKey: .equipment)
+        try c.encode(injuryFlags, forKey: .injuryFlags)
+        try c.encode(masteredExercises, forKey: .masteredExercises)
+        try c.encodeIfPresent(kettlebellCount, forKey: .kettlebellCount)
+        try c.encodeIfPresent(startingLoadsKg, forKey: .startingLoadsKg)
+        try c.encodeIfPresent(phase, forKey: .phase)
+        try c.encodeIfPresent(trainingPhase, forKey: .trainingPhase)
+        try c.encodeIfPresent(trackId, forKey: .trackId)
+        try c.encodeIfPresent(startPhase, forKey: .startPhase)
+        try c.encodeIfPresent(periodizationWeek, forKey: .periodizationWeek)
+        try c.encodeIfPresent(preferredDays, forKey: .preferredDays)
+        var extra = encoder.container(keyedBy: ImplementKey.self)
+        for (key, n) in implementCounts where CodingKeys(rawValue: key) == nil {
+            try extra.encode(n, forKey: ImplementKey(stringValue: key))
+        }
     }
 }
 

@@ -16,7 +16,7 @@ import { useFrameworks } from '@/api/frameworks'
 import { usePreviewStore } from '@/store/previewStore'
 import { builderGenerateParams } from '@/lib/builderParams'
 import { scheduleToConstraints, type ScheduleConstraints } from '@/lib/scheduleToConstraints'
-import { builderTrack, findTrack, mainFramework, mergedEntryRequirements, primaryTrack } from '@/lib/tracks'
+import { builderTrack, findTrack, implementCount, mainFramework, mergedEntryRequirements, primaryTrack, trackImplements } from '@/lib/tracks'
 
 export function ReviewGenerate() {
   const navigate = useNavigate()
@@ -102,7 +102,7 @@ export function ReviewGenerate() {
   const entryReady = !requirements || (
     requirements.training_levels.includes(constraints.training_level ?? 'intermediate') &&
     requiredSkills.every((id) => constraints.mastered_exercises?.includes(id)) &&
-    (requirements.kettlebell_count < 2 || (constraints.kettlebell_count ?? 0) >= 2)
+    trackImplements(requirements).every((imp) => implementCount(constraints, imp.countKey) >= imp.count)
   )
   const trackLabel = activeTrack?.name ?? 'Auto-select'
   const startPhaseName = activeTrack?.phases.find((p) => p.id === startPhaseId)?.name
@@ -346,11 +346,14 @@ export function ReviewGenerate() {
               I can perform {requirements.exercise_names?.[id] ?? id.replaceAll('_', ' ')} with controlled technique.
             </label>
           ))}
-          {requirements.kettlebell_count >= 2 && <label className="flex items-center gap-2">
-            <input type="checkbox" checked={(constraints.kettlebell_count ?? 0) >= 2}
-              onChange={(event) => useBuilderStore.getState().updateConstraints({ kettlebell_count: event.target.checked ? 2 : 1 })} />
-            I have two matching kettlebells appropriate for these exercises.
-          </label>}
+          {trackImplements(requirements).map((imp) => (
+            <label key={imp.countKey} className="flex items-center gap-2">
+              <input type="checkbox" checked={implementCount(constraints, imp.countKey) >= imp.count}
+                onChange={(event) => useBuilderStore.getState().updateConstraints(
+                  { [imp.countKey]: event.target.checked ? imp.count : 1 } as Partial<typeof constraints>)} />
+              I have {imp.number} matching {imp.plural} appropriate for these exercises.
+            </label>
+          ))}
           {(requirements.starting_loads?.length ?? 0) > 0 && (
             <div className="space-y-1.5 pt-1">
               <p className="text-muted-foreground">

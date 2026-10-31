@@ -689,7 +689,7 @@ struct BuilderStep4ReviewView: View {
         guard let r = requirements else { return true }
         return r.trainingLevels.contains(builder.constraints.trainingLevel)
             && Set(requiredSkills).isSubset(of: Set(builder.constraints.masteredExercises))
-            && (r.kettlebellCount < 2 || (builder.constraints.kettlebellCount ?? 0) >= 2)
+            && r.neededImplements.allSatisfy { builder.constraints.count(for: $0.countKey) >= $0.count }
     }
     private var requiredSkills: [String] {
         requirements?.masteredExercisesByLevel?[builder.constraints.trainingLevel]
@@ -776,10 +776,10 @@ struct BuilderStep4ReviewView: View {
                                 if checked { builder.constraints.masteredExercises.append(id) }
                             }))
                     }
-                    if r.kettlebellCount >= 2 {
-                        Toggle("I have two appropriate matching kettlebells", isOn: Binding(
-                            get: { (builder.constraints.kettlebellCount ?? 0) >= 2 },
-                            set: { builder.constraints.kettlebellCount = $0 ? 2 : 1 }))
+                    ForEach(r.neededImplements, id: \.countKey) { imp in
+                        Toggle("I have \(imp.number) appropriate matching \(imp.plural)", isOn: Binding(
+                            get: { builder.constraints.count(for: imp.countKey) >= imp.count },
+                            set: { builder.constraints.setCount($0 ? imp.count : 1, for: imp.countKey) }))
                     }
                 }
                 if let lifts = r.startingLoads, !lifts.isEmpty {
@@ -902,6 +902,10 @@ private final class SettingsState: ObservableObject {
                 c.masteredExercises = ids.compactMap(\.stringValue)
             }
             if case .int(let count)? = saved["kettlebell_count"] { c.kettlebellCount = count }
+            // Any other implement the track asked for (`dumbbell_count`).
+            for (key, value) in saved where key.hasSuffix("_count") && key != "kettlebell_count" {
+                if case .int(let count) = value { c.implementCounts[key] = count }
+            }
         }
         c.trainingLevel = profile.trainingLevel
         c.equipment = profile.equipment
