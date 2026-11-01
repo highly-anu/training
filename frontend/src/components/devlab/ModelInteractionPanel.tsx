@@ -40,6 +40,8 @@ const EDGES: Edge[] = [
       'track_for_level, then primary_track_id, then the first track',
       'bias (else scope) — fallback priorities',
       'training_contract.yaml — the track\'s contract, when the package has one',
+      'training_contract.yaml tracks.<id>.options — choices the athlete makes for the track, each with a default (Wildman\'s swing minutes); both builders ask',
+      'fidelity.yaml inventions — a track the app made up rather than the source is labelled in both builders',
     ],
     yamlFromTarget: [
       'sessions_per_week',
@@ -53,6 +55,7 @@ const EDGES: Edge[] = [
       'A legacy framework_id maps to the track and phase that run it (goals.owner_track_for_framework)',
       'Priorities from the longest phase\'s framework sessions_per_week (the first wins a tie), else the bias',
       'The goal carries the track\'s training contract; a blend drops it and composes lanes (src/composition.py)',
+      'The athlete\'s answers ride in the constraints as contract_options; an option left out, or a choice it does not offer, takes its default',
     ],
   },
   {
@@ -176,6 +179,7 @@ const EDGES: Edge[] = [
       'slot.scaling.intensity_pct / volume_multiplier',
       'slot.load (as written), slot.standard (a test\'s scored slot)',
       'slot.switch_at_sec, rest_until_hr_pct (watch cues)',
+      'block.alternate {exercise_id, when} — an EMOM block\'s even rounds another movement when the track\'s options say so',
     ],
     yamlFromTarget: [
       'exercise.starting_load_kg (by level), weekly_increment_kg and sessions_per_week',
@@ -191,6 +195,7 @@ const EDGES: Edge[] = [
       'Time and distance ceilings: the phase kind\'s volume_multiplier (data/commons/phase_kinds.yaml)',
       'Deload: deload_protocol.volume_reduction_pct is the share kept; a counts_as_deload kind\'s share is the total',
       'as_written frameworks and a test\'s scored slot (standard_tests.protocol_load) are prescribed exactly as the source writes them',
+      'An alternating interval (Wildman\'s Option C): odd rounds the block\'s movement, even rounds its alternate if the athlete\'s equipment and injuries allow it; the load carries alternate, its note leads with it, and both watches title each round (alternateName)',
     ],
     hardcodedValues: [
       '_DEFAULT_INCREMENT_KG 2.5 and the other defaults: 3 × 5, deload share 0.6, density 0.70 / 0.75, AMRAP 1200 s',
