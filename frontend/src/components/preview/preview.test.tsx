@@ -229,6 +229,14 @@ describe('"From tomorrow onwards" (2026-10-27)', () => {
   // the settings sheet's start-date field had re-anchored it to tomorrow in
   // memory, so tomorrow fell in week 1, all 16 weeks were rebuilt and saved
   // at once, and weeks 1-2 left the program with their links and logs.
+  // On that Tuesday: on the real clock a Sunday's "tomorrow" is the fourth
+  // week's Monday, and the test failed every Sunday.
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    vi.setSystemTime(new Date(2026, 9, 27, 10))
+  })
+  afterEach(() => vi.useRealTimers())
+
   const mondayTwoWeeksAgo = () => {
     const d = new Date()
     d.setDate(d.getDate() - ((d.getDay() + 6) % 7) - 14)
