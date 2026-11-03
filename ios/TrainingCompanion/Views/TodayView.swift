@@ -39,9 +39,9 @@ struct TodayView: View {
 
     private func sessionsFor(_ offset: Int) -> [(session: ProgramSession, sessionKey: String, weekIndex: Int, dayName: String, sessionIndex: Int)] {
         let date = dateFor(offset)
-        guard let week = appState.week(for: date) else { return [] }
+        guard let wi = appState.weekIndex(for: date) else { return [] }
+        let week = appState.allWeeks[wi]
         let dayName = weekdayNames[Calendar.current.component(.weekday, from: date) - 1]
-        let wi = appState.allWeeks.firstIndex(where: { $0.weekNumber == week.weekNumber }) ?? 0
         return (week.schedule[dayName] ?? []).enumerated().map { (i, s) in
             (session: s,
              sessionKey: appState.makeSessionKey(weekNumber: week.weekNumber, dayName: dayName, index: i),
@@ -309,8 +309,7 @@ struct TodayView: View {
     /// The program day `dayOff` days from today, if the program covers it.
     private func dayTarget(for dayOff: Int) -> DayTarget? {
         let date = dateFor(dayOff)
-        guard let week = appState.week(for: date),
-              let wi = appState.allWeeks.firstIndex(where: { $0.weekNumber == week.weekNumber }) else { return nil }
+        guard let wi = appState.weekIndex(for: date) else { return nil }
         return DayTarget(weekIndex: wi, dayName: weekdayNames[Calendar.current.component(.weekday, from: date) - 1])
     }
 
