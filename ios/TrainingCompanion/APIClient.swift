@@ -751,10 +751,18 @@ final class APIClient {
     /// Thrown when the server rejects a program write as based on a stale read.
     struct StaleProgramRevision: Error {}
 
-    /// Returns the server's `phaseSummary` of the weeks just saved (nil from an
-    /// older server), so the Overview shows what this edit changed.
+    /// What the PUT answers beside `saved`: the stored copy's new revision and
+    /// version, which the next save is checked against, and the server's
+    /// `phaseSummary` of the weeks just saved (nil from an older server), so
+    /// the Overview shows what this edit changed.
+    struct SavedProgram: Decodable {
+        let revision: String?
+        let programVersionId: String?
+        let phaseSummary: JSONValue?
+    }
+
     @discardableResult
-    func saveProgram(_ payload: UserProgramSavePayload) async throws -> JSONValue? {
+    func saveProgram(_ payload: UserProgramSavePayload) async throws -> SavedProgram? {
         let url = URL(string: APIClient.baseURL + "/user/program")!
         var request = URLRequest(url: url)
         request.httpMethod = "PUT"
@@ -770,8 +778,7 @@ final class APIClient {
             throw StaleProgramRevision()
         }
         try validateStatus(response)
-        struct Saved: Decodable { let phaseSummary: JSONValue? }
-        return (try? JSONDecoder().decode(Saved.self, from: data))?.phaseSummary
+        return try? JSONDecoder().decode(SavedProgram.self, from: data)
     }
 
     // MARK: - Watch device pairing (Garmin / future companions)

@@ -1018,6 +1018,13 @@ final class AppState: ObservableObject {
 
     /// Returns the program week that contains `date`, or nil if out of range.
     func week(for date: Date) -> ProgramWeek? {
+        weekIndex(for: date).map { allWeeks[$0] }
+    }
+
+    /// The array index of the week `date` falls in — what an edit addresses.
+    /// Never look a week up by `weekNumber`: one number can sit at two indices
+    /// (an event-date tail spliced onto its head).
+    func weekIndex(for date: Date) -> Int? {
         guard let program = serverProgram?.currentProgram,
               let startDateStr = serverProgram?.programStartDate,
               let startDate = dayFormatter.date(from: startDateStr) else { return nil }
@@ -1027,7 +1034,7 @@ final class AppState: ObservableObject {
         let days = calendar.dateComponents([.day], from: start, to: target).day ?? 0
         guard days >= 0 else { return nil }
         let idx = days / 7
-        return idx < program.weeks.count ? program.weeks[idx] : nil
+        return idx < program.weeks.count ? idx : nil
     }
 
     var todayDayName: String {
@@ -1111,8 +1118,16 @@ final class AppState: ObservableObject {
                                       revision: sp.revision, programVersionId: sp.programVersionId,
                                       extra: sp.extra)
         writeWidgetData()
-        Task { try? await saveProgramToServer() }
+        // One save at a time: each sends the newest copy under the revision the
+        // one before it was answered with. Two edits in quick succession used to
+        // race, the second sent on the first's base revision and refused (409).
+        let previous = programSaveTask
+        programSaveTask = Task {
+            await previous?.value
+            try? await saveProgramToServer()
+        }
     }
+    private(set) var programSaveTask: Task<Void, Never>?
 
     /// Ranked alternatives for one exercise of one planned session, under the
     /// program's methodology and the athlete's current profile.
@@ -1439,21 +1454,25 @@ final class AppState: ObservableObject {
             extra: sp.extra
         )
         do {
-            let summary = try await api.saveProgram(payload)
+            let saved = try await api.saveProgram(payload)
             programSaveConflict = nil
             // The watches read today from the server: an added or moved session
             // reaches the Apple Watch now, not at its next sync.
             NotificationCenter.default.post(name: .programSaved, object: nil)
-            // The summary of the weeks just saved (a move, a swap, a replaced
-            // session), so Overview's phase changes follow the edit.
-            if let summary, let now = serverProgram, let current = now.currentProgram {
+            // The stored copy's new revision, which the next save is checked
+            // against (dropped, every edit after the first was refused as stale
+            // and the reload reverted it), and the summary of the weeks just
+            // saved (a move, a swap, a replaced session), so Overview's phase
+            // changes follow the edit.
+            if let saved, let now = serverProgram, let current = now.currentProgram {
                 var extra = current.extra
-                extra["phase_summary"] = summary
+                if let summary = saved.phaseSummary { extra["phase_summary"] = summary }
                 serverProgram = ServerProgram(currentProgram: GeneratedProgram(weeks: current.weeks, extra: extra),
                                               programStartDate: now.programStartDate,
                                               eventDate: now.eventDate, sourceGoalIds: now.sourceGoalIds,
                                               sourceGoalWeights: now.sourceGoalWeights,
-                                              revision: now.revision, programVersionId: now.programVersionId,
+                                              revision: saved.revision ?? now.revision,
+                                              programVersionId: saved.programVersionId ?? now.programVersionId,
                                               extra: now.extra)
             }
         } catch is APIClient.StaleProgramRevision {
