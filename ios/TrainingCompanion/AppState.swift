@@ -374,7 +374,7 @@ final class AppState: ObservableObject {
             matchedKey: matchedSessionKey(for: workout.id),
             suggestionKey: suggestion?.sessionKey,
             sameDay: sameDay,
-            isComplete: { self.isSessionComplete($0) },
+            isLinked: { self.linkedWorkout(forSessionKey: $0) != nil },
             session: { earlier ? nil : self.locateSession(key: $0)?.session })
     }
 
@@ -1611,15 +1611,19 @@ final class AppState: ObservableObject {
         workoutMatches[workout.id] = WorkoutMatch(workoutId: workout.id, sessionKey: sessionKey,
                                                   confidence: "manual")
         matchSuggestions.removeAll { $0.importedWorkoutId == workout.id }
+        // The server merges into a log already there (the watch's sets and
+        // notes stay), so the local copy keeps them too.
+        let existing = sessionLogs[sessionKey]
         sessionLogs[sessionKey] = SessionLogEntry(
             sessionKey: sessionKey,
-            completedAt: completedAt,
+            completedAt: existing?.completedAt ?? completedAt,
             source: "fit_file",
-            notes: nil,
-            fatigueRating: nil,
-            avgHR: workout.heartRate?.avg,
-            peakHR: workout.heartRate?.max,
-            matchedWorkoutId: workout.id
+            notes: existing?.notes,
+            fatigueRating: existing?.fatigueRating,
+            avgHR: workout.heartRate?.avg ?? existing?.avgHR,
+            peakHR: workout.heartRate?.max ?? existing?.peakHR,
+            matchedWorkoutId: workout.id,
+            exercises: existing?.exercises ?? [:]
         )
         await loadProgramAnalytics()
     }
