@@ -20,9 +20,9 @@ enum WorkoutCompletion {
         /// The server's weak match, waiting for the athlete's word; the other
         /// sessions still open that day are offered beside it.
         case suggested(key: String, session: ProgramSession?, others: [Candidate])
-        /// No suggestion, but sessions planned that day are still open.
+        /// No suggestion, but sessions planned that day have no recording yet.
         case candidates([Candidate])
-        /// Nothing planned and open on the day: extra work.
+        /// Nothing planned that day without a recording: extra work.
         case unplanned
 
         static func == (lhs: Match, rhs: Match) -> Bool {
@@ -93,14 +93,20 @@ enum WorkoutCompletion {
 
     /// Linked first, then the server's suggestion, then the day's open
     /// sessions. `sameDay` is the current program's sessions on the
-    /// workout's date in order; `isComplete` says which are already done.
+    /// workout's date in order; `isLinked` says which already have a
+    /// recording. A session only *logged* done is still open: the watch logs
+    /// the session it ran, and its recording reaches the server on its own
+    /// through Garmin Connect — the very workout to link. Dropping done
+    /// sessions made every watch-run session read "Nothing planned that
+    /// day"; Log ▸ Linking (`src/linking.py`) has always taken only linked
+    /// sessions off the day.
     static func match(matchedKey: String?, suggestionKey: String?,
-                      sameDay: [Candidate], isComplete: (String) -> Bool,
+                      sameDay: [Candidate], isLinked: (String) -> Bool,
                       session: (String) -> ProgramSession?) -> Match {
         if let key = matchedKey, !key.isEmpty {
             return .linked(key: key, session: session(key))
         }
-        let open = sameDay.filter { !isComplete($0.key) }
+        let open = sameDay.filter { !isLinked($0.key) }
         if let key = suggestionKey {
             return .suggested(key: key, session: session(key),
                               others: open.filter { $0.key != key })

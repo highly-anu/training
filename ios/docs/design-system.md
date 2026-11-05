@@ -1627,9 +1627,12 @@ Top to bottom:
   - **Suggested** (orange): the server's weak match, with *Not this* on the
     row and **Confirm & complete** (green) as the sheet's primary action;
     the day's other open sessions are offered under it.
-  - **Unlinked**: no suggestion, but sessions planned that day are open —
-    each with *Link*.
-  - **Extra**: nothing open that day.
+  - **Unlinked**: no suggestion, but sessions planned that day have no
+    recording yet — each with *Link*. A session already logged done is
+    still open: the watch logs the session it ran and its recording comes
+    in through Garmin Connect afterwards, as Log ▸ Linking reads it.
+  - **Extra**: every session that day already has a recording, or none
+    was planned.
   Linking goes through `AppState.matchAndComplete`, the same path as Today's
   Accept.
 - *Week N*: a dot per planned session of the workout's week, in its
