@@ -186,6 +186,26 @@
             "items": {"type": "string", "pattern": "^[a-z0-9_]+$"},
             "description": "Ids of tracks this one replaced (a package dropped or renamed a track). A regenerate of a stored program that names one runs this track."
           },
+          "authored_level": {
+            "description": "The level the track's sessions are written for (CrossFit's Rx: elite). Below it a session whose archetype is `scaling_eligible` is done at a share of what is written (src/level_scaling.py, docs/logic/levels.md); a track without it is not scaled.",
+            "enum": ["novice", "intermediate", "advanced", "elite"]
+          },
+          "level_scaling": {
+            "description": "What the source says a level below `authored_level` does, as shares of the written prescription per dimension (load: a fixed weight; volume: sets, reps, reps a round; time: minutes and seconds of work; distance). A dimension it leaves out takes the commons' (data/commons/training_levels.yaml), which the package records as an invention.",
+            "type": "object",
+            "propertyNames": {"pattern": "^[a-z_]+$"},
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": false,
+              "minProperties": 1,
+              "properties": {
+                "load": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+                "volume": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+                "time": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+                "distance": {"type": "number", "exclusiveMinimum": 0, "maximum": 1}
+              }
+            }
+          },
           "phases": {
             "type": "array",
             "minItems": 1,

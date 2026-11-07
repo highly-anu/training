@@ -423,6 +423,18 @@ group's name.
 
 ## Key Engine Behaviors
 
+- **Levels: written for one, done by all** (`docs/logic/levels.md`, since 2026-11-07;
+  roadmap 18). A track opts in with `authored_level`; below it a `scaling_eligible`
+  archetype's session is done at a share of what is written (`src/level_scaling.py`, called
+  by `calculate_load`): the track's own `level_scaling` where its source says, else the
+  commons' shares (`training_levels.yaml` `scaling`), recorded as an invention
+  (`package_fidelity.unrecorded_scaling`). Load scales only a slot's `load_kg` (by `sex`,
+  filled from the profile); % 1RM, ×BW and RPE stay the athlete's own. A written movement
+  out of reach takes its `scaling_down` (`scaled_from`); an exercise's lowest level is
+  computed (`src/level_suitability.py`, Explore's `exerciseLevels`), `min_level` where no
+  chain says. A scaled benchmark loses its `standard`; a source-written level version is
+  never scaled. Only CrossFit has converted; contracts do not scale yet. Tracks without
+  `authored_level` run exactly as before.
 - **Injury flags**: excluded_movement_patterns blocks exercises by movement pattern; contraindicated_with blocks specific exercises. Slots whose required pattern is fully excluded show as `injury_skip` (not an error).
 - **Session time cap**: `_time_to_task` progression is capped at `session_time_minutes` — Zone 2 duration never exceeds the athlete's session limit even in build phase.
 - **Package provenance**: a program may only use its philosophy's own package, plus any package that philosophy declares in `borrows_from` (`src/provenance.py`). Enforcement is per philosophy via `self_contained: true` — all 11 are on. `api.py` and `generator.py` share one `SourcePolicy`, so validation and generation can never check different libraries. Borrowed sessions carry a `provenance` tag and are badged "via X" in the UI.

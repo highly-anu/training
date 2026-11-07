@@ -320,6 +320,9 @@ export interface ExploreLinks {
     /** `requires` entries that are no exercise — what the athlete brings. */
     exerciseConcepts: { exercise: string; concept: string }[]
   }
+  /** Each package's exercises by the lowest level they suit and what each
+   *  scales to (src/level_suitability.py). Absent from an older server. */
+  exerciseLevels?: Record<string, Record<string, { minLevel: string | null; scalesTo: string[] }>>
 }
 
 export interface Archetype {
@@ -385,6 +388,16 @@ export interface ExerciseLoad {
   increment_kg?: number
   work_up?: boolean
   stalled?: boolean
+  /** Done at a share of what is written (src/level_scaling.py): each scaled
+   *  field's written value (the Rx), and from which level and how much. */
+  rx?: Partial<Pick<ExerciseLoad, 'sets' | 'reps' | 'rep_scheme' | 'reps_per_round' | 'time_minutes'
+    | 'duration_minutes' | 'hold_seconds' | 'work_sec' | 'distance_m' | 'distance_km' | 'weight_kg'>>
+  level_scaled?: {
+    level: string
+    from: string
+    shares: Record<'load' | 'volume' | 'time' | 'distance', number>
+    sources: Record<'load' | 'volume' | 'time' | 'distance', 'track' | 'commons'>
+  }
   load_note?: string
 }
 
@@ -420,6 +433,13 @@ export interface ExerciseAssignment {
   skip_exercise?: boolean
   /** The standard this slot measures, when it is a test's scored slot. */
   standard?: { id: string; result: string | null }
+  /** The written movement this one scales (src/level_scaling.py): out of reach
+   *  at the athlete's level (`level`), or for their equipment or an injury. */
+  scaled_from?: string
+  scaled_from_name?: string
+  scale_cause?: 'level' | 'constraint'
+  /** The standard a benchmark done scaled no longer measures. */
+  scaled_standard?: string
 }
 
 export interface ComplementaryExercise {
@@ -1090,6 +1110,11 @@ export interface Track {
   /** A track the app made up rather than the source (its fidelity record's
    *  invention): the builders label it as the app's own. */
   invention?: { id: string; text: string }
+  /** The level its sessions are written for; a level below does them scaled
+   *  (src/level_scaling.py). Absent for a track done as written at every level. */
+  authored_level?: string
+  /** What its source says a level below does, as shares of what is written. */
+  level_scaling?: Record<string, Partial<Record<'load' | 'volume' | 'time' | 'distance', number>>>
   entry_requirements?: {
     training_levels: string[]
     mastered_exercises: string[]

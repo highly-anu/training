@@ -1,6 +1,7 @@
 import { ArrowDown } from 'lucide-react'
 import { LineagePill } from '@/components/explore/LineageSection'
 import type { ExerciseProgression } from '@/lib/exploreLinks'
+import { TRAINING_LEVEL_LABELS } from '@/lib/gen/clientVocab'
 
 interface PrereqChainProps {
   name: string
@@ -10,16 +11,24 @@ interface PrereqChainProps {
 
 export function PrereqChain({ name, progression }: PrereqChainProps) {
   if (!progression) return <div className="h-10 rounded-md bg-muted/20 animate-pulse" />
-  const { before, after, easier } = progression
+  const { before, after, easier, levels } = progression
+  // The lowest level it suits, per package that has it (src/level_suitability.py).
+  const suits = levels.length > 0 && (
+    <p className="text-[11px] text-muted-foreground">
+      Suits {levels.map((l) => `${l.minLevel ? `${TRAINING_LEVEL_LABELS[l.minLevel] ?? l.minLevel} and up` : 'no level'}`
+        + (levels.length > 1 ? ` (${l.label})` : '')).join(' · ')}
+    </p>
+  )
 
   if (!before.length && !after.length && !easier.length) {
-    return (
+    return suits || (
       <p className="text-xs text-muted-foreground">No prerequisite chain found.</p>
     )
   }
 
   return (
     <div className="space-y-3">
+      {suits}
       <div className="flex flex-col items-center gap-1">
         {/* Comes before */}
         {before.length > 0 && (

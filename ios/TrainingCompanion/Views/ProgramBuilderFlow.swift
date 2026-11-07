@@ -454,11 +454,12 @@ struct BuilderStep2ScheduleView: View {
                         builder.applyLength(of: track)
                     } label: {
                         TrackChoiceRow(track: track, selected: track.id == active?.id,
-                                       primary: track.id == philosophy?.primaryTrack?.id)
+                                       primary: track.id == philosophy?.primaryTrack?.id,
+                                       level: builder.constraints.trainingLevel)
                     }
                     .buttonStyle(.plain)
                 } else {
-                    TrackChoiceRow(track: track, selected: false, primary: false)
+                    TrackChoiceRow(track: track, selected: false, primary: false, level: builder.constraints.trainingLevel)
                 }
             }
         } header: {
@@ -477,6 +478,8 @@ struct TrackChoiceRow: View {
     let track: PhilosophyTrack
     let selected: Bool
     let primary: Bool
+    /// The athlete's level, to say when the track's sessions are scaled to it.
+    var level: String? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -502,6 +505,10 @@ struct TrackChoiceRow: View {
             if track.invention != nil {
                 // A track the app made up, not the method's own program.
                 Label("The app's own track, not the method's", systemImage: "info.circle")
+                    .font(.caption2).foregroundStyle(.secondary)
+            }
+            if let scaled = track.scaledFor(level: level) {
+                Label(scaled, systemImage: "slider.horizontal.3")
                     .font(.caption2).foregroundStyle(.secondary)
             }
             TrackPhaseList(track: track)
@@ -573,7 +580,8 @@ struct LaneSections: View {
                     lane.wrappedValue.startPhaseId = nil
                     builder.applyLength(ofLanes: appState.philosophies)
                 } label: {
-                    TrackChoiceRow(track: track, selected: tracks.count > 1 && track.id == active?.id, primary: false)
+                    TrackChoiceRow(track: track, selected: tracks.count > 1 && track.id == active?.id, primary: false,
+                                   level: builder.constraints.trainingLevel)
                 }
                 .buttonStyle(.plain)
                 .disabled(tracks.count < 2 || taken)

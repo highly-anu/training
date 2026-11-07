@@ -2,7 +2,9 @@ id: cf_eva
 name: "Eva"
 modality: mixed_modal_conditioning
 category: conditioning
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written as Rx (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 duration_estimate_minutes: 50
 pool_only: true
 
@@ -24,6 +26,7 @@ slots:
       exercise_ids: [kb_swing_two_hand]
       ordered: true
     load: "2 pood (32 kg); women 1.5 pood"
+    load_kg: {male: 32, female: 24}
 
   - role: eva_3
     slot_type: amrap_movement

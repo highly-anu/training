@@ -54,6 +54,7 @@ deferred is under *Later*.
 | 15 | Program preview on the phone; the regenerate offer that asks the server first (*IA*) | P2 | M | iOS, web |
 | 16 | Garmin's official Connect API, open again since 2026-10-21: verify the integration, then health data and workouts pushed to the watch | P2 | M | API, watch, web, iOS |
 | 17 | Explore: each philosophy's page read from its package — a server document, its week and rules, one colour system | P2 | M | API, web, iOS, content |
+| 18 | Levels: every package from novice to elite — written for one level, scaled to the others; CrossFit converted 2026-11-07, ten to go | P1 | L | engine, content, web, iOS |
 
 ---
 
@@ -1567,6 +1568,40 @@ named workouts, which the selector never picks by modality, so the add path take
 workouts that fit as written), and the session counts only once done. Not yet: adding from
 the watches themselves, and a Garmin-side resync after a phone add (the Garmin app reads the
 added session at its next sync).
+
+### 18. Levels: every package from novice to elite — P1 · L
+
+**Why.** Before 2026-11-07 a level chose a track, archetypes and unlocked exercises, but
+changed almost no number: templated packages prescribe `as_written`, contracts never
+called `calculate_load`, and the per-level `starting_load_kg` tables (four packages) were
+mostly unread. Four packages refused novices outright.
+
+**Done (2026-11-07, `feat/level-framework`).** The framework (docs/logic/levels.md): a
+track's `authored_level`, the commons' per-level shares, a track's own `level_scaling`,
+`load_kg` on fixed loads, `scaling_eligible` archetypes, `scaling_down` substitution,
+`min_level`, the computed suitability table on Explore, `elite_standards`, the fidelity
+check that a scaled level is recorded. CrossFit converted: Rx for the elite, the Level 1
+guide's half for a newcomer (R15), the commons' shares between (I7), scaled movements (I8).
+
+**Next, one package a change** (the recipe in docs/logic/levels.md):
+
+1. **Gym Jones** — Soldier of Steel's "beginners" lines become `level_scaling` / `load_kg`;
+   SoS stays the novice version, Operator Fitness is scaled below its authored level.
+2. **Horsemen** — written for operators, silent below: the commons' shares as an invention;
+   its % and ×BW loads stay relative; its 39 `requires` chains already gate movements.
+3. **Uphill** — the contract hook (`_assignment` + `verify`), then a novice `start_minutes`
+   from the source's first-week hours; fold `distance_multiplier` into `scaling.distance`.
+4. **Marcus Filly, BJJ** — contract reps and time; a novice track only if a source writes one.
+5. **Wildman** — reps and rounds only; the bell stays the athlete's (R9). Settles whether
+   advanced and elite differ from intermediate.
+6. **Kelly Starrett, ATG** — suitability and `scaling_down` where gaps exist.
+7. **Starting Strength, Ido** — suitability and elite standards only; their versions are
+   the source's.
+
+**Open.** A scaled benchmark measures nothing, so a non-elite CrossFit athlete's Progress
+has no tested standard; a "scaled" result kind on the standards would let it count. The
+benchmarks' own published beginner versions should replace the computed scale where
+crossfit.com prints them. `starting_load_kg` has no elite × share fallback yet.
 
 ## Later
 

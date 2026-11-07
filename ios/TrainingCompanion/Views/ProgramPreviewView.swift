@@ -611,6 +611,9 @@ private struct PreviewSessionSheet: View {
                 if ea.exercise != nil {
                     Text(LoadFormat.describe(ea)).font(.subheadline.monospaced()).foregroundStyle(.secondary)
                 }
+                ForEach([LoadFormat.scaledFromText(ea), LoadFormat.scaledText(ea)].compactMap { $0 }, id: \.self) { line in
+                    Text(line).font(.caption).foregroundStyle(.secondary)
+                }
                 if let was = ea.substitutedForExercise {
                     let flag = ea.substitutedByFlag.map { " (\(names.flag($0) ?? HeldBack.label($0)))" } ?? ""
                     Text("In place of \(names.exercise(was) ?? HeldBack.label(was))\(flag)")
@@ -702,6 +705,9 @@ private struct PreviewAdjustSheet: View {
 /// 8) opens Program ▸ Preview on launch with a draft built from the profile's
 /// level, equipment, injuries and schedule — the builder's last step without
 /// the taps the simulator cannot script (`ROUTE='trainingcompanion://program'`).
+/// `TC_PREVIEW_LEVEL`, `TC_PREVIEW_DAYS` and `TC_PREVIEW_EQUIPMENT` (comma
+/// separated) override the profile's level, days and equipment (a scaled
+/// level, a method that needs more days or kit than the profile has).
 enum ProgramPreviewDebugLaunch {
     @MainActor
     static func draft(appState: AppState,
@@ -710,10 +716,11 @@ enum ProgramPreviewDebugLaunch {
         await appState.loadProfile()   // the launch may not have read it yet
         let p = appState.profile
         var c = GenerateConstraints()
-        c.trainingLevel = p.trainingLevel
-        c.equipment = p.equipment
+        c.trainingLevel = environment["TC_PREVIEW_LEVEL"] ?? p.trainingLevel
+        c.equipment = environment["TC_PREVIEW_EQUIPMENT"].map { $0.split(separator: ",").map(String.init) } ?? p.equipment
         c.injuryFlags = p.injuryFlags
-        c.daysPerWeek = ProgramConstraintsDiff.daysPerWeek(p.weeklySchedule) ?? 3
+        c.daysPerWeek = Int(environment["TC_PREVIEW_DAYS"] ?? "")
+            ?? ProgramConstraintsDiff.daysPerWeek(p.weeklySchedule) ?? 3
         c.sessionTimeMinutes = 75
         let request = GenerateProgramRequest(philosophyId: id, constraints: c,
                                              numWeeks: Int(environment["TC_PREVIEW_WEEKS"] ?? "") ?? 8,

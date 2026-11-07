@@ -51,6 +51,11 @@ def run(only: str | None = None) -> int:
         headline_anywhere = False
         source = 'declared' if pid in declared else 'default'
         print(f'\n{pid} ({source})')
+        if any(t.get('authored_level') for t in phases.tracks_of(phil)) and \
+                not (declared.get(pid) or {}).get('elite_standards'):
+            # A track scaled from its authored level says what that level is
+            # measured by (docs/logic/levels.md).
+            problems.append(f'{pid}: a track declares authored_level but analytics.yaml names no elite_standards')
         for track in phases.tracks_of(phil):
             goal = goals.philosophy_to_goal(pid, frameworks, track_id=track['id'])
             # The track's first framework says what it is built for: a

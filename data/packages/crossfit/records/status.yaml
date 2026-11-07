@@ -9,6 +9,7 @@ currency:
   constantly_varied: benchmark_wods
   five_on_two_off: benchmark_wods
 source_tests:
+- tests/test_level_scaling.py::test_a_novice_fran_is_half_the_rx
 - tests/test_standard_tests.py::test_crossfit_benchmarks_recur_in_its_pools
 - tests/test_week_template.py::test_crossfit_runs_glassmans_cycle_and_the_girls_as_written
 inventions:
@@ -23,10 +24,17 @@ inventions:
   its place, and the week says so.'
 - 'I4: At five training days a six-day week drops, in order, the skill day, the long-distance day, the
   heavy day, then the couplets; the sources do not say.'
-- 'I5: The tracks are for intermediate athletes and up; novices are refused until a scaled track is built.'
 - 'I6: Each workout''s minutes are an estimate; loads are given in pounds as written with kilograms beside
   them.'
+- 'I7: Every workout is written for the elite (Rx); an intermediate does 70 % and an advanced athlete
+  85 % of its load, volume, time and distance (the commons'' shares, data/commons/training_levels.yaml).
+  The Level 1 guide states only the newcomer''s half.'
+- 'I8: A movement out of the athlete''s reach is replaced by a scaled one the package owns (jumping pull-ups
+  for pull-ups, pike push-ups for handstand push-ups, single unders for double unders, the pull-up for
+  the muscle-up and the L pull-up, a dumbbell snatch, a squat clean or a front squat for the full Olympic
+  lifts), and the muscle-up, the handstand push-up and the full Olympic lifts and double unders are for
+  the levels named; the Level 1 guide scales by example, not by table.'
 last_review:
-  output_vs_dossier: '2026-10-22'
-next: A scaled novice track (the Level 1 guide's scaling, the benchmarks' beginner versions); more of
-  the 2005 archive; exercise media.
+  output_vs_dossier: '2026-11-07'
+next: The benchmarks' published beginner versions (where crossfit.com prints them, in place of the computed
+  scale); more of the 2005 archive; exercise media.

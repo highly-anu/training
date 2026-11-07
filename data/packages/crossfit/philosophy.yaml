@@ -50,6 +50,13 @@ tracks:
     description: >
       Glassman's template as crossfit.com ran it: three days of training, one
       of rest, the days cycling through one, two and three elements.
+    # Every workout is written as Rx; a level below it does a share
+    # (src/level_scaling.py). The Level 1 guide's scaling for a newcomer: load
+    # first, intensity and volume by half (R15). The intermediate and advanced
+    # shares are the commons' (I7).
+    authored_level: elite
+    level_scaling:
+      novice: {load: 0.5, volume: 0.5, time: 0.5, distance: 0.5}
     phases:
       - id: constantly_varied
         name: "Constantly Varied"
@@ -84,6 +91,13 @@ tracks:
     name: "Five On, Two Off"
     description: >
       The template's five-days-on, two-days-off regimen, for fixed weekdays.
+    # Every workout is written as Rx; a level below it does a share
+    # (src/level_scaling.py). The Level 1 guide's scaling for a newcomer: load
+    # first, intensity and volume by half (R15). The intermediate and advanced
+    # shares are the commons' (I7).
+    authored_level: elite
+    level_scaling:
+      novice: {load: 0.5, volume: 0.5, time: 0.5, distance: 0.5}
     phases:
       - id: five_on_two_off
         name: "Constantly Varied (5/2)"

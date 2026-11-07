@@ -3,6 +3,11 @@
 # and the rounds of the twenty-minute triplets.
 id: crossfit
 
+# The elite is the Rx athlete: the benchmark workouts at the elite rung of
+# their ladders, which every workout is written for (docs/logic/levels.md).
+elite_standards: [wod_fran_minutes, wod_helen_minutes, wod_cindy_rounds, wod_diane_minutes,
+                  wod_elizabeth_minutes, wod_annie_minutes, wod_murph_minutes]
+
 progress:
   - id: benchmark_wods
     label: Benchmark workouts

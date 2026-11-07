@@ -158,7 +158,33 @@ def refs(rec: dict | None) -> set:
 
 def ref_errors(pkg: str, rec: dict | None) -> list[str]:
     workflow = _workflow()
-    return [f"{owner}: {err}" for owner, r in _cited(rec) if (err := ref_error(pkg, r, workflow))]
+    return [f"{owner}: {err}" for owner, r in _cited(rec) if (err := ref_error(pkg, r, workflow))] + \
+        unrecorded_scaling(pkg, rec)
+
+
+def unrecorded_scaling(pkg: str, rec: dict | None) -> list[str]:
+    """A level a track scales to that the record does not account for
+    (docs/logic/levels.md): a track's own `level_scaling.<level>` is what its
+    source says, so a rule cites it; a dimension it leaves to the commons'
+    shares is the app's, so a rule or an invention names the track's
+    `authored_level`."""
+    from src import level_scaling, levels
+    cited = refs(rec)
+    errors = []
+    for track in (_yaml(pkg, 'philosophy.yaml') or {}).get('tracks') or []:
+        authored = track.get('authored_level')
+        if not authored:
+            continue
+        own = track.get('level_scaling') or {}
+        at = f"data:philosophy.yaml#tracks.{track['id']}"
+        if any(set(level_scaling.DIMENSIONS) - set(own.get(lv) or {}) for lv in levels.up_to(authored)[:-1]) \
+                and f'{at}.authored_level' not in cited:
+            errors.append(f"{track['id']}: levels below {authored} take the commons' shares, "
+                          f"and no rule or invention names {at}.authored_level")
+        for lv in own:
+            if f'{at}.level_scaling.{lv}' not in cited:
+                errors.append(f"{track['id']}: no rule cites {at}.level_scaling.{lv}")
+    return errors
 
 
 # ── What the record says ─────────────────────────────────────────────────────

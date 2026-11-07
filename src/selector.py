@@ -65,6 +65,10 @@ def _get_unlocked(training_level: str, exercises: dict, level_seeds: dict | None
         return set(exercises.keys())
 
     known = _level_known(training_level, level_seeds) | set(also_known or ())
+    # An exercise may name the lowest level it suits (`min_level`) where no
+    # prerequisite chain says it: below it the exercise stays locked whatever
+    # is known.
+    rank = _levels.rank(training_level)
 
     # Resolve prerequisite chains to a fixed point. A requirement is satisfied
     # when it is a known concept OR an exercise that is itself unlocked, so a
@@ -72,7 +76,8 @@ def _get_unlocked(training_level: str, exercises: dict, level_seeds: dict | None
     # on its own. Previously only one hop was checked, which is why _LEVEL_CONCEPTS had
     # to seed carries "directly to avoid multi-hop prerequisite chain limitation".
     unlocked: set = set()
-    pending = dict(exercises)
+    pending = {ex_id: ex for ex_id, ex in exercises.items()
+               if not ex.get('min_level') or _levels.rank(ex['min_level']) <= rank}
     while True:
         newly = {
             ex_id for ex_id, ex in pending.items()
@@ -622,6 +627,30 @@ def select_exercise(
 # ---------------------------------------------------------------------------
 
 
+def _scaled_slot(slot: dict, exercises: dict) -> tuple[dict | None, dict]:
+    """A slot that names its movements, narrowed to their scaled versions
+    (each exercise's `scaling_down`, breadth first: the nearest scale of the
+    first written movement before a further one), and which written movement
+    each scales. (None, {}) when the slot names none or none has a scale."""
+    written = list((slot.get('exercise_filter') or {}).get('exercise_ids') or [])
+    order: list[str] = []
+    written_of: dict[str, str] = {}
+    queue = [(eid, eid) for eid in written]
+    while queue:
+        eid, origin = queue.pop(0)
+        for sub in (exercises.get(eid) or {}).get('scaling_down') or []:
+            if sub in written or sub in written_of:
+                continue
+            order.append(sub)
+            written_of[sub] = origin
+            queue.append((sub, origin))
+    if not order:
+        return None, {}
+    # Only the names: a scale is another movement (a ring row for a pull-up),
+    # which the written slot's category or pattern need not admit.
+    return {**slot, 'exercise_filter': {'exercise_ids': order, 'ordered': True}}, written_of
+
+
 def _slot_unfillable_in_policy(slot: dict, exercises: dict, policy, modality: str | None) -> bool:
     """True when no exercise in the policy's packages could ever match this slot.
 
@@ -948,6 +977,27 @@ def populate_session(
                 modality=modality,
             )
 
+        scaled_from = None
+        if ex is None and (slot.get('scaling_eligible') or arch.get('scaling_eligible')):
+            # The written movement is out of reach (locked at this level, or no
+            # equipment for it): its scaled versions, the exercise's own
+            # `scaling_down`, nearest first (src/level_scaling.py).
+            scaled_slot, written_of = _scaled_slot(slot, exercises)
+            if scaled_slot is not None:
+                ex = select_exercise(
+                    scaled_slot, constraints, exercises, unlocked,
+                    excl_patterns, excl_ids, used_ex_ids, phase,
+                    session_used_ids=fresh_used,
+                    primary_sources=primary_sources,
+                    policy=policy,
+                    modality=modality,
+                )
+                if ex is not None:
+                    scaled_from = written_of[ex['id']]
+                    if collect_trace:
+                        ex_trace = {'selected_id': ex['id'], 'injury_blocked': False,
+                                    'scaled_from': scaled_from, 'filter_counts': {}, 'candidates': []}
+
         substituted_for = None
         reason = None
         blocked_by = None
@@ -1025,6 +1075,12 @@ def populate_session(
             ref = standard_tests.standard_ref(slot)
             if ref:
                 assignment['standard'] = ref
+            if scaled_from:
+                # Which written movement this scales, and why: the level, or
+                # (unlocked but not doable) the equipment or an injury.
+                assignment['scaled_from'] = scaled_from
+                assignment['scaled_from_name'] = (exercises.get(scaled_from) or {}).get('name', scaled_from)
+                assignment['scale_cause'] = 'level' if scaled_from not in unlocked else 'constraint'
             if substituted_for:
                 assignment['substituted_for'] = substituted_for
                 if blocked_by and blocked_by.get('via'):

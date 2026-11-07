@@ -275,7 +275,8 @@ SCHEMA_ENUMS = (('constraints', '"equipment": {', False), ('archetype', '"requir
 # (the authoring dialogs offered a stale list of kinds; the schemas had three).
 LEVEL_ENUMS = (('constraints', '"training_level": {'), ('philosophy', '"track_for_level": {'),
                ('training_contract', '"levels": {"type": "array"'), ('archetype', '"training_levels": {'),
-               ('framework', '"applicable_when": {'))
+               ('framework', '"applicable_when": {'), ('philosophy', '"authored_level": {'),
+               ('exercise', '"min_level": {'))
 KIND_ENUMS = (('constraints', '"training_phase": {'), ('philosophy', '"kind": {'),
               ('archetype', '"applicable_phases": {'))
 

@@ -57,5 +57,16 @@ def distance_multiplier(level: str | None) -> float:
     return float(_entry(level).get('distance_multiplier') or _entry(default())['distance_multiplier'])
 
 
+def scaling(level: str | None) -> dict:
+    """The share of an elite prescription this level does, per dimension
+    (load, volume, time, distance); the default level's for an unknown one."""
+    return dict(_entry(level).get('scaling') or _entry(default())['scaling'])
+
+
+def standard_rung(level: str | None) -> str | None:
+    """The rung of a standard's ladder this level trains toward."""
+    return _entry(level).get('standard_rung')
+
+
 def label(level: str | None) -> str:
     return _entry(level).get('label') or (level or '')

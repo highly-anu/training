@@ -25,7 +25,7 @@ from __future__ import annotations
 import json
 import os
 
-from src import loader, provenance
+from src import level_suitability, loader, provenance
 from src.blockers import NOT_EQUIPMENT
 from src.analytics.movement import ROLLUPS
 from src.selector import _PATTERN_ALIASES, _matches_slot_filter
@@ -213,6 +213,9 @@ def build(philosophies: list, frameworks: dict, modalities: dict,
             'exerciseProgression': progression,
             'exerciseConcepts': concepts,
         },
+        # Each package's exercises by the lowest level they suit and what
+        # each scales to (src/level_suitability.py).
+        'exerciseLevels': level_suitability.table(),
     }
 
 

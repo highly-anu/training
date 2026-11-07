@@ -39,6 +39,7 @@ from src import phases
 from src.phases import PhaseResolutionError
 from src.similarity import compute_all_similarities
 from src.generator import generate
+from src import generator as _generator
 from src.phase_calendar import compute_phase_from_date
 from src.progression import calculate_load, ramps_for, rep_scheme_text
 from src.training_contract import ContractError
@@ -525,6 +526,12 @@ def _clean_exercise_assignment(ea: dict) -> dict:
         # The standard this slot measures ({id, result}), when it is a test's
         # scored slot (src/standard_tests.py); absent otherwise.
         **({'standard': ea['standard']} if ea.get('standard') else {}),
+        # Done scaled to the athlete's level (src/level_scaling.py): the
+        # written movement it stands for and why ('level' or 'constraint'),
+        # and the standard a scaled benchmark no longer measures.
+        **({'scaled_from': ea['scaled_from'], 'scaled_from_name': ea.get('scaled_from_name') or ea['scaled_from'],
+            'scale_cause': ea.get('scale_cause')} if ea.get('scaled_from') else {}),
+        **({'scaled_standard': ea['scaled_standard']} if ea.get('scaled_standard') else {}),
     }
 
 
@@ -1421,6 +1428,7 @@ def _generate_program_inner(body):
     constraints.setdefault('days_per_week', 5)
     constraints.setdefault('session_time_minutes', 75)
     constraints.setdefault('training_level', 'intermediate')
+    _fill_sex(constraints)
     constraints.setdefault('equipment', ['barbell', 'rack', 'plates', 'kettlebell',
                                           'pull_up_bar', 'ruck_pack', 'open_space'])
     constraints.setdefault('injury_flags', [])
@@ -2046,6 +2054,15 @@ def _week_phase_rules(body: dict, philosophy_ids) -> tuple[frozenset, float | No
     return frozenset(rules['exclude_exercises']), keep, ramps_for(fw)
 
 
+def _week_level_policy(body: dict, philosophy_ids) -> dict | None:
+    """The level policy of the track whose week a single-session route edits
+    (src/level_scaling.py), found by the week's phase as `_week_phase_rules`
+    finds its rules; None for a track that has not opted in."""
+    phils = loader.load_philosophies()
+    wanted = [p for p in phils if p.get('id') in set(philosophy_ids or [])] or phils
+    return phases.phase_rules(wanted, body.get('phase_id'), body.get('framework_id')).get('level_policy')
+
+
 def _added_provenance(arch: dict) -> dict | None:
     """The package an added session came from, borrowed when it is not one of
     the stored program's (the web badges it "via <label>")."""
@@ -2093,6 +2110,7 @@ def _generate_session_inner(body):
                                           'pull_up_bar', 'ruck_pack', 'open_space'])
     constraints.setdefault('injury_flags', [])
     constraints.setdefault('fatigue_state', 'normal')
+    _fill_sex(constraints)
 
     # Build minimal goal-like dict for populate_session (only needs primary_sources)
     goal = {'primary_sources': primary_sources}
@@ -2216,6 +2234,7 @@ def _generate_session_inner(body):
         # As written means the source's own workouts; any other archetype
         # keeps its modality's model (it has no load text to show).
         prog_model = (data['modalities'].get(modality) or {}).get('progression_model', 'linear_load')
+    track_policy = _week_level_policy(body, goal['primary_sources'])
     for ea in populated.get('exercises', []):
         if ea.get('exercise') is None:
             continue
@@ -2230,6 +2249,8 @@ def _generate_session_inner(body):
             session_time_minutes=constraints.get('session_time_minutes', 75),
             deload_keep=deload_keep,
             ramps=ramps,
+            level_policy=_generator._slot_level_policy(populated, ea, track_policy),
+            sex=constraints.get('sex'),
         )
 
     arch = populated.get('archetype', {})
@@ -2330,7 +2351,11 @@ def substitute_exercise():
             continue
         load = calculate_load(ex, slot, prog_model, week_in_phase, phase, level, is_deload,
                               session_time_minutes=constraints.get('session_time_minutes', 75),
-                              deload_keep=deload_keep, ramps=ramps)
+                              deload_keep=deload_keep, ramps=ramps,
+                              level_policy=_generator._slot_level_policy(
+                                  {'archetype': arch}, {'slot': slot},
+                                  _week_level_policy(body, goal['primary_sources'])),
+                              sex=constraints.get('sex'))
         ea = {'slot_index': slot_index, 'slot_role': session_role,
               'slot_type': slot.get('slot_type', 'sets_reps'),
               'exercise': ex, 'slot': slot, 'load': load}
@@ -5046,6 +5071,24 @@ def _keep_days_behind_counted(user_id: str, existing: dict | None, envelope: dic
     except Exception as err:  # noqa: BLE001 — keeping the past must never fail the save
         app.logger.warning('program save: could not keep the elapsed days: %s', err)
         return envelope, 0
+
+
+def _fill_sex(constraints: dict) -> None:
+    """The athlete's sex from the profile, when the request does not say:
+    it picks a written fixed load's women's weight (src/level_scaling.rx_kg).
+    Nothing is added when the profile does not say either."""
+    if constraints.get('sex') in ('male', 'female'):
+        return
+    user_id = getattr(g, 'user_id', None)
+    if not user_id:
+        return
+    try:
+        from src.db import get_user_profile
+        sex = ((get_user_profile(user_id) or {}).get('sex') or '').lower()
+    except Exception:  # noqa: BLE001 — no profile: the written (men's) loads
+        return
+    if sex in ('male', 'female'):
+        constraints['sex'] = sex
 
 
 def _standards_context(user_id: str) -> tuple[str, str | None]:

@@ -61,7 +61,7 @@ export function formatLoad(load: ExerciseLoad): string {
   }
 
   // Pack weight (rucks, loaded carries)
-  if (load.reps_per_round && load.weight_kg != null) parts.push(`${load.weight_kg}kg`)
+  if ((load.reps_per_round || load.rep_scheme?.length) && load.weight_kg != null) parts.push(`${load.weight_kg}kg`)
   if (load.pack_load_kg) {
     parts.push(`${load.pack_load_kg} kg pack`)
   }

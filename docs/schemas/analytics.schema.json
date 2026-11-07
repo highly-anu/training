@@ -12,6 +12,13 @@
       "pattern": "^[a-z0-9_]+$",
       "description": "Must equal the package directory name and the philosophy id."
     },
+    "elite_standards": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "The standards that define this methodology's elite (docs/logic/levels.md): their ladders' elite rung is what the package's authored prescriptions are for, and each level trains toward its own rung (data/commons/training_levels.yaml `standard_rung`). Ids of the commons' standards or the package's own standards.yaml.",
+      "items": {"type": "string", "pattern": "^[a-z0-9_]+$"}
+    },
     "progress": {
       "type": "array",
       "minItems": 1,
