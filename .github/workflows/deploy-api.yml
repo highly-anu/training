@@ -36,6 +36,23 @@ jobs:
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
 
-      - run: flyctl deploy --remote-only
+      # One machine, never more (CLAUDE.md, "Production runs on one machine").
+      # --ha=false: a deploy that finds no machine launches one, where flyctl's
+      # default also creates a spare. On 2026-10-31 racing deploys left none for
+      # a moment, the next run launched two, and production ran on three until
+      # the database pooler's 15 sessions were all held and writes failed.
+      - run: flyctl deploy --remote-only --ha=false
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      # Fails the run, which GitHub emails about, when the app is not on one
+      # machine; it never scales by itself.
+      - name: Check one machine
+        run: |
+          n=$(flyctl machines list -a training-api -q | grep -c .)
+          if [ "$n" -ne 1 ]; then
+            echo "::error::training-api runs on $n machines, not 1. Run: fly scale count 1 -a training-api"
+            exit 1
+          fi
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
