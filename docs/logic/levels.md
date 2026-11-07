@@ -48,7 +48,7 @@ written, per dimension:
 | Dimension | Scales | Never |
 |-----------|--------|-------|
 | `load` | a slot's `load_kg` (a number, or `{male, female}` by the athlete's `sex`) | a % of 1RM or of bodyweight, RPE: already the athlete's own |
-| `volume` | sets (above one), reps, `rep_scheme`, reps a round | rounds of a for-time piece (its structure) |
+| `volume` | the sets where there are several, else the reps, `rep_scheme`, reps a round — once, never both | rounds of a for-time piece (its structure) |
 | `time` | an AMRAP's or a cap's minutes, a block's minutes, holds, interval work | rest |
 | `distance` | metres, kilometres | |
 
@@ -57,7 +57,10 @@ source says (CrossFit's Level 1 guide: half for a newcomer), else the
 commons' (`training_levels.yaml` `scaling`, relative to the authored level:
 novice 0.5, intermediate 0.7, advanced 0.85 of an elite prescription), never
 more than written. Counts round half up and never go under one; seconds to
-5 s, metres to 10 m, kilograms to 2.5 kg (4 kg for a kettlebell).
+5 s, metres to 10 m, kilograms to 2.5 kg (1 kg under 20 kg: dumbbells and
+balls; 4 kg for a kettlebell). Converted: CrossFit (Rx elite, the Level 1
+guide's half for a novice), Gym Jones (Operator Fitness elite, Soldier of
+Steel the novice's own, never scaled).
 
 `src/level_scaling.scale_prescription` is the one function, called by
 `progression.calculate_load` (the generator, `POST /sessions/generate`,

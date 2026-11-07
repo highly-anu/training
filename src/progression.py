@@ -447,7 +447,7 @@ def calculate_load(
     if level_policy:
         from src.level_scaling import scale_prescription
         bell = 'kettlebell' in ((exercise or {}).get('equipment') or [])
-        load = scale_prescription(load, slot, training_level, level_policy, sex, kg_step=4.0 if bell else 2.5)
+        load = scale_prescription(load, slot, training_level, level_policy, sex, kg_step=4.0 if bell else None)
     rpm = paced_rpm(exercise, slot)
     if rpm is not None and isinstance(load, dict):
         load['target_rpm'] = rpm

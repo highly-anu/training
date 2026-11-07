@@ -64,6 +64,10 @@ None.
   Both plans prescribe pull-ups from the first week.
 - I6: Operator Fitness is for intermediate and up, Soldier of Steel for novices and
   intermediates. The plans name audiences, not levels.
+- I7: Operator Fitness is written for the elite (the operator); an advanced athlete does
+  85 % and an intermediate 70 % of each day's sets, reps, minutes, distances and fixed
+  weights (the commons' shares). Percentages of 1RM, ranges and the pack stay as written.
+  Soldier of Steel, the newly training's own plan, is never scaled.
 
 ## Removed in this review
 

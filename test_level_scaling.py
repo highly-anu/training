@@ -47,11 +47,19 @@ def test_no_policy_leaves_the_load_alone():
 
 
 def test_counts_round_half_up_and_never_under_one():
-    out = ls.scale_prescription({'sets': 3, 'reps': 1, 'rep_scheme': [21, 15, 9], 'reps_per_round': 5},
-                                {}, 'novice', ELITE)
-    assert out['sets'] == 2 and out['reps'] == 1 and out['rep_scheme'] == [11, 8, 5] and out['reps_per_round'] == 3
-    assert out['rx'] == {'sets': 3, 'rep_scheme': [21, 15, 9], 'reps_per_round': 5}
+    out = ls.scale_prescription({'rep_scheme': [21, 15, 9], 'reps_per_round': 5, 'reps': 1}, {}, 'novice', ELITE)
+    assert out['rep_scheme'] == [11, 8, 5] and out['reps_per_round'] == 3 and out['reps'] == 1
+    assert out['rx'] == {'rep_scheme': [21, 15, 9], 'reps_per_round': 5}
     assert ls.scale_prescription({'sets': 1}, {}, 'novice', ELITE) == {'sets': 1}    # one set stays one
+
+
+def test_volume_is_cut_once():
+    # Several sets: the sets go, every set stays the written one.
+    out = ls.scale_prescription({'sets': 5, 'reps': 3}, {}, 'intermediate', ELITE)
+    assert out['sets'] == 4 and out['reps'] == 3 and out['rx'] == {'sets': 5}
+    # One set: its reps.
+    out = ls.scale_prescription({'sets': 1, 'reps': 100}, {}, 'intermediate', ELITE)
+    assert out['sets'] == 1 and out['reps'] == 70
 
 
 def test_time_and_distance_scale_to_whole_units():

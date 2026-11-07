@@ -3,6 +3,8 @@ name: "Operator Fitness — Day 16: Recovery"
 modality: strength_endurance
 category: conditioning
 training_levels: [intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 duration_estimate_minutes: 60
 pool_only: true
 
@@ -15,6 +17,7 @@ slots:
       exercise_ids: [kb_tgu]
       ordered: true
     load: "15 lb (7 kg) dumbbell"
+    load_kg: 7
 
 required_equipment:
 - dumbbell

@@ -26,9 +26,10 @@ from . import levels
 
 DIMENSIONS = ('load', 'volume', 'time', 'distance')
 
-# The load fields each dimension scales. A count is rounded half up and never
-# goes under one; seconds to 5 s, metres to 10 m, kilograms to 2.5 kg.
-_VOLUME_INT = ('sets', 'reps', 'reps_per_round')
+# The load fields each dimension scales: volume the sets, else the reps (once,
+# never both), time and distance theirs. A count is rounded half up and never
+# goes under one; seconds to 5 s, metres to 10 m, kilograms to 2.5 kg (1 kg
+# under 20: dumbbells and balls come by the kilogram; 4 kg for a bell).
 _TIME_MIN = ('duration_minutes', 'time_minutes')
 _TIME_SEC = ('hold_seconds', 'work_sec')
 
@@ -70,8 +71,9 @@ def _seconds(n, share: float) -> int:
     return max(5, int(5 * math.floor(n * share / 5 + 0.5)))
 
 
-def _kg(kg: float, step: float = 2.5) -> float:
-    return max(step, round(kg / step) * step)
+def _kg(kg: float, step: float | None = None) -> float:
+    step = step or (1.0 if kg < 20 else 2.5)
+    return max(step, math.floor(kg / step + 0.5) * step)
 
 
 def rx_kg(slot: dict, sex: str | None) -> float | None:
@@ -85,13 +87,13 @@ def rx_kg(slot: dict, sex: str | None) -> float | None:
 
 
 def scale_prescription(load: dict, slot: dict, level: str | None, policy: dict | None,
-                       sex: str | None = None, kg_step: float = 2.5) -> dict:
+                       sex: str | None = None, kg_step: float | None = None) -> dict:
     """The load at the athlete's level. Unchanged without a policy; at or
     above the authored level only a slot's `load_kg` becomes its weight.
     Below it every scaled field keeps its written value under `rx`, and
     `level_scaled` says from which level and how much, for the clients.
     `kg_step` is what a weight rounds to (4 kg for a kettlebell, which
-    comes in those sizes)."""
+    comes in those sizes); None takes 2.5 kg, 1 kg under 20."""
     if not policy or not isinstance(load, dict):
         return load
     out = dict(load)
@@ -113,11 +115,14 @@ def scale_prescription(load: dict, slot: dict, level: str | None, policy: dict |
             rx[key] = value
             out[key] = new
 
-    for key in _VOLUME_INT:
-        if key == 'sets' and (out.get('sets') or 0) <= 1:
-            continue
-        scale(key, _count, shares['volume'])
-    if isinstance(out.get('rep_scheme'), list) and shares['volume'] < 1.0:
+    # Volume is cut once: the sets where there are several (5 x 3 at 80 % is
+    # 4 x 3, every set still the written one), else the reps.
+    if isinstance(out.get('sets'), (int, float)) and not isinstance(out['sets'], bool) and out['sets'] > 1:
+        scale('sets', _count, shares['volume'])
+    else:
+        scale('reps', _count, shares['volume'])
+        scale('reps_per_round', _count, shares['volume'])
+    if isinstance(out.get('rep_scheme'), list) and shares['volume'] < 1.0 and 'sets' not in rx:
         scheme = [_count(n, shares['volume']) if isinstance(n, (int, float)) else n for n in out['rep_scheme']]
         if scheme != out['rep_scheme']:
             rx['rep_scheme'] = list(out['rep_scheme'])

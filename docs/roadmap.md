@@ -54,7 +54,7 @@ deferred is under *Later*.
 | 15 | Program preview on the phone; the regenerate offer that asks the server first (*IA*) | P2 | M | iOS, web |
 | 16 | Garmin's official Connect API, open again since 2026-10-21: verify the integration, then health data and workouts pushed to the watch | P2 | M | API, watch, web, iOS |
 | 17 | Explore: each philosophy's page read from its package — a server document, its week and rules, one colour system | P2 | M | API, web, iOS, content |
-| 18 | Levels: every package from novice to elite — written for one level, scaled to the others; CrossFit converted 2026-11-07, ten to go | P1 | L | engine, content, web, iOS |
+| 18 | Levels: every package from novice to elite — written for one level, scaled to the others; CrossFit and Gym Jones converted 2026-11-07, nine to go | P1 | L | engine, content, web, iOS |
 
 ---
 
@@ -1585,8 +1585,10 @@ guide's half for a newcomer (R15), the commons' shares between (I7), scaled move
 
 **Next, one package a change** (the recipe in docs/logic/levels.md):
 
-1. **Gym Jones** — Soldier of Steel's "beginners" lines become `level_scaling` / `load_kg`;
-   SoS stays the novice version, Operator Fitness is scaled below its authored level.
+1. ~~**Gym Jones**~~ — done 2026-11-07 (`feat/levels-gym-jones`): Operator Fitness written
+   for the elite, the commons' shares for advanced and intermediate (I7); Soldier of Steel,
+   with its own beginners' lines, is the novice's and never scaled. Its elite standard is
+   the 2 km row Operator Fitness rows.
 2. **Horsemen** — written for operators, silent below: the commons' shares as an invention;
    its % and ×BW loads stay relative; its 39 `requires` chains already gate movements.
 3. **Uphill** — the contract hook (`_assignment` + `verify`), then a novice `start_minutes`

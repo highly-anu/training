@@ -22,6 +22,10 @@ inventions:
   pull-ups from the first week, Soldier of Steel with plank pulls until one is possible.'
 - 'I6: Operator Fitness is for intermediate athletes and up, Soldier of Steel for novices and intermediates;
   the plans name their audiences (operators, the newly training), not levels.'
+- 'I7: Operator Fitness is written for the elite (the operator): an advanced athlete does 85 % and an
+  intermediate 70 % of each day''s sets, reps, minutes, distances and fixed weights (the commons'' shares,
+  data/commons/training_levels.yaml); a % of 1RM, a range and a pack stay as written. The plan names no
+  level and gives no scale; Soldier of Steel, the newly training''s own plan, runs as written.'
 last_review:
-  output_vs_dossier: '2026-10-22'
+  output_vs_dossier: '2026-11-07'
 next: Operator Fitness II once a complete copy is read; exercise media.
