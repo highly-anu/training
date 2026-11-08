@@ -47,6 +47,10 @@ tracks:
     description: >
       Persist's Full Body Pump Condition, three days a week: strength,
       strength balance and a conditioning piece each day.
+    # Written for the elite: the levels below do the commons' shares of each
+    # section's sets and minutes, the loads chosen by RPE as written
+    # (training_contract.with_level).
+    authored_level: elite
     phases:
       - id: persist
         name: "Persist Cycles"
@@ -69,6 +73,10 @@ tracks:
     description: >
       Persist's Full Body Pump Lift, three days a week: lifting and muscle
       pumps, no conditioning — a finisher closes each day.
+    # Written for the elite: the levels below do the commons' shares of each
+    # section's sets and minutes, the loads chosen by RPE as written
+    # (training_contract.with_level).
+    authored_level: elite
     phases:
       - id: persist_lift
         name: "Persist Cycles"

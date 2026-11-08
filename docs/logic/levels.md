@@ -62,7 +62,8 @@ balls; 4 kg for a kettlebell). Converted: CrossFit (Rx elite, the Level 1
 guide's half for a novice), Gym Jones (Operator Fitness elite, Soldier of
 Steel the novice's own, never scaled), Horsemen (every workout elite,
 novices taken in, the hardest movements kept for intermediates and up),
-Uphill (each level's volume the source's, nothing scaled).
+Uphill (each level's volume the source's, nothing scaled), Marcus Filly
+(the 3x samples elite, novices taken in), BJJ (the S&C elite, a class a class).
 
 `src/level_scaling.scale_prescription` is the one function, called by
 `progression.calculate_load` (the generator, `POST /sessions/generate`,
@@ -87,10 +88,14 @@ training contract's per-level volume (`start_minutes`: Uphill's first-week
 hours by fitness, R6, its novice the source's 5 hours untrained). Then the
 track's `level_scaling`, then the commons' shares.
 
-**Not yet:** training contracts (`training_contract._assignment` and its
-`verify`) do not scale; a contract track's modules carry their own per-level
-volume (`start_minutes`). A contract package converts with its own change,
-which adds the hook and its mirror in `verify`. An exercise's
+**Training contracts** scale in their module chain
+(`training_contract.with_level`, after `with_volume`), which generation and
+`verify` both resolve, so the contract's own checks see the scaled module: a
+`scaling_eligible` module's sets (once, each block's minutes with them), reps,
+holds and timed blocks. Never: the week's volume (`start_minutes`, the
+source's by level), a lift's weight (`load_per_exposure`) or a bell, a
+progressing block's cycle, an interval (EMOM), a test, practice
+(`skill_practice`: warm-ups, cooldowns, technique). An exercise's
 `starting_load_kg` stays per level as authored (no elite × share fallback
 yet).
 

@@ -135,6 +135,27 @@ def test_min_level_locks_an_exercise_below_it():
     assert selector._get_unlocked('advanced', exercises) == {'clean', 'snatch'}
 
 
+def test_a_contract_module_scales_what_is_written_and_keeps_its_cycles():
+    from src import training_contract as tc
+    module = {'scaling_eligible': True, 'progression': {'model': 'skill_hold'}, 'blocks': [
+        {'role': 'lift', 'slot_type': 'sets_reps', 'sets': 4, 'reps': 5, 'duration_sec': 480},
+        {'role': 'conditioning', 'slot_type': 'time_domain', 'duration_sec': 900},
+        {'role': 'hold', 'slot_type': 'static_hold', 'sets': 1, 'hold_sec': 30, 'duration_sec': 60},
+        {'role': 'warm_up', 'slot_type': 'skill_practice', 'duration_sec': 600},
+        {'role': 'long', 'slot_type': 'time_domain', 'duration_sec': 3600, 'volume': True},
+        {'role': 'bell', 'slot_type': 'sets_reps', 'sets': 5, 'reps': 5, 'loaded': True, 'duration_sec': 600},
+        {'role': 'test', 'slot_type': 'time_domain', 'duration_sec': 600, 'standard': 'x'}]}
+    lift, conditioning, hold, *untouched = tc.with_level(module, ELITE, 'novice')['blocks']
+    assert (lift['sets'], lift['reps'], lift['duration_sec'], lift['rx']) == (2, 5, 240, {'sets': 4})
+    assert conditioning['duration_sec'] == 480 and conditioning['rx'] == {'duration_minutes': 15}
+    assert (hold['hold_sec'], hold['duration_sec']) == (15, 30)
+    # Practice, the week's volume, a progressing lift and a test are never scaled.
+    assert untouched == module['blocks'][3:]
+    # A module the source wrote for the level, and the authored level itself, run as written.
+    assert tc.with_level({**module, 'scaling_eligible': False}, ELITE, 'novice')['blocks'] == module['blocks']
+    assert tc.with_level(module, ELITE, 'elite')['blocks'] == module['blocks']
+
+
 def test_the_suitability_table_reads_requires_and_min_level():
     from src import level_suitability
     by_package = {'pkg': {'a': {'id': 'a'}, 'b': {'id': 'b', 'requires': ['muscle_up']},

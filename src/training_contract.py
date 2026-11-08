@@ -317,6 +317,56 @@ def with_volume(module: dict, level: str, week: int, deload: bool, longest: floa
             'volume_capped': minutes if minutes > room else None}
 
 
+def with_level(module: dict, policy: dict | None, level: str | None) -> dict:
+    """The module at the athlete's level (src/level_scaling.py): below the
+    track's authored level a `scaling_eligible` module's blocks are a share of
+    what is written — the sets where there are several (each block's minutes
+    with them), else the reps; a hold's seconds and a timed block's minutes.
+    Never touched: the week's volume (`start_minutes` is the source's by
+    level), a lift's weight (`load_per_exposure`, a bell), a progressing
+    block's cycle, an interval, a test, practice (`skill_practice`). Each
+    scaled block keeps what was written under `rx`; generation and `verify`
+    resolve a module through the same chain, so they agree."""
+    from . import level_scaling
+    if not policy or not module.get('scaling_eligible'):
+        return module
+    found = level_scaling.factors(level, policy)
+    if found is None:
+        return module
+    shares, sources = found
+    blocks = []
+    for b in module['blocks']:
+        if (b.get('volume') or b.get('standard') or _progresses(b)
+                or b['slot_type'] not in ('sets_reps', 'static_hold', 'time_domain')):
+            blocks.append(b)
+            continue
+        load = {k: b[k] for k in ('sets', 'reps') if k in b}
+        if b['slot_type'] == 'static_hold':
+            load['hold_seconds'] = b['hold_sec']
+        if b['slot_type'] == 'time_domain' and b.get('duration_sec'):
+            load['duration_minutes'] = math.ceil(b['duration_sec'] / 60)
+        scaled = level_scaling.scale_prescription(load, {}, level, policy)
+        rx = scaled.get('rx')
+        if not rx:
+            blocks.append(b)
+            continue
+        b = {**b, 'rx': rx, 'level_scaled': scaled['level_scaled']}
+        if 'sets' in rx:
+            b['sets'] = scaled['sets']
+            if 'duration_sec' in b:
+                b['duration_sec'] = math.ceil(b['duration_sec'] * scaled['sets'] / rx['sets'])
+        if 'reps' in rx:
+            b['reps'] = scaled['reps']
+        if 'hold_seconds' in rx:
+            b['hold_sec'] = scaled['hold_seconds']
+            if 'duration_sec' in b:
+                b['duration_sec'] = math.ceil(b['duration_sec'] * scaled['hold_seconds'] / rx['hold_seconds'])
+        if 'duration_minutes' in rx:
+            b['duration_sec'] = scaled['duration_minutes'] * 60
+        blocks.append(b)
+    return {**module, 'blocks': blocks}
+
+
 # ── Load per confirmed exposure (Starting Strength) ──────────────────────────
 #
 # Each lift carries {next_kg, kg, exposures, failures, resets, stalled}:
@@ -809,6 +859,10 @@ def _assignment(block: dict, module: dict, exercises: dict, constraints: dict,
             load['target_rpm'] = block['target_rpm']
         if block['slot_type'] == 'skill_practice':
             load['focus'] = 'Controlled technique; stop before movement quality deteriorates.'
+    if block.get('rx'):
+        # Done at the athlete's level (with_level): what was written, for the clients.
+        load['rx'] = dict(block['rx'])
+        load['level_scaled'] = block['level_scaled']
     if block.get('intensity'):
         # A prescribed zone, as the selector writes one, so heart rate counts
         # for this block in the analytics (src/analytics/hr_plan.py).
@@ -1245,10 +1299,11 @@ def start(contract: dict, entries: list, constraints: dict, data: dict, policy,
 
         def resolve(m, step, offset=0, position=1, seen=()):
             """The module as it runs at this exposure of this week."""
-            return with_volume(with_stall(at_step(m, step, weeks_of[m['id']], offset), state[m['id']], step,
-                                          position, seen),
-                               level, entry['week_in_program'], deloads[m['id']], longest, modules,
-                               entry.get('phase_id'), entry['week_in_phase'], held)
+            return with_level(with_volume(with_stall(at_step(m, step, weeks_of[m['id']], offset), state[m['id']],
+                                                     step, position, seen),
+                                          level, entry['week_in_program'], deloads[m['id']], longest, modules,
+                                          entry.get('phase_id'), entry['week_in_phase'], held),
+                              contract.get('level_policy'), level)
 
         # The week's longest exposure: a cycle's last step, or the longer of
         # alternating variants (Workout A runs longer than B).
@@ -1625,11 +1680,13 @@ def verify(program: dict, contract: dict, constraints: dict) -> None:
                     last_day[mid] = absolute
                     actual = [e['exercise']['id'] for e in session['exercises'] if e['load']['module_id'] == mid and e.get('exercise')]
                     lift_state = (program.get('module_state') or {}).get(mid) or {}
-                    module_now = with_volume(with_stall(at_step(expected[mid], record['forecast_step'], mweek,
-                                                                counts[mid] - 1 if deload else 0),
-                                                        lift_state, record['forecast_step'], counts[mid], light_seen[mid]),
-                                             level, week['week_number'], deload, longest, week_list,
-                                             week.get('phase_id'), week.get('week_in_phase', 1), held)
+                    module_now = with_level(with_volume(with_stall(at_step(expected[mid], record['forecast_step'], mweek,
+                                                                           counts[mid] - 1 if deload else 0),
+                                                                   lift_state, record['forecast_step'], counts[mid],
+                                                                   light_seen[mid]),
+                                                        level, week['week_number'], deload, longest, week_list,
+                                                        week.get('phase_id'), week.get('week_in_phase', 1), held),
+                                            contract.get('level_policy'), level)
                     dropping = _cuts(module_now, deload) and not session.get('test')
                     if module_now.get('variant') != record.get('variant'):
                         raise ContractError('A module ran a variant out of its rotation.')

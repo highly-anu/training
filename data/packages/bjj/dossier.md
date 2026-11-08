@@ -85,6 +85,11 @@ None.
   workout is about fifty minutes; "max reps" pull-ups are sets to failure, a 20–30 s
   pinch a 30 s hold, the weighted plank carries a plate, the carry is with dumbbells;
   the deload notes add an easier pull-up and a lower box.
+- I9: the strength and the competition conditioning are written for the elite; the levels
+  below do a share of their sets, holds and minutes (the commons' shares), the weights
+  the athlete's. A class is a class at every level.
+- I10: the elite standards are the bench press to bodyweight and max pull-ups; the
+  sources name none.
 
 ## Output review (2026-10-22)
 

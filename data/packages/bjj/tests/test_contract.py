@@ -28,7 +28,9 @@ BJJ_GYM = ['barbell', 'rack', 'plates', 'pull_up_bar', 'dumbbell', 'box', 'open_
 
 def _bjj(weeks=4, **overrides):
     goal = goals.philosophy_to_goal(PKG, list(loader.load_all_frameworks().values()))
-    c = dict(equipment=BJJ_GYM, days_per_week=5, session_time_minutes=60, training_level='intermediate')
+    # StrengthLog as written is the elite's; the levels below do it scaled
+    # (I9, tests/test_level_scaling.py).
+    c = dict(equipment=BJJ_GYM, days_per_week=5, session_time_minutes=60, training_level='elite')
     c.update(overrides)
     return generate(None, c, num_weeks=weeks, goal_dict=goal, output_format='dict'), goal, c
 

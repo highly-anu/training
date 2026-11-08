@@ -48,7 +48,7 @@ None.
 - The progression inside a cycle (more sets in weeks 4–6; fewer reps in weeks 3 and 5 in
   the 4x sample) has no numbers to write, so the days repeat as printed.
 - The Benchmark Week between cycles is not programmed.
-- A novice track: Base Camp's sessions are sold.
+- Base Camp's sessions are sold: every level runs the 3x tracks, scaled below the elite (I6).
 - Podcasts, Revival Strength and the Healthy Shoulder Guide were not read.
 
 ## Inventions
@@ -61,7 +61,9 @@ None.
 - I4: the warm-up, cooldown and conditioning are one entry each, the day's content in its
   note.
 - I5: the sample's "or" options as alternatives in its order; no leg press.
-- I6: intermediate lifters and up; novices refused.
+- I6: every level runs the 3x tracks; the samples are the elite's, the levels below do a share
+  of each section's sets and the conditioning's minutes (the commons' shares), loads by RPE.
+- I8: the elite standard is the back squat to bodyweight; the source names none.
 - I7: at four or five days, the three sessions on three of them.
 
 ## Removed in this review

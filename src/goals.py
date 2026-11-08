@@ -134,6 +134,9 @@ def philosophy_to_goal(phil_id: str, all_frameworks: list,
 
     from .training_contract import load_contract
     contract = load_contract(phil_id, track['id'])
+    if contract and track.get('authored_level'):
+        # A contract track scaled from its authored level (training_contract.with_level).
+        contract = {**contract, 'level_policy': level_scaling.policy_for(track)}
     return {
         'id': f'_phil_{phil_id}',
         'name': phil.get('name', phil_id),
