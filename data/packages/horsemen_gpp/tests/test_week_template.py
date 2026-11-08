@@ -36,7 +36,9 @@ def _horsemen(**overrides):
 
 
 def test_horsemen_runs_the_source_weeks_as_written():
-    p, goal = _horsemen()
+    # The elite operator does every workout as written; the levels below do
+    # it scaled (I3, tests/test_level_scaling.py).
+    p, goal = _horsemen(training_level='elite')
     assert len(p['weeks']) == 16, p.get('validation_errors')
     first = p['weeks'][0]
     cats = [first['schedule'][d][0].get('category') for d in sorted(first['schedule'])]
@@ -48,7 +50,9 @@ def test_horsemen_runs_the_source_weeks_as_written():
             for s in ss:
                 for ea in s['exercises']:
                     load = ea.get('load') or {}
-                    assert 'weight_kg' not in load, 'no load is computed: the source writes it'
+                    # No load is computed: a weight is the source's own, in kilograms.
+                    assert load.get('weight_kg') in (None, (ea.get('slot') or {}).get('load_kg')), (ea['slot'], load)
+                    assert 'rx' not in load, load
     tests = [(w['week_number'], s['test']['archetype']) for w in p['weeks'] for ss in w['schedule'].values()
              for s in ss if s.get('test')]
     assert tests == [(2, 'horsemen_pt_test'), (16, 'horsemen_pt_test')], tests

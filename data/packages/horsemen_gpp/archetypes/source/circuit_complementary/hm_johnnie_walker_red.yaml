@@ -2,7 +2,9 @@ id: hm_johnnie_walker_red
 name: "Johnnie Walker Red"
 modality: mixed_modal_conditioning
 category: conditioning
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 duration_estimate_minutes: 20
 pool_only: true
 
@@ -12,6 +14,7 @@ slots:
     sets: 5
     distance_m: 30
     load: "12 kg (26 lb)"
+    load_kg: 12
     exercise_filter:
       exercise_ids: [kb_overhead_lunge]
       ordered: true

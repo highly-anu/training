@@ -3,9 +3,12 @@ name: Ode to the Regiment
 modality: durability
 category: gpp_durability
 training_levels:
+- novice
 - intermediate
 - advanced
 - elite
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 75
 slots:
@@ -17,6 +20,7 @@ slots:
     - ruck
     ordered: true
   load: 20 kg (45 lb) minimum
+  load_kg: 20
   notes: 3-mile ruck run with at least 45 lb in the ruck.
 - role: lunges
   slot_type: sets_reps

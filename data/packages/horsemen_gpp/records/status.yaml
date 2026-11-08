@@ -14,6 +14,14 @@ source_tests:
 inventions:
 - 'I2: The PT test''s placement: the macro''s first and last hard job-specific days (the source never
   schedules it).'
+- 'I3: Every named workout is written for the elite operator; an advanced athlete does 85 %, an intermediate
+  70 % and a novice half of each one''s sets, reps, minutes, distances and fixed weights (the commons''
+  shares, data/commons/training_levels.yaml), a rep ladder rung by rung and an interval by its rounds;
+  a % of 1RM, a multiple of bodyweight and today''s max stay the athlete''s own. Novices are taken in,
+  the full snatch, clean and jerk, squat clean, power snatch, rope climb and handstand push-up kept for
+  intermediates and up and scaled below (the rope to pull-ups, as R6, the handstand push-up to push-ups,
+  the clean and jerk to the power clean). The source writes for experienced operators, has no novice path
+  and gives no scale; the PT test runs as written, for intermediates and up.'
 last_review:
-  output_vs_dossier: '2026-10-22'
+  output_vs_dossier: '2026-11-08'
 next: Exercise media (28 of 237 written).

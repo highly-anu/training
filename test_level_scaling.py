@@ -63,10 +63,24 @@ def test_volume_is_cut_once():
 
 
 def test_time_and_distance_scale_to_whole_units():
-    out = ls.scale_prescription({'time_minutes': 20, 'hold_seconds': 45, 'work_sec': 30, 'distance_m': 400,
+    out = ls.scale_prescription({'time_minutes': 20, 'hold_seconds': 45, 'distance_m': 400,
                                  'distance_km': 5.0}, {}, 'intermediate', ELITE)
-    assert out['time_minutes'] == 14 and out['hold_seconds'] == 30 and out['work_sec'] == 20
+    assert out['time_minutes'] == 14 and out['hold_seconds'] == 30
     assert out['distance_m'] == 280 and out['distance_km'] == 3.5
+
+
+def test_an_interval_keeps_its_length_and_loses_rounds():
+    # A handstand push-up every 30 s for 50 minutes: every 30 s for 25.
+    out = ls.scale_prescription({'target_rounds': 100, 'work_sec': 30, 'time_minutes': 50}, {}, 'novice', ELITE)
+    assert out['work_sec'] == 30 and out['target_rounds'] == 50 and out['time_minutes'] == 25
+
+
+def test_a_ladder_keeps_its_sets_and_scales_each_rung():
+    out = ls.scale_prescription({'sets': 5, 'reps': '25-20-15-10-5'}, {}, 'novice', ELITE)
+    assert out['sets'] == 5 and out['reps'] == '13-10-8-5-3' and out['rx'] == {'reps': '25-20-15-10-5'}
+    # A range is one set's reps: the sets go.
+    out = ls.scale_prescription({'sets': 4, 'reps': '8-10'}, {}, 'novice', ELITE)
+    assert out['sets'] == 2 and out['reps'] == '8-10'
 
 
 def test_a_relative_load_is_the_athletes_own():

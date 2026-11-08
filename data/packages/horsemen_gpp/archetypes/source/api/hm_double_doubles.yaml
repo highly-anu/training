@@ -3,9 +3,12 @@ name: Double/Doubles
 modality: mixed_modal_conditioning
 category: conditioning
 training_levels:
+- novice
 - intermediate
 - advanced
 - elite
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 40
 slots:
@@ -45,6 +48,7 @@ slots:
     - kb_swing_two_hand
     ordered: true
   load: 24 kg (53 lb)
+  load_kg: 24
   notes: Two-arm kettlebell swings.
 - role: doubles_3
   slot_type: time_domain
@@ -61,6 +65,7 @@ slots:
     - kb_tgu
     ordered: true
   load: 20 kg (44 lb)
+  load_kg: 20
 - role: doubles_4
   slot_type: time_domain
   duration_sec: 120

@@ -166,14 +166,15 @@ def test_two_tracks_of_one_philosophy():
 
 
 def test_a_track_that_cannot_run_alone_says_so_plainly():
-    # Horsemen's named workouts are written for operators: a novice can do
-    # none of them (CrossFit was the example until it scaled to novices).
-    program, _ = _compose([{'philosophy_id': 'horsemen_gpp', 'weight': 0.5},
+    # Marcus Filly's program is written for intermediates and up and has no
+    # novice track (CrossFit and Horsemen were the examples until they scaled
+    # to novices).
+    program, _ = _compose([{'philosophy_id': 'marcus_filly', 'weight': 0.5},
                            {'philosophy_id': 'starting_strength', 'weight': 0.5}],
                           weeks=4, days_per_week=5, session_time_minutes=75, training_level='novice')
     error = program['validation_errors'][0]
     assert error['code'] == 'COMPOSITION_UNFULFILLED'
-    assert error['message'].startswith('Horsemen GPP') and 'cannot fit beside' not in error['message'], error
+    assert error['message'].startswith('Marcus Filly') and 'cannot fit beside' not in error['message'], error
 
 
 def test_too_little_room_is_refused_naming_the_track():
@@ -238,11 +239,11 @@ def test_the_old_blend_shape_composes_too():
 
 
 def test_a_refused_composition_is_answered_as_every_infeasible_request():
-    status, body = _post({'lanes': [{'philosophy_id': 'horsemen_gpp', 'weight': 0.5},
+    status, body = _post({'lanes': [{'philosophy_id': 'marcus_filly', 'weight': 0.5},
                                     {'philosophy_id': 'starting_strength', 'weight': 0.5}],
                           'num_weeks': 2, 'constraints': _constraints(days_per_week=5, training_level='novice')})
     assert status == 200 and body['validation']['feasible'] is False and body['weeks'] == []
-    assert body['detail'].startswith('Horsemen GPP')
+    assert body['detail'].startswith('Marcus Filly')
 
 
 if __name__ == '__main__':

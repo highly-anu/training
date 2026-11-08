@@ -3,9 +3,12 @@ name: Tens
 modality: mixed_modal_conditioning
 category: conditioning
 training_levels:
+- novice
 - intermediate
 - advanced
 - elite
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 60
 slots:
@@ -18,6 +21,7 @@ slots:
     - hang_power_clean
     ordered: true
   load: 61 kg (135 lb)
+  load_kg: 61
   notes: >-
     Accumulating: exercise 1 and 1 sprint, then exercises 1-2 and 2 sprints, then 1-3 and 3 sprints, and
     so on to all ten and 10 sprints — so hang cleans come 10 times and back extensions once. 10 reps of
@@ -31,6 +35,7 @@ slots:
     - back_squat
     ordered: true
   load: 61 kg (135 lb)
+  load_kg: 61
 - role: plyo_jump_repeats
   slot_type: sets_reps
   sets: 8
@@ -58,6 +63,7 @@ slots:
     - db_row_single_arm
     ordered: true
   load: 23 kg (50 lb)
+  load_kg: 23
 - role: bent_over_lateral_raises
   slot_type: sets_reps
   sets: 5
@@ -67,6 +73,7 @@ slots:
     - db_bent_over_lateral_raise
     ordered: true
   load: 11 kg (25 lb)
+  load_kg: 11
 - role: dips
   slot_type: sets_reps
   sets: 4
@@ -85,6 +92,7 @@ slots:
     - med_ball_underhand_throw
     ordered: true
   load: 14 kg (30 lb)
+  load_kg: 14
   notes: Underhand throws.
 - role: ab_wheel
   slot_type: sets_reps

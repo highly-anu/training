@@ -3,9 +3,12 @@ name: Mirror
 modality: mixed_modal_conditioning
 category: conditioning
 training_levels:
+- novice
 - intermediate
 - advanced
 - elite
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 25
 slots:
@@ -17,6 +20,7 @@ slots:
     - db_snatch
     ordered: true
   load: 11 kg (25 lb)
+  load_kg: 11
   notes: >-
     45 s at each station, in order, until all are finished: DB snatches, right hand.
 - role: db_snatch_left
@@ -27,6 +31,7 @@ slots:
     - db_snatch
     ordered: true
   load: 11 kg (25 lb)
+  load_kg: 11
   notes: DB snatches, left hand.
 - role: renegade_rows
   slot_type: time_domain
@@ -36,6 +41,7 @@ slots:
     - db_renegade_row
     ordered: true
   load: 9 kg (20 lb)
+  load_kg: 9
 - role: db_row_right
   slot_type: time_domain
   duration_sec: 45
@@ -44,6 +50,7 @@ slots:
     - db_row_single_arm
     ordered: true
   load: 23 kg (50 lb)
+  load_kg: 23
   notes: DB bent-over row with a bench, right arm.
 - role: db_row_left
   slot_type: time_domain
@@ -53,6 +60,7 @@ slots:
     - db_row_single_arm
     ordered: true
   load: 23 kg (50 lb)
+  load_kg: 23
   notes: DB bent-over row with a bench, left arm.
 - role: kb_sumo_squats
   slot_type: time_domain
@@ -62,6 +70,7 @@ slots:
     - kb_sumo_squat_double
     ordered: true
   load: 2 x 34 kg (2 x 75 lb)
+  load_kg: 34
 - role: kb_swing_right
   slot_type: time_domain
   duration_sec: 45
@@ -156,6 +165,7 @@ slots:
     - plate_bent_over_row
     ordered: true
   load: 45 kg (100 lb) plate
+  load_kg: 45
   notes: 'Manhole covers: bent-over row with a plate.'
 - role: corkscrew_right
   slot_type: time_domain
@@ -165,6 +175,7 @@ slots:
     - corkscrew
     ordered: true
   load: 11 kg (25 lb)
+  load_kg: 11
   notes: Corkscrew, right.
 - role: corkscrew_left
   slot_type: time_domain
@@ -174,6 +185,7 @@ slots:
     - corkscrew
     ordered: true
   load: 11 kg (25 lb)
+  load_kg: 11
   notes: Corkscrew, left.
 - role: figure_eights
   slot_type: time_domain
@@ -183,6 +195,7 @@ slots:
     - kb_figure_eight
     ordered: true
   load: 20 kg (45 lb)
+  load_kg: 20
 - role: plate_press
   slot_type: time_domain
   duration_sec: 45
@@ -191,6 +204,7 @@ slots:
     - plate_press
     ordered: true
   load: 20 kg (45 lb) plate
+  load_kg: 20
 - role: cardio_2
   slot_type: time_domain
   duration_sec: 45

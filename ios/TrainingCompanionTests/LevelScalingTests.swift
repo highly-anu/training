@@ -47,6 +47,22 @@ final class LevelScalingTests: XCTestCase {
         XCTAssertNil(plain.scaledFor(level: "novice"))
     }
 
+    func testALadderAndAnIntervalSayWhatWasWritten() throws {
+        let ladder = try assignment("""
+        {"exercise": {"id": "bench_press", "name": "Bench Press"}, "slot_type": "sets_reps",
+         "load": {"sets": 5, "reps": "13-10-8-5-3", "rx": {"reps": "25-20-15-10-5"},
+                  "level_scaled": {"level": "novice", "from": "elite"}}}
+        """)
+        XCTAssertEqual(LoadFormat.scaledText(ladder), "Scaled for Novice · Rx 25-20-15-10-5 reps")
+        let interval = try assignment("""
+        {"exercise": {"id": "push_up", "name": "Push-Up"}, "slot_type": "emom",
+         "load": {"target_rounds": 50, "work_sec": 30, "time_minutes": 25,
+                  "rx": {"target_rounds": 100, "time_minutes": 50},
+                  "level_scaled": {"level": "novice", "from": "elite"}}}
+        """)
+        XCTAssertEqual(LoadFormat.scaledText(interval), "Scaled for Novice · Rx 100 rounds · 50 min")
+    }
+
     func testTheScaleSurvivesARoundTrip() throws {
         // The phone saves the program back through the revision-checked PUT:
         // what it does not model rides in `extra` and must come back intact.

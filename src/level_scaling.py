@@ -21,6 +21,7 @@ its own change. Nothing here names a package.
 from __future__ import annotations
 
 import math
+import re
 
 from . import levels
 
@@ -31,7 +32,7 @@ DIMENSIONS = ('load', 'volume', 'time', 'distance')
 # goes under one; seconds to 5 s, metres to 10 m, kilograms to 2.5 kg (1 kg
 # under 20: dumbbells and balls come by the kilogram; 4 kg for a bell).
 _TIME_MIN = ('duration_minutes', 'time_minutes')
-_TIME_SEC = ('hold_seconds', 'work_sec')
+_TIME_SEC = ('hold_seconds',)
 
 
 def policy_for(track: dict | None) -> dict | None:
@@ -61,6 +62,14 @@ def factors(level: str | None, policy: dict | None) -> dict | None:
         else:
             shares[dim], sources[dim] = min(1.0, at[dim] / top[dim]), 'commons'
     return shares, sources
+
+
+def _ladder(reps) -> list[int] | None:
+    """A rep ladder written as text, one count a set ("25-20-15-10-5"); None
+    for a range ("8-10" is one set's reps, not two sets) or anything else."""
+    if not isinstance(reps, str) or not re.fullmatch(r'\d+(?:-\d+){2,}', reps):
+        return None
+    return [int(n) for n in reps.split('-')]
 
 
 def _count(n, share: float) -> int:
@@ -116,8 +125,14 @@ def scale_prescription(load: dict, slot: dict, level: str | None, policy: dict |
             out[key] = new
 
     # Volume is cut once: the sets where there are several (5 x 3 at 80 % is
-    # 4 x 3, every set still the written one), else the reps.
-    if isinstance(out.get('sets'), (int, float)) and not isinstance(out['sets'], bool) and out['sets'] > 1:
+    # 4 x 3, every set still the written one), else the reps. A ladder of
+    # reps, one a set ("25-20-15-10-5"), keeps its sets and scales each rung.
+    ladder = _ladder(out.get('reps'))
+    if ladder and len(ladder) == out.get('sets'):
+        rungs = '-'.join(str(_count(n, shares['volume'])) for n in ladder)
+        if rungs != out['reps'] and shares['volume'] < 1.0:
+            rx['reps'], out['reps'] = out['reps'], rungs
+    elif isinstance(out.get('sets'), (int, float)) and not isinstance(out['sets'], bool) and out['sets'] > 1:
         scale('sets', _count, shares['volume'])
     else:
         scale('reps', _count, shares['volume'])
@@ -127,6 +142,10 @@ def scale_prescription(load: dict, slot: dict, level: str | None, policy: dict |
         if scheme != out['rep_scheme']:
             rx['rep_scheme'] = list(out['rep_scheme'])
             out['rep_scheme'] = scheme
+    if out.get('work_sec'):
+        # An interval keeps its length (a handstand push-up every 30 s is
+        # never every 15): its rounds go, and its minutes with them.
+        scale('target_rounds', _count, shares['time'])
     for key in _TIME_MIN:
         scale(key, _count, shares['time'])
     for key in _TIME_SEC:

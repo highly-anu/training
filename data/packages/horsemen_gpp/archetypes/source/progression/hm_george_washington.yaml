@@ -2,7 +2,9 @@ id: hm_george_washington
 name: George Washington
 modality: mixed_modal_conditioning
 category: conditioning
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 40
 slots:
@@ -68,6 +70,7 @@ slots:
     exercise_ids: [kb_tgu]
     ordered: true
   load: 12 kg (26 lb)
+  load_kg: 12
 required_equipment: [rower, box, pull_up_bar, ghd, rings, kettlebell]
 sources: [Horsemen]
 notes: 'A chipper: row 500 m, then 50 each of box jumps, push-ups, sit-ups, jumping pull-ups, back extensions and

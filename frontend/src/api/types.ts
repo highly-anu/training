@@ -390,7 +390,7 @@ export interface ExerciseLoad {
   stalled?: boolean
   /** Done at a share of what is written (src/level_scaling.py): each scaled
    *  field's written value (the Rx), and from which level and how much. */
-  rx?: Partial<Pick<ExerciseLoad, 'sets' | 'reps' | 'rep_scheme' | 'reps_per_round' | 'time_minutes'
+  rx?: Partial<Pick<ExerciseLoad, 'sets' | 'reps' | 'rep_scheme' | 'reps_per_round' | 'target_rounds' | 'time_minutes'
     | 'duration_minutes' | 'hold_seconds' | 'work_sec' | 'distance_m' | 'distance_km' | 'weight_kg'>>
   level_scaled?: {
     level: string

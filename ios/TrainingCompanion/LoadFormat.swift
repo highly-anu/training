@@ -139,6 +139,8 @@ enum LoadFormat {
         if let n = number("reps_per_round") { parts.append("\(Int(n)) reps") }
         if let sets = number("sets") { parts.append("\(Int(sets)) sets") }
         if let reps = number("reps") { parts.append("\(Int(reps)) reps") }
+        if case .string(let ladder)? = rx["reps"] { parts.append("\(ladder) reps") }
+        if let rounds = number("target_rounds") { parts.append("\(Int(rounds)) rounds") }
         if let min = number("time_minutes") ?? number("duration_minutes") { parts.append("\(Int(min)) min") }
         if let secs = number("hold_seconds") ?? number("work_sec") { parts.append("\(Int(secs)) s") }
         if let km = number("distance_km") { parts.append("\(kilograms(km)) km") }

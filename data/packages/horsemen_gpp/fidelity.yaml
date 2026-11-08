@@ -82,11 +82,25 @@ inventions:
     implemented_by:
       - data:philosophy.yaml#tracks.four_month_macro.phases.strength.tests
       - data:philosophy.yaml#tracks.four_month_macro.phases.maintenance.tests
+  - id: I3
+    text: "Every named workout is written for the elite operator; an advanced athlete does 85 %, an intermediate 70 % and a novice half of each one's sets, reps, minutes, distances and fixed weights (the commons' shares, data/commons/training_levels.yaml), a rep ladder rung by rung and an interval by its rounds; a % of 1RM, a multiple of bodyweight and today's max stay the athlete's own. Novices are taken in, the full snatch, clean and jerk, squat clean, power snatch, rope climb and handstand push-up kept for intermediates and up and scaled below (the rope to pull-ups, as R6, the handstand push-up to push-ups, the clean and jerk to the power clean). The source writes for experienced operators, has no novice path and gives no scale; the PT test runs as written, for intermediates and up."
+    implemented_by:
+      - data:philosophy.yaml#tracks.four_month_macro.authored_level
+      - data:frameworks/concurrent_training.yaml#applicable_when.training_level
+      - data:archetypes/source/circuit_short/hm_bad_bush.yaml#scaling_eligible
+      - data:exercises.yaml#exercises.snatch.min_level
+      - data:exercises.yaml#exercises.rope_climb.scaling_down
+      - test:tests/test_level_scaling.py::test_a_novice_does_half_of_every_workout
 
 currency:
   four_month_macro: {entry: strength, rule: R8}
 
 reviews:
+  - kind: output_vs_dossier
+    date: '2026-11-08'
+    by: Claude (level framework)
+    scope: "The 4-Month Macro at novice, intermediate and elite, 16 weeks, every equipment item, six days, 120 minutes"
+    result: "The elite runs every workout as written (68 distinct in 16 weeks). An intermediate does 70 % (67 distinct), a novice half (66, 16 movements scaled, no empty slot): Tongue Lashing's press 3 x 3 at 75-80 % of today's 1RM (written 6 x 3), Winter in August's bench ladder 13-10-8-5-3 at 30 kg (written 25-20-15-10-5 at 61), the handstand push-up every 30 seconds as a push-up for 25 minutes (written 50), Ben Franklin's swings at a 12 kg bell. The PT test is skipped for a novice and says why."
   - kind: output_vs_dossier
     date: '2026-10-22'
     by: Claude (package audit)

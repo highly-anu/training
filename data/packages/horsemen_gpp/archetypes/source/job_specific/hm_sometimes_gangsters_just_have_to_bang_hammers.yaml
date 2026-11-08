@@ -3,9 +3,12 @@ name: Sometimes Gangsters Just Have to Bang Hammers
 modality: durability
 category: gpp_durability
 training_levels:
+- novice
 - intermediate
 - advanced
 - elite
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 70
 slots:
@@ -37,6 +40,7 @@ slots:
     - overhead_squat
     ordered: true
   load: 20 kg (45 lb)
+  load_kg: 20
 - role: jumping_lunges
   slot_type: sets_reps
   sets: 1
@@ -62,6 +66,7 @@ slots:
     - kb_swing_two_hand
     ordered: true
   load: 20 kg (44 lb)
+  load_kg: 20
 - role: deadlifts
   slot_type: sets_reps
   sets: 1
@@ -71,6 +76,7 @@ slots:
     - deadlift
     ordered: true
   load: 43 kg (95 lb)
+  load_kg: 43
 - role: arm_haulers
   slot_type: sets_reps
   sets: 1
@@ -131,6 +137,7 @@ slots:
     - ball_slam
     ordered: true
   load: 9 kg (20 lb)
+  load_kg: 9
 - role: row_500m_2
   slot_type: distance
   distance_m: 500
@@ -149,6 +156,7 @@ slots:
     - db_snatch
     ordered: true
   load: 20 kg (44 lb)
+  load_kg: 20
   notes: 40 kettlebell snatches (a dumbbell will do).
 - role: box_jumps
   slot_type: sets_reps
@@ -176,6 +184,7 @@ slots:
     - kb_tgu
     ordered: true
   load: 24 kg (53 lb)
+  load_kg: 24
 required_equipment:
 - barbell
 - rack

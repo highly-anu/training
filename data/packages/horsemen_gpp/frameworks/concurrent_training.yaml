@@ -29,7 +29,9 @@ prescription_policy: framework
 progression_model: as_written
 
 applicable_when:
+  # A novice does each workout scaled (I3).
   training_level:
+    - novice
     - intermediate
     - advanced
     - elite

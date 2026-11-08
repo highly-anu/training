@@ -3,9 +3,12 @@ name: Drunken Lullaby
 modality: mixed_modal_conditioning
 category: conditioning
 training_levels:
+- novice
 - intermediate
 - advanced
 - elite
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 35
 slots:
@@ -18,6 +21,7 @@ slots:
     - sb_getup
     ordered: true
   load: 39 kg (85 lb)
+  load_kg: 39
   notes: >-
     Rounds of 20, 15, 10 and 5: sandbag get-ups, push-ups, box jumps (twice the round: 40, 30 ...), sandbag
     half moons. The source does not say for time.
@@ -48,6 +52,7 @@ slots:
     - sb_halfmoon
     ordered: true
   load: 16 kg (35 lb)
+  load_kg: 16
 required_equipment:
 - sandbag
 - box

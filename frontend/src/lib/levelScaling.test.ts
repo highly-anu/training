@@ -20,6 +20,14 @@ describe('scaledLoadText', () => {
   it('says the level and what was written', () => {
     expect(scaledLoadText(fran)).toBe('Scaled for Novice · Rx 21-15-9 reps · 30kg')
   })
+  it('says a ladder and an interval as written', () => {
+    const level_scaled = fran.load.level_scaled
+    expect(scaledLoadText({ ...fran, load: { sets: 5, reps: '13-10-8-5-3', rx: { reps: '25-20-15-10-5' }, level_scaled } }))
+      .toBe('Scaled for Novice · Rx 5×25-20-15-10-5')
+    expect(scaledLoadText({ ...fran, load: { target_rounds: 50, work_sec: 30, time_minutes: 25,
+                                             rx: { target_rounds: 100, time_minutes: 50 }, level_scaled } }))
+      .toBe('Scaled for Novice · Rx 100 × 30s · 50 min')
+  })
   it('says nothing for a prescription done as written', () => {
     expect(scaledLoadText({ ...fran, load: { rep_scheme: [21, 15, 9] } } as ExerciseAssignment)).toBeNull()
   })

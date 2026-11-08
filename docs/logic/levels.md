@@ -48,8 +48,8 @@ written, per dimension:
 | Dimension | Scales | Never |
 |-----------|--------|-------|
 | `load` | a slot's `load_kg` (a number, or `{male, female}` by the athlete's `sex`) | a % of 1RM or of bodyweight, RPE: already the athlete's own |
-| `volume` | the sets where there are several, else the reps, `rep_scheme`, reps a round — once, never both | rounds of a for-time piece (its structure) |
-| `time` | an AMRAP's or a cap's minutes, a block's minutes, holds, interval work | rest |
+| `volume` | the sets where there are several, else the reps, `rep_scheme`, reps a round — once, never both; a rep ladder ("25-20-15-10-5", one rung a set) rung by rung, its sets kept | rounds of a for-time piece (its structure) |
+| `time` | an AMRAP's or a cap's minutes, a block's minutes, holds; an interval's rounds (and its minutes with them) | an interval's length (every 30 s stays every 30 s), rest |
 | `distance` | metres, kilometres | |
 
 The share is the track's own `level_scaling.<level>.<dimension>` where its
@@ -60,7 +60,8 @@ more than written. Counts round half up and never go under one; seconds to
 5 s, metres to 10 m, kilograms to 2.5 kg (1 kg under 20 kg: dumbbells and
 balls; 4 kg for a kettlebell). Converted: CrossFit (Rx elite, the Level 1
 guide's half for a novice), Gym Jones (Operator Fitness elite, Soldier of
-Steel the novice's own, never scaled).
+Steel the novice's own, never scaled), Horsemen (every workout elite,
+novices taken in, the hardest movements kept for intermediates and up).
 
 `src/level_scaling.scale_prescription` is the one function, called by
 `progression.calculate_load` (the generator, `POST /sessions/generate`,

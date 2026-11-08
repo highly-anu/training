@@ -3,9 +3,12 @@ name: Ronald Reagan
 modality: mixed_modal_conditioning
 category: conditioning
 training_levels:
+- novice
 - intermediate
 - advanced
 - elite
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 45
 slots:
@@ -29,6 +32,7 @@ slots:
     - thruster
     ordered: true
   load: 57 kg (125 lb), heavy
+  load_kg: 57
   notes: 'Rungs from 10 down to 1: thrusters, then weighted pull-ups.'
 - role: weighted_pull_ups
   slot_type: sets_reps
@@ -39,6 +43,7 @@ slots:
     - weighted_pull_up
     ordered: true
   load: 7 kg (15 lb)
+  load_kg: 7
 - role: rock_squat_and_carry
   slot_type: sets_reps
   sets: 3
