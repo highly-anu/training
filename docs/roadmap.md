@@ -54,7 +54,7 @@ deferred is under *Later*.
 | 15 | Program preview on the phone; the regenerate offer that asks the server first (*IA*) | P2 | M | iOS, web |
 | 16 | Garmin's official Connect API, open again since 2026-10-21: verify the integration, then health data and workouts pushed to the watch | P2 | M | API, watch, web, iOS |
 | 17 | Explore: each philosophy's page read from its package — a server document, its week and rules, one colour system | P2 | M | API, web, iOS, content |
-| 18 | Levels: every package from novice to elite — written for one level, scaled to the others; CrossFit, Gym Jones and Horsemen converted 2026-11-08, eight to go | P1 | L | engine, content, web, iOS |
+| 18 | Levels: every package from novice to elite — written for one level, scaled to the others; CrossFit, Gym Jones, Horsemen and Uphill converted 2026-11-08, seven to go | P1 | L | engine, content, web, iOS |
 
 ---
 
@@ -1594,9 +1594,14 @@ guide's half for a newcomer (R15), the commons' shares between (I7), scaled move
    lifts, the rope and the handstand push-up kept for intermediates and up and scaled below;
    % of today's max and ×BW as written; the PT test a protocol for intermediates and up.
    Elite standards: the source's four-month goals (R8).
-3. **Uphill** — the contract hook (`_assignment` + `verify`), then a novice `start_minutes`
-   from the source's first-week hours; fold `distance_multiplier` into `scaling.distance`.
-4. **Marcus Filly, BJJ** — contract reps and time; a novice track only if a source writes one.
+3. ~~**Uphill**~~ — done 2026-11-08 (`feat/levels-uphill`): no scaling needed — the source
+   writes each level's first-week hours (R6), so the novice is the source's 5 hours untrained
+   (210 aerobic minutes) and runs the full program (I12; Beginner Mountain Fitness is not
+   published). Elite standard: the pack-carry vertical pace. `distance_multiplier` stays:
+   only the modality scheduler reads it, and no shipped package runs on it.
+4. **Marcus Filly, BJJ** — the contract hook first (`training_contract._assignment` and its
+   mirror in `verify`): their sources are silent below the level written for, so a level
+   takes the commons' shares of reps and time; a novice track only if a source writes one.
 5. **Wildman** — reps and rounds only; the bell stays the athlete's (R9). Settles whether
    advanced and elite differ from intermediate.
 6. **Kelly Starrett, ATG** — suitability and `scaling_down` where gaps exist.

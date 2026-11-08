@@ -61,7 +61,8 @@ more than written. Counts round half up and never go under one; seconds to
 balls; 4 kg for a kettlebell). Converted: CrossFit (Rx elite, the Level 1
 guide's half for a novice), Gym Jones (Operator Fitness elite, Soldier of
 Steel the novice's own, never scaled), Horsemen (every workout elite,
-novices taken in, the hardest movements kept for intermediates and up).
+novices taken in, the hardest movements kept for intermediates and up),
+Uphill (each level's volume the source's, nothing scaled).
 
 `src/level_scaling.scale_prescription` is the one function, called by
 `progression.calculate_load` (the generator, `POST /sessions/generate`,
@@ -81,7 +82,9 @@ scaled.
 **Precedence.** A version the source wrote for the level wins: an archetype
 or track whose `training_levels` include it and which is not
 `scaling_eligible` runs as written (Ido's routines, Starting Strength's LP
-and Texas Method, Gym Jones's Soldier of Steel, ATG's programs). Then the
+and Texas Method, Gym Jones's Soldier of Steel, ATG's programs), and so does a
+training contract's per-level volume (`start_minutes`: Uphill's first-week
+hours by fitness, R6, its novice the source's 5 hours untrained). Then the
 track's `level_scaling`, then the commons' shares.
 
 **Not yet:** training contracts (`training_contract._assignment` and its

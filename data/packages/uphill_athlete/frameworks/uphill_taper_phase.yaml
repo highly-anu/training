@@ -25,6 +25,7 @@ allocation_mode: exclusive
 progression_model: volume_block
 applicable_when:
   training_level:
+    - novice
     - intermediate
     - advanced
     - elite
