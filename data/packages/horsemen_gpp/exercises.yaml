@@ -1330,7 +1330,7 @@ exercises:
   - isometric
   - locomotion
   requires:
-  - kb_farmer_carry
+  - farmer_carry_kb
   unlocks: []
   contraindicated_with:
   - hip_flexor_strain
@@ -1339,7 +1339,7 @@ exercises:
     load: increase_bell_weight
     volume: increase_distance_m
   scaling_down:
-  - kb_farmer_carry
+  - farmer_carry_kb
   typical_volume:
     sets: 4
     distance_m: 40
@@ -1367,7 +1367,7 @@ exercises:
   - isometric
   - locomotion
   requires:
-  - kb_farmer_carry
+  - farmer_carry_kb
   unlocks: []
   contraindicated_with:
   - lumbar_disc
@@ -1376,7 +1376,7 @@ exercises:
     load: increase_bell_weight
     volume: increase_distance_m
   scaling_down:
-  - kb_farmer_carry
+  - farmer_carry_kb
   typical_volume:
     sets: 4
     distance_m: 40

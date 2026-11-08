@@ -3,6 +3,13 @@
 # progression is over when it has stopped going up.
 id: starting_strength
 
+# The lifter's marks: the five lifts as multiples of bodyweight, at their
+# ladders' elite rung (docs/logic/levels.md). The method itself is the novice's
+# and the intermediate's (Linear Progression, the Texas Method); the elite
+# rung is where those lifts lead.
+elite_standards: [back_squat_bw_ratio, deadlift_bw_ratio, bench_press_bw_ratio, strict_press_bw_ratio,
+                  power_clean_bw_ratio]
+
 progress:
   - id: bar_load
     label: Load on the bar

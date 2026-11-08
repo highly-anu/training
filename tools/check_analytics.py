@@ -51,11 +51,13 @@ def run(only: str | None = None) -> int:
         headline_anywhere = False
         source = 'declared' if pid in declared else 'default'
         print(f'\n{pid} ({source})')
-        if any(t.get('authored_level') for t in phases.tracks_of(phil)) and \
-                not (declared.get(pid) or {}).get('elite_standards'):
-            # A track scaled from its authored level says what that level is
-            # measured by (docs/logic/levels.md).
-            problems.append(f'{pid}: a track declares authored_level but analytics.yaml names no elite_standards')
+        spec = declared.get(pid) or {}
+        if not spec.get('elite_standards') and not spec.get('no_elite_standard'):
+            # Every methodology says what its elite is measured by, or why
+            # nothing measures it (docs/logic/levels.md).
+            problems.append(f'{pid}: analytics.yaml names no elite_standards and says no no_elite_standard')
+        if spec.get('elite_standards') and spec.get('no_elite_standard'):
+            problems.append(f'{pid}: analytics.yaml gives both elite_standards and no_elite_standard')
         for track in phases.tracks_of(phil):
             goal = goals.philosophy_to_goal(pid, frameworks, track_id=track['id'])
             # The track's first framework says what it is built for: a

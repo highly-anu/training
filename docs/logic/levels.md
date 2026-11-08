@@ -6,8 +6,8 @@ same package serve every training level (novice, intermediate, advanced,
 elite: `data/commons/training_levels.yaml`) in three layers, each data, none
 naming a package (`tools/check_code_neutral.py`).
 
-Since 2026-11-07. Pilot: CrossFit. The other packages convert one change at a
-time (`docs/roadmap.md`, item 18).
+Since 2026-11-07 (CrossFit first); every package by 2026-11-08 (`docs/roadmap.md`,
+item 18). How each one serves the levels is the table at the end.
 
 ## 1. Which movements: suitability
 
@@ -21,7 +21,14 @@ borrows). That reads
   package's seeds (`level_seeds.yaml`, a training contract track's
   `level_seeds`);
 - an exercise's optional `min_level`, for a movement no chain locks (a full
-  snatch): below it the exercise is locked whatever is known.
+  snatch): below it the exercise is locked whatever is known;
+
+raised to the lowest level any of the package's sessions names it for
+(`_named_by`: an archetype's slot or a contract's block, for the levels it
+lists) — Ido's advanced routine's moves are an advanced athlete's. An exercise
+no session names, only a filter reaches, keeps its unlock level. The commons'
+concepts cascade upward as a package's seeds do (`selector._level_known`): an
+advanced athlete knows what an intermediate does.
 
 `/api/explore/links` serves the table as `exerciseLevels`
 (`{package: {exercise: {minLevel, scalesTo}}}`), and Explore's exercise page
@@ -58,12 +65,7 @@ commons' (`training_levels.yaml` `scaling`, relative to the authored level:
 novice 0.5, intermediate 0.7, advanced 0.85 of an elite prescription), never
 more than written. Counts round half up and never go under one; seconds to
 5 s, metres to 10 m, kilograms to 2.5 kg (1 kg under 20 kg: dumbbells and
-balls; 4 kg for a kettlebell). Converted: CrossFit (Rx elite, the Level 1
-guide's half for a novice), Gym Jones (Operator Fitness elite, Soldier of
-Steel the novice's own, never scaled), Horsemen (every workout elite,
-novices taken in, the hardest movements kept for intermediates and up),
-Uphill (each level's volume the source's, nothing scaled), Marcus Filly
-(the 3x samples elite, novices taken in), BJJ (the S&C elite, a class a class).
+balls; 4 kg for a kettlebell).
 
 `src/level_scaling.scale_prescription` is the one function, called by
 `progression.calculate_load` (the generator, `POST /sessions/generate`,
@@ -102,9 +104,10 @@ yet).
 ## 3. The elite target: standards
 
 `analytics.yaml` names `elite_standards`: the standards whose elite rung the
-authored prescriptions are for (CrossFit: the benchmark workouts).
-`tools/check_analytics.py` fails a package with a scaled track and none;
-`tools/check_provenance.py` checks the ids. Each level trains toward its own
+authored prescriptions are for (CrossFit: the benchmark workouts) — or, where
+nothing honest measures the method's elite, `no_elite_standard` says why (ATG
+writes no pass mark; Built to Move's bands are not read). `tools/check_analytics.py`
+fails a package with neither; `tools/check_provenance.py` checks the ids. Each level trains toward its own
 rung (`standard_rung`: novice → entry, the rest by name): a standard's
 "intermediate" is roughly where a novice program ends, so the ladders are not
 one-to-one. Standards stay measures: the engine never moves a level.
@@ -132,3 +135,19 @@ pins a scaled track at its authored level too.
 6. Re-record: `test_single_lane_golden.py --record --package <id>`,
    `tools/evaluate_packages.py --package <id> --update-baseline`; review the
    output at the lowest level and the authored one.
+
+## Every package
+
+| Package | How a level is served | Scaled below | Elite standards |
+|---------|-----------------------|--------------|-----------------|
+| CrossFit | every workout written as Rx (elite); novices taken in | the Level 1 guide's half for a novice (R15), the commons' between (I7); hard movements scaled (I8) | the benchmark workouts |
+| Gym Jones | Operator Fitness elite; Soldier of Steel the source's novice plan | Operator Fitness for advanced and intermediate, the commons' (I7) | the 2 km row |
+| Horsemen | every workout elite; novices taken in | the commons' (I3); the full Olympic lifts, rope and HSPU from intermediate | the four-month goals (R8) |
+| Uphill | each level's volume the source's (R6); a novice from the untrained 5 hours (I12) | nothing | the pack-carry vertical pace |
+| Marcus Filly | the 3x samples elite; novices taken in | sets and conditioning minutes, the commons' (I6) | the back squat (I8) |
+| BJJ | the S&C elite; a class a class | sets, holds, minutes of the S&C, the commons' (I9) | the bench, max pull-ups (I10) |
+| Wildman | the bell the athlete chooses and the cycle they earn (R9); module levels as written | nothing: the cycle starts where every athlete starts and advances on clean sessions | the snatch test, the get-up, the pentathlon's events |
+| Starting Strength | the source's own versions: Linear Progression (novice), the Texas Method (intermediate); advanced refused (Practical Programming's advanced programs are not read) | nothing | the five lifts to bodyweight |
+| Ido Portal | the source's own versions of each routine (beginner, intermediate, advanced) | nothing | the free handstand |
+| ATG | the source's own programs by level (Zero, Program #2, Knee Ability Pro) | nothing | none: Patrick writes no pass mark |
+| Kelly Starrett | Built to Move is for every level as written | nothing | none: the book's bands are not read |

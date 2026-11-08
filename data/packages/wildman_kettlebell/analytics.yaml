@@ -5,6 +5,14 @@
 # rounds). Pentathlon Prep falls through to cadence, Get-Up and Loaded
 # Mobility to technique minutes (src/analytics/document._lead_entry).
 id: wildman_kettlebell
+
+# The kettlebell athlete's marks: the snatch test, the get-up to bodyweight and
+# the pentathlon's five events, at their ladders' elite rung
+# (docs/logic/levels.md). A level is the bell the athlete chooses and the cycle
+# they have earned (R9): nothing is scaled.
+elite_standards: [ssst_reps, turkish_get_up_bw_ratio, kb_pentathlon_clean_reps,
+                  kb_pentathlon_long_cycle_press_reps, kb_pentathlon_jerk_reps,
+                  kb_pentathlon_half_snatch_reps, kb_pentathlon_push_press_reps]
 progress:
 - id: interval_rounds
   label: Completed intervals

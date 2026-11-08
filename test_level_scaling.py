@@ -156,11 +156,34 @@ def test_a_contract_module_scales_what_is_written_and_keeps_its_cycles():
     assert tc.with_level(module, ELITE, 'elite')['blocks'] == module['blocks']
 
 
+def test_a_level_knows_what_the_levels_below_it_know():
+    # The commons' concepts cascade upward: the advanced list once lost
+    # shoulder stability, and a ring dip unlocked at intermediate was locked
+    # at advanced.
+    for lower, higher in zip(levels.order(), levels.order()[1:]):
+        assert selector._level_known(lower) <= selector._level_known(higher), (lower, higher)
+
+
+def test_a_session_written_for_a_level_names_its_moves_for_it():
+    from src import level_suitability
+    by_package = {'pkg': {'basic': {'id': 'basic'}, 'flag': {'id': 'flag'}, 'open': {'id': 'open'}}}
+    archetypes = [
+        {'id': 'beginner', 'training_levels': ['novice', 'intermediate'],
+         'slots': [{'exercise_filter': {'exercise_ids': ['basic']}}]},
+        {'id': 'advanced', 'training_levels': ['advanced', 'elite'],
+         'slots': [{'exercise_filter': {'exercise_ids': ['flag', 'basic']}},
+                   {'exercise_filter': {'movement_pattern': 'squat'}}]}]
+    got = level_suitability.min_levels('pkg', by_package, {}, archetypes)
+    # Named by the beginner version: a novice's. Named only by the advanced
+    # one: an advanced athlete's. Reached by a filter alone: its unlock level.
+    assert got == {'basic': 'novice', 'flag': 'advanced', 'open': 'novice'}, got
+
+
 def test_the_suitability_table_reads_requires_and_min_level():
     from src import level_suitability
     by_package = {'pkg': {'a': {'id': 'a'}, 'b': {'id': 'b', 'requires': ['muscle_up']},
                           'c': {'id': 'c', 'min_level': 'intermediate', 'scaling_down': ['a']}}}
-    got = level_suitability.min_levels('pkg', by_package, {})
+    got = level_suitability.min_levels('pkg', by_package, {}, archetypes=[])
     assert got['a'] == 'novice' and got['c'] == 'intermediate'
     assert got['b'] == 'advanced'      # the muscle-up is an advanced athlete's (level_concepts.yaml)
 

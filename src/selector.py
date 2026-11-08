@@ -38,7 +38,13 @@ _LEVEL_CONCEPTS: dict[str, set] = {
 def _level_known(training_level: str, level_seeds: dict | None = None) -> set:
     """The concepts and exercise ids assumed known at a level: the built-in
     concepts plus every package seed at that level or below."""
-    known = set(_LEVEL_CONCEPTS.get(training_level, set()))
+    # The commons' concepts cascade upward as a package's seeds do: an
+    # advanced athlete knows what an intermediate does (the lists were copied
+    # by hand, and the advanced one had lost shoulder stability and the
+    # carries — a ring dip unlocked at intermediate and locked at advanced).
+    known = set()
+    for level in _levels.up_to(training_level):
+        known |= _LEVEL_CONCEPTS.get(level, set())
     if level_seeds:
         # Seeds cascade upward: what a novice knows, an advanced athlete knows.
         for seeds in level_seeds.values():

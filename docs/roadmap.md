@@ -54,7 +54,7 @@ deferred is under *Later*.
 | 15 | Program preview on the phone; the regenerate offer that asks the server first (*IA*) | P2 | M | iOS, web |
 | 16 | Garmin's official Connect API, open again since 2026-10-21: verify the integration, then health data and workouts pushed to the watch | P2 | M | API, watch, web, iOS |
 | 17 | Explore: each philosophy's page read from its package — a server document, its week and rules, one colour system | P2 | M | API, web, iOS, content |
-| 18 | Levels: every package from novice to elite — written for one level, scaled to the others; CrossFit, Gym Jones, Horsemen, Uphill, Marcus Filly and BJJ converted 2026-11-08, five to go | P1 | L | engine, content, web, iOS |
+| 18 | Levels: every package from novice to elite — all eleven done 2026-11-08; what is left is listed under Open | P2 | S | engine, content |
 
 ---
 
@@ -1604,13 +1604,22 @@ guide's half for a newcomer (R15), the commons' shares between (I7), scaled move
    3x samples are the elite's, novices taken in (I6); BJJ's strength and competition
    conditioning the elite's, a class a class at every level (I9). Elite standards: the back
    squat (Filly), the bench and max pull-ups (BJJ), the app's choice (the sources name none).
-5. **Wildman** — reps and rounds only; the bell stays the athlete's (R9). Settles whether
-   advanced and elite differ from intermediate.
-6. **Kelly Starrett, ATG** — suitability and `scaling_down` where gaps exist.
-7. **Starting Strength, Ido** — suitability and elite standards only; their versions are
-   the source's.
+5. ~~**Wildman**~~ — done 2026-11-08 (`feat/levels-rest`): nothing scaled. A level is the
+   bell the athlete chooses and the cycle they earn (R9), the modules' levels as written;
+   advanced and elite differ from intermediate by those, never by an inferred weight.
+6. ~~**Kelly Starrett, ATG**~~ — done: their levels are the source's own (ATG's programs by
+   level, Built to Move for all); neither names an elite standard and each says why
+   (`no_elite_standard`).
+7. ~~**Starting Strength, Ido**~~ — done: the source's own versions; elite standards the five
+   lifts and the free handstand. An exercise named only in a version written for higher
+   levels now suits from that level (Ido's advanced routines), and the commons' level
+   concepts cascade upward (an advanced athlete had lost the ring dip). Horsemen's two
+   kettlebell carries required an id that does not exist and were elite-only; fixed.
 
-**Open.** A scaled benchmark measures nothing, so a non-elite CrossFit athlete's Progress
+**Open.** Starting Strength refuses advanced and elite lifters (Practical Programming's
+advanced programs are not read). Built to Move's bands would make its tests standards. A
+contract's EMOM and timed-cycle progressions are never scaled (Wildman needs none). A
+scaled benchmark measures nothing, so a non-elite CrossFit athlete's Progress
 has no tested standard; a "scaled" result kind on the standards would let it count. The
 benchmarks' own published beginner versions should replace the computed scale where
 crossfit.com prints them. `starting_load_kg` has no elite × share fallback yet.

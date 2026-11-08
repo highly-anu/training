@@ -433,7 +433,7 @@ group's name.
   out of reach takes its `scaling_down` (`scaled_from`); an exercise's lowest level is
   computed (`src/level_suitability.py`, Explore's `exerciseLevels`), `min_level` where no
   chain says. A scaled benchmark loses its `standard`; a source-written level version is
-  never scaled. A contract scales in its module chain (`training_contract.with_level`, which `verify` resolves too). Converted: CrossFit, Gym Jones, Horsemen, Uphill (its own per-level volume), Marcus Filly, BJJ. Tracks without
+  never scaled. A contract scales in its module chain (`training_contract.with_level`, which `verify` resolves too). An exercise suits from the lowest level that unlocks it, raised to the lowest level a session names it for; the commons' level concepts cascade upward. Every package names `elite_standards` or says why not (`no_elite_standard`; `check_analytics`); how each serves the levels is the table in docs/logic/levels.md. Tracks without
   `authored_level` run exactly as before.
 - **Injury flags**: excluded_movement_patterns blocks exercises by movement pattern; contraindicated_with blocks specific exercises. Slots whose required pattern is fully excluded show as `injury_skip` (not an error).
 - **Session time cap**: `_time_to_task` progression is capped at `session_time_minutes` — Zone 2 duration never exceeds the athlete's session limit even in build phase.
