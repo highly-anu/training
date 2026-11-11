@@ -86,6 +86,7 @@ struct TodayInbox: View {
                 Image(systemName: "chevron.right").font(.caption2)
             }
             .font(.caption)
+            .appTapSlop()
         }
         .buttonStyle(.plain)
         .foregroundStyle(.secondary)

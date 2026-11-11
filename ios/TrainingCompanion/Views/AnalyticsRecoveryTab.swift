@@ -86,7 +86,7 @@ struct AnalyticsRecoveryTab: View {
                 ReadinessDetailView(result: result, latest: logs.first)
             } content: {
                 VStack(alignment: .leading, spacing: 10) {
-                    HStack(alignment: .center, spacing: 16) {
+                    AppAdaptiveStack(alignment: .center, spacing: 16) {
                         Text("\(result.score)")
                             .font(.largeTitle).fontWeight(.bold).fontDesign(.rounded).monospacedDigit()
                             .foregroundStyle(result.statusColor)
@@ -105,8 +105,8 @@ struct AnalyticsRecoveryTab: View {
                                 }
                             }
                         }
-                        Spacer(minLength: 0)
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     ReadinessFlagChips(flags: result.flags)
                 }
             }
@@ -155,10 +155,10 @@ struct AnalyticsRecoveryTab: View {
                             Label(String(format: "%.1fh", debt.hours), systemImage: "moon.zzz")
                                 .font(.subheadline).fontWeight(.semibold).monospacedDigit()
                                 .foregroundStyle(debt.color)
-                            Text("\(debt.nights) nights").font(.caption).foregroundStyle(.secondary)
+                            Text("\(debt.nights) nights · \(debt.word)").font(.caption).foregroundStyle(.secondary)
                         }
                         .accessibilityElement(children: .ignore)
-                        .accessibilityLabel(String(format: "%.1f hours of sleep debt over %d nights", debt.hours, debt.nights))
+                        .accessibilityLabel(String(format: "%.1f hours of sleep debt over %d nights, %@", debt.hours, debt.nights, debt.word))
                     }
                 }
             }

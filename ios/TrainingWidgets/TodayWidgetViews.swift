@@ -8,7 +8,13 @@ struct TodayWidgetEntryView: View {
     @Environment(\.widgetFamily) var family
 
     var body: some View {
-        if let data = entry.todayData {
+        if family == .accessoryInline {
+            Label(AccessoryText.today(entry.todayData), systemImage: "figure.run")
+                .widgetURL(URL(string: "trainingcompanion://today"))
+        } else if family == .accessoryRectangular {
+            AccessoryTodayRectangle(data: entry.todayData)
+                .widgetURL(URL(string: "trainingcompanion://today"))
+        } else if let data = entry.todayData {
             switch family {
             case .systemSmall:  SmallTodayView(sessions: data.sessions)
             case .systemMedium: MediumTodayView(sessions: data.sessions)
@@ -59,6 +65,7 @@ struct SmallTodayView: View {
                 HStack {
                     Image(symbol: WidgetModalityStyle.symbol(for: s))
                         .foregroundStyle(WidgetModalityStyle.color(for: s.modalityId))
+                        .widgetAccentable()
                     Spacer()
                     Text(todayShortLabel)
                         .font(.caption2)
@@ -68,7 +75,7 @@ struct SmallTodayView: View {
                 if s.isDeload {
                     Text("Deload")
                         .font(.caption2)
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(Color.accentColor)
                 }
                 Text(s.archetypeName)
                     .font(.headline)
@@ -97,6 +104,7 @@ struct SmallTodayView: View {
                         Circle()
                             .fill(WidgetModalityStyle.color(for: s.modalityId))
                             .frame(width: 7, height: 7)
+                            .widgetAccentable()
                         Text(s.archetypeName)
                             .font(.caption2)
                             .lineLimit(1)
@@ -222,6 +230,7 @@ struct SessionRowView: View {
         HStack(spacing: 10) {
             Image(symbol: WidgetModalityStyle.symbol(for: session))
                 .foregroundStyle(WidgetModalityStyle.color(for: session.modalityId))
+                .widgetAccentable()
                 .frame(width: 22)
             VStack(alignment: .leading, spacing: 1) {
                 Text(session.archetypeName)
@@ -248,6 +257,7 @@ struct LargeSessionRowView: View {
             HStack(spacing: 8) {
                 Image(symbol: WidgetModalityStyle.symbol(for: session))
                     .foregroundStyle(WidgetModalityStyle.color(for: session.modalityId))
+                    .widgetAccentable()
                 Text(session.archetypeName)
                     .font(.subheadline)
                     .fontWeight(.semibold)

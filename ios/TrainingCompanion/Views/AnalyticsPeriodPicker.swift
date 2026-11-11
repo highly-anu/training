@@ -14,6 +14,9 @@ struct AnalyticsPeriodPicker: View {
     @Binding var period: AnalyticsPeriod
 
     var body: some View {
+        // Scrolls when the chips outgrow the width (the accessibility sizes):
+        // a chip never wraps its label (§6.57).
+        ScrollView(.horizontal, showsIndicators: false) {
         HStack(spacing: 6) {
             ForEach(AnalyticsPeriod.allCases) { p in
                 Button {
@@ -22,6 +25,7 @@ struct AnalyticsPeriodPicker: View {
                 } label: {
                     Text(p.label)
                         .font(.subheadline).fontWeight(period == p ? .semibold : .regular)
+                        .lineLimit(1).fixedSize()
                         .foregroundStyle(period == p ? Color.white : Color.primary)
                         .padding(.horizontal, 12).padding(.vertical, 6)
                         .background(period == p ? AppColor.accent : Color(.systemGray5))
@@ -33,6 +37,7 @@ struct AnalyticsPeriodPicker: View {
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(period == p ? .isSelected : [])
             }
+        }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

@@ -209,6 +209,7 @@ struct WorkoutFilterScopeLine: View {
             .background(Color.accentColor.opacity(AppColor.Opacity.fill))
             .foregroundStyle(Color.accentColor)
             .clipShape(Capsule())
+            .appTapSlop(9)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Remove filter \(text)")

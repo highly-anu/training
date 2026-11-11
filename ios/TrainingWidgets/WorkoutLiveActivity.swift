@@ -1,4 +1,5 @@
 import ActivityKit
+import AppIntents
 import SwiftUI
 import WidgetKit
 
@@ -27,11 +28,12 @@ struct WorkoutLiveActivity: Widget {
                         .font(.title2.weight(.semibold).monospacedDigit())
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: 6) {
                         Text(context.state.title).font(.headline).lineLimit(1)
                         if let next = context.state.next {
                             Text(next).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                         }
+                        WorkoutActivityButtons(state: context.state, tint: tint)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -77,7 +79,7 @@ private struct WorkoutActivityLockScreen: View {
             Spacer(minLength: 8)
             VStack(alignment: .trailing, spacing: 2) {
                 WorkoutActivityClock(state: context.state)
-                    .font(.system(size: 34, weight: .semibold, design: .rounded).monospacedDigit())
+                    .font(.system(.largeTitle, design: .rounded).weight(.semibold).monospacedDigit())
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.trailing)
                 Text("Step \(context.state.step) of \(context.state.steps)")
@@ -85,7 +87,43 @@ private struct WorkoutActivityLockScreen: View {
                     .foregroundStyle(.white.opacity(0.6))
             }
         }
-        .padding(16)
+        .accessibilityElement(children: .combine)
+        .padding([.horizontal, .top], 16)
+        .padding(.bottom, context.state.phase == .done ? 16 : 10)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            WorkoutActivityButtons(state: context.state, tint: tint)
+                .padding([.horizontal, .bottom], 16)
+        }
+    }
+}
+
+/// Pause or Resume on a timed step, Skip on any (WorkoutActivityIntents):
+/// the system runs them in the app, which moves the workout and redraws
+/// this. Nothing once the workout is done.
+private struct WorkoutActivityButtons: View {
+    let state: WorkoutActivityAttributes.ContentState
+    let tint: Color
+
+    var body: some View {
+        if state.phase != .done {
+            HStack(spacing: 8) {
+                if state.canPause {
+                    Button(intent: WorkoutPauseResumeIntent()) {
+                        Label(state.paused ? "Resume" : "Pause",
+                              systemImage: state.paused ? "play.fill" : "pause.fill")
+                            .frame(maxWidth: .infinity, minHeight: 28)
+                    }
+                }
+                Button(intent: WorkoutSkipIntent()) {
+                    Label(state.phase == .rest ? "Skip rest" : "Skip step", systemImage: "forward.end.fill")
+                        .frame(maxWidth: .infinity, minHeight: 28)
+                }
+            }
+            .font(.subheadline.weight(.semibold))
+            .buttonStyle(.bordered)
+            .buttonBorderShape(.capsule)
+            .tint(tint)
+        }
     }
 }
 
@@ -105,6 +143,7 @@ private struct WorkoutActivityClock: View {
 
 private enum WorkoutActivityText {
     static func phaseWord(_ s: WorkoutActivityAttributes.ContentState) -> String {
+        if s.paused { return "Paused" }
         switch s.phase {
         case .work: return "Work"
         case .rest: return "Rest"
@@ -114,6 +153,7 @@ private enum WorkoutActivityText {
     }
 
     static func symbol(_ s: WorkoutActivityAttributes.ContentState) -> String {
+        if s.paused { return "pause.fill" }
         switch s.phase {
         case .work: return "figure.strengthtraining.traditional"
         case .rest: return "pause.circle.fill"

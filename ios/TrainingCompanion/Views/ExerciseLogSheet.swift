@@ -117,7 +117,7 @@ struct ExerciseLogSheet: View {
                                 Image(systemName: "minus.circle")
                                     .font(.title3)
                                     .foregroundStyle(AppColor.destructive)
-                                    .frame(width: 44, height: 32)
+                                    .frame(width: 44, height: 44)
                                     .contentShape(Rectangle())
                             }
                             .buttonStyle(.borderless)

@@ -259,7 +259,7 @@ struct SessionDetailView: View {
                             Image(systemName: "ellipsis")
                                 .font(.body.weight(.semibold))
                                 .foregroundStyle(.secondary)
-                                .frame(width: 32, height: 44)
+                                .frame(width: 44, height: 44)
                                 .contentShape(Rectangle())
                         }
                         .buttonStyle(.borderless)
@@ -304,7 +304,7 @@ struct SessionDetailView: View {
                 .font(.title3)
                 .appSymbolReplace(value: logged)
                 .foregroundStyle(logged ? AnyShapeStyle(AppColor.complete) : AnyShapeStyle(.tertiary))
-                .frame(width: 32, height: 44)
+                .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.borderless)

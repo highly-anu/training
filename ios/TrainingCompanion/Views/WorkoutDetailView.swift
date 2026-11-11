@@ -263,6 +263,7 @@ struct WorkoutDetailView: View {
                                     .font(.caption2).foregroundStyle(.secondary)
                             }
                             .frame(maxWidth: .infinity)
+                            .appStat("Average \(avg) beats per minute")
                         }
                         if avgHR != nil && maxHR != nil {
                             Divider().frame(height: 44)
@@ -277,6 +278,7 @@ struct WorkoutDetailView: View {
                                     .font(.caption2).foregroundStyle(.secondary)
                             }
                             .frame(maxWidth: .infinity)
+                            .appStat("Peak \(peak) beats per minute")
                         }
                     }
                     .padding(.vertical, 6)
@@ -344,8 +346,10 @@ struct WorkoutDetailView: View {
                         Image(systemName: effect.icon)
                             .foregroundStyle(.white).font(.body)
                     )
+                    .accessibilityHidden(true)
             }
             .padding(.vertical, 2)
+            .accessibilityElement(children: .combine)
         }
     }
 
@@ -494,6 +498,7 @@ struct WorkoutDetailView: View {
                                 AppHaptics.selection()
                                 selectedSessionKey = selectedSessionKey == item.key ? nil : item.key
                             }
+                            .appTapRow(selected: selectedSessionKey == item.key)
                     }
                 }
                 Section {
@@ -551,6 +556,7 @@ struct WorkoutDetailView: View {
                                 AppHaptics.selection()
                                 selectedSessionKey = item.key
                             }
+                            .appTapRow(selected: selectedSessionKey == item.key)
                     }
                 }
             }
@@ -636,7 +642,7 @@ struct WorkoutDetailView: View {
 
     private func sessionMatchRow(_ item: (session: ProgramSession, key: String), selected: Bool) -> some View {
         HStack(spacing: 12) {
-            Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+            Image(systemName: selected ? "checkmark.circle.fill" : "circle").accessibilityHidden(true)
                 .foregroundStyle(selected ? AppColor.complete : .secondary)
                 .font(.title3).frame(width: 28)
             VStack(alignment: .leading, spacing: 3) {
@@ -654,7 +660,7 @@ struct WorkoutDetailView: View {
 
     private func manualSessionRow(_ item: (session: ProgramSession, key: String, dateLabel: String), selected: Bool) -> some View {
         HStack(spacing: 12) {
-            Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+            Image(systemName: selected ? "checkmark.circle.fill" : "circle").accessibilityHidden(true)
                 .foregroundStyle(selected ? AppColor.complete : .secondary)
                 .font(.title3).frame(width: 28)
             VStack(alignment: .leading, spacing: 3) {
@@ -726,6 +732,7 @@ struct WorkoutDetailView: View {
         .padding(10)
         .background(.quaternary.opacity(0.5))
         .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusControl))
+        .appStat("\(value) \(SpokenUnit.text(unit))")
     }
 
     private func avgPaceString(dist: WorkoutDistance?, durMin: Double?) -> String? {

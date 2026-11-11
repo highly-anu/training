@@ -17,6 +17,7 @@ struct TodaySession: Identifiable {
 struct TodaySessionCard: View {
     @EnvironmentObject private var appState: AppState
     @ObservedObject private var kept = KeptWorkout.shared
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     let item: TodaySession
     var showsTip = false
@@ -29,6 +30,12 @@ struct TodaySessionCard: View {
     var body: some View {
         let done = appState.isShownComplete(item.key)
         let linked = appState.linkedWorkout(forSessionKey: item.key) != nil
+        // At the accessibility sizes the text takes the card's width: the
+        // actions move up beside the status, the facts stack (§6.57).
+        let large = typeSize.isAccessibilitySize
+        // The session's actions, visible (§6.43); the card itself opens it.
+        let menu = SessionActionsMenu(weekIndex: item.weekIndex, dayName: item.dayName,
+                                      sessionIndex: item.sessionIndex, showsTip: showsTip)
 
         VStack(alignment: .leading, spacing: AppMetrics.gapMedium) {
             HStack(spacing: 14) {
@@ -43,6 +50,7 @@ struct TodaySessionCard: View {
                         Label(ModalityStyle.label(for: session.modality),
                               systemImage: ModalityStyle.icon(for: session.modality))
                             .font(.caption)
+                            .lineLimit(1).minimumScaleFactor(0.7)
                             .foregroundStyle(color)
                             .padding(.horizontal, 8).padding(.vertical, 3)
                             .background(color.opacity(AppColor.Opacity.fill))
@@ -65,6 +73,7 @@ struct TodaySessionCard: View {
                                 .accessibilityLabel("Done")
                                 .transition(.scale(scale: 0.4).combined(with: .opacity))
                         }
+                        if large { menu }
                     }
                     HStack(spacing: 6) {
                         // The workout icon leads the name; the capsule above keeps
@@ -78,16 +87,18 @@ struct TodaySessionCard: View {
                             .font(onStart == nil ? .body : .title3).fontWeight(onStart == nil ? .medium : .semibold)
                             .foregroundStyle(done ? .secondary : .primary)
                     }
-                    HStack(spacing: 12) {
+                    AppAdaptiveStack(spacing: large ? 4 : 12) {
                         if let mins = session.archetype?.durationEstimateMinutes {
                             Label("\(mins) min", systemImage: "clock")
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                         if let test = session.testInfo {
                             // A test day says so: what it measures, not how many rows.
-                            TestBadge()
-                            Text("\(test.standards.count) standard\(test.standards.count == 1 ? "" : "s")")
-                                .font(.caption).foregroundStyle(.secondary)
+                            HStack(spacing: 6) {
+                                TestBadge()
+                                Text("\(test.standards.count) standard\(test.standards.count == 1 ? "" : "s")")
+                                    .font(.caption).foregroundStyle(.secondary)
+                            }
                         } else {
                             let count = session.exercises.filter { !$0.injurySkip }.count
                             Label("\(count) exercises", systemImage: "list.bullet")
@@ -96,9 +107,7 @@ struct TodaySessionCard: View {
                     }
                 }
 
-                // The session's actions, visible (§6.43); the card itself opens it.
-                SessionActionsMenu(weekIndex: item.weekIndex, dayName: item.dayName,
-                                   sessionIndex: item.sessionIndex, showsTip: showsTip)
+                if !large { menu }
             }
             if let onStart, !done {
                 let resumes = kept.record?.target.sessionKey == item.key

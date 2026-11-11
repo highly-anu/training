@@ -111,7 +111,7 @@ struct BuilderStep1PhilosophyView: View {
             } label: {
                 Image(systemName: "info.circle")
                     .foregroundStyle(.secondary)
-                    .padding(10)
+                    .appTapTarget()
             }
             .buttonStyle(.plain)
             .accessibilityLabel("About \(philosophy.name)")

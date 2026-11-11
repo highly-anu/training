@@ -94,6 +94,7 @@ struct HRTimelineView: View {
             }
         }
         .appChartEntry()
+        .appChartSummary("Heart rate", ChartSummary.range(chartData.map { Double($0.bpm) }, unit: "beats per minute"))
         .chartYScale(domain: lo...hi)
         .chartXSelection(value: scrub)
         .chartXAxis(.hidden)

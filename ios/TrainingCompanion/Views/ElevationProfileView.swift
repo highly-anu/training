@@ -54,6 +54,7 @@ struct ElevationProfileView: View {
             }
         }
         .appChartEntry()
+        .appChartSummary("Elevation", ChartSummary.range(chartData.map(\.alt), unit: "metres"))
         .chartYScale(domain: yLo...yHi)
         .chartXSelection(value: scrub)
         .chartXAxis(.hidden)

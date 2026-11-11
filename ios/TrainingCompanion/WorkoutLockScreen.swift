@@ -83,22 +83,32 @@ final class WorkoutLockScreen: NSObject, UNUserNotificationCenterDelegate {
     /// The Live Activity as the player stands: started with the workout,
     /// updated on each move.
     func update(_ player: WorkoutPlayerModel) {
-        guard ActivityAuthorizationInfo().areActivitiesEnabled, let session = player.session,
-              player.startedAt != nil else { return }
-        let state = Self.state(player.engine, session: session)
+        guard let session = player.session, player.startedAt != nil else { return }
+        update(engine: player.engine, session: session, title: player.target.title)
+    }
+
+    /// The same from an engine alone: a button of the Live Activity pressed
+    /// after the app was let go (WorkoutRemote), when the activity is the one
+    /// the system still shows.
+    func update(engine: WorkoutSessionState, session: WatchSession, title: String) {
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
+        let state = Self.state(engine, session: session)
         let content = ActivityContent(state: state, staleDate: state.endsAt?.addingTimeInterval(60))
+        if activity == nil { activity = Activity<WorkoutActivityAttributes>.activities.first }
         if let activity {
             Task { await activity.update(content) }
         } else {
-            let attributes = WorkoutActivityAttributes(sessionName: player.target.title, modalityId: session.modalityId)
+            let attributes = WorkoutActivityAttributes(sessionName: title, modalityId: session.modalityId)
             activity = try? Activity.request(attributes: attributes, content: content)
         }
     }
 
     func end() {
-        guard let activity else { return }
-        self.activity = nil
-        Task { await activity.end(nil, dismissalPolicy: .immediate) }
+        // One the app started before it was let go is ended too.
+        let running = Activity<WorkoutActivityAttributes>.activities
+        activity = nil
+        guard !running.isEmpty else { return }
+        Task { for a in running { await a.end(nil, dismissalPolicy: .immediate) } }
         cancelCues()
     }
 
@@ -113,8 +123,11 @@ final class WorkoutLockScreen: NSObject, UNUserNotificationCenterDelegate {
         default: phase = engine.clockDrivesNext ? .work : .waiting
         }
         let index = engine.phase.exerciseIndex ?? 0
+        var canPause = false
+        if case .timedWork = engine.phase { canPause = true }
         return .init(title: engine.cueText, phase: phase, endsAt: forecast.first?.at,
                      next: forecast.first?.text, step: min(index + 1, session.exercises.count),
-                     steps: session.exercises.count)
+                     steps: session.exercises.count,
+                     canPause: canPause, paused: canPause && engine.isTimerPaused)
     }
 }

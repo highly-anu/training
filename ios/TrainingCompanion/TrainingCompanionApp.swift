@@ -22,6 +22,8 @@ struct TrainingCompanionApp: App {
     }
 
     init() {
+        // The Live Activity's Pause and Skip reach the workout through here.
+        WorkoutRemote.install()
         // Two tips, each shown once (design-system §6.52).
         try? Tips.configure()
         #if DEBUG

@@ -68,8 +68,10 @@ struct ProgramView: View {
                     if section != .history {
                         if appState.allWeeks.isEmpty {
                             Button { AppHaptics.light(); showBuilder = true } label: { Image(systemName: "plus") }
+                                .accessibilityLabel("New program")
                         } else {
                             Button { AppHaptics.light(); showSettings = true } label: { Image(systemName: "gearshape") }
+                                .accessibilityLabel("Program settings")
                         }
                     }
                 }
@@ -150,7 +152,7 @@ struct ProgramView: View {
                 AppHaptics.light()
                 appState.programSaveConflict = nil
             } label: {
-                Image(systemName: "xmark").font(.caption)
+                Image(systemName: "xmark").font(.caption).appTapTarget()
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Dismiss")
@@ -185,7 +187,7 @@ struct ProgramView: View {
     private func weekTitle(_ index: Int, current: Int?) -> some View {
         let weeks = appState.allWeeks
         return VStack(alignment: .leading, spacing: 2) {
-            HStack(spacing: AppMetrics.gapSmall) {
+            AppAdaptiveStack(spacing: AppMetrics.gapSmall) {
                 // Position in the program, not week.weekNumber.
                 // A program whose weeks are numbered 16...31 (the tail of
                 // an earlier plan) but whose programStartDate is this week
@@ -195,6 +197,7 @@ struct ProgramView: View {
                 if index == current {
                     Text("Current")
                         .font(.caption2).fontWeight(.semibold)
+                        .lineLimit(1).fixedSize()
                         .foregroundStyle(.white)
                         .padding(.horizontal, 7).padding(.vertical, 3)
                         .background(AppColor.accent.gradient)
@@ -257,12 +260,14 @@ struct ProgramView: View {
             AppHaptics.light()
             selectedDay = DaySelection(weekIndex: weekIdx, dayName: day)
           } label: {
-            HStack(spacing: 12) {
+            // The day beside its sessions; above them at the accessibility
+            // sizes, where a name would break word by word (§6.57).
+            AppAdaptiveStack(spacing: 12) {
                 Text(day.prefix(3))
                     .font(.subheadline)
                     .fontWeight(isToday ? .bold : .regular)
                     .foregroundStyle(isToday ? AppColor.accent : .primary)
-                    .frame(width: 36, alignment: .leading)
+                    .frame(minWidth: 36, alignment: .leading)
 
                 if sessions.isEmpty {
                     HStack(spacing: 5) {
@@ -295,15 +300,15 @@ struct ProgramView: View {
                         }
                     }
                 }
-
-                Spacer(minLength: 0)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.leading, 14)
             .padding(.vertical, 10)
             .frame(minHeight: 44)
             .contentShape(Rectangle())
           }
           .buttonStyle(.plain)
+          .accessibilityLabel(dayLabel(day: day, week: week, isToday: isToday))
           if sessions.isEmpty {
               SessionAddButton(weekIndex: weekIdx, dayName: day, title: "Add")
                   .padding(.trailing, 14)
@@ -316,6 +321,24 @@ struct ProgramView: View {
         // The same as a long press: each session's Move, Replace, Remove (an
         // added one); Add Session on today or a later day.
         .sessionActions(weekIndex: weekIdx, dayName: day)
+    }
+
+    /// A day's row for VoiceOver: the day, then each session with what the
+    /// icons and badges say ("Wednesday, today: Swing Day, done").
+    private func dayLabel(day: String, week: ProgramWeek, isToday: Bool) -> String {
+        let sessions = week.schedule[day] ?? []
+        let head = day + (isToday ? ", today" : "")
+        guard !sessions.isEmpty else { return head + ": rest" }
+        let parts = sessions.indices.map { i -> String in
+            let session = sessions[i]
+            let key = appState.makeSessionKey(weekNumber: week.weekNumber, dayName: day, index: i)
+            var text = session.archetype?.name ?? ModalityStyle.label(for: session.modality)
+            if session.testInfo != nil { text += ", test" }
+            if session.isAdded { text += ", added" }
+            if appState.isSessionComplete(key) { text += ", done" }
+            return text
+        }
+        return head + ": " + parts.joined(separator: "; ")
     }
 
     // MARK: - Empty States
@@ -382,6 +405,8 @@ private struct DaySessionsSheet: View {
             Image(symbol: done ? "checkmark.circle.fill" : SessionIcon.symbol(icon: session.icon, modality: session.modality))
                 .foregroundStyle(done ? AppColor.complete : ModalityStyle.color(for: session.modality))
                 .font(.title3)
+                .accessibilityLabel("Done")
+                .accessibilityHidden(!done)
             VStack(alignment: .leading, spacing: 3) {
                 Text(session.archetype?.name ?? ModalityStyle.label(for: session.modality))
                     .fontWeight(.medium)

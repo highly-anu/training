@@ -123,6 +123,9 @@ struct PMCChart: View {
         }
         .frame(height: compact ? 56 : 220)
         .accessibilityLabel("Fitness, fatigue and form over \(entries.count) days")
+        .accessibilityValue(entries.last.map {
+            "Latest fitness \(ChartSummary.whole($0.ctl)), fatigue \(ChartSummary.whole($0.atl)), form \(ChartSummary.whole($0.tsb))"
+        } ?? "")
     }
 }
 

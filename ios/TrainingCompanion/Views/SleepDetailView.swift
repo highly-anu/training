@@ -24,6 +24,8 @@ enum SleepFormat {
         }
 
         var color: Color { hours < 2 ? AppColor.complete : hours < 5 ? AppColor.warning : AppColor.destructive }
+        /// What the colour says, for VoiceOver and beside the number without colour.
+        var word: String { hours < 2 ? "low" : hours < 5 ? "building" : "high" }
     }
 }
 
@@ -70,7 +72,7 @@ struct SleepDetailView: View {
             if debt.nights > 0 {
                 Section("Last 7 days") {
                     LabeledContent("Sleep debt") {
-                        Text(String(format: "%.1fh", debt.hours)).monospacedDigit().foregroundStyle(debt.color)
+                        Text(String(format: "%.1fh, %@", debt.hours, debt.word)).monospacedDigit().foregroundStyle(debt.color)
                     }
                     LabeledContent("Target") { Text("8h a night") }
                     LabeledContent("Nights recorded") { Text("\(debt.nights)").monospacedDigit() }

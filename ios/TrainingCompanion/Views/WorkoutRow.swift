@@ -14,6 +14,7 @@ struct WorkoutRow: View {
     var showsSession: Bool = true
     /// Off inside a `NavigationLink`, which draws its own.
     var showsChevron: Bool = true
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         let session = linkedProgramSession(for: workout)
@@ -25,30 +26,44 @@ struct WorkoutRow: View {
                                                 modalityId: modality)
         let iconColor = modality.map { ModalityStyle.color(for: $0) } ?? AppColor.info
 
+        // At the accessibility sizes the text takes the row's width: the icon
+        // leads the title, the facts are one wrapping line, the chips stack and
+        // the load is said in words (§6.57).
+        let large = typeSize.isAccessibilitySize
+        let icon = Image(symbol: iconName)
+            .foregroundStyle(iconColor)
+            .font(.title3)
+            .frame(minWidth: 28)
+
         return HStack(spacing: 12) {
-            Image(symbol: iconName)
-                .foregroundStyle(iconColor)
-                .font(.title3)
-                .frame(width: 28)
+            if !large { icon }
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(recordedTitle(workout)).font(.body)
+                if large {
+                    HStack(spacing: 8) { icon; Text(recordedTitle(workout)).font(.body) }
+                } else {
+                    Text(recordedTitle(workout)).font(.body)
+                }
 
                 // What was recorded: when, for how long, and by what.
-                HStack(spacing: 8) {
-                    Text(workoutDateLabel(workout.date))
-                        .font(.caption).foregroundStyle(.secondary)
-                    if let time = workoutTimeLabel(workout) {
-                        Text(time).font(.caption).foregroundStyle(.secondary)
-                    }
-                    if let dur = workout.durationMinutes, dur > 0 {
-                        Text("\(Int(dur)) min").font(.caption).foregroundStyle(.secondary)
+                if large {
+                    Text(recordedFacts(workout)).font(.caption).foregroundStyle(.secondary)
+                } else {
+                    HStack(spacing: 8) {
+                        Text(workoutDateLabel(workout.date))
+                            .font(.caption).foregroundStyle(.secondary)
+                        if let time = workoutTimeLabel(workout) {
+                            Text(time).font(.caption).foregroundStyle(.secondary)
+                        }
+                        if let dur = workout.durationMinutes, dur > 0 {
+                            Text("\(Int(dur)) min").font(.caption).foregroundStyle(.secondary)
+                        }
                     }
                 }
 
                 let distance = workout.distance.flatMap { $0.isMeaningful ? $0 : nil }
                 if distance != nil || workout.heartRate?.avg != nil {
-                    HStack(spacing: 10) {
+                    AppAdaptiveStack(spacing: large ? 2 : 10) {
                         if let dist = distance {
                             Label(String(format: "%.1f %@", dist.value, dist.unit), systemImage: "arrow.forward")
                                 .font(.caption).foregroundStyle(.secondary)
@@ -60,7 +75,7 @@ struct WorkoutRow: View {
                     }
                 }
 
-                HStack(spacing: 6) {
+                AppAdaptiveStack(spacing: large ? 4 : 6) {
                     sourceChip(workout.source)
                     if showsSession {
                         matchChip(session: session,
@@ -71,12 +86,17 @@ struct WorkoutRow: View {
                             .font(.caption2).foregroundStyle(.secondary)
                     }
                 }
+                if large, let t = trimp {
+                    Text("Load \(t) · \(TrimpStyle.label(t))")
+                        .font(.caption).fontWeight(.semibold)
+                        .foregroundStyle(TrimpStyle.color(t))
+                }
             }
 
-            Spacer()
+            Spacer(minLength: 0)
 
             // TRIMP badge (Strava/Whoop-style load number)
-            if let t = trimp {
+            if !large, let t = trimp {
                 VStack(spacing: 1) {
                     Text("\(t)")
                         .font(.headline).fontWeight(.bold)
@@ -84,7 +104,8 @@ struct WorkoutRow: View {
                     Text("load")
                         .font(.caption2).foregroundStyle(.secondary)
                 }
-                .frame(width: 40)
+                .frame(minWidth: 40)
+                .appStat("Load \(t), \(TrimpStyle.label(t))")
             }
 
             if showsChevron {
@@ -101,6 +122,7 @@ struct WorkoutRow: View {
     private func sourceChip(_ source: String) -> some View {
         Text(ImportedWorkout.sourceLabel(source))
             .font(.caption2).fontWeight(.medium)
+            .lineLimit(1)
             .padding(.horizontal, 6).padding(.vertical, 2)
             .background(Color(.systemGray5))
             .clipShape(Capsule())
@@ -123,6 +145,7 @@ struct WorkoutRow: View {
         } else {
             Text("Unmatched")
                 .font(.caption2)
+                .lineLimit(1)
                 .padding(.horizontal, 6).padding(.vertical, 2)
                 .background(Color(.systemGray6))
                 .foregroundStyle(.tertiary)
@@ -190,6 +213,14 @@ struct WorkoutRow: View {
     private static let dateDisplay: DateFormatter = {
         let f = DateFormatter(); f.dateFormat = "EEE, MMM d"; return f
     }()
+
+    /// "Tue, Nov 10 · 07:30 · 45 min": the row's facts as one line that wraps.
+    private func recordedFacts(_ workout: ImportedWorkout) -> String {
+        var parts = [workoutDateLabel(workout.date)]
+        if let time = workoutTimeLabel(workout) { parts.append(time) }
+        if let dur = workout.durationMinutes, dur > 0 { parts.append("\(Int(dur)) min") }
+        return parts.joined(separator: " · ")
+    }
 
     private func workoutDateLabel(_ dateStr: String) -> String {
         guard let date = Self.dateParser.date(from: dateStr) else { return dateStr }

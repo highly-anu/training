@@ -115,7 +115,7 @@ struct AnalyticsOverviewTab: View {
         AppCard(header: "Totals") {
             if summary == nil && appState.loadSummaryFailed.contains(period) { onDeviceMark }
         } content: {
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+            AppAdaptiveGrid(columns: 3, spacing: 12) {
                 kpiCell(
                     label: "Sessions",
                     value: "\(Int(stats.sessions))",
@@ -169,19 +169,25 @@ struct AnalyticsOverviewTab: View {
     private func kpiCell(label: String, value: String, unit: String,
                           prev: Double?, curr: Double?, higherIsBetter: Bool) -> some View {
         VStack(alignment: .leading, spacing: 3) {
-            HStack(alignment: .top, spacing: 2) {
-                Text(value).font(.title3).fontWeight(.semibold).monospacedDigit()
-                    .appNumeric(value: value)
-                if !unit.isEmpty {
-                    Text(unit).font(.caption).foregroundStyle(.secondary).padding(.top, 4)
+            AppAdaptiveStack(alignment: .top, spacing: 2) {
+                HStack(alignment: .top, spacing: 2) {
+                    Text(value).font(.title3).fontWeight(.semibold).monospacedDigit()
+                        .lineLimit(1).minimumScaleFactor(0.6)
+                        .appNumeric(value: value)
+                    if !unit.isEmpty {
+                        Text(unit).font(.caption).foregroundStyle(.secondary).padding(.top, 4)
+                            .lineLimit(1)
+                    }
                 }
-                Spacer(minLength: 0)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 if let p = prev, let c = curr, p > 0, period != .all {
                     trendArrow(prev: p, curr: c, higherIsBetter: higherIsBetter)
                 }
             }
             Text(label).font(.caption).foregroundStyle(.secondary)
+                .lineLimit(1).minimumScaleFactor(0.7)
         }
+        .accessibilityElement(children: .combine)
     }
 
     private func trendArrow(prev: Double, curr: Double, higherIsBetter: Bool) -> some View {

@@ -138,6 +138,8 @@ struct ActivityBars: View {
             }
         }
         .frame(height: CGFloat(entries.count) * 32 + 16)
+        .accessibilityLabel("Hours by activity")
+        .accessibilityValue(entries.map { String(format: "%@ %.1f hours", $0.name, $0.hours) }.joined(separator: ", "))
     }
 }
 
@@ -235,6 +237,7 @@ struct WeeklySessionsChart: View {
             }
             .frame(height: height)
             .accessibilityLabel("Sessions in each of the last \(entries.count) weeks")
+            .accessibilityValue(ChartSummary.series(entries.map { Double($0.sessionCount) }, unit: "sessions") ?? "")
             HStack(spacing: 12) {
                 key(Color.gray.opacity(0.3), "0")
                 key(.green, "1–2")
@@ -289,6 +292,7 @@ struct WeeklyTRIMPChart: View {
         }
         .frame(height: height)
         .accessibilityLabel("TRIMP in each of the last \(bars.count) weeks")
+        .accessibilityValue(ChartSummary.series(bars.map { Double($0.trimp) }) ?? "")
     }
 }
 
