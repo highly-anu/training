@@ -50,7 +50,7 @@ export function DayColumn({ day, sessions, weekNumber, isToday, onOpenSession, i
         className={cn(
           'mb-2 rounded-md px-2 py-1 text-center text-xs font-semibold flex items-center justify-center gap-1',
           isComplete
-            ? cn('bg-emerald-500/15', COMPLETION.text)
+            ? cn('bg-done/15', COMPLETION.text)
             : isToday
               ? 'bg-primary text-primary-foreground'
               : isWeekend

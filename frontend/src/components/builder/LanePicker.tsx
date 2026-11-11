@@ -1,3 +1,4 @@
+import { FALLBACK_HEX } from '@/lib/dataColors'
 import { Tip } from '@/components/shared/Tip'
 import { Plus, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -11,7 +12,7 @@ import type { ModalityId, Philosophy } from '@/api/types'
 const SECTION_LABEL = 'text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium'
 
 function hexOf(phil: Philosophy | undefined): string {
-  return MODALITY_COLORS[(phil?.bias?.[0] ?? '') as ModalityId]?.hex ?? '#6366f1'
+  return MODALITY_COLORS[(phil?.bias?.[0] ?? '') as ModalityId]?.hex ?? FALLBACK_HEX
 }
 
 /**

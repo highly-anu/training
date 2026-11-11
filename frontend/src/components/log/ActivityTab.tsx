@@ -168,7 +168,7 @@ function SessionLogRow({ row, onOpen }: { row: LogSessionRow; onOpen?: () => voi
       )}
     >
       {row.isComplete
-        ? <CheckCircle2 className="size-4 mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+        ? <CheckCircle2 className="size-4 mt-0.5 shrink-0 text-done" />
         : <Circle className="size-4 mt-0.5 shrink-0 text-muted-foreground" />}
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{row.title}</p>

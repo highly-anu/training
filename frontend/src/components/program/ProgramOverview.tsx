@@ -1,3 +1,5 @@
+import { ChartFrame } from '@/components/shared/ChartFrame'
+import { FALLBACK_HEX, SERIES, VOLUME_HEX } from '@/lib/dataColors'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ModalityDonut } from '@/components/dashboard/ModalityDonut'
@@ -5,7 +7,7 @@ import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { PHASE_COLORS } from '@/lib/phaseColors'
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, ReferenceArea,
+  BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ReferenceArea,
 } from 'recharts'
 import type { GeneratedProgram, ModalityId, WeekVolumeSummary } from '@/api/types'
 import type { PhaseSegment } from '@/hooks/usePhaseCalendar'
@@ -19,10 +21,10 @@ import { useChartEntry } from '@/lib/chartMotion'
 // ── Category config (for backend volume summary bars — 4 fixed buckets) ───────
 
 const VOL_CATEGORIES = [
-  { id: 'Strength',     color: '#ef4444' },
-  { id: 'Conditioning', color: '#0ea5e9' },
-  { id: 'Durability',   color: '#f59e0b' },
-  { id: 'Mobility',     color: '#10b981' },
+  { id: 'Strength',     color: VOLUME_HEX.Strength },
+  { id: 'Conditioning', color: VOLUME_HEX.Conditioning },
+  { id: 'Durability',   color: VOLUME_HEX.Durability },
+  { id: 'Mobility',     color: VOLUME_HEX.Mobility },
 ] as const
 
 // Strength minutes for the bars: a set counts four minutes, and a session with
@@ -75,7 +77,7 @@ function buildArchetypeRows(
         if (!session.archetype) continue
         const dur = session.duration_min ?? session.archetype.duration_estimate_minutes ?? 0
         const mod = session.modality as ModalityId
-        const color = MODALITY_COLORS[mod]?.hex ?? '#6366f1'
+        const color = MODALITY_COLORS[mod]?.hex ?? FALLBACK_HEX
         const name = session.archetype.name
 
         const existing = map.get(name)
@@ -562,16 +564,16 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
                                     {/* Mini volume bar */}
                                     <div className="flex h-1 flex-1 overflow-hidden rounded-full bg-muted min-w-0">
                                       {row.strength > 0 && (
-                                        <div style={{ width: `${(row.strength / rowTotal) * 100}%`, backgroundColor: '#ef4444' }} />
+                                        <div style={{ width: `${(row.strength / rowTotal) * 100}%`, backgroundColor: VOLUME_HEX.Strength }} />
                                       )}
                                       {row.conditioning > 0 && (
-                                        <div style={{ width: `${(row.conditioning / rowTotal) * 100}%`, backgroundColor: '#0ea5e9' }} />
+                                        <div style={{ width: `${(row.conditioning / rowTotal) * 100}%`, backgroundColor: VOLUME_HEX.Conditioning }} />
                                       )}
                                       {row.durability > 0 && (
-                                        <div style={{ width: `${(row.durability / rowTotal) * 100}%`, backgroundColor: '#f59e0b' }} />
+                                        <div style={{ width: `${(row.durability / rowTotal) * 100}%`, backgroundColor: VOLUME_HEX.Durability }} />
                                       )}
                                       {row.mobility > 0 && (
-                                        <div style={{ width: `${(row.mobility / rowTotal) * 100}%`, backgroundColor: '#10b981' }} />
+                                        <div style={{ width: `${(row.mobility / rowTotal) * 100}%`, backgroundColor: VOLUME_HEX.Mobility }} />
                                       )}
                                     </div>
                                     <span className="text-[10px] text-muted-foreground tabular-nums w-12 text-right shrink-0">
@@ -616,7 +618,8 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
       {chartData.length > 0 && (
         <div>
           <h2 className="text-sm font-semibold mb-3">Volume Progression</h2>
-          <ResponsiveContainer width="100%" height={200}>
+          <ChartFrame label="Volume by week: strength, conditioning, durability and mobility" height={200}
+            summary={`${chartData.length} weeks`}>
             <BarChart data={chartData} barSize={6} barGap={1} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
               <XAxis
                 dataKey="week"
@@ -632,7 +635,7 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
                 width={24}
               />
               <Tooltip
-                cursor={{ fill: '#888', fillOpacity: 0.08 }}
+                cursor={{ fill: SERIES.cursor, fillOpacity: 0.08 }}
                 contentStyle={{
                   backgroundColor: 'var(--card)',
                   border: '1px solid var(--border)',
@@ -656,12 +659,12 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
                 />
               ))}
 
-              <Bar {...drawIn} dataKey="Conditioning" fill="#0ea5e9" radius={[2, 2, 0, 0]} />
-              <Bar {...drawIn} dataKey="Durability"   fill="#f59e0b" radius={[2, 2, 0, 0]} />
-              <Bar {...drawIn} dataKey="Strength"     fill="#ef4444" radius={[2, 2, 0, 0]} />
-              <Bar {...drawIn} dataKey="Mobility"     fill="#10b981" radius={[2, 2, 0, 0]} />
+              <Bar {...drawIn} dataKey="Conditioning" fill={VOLUME_HEX.Conditioning} radius={[2, 2, 0, 0]} />
+              <Bar {...drawIn} dataKey="Durability"   fill={VOLUME_HEX.Durability} radius={[2, 2, 0, 0]} />
+              <Bar {...drawIn} dataKey="Strength"     fill={VOLUME_HEX.Strength} radius={[2, 2, 0, 0]} />
+              <Bar {...drawIn} dataKey="Mobility"     fill={VOLUME_HEX.Mobility} radius={[2, 2, 0, 0]} />
             </BarChart>
-          </ResponsiveContainer>
+          </ChartFrame>
         </div>
       )}
 

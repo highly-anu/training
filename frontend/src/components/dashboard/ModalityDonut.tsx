@@ -1,4 +1,6 @@
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
+import { ChartFrame } from '@/components/shared/ChartFrame'
+import * as say from '@/lib/chartSummary'
+import { PieChart, Pie, Cell, Tooltip } from 'recharts'
 import { sortPriorities } from '@/lib/prioritySort'
 import { modalityHex, modalityLabel } from '@/lib/modalityColors'
 import type { GoalPriorities } from '@/api/types'
@@ -21,7 +23,8 @@ export function ModalityDonut({ priorities }: ModalityDonutProps) {
 
   return (
     <div className="relative flex flex-col items-center">
-      <ResponsiveContainer width="100%" height={180}>
+      <ChartFrame label="The program's modality mix" height={180}
+        summary={say.shares(data)}>
         <PieChart>
           <Pie {...drawIn}
             data={data}
@@ -47,7 +50,7 @@ export function ModalityDonut({ priorities }: ModalityDonutProps) {
             formatter={(v, name) => [`${String(v)}%`, String(name)]}
           />
         </PieChart>
-      </ResponsiveContainer>
+      </ChartFrame>
 
       {/* Center label */}
       {dominant && (

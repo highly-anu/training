@@ -1,15 +1,17 @@
+import { ChartFrame } from '@/components/shared/ChartFrame'
+import * as say from '@/lib/chartSummary'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { AlertTriangle } from 'lucide-react'
-import { ResponsiveContainer, LineChart, Line, Tooltip } from 'recharts'
+import { LineChart, Line, Tooltip } from 'recharts'
 import { subDays, parseISO, isAfter, format } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { readinessSourceNote, type ReadinessFlag } from '@/lib/readiness'
 import { fetchReadiness } from '@/api/health'
 import { useBioStore } from '@/store/bioStore'
-import { STATUS_STYLES } from '@/lib/statusColors'
+import { STATUS_STYLES, STATUS_CSS } from '@/lib/statusColors'
 import { useChartEntry } from '@/lib/chartMotion'
 import { RollingNumber } from '@/components/motion/RollingNumber'
 
@@ -88,7 +90,8 @@ export function ReadinessWidget() {
         {/* Sparkline */}
         {sparkData.length > 1 && (
           <div className="flex-1 ml-2">
-            <ResponsiveContainer width="100%" height={40}>
+            <ChartFrame label="Resting heart rate, last seven days" height={40}
+              summary={say.series(sparkData.map((d) => d.rhr), 'bpm')}>
               <LineChart data={sparkData}>
                 <Tooltip
                   content={({ active, payload }) =>
@@ -102,13 +105,13 @@ export function ReadinessWidget() {
                 <Line {...drawIn}
                   type="monotone"
                   dataKey="rhr"
-                  stroke={status === 'green' ? '#10b981' : status === 'yellow' ? '#f59e0b' : '#ef4444'}
+                  stroke={STATUS_CSS[status]}
                   strokeWidth={1.5}
                   dot={false}
                   connectNulls
                 />
               </LineChart>
-            </ResponsiveContainer>
+            </ChartFrame>
           </div>
         )}
       </div>

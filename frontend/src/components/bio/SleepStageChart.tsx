@@ -1,7 +1,9 @@
+import { ChartFrame } from '@/components/shared/ChartFrame'
+import * as say from '@/lib/chartSummary'
+import { SERIES } from '@/lib/dataColors'
 import { useMemo } from 'react'
 import {
-  ResponsiveContainer,
-  BarChart,
+    BarChart,
   Bar,
   XAxis,
   YAxis,
@@ -78,7 +80,8 @@ export function SleepStageChart({ bioLogs, days = 30 }: SleepStageChartProps) {
   }
 
   return (
-    <ResponsiveContainer width="100%" height={200}>
+    <ChartFrame label="Sleep stages by night, hours" height={200}
+      summary={say.named('Total', say.series(data.map((d) => d.Deep + d.REM + d.Light), 'hours', say.oneDecimal))}>
       <BarChart data={data} margin={{ top: 4, right: 8, left: -20, bottom: 0 }} barSize={10}>
         <XAxis
           dataKey="date"
@@ -95,11 +98,11 @@ export function SleepStageChart({ bioLogs, days = 30 }: SleepStageChartProps) {
         />
         <Tooltip content={<CustomTooltip />} />
         <Legend iconSize={8} wrapperStyle={{ fontSize: 10 }} />
-        <Bar {...drawIn} dataKey="Deep" stackId="sleep" fill="#1d4ed8" radius={[0, 0, 0, 0]} />
-        <Bar {...drawIn} dataKey="REM" stackId="sleep" fill="#7c3aed" radius={[0, 0, 0, 0]} />
-        <Bar {...drawIn} dataKey="Light" stackId="sleep" fill="#38bdf8" radius={[0, 0, 0, 0]} />
-        <Bar {...drawIn} dataKey="Awake" stackId="sleep" fill="#6b7280" radius={[4, 4, 0, 0]} />
+        <Bar {...drawIn} dataKey="Deep" stackId="sleep" fill={SERIES.sleepDeep} radius={[0, 0, 0, 0]} />
+        <Bar {...drawIn} dataKey="REM" stackId="sleep" fill={SERIES.sleepRem} radius={[0, 0, 0, 0]} />
+        <Bar {...drawIn} dataKey="Light" stackId="sleep" fill={SERIES.sleepLight} radius={[0, 0, 0, 0]} />
+        <Bar {...drawIn} dataKey="Awake" stackId="sleep" fill={SERIES.sleepAwake} radius={[4, 4, 0, 0]} />
       </BarChart>
-    </ResponsiveContainer>
+    </ChartFrame>
   )
 }

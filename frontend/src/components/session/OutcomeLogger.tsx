@@ -136,7 +136,7 @@ export function OutcomeLogger({ slotType, exercise, exerciseId, sessionKey, load
           />
         </label>
       ))}
-      {logged && <span className="text-[10px] text-emerald-700 dark:text-emerald-300">logged</span>}
+      {logged && <span className="text-[10px] text-done">logged</span>}
     </div>
   )
 }

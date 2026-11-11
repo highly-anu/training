@@ -116,7 +116,7 @@ function ImportPanel({
         </div>
       )}
       {status === 'done' && (
-        <div className="flex flex-wrap items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300">
+        <div className="flex flex-wrap items-center gap-2 text-sm text-done">
           <CheckCircle2 className="size-4" />
           {novel === 0 ? (
             <span className="text-muted-foreground">
@@ -141,8 +141,8 @@ function ImportPanel({
 
       {/* Linked success */}
       {linkedSuccess && (
-        <div className="flex items-center justify-between gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-4 py-3">
-          <div className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300">
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-done/30 bg-done/5 px-4 py-3">
+          <div className="flex items-center gap-2 text-sm text-done">
             <CheckCircle2 className="size-4" />
             Workout linked to {sessionLabel(linkedSuccess)}
           </div>

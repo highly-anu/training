@@ -1,3 +1,4 @@
+import { FALLBACK_HEX } from '@/lib/dataColors'
 import { Tip } from '@/components/shared/Tip'
 import { LoadingState, FailedState } from '@/components/shared/states'
 import { useMemo, useState } from 'react'
@@ -141,7 +142,7 @@ function EquipmentChips({ selected, used, unlock, bodyweight, onToggle, onBodywe
 
 function ResultChip({ item, facet, onPick }: { item: FacetItem; facet: Facet; onPick: () => void }) {
   const open = useExploreNavigate()
-  const color = item.color ?? '#6366f1'
+  const color = item.color ?? FALLBACK_HEX
   const dim = item.partial || item.unmatched || item.unavailable
   const why = item.unavailable ? 'not enabled' : item.unmatched ? 'no match' : item.note
   return (

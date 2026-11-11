@@ -15,7 +15,7 @@ export function SpecSourceBadge({ source, file, className }: {
       className={cn(
         'inline-block px-1.5 py-0.5 rounded text-[10px] font-mono border',
         declared
-          ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+          ? 'border-good/30 bg-good/10 text-good'
           : 'border-border bg-muted/40 text-muted-foreground',
         className,
       )}

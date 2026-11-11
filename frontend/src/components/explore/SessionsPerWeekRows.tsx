@@ -1,3 +1,4 @@
+import { NEUTRAL_HEX } from '@/lib/dataColors'
 import type { Framework, ModalityId } from '@/api/types'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 
@@ -9,7 +10,7 @@ export function SessionsPerWeekRows({ sessionsPerWeek }: { sessionsPerWeek: Fram
   return (
     <div className="space-y-1.5">
       {rows.map(([mod, count]) => {
-        const hex = MODALITY_COLORS[mod as ModalityId]?.hex ?? '#94a3b8'
+        const hex = MODALITY_COLORS[mod as ModalityId]?.hex ?? NEUTRAL_HEX
         return (
           <div key={mod} className="flex items-center gap-2 text-xs">
             <span className="w-40 truncate text-muted-foreground text-[11px]">

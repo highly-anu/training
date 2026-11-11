@@ -20,7 +20,7 @@ interface WorkoutRowProps {
 }
 
 const STATUS_CLASS: Record<WorkoutMatchStatus, string> = {
-  matched:   'border-emerald-500/40 text-emerald-700 dark:text-emerald-300',
+  matched:   'border-done/40 text-done',
   pending:   'border-amber-500/40 text-amber-700 dark:text-amber-300',
   unmatched: 'border-border text-muted-foreground',
 }

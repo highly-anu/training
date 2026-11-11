@@ -34,6 +34,9 @@
   --color-action-foreground: var(--action-foreground);
   --color-done: var(--done);
   --color-done-foreground: var(--done-foreground);
+  --color-good: var(--good);
+  --color-warn: var(--warn);
+  --color-bad: var(--bad);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -121,8 +124,14 @@
   /* Action is the primary; done is emerald, dark enough to carry white text. */
   --action: var(--primary);
   --action-foreground: var(--primary-foreground);
-  --done: oklch(0.508 0.118 165.612);
+  --done: oklch(0.46 0.107 165.612);
   --done-foreground: oklch(0.985 0.02 166);
+
+  /* A verdict — going well, watch it, off — as text on the page. Not done
+     (finished), not destructive (an action). Dark enough for AA on white. */
+  --good: oklch(0.465 0.136 150.069);
+  --warn: oklch(0.473 0.137 46.201);
+  --bad: oklch(0.48 0.2 27.518);
 
   --border: oklch(0.92 0.004 286.32);
   --input: oklch(0.92 0.004 286.32);
@@ -162,6 +171,9 @@
 
   --done: oklch(0.765 0.177 163.223);
   --done-foreground: oklch(0.262 0.051 172.552);
+  --good: oklch(0.871 0.15 154.449);
+  --warn: oklch(0.879 0.169 91.605);
+  --bad: oklch(0.808 0.114 19.571);
 
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
@@ -190,6 +202,9 @@
   --destructive-foreground: oklch(0.14 0.015 25);
   --done: oklch(0.765 0.177 163.223);
   --done-foreground: oklch(0.262 0.051 172.552);
+  --good: oklch(0.871 0.15 154.449);
+  --warn: oklch(0.879 0.169 91.605);
+  --bad: oklch(0.808 0.114 19.571);
   --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.72 0.11 95);

@@ -67,7 +67,7 @@ function WeekTab({
       {/* Date + goal name */}
       <div>
         <p className="text-xs text-muted-foreground">{format(new Date(), 'EEEE, MMMM d, yyyy')}</p>
-        <h1 className="text-2xl font-bold tracking-tight mt-0.5">{program.goal?.name ?? 'Training Program'}</h1>
+        <h2 className="text-2xl font-bold tracking-tight mt-0.5">{program.goal?.name ?? 'Training Program'}</h2>
         {daysToEvent !== null && daysToEvent >= 0 && (
           <div className="flex items-center gap-1.5 mt-1">
             <Flag className="size-3 text-amber-700 dark:text-amber-300" />

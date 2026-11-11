@@ -1,3 +1,4 @@
+import { EFFORT_HEX, NEUTRAL_HEX } from '@/lib/dataColors'
 import { useMemo, useState } from 'react'
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import { useExploreLinks } from '@/api/exploreLinks'
@@ -54,13 +55,6 @@ function fmtSlotPrescription(slot: ArchetypeSlot): string {
 
 // ─── Effort coloring ──────────────────────────────────────────────────────────
 
-const EFFORT_COLORS: Record<string, string> = {
-  low:    '#22c55e',
-  medium: '#eab308',
-  high:   '#f97316',
-  max:    '#ef4444',
-}
-
 const LEVEL_LABELS: Record<string, string> = {
   novice:       'N',
   intermediate: 'I',
@@ -74,7 +68,7 @@ const LEVEL_LABELS: Record<string, string> = {
 function ExerciseCard({ exercise: ex }: { exercise: Exercise }) {
   const [open, setOpen] = useState(false)
 
-  const effortColor = EFFORT_COLORS[ex.effort] ?? '#94a3b8'
+  const effortColor = EFFORT_HEX[ex.effort] ?? NEUTRAL_HEX
   const loadEntries = Object.entries(ex.starting_load_kg ?? {})
   const volStr = ex.typical_volume
     ? formatVolume(ex.typical_volume as Record<string, unknown>)
@@ -239,7 +233,7 @@ function ExerciseCard({ exercise: ex }: { exercise: Exercise }) {
                   <p className="text-[9px] text-muted-foreground/50 mb-0.5">Unlocks</p>
                   <div className="flex flex-wrap gap-1">
                     {ex.unlocks.map(u => (
-                      <span key={u} className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300">
+                      <span key={u} className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-good/10 border border-good/30 text-good">
                         {u.replace(/_/g, ' ')}
                       </span>
                     ))}

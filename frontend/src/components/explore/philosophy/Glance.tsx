@@ -1,3 +1,4 @@
+import { NEUTRAL_HEX } from '@/lib/dataColors'
 import { Tip } from '@/components/shared/Tip'
 import { createElement, useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
@@ -118,7 +119,7 @@ export function PhaseBar({ phases, scaleWeeks, selected, onSelect, height = 'h-2
   return (
     <div className="flex w-full gap-px">
       {phases.map((p) => {
-        const style = { width: `${(p.weeks / (scaleWeeks || 1)) * 100}%`, backgroundColor: PHASE_COLORS[p.kind]?.hex ?? '#94a3b8' }
+        const style = { width: `${(p.weeks / (scaleWeeks || 1)) * 100}%`, backgroundColor: PHASE_COLORS[p.kind]?.hex ?? NEUTRAL_HEX }
         const cls = cn(height, 'rounded-[2px] transition-opacity', selected && selected !== p.id && 'opacity-35')
         return onSelect
           ? <Tip key={p.id} label={`${p.name} · ${p.weeks} wk`}><button type="button" onClick={() => onSelect(p.id)} className={cls} style={style} aria-label={`${p.name}, ${p.weeks} weeks`} /></Tip>

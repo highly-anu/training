@@ -277,7 +277,7 @@ function DroppableDay({
           : isSelected
             ? 'border-primary/40 bg-primary/5'
             : isComplete
-              ? cn('border-emerald-500/20', COMPLETION.bg)
+              ? cn('border-done/20', COMPLETION.bg)
               : 'border-border bg-card/40'
       )}
     >
@@ -288,7 +288,7 @@ function DroppableDay({
         className={cn(
           'flex items-center justify-between rounded-md px-1.5 py-1 text-[10px] font-bold tracking-widest uppercase transition-colors',
           isComplete
-            ? cn(COMPLETION.text, 'hover:bg-emerald-500/10')
+            ? cn(COMPLETION.text, 'hover:bg-done/10')
             : isToday
               ? 'text-primary hover:bg-primary/10'
               : 'text-muted-foreground hover:bg-muted'

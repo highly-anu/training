@@ -1,7 +1,9 @@
+import { ChartFrame } from '@/components/shared/ChartFrame'
+import * as say from '@/lib/chartSummary'
+import { SERIES } from '@/lib/dataColors'
 import { useMemo, useState } from 'react'
 import {
-  ResponsiveContainer,
-  AreaChart,
+    AreaChart,
   Area,
   XAxis,
   YAxis,
@@ -136,7 +138,8 @@ export function HRTimeline({ samples, avgHR, maxHR = 190, zoneBoundaries = DEFAU
 
   return (
     <div className="space-y-1">
-      <ResponsiveContainer width="100%" height={160}>
+      <ChartFrame label="Heart rate over the workout" height={160}
+        summary={say.range(data.map((d) => d.bpm), 'bpm')}>
         <AreaChart data={data} margin={{ top: 4, right: 24, left: -8, bottom: 0 }}>
           <defs>
             <linearGradient id={`${gradientId}-stroke`} x1="0" y1="0" x2="0" y2="1">
@@ -203,7 +206,7 @@ export function HRTimeline({ samples, avgHR, maxHR = 190, zoneBoundaries = DEFAU
           {computedAvg != null && (
             <ReferenceLine
               y={computedAvg}
-              stroke="#f97316"
+              stroke={SERIES.threshold}
               strokeDasharray="4 4"
               strokeWidth={1}
             />
@@ -217,10 +220,10 @@ export function HRTimeline({ samples, avgHR, maxHR = 190, zoneBoundaries = DEFAU
             dot={false}
           />
         </AreaChart>
-      </ResponsiveContainer>
+      </ChartFrame>
       {computedAvg != null && (
         <p className="text-[10px] text-muted-foreground/60 text-right">
-          <span className="inline-block w-3 h-px bg-orange-400 align-middle mr-1" style={{ borderTop: '1px dashed #f97316' }} />
+          <span className="inline-block w-3 h-px align-middle mr-1" style={{ borderTop: `1px dashed ${SERIES.threshold}` }} />
           avg {computedAvg} bpm
         </p>
       )}

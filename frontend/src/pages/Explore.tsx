@@ -1,3 +1,4 @@
+import { EFFORT_HEX, FALLBACK_HEX, NEUTRAL_HEX, RECOVERY_COST_HEX, SCALE_BADGE, TIER_HEX } from '@/lib/dataColors'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { SubTabs } from '@/components/layout/SubTabs'
 import { LoadingState, FailedState } from '@/components/shared/states'
@@ -70,11 +71,7 @@ function prettify(id: string) {
 }
 
 function RecoveryCostBadge({ cost }: { cost: 'low' | 'medium' | 'high' }) {
-  const styles = {
-    low: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300',
-    medium: 'bg-amber-500/15 text-amber-700 dark:text-amber-300',
-    high: 'bg-red-500/15 text-red-700 dark:text-red-300',
-  }
+  const styles = SCALE_BADGE
   return (
     <span className={cn('inline-block px-1.5 py-0.5 rounded text-[10px] font-medium', styles[cost])}>
       {cost} recovery
@@ -274,7 +271,7 @@ function ModalityOverview({
         <div className="grid grid-cols-3 gap-2">
           {sorted.map((mod) => {
             const color = MODALITY_COLORS[mod.id]
-            const hex = color?.hex ?? '#6366f1'
+            const hex = color?.hex ?? FALLBACK_HEX
             return (
               <button
                 key={mod.id}
@@ -307,7 +304,7 @@ function ModalityOverview({
 // ─── Modality signature — intensity strip + volume / session range bars ────────
 
 function ModalitySignature({ mod, allArchetypes }: { mod: Modality; allArchetypes: Archetype[] }) {
-  const hex = MODALITY_COLORS[mod.id]?.hex ?? '#6366f1'
+  const hex = MODALITY_COLORS[mod.id]?.hex ?? FALLBACK_HEX
 
   // Which HR zones are active for this modality
   const activeZones = useMemo(() => {
@@ -334,7 +331,7 @@ function ModalitySignature({ mod, allArchetypes }: { mod: Modality; allArchetype
   }, [mod])
 
   const recoveryLevel = { low: 1, medium: 2, high: 3 }[mod.recovery_cost] ?? 1
-  const recoveryColor = { low: '#10b981', medium: '#f59e0b', high: '#ef4444' }[mod.recovery_cost]
+  const recoveryColor = RECOVERY_COST_HEX[mod.recovery_cost]
 
   const VOL_MAX = 600
   const volMinPct = (mod.min_weekly_minutes / VOL_MAX) * 100
@@ -360,7 +357,7 @@ function ModalitySignature({ mod, allArchetypes }: { mod: Modality; allArchetype
               <div key={n} className="size-2.5 rounded-full transition-all"
                 style={{
                   backgroundColor: n <= recoveryLevel ? recoveryColor : 'transparent',
-                  border: `1px solid ${n <= recoveryLevel ? recoveryColor : '#334155'}`,
+                  border: `1px solid ${n <= recoveryLevel ? recoveryColor : 'var(--border)'}`,
                   opacity: n <= recoveryLevel ? (n === recoveryLevel ? 1 : 0.6) : 0.25,
                 }} />
             ))}
@@ -378,10 +375,10 @@ function ModalitySignature({ mod, allArchetypes }: { mod: Modality; allArchetype
               <div key={def.id} className="flex-1 flex items-center justify-center rounded py-1.5 transition-all"
                 style={{
                   backgroundColor: active ? `${hex}cc` : 'transparent',
-                  border: `1px solid ${active ? hex : '#1e293b'}`,
+                  border: `1px solid ${active ? hex : 'var(--border)'}`,
                 }}>
                 <span className="text-[9px] font-mono font-medium"
-                  style={{ color: active ? '#fff' : '#334155' }}>
+                  style={{ color: active ? 'var(--foreground)' : 'var(--muted-foreground)' }}>
                   {def.label}
                 </span>
               </div>
@@ -440,8 +437,8 @@ function ModalitySignature({ mod, allArchetypes }: { mod: Modality; allArchetype
               className="px-1.5 py-0.5 rounded text-[9px] font-mono transition-colors"
               style={{
                 backgroundColor: mod.session_position === pos ? `${hex}20` : 'transparent',
-                color: mod.session_position === pos ? hex : '#334155',
-                border: `1px solid ${mod.session_position === pos ? `${hex}50` : '#1e293b'}`,
+                color: mod.session_position === pos ? hex : 'var(--muted-foreground)',
+                border: `1px solid ${mod.session_position === pos ? `${hex}50` : 'var(--border)'}`,
               }}>
               {pos}
             </span>
@@ -476,7 +473,7 @@ function ModalityDetail({
   onBack: () => void
 }) {
   const color = MODALITY_COLORS[mod.id]
-  const hex = color?.hex ?? '#6366f1'
+  const hex = color?.hex ?? FALLBACK_HEX
 
   const featuredIn = useMemo(
     () => philosophies.filter(p => p.bias.includes(mod.id)),
@@ -571,13 +568,13 @@ function ModalityDetail({
             <div className="grid grid-cols-2 gap-3">
               {mod.compatible_in_session_with.length > 0 && (
                 <div className="space-y-1.5">
-                  <p className="text-[10px] text-emerald-700/70 dark:text-emerald-300/70 font-medium">Pairs well with</p>
+                  <p className="text-[10px] text-good/70 font-medium">Pairs well with</p>
                   <div className="flex flex-wrap gap-1">
                     {mod.compatible_in_session_with.map((id) => {
                       const c = MODALITY_COLORS[id]
                       return (
-                        <span key={id} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
-                          <span className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: c?.hex ?? '#10b981' }} />
+                        <span key={id} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-good/10 text-good border border-good/20">
+                          <span className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: c?.hex ?? NEUTRAL_HEX }} />
                           {c?.label ?? prettify(id)}
                         </span>
                       )
@@ -593,7 +590,7 @@ function ModalityDetail({
                       const c = MODALITY_COLORS[id]
                       return (
                         <span key={id} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-red-500/10 text-red-700 dark:text-red-300 border border-red-500/20">
-                          <span className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: c?.hex ?? '#ef4444' }} />
+                          <span className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: c?.hex ?? NEUTRAL_HEX }} />
                           {c?.label ?? prettify(id)}
                         </span>
                       )
@@ -679,10 +676,6 @@ function ModalityDetail({
 
 // ─── Exercise components ──────────────────────────────────────────────────────
 
-const EX_EFFORT_COLORS: Record<string, string> = {
-  low: '#10b981', medium: '#f59e0b', high: '#f97316', max: '#ef4444',
-}
-
 function ExerciseLanding({ allExercises, onSelect }: { allExercises: Exercise[]; onSelect: (e: Exercise) => void }) {
   const [search, setSearch] = useState('')
   const [activeCategories, setActiveCategories] = useState<Set<string>>(new Set())
@@ -734,7 +727,7 @@ function ExerciseLanding({ allExercises, onSelect }: { allExercises: Exercise[];
         <div className="space-y-1.5">
           <div className="flex flex-wrap gap-2">
             {byCat.map(([cat, count]) => {
-              const color = EX_CATEGORY_COLORS[cat] ?? '#6366f1'
+              const color = EX_CATEGORY_COLORS[cat] ?? FALLBACK_HEX
               const active = activeCategories.has(cat)
               return (
                 <button
@@ -789,7 +782,7 @@ function ExerciseLanding({ allExercises, onSelect }: { allExercises: Exercise[];
         {/* Exercise list */}
         <div className="space-y-1">
           {displayed.map((ex) => {
-            const color = EX_CATEGORY_COLORS[ex.category] ?? '#6366f1'
+            const color = EX_CATEGORY_COLORS[ex.category] ?? FALLBACK_HEX
             return (
               <button
                 key={ex.id}
@@ -807,7 +800,7 @@ function ExerciseLanding({ allExercises, onSelect }: { allExercises: Exercise[];
                     {ex.movement_patterns.slice(0, 2).map(p => (
                       <span key={p}>{p.replace(/_/g, ' ')}</span>
                     ))}
-                    <span className={cn(EX_EFFORT_COLORS[ex.effort])}>{ex.effort}</span>
+                    <span style={{ color: EFFORT_HEX[ex.effort] }}>{ex.effort}</span>
                   </div>
                 </div>
               </button>
@@ -977,7 +970,7 @@ function ExercisePanel({
 // ─── Archetype landing card ───────────────────────────────────────────────────
 
 function ArchetypeLandingCard({ archetype, onSelect }: { archetype: Archetype; onSelect: () => void }) {
-  const catColor = ARCH_CAT_COLORS[archetype.category] ?? '#94a3b8'
+  const catColor = ARCH_CAT_COLORS[archetype.category] ?? NEUTRAL_HEX
   const modColor = MODALITY_COLORS[archetype.modality as ModalityId]
 
   return (
@@ -1075,7 +1068,7 @@ function ArchetypeLanding({ archetypes, onSelect }: {
         <div className="space-y-1.5">
           <div className="flex flex-wrap gap-2">
             {Object.entries(catCounts).map(([cat, count]) => {
-              const color = ARCH_CAT_COLORS[cat] ?? '#94a3b8'
+              const color = ARCH_CAT_COLORS[cat] ?? NEUTRAL_HEX
               const active = activeCategories.has(cat)
               return (
                 <button
@@ -1129,7 +1122,7 @@ function ArchetypeDetail({ archetype, allExercises, allArchetypes, onSelect, onB
   onSelect: (id: string) => void
   onBack: () => void
 }) {
-  const catColor = ARCH_CAT_COLORS[archetype.category] ?? '#94a3b8'
+  const catColor = ARCH_CAT_COLORS[archetype.category] ?? NEUTRAL_HEX
   const lineage = useLineage('archetypes', archetype.id)
   const { data: specs } = useAnalyticsSpecs()
   const trackedBy = useMemo(
@@ -1226,7 +1219,7 @@ function FrameworkOverview({
 
   function fwColor(fw: Framework): string {
     const p = fw.source_philosophy ? philMap[fw.source_philosophy] : null
-    return p ? (MODALITY_COLORS[p.bias[0] as ModalityId]?.hex ?? '#6366f1') : '#6366f1'
+    return p ? (MODALITY_COLORS[p.bias[0] as ModalityId]?.hex ?? FALLBACK_HEX) : FALLBACK_HEX
   }
 
   const philsWithFrameworks = useMemo(() => {
@@ -1274,7 +1267,7 @@ function FrameworkOverview({
         <div className="space-y-1.5">
           <div className="flex flex-wrap gap-2">
             {philsWithFrameworks.map(p => {
-              const color = MODALITY_COLORS[p.bias[0] as ModalityId]?.hex ?? '#6366f1'
+              const color = MODALITY_COLORS[p.bias[0] as ModalityId]?.hex ?? FALLBACK_HEX
               const active = activePhil === p.id
               return (
                 <button
@@ -1415,8 +1408,8 @@ function FrameworkExplorerDetail({
 
   const sourcePhil = fw.source_philosophy ? philMap[fw.source_philosophy] : null
   const hex = sourcePhil
-    ? (MODALITY_COLORS[sourcePhil.bias[0] as ModalityId]?.hex ?? '#6366f1')
-    : '#6366f1'
+    ? (MODALITY_COLORS[sourcePhil.bias[0] as ModalityId]?.hex ?? FALLBACK_HEX)
+    : FALLBACK_HEX
 
   const intensityEntries = fw.intensity_distribution
     ? Object.entries(fw.intensity_distribution)
@@ -1568,7 +1561,7 @@ function FrameworkExplorerDetail({
               {(['committed', 'core', 'supplementary'] as const).map(tier => {
                 const mods = fw.modality_priority?.[tier] ?? []
                 if (!mods.length) return null
-                const tierColor = tier === 'committed' ? '#ef4444' : tier === 'core' ? '#f97316' : '#64748b'
+                const tierColor = TIER_HEX[tier] ?? TIER_HEX.supplementary
                 return (
                   <div key={tier} className="space-y-1">
                     <p className="text-[9px] uppercase tracking-wider font-medium" style={{ color: tierColor }}>{tier}</p>

@@ -318,3 +318,42 @@ describe('nothing behind hover (§11.10)', () => {
     }), 'A shortcut goes in lib/shortcuts.ts, so "?" lists it; Escape belongs to the dialog or sheet.').toEqual([])
   })
 })
+
+describe('hue is data, emerald is done (§8.12, §12.11)', () => {
+  const COLOUR_MODULES = (file: string) => /^lib\/\w*[Cc]olors\.ts$/.test(file)
+  const TESTS = (file: string) => /\.test\.tsx?$/.test(file) || file.startsWith('mocks/')
+
+  it('done and the verdicts are tokens, never a raw green', () => {
+    expect(findings({
+      pattern: /\b(emerald|green)-\d/,
+      allow: either(is('lib/dataColors.ts', 'lib/movementColors.ts'), GENERATED, DEV_LAB, TESTS),
+    }), 'Finished is `text-done` / `bg-done/10` (lib/completionColors.ts); going well is `text-good` (lib/statusColors.ts). A green that is data — a scale step, a category — gets a name in lib/dataColors.ts.').toEqual([])
+  })
+
+  it('a component writes no hex', () => {
+    expect(findings({
+      pattern: /['"`(]#[0-9a-fA-F]{3,8}\b/,
+      allow: either(COLOUR_MODULES, is('lib/hrZones.ts', 'lib/themes.ts', 'lib/developmentShaping.ts'), GENERATED, DEV_LAB, TESTS),
+    }), 'A theme colour is a token (`var(--border)`); a data colour has a name in its module (lib/dataColors.ts for a series or scale).').toEqual([])
+  })
+
+  it('every chart sits in a ChartFrame', () => {
+    expect(findings({
+      pattern: /\bResponsiveContainer\b/,
+      allow: is('components/shared/ChartFrame.tsx'),
+    }), '<ChartFrame label="…" summary={say.series(…)}> gives the chart its name and its numbers in words (lib/chartSummary.ts).').toEqual([])
+    const frames = tagFindings((tag, attrs) => tag === 'ChartFrame' && !/\blabel=/.test(attrs), TESTS)
+    expect(frames, 'A ChartFrame says what it draws.').toEqual([])
+  })
+
+  it('the page can be skipped to and has one h1', () => {
+    const layout = FILES.find(({ file }) => file === 'components/layout/RootLayout.tsx')!.lines.join('\n')
+    expect(layout).toMatch(/href="#main"/)
+    expect(layout).toMatch(/id="main"/)
+    expect(findings({
+      pattern: /<h1\b/,
+      // Three pages outside the sidebar's sections write their own header, one h1 each.
+      allow: either(is('components/layout/PageHeader.tsx', 'pages/ProgramHistoryDetail.tsx', 'pages/WorkoutDetail.tsx', 'pages/LoginPage.tsx'), DEV_LAB, TESTS),
+    }), 'The page\'s name is PageHeader\'s `title`, its only h1; a section is an h2.').toEqual([])
+  })
+})

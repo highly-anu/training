@@ -1,3 +1,4 @@
+import { ROUTE } from '@/lib/dataColors'
 import { Working } from '@/components/ui/spinner'
 import { useEffect, useRef, useState } from 'react'
 import type { GPSPoint } from '@/api/types'
@@ -128,7 +129,7 @@ export function Swiss3DMap({ track, className }: Swiss3DMapProps) {
             clampToGround: !hasAlt,
             material: new Cesium.PolylineGlowMaterialProperty({
               glowPower: 0.25,
-              color: Cesium.Color.fromCssColorString('#38bdf8'),
+              color: Cesium.Color.fromCssColorString(ROUTE.track),
             }),
           },
         })
@@ -141,7 +142,7 @@ export function Swiss3DMap({ track, className }: Swiss3DMapProps) {
           ),
           point: {
             pixelSize: 10,
-            color: Cesium.Color.fromCssColorString('#22c55e'),
+            color: Cesium.Color.fromCssColorString(ROUTE.start),
             outlineColor: Cesium.Color.WHITE,
             outlineWidth: 2,
             heightReference: hasAlt ? Cesium.HeightReference.NONE : Cesium.HeightReference.CLAMP_TO_GROUND,
@@ -157,7 +158,7 @@ export function Swiss3DMap({ track, className }: Swiss3DMapProps) {
           ),
           point: {
             pixelSize: 10,
-            color: Cesium.Color.fromCssColorString('#ef4444'),
+            color: Cesium.Color.fromCssColorString(ROUTE.end),
             outlineColor: Cesium.Color.WHITE,
             outlineWidth: 2,
             heightReference: hasAlt ? Cesium.HeightReference.NONE : Cesium.HeightReference.CLAMP_TO_GROUND,

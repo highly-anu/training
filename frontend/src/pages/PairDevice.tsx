@@ -64,7 +64,7 @@ export function PairDevice() {
 
           {code && claim.isSuccess && (
             <>
-              <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Paired</p>
+              <p className="text-sm font-medium text-done">Paired</p>
               <p className="text-xs text-muted-foreground">
                 The watch picks this up within a few seconds and shows today's session.
               </p>
