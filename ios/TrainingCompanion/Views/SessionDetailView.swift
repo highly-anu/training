@@ -41,6 +41,8 @@ struct SessionDetailView: View {
     @State private var confirmFailed = false
     @State private var changingVerdict = false
     @State private var liftAnswers: [String: LiftConfirmation.Answer] = [:]
+    /// The workout player, full screen (design-system §6.44).
+    @State private var player: WorkoutPlayerModel.Target? = nil
 
     private var isDone: Bool { appState.isSessionComplete(sessionKey) }
 
@@ -72,9 +74,22 @@ struct SessionDetailView: View {
                 }
             }
             .safeAreaInset(edge: .bottom) {
-                completionButton
-                    .padding()
-                    .background(.background)
+                VStack(spacing: 10) {
+                    if !isDone { startButton }
+                    completionButton
+                }
+                .padding()
+                .background(.background)
+            }
+            .fullScreenCover(item: $player) { target in
+                WorkoutPlayerView(player: .resumingIfKept(target), fallback: currentSession) {
+                    player = nil
+                }
+                .environmentObject(appState)
+            }
+            .onAppear {
+                // Debug builds: TC_PLAYER opens this session's player (WorkoutPlayerDebug).
+                if player == nil, WorkoutPlayerDebug.take(sessionKey) { openPlayer() }
             }
             // The exercise reference (§6.14): what the movement is and how to
             // do it, without leaving the session.
@@ -544,6 +559,33 @@ struct SessionDetailView: View {
                 }
             }
         }
+    }
+
+    // MARK: - Start workout
+
+    /// The session run step by step (WorkoutPlayerView), on its own day.
+    private var startButton: some View {
+        Button { openPlayer() } label: {
+            Label("Start workout", systemImage: "play.fill")
+                .fontWeight(.semibold)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 4)
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(ModalityStyle.color(for: currentSession.modality))
+        .disabled(playerTarget == nil)
+    }
+
+    private var playerTarget: WorkoutPlayerModel.Target? {
+        guard let weekIndex, let dayName,
+              let date = appState.sessionDate(weekIndex: weekIndex, dayName: dayName) else { return nil }
+        return .init(sessionKey: sessionKey, date: date,
+                     title: currentSession.archetype?.name ?? ModalityStyle.label(for: currentSession.modality))
+    }
+
+    private func openPlayer() {
+        AppHaptics.medium()
+        player = playerTarget
     }
 
     // MARK: - Completion Button

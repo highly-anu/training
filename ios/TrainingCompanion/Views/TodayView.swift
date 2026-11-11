@@ -17,6 +17,9 @@ struct TodayView: View {
     @ScaledMetric(relativeTo: .body) private var sessionsListHeight: CGFloat = 256
     @State private var showBuilder = false
     @State private var reviewWorkout: ImportedWorkout? = nil
+    /// A workout the player kept when the app went away (ActiveWorkoutStore).
+    @State private var keptWorkout: ActiveWorkoutStore.Record? = nil
+    @State private var resumed: WorkoutPlayerModel.Target? = nil
 
     private let dayFmt: DateFormatter = {
         let f = DateFormatter(); f.dateFormat = "EEEE, MMM d"; return f
@@ -71,7 +74,14 @@ struct TodayView: View {
             // A session asked for from outside (a widget, a deep link): both
             // hooks, because the router may set it before this view exists or
             // while it is on screen, and the program may still be loading.
-            .onAppear { openPendingSession() }
+            .onAppear {
+                openPendingSession()
+                keptWorkout = ActiveWorkoutStore.load()
+            }
+            .fullScreenCover(item: $resumed, onDismiss: { keptWorkout = ActiveWorkoutStore.load() }) { target in
+                WorkoutPlayerView(player: .resumingIfKept(target), fallback: nil) { resumed = nil }
+                    .environmentObject(appState)
+            }
             .onChange(of: router.pendingSessionKey) { openPendingSession() }
             // A regenerate (here or on the web) is a new program: its
             // scorecard, not the last one's, on the Development card.
@@ -118,6 +128,7 @@ struct TodayView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 programHeader
+                if let kept = keptWorkout { resumeCard(kept) }
                 todaySection
                 suggestionsSection
                 resultsToConfirmSection
@@ -135,6 +146,45 @@ struct TodayView: View {
             }
             dayOffset = 0
         }
+    }
+
+    // MARK: - Resume
+
+    /// The workout the player was running when the app went away: back to
+    /// it, caught up to now, or let go (design-system §6.45).
+    private func resumeCard(_ kept: ActiveWorkoutStore.Record) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: kept.finished ? "checkmark.circle.fill" : "play.circle.fill")
+                .font(.title2)
+                .foregroundStyle(Color.accentColor)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(kept.finished ? "Workout to save" : "Workout in progress")
+                    .font(.subheadline.weight(.semibold))
+                Text("\(kept.target.title) · started \(kept.startedAt.formatted(date: .omitted, time: .shortened))")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+            Spacer()
+            Button(kept.finished ? "Review" : "Resume") {
+                AppHaptics.medium()
+                resumed = kept.target
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.small)
+            Menu {
+                Button("Discard workout", role: .destructive) {
+                    ActiveWorkoutStore.clear()
+                    keptWorkout = nil
+                }
+            } label: {
+                Image(systemName: "ellipsis")
+                    .frame(width: 28, height: 28)
+            }
+            .foregroundStyle(.secondary)
+        }
+        .padding(14)
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
     }
 
     // MARK: - Program Header

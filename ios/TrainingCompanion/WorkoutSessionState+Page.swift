@@ -1,5 +1,4 @@
 import Foundation
-import WatchKit
 
 extension WatchExercise {
     /// Rounds, work and rest of an interval step, read once for the page and
@@ -59,12 +58,13 @@ extension WorkoutSessionState {
     }
 
     private func startClock(_ index: Int) {
-        clockStarts[index] = Date()
-        WKInterfaceDevice.current().play(.start)
+        clockStarts[index] = now
+        play(.start)
     }
 
     /// The time on a running step.
-    func clockElapsed(_ index: Int, _ ex: WatchExercise, now: Date = Date()) -> Int {
+    func clockElapsed(_ index: Int, _ ex: WatchExercise, now: Date? = nil) -> Int {
+        let now = now ?? self.now
         if case let .timedWork(ei, secs) = phase, ei == index { return secs }
         if case let .amrapRunning(ei, left) = phase, ei == index { return max(0, (ex.timeMinutes ?? 0) * 60 - left) }
         if let t = clockStarts[index] { return max(0, Int(now.timeIntervalSince(t))) }
@@ -73,7 +73,8 @@ extension WorkoutSessionState {
 
     // MARK: - The page's state
 
-    func stepState(_ ex: WatchExercise, index: Int, screen: WatchScreen, now: Date = Date()) -> WatchStepState {
+    func stepState(_ ex: WatchExercise, index: Int, screen: WatchScreen, now: Date? = nil) -> WatchStepState {
+        let now = now ?? self.now
         var s = WatchStepState()
         let logs = setLogs[ex.exerciseId] ?? []
         // The working set: Set Next's or Edit Set's, else what the logger
@@ -159,13 +160,13 @@ extension WorkoutSessionState {
         case .completeSet:
             return
         case .startHold:
-            holdStartedAt = Date()
-            WKInterfaceDevice.current().play(.start)
+            holdStartedAt = now
+            play(.start)
         case .stopHold:
             stopHold(index, ex, screen)
         case .logRound:
             recordOutcome(ex.exerciseId, rounds: (outcomes[ex.exerciseId]?.rounds ?? 0) + 1)
-            WKInterfaceDevice.current().play(.click)
+            play(.click)
         case .logRoundAndNext:
             recordOutcome(ex.exerciseId, rounds: (outcomes[ex.exerciseId]?.rounds ?? 0) + 1)
             finishStep(index, ex, screen)
@@ -173,14 +174,13 @@ extension WorkoutSessionState {
             finishStep(index, ex, screen)
         case .nextSide:
             sideIsLeft.toggle()
-            WKInterfaceDevice.current().play(.directionUp)
+            play(.directionUp)
         }
     }
 
     /// The hold went up as one set of its seconds; then the rest.
     private func stopHold(_ index: Int, _ ex: WatchExercise, _ screen: WatchScreen) {
         guard let started = holdStartedAt else { return }
-        let now = Date()
         let held = max(0, Int(now.timeIntervalSince(started)))
         let end = elapsedSeconds
         holdStartedAt = nil
@@ -230,6 +230,6 @@ extension WorkoutSessionState {
         }
         markExerciseComplete(id: ex.exerciseId)
         advance(to: indexAfter(index))
-        WKInterfaceDevice.current().play(.success)
+        play(.success)
     }
 }

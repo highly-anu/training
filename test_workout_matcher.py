@@ -147,7 +147,41 @@ def test_rules_are_shared() -> None:
     check('no modality is in two families', not dupes, str(dupes))
 
 
+def test_a_recording_finds_the_session_that_ran_beside_it() -> None:
+    """A band's workout and the phone's player: the log's wall-clock steps
+    say which of the day's two sessions the recording was (match_by_time)."""
+    index = {'2026-11-11': [
+        {'sessionKey': '3-Wednesday-0', 'sessionUid': 'v1:w2-Wednesday-0', 'modality': 'max_strength', 'duration': 60},
+        {'sessionKey': '3-Wednesday-1', 'sessionUid': 'v1:w2-Wednesday-1', 'modality': 'max_strength', 'duration': 60},
+    ]}
+
+    def log(uid: str, key: str, start: str, end: str) -> dict:
+        return {'sessionUid': uid, 'sessionKey': key, 'completedAt': '2026-11-11T19:00:00Z',
+                'exerciseTimeline': [{'exerciseId': 'a', 'startOffset': 0, 'endOffset': 1,
+                                      'startAt': start, 'endAt': end}]}
+    logs = [log('v1:w2-Wednesday-0', '3-Wednesday-0', '2026-11-11T07:00:00Z', '2026-11-11T08:05:00Z'),
+            log('v1:w2-Wednesday-1', '3-Wednesday-1', '2026-11-11T18:00:00Z', '2026-11-11T18:50:00Z')]
+    band = {'id': 'garmin-1', 'date': '2026-11-11', 'startTime': '2026-11-11T17:58:00',
+            'endTime': '2026-11-11T18:55:00', 'durationMinutes': 57}
+    got = wm.match_by_time([band], logs, index, set())
+    check('time: the evening recording is the evening session',
+          [m['sessionUid'] for m in got] == ['v1:w2-Wednesday-1'], str(got))
+    check('time: an auto match', bool(got) and got[0]['matchConfidence'] == 'auto', str(got))
+    # Already matched, not completed, no overlap, or not planned that day: nothing.
+    check('time: an existing match stays', wm.match_by_time([band], logs, index, {'garmin-1'}) == [])
+    check('time: an open log does not claim it',
+          wm.match_by_time([band], [{**logs[1], 'completedAt': ''}], index, set()) == [])
+    early = {**band, 'startTime': '2026-11-11T12:00:00', 'endTime': '2026-11-11T12:30:00'}
+    check('time: no overlap, no match', wm.match_by_time([early], logs, index, set()) == [])
+    other_day = {**band, 'date': '2026-11-12'}
+    check('time: only a session planned for its day', wm.match_by_time([other_day], logs, index, set()) == [])
+    # A log without wall-clock times (an older watch's) is left to the scoring.
+    offsets_only = {**logs[1], 'exerciseTimeline': [{'exerciseId': 'a', 'startOffset': 0, 'endOffset': 60}]}
+    check('time: offsets alone say nothing', wm.match_by_time([band], [offsets_only], index, set()) == [])
+
+
 if __name__ == '__main__':
+    test_a_recording_finds_the_session_that_ran_beside_it()
     test_rules_are_shared()
     test_score_cases()
     test_match_cases()

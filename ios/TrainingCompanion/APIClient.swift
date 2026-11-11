@@ -118,6 +118,14 @@ final class APIClient {
         _ = try await putRaw("/health/sessions/\(sessionKey)", body: body)
     }
 
+    /// The same log, addressed by the session's uid (the workout player's):
+    /// a day with two sessions, or a plan since replaced, lands on its row.
+    func saveWorkoutLog(sessionUid: String, log: [String: Any]) async throws {
+        guard let body = try? JSONSerialization.data(withJSONObject: log) else { return }
+        let escaped = sessionUid.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? sessionUid
+        _ = try await putRaw("/health/sessions/by-uid/\(escaped)", body: body)
+    }
+
     /// Store workouts the watch recorded (`WatchUpload.workoutPayload`). No
     /// `autoMatch`: the watch knows which session it ran, and the match is
     /// posted explicitly with `saveWorkoutMatch`. The server recomputes

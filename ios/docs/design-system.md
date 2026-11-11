@@ -1027,6 +1027,16 @@ A count is `.click`, the go `.start` (both sound unless the watch is silenced); 
 on, `AVSpeechSynthesizer` also says the word, ducking other audio. The rule is
 `WatchCues.leadIn`, the Garmin's `Cues.leadIn`: change it in `watch_vocabulary.json`.
 
+### 9.8 One engine, two apps
+
+`WorkoutSessionState` (with `+Page` and `+Clock`) runs every step on the watch and in the
+phone's player (§6.44): both apps compile it, the watch through its membership
+exceptions. It never touches a device — haptics, tones and words go through
+`WorkoutCueOutput` (`WatchCueOutput` here, `PhoneCueOutput` on the phone) — and its clock
+is `tick()` once a second plus `catchUp(to:)`, which runs missed seconds silently. A
+change to how a step behaves is made there, once, with a case in `WorkoutEngineTests`;
+`WorkoutManager` keeps only what is the watch's own (HealthKit, the route, the metronome).
+
 ---
 
 ## Color Utility
@@ -2042,3 +2052,62 @@ Apple Watch is resynced once the save lands (`.programSaved` → `WatchSessionMa
 shows a dashed "Added" capsule on Today's card and "Added" in the calendar row. Week dots leave
 an undone one out (`WorkoutCompletion.weekDots`). A refusal shows the server's sentence
 (`APIError.serverErrorDetail`).
+
+### 6.44 Workout Player
+
+`Views/WorkoutPlayerView.swift` (model `WorkoutPlayer.swift`): one session, full screen
+(`.fullScreenCover`, the app's only one), run step by step on the Apple Watch's engine
+(§9.8) and drawn from the screens the server writes for both watches (`WatchSpecText`), so
+every number and word is the watches'. It is for an athlete who records with a band and
+reads the steps on the phone: no heart rate is shown or kept.
+
+- **Before the start:** the session laid out (each step with its prescription and last
+  time), **Start** in the modality colour. The first Start asks for notifications once.
+- **Header:** close (✕, "Leave the workout?" — Finish and save / Leave, resume later / Discard workout), the
+  session's name over the elapsed time, the step list (≡); a segmented bar of the steps,
+  the current one in the modality colour, done ones dimmed; "Step n of N".
+- **Step page:** the title in `.title` bold, field A (label `.caption` semibold secondary
+  uppercase over a 96 pt rounded bold monospaced value), field B on one row beside its
+  label (`.title` rounded), the template's gauge (set dots, an interval's bar over the whole step with Work /
+  Rest under it, a timed step's or AMRAP cap's bar), the two lines (`.title3`, then
+  `.title3` secondary), **Notes** as a disclosure (load note, coach cue, focus).
+- **Controls:** one 64 pt capsule in the modality colour saying what the spec's LAP does
+  (Complete set n, Start/End hold, + Round, Switch side, Next, Finish), **Skip** under it
+  in plain secondary. A completed set opens the **set logger** sheet (reps, kg, RPE
+  steppers, prefilled from the prescription and last time; Save logs it).
+- **Rest:** a 260 pt ring in the modality colour counting down, "Up next" with the step
+  and its set, then **+30 s** (secondary capsule) and **Skip rest** (prominent). A rest
+  that ends on heart rate shows "until HR < n" with its cap: the phone has no reading.
+- **Lead-in:** "Work in" over the count (160 pt rounded bold, the modality colour) on a
+  dimmed page, with a tone and a tap each and the go's own tone; spoken with Voice on.
+- **The end:** `WorkoutPlayerCompleteView` — a check, "Workout complete", the summary
+  (time, sets, volume, steps done), each step's log, a test's **Results**, the reps a
+  timed step asks for, notes; **Save workout** (or **Save results** / **Not a test**) and
+  **Discard workout**. A failed save says so in red under the buttons and keeps the
+  workout. Save is one `PUT /health/sessions/by-uid/<uid>`, then Today refreshes.
+- **While away:** the screen stays awake while the player is open; leaving the app
+  schedules a notification per forecast moment and starts the **Live Activity**
+  (`TrainingWidgets/WorkoutLiveActivity.swift`): on the Lock Screen the session and phase in
+  the modality colour, the step in `.headline`, what follows, and the countdown in 34 pt
+  rounded monospaced with "Step n of N"; in the Dynamic Island the phase symbol and the
+  countdown (compact), the step and next (expanded). The countdown is
+  `Text(timerInterval:)`; a step that waits for the athlete shows n/N instead.
+- **Kept:** the engine's state is saved on every move (`ActiveWorkoutStore`); a relaunch
+  shows §6.45's resume card, and Start on the same session carries on.
+
+### 6.45 Start Workout and Resume
+
+The player is reached from `SessionDetailView`, so every place that opens a session
+(Today, Program ▸ Calendar, Log) can start one: **Start workout** (play.fill, prominent,
+the modality colour) stands above **Mark Session Complete** in the bottom inset while the
+session is not done. It is disabled only when the session's day cannot be placed in the
+program. Cards and the long-press menu (§6.43) do not offer it.
+
+A workout kept from an earlier launch is a card at the top of Today, under the header:
+play.circle.fill (checkmark.circle.fill when it ended unsaved), "Workout in progress" /
+"Workout to save" over the session and its start time, **Resume** / **Review** (small,
+prominent), and a ⋯ menu with **Discard workout**. It goes once the workout is saved or
+discarded, or after a day.
+
+Settings ▸ **Workout** holds the player's cues on this phone: Count in before work, Count
+in after Start, Voice (`WatchCueSettings`; the Apple Watch keeps its own).

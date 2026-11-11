@@ -14,6 +14,9 @@ struct SettingsView: View {
     @ObservedObject private var logger = AppLogger.shared
     @ObservedObject private var notifications = NotificationManager.shared
     @AppStorage(AppAppearance.storageKey) private var appearanceRaw = AppAppearance.fallback.rawValue
+    @AppStorage(WatchCueSettings.voiceKey) private var cueVoice = false
+    @AppStorage(WatchCueSettings.leadInKey) private var cueLeadIn = true
+    @AppStorage(WatchCueSettings.countdownStartKey) private var cueCountdownStart = true
 
     @State private var showDebugLog = false
     @State private var diagnosis: WorkoutAccessDiagnosis?
@@ -60,6 +63,7 @@ struct SettingsView: View {
             devicesSection
             pairGarminSection
             notificationsSection
+            workoutSection
             appearanceSection
             accountSection
             syncCategoriesSection
@@ -119,6 +123,21 @@ struct SettingsView: View {
         } else {
             notifications.isEnabled = false
             await notifications.cancelAll()
+        }
+    }
+
+    // MARK: - Workout
+
+    /// The workout player's cues on this phone (the Apple Watch keeps its own).
+    private var workoutSection: some View {
+        Section {
+            Toggle("Count in before work", isOn: $cueLeadIn)
+            Toggle("Count in after Start", isOn: $cueCountdownStart)
+            Toggle("Voice", isOn: $cueVoice)
+        } header: {
+            Text("Workout")
+        } footer: {
+            Text("The player counts \"3, 2, 1\" with tones and taps before a rest ends and before a timed step starts. Voice also says the count and each step aloud, lowering your music.")
         }
     }
 

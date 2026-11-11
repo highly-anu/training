@@ -4515,6 +4515,12 @@ def get_today_session():
                 last=last if level >= 1 else None, results=std_results, sex=std_sex,
                 max_hr=max_hr,
             ))
+            # The session's stable identity in the plan (program_history):
+            # the phone's player uploads by it, so a day with two sessions,
+            # or one from a plan since replaced, lands on its own row.
+            uid = _program_history_uid(vid, w_index, d_name, i)
+            if uid:
+                out[-1]['sessionUid'] = uid
         return out
 
     out_sessions = encode_day(week_index, day_name, spec_level)

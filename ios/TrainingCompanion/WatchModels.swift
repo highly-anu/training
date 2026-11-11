@@ -685,10 +685,13 @@ struct WatchSession: Codable, Identifiable, Hashable {
     /// Its workout icon (src/session_icon.py), tinted with the modality colour;
     /// nil → the modality icon.
     var icon: String? = nil
+    /// Its stable identity in the plan (program_history), where the plan is in
+    /// history: the phone's player uploads by it.
+    var sessionUid: String? = nil
 
     enum CodingKeys: String, CodingKey {
         case sessionId, modalityId, archetypeName, estimatedMinutes, isDeload, exercises, completed
-        case packageId, screens, watch, icon
+        case packageId, screens, watch, icon, sessionUid
     }
 }
 
@@ -708,6 +711,7 @@ extension WatchSession {
         screens = try? c.decodeIfPresent([String: WatchScreenSpec].self, forKey: .screens)
         watch = try? c.decodeIfPresent(WatchIdentity.self, forKey: .watch)
         icon = try? c.decodeIfPresent(String.self, forKey: .icon)
+        sessionUid = try? c.decodeIfPresent(String.self, forKey: .sessionUid)
     }
 
     /// The screen an exercise is drawn with (`WatchScreen.forExercise`).
@@ -954,6 +958,11 @@ nonisolated struct ExerciseTimelineEntry: Codable {
     let startOffset: Int    // seconds from startedAt — when the first set of this exercise began
     let endOffset: Int      // seconds from startedAt — when the exercise was marked complete
     let avgHRDuring: Int?   // mean bpm during [startOffset, endOffset] from hrSamples
+    /// The same window by the wall clock (ISO 8601): what lines a step up
+    /// with a recording another device made — the phone's steps with a
+    /// Garmin band's heart rate (src/analytics/hr_plan.py reads it first).
+    var startAt: String? = nil
+    var endAt: String? = nil
 }
 
 nonisolated struct WatchWorkoutSummary: Codable {

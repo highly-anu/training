@@ -714,7 +714,9 @@ training data; only sign-in goes to Supabase.
   `fit_file > garmin > apple_watch_live > apple_health > strava > manual`.
 - **Matching** — `src/workout_matcher.py` (server) and
   `frontend/src/lib/workoutMatcher.ts` (browser) share `data/matching_rules.json` and
-  the golden fixtures in `data/matcher_fixtures.json`. Change scoring in the JSON, not
+  the golden fixtures in `data/matcher_fixtures.json`. Ahead of that scoring, server-only,
+  `match_by_time` links a workout to the session a log says ran beside it (the phone's
+  player sends each step's absolute `startAt` / `endAt`; see *Workout Player*). Change scoring in the JSON, not
   in either implementation, and run both suites. Weak matches go to
   `workout_match_suggestions`, never to `workout_matches` with a 'pending' confidence —
   a dozen readers treat "row that isn't 'rejected'" as "is matched".
@@ -1111,6 +1113,37 @@ way they own their analytics. Layout and the add-a-philosophy walk-through:
   cached day only if it is today's — yesterday's rest day used to stand in for
   a failed morning sync.
 
+## Workout Player (phone)
+
+**Start workout runs any session on the phone, step by step** (since 2026-11-11), for an
+athlete who records with a band (a Garmin Cirqa) and reads the steps on the phone.
+`SessionDetailView`'s Start workout opens `Views/WorkoutPlayerView.swift` (design-system
+§6.44–6.45), which reads that day's `today-session?spec=1&date=` (`fetchWatchDay`) and
+picks the session by `sessionId`, else builds the steps from the stored program
+(`PlayerFallback`, no `last`). It runs on **the Apple Watch's engine**
+(`WorkoutSessionState` + `+Page` + `+Clock`, compiled into both apps; `docs/watch.md`
+makes the phone the contract's third reader): cues through `WorkoutCueOutput`
+(`PhoneCueOutput`: taps, system tones, speech with Voice on), the wall clock (`tick`,
+`catchUp(to:)` on return from the background), `forecast` for what the clock will do
+next. No heart rate on the phone: a heart-rate rest runs its cap.
+
+- **Away from the app**: the screen stays awake while the player is open; in the
+  background each forecast moment is a notification (`WorkoutLockScreen`, prefix
+  `workout-cue-`, at most 40) and the Live Activity shows the step and its countdown
+  (`TrainingWidgets/WorkoutLiveActivity.swift`; `WorkoutActivityAttributes.swift` is in the
+  widget extension through an exception set). The state is saved on every move
+  (`ActiveWorkoutStore`, Application Support); Today offers it again after a relaunch.
+- **Saving**: one `PUT /health/sessions/by-uid/<sessionUid>` (`today-session` carries
+  `sessionUid`), `source: phone`, each step's window with absolute `startAt` / `endAt`, the
+  tests' `standardResults` — then `AppState.finishWorkout` refreshes Today. The band's
+  recording links to it **by time**: `workout_matcher.match_by_time`, a pre-pass in
+  `match_and_store`, takes the one completed log of the workout's day whose timeline
+  overlaps the recording by half the shorter span (a minute at least), and
+  `hr_plan` then splits its heart rate by step.
+- Settings ▸ Workout: Count in before work, Count in after Start, Voice
+  (`WatchCueSettings`, the same keys the Apple Watch keeps on its own).
+- `WorkoutEngineTests` (every template on a simulated clock), `WorkoutLockScreenTests`.
+
 ## Program History
 
 `user_programs` holds **one row per athlete** and `save_user_program` upserts it,
@@ -1260,6 +1293,13 @@ still alias Load, Blocks and Progress; `&measure=<entry id>` or `&exercise=<id>`
 in the launch environment (`SIMCTL_CHILD_TC_ROUTE`), because `simctl openurl` makes
 iOS ask "Open in Training Companion?" and nothing can tap that. Screens behind a tap
 (the swap sheet, the exercise sheet) are still out of reach; test their models.
+The workout player opens from the launch too, in debug builds (`WorkoutPlayerDebug`):
+`SIMCTL_CHILD_TC_ROUTE='trainingcompanion://session?key=<key>'` with
+`SIMCTL_CHILD_TC_PLAYER=<key>` starts that session's player afresh (a kept workout is let
+go); `TC_PLAYER_STEP=<n>`, `TC_PLAYER_RUN=1` (Start), `TC_PLAYER_LAPS=<k>` (the primary
+button k times; a set is logged as prescribed), `TC_PLAYER_END=1` (the end screen),
+`TC_PLAYER_SAVE=1` (and Save). Launching another app (`simctl launch … com.apple.Preferences`)
+puts the Live Activity in the Dynamic Island.
 A simulator that has never answered the Health sheet shows it on every launch, over
 whatever route was asked for; `SIMCTL_CHILD_TC_SKIP_HEALTH=1` skips the request in
 debug builds (`HealthKitManager.skipsAuthorizationRequest`).
