@@ -14,6 +14,13 @@ item 14; the Garmin layout and the add-a-philosophy walk-through are
 and names the roadmap item. Platform-native work (the table's last section) is the
 only exception.
 
+**The phone is the third reader** (since 2026-11-11). Its workout player
+(`WorkoutPlayerView`, design-system §6.44) runs a session on the Apple Watch's engine
+(`WorkoutSessionState`, compiled into both apps) from the same payload, for an athlete who
+records with a band and reads the steps on the phone. A step feature that changes the
+engine or the screens reaches it for free; one that needs the phone's own view gets its
+cell in the *Phone* column, *pending* when it follows. The phone keeps no heart rate.
+
 ## One contract
 
 `GET /api/user/today-session?date=<watch's day>&spec=1&week=1` is what a watch reads
@@ -77,34 +84,34 @@ screens that recorded only the step's window, and the athlete logged them on the
 
 As of 2026-10-18. *Server* is the payload key; *—* means the server has no part.
 
-| Feature | Server | Garmin | Apple Watch |
-|---|---|---|---|
-| Today's sessions | `sessions` | yes | yes — the day relayed as it is |
-| Screens by template (package `watch.yaml`) | `screens`, `screen` | yes | yes — the same data page (`StepPageView`) |
-| Done today, on any device | `completed` | yes | yes |
-| Last time per exercise | `last` | yes | yes |
-| Test step: best and the next level, Save results / Not a test | `standard` | yes | yes |
-| Week progress | `progress.week` | glance, Progress page | This Week count, complication ring |
-| Programme %, headline, trend | `progress.program`, `.headline` | Progress page | Progress page (Today ▸ Progress) |
-| Week ahead | `days` (`week=1`) | Week menu | Week page: days → sessions → steps |
-| Tomorrow on a rest day | `tomorrow` | yes | yes, and once the day's sessions are done |
-| Readiness | `readiness` | ring | dot and score |
-| Program not started yet | `status`, `startsOn` | not checked | "Starts Mon 20 Oct" |
-| Max HR for the zone alerts | `maxHR` | — (the watch's own zones) | yes |
-| Sync failure in words | — | yes | Sync row: "ok 07:41" / "failed 07:41 · No phone" (`WatchListText`) |
-| Edit set before, next and after; pace | — | yes | Set Next and Edit Set (commands page, carried forward); pace edit and the pre-start plan pending |
-| Metronome | `targetRpm`, `metronome_rpm` | yes | yes: a haptic beat while paced, switched on the commands page |
-| Summary pages | `watch.summary.pages` | yes: after "Saving" / "Activity Saved", a list (Done, All Stats and a row per page with its number) opens the loop | summary, heart rate (it carries the zones, so `hr_zones` draws it once), exercises; training effect and training status are the Garmin's own |
-| Lead-in "Work in 3, 2, 1, go" before work on a clock (a rest's last seconds; after Start with Countdown Start) and its settings | — (`cues.lead_in` in the vocabulary) | tones you pick (Settings ▸ Lead-in Tones) and a vibration; Settings: Tones, Vibration, Lead-in, Countdown Start (also in Garmin Connect Mobile) | a click on each count, the start haptic on the go, spoken with Voice on; Settings on the Today list: Lead-in, Countdown Start, Voice |
-| Hand switch | `switchAtSec` (slot `switch_at_sec`: the pentathlon test's five events at 3:00) | in a timed block (1.7.0) and an interval's work: Left/Right, a Switch hands alert | the same, with the turn haptic for the new hand |
-| Rest that ends on heart rate | `restUntilHr` in bpm (slot `rest_until_hr_pct` × max HR: Wildman's anti-glycolytic sets, Uphill's hill repeats) | the interval's rest ends 5 s under it; HR TO and the time so far | the same (`WatchCues.RestGate`); the rest screen's "still recovering" guess is gone |
-| A round's movements and their reps, a rep scheme | `repsPerRound`, `repScheme` (slot `rep_scheme`: Fran's [21, 15, 9]) | the round line: the step's own movement, then the folded ones, each with this round's reps; "21-15-9 for time" in the step lists | the same; a for-time piece's movements fold into its round, as the Garmin's always did |
-| Session icon (its main exercise, in its modality's colour) | `icon` (src/session_icon.py; also on `tomorrow`) | the session hero, activity header and summary: `Icons.forSession` (`cat_kettlebell`), else the archetype category's | the session list (`SessionIcon`, the `kettlebell` symbol in the watch's catalog), the complication; else the modality's |
-| Double bells | `bells` (exercises.yaml) | 2x24 and both bells in the volume | the same; neither watch reads it off the id any more |
-| Upload: sets by id, rounds, clock, distance | — | `Wire.mc` | `WatchUpload` |
-| Interval rounds, timed seconds; reps counted at the end | `logs` | `noteStepEnd`, Results menu | `stepLeft`, completion screen |
-| An alternating interval names each round's movement (Option C) | `alternateName` | `roundName` | `WatchSpecText.roundName` |
-| **Native, not shared** | | glance (64 KB; Next up or Day bar, `glanceStyle`; a press opens Today), wellness posting, pairing QR | HealthKit workout and route, complication, overtime prompt |
+| Feature | Server | Garmin | Apple Watch | Phone (player) |
+|---|---|---|---|---|
+| Today's sessions | `sessions` | yes | yes — the day relayed as it is | any day of the program (`date=` from the session sheet), picked by `sessionId` |
+| Screens by template (package `watch.yaml`) | `screens`, `screen` | yes | yes — the same data page (`StepPageView`) | yes — the same specs at a phone's size (`PlayerStepView`) |
+| Done today, on any device | `completed` | yes | yes | — (Start workout leaves a done session's sheet) |
+| Last time per exercise | `last` | yes | yes | yes, under the step and in the step list |
+| Test step: best and the next level, Save results / Not a test | `standard` | yes | yes | yes: the completion screen's Results, Save results / Not a test |
+| Week progress | `progress.week` | glance, Progress page | This Week count, complication ring | — (Today has it) |
+| Programme %, headline, trend | `progress.program`, `.headline` | Progress page | Progress page (Today ▸ Progress) | — (Analytics has it) |
+| Week ahead | `days` (`week=1`) | Week menu | Week page: days → sessions → steps | — (Program ▸ Calendar) |
+| Tomorrow on a rest day | `tomorrow` | yes | yes, and once the day's sessions are done | — |
+| Readiness | `readiness` | ring | dot and score | — (Today has it) |
+| Program not started yet | `status`, `startsOn` | not checked | "Starts Mon 20 Oct" | — |
+| Max HR for the zone alerts | `maxHR` | — (the watch's own zones) | yes | — (no heart rate: the band records) |
+| Sync failure in words | — | yes | Sync row: "ok 07:41" / "failed 07:41 · No phone" (`WatchListText`) | Not saved — try again (the workout is kept) |
+| Edit set before, next and after; pace | — | yes | Set Next and Edit Set (commands page, carried forward); pace edit and the pre-start plan pending | the set logger after Complete set: reps, kg, RPE, prefilled |
+| Metronome | `targetRpm`, `metronome_rpm` | yes | yes: a haptic beat while paced, switched on the commands page | pending |
+| Summary pages | `watch.summary.pages` | yes: after "Saving" / "Activity Saved", a list (Done, All Stats and a row per page with its number) opens the loop | summary, heart rate (it carries the zones, so `hr_zones` draws it once), exercises; training effect and training status are the Garmin's own | the completion screen: summary, steps |
+| Lead-in "Work in 3, 2, 1, go" before work on a clock (a rest's last seconds; after Start with Countdown Start) and its settings | — (`cues.lead_in` in the vocabulary) | tones you pick (Settings ▸ Lead-in Tones) and a vibration; Settings: Tones, Vibration, Lead-in, Countdown Start (also in Garmin Connect Mobile) | a click on each count, the start haptic on the go, spoken with Voice on; Settings on the Today list: Lead-in, Countdown Start, Voice | a tone and a tap on each count, spoken with Voice on; Settings ▸ Workout: Count in before work, Count in after Start, Voice |
+| Hand switch | `switchAtSec` (slot `switch_at_sec`: the pentathlon test's five events at 3:00) | in a timed block (1.7.0) and an interval's work: Left/Right, a Switch hands alert | the same, with the turn haptic for the new hand | the same (the shared engine), a tone with the tap |
+| Rest that ends on heart rate | `restUntilHr` in bpm (slot `rest_until_hr_pct` × max HR: Wildman's anti-glycolytic sets, Uphill's hill repeats) | the interval's rest ends 5 s under it; HR TO and the time so far | the same (`WatchCues.RestGate`); the rest screen's "still recovering" guess is gone | its cap: "until HR < n" shown, no reading |
+| A round's movements and their reps, a rep scheme | `repsPerRound`, `repScheme` (slot `rep_scheme`: Fran's [21, 15, 9]) | the round line: the step's own movement, then the folded ones, each with this round's reps; "21-15-9 for time" in the step lists | the same; a for-time piece's movements fold into its round, as the Garmin's always did | the same |
+| Session icon (its main exercise, in its modality's colour) | `icon` (src/session_icon.py; also on `tomorrow`) | the session hero, activity header and summary: `Icons.forSession` (`cat_kettlebell`), else the archetype category's | the session list (`SessionIcon`, the `kettlebell` symbol in the watch's catalog), the complication; else the modality's | — (the session sheet has it) |
+| Double bells | `bells` (exercises.yaml) | 2x24 and both bells in the volume | the same; neither watch reads it off the id any more | the same |
+| Upload: sets by id, rounds, clock, distance | — | `Wire.mc` | `WatchUpload` | `WorkoutPlayerModel.sessionLog` → `PUT /health/sessions/by-uid/<sessionUid>`, `source: phone`, step windows with `startAt`/`endAt` |
+| Interval rounds, timed seconds; reps counted at the end | `logs` | `noteStepEnd`, Results menu | `stepLeft`, completion screen | the completion screen |
+| An alternating interval names each round's movement (Option C) | `alternateName` | `roundName` | `WatchSpecText.roundName` | the same |
+| **Native, not shared** | | glance (64 KB; Next up or Day bar, `glanceStyle`; a press opens Today), wellness posting, pairing QR | HealthKit workout and route, complication, overtime prompt | Live Activity and lock-screen cues, resume after a relaunch, the stored program when offline |
 
 ## Tests
 
@@ -115,6 +122,7 @@ As of 2026-10-18. *Server* is the payload key; *—* means the server has no par
 | Rendering | — | `SpecFixtures.mc` on `data/watch_fixtures.json` (`build.sh --test`, simulator open) | `WatchSpecTests` on the same file |
 | Lead-in rule | — | `CuesTests.mc` | `WatchStepsTests.testTheLeadInTicksThreeThenGoes` |
 | Upload shape | — | `WireTests.mc` | `WatchUploadTests` |
+| Engine, clock, forecast (both Apple apps) | — | — | `WorkoutEngineTests`, `WorkoutLockScreenTests` (the phone's lock screen) |
 
 `data/watch_fixtures.json` is the screens' contract: a server-shaped exercise, its spec
 and the engine's state in; the title, the two fields, the gauge field, the two lines and
@@ -123,7 +131,12 @@ vocabulary id is drawn by some case; `garmin/tools/gen_spec_fixtures.py` turns i
 `garmin/core/test/SpecFixtures.mc`, which runs it through `SpecRenderer`. Change a screen
 in the JSON, never in one renderer. Swift logic the tests should reach goes in a file
 both the app and the watch compile (the watch target's membership exceptions:
-`WatchModels.swift`, `WatchVocab.swift`, `WatchSpecText.swift`).
+`WatchModels.swift`, `WatchVocab.swift`, `WatchSpecText.swift`, and the engine:
+`WorkoutSessionState.swift` with `+Page` and `+Clock`, `WorkoutCues.swift`). The engine
+never touches a device: its cues go through `WorkoutCueOutput` (`WatchCueOutput` on the
+wrist, `PhoneCueOutput` on the phone), its clock is `tick`/`catchUp(to:)` (a locked
+phone's seconds caught up silently), and `forecast` says what the clock will do next —
+`WorkoutEngineTests` drives every template on a simulated clock.
 
 ## Releases
 
