@@ -1,13 +1,12 @@
 import Combine
 import Foundation
-import WatchKit
 
 @MainActor
 final class WorkoutSessionState: ObservableObject {
 
     // MARK: - Phase
 
-    enum Phase: Equatable {
+    enum Phase: Equatable, Codable {
         case idle
         case active(exerciseIndex: Int, setIndex: Int)
         case timedWork(exerciseIndex: Int, secondsElapsed: Int)
@@ -59,7 +58,7 @@ final class WorkoutSessionState: ObservableObject {
 
     private func windowSeconds(_ index: Int?) -> Int? {
         guard let index, let start = stepWindows[index]?.start else { return nil }
-        return max(0, Int(Date().timeIntervalSince(start)))
+        return max(0, Int(now.timeIntervalSince(start)))
     }
 
     /// Exercise index → when it became current and when the athlete moved
@@ -68,10 +67,10 @@ final class WorkoutSessionState: ObservableObject {
     /// heart rate by: only an exercise that prescribes zones counts in them
     /// (src/analytics/hr_plan.py). Sets alone timed only set-logged steps, so
     /// a warm-up or a timed piece had no window.
-    private(set) var stepWindows: [Int: (start: Date, end: Date?)] = [:]
-    private var currentStep: Int? = nil
+    var stepWindows: [Int: (start: Date, end: Date?)] = [:]
+    var currentStep: Int? = nil
 
-    private func noteStep(_ index: Int?, at now: Date = Date()) {
+    private func noteStep(_ index: Int?) {
         guard index != currentStep else { return }
         if let cur = currentStep, let w = stepWindows[cur] { stepWindows[cur] = (w.start, now) }
         if let index {
@@ -80,6 +79,30 @@ final class WorkoutSessionState: ObservableObject {
             stepWindows[index] = (start, nil)
         }
         currentStep = index
+    }
+
+    /// The engine's clock: the wall clock, or the second a catch-up or a
+    /// forecast is replaying (WorkoutSessionState+Clock).
+    var now: Date { simulatedNow ?? Date() }
+    var simulatedNow: Date? = nil
+    /// No haptics, no voice: a catch-up replaying missed seconds, a forecast.
+    var muted = false
+    /// The second the clock last ticked (a catch-up replays from it), and the
+    /// timed step that already rolled on at its time.
+    var lastTickAt: Date? = nil
+    var lastAutoAdvancedIndex = -1
+    /// The device's cues (the watch's wrist, the phone's speaker); silent
+    /// until the device sets its own.
+    var cues: WorkoutCueOutput = SilentCues()
+
+    func play(_ cue: CueHaptic) {
+        guard !muted else { return }
+        cues.haptic(cue)
+    }
+
+    func leadInCue(_ cue: WatchCues.LeadIn, secondsLeft: Int) {
+        guard !muted else { return }
+        cues.leadIn(cue, secondsLeft: secondsLeft)
     }
 
     // Timer control
@@ -116,12 +139,12 @@ final class WorkoutSessionState: ObservableObject {
 
     /// Set when transitioning into `.active` phase — marks the start of the next set
     /// so it can be stamped onto WatchSetLog.startOffset.
-    private(set) var currentSetStartOffset: Int? = nil
+    var currentSetStartOffset: Int? = nil
 
     /// The session being run: what the page reads its steps, specs and
     /// "Next:" line from (WatchSteps), and how the engine moves on past the
     /// movements folded into an AMRAP.
-    private(set) var session: WatchSession? = nil
+    var session: WatchSession? = nil
 
     /// The side being worked on a side-tracked step (the side_tracked
     /// behaviour or a unilateral movement): it switches after each set.
@@ -134,6 +157,8 @@ final class WorkoutSessionState: ObservableObject {
     /// The rest running now follows a step's last set: when it ends, the
     /// next step comes up (the Garmin's advanceAfterRest).
     var restAdvances = false
+    /// The rest running now, whole: its ring's full circle (+30 s grows it).
+    @Published var restTotalSec = 0
     /// The coming sets' reps, weight and RPE, as Set Next or Edit Set left
     /// them (exercise id → set); the next log starts from them.
     @Published var workingSets: [String: WorkingSet] = [:]
@@ -151,7 +176,7 @@ final class WorkoutSessionState: ObservableObject {
         var left: Int
     }
 
-    struct WorkingSet: Equatable {
+    struct WorkingSet: Equatable, Codable {
         var reps: Int
         var weightKg: Double?
         var rpe: Int?
@@ -177,22 +202,23 @@ final class WorkoutSessionState: ObservableObject {
         self.session = session
         currentSetStartOffset = 0
         phase = .active(exerciseIndex: 0, setIndex: 0)
-        WKInterfaceDevice.current().play(.start)
+        play(.start)
     }
 
     func completeSession() {
         phase = .sessionComplete
-        WKInterfaceDevice.current().play(.success)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-            WKInterfaceDevice.current().play(.success)
+        play(.success)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
+            self?.play(.success)
         }
     }
 
-    func pauseTimer()  { isTimerPaused = true;  WKInterfaceDevice.current().play(.stop) }
-    func resumeTimer() { isTimerPaused = false; WKInterfaceDevice.current().play(.start) }
+    func pauseTimer()  { isTimerPaused = true;  play(.stop) }
+    func resumeTimer() { isTimerPaused = false; play(.start) }
 
     func reset() {
         phase = .idle
+        lastAutoAdvancedIndex = -1; lastTickAt = nil
         isTimerPaused = false
         currentHR = 0; peakHR = 0
         avgHRSamples = []
@@ -222,7 +248,7 @@ final class WorkoutSessionState: ObservableObject {
         logs.append(log)
         setLogs[exerciseId] = logs
         currentSetStartOffset = nil
-        WKInterfaceDevice.current().play(.success)
+        play(.success)
     }
 
     func startRest(exerciseIndex: Int, completedSet: Int, seconds: Int) {
@@ -231,6 +257,7 @@ final class WorkoutSessionState: ObservableObject {
             phase = .active(exerciseIndex: exerciseIndex, setIndex: completedSet + 1)
             return
         }
+        restTotalSec = seconds
         phase = .resting(exerciseIndex: exerciseIndex, completedSet: completedSet,
                          secondsRemaining: seconds)
     }
@@ -239,8 +266,8 @@ final class WorkoutSessionState: ObservableObject {
     func tickRest() {
         guard case let .resting(ei, cs, remaining) = phase else { return }
         switch remaining {
-        case 31: WKInterfaceDevice.current().play(.notification)
-        case 11: WKInterfaceDevice.current().play(.directionUp)
+        case 31: play(.notification)
+        case 11: play(.directionUp)
         default: break
         }
         leadInTick(secondsLeft: remaining - 1)
@@ -273,13 +300,13 @@ final class WorkoutSessionState: ObservableObject {
     private func leadInTick(secondsLeft: Int) {
         guard WatchCueSettings.leadIn, secondsLeft > 0,
               WatchCues.leadIn(secondsLeft: secondsLeft) == .tick else { return }
-        WatchCuePlayer.shared.play(.tick, secondsLeft: secondsLeft)
+        leadInCue(.tick, secondsLeft: secondsLeft)
     }
 
     /// The moment a clock rolls into work: the lead-in's go, else the start haptic.
     private func goCue() {
-        if WatchCueSettings.leadIn { WatchCuePlayer.shared.go() }
-        else { WKInterfaceDevice.current().play(.start) }
+        if WatchCueSettings.leadIn { leadInCue(.go, secondsLeft: 0) }
+        else { play(.start) }
     }
 
     /// The seconds left of a lead-in into work on `index` (3, 2, 1), else nil:
@@ -304,25 +331,26 @@ final class WorkoutSessionState: ObservableObject {
         guard WatchCueSettings.countdownStart else { run(); return }
         let n = WatchVocab.leadInSeconds
         countIn = CountIn(index: index, left: n)
-        WatchCuePlayer.shared.play(.tick, secondsLeft: n)
+        leadInCue(.tick, secondsLeft: n)
         countInTask = Task { @MainActor [weak self] in
             for left in stride(from: n - 1, through: 0, by: -1) {
                 try? await Task.sleep(nanoseconds: 1_000_000_000)
                 guard let self, !Task.isCancelled else { return }
                 if left > 0 {
                     self.countIn = CountIn(index: index, left: left)
-                    WatchCuePlayer.shared.play(.tick, secondsLeft: left)
+                    leadInCue(.tick, secondsLeft: left)
                 } else {
                     self.countIn = nil
                     self.countInTask = nil
                     run()
-                    if WatchCueSettings.voice { WatchCuePlayer.shared.play(.go, secondsLeft: 0) }
+                    if WatchCueSettings.voice { leadInCue(.go, secondsLeft: 0) }
                 }
             }
         }
     }
 
     func extendRest(exerciseIndex: Int, completedSet: Int, current remaining: Int) {
+        restTotalSec = max(restTotalSec, remaining) + 30
         phase = .resting(exerciseIndex: exerciseIndex, completedSet: completedSet,
                          secondsRemaining: remaining + 30)
     }
@@ -383,7 +411,7 @@ final class WorkoutSessionState: ObservableObject {
 
     func startTimedWork(exerciseIndex: Int) {
         phase = .timedWork(exerciseIndex: exerciseIndex, secondsElapsed: 0)
-        WKInterfaceDevice.current().play(.start)
+        play(.start)
     }
 
     func tickTimedWork(exercise: WatchExercise? = nil) {
@@ -395,7 +423,7 @@ final class WorkoutSessionState: ObservableObject {
     func completeTimedWork(exerciseIndex: Int, exerciseId: String) {
         markExerciseComplete(id: exerciseId)
         advance(to: indexAfter(exerciseIndex))
-        WKInterfaceDevice.current().play(.success)
+        play(.success)
     }
 
     /// Called by the master ticker when the next exercise is also timed — skips the
@@ -404,7 +432,7 @@ final class WorkoutSessionState: ObservableObject {
         markExerciseComplete(id: currentExerciseId)
         isTimerPaused = false
         phase = .timedWork(exerciseIndex: nextIndex, secondsElapsed: 0)
-        WKInterfaceDevice.current().play(.start)
+        play(.start)
     }
 
     // MARK: - EMOM
@@ -412,7 +440,7 @@ final class WorkoutSessionState: ObservableObject {
     func startEMOM(exerciseIndex: Int, workSeconds: Int) {
         phase = .emomInterval(exerciseIndex: exerciseIndex, round: 1,
                               isWork: true, remaining: workSeconds)
-        WKInterfaceDevice.current().play(.start)
+        play(.start)
     }
 
     func tickEMOM(workSec: Int, restSec: Int, totalRounds: Int,
@@ -441,7 +469,7 @@ final class WorkoutSessionState: ObservableObject {
                     phase = .emomInterval(exerciseIndex: ei, round: round,
                                          isWork: false, remaining: restSec)
                     restGate = WatchCues.RestGate()
-                    WKInterfaceDevice.current().play(.stop)
+                    play(.stop)
                 } else {
                     advanceEMOMRound(ei: ei, round: round, workSec: workSec,
                                      totalRounds: totalRounds, exerciseId: exerciseId)
@@ -468,7 +496,7 @@ final class WorkoutSessionState: ObservableObject {
     /// with the turn haptic for that hand.
     func switchHands() {
         sideIsLeft.toggle()
-        WKInterfaceDevice.current().play(sideIsLeft ? .navigationLeftTurn : .navigationRightTurn)
+        play(sideIsLeft ? .turnLeft : .turnRight)
     }
 
     private func advanceEMOMRound(ei: Int, round: Int, workSec: Int,
@@ -477,7 +505,7 @@ final class WorkoutSessionState: ObservableObject {
         if next > totalRounds {
             markExerciseComplete(id: exerciseId)
             advance(to: indexAfter(ei))
-            WKInterfaceDevice.current().play(.success)
+            play(.success)
         } else {
             phase = .emomInterval(exerciseIndex: ei, round: next,
                                   isWork: true, remaining: workSec)
@@ -490,16 +518,16 @@ final class WorkoutSessionState: ObservableObject {
     func startAMRAP(exerciseIndex: Int, minutes: Int) {
         phase = .amrapRunning(exerciseIndex: exerciseIndex,
                               secondsRemaining: minutes * 60)
-        WKInterfaceDevice.current().play(.start)
+        play(.start)
     }
 
     func tickAMRAP(exerciseIndex: Int, exerciseId: String) {
         guard case let .amrapRunning(ei, remaining) = phase else { return }
-        if remaining == 31 { WKInterfaceDevice.current().play(.notification) }
+        if remaining == 31 { play(.notification) }
         if remaining <= 1 {
             markExerciseComplete(id: exerciseId)
             advance(to: indexAfter(ei))
-            WKInterfaceDevice.current().play(.success)
+            play(.success)
         } else {
             phase = .amrapRunning(exerciseIndex: ei, secondsRemaining: remaining - 1)
         }
@@ -523,7 +551,7 @@ final class WorkoutSessionState: ObservableObject {
             }
             if hrOutOfZoneCounter >= 30 && hrAlertCooldown == 0 {
                 isHRAlertActive = true
-                for _ in 0..<3 { WKInterfaceDevice.current().play(.notification) }
+                for _ in 0..<3 { play(.notification) }
                 hrAlertCooldown = 60
                 hrOutOfZoneCounter = 0
             }

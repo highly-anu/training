@@ -954,6 +954,11 @@ nonisolated struct ExerciseTimelineEntry: Codable {
     let startOffset: Int    // seconds from startedAt — when the first set of this exercise began
     let endOffset: Int      // seconds from startedAt — when the exercise was marked complete
     let avgHRDuring: Int?   // mean bpm during [startOffset, endOffset] from hrSamples
+    /// The same window by the wall clock (ISO 8601): what lines a step up
+    /// with a recording another device made — the phone's steps with a
+    /// Garmin band's heart rate (src/analytics/hr_plan.py reads it first).
+    var startAt: String? = nil
+    var endAt: String? = nil
 }
 
 nonisolated struct WatchWorkoutSummary: Codable {

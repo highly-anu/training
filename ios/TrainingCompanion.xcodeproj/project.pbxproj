@@ -119,12 +119,17 @@
 		E09E7CB82F80F06500CEE326 /* Exceptions for "TrainingCompanion" folder in "TrainingCompanionWatch Watch App" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				HRZoneCalculator.swift,
 				WatchListText.swift,
 				WatchModels.swift,
 				WatchSpecText.swift,
 				WatchSteps.swift,
 				WatchSummaryText.swift,
 				WatchVocab.swift,
+				WorkoutCues.swift,
+				"WorkoutSessionState+Clock.swift",
+				"WorkoutSessionState+Page.swift",
+				WorkoutSessionState.swift,
 			);
 			target = E09E7C722F80E37400CEE326 /* TrainingCompanionWatch Watch App */;
 		};
