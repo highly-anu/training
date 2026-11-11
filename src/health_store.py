@@ -901,21 +901,9 @@ def get_session_logs_by_uid(user_id: str) -> dict:
                 cur.execute('SELECT * FROM session_logs WHERE user_id = %s '
                             'AND session_uid IS NOT NULL', (user_id,))
                 rows = cur.fetchall()
-        out = {}
-        for row in rows:
-            exercises = row['exercises'] if isinstance(row['exercises'], dict) else (
-                json.loads(row['exercises'] or '{}')
-            )
-            out[row['session_uid']] = {
-                'sessionKey':    row['session_key'],
-                'sessionUid':    row['session_uid'],
-                'exercises':     exercises,
-                'notes':         row['notes'] or '',
-                'fatigueRating': row['fatigue_rating'],
-                'completedAt':   str(row['completed_at']) if row['completed_at'] else '',
-                'source':        row.get('source') or 'web',
-            }
-        return out
+        # Every reader's shape (_log_entry), the timeline included: the
+        # matcher lines a band's recording up with the session the phone ran.
+        return {row['session_uid']: _log_entry(row) for row in rows}
     except Exception:
         return {}
 
