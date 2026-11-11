@@ -100,7 +100,7 @@ function ResultForm({ standard, initial, submitLabel, pending, error, onSubmit, 
       {mode === 'load' && (
         <p className="text-[10px] text-muted-foreground">Divided by your bodyweight on that day; more than one rep is an estimate.</p>
       )}
-      {error && <p className="text-[11px] text-red-700 dark:text-red-300">{error}</p>}
+      {error && <p className="text-[11px] text-bad">{error}</p>}
       <div className="flex gap-2">
         <Button type="submit" size="sm" className="h-7 text-xs" disabled={!ready} loading={pending}>{submitLabel}</Button>
         {onCancel && <Button type="button" size="sm" variant="ghost" className="h-7 text-xs" onClick={onCancel}>Cancel</Button>}
@@ -148,7 +148,7 @@ function EntryRow({ entry, standard }: { entry: StandardEntry; standard?: Benchm
           {entry.inputText && <> · {entry.inputText}</>}
         </p>
         {entry.note && <p className="text-[11px] text-foreground/80">{entry.note}</p>}
-        {remove.error && <p className="text-[11px] text-red-700 dark:text-red-300">{remove.error.message}</p>}
+        {remove.error && <p className="text-[11px] text-bad">{remove.error.message}</p>}
       </div>
       {confirming ? (
         <div className="flex shrink-0 items-center gap-1">

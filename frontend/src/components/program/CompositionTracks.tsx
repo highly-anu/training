@@ -40,7 +40,7 @@ export function CompositionTracks({ program, currentWeek = 0 }: {
             </div>
             <PhaseBar segments={segments} totalWeeks={total} currentWeek={currentWeek} />
             {cuts.map((c) => (
-              <p key={c} className="text-[11px] text-amber-700 dark:text-amber-300 leading-relaxed">
+              <p key={c} className="text-[11px] text-warn leading-relaxed">
                 {c.slice(track.name.length + 2)}
               </p>
             ))}

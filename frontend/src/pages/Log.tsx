@@ -133,7 +133,7 @@ function ImportPanel({
         </div>
       )}
       {status === 'error' && (
-        <div className="flex items-center gap-2 text-sm text-red-700 dark:text-red-300">
+        <div className="flex items-center gap-2 text-sm text-bad">
           <AlertCircle className="size-4" />
           {errorMsg}
         </div>
@@ -152,8 +152,8 @@ function ImportPanel({
 
       {/* Decisions waiting */}
       {pendingMatches.length > 0 && (
-        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3">
-          <p className="text-sm font-medium text-amber-700 dark:text-amber-300 mb-2">
+        <div className="rounded-lg border border-warn/30 bg-warn/5 px-4 py-3">
+          <p className="text-sm font-medium text-warn mb-2">
             {pendingMatches.length} workout{pendingMatches.length !== 1 ? 's need' : ' needs'} a match decision
           </p>
           <div className="flex flex-wrap gap-2">
@@ -163,7 +163,7 @@ function ImportPanel({
                 size="sm"
                 variant="outline"
                 onClick={() => onReview(p)}
-                className="text-xs border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10"
+                className="text-xs border-warn/40 text-warn hover:bg-warn/10"
               >
                 <Link2 className="size-3 mr-1" />
                 {p.importedWorkout.date} — {formatActivityType(p.importedWorkout.activityType)}

@@ -177,14 +177,14 @@ function Connector({ kind, onAction, onDismiss, label }: {
           onClick={onAction}
           aria-label={`Unlink ${label}`}
           className={cn('group/link flex size-7 items-center justify-center rounded-full border transition-colors',
-            COMPLETION.border, COMPLETION.bgStrong, COMPLETION.text, 'hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-700 dark:hover:text-red-300')}
+            COMPLETION.border, COMPLETION.bgStrong, COMPLETION.text, 'hover:border-bad/40 hover:bg-bad/10 hover:text-bad')}
         >
           <Check className="size-3.5 group-hover/link:hidden" />
           <Unlink className="size-3.5 hidden group-hover/link:block" />
         </button></Tip>
       ) : (
         <>
-          <Button size="sm" variant="outline" onClick={onAction} className="h-7 px-1.5 sm:px-2 text-xs border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10" aria-label={`Link ${label}`}>
+          <Button size="sm" variant="outline" onClick={onAction} className="h-7 px-1.5 sm:px-2 text-xs border-warn/40 text-warn hover:bg-warn/10" aria-label={`Link ${label}`}>
             <Link2 className="size-3 sm:mr-1" /><span className="hidden sm:inline">Link</span>
           </Button>
           {onDismiss && (
@@ -236,7 +236,7 @@ function DayCard({ day, programLabel, armed, selectedId, draggingId, isComplete,
     <section
       aria-label={dayLabel(day.date)}
       className={cn('rounded-xl border p-2.5 sm:p-3 space-y-2',
-        day.needsAttention ? 'border-amber-500/30 bg-amber-500/[0.03]' : 'border-border bg-card/40')}
+        day.needsAttention ? 'border-warn/30 bg-warn/[0.03]' : 'border-border bg-card/40')}
     >
       <header className="flex items-center gap-2">
         <h3 className="text-sm font-semibold">{dayLabel(day.date)}</h3>
@@ -246,7 +246,7 @@ function DayCard({ day, programLabel, armed, selectedId, draggingId, isComplete,
           </span>
         )}
         {day.needsAttention && (
-          <span className="text-[10px] rounded border border-amber-500/40 px-1.5 py-px text-amber-700 dark:text-amber-300">to link</span>
+          <span className="text-[10px] rounded border border-warn/40 px-1.5 py-px text-warn">to link</span>
         )}
       </header>
 

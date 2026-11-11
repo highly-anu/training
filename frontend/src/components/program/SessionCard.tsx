@@ -107,13 +107,13 @@ export function SessionCard({ session, weekNumber, day, sessionIndex, className,
         {session.exercises.length} exercise{session.exercises.length !== 1 ? 's' : ''}
         {heldBack > 0 && (
           // Icon and words, never colour alone (design system §1.6).
-          <span className="ml-1 inline-flex items-center gap-0.5 text-amber-700 dark:text-amber-300">
+          <span className="ml-1 inline-flex items-center gap-0.5 text-warn">
             · <CircleSlash className="size-2.5" aria-hidden="true" /> {heldBack} held back
           </span>
         )}
       </p>
       {notes.map((n) => (
-        <p key={n} className="mt-1 text-[10px] leading-snug text-amber-700 dark:text-amber-300">{n}</p>
+        <p key={n} className="mt-1 text-[10px] leading-snug text-warn">{n}</p>
       ))}
       {highlight && <p className="mt-1 text-[10px] font-medium text-primary">Changes</p>}
     </motion.button>

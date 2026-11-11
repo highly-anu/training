@@ -1752,6 +1752,21 @@ Frontend-design §8.3, §8.8, §8.12, §12.11. Left: about 150 amber, red and or
 that are notices rather than verdicts keep their `-700 dark:-300` pairs; focus returning
 to a sheet's trigger is Radix's own and was not re-tested per sheet.
 
+**Done — 7. Page passes** (`feat/web-pages`). Every page read at 390 px: no page scrolls
+sideways and each has one `h1`; Today's week, seven columns squeezed into a phone, now
+scrolls in its own strip and opens on today. The amber, red and orange notice classes
+phase 6 left are the `warn` and `bad` tokens (32 files), a recorded workout's metric icons
+are named data (`METRIC_ICON`), and the design test fails on a raw warm hue outside the
+colour modules. Explore's topics, Profile ▸ Standards and the Settings tabs keep their
+scroll per history entry (`ScrollPanel`), as do WorkoutDetail and the preview.
+Frontend-design §16 is now the reading order for a page, each line a row of §1.8; CLAUDE.md
+lists the web's helpers. Not done, and not planned as phases: the session card growing into
+its side panel (shared `layoutId`), `PresenceList` and `Stagger`, which exist and no page
+uses yet, a keyboard drag in Linking (select-then-pick stands in), `PageHeader` on
+ProgramHistoryDetail and WorkoutDetail's own header bars. Not checked on a device: the
+44 px touch targets under `pointer: coarse`, OS Reduce Motion, and the Light, Military and
+Zen themes page by page (their contrast is computed, their look was not reviewed).
+
 **2. States.** `components/shared/states/`: one reading of a load (`loadPhase` — content is
 never replaced by a reload or its failure), `LoadingState` (the one loading look, in the
 content's shape), `FailedState` with Try again, `ErrorBanner` with a retry, `QueryState`

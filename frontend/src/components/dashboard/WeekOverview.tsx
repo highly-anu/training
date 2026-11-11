@@ -1,6 +1,6 @@
 import { announce } from '@/lib/announce'
 import { DoneMark } from '@/components/shared/DoneMark'
-import { useState, useMemo, type ReactNode } from 'react'
+import { useEffect, useRef, useState, useMemo, type ReactNode } from 'react'
 import { format, differenceInCalendarDays, parseISO } from 'date-fns'
 import { GripVertical, Check, CheckCircle2, Circle, BatteryCharging, Activity, MoreHorizontal } from 'lucide-react'
 import {
@@ -382,6 +382,16 @@ export function WeekOverview({ weekData, weekIndex, selectedDay, onDaySelect }: 
 
   const [activeDragId, setActiveDragId] = useState<string | null>(null)
 
+  // On a phone the week is wider than the screen: open it with today in view.
+  const strip = useRef<HTMLDivElement>(null)
+  const todayColumn = isCurrentCalendarWeek ? DAYS.indexOf(todayDayName as (typeof DAYS)[number]) : -1
+  useEffect(() => {
+    const el = strip.current
+    if (!el || todayColumn < 0 || el.scrollWidth <= el.clientWidth) return
+    const column = el.scrollWidth / DAYS.length
+    el.scrollLeft = Math.max(0, column * todayColumn - (el.clientWidth - column) / 2)
+  }, [todayColumn, weekIndex])
+
   const activeSession = useMemo(() => {
     if (!activeDragId) return null
     const [fromDay, idxStr] = activeDragId.split('|')
@@ -445,7 +455,9 @@ export function WeekOverview({ weekData, weekIndex, selectedDay, onDaySelect }: 
         },
       }}
     >
-      <div className="grid grid-cols-7 gap-1.5">
+      {/* Seven columns do not fit a phone: there the week scrolls sideways, opened on today. */}
+      <div ref={strip} className="overflow-x-auto sm:overflow-visible">
+      <div className="grid min-w-[40rem] grid-cols-7 gap-1.5 sm:min-w-0">
         {DAYS.map((day, i) => {
           const sessions = weekData?.schedule[day] ?? []
           const dayKey = `${weekData?.week_number}-${day}`
@@ -510,6 +522,7 @@ export function WeekOverview({ weekData, weekIndex, selectedDay, onDaySelect }: 
             </DroppableDay>
           )
         })}
+      </div>
       </div>
 
       <DragOverlay dropAnimation={null}>

@@ -117,7 +117,7 @@ export function StravaConnect() {
         </div>
 
         {stravaParam === 'error' && (
-          <p className="mt-2 text-xs text-red-700 dark:text-red-300">
+          <p className="mt-2 text-xs text-bad">
             Authorization failed: {searchParams.get('reason') ?? 'unknown error'}
           </p>
         )}
@@ -167,7 +167,7 @@ export function StravaConnect() {
           </p>
         )}
         {sync.isError && (
-          <p className="text-xs text-red-700 dark:text-red-300">{sync.error.message}</p>
+          <p className="text-xs text-bad">{sync.error.message}</p>
         )}
 
         <div className="flex gap-2">

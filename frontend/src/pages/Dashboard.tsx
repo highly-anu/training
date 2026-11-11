@@ -70,8 +70,8 @@ function WeekTab({
         <h2 className="text-2xl font-bold tracking-tight mt-0.5">{program.goal?.name ?? 'Training Program'}</h2>
         {daysToEvent !== null && daysToEvent >= 0 && (
           <div className="flex items-center gap-1.5 mt-1">
-            <Flag className="size-3 text-amber-700 dark:text-amber-300" />
-            <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
+            <Flag className="size-3 text-warn" />
+            <p className="text-xs font-medium text-warn">
               {weeksToEvent}w {daysToEvent % 7}d until event
               {eventDate && (
                 <span className="text-muted-foreground font-normal ml-1">
@@ -179,7 +179,7 @@ function WeekTab({
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
             Next Up — Week {weekIndex + 2}
             {program.weeks[weekIndex + 1].is_deload && (
-              <span className="ml-2 text-amber-700 dark:text-amber-300 normal-case font-medium">deload</span>
+              <span className="ml-2 text-warn normal-case font-medium">deload</span>
             )}
           </h2>
           <div className="rounded-xl border bg-card/60 p-4 opacity-80">

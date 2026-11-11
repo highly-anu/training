@@ -321,7 +321,7 @@ export function ProgramTuner() {
                             'flex items-start gap-1.5 text-[10px] leading-relaxed',
                             issue.severity === 'error'
                               ? 'text-destructive'
-                              : 'text-amber-600 dark:text-amber-500'
+                              : 'text-warn'
                           )}
                         >
                           <AlertTriangle className="size-3 mt-px shrink-0" />
@@ -509,7 +509,7 @@ export function ProgramTuner() {
 
         {eventDate && eventIsTight ? (
           <>
-            <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-xs text-amber-700 dark:text-amber-300">
+            <div className="rounded-xl border border-warn/30 bg-warn/5 px-4 py-3 text-xs text-warn">
               Your event is in <span className="font-semibold">{weeksUntilEvent}w</span>, but a full program is{' '}
               <span className="font-semibold">{defaultNumWeeks}w</span>. Choose how to handle this:
             </div>

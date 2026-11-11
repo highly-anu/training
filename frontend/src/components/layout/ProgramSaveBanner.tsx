@@ -27,9 +27,9 @@ export function ProgramSaveBanner() {
   return (
     <div
       role="alert"
-      className="flex items-center gap-3 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm"
+      className="flex items-center gap-3 border-b border-warn/30 bg-warn/10 px-4 py-2 text-sm"
     >
-      <AlertTriangle className="size-4 shrink-0 text-amber-500" />
+      <AlertTriangle className="size-4 shrink-0 text-warn" />
       <p className="flex-1 leading-snug">
         {error === 'start_date_changed'
           ? "Your latest edit would have moved your program's start date, so it was not saved. Reload to get your program back."

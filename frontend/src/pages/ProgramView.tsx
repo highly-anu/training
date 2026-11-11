@@ -309,7 +309,7 @@ export function ProgramView() {
               Preview from week {weekIndex + 1}
             </Button>
             {regenerate.error && (
-              <p className="text-xs text-red-700 dark:text-red-300">
+              <p className="text-xs text-bad">
                 {regenerate.error.message || 'Could not regenerate'}
               </p>
             )}

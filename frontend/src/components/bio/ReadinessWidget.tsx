@@ -132,7 +132,7 @@ export function ReadinessWidget() {
       {actionableFlags.length > 0 && (
         <div className="space-y-1">
           {actionableFlags.map((f) => (
-            <div key={f} className="flex items-start gap-1.5 text-[11px] text-orange-700 dark:text-orange-300">
+            <div key={f} className="flex items-start gap-1.5 text-[11px] text-warn">
               <AlertTriangle className="size-3 mt-0.5 shrink-0" />
               {FLAG_LABELS[f as ReadinessFlag] ?? f}
             </div>

@@ -102,7 +102,7 @@ function CleanProgress({ session, logKey, serverKey }: Props) {
           </div>
         </>
       )}
-      {failed && <p className="text-xs text-red-600">Not saved — try again.</p>}
+      {failed && <p className="text-xs text-bad">Not saved — try again.</p>}
     </div>
   )
 }
@@ -224,7 +224,7 @@ function LiftProgress({ session, logKey, serverKey }: Props) {
           )}
         </>
       )}
-      {failed && <p className="text-xs text-red-600">Not saved — try again.</p>}
+      {failed && <p className="text-xs text-bad">Not saved — try again.</p>}
     </div>
   )
 }

@@ -1,3 +1,4 @@
+import { useScrollRestore } from '@/lib/useScrollRestore'
 import { ROUTE } from '@/lib/dataColors'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { LoadingState, FailedState } from '@/components/shared/states'
@@ -152,6 +153,7 @@ function formatPace(dist: { value: number; unit: 'km' | 'm' }, durationMinutes: 
 }
 
 export function WorkoutDetail() {
+  const scroller = useScrollRestore()
   const { workoutId: rawWorkoutId } = useParams<{ workoutId: string }>()
   const workoutId = rawWorkoutId ? decodeURIComponent(rawWorkoutId) : undefined
   const navigate = useNavigate()
@@ -339,7 +341,7 @@ export function WorkoutDetail() {
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto">
+      <div ref={scroller} className="flex-1 overflow-y-auto">
         <div className="max-w-2xl mx-auto w-full px-6 py-6 space-y-6">
 
       {/* Header */}

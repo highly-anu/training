@@ -136,7 +136,7 @@ function CheckinHistory({ logs }: { logs: DailyBioLog[] }) {
               <td className="px-4 py-2.5 text-sm">{format(parseISO(log.date), 'EEE, MMM d')}</td>
               <td className="px-4 py-2.5 text-center text-sm tabular-nums">
                 {log.restingHR != null
-                  ? <span className="text-red-700 dark:text-red-300 font-medium">{log.restingHR}</span>
+                  ? <span className="text-bad font-medium">{log.restingHR}</span>
                   : <span className="text-muted-foreground/40">—</span>}
               </td>
               <td className="px-4 py-2.5 text-center text-sm tabular-nums">

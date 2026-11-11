@@ -1,3 +1,4 @@
+import { useScrollRestore } from '@/lib/useScrollRestore'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { SubTabs, tabDomId } from '@/components/layout/SubTabs'
 import { LoadingState, FailedState } from '@/components/shared/states'
@@ -53,6 +54,7 @@ const TABS: { id: PreviewTab; label: string }[] = [
  * swaps on the draft, and only "Start this program" / "Apply" saves it.
  */
 export function ProgramPreview() {
+  const scroller = useScrollRestore()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -213,7 +215,7 @@ export function ProgramPreview() {
             active={tab}
             onChange={setTab}
             tabs={TABS.map((t) => (t.id === 'held-back' && counts.sessions > 0
-              ? { ...t, badge: <span className="text-amber-700 dark:text-amber-300">{counts.sessions}</span> }
+              ? { ...t, badge: <span className="text-warn">{counts.sessions}</span> }
               : t))}
           />
         }
@@ -234,7 +236,7 @@ export function ProgramPreview() {
         {!refused && <PhaseBar segments={segments} totalWeeks={totalWeeks} currentWeek={1} />}
       </PageHeader>
 
-      <div className="flex-1 overflow-y-auto" role="tabpanel" aria-labelledby={tabDomId('preview-tabs', tab)}>
+      <div ref={scroller} className="flex-1 overflow-y-auto" role="tabpanel" aria-labelledby={tabDomId('preview-tabs', tab)}>
         {generate.isPending && (
           <Working className="mx-6 mt-4">Previewing again…</Working>
         )}
@@ -270,7 +272,7 @@ export function ProgramPreview() {
                     </span>
                   )}
                   {(weekData.tests_skipped?.length ?? 0) > 0 && (
-                    <span className="text-[10px] text-amber-700 dark:text-amber-300">
+                    <span className="text-[10px] text-warn">
                       Test skipped: {weekData.tests_skipped!.map((t) => idLabel(t.reason)).join(', ')}
                     </span>
                   )}

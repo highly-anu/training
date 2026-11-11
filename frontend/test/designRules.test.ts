@@ -330,6 +330,13 @@ describe('hue is data, emerald is done (§8.12, §12.11)', () => {
     }), 'Finished is `text-done` / `bg-done/10` (lib/completionColors.ts); going well is `text-good` (lib/statusColors.ts). A green that is data — a scale step, a category — gets a name in lib/dataColors.ts.').toEqual([])
   })
 
+  it('a warning and a failure are tokens, never a raw amber or red', () => {
+    expect(findings({
+      pattern: /\b(amber|orange|yellow|red|rose)-\d/,
+      allow: either(is('lib/dataColors.ts', 'lib/movementColors.ts'), GENERATED, DEV_LAB, TESTS),
+    }), 'Needs attention is `text-warn` / `border-warn/30 bg-warn/5`; failed is `text-bad`. A warm hue that is data — a scale step, a quantity\'s icon — gets a name in lib/dataColors.ts.').toEqual([])
+  })
+
   it('a component writes no hex', () => {
     expect(findings({
       pattern: /['"`(]#[0-9a-fA-F]{3,8}\b/,

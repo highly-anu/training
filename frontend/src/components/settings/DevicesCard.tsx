@@ -48,7 +48,7 @@ export function DevicesCard() {
         <Button type="submit" size="sm" className="h-8 text-xs" disabled={!code.trim()} loading={claim.isPending}>
           Pair
         </Button>
-        {claim.isError && <span className="text-[11px] text-red-700 dark:text-red-300">{claim.error.message}</span>}
+        {claim.isError && <span className="text-[11px] text-bad">{claim.error.message}</span>}
         {claim.isSuccess && <span className="text-[11px] text-done">Paired</span>}
       </form>
 
