@@ -72,8 +72,9 @@ struct AppSubTabScreen<Tab: AppSubTab, Content: View>: View {
             // An inset, moved down by the pull so it follows the large title
             // the way Today's header does. Not the bar's `largeSubtitle`
             // slot: over a List or Form section that slot takes no touches
-            // at all (Log, Profile; 1.1.1). Not a `safeAreaBar`: it left
-            // List sections' titles blurred with nothing scrolled.
+            // at all (Log, Profile; 1.1.1). Not a `safeAreaBar`: it leaves
+            // the large title blurred with nothing scrolled (tried again on
+            // the 26.2 SDK for 1.37).
             .safeAreaInset(edge: .top, spacing: 0) {
                 AppSubTabPicker(selection: $selection)
                     .offset(y: pull)

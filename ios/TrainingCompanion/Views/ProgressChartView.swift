@@ -54,6 +54,7 @@ struct ProgressChartView: View {
             if let exercise {
                 ExerciseDetailSheet(exerciseId: exercise.exerciseId, name: exercise.name)
                     .environmentObject(appState)
+                    .appSheet(.flexible)
             }
         }
     }

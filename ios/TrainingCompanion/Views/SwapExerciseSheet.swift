@@ -15,6 +15,9 @@ struct SwapExerciseSheet: View {
     /// A program that is not the active one (the preview's draft): its own
     /// methodologies and constraints, and the pick goes to `onPick`.
     var draft: Draft? = nil
+    /// Inside a sheet that owns a `NavigationStack` it is pushed (§6.48); a
+    /// pick or Back pops it.
+    var pushed = false
 
     struct Draft {
         let program: GeneratedProgram
@@ -37,7 +40,20 @@ struct SwapExerciseSheet: View {
     }
 
     var body: some View {
-        NavigationStack {
+        if pushed {
+            alternativesList
+        } else {
+            NavigationStack {
+                alternativesList.toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") { dismiss() }
+                    }
+                }
+            }
+        }
+    }
+
+    private var alternativesList: some View {
             List {
                 if let current, let ex = current.exercise {
                     Section("Current") {
@@ -79,19 +95,13 @@ struct SwapExerciseSheet: View {
             }
             .navigationTitle("Swap Exercise")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
-            }
-            .sheet(item: $detail) { alt in
+            .appPush(item: $detail) { alt in
                 if let ex = alt.assignment.exercise {
-                    ExerciseDetailSheet(exerciseId: ex.id, name: ex.name, assignment: alt.assignment)
-                        .environmentObject(appState)
+                    ExerciseDetailSheet(exerciseId: ex.id, name: ex.name, assignment: alt.assignment,
+                                        pushed: true)
                 }
             }
             .task { await load() }
-        }
     }
 
     private func alternativeRow(_ alt: ExerciseAlternative) -> some View {

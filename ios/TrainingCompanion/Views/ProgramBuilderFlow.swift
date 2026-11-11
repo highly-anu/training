@@ -1007,7 +1007,7 @@ struct ProgramSettingsSheet: View {
             .navigationTitle("Program Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
             }
             .navigationDestination(item: $preview) { p in
                 ProgramPreviewView(mode: .new, request: p.request, draft: p.draft,

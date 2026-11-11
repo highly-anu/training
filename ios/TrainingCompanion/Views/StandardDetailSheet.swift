@@ -110,8 +110,8 @@ struct StandardDetailSheet: View {
             .navigationTitle(subject.name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { dismiss() } } }
-            .sheet(isPresented: $logging) { StandardResultSheet(subject: subject, editing: nil) }
-            .sheet(item: $editing) { entry in StandardResultSheet(subject: subject, editing: entry) }
+            .sheet(isPresented: $logging) { StandardResultSheet(subject: subject, editing: nil).appSheet(.flexible) }
+            .sheet(item: $editing) { entry in StandardResultSheet(subject: subject, editing: entry).appSheet(.flexible) }
             .confirmationDialog("Delete this result?", isPresented: Binding(
                 get: { deleting != nil }, set: { if !$0 { deleting = nil } }
             ), titleVisibility: .visible, presenting: deleting) { entry in

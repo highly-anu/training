@@ -280,7 +280,8 @@ final class WorkoutPlayerModel: ObservableObject {
 }
 
 /// The workout in progress, kept in Application Support so it outlives the
-/// app: a relaunch offers it again on Today.
+/// app: a relaunch offers it again above the tab bar (`KeptWorkout`).
+@MainActor
 enum ActiveWorkoutStore {
     struct Record: Codable {
         let target: WorkoutPlayerModel.Target
@@ -300,19 +301,53 @@ enum ActiveWorkoutStore {
         guard let url, let data = try? JSONEncoder().encode(record) else { return }
         try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         try? data.write(to: url, options: .atomic)
+        KeptWorkout.shared.record = record
     }
 
     /// The workout kept, unless it is more than a day old.
     static func load() -> Record? {
         guard let url, let data = try? Data(contentsOf: url),
               let record = try? JSONDecoder().decode(Record.self, from: data) else { return nil }
-        guard Date().timeIntervalSince(record.startedAt) < 24 * 3600 else { clear(); return nil }
+        guard Date().timeIntervalSince(record.startedAt) < 24 * 3600 else {
+            // Only the file: `KeptWorkout` reads through here as it is made.
+            try? FileManager.default.removeItem(at: url)
+            return nil
+        }
         return record
     }
 
     static func clear() {
         guard let url else { return }
         try? FileManager.default.removeItem(at: url)
+        KeptWorkout.shared.record = nil
+    }
+}
+
+/// The kept workout as the app sees it: what the tab bar's accessory shows
+/// from any tab (design-system §6.45). The store writes it on every save and
+/// clear, so no screen reads the file to find out.
+@MainActor
+final class KeptWorkout: ObservableObject {
+    static let shared = KeptWorkout()
+    @Published fileprivate(set) var record: ActiveWorkoutStore.Record?
+
+    private init() { record = ActiveWorkoutStore.load() }
+
+    /// After a day the store lets a workout go; ask again on coming back.
+    func refresh() { record = ActiveWorkoutStore.load() }
+
+    func discard() { ActiveWorkoutStore.clear() }
+}
+
+extension ActiveWorkoutStore.Record {
+    /// "Step 4 of 9", or what is left to do with a finished one.
+    var progressText: String {
+        if finished { return "Finished · save it" }
+        let count = session.exercises.count
+        guard let index = snapshot.phase.exerciseIndex, count > 0 else {
+            return "Started \(startedAt.formatted(date: .omitted, time: .shortened))"
+        }
+        return "Step \(min(index + 1, count)) of \(count)"
     }
 }
 

@@ -49,7 +49,7 @@ struct WorkoutCompleteSheet: View {
                 .padding(.horizontal, 16)
                 .padding(.bottom, 16)
             }
-            .safeAreaInset(edge: .bottom) { actionBar(match) }
+            .appActionBar { actionBar(match) }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -514,47 +514,33 @@ struct WorkoutCompleteSheet: View {
 
     // MARK: - Actions
 
-    private func actionBar(_ match: WorkoutCompletion.Match) -> some View {
-        VStack(spacing: 0) {
-            if case .suggested(let key, _, _) = match {
-                Button {
-                    link(key)
-                } label: {
-                    HStack(spacing: 8) {
-                        if linkingKey == key {
-                            ProgressView().tint(.white)
-                        } else {
-                            Image(systemName: "checkmark.circle.fill")
-                        }
-                        Text("Confirm & complete")
+    @ViewBuilder private func actionBar(_ match: WorkoutCompletion.Match) -> some View {
+        if case .suggested(let key, _, _) = match {
+            Button {
+                link(key)
+            } label: {
+                HStack(spacing: AppMetrics.gapSmall) {
+                    if linkingKey == key {
+                        ProgressView()
+                    } else {
+                        Image(systemName: "checkmark.circle.fill")
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(AppColor.complete)
-                    .foregroundStyle(.white)
-                    .font(.subheadline).fontWeight(.semibold)
-                    .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusControl))
+                    Text("Confirm & complete")
                 }
-                .disabled(linkingKey != nil)
-            } else {
-                Button {
-                    AppHaptics.light()
-                    dismiss()
-                } label: {
-                    Text("Done")
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(Color.accentColor)
-                        .foregroundStyle(.white)
-                        .font(.subheadline).fontWeight(.semibold)
-                        .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusControl))
-                }
+                .fontWeight(.semibold)
+                .frame(maxWidth: .infinity)
             }
+            .appButton(.complete)
+            .disabled(linkingKey != nil)
+        } else {
+            Button {
+                AppHaptics.light()
+                dismiss()
+            } label: {
+                Text("Done").fontWeight(.semibold).frame(maxWidth: .infinity)
+            }
+            .appButton(.primary)
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 8)
-        .padding(.bottom, 8)
-        .background(.bar)
     }
 
     /// Link the workout to a session of the current program and mark it

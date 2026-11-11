@@ -21,6 +21,12 @@ final class DesignTokenTests: XCTestCase {
          #"\.(easeIn|easeOut|easeInOut|linear)\(duration:"#, ["AppAnimationSettings.swift"]),
         ("a button style picked per screen — use .appButton(_:)",
          #"\.buttonStyle\(\.bordered(Prominent)?\)"#, ["AppCard.swift"]),
+        ("a glass button picked per screen — .appButton(_:) inside an action bar or AppFloatingControls",
+         #"\.buttonStyle\(\.glass"#, ["AppCard.swift"]),
+        ("a sheet height of its own — use .appSheet(_:)",
+         #"\.presentationDetents\("#, ["AppNavigation.swift"]),
+        ("a transition of its own — use .appZoom(from:in:)",
+         #"\.navigationTransition\("#, ["AppNavigation.swift"]),
     ]
 
     func testNoViewWritesWhatATokenOwns() throws {

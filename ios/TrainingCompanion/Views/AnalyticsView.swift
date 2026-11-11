@@ -76,6 +76,7 @@ struct AnalyticsView: View {
             .sheet(isPresented: $showBioEntry) {
                 BioCheckInView()
                     .environmentObject(appState)
+                    .appSheet(.flexible)
             }
         }
     }
