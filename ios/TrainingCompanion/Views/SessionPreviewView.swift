@@ -72,34 +72,28 @@ struct SessionPreviewView: View {
         }
         .navigationTitle("Preview")
         .navigationBarTitleDisplayMode(.inline)
-        .safeAreaInset(edge: .bottom) {
-            VStack(spacing: 8) {
-                if let error {
-                    Label(error, systemImage: "exclamationmark.triangle")
-                        .font(.footnote).foregroundStyle(AppColor.warning)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                Button(action: onConfirm) {
-                    Text(confirmTitle).frame(maxWidth: .infinity)
-                }
-                .appButton(.primary)
-                .controlSize(.large)
-                .disabled(isSearching)
-                if let onSearchAgain {
-                    Button(action: onSearchAgain) {
-                        HStack(spacing: 6) {
-                            if isSearching { ProgressView().controlSize(.small) }
-                            Text(isSearching ? "Searching…" : "Search Again")
-                        }
-                        .frame(maxWidth: .infinity)
-                    }
-                    .appButton(.secondary)
-                    .controlSize(.large)
-                    .disabled(isSearching)
-                }
+        .appActionBar {
+            if let error {
+                Label(error, systemImage: "exclamationmark.triangle")
+                    .font(.footnote).foregroundStyle(AppColor.warning)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding()
-            .background(.bar)
+            Button(action: onConfirm) {
+                Text(confirmTitle).fontWeight(.semibold).frame(maxWidth: .infinity)
+            }
+            .appButton(.primary)
+            .disabled(isSearching)
+            if let onSearchAgain {
+                Button(action: onSearchAgain) {
+                    HStack(spacing: 6) {
+                        if isSearching { ProgressView().controlSize(.small) }
+                        Text(isSearching ? "Searching…" : "Search Again")
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .appButton(.secondary)
+                .disabled(isSearching)
+            }
         }
     }
 }

@@ -130,17 +130,33 @@ enum AppButtonKind {
 
 private struct AppButtonModifier: ViewModifier {
     let kind: AppButtonKind
+    @Environment(\.appButtonsFloat) private var floats
 
     func body(content: Content) -> some View {
-        switch kind {
-        case .primary:
-            content.buttonStyle(.borderedProminent)
-        case .secondary:
-            content.buttonStyle(.bordered)
-        case .destructive:
-            content.buttonStyle(.bordered).tint(AppColor.destructive)
-        case .complete:
-            content.buttonStyle(.borderedProminent).tint(AppColor.complete)
+        if floats {
+            // Over content (an action bar, the player's controls): glass, the
+            // one place a button is not a solid fill (§6.47).
+            switch kind {
+            case .primary:
+                content.buttonStyle(.glassProminent)
+            case .secondary:
+                content.buttonStyle(.glass)
+            case .destructive:
+                content.buttonStyle(.glass).tint(AppColor.destructive)
+            case .complete:
+                content.buttonStyle(.glassProminent).tint(AppColor.complete)
+            }
+        } else {
+            switch kind {
+            case .primary:
+                content.buttonStyle(.borderedProminent)
+            case .secondary:
+                content.buttonStyle(.bordered)
+            case .destructive:
+                content.buttonStyle(.bordered).tint(AppColor.destructive)
+            case .complete:
+                content.buttonStyle(.borderedProminent).tint(AppColor.complete)
+            }
         }
     }
 }
@@ -149,6 +165,43 @@ extension View {
     /// Styles a button as one of the app's kinds. See `AppButtonKind`.
     func appButton(_ kind: AppButtonKind) -> some View {
         modifier(AppButtonModifier(kind: kind))
+    }
+}
+
+// MARK: - Floating controls
+
+extension EnvironmentValues {
+    /// Whether `appButton` draws glass: true inside an action bar and the
+    /// player's controls, which float over content.
+    @Entry var appButtonsFloat = false
+}
+
+/// The buttons that float over a screen's content (design-system §6.47): the
+/// app's kinds drawn in glass, grouped so neighbouring buttons blend. Content
+/// scrolls beneath; the group itself has no background.
+struct AppFloatingControls<Content: View>: View {
+    var spacing: CGFloat = AppMetrics.gapSmall
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        GlassEffectContainer(spacing: spacing) {
+            VStack(spacing: spacing) { content() }
+        }
+        .environment(\.appButtonsFloat, true)
+    }
+}
+
+extension View {
+    /// A screen's bottom action bar: its buttons in glass over the content,
+    /// which fades out beneath them. One per screen, for the screen's main
+    /// action and at most one beside it.
+    func appActionBar<Bar: View>(@ViewBuilder _ bar: @escaping () -> Bar) -> some View {
+        safeAreaBar(edge: .bottom, spacing: 0) {
+            AppFloatingControls(content: bar)
+                .controlSize(.large)
+                .padding(.horizontal)
+                .padding(.vertical, AppMetrics.gapSmall)
+        }
     }
 }
 
@@ -164,6 +217,8 @@ struct AnalyticsDetailCard<Content: View, Trailing: View, Destination: View>: Vi
     @ViewBuilder let trailing: () -> Trailing
     @ViewBuilder let destination: () -> Destination
     @ViewBuilder let content: () -> Content
+    /// The detail grows out of the card (§6.48).
+    @Namespace private var zoom
 
     init(header: String, hint: String,
          @ViewBuilder trailing: @escaping () -> Trailing,
@@ -178,7 +233,7 @@ struct AnalyticsDetailCard<Content: View, Trailing: View, Destination: View>: Vi
 
     var body: some View {
         NavigationLink {
-            destination()
+            destination().appZoom(from: "card", in: zoom)
         } label: {
             AppCard(header: header) {
                 HStack(spacing: 8) {
@@ -192,6 +247,7 @@ struct AnalyticsDetailCard<Content: View, Trailing: View, Destination: View>: Vi
                 content()
             }
             .contentShape(Rectangle())
+            .matchedTransitionSource(id: "card", in: zoom)
         }
         .buttonStyle(.plain)
         .accessibilityHint(hint)

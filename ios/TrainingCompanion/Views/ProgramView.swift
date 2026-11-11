@@ -91,6 +91,7 @@ struct ProgramView: View {
             .sheet(item: $selectedDay) { sel in
                 DaySessionsSheet(weekIndex: sel.weekIndex, dayName: sel.dayName)
                     .environmentObject(appState)
+                    .appSheet(.flexible)
             }
             .task {
                 if appState.allWeeks.isEmpty { await appState.loadProgram() }

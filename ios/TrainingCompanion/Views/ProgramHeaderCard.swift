@@ -62,7 +62,7 @@ struct ProgramHeaderCard<Footer: View>: View {
                 footer()
             }
         }
-        .sheet(item: $sheet) { PhilosophyDetailSheet(philosophy: $0) }
+        .sheet(item: $sheet) { PhilosophyDetailSheet(philosophy: $0).appSheet(.flexible) }
     }
 
     private func phaseRow(_ phase: Phase) -> some View {

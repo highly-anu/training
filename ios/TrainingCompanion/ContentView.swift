@@ -119,28 +119,87 @@ struct ContentView: View {
 /// suggestions inbox, and what was logged against planned sessions.
 struct MainTabView: View {
     @EnvironmentObject var router: AppRouter
+    @EnvironmentObject var appState: AppState
+    @Environment(\.scenePhase) private var scenePhase
+    @ObservedObject private var kept = KeptWorkout.shared
+    @State private var resumed: WorkoutPlayerModel.Target? = nil
+    @Namespace private var playerZoom
 
     var body: some View {
         TabView(selection: $router.tab) {
-            TodayView()
-                .tabItem { Label("Today", systemImage: "sun.max") }
-                .tag(AppRouter.Tab.dashboard)
-
-            ProgramView()
-                .tabItem { Label("Program", systemImage: "calendar") }
-                .tag(AppRouter.Tab.program)
-
-            AnalyticsView()
-                .tabItem { Label("Analytics", systemImage: "chart.bar.xaxis") }
-                .tag(AppRouter.Tab.analytics)
-
-            LogView()
-                .tabItem { Label("Log", systemImage: "list.clipboard") }
-                .tag(AppRouter.Tab.log)
-
-            ProfileView()
-                .tabItem { Label("Profile", systemImage: "person") }
-                .tag(AppRouter.Tab.profile)
+            Tab("Today", systemImage: "sun.max", value: AppRouter.Tab.dashboard) { TodayView() }
+            Tab("Program", systemImage: "calendar", value: AppRouter.Tab.program) { ProgramView() }
+            Tab("Analytics", systemImage: "chart.bar.xaxis", value: AppRouter.Tab.analytics) { AnalyticsView() }
+            Tab("Log", systemImage: "list.clipboard", value: AppRouter.Tab.log) { LogView() }
+            Tab("Profile", systemImage: "person", value: AppRouter.Tab.profile) { ProfileView() }
         }
+        .tabBarMinimizeBehavior(.onScrollDown)
+        // The workout the player kept: the way back into it from any tab
+        // (§6.45). It was a card on Today until 1.37.
+        .tabViewBottomAccessory(isEnabled: kept.record != nil) {
+            if let record = kept.record {
+                KeptWorkoutAccessory(record: record,
+                                     open: { AppHaptics.medium(); resumed = record.target },
+                                     discard: { kept.discard() })
+                    .matchedTransitionSource(id: "kept-workout", in: playerZoom)
+            }
+        }
+        .fullScreenCover(item: $resumed, onDismiss: { kept.refresh() }) { target in
+            WorkoutPlayerView(player: .resumingIfKept(target), fallback: nil) { resumed = nil }
+                .environmentObject(appState)
+                .appZoom(from: "kept-workout", in: playerZoom)
+        }
+        .onChange(of: scenePhase) { if scenePhase == .active { kept.refresh() } }
+    }
+}
+
+/// The tab bar's accessory while a workout is kept: its name and where it
+/// stands, a tap back into the player, and the way to let it go.
+struct KeptWorkoutAccessory: View {
+    let record: ActiveWorkoutStore.Record
+    let open: () -> Void
+    let discard: () -> Void
+    @Environment(\.tabViewBottomAccessoryPlacement) private var placement
+
+    var body: some View {
+        HStack(spacing: AppMetrics.gapSmall) {
+            Button(action: open) {
+                HStack(spacing: AppMetrics.gapSmall) {
+                    Image(systemName: record.finished ? "checkmark.circle.fill" : "play.circle.fill")
+                        .font(.title3)
+                        .foregroundStyle(.tint)
+                    if placement == .inline {
+                        Text("\(record.finished ? "Review" : "Resume") · \(record.progressText)")
+                            .font(.footnote.weight(.semibold))
+                            .lineLimit(1)
+                    } else {
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text(record.target.title)
+                                .font(.footnote.weight(.semibold))
+                                .lineLimit(1)
+                            Text("\(record.finished ? "Review" : "Resume") · \(record.progressText)")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+                    }
+                    Spacer(minLength: 0)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("\(record.finished ? "Review" : "Resume") \(record.target.title), \(record.progressText)")
+            Menu {
+                Button("Discard workout", systemImage: "trash", role: .destructive, action: discard)
+            } label: {
+                Image(systemName: "ellipsis")
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .foregroundStyle(.secondary)
+            .accessibilityLabel("Workout options")
+        }
+        .padding(.leading, AppMetrics.gapLarge)
+        .padding(.trailing, AppMetrics.gapTight)
     }
 }

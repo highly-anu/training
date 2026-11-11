@@ -554,6 +554,9 @@ Button("Start workout") { … }.appButton(.primary)
 
 A plain text button (a toolbar item, an inline link) takes the tint and no style.
 
+Inside an action bar or `AppFloatingControls` (§6.47) the same four kinds draw in glass;
+the call site does not change, and no view names a glass style itself (`DesignTokenTests`).
+
 ### 6.7 Deload Banner
 
 ```swift
@@ -646,7 +649,9 @@ AppSubTabScreen(selection: $selectedTab) { tab in
   takes no touches when the section is a List or Form — every Log and
   Profile section — whatever the list style, wrapper or control. Check a
   placement with taps on a List section *and* a ScrollView section, and a
-  gesture change with a real drag, not by reasoning.
+  gesture change with a real drag, not by reasoning. The `safeAreaBar` was
+  tried again on the 26.2 SDK for 1.37 and still blurs the large title with
+  nothing scrolled; the inset stays.
 - **A section is rebuilt on every switch** (`.id(selection)`), so it starts at
   the top. Keeping visited sections alive and hidden was tried on 2026-10-15
   and dropped: the navigation bar's tracking of the visible one could not be
@@ -879,7 +884,9 @@ deep link — `program?section=`, `analytics?section=` (`overview` and
 `development` are kept as aliases), `log?section=`, `profile?section=`.
 
 `AppRouter.Tab` enumerates them; `MainTabView` in `ContentView.swift` reads the
-selection from the router (§6.9). The first case is still named `.dashboard`
+selection from the router (§6.9). The bar is the system's (`Tab(_:systemImage:value:)`):
+it shrinks on a scroll down (`tabBarMinimizeBehavior(.onScrollDown)`) and carries the
+kept workout as its bottom accessory (§6.45). The first case is still named `.dashboard`
 because the widgets deep-link to it; its label is "Today".
 
 **Settings is pushed from Profile's toolbar gear** (`Views/SettingsView.swift`):
@@ -919,11 +926,15 @@ equipment, prerequisites and unlocks with ids resolved to names. When opened
 from a prescription it shows that session's load (§6.5) and notes first.
 
 ```swift
-.sheet(item: $exerciseSheet) { item in
-    ExerciseDetailSheet(exerciseId: ex.id, name: ex.name, assignment: item.assignment)
-        .environmentObject(appState)
+// Inside a sheet that owns a NavigationStack: a push (§6.48).
+.appPush(item: $exerciseSheet) { item in
+    ExerciseDetailSheet(exerciseId: ex.id, name: ex.name, assignment: item.assignment, pushed: true)
 }
 ```
+
+`pushed: true` drops the sheet's own `NavigationStack` and Done button; without it the
+screen is a sheet in its own right (from Analytics ▸ Progress). `SwapExerciseSheet` takes
+the same flag.
 
 **Who presents it**
 
@@ -2156,21 +2167,84 @@ reads the steps on the phone: no heart rate is shown or kept.
   countdown (compact), the step and next (expanded). The countdown is
   `Text(timerInterval:)`; a step that waits for the athlete shows n/N instead.
 - **Kept:** the engine's state is saved on every move (`ActiveWorkoutStore`); a relaunch
-  shows §6.45's resume card, and Start on the same session carries on.
+  shows it above the tab bar (§6.45), and Start on the same session carries on.
+- **Controls:** `AppFloatingControls` (§6.47) — the one primary button in the step's
+  colour, Pause / Skip / ±0.1 km beside each other beneath it, all glass over the step.
 
 ### 6.45 Start Workout and Resume
 
 The player is reached from `SessionDetailView`, so every place that opens a session
 (Today, Program ▸ Calendar, Log) can start one: **Start workout** (play.fill, prominent,
-the modality colour) stands above **Mark Session Complete** in the bottom inset while the
-session is not done. It is disabled only when the session's day cannot be placed in the
+the modality colour) stands above **Mark Session Complete** in the action bar (§6.47) while
+the session is not done. The player grows out of the button (§6.48). It is disabled only when the session's day cannot be placed in the
 program. Cards and the long-press menu (§6.43) do not offer it.
 
-A workout kept from an earlier launch is a card at the top of Today, under the header:
-play.circle.fill (checkmark.circle.fill when it ended unsaved), "Workout in progress" /
-"Workout to save" over the session and its start time, **Resume** / **Review** (small,
-prominent), and a ⋯ menu with **Discard workout**. It goes once the workout is saved or
-discarded, or after a day.
+A kept workout — one the athlete left with Resume later, or that an earlier launch left
+behind — is the **tab bar's bottom accessory** (`tabViewBottomAccessory`,
+`KeptWorkoutAccessory` in `ContentView.swift`), so the way back is on every tab: play.circle.fill
+(checkmark.circle.fill when it ended unsaved), the session's name over "Resume · Step 4 of 9"
+("Review · Finished · save it"), and a ⋯ menu with **Discard workout**. A tap opens the
+player, which grows out of the accessory. With the bar minimised it is one line. It goes
+once the workout is saved or discarded, or after a day. `KeptWorkout.shared` publishes the
+record; `ActiveWorkoutStore` writes it on every save and clear, so no screen reads the file.
+Until 1.37 this was a card at the top of Today, which only Today showed.
 
 Settings ▸ **Workout** holds the player's cues on this phone: Count in before work, Count
 in after Start, Voice (`WatchCueSettings`; the Apple Watch keeps its own).
+
+### 6.46 (unused)
+
+### 6.47 Floating Controls and the Action Bar
+
+**Glass is for what floats over content; cards stay solid.** Two places qualify, both in
+`AppCard.swift`:
+
+- **`.appActionBar { … }`** — a screen's bottom bar: its main action and at most one beside
+  it, large, in glass, with the content scrolling and fading out beneath (`safeAreaBar`).
+  No background of its own. Session detail (Start workout · Mark Session Complete), the
+  session preview (confirm · Search Again), the program preview (Start this program) and
+  Workout complete (Confirm & complete / Done) use it; a screen has one.
+- **`AppFloatingControls { … }`** — the same grouping without the bar, for controls laid
+  over a screen: the workout player's (§6.44).
+
+```swift
+.appActionBar {
+    Button { start() } label: { Label("Start workout", systemImage: "play.fill").frame(maxWidth: .infinity) }
+        .appButton(.primary)
+        .tint(ModalityStyle.color(for: session.modality))
+}
+```
+
+**Rules**
+
+- Buttons inside are ordinary `.appButton(_:)` (§6.6); the container makes them glass
+  (`\.appButtonsFloat`) and blends neighbours (`GlassEffectContainer`). Never
+  `.buttonStyle(.glass…)` at a call site.
+- A message in the bar (an error line) is plain text above the buttons. A setting in the
+  bar — the preview's "Also add … to my profile" toggle — sits on a glass surface of its own.
+- Content cards, rows and sheets are never glass.
+
+### 6.48 Sheets, Pushes and Zoom
+
+**How a screen arrives says what it is** (`AppNavigation.swift`).
+
+| Arrives as | When | How |
+|---|---|---|
+| Full-height sheet | A flow or a screen in its own right: the builder, a preview, a session, a workout, Preview ▸ Adjust (a form taller than half a screen) | `.sheet` alone |
+| `.appSheet(.compact)` | A short choice with nothing to type: Move, the player's Finish | half height, grabber |
+| `.appSheet(.flexible)` | Reference, a short list or a small form: the set logger, a standard's result, the check-in, a day's sessions, a philosophy, an exercise from the chart | half height, pulls up, grabber |
+| Push (`.appPush(item:)`) | A further step **inside** a sheet that owns a `NavigationStack`: an exercise's reference, a swap | Back button; never a sheet on a sheet |
+| Zoom (`.appZoom(from:in:)`) | A detail that belongs to the row or card that opened it | grows from its source |
+
+Zoom sources today: Today's session card → the session; an Analytics card → its detail
+(`AnalyticsDetailCard`, built in); a workout row → the workout (`appZoomScope` on Log,
+`appZoomSource` on the row); Start workout → the player; the kept-workout accessory → the
+player. Under Reduce Motion `appZoom` does nothing and the system's own transition runs.
+
+**Rules**
+
+- Cancel leads, the confirming action trails, in every sheet's toolbar.
+- A view writes no `.presentationDetents` or `.navigationTransition` itself
+  (`DesignTokenTests`).
+- A screen that can be both pushed and presented takes `pushed:` and owns its
+  `NavigationStack` only when presented (§6.14).

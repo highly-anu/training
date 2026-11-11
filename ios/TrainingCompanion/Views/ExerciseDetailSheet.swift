@@ -11,6 +11,9 @@ struct ExerciseDetailSheet: View {
     let name: String
     /// The prescription this sheet was opened from, when there is one.
     var assignment: ProgramExerciseAssignment? = nil
+    /// Inside a sheet that owns a `NavigationStack` it is pushed (§6.48): the
+    /// stack and its Back button are the caller's.
+    var pushed = false
 
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
@@ -21,7 +24,18 @@ struct ExerciseDetailSheet: View {
     private var catalogEntry: AppExercise? { appState.exerciseCatalog[exerciseId] }
 
     var body: some View {
-        NavigationStack {
+        if pushed {
+            reference
+        } else {
+            NavigationStack {
+                reference.toolbar {
+                    ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+                }
+            }
+        }
+    }
+
+    private var reference: some View {
             List {
                 headerSection
                 if let assignment { prescriptionSection(assignment) }
@@ -44,11 +58,7 @@ struct ExerciseDetailSheet: View {
             }
             .navigationTitle(name)
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) { Button("Done") { dismiss() } }
-            }
             .task { await load() }
-        }
     }
 
     // MARK: - Sections

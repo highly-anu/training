@@ -43,6 +43,8 @@ struct SessionDetailView: View {
     @State private var liftAnswers: [String: LiftConfirmation.Answer] = [:]
     /// The workout player, full screen (design-system §6.44).
     @State private var player: WorkoutPlayerModel.Target? = nil
+    /// The player grows out of Start workout.
+    @Namespace private var zoom
 
     private var isDone: Bool { appState.isSessionComplete(sessionKey) }
 
@@ -73,18 +75,15 @@ struct SessionDetailView: View {
                     Button("Done") { dismiss() }
                 }
             }
-            .safeAreaInset(edge: .bottom) {
-                VStack(spacing: 10) {
-                    if !isDone { startButton }
-                    completionButton
-                }
-                .padding()
-                .background(.background)
+            .appActionBar {
+                if !isDone { startButton }
+                completionButton
             }
             .fullScreenCover(item: $player) { target in
                 WorkoutPlayerView(player: .resumingIfKept(target), fallback: currentSession) {
                     player = nil
                 }
+                .appZoom(from: "player", in: zoom)
                 .environmentObject(appState)
             }
             .onAppear {
@@ -92,18 +91,18 @@ struct SessionDetailView: View {
                 if player == nil, WorkoutPlayerDebug.take(sessionKey) { openPlayer() }
             }
             // The exercise reference (§6.14): what the movement is and how to
-            // do it, without leaving the session.
-            .sheet(item: $exerciseSheet) { item in
+            // do it, without leaving the session — pushed, as the swap is
+            // (§6.48); both were sheets on this sheet until 1.37.
+            .appPush(item: $exerciseSheet) { item in
                 if let ex = item.assignment.exercise {
-                    ExerciseDetailSheet(exerciseId: ex.id, name: ex.name, assignment: item.assignment)
-                        .environmentObject(appState)
+                    ExerciseDetailSheet(exerciseId: ex.id, name: ex.name, assignment: item.assignment,
+                                        pushed: true)
                 }
             }
-            .sheet(item: $swapTarget) { target in
+            .appPush(item: $swapTarget) { target in
                 if let wi = weekIndex, let dn = dayName, let si = sessionIndex {
                     SwapExerciseSheet(weekIndex: wi, dayName: dn, sessionIndex: si,
-                                      exerciseIndex: target.exerciseIndex)
-                        .environmentObject(appState)
+                                      exerciseIndex: target.exerciseIndex, pushed: true)
                 }
             }
             // What was done (§6.16): sets for a sets × reps slot, the slot's
@@ -111,6 +110,7 @@ struct SessionDetailView: View {
             .sheet(item: $logTarget) { item in
                 ExerciseLogSheet(sessionKey: sessionKey, assignment: item.assignment)
                     .environmentObject(appState)
+                    .appSheet(.flexible)
             }
             .task {
                 // A test names its standards: their names and the athlete's
@@ -569,11 +569,11 @@ struct SessionDetailView: View {
             Label("Start workout", systemImage: "play.fill")
                 .fontWeight(.semibold)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 4)
         }
         .appButton(.primary)
         .tint(ModalityStyle.color(for: currentSession.modality))
         .disabled(playerTarget == nil)
+        .matchedTransitionSource(id: "player", in: zoom)
     }
 
     private var playerTarget: WorkoutPlayerModel.Target? {
@@ -613,10 +613,8 @@ struct SessionDetailView: View {
                     .fontWeight(.semibold)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 4)
         }
-        .appButton(.primary)
-        .tint(isDone ? .secondary : AppColor.complete)
+        .appButton(isDone ? .secondary : .complete)
         .disabled(isSaving)
     }
 

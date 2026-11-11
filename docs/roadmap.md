@@ -54,7 +54,7 @@ deferred is under *Later*.
 | 15 | Program preview on the phone; the regenerate offer that asks the server first (*IA*) | P2 | M | iOS, web |
 | 16 | Garmin's official Connect API, open again since 2026-10-21: verify the integration, then health data and workouts pushed to the watch | P2 | M | API, watch, web, iOS |
 | 17 | Explore: each philosophy's page read from its package — a server document, its week and rules, one colour system | P2 | M | API, web, iOS, content |
-| 18 | Phone design and interaction uplift: the foundation (1.35) and states (1.36) are in; iOS 26 chrome, discoverable actions, screen passes, motion, accessibility left (*IA*) | P2 | L | iOS |
+| 18 | Phone design and interaction uplift: the foundation (1.35), states (1.36) and iOS 26 chrome (1.37) are in; discoverable actions, screen passes, motion, accessibility left (*IA*) | P2 | L | iOS |
 
 ---
 
@@ -1593,12 +1593,16 @@ Overview with Try again (it read "No Program"); History, Log ▸ Activity, a his
 version, Profile and Recovery got the error state they lacked; eight hand-built empty
 states and every full-screen spinner are gone. Design-system §6.3, §7.3.
 
+**Done — 3. Navigation and chrome** (1.37.0, `feat/ios-chrome`). The `Tab` API, the bar
+shrinking on a scroll; the kept workout as the tab bar's accessory on every tab (it was a
+card on Today); `.appActionBar` and `AppFloatingControls` — the four bottom bars and the
+player's controls in glass, cards solid; `AppNavigation.swift`: sheet heights by content,
+exercise reference and swap pushed inside a sheet, zoom from a session card, an Analytics
+card, a workout row, Start workout and the accessory. The sub-tab picker stays an inset
+(`safeAreaBar` still blurs the title on 26.2). Design-system §6.45, §6.47, §6.48.
+
 **Left, in order:**
 
-3. *Navigation and chrome.* The `Tab` API with `tabBarMinimizeBehavior`; the kept workout
-   as the tab bar's bottom accessory; the four bottom action bars and the player's
-   controls as glass; zoom transitions from a session card, an Analytics card, a workout
-   row; detents by content; exercise detail and swap pushed inside a sheet, not stacked.
 4. *Discoverable actions.* A `…` menu on session cards and Calendar rows beside the
    long-press (§6.43 says no card shows them), `+ Add session` on rest days; Today's day
    carousel and Calendar's week as paging scroll views with chevrons and a week strip;

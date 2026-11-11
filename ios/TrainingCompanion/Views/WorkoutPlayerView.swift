@@ -140,18 +140,18 @@ struct WorkoutPlayerView: View {
                 player.go(to: i)
                 showSteps = false
             }
-            .presentationDetents([.medium, .large])
+            .appSheet(.flexible)
         }
         .sheet(isPresented: $showLogger) {
             PlayerSetLogger(engine: engine, session: session, exercise: ex, index: index, tint: tint)
-                .presentationDetents([.medium])
+                .appSheet(.compact)
         }
         .confirmationDialog("Leave the workout?", isPresented: $confirmLeave, titleVisibility: .visible) {
             Button("Finish and save") { player.finish() }
             Button("Leave, resume later") { player.leaveForLater(); onClose() }
             Button("Discard workout", role: .destructive) { player.discard(); onClose() }
         } message: {
-            Text("Resume later keeps where you are; Today offers it again.")
+            Text("Resume later keeps where you are; it waits above the tab bar.")
         }
         .alert("Time's up", isPresented: Binding(get: { engine.showOvertimePrompt },
                                                  set: { engine.showOvertimePrompt = $0 })) {
@@ -353,7 +353,9 @@ struct PlayerControls: View {
         let st = engine.stepState(exercise, index: index, screen: screen)
         let running = engine.isRunning(index, exercise, screen)
         let outcome = WatchSpecText.lap(exercise, screen, st)
-        VStack(spacing: 12) {
+        // The buttons float over the step in glass (§6.47): the one primary
+        // in the step's colour, the small ones beside each other beneath it.
+        AppFloatingControls(spacing: AppMetrics.gapMedium) {
             if !running {
                 if engine.countIn?.index != index {
                     primary("Start", systemImage: "play.fill") { engine.start(index, exercise, screen) }
@@ -364,20 +366,20 @@ struct PlayerControls: View {
                     else { engine.perform(outcome, index, exercise, screen) }
                 }
             }
-            HStack(spacing: 24) {
+            HStack(spacing: AppMetrics.gapSmall) {
                 if running, screen.template == .distance, !WatchSpecText.isShortDistance(exercise, screen) {
-                    Button("−0.1 km") { addKm(-0.1, st) }
-                    Button("+0.1 km") { addKm(0.1, st) }
+                    small("−0.1 km") { addKm(-0.1, st) }
+                    small("+0.1 km") { addKm(0.1, st) }
                 }
                 if running, case .timedWork = engine.phase {
-                    Button(engine.isTimerPaused ? "Resume" : "Pause") {
+                    small(engine.isTimerPaused ? "Resume" : "Pause",
+                          systemImage: engine.isTimerPaused ? "play.fill" : "pause.fill") {
                         engine.isTimerPaused ? engine.resumeTimer() : engine.pauseTimer()
                     }
                 }
-                Button("Skip") { engine.finishStep(index, exercise, screen) }
+                small("Skip", systemImage: "forward.end.fill") { engine.finishStep(index, exercise, screen) }
             }
-            .font(.body.weight(.medium))
-            .foregroundStyle(.secondary)
+            .controlSize(.large)
         }
         .padding()
     }
@@ -395,6 +397,18 @@ struct PlayerControls: View {
         }
         .appButton(.primary)
         .tint(tint)
+    }
+
+    private func small(_ title: String, systemImage: String? = nil, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Group {
+                if let systemImage { Label(title, systemImage: systemImage) } else { Text(title) }
+            }
+            .font(.subheadline.weight(.medium))
+            .lineLimit(1)
+            .frame(maxWidth: .infinity)
+        }
+        .appButton(.secondary)
     }
 
     private func addKm(_ delta: Double, _ st: WatchStepState) {

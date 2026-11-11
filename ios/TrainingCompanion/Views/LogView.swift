@@ -26,6 +26,8 @@ struct LogView: View {
     @State private var selectedSegment: LogTab = .activity
     @State private var workoutFilter = WorkoutListFilter()
     @State private var selectedWorkout: ImportedWorkout? = nil
+    /// A workout's detail grows out of its row (§6.48).
+    @Namespace private var zoom
     @State private var selectedSession: AppState.LocatedSession? = nil
     @State private var showImportPicker = false
 
@@ -68,7 +70,9 @@ struct LogView: View {
             .navigationDestination(item: $selectedWorkout) { workout in
                 WorkoutDetailView(workout: workout)
                     .environmentObject(appState)
+                    .appZoom(from: workout.id, in: zoom)
             }
+            .appZoomScope(zoom)
             .sheet(item: $selectedSession) { found in
                 SessionDetailView(session: found.session, sessionKey: found.key,
                                   weekIndex: found.weekIndex, dayName: found.dayName,

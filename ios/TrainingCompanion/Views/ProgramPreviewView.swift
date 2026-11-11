@@ -120,7 +120,7 @@ struct ProgramPreviewView: View {
                 AppSubTabPicker(selection: $tab).background(.bar)
             }
         }
-        .safeAreaInset(edge: .bottom, spacing: 0) { commitBar }
+        .appActionBar { commitBar }
         .navigationTitle(mode == .new ? "Preview" : "Preview changes")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -427,27 +427,25 @@ struct ProgramPreviewView: View {
 
     // MARK: - Commit
 
-    private var commitBar: some View {
-        VStack(spacing: 8) {
-            if !extraEquipment.isEmpty && !draft.isInfeasible {
-                Toggle("Also add \(extraEquipment.map(HeldBack.label).joined(separator: ", ")) to my profile",
-                       isOn: $addToProfile)
-                    .font(.footnote)
-            }
-            Button {
-                confirming = true
-            } label: {
-                Text(mode == .new ? "Start this program" : "Apply from week \(startWeek)")
-                    .fontWeight(.semibold)
-                    .frame(maxWidth: .infinity)
-            }
-            .appButton(.primary)
-            .controlSize(.large)
-            .disabled(draft.isInfeasible || isWorking)
+    @ViewBuilder private var commitBar: some View {
+        if !extraEquipment.isEmpty && !draft.isInfeasible {
+            // A setting, not a button: it keeps a surface of its own in the bar.
+            Toggle("Also add \(extraEquipment.map(HeldBack.label).joined(separator: ", ")) to my profile",
+                   isOn: $addToProfile)
+                .font(.footnote)
+                .padding(.horizontal, AppMetrics.gapMedium)
+                .padding(.vertical, AppMetrics.gapSmall)
+                .glassEffect(.regular, in: .rect(cornerRadius: AppMetrics.radiusCard))
         }
-        .padding(.horizontal)
-        .padding(.vertical, 10)
-        .background(.bar)
+        Button {
+            confirming = true
+        } label: {
+            Text(mode == .new ? "Start this program" : "Apply from week \(startWeek)")
+                .fontWeight(.semibold)
+                .frame(maxWidth: .infinity)
+        }
+        .appButton(.primary)
+        .disabled(draft.isInfeasible || isWorking)
     }
 
     private var hasActive: Bool { appState.serverProgram?.currentProgram != nil }
@@ -586,7 +584,7 @@ private struct PreviewSessionSheet: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
             }
-            .sheet(item: $swapIndex) { s in
+            .appPush(item: $swapIndex) { s in
                 SwapExerciseSheet(weekIndex: target.weekIndex, dayName: target.day,
                                   sessionIndex: target.sessionIndex, exerciseIndex: s.value,
                                   draft: .init(program: program, philosophyIds: request.sourceIds,
@@ -595,8 +593,8 @@ private struct PreviewSessionSheet: View {
                                           in: program, weekIndex: target.weekIndex, day: target.day,
                                           sessionIndex: target.sessionIndex, exerciseIndex: s.value,
                                           with: assignment))
-                                  })
-                .environmentObject(appState)
+                                  },
+                                  pushed: true)
             }
         }
     }

@@ -1138,7 +1138,7 @@ next. No heart rate on the phone: a heart-rate rest runs its cap.
   `workout-cue-`, at most 40) and the Live Activity shows the step and its countdown
   (`TrainingWidgets/WorkoutLiveActivity.swift`; `WorkoutActivityAttributes.swift` is in the
   widget extension through an exception set). The state is saved on every move
-  (`ActiveWorkoutStore`, Application Support); Today offers it again after a relaunch.
+  (`ActiveWorkoutStore`, Application Support); the tab bar's accessory offers it again from any tab (`KeptWorkout`).
 - **Saving**: one `PUT /health/sessions/by-uid/<sessionUid>` (`today-session` carries
   `sessionUid`), `source: phone`, each step's window with absolute `startAt` / `endAt`, the
   tests' `standardResults` — then `AppState.finishWorkout` refreshes Today. The band's

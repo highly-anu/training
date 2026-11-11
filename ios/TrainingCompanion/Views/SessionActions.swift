@@ -90,6 +90,7 @@ struct SessionActions: ViewModifier {
         case .move(let i):
             if let week {
                 MoveWorkoutSheet(weekIndex: weekIndex, fromDay: dayName, sessionIndex: i, weekSchedule: week.schedule)
+                    .appSheet(.compact)
             }
         case .replace(let i):
             if let api = appState.api, let session = sessions[safe: i] {

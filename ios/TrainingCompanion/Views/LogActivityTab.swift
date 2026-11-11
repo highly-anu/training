@@ -54,6 +54,7 @@ struct LogActivityTab: View {
                         switch entry {
                         case .workout(let workout):
                             WorkoutRow(workout: workout, trimp: trimpCache[workout.id])
+                                .appZoomSource(workout.id)
                                 .contentShape(Rectangle())
                                 .onTapGesture { selectedWorkout = workout }
                         case .session(let row):
