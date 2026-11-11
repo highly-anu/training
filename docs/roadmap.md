@@ -54,7 +54,7 @@ deferred is under *Later*.
 | 15 | Program preview on the phone; the regenerate offer that asks the server first (*IA*) | P2 | M | iOS, web |
 | 16 | Garmin's official Connect API, open again since 2026-10-21: verify the integration, then health data and workouts pushed to the watch | P2 | M | API, watch, web, iOS |
 | 17 | Explore: each philosophy's page read from its package — a server document, its week and rules, one colour system | P2 | M | API, web, iOS, content |
-| 18 | Phone design and interaction uplift: the foundation is in (1.35); states, iOS 26 chrome, discoverable actions, screen passes, motion, accessibility left (*IA*) | P2 | L | iOS |
+| 18 | Phone design and interaction uplift: the foundation (1.35) and states (1.36) are in; iOS 26 chrome, discoverable actions, screen passes, motion, accessibility left (*IA*) | P2 | L | iOS |
 
 ---
 
@@ -1586,12 +1586,15 @@ targets (it was empty: the app shipped system blue). `DesignTokenTests` fails on
 font size, a colour literal, a bare `withAnimation`, a curve or a button style outside
 their owners. Design-system §2, §4, §5, §6.4, §6.6, §7 rewritten to what ships.
 
+**Done — 2. States** (1.36.0, `feat/ios-states`). `Views/AppStates.swift`: one reading of
+a load (`AppLoadPhase`), `AppLoadingState` (the screen's shape, redacted), `AppEmptyState`,
+`AppFailedState`, `AppErrorBanner`. A failed program load says so on Today, Program and
+Overview with Try again (it read "No Program"); History, Log ▸ Activity, a history
+version, Profile and Recovery got the error state they lacked; eight hand-built empty
+states and every full-screen spinner are gone. Design-system §6.3, §7.3.
+
 **Left, in order:**
 
-2. *States.* `AppStateView` (loading as a redacted placeholder of the screen's own cards,
-   empty and failed as `ContentUnavailableView` with an action) in place of ten hand-built
-   empty states; `AppState.programError` shown on Today and Program — a failed load says
-   "No Program" today; error states for History, Load, Recovery, Log ▸ Activity, Profile.
 3. *Navigation and chrome.* The `Tab` API with `tabBarMinimizeBehavior`; the kept workout
    as the tab bar's bottom accessory; the four bottom action bars and the player's
    controls as glass; zoom transitions from a session card, an Analytics card, a workout

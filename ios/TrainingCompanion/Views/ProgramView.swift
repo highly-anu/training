@@ -37,12 +37,12 @@ struct ProgramView: View {
 
     @ViewBuilder
     private var currentProgramSection: some View {
-        if appState.allWeeks.isEmpty && !appState.isLoadingProgram {
-            noProgramView
-        } else if appState.isLoadingProgram && appState.allWeeks.isEmpty {
-            loadingView
-        } else {
-            programContent
+        switch programPhase {
+        case .content: programContent
+        case .loading: AppLoadingState(label: "Loading program")
+        case .failed(let message):
+            AppFailedState(title: "Could not load your program", message: message) { await appState.loadProgram() }
+        case .empty: noProgramView
         }
     }
 
@@ -353,28 +353,17 @@ struct ProgramView: View {
 
     // MARK: - Empty States
 
-    private var loadingView: some View {
-        VStack(spacing: 16) {
-            ProgressView()
-            Text("Loading program…").foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    private var noProgramView: some View {
+        AppEmptyState(icon: "calendar.badge.plus", title: "No program",
+                      message: "Create a training program to get started.",
+                      actionLabel: "Create program", prominent: true) { showBuilder = true }
     }
 
-    private var noProgramView: some View {
-        VStack(spacing: 24) {
-            Image(systemName: "calendar.badge.plus")
-                .font(AppFont.symbol(64))
-                .foregroundStyle(AppColor.accent.gradient)
-            Text("No Program").font(.title2).fontWeight(.medium)
-            Text("Create a training program to get started.")
-                .font(.subheadline).foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-            Button("Create Program") { showBuilder = true }
-                .appButton(.primary)
-        }
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    /// One reading of the program's load for Calendar and Overview.
+    private var programPhase: AppLoadPhase {
+        AppLoadPhase.resolve(hasContent: !appState.allWeeks.isEmpty,
+                             isLoading: appState.isLoadingProgram,
+                             error: appState.serverProgram == nil ? appState.programError : nil)
     }
 }
 

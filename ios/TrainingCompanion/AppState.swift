@@ -11,6 +11,7 @@ final class AppState: ObservableObject {
 
     @Published var serverProgram: ServerProgram? = nil
     @Published var isLoadingProgram = false
+    @Published var isLoadingBenchmarks = false
     @Published var programError: String? = nil
     /// Set when a save lost to a newer copy on the server (409). The program
     /// is re-pulled; this is what tells the user their last edit is gone,
@@ -23,6 +24,8 @@ final class AppState: ObservableObject {
     /// (the old `ProgramStore`) only ever held a stale copy.
     @Published var programHistory: [ProgramHistoryEntry] = []
     @Published var isLoadingHistory = false
+    /// Why the last history load failed; the list keeps what it had.
+    @Published var historyError: String? = nil
 
     /// Which archived version the loaded program is, or nil before history knows.
     var programVersionId: String? { serverProgram?.programVersionId }
@@ -31,6 +34,9 @@ final class AppState: ObservableObject {
 
     @Published var profile: UserProfile = .default
     @Published var isLoadingProfile = false
+    /// Why the last profile load failed: the screen is then showing this
+    /// device's copy, or the defaults, and must say so.
+    @Published var profileError: String? = nil
     @Published var lastProfileSyncAt: Date? = nil
 
     private let logger = AppLogger.shared
@@ -53,6 +59,8 @@ final class AppState: ObservableObject {
 
     @Published var importedWorkouts: [ImportedWorkout] = []
     @Published var isLoadingWorkouts = false
+    /// Why the last workouts load failed.
+    @Published var workoutsError: String? = nil
     /// Confirmed `workout_matches` rows, keyed by imported workout id.
     @Published var workoutMatches: [String: WorkoutMatch] = [:]
     /// Log ▸ Linking's day cards; nil until loaded.
@@ -75,6 +83,8 @@ final class AppState: ObservableObject {
     @Published var progressionReview: ProgressionReview? = nil
     /// `GET /analytics/program` — the methodology scorecard and the chart (Analytics ▸ Progress).
     @Published var programAnalytics: ProgramAnalytics? = nil
+    /// Why the last readiness load failed (Analytics ▸ Recovery says so).
+    @Published var readinessError: String? = nil
     @Published var isLoadingProgramAnalytics = false
     @Published var programAnalyticsError: String? = nil
     /// `GET /analytics/development` — every block, not just this one (Analytics ▸ Development).
@@ -228,8 +238,10 @@ final class AppState: ObservableObject {
             importedWorkouts = snapshot.workouts
             workoutMatches = APIClient.matchesByWorkout(snapshot.matches)
             workoutsLoaded = true
+            workoutsError = nil
         } catch {
             if (error as? URLError)?.code == .cancelled { return }
+            workoutsError = error.localizedDescription
             print("⚠️ loadWorkouts failed: \(error)")
         }
     }
@@ -523,7 +535,13 @@ final class AppState: ObservableObject {
         guard let api else { return }
         isLoadingHistory = true
         defer { isLoadingHistory = false }
-        programHistory = (try? await api.fetchProgramHistory()) ?? []
+        do {
+            programHistory = try await api.fetchProgramHistory()
+            historyError = nil
+        } catch {
+            if (error as? URLError)?.code == .cancelled { return }
+            historyError = error.localizedDescription
+        }
     }
 
     /// Writes today's sessions to the shared App Group container so iPhone widgets can display them.
@@ -661,7 +679,10 @@ final class AppState: ObservableObject {
             if let dob = p.dateOfBirth {
                 UserDefaults.standard.set(dob, forKey: "dateOfBirth")
             }
+            profileError = nil
         } catch {
+            if (error as? URLError)?.code == .cancelled { return }
+            profileError = error.localizedDescription
             logger.log("profile: ERROR — \(error)")
         }
     }
@@ -916,9 +937,11 @@ final class AppState: ObservableObject {
         do {
             let result = try await api.fetchReadiness()
             readinessResult = result
+            readinessError = nil
             writeHomeWidgets()
         } catch {
             if (error as? URLError)?.code == .cancelled { return }
+            readinessError = error.localizedDescription
             AppLogger.logFromBackground("readiness: fetch failed — \(error.localizedDescription)")
         }
     }
@@ -972,6 +995,8 @@ final class AppState: ObservableObject {
 
     func loadBenchmarksIfNeeded() async {
         guard let api, benchmarks.isEmpty else { return }
+        isLoadingBenchmarks = true
+        defer { isLoadingBenchmarks = false }
         benchmarks = (try? await api.fetchBenchmarks(sex: profile.sex)) ?? []
     }
 

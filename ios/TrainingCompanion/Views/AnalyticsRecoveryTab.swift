@@ -17,6 +17,12 @@ struct AnalyticsRecoveryTab: View {
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 16) {
+                if let error = appState.readinessError {
+                    AppErrorBanner(message: "Readiness could not be read: \(error)") {
+                        await appState.loadRecentBioLogs()
+                        await appState.loadReadiness()
+                    }
+                }
                 readinessCard
                 sleepCard
                 trendCard(.hrv, header: "HRV")
