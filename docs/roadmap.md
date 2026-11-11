@@ -1726,6 +1726,19 @@ passes (7): the session card growing into its side panel by a shared `layoutId`,
 link's row settling in Log ▸ Linking and Today's first card arriving after Start —
 `PresenceList` and `Stagger` exist and have no caller yet.
 
+**Done — 5. Actions** (`feat/web-actions`). Today's week grid: each session card is one
+stretched button with a "…" menu (Open · Mark complete · Move to a day) and an
+always-visible complete toggle, where the card was a `div` with `onClick` and the toggle
+appeared on hover; the drag has a keyboard (Space, arrows, Space) with announcements, and
+un-completing from the grid now reaches the server (it only ever cleared the local tick).
+`WorkoutRow` the same shape. Focus ring, press and the 44 px touch target are three
+blocks in `globals.css`; `Tip` replaces `title` on buttons and shows shortcuts; `g` +
+letter, `[` `]` and `?` come from `lib/shortcuts.ts`; scrollers keep their place per
+history entry (`lib/useScrollRestore.ts`). Design test: *nothing behind hover*.
+Frontend-design §11.10. Left to the page passes: scroll restoration for Explore's and
+Profile's inner panels, Workout detail and Preview; a keyboard drag in Log ▸ Linking
+(select-then-pick is its twin today).
+
 **2. States.** `components/shared/states/`: one reading of a load (`loadPhase` — content is
 never replaced by a reload or its failure), `LoadingState` (the one loading look, in the
 content's shape), `FailedState` with Try again, `ErrorBanner` with a retry, `QueryState`

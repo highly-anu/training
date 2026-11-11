@@ -1,3 +1,4 @@
+import { useScrollRestore } from '@/lib/useScrollRestore'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { Page } from '@/components/layout/Page'
 import { ChevronLeft, Wand2 } from 'lucide-react'
@@ -7,6 +8,7 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { useCurrentProgram } from '@/api/programs'
 
 export function SessionDetail() {
+  const scroller = useScrollRestore()
   const { week, day } = useParams<{ week: string; day: string }>()
   const navigate = useNavigate()
   const program = useCurrentProgram()
@@ -68,7 +70,7 @@ export function SessionDetail() {
         </Button>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div ref={scroller} className="flex-1 overflow-y-auto">
         <SessionPanel program={program} weekData={weekData} weekIndex={weekIdx} day={day ?? ''} />
       </div>
     </Page>

@@ -79,7 +79,7 @@ function PhaseCard({ phase, selected, onOpen }: { phase: GlancePhase; selected: 
               <FlaskConical className="size-3" />{phase.tests}
             </span>
           )}
-          <Info className="ml-auto size-3 opacity-0 transition-opacity group-hover:opacity-60" />
+          <Info className="ml-auto size-3 text-muted-foreground/60" />
         </div>
       </div>
     </button>

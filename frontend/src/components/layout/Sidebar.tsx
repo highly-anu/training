@@ -1,3 +1,7 @@
+import { useUiStore } from '@/store/uiStore'
+import { Button } from '@/components/ui/button'
+import { keysFor } from '@/lib/shortcuts'
+import { Keys, Tip } from '@/components/shared/Tip'
 import { NavLink } from 'react-router-dom'
 import {
   House,
@@ -7,7 +11,7 @@ import {
   Compass,
   User,
   Activity,
-  Terminal, Settings as SettingsIcon } from 'lucide-react'
+  Terminal, Keyboard, Settings as SettingsIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ThemeToggle } from '@/components/shared/ThemeToggle'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -59,6 +63,7 @@ const DEV_GROUP: NavGroup = { label: 'Dev', items: [{ to: '/dev', label: 'Dev La
 
 export function Sidebar({ onNavigate }: { /** A link was followed (the drawer closes). */ onNavigate?: () => void }) {
   const groups = useDevLabEnabled() ? [...NAV_GROUPS, DEV_GROUP] : NAV_GROUPS
+  const setShortcutsOpen = useUiStore((s) => s.setShortcutsOpen)
   return (
     <aside className="flex h-full w-56 flex-col border-r bg-card">
       {/* Logo */}
@@ -81,9 +86,10 @@ export function Sidebar({ onNavigate }: { /** A link was followed (the drawer cl
                   to={to}
                   end={end}
                   onClick={onNavigate}
+                  aria-keyshortcuts={keysFor(to)}
                   className={({ isActive }) =>
                     cn(
-                      'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors [@media(pointer:coarse)]:min-h-11',
+                      'reveal-host flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors [@media(pointer:coarse)]:min-h-11',
                       isActive
                         ? 'bg-primary/10 text-primary'
                         : 'text-muted-foreground hover:bg-accent hover:text-foreground'
@@ -92,6 +98,12 @@ export function Sidebar({ onNavigate }: { /** A link was followed (the drawer cl
                 >
                   <Icon className="size-4 shrink-0" />
                   {label}
+                  {/* The section's shortcut, for a pointer that hovers — a thumb has no keys. */}
+                  {keysFor(to) && (
+                    <span className="reveal ml-auto hidden [@media(hover:hover)]:block">
+                      <Keys keys={keysFor(to)!} />
+                    </span>
+                  )}
                 </NavLink>
               ))}
             </div>
@@ -102,7 +114,20 @@ export function Sidebar({ onNavigate }: { /** A link was followed (the drawer cl
       {/* Footer */}
       <div className="flex items-center justify-between border-t p-3">
         <span className="text-xs text-muted-foreground">v0.1</span>
-        <ThemeToggle />
+        <div className="flex items-center gap-1">
+          <Tip label="Keyboard shortcuts" keys="?">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hidden size-8 [@media(hover:hover)]:inline-flex"
+              aria-label="Keyboard shortcuts"
+              onClick={() => { onNavigate?.(); setShortcutsOpen(true) }}
+            >
+              <Keyboard />
+            </Button>
+          </Tip>
+          <ThemeToggle />
+        </div>
       </div>
     </aside>
   )

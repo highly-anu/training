@@ -1,3 +1,4 @@
+import { Tip } from '@/components/shared/Tip'
 import { TabPanels } from '@/components/motion/TabPanels'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { SubTabs } from '@/components/layout/SubTabs'
@@ -442,17 +443,16 @@ function SessionButton({ type, onClick, label }: { type: SessionType; onClick: (
   const { text, color } = config[type]
 
   return (
-    <button
+    <Tip label={`${label}: ${text} (click to cycle)`}><button
       onClick={onClick}
       className={cn(
         'px-2 py-1 rounded text-[10px] font-medium uppercase tracking-wider transition-all border',
         color,
         'hover:opacity-80'
       )}
-      title={`${label}: ${text} (click to cycle)`}
     >
       {text}
-    </button>
+    </button></Tip>
   )
 }
 

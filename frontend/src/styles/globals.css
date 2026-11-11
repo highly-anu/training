@@ -270,3 +270,60 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* ─── Every control answers the keyboard, the press and the thumb ──────────
+ * docs/frontend-design.md §11.10. In `@layer base` and at zero specificity
+ * (`:where`), so a component's own ring, press or position always wins.
+ */
+@layer base {
+  /* Focus: anything that can be tabbed to shows where the keyboard is. A
+   * component with its own ring (ui/button, inputs) writes `outline-none`
+   * beside it; `outline-none` without one is a control the keyboard loses
+   * (test/designRules.test.ts). */
+  :where(a, button, summary, [role="button"], [role="tab"], [role="menuitem"], [tabindex="0"]):focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  /* Press: the control dims while it is held, before anything else answers. */
+  :where(button, [role="button"], summary):active:not(:disabled, [aria-disabled="true"]) {
+    opacity: 0.8;
+  }
+
+  /* Touch: a control smaller than 44 px keeps its looks and gets a 44 px
+   * target centred on it. */
+  @media (pointer: coarse) {
+    :where(button, [role="button"]) {
+      position: relative;
+    }
+    :where(button, [role="button"])::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100%, 44px);
+      height: max(100%, 44px);
+      transform: translate(-50%, -50%);
+    }
+  }
+}
+
+/* A control that waits for the pointer — a drag handle, a row's secondary
+ * action — may be hidden only where there is a pointer that hovers, and shows
+ * on hover of its `.reveal-host`, on keyboard focus anywhere in the host and
+ * while its own menu is open. On touch it is simply there. The only place an
+ * `opacity-0` may wait for a hover (test/designRules.test.ts). */
+@layer components {
+  @media (hover: hover) {
+    .reveal {
+      opacity: 0;
+      transition: opacity var(--motion-fast) var(--ease-standard-curve);
+    }
+    .reveal-host:hover .reveal,
+    .reveal-host:focus-within .reveal,
+    .reveal:focus-visible,
+    .reveal[data-state="open"] {
+      opacity: 1;
+    }
+  }
+}

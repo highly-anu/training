@@ -1,17 +1,26 @@
 import { announce } from '@/lib/announce'
 import { DoneMark } from '@/components/shared/DoneMark'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, type ReactNode } from 'react'
 import { format, differenceInCalendarDays, parseISO } from 'date-fns'
-import { GripVertical, Check, CheckCircle2, Circle, BatteryCharging, Activity } from 'lucide-react'
+import { GripVertical, Check, CheckCircle2, Circle, BatteryCharging, Activity, MoreHorizontal } from 'lucide-react'
 import {
   DndContext,
   DragOverlay,
   useDraggable,
   useDroppable,
+  useSensor,
+  useSensors,
+  KeyboardSensor,
+  PointerSensor,
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core'
 import { cn } from '@/lib/utils'
+import { dropTargetCoordinates } from '@/lib/dndKeyboard'
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
+  DropdownMenuSeparator, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { WorkoutIcon } from '@/components/icons/WorkoutIcon'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { formatLoad } from '@/lib/formatLoad'
@@ -37,51 +46,54 @@ function mainExercises(session: Session) {
   return mains.length > 0 ? mains : all
 }
 
-// ─── Session mini-card (shared between live card and DragOverlay ghost) ───────
+// ─── Session mini-card ────────────────────────────────────────────────────────
 
 interface SessionCardProps {
   session: Session
-  weekNumber: number
   day: string
   isComplete: boolean
   hasWorkout: boolean
-  isDragging?: boolean
-  dragHandleListeners?: Record<string, unknown>
-  dragHandleRef?: (el: HTMLElement | null) => void
-  onClick: () => void
+  /** The drag handle, when the card can be dragged. */
+  handle?: ReactNode
+  onOpen: () => void
   onToggleComplete: () => void
+  onMove: (toDay: string) => void
 }
 
+/**
+ * One session in its day's column. Nothing waits for a hover
+ * (docs/frontend-design.md §11.10): the card is a button that opens its day,
+ * the complete toggle and the "…" menu are always there, and the menu holds
+ * every action the drag does — Move to a day — for a keyboard and a thumb.
+ * Only the drag handle may wait for a pointer (`.reveal`), and it is a
+ * focusable button the keyboard can pick the card up with.
+ */
 function SessionCard({
   session,
-  weekNumber: _weekNumber,
-  day: _day,
+  day,
   isComplete,
   hasWorkout,
-  isDragging,
-  dragHandleListeners,
-  dragHandleRef,
-  onClick,
+  handle,
+  onOpen,
   onToggleComplete,
+  onMove,
 }: SessionCardProps) {
   const colors = MODALITY_COLORS[session.modality]
   const exercises = mainExercises(session)
   const shown = exercises.slice(0, 2)
   const extra = exercises.length - shown.length
   const duration = session.archetype?.duration_estimate_minutes
+  const name = session.archetype?.name ?? session.modality.replace(/_/g, ' ')
 
   return (
     <div
       className={cn(
-        'relative rounded-lg border overflow-hidden cursor-pointer transition-[color,background-color,border-color,box-shadow] group/card h-full flex flex-col',
-        isDragging
-          ? 'shadow-xl ring-2 ring-primary/40 opacity-95'
-          : 'hover:border-primary/40 hover:shadow-sm',
+        'reveal-host relative rounded-lg border overflow-hidden transition-[color,background-color,border-color,box-shadow] h-full flex flex-col',
+        'hover:border-primary/40 hover:shadow-sm',
         isComplete
           ? cn(COMPLETION.border, COMPLETION.bg)
           : 'border-border bg-card'
       )}
-      onClick={onClick}
     >
       {/* Colored top bar */}
       <div
@@ -89,20 +101,27 @@ function SessionCard({
         style={{ backgroundColor: colors?.hex ?? 'var(--primary)' }}
       />
 
-      <div className="p-2 space-y-1.5 flex-1 flex flex-col">
+      {/* The card opens its day: one button under the content, so the
+          controls above it stay their own. */}
+      <button
+        type="button"
+        onClick={onOpen}
+        aria-label={`Open ${name}, ${day}`}
+        className="absolute inset-0 rounded-lg focus-visible:-outline-offset-2"
+      />
+
+      <div className="pointer-events-none relative p-2 pb-7 space-y-1.5 flex-1 flex flex-col">
         {/* Workout icon and workout indicator on their own row: the columns
             are narrow, and the name needs their whole width */}
         {(session.icon || hasWorkout) && (
-          <div className="flex items-center justify-between gap-1">
+          <div className="flex items-center gap-1 pr-5">
             <WorkoutIcon icon={session.icon} modality={session.modality} className="size-4" />
-            {hasWorkout && <Activity className="size-3 text-blue-700 dark:text-blue-300 shrink-0 ml-auto" />}
+            {hasWorkout && <Activity className="size-3 text-blue-700 dark:text-blue-300 shrink-0" />}
           </div>
         )}
 
         {/* Archetype name */}
-        <p className="text-xs font-medium leading-snug text-foreground">
-          {session.archetype?.name ?? session.modality.replace(/_/g, ' ')}
-        </p>
+        <p className="text-xs font-medium leading-snug text-foreground">{name}</p>
 
         {/* Modality, beside the name rather than over it */}
         <p
@@ -139,65 +158,57 @@ function SessionCard({
         )}
       </div>
 
-      <button
-        type="button"
-        onClick={(e) => { e.stopPropagation(); onToggleComplete() }}
-        className={cn(
-          'absolute bottom-1.5 right-1.5 p-0.5 rounded-full transition-all',
-          isComplete
-            ? COMPLETION.text
-            : 'opacity-0 group-hover/card:opacity-40 hover:!opacity-100 text-muted-foreground hover:text-emerald-700 dark:hover:text-emerald-300'
-        )}
-        aria-label={isComplete ? 'Mark not done' : 'Mark complete'}
-        aria-pressed={isComplete}
-      >
-        <DoneMark done={isComplete} doneIcon={<CheckCircle2 className="size-3.5" />} openIcon={<Circle className="size-3.5" />} />
-      </button>
+      <div className="absolute bottom-1 right-1 flex items-center gap-0.5">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              aria-label={`Actions for ${name}`}
+              className="rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground data-[state=open]:text-foreground"
+            >
+              <MoreHorizontal className="size-3.5" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuItem onSelect={onOpen}>Open</DropdownMenuItem>
+            <DropdownMenuItem onSelect={onToggleComplete}>
+              {isComplete ? 'Mark not done' : 'Mark complete'}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>Move to</DropdownMenuLabel>
+            {DAYS.filter((d) => d !== day).map((d) => (
+              <DropdownMenuItem key={d} onSelect={() => onMove(d)}>{d}</DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-      {/* Drag handle */}
-      {dragHandleListeners && (
-        <div
-          ref={dragHandleRef}
-          {...dragHandleListeners}
+        <button
+          type="button"
+          onClick={onToggleComplete}
           className={cn(
-            'absolute top-1.5 right-1 p-0.5 rounded cursor-grab active:cursor-grabbing',
-            'opacity-0 group-hover/card:opacity-50 hover:!opacity-100 transition-opacity',
-            'text-muted-foreground hover:text-foreground'
+            'rounded-full p-0.5 transition-colors',
+            isComplete ? COMPLETION.text : 'text-muted-foreground hover:text-foreground'
           )}
-          onClick={e => e.stopPropagation()}
-          title="Drag to move to another day"
+          aria-label={isComplete ? 'Mark not done' : 'Mark complete'}
+          aria-pressed={isComplete}
         >
-          <GripVertical className="size-3.5" />
-        </div>
-      )}
+          <DoneMark done={isComplete} doneIcon={<CheckCircle2 className="size-3.5" />} openIcon={<Circle className="size-3.5" />} />
+        </button>
+      </div>
+
+      {handle}
     </div>
   )
 }
 
 // ─── Draggable session wrapper ────────────────────────────────────────────────
 
-interface DraggableSessionProps {
+interface DraggableSessionProps extends Omit<SessionCardProps, 'handle'> {
   dragId: string
-  session: Session
-  weekNumber: number
-  day: string
-  isComplete: boolean
-  hasWorkout: boolean
-  onCardClick: () => void
-  onToggleComplete: () => void
 }
 
-function DraggableSession({
-  dragId,
-  session,
-  weekNumber,
-  day,
-  isComplete,
-  hasWorkout,
-  onCardClick,
-  onToggleComplete,
-}: DraggableSessionProps) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+function DraggableSession({ dragId, ...card }: DraggableSessionProps) {
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, isDragging } = useDraggable({
     id: dragId,
   })
 
@@ -209,19 +220,23 @@ function DraggableSession({
           ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` }
           : undefined
       }
-      {...attributes}
       className={cn('flex-1 flex flex-col min-h-0', isDragging && 'opacity-30')}
     >
       <SessionCard
-        session={session}
-        weekNumber={weekNumber}
-        day={day}
-        isComplete={isComplete}
-        hasWorkout={hasWorkout}
-        isDragging={false}
-        dragHandleListeners={listeners as Record<string, unknown>}
-        onClick={onCardClick}
-        onToggleComplete={onToggleComplete}
+        {...card}
+        handle={
+          // The pointer's shortcut for the menu's Move to.
+          <button
+            type="button"
+            ref={setActivatorNodeRef}
+            {...attributes}
+            {...listeners}
+            aria-label={`Move ${card.session.archetype?.name ?? 'session'} to another day`}
+            className="reveal absolute top-1.5 right-1 rounded p-0.5 cursor-grab touch-none text-muted-foreground hover:text-foreground active:cursor-grabbing"
+          >
+            <GripVertical className="size-3.5" />
+          </button>
+        }
       />
     </div>
   )
@@ -346,6 +361,8 @@ export function WeekOverview({ weekData, weekIndex, selectedDay, onDaySelect }: 
   const sessionLogs = useProfileStore(s => s.sessionLogs)
   const setSessionLog = useProfileStore(s => s.setSessionLog)
   const upsertSessionPerformance = useBioStore(s => s.upsertSessionPerformance)
+  const clearSessionCompletion = useBioStore(s => s.clearSessionCompletion)
+  const getPerformanceLog = useBioStore(s => s.getPerformanceLog)
   const workoutMatches = useBioStore(s => s.workoutMatches)
   const moveSession = useProgramStore(s => s.moveSession)
 
@@ -376,22 +393,58 @@ export function WeekOverview({ weekData, weekIndex, selectedDay, onDaySelect }: 
     setActiveDragId(String(e.active.id))
   }
 
+  function move(fromDay: string, sessionIndex: number, toDay: string) {
+    if (fromDay === toDay || isNaN(sessionIndex)) return
+    moveSession(weekIndex, fromDay, toDay, sessionIndex)
+    // The selection follows a session moved off the selected day.
+    if (selectedDay === fromDay) onDaySelect?.(toDay)
+  }
+
   function handleDragEnd(e: DragEndEvent) {
     setActiveDragId(null)
     const { active, over } = e
     if (!over) return
     const [fromDay, idxStr] = String(active.id).split('|')
-    const sessionIndex = parseInt(idxStr, 10)
-    const toDay = String(over.id)
-    if (fromDay !== toDay && !isNaN(sessionIndex)) {
-      moveSession(weekIndex, fromDay, toDay, sessionIndex)
-      // If the moved session came from the selected day, deselect it
-      if (selectedDay === fromDay) onDaySelect?.(toDay)
-    }
+    move(fromDay, parseInt(idxStr, 10), String(over.id))
+  }
+
+  // A drag starts after 4 px, so a click on the handle is not one; the
+  // keyboard steps from day to day (`lib/dndKeyboard`).
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: dropTargetCoordinates }),
+  )
+
+  const dragged = (id: string | number) => {
+    const [fromDay, idxStr] = String(id).split('|')
+    const session = weekData?.schedule[fromDay]?.[parseInt(idxStr, 10)]
+    return { fromDay, name: session?.archetype?.name ?? 'Session' }
   }
 
   return (
-    <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={() => setActiveDragId(null)}>
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragCancel={() => setActiveDragId(null)}
+      accessibility={{
+        screenReaderInstructions: {
+          draggable: 'To move this session to another day, press Space or Enter, choose the day with the arrow keys, and press Space to drop it. Escape puts it back.',
+        },
+        announcements: {
+          onDragStart: ({ active }) => `Picked up ${dragged(active.id).name}.`,
+          onDragOver: ({ active, over }) => (over ? `${dragged(active.id).name} is over ${over.id}.` : undefined),
+          onDragEnd: ({ active, over }) => {
+            const { fromDay, name } = dragged(active.id)
+            return over && over.id !== fromDay ? `${name} moved to ${over.id}.` : `${name} stays on ${fromDay}.`
+          },
+          onDragCancel: ({ active }) => {
+            const { fromDay, name } = dragged(active.id)
+            return `Move cancelled. ${name} stays on ${fromDay}.`
+          },
+        },
+      }}
+    >
       <div className="grid grid-cols-7 gap-1.5">
         {DAYS.map((day, i) => {
           const sessions = weekData?.schedule[day] ?? []
@@ -424,11 +477,14 @@ export function WeekOverview({ weekData, weekIndex, selectedDay, onDaySelect }: 
                     key={si}
                     dragId={`${day}|${si}`}
                     session={session}
-                    weekNumber={weekData?.week_number ?? 1}
                     day={day}
                     isComplete={sessionIsComplete}
                     hasWorkout={sessionHasWorkout}
-                    onCardClick={() => onDaySelect?.(isSelected ? null : day)}
+                    onOpen={() => onDaySelect?.(isSelected ? null : day)}
+                    onMove={(toDay) => {
+                      move(day, si, toDay)
+                      announce(`${session.archetype?.name ?? 'Session'} moved to ${toDay}.`)
+                    }}
                     onToggleComplete={() => {
                       const current = sessionLogs[dayKey] ?? []
                       const next = [...current]
@@ -442,6 +498,10 @@ export function WeekOverview({ weekData, weekIndex, selectedDay, onDaySelect }: 
                           notes: '',
                           completedAt: new Date().toISOString(),
                         })
+                      } else {
+                        // The upsert cannot clear completed_at: undo is its own call (as SessionPanel).
+                        clearSessionCompletion(`${dayKey}-${si}`)
+                        if (si === 0 && getPerformanceLog(dayKey)?.completedAt) clearSessionCompletion(dayKey)
                       }
                     }}
                   />

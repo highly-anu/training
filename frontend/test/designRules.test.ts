@@ -55,6 +55,30 @@ const either = (...fns: ((file: string) => boolean)[]) => (file: string) => fns.
 /** Generated tables: `transition` is a modality id there. */
 const GENERATED = under('lib/gen/')
 
+/** Dev Lab is a workbench for one developer; the shared components reach it, the page rules do not. */
+const DEV_LAB = either(under('components/devlab/'), is('pages/DevLab.tsx'))
+
+/**
+ * Opening tags, whole — a tag's attributes run over many lines, which the
+ * line rules cannot see. `{…}` is followed three levels deep, as far as a
+ * handler written in place goes.
+ */
+const TAG = /<([A-Za-z][\w.]*)\b((?:[^<>{}]|\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\}|=>)*?)\/?>/g
+
+function tagFindings(
+  breach: (tag: string, attrs: string) => boolean,
+  allow: (file: string) => boolean = () => false,
+): string[] {
+  return FILES
+    .filter(({ file }) => file.endsWith('.tsx') && !allow(file))
+    .flatMap(({ file, lines }) => {
+      const source = lines.join('\n')
+      return [...source.matchAll(TAG)]
+        .filter((m) => breach(m[1], m[2]))
+        .map((m) => `${file}:${source.slice(0, m.index).split('\n').length}  <${m[1]}>`)
+    })
+}
+
 describe('the sources the rules read', () => {
   it('finds the app', () => {
     // A moved folder or a broken walk would let every rule pass on nothing.
@@ -235,5 +259,62 @@ describe('what changed, and where it came from (§11.9, §12.1, §13.1, §17)', 
     expect(store).toMatch(/mobileNavOpen: false/)
     // Persisted, it would open over the page on the next visit.
     expect(store).toMatch(/partialize: \(s\) => \(\{ selectedWeekIndex: s\.selectedWeekIndex \}\)/)
+  })
+})
+
+describe('nothing behind hover (§11.10)', () => {
+  const PLAIN = new Set(['div', 'span', 'li', 'tr', 'td', 'p', 'section', 'article', 'Card'])
+
+  it('what can be clicked is a button or a link', () => {
+    // `onClick={(e) => e.stopPropagation()}` is a wall, not an action.
+    const wall = /onClick=\{\(?\w+\)?\s*=>\s*\w+\.stopPropagation\(\)\}/
+    expect(tagFindings(
+      (tag, attrs) => PLAIN.has(tag) && /\bonClick=/.test(attrs) && !wall.test(attrs),
+      DEV_LAB,
+    ), 'Make it a <button> (or a link). A card with controls inside takes one stretched button under its content — WeekOverview\'s SessionCard, WorkoutRow.').toEqual([])
+    expect(tagFindings((tag, attrs) => PLAIN.has(tag) && /role="button"/.test(attrs), DEV_LAB),
+      'A <button> is focusable, answers Space and Enter, and is announced; a div with a role is none of those by itself.').toEqual([])
+  })
+
+  it('no control waits for a hover', () => {
+    expect(findings({
+      pattern: /(opacity-0|invisible)\b.*\bgroup-hover(\/\w+)?:|\bgroup-hover(\/\w+)?:(opacity-100|visible)\b/,
+      allow: DEV_LAB,
+    }), 'Show it. Only a pointer\'s shortcut for something the row\'s menu also does may wait: class `reveal` inside a `reveal-host` (globals.css), which shows on focus and on touch.').toEqual([])
+  })
+
+  it('a button explains itself through <Tip>, never `title`', () => {
+    expect(tagFindings((tag, attrs) => (tag === 'button' || tag === 'Button') && /\btitle=/.test(attrs), DEV_LAB),
+      'Wrap it in <Tip label="…">: a `title` waits a second, never shows on touch or focus, and cannot show a shortcut.').toEqual([])
+  })
+
+  it('focus, press and the touch target are written once', () => {
+    const css = readFileSync(resolve(SRC, 'styles/globals.css'), 'utf8')
+    expect(css).toMatch(/:focus-visible\s*\{\s*outline: 2px solid var\(--ring\)/)
+    expect(css).toMatch(/@media \(pointer: coarse\)/)
+    expect(css).toMatch(/\.reveal-host:focus-within/)
+    // An outline taken away with nothing in its place.
+    expect(findings({
+      pattern: /^(?!.*(focus-visible:|focus:(?!outline-none)|data-\[)).*\boutline-none\b/,
+      allow: either(under('components/ui/'), DEV_LAB),
+    }), 'Leave the global focus ring, or replace it on the same element with a focus-visible: style.').toEqual([])
+  })
+
+  it('a drag has a keyboard and a menu', () => {
+    const week = FILES.find(({ file }) => file === 'components/dashboard/WeekOverview.tsx')!.lines.join('\n')
+    expect(week).toMatch(/KeyboardSensor/)
+    expect(week).toMatch(/announcements:/)
+    expect(week).toMatch(/<DropdownMenuLabel>Move to<\/DropdownMenuLabel>/)
+  })
+
+  it('one tooltip provider, one list of shortcuts', () => {
+    expect(findings({
+      pattern: /<TooltipProvider\b/,
+      allow: is('components/shared/Tip.tsx', 'components/ui/tooltip.tsx'),
+    }), 'App.tsx has <TipProvider>; use <Tip>, which finds it.').toEqual([])
+    expect(findings({
+      pattern: /addEventListener\('keydown'/,
+      allow: either(is('components/layout/Shortcuts.tsx', 'components/log/LinkingTab.tsx'), DEV_LAB),
+    }), 'A shortcut goes in lib/shortcuts.ts, so "?" lists it; Escape belongs to the dialog or sheet.').toEqual([])
   })
 })

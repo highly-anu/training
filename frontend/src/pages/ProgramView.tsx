@@ -1,3 +1,4 @@
+import { useScrollRestore } from '@/lib/useScrollRestore'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { SubTabs, tabDomId } from '@/components/layout/SubTabs'
 import { Button } from '@/components/ui/button'
@@ -40,6 +41,7 @@ const PROGRAM_TAB_ITEMS = [
 ] as const satisfies readonly { id: ProgramTab; label: string }[]
 
 export function ProgramView() {
+  const scroller = useScrollRestore()
   const navigate = useNavigate()
   const program = useCurrentProgram()
   const [weekIndex, setWeekIndex] = useState(0)
@@ -239,7 +241,7 @@ export function ProgramView() {
       </PageHeader>
 
       {/* Body. Not <TabPanels>: the calendar scrolls to its week as it mounts. */}
-      <div className="flex-1 overflow-y-auto" role="tabpanel" aria-labelledby={tabDomId('program-tabs', activeTab)}>
+      <div ref={scroller} className="flex-1 overflow-y-auto" role="tabpanel" aria-labelledby={tabDomId('program-tabs', activeTab)}>
         {activeTab === 'calendar' ? (
           <div className="max-w-5xl mx-auto px-6 py-6 space-y-8">
             {program.weeks.map((weekData, idx) => (

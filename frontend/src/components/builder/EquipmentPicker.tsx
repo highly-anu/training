@@ -1,9 +1,9 @@
+import { Tip } from '@/components/shared/Tip'
 import { cn } from '@/lib/utils'
 import type { EquipmentId } from '@/api/types'
 import { EQUIPMENT_GROUPS } from '@/lib/equipment'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 const EQUIPMENT_PRESETS = [
   {
@@ -106,7 +106,6 @@ export function EquipmentPicker({ selected, onChange }: EquipmentPickerProps) {
         ))}
       </div>
 
-      <TooltipProvider>
         <div className="space-y-3">
           {EQUIPMENT_GROUPS.map((group) => (
             <div key={group.name}>
@@ -118,43 +117,31 @@ export function EquipmentPicker({ selected, onChange }: EquipmentPickerProps) {
                   const disabled = NO_EXERCISES.has(id)
                   const checked = selected.includes(id)
                   const row = (
-                    <div
+                    <Label
                       key={id}
+                      htmlFor={`eq-${id}`}
                       className={cn(
-                        'flex items-center gap-2 rounded px-2 py-1',
+                        'flex items-center gap-2 rounded px-2 py-1 text-xs font-normal',
                         disabled
                           ? 'cursor-not-allowed opacity-40'
                           : 'cursor-pointer hover:bg-muted/50'
                       )}
-                      onClick={() => !disabled && toggleItem(id)}
                     >
                       <Checkbox
                         id={`eq-${id}`}
                         checked={checked}
                         disabled={disabled}
                         onCheckedChange={() => toggleItem(id)}
-                        className="pointer-events-none"
                       />
-                      <Label
-                        htmlFor={`eq-${id}`}
-                        className={cn('text-xs', disabled ? 'cursor-not-allowed' : 'cursor-pointer')}
-                      >
-                        {label}
-                      </Label>
-                    </div>
+                      {label}
+                    </Label>
                   )
-                  return disabled ? (
-                    <Tooltip key={id}>
-                      <TooltipTrigger asChild>{row}</TooltipTrigger>
-                      <TooltipContent side="top" className="text-xs">No exercises yet</TooltipContent>
-                    </Tooltip>
-                  ) : row
+                  return disabled ? <Tip key={id} label="No exercises yet">{row}</Tip> : row
                 })}
               </div>
             </div>
           ))}
         </div>
-      </TooltipProvider>
 
       {visibleSelected.length > 0 && (
         <p className="text-xs text-muted-foreground">

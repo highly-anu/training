@@ -1,3 +1,4 @@
+import { Tip } from '@/components/shared/Tip'
 import { Plus, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useBuilderStore } from '@/store/builderStore'
@@ -79,10 +80,10 @@ export function LanePicker() {
                 <div className="flex items-center gap-2 shrink-0">
                   <span className="text-xs font-semibold tabular-nums">{pct}%</span>
                   {siblings.length > 0 && (
-                    <button onClick={() => removeLane(i)} title="Remove this track"
+                    <Tip label="Remove this track"><button onClick={() => removeLane(i)}
                             className="rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-muted">
                       <X className="size-3.5" />
-                    </button>
+                    </button></Tip>
                   )}
                 </div>
               </div>

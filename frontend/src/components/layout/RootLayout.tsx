@@ -1,3 +1,4 @@
+import { Shortcuts } from './Shortcuts'
 import { useLocation, useOutlet } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { Sidebar } from './Sidebar'
@@ -37,6 +38,7 @@ export function RootLayout() {
       <div className="flex flex-1 flex-col overflow-hidden">
         <TopBar />
         <ProgramSaveBanner />
+        <Shortcuts />
         <main className="flex-1 overflow-hidden flex flex-col">
           <AnimatePresence mode="wait">
             <div key={pathname} className="contents">
