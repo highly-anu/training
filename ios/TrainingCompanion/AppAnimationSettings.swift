@@ -26,6 +26,10 @@ enum AppAnimation {
     /// time is.
     static let tick = Animation.linear(duration: 1)
 
+    /// A placeholder's pulse while its screen loads (§7.3); never run under
+    /// Reduce Motion.
+    static let shimmer = Animation.easeInOut(duration: 0.9)
+
     static var reduceMotion: Bool { UIAccessibility.isReduceMotionEnabled }
     private static var reduced: Animation? { reduceMotion ? crossfade : nil }
 }

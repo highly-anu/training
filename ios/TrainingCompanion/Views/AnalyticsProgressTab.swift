@@ -26,15 +26,11 @@ struct AnalyticsProgressTab: View {
             if let doc = appState.programAnalytics, doc.hasProgram {
                 content(doc)
             } else if appState.isLoadingProgramAnalytics && appState.programAnalytics == nil {
-                ProgressView("Measuring the program…")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                AppLoadingState(label: "Measuring the program")
             } else if let error = appState.programAnalyticsError, appState.programAnalytics == nil {
-                emptyState(icon: "exclamationmark.triangle", title: "Could not load",
-                           message: error, actionLabel: "Try again") {
-                    Task { await appState.loadProgramAnalytics() }
-                }
+                AppFailedState(message: error) { await appState.loadProgramAnalytics() }
             } else {
-                emptyState(icon: "chart.bar.doc.horizontal", title: "No active program",
+                AppEmptyState(icon: "chart.bar.doc.horizontal", title: "No active program",
                            message: "Generate a program to measure it here.",
                            actionLabel: "Go to Program") { router.showProgram(.calendar) }
             }
@@ -261,17 +257,6 @@ struct AnalyticsProgressTab: View {
     /// change line (`progression_findings`), so the two lines agree.
     static func withUnit(_ value: String, _ unit: String) -> String {
         ["", "kg", "%", "s", "km", "m"].contains(unit) ? value + unit : "\(value) \(unit)"
-    }
-
-    private func emptyState(icon: String, title: String, message: String,
-                            actionLabel: String, action: @escaping () -> Void) -> some View {
-        ContentUnavailableView {
-            Label(title, systemImage: icon)
-        } description: {
-            Text(message)
-        } actions: {
-            Button(actionLabel, action: action).appButton(.secondary)
-        }
     }
 
     // MARK: - Frame

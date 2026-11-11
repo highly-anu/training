@@ -22,15 +22,11 @@ struct AnalyticsDevelopmentTab: View {
             if let doc = appState.developmentAnalytics, doc.hasHistory {
                 content(doc)
             } else if appState.isLoadingDevelopment && appState.developmentAnalytics == nil {
-                ProgressView("Reading the history…")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                AppLoadingState(label: "Reading the history")
             } else if let error = appState.developmentError, appState.developmentAnalytics == nil {
-                emptyState(icon: "exclamationmark.triangle", title: "Could not load",
-                           message: error, actionLabel: "Try again") {
-                    Task { await appState.loadDevelopmentAnalytics() }
-                }
+                AppFailedState(message: error) { await appState.loadDevelopmentAnalytics() }
             } else {
-                emptyState(icon: "clock.arrow.circlepath", title: "No program history yet",
+                AppEmptyState(icon: "clock.arrow.circlepath", title: "No program history yet",
                            message: "Blocks appear here as programs are saved.",
                            actionLabel: "Go to Program") { router.showProgram(.calendar) }
             }
@@ -73,16 +69,6 @@ struct AnalyticsDevelopmentTab: View {
         }
     }
 
-    private func emptyState(icon: String, title: String, message: String,
-                            actionLabel: String, action: @escaping () -> Void) -> some View {
-        ContentUnavailableView {
-            Label(title, systemImage: icon)
-        } description: {
-            Text(message)
-        } actions: {
-            Button(actionLabel, action: action).appButton(.secondary)
-        }
-    }
 }
 
 // MARK: - Blocks

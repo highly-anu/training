@@ -471,28 +471,45 @@ struct ModalityBadge: View {
 }
 ```
 
-### 6.3 Empty State
+### 6.3 Loading, Empty and Failed States
 
-Used when there's no program, no exercises match a filter, etc. Always provides a clear path forward.
-
-**Use the system's `ContentUnavailableView`** — its title, symbol, description and
-actions scale with Dynamic Type and read correctly to VoiceOver. This section used to
-prescribe a hand-built `VStack` with `.font(.system(size: 48))`, against §8; Analytics ▸
-Program, Progress and Blocks each carried a copy until 2026-10-17.
+Every screen answers three questions before its content: is it still loading, did the
+load fail, or is there nothing. One reading, `AppLoadPhase.resolve(hasContent:isLoading:error:)`
+(`Views/AppStates.swift`, `AppLoadPhaseTests`): content on screen wins and is never
+replaced by a reload or its failure; then a load in flight; then the failure; only a load
+that finished and found nothing is empty. Until 1.36 a failed program load read "No
+Program" with a Generate button, ten screens drew their own empty state, and
+`AppState.programError` was read by no view.
 
 ```swift
-ContentUnavailableView {
-    Label("No active program", systemImage: "chart.bar.doc.horizontal")
-} description: {
-    Text("Generate a program to measure it here.")
-} actions: {
-    Button("Go to Program") { router.showProgram(.calendar) }
-        .buttonStyle(.bordered)
+switch AppLoadPhase.resolve(hasContent: !appState.programHistory.isEmpty,
+                            isLoading: appState.isLoadingHistory,
+                            error: appState.historyError) {
+case .content: list
+case .loading: AppLoadingState(shape: .list, label: "Loading history")
+case .failed(let message): AppFailedState(message: message) { await appState.loadProgramHistory() }
+case .empty:
+    AppEmptyState(icon: "clock.arrow.circlepath", title: "No history yet",
+                  message: "Your programs are recorded from the moment you first open or save one.")
 }
 ```
 
+| View | When | Notes |
+|---|---|---|
+| `AppLoadingState` | first load, nothing to show yet | §7.3; `.cards` or `.list`; VoiceOver reads its `label` |
+| `AppEmptyState` | the load finished and found nothing | a `ContentUnavailableView`; always the way forward when there is one — `prominent: true` (§6.6 `.primary`) only when it is the screen's one action (no program) |
+| `AppFailedState` | the load failed and there is nothing to show | the server's or the system's message, "Try again" |
+| `AppErrorBanner` | a reload failed while content is on screen | one warning-tinted row above the content, never in its place (Profile, Analytics ▸ Recovery) |
+
+A new load in `AppState` publishes its failure (`historyError`, `workoutsError`,
+`profileError`, `readinessError`, beside the older `programError`, `linkingError`,
+`programAnalyticsError`, `developmentError`), ignores `URLError.cancelled`, and keeps what
+it had. Analytics ▸ Load keeps its own answer: on a failed request it shows the phone's
+figures and says so (`onDeviceMark`).
+
 Inside a card, where the full view is too large, an empty chart is a `.title2` symbol
-over one `.footnote` line — never a fixed point size.
+over one `.footnote` line — never a fixed point size. Spinners remain only for an action
+in flight (a button, a sheet's save).
 
 ### 6.4 Section Header
 
@@ -965,9 +982,11 @@ withAnimation(AppAnimation.springSnappy) { isComplete = true }
 
 ### 7.3 Loading States
 
-A screen waiting for its content shows that content's own cards, redacted
-(`redacted(reason: .placeholder)`), never a spinner for what loads in under a second.
-No screen does yet: the shared view is roadmap 18, phase 2.
+A screen waiting for its content shows that content's shape, redacted
+(`redacted(reason: .placeholder)`), never a spinner: `AppLoadingState` (§6.3) draws three
+cards or seven rows with a slow pulse (`AppAnimation.shimmer`, the one curve that is not a
+spring; still under Reduce Motion). It shows only while there is nothing on screen — a
+pull to refresh keeps the content and the system's own indicator.
 
 ### 7.4 Haptics
 

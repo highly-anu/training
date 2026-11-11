@@ -57,12 +57,15 @@ struct TodayView: View {
     var body: some View {
         NavigationStack {
             Group {
-                if appState.isLoadingProgram && appState.serverProgram == nil {
-                    loadingView
-                } else if appState.serverProgram?.currentProgram == nil {
-                    noProgramView
-                } else {
-                    dashboardContent
+                // A failed load says so (§6.3): until 1.36 it read "No Program".
+                switch AppLoadPhase.resolve(hasContent: appState.serverProgram?.currentProgram != nil,
+                                            isLoading: appState.isLoadingProgram && appState.serverProgram == nil,
+                                            error: appState.serverProgram == nil ? appState.programError : nil) {
+                case .content: dashboardContent
+                case .loading: AppLoadingState(label: "Loading program")
+                case .failed(let message):
+                    AppFailedState(title: "Could not load your program", message: message) { await appState.loadAll() }
+                case .empty: noProgramView
                 }
             }
             .navigationTitle("Today")
@@ -938,31 +941,12 @@ struct TodayView: View {
 
     // MARK: - Loading / No Program
 
-    private var loadingView: some View {
-        VStack(spacing: 16) {
-            ProgressView()
-            Text("Loading program…").foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
     /// §6.3: an empty state offers the way forward, so the builder opens from
     /// here as well as from the Program tab.
     private var noProgramView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "calendar.badge.exclamationmark")
-                .font(AppFont.symbol(56)).foregroundStyle(AppColor.warning.gradient)
-            Text("No Program").font(.title2).fontWeight(.medium)
-            Text("Pick a methodology and generate your first program.")
-                .font(.subheadline).foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-            Button("Generate a Program") {
-                AppHaptics.light()
-                showBuilder = true
-            }
-            .appButton(.primary)
-        }
-        .padding().frame(maxWidth: .infinity, maxHeight: .infinity)
+        AppEmptyState(icon: "calendar.badge.plus", title: "No program",
+                      message: "Pick a methodology and generate your first program.",
+                      actionLabel: "Generate a program", prominent: true) { showBuilder = true }
     }
 }
 

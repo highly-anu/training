@@ -27,13 +27,16 @@ struct ProgramOverviewTab: View {
 
     var body: some View {
         Group {
-            if appState.allWeeks.isEmpty {
-                ContentUnavailableView(
-                    "No program",
-                    systemImage: "calendar",
-                    description: Text("Generate a program on Calendar to see its phases and priorities.")
-                )
-            } else {
+            switch AppLoadPhase.resolve(hasContent: !appState.allWeeks.isEmpty,
+                                        isLoading: appState.isLoadingProgram,
+                                        error: appState.serverProgram == nil ? appState.programError : nil) {
+            case .loading: AppLoadingState(label: "Loading program")
+            case .failed(let message):
+                AppFailedState(title: "Could not load your program", message: message) { await appState.loadProgram() }
+            case .empty:
+                AppEmptyState(icon: "calendar", title: "No program",
+                              message: "Generate a program on Calendar to see its phases and priorities.")
+            case .content:
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
                         headerCard

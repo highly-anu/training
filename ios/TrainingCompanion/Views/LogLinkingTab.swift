@@ -21,16 +21,15 @@ struct LogLinkingTab: View {
         let days = Linking.visible(all, showAll: showAll)
         Group {
             if appState.linking == nil, let error = appState.linkingError {
-                empty(icon: "exclamationmark.triangle", title: "Could not load",
-                      message: error, actionLabel: "Try again") {
+                AppFailedState(message: error) {
                     appState.linkingError = nil
-                    Task { await appState.loadLinking() }
+                    await appState.loadLinking()
                 }
             } else if appState.linking == nil {
-                ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
+                AppLoadingState(shape: .list, label: "Loading links")
             } else if all.isEmpty {
-                empty(icon: "link", title: "Nothing to link yet",
-                      message: "Once you have a program and recorded workouts, each day shows them side by side here.")
+                AppEmptyState(icon: "link", title: "Nothing to link yet",
+                              message: "Once you have a program and recorded workouts, each day shows them side by side here.")
             } else {
                 List {
                     Section {
@@ -227,22 +226,6 @@ struct LogLinkingTab: View {
         if let full = appState.importedWorkouts.first(where: { $0.id == w.id }) {
             Button("Open Workout", systemImage: "arrow.up.right") { reviewWorkout = full }
         }
-    }
-
-    private func empty(icon: String, title: String, message: String,
-                       actionLabel: String? = nil, action: (() -> Void)? = nil) -> some View {
-        VStack(spacing: 16) {
-            Spacer()
-            Image(systemName: icon).font(AppFont.symbol(48)).foregroundStyle(.secondary)
-            Text(title).font(.headline)
-            Text(message).font(.subheadline).foregroundStyle(.secondary)
-                .multilineTextAlignment(.center).padding(.horizontal, 24)
-            if let actionLabel, let action {
-                Button(actionLabel, action: action).appButton(.secondary)
-            }
-            Spacer()
-        }
-        .frame(maxWidth: .infinity)
     }
 
     /// The change shows at once (AppState applies it before the request);

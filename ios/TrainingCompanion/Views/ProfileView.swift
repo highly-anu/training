@@ -245,7 +245,9 @@ private struct StandardsTab: View {
         List {
             Section {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("\(appState.benchmarks.count) standards.")
+                    Text(appState.benchmarks.isEmpty
+                         ? (appState.isLoadingBenchmarks ? "Loading the standards…" : "The standards could not be loaded.")
+                         : "\(appState.benchmarks.count) standards.")
                         .font(.headline)
                     Text("Log a result whenever you test one. Every result is kept with its date, so you can see where you stand now and how far you have come across programs.")
                         .font(.caption)
@@ -876,11 +878,25 @@ struct ProfileView: View {
     var body: some View {
         NavigationStack {
             AppSubTabScreen(selection: $selectedTab) { tab in
-                switch tab {
-                case .athlete:    AthleteTab()
-                case .equipment:  EquipmentTab()
-                case .standards:  StandardsTab()
-                case .schedule:   ScheduleTab()
+                Group {
+                    switch tab {
+                    case .athlete:    AthleteTab()
+                    case .equipment:  EquipmentTab()
+                    case .standards:  StandardsTab()
+                    case .schedule:   ScheduleTab()
+                    }
+                }
+                // What is shown is then this device's copy (§6.3). An inset,
+                // not a stack: the bar collapses its title by the section's
+                // own scroll view.
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    if let error = appState.profileError {
+                        AppErrorBanner(message: "Your profile could not be read: \(error)") {
+                            await appState.loadProfile()
+                        }
+                        .padding(.horizontal)
+                        .padding(.vertical, AppMetrics.gapSmall)
+                    }
                 }
             }
             .task { applyRequestedSection() }
