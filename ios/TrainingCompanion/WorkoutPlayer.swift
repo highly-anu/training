@@ -117,8 +117,21 @@ final class WorkoutPlayerModel: ObservableObject {
             engine.muted = true
             engine.catchUp(to: Date())
             engine.muted = false
-            startClock()
+            if isPastLastStep {
+                // Saved after the last step (by a build that drew it again):
+                // the end screen.
+                finish()
+                finished = true
+            } else {
+                startClock()
+            }
         }
+    }
+
+    /// Every step behind the athlete: the engine's step is past the session's last.
+    var isPastLastStep: Bool {
+        guard let count = session?.exercises.count, let i = engine.phase.exerciseIndex else { return false }
+        return i >= count
     }
 
     private func startClock() {
@@ -160,6 +173,12 @@ final class WorkoutPlayerModel: ObservableObject {
         if engine.phase == .sessionComplete {
             finished = true
             stopClock()
+        } else if isPastLastStep {
+            // The engine moves past the last step once its last set, rest or
+            // clock is done — where the watch shows Finish Session. The phone
+            // drew the last step there again, from its first set.
+            finish()
+            return
         } else if !engine.muted {
             PhoneCueOutput.shared.announce(engine.cueText)
         }
