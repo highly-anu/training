@@ -7,5 +7,6 @@ struct TrainingWidgetsBundle: WidgetBundle {
         TodaySessionWidget()
         WeekOverviewWidget()
         StatusRowWidget()
+        WorkoutLiveActivity()
     }
 }

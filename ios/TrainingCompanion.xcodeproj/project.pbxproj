@@ -133,6 +133,13 @@
 			);
 			target = E09E7C722F80E37400CEE326 /* TrainingCompanionWatch Watch App */;
 		};
+		E0F1A7C12FB2000100C0FFEE /* Exceptions for "TrainingCompanion" folder in "TrainingWidgetsExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				WorkoutActivityAttributes.swift,
+			);
+			target = E0D79A0E2FA758D600CFB293 /* TrainingWidgetsExtension */;
+		};
 		E0D79A272FA758D800CFB293 /* Exceptions for "TrainingWidgets" folder in "TrainingWidgetsExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -160,6 +167,7 @@
 			exceptions = (
 				E09E7C352F80454500CEE326 /* Exceptions for "TrainingCompanion" folder in "TrainingCompanion" target */,
 				E09E7CB82F80F06500CEE326 /* Exceptions for "TrainingCompanion" folder in "TrainingCompanionWatch Watch App" target */,
+				E0F1A7C12FB2000100C0FFEE /* Exceptions for "TrainingCompanion" folder in "TrainingWidgetsExtension" target */,
 			);
 			path = TrainingCompanion;
 			sourceTree = "<group>";
