@@ -1,3 +1,5 @@
+import { Check } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { LoadingState, FailedState } from '@/components/shared/states'
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
@@ -213,14 +215,23 @@ function AdjustmentList({ adjustments }: { adjustments: ProgressionAdjustment[] 
             <p className="text-[11px] text-muted-foreground">{adj.reason}</p>
           </div>
           {APPLIABLE.has(adj.type) ? (
-            <button
-              type="button"
-              disabled={apply.isPending || appliedType === adj.type}
-              onClick={() => run(adj)}
-              className="shrink-0 rounded-md border border-primary/40 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary/20 disabled:opacity-50 transition-colors"
-            >
-              {appliedType === adj.type ? 'Applied' : apply.isPending ? 'Applying…' : `Apply from week ${(fromWeekIndex ?? 0) + 1}`}
-            </button>
+            appliedType === adj.type ? (
+              // The answer stays where the button was: what it did, not a button any more.
+              <span role="status" className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-done">
+                <Check className="size-3.5" aria-hidden="true" /> Applied
+              </span>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 shrink-0 border-primary/40 bg-primary/10 px-2.5 text-xs text-primary hover:bg-primary/20 hover:text-primary"
+                loading={apply.isPending && apply.variables?.adjustment.type === adj.type}
+                disabled={apply.isPending}
+                onClick={() => run(adj)}
+              >
+                Apply from week {(fromWeekIndex ?? 0) + 1}
+              </Button>
+            )
           ) : (
             <span className="shrink-0 text-[11px] text-muted-foreground/70">advice</span>
           )}

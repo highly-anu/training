@@ -171,3 +171,26 @@ describe('three states before content (§11)', () => {
     }), 'An empty list or page is <EmptyState>, with the way forward.').toEqual([])
   })
 })
+
+describe('every action answers (§11.5–11.6)', () => {
+  it('a pending button keeps its label', () => {
+    expect(findings({
+      pattern: /(isPending|[lL]oading|busy|[sS]aving|[sS]ubmitting|[gG]enerating|[sS]yncing)\s*\?\s*['"`][A-Z][^'"`]*(…|\.\.\.)['"`]/,
+      allow: () => false,
+    }), 'Use <Button loading={…}>: the spinner takes the icon, the label stays.').toEqual([])
+  })
+
+  it('the toast has one door', () => {
+    expect(findings({
+      pattern: /from 'sonner'/,
+      allow: is('lib/toast.ts', 'components/shared/Toaster.tsx'),
+    }), 'Use toast.undo / toast.failed from lib/toast — and only where the answer has left the screen.').toEqual([])
+  })
+
+  it('nothing asks through the browser', () => {
+    expect(findings({
+      pattern: /\b(window\.)?(confirm|alert|prompt)\((['"`]|$)/,
+      allow: () => false,
+    }), 'A removal offers toast.undo; what cannot be undone asks through <ConfirmDialog>.').toEqual([])
+  })
+})

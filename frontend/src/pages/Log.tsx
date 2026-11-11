@@ -1,3 +1,4 @@
+import { toast } from '@/lib/toast'
 import { Spinner } from '@/components/ui/spinner'
 import { useState, useCallback, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -225,7 +226,18 @@ export function Log() {
   const addImportedWorkouts = useBioStore((s) => s.addImportedWorkouts)
   const addAutoMatch = useBioStore((s) => s.addAutoMatch)
   const setPendingMatches = useBioStore((s) => s.setPendingMatches)
-  const removeImportedWorkout = useBioStore((s) => s.removeImportedWorkout)
+  const hideImportedWorkout = useBioStore((s) => s.hideImportedWorkout)
+  const restoreImportedWorkout = useBioStore((s) => s.restoreImportedWorkout)
+  const commitWorkoutRemoval = useBioStore((s) => s.commitWorkoutRemoval)
+  // The row leaves at once; the server is told when the Undo window closes.
+  const removeWorkout = (w: ImportedWorkout) => {
+    const hidden = hideImportedWorkout(w.id)
+    if (!hidden) return
+    toast.undo('Workout removed', {
+      undo: () => restoreImportedWorkout(hidden),
+      commit: () => commitWorkoutRemoval(w.id),
+    })
+  }
   const importedWorkouts = useBioStore((s) => s.importedWorkouts)
   const workoutMatches = useBioStore((s) => s.workoutMatches)
   const pendingMatches = useBioStore((s) => s.pendingMatches)
@@ -449,7 +461,7 @@ export function Log() {
             sessionLabelFor={sessionLabelFor}
             onOpen={(w) => navigate(`/log/${encodeURIComponent(w.id)}`, { state: { workout: w } })}
             onMatch={(w) => setActivePending(pendingMatches.find((p) => p.importedWorkout.id === w.id) ?? null)}
-            onRemove={(w) => removeImportedWorkout(w.id)}
+            onRemove={removeWorkout}
             onImport={() => setImportOpen(true)}
           />
         )}

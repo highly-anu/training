@@ -45,8 +45,8 @@ export function DevicesCard() {
           aria-label="Pairing code"
           className="h-8 w-36 rounded-md border border-border bg-background px-2 text-xs font-mono uppercase focus:outline-none focus:ring-1 focus:ring-primary"
         />
-        <Button type="submit" size="sm" className="h-8 text-xs" disabled={!code.trim() || claim.isPending}>
-          {claim.isPending ? 'Pairing…' : 'Pair'}
+        <Button type="submit" size="sm" className="h-8 text-xs" disabled={!code.trim()} loading={claim.isPending}>
+          Pair
         </Button>
         {claim.isError && <span className="text-[11px] text-red-700 dark:text-red-300">{claim.error.message}</span>}
         {claim.isSuccess && <span className="text-[11px] text-emerald-700 dark:text-emerald-300">Paired</span>}

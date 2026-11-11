@@ -1,3 +1,5 @@
+import { announce } from '@/lib/announce'
+import { DoneMark } from '@/components/shared/DoneMark'
 import { useState, useMemo } from 'react'
 import { format, differenceInCalendarDays, parseISO } from 'date-fns'
 import { GripVertical, Check, CheckCircle2, Circle, BatteryCharging, Activity } from 'lucide-react'
@@ -71,7 +73,7 @@ function SessionCard({
   return (
     <div
       className={cn(
-        'relative rounded-lg border overflow-hidden cursor-pointer transition-all group/card h-full flex flex-col',
+        'relative rounded-lg border overflow-hidden cursor-pointer transition-[color,background-color,border-color,box-shadow] group/card h-full flex flex-col',
         isDragging
           ? 'shadow-xl ring-2 ring-primary/40 opacity-95'
           : 'hover:border-primary/40 hover:shadow-sm',
@@ -146,9 +148,10 @@ function SessionCard({
             ? COMPLETION.text
             : 'opacity-0 group-hover/card:opacity-40 hover:!opacity-100 text-muted-foreground hover:text-emerald-700 dark:hover:text-emerald-300'
         )}
-        title={isComplete ? 'Mark incomplete' : 'Mark complete'}
+        aria-label={isComplete ? 'Mark not done' : 'Mark complete'}
+        aria-pressed={isComplete}
       >
-        {isComplete ? <CheckCircle2 className="size-3.5" /> : <Circle className="size-3.5" />}
+        <DoneMark done={isComplete} doneIcon={<CheckCircle2 className="size-3.5" />} openIcon={<Circle className="size-3.5" />} />
       </button>
 
       {/* Drag handle */}
@@ -282,7 +285,7 @@ function DroppableDay({
             today
           </span>
         )}
-        {isComplete && !isToday && <Check className={cn('size-2.5', COMPLETION.text)} />}
+        <DoneMark done={isComplete && !isToday} doneIcon={<Check className={cn('size-2.5', COMPLETION.text)} />} />
       </button>
 
       {/* Sessions or rest */}
@@ -431,6 +434,7 @@ export function WeekOverview({ weekData, weekIndex, selectedDay, onDaySelect }: 
                       const next = [...current]
                       next[si] = !next[si]
                       setSessionLog(dayKey, next)
+                      announce(next[si] ? `${session.archetype?.name ?? 'Session'} marked complete.` : 'Session marked not done.')
                       if (next[si]) {
                         upsertSessionPerformance({
                           sessionKey: `${dayKey}-${si}`,

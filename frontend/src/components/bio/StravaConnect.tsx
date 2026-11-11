@@ -1,6 +1,6 @@
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Spinner } from '@/components/ui/spinner'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { RefreshCw, LogOut, Zap } from 'lucide-react'
@@ -29,6 +29,7 @@ export function StravaConnect() {
   const authorize = useStravaAuthorize()
   const sync = useStravaSyncMutation()
   const disconnect = useStravaDisconnect()
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false)
 
   const addImportedWorkouts = useBioStore((s) => s.addImportedWorkouts)
   const addAutoMatch = useBioStore((s) => s.addAutoMatch)
@@ -105,15 +106,11 @@ export function StravaConnect() {
           <Button
             size="sm"
             onClick={() => authorize.mutate()}
-            disabled={authorize.isPending}
+            loading={authorize.isPending}
             style={{ backgroundColor: STRAVA_ORANGE, color: '#fff' }}
             className="shrink-0 hover:opacity-90 transition-opacity"
           >
-            {authorize.isPending ? (
-              <Spinner className="size-3.5 mr-1.5" />
-            ) : (
-              <Zap className="size-3.5 mr-1.5" />
-            )}
+            <Zap className="size-3.5" />
             Connect
           </Button>
         </div>
@@ -176,26 +173,31 @@ export function StravaConnect() {
           <Button
             size="sm"
             onClick={handleSync}
-            disabled={sync.isPending}
+            loading={sync.isPending}
             className="flex-1"
           >
-            {sync.isPending ? (
-              <Spinner className="size-3.5 mr-1.5" />
-            ) : (
-              <RefreshCw className="size-3.5 mr-1.5" />
-            )}
-            {sync.isPending ? 'Syncing…' : 'Sync Now'}
+            <RefreshCw className="size-3.5" />
+            Sync now
           </Button>
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => disconnect.mutate()}
-            disabled={disconnect.isPending}
+            onClick={() => setConfirmDisconnect(true)}
+            loading={disconnect.isPending}
             className="text-muted-foreground hover:text-foreground"
           >
             <LogOut className="size-3.5 mr-1.5" />
             Disconnect
           </Button>
+          <ConfirmDialog
+            open={confirmDisconnect}
+            onOpenChange={setConfirmDisconnect}
+            title="Disconnect Strava?"
+            description="Sync stops and new activities no longer arrive from Strava. The workouts already imported stay in your log, with their links to sessions."
+            confirmLabel="Disconnect"
+            destructive
+            onConfirm={() => disconnect.mutate()}
+          />
         </div>
       </div>
     )

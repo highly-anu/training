@@ -1,3 +1,5 @@
+import { LiveRegion } from '@/components/shared/LiveRegion'
+import { Toaster } from '@/components/shared/Toaster'
 import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
@@ -97,6 +99,8 @@ export default function App() {
               </HealthDataProvider>
             </AuthInit>
           </BrowserRouter>
+          <Toaster />
+          <LiveRegion />
           <ReactQueryDevtools initialIsOpen={false} />
         </QueryClientProvider>
       </MotionConfig>

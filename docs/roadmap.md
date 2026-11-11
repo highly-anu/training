@@ -1699,6 +1699,19 @@ running action (`ui/spinner.tsx`); `LoadingCard` and `DumbbellLoader` are gone. 
 border stays where it means absent or optional and the test lists those files. Design test:
 *three states before content*. Frontend-design §11.2–11.3.
 
+**Done — 3. Feedback** (`feat/web-feedback`). `Button` takes `loading` (the spinner in the
+icon's place, the label unchanged; there were three pending styles and labels that turned
+to "Saving…"), and every pending button uses it. `lib/toast.ts` over sonner with two uses
+only — `toast.undo` and `toast.failed` — and `Toaster` in the theme's surface colours.
+Removing an imported workout no longer happens without a way back: the row leaves, the
+server is told when the six-second Undo closes; removing an added session can be undone
+the same way. Disconnecting Garmin or Strava asks first (`ConfirmDialog`, saying what stops
+and what stays). Deleting a result and confirming or dismissing a suggestion show at once
+and roll back with a toast when the write fails. Completing a session scales its check in
+(`DoneMark`) and is said to a screen reader (`announce`, `LiveRegion`). Design test: *every
+action answers*. Frontend-design §11.5–11.8. Left for 4: a new link's row settling in
+Log ▸ Linking, and Today's first card arriving after Start, which need the list motion.
+
 **2. States.** `components/shared/states/`: one reading of a load (`loadPhase` — content is
 never replaced by a reload or its failure), `LoadingState` (the one loading look, in the
 content's shape), `FailedState` with Try again, `ErrorBanner` with a retry, `QueryState`

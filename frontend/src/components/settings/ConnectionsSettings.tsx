@@ -6,8 +6,9 @@
  * worker reads them: a preference the browser kept to itself would do nothing
  * about activities Garmin is already pushing.
  */
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { LoadingState } from '@/components/shared/states'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { format, parseISO } from 'date-fns'
@@ -45,6 +46,7 @@ function GarminConnect() {
   const authorize = useGarminAuthorize()
   const disconnect = useGarminDisconnect()
   const backfill = useGarminBackfill()
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false)
 
   // The OAuth callback redirects back here with ?garmin=connected|error.
   const garminParam = searchParams.get('garmin')
@@ -109,9 +111,9 @@ function GarminConnect() {
         <Button
           size="sm"
           onClick={() => authorize.mutate()}
-          disabled={authorize.isPending}
+          loading={authorize.isPending}
         >
-          {authorize.isPending ? 'Redirecting…' : 'Connect Garmin'}
+          Connect Garmin
         </Button>
       </div>
     )
@@ -135,13 +137,22 @@ function GarminConnect() {
         <Button
           size="sm"
           variant="ghost"
-          onClick={() => disconnect.mutate()}
-          disabled={disconnect.isPending}
+          onClick={() => setConfirmDisconnect(true)}
+          loading={disconnect.isPending}
           className="text-muted-foreground"
         >
           <LogOut className="h-3.5 w-3.5 mr-1" />
           Disconnect
         </Button>
+        <ConfirmDialog
+          open={confirmDisconnect}
+          onOpenChange={setConfirmDisconnect}
+          title="Disconnect Garmin Connect?"
+          description="New activities stop arriving from Garmin. The workouts already imported stay in your log, with their links to sessions."
+          confirmLabel="Disconnect"
+          destructive
+          onConfirm={() => disconnect.mutate()}
+        />
       </div>
 
       {/* No "sync now": Garmin pushes. The only useful manual action is asking
@@ -151,9 +162,9 @@ function GarminConnect() {
           size="sm"
           variant="outline"
           onClick={() => backfill.mutate({ days: 90 })}
-          disabled={backfill.isPending}
+          loading={backfill.isPending}
         >
-          {backfill.isPending ? 'Requesting…' : 'Import last 90 days'}
+          Import last 90 days
         </Button>
         {backfill.isSuccess && (
           <p className="text-xs text-muted-foreground">

@@ -1,3 +1,4 @@
+import { Spinner } from '@/components/ui/spinner'
 import { useState, useMemo } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { Settings, CalendarDays, Wand2, Flag, RotateCcw } from 'lucide-react'
@@ -260,8 +261,9 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
             onClick={handleRebuildFromTomorrow}
             className="w-full rounded-lg border-2 border-primary bg-primary/5 px-4 py-3 text-left transition-colors hover:bg-primary/10 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            <p className="text-sm font-semibold text-primary">
-              {regenerate.isPending ? 'Building a preview…' : 'From tomorrow onwards'}
+            <p className="flex items-center gap-2 text-sm font-semibold text-primary" aria-busy={regenerate.isPending || undefined}>
+              {regenerate.isPending && <Spinner className="size-3.5" />}
+              From tomorrow onwards
             </p>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
               {tomorrowWeekIdx === null

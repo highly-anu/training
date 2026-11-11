@@ -1,5 +1,4 @@
 import { ErrorBanner } from '@/components/shared/ErrorBanner'
-import { Spinner } from '@/components/ui/spinner'
 import { useMemo } from 'react'
 import { Wand2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
@@ -413,19 +412,11 @@ export function ReviewGenerate() {
           size="lg"
           className="w-full gap-2"
           onClick={handleGenerate}
-          disabled={isPending || !canGenerate || !entryReady || hasErrors === true || hasFeasibilityErrors}
+          loading={isPending}
+          disabled={!canGenerate || !entryReady || hasErrors === true || hasFeasibilityErrors}
         >
-          {isPending ? (
-            <>
-              <Spinner />
-              Generating…
-            </>
-          ) : (
-            <>
-              <Wand2 className="size-4" />
-              Preview program
-            </>
-          )}
+          <Wand2 className="size-4" />
+          Preview program
         </Button>
       </motion.div>
     </div>

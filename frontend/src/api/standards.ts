@@ -1,4 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from '@/lib/toast'
+import { useMutation, useQuery, useQueryClient, type QueryClient, type QueryKey } from '@tanstack/react-query'
 import { apiClient } from './client'
 import { queryKeys } from './queryKeys'
 import type { BenchmarkStandard, StandardResultInput, StandardResults, StandardSuggestion } from './types'
@@ -72,11 +73,40 @@ export function useUpdateResult() {
 }
 
 /** Delete one result — never the standard's whole history. */
+/** What an optimistic change replaced, per cached query, to put back when the write fails. */
+type Snapshot<T> = [QueryKey, T | undefined][]
+
+function restore<T>(qc: QueryClient, before: Snapshot<T> | undefined) {
+  before?.forEach(([key, data]) => qc.setQueryData(key, data))
+}
+
+/** The results document with one entry taken out of its standard's list. */
+export function withoutResult(doc: StandardResults | undefined, id: number): StandardResults | undefined {
+  if (!doc) return doc
+  const standards = Object.fromEntries(Object.entries(doc.standards).map(([key, s]) => {
+    const entries = s.entries.filter((e) => e.id !== id)
+    return [key, entries.length === s.entries.length ? s : { ...s, entries, count: entries.length }]
+  }))
+  return { ...doc, standards }
+}
+
 export function useDeleteResult() {
   const refresh = useRefreshResults()
-  return useMutation<{ deleted: number }, Error, number>({
+  const qc = useQueryClient()
+  return useMutation<{ deleted: number }, Error, number, Snapshot<StandardResults>>({
     mutationFn: (id) => apiClient.delete(`/standards/results/${id}`) as unknown as Promise<{ deleted: number }>,
-    onSuccess: refresh,
+    // The result leaves the list at once; the server's summary (current, best) follows.
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: queryKeys.standards.results })
+      const before = qc.getQueriesData<StandardResults>({ queryKey: queryKeys.standards.results })
+      qc.setQueriesData<StandardResults>({ queryKey: queryKeys.standards.results }, (old) => withoutResult(old, id))
+      return before
+    },
+    onError: (_e, _id, before) => {
+      restore(qc, before)
+      toast.failed('Could not delete the result. It is back in the list.')
+    },
+    onSettled: refresh,
   })
 }
 
@@ -107,11 +137,28 @@ type Decision = { id: number; action: 'confirm' | 'dismiss' | 'reopen'; text?: s
 export function useDecideSuggestion() {
   const qc = useQueryClient()
   const refresh = useRefreshResults()
-  return useMutation<{ suggestion: StandardSuggestion | null }, Error, Decision>({
+  return useMutation<{ suggestion: StandardSuggestion | null }, Error, Decision, Snapshot<StandardSuggestion[]>>({
     mutationFn: ({ id, action, text }) =>
       apiClient.post(`/standards/suggestions/${id}/${action}`, { via: 'web', ...(text ? { text } : {}) }) as unknown as
         Promise<{ suggestion: StandardSuggestion | null }>,
-    onSuccess: () => {
+    // A decided suggestion leaves the list at once. Reopen brings one back, so it waits for the server.
+    onMutate: async ({ id, action }) => {
+      if (action === 'reopen') return []
+      await qc.cancelQueries({ queryKey: queryKeys.standards.suggestions })
+      const before = qc.getQueriesData<StandardSuggestion[]>({ queryKey: queryKeys.standards.suggestions })
+      qc.setQueriesData<StandardSuggestion[]>({ queryKey: queryKeys.standards.suggestions },
+        (old) => old?.filter((s) => s.id !== id))
+      return before
+    },
+    onError: (_e, { action }, before) => {
+      restore(qc, before)
+      // Its row was already gone, so the failure has nowhere of its own to show.
+      if (action !== 'reopen') {
+        toast.failed(action === 'confirm' ? 'Could not save the result. It is waiting to be confirmed again.'
+          : 'Could not dismiss the suggestion. It is back in the list.')
+      }
+    },
+    onSettled: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.standards.suggestions })
       refresh()
     },

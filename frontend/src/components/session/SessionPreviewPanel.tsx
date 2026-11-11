@@ -1,4 +1,3 @@
-import { Spinner } from '@/components/ui/spinner'
 import { ChevronLeft, Clock, ListChecks } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
@@ -67,8 +66,8 @@ export function SessionPreviewPanel({ session, confirmLabel, note, onConfirm, on
         {error && <p className="text-xs text-destructive">{error}</p>}
         <Button className="w-full" onClick={onConfirm} disabled={searching}>{confirmLabel}</Button>
         {onSearchAgain && (
-          <Button variant="outline" className="w-full" onClick={onSearchAgain} disabled={searching}>
-            {searching ? <><Spinner className="mr-2" /> Searching…</> : 'Search again'}
+          <Button variant="outline" className="w-full" onClick={onSearchAgain} loading={searching}>
+            Search again
           </Button>
         )}
       </div>

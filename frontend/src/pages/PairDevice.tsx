@@ -51,10 +51,10 @@ export function PairDevice() {
               </p>
               <Button
                 className="w-full h-9 text-sm"
-                disabled={claim.isPending}
+                loading={claim.isPending}
                 onClick={() => claim.mutate(code)}
               >
-                {claim.isPending ? 'Pairing…' : 'Pair this watch'}
+                Pair this watch
               </Button>
               {claim.isError && (
                 <p className="text-[11px] text-red-700 dark:text-red-300">
