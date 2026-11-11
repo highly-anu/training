@@ -4,6 +4,7 @@ import { INTENSITY_BUCKETS } from '@/lib/hrZones'
 import { StatusBadge } from './StatusBadge'
 import { CoverageNotice } from './CoverageNotice'
 import { ZonePlanComparison } from '@/components/bio/ZonePlanComparison'
+import { useChartEntry } from '@/lib/chartMotion'
 
 const BUCKETS = INTENSITY_BUCKETS
 
@@ -28,6 +29,7 @@ function WeekTooltip({ active, payload }: TooltipProps) {
 
 /** Planned intensity split against actual, per week. */
 export function IntensitySplit({ intensity }: { intensity: AnalyticsIntensity }) {
+  const drawIn = useChartEntry()
   const data = intensity.weeks.map((w) => ({ ...w, label: `W${w.week}` }))
   const current = intensity.byFramework[intensity.byFramework.length - 1]
   return (
@@ -54,7 +56,7 @@ export function IntensitySplit({ intensity }: { intensity: AnalyticsIntensity })
             <Tooltip content={<WeekTooltip />} cursor={{ fill: 'var(--color-muted-foreground)', fillOpacity: 0.08 }} />
             <Legend iconSize={8} wrapperStyle={{ fontSize: 10 }} />
             {BUCKETS.map((b, i) => (
-              <Bar key={b.key} dataKey={b.key} name={b.label} stackId="split" fill={b.color}
+              <Bar {...drawIn} key={b.key} dataKey={b.key} name={b.label} stackId="split" fill={b.color}
                    stroke="var(--color-card)" strokeWidth={1}
                    radius={i === BUCKETS.length - 1 ? [3, 3, 0, 0] : 0} />
             ))}

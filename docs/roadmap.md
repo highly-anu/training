@@ -1712,6 +1712,20 @@ and roll back with a toast when the write fails. Completing a session scales its
 action answers*. Frontend-design §11.5–11.8. Left for 4: a new link's row settling in
 Log ▸ Linking, and Today's first card arriving after Start, which need the list motion.
 
+**Done — 4. Motion** (`feat/web-motion`). `components/motion/`: `RollingNumber` (Load's
+totals under a period switch, Today's adherence and readiness), `TabPanels` (Log,
+Analytics, Profile, Settings), `Collapse`, `PresenceList`, `Stagger`. `SubTabs` replaces
+the six tab selectors — a tablist with arrow keys, a pill that slides to the selection,
+44 px on touch — and `PageHeader` the eleven hand-written headers; Profile's section moved
+into `?tab=`. Every chart series draws through `useChartEntry` (one timing, off under
+Reduce Motion; there were three regimes and eight series switched off). The navigation
+under `md` is a drawer on `ui/sheet` that starts closed, where a persisted flag used to
+open an overlay over every page on a phone. Design test: *what changed, and where it came
+from*. Frontend-design §11.9, §12.1, §13.1, §17.2–17.5. Not done, and left to the page
+passes (7): the session card growing into its side panel by a shared `layoutId`, a new
+link's row settling in Log ▸ Linking and Today's first card arriving after Start —
+`PresenceList` and `Stagger` exist and have no caller yet.
+
 **2. States.** `components/shared/states/`: one reading of a load (`loadPhase` — content is
 never replaced by a reload or its failure), `LoadingState` (the one loading look, in the
 content's shape), `FailedState` with Try again, `ErrorBanner` with a retry, `QueryState`

@@ -16,6 +16,7 @@ import { fetchPMC } from '@/api/userdata'
 import type { PMCEntry } from '@/api/types'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { useNavigate } from 'react-router-dom'
+import { useChartEntry } from '@/lib/chartMotion'
 
 interface TooltipProps {
   active?: boolean
@@ -46,6 +47,7 @@ function formatXAxis(dateStr: string): string {
 }
 
 export function PMCChart() {
+  const drawIn = useChartEntry()
   const navigate = useNavigate()
   const { data: raw = [], isLoading, error, refetch } = useQuery({
     queryKey: ['pmc'],
@@ -115,12 +117,12 @@ export function PMCChart() {
           />
           <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--color-muted-foreground)', fillOpacity: 0.08 }} />
           <ReferenceLine y={0} stroke="var(--color-border)" strokeOpacity={0.6} />
-          <Bar dataKey="tsb" name="TSB" barSize={4} radius={[1, 1, 0, 0]}>
+          <Bar {...drawIn} dataKey="tsb" name="TSB" barSize={4} radius={[1, 1, 0, 0]}>
             {raw.map((entry: PMCEntry, i: number) => (
               <Cell key={i} fill={entry.tsb >= 0 ? '#10b981' : '#ef4444'} fillOpacity={0.7} />
             ))}
           </Bar>
-          <Line
+          <Line {...drawIn}
             type="monotone"
             dataKey="atl"
             name="ATL"
@@ -128,7 +130,7 @@ export function PMCChart() {
             strokeWidth={1.5}
             dot={false}
           />
-          <Line
+          <Line {...drawIn}
             type="monotone"
             dataKey="ctl"
             name="CTL"

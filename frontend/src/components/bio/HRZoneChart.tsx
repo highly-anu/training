@@ -9,6 +9,7 @@ import {
 } from 'recharts'
 import type { HRZoneDistribution } from '@/api/types'
 import { ZONES } from '@/lib/hrZones'
+import { useChartEntry } from '@/lib/chartMotion'
 
 interface HRZoneChartProps {
   zones: HRZoneDistribution
@@ -37,6 +38,7 @@ function CustomTooltip({ label, payload }: TooltipPayload) {
 }
 
 export function HRZoneChart({ zones, showEstimateLabel = true }: HRZoneChartProps) {
+  const drawIn = useChartEntry()
   const data = ZONE_META.map((z) => ({
     label: z.label,
     description: z.description,
@@ -61,7 +63,7 @@ export function HRZoneChart({ zones, showEstimateLabel = true }: HRZoneChartProp
             domain={[0, 100]}
           />
           <Tooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
-          <Bar dataKey="value" radius={[3, 3, 0, 0]}>
+          <Bar {...drawIn} dataKey="value" radius={[3, 3, 0, 0]}>
             {data.map((entry, i) => (
               <Cell key={i} fill={entry.color} />
             ))}

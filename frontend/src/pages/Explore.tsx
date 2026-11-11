@@ -1,3 +1,5 @@
+import { PageHeader } from '@/components/layout/PageHeader'
+import { SubTabs } from '@/components/layout/SubTabs'
 import { LoadingState, FailedState } from '@/components/shared/states'
 import { useState, useMemo } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
@@ -140,38 +142,6 @@ type Topic = ExploreTopic
 function useLineage(topic: LinkedTopic, id: string) {
   const { index, names, colors } = useLinkIndex()
   return useMemo(() => (index ? lineageOf(index, topic, id, names, colors) : null), [index, topic, id, names, colors])
-}
-
-function TopicSelector({
-  active,
-  onChange,
-}: {
-  active: Topic
-  onChange: (t: Topic) => void
-}) {
-  return (
-    <div className="flex items-center gap-1">
-      {TOPICS.map((tab) => {
-        const isActive = tab.id === active
-        return (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => onChange(tab.id)}
-            className={cn(
-              'flex items-center gap-1.5 px-3 py-1 text-xs rounded border transition-colors',
-              isActive
-                ? 'bg-primary/15 border-primary/40 text-primary'
-                : 'border-border text-muted-foreground hover:bg-muted',
-            )}
-          >
-            <tab.Icon className="size-3 shrink-0" />
-            {tab.label}
-          </button>
-        )
-      })}
-    </div>
-  )
 }
 
 // ─── Philosophy card ──────────────────────────────────────────────────────────
@@ -1737,9 +1707,9 @@ function FrameworkExplorerDetail({
 
 type ExploreSection = 'explorer' | 'ontology'
 
-const EXPLORE_SECTIONS: { key: ExploreSection; label: string }[] = [
-  { key: 'explorer', label: 'Explorer' },
-  { key: 'ontology', label: 'Ontology' },
+const EXPLORE_SECTIONS: { id: ExploreSection; label: string }[] = [
+  { id: 'explorer', label: 'Explorer' },
+  { id: 'ontology', label: 'Ontology' },
 ]
 
 const TOPIC_IDS = new Set<string>(TOPICS.map((t) => t.id))
@@ -1805,33 +1775,21 @@ export function Explore() {
       key="explore"
       className="flex h-full flex-col"
     >
-      {/* Header */}
-      <div className="flex items-center gap-3 border-b px-6 py-4 shrink-0 flex-wrap">
-        <Compass className="size-5 text-primary shrink-0" />
-        <h1 className="text-lg font-semibold shrink-0">Explore</h1>
-        <div className="flex gap-1 shrink-0">
-          {EXPLORE_SECTIONS.map(({ key, label }) => (
-            <button
-              key={key}
-              onClick={() => setSection(key)}
-              className={cn(
-                'px-3 py-1 rounded text-xs border transition-colors',
-                section === key
-                  ? 'bg-primary/15 border-primary/40 text-primary'
-                  : 'border-border text-muted-foreground hover:bg-muted'
-              )}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        {section === 'explorer' && (
+      <PageHeader
+        icon={Compass}
+        title="Explore"
+        tabs={
           <>
-            <div className="w-px h-4 bg-border/60 shrink-0" />
-            <TopicSelector active={topic} onChange={handleTopicChange} />
+            <SubTabs label="Explore views" tabs={EXPLORE_SECTIONS} active={section} onChange={setSection} className="shrink-0" />
+            {section === 'explorer' && (
+              <>
+                <div className="h-4 w-px shrink-0 bg-border/60" aria-hidden="true" />
+                <SubTabs label="Explore topics" tabs={TOPICS} active={topic} onChange={handleTopicChange} />
+              </>
+            )}
           </>
-        )}
-      </div>
+        }
+      />
 
       {/* ── Explorer: unified landing ↔ detail pattern for all topics ── */}
       {section === 'explorer' && (

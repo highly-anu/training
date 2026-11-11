@@ -12,6 +12,7 @@ import {
 import { parseISO } from 'date-fns'
 import type { HRSample } from '@/api/types'
 import { DEFAULT_ZONE_BOUNDARIES, ZONE_COLORS, ZONE_BG } from '@/lib/hrZones'
+import { useChartEntry } from '@/lib/chartMotion'
 
 interface HRTimelineProps {
   samples: HRSample[]
@@ -49,6 +50,7 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<
 let instanceCounter = 0
 
 export function HRTimeline({ samples, avgHR, maxHR = 190, zoneBoundaries = DEFAULT_ZONE_BOUNDARIES }: HRTimelineProps) {
+  const drawIn = useChartEntry()
   const [gradientId] = useState(() => `hrZone-${++instanceCounter}`)
 
   const data = useMemo(() => {
@@ -206,14 +208,13 @@ export function HRTimeline({ samples, avgHR, maxHR = 190, zoneBoundaries = DEFAU
               strokeWidth={1}
             />
           )}
-          <Area
+          <Area {...drawIn}
             type="monotone"
             dataKey="bpm"
             stroke={`url(#${gradientId}-stroke)`}
             fill={`url(#${gradientId}-fill)`}
             strokeWidth={1.5}
             dot={false}
-            isAnimationActive={false}
           />
         </AreaChart>
       </ResponsiveContainer>

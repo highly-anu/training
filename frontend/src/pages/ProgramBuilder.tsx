@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/layout/PageHeader'
 import { AnimatePresence, motion } from 'framer-motion'
 import { stepVariants } from '@/lib/motion'
 import { Page } from '@/components/layout/Page'
@@ -34,15 +35,7 @@ export function ProgramBuilder() {
       key="builder"
       className="flex h-full flex-col"
     >
-      {/* Header */}
-      <div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
-        <Wand2 className="size-5 text-primary" />
-        <div className="flex-1 min-w-0">
-          <h1 className="text-lg font-semibold">{stepInfo.title}</h1>
-          <p className="text-xs text-muted-foreground">{stepInfo.sub}</p>
-        </div>
-        <StepIndicator current={step} />
-      </div>
+      <PageHeader icon={Wand2} title={stepInfo.title} subtitle={stepInfo.sub} actions={<StepIndicator current={step} />} />
 
       {/* Step content */}
       <div className="flex-1 overflow-y-auto">

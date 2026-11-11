@@ -6,6 +6,7 @@ import {
 import type { AnalyticsProgressEntry, ExerciseFinding, ExerciseSeriesSection } from '@/api/types'
 import { chartableMeasures, deloadSpans, measureKey, seriesFor, type ChartPoint, type ChartSelection } from '@/lib/progressChart'
 import { cn } from '@/lib/utils'
+import { useChartEntry } from '@/lib/chartMotion'
 
 // The one actual/expected pair, everywhere: done emerald, planned indigo dashed.
 const DONE = '#10b981'
@@ -58,6 +59,7 @@ export function ProgressChart({ section, progress, selection, onSelect, findings
   onSelect: (s: ChartSelection) => void
   findings?: Map<string, ExerciseFinding>
 }) {
+  const drawIn = useChartEntry()
   const exercises = section?.exercises ?? []
   const measures = useMemo(() => chartableMeasures(section, progress), [section, progress])
   const series = useMemo(() => (selection ? seriesFor(selection, section, progress) : null), [selection, section, progress])
@@ -174,10 +176,10 @@ export function ProgressChart({ section, progress, selection, onSelect, findings
             <Tooltip content={<PointTooltip unit={series.unit} plannedLabel={series.plannedLabel} />} />
             <Legend iconSize={8} wrapperStyle={{ fontSize: 11 }} />
             {hasPlanned && (
-              <Line type="linear" dataKey="planned" name={series.plannedLabel} stroke={PLANNED} strokeWidth={2}
-                    strokeDasharray="5 3" dot={false} connectNulls isAnimationActive={false} />
+              <Line {...drawIn} type="linear" dataKey="planned" name={series.plannedLabel} stroke={PLANNED} strokeWidth={2}
+                    strokeDasharray="5 3" dot={false} connectNulls />
             )}
-            <Line type="linear" dataKey="done" name="Done" stroke={DONE} strokeWidth={2} connectNulls isAnimationActive={false}
+            <Line {...drawIn} type="linear" dataKey="done" name="Done" stroke={DONE} strokeWidth={2} connectNulls
                   dot={(props: { cx?: number; cy?: number; payload?: ChartPoint }) => props.payload?.done == null
                     ? <g key={`${props.cx}-${props.cy}`} />
                     : <circle key={`${props.cx}-${props.cy}`} cx={props.cx} cy={props.cy} r={4}

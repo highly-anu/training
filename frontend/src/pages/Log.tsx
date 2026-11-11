@@ -1,3 +1,6 @@
+import { TabPanels } from '@/components/motion/TabPanels'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { SubTabs } from '@/components/layout/SubTabs'
 import { toast } from '@/lib/toast'
 import { Spinner } from '@/components/ui/spinner'
 import { useState, useCallback, useMemo } from 'react'
@@ -5,7 +8,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Page } from '@/components/layout/Page'
 import { format } from 'date-fns'
 import { Upload, CheckCircle2, AlertCircle, Link2, ClipboardList, ArrowDownToLine } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet'
 import { MatchConfirmDialog } from '@/components/bio/MatchConfirmDialog'
@@ -42,33 +44,7 @@ type ParseStatus = 'idle' | 'parsing' | 'done' | 'error'
 
 const LARGE_XML_BYTES = 50 * 1024 * 1024
 
-// ── Tab selector ───────────────────────────────────────────────────────────────
-
-function TabSelector({ active, onChange, tabs }: {
-  active: LogTab
-  onChange: (t: LogTab) => void
-  tabs: { id: LogTab; label: string }[]
-}) {
-  return (
-    <div className="flex items-center gap-1">
-      {tabs.map((tab) => (
-        <button
-          key={tab.id}
-          type="button"
-          onClick={() => onChange(tab.id)}
-          className={cn(
-            'px-3 py-1 text-xs rounded border transition-colors whitespace-nowrap',
-            tab.id === active
-              ? 'bg-primary/15 border-primary/40 text-primary'
-              : 'border-border text-muted-foreground hover:bg-muted'
-          )}
-        >
-          {tab.label}
-        </button>
-      ))}
-    </div>
-  )
-}
+const LOG_TABS: readonly LogTab[] = ['activity', 'linking']
 
 // ── Import panel (inside the sheet) ────────────────────────────────────────────
 
@@ -426,15 +402,11 @@ export function Log() {
       key="log"
       className="flex h-full flex-col overflow-hidden"
     >
-      {/* Header */}
-      <div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
-        <ClipboardList className="size-5 text-primary" />
-        <h1 className="text-lg font-semibold">Log</h1>
-        <div className="ml-4 flex items-center gap-2">
-          <div className="w-px h-4 bg-border/60 shrink-0" />
-          <TabSelector active={activeTab} onChange={setActiveTab} tabs={tabs} />
-        </div>
-        <div className="ml-auto flex items-center gap-1">
+      <PageHeader
+        icon={ClipboardList}
+        title="Log"
+        tabs={<SubTabs id="log-tabs" label="Log sections" tabs={tabs} active={activeTab} onChange={setActiveTab} />}
+        actions={
           <Button
             variant="ghost"
             size="icon"
@@ -445,11 +417,11 @@ export function Log() {
           >
             <ArrowDownToLine className="size-4" />
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <TabPanels active={activeTab} order={LOG_TABS} tabsId="log-tabs" className="flex-1 overflow-y-auto">
         {activeTab === 'activity' && (
           <ActivityTab
             workouts={allImported}
@@ -473,7 +445,7 @@ export function Log() {
             onImport={() => setImportOpen(true)}
           />
         )}
-      </div>
+      </TabPanels>
 
       {/* Import — an action, not a place */}
       <Sheet open={importOpen} onOpenChange={(open) => (open ? setImportOpen(true) : closeImport())}>

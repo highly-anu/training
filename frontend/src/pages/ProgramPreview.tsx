@@ -1,10 +1,12 @@
+import { PageHeader } from '@/components/layout/PageHeader'
+import { SubTabs, tabDomId } from '@/components/layout/SubTabs'
 import { LoadingState, FailedState } from '@/components/shared/states'
 import { Working } from '@/components/ui/spinner'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { Page } from '@/components/layout/Page'
-import { ChevronLeft, Play, ScanEye, SlidersHorizontal } from 'lucide-react'
+import { Play, ScanEye, SlidersHorizontal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -32,7 +34,6 @@ import { useBuilderStore } from '@/store/builderStore'
 import { builderGenerateParams } from '@/lib/builderParams'
 import { changedSessionKeys } from '@/lib/programSource'
 import { heldBackSummary, idLabel } from '@/lib/heldBack'
-import { cn } from '@/lib/utils'
 import type { EquipmentId, TrainingPhase } from '@/api/types'
 
 type PreviewTab = 'overview' | 'calendar' | 'held-back'
@@ -200,38 +201,24 @@ export function ProgramPreview() {
       className="flex h-full flex-col"
     >
       {/* Header: identity row, then the phase strip (frontend-design §17.8, as Program). */}
-      <div className="border-b px-6 py-4 space-y-3 shrink-0">
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-3">
-          <button type="button" onClick={back} aria-label="Back"
-            className="rounded p-1 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-            <ChevronLeft className="size-4" />
-          </button>
-          <ScanEye className="size-5 text-primary shrink-0" />
-          <h1 className="text-lg font-semibold shrink-0 max-w-full">
-            {mode === 'regenerate' ? 'Preview changes' : 'Preview'}
-          </h1>
-          <span className="text-muted-foreground/50 text-xs">·</span>
-          <span className="text-xs text-muted-foreground">{title}</span>
-          <div className="ml-4 flex items-center gap-2">
-            <div className="w-px h-4 bg-border/60 shrink-0" />
-            <div className="flex items-center gap-1">
-              {TABS.map((t) => (
-                <button key={t.id} type="button" onClick={() => setTab(t.id)}
-                  className={cn(
-                    'px-3 py-1 rounded text-xs border transition-colors',
-                    tab === t.id
-                      ? 'bg-primary/15 border-primary/40 text-primary'
-                      : 'border-border text-muted-foreground hover:bg-muted'
-                  )}>
-                  {t.label}
-                  {t.id === 'held-back' && counts.sessions > 0 && (
-                    <span className="ml-1 text-amber-700 dark:text-amber-300">{counts.sessions}</span>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+      <PageHeader
+        icon={ScanEye}
+        onBack={back}
+        title={mode === 'regenerate' ? 'Preview changes' : 'Preview'}
+        subtitle={title}
+        tabs={
+          <SubTabs
+            id="preview-tabs"
+            label="Preview sections"
+            active={tab}
+            onChange={setTab}
+            tabs={TABS.map((t) => (t.id === 'held-back' && counts.sessions > 0
+              ? { ...t, badge: <span className="text-amber-700 dark:text-amber-300">{counts.sessions}</span> }
+              : t))}
+          />
+        }
+        actions={
+          <>
             <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setAdjustOpen(true)}
               disabled={generate.isPending}>
               <SlidersHorizontal className="size-3.5" aria-hidden="true" /> Adjust
@@ -241,12 +228,13 @@ export function ProgramPreview() {
               <Play className="size-3.5" aria-hidden="true" />
               {mode === 'regenerate' ? `Apply from week ${startWeek}` : 'Start this program'}
             </Button>
-          </div>
-        </div>
+          </>
+        }
+      >
         {!refused && <PhaseBar segments={segments} totalWeeks={totalWeeks} currentWeek={1} />}
-      </div>
+      </PageHeader>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto" role="tabpanel" aria-labelledby={tabDomId('preview-tabs', tab)}>
         {generate.isPending && (
           <Working className="mx-6 mt-4">Previewing again…</Working>
         )}

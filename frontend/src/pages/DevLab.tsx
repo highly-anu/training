@@ -1,3 +1,5 @@
+import { PageHeader } from '@/components/layout/PageHeader'
+import { SubTabs } from '@/components/layout/SubTabs'
 import { useState } from 'react'
 import { Page } from '@/components/layout/Page'
 import { Terminal, Play } from 'lucide-react'
@@ -220,6 +222,15 @@ function InputsPanel({ program }: { program: TracedProgram }) {
 
 // ─── DevLab page ──────────────────────────────────────────────────────────────
 
+type DevTab = 'pipeline' | 'browser' | 'heatmap' | 'interactions'
+
+const DEV_TABS: { id: DevTab; label: string }[] = [
+  { id: 'pipeline', label: 'Pipeline Trace' },
+  { id: 'browser', label: 'Object Browser' },
+  { id: 'heatmap', label: 'Ontology' },
+  { id: 'interactions', label: 'Model Interactions' },
+]
+
 export function DevLab() {
   const { data: philosophies = [], isLoading: loadingPhilosophies } = usePhilosophies()
   const { data: injuryFlagOptions = [] } = useInjuryFlags()
@@ -307,7 +318,7 @@ export function DevLab() {
   const trace = result?.generation_trace
   const canGenerate = !!philosophyId && !generateMutation.isPending
 
-  const [devTab, setDevTab] = useState<'pipeline' | 'browser' | 'heatmap' | 'interactions'>('pipeline')
+  const [devTab, setDevTab] = useState<DevTab>('pipeline')
   const [ontologyNodeId, setOntologyNodeId] = useState<string | null>(null)
   const [ontologyFromBrowser, setOntologyFromBrowser] = useState(false)
 
@@ -322,57 +333,11 @@ export function DevLab() {
       key="devlab"
       className="flex flex-col h-full min-h-0"
     >
-      {/* Header */}
-      <div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
-        <Terminal className="size-5 text-primary" />
-        <h1 className="text-lg font-semibold">Dev Lab</h1>
-        <div className="ml-4 flex gap-1">
-          <button
-            onClick={() => setDevTab('pipeline')}
-            className={cn(
-              'px-3 py-1 rounded text-xs border transition-colors',
-              devTab === 'pipeline'
-                ? 'bg-primary/15 border-primary/40 text-primary'
-                : 'border-border text-muted-foreground hover:bg-muted'
-            )}
-          >
-            Pipeline Trace
-          </button>
-          <button
-            onClick={() => setDevTab('browser')}
-            className={cn(
-              'px-3 py-1 rounded text-xs border transition-colors',
-              devTab === 'browser'
-                ? 'bg-primary/15 border-primary/40 text-primary'
-                : 'border-border text-muted-foreground hover:bg-muted'
-            )}
-          >
-            Object Browser
-          </button>
-          <button
-            onClick={() => setDevTab('heatmap')}
-            className={cn(
-              'px-3 py-1 rounded text-xs border transition-colors',
-              devTab === 'heatmap'
-                ? 'bg-primary/15 border-primary/40 text-primary'
-                : 'border-border text-muted-foreground hover:bg-muted'
-            )}
-          >
-            Ontology
-          </button>
-          <button
-            onClick={() => setDevTab('interactions')}
-            className={cn(
-              'px-3 py-1 rounded text-xs border transition-colors',
-              devTab === 'interactions'
-                ? 'bg-primary/15 border-primary/40 text-primary'
-                : 'border-border text-muted-foreground hover:bg-muted'
-            )}
-          >
-            Model Interactions
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        icon={Terminal}
+        title="Dev Lab"
+        tabs={<SubTabs label="Dev Lab tools" tabs={DEV_TABS} active={devTab} onChange={setDevTab} />}
+      />
 
       {devTab === 'browser' && (
         <div className="flex-1 min-h-0">

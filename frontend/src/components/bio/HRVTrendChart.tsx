@@ -11,6 +11,7 @@ import {
 import { subDays, parseISO, isAfter, format } from 'date-fns'
 import type { DailyBioLog } from '@/api/types'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { useChartEntry } from '@/lib/chartMotion'
 
 interface Props {
   bioLogs: Record<string, DailyBioLog>
@@ -56,6 +57,7 @@ function rollingMean(values: (number | null)[], windowSize: number, index: numbe
 }
 
 export function HRVTrendChart({ bioLogs, days = 30 }: Props) {
+  const drawIn = useChartEntry()
   const { data, trend, baseline } = useMemo(() => {
     const cutoff = subDays(new Date(), days)
     const sorted = Object.values(bioLogs)
@@ -142,7 +144,7 @@ export function HRVTrendChart({ bioLogs, days = 30 }: Props) {
               strokeOpacity={0}
             />
           )}
-          <Line
+          <Line {...drawIn}
             type="monotone"
             dataKey="hrv"
             name="HRV"
@@ -153,7 +155,7 @@ export function HRVTrendChart({ bioLogs, days = 30 }: Props) {
             opacity={0.5}
           />
           {hasRolling && (
-            <Line
+            <Line {...drawIn}
               type="monotone"
               dataKey="rolling"
               name="7-day avg"

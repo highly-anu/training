@@ -3,7 +3,12 @@ import type { ModalityId, PhaseSummary, PhaseSummaryItem } from '@/api/types'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { PHASE_COLORS } from '@/lib/phaseColors'
 import { SessionsPerWeekRows } from '@/components/explore/SessionsPerWeekRows'
-import { cn } from '@/lib/utils'
+import { SubTabs } from '@/components/layout/SubTabs'
+
+const VIEWS = [
+  { id: 'archetypes', label: 'Sessions' },
+  { id: 'exercises', label: 'Exercises' },
+] as const
 
 // How a program's sessions and exercises change from phase to phase. Every
 // number here is the server's (`phase_summary`, src/phase_summary.py); the
@@ -124,15 +129,13 @@ export function PhaseMatrix({ summaries }: { summaries: PhaseSummary[] }) {
             Times per week each {view === 'archetypes' ? 'session' : 'exercise'} appears in each phase.
           </p>
         </div>
-        <div role="tablist" className="flex rounded-md border p-0.5 text-[11px] shrink-0">
-          {(['archetypes', 'exercises'] as const).map((v) => (
-            <button key={v} role="tab" aria-selected={view === v}
-              onClick={() => { setView(v); setExpanded(false) }}
-              className={cn('px-2 py-0.5 rounded', view === v ? 'bg-muted text-foreground' : 'text-muted-foreground')}>
-              {v === 'archetypes' ? 'Sessions' : 'Exercises'}
-            </button>
-          ))}
-        </div>
+        <SubTabs
+          label="What the table lists"
+          className="shrink-0"
+          tabs={VIEWS}
+          active={view}
+          onChange={(v) => { setView(v); setExpanded(false) }}
+        />
       </div>
       <div className="rounded-xl border bg-card overflow-x-auto">
         <table className="w-full text-xs border-collapse">

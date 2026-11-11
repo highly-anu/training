@@ -16,6 +16,7 @@ import { fetchWeeklyLoad } from '@/api/userdata'
 import type { WeeklyLoad } from '@/api/types'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { useNavigate } from 'react-router-dom'
+import { useChartEntry } from '@/lib/chartMotion'
 
 interface TooltipProps {
   active?: boolean
@@ -61,6 +62,7 @@ function barColor(trimp: number, median: number): string {
 }
 
 export function WeeklyLoadChart() {
+  const drawIn = useChartEntry()
   const navigate = useNavigate()
   const { data: raw = [], isLoading, error, refetch } = useQuery({
     queryKey: ['weeklyLoad'],
@@ -135,7 +137,7 @@ export function WeeklyLoadChart() {
               strokeOpacity={0.4}
             />
           )}
-          <Bar dataKey="trimp" radius={[2, 2, 0, 0]}>
+          <Bar {...drawIn} dataKey="trimp" radius={[2, 2, 0, 0]}>
             {data.map((entry, i) => (
               <Cell key={i} fill={barColor(entry.trimp, median)} />
             ))}

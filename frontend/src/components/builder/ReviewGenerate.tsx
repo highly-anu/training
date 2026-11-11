@@ -2,8 +2,6 @@ import { ErrorBanner } from '@/components/shared/ErrorBanner'
 import { useMemo } from 'react'
 import { Wand2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { springSnappy } from '@/lib/motion'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { ValidationAlert } from '@/components/shared/ValidationAlert'
@@ -404,10 +402,7 @@ export function ReviewGenerate() {
           )}
         </div>
       )}
-      <motion.div
-        animate={{ scale: isPending ? 0.98 : 1 }}
-        transition={springSnappy}
-      >
+      <div>
         <Button
           size="lg"
           className="w-full gap-2"
@@ -418,7 +413,7 @@ export function ReviewGenerate() {
           <Wand2 className="size-4" />
           Preview program
         </Button>
-      </motion.div>
+      </div>
     </div>
   )
 }

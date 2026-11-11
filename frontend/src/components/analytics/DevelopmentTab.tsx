@@ -16,6 +16,7 @@ import {
   blockBands, blockColor, currencySeries, dayStamp, formatDelta, liftSeries, METRIC_UNIT, type BlockBand, type SeriesPoint,
 } from '@/lib/developmentShaping'
 import { statusLevel } from './status'
+import { useChartEntry } from '@/lib/chartMotion'
 
 /**
  * How the athlete has developed across programs — the history tables read
@@ -134,6 +135,7 @@ function PointTooltip({ active, payload, unit }: TooltipProps & { unit: string }
 function SeriesChart({ series, bands, unit, blocks }: {
   series: SeriesPoint[]; bands: BlockBand[]; unit: string; blocks: DevelopmentBlock[]
 }) {
+  const drawIn = useChartEntry()
   if (series.length === 0) return null
   const x1 = Math.min(bands[0]?.x1 ?? series[0].x, series[0].x)
   const x2 = Math.max(bands[bands.length - 1]?.x2 ?? series[series.length - 1].x, series[series.length - 1].x)
@@ -149,7 +151,7 @@ function SeriesChart({ series, bands, unit, blocks }: {
         <YAxis tick={{ fontSize: 9, fill: 'var(--color-muted-foreground)' }} axisLine={false} tickLine={false}
                domain={['auto', 'auto']} unit={` ${unit}`} />
         <Tooltip content={<PointTooltip unit={unit} />} />
-        <Line type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} connectNulls isAnimationActive={false}
+        <Line {...drawIn} type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} connectNulls
               dot={(props: { cx?: number; cy?: number; payload?: SeriesPoint }) => (
                 <circle key={`${props.cx}-${props.cy}`} cx={props.cx} cy={props.cy} r={4}
                         fill={props.payload?.isDeload ? 'var(--color-card)' : blockColor(blocks, props.payload?.blockId)}
@@ -286,6 +288,7 @@ function LoadTooltip({ active, payload }: { active?: boolean; payload?: Array<{ 
 }
 
 function LoadAcrossBlocks({ data }: { data: DevelopmentAnalytics }) {
+  const drawIn = useChartEntry()
   const weekly = data.load.weekly
   if (weekly.length === 0) return null
   const rows = weekly.map((w) => ({ ...w, label: format(weekStart(w.week), 'd MMM') }))
@@ -300,7 +303,7 @@ function LoadAcrossBlocks({ data }: { data: DevelopmentAnalytics }) {
           <XAxis dataKey="label" tick={{ fontSize: 9, fill: 'var(--color-muted-foreground)' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
           <YAxis tick={{ fontSize: 9, fill: 'var(--color-muted-foreground)' }} axisLine={false} tickLine={false} />
           <Tooltip content={<LoadTooltip />} />
-          <Bar dataKey="trimp" radius={[3, 3, 0, 0]} isAnimationActive={false}>
+          <Bar {...drawIn} dataKey="trimp" radius={[3, 3, 0, 0]}>
             {rows.map((r) => <Cell key={r.week} fill={blockColor(data.blocks, r.blockId)} fillOpacity={r.blockId == null ? 0.4 : 0.85} />)}
           </Bar>
         </BarChart>

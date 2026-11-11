@@ -11,6 +11,7 @@ import {
 import { subDays, parseISO, isAfter, format } from 'date-fns'
 import type { DailyBioLog } from '@/api/types'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { useChartEntry } from '@/lib/chartMotion'
 
 interface SleepStageChartProps {
   bioLogs: Record<string, DailyBioLog>
@@ -46,6 +47,7 @@ function CustomTooltip({ active, payload, label }: TooltipProps) {
 }
 
 export function SleepStageChart({ bioLogs, days = 30 }: SleepStageChartProps) {
+  const drawIn = useChartEntry()
   const data = useMemo(() => {
     const cutoff = subDays(new Date(), days)
     return Object.values(bioLogs)
@@ -93,10 +95,10 @@ export function SleepStageChart({ bioLogs, days = 30 }: SleepStageChartProps) {
         />
         <Tooltip content={<CustomTooltip />} />
         <Legend iconSize={8} wrapperStyle={{ fontSize: 10 }} />
-        <Bar dataKey="Deep" stackId="sleep" fill="#1d4ed8" radius={[0, 0, 0, 0]} />
-        <Bar dataKey="REM" stackId="sleep" fill="#7c3aed" radius={[0, 0, 0, 0]} />
-        <Bar dataKey="Light" stackId="sleep" fill="#38bdf8" radius={[0, 0, 0, 0]} />
-        <Bar dataKey="Awake" stackId="sleep" fill="#6b7280" radius={[4, 4, 0, 0]} />
+        <Bar {...drawIn} dataKey="Deep" stackId="sleep" fill="#1d4ed8" radius={[0, 0, 0, 0]} />
+        <Bar {...drawIn} dataKey="REM" stackId="sleep" fill="#7c3aed" radius={[0, 0, 0, 0]} />
+        <Bar {...drawIn} dataKey="Light" stackId="sleep" fill="#38bdf8" radius={[0, 0, 0, 0]} />
+        <Bar {...drawIn} dataKey="Awake" stackId="sleep" fill="#6b7280" radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   )

@@ -91,7 +91,8 @@ describe('motion is written once (§11)', () => {
       // `duration-200`, `delay-150`, `ease-in-out`. The tokens are written
       // `duration-(--motion-base)` and `ease-standard`, which do not match.
       pattern: /(?<![\w-])(duration|delay)-\d|(?<![\w-])ease-(in|out|in-out|linear)(?![\w-])/,
-      allow: GENERATED,
+      // Recharts takes its easing by name; chartMotion is where it is said.
+      allow: either(GENERATED, is('lib/chartMotion.ts')),
     }), 'Use duration-(--motion-fast|base|slow) and ease-standard | ease-exit (styles/globals.css).').toEqual([])
   })
 
@@ -192,5 +193,47 @@ describe('every action answers (§11.5–11.6)', () => {
       pattern: /\b(window\.)?(confirm|alert|prompt)\((['"`]|$)/,
       allow: () => false,
     }), 'A removal offers toast.undo; what cannot be undone asks through <ConfirmDialog>.').toEqual([])
+  })
+})
+
+describe('what changed, and where it came from (§11.9, §12.1, §13.1, §17)', () => {
+  it('no component writes its own enter, exit or press', () => {
+    expect(findings({
+      pattern: /\b(initial|animate|exit|whileHover|whileTap)=\{\{/,
+      // The ontology graph animates to computed positions: data, not a preset.
+      allow: either(under('components/motion/', 'components/layout/', 'components/devlab/heatmap/'), is('lib/motion.ts')),
+    }), 'Spread a preset from @/lib/motion (riseIn, collapseMotion, pressMotion…) or use components/motion.').toEqual([])
+  })
+
+  it('every chart draws through useChartEntry', () => {
+    expect(findings({
+      pattern: /\b(isAnimationActive|animationDuration|animationBegin|animationEasing)\b/,
+      allow: is('lib/chartMotion.ts'),
+    }), 'Spread useChartEntry() on the series: one timing, off under Reduce Motion.').toEqual([])
+    const series = /<(Line|Bar|Area|Pie)\s(?!\{\.\.\.drawIn\})/
+    expect(findings({ pattern: series, allow: () => false, only: (f) => f.endsWith('.tsx') }),
+      'A Recharts series starts `<Line {...drawIn}` with `const drawIn = useChartEntry()`.').toEqual([])
+  })
+
+  it('a page header is <PageHeader>, its sections <SubTabs>', () => {
+    expect(findings({
+      pattern: /border-b px-6 py-4/,
+      allow: is('components/layout/PageHeader.tsx'),
+    }), 'Use <PageHeader icon title tabs actions>.').toEqual([])
+    expect(findings({
+      pattern: /role="tab(list)?"/,
+      allow: is('components/layout/SubTabs.tsx'),
+    }), 'Use <SubTabs>: arrow keys, the sliding pill and the 44 px touch target come with it.').toEqual([])
+    expect(findings({
+      pattern: /function TabSelector\b/,
+      allow: () => false,
+    }), 'Use <SubTabs>.').toEqual([])
+  })
+
+  it('the navigation drawer starts closed', () => {
+    const store = FILES.find(({ file }) => file === 'store/uiStore.ts')!.lines.join('\n')
+    expect(store).toMatch(/mobileNavOpen: false/)
+    // Persisted, it would open over the page on the next visit.
+    expect(store).toMatch(/partialize: \(s\) => \(\{ selectedWeekIndex: s\.selectedWeekIndex \}\)/)
   })
 })
