@@ -685,10 +685,13 @@ struct WatchSession: Codable, Identifiable, Hashable {
     /// Its workout icon (src/session_icon.py), tinted with the modality colour;
     /// nil → the modality icon.
     var icon: String? = nil
+    /// Its stable identity in the plan (program_history), where the plan is in
+    /// history: the phone's player uploads by it.
+    var sessionUid: String? = nil
 
     enum CodingKeys: String, CodingKey {
         case sessionId, modalityId, archetypeName, estimatedMinutes, isDeload, exercises, completed
-        case packageId, screens, watch, icon
+        case packageId, screens, watch, icon, sessionUid
     }
 }
 
@@ -708,6 +711,7 @@ extension WatchSession {
         screens = try? c.decodeIfPresent([String: WatchScreenSpec].self, forKey: .screens)
         watch = try? c.decodeIfPresent(WatchIdentity.self, forKey: .watch)
         icon = try? c.decodeIfPresent(String.self, forKey: .icon)
+        sessionUid = try? c.decodeIfPresent(String.self, forKey: .sessionUid)
     }
 
     /// The screen an exercise is drawn with (`WatchScreen.forExercise`).

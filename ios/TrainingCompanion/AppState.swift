@@ -777,6 +777,54 @@ final class AppState: ObservableObject {
         await loadProgramAnalytics()
     }
 
+    /// A workout the phone's player ran (WorkoutPlayerModel): its log — the
+    /// sets, outcomes, results answer, notes and each step's wall-clock
+    /// window — sent by the session's uid where the server named one, then
+    /// the session done here as `markSessionComplete` does it. False when the
+    /// server did not take it (the player keeps the workout to try again).
+    func finishWorkout(sessionKey: String, sessionUid: String?, log: [String: Any]) async -> Bool {
+        guard let api else { return false }
+        do {
+            if let sessionUid {
+                try await api.saveWorkoutLog(sessionUid: sessionUid, log: log)
+            } else {
+                try await api.saveWorkoutLog(sessionKey: sessionKey, log: log)
+            }
+        } catch {
+            AppLogger.logFromBackground("workout player: save failed — \(error.localizedDescription)")
+            return false
+        }
+        let before = sessionLogs[sessionKey]
+        var entry = SessionLogEntry(
+            sessionKey: sessionKey, completedAt: log["completedAt"] as? String ?? iso.string(from: Date()),
+            source: WorkoutPlayerModel.source, notes: log["notes"] as? String, fatigueRating: before?.fatigueRating,
+            avgHR: nil, peakHR: nil, matchedWorkoutId: before?.matchedWorkoutId)
+        entry.exercises = before?.exercises ?? [:]
+        sessionLogs[sessionKey] = entry
+        rescheduleNotifications()
+        writeHomeWidgets()
+        await loadRecentSessionLogs()
+        await loadStandardSuggestions()
+        await loadProgramAnalytics()
+        return true
+    }
+
+    /// The day a session falls on (yyyy-MM-dd) as the server's today-session
+    /// reads a date: the week by its index from the program's start, the
+    /// session's weekday within it.
+    func sessionDate(weekIndex: Int, dayName: String) -> String? {
+        guard let startStr = serverProgram?.programStartDate, let start = dayFormatter.date(from: startStr) else {
+            return nil
+        }
+        let names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+        let cal = Calendar.current
+        for offset in 0..<7 {
+            guard let d = cal.date(byAdding: .day, value: weekIndex * 7 + offset, to: start) else { continue }
+            if names[cal.component(.weekday, from: d) - 1] == dayName { return dayFormatter.string(from: d) }
+        }
+        return nil
+    }
+
     /// The athlete's answer for a training-contract session (clean or not,
     /// and the RPE), then the logs read back so the session shows it. False
     /// when the server did not take it.
