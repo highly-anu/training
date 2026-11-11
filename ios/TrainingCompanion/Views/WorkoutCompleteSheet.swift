@@ -136,7 +136,7 @@ struct WorkoutCompleteSheet: View {
                     .font(AppFont.symbol(34))
                     .foregroundStyle(.white, AppColor.complete)
                     .background(Circle().fill(Color(.systemBackground)).padding(-3))
-                    .symbolEffect(.bounce, value: celebrations)
+                    .appSymbolBounce(value: celebrations)
                     .offset(x: 4, y: 4)
             }
             .scaleEffect(appeared ? 1 : 0.85)
@@ -349,7 +349,7 @@ struct WorkoutCompleteSheet: View {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.title3)
                             .foregroundStyle(AppColor.complete)
-                            .symbolEffect(.bounce, value: celebrations)
+                            .appSymbolBounce(value: celebrations)
                             .accessibilityLabel("Complete")
                     }
                 } else {
@@ -487,7 +487,7 @@ struct WorkoutCompleteSheet: View {
                 .font(.caption).fontWeight(.semibold)
                 .monospacedDigit()
                 .foregroundStyle(done == dots.count ? AppColor.complete : .secondary)
-                .contentTransition(.numericText())
+                .appNumeric(value: done)
         } content: {
             HStack(spacing: 6) {
                 ForEach(dots) { dot in

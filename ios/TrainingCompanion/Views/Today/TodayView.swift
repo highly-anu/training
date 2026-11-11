@@ -71,6 +71,10 @@ struct TodayView: View {
             .onAppear { if BuilderDebugLaunch.current != nil { showBuilder = true } }
             #endif
             .onChange(of: router.pendingSessionKey) { openPendingSession() }
+            // A session just completed turns emerald once Today is in front
+            // of the athlete again (§6.56).
+            .onChange(of: isCovered) { showCompletion() }
+            .onChange(of: appState.justCompleted) { showCompletion() }
             // A regenerate (here or on the web) is a new program: its
             // scorecard, not the last one's, on the Development card.
             .onChange(of: appState.serverProgram?.revision) {
@@ -115,6 +119,25 @@ struct TodayView: View {
         }
     }
 
+    // MARK: - Completion
+
+    /// Something is over Today: a session's sheet, the player, another tab.
+    private var isCovered: Bool {
+        selectedSession != nil || player != nil || router.tab != .dashboard
+    }
+
+    /// The completion moment: the card's stripe and border turn emerald, its
+    /// mark arrives and the week strip's dot fills — after the sheet that
+    /// completed it has gone, which is where the success haptic was given.
+    private func showCompletion() {
+        guard !isCovered, appState.justCompleted != nil else { return }
+        Task {
+            try? await Task.sleep(for: .milliseconds(450))
+            guard !isCovered else { return }
+            withAnimation(AppAnimation.springStandard) { appState.justCompleted = nil }
+        }
+    }
+
     // MARK: - Dashboard Content
 
     /// §6.53: where the athlete is, the day and its session, what waits for an
@@ -122,11 +145,13 @@ struct TodayView: View {
     private var dashboardContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppMetrics.gapSection) {
-                programHeader
-                todaySection
-                TodayInbox { reviewWorkout = $0 }
-                TodaySummary()
-                Spacer(minLength: 40)
+                AppScrollFade {
+                    programHeader
+                    todaySection
+                    TodayInbox { reviewWorkout = $0 }
+                    TodaySummary()
+                    Spacer(minLength: 40)
+                }
             }
             .padding()
         }
@@ -221,7 +246,7 @@ struct TodayView: View {
     private func stripDay(_ offset: Int) -> WeekStrip.Day {
         let date = dateFor(offset)
         let sessions = sessionsFor(offset)
-        let done = sessions.filter { appState.isSessionComplete($0.key) }.count
+        let done = sessions.filter { appState.isShownComplete($0.key) }.count
         let status: WeekStrip.Status = sessions.isEmpty ? .rest
             : (done == sessions.count ? .done : .planned)
         return WeekStrip.Day(offset: offset, date: date, status: status,
@@ -232,7 +257,7 @@ struct TodayView: View {
     private func dayCardView(dayOff: Int) -> some View {
         let sessions = sessionsFor(dayOff)
         // Today's first session still to do leads the page and starts from it.
-        let next = dayOff == 0 ? sessions.first { !appState.isSessionComplete($0.key) }?.key : nil
+        let next = dayOff == 0 ? sessions.first { !appState.isShownComplete($0.key) }?.key : nil
         return VStack(spacing: AppMetrics.gapMedium) {
             if sessions.isEmpty {
                 // A rest day can still take one: its Add session row, or a long press.

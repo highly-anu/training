@@ -58,11 +58,13 @@ struct AnalyticsDevelopmentTab: View {
     private func content(_ doc: DevelopmentAnalytics) -> some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 16) {
-                BlocksCard(doc: doc)
-                SeriesCard(doc: doc, selected: $selectedSeries)
-                if !doc.weeklyLoad.isEmpty { LoadByBlockCard(doc: doc) }
-                if !doc.benchmarks.isEmpty { StandardsCard(doc: doc) }
-                Spacer(minLength: 24)
+                AppScrollFade {
+                    BlocksCard(doc: doc)
+                    SeriesCard(doc: doc, selected: $selectedSeries)
+                    if !doc.weeklyLoad.isEmpty { LoadByBlockCard(doc: doc) }
+                    if !doc.benchmarks.isEmpty { StandardsCard(doc: doc) }
+                    Spacer(minLength: 24)
+                }
             }
             .padding(.horizontal)
             .padding(.vertical, 12)
@@ -317,6 +319,7 @@ private struct SeriesCard: View {
                     }
             }
         }
+        .appChartEntry()
         .chartXSelection(value: $touched)
         .chartYScale(domain: .automatic(includesZero: false))
         .chartXAxis {
@@ -458,6 +461,7 @@ struct BlockLoadChart: View {
                     .foregroundStyle(doc.color(of: bar.blockId).opacity(bar.blockId == nil ? 0.4 : 0.85))
                     .cornerRadius(3)
             }
+            .appChartEntry()
             .chartXAxis { WeeklyAxis.months }
             .chartYAxis {
                 AxisMarks(position: .leading) { value in

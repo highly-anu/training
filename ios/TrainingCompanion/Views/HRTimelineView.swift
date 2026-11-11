@@ -93,6 +93,7 @@ struct HRTimelineView: View {
                     }
             }
         }
+        .appChartEntry()
         .chartYScale(domain: lo...hi)
         .chartXSelection(value: scrub)
         .chartXAxis(.hidden)

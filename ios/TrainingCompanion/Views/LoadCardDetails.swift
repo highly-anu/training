@@ -81,6 +81,7 @@ struct ModalityDonut: View {
                         .foregroundStyle(share.color)
                         .cornerRadius(3)
                 }
+                .appChartEntry()
                 if let top = shares.first {
                     VStack(spacing: 2) {
                         Text("\(top.pct)%").font(.title3).fontWeight(.bold).monospacedDigit()
@@ -125,6 +126,7 @@ struct ActivityBars: View {
                         .fixedSize()
                 }
         }
+        .appChartEntry()
         .chartXAxis(.hidden)
         .chartYAxis {
             AxisMarks(preset: .aligned) { value in
@@ -220,6 +222,7 @@ struct WeeklySessionsChart: View {
                     .foregroundStyle(Self.color(entry.sessionCount))
                     .cornerRadius(4)
             }
+            .appChartEntry()
             .chartXAxis { WeeklyAxis.months }
             .chartYAxis {
                 AxisMarks(position: .leading) { value in
@@ -273,6 +276,7 @@ struct WeeklyTRIMPChart: View {
                 .foregroundStyle(Color.orange)
                 .cornerRadius(4)
         }
+        .appChartEntry()
         .chartXAxis { WeeklyAxis.months }
         .chartYAxis {
             AxisMarks(position: .leading) { value in

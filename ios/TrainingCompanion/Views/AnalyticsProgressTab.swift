@@ -122,30 +122,32 @@ struct AnalyticsProgressTab: View {
         return ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 16) {
-                    if let frame = doc.frame { frameCard(frame) }
-                    if let review { overviewCard(review: review) }
-                    ProgressChartView(doc: doc, selection: $chartSelection, finding: finding)
-                        .id("chart")
-                    ForEach(doc.methodologies) { method in
-                        MethodologySectionView(method: method, doc: doc, chartable: chartable,
-                                               selectedId: chartSelection.flatMap {
-                                                   if case .measure(let key) = $0 { return key }; return nil
-                                               }) { key in
-                            AppHaptics.light()
-                            withAnimation(AppAnimation.springStandard) { chartSelection = .measure(id: key) }
-                            withAnimation(AppAnimation.springStandard) { proxy.scrollTo("chart", anchor: .center) }
+                    AppScrollFade {
+                        if let frame = doc.frame { frameCard(frame) }
+                        if let review { overviewCard(review: review) }
+                        ProgressChartView(doc: doc, selection: $chartSelection, finding: finding)
+                            .id("chart")
+                        ForEach(doc.methodologies) { method in
+                            MethodologySectionView(method: method, doc: doc, chartable: chartable,
+                                                   selectedId: chartSelection.flatMap {
+                                                       if case .measure(let key) = $0 { return key }; return nil
+                                                   }) { key in
+                                AppHaptics.light()
+                                withAnimation(AppAnimation.springStandard) { chartSelection = .measure(id: key) }
+                                withAnimation(AppAnimation.springStandard) { proxy.scrollTo("chart", anchor: .center) }
+                            }
                         }
+                        if let scorecard = doc.scorecard { ScorecardCard(scorecard: scorecard) }
+                        if let intensity = doc.intensity { IntensityCard(intensity: intensity) }
+                        if let benchmarks = doc.benchmarks, benchmarks.rows.contains(where: \.primary) {
+                            ProgramStandardsCard(benchmarks: benchmarks)
+                        }
+                        if let shapes = doc.archetypes, !shapes.isEmpty { SessionShapesCard(rows: shapes) }
+                        if let load = doc.load { LoadCard(load: load) }
+                        if let review { adviceCards(review) }
+                        if !doc.sectionErrors.isEmpty { sectionErrorsCard(doc.sectionErrors) }
+                        Spacer(minLength: 24)
                     }
-                    if let scorecard = doc.scorecard { ScorecardCard(scorecard: scorecard) }
-                    if let intensity = doc.intensity { IntensityCard(intensity: intensity) }
-                    if let benchmarks = doc.benchmarks, benchmarks.rows.contains(where: \.primary) {
-                        ProgramStandardsCard(benchmarks: benchmarks)
-                    }
-                    if let shapes = doc.archetypes, !shapes.isEmpty { SessionShapesCard(rows: shapes) }
-                    if let load = doc.load { LoadCard(load: load) }
-                    if let review { adviceCards(review) }
-                    if !doc.sectionErrors.isEmpty { sectionErrorsCard(doc.sectionErrors) }
-                    Spacer(minLength: 24)
                 }
                 .padding(.horizontal)
                 .padding(.vertical, 12)
@@ -540,6 +542,7 @@ struct IntensityWeeksChart: View {
             BarMark(x: .value("Week", String(slice.position)), y: .value("Minutes", slice.minutes))
                 .foregroundStyle(by: .value("Zone", slice.zone))
         }
+        .appChartEntry()
         .chartXAxis {
             AxisMarks { value in
                 AxisValueLabel {

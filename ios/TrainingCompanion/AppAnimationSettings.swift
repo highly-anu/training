@@ -26,6 +26,13 @@ enum AppAnimation {
     /// time is.
     static let tick = Animation.linear(duration: 1)
 
+    /// A chart drawing itself the first time it appears (`appChartEntry`):
+    /// slower than a state change and without overshoot — a line that bounced
+    /// past its last point would show a value that is not there.
+    static var chartEntry: Animation {
+        reduced ?? .spring(response: 0.7, dampingFraction: 1)
+    }
+
     /// A placeholder's pulse while its screen loads (§7.3); never run under
     /// Reduce Motion.
     static let shimmer = Animation.easeInOut(duration: 0.9)

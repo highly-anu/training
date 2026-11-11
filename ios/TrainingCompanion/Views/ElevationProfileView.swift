@@ -53,6 +53,7 @@ struct ElevationProfileView: View {
                     .lineStyle(StrokeStyle(lineWidth: 1))
             }
         }
+        .appChartEntry()
         .chartYScale(domain: yLo...yHi)
         .chartXSelection(value: scrub)
         .chartXAxis(.hidden)

@@ -681,7 +681,9 @@ Never edit a generated file.
 Shared iOS style primitives live in `AppTheme.swift` (`AppColor`, `AppFont`),
 `AppAnimationSettings.swift` (`AppAnimation`, `AppHaptics`, `AppMetrics`,
 `appTabStyle()`), `AppCard.swift` (`AppCard` / `.appCard()`, `SectionLabel`,
-`.appButton(_:)`) and `AppSubTabs.swift`. The tint is amber (`AccentColor`, the
+`.appButton(_:)`), `AppSubTabs.swift` and `AppMotion.swift` (rolling numbers, symbol
+effects, the scroll fade, chart entry — the only file that may write `.contentTransition(`,
+`.symbolEffect(` or `.scrollTransition(`; design-system §7.5, §6.56). The tint is amber (`AccentColor`, the
 same asset in all four targets; it was empty, so the app shipped system blue,
 until 1.35) and done is emerald (`AppColor.complete`). A view writes no colour
 literal, fixed font size, animation curve or `.bordered` button style of its

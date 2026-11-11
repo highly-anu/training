@@ -4,7 +4,7 @@ import SwiftUI
 /// session's modality colour) or rest. A tap selects the day, so the strip is
 /// the day pager's second control (design-system §6.50).
 struct WeekStrip: View {
-    enum Status { case done, planned, rest }
+    enum Status: Equatable { case done, planned, rest }
 
     struct Day: Identifiable {
         let offset: Int
@@ -61,22 +61,22 @@ struct WeekStrip: View {
         .contentShape(Rectangle())
     }
 
-    @ViewBuilder
+    /// One image whose symbol follows the day, so a day done fills its dot in
+    /// place (§6.56) rather than swapping one view for another.
     private func mark(_ day: Day) -> some View {
+        let symbol: String, font: Font, style: AnyShapeStyle
         switch day.status {
         case .done:
-            Image(systemName: "checkmark.circle.fill")
-                .font(.footnote)
-                .foregroundStyle(AppColor.complete)
+            (symbol, font, style) = ("checkmark.circle.fill", .footnote, AnyShapeStyle(AppColor.complete))
         case .planned:
-            Image(systemName: "circle.fill")
-                .font(.caption2)
-                .foregroundStyle(day.color ?? AppColor.accent)
+            (symbol, font, style) = ("circle.fill", .caption2, AnyShapeStyle(day.color ?? AppColor.accent))
         case .rest:
-            Image(systemName: "minus")
-                .font(.caption2.weight(.semibold))
-                .foregroundStyle(.tertiary)
+            (symbol, font, style) = ("minus", .caption2.weight(.semibold), AnyShapeStyle(.tertiary))
         }
+        return Image(systemName: symbol)
+            .font(font)
+            .foregroundStyle(style)
+            .appSymbolReplace(value: day.status)
     }
 
     private func label(_ day: Day) -> String {

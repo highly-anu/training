@@ -202,6 +202,7 @@ struct ProgressChartView: View {
                 RuleMark(x: .value("Selected", t)).foregroundStyle(Color.primary.opacity(0.25))
             }
         }
+        .appChartEntry()
         // The legend names the dashed line only when there is one: a lift the
         // method works up on the day has no prescribed kg.
         .chartForegroundStyleScale(series.points.contains { $0.planned != nil }

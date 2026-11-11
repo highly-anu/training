@@ -990,6 +990,7 @@ the same flag.
 | `layoutChange` | response 0.5, damping 0.88 | Content arriving, leaving or moving in a list |
 | `crossfade` | ease in-out, 0.2 s | Loaded content fading in; every spring under Reduce Motion |
 | `tick` | linear, 1 s | A clock's hand between two seconds (the player's countdown ring) |
+| `chartEntry` | response 0.7, no bounce | A chart drawing itself the first time it appears (§7.5) |
 
 ### 7.2 Standard Transitions
 
@@ -1025,6 +1026,21 @@ pull to refresh keeps the content and the system's own indicator.
 
 Pull-to-refresh goes through `AppRefresh.perform` (light on trigger, 600 ms minimum,
 success at the end).
+
+### 7.5 Small Motions
+
+One modifier each, in `AppMotion.swift`, timed by an `AppAnimation` preset and still under
+Reduce Motion. A view never writes `.contentTransition(`, `.symbolEffect(` or
+`.scrollTransition(` of its own (`DesignTokenTests`). Where each is used: §6.56.
+
+| Modifier | What | Under Reduce Motion |
+|---|---|---|
+| `appNumeric(value:countsDown:)` | A number rolls to its new value (`springSnappy`); without `value`, the roll alone, for a clock its owner already animates | Fades |
+| `appSymbolBounce(value:)` | A symbol bounces once: something was earned | Nothing |
+| `appSymbolReplace(value:)` | One image whose symbol follows a state: pause / play, linked or not, a day's mark | Fades |
+| `appSymbolSpin(isActive:)` | A symbol turns while work runs | Still |
+| `AppScrollFade { … }` / `appScrollFade()` | A card eases in and out at the scroll's edge (opacity to 0.65, scale to 0.97), settled once a third of it shows | Nothing |
+| `appChartEntry()` | A chart is drawn from its leading edge, once | Drawn at once |
 
 ---
 
@@ -2411,3 +2427,31 @@ from nowhere on completion, and a note could not be written beforehand.
 profiles) are `.appCard(compact:border:tint:)` with a check mark when chosen.
 Replace and Add session (`ReplaceWorkoutSheet`) search with the system's `.searchable`
 and switch Browse / Search with `AppSubTabPicker`; its own search field is gone.
+
+### 6.56 Motion Helpers and the Completion Moment
+
+`AppMotion.swift` (§7.5). Where each goes:
+
+- **Numbers that change while on screen** take `appNumeric(value:)`: Today's three tiles,
+  Recovery's readiness score, Load's totals, done of scheduled, the player's clocks and
+  counts, Workout complete's sets. A number that only ever arrives with its screen needs
+  nothing.
+- **A symbol that follows a state** is one `Image` with a computed name and
+  `appSymbolReplace(value:)` — never two images in an `if`: the exercise row's log circle,
+  mark complete, a linked pair, the week strip's day mark (`WeekStrip.Status` is the
+  value), the player's pause / play. `appSymbolBounce` is for what was earned (Workout
+  complete's check and records).
+- **Card stacks** — Today's dashboard and the four Analytics sections — wrap their cards
+  in `AppScrollFade { … }` inside the stack, so a card added later gets it. Lists of rows
+  do not.
+- **Every `Chart`** ends with `.appChartEntry()`. It masks, so it never changes the
+  chart's layout, and the mask is gone once the reveal is over.
+
+**The completion moment.** A session is finished behind a cover — the detail sheet, the
+player — so its card would change unseen. `AppState.justCompleted` holds the key
+(`markSessionComplete`, `finishWorkout`; cleared by undo), and Today draws that session
+as not yet done (`isShownComplete`) until Today is uncovered: then, after 450 ms, the
+card's stripe turns from its modality colour to emerald, the check scales in, Start
+workout leaves and the week strip's dot becomes its check, in one `springStandard`. The
+success haptic stays with the tap that finished it. Under Reduce Motion the same change
+crossfades.

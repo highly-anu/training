@@ -17,17 +17,19 @@ struct AnalyticsRecoveryTab: View {
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 16) {
-                if let error = appState.readinessError {
-                    AppErrorBanner(message: "Readiness could not be read: \(error)") {
-                        await appState.loadRecentBioLogs()
-                        await appState.loadReadiness()
+                AppScrollFade {
+                    if let error = appState.readinessError {
+                        AppErrorBanner(message: "Readiness could not be read: \(error)") {
+                            await appState.loadRecentBioLogs()
+                            await appState.loadReadiness()
+                        }
                     }
+                    readinessCard
+                    sleepCard
+                    trendCard(.hrv, header: "HRV")
+                    trendCard(.restingHR, header: "Resting Heart Rate")
+                    checkInHistoryCard
                 }
-                readinessCard
-                sleepCard
-                trendCard(.hrv, header: "HRV")
-                trendCard(.restingHR, header: "Resting Heart Rate")
-                checkInHistoryCard
             }
             .padding(.horizontal)
             .padding(.vertical, 12)
@@ -88,6 +90,7 @@ struct AnalyticsRecoveryTab: View {
                         Text("\(result.score)")
                             .font(.largeTitle).fontWeight(.bold).fontDesign(.rounded).monospacedDigit()
                             .foregroundStyle(result.statusColor)
+                            .appNumeric(value: result.score)
                             .accessibilityLabel("Readiness \(result.score), \(result.statusLabel)")
                         if let latest = logs.first {
                             VStack(alignment: .leading, spacing: 6) {

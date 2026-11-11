@@ -302,6 +302,7 @@ struct SessionDetailView: View {
         } label: {
             Image(systemName: logged ? "checkmark.circle.fill" : "circle")
                 .font(.title3)
+                .appSymbolReplace(value: logged)
                 .foregroundStyle(logged ? AnyShapeStyle(AppColor.complete) : AnyShapeStyle(.tertiary))
                 .frame(width: 32, height: 44)
                 .contentShape(Rectangle())
@@ -661,6 +662,7 @@ struct SessionDetailView: View {
                     ProgressView().scaleEffect(0.9)
                 } else {
                     Image(systemName: isDone ? "xmark.circle" : "checkmark.circle.fill")
+                        .appSymbolReplace(value: isDone)
                 }
                 Text(isDone ? "Mark Incomplete" : "Mark Session Complete")
                     .fontWeight(.semibold)

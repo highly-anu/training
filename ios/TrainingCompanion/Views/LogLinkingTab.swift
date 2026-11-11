@@ -209,6 +209,7 @@ struct LogLinkingTab: View {
             HStack(spacing: 8) {
                 Image(systemName: linked ? "checkmark.circle.fill" : "arrow.turn.down.right")
                     .foregroundStyle(linked ? AppColor.complete : Color.secondary)
+                    .appSymbolReplace(value: linked)
                     .frame(width: 22)
                 sessionLine(s)
             }

@@ -27,13 +27,14 @@ struct TodaySessionCard: View {
     private var color: Color { ModalityStyle.color(for: session.modality) }
 
     var body: some View {
-        let done = appState.isSessionComplete(item.key)
+        let done = appState.isShownComplete(item.key)
         let linked = appState.linkedWorkout(forSessionKey: item.key) != nil
 
         VStack(alignment: .leading, spacing: AppMetrics.gapMedium) {
             HStack(spacing: 14) {
+                // Its modality's colour until it is done, then emerald (§6.56).
                 RoundedRectangle(cornerRadius: 3)
-                    .fill(color)
+                    .fill(done ? AppColor.complete : color)
                     .frame(width: 4)
                     .frame(maxHeight: .infinity)
 
@@ -62,6 +63,7 @@ struct TodaySessionCard: View {
                         if done {
                             Image(systemName: "checkmark.circle.fill").foregroundStyle(AppColor.complete)
                                 .accessibilityLabel("Done")
+                                .transition(.scale(scale: 0.4).combined(with: .opacity))
                         }
                     }
                     HStack(spacing: 6) {

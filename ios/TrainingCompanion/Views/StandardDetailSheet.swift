@@ -273,6 +273,7 @@ struct StandardHistoryChart: View {
                     }
             }
         }
+        .appChartEntry()
         .chartXScale(domain: xDomain)
         .chartYScale(domain: yDomain)
         .chartYAxis(.hidden)
