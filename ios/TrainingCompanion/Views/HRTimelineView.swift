@@ -6,6 +6,9 @@ struct HRTimelineView: View {
     let avgHR: Int?
     var maxHR: Int? = nil
     var hrConfig: HRConfig? = nil
+    /// The moment under the finger, in seconds from the start: one value the
+    /// workout's charts share (§6.10), so it stays put from HR to pace.
+    var scrub: Binding<Double?> = .constant(nil)
 
     struct HRPoint {
         let elapsed: Double
@@ -72,6 +75,12 @@ struct HRTimelineView: View {
                 .interpolationMethod(.catmullRom)
             }
 
+            if let at = scrub.wrappedValue {
+                RuleMark(x: .value("Time", at))
+                    .foregroundStyle(.secondary)
+                    .lineStyle(StrokeStyle(lineWidth: 1))
+            }
+
             // Avg rule
             if let avg = avgHR {
                 RuleMark(y: .value("Avg", avg))
@@ -85,6 +94,7 @@ struct HRTimelineView: View {
             }
         }
         .chartYScale(domain: lo...hi)
+        .chartXSelection(value: scrub)
         .chartXAxis(.hidden)
         .chartYAxis {
             AxisMarks(position: .leading, values: .stride(by: 20)) { value in

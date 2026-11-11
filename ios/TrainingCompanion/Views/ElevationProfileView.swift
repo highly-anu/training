@@ -4,6 +4,9 @@ import Charts
 struct ElevationProfileView: View {
     let points: [GPSPoint]
     let gainM: Double?
+    /// The moment under the finger, in seconds from the start: one value the
+    /// workout's charts share (§6.10), so it stays put from HR to pace.
+    var scrub: Binding<Double?> = .constant(nil)
 
     struct AltPoint {
         let elapsed: Double
@@ -44,8 +47,14 @@ struct ElevationProfileView: View {
                 .interpolationMethod(.catmullRom)
                 .lineStyle(StrokeStyle(lineWidth: 1.5))
             }
+            if let at = scrub.wrappedValue {
+                RuleMark(x: .value("Time", at))
+                    .foregroundStyle(.secondary)
+                    .lineStyle(StrokeStyle(lineWidth: 1))
+            }
         }
         .chartYScale(domain: yLo...yHi)
+        .chartXSelection(value: scrub)
         .chartXAxis(.hidden)
         .chartYAxis {
             AxisMarks(position: .leading, values: .stride(by: strideValue)) { value in
@@ -67,7 +76,7 @@ struct ElevationProfileView: View {
         }
         .task(id: points.count) {
             let computed = await Task.detached(priority: .userInitiated) {
-                buildChartData(points)
+                Self.buildData(points: points)
             }.value
             chartData = computed.data
             yLo = computed.lo
@@ -83,7 +92,8 @@ struct ElevationProfileView: View {
     }
 }
 
-nonisolated private func buildChartData(_ points: [GPSPoint]) -> (data: [ElevationProfileView.AltPoint], lo: Double, hi: Double) {
+extension ElevationProfileView {
+  nonisolated static func buildData(points: [GPSPoint]) -> (data: [AltPoint], lo: Double, hi: Double) {
     guard let first = points.first else { return ([], 0, 500) }
 
     let iso = ISO8601DateFormatter()
@@ -116,4 +126,5 @@ nonisolated private func buildChartData(_ points: [GPSPoint]) -> (data: [Elevati
     let lo = (alts.min() ?? 0) - 15
     let hi = (alts.max() ?? 500) + 15
     return (data, lo, hi)
+  }
 }

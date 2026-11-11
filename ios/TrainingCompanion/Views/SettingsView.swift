@@ -56,19 +56,16 @@ struct SettingsView: View {
         List {
             // The web Settings' order (information-architecture.md §2):
             // Connections (devices included) · Appearance · Account, with the
-            // phone-only Notifications after Connections and the developer
-            // sections last. The debug log stays in release builds: on the
-            // athlete's own phone it is the only way to read a sync failure.
+            // phone-only Workout and Notifications between, and everything a
+            // developer or a failed sync needs behind one row (§6.13).
             connectionsSection
             devicesSection
             pairGarminSection
-            notificationsSection
             workoutSection
+            notificationsSection
             appearanceSection
             accountSection
-            syncCategoriesSection
-            apiTargetSection
-            debugLogSection
+            diagnosticsSection
         }
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
@@ -160,6 +157,30 @@ struct SettingsView: View {
 
     /// Identity, sign out and account deletion (§6.29).
     private var accountSection: some View { AccountSection() }
+
+    // MARK: - Diagnostics
+
+    /// Sync details, the API target and the debug log, one push away: until
+    /// 1.39 they were three sections under Account on the screen itself. The
+    /// log stays in release builds — on the athlete's own phone it is the
+    /// only way to read a sync failure.
+    private var diagnosticsSection: some View {
+        Section {
+            NavigationLink {
+                List {
+                    syncCategoriesSection
+                    apiTargetSection
+                    debugLogSection
+                }
+                .navigationTitle("Diagnostics")
+                .navigationBarTitleDisplayMode(.inline)
+            } label: {
+                Label("Diagnostics", systemImage: "stethoscope")
+            }
+        } footer: {
+            Text("When each sync last ran, where this build sends its requests, and the debug log.")
+        }
+    }
 
     // MARK: - API target (development)
 

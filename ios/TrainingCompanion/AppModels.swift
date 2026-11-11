@@ -179,6 +179,24 @@ struct AppBenchmark: Codable, Identifiable {
 
 // MARK: - Philosophies
 
+/// A methodology's comparable facts (`GET /philosophies/glance`): the same
+/// keys for every one, so the builder's cards can be read against each other.
+struct PhilosophyGlance: Decodable, Identifiable {
+    struct Span: Decodable { let min: Int?; let ideal: Int? }
+    let id: String
+    let levels: [String]?
+    let weeks: Span?
+    let daysPerWeek: Span?
+    let sessionMinutes: Span?
+
+    /// "12 wk · 3 days/wk · 30 min": the ideal of each, what it has of them.
+    var facts: [String] {
+        [weeks?.ideal.map { "\($0) wk" },
+         daysPerWeek?.ideal.map { "\($0) \($0 == 1 ? "day" : "days")/wk" },
+         sessionMinutes?.ideal.map { "\($0) min" }].compactMap { $0 }
+    }
+}
+
 struct PhilosophyCard: Codable, Identifiable {
     let id: String
     let name: String

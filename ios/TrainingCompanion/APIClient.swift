@@ -296,6 +296,11 @@ final class APIClient {
         return (try? JSONDecoder().decode([PhilosophyCard].self, from: data)) ?? []
     }
 
+    func fetchPhilosophyGlance() async throws -> [PhilosophyGlance] {
+        let data = try await get("/philosophies/glance")
+        return try JSONDecoder().decode([Lossy<PhilosophyGlance>].self, from: data).compactMap(\.value)
+    }
+
     func fetchInjuryFlags() async throws -> [InjuryFlagDef] {
         let data = try await get("/constraints/injury-flags")
         return (try? JSONDecoder().decode([InjuryFlagDef].self, from: data)) ?? []

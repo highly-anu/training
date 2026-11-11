@@ -286,7 +286,8 @@ Z5 red — easy to hard. Every zone drawn on the phone reads it: Analytics ▸
 Program's intensity rows, a workout's zone distribution and HR timeline bands,
 and Profile ▸ Athlete's zone bar (the five zones as one bar, each segment as
 wide as its share of heart rate, its bpm range under it; each edge's stepper
-carries the colour of the zone it ends). The timeline used to draw slate/sky
+carries the colour of the zone it ends; the bar is as tall as its label at the
+athlete's text size, never a fixed height). The timeline used to draw slate/sky
 bands from the web palette while the rest drew blue…red.
 
 ---
@@ -751,6 +752,14 @@ WorkoutChartsSection(workout: detail, hrConfig: appState.profile.hrConfig)
   HR select a chart that did not exist, and that bug had already been copied
   into the second screen. Prefer making a bad state unrepresentable over fixing
   it in each copy.
+- **One scrubber for all three** (since 1.39). Each chart takes `scrub:
+  Binding<Double?>` — seconds from the start — and draws a rule there
+  (`chartXSelection`); the section owns the value, so it stays put from HR to
+  pace. The line above the chart reads the moment in every series
+  (`WorkoutScrub.readout`: "12:30 · 142 bpm · 5:12 /km · 412 m"; a value only
+  when one was recorded within a minute, so a pause reads as nothing), and says
+  "Drag across the chart to read a moment" until the first touch. Pure, in
+  `WorkoutScrubTests`. No chart could be read before.
 - **Availability thresholds live in the component**: HR needs one sample,
   elevation one point with an altitude, pace ten points moving faster than
   0.3 m/s — enough to draw a line, not a dot.
@@ -869,7 +878,7 @@ modality and no session, so the modality icon is the correct and only answer.
 
 | Tab | Root | Sections (`AppSubTabs`) |
 |---|---|---|
-| **Today** | `TodayView` | — (cards: sessions, readiness, suggestions, development, progression) |
+| **Today** | `Views/Today/TodayView` | — (the day's sessions, what waits for an answer, three tiles — §6.53) |
 | **Program** | `ProgramView` | Overview · Calendar · History |
 | **Analytics** | `AnalyticsView` | Progress · Blocks · Load · Recovery |
 | **Log** | `LogView` | Activity · Linking |
@@ -889,11 +898,14 @@ it shrinks on a scroll down (`tabBarMinimizeBehavior(.onScrollDown)`) and carrie
 kept workout as its bottom accessory (§6.45). The first case is still named `.dashboard`
 because the widgets deep-link to it; its label is "Today".
 
-**Settings is pushed from Profile's toolbar gear** (`Views/SettingsView.swift`):
-Connections (integration toggles), Devices & Sync (pairing, Sync Now, last
-sync, sync details, debug log), Notifications (local session reminders —
-`NotificationManager.swift`, rescheduled from the stored program on every
-program change), Appearance, Account (sign out). Until
+**Settings is pushed from Profile's toolbar gear** (`Views/SettingsView.swift`),
+in this order: Connections (integration toggles), Devices & Sync (pairing, Sync
+Now, last sync), Workout (the player's cues), Notifications (local session
+reminders — `NotificationManager.swift`, rescheduled from the stored program on
+every program change), Appearance, Account (sign out), and last one
+**Diagnostics** row that pushes what the athlete never needs: when each sync
+last ran, the API target (the switch in debug builds) and the debug log. Until
+1.39 those three sat among the settings. Until
 2026-10-01 these lived on a fifth "Sync" tab — a debug screen that held the
 only sign-out, the integration switches and a hidden program mutation. A tab
 is a place the athlete goes every day; a setting is something they change once.
@@ -1457,7 +1469,7 @@ the builder's track picker (step 2) and review (step 4), the Program settings
 sheet under its Track picker, and the methodology sheet (§6.18), which passes
 `showsDescriptions: true` to add each phase's description.
 
-`StartPhasePicker` (in `ProgramBuilderFlow.swift`) picks where a program
+`StartPhasePicker` (in `Views/ProgramBuilder/BuilderConstraintsStep.swift`) picks where a program
 starts from the chosen track's own phases; `nil` is the first phase. The
 builder (step 3) and the settings sheet use it, and both disable it while an
 event date is set, because the server then counts the phases back from the
@@ -2279,6 +2291,9 @@ player. Under Reduce Motion `appZoom` does nothing and the system's own transiti
   `dayRange` (the program's span around today, clamped to eight weeks either way, today
   always a page; a week either way without a program), `week(around:)` (Monday to Sunday
   as day offsets), `step`.
+- **`fitsPage: true`** makes the pager as tall as the page on show rather than the
+  tallest page, for pages of very different heights: Today's rest day beside a day of
+  three sessions left a gap over whatever followed.
 
 Today's days and Program ▸ Calendar's weeks use it. Both were hand-rolled `DragGesture`s
 with no control until 1.38: nothing said another day was there.
@@ -2331,3 +2346,68 @@ the athlete does the thing:
 A tip teaches a control that is already visible; it never stands in for one. A third tip
 needs one of these to go. `Tips.configure()` runs at launch; debug builds take
 `SIMCTL_CHILD_TC_TIPS=show|hide` so a screenshot has every tip or none.
+
+### 6.53 Today
+
+**The day's session first, then what waits for an answer, then three numbers.**
+`Views/Today/` — `TodayView` (the screen), `TodaySessionCard`, `TodayInbox`,
+`TodaySummary`. One 1,040-line file until 1.39.
+
+1. **Where the athlete is**: the program's name over "Week 3 · Build". The date is the
+   pager's title (§6.49), not a second heading.
+2. **The day** — pager header, week strip (§6.50), then the day's sessions.
+   `TodaySessionCard`: the modality capsule, the session's icon and name, minutes and
+   exercise count, its "…" (§6.43). **The session to do next carries Start workout**, in
+   its modality colour, which opens the player (§6.44) straight from the tab; the card
+   itself still opens the detail. A done session shows its emerald mark and no button;
+   a later day's session none either.
+3. **The inbox** (`TodayInbox`): workouts that look like planned sessions and results to
+   confirm, three of each at most, each row the shared component (§6.34, the match
+   suggestion row); the rest are in Log ▸ Linking and Profile ▸ Standards.
+4. **Three tiles** (`TodaySummary`, `TodayTile`): Readiness, Adherence, Progress — one
+   number or mark each in its status colour (`AppFont.metricCompact`), a line under it,
+   and a tap into the Analytics section that explains it. A tile with nothing to say
+   shows a dash, never a zero. They were three full cards, and the session shared the
+   screen with three dashboards.
+
+**Rules**
+
+- Today holds no detail an Analytics section already has; a tile links there.
+- Start is on the card only when the session can be started today; nothing on Today
+  starts a past or future day's session.
+
+### 6.54 Session Detail: After the Session
+
+`SessionDetailView` is the header, then the exercises. What is answered once the work
+is done — "done as written?" for a contract session (or its lifts), the notes, the
+fatigue — is one **After the session** disclosure under the exercises: closed while the
+session is untouched, open by itself once something is logged, a workout is linked or
+the session is done. Its label's second line says what is inside ("Done as written,
+notes, fatigue"). Until 1.39 Progress and Session Notes were two sections that appeared
+from nowhere on completion, and a note could not be written beforehand.
+
+### 6.55 Program Builder
+
+`Views/ProgramBuilder/` — `BuilderState` (the draft and what is valid),
+`ProgramBuilderFlow` (the shell), one file a step (`BuilderMethodologyStep`,
+`BuilderScheduleStep`, `BuilderConstraintsStep`, `BuilderReviewStep`);
+`Views/ProgramSettingsSheet.swift` is the settings sheet that shared its file.
+
+- **Step indicator** (`BuilderStepIndicator`), the navigation bar's title: "Step 2 of
+  4 · Schedule" over four capsules, amber up to the current one. Read as one element
+  by VoiceOver.
+- **The way forward is the action bar** (§6.47): "Next", and on the last step "Preview
+  program" — disabled while the step is not valid (`BuilderState.entryReady` on the
+  last: the method's required movements ticked). It was a text button in the toolbar,
+  and the last step had a second button in its list.
+- **A methodology card says what it asks**: its icon, name, the comparable facts
+  `/philosophies/glance` serves ("12 wk · 3 days/wk · 30 min", `PhilosophyGlance.facts`,
+  the ideal of each) and two lines of its summary; selected is the accent border, tint
+  and a filled check, never colour alone. The (i) opens the methodology sheet (§6.18).
+- Debug builds open the builder on launch with
+  `SIMCTL_CHILD_TC_BUILDER=<step>[:<philosophy id>]`.
+
+**Selection cards** everywhere (the builder's methodologies, Profile ▸ Equipment's
+profiles) are `.appCard(compact:border:tint:)` with a check mark when chosen.
+Replace and Add session (`ReplaceWorkoutSheet`) search with the system's `.searchable`
+and switch Browse / Search with `AppSubTabPicker`; its own search field is gone.

@@ -4,6 +4,9 @@ import Charts
 struct PaceTimelineView: View {
     let points: [GPSPoint]
     let distanceKm: Double?
+    /// The moment under the finger, in seconds from the start: one value the
+    /// workout's charts share (§6.10), so it stays put from HR to pace.
+    var scrub: Binding<Double?> = .constant(nil)
 
     struct PacePoint {
         let elapsed: Double
@@ -40,6 +43,11 @@ struct PaceTimelineView: View {
                         .foregroundStyle(.blue.opacity(0.8))
                         .interpolationMethod(.linear)
                     }
+                    if let at = scrub.wrappedValue {
+                        RuleMark(x: .value("Time", at))
+                            .foregroundStyle(.secondary)
+                            .lineStyle(StrokeStyle(lineWidth: 1))
+                    }
                     if let avg = avgPace {
                         RuleMark(y: .value("Avg", avg))
                             .foregroundStyle(.orange)
@@ -63,6 +71,7 @@ struct PaceTimelineView: View {
                         }
                     }
                 }
+                .chartXSelection(value: scrub)
                 .chartXAxis(.hidden)
             }
         }

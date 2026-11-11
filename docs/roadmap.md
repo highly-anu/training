@@ -54,7 +54,7 @@ deferred is under *Later*.
 | 15 | Program preview on the phone; the regenerate offer that asks the server first (*IA*) | P2 | M | iOS, web |
 | 16 | Garmin's official Connect API, open again since 2026-10-21: verify the integration, then health data and workouts pushed to the watch | P2 | M | API, watch, web, iOS |
 | 17 | Explore: each philosophy's page read from its package — a server document, its week and rules, one colour system | P2 | M | API, web, iOS, content |
-| 18 | Phone design and interaction uplift: the foundation (1.35), states (1.36), iOS 26 chrome (1.37) and discoverable actions (1.38) are in; screen passes, motion, accessibility left (*IA*) | P2 | L | iOS |
+| 18 | Phone design and interaction uplift: the foundation (1.35), states (1.36), iOS 26 chrome (1.37), discoverable actions (1.38) and the screen passes (1.39) are in; motion, accessibility left (*IA*) | P2 | L | iOS |
 
 ---
 
@@ -1610,14 +1610,18 @@ Log ▸ Linking, on a standard's results; remove buttons on logger sets and cust
 `MeasureRow` one push target with a chart button; the Progress chart's readout shown
 before the first touch; two TipKit tips. Design-system §6.43, §6.49–§6.52.
 
+**Done — 5. Screen passes** (1.39.0, `feat/ios-screens`). Today is `Views/Today/`: the
+day's session as the hero card with Start workout on it, the inbox, Readiness / Adherence
+/ Progress as three tiles; the pager is as tall as its page and titled with the date. The
+builder is `Views/ProgramBuilder/`, a file a step: a step indicator, the glance facts on
+each methodology card (the phone now reads `/philosophies/glance`), Next / Preview program
+in the action bar. Session detail folds done-as-written, notes and fatigue into "After the
+session". A workout's charts share one scrubber with a readout line. Profile's selection
+cards and zone bar, Settings' Diagnostics row, `.searchable` in Replace, activity names
+capitalised in Linking. Design-system §6.10, §6.13, §6.49, §6.53–§6.55.
+
 **Left, in order:**
 
-5. *Screen passes.* Today (split per card; the session as the hero with Start on it;
-   Readiness / Adherence / Progress three-up; the match-suggestion row wraps its date
-   and the pager leaves a gap under it; the pager title reads "Today" under the date
-   heading; Linking shows activity names in lower case), the builder (a step indicator, the glance
-   facts, a bottom bar), Session detail, Workout detail (one scrubber across the charts),
-   Profile, Settings (grouped, debug behind one row), `.searchable` in Replace.
 6. *Motion.* `numericText` on live numbers, `symbolEffect` on state changes,
    `scrollTransition` on card stacks, the completion moment, chart entry once.
 7. *Accessibility and system surfaces.* Labels and values on the screens with none, chart

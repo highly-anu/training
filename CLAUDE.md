@@ -623,7 +623,8 @@ group's name.
   - **Regenerates** send the target week's `track_id`, `start_phase` and
     `periodization_week` (web `lib/programSource.tailResume`, iOS
     `ProgramConstraintsDiff.merged`), so a tail resumes in its own track and phase.
-  - **iOS** decodes `PhilosophyCard.tracks`, reads `phase_id` / `phase_name` /
+  - **iOS** decodes `PhilosophyCard.tracks` (and `/philosophies/glance` for the
+    builder's cards, `PhilosophyGlance`), reads `phase_id` / `phase_name` /
     `track_id` off each week's round-tripped extras (`ProgramWeek.phaseLabel`), colours
     by kind through `PhaseStyle`, and picks tracks and start phases with
     `TrackPhaseList` / `StartPhasePicker` (design-system §3.2, §6.22;
@@ -1124,7 +1125,8 @@ way they own their analytics. Layout and the add-a-philosophy walk-through:
 
 **Start workout runs any session on the phone, step by step** (since 2026-11-11), for an
 athlete who records with a band (a Garmin Cirqa) and reads the steps on the phone.
-`SessionDetailView`'s Start workout opens `Views/WorkoutPlayerView.swift` (design-system
+Start workout — on Today's card for the session to do next (`Views/Today/TodaySessionCard.swift`,
+design-system §6.53) and in `SessionDetailView` — opens `Views/WorkoutPlayerView.swift` (design-system
 §6.44–6.45), which reads that day's `today-session?spec=1&date=` (`fetchWatchDay`) and
 picks the session by `sessionId`, else builds the steps from the stored program
 (`PlayerFallback`, no `last`). It runs on **the Apple Watch's engine**
@@ -1311,7 +1313,9 @@ A simulator that has never answered the Health sheet shows it on every launch, o
 whatever route was asked for; `SIMCTL_CHILD_TC_SKIP_HEALTH=1` skips the request in
 debug builds (`HealthKitManager.skipsAuthorizationRequest`). `SIMCTL_CHILD_TC_TIPS=hide`
 (or `show`) keeps the two TipKit tips out of (or in) a screenshot.
-Settings ▸ API target shows the current target and, in debug builds, the switch.
+Settings ▸ Diagnostics shows the current API target and, in debug builds, the switch.
+The program builder (`Views/ProgramBuilder/`, a file a step) opens on launch in debug
+builds with `SIMCTL_CHILD_TC_BUILDER=<step>[:<philosophy id>]` (`BuilderDebugLaunch`).
 Never generate, adjust or swap from a simulator pointed at production.
 
 **Releases.** `ios/VERSION` is the version testers see (MAJOR.MINOR.PATCH:

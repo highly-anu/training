@@ -44,15 +44,21 @@ struct AppPager<Page: View>: View {
     /// The screen's side margin, kept inside each page so a page slides
     /// edge to edge.
     var inset: CGFloat = AppMetrics.gapLarge
+    /// The pager is as tall as the page on show, not as the tallest page:
+    /// for pages of very different heights (a rest day beside three
+    /// sessions), so what follows the pager sits under the page.
+    var fitsPage = false
     @ViewBuilder let page: (Int) -> Page
 
     @State private var position: Int?
+    @State private var heights: [Int: CGFloat] = [:]
 
     init(pages: ClosedRange<Int>, selection: Binding<Int>, inset: CGFloat = AppMetrics.gapLarge,
-         @ViewBuilder page: @escaping (Int) -> Page) {
+         fitsPage: Bool = false, @ViewBuilder page: @escaping (Int) -> Page) {
         self.pages = pages
         self._selection = selection
         self.inset = inset
+        self.fitsPage = fitsPage
         self.page = page
         self._position = State(initialValue: selection.wrappedValue)
     }
@@ -61,7 +67,7 @@ struct AppPager<Page: View>: View {
         ScrollView(.horizontal) {
             LazyHStack(alignment: .top, spacing: 0) {
                 ForEach(Array(pages), id: \.self) { index in
-                    page(index)
+                    measured(index)
                         .padding(.horizontal, inset)
                         .containerRelativeFrame(.horizontal)
                         .id(index)
@@ -72,6 +78,8 @@ struct AppPager<Page: View>: View {
         .scrollTargetBehavior(.paging)
         .scrollIndicators(.hidden)
         .scrollPosition(id: $position)
+        .frame(height: fitsPage ? heights[selection] : nil, alignment: .top)
+        .animation(AppAnimation.layoutChange, value: fitsPage ? heights[selection] : nil)
         .onChange(of: position) {
             guard let position, position != selection else { return }
             AppHaptics.soft()
@@ -80,6 +88,20 @@ struct AppPager<Page: View>: View {
         .onChange(of: selection) {
             guard position != selection else { return }
             withAnimation(AppAnimation.springStandard) { position = selection }
+        }
+    }
+}
+
+extension AppPager {
+    /// A page at its own height, reported when the pager fits its page.
+    @ViewBuilder
+    fileprivate func measured(_ index: Int) -> some View {
+        if fitsPage {
+            page(index)
+                .fixedSize(horizontal: false, vertical: true)
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { heights[index] = $0 }
+        } else {
+            page(index)
         }
     }
 }
