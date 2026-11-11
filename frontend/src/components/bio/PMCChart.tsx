@@ -1,3 +1,4 @@
+import { LoadingState, FailedState } from '@/components/shared/states'
 import { useQuery } from '@tanstack/react-query'
 import {
   ResponsiveContainer,
@@ -46,11 +47,24 @@ function formatXAxis(dateStr: string): string {
 
 export function PMCChart() {
   const navigate = useNavigate()
-  const { data: raw = [] } = useQuery({
+  const { data: raw = [], isLoading, error, refetch } = useQuery({
     queryKey: ['pmc'],
     queryFn: fetchPMC,
     staleTime: 10 * 60 * 1000,
   })
+
+  if (isLoading) return <LoadingState shape="block" label="Loading fitness and fatigue" className="h-48" />
+  if (error && raw.length === 0) {
+    return (
+      <FailedState
+        size="compact"
+        className="h-48 border-0 bg-transparent"
+        title="Could not load fitness and fatigue"
+        error={error}
+        onRetry={() => { void refetch() }}
+      />
+    )
+  }
 
   if (raw.length === 0) {
     return (

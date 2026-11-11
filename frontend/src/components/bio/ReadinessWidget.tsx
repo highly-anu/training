@@ -1,3 +1,4 @@
+import { Skeleton } from '@/components/ui/skeleton'
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
@@ -27,7 +28,7 @@ const STATUS_LABEL = { green: 'Ready', yellow: 'Moderate', red: 'Low' } as const
 export function ReadinessWidget() {
   const dailyBioLogs = useBioStore((s) => s.dailyBioLogs)
 
-  const { data: result } = useQuery({
+  const { data: result, isLoading, isError } = useQuery({
     queryKey: ['readiness'],
     queryFn: fetchReadiness,
     staleTime: 5 * 60 * 1000,
@@ -65,14 +66,21 @@ export function ReadinessWidget() {
           {result?.score ?? '—'}
         </span>
         <div className="mb-0.5 space-y-0.5">
-          <span
-            className={cn(
-              'inline-block rounded-full border px-2 py-0.5 text-[10px] font-semibold',
-              styles.badge
-            )}
-          >
-            {STATUS_LABEL[status]}
-          </span>
+          {/* No score yet is not "Ready": the badge waits for the answer. */}
+          {result ? (
+            <span
+              className={cn(
+                'inline-block rounded-full border px-2 py-0.5 text-[10px] font-semibold',
+                styles.badge
+              )}
+            >
+              {STATUS_LABEL[status]}
+            </span>
+          ) : isLoading ? (
+            <Skeleton role="status" aria-label="Loading readiness" className="h-4 w-14 rounded-full" />
+          ) : isError ? (
+            <span className="text-[10px] text-muted-foreground">Could not load</span>
+          ) : null}
           <p className="text-[10px] text-muted-foreground">out of 100</p>
         </div>
 

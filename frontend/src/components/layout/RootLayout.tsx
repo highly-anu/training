@@ -3,6 +3,7 @@ import { AnimatePresence } from 'framer-motion'
 import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
 import { ProgramSaveBanner } from './ProgramSaveBanner'
+import { RouteErrorBoundary } from './RouteErrorBoundary'
 import { useUiStore } from '@/store/uiStore'
 import { cn } from '@/lib/utils'
 
@@ -46,7 +47,7 @@ export function RootLayout() {
         <main className="flex-1 overflow-hidden flex flex-col">
           <AnimatePresence mode="wait">
             <div key={pathname} className="contents">
-              {outlet}
+              <RouteErrorBoundary resetKey={pathname}>{outlet}</RouteErrorBoundary>
             </div>
           </AnimatePresence>
         </main>

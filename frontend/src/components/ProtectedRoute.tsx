@@ -1,3 +1,4 @@
+import { LoadingState } from '@/components/shared/states'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 
@@ -9,7 +10,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-sm text-muted-foreground">Loading…</div>
+        <LoadingState shape="lines" count={3} label="Signing in" className="w-48" />
       </div>
     )
   }

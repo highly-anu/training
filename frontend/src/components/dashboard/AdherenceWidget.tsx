@@ -1,3 +1,4 @@
+import { LoadingState, FailedState } from '@/components/shared/states'
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
@@ -28,7 +29,7 @@ function statusFor(pct: number): 'green' | 'yellow' | 'red' {
  * which could read "On Track" while the Program tab said off plan.
  */
 export function AdherenceWidget() {
-  const { data, isLoading } = useProgramAnalytics()
+  const { data, isLoading, isError, error, refetch } = useProgramAnalytics()
   const sc = data?.scorecard
 
   // A completion, an undo or a match changes the scorecard: refetch rather
@@ -43,8 +44,24 @@ export function AdherenceWidget() {
 
   if (isLoading) {
     return (
-      <div className="h-full rounded-xl border bg-card p-4 ring-1 ring-border">
+      <div className="h-full rounded-xl border bg-card p-4 space-y-3 ring-1 ring-border">
         <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Adherence</h2>
+        <LoadingState shape="lines" count={3} label="Loading adherence" />
+      </div>
+    )
+  }
+
+  if (isError && !sc) {
+    return (
+      <div className="h-full rounded-xl border bg-card p-4 space-y-3 ring-1 ring-border">
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Adherence</h2>
+        <FailedState
+          size="compact"
+          className="border-0 bg-transparent p-0"
+          title="Could not load adherence"
+          error={error}
+          onRetry={() => { void refetch() }}
+        />
       </div>
     )
   }

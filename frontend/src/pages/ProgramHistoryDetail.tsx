@@ -1,3 +1,4 @@
+import { LoadingState, FailedState } from '@/components/shared/states'
 import { useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
@@ -8,7 +9,6 @@ import { useProgramVersion } from '@/api/programHistory'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
 import { PhaseBadge } from '@/components/shared/PhaseBadge'
 import { EmptyState } from '@/components/shared/EmptyState'
-import { LoadingCard } from '@/components/shared/LoadingCard'
 import { ErrorBanner } from '@/components/shared/ErrorBanner'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
@@ -98,7 +98,7 @@ function SessionRow({ session }: { session: PlannedSession }) {
 
 export function ProgramHistoryDetail() {
   const { versionId } = useParams<{ versionId: string }>()
-  const { data, isLoading, isError, error } = useProgramVersion(versionId)
+  const { data, isLoading, isError, error, refetch } = useProgramVersion(versionId)
 
   const weeks = useMemo(() => {
     const byWeek = new Map<number, PlannedSession[]>()
@@ -125,8 +125,10 @@ export function ProgramHistoryDetail() {
         Program history
       </Link>
 
-      {isLoading && <LoadingCard lines={5} />}
-      {isError && <ErrorBanner error={error as Error} title="Could not load this program" />}
+      {isLoading && <LoadingState shape="cards" />}
+      {isError && (data
+        ? <ErrorBanner error={error} title="Could not refresh this program" onRetry={() => { void refetch() }} />
+        : <FailedState title="Could not load this program" error={error} onRetry={() => { void refetch() }} />)}
 
       {data && (
         <>

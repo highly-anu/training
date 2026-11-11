@@ -1,3 +1,5 @@
+import { ErrorBanner } from '@/components/shared/ErrorBanner'
+import { LoadingState, FailedState } from '@/components/shared/states'
 import { useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Page } from '@/components/layout/Page'
@@ -424,7 +426,7 @@ function LoadTab({ period, onPeriodChange }: { period: Period; onPeriodChange: (
   // Zone minutes over the period from the per-workout metrics cache — the
   // numbers the weekly load and PMC are built from. This used to estimate
   // every workout from its mean HR alone, ignoring the samples.
-  const { data: summary } = useLoadSummary(period)
+  const { data: summary, isLoading, error, refetch } = useLoadSummary(period)
   const zoneData = useMemo(() => {
     const m = summary?.zones?.minutes
     if (!m) return null
@@ -432,8 +434,24 @@ function LoadTab({ period, onPeriodChange }: { period: Period; onPeriodChange: (
     return m.map((minutes, i) => ({ zone: `Z${i + 1}`, minutes: Math.round(minutes), color: colors[i] }))
   }, [summary])
 
+  // Before the first answer the tab used to draw every total as zero.
+  if (!summary && isLoading) {
+    return <LoadingState shape="cards" count={3} label="Loading training load" className="max-w-3xl mx-auto px-8 py-8" />
+  }
+  if (!summary && error) {
+    return (
+      <div className="max-w-3xl mx-auto px-8 py-8">
+        <FailedState title="Could not load training load" error={error} onRetry={() => { void refetch() }} />
+      </div>
+    )
+  }
+
   return (
     <div className="max-w-3xl mx-auto px-8 py-8 space-y-8">
+
+      {summary && error && (
+        <ErrorBanner error={error} title="Could not refresh training load" onRetry={() => { void refetch() }} />
+      )}
 
       <VolumeSection period={period} onPeriodChange={onPeriodChange} />
 

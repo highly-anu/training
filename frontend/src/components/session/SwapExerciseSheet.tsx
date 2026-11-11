@@ -1,8 +1,8 @@
+import { LoadingState } from '@/components/shared/states'
 import { useEffect, useState } from 'react'
 import { ArrowLeftRight } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
-import { LoadingCard } from '@/components/shared/LoadingCard'
 import { useSubstituteExercise } from '@/api/programs'
 import { useProgramStore } from '@/store/programStore'
 import { formatLoad } from '@/lib/formatLoad'
@@ -89,7 +89,7 @@ export function SwapExerciseSheet({
         </SheetHeader>
 
         <div className="mt-4 space-y-2">
-          {substitute.isPending && <LoadingCard />}
+          {substitute.isPending && <LoadingState shape="list" count={4} label="Finding alternatives" />}
           {error && <p className="text-sm text-muted-foreground">{error}</p>}
           {alternatives?.map((alt) => {
             const ex = alt.assignment.exercise

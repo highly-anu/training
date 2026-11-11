@@ -1,3 +1,4 @@
+import { LoadingState, FailedState } from '@/components/shared/states'
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
@@ -6,7 +7,6 @@ import { differenceInCalendarDays, format, parseISO } from 'date-fns'
 import { History, ChevronRight, Link2, CheckCircle2, CalendarRange } from 'lucide-react'
 import { useProgramHistory } from '@/api/programHistory'
 import { EmptyState } from '@/components/shared/EmptyState'
-import { LoadingCard } from '@/components/shared/LoadingCard'
 import { ErrorBanner } from '@/components/shared/ErrorBanner'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
@@ -119,7 +119,7 @@ function HistoryCard({ entry, index }: { entry: ProgramHistoryEntry; index: numb
 }
 
 export function ProgramHistoryList() {
-  const { data, isLoading, isError, error } = useProgramHistory()
+  const { data, isLoading, isError, error, refetch } = useProgramHistory()
 
   const grouped = useMemo(() => {
     // Revisions of one training block share a lineage. Showing each edit as its
@@ -139,9 +139,11 @@ export function ProgramHistoryList() {
         Every plan you have trained, and when each was in force.
       </p>
 
-      {isLoading && <LoadingCard />}
+      {isLoading && <LoadingState shape="cards" />}
 
-      {isError && <ErrorBanner error={error} title="Could not load program history" />}
+      {isError && (grouped.length > 0
+        ? <ErrorBanner error={error} title="Could not refresh program history" onRetry={() => { void refetch() }} />
+        : <FailedState title="Could not load program history" error={error} onRetry={() => { void refetch() }} />)}
 
       {!isLoading && !isError && grouped.length === 0 && (
         <EmptyState

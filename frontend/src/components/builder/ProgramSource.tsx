@@ -1,3 +1,4 @@
+import { FailedState, LoadingState } from '@/components/shared/states'
 import { useState, useMemo } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { swapMotion } from '@/lib/motion'
@@ -286,7 +287,16 @@ export function ProgramSource() {
   const [philWeights, setPhilWeights] = useState<Record<string, number>>(() => useBuilderStore.getState().philosophyWeights)
   const [customPriorities, setCustomPriorities] = useState<Record<ModalityId, number>>(DEFAULT_PRIORITIES)
 
-  const { data: philosophies = [], isLoading: philLoading } = usePhilosophies()
+  const { data: philosophies = [], isLoading: philLoading, error: philError, refetch: philRetry } = usePhilosophies()
+  // Without the list there is nothing to pick, and "nothing" must not look like an empty catalogue.
+  const philFailed = philError && philosophies.length === 0 ? (
+    <FailedState
+      size="compact"
+      title="Could not load the philosophies"
+      error={philError}
+      onRetry={() => { void philRetry() }}
+    />
+  ) : null
   const { data: frameworks = [] } = useFrameworks()
 
   const {
@@ -492,12 +502,8 @@ export function ProgramSource() {
                   Select a philosophy
                 </p>
                 {isLoading ? (
-                  <div className="grid grid-cols-2 gap-2">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <div key={i} className="h-12 rounded-lg bg-muted/20 animate-pulse" />
-                    ))}
-                  </div>
-                ) : (
+                  <LoadingState shape="tiles" label="Loading the philosophies" />
+                ) : philFailed ?? (
                   <div className="grid grid-cols-2 gap-2">
                     {philosophies.map((phil) => (
                       <PhilCard
@@ -543,12 +549,8 @@ export function ProgramSource() {
                   Select up to 4 philosophies
                 </p>
                 {isLoading ? (
-                  <div className="grid grid-cols-2 gap-2">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <div key={i} className="h-12 rounded-lg bg-muted/20 animate-pulse" />
-                    ))}
-                  </div>
-                ) : (
+                  <LoadingState shape="tiles" label="Loading the philosophies" />
+                ) : philFailed ?? (
                   <div className="grid grid-cols-2 gap-2">
                     {philosophies.map((phil) => (
                       <PhilCard

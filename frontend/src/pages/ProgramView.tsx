@@ -1,3 +1,4 @@
+import { LoadingState, FailedState } from '@/components/shared/states'
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Page } from '@/components/layout/Page'
@@ -61,6 +62,8 @@ export function ProgramView() {
   } = useProfileStore()
 
   const programStartDate = useProgramStore((s) => s.programStartDate)
+  const programLoadState = useProgramStore((s) => s.programLoadState)
+  const loadProgram = useProgramStore((s) => s.loadFromServer)
   const sourceGoalIds = useProgramStore((s) => s.sourceGoalIds)
   const { data: philosophies } = usePhilosophies()
 
@@ -135,6 +138,28 @@ export function ProgramView() {
         keepBefore: format(new Date(), 'yyyy-MM-dd'),
       },
       weekIndex,
+    )
+  }
+
+  // No program on screen yet is one of three things, and only the last is
+  // "build one": still loading, could not be loaded (it may well exist), none.
+  if (!program && programLoadState === 'error') {
+    return (
+      <Page key="program-failed" className="flex h-full items-center justify-center p-6">
+        <FailedState
+          title="Could not load your program"
+          error="The server could not be reached. Your program is safe — try again in a moment."
+          onRetry={() => { void loadProgram() }}
+          className="max-w-md"
+        />
+      </Page>
+    )
+  }
+  if (!program && programLoadState !== 'loaded') {
+    return (
+      <Page enter="fade" key="program-loading" className="h-full p-6">
+        <LoadingState shape="cards" count={3} label="Loading your program" className="mx-auto max-w-3xl" />
+      </Page>
     )
   }
 

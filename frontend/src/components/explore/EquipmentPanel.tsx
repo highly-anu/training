@@ -1,8 +1,7 @@
+import { LoadingState, FailedState } from '@/components/shared/states'
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { ArrowUpRight } from 'lucide-react'
-import { LoadingCard } from '@/components/shared/LoadingCard'
-import { ErrorBanner } from '@/components/shared/ErrorBanner'
 import { Section } from '@/components/explore/ExploreSection'
 import { TOPIC_ICONS, useExploreNavigate } from '@/components/explore/topics'
 import { useLinkIndex } from '@/components/explore/useLineage'
@@ -208,7 +207,7 @@ function FacetList({ facet, items, onPick, onClear }: {
 }
 
 export function EquipmentPanel() {
-  const { data: links, isLoading, error } = useExploreLinks()
+  const { data: links, isLoading, error, refetch } = useExploreLinks()
   const { data: profiles = [] } = useEquipmentProfiles()
   const { names, colors } = useLinkIndex()
   const { equipment, bodyweight, show, picked, write } = useExplorerState()
@@ -219,8 +218,14 @@ export function EquipmentPanel() {
     [ix, eqSet, picked, names, colors, bodyweight])
   const unlock = useMemo(() => (ix ? unlocks(ix, eqSet, picked, { bodyweight }) : {}), [ix, eqSet, picked, bodyweight])
 
-  if (isLoading) return <div className="p-6"><LoadingCard /></div>
-  if (error) return <div className="p-6"><ErrorBanner error={error as Error} /></div>
+  if (isLoading) return <LoadingState className="p-6" />
+  if (error && !links) {
+    return (
+      <div className="p-6">
+        <FailedState title="Could not load the equipment" error={error} onRetry={() => { void refetch() }} />
+      </div>
+    )
+  }
   if (!ix || !lists) return null
 
   // Every piece of equipment the engine knows; an unknown id from a profile is dropped.

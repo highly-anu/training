@@ -1,3 +1,4 @@
+import { Skeleton } from '@/components/ui/skeleton'
 import { useState } from 'react'
 import { Section } from '@/components/explore/ExploreSection'
 import { TOPIC_ICONS, useExploreNavigate } from '@/components/explore/topics'
@@ -76,7 +77,7 @@ export function LineageSection({ lineage, emptyUp, emptyDown }: {
   emptyDown: string
 }) {
   if (!lineage) {
-    return <div className="h-16 rounded-md bg-muted/20 animate-pulse" />
+    return <Skeleton className="h-16" />
   }
   return (
     <div className="grid gap-4 md:grid-cols-2 items-start rounded-lg border border-border/40 bg-card/30 p-3">

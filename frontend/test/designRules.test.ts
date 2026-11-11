@@ -103,3 +103,71 @@ describe('motion is written once (§11)', () => {
     }), 'The root of a routed page is <Page> (components/layout/Page.tsx).').toEqual([])
   })
 })
+
+describe('three states before content (§11)', () => {
+  it('one spinner, and only beside the words of an action', () => {
+    expect(findings({
+      pattern: /animate-spin/,
+      allow: is('components/ui/spinner.tsx'),
+    }), 'A screen that is loading shows <LoadingState>; a running action <Spinner> or <Working> (ui/spinner).').toEqual([])
+  })
+
+  it('one skeleton', () => {
+    expect(findings({
+      pattern: /animate-pulse/,
+      // The block in force on the Blocks timeline pulses; it is not a placeholder.
+      allow: is('components/ui/skeleton.tsx', 'components/analytics/DevelopmentTab.tsx'),
+    }), 'A placeholder is <Skeleton> (ui/skeleton), usually through <LoadingState>.').toEqual([])
+  })
+
+  it('no "Loading…" standing in for a screen', () => {
+    expect(findings({
+      pattern: /Loading[^'"`<{]*(…|\.\.\.)/,
+      allow: is('components/shared/states/LoadingState.tsx'),
+    }), 'Draw the shape of what is coming: <LoadingState shape=…>.').toEqual([])
+  })
+
+  it('the old loading looks stay gone', () => {
+    expect(findings({
+      pattern: /\b(LoadingCard|DumbbellLoader)\b/,
+      allow: () => false,
+    }), 'Use <LoadingState> (components/shared/states).').toEqual([])
+  })
+
+  it('an error is shown by FailedState or ErrorBanner, never as its bare message', () => {
+    expect(findings({
+      pattern: /\{\(?\(?\w*(error|Error)\b[^}]*\)\.message\}/,
+      allow: under('components/shared/', 'components/devlab/', 'pages/DevLab'),
+    }), 'Nothing loaded: <FailedState onRetry>. A reload failed with content on screen: <ErrorBanner onRetry>.').toEqual([])
+  })
+
+  it('a dashed box means absent or optional, and no new file draws one', () => {
+    // Empty is <EmptyState>. The others are a rest day, an unfilled slot, a
+    // drop target, an integration not configured — never a list with nothing in it.
+    const DASHED = [
+      'components/shared/EmptyState.tsx',
+      'components/analytics/CoverageNotice.tsx',
+      'components/bio/StravaConnect.tsx',
+      'components/builder/GuidedScheduler.tsx',
+      'components/builder/LanePicker.tsx',
+      'components/dashboard/TodaySession.tsx',
+      'components/devlab/heatmap/HeatmapPanel.tsx',
+      'components/explore/LineageSection.tsx',
+      'components/explore/philosophy/Glance.tsx',
+      'components/explore/philosophy/PhaseWeek.tsx',
+      'components/log/LinkingTab.tsx',
+      'components/program/DayColumn.tsx',
+      'components/program/PhaseChanges.tsx',
+      'components/program/SessionCard.tsx',
+      'components/session/SessionPanel.tsx',
+      'components/session/WorkoutSummaryCard.tsx',
+      'components/settings/ConnectionsSettings.tsx',
+      'pages/Log.tsx',
+      'pages/ProgramHistoryDetail.tsx',
+    ]
+    expect(findings({
+      pattern: /border-dashed/,
+      allow: is(...DASHED),
+    }), 'An empty list or page is <EmptyState>, with the way forward.').toEqual([])
+  })
+})

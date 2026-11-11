@@ -1683,6 +1683,22 @@ and fails on a transition, duration or easing outside `lib/motion.ts`, a `durati
 or `ease-in-out` class, and a page that writes its own transition. Frontend-design §1.7
 (the design language), §1.8 (every rule in one table) and §9 rewritten to what ships.
 
+**Done — 2. States** (`feat/web-states`). `components/shared/states/`: `loadPhase` (content
+is never replaced by a reload or its failure), `LoadingState` (skeletons in the shape of
+what is coming — the one loading look, where there were six), `FailedState` ("Could not
+load", the message, Try again), `QueryState` around a query; `ErrorBanner` takes `onRetry`
+for a reload that failed over content; `RouteErrorBoundary` keeps the sidebar when a page
+throws. Every page and tab reads through them, and the ones that had no state got one:
+Analytics ▸ Load drew zeros until its summary answered, Program said "No program generated
+yet" while loading and when the load had failed, a workout that could not be fetched read
+"Workout not found", Today's Readiness card read "Ready" before any score, Explore's
+archetypes and exercises, Profile's injuries and standards, the builder's philosophies and
+Today's widgets had no failed state. Retries went from three to every failed state. The
+only spinners left are `Spinner` in a working button and `Working` beside the words of a
+running action (`ui/spinner.tsx`); `LoadingCard` and `DumbbellLoader` are gone. The dashed
+border stays where it means absent or optional and the test lists those files. Design test:
+*three states before content*. Frontend-design §11.2–11.3.
+
 **2. States.** `components/shared/states/`: one reading of a load (`loadPhase` — content is
 never replaced by a reload or its failure), `LoadingState` (the one loading look, in the
 content's shape), `FailedState` with Try again, `ErrorBanner` with a retry, `QueryState`
