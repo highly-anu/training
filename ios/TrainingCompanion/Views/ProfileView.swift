@@ -32,6 +32,10 @@ private let equipmentCategories: [EquipmentCategory] = ClientVocab.equipmentSect
 
 // MARK: - Shared selection card
 
+/// One thing the athlete has or has not (a piece of equipment, an injury):
+/// the app's card (§6.15), ringed and washed in its colour with a tick when
+/// selected. Until 1.39 it drew its own surface at the control radius and
+/// said "selected" by colour alone.
 private struct SelectionCard: View {
     let title: String
     let subtitle: String
@@ -41,31 +45,27 @@ private struct SelectionCard: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 0) {
-                Rectangle()
-                    .fill(isSelected ? accentColor : Color.clear)
-                    .frame(width: 2)
+            HStack(alignment: .top, spacing: AppMetrics.gapSmall) {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(title)
                         .font(.subheadline)
                         .fontWeight(.medium)
-                        .lineLimit(1)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
                     Text(subtitle)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 10)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                Spacer(minLength: 0)
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(isSelected ? AnyShapeStyle(accentColor) : AnyShapeStyle(.tertiary))
+                    .accessibilityHidden(true)
             }
-            .background(isSelected ? accentColor.opacity(AppColor.Opacity.fill) : Color(.secondarySystemGroupedBackground))
-            .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusControl))
-            .overlay(
-                RoundedRectangle(cornerRadius: AppMetrics.radiusControl)
-                    .stroke(isSelected ? accentColor.opacity(0.4) : Color(.separator).opacity(0.3))
-            )
+            .frame(maxHeight: .infinity, alignment: .top)
+            .appCard(compact: true, border: isSelected ? accentColor : nil, tint: isSelected ? accentColor : nil)
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 
@@ -651,7 +651,16 @@ private struct HRZoneBar: View {
     var body: some View {
         let e = edges
         let span = e[5] - e[0]
-        GeometryReader { geo in
+        // As tall as a zone's name over its range at the athlete's type size
+        // (a fixed 40 pt clipped the ranges at the larger ones until 1.39).
+        VStack(spacing: 3) {
+            Text("Z1").font(.caption2).fontWeight(.bold).frame(minHeight: 20)
+            Text("000").font(.caption2)
+        }
+        .hidden()
+        .accessibilityHidden(true)
+        .frame(maxWidth: .infinity)
+        .overlay { GeometryReader { geo in
             let spacing: CGFloat = 2
             let usable = geo.size.width - spacing * 4
             // A floor so a 3 %-wide zone still fits its name, then scaled back
@@ -678,8 +687,7 @@ private struct HRZoneBar: View {
                     .accessibilityLabel("Zone \(zone), \(range(zone)) beats per minute")
                 }
             }
-        }
-        .frame(height: 40)
+        } }
     }
 }
 

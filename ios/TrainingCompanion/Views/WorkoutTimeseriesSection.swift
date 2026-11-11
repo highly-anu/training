@@ -78,7 +78,9 @@ struct WorkoutRouteSection: View {
 // MARK: - Charts
 
 /// HR, elevation and pace over the workout, with a selector when more than one
-/// has data.
+/// has data, and one scrubber for all three: drag across any of them and the
+/// line above reads the moment — time, heart rate, pace, altitude — and stays
+/// there when the chart is switched (since 1.39; no chart could be read before).
 ///
 /// The selection is a `ChartKind?` derived from what is actually available, not
 /// an `Int` defaulting to 0. The old form let the view select a chart that did
@@ -95,6 +97,9 @@ struct WorkoutChartsSection: View {
     let hrConfig: HRConfig?
 
     @State private var selected: ChartKind?
+    /// Seconds from the start under the finger; nil when nothing is touched.
+    @State private var scrub: Double?
+    @State private var series = WorkoutScrub.Series()
 
     enum ChartKind: String, Hashable {
         case hr, elevation, pace
@@ -146,9 +151,17 @@ struct WorkoutChartsSection: View {
                         .onChange(of: selected) { AppHaptics.selection() }
                     }
 
+                    Text(WorkoutScrub.readout(at: scrub, in: series) ?? "Drag across the chart to read a moment")
+                        .font(.caption).monospacedDigit()
+                        .foregroundStyle(scrub == nil ? .secondary : .primary)
+                        .lineLimit(1).minimumScaleFactor(0.8)
+                        .padding(.bottom, AppMetrics.gapSmall)
+                        .accessibilityHidden(scrub == nil)
+
                     chart
                         .frame(height: 160)
                         .animation(AppAnimation.crossfade, value: selected)
+                        .sensoryFeedback(.selection, trigger: scrub == nil)
                 }
                 .listRowInsets(EdgeInsets(top: 12, leading: 12, bottom: 12, trailing: 12))
             } header: {
@@ -156,7 +169,13 @@ struct WorkoutChartsSection: View {
             }
             // Keep the selection inside what the data supports — on first
             // appearance, and whenever the workout's data changes underneath.
-            .task(id: available) { normalizeSelection() }
+            .task(id: available) {
+                normalizeSelection()
+                let (hr, track, km) = (hrSamples, gpsTrack ?? [], distanceKm)
+                series = await Task.detached(priority: .userInitiated) {
+                    WorkoutScrub.Series(hr: hr, track: track, distanceKm: km)
+                }.value
+            }
             .onChange(of: available) { normalizeSelection() }
         }
     }
@@ -170,14 +189,14 @@ struct WorkoutChartsSection: View {
     private var chart: some View {
         switch selected {
         case .hr:
-            HRTimelineView(samples: hrSamples, avgHR: avgHR, maxHR: maxHR, hrConfig: hrConfig)
+            HRTimelineView(samples: hrSamples, avgHR: avgHR, maxHR: maxHR, hrConfig: hrConfig, scrub: $scrub)
         case .elevation:
             if let gpsTrack {
-                ElevationProfileView(points: gpsTrack, gainM: elevationGain)
+                ElevationProfileView(points: gpsTrack, gainM: elevationGain, scrub: $scrub)
             }
         case .pace:
             if let gpsTrack {
-                PaceTimelineView(points: gpsTrack, distanceKm: distanceKm)
+                PaceTimelineView(points: gpsTrack, distanceKm: distanceKm, scrub: $scrub)
             }
         case nil:
             EmptyView()
@@ -195,5 +214,52 @@ extension WorkoutChartsSection {
                   elevationGain: workout.elevation?.gain,
                   distanceKm: workout.distance?.value,
                   hrConfig: hrConfig)
+    }
+}
+
+// MARK: - Scrubbing
+
+/// What the workout's charts say at one moment. Pure, so it is tested without
+/// a chart: the three series as the charts draw them, and the line that reads
+/// them at a time.
+enum WorkoutScrub {
+    struct Series: Sendable {
+        var hr: [(elapsed: Double, value: Double)] = []
+        var pace: [(elapsed: Double, value: Double)] = []
+        var altitude: [(elapsed: Double, value: Double)] = []
+
+        init() {}
+
+        nonisolated init(hr samples: [HRSample], track: [GPSPoint], distanceKm: Double?) {
+            hr = HRTimelineView.buildData(samples: samples).data.map { ($0.elapsed, Double($0.bpm)) }
+            pace = PaceTimelineView.buildData(points: track, distanceKm: distanceKm).data
+                .map { ($0.elapsed, $0.paceSecPerKm) }
+            altitude = ElevationProfileView.buildData(points: track).data.map { ($0.elapsed, $0.alt) }
+        }
+    }
+
+    /// The value recorded nearest `time`, if one was within a minute of it —
+    /// a pause in the recording reads as nothing, not as its last value.
+    nonisolated static func value(at time: Double, in series: [(elapsed: Double, value: Double)]) -> Double? {
+        guard let nearest = series.min(by: { abs($0.elapsed - time) < abs($1.elapsed - time) }),
+              abs(nearest.elapsed - time) <= 60 else { return nil }
+        return nearest.value
+    }
+
+    /// "12:30 · 142 bpm · 5:12 /km · 412 m"; nil when nothing is touched.
+    nonisolated static func readout(at time: Double?, in series: Series) -> String? {
+        guard let time else { return nil }
+        var parts = [clock(max(0, time))]
+        if let bpm = value(at: time, in: series.hr) { parts.append("\(Int(bpm.rounded())) bpm") }
+        if let pace = value(at: time, in: series.pace) { parts.append("\(clock(pace)) /km") }
+        if let alt = value(at: time, in: series.altitude) { parts.append("\(Int(alt.rounded())) m") }
+        return parts.joined(separator: " · ")
+    }
+
+    /// Seconds as "m:ss", or "h:mm:ss" from an hour on.
+    nonisolated static func clock(_ seconds: Double) -> String {
+        let s = Int(seconds.rounded())
+        return s >= 3600 ? String(format: "%d:%02d:%02d", s / 3600, s % 3600 / 60, s % 60)
+                         : String(format: "%d:%02d", s / 60, s % 60)
     }
 }

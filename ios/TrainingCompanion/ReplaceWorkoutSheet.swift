@@ -43,7 +43,10 @@ struct ReplaceWorkoutSheet: View {
     @State private var isGenerating = false
     @State private var generateError: String? = nil
 
-    enum Tab { case browse, generate }
+    enum Tab: AppSubTab {
+        case browse, generate
+        var label: String { self == .browse ? "Browse" : "Search" }
+    }
 
     enum FatigueState: String, CaseIterable, Identifiable {
         case fresh, normal, accumulated, overreached
@@ -66,13 +69,7 @@ struct ReplaceWorkoutSheet: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                Picker("Mode", selection: $selectedTab) {
-                    Text("Browse").tag(Tab.browse)
-                    Text("Search").tag(Tab.generate)
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal)
-                .padding(.vertical, 12)
+                AppSubTabPicker(selection: $selectedTab)
 
                 Divider()
 
@@ -123,21 +120,10 @@ struct ReplaceWorkoutSheet: View {
 
     private var browseTab: some View {
         VStack(spacing: 0) {
-            VStack(spacing: 8) {
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundStyle(.secondary)
-                    TextField("Search archetypes…", text: $searchQuery)
-                        .autocorrectionDisabled()
-                }
-                .padding(10)
-                .background(.quaternary, in: RoundedRectangle(cornerRadius: AppMetrics.radiusControl))
-
-                Toggle("Same modality only", isOn: $sameModalityOnly)
-                    .font(.subheadline)
-            }
-            .padding(.horizontal)
-            .padding(.vertical, 10)
+            Toggle("Same modality only", isOn: $sameModalityOnly)
+                .font(.subheadline)
+                .padding(.horizontal)
+                .padding(.vertical, 10)
 
             Divider()
 
@@ -145,9 +131,9 @@ struct ReplaceWorkoutSheet: View {
                 ProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if filtered.isEmpty {
-                Text("No archetypes match")
-                    .foregroundStyle(.secondary)
-                    .font(.subheadline)
+                AppEmptyState(icon: "magnifyingglass", title: "No sessions match",
+                              message: searchQuery.isEmpty ? "None of this kind. Turn off Same modality only to see the rest."
+                                                           : "Nothing is called \u{201C}\(searchQuery)\u{201D}.")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 List(filtered) { arch in
@@ -165,6 +151,11 @@ struct ReplaceWorkoutSheet: View {
                 .listStyle(.plain)
             }
         }
+        // The system's field, in the bar while this tab shows: until 1.39 a
+        // hand-drawn one with no clear button, cancel or dictation.
+        .searchable(text: $searchQuery, placement: .navigationBarDrawer(displayMode: .always),
+                    prompt: "Search sessions")
+        .autocorrectionDisabled()
     }
 
     private func archetypeRow(_ arch: AppArchetype) -> some View {

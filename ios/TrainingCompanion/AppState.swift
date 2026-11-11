@@ -103,6 +103,8 @@ final class AppState: ObservableObject {
     /// Results logged sessions suggest, waiting for the athlete (not results yet).
     @Published var standardSuggestions: [StandardSuggestion] = []
     @Published var philosophies: [PhilosophyCard] = []
+    /// Each methodology's comparable facts, by id (the builder's cards).
+    @Published var philosophyGlance: [String: PhilosophyGlance] = [:]
     @Published var injuryFlagDefs: [InjuryFlagDef] = []
     /// Every exercise the API knows, by id — the reference the exercise sheet
     /// and the swap list read names and prerequisites from.
@@ -1012,6 +1014,13 @@ final class AppState: ObservableObject {
     func loadPhilosophiesIfNeeded() async {
         guard let api, philosophies.isEmpty else { return }
         philosophies = (try? await api.fetchPhilosophies()) ?? []
+    }
+
+    /// The cards read without it; a failed load leaves them their words.
+    func loadPhilosophyGlanceIfNeeded() async {
+        guard let api, philosophyGlance.isEmpty else { return }
+        let list = (try? await api.fetchPhilosophyGlance()) ?? []
+        philosophyGlance = Dictionary(list.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
     }
 
     func loadInjuryFlagsIfNeeded() async {

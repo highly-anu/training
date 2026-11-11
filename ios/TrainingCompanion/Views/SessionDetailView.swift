@@ -15,6 +15,8 @@ struct SessionDetailView: View {
     /// slider used to run 1–10 and the server folded it, so "7" showed as "4/5".
     @State private var fatigueRating: Double = 3
     @State private var showFatigue = false
+    /// "After the session" open: by itself once the session is begun or done.
+    @State private var afterOpen = false
     @State private var isSaving = false
     @State private var saveTask: Task<Void, Never>? = nil
     @State private var exerciseSheet: ExerciseRowItem? = nil
@@ -63,11 +65,12 @@ struct SessionDetailView: View {
                 headerSection
                 if let workout = linkedWorkout { linkedWorkoutSection(workout) }
                 exercisesSection
-                if !progressingExercises.isEmpty && (isDone || linkedWorkout != nil) {
-                    if loadLifts.isEmpty { progressSection } else { liftProgressSection }
-                }
-                if isDone { notesSection }
+                afterSection
             }
+            .onChange(of: hasBegun) { _, begun in
+                if begun { withAnimation(AppAnimation.layoutChange) { afterOpen = true } }
+            }
+            .onAppear { afterOpen = hasBegun }
             .navigationTitle(currentSession.archetype?.name ?? ModalityStyle.label(for: currentSession.modality))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -412,8 +415,8 @@ struct SessionDetailView: View {
         return (clean, perf.rpe)
     }
 
-    private var progressSection: some View {
-        Section {
+    private var progressRows: some View {
+        Group {
             if let verdict = moduleVerdict, !changingVerdict {
                 HStack {
                     Label(verdict.clean ? "Clean, as written\(verdict.rpe.map { " · RPE \($0)" } ?? "")"
@@ -444,8 +447,6 @@ struct SessionDetailView: View {
                     .font(.caption)
                     .foregroundStyle(AppColor.destructive)
             }
-        } header: {
-            Text("Progress")
         }
     }
 
@@ -467,8 +468,8 @@ struct SessionDetailView: View {
 
     /// Each lift made or missed, at its prescribed weight or the one worked up
     /// to. A made lift goes up next time; a miss repeats it, two reset it.
-    private var liftProgressSection: some View {
-        Section {
+    private var liftProgressRows: some View {
+        Group {
             if let verdict = LiftConfirmation.verdict(loadLifts, log: appState.sessionLogs[sessionKey]),
                !changingVerdict {
                 ForEach(loadLifts) { lift in
@@ -538,8 +539,6 @@ struct SessionDetailView: View {
                     .font(.caption)
                     .foregroundStyle(AppColor.destructive)
             }
-        } header: {
-            Text("Progress")
         }
     }
 
@@ -556,12 +555,45 @@ struct SessionDetailView: View {
         }
     }
 
-    // MARK: - Notes Section
+    // MARK: - After the session
 
-    private var notesSection: some View {
-        Section("Session Notes") {
-            TextEditor(text: $notes)
-                .frame(minHeight: 80)
+    /// Begun: something is logged for it, a workout is linked, or it is done.
+    private var hasBegun: Bool {
+        isDone || linkedWorkout != nil || appState.sessionLogs[sessionKey] != nil
+    }
+
+    private var asksProgress: Bool {
+        !progressingExercises.isEmpty && (isDone || linkedWorkout != nil)
+    }
+
+    /// What is answered once the work is done — done as written, the notes,
+    /// the fatigue — in one section under the exercises, closed until the
+    /// session is begun (design-system §6.54). Until 1.39 Progress and Session
+    /// Notes were two sections that appeared from nowhere on completion, and
+    /// a note could not be written beforehand.
+    private var afterSection: some View {
+        Section {
+            DisclosureGroup(isExpanded: $afterOpen) {
+                if asksProgress {
+                    if loadLifts.isEmpty { progressRows } else { liftProgressRows }
+                }
+                notesRows
+            } label: {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("After the session")
+                        .font(.subheadline).fontWeight(.semibold)
+                    Text(asksProgress ? "Done as written, notes, fatigue" : "Notes, fatigue")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+
+    private var notesRows: some View {
+        Group {
+            TextField("Notes", text: $notes, axis: .vertical)
+                .lineLimit(3...8)
                 .onChange(of: notes) { _, _ in
                     debouncedSaveNotes()
                 }

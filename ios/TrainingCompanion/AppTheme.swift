@@ -120,6 +120,9 @@ enum AppFont {
     /// A card's lead number (readiness, a score).
     static let metric = Font.system(.largeTitle, design: .rounded, weight: .bold).monospacedDigit()
 
+    /// The same in a tile a third of the screen wide (Today's summary row).
+    static let metricCompact = Font.system(.title, design: .rounded, weight: .bold).monospacedDigit()
+
     /// A symbol standing alone as an illustration: an empty state, a result.
     static func symbol(_ size: CGFloat = 48) -> Font { .system(size: size) }
 
