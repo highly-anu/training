@@ -1049,7 +1049,8 @@ Reduce Motion. A view never writes `.contentTransition(`, `.symbolEffect(` or
 - **Dynamic Type:** All `.font()` modifiers use semantic styles (`.subheadline`, `.caption`, etc.) — never `.system(size: 14)` for body text. The system scales these automatically.
 - **VoiceOver labels:** Every `Image(systemName:)` that conveys meaning must have `.accessibilityLabel()`. Icon-only buttons must have `.accessibilityLabel()`.
 - **Color + icon:** Modality colors are always accompanied by the modality label text or icon. Never color-only meaning.
-- **Minimum tap targets:** 44×44pt minimum for all interactive elements. Use `.frame(minWidth: 44, minHeight: 44)` on small controls.
+- **Minimum tap targets:** 44×44pt minimum for all interactive elements: `.appTapTarget()` on a small control, `.appTapSlop()` on a text button in running content (§6.57).
+- **The helpers are in `AppAccessibility.swift`** (§6.57): one fact read as one element, a chart's numbers as its value, a symbol beside a colour-only status, rows that stack at the accessibility sizes.
 - **Focus management:** When a sheet is dismissed, VoiceOver focus should return to the triggering element. Use `.accessibilityFocused()` if needed.
 
 ---
@@ -2208,7 +2209,14 @@ reads the steps on the phone: no heart rate is shown or kept.
   the modality colour, the step in `.headline`, what follows, and the countdown in 34 pt
   rounded monospaced with "Step n of N"; in the Dynamic Island the phase symbol and the
   countdown (compact), the step and next (expanded). The countdown is
-  `Text(timerInterval:)`; a step that waits for the athlete shows n/N instead.
+  `Text(timerInterval:)`; a step that waits for the athlete shows n/N instead. On the
+  Lock Screen and in the expanded island it has the player's own two secondary buttons:
+  **Pause** / **Resume** on a step the clock runs (`canPause`) and **Skip** on any —
+  `Button(intent:)` with `WorkoutPauseResumeIntent` / `WorkoutSkipIntent`
+  (`WorkoutActivityIntents.swift`, compiled into the app and the widget extension). The
+  intent runs in the app and calls `WorkoutRemote`: the open player's engine, else the
+  kept workout's, caught up to now first; then the state is saved, the cues are scheduled
+  again and the activity redrawn (`paused` shows "Paused" and a still clock).
 - **Kept:** the engine's state is saved on every move (`ActiveWorkoutStore`); a relaunch
   shows it above the tab bar (§6.45), and Start on the same session carries on.
 - **Controls:** `AppFloatingControls` (§6.47) — the one primary button in the step's
@@ -2455,3 +2463,55 @@ card's stripe turns from its modality colour to emerald, the check scales in, St
 workout leaves and the week strip's dot becomes its check, in one `springStandard`. The
 success haptic stays with the tap that finished it. Under Reduce Motion the same change
 crossfades.
+
+### 6.57 Accessibility Helpers and the Largest Sizes
+
+`AppAccessibility.swift`. A view writes none of this by hand:
+
+| Need | Helper |
+|---|---|
+| A control drawn under 44 pt | `.appTapTarget()` — the frame takes the tap |
+| A text button in running content | `.appTapSlop()` — the tap area grows, nothing moves |
+| A value, its unit and its caption that are one fact | `.appStat("6.9 hours, down 25 percent")` — one element, in words (`SpokenUnit.text` spells "h", "km", "bpm") |
+| A row that acts on a tap gesture | `.appTapRow(selected:)` — one element, a button, selected when it is |
+| A chart | `.appChartSummary(label, summary)` — what it draws as the label, its numbers as the value, built by `ChartSummary` (`range`: low to high and the latest; `series`: first to last; `shares`: each part's percent) |
+| A status told by colour alone | `ColorTwin(symbol:)` beside it — drawn only under Differentiate Without Colour |
+| A row of tiles | `AppAdaptiveStack` — a row at the standard sizes, a leading column at the accessibility sizes; `AppAdaptiveGrid(columns:)` drops to one or two columns |
+
+**Every chart has a summary**; a chart without one reads as nothing or as each mark in
+turn. A status that already has words or its own symbol (the status badges, the week
+strip's check, dot and dash) needs no twin.
+
+**At the accessibility sizes** (`dynamicTypeSize.isAccessibilitySize`) the text takes the
+width. The rules the pass at the largest size settled:
+
+- A row that cannot fit is an `AppAdaptiveStack`; its leading item takes
+  `.frame(maxWidth: .infinity, alignment: .leading)` instead of a `Spacer`, which would
+  give the column a height.
+- A capsule's or chip's label is one line (`.lineLimit(1)`, with `.fixedSize()` or
+  `.minimumScaleFactor(0.7)`); a row of chips scrolls sideways (the period picker).
+- An icon column is `.frame(minWidth:)`, never a fixed width: a scaled symbol in a fixed
+  frame draws over its text.
+- A title beside paging chevrons says less — Today's date is "Wed, Nov 11" — instead
+  of wrapping inside a word.
+- A card's trailing action moves up beside its status (Today's session card: the "…"),
+  so the name has the card's width.
+
+Standard sizes are unchanged by all of it; check both when a row changes.
+
+### 6.58 Widgets: Rendering Modes and the Lock Screen
+
+- **Tinted and clear.** In `accented` and `vibrant` rendering the system draws a widget
+  in one tint, so a hue carries nothing. What the widget is about — today's session's
+  stripe and icon, the week's done marks, a ring — is `.widgetAccentable()`; done is a
+  checkmark, never emerald alone; a mark that is white on a hue in full colour reads
+  `widgetRenderingMode` and becomes one filled symbol outside it (the week widget's done
+  session, `HomeWidgets.swift`), and a missed session says so in its shape ("✕"). Fonts
+  are text styles, as in the app.
+- **Lock Screen** (`TrainingWidgets/AccessoryWidgets.swift`). *Today* also comes as
+  `accessoryRectangular` (the session, its minutes, "Done") and `accessoryInline` (one
+  line above the clock: "Clean and Press · 23 min", "Rest day", "Today done"). *Week
+  Count* is new: `accessoryCircular` (a capacity gauge, done of the week's sessions),
+  rectangular and inline ("Week 3 · 2 of 3 done"). `AccessoryText` is the one wording;
+  both read `WidgetDataStore`, as the home-screen widgets do, and say "Open Training
+  Companion" when the stored week is over.

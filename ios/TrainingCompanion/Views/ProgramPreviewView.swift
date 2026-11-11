@@ -222,7 +222,7 @@ struct ProgramPreviewView: View {
         } label: {
             HStack(alignment: .top, spacing: 10) {
                 Text(day.prefix(3)).font(.subheadline).foregroundStyle(.secondary)
-                    .frame(width: 34, alignment: .leading)
+                    .frame(minWidth: 34, alignment: .leading)
                 Image(symbol: SessionIcon.symbol(icon: session.icon, modality: session.modality))
                     .foregroundStyle(ModalityStyle.color(for: session.modality))
                     .font(.caption)

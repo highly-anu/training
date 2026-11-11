@@ -55,7 +55,7 @@ struct ProgramHeaderCard<Footer: View>: View {
                         ForEach(tags) { tag in
                             Label(tag.text, systemImage: tag.icon)
                                 .font(.caption).foregroundStyle(.secondary)
-                                .lineLimit(1)
+                                .lineLimit(2)
                         }
                     }
                 }

@@ -125,7 +125,7 @@ struct ProgramOverviewTab: View {
                 }
             }
             if days != nil || minutes != nil || event != nil {
-                HStack(alignment: .top, spacing: 32) {
+                AppAdaptiveStack(alignment: .top, spacing: 32) {
                     if let days {
                         ProgramHeaderStat(icon: "repeat", value: "\(days)", unit: "days/wk",
                                           accessibility: "\(days) days a week")

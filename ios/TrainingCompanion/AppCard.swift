@@ -71,7 +71,9 @@ struct AppCard<Content: View, Trailing: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .center, spacing: AppMetrics.gapSmall) {
+            // The verdict beside the name; under it at the accessibility
+            // sizes, where the two would each truncate (§6.57).
+            AppAdaptiveStack(alignment: .center, spacing: AppMetrics.gapSmall) {
                 Text(header)
                     .font(.footnote).fontWeight(.semibold)
                     .foregroundStyle(.secondary)
@@ -79,7 +81,7 @@ struct AppCard<Content: View, Trailing: View>: View {
                     .tracking(0.5)
                     .lineLimit(2)
                     .accessibilityAddTraits(.isHeader)
-                Spacer(minLength: 0)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 trailing()
             }
             content()
@@ -300,7 +302,7 @@ struct TintCapsule: View {
             }
         }
         .font(.caption2).fontWeight(.semibold)
-        .lineLimit(1)
+        .lineLimit(1).minimumScaleFactor(0.8)
         .padding(.horizontal, 8).padding(.vertical, 3)
         .background(color.opacity(AppColor.Opacity.fill))
         .foregroundStyle(color)

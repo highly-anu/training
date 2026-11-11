@@ -60,6 +60,7 @@ struct PaceTimelineView: View {
                     }
                 }
                 .appChartEntry()
+                .appChartSummary("Pace", avgPace.map { "Average \(formatPace($0)) per kilometre" })
                 // Inverted: faster pace (lower sec/km) at top
                 .chartYScale(domain: yHi...yLo)
                 .chartYAxis {

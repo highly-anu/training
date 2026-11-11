@@ -683,7 +683,10 @@ Shared iOS style primitives live in `AppTheme.swift` (`AppColor`, `AppFont`),
 `appTabStyle()`), `AppCard.swift` (`AppCard` / `.appCard()`, `SectionLabel`,
 `.appButton(_:)`), `AppSubTabs.swift` and `AppMotion.swift` (rolling numbers, symbol
 effects, the scroll fade, chart entry — the only file that may write `.contentTransition(`,
-`.symbolEffect(` or `.scrollTransition(`; design-system §7.5, §6.56). The tint is amber (`AccentColor`, the
+`.symbolEffect(` or `.scrollTransition(`; design-system §7.5, §6.56) and
+`AppAccessibility.swift` (44 pt targets, one fact as one element, chart summaries, the
+colour twin, rows that stack at the accessibility sizes — §6.57: a row or chart that
+changes is checked at the largest Dynamic Type size too). The tint is amber (`AccentColor`, the
 same asset in all four targets; it was empty, so the app shipped system blue,
 until 1.35) and done is emerald (`AppColor.complete`). A view writes no colour
 literal, fixed font size, animation curve or `.bordered` button style of its
@@ -1142,7 +1145,9 @@ next. No heart rate on the phone: a heart-rate rest runs its cap.
   background each forecast moment is a notification (`WorkoutLockScreen`, prefix
   `workout-cue-`, at most 40) and the Live Activity shows the step and its countdown
   (`TrainingWidgets/WorkoutLiveActivity.swift`; `WorkoutActivityAttributes.swift` is in the
-  widget extension through an exception set). The state is saved on every move
+  widget extension through an exception set), with Pause / Resume and Skip
+  (`WorkoutActivityIntents.swift`, in both targets; the intent runs in the app, where
+  `WorkoutRemote` moves the open player's engine, else the kept workout's). The state is saved on every move
   (`ActiveWorkoutStore`, Application Support); the tab bar's accessory offers it again from any tab (`KeptWorkout`).
 - **Saving**: one `PUT /health/sessions/by-uid/<sessionUid>` (`today-session` carries
   `sessionUid`), `source: phone`, each step's window with absolute `startAt` / `endAt`, the

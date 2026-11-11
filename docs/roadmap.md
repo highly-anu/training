@@ -54,7 +54,7 @@ deferred is under *Later*.
 | 15 | Program preview on the phone; the regenerate offer that asks the server first (*IA*) | P2 | M | iOS, web |
 | 16 | Garmin's official Connect API, open again since 2026-10-21: verify the integration, then health data and workouts pushed to the watch | P2 | M | API, watch, web, iOS |
 | 17 | Explore: each philosophy's page read from its package — a server document, its week and rules, one colour system | P2 | M | API, web, iOS, content |
-| 18 | Phone design and interaction uplift: the foundation (1.35), states (1.36), iOS 26 chrome (1.37), discoverable actions (1.38), the screen passes (1.39) and motion (1.40) are in; accessibility left (*IA*) | P2 | L | iOS |
+| 18 | Phone design and interaction uplift: the foundation (1.35), states (1.36), iOS 26 chrome (1.37), discoverable actions (1.38), the screen passes (1.39), motion (1.40) and accessibility with the system surfaces (1.41) are in (*IA*) | P2 | L | iOS |
 
 ---
 
@@ -1630,12 +1630,16 @@ turns emerald, its check scales in, the week strip's dot fills. `DesignTokenTest
 `.contentTransition(`, `.symbolEffect(` and `.scrollTransition(` to that file.
 Design-system §7.5, §6.56.
 
-**Left:**
-
-7. *Accessibility and system surfaces.* Labels and values on the screens with none, chart
-   descriptors, a symbol wherever status is colour-only, 44 pt targets, the largest
-   Dynamic Type size; widgets' tinted and clear rendering and Lock Screen accessories;
-   Pause / Skip on the Live Activity.
+7. *Accessibility and system surfaces* (1.41.0). `AppAccessibility.swift`: 44 pt targets,
+   several texts read as one fact, every chart's numbers as its value (`ChartSummary`), a
+   symbol beside a colour-only status under Differentiate Without Colour, and rows that
+   stack at the accessibility sizes — every tab was laid out at the largest. The widgets
+   draw in the tinted and clear modes, Today comes to the Lock Screen and Week Count is
+   new there; the Live Activity has Pause / Resume and Skip, run in the app by
+   `WorkoutRemote`. Design-system §6.57, §6.58, §6.44. Not seen in the simulator: the
+   widgets on a Home or Lock Screen, the Live Activity's buttons (only the island's
+   compact form), and Differentiate Without Colour, which `simctl` cannot switch on —
+   check them on a phone.
 
 Not in it: the `@Observable` migration (118 `@Published`, no visible change), Control
 Centre controls, App Shortcuts.

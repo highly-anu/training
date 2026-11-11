@@ -290,11 +290,13 @@ struct AnalyticsProgressTab: View {
     private func fidelityCell(_ row: ProgramAnalytics.Frame.Fidelity) -> some View {
         let meets = row.status == "meets_ideal"
         let color: Color = meets ? AppColor.complete : row.status == "below_minimum" ? AppColor.destructive : AppColor.caution
+        // The mark's colour, said: VoiceOver hears neither it nor the symbol.
+        let verdict = meets ? "meets the ideal" : row.status == "below_minimum" ? "below the minimum" : "below the ideal"
         return ProgramHeaderStat(
             icon: Self.fidelityIcon(row.field),
             value: "\(Self.number(row.actual))/\(Self.number(row.ideal))",
             unit: row.unit,
-            accessibility: "\(Self.fidelityLabel(row.field)): \(Self.number(row.actual)) \(row.unit), ideal \(Self.number(row.ideal))"
+            accessibility: "\(Self.fidelityLabel(row.field)): \(Self.number(row.actual)) \(row.unit), ideal \(Self.number(row.ideal)), \(verdict)"
         ) {
             Image(systemName: meets ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
                 .foregroundStyle(color)
@@ -567,6 +569,10 @@ struct IntensityWeeksChart: View {
         .chartLegend(position: .bottom, spacing: 6)
         .frame(height: height)
         .accessibilityLabel("Minutes per zone in each of \(weeks.count) weeks")
+        .accessibilityValue(weeks.last.map {
+            "Latest week: zones 1 and 2 \(ChartSummary.whole($0.zone12Pct)) minutes, zone 3 \(ChartSummary.whole($0.zone3Pct)), "
+                + "zones 4 and 5 \(ChartSummary.whole($0.zone45Pct)), max effort \(ChartSummary.whole($0.maxEffortPct))"
+        } ?? "")
     }
 }
 
@@ -603,7 +609,7 @@ struct MeasureRow: View {
                     Image(systemName: selected ? "chart.line.uptrend.xyaxis.circle.fill" : "chart.line.uptrend.xyaxis.circle")
                         .font(.title3)
                         .foregroundStyle(selected ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.secondary))
-                        .frame(width: 40, height: 44)
+                        .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)

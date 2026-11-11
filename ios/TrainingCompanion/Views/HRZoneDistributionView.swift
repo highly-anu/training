@@ -33,10 +33,12 @@ struct HRZoneDistributionView: View {
                     Text(String(format: "%.0f%%", row.pct))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
-                        .frame(width: 32, alignment: .leading)
+                        .frame(minWidth: 32, alignment: .leading)
                 }
             }
             .appChartEntry()
+            .accessibilityLabel("Time in heart rate zones")
+            .accessibilityValue(ChartSummary.shares(rows.map { ($0.label, $0.pct) }) ?? "")
             .chartXAxis(.hidden)
             .chartYAxis {
                 AxisMarks(preset: .aligned) { value in

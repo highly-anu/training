@@ -319,7 +319,9 @@ private struct SessionShapeRow: View {
             if let delta {
                 Label("\(delta > 0 ? "+" : "")\(Int(delta.rounded()))%", systemImage: "clock")
                     .foregroundStyle(abs(delta) > 25 ? AppColor.caution : Color.secondary)
-                    .accessibilityLabel("Duration \(Int(delta.rounded())) percent against the estimate")
+                    .accessibilityLabel("Duration \(Int(delta.rounded())) percent against the estimate"
+                                        + (abs(delta) > 25 ? ", well off it" : ""))
+                if abs(delta) > 25 { ColorTwin(symbol: "exclamationmark.triangle") }
             }
             if let avg = row.hr?.avg {
                 Label("\(avg)\(row.hr?.max.map { "/\($0)" } ?? "")", systemImage: "heart.fill")

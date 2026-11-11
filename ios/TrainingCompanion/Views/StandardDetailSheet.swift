@@ -100,6 +100,8 @@ struct StandardDetailSheet: View {
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .contentShape(Rectangle())
                                     .onTapGesture { editing = entry }
+                                    .appTapRow()
+                                    .accessibilityHint("Edits this result")
                                 // Visible; the swipe holds the same two (§6.51).
                                 Menu {
                                     Button { editing = entry } label: { Label("Edit", systemImage: "pencil") }
@@ -108,7 +110,7 @@ struct StandardDetailSheet: View {
                                     Image(systemName: "ellipsis")
                                         .font(.body.weight(.semibold))
                                         .foregroundStyle(.secondary)
-                                        .frame(width: 32, height: 44)
+                                        .frame(width: 44, height: 44)
                                         .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.borderless)

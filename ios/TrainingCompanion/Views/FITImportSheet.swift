@@ -101,6 +101,7 @@ struct FITImportSheet: View {
                                 AppHaptics.selection()
                                 selectedSessionKey = selectedSessionKey == item.key ? nil : item.key
                             }
+                            .appTapRow(selected: selectedSessionKey == item.key)
                     }
                 }
 
@@ -163,6 +164,7 @@ struct FITImportSheet: View {
                                 AppHaptics.selection()
                                 selectedSessionKey = item.key
                             }
+                            .appTapRow(selected: selectedSessionKey == item.key)
                     }
                 }
             }
@@ -268,7 +270,7 @@ struct FITImportSheet: View {
                 }
                 Spacer()
             }
-            HStack(spacing: 16) {
+            AppAdaptiveStack(spacing: 16) {
                 if let dur = workout.durationMinutes {
                     statChip(value: "\(Int(dur))", unit: "min", icon: "clock")
                 }
@@ -285,7 +287,7 @@ struct FITImportSheet: View {
 
     private func sessionMatchRow(_ item: (session: ProgramSession, key: String), selected: Bool) -> some View {
         HStack(spacing: 12) {
-            Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+            Image(systemName: selected ? "checkmark.circle.fill" : "circle").accessibilityHidden(true)
                 .foregroundStyle(selected ? AppColor.complete : .secondary)
                 .font(.title3).frame(width: 28)
             VStack(alignment: .leading, spacing: 3) {
@@ -303,7 +305,7 @@ struct FITImportSheet: View {
 
     private func manualSessionRow(_ item: (session: ProgramSession, key: String, dateLabel: String), selected: Bool) -> some View {
         HStack(spacing: 12) {
-            Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+            Image(systemName: selected ? "checkmark.circle.fill" : "circle").accessibilityHidden(true)
                 .foregroundStyle(selected ? AppColor.complete : .secondary)
                 .font(.title3).frame(width: 28)
             VStack(alignment: .leading, spacing: 3) {
@@ -358,5 +360,6 @@ struct FITImportSheet: View {
             Text(value).font(.callout).fontWeight(.medium)
             Text(unit).font(.caption2).foregroundStyle(.secondary)
         }
+        .appStat("\(value) \(SpokenUnit.text(unit))")
     }
 }

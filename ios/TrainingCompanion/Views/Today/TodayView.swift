@@ -19,6 +19,12 @@ struct TodayView: View {
         let f = DateFormatter(); f.dateFormat = "EEEE, MMM d"; return f
     }()
 
+    /// The accessibility sizes' title: the long weekday would break mid-word (§6.57).
+    private let shortDayFmt: DateFormatter = {
+        let f = DateFormatter(); f.dateFormat = "EEE, MMM d"; return f
+    }()
+    @Environment(\.dynamicTypeSize) private var typeSize
+
     private let dayOrder = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
     private let weekdayNames = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
 
@@ -219,8 +225,9 @@ struct TodayView: View {
             AppPagerHeader(pages: pages, selection: $dayOffset, unit: "day",
                            onTitle: dayOffset == 0 ? nil : { dayOffset = 0 }) {
                 HStack(spacing: AppMetrics.gapSmall) {
-                    Text(dayFmt.string(from: dateFor(dayOffset)))
+                    Text((typeSize.isAccessibilitySize ? shortDayFmt : dayFmt).string(from: dateFor(dayOffset)))
                         .font(.headline)
+                        .lineLimit(1).minimumScaleFactor(0.7)
                     if dayOffset != 0 {
                         Label("Today", systemImage: dayOffset > 0 ? "arrow.uturn.backward" : "arrow.uturn.forward")
                             .font(.caption.weight(.medium))

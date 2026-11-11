@@ -237,6 +237,7 @@ struct SettingsView: View {
                         .font(.footnote)
                 }
             }
+            .accessibilityElement(children: .combine)
 
             // Apple Watch. A TestFlight build can update the phone and leave
             // the watch without the app, so say so and where to install it.
@@ -252,6 +253,7 @@ struct SettingsView: View {
                         .foregroundStyle(watchReachable ? AppColor.complete : .secondary).font(.footnote)
                 }
             }
+            .accessibilityElement(children: .combine)
             if watchPaired && !watchAppInstalled {
                 Text("Install it from the Watch app ▸ My Watch ▸ Available Apps. Turn on Watch app ▸ General ▸ Automatic App Install so later builds follow.")
                     .font(.caption)
@@ -271,6 +273,7 @@ struct SettingsView: View {
                     Spacer()
                     Text("Not paired").foregroundStyle(.secondary).font(.footnote)
                 }
+                .accessibilityElement(children: .combine)
         } else {
                 ForEach(garminDevices) { d in
                     HStack {
@@ -284,6 +287,7 @@ struct SettingsView: View {
                             Text("Paired").foregroundStyle(AppColor.complete).font(.footnote)
                         }
                     }
+                    .accessibilityElement(children: .combine)
                 }
                 // The web Devices card's "Last wellness reading" line.
                 if let latestWellness {
@@ -703,7 +707,7 @@ struct SettingsView: View {
             Text(monFmt.string(from: entry.date))
                 .font(AppFont.mono)
                 .foregroundStyle(.secondary)
-                .frame(width: 58, alignment: .leading)
+                .frame(minWidth: 58, alignment: .leading)
             Text(entry.message)
                 .font(AppFont.mono)
                 .foregroundStyle(.primary)

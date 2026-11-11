@@ -147,7 +147,7 @@ struct AppPagerHeader<Title: View>: View {
                 .font(.subheadline.weight(.semibold))
                 .frame(width: 36, height: 36)
                 .background(.fill.tertiary, in: Circle())
-                .contentShape(Circle())
+                .appTapTarget()
         }
         .buttonStyle(.plain)
         .foregroundStyle(target == nil ? AnyShapeStyle(.tertiary) : AnyShapeStyle(AppColor.accent))

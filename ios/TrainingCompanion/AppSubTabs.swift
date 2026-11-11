@@ -35,7 +35,7 @@ struct AppSubTabPicker<Tab: AppSubTab>: View {
     @Binding var selection: Tab
 
     var body: some View {
-        Picker("", selection: $selection) {
+        Picker("Section", selection: $selection) {
             ForEach(Array(Tab.allCases)) { tab in
                 Text(tab.label).tag(tab)
             }

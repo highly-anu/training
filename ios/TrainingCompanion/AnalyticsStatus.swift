@@ -46,6 +46,17 @@ enum AnalyticsStatusStyle {
         }
     }
 
+    /// The tone a status's colour carries, as a shape, for an athlete who
+    /// differentiates without colour: good, caution, bad; none for neutral.
+    static func toneSymbol(_ status: String) -> String? {
+        switch color(status) {
+        case AppColor.complete: return "checkmark"
+        case AppColor.caution: return "exclamationmark.triangle"
+        case AppColor.destructive: return "xmark.octagon"
+        default: return nil
+        }
+    }
+
     /// A measure's status as a symbol beside its count (the Score card):
     /// paused, slow, on course, fast.
     static func symbol(_ status: String) -> String {
@@ -84,8 +95,11 @@ enum AnalyticsStatusStyle {
 /// A small coloured capsule naming a status.
 struct AnalyticsStatusBadge: View {
     let status: String
+    @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiate
 
     var body: some View {
-        TintCapsule(text: AnalyticsStatusStyle.label(status), color: AnalyticsStatusStyle.color(status))
+        TintCapsule(text: AnalyticsStatusStyle.label(status),
+                    symbol: differentiate ? AnalyticsStatusStyle.toneSymbol(status) : nil,
+                    color: AnalyticsStatusStyle.color(status))
     }
 }

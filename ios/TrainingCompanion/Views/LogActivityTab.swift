@@ -57,6 +57,7 @@ struct LogActivityTab: View {
                                 .appZoomSource(workout.id)
                                 .contentShape(Rectangle())
                                 .onTapGesture { selectedWorkout = workout }
+                                .accessibilityAddTraits(.isButton)
                         case .session(let row):
                             sessionRow(row)
                                 .deleteDisabled(true)
@@ -116,6 +117,7 @@ struct LogActivityTab: View {
                     Image(systemName: row.isComplete ? "checkmark.circle.fill" : "circle")
                         .foregroundStyle(row.isComplete ? AppColor.complete : Color.secondary)
                         .font(.caption)
+                        .accessibilityLabel(row.isComplete ? "Done" : "Not done")
                     Text(row.title).font(.subheadline).fontWeight(.medium)
                     Spacer()
                     if row.isLocatable {

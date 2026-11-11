@@ -133,6 +133,7 @@ struct SwapExerciseSheet: View {
             } label: {
                 Image(systemName: "info.circle")
                     .foregroundStyle(.secondary)
+                    .appTapTarget()
             }
             .buttonStyle(.plain)
             .accessibilityLabel("About \(alt.assignment.exercise?.name ?? "this exercise")")

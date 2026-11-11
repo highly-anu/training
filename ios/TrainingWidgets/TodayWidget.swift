@@ -39,7 +39,7 @@ struct TodaySessionWidget: Widget {
         }
         .configurationDisplayName("Today's Training")
         .description("See today's scheduled sessions at a glance.")
-        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .accessoryRectangular, .accessoryInline])
     }
 }
 

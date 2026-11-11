@@ -151,7 +151,7 @@ struct SessionActionsMenu: View {
                 Image(systemName: "ellipsis")
                     .font(.body.weight(.semibold))
                     .foregroundStyle(.secondary)
-                    .frame(width: 36, height: 44)
+                    .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
             }
             .accessibilityLabel("Session actions")

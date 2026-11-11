@@ -40,6 +40,17 @@ struct SleepStagesChartView: View {
         return out
     }
 
+    /// "12 nights, average a night: Deep 62 minutes, REM 95 minutes, …"
+    private static func summary(_ points: [SleepPoint]) -> String? {
+        let nights = Set(points.map(\.date)).count
+        guard nights > 0 else { return nil }
+        let parts = ["Deep", "REM", "Light", "Awake"].compactMap { stage -> String? in
+            let total = points.filter { $0.stage == stage }.reduce(0) { $0 + $1.minutes }
+            return total > 0 ? "\(stage) \(total / nights) minutes" : nil
+        }
+        return "\(nights) night\(nights == 1 ? "" : "s"), average a night: " + parts.joined(separator: ", ")
+    }
+
     var body: some View {
         if points.isEmpty {
             emptyState
@@ -76,6 +87,7 @@ struct SleepStagesChartView: View {
             }
             .chartLegend(position: .bottom, alignment: .center, spacing: 8)
             .frame(height: 160)
+            .appChartSummary("Sleep stages by night", Self.summary(points))
         }
     }
 

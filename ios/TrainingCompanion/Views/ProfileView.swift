@@ -180,7 +180,7 @@ private struct InjuriesSection: View {
                         Image(systemName: "minus.circle.fill")
                             .font(.title3)
                             .foregroundStyle(AppColor.destructive)
-                            .frame(width: 32, height: 44)
+                            .frame(width: 44, height: 44)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.borderless)
@@ -347,6 +347,7 @@ extension StandardsTab {
         StandardRow(standard: standard, result: appState.standardResults?.standards[standard.id])
             .contentShape(Rectangle())
             .onTapGesture { open = standard }
+            .appTapRow()
     }
 
     /// Open the sheet a deep link asked for, once the standards are loaded.
@@ -786,10 +787,11 @@ private struct DayRow: View {
             Circle()
                 .fill(hasAny ? Color.accentColor : Color(.systemGray4))
                 .frame(width: 7, height: 7)
+                .accessibilityHidden(true)
             Text(day)
                 .font(.subheadline)
                 .fontWeight(.medium)
-                .frame(width: 86, alignment: .leading)
+                .frame(minWidth: 86, alignment: .leading)
             HStack(spacing: 6) {
                 SessionChip(label: "\(day), session 1", type: daySchedule.session1) {
                     daySchedule.session1 = $0

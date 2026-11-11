@@ -103,6 +103,7 @@ final class WorkoutPlayerModel: ObservableObject {
         engine.lastTickAt = now
         startClock()
         save()
+        WorkoutRemote.player = self
     }
 
     /// A workout the store kept, back where it was and caught up to now.
@@ -113,6 +114,7 @@ final class WorkoutPlayerModel: ObservableObject {
         notes = record.notes
         engine.restore(record.snapshot, session: record.session)
         finished = record.finished
+        WorkoutRemote.player = self
         if !finished {
             engine.muted = true
             engine.catchUp(to: Date())
@@ -184,6 +186,18 @@ final class WorkoutPlayerModel: ObservableObject {
         }
         WorkoutLockScreen.shared.update(self)
         save()
+    }
+
+    /// A button of the Live Activity (WorkoutRemote), pressed while the app
+    /// is behind the Lock Screen: the engine caught up to now, moved, and
+    /// what the Lock Screen shows made again from where it stands.
+    func remote(_ action: WorkoutActivityControl.Action) {
+        guard let session, startedAt != nil, !finished else { return }
+        engine.catchUp(to: Date())
+        WorkoutRemote.apply(action, to: engine, session: session)
+        save()
+        WorkoutLockScreen.shared.scheduleCues(engine.forecast(), session: target.title)
+        WorkoutLockScreen.shared.update(self)
     }
 
     /// End: the completion screen, where the results, notes and Save are.

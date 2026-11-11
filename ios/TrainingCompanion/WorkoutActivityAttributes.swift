@@ -19,6 +19,10 @@ struct WorkoutActivityAttributes: ActivityAttributes {
         /// Step n of N.
         var step: Int
         var steps: Int
+        /// A timed step, whose clock the athlete may hold: the Pause button.
+        var canPause: Bool = false
+        /// Held: the clock stands, the button says Resume.
+        var paused: Bool = false
 
         enum Phase: String, Codable, Hashable { case work, rest, waiting, done }
     }

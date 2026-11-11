@@ -474,6 +474,7 @@ struct BlockLoadChart: View {
             }
             .frame(height: height)
             .accessibilityLabel("TRIMP in each of \(bars.count) weeks, by block")
+            .accessibilityValue(ChartSummary.series(bars.map { Double($0.trimp) }) ?? "")
             LegendFlow(spacing: 12, lineSpacing: 4) {
                 ForEach(doc.blocks) { block in
                     HStack(spacing: 4) {

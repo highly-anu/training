@@ -62,7 +62,7 @@ struct WorkoutPlayerView: View {
         let tint = ModalityStyle.color(for: session.modalityId)
         return VStack(spacing: 0) {
             HStack {
-                Button { onClose() } label: { Image(systemName: "xmark").font(.headline) }
+                Button { onClose() } label: { Image(systemName: "xmark").font(.headline).appTapTarget() }
                     .accessibilityLabel("Close")
                 Spacer()
             }
@@ -168,16 +168,16 @@ struct WorkoutPlayerView: View {
         let place = (steps.firstIndex(of: index) ?? 0) + 1
         return VStack(spacing: 8) {
             HStack {
-                Button { confirmLeave = true } label: { Image(systemName: "xmark").font(.headline) }
+                Button { confirmLeave = true } label: { Image(systemName: "xmark").font(.headline).appTapTarget() }
                     .accessibilityLabel("Leave workout")
                 Spacer()
                 VStack(spacing: 0) {
-                    Text(session.archetypeName).font(.subheadline.weight(.semibold)).lineLimit(1)
+                    Text(session.archetypeName).font(.subheadline.weight(.semibold)).lineLimit(1).minimumScaleFactor(0.8)
                     Text(WatchSpecText.mmss(engine.elapsedSeconds))
                         .font(.caption.monospacedDigit()).foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button { showSteps = true } label: { Image(systemName: "list.bullet").font(.headline) }
+                Button { showSteps = true } label: { Image(systemName: "list.bullet").font(.headline).appTapTarget() }
                     .accessibilityLabel("All steps")
             }
             // One segment per step: done, current, to come.
@@ -189,6 +189,7 @@ struct WorkoutPlayerView: View {
                         .frame(height: 4)
                 }
             }
+            .accessibilityHidden(true)
             Text("Step \(place) of \(steps.count)").font(.caption).foregroundStyle(.secondary)
         }
         .padding(.horizontal)
@@ -284,6 +285,7 @@ struct PlayerStepView: View {
                             .frame(width: 14, height: 14)
                     }
                 }
+                .accessibilityElement(children: .ignore)
                 .accessibilityLabel("\(st.setsDone) of \(total) sets done")
             }
         case .interval:
@@ -586,6 +588,8 @@ struct PlayerStepList: View {
                                       : engine.phase.exerciseIndex == i ? "play.circle.fill" : "circle")
                                     .foregroundStyle(engine.completedExerciseIds.contains(ex.exerciseId) ? AppColor.complete
                                                      : engine.phase.exerciseIndex == i ? .accentColor : .secondary)
+                                    .accessibilityLabel(engine.completedExerciseIds.contains(ex.exerciseId) ? "Done"
+                                                        : engine.phase.exerciseIndex == i ? "Current step" : "To do")
                                 VStack(alignment: .leading) {
                                     Text(ex.name).foregroundStyle(.primary)
                                     Text(WatchSteps.preview(ex, session.screen(for: ex))).font(.caption).foregroundStyle(.secondary)

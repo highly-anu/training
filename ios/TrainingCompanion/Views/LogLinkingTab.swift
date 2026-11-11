@@ -62,10 +62,10 @@ struct LogLinkingTab: View {
     // MARK: - Pieces
 
     private func scopeLine(open: Int) -> some View {
-        HStack {
+        AppAdaptiveStack {
             Text(open == 0 ? "Nothing waiting" : "\(open) \(open == 1 ? "day" : "days") to link")
                 .font(.subheadline).foregroundStyle(.secondary)
-            Spacer()
+                .frame(maxWidth: .infinity, alignment: .leading)
             Button(showAll ? "Days to link" : "All days") {
                 AppHaptics.selection()
                 withAnimation(AppAnimation.springStandard) { showAll.toggle() }
@@ -88,10 +88,10 @@ struct LogLinkingTab: View {
     }
 
     private func header(for day: LinkingDay) -> some View {
-        HStack(spacing: 6) {
+        AppAdaptiveStack(spacing: 6) {
             Text(Self.dayTitle(day.date))
             if let label = day.programLabel {
-                Text("· \(label)").lineLimit(1)
+                Text("· \(label)").lineLimit(2)
             }
             if day.historical {
                 Text("earlier program")
@@ -125,7 +125,7 @@ struct LogLinkingTab: View {
                     Spacer(minLength: 0)
                     moreMenu(s.workout)
                 }
-                HStack {
+                AppAdaptiveStack {
                     Button("Link") { act { await appState.link(workoutId: s.workout.id, to: s.session) } }
                         .appButton(.primary)
                         .accessibilityLabel("Link \(s.workout.title) to \(s.session.name)")
@@ -140,16 +140,20 @@ struct LogLinkingTab: View {
             .contextMenu { openButton(s.workout) }
         }
         ForEach(day.workouts) { w in
-            HStack {
+            // The action under the workout at the accessibility sizes (§6.57).
+            AppAdaptiveStack {
                 workoutLine(w)
-                Spacer()
-                Button(picking?.id == w.id ? "Picking…" : "Link…") {
-                    AppHaptics.selection()
-                    picking = picking?.id == w.id ? nil : w
+                .frame(maxWidth: .infinity, alignment: .leading)
+                HStack {
+                    Button(picking?.id == w.id ? "Picking…" : "Link…") {
+                        AppHaptics.selection()
+                        picking = picking?.id == w.id ? nil : w
+                    }
+                    .appButton(.secondary).font(.subheadline)
+                    .lineLimit(1).fixedSize()
+                    .accessibilityLabel("Select \(w.title) to link")
+                    moreMenu(w)
                 }
-                .appButton(.secondary).font(.subheadline)
-                .accessibilityLabel("Select \(w.title) to link")
-                moreMenu(w)
             }
             .contextMenu { openButton(w) }
         }
@@ -172,19 +176,22 @@ struct LogLinkingTab: View {
             .contextMenu { openButton(e.workout) }
         }
         ForEach(day.declined) { w in
-            HStack {
+            AppAdaptiveStack {
                 VStack(alignment: .leading, spacing: 2) {
                     workoutLine(w)
                     Text("Set aside: no session").font(.caption).foregroundStyle(.secondary)
                 }
-                Spacer()
-                Button(picking?.id == w.id ? "Picking…" : "Link…") {
-                    AppHaptics.selection()
-                    picking = picking?.id == w.id ? nil : w
+                .frame(maxWidth: .infinity, alignment: .leading)
+                HStack {
+                    Button(picking?.id == w.id ? "Picking…" : "Link…") {
+                        AppHaptics.selection()
+                        picking = picking?.id == w.id ? nil : w
+                    }
+                    .appButton(.secondary).font(.subheadline)
+                    .lineLimit(1).fixedSize()
+                    .accessibilityLabel("Select \(w.title) to link")
+                    moreMenu(w)
                 }
-                .appButton(.secondary).font(.subheadline)
-                .accessibilityLabel("Select \(w.title) to link")
-                moreMenu(w)
             }
             .swipeActions {
                 Button("Link…") { picking = w }.tint(.accentColor)
@@ -210,7 +217,7 @@ struct LogLinkingTab: View {
                 Image(systemName: linked ? "checkmark.circle.fill" : "arrow.turn.down.right")
                     .foregroundStyle(linked ? AppColor.complete : Color.secondary)
                     .appSymbolReplace(value: linked)
-                    .frame(width: 22)
+                    .frame(minWidth: 22)
                 sessionLine(s)
             }
         }
@@ -226,7 +233,7 @@ struct LogLinkingTab: View {
             Image(symbol: sessionIcon ?? ActivityIcon.forWorkout(activityType: w.activityType ?? "",
                                                                  modalityId: w.inferredModalityId))
                 .foregroundStyle(ModalityStyle.color(for: (sessionIcon != nil ? s?.modality : w.inferredModalityId) ?? ""))
-                .frame(width: 22)
+                .frame(minWidth: 22)
             VStack(alignment: .leading, spacing: 1) {
                 Text(w.title).font(.subheadline.weight(.medium)).lineLimit(1)
                 Text(Self.workoutDetail(w)).font(.caption).foregroundStyle(.secondary)
@@ -238,7 +245,7 @@ struct LogLinkingTab: View {
         HStack(spacing: 8) {
             Image(symbol: SessionIcon.symbol(icon: s.icon, modality: s.modality ?? ""))
                 .foregroundStyle(ModalityStyle.color(for: s.modality ?? ""))
-                .frame(width: 22)
+                .frame(minWidth: 22)
             VStack(alignment: .leading, spacing: 1) {
                 Text(s.name).font(.subheadline).lineLimit(1)
                 Text(Self.sessionDetail(s)).font(.caption).foregroundStyle(.secondary)
@@ -263,7 +270,7 @@ struct LogLinkingTab: View {
                 Image(systemName: "ellipsis")
                     .font(.body.weight(.semibold))
                     .foregroundStyle(.secondary)
-                    .frame(width: 32, height: 44)
+                    .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.borderless)
