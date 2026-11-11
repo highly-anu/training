@@ -146,7 +146,7 @@ struct ProgramView: View {
     private func conflictBanner(_ message: String) -> some View {
         HStack(alignment: .top, spacing: 8) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundStyle(.orange)
+                .foregroundStyle(AppColor.warning)
             Text(message)
                 .font(.footnote)
                 .fixedSize(horizontal: false, vertical: true)
@@ -162,9 +162,9 @@ struct ProgramView: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.orange.opacity(0.12))
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.orange.opacity(0.25), lineWidth: 1))
+        .background(AppColor.warning.opacity(AppColor.Opacity.fill))
+        .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusControl))
+        .overlay(RoundedRectangle(cornerRadius: AppMetrics.radiusControl).stroke(AppColor.warning.opacity(0.25), lineWidth: 1))
     }
 
     // MARK: - Swipeable Section
@@ -253,14 +253,14 @@ struct ProgramView: View {
                                 .font(.caption2).fontWeight(.semibold)
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 7).padding(.vertical, 3)
-                                .background(Color.blue.gradient)
+                                .background(AppColor.accent.gradient)
                                 .clipShape(Capsule())
                         }
                     }
                     Spacer()
                     HStack(spacing: 6) {
                         Text(week.phaseLabel)
-                        if week.isDeload { Text("· Deload").foregroundStyle(.orange) }
+                        if week.isDeload { Text("· Deload").foregroundStyle(AppColor.warning) }
                     }
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -276,14 +276,14 @@ struct ProgramView: View {
                     }
                 }
                 .background(.background.secondary)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusCard, style: .continuous))
             }
         } else {
             Text(weekIdx < 0 ? "Before program start" : "End of program")
                 .font(.caption).foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, minHeight: 80)
                 .background(.background.secondary)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusCard, style: .continuous))
         }
     }
 
@@ -300,12 +300,12 @@ struct ProgramView: View {
                 Text(day.prefix(3))
                     .font(.subheadline)
                     .fontWeight(isToday ? .bold : .regular)
-                    .foregroundStyle(isToday ? .blue : .primary)
+                    .foregroundStyle(isToday ? AppColor.accent : .primary)
                     .frame(width: 36, alignment: .leading)
 
                 if sessions.isEmpty {
                     HStack(spacing: 5) {
-                        Image(systemName: "battery.100.bolt").foregroundStyle(.green)
+                        Image(systemName: "battery.100.bolt").foregroundStyle(AppColor.complete)
                         Text("Rest").foregroundStyle(.secondary)
                     }
                     .font(.subheadline)
@@ -319,7 +319,7 @@ struct ProgramView: View {
                             HStack(spacing: 6) {
                                 Image(symbol: done ? "checkmark.circle.fill"
                                                    : SessionIcon.symbol(icon: session.icon, modality: session.modality))
-                                    .foregroundStyle(done ? .green
+                                    .foregroundStyle(done ? AppColor.complete
                                                           : ModalityStyle.color(for: session.modality))
                                     .font(.caption)
                                 Text(session.archetype?.name
@@ -342,7 +342,7 @@ struct ProgramView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
-            .background(isToday ? Color.blue.opacity(0.06) : Color.clear)
+            .background(isToday ? AppColor.accent.opacity(0.06) : Color.clear)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -364,14 +364,14 @@ struct ProgramView: View {
     private var noProgramView: some View {
         VStack(spacing: 24) {
             Image(systemName: "calendar.badge.plus")
-                .font(.system(size: 64))
-                .foregroundStyle(.blue.gradient)
+                .font(AppFont.symbol(64))
+                .foregroundStyle(AppColor.accent.gradient)
             Text("No Program").font(.title2).fontWeight(.medium)
             Text("Create a training program to get started.")
                 .font(.subheadline).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             Button("Create Program") { showBuilder = true }
-                .buttonStyle(.borderedProminent)
+                .appButton(.primary)
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -424,7 +424,7 @@ private struct DaySessionsSheet: View {
         let done = appState.isSessionComplete(key)
         return HStack(spacing: 12) {
             Image(symbol: done ? "checkmark.circle.fill" : SessionIcon.symbol(icon: session.icon, modality: session.modality))
-                .foregroundStyle(done ? .green : ModalityStyle.color(for: session.modality))
+                .foregroundStyle(done ? AppColor.complete : ModalityStyle.color(for: session.modality))
                 .font(.title3)
             VStack(alignment: .leading, spacing: 3) {
                 Text(session.archetype?.name ?? ModalityStyle.label(for: session.modality))

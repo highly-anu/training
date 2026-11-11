@@ -88,7 +88,7 @@ struct StandardDetailSheet: View {
                 Section {
                     Button { logging = true } label: { Label("Log a result", systemImage: "plus.circle") }
                     if let problem {
-                        Text(problem).font(.caption).foregroundStyle(.red)
+                        Text(problem).font(.caption).foregroundStyle(AppColor.destructive)
                     }
                 }
 
@@ -231,7 +231,7 @@ struct StandardHistoryChart: View {
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
                     .foregroundStyle(Color.secondary.opacity(0.5))
                     .annotation(position: .trailing, alignment: .leading) {
-                        Text("\(l.level) \(l.text)").font(.system(size: 9)).foregroundStyle(.secondary)
+                        Text("\(l.level) \(l.text)").font(AppFont.micro).foregroundStyle(.secondary)
                     }
             }
             ForEach(pts) { p in
@@ -253,7 +253,7 @@ struct StandardHistoryChart: View {
                                 .font(.caption2).foregroundStyle(.secondary)
                         }
                         .padding(6)
-                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 6))
+                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: AppMetrics.radiusChip))
                     }
             }
         }
@@ -367,7 +367,7 @@ struct StandardResultSheet: View {
                     DatePicker("Day", selection: $day, in: ...Date(), displayedComponents: .date)
                     TextField("Note (optional)", text: $note)
                     if let problem {
-                        Text(problem).font(.caption).foregroundStyle(.red)
+                        Text(problem).font(.caption).foregroundStyle(AppColor.destructive)
                     }
                 } header: {
                     Text(subject.name)

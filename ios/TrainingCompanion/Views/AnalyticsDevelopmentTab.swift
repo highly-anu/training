@@ -80,7 +80,7 @@ struct AnalyticsDevelopmentTab: View {
         } description: {
             Text(message)
         } actions: {
-            Button(actionLabel, action: action).buttonStyle(.bordered)
+            Button(actionLabel, action: action).appButton(.secondary)
         }
     }
 }
@@ -91,7 +91,7 @@ private struct BlocksCard: View {
     let doc: DevelopmentAnalytics
 
     var body: some View {
-        AnalyticsCard(header: "Blocks") {
+        AppCard(header: "Blocks") {
             VStack(alignment: .leading, spacing: 10) {
                 // The strip: each block's share of the span, in its colour.
                 GeometryReader { geo in
@@ -233,7 +233,7 @@ private struct SeriesCard: View {
     /// A row of chips picked the series and every block's row sat under the
     /// chart until 2026-10-17.
     var body: some View {
-        AnalyticsCard(header: "Lifts across blocks") {
+        AppCard(header: "Lifts across blocks") {
             if let option = current {
                 VStack(alignment: .leading, spacing: 10) {
                     if options.count > 1 {
@@ -302,7 +302,7 @@ private struct SeriesCard: View {
             }
             ForEach(points) { p in
                 LineMark(x: .value("Date", p.date), y: .value(option.unit, p.value))
-                    .foregroundStyle(Color.green)
+                    .foregroundStyle(AppColor.complete)
                     .lineStyle(StrokeStyle(lineWidth: 2))
                     .interpolationMethod(.monotone)
                 // A deload point is hollow, as on Progress: a fill in the
@@ -327,7 +327,7 @@ private struct SeriesCard: View {
                                 .font(.caption).monospacedDigit()
                         }
                         .padding(6)
-                        .background(.background.secondary, in: RoundedRectangle(cornerRadius: 6))
+                        .background(.background.secondary, in: RoundedRectangle(cornerRadius: AppMetrics.radiusChip))
                     }
             }
         }
@@ -380,7 +380,7 @@ private struct SeriesBlocksView: View {
                     Spacer(minLength: 4)
                     Text(DevelopmentAnalytics.formatDelta(row.delta))
                         .font(.subheadline).fontWeight(.semibold).monospacedDigit()
-                        .foregroundStyle(row.delta > 0 ? Color.green : row.delta < 0 ? Color.yellow : Color.secondary)
+                        .foregroundStyle(row.delta > 0 ? AppColor.complete : row.delta < 0 ? AppColor.caution : Color.secondary)
                 }
                 HStack(spacing: 14) {
                     Text("\(number(row.first)) → \(number(row.last)) \(unit)")
@@ -592,7 +592,7 @@ private struct StandardsCard: View {
     private var shown: [DevelopmentAnalytics.Benchmark] { own.isEmpty || showMore ? own + other : own }
 
     var body: some View {
-        AnalyticsCard(header: "Standards over time") {
+        AppCard(header: "Standards over time") {
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(shown) { benchmark in
                     if benchmark.id != shown.first?.id { Divider() }

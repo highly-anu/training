@@ -39,9 +39,7 @@ struct ProgramOverviewTab: View {
                         headerCard
                         if let program = appState.serverProgram?.currentProgram, program.compositionLanes.count > 1 {
                             CompositionTracks(program: program)
-                                .padding()
-                                .background(Color(.secondarySystemBackground))
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                .appCard()
                         }
                         phasesCard
                         Spacer(minLength: 40)
@@ -178,7 +176,7 @@ struct ProgramOverviewTab: View {
         let segments = PhaseSegment.segments(of: weeks)
         let current = appState.currentWeekIndex ?? -1
         let summaries = self.summaries
-        return AnalyticsCard(header: "Phases") {
+        return AppCard(header: "Phases") {
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(Array(segments.enumerated()), id: \.element.id) { index, seg in
                     if index > 0 { Divider() }

@@ -194,7 +194,7 @@ struct AnalyticsRecoveryTab: View {
     // MARK: - Check-ins
 
     private var checkInHistoryCard: some View {
-        AnalyticsCard(header: "Check-in History") {
+        AppCard(header: "Check-in History") {
             VStack(spacing: 0) {
                 if logs.isEmpty {
                     VStack(spacing: 12) {

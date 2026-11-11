@@ -162,11 +162,11 @@ enum TrainingEffect: String, CaseIterable {
     var color: Color {
         switch self {
         case .recovery:        return .secondary
-        case .maintenance:     return Color(red: 0.078, green: 0.722, blue: 0.651)   // teal
-        case .baseDevelopment: return Color(red: 0.055, green: 0.647, blue: 0.914)   // sky
-        case .aerobicCapacity: return Color(red: 0.063, green: 0.725, blue: 0.506)   // green
-        case .threshold:       return Color(red: 0.976, green: 0.451, blue: 0.086)   // orange
-        case .highlyImpacting: return Color(red: 0.937, green: 0.267, blue: 0.267)   // red
+        case .maintenance:     return AppColor.Effect.maintenance
+        case .baseDevelopment: return AppColor.Effect.base
+        case .aerobicCapacity: return AppColor.Effect.aerobic
+        case .threshold:       return AppColor.Effect.threshold
+        case .highlyImpacting: return AppColor.Effect.hard
         }
     }
 
@@ -231,7 +231,7 @@ enum WorkoutSortKey: String, CaseIterable, Identifiable {
 extension WorkoutAnalysis {
     var decouplingResult: DecouplingResult? {
         guard let d = decoupling else { return nil }
-        let color: Color = d.label == "efficient" ? .green : d.label == "moderate" ? .orange : .red
+        let color: Color = d.label == "efficient" ? AppColor.complete : d.label == "moderate" ? AppColor.warning : AppColor.destructive
         return DecouplingResult(pct: d.pct, label: d.label, color: color)
     }
 }
@@ -315,7 +315,7 @@ struct LoadSummary: Decodable, Equatable {
     /// draws it — "Traditional Strength Training" was blue beside a red Max
     /// Strength; a palette only for an activity the server could not place.
     @MainActor var activityEntries: [ActivityTypeEntry] {
-        let colors: [Color] = [.blue, .green, .orange, .purple, .cyan, .pink, .yellow, .indigo]
+        let colors: [Color] = [AppColor.accent, AppColor.complete, AppColor.warning, .purple, .cyan, .pink, AppColor.caution, .indigo]
         return activities.enumerated().map { i, a in
             ActivityTypeEntry(name: ImportedWorkout.activityLabel(a.activityType),
                               hours: a.minutes / 60, sessions: Double(a.sessions),

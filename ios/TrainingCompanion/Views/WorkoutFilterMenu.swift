@@ -142,7 +142,7 @@ struct WorkoutFilterMenu: View {
             if !filter.isDefault {
                 Divider()
                 Button(role: .destructive) {
-                    withAnimation { filter = WorkoutListFilter() }
+                    withAnimation(AppAnimation.springStandard) { filter = WorkoutListFilter() }
                 } label: {
                     Label("Reset Filters", systemImage: "arrow.counterclockwise")
                 }
@@ -198,7 +198,7 @@ struct WorkoutFilterScopeLine: View {
     private func chip(_ text: String, clear: @escaping () -> Void) -> some View {
         Button {
             AppHaptics.selection()
-            withAnimation { clear() }
+            withAnimation(AppAnimation.springStandard) { clear() }
         } label: {
             HStack(spacing: 4) {
                 Text(text)
@@ -206,7 +206,7 @@ struct WorkoutFilterScopeLine: View {
             }
             .font(.footnote.weight(.medium))
             .padding(.horizontal, 10).padding(.vertical, 4)
-            .background(Color.accentColor.opacity(0.15))
+            .background(Color.accentColor.opacity(AppColor.Opacity.fill))
             .foregroundStyle(Color.accentColor)
             .clipShape(Capsule())
         }

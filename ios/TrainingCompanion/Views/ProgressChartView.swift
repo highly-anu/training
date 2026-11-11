@@ -27,7 +27,7 @@ struct ProgressChartView: View {
     }
 
     var body: some View {
-        AnalyticsCard(header: "Progress") {
+        AppCard(header: "Progress") {
             VStack(alignment: .leading, spacing: 12) {
                 picker
                 if let exercise, exercise.metrics.count > 1 { metricPicker(exercise) }
@@ -248,7 +248,7 @@ struct ProgressChartView: View {
         }
         .font(.footnote)
         .padding(10)
-        .background(.background.tertiary, in: RoundedRectangle(cornerRadius: 10))
+        .background(.background.tertiary, in: RoundedRectangle(cornerRadius: AppMetrics.radiusControl))
         .accessibilityElement(children: .combine)
     }
 

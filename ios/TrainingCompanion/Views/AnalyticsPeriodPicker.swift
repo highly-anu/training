@@ -24,7 +24,7 @@ struct AnalyticsPeriodPicker: View {
                         .font(.subheadline).fontWeight(period == p ? .semibold : .regular)
                         .foregroundStyle(period == p ? Color.white : Color.primary)
                         .padding(.horizontal, 12).padding(.vertical, 6)
-                        .background(period == p ? Color.blue : Color(.systemGray5))
+                        .background(period == p ? AppColor.accent : Color(.systemGray5))
                         .clipShape(Capsule())
                         // The capsule stays its size; the target is 44 pt (§8).
                         .frame(minHeight: 44)

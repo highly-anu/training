@@ -1,47 +1,154 @@
 import SwiftUI
 
-/// The analytics card: an uppercase caption header over content, on the
-/// secondary background with the app's card radius (design-system §6.15).
-/// Overview and Recovery each carried a private copy of this; the Program
-/// section is the third user, which is the §1.7 threshold for extracting it.
-/// The header may carry a trailing view — a status badge — so a card's
-/// verdict sits beside its name rather than on a row of its own.
-struct AnalyticsCard<Content: View, Trailing: View>: View {
+// MARK: - Card
+
+/// The app's one card surface (design-system §6.15): the secondary background
+/// at the card radius, padded. Every card is this — Today's, Program's and
+/// Profile's each drew their own at 10, 12 and 14 pt until 1.35.
+///
+/// - `compact`: 12 pt of padding, for a card that is one row of a stack.
+/// - `border`: a ring in the card's colour, for a card whose colour is its
+///   state (readiness, adherence, a pending suggestion).
+/// - `tint`: the card washed with a colour (a completed session).
+struct AppCardSurface: ViewModifier {
+    var compact = false
+    var border: Color? = nil
+    var tint: Color? = nil
+
+    func body(content: Content) -> some View {
+        let shape = RoundedRectangle(cornerRadius: AppMetrics.radiusCard, style: .continuous)
+        content
+            .padding(compact ? AppMetrics.cardPaddingCompact : AppMetrics.cardPadding)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background {
+                ZStack {
+                    shape.fill(.background.secondary)
+                    if let tint { shape.fill(tint.opacity(AppColor.Opacity.tint)) }
+                }
+            }
+            .clipShape(shape)
+            .overlay {
+                if let border {
+                    shape.strokeBorder(border.opacity(AppColor.Opacity.border), lineWidth: 1)
+                }
+            }
+    }
+}
+
+extension View {
+    /// Lays the view on the app's card surface. See `AppCardSurface`.
+    func appCard(compact: Bool = false, border: Color? = nil, tint: Color? = nil) -> some View {
+        modifier(AppCardSurface(compact: compact, border: border, tint: tint))
+    }
+}
+
+/// A card with an uppercase caption header over its content. The header may
+/// carry a trailing view — a status badge — so a card's verdict sits beside
+/// its name rather than on a row of its own. A card without a header is the
+/// `appCard()` modifier on its content.
+struct AppCard<Content: View, Trailing: View>: View {
     let header: String
+    var compact = false
     @ViewBuilder let trailing: () -> Trailing
     @ViewBuilder let content: () -> Content
 
-    init(header: String, @ViewBuilder content: @escaping () -> Content) where Trailing == EmptyView {
+    init(header: String, compact: Bool = false,
+         @ViewBuilder content: @escaping () -> Content) where Trailing == EmptyView {
         self.header = header
+        self.compact = compact
         self.trailing = { EmptyView() }
         self.content = content
     }
 
-    init(header: String, @ViewBuilder trailing: @escaping () -> Trailing,
+    init(header: String, compact: Bool = false,
+         @ViewBuilder trailing: @escaping () -> Trailing,
          @ViewBuilder content: @escaping () -> Content) {
         self.header = header
+        self.compact = compact
         self.trailing = trailing
         self.content = content
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .center, spacing: 8) {
+            HStack(alignment: .center, spacing: AppMetrics.gapSmall) {
                 Text(header)
                     .font(.footnote).fontWeight(.semibold)
                     .foregroundStyle(.secondary)
                     .textCase(.uppercase)
                     .tracking(0.5)
                     .lineLimit(2)
+                    .accessibilityAddTraits(.isHeader)
                 Spacer(minLength: 0)
                 trailing()
             }
             content()
         }
-        .padding(AppMetrics.cardPadding)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.background.secondary)
-        .clipShape(RoundedRectangle(cornerRadius: AppMetrics.cardCornerRadius))
+        .appCard(compact: compact)
+    }
+}
+
+/// A group's name above its cards, styled as an inset list's section header
+/// and aligned with the cards' text — not a card: it says what follows,
+/// nothing of its own. The same type as a card's header, so a label above
+/// cards and a header inside one read as one voice.
+struct SectionLabel: View {
+    let text: String
+    /// Inset to the cards' text (the default), or flush with their edge.
+    var inset = true
+
+    init(_ text: String, inset: Bool = true) {
+        self.text = text
+        self.inset = inset
+    }
+
+    init(text: String) { self.init(text) }
+
+    var body: some View {
+        Text(text)
+            .font(.footnote).fontWeight(.semibold)
+            .foregroundStyle(.secondary)
+            .textCase(.uppercase)
+            .tracking(0.5)
+            .padding(.horizontal, inset ? AppMetrics.cardPadding : 0)
+            .accessibilityAddTraits(.isHeader)
+    }
+}
+
+// MARK: - Buttons
+
+/// The app's buttons (design-system §6.46). One family, by what the button
+/// does — not a style picked per screen:
+///
+/// - `primary`: the screen's one main action (Start workout, Save).
+/// - `secondary`: everything beside it.
+/// - `destructive`: removes or discards.
+/// - `complete`: confirms something as done — emerald, as completion is.
+enum AppButtonKind {
+    case primary, secondary, destructive, complete
+}
+
+private struct AppButtonModifier: ViewModifier {
+    let kind: AppButtonKind
+
+    func body(content: Content) -> some View {
+        switch kind {
+        case .primary:
+            content.buttonStyle(.borderedProminent)
+        case .secondary:
+            content.buttonStyle(.bordered)
+        case .destructive:
+            content.buttonStyle(.bordered).tint(AppColor.destructive)
+        case .complete:
+            content.buttonStyle(.borderedProminent).tint(AppColor.complete)
+        }
+    }
+}
+
+extension View {
+    /// Styles a button as one of the app's kinds. See `AppButtonKind`.
+    func appButton(_ kind: AppButtonKind) -> some View {
+        modifier(AppButtonModifier(kind: kind))
     }
 }
 
@@ -73,7 +180,7 @@ struct AnalyticsDetailCard<Content: View, Trailing: View, Destination: View>: Vi
         NavigationLink {
             destination()
         } label: {
-            AnalyticsCard(header: header) {
+            AppCard(header: header) {
                 HStack(spacing: 8) {
                     trailing()
                     Image(systemName: "chevron.right")
@@ -118,7 +225,7 @@ extension LabelStyle where Self == InlineLabelStyle {
     static var inline: InlineLabelStyle { InlineLabelStyle() }
 }
 
-/// A small capsule in one colour: a 15 % fill, the colour's text and symbol,
+/// A small capsule in one colour: a 12 % fill, the colour's text and symbol,
 /// and — `bordered` — a 35 % ring (design-system §3.1's badge). The modality
 /// badge, a linked session's chip, a status and a training effect are all
 /// this; each screen used to restyle its own.
@@ -139,11 +246,11 @@ struct TintCapsule: View {
         .font(.caption2).fontWeight(.semibold)
         .lineLimit(1)
         .padding(.horizontal, 8).padding(.vertical, 3)
-        .background(color.opacity(0.15))
+        .background(color.opacity(AppColor.Opacity.fill))
         .foregroundStyle(color)
         .clipShape(Capsule())
         .overlay {
-            if bordered { Capsule().stroke(color.opacity(0.35), lineWidth: 1) }
+            if bordered { Capsule().stroke(color.opacity(AppColor.Opacity.border), lineWidth: 1) }
         }
     }
 }

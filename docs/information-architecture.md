@@ -183,8 +183,8 @@ Standards), sex (a new profile key; unblocks the female standards' tables), body
 |---|---|---|---|
 | **Today** | `TodayView` | — | Renamed from "Dashboard". Empty state gets a "Generate a program" button (design system §6.3); adds a Suggestions card and a Progress card that routes to Analytics ▸ Progress. |
 | **Program** | `ProgramView` | Overview · Calendar · History | Builder picks a methodology from `/api/philosophies`; Settings sheet has its title and Cancel; Overview holds "About this methodology", the phases and the priority mix. |
-| **Log** | `LogView` | Activity · Linking | Added 2026-10-01 once the phone could log: the recorded-workout list (with the `.fit` importer) moved here from Analytics, the suggestions inbox with accept/review/dismiss, and what was logged against planned sessions across the program — earlier programs' logs included, named by the server from `planned_sessions`. |
 | **Analytics** | `AnalyticsView` | Progress · Blocks · Load · Recovery | Progress = the program document and the review in one (`AnalyticsProgressTab`; Program until 2026-10-23); Blocks = every program (design system §6.20); Load = the old Overview. |
+| **Log** | `LogView` | Activity · Linking | Added 2026-10-01 once the phone could log: the recorded-workout list (with the `.fit` importer) moved here from Analytics, the suggestions inbox with accept/review/dismiss, and what was logged against planned sessions across the program — earlier programs' logs included, named by the server from `planned_sessions`. |
 | **Profile** | `ProfileView` | Athlete · Equipment · Schedule · Standards | Athlete = level, DOB, bodyweight, editable HR zones (a zone-coloured bar, §3.5), injuries. Toolbar gear pushes **Settings**: Connections (integration toggles), Devices & Sync (pair Garmin, Sync Now, last sync, sync details, debug log), Account (sign out), Appearance. |
 
 The **Sync** tab is removed. `resetProgramStartToToday()` — a program mutation hiding on

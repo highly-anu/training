@@ -6,7 +6,7 @@ struct TestBadge: View {
         Label("Test", systemImage: "trophy.fill")
             .font(.caption2).fontWeight(.semibold)
             .padding(.horizontal, 6).padding(.vertical, 2)
-            .background(Color.accentColor.opacity(0.15))
+            .background(Color.accentColor.opacity(AppColor.Opacity.fill))
             .clipShape(Capsule())
             .accessibilityLabel("A test of this phase's standards")
     }

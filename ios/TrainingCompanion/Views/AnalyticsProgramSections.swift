@@ -76,23 +76,6 @@ struct MethodologySectionView: View {
     }
 }
 
-/// A group's name above its cards, styled as an inset list's section header
-/// and aligned with the cards' text — not a card: it says what follows,
-/// nothing of its own.
-struct SectionLabel: View {
-    let text: String
-
-    var body: some View {
-        Text(text)
-            .font(.footnote).fontWeight(.semibold)
-            .foregroundStyle(.secondary)
-            .textCase(.uppercase)
-            .tracking(0.5)
-            .padding(.horizontal, AppMetrics.cardPadding)
-            .accessibilityAddTraits(.isHeader)
-    }
-}
-
 /// The measures a methodology declares that no session of this program is in
 /// scope for, each with the tracks that schedule it.
 struct MeasuresElsewhereView: View {
@@ -146,7 +129,7 @@ struct ProgramStandardsCard: View {
     private var shown: [ProgramAnalytics.Benchmarks.Row] { benchmarks.rows.filter(\.primary) }
 
     var body: some View {
-        AnalyticsCard(header: "Standards") {
+        AppCard(header: "Standards") {
             VStack(alignment: .leading, spacing: 12) {
                 // ×BW standards derive from logged sets with a bodyweight.
                 Label(benchmarks.bodyweightText.map { "BW \($0)" }
@@ -271,7 +254,7 @@ struct SessionShapesCard: View {
                         .accessibilityLabel("\(done) of \(scheduled) sessions done")
                     if offEstimate > 0 {
                         Label("\(offEstimate)", systemImage: "clock.badge.exclamationmark")
-                            .font(.subheadline).foregroundStyle(.yellow)
+                            .font(.subheadline).foregroundStyle(AppColor.caution)
                             .accessibilityLabel("\(offEstimate) workouts ran far from their estimate")
                     }
                 }
@@ -334,7 +317,7 @@ private struct SessionShapeRow: View {
         return HStack(spacing: 12) {
             if let delta {
                 Label("\(delta > 0 ? "+" : "")\(Int(delta.rounded()))%", systemImage: "clock")
-                    .foregroundStyle(abs(delta) > 25 ? Color.yellow : Color.secondary)
+                    .foregroundStyle(abs(delta) > 25 ? AppColor.caution : Color.secondary)
                     .accessibilityLabel("Duration \(Int(delta.rounded())) percent against the estimate")
             }
             if let avg = row.hr?.avg {

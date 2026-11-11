@@ -35,7 +35,7 @@ struct MoveWorkoutSheet: View {
                         Spacer()
                         if selectedDay == day {
                             Image(systemName: "checkmark")
-                                .foregroundStyle(.blue)
+                                .foregroundStyle(AppColor.accent)
                         }
                     }
                 }

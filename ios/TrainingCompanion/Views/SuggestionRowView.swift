@@ -45,16 +45,16 @@ struct SuggestionRowView: View {
                 } label: {
                     Image(systemName: "checkmark")
                 }
-                .buttonStyle(.borderedProminent)
+                .appButton(.primary)
                 .controlSize(.small)
-                .tint(.green)
+                .tint(AppColor.complete)
                 .accessibilityLabel("Accept suggestion")
             }
             Button("Review") {
                 AppHaptics.light()
                 onReview()
             }
-            .buttonStyle(.bordered)
+            .appButton(.secondary)
             .controlSize(.small)
             Button {
                 AppHaptics.light()
@@ -62,16 +62,10 @@ struct SuggestionRowView: View {
             } label: {
                 Image(systemName: "xmark")
             }
-            .buttonStyle(.bordered)
+            .appButton(.secondary)
             .controlSize(.small)
             .accessibilityLabel("Dismiss suggestion")
         }
-        .padding(12)
-        .background(.background.secondary)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.orange.opacity(0.35), lineWidth: 1)
-        )
+        .appCard(compact: true, border: AppColor.warning)
     }
 }

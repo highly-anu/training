@@ -131,7 +131,7 @@ struct ReplaceWorkoutSheet: View {
                         .autocorrectionDisabled()
                 }
                 .padding(10)
-                .background(.quaternary, in: RoundedRectangle(cornerRadius: 10))
+                .background(.quaternary, in: RoundedRectangle(cornerRadius: AppMetrics.radiusControl))
 
                 Toggle("Same modality only", isOn: $sameModalityOnly)
                     .font(.subheadline)
@@ -178,7 +178,7 @@ struct ReplaceWorkoutSheet: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(arch.name)
                     .fontWeight(.medium)
-                    .foregroundStyle(isSelected ? .blue : .primary)
+                    .foregroundStyle(isSelected ? AppColor.accent : .primary)
                 Text(arch.modality.replacingOccurrences(of: "_", with: " ").capitalized)
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -259,7 +259,7 @@ struct ReplaceWorkoutSheet: View {
                     }
                     .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent)
+                .appButton(.primary)
                 .controlSize(.large)
                 .disabled(isGenerating)
                 .listRowBackground(Color.clear)
@@ -275,7 +275,7 @@ struct ReplaceWorkoutSheet: View {
             Divider()
             Label(message, systemImage: "exclamationmark.triangle")
                 .font(.footnote)
-                .foregroundStyle(.orange)
+                .foregroundStyle(AppColor.warning)
                 .padding()
         }
     }

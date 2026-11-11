@@ -10,9 +10,9 @@ import SwiftUI
 extension ReadinessResult {
     var statusColor: Color {
         switch status {
-        case "green":  return .green
-        case "yellow": return .yellow
-        default:       return .red
+        case "green":  return AppColor.complete
+        case "yellow": return AppColor.caution
+        default:       return AppColor.destructive
         }
     }
     var statusIcon: String {
@@ -88,7 +88,7 @@ struct ReadinessFlagChips: View {
                 HStack(spacing: 6) {
                     ForEach(shown, id: \.self) { key in
                         let chip = Self.chip(key)
-                        TintCapsule(text: chip.label, symbol: chip.icon, color: .orange)
+                        TintCapsule(text: chip.label, symbol: chip.icon, color: AppColor.warning)
                     }
                 }
             }

@@ -69,7 +69,7 @@ struct MeasureDetailView: View {
                         Spacer(minLength: 4)
                         if ex.stalled {
                             Label("Stalled", systemImage: "pause.circle.fill")
-                                .labelStyle(.inline).font(.footnote).foregroundStyle(.red)
+                                .labelStyle(.inline).font(.footnote).foregroundStyle(AppColor.destructive)
                         }
                         AnalyticsStatusBadge(status: ex.status)
                     }
@@ -136,7 +136,7 @@ struct MeasureDetailView: View {
                     Label(target, systemImage: "target").labelStyle(.inline)
                     if let met = row.met {
                         Image(systemName: met ? "checkmark.circle.fill" : "xmark.circle")
-                            .foregroundStyle(met ? Color.green : Color.secondary)
+                            .foregroundStyle(met ? AppColor.complete : Color.secondary)
                     }
                 }
                 .font(.footnote).foregroundStyle(.secondary)

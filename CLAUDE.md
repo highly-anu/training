@@ -676,9 +676,15 @@ each Apple target folder and the four schemas' equipment enums (frontend-design 
 stored equipment alias (`assault_bike`) is read as its id by `src/equipment.canonical`.
 Never edit a generated file.
 
-Shared iOS style primitives live in `AppAnimationSettings.swift`
-(`AppAnimation`, `AppHaptics`, `AppMetrics`, `appTabStyle()`) and
-`AppSubTabs.swift`. Tab selection lives in `AppRouter.swift`, so one screen can
+Shared iOS style primitives live in `AppTheme.swift` (`AppColor`, `AppFont`),
+`AppAnimationSettings.swift` (`AppAnimation`, `AppHaptics`, `AppMetrics`,
+`appTabStyle()`), `AppCard.swift` (`AppCard` / `.appCard()`, `SectionLabel`,
+`.appButton(_:)`) and `AppSubTabs.swift`. The tint is amber (`AccentColor`, the
+same asset in all four targets; it was empty, so the app shipped system blue,
+until 1.35) and done is emerald (`AppColor.complete`). A view writes no colour
+literal, fixed font size, animation curve or `.bordered` button style of its
+own: `DesignTokenTests` reads the sources and fails on one (design-system §2,
+§4, §6.6, §7). The rest of the uplift is `docs/roadmap.md` item 18. Tab selection lives in `AppRouter.swift`, so one screen can
 send the user to a section of another (§6.9) — route through its methods, never
 by assigning tab state at the call site. Put shared behaviour inside the
 component rather than in instructions at the call site.

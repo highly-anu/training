@@ -24,7 +24,7 @@ struct CompositionTracks: View {
                         phaseBar(lane)
                         ForEach(program.cuts(of: lane), id: \.self) { cut in
                             Label(cut, systemImage: "scissors")
-                                .font(.caption).foregroundStyle(.orange)
+                                .font(.caption).foregroundStyle(AppColor.warning)
                         }
                     }
                 }

@@ -1,12 +1,33 @@
 import SwiftUI
 
+/// The app's motion (design-system §7). Three springs, and nothing else:
+/// a view never writes `withAnimation {` or a curve of its own
+/// (DesignTokenTests). With Reduce Motion on every preset is a short
+/// crossfade — decided here, so no caller has to ask.
 enum AppAnimation {
-    static let springStandard  = Animation.spring(response: 0.45, dampingFraction: 0.82, blendDuration: 0)
-    static let springSnappy    = Animation.spring(response: 0.35, dampingFraction: 0.86, blendDuration: 0)
-    static let springBouncy    = Animation.spring(response: 0.55, dampingFraction: 0.72, blendDuration: 0)
-    static let springGentle    = Animation.spring(response: 0.6,  dampingFraction: 0.9,  blendDuration: 0)
-    static let layoutChange    = Animation.spring(response: 0.5,  dampingFraction: 0.88)
-    static let interactiveDrag = Animation.interactiveSpring(response: 0.28, dampingFraction: 0.86, blendDuration: 0.25)
+    /// State changing in place: a card expanding, a selection moving.
+    static var springStandard: Animation {
+        reduced ?? .spring(response: 0.45, dampingFraction: 0.82, blendDuration: 0)
+    }
+    /// A small, quick answer to a tap: a toggle, a chip, a tab.
+    static var springSnappy: Animation {
+        reduced ?? .spring(response: 0.35, dampingFraction: 0.86, blendDuration: 0)
+    }
+    /// Content arriving, leaving or moving in a list.
+    static var layoutChange: Animation {
+        reduced ?? .spring(response: 0.5, dampingFraction: 0.88)
+    }
+
+    /// The crossfade that stands in for every spring under Reduce Motion,
+    /// and the app's one non-spring: content fading in once it has loaded.
+    static let crossfade = Animation.easeInOut(duration: 0.2)
+
+    /// A clock's hand between two seconds: a countdown ring. Linear because
+    /// time is.
+    static let tick = Animation.linear(duration: 1)
+
+    static var reduceMotion: Bool { UIAccessibility.isReduceMotionEnabled }
+    private static var reduced: Animation? { reduceMotion ? crossfade : nil }
 }
 
 enum AppHaptics {
@@ -36,9 +57,36 @@ enum AppRefresh {
     }
 }
 
+/// Spacing and radii (design-system §5). A view takes a step of the scale,
+/// never a number of its own.
 enum AppMetrics {
-    static let cardCornerRadius: CGFloat = 16
-    static let cardPadding: CGFloat = 16
+    // Gaps: between and inside elements.
+    /// 4 — an icon and its label, a title and its caption.
+    static let gapTight: CGFloat = 4
+    /// 8 — rows inside a card, chips in a row.
+    static let gapSmall: CGFloat = 8
+    /// 12 — cards in a stack, a compact card's padding.
+    static let gapMedium: CGFloat = 12
+    /// 16 — the page's margin, a card's padding.
+    static let gapLarge: CGFloat = 16
+    /// 24 — between a screen's sections.
+    static let gapSection: CGFloat = 24
+
+    // Radii.
+    /// 6 — a chip, a badge, a bar.
+    static let radiusChip: CGFloat = 6
+    /// 10 — a control: a field, a small button, a thumbnail.
+    static let radiusControl: CGFloat = 10
+    /// 12 — a row that stands alone, a card inside a card.
+    static let radiusRow: CGFloat = 12
+    /// 16 — a card.
+    static let radiusCard: CGFloat = 16
+
+    static let cardCornerRadius: CGFloat = radiusCard
+    static let cardPadding: CGFloat = gapLarge
+    static let cardPaddingCompact: CGFloat = gapMedium
+    /// The smallest thing a finger is asked to hit.
+    static let minTapTarget: CGFloat = 44
     static let swipeThreshold: CGFloat = 80
     static let swipeVelocityThreshold: CGFloat = 400
 

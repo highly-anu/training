@@ -34,9 +34,9 @@ The app defaults to dark mode. Light mode is supported via the system setting �
 
 ```swift
 // Correct
-Color("Background")
-Color("CardSurface")
-Color("PrimaryText")
+Color(.systemBackground)
+AppColor.surface
+.primary
 
 // Wrong
 Color(hex: "#141620")
@@ -119,37 +119,57 @@ than copying the first. Do it anyway, or be explicit in review about why not.
 
 ## 2. Color Architecture
 
-### 2.1 Named Color Assets
+### 2.1 Colour Tokens
 
-Define these in `TrainingCompanion/Assets.xcassets` as named colors with dark and light variants. Every view uses names, never literals.
+Every colour a view uses has a name in `AppColor` (`AppTheme.swift`) or comes from one
+of the generated or semantic systems of §3. A view never writes a literal: `Color(red:`
+belongs to `AppTheme.swift` and the generated `ClientVocab.swift` alone, and
+`DesignTokenTests` fails the build's tests on any other. (Until 1.35 this section listed
+ten named assets that did not exist, and the app shipped system blue: `AccentColor` was
+empty in all four targets.)
 
-| Asset Name | Dark | Light | Usage |
-|---|---|---|---|
-| `Background` | `#141620` (dark navy) | `#ffffff` | Page backgrounds |
-| `CardSurface` | `#1e2030` (lighter navy) | `#ffffff` | Card/panel fills |
-| `CardBorder` | `#ffffff1a` (white 10%) | `#e8e8ec` | Card borders |
-| `PrimaryText` | `#fafafa` | `#141620` | Main readable text |
-| `SecondaryText` | `#8a8fa8` | `#6b7280` | Captions, metadata |
-| `Accent` | `#c97d15` | `#c97d15` | Amber primary — identical in both themes |
-| `AccentText` | `#c97d15` | `#c97d15` | Load prescriptions, active states |
-| `Muted` | `#272a3a` | `#f4f4f6` | Input fills, tab bar fills, skeleton backgrounds |
-| `DestructiveRed` | `#ef4444` | `#ef4444` | Errors, destructive actions |
-| `CompleteGreen` | `#10b981` | `#10b981` | Completion states (emerald — never changes) |
+| Token | Value | Use |
+|---|---|---|
+| `AppColor.accent` | the `AccentColor` asset: `#C97D15` dark, `#A8650F` light | The tint: every control, link, selection and load prescription. The brand amber reads 3.3:1 on white, so light mode takes the darker one (4.6:1). The asset is the same in the app, the widgets, the watch app and its widgets |
+| `AppColor.surface` | `secondarySystemBackground` | A card on the page |
+| `AppColor.surfaceGrouped` | `secondarySystemGroupedBackground` | A row or card inside a grouped list or form |
+| `AppColor.surfaceRaised` | `tertiarySystemBackground` | A control or chip inside a card |
+| `AppColor.separator` | `separator` | A hairline between or around surfaces |
+| `AppColor.complete` | `#10B981` emerald, both themes | Done, saved, linked, on track — never the tint, so "done" reads apart from "tap me" |
+| `AppColor.warning` | system orange | Needs attention, nothing failed: behind, partial, a compromise |
+| `AppColor.caution` | system yellow | Weaker than a warning: a mild flag, a middling reading |
+| `AppColor.destructive` | system red | A failure, or an action that removes something |
+| `AppColor.info` | system blue | Neutral information that wants a colour of its own |
 
-**Rule:** `Accent` (amber) is the only color that is the same in dark and light mode. This is intentional — brand consistency over theme adaptation.
+Text takes the system's hierarchy — `.primary`, `.secondary`, `.tertiary` (§4.2) — and
+pages the system background; neither has a token.
 
-### 2.2 Opacity Convention
+**Blue is not a selection colour.** Anything interactive or selected is the tint. Blue
+appears only as data: heart-rate zone 1, a chart series, a modality.
 
-The web uses opacity suffixes (`/10`, `/15`, `/30`) to encode visual hierarchy. In SwiftUI use `.opacity()` or `Color("X").opacity(N)` equivalently:
+**Palettes** that are data, each in `AppColor`: `Effect` (training effect, mild to hard),
+`blocks` (five hues cycled in block order, the web's `lib/developmentShaping.ts`),
+`Sleep` (stages), `Schedule` (Profile ▸ Schedule's session lengths). Heart-rate zones
+(`HRZoneStyle`), chart series and the modality and phase-kind colours (`ClientVocab`,
+generated) keep their own owners (§3).
 
-| Opacity | Use |
-|---|---|
-| `0.08` | Extremely subtle tint (completion card background) |
-| `0.12` | Light semantic background (badge fill) |
-| `0.25` | Semantic border (completion border, dashed outline) |
-| `0.45` | Interactive border on hover/press state |
-| `0.50` | Disabled icons, ghost elements |
-| `0.70` | Overlay backdrops behind sheets |
+### 2.2 Opacity Scale
+
+How strongly a colour is laid over a surface: `AppColor.Opacity`, one step per job, so two
+cards tinted with different colours weigh the same.
+
+| Token | Value | Use |
+|---|---|---|
+| `tint` | `0.08` | A card washed with its colour (a completed session) |
+| `fill` | `0.12` | A badge or chip's fill |
+| `fillStrong` | `0.2` | A selected chip, a bar's track |
+| `border` | `0.35` | A coloured border |
+| `ghost` | `0.5` | Disabled, not yet reached, behind the data |
+| `muted` | `0.75` | De-emphasised but still read |
+
+```swift
+.background(AppColor.complete.opacity(AppColor.Opacity.fill))
+```
 
 ---
 
@@ -162,34 +182,14 @@ These use literal `Color(hex:)` values (not named assets) because the specific c
 Exact values match the web `MODALITY_COLORS` table because both are generated from the modality files' `display` blocks (`tools/gen_client_vocab.py` → `ClientVocab.swift` in each target folder; frontend-design §8.9). All iOS screens that show modality identity use these — no approximations; the watch complication now does too (it drew the nearest system colours).
 
 ```swift
-// ios/TrainingCompanion/ModalityStyle.swift
-struct ModalityStyle {
-    let hex: String
-    let color: Color
-    let label: String
-    let icon: String   // SF Symbol name
-
-    static let all: [String: ModalityStyle] = [
-        "max_strength":             .init(hex: "#ef4444", label: "Max Strength",     icon: "figure.strengthtraining.traditional"),
-        "relative_strength":        .init(hex: "#f43f5e", label: "Relative Strength",icon: "figure.strengthtraining.traditional"),
-        "strength_endurance":       .init(hex: "#f97316", label: "Str Endurance",    icon: "dumbbell"),
-        "power":                    .init(hex: "#eab308", label: "Power",             icon: "bolt.fill"),
-        "aerobic_base":             .init(hex: "#0ea5e9", label: "Aerobic Base",      icon: "figure.run"),
-        "anaerobic_intervals":      .init(hex: "#06b6d4", label: "Intervals",         icon: "heart.circle"),
-        "mixed_modal_conditioning": .init(hex: "#8b5cf6", label: "Mixed Modal",       icon: "bolt.heart"),
-        "mobility":                 .init(hex: "#10b981", label: "Mobility",          icon: "figure.cooldown"),
-        "movement_skill":           .init(hex: "#14b8a6", label: "Movement Skill",    icon: "figure.flexibility"),
-        "durability":               .init(hex: "#f59e0b", label: "Durability",        icon: "backpack"),
-        "combat_sport":             .init(hex: "#ec4899", label: "Combat Sport",      icon: "figure.boxing"),
-        "rehab":                    .init(hex: "#84cc16", label: "Rehab",             icon: "cross.case"),
-        "kettlebell":               .init(hex: "#6366f1", label: "Kettlebell",        icon: "dumbbell.fill"),
-    ]
-
-    static func style(for modalityId: String) -> ModalityStyle {
-        all[modalityId] ?? .init(hex: "#8a8fa8", label: modalityId, icon: "square.fill")
-    }
-}
+// ModalityStyle.swift reads the generated ClientVocab; no view holds a hex.
+ModalityStyle.color(for: session.modality)   // Color
+ModalityStyle.label(for: session.modality)   // "Max Strength"
+ModalityStyle.icon(for: session.modality)    // SF Symbol name
 ```
+
+The values are the modality files' `display` blocks
+(`data/commons/modalities/*.yaml`); change one there and regenerate.
 
 **Color grouping logic (matches web):**
 - Warm (red → rose → orange): strength modalities
@@ -204,21 +204,21 @@ struct ModalityStyle {
 ```swift
 // Top bar stripe on session card (2pt height)
 Rectangle()
-    .fill(Color(hex: style.hex))
+    .fill(color)
     .frame(height: 2)
 
 // Badge background
 Text(style.label)
     .font(.caption2).fontWeight(.semibold)
     .padding(.horizontal, 8).padding(.vertical, 3)
-    .background(Color(hex: style.hex).opacity(0.15))
-    .foregroundStyle(Color(hex: style.hex))
+    .background(color.opacity(AppColor.Opacity.fill))
+    .foregroundStyle(color)
     .clipShape(Capsule())
-    .overlay(Capsule().stroke(Color(hex: style.hex).opacity(0.35), lineWidth: 1))
+    .overlay(Capsule().stroke(color.opacity(AppColor.Opacity.border), lineWidth: 1))
 
 // Icon tint
 Image(systemName: style.icon)
-    .foregroundStyle(Color(hex: style.hex))
+    .foregroundStyle(color)
 ```
 
 ### 3.2 Training Phase Colors
@@ -250,12 +250,12 @@ One color owns "done" throughout the entire app: `#10b981` (emerald-500). Same a
 
 ```swift
 // Completed session card overlay
-.background(Color("CompleteGreen").opacity(0.08))
-.overlay(RoundedRectangle(cornerRadius: 12).stroke(Color("CompleteGreen").opacity(0.25)))
+.background(AppColor.complete.opacity(0.08))
+.overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColor.complete.opacity(0.25)))
 
 // Completion checkmark
 Image(systemName: "checkmark.circle.fill")
-    .foregroundStyle(Color("CompleteGreen"))
+    .foregroundStyle(AppColor.complete)
 ```
 
 ### 3.4 Slot-Type Icons
@@ -316,21 +316,32 @@ instead) and no `.system(size:)` for text or the glyphs beside it. `.tertiary` i
 chevrons and placeholders, never text someone has to read — on dark it is too faint
 for 11–12 pt. Program ▸ Overview had all four until 2026-10-17 (§6.26).
 
+**The sizes the text styles do not have are `AppFont`** (`AppTheme.swift`); a view never
+writes `.system(size:` (`DesignTokenTests`; there were 23, some at 8–10 pt, until 1.35).
+
+| Token | What | Use |
+|---|---|---|
+| `AppFont.hero(_:)` | rounded bold, monospaced digits, 72 pt by default | The one number a screen is about: the player's clock, a rest countdown |
+| `AppFont.metric` | `.largeTitle` rounded bold, monospaced digits; scales | A card's lead number: readiness, a score |
+| `AppFont.symbol(_:)` | 48 pt by default | A symbol standing alone as an illustration: an empty state, a result |
+| `AppFont.micro` / `microStrong` | `.caption2` | The smallest text set: a chart's tick, a chip's label |
+| `AppFont.mono` | `.caption2` monospaced | A log line, an identifier |
+
 ### 4.2 Color Hierarchy
 
 Three levels of prominence via color, not weight alone:
 
 ```swift
-Text("Back Squat")           // Primary: Color("PrimaryText")
+Text("Back Squat")           // Primary: .primary
     .font(.subheadline).fontWeight(.semibold)
 
-Text("5×5 @ 100 kg")        // Accent: Color("AccentText") — load specs
+Text("5×5 @ 100 kg")        // Accent: AppColor.accent — load specs
     .font(.caption.monospaced())
-    .foregroundStyle(Color("AccentText"))
+    .foregroundStyle(AppColor.accent)
 
-Text("Linear progression")   // Secondary: Color("SecondaryText")
+Text("Linear progression")   // Secondary: .secondary
     .font(.caption)
-    .foregroundStyle(Color("SecondaryText"))
+    .foregroundStyle(.secondary)
 ```
 
 ### 4.3 Truncation
@@ -364,31 +375,41 @@ All values in points (pt). 1pt = 1px at 1× scale.
 
 ### 5.2 Gap / Spacing Scale
 
-| Value | Use |
-|---|---|
-| `4pt` | Between badge and label, icon and text |
-| `8pt` | Between exercise rows, between session cards |
-| `12pt` | Between related form elements |
-| `16pt` | Between sections within a card |
-| `24pt` | Between major sections on a page |
+`AppMetrics` (`AppAnimationSettings.swift`); a view takes a step of the scale.
+
+| Token | Value | Use |
+|---|---|---|
+| `gapTight` | `4pt` | An icon and its label, a title and its caption |
+| `gapSmall` | `8pt` | Rows inside a card, chips in a row |
+| `gapMedium` | `12pt` | Cards in a stack; a compact card's padding (`cardPaddingCompact`) |
+| `gapLarge` | `16pt` | The page's margin; a card's padding (`cardPadding`) |
+| `gapSection` | `24pt` | Between a screen's sections |
+
+`minTapTarget` is 44 pt (§8).
 
 ### 5.3 Corner Radius
 
-| Radius | Use |
-|---|---|
-| `6pt` | Small chips, filter pills |
-| `10pt` | Buttons, input fields |
-| `12pt` | Session cards, exercise rows |
-| `16pt` | Sheet header elements, large cards |
-| `999pt` (`.clipShape(Capsule())`) | Badges, modality pills, toggle-style buttons |
+| Token | Value | Use |
+|---|---|---|
+| `radiusChip` | `6pt` | A chip, a badge, a bar |
+| `radiusControl` | `10pt` | A field, a small button, a thumbnail, a selection tile |
+| `radiusRow` | `12pt` | A row that stands alone, a card inside a card |
+| `radiusCard` | `16pt` | A card (`.appCard()`), always continuous |
+| `Capsule()` | — | Badges, modality pills, toggle-style buttons |
 
-**Rule:** Nested elements use the same or smaller radius than their parent.
+**Rule:** Nested elements use the same or smaller radius than their parent. **A card is
+16.** Until 1.35 Analytics cards were 16, Today's and Program's hand-built ones 12 and 14
+and Profile's 10; every card is now `.appCard()` or `AppCard` (§6.15).
 
 ---
 
 ## 6. Component Patterns
 
 ### 6.1 Session Card
+
+The sample shows the anatomy; the cards that ship are Today's (`TodayView`) and the
+calendar's rows, on `.appCard()`, with `SessionIcon` (§6.40) leading and the actions of
+§6.43. `color` is `ModalityStyle.color(for:)`.
 
 ```swift
 struct SessionCard: View {
@@ -399,41 +420,40 @@ struct SessionCard: View {
         VStack(alignment: .leading, spacing: 0) {
             // Modality color bar — 2pt stripe, full width
             Rectangle()
-                .fill(Color(hex: style.hex))
+                .fill(color)
                 .frame(height: 2)
 
             VStack(alignment: .leading, spacing: 8) {
                 // Header row: icon + name + duration pill
                 HStack {
                     Image(systemName: style.icon)
-                        .foregroundStyle(Color(hex: style.hex))
+                        .foregroundStyle(color)
                         .font(.subheadline)
                     Text(session.archetypeName)
                         .font(.subheadline).fontWeight(.semibold)
-                        .foregroundStyle(Color("PrimaryText"))
+                        .foregroundStyle(.primary)
                         .lineLimit(1)
                     Spacer()
                     Text("\(session.estimatedMinutes) min")
                         .font(.caption2).fontWeight(.semibold)
                         .padding(.horizontal, 8).padding(.vertical, 3)
-                        .background(Color("Muted"))
+                        .background(AppColor.surfaceRaised)
                         .clipShape(Capsule())
                 }
 
                 // Modality badge
                 ModalityBadge(style: style)
             }
-            .padding(12)
         }
-        .background(Color("CardSurface"))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12)
-            .stroke(Color("CardBorder"), lineWidth: 1))
+        .appCard(compact: true)
     }
 }
 ```
 
 ### 6.2 Modality Badge
+
+A tinted capsule is `TintCapsule` (`AppCard.swift`): the colour's `fill` behind its own
+text. The sample is what it draws.
 
 ```swift
 struct ModalityBadge: View {
@@ -443,10 +463,10 @@ struct ModalityBadge: View {
         Text(style.label)
             .font(.caption2).fontWeight(.semibold)
             .padding(.horizontal, 8).padding(.vertical, 3)
-            .background(Color(hex: style.hex).opacity(0.15))
-            .foregroundStyle(Color(hex: style.hex))
+            .background(color.opacity(AppColor.Opacity.fill))
+            .foregroundStyle(color)
             .clipShape(Capsule())
-            .overlay(Capsule().stroke(Color(hex: style.hex).opacity(0.35), lineWidth: 1))
+            .overlay(Capsule().stroke(color.opacity(AppColor.Opacity.border), lineWidth: 1))
     }
 }
 ```
@@ -476,14 +496,12 @@ over one `.footnote` line — never a fixed point size.
 
 ### 6.4 Section Header
 
-Uppercase caption labels above groups of content — same pattern as the web's section labels.
+Uppercase caption labels above groups of content — same pattern as the web's section
+labels. One component, `SectionLabel` (`AppCard.swift`); `inset: false` when the parent
+already pads. Today drew its own until 1.35.
 
 ```swift
-Text("THIS WEEK")
-    .font(.caption).fontWeight(.semibold)
-    .tracking(0.8)
-    .foregroundStyle(Color("SecondaryText"))
-    .padding(.horizontal, 16)
+SectionLabel("This week")
 ```
 
 ### 6.5 Load Prescription Text
@@ -497,20 +515,27 @@ re-derive the string at a call site.
 ```swift
 Text(exercise.loadDescription)
     .font(.caption.monospaced())
-    .foregroundStyle(Color("AccentText"))
+    .foregroundStyle(AppColor.accent)
 ```
 
-### 6.6 Primary Button
+### 6.6 Buttons
+
+One family, `.appButton(_:)` (`AppCard.swift`), so a button's weight says what it does on
+every screen. A view never picks `.buttonStyle(.bordered…)` itself (`DesignTokenTests`;
+93 did until 1.35, and Workout complete drew its own).
+
+| Kind | Looks | Use |
+|---|---|---|
+| `.primary` | filled with the tint | The one action a screen or bar is for |
+| `.secondary` | tinted, bordered | What stands beside it |
+| `.destructive` | bordered, red | Removes something |
+| `.complete` | filled emerald | Marks done: a session, a set, a confirmed link |
 
 ```swift
-Button("Generate Program") { ... }
-    .frame(maxWidth: .infinity)
-    .padding(.vertical, 14)
-    .background(Color("Accent"))
-    .foregroundStyle(.white)
-    .font(.subheadline).fontWeight(.semibold)
-    .clipShape(RoundedRectangle(cornerRadius: 10))
+Button("Start workout") { … }.appButton(.primary)
 ```
+
+A plain text button (a toolbar item, an inline link) takes the tint and no style.
 
 ### 6.7 Deload Banner
 
@@ -523,10 +548,10 @@ HStack(spacing: 8) {
 }
 .padding(12)
 .frame(maxWidth: .infinity, alignment: .leading)
-.background(Color(TrainingPhase.deload.color).opacity(0.12))
-.clipShape(RoundedRectangle(cornerRadius: 10))
-.overlay(RoundedRectangle(cornerRadius: 10)
-    .stroke(Color(TrainingPhase.deload.color).opacity(0.25), lineWidth: 1))
+.background(Color(TrainingPhase.deload.color).opacity(AppColor.Opacity.fill))
+.clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusControl))
+.overlay(RoundedRectangle(cornerRadius: AppMetrics.radiusControl)
+    .stroke(Color(TrainingPhase.deload.color).opacity(AppColor.Opacity.border), lineWidth: 1))
 ```
 
 ### 6.8 Sub-Tab Selector
@@ -910,39 +935,54 @@ from a prescription it shows that session's load (§6.5) and notes first.
 
 ### 7.1 Rules
 
-- Duration: 0.15–0.25s. Never longer unless the element itself moves across the screen.
-- Easing: `.easeOut` for most transitions (things settle quickly). `.easeInOut` for push/pop navigation.
-- Exit animations faster than entry: entry 0.20s, exit 0.15s.
-- No bouncy springs for data-driven UI. Springs only for direct manipulation (drag-to-dismiss, pull-to-refresh).
+- **Springs are the standard**, three of them, in `AppAnimation`
+  (`AppAnimationSettings.swift`). A view never writes `withAnimation {` or a curve of its
+  own (`DesignTokenTests`). Until 1.35 this section banned springs while the code was six
+  of them.
+- **Reduce Motion is decided in one place**: with it on, every spring preset is
+  `crossfade`, so no caller asks.
+- Nothing moves that the athlete did not cause or that did not just arrive.
+
+| Preset | What | Use |
+|---|---|---|
+| `springStandard` | response 0.45, damping 0.82 | State changing in place: a card expanding, a selection moving |
+| `springSnappy` | response 0.35, damping 0.86 | A small, quick answer to a tap: a toggle, a chip, a tab |
+| `layoutChange` | response 0.5, damping 0.88 | Content arriving, leaving or moving in a list |
+| `crossfade` | ease in-out, 0.2 s | Loaded content fading in; every spring under Reduce Motion |
+| `tick` | linear, 1 s | A clock's hand between two seconds (the player's countdown ring) |
 
 ### 7.2 Standard Transitions
 
 ```swift
-// Sheet present/dismiss
-.transition(.move(edge: .bottom).combined(with: .opacity))
-
-// List row appear (staggered)
-.transition(.opacity.animation(.easeOut(duration: 0.2).delay(Double(index) * 0.04)))
-
 // State change (completion, toggle)
-withAnimation(.easeOut(duration: 0.2)) { isComplete = true }
+withAnimation(AppAnimation.springSnappy) { isComplete = true }
 
-// Tab switch: use default SwiftUI TabView animation — do not override it
+// A row arriving or leaving
+.animation(AppAnimation.layoutChange, value: rows)
+
+// Tab switch, sheet, push: the system's — do not override
 ```
 
 ### 7.3 Loading States
 
-Use redacted shimmer (`redacted(reason: .placeholder)`) for skeleton loading. Never show spinners for content that loads in <1s.
+A screen waiting for its content shows that content's own cards, redacted
+(`redacted(reason: .placeholder)`), never a spinner for what loads in under a second.
+No screen does yet: the shared view is roadmap 18, phase 2.
 
-```swift
-if isLoading {
-    SessionCardSkeleton()
-        .redacted(reason: .placeholder)
-        .shimmering()    // requires Shimmer package or manual implementation
-} else {
-    SessionCard(session: session)
-}
-```
+### 7.4 Haptics
+
+`AppHaptics` is the one API; a touch answers what happened, never decorates.
+
+| Call | When |
+|---|---|
+| `selection()` | A picker, a sub-tab, a chip changing |
+| `light()` | A gesture taking hold: pull-to-refresh triggering, a page turning |
+| `medium()` / `rigid()` | A committed action: a set logged, a step advanced |
+| `success()` | Work finished: a session saved, a refresh done, a link confirmed |
+| `warning()` / `error()` | A refusal, a failed save |
+
+Pull-to-refresh goes through `AppRefresh.perform` (light on trigger, 600 ms minimum,
+success at the end).
 
 ---
 
@@ -1066,7 +1106,7 @@ extension Color {
 verdict badge, "On device", a trend) goes in its `trailing:` slot, never in a
 content row; nothing inside a card draws a box of its own (the coverage notice
 lost its dashed border, Last Night its stage tiles, HRV and resting HR their
-second title, 2026-10-17); every capsule is `TintCapsule`. `AppCard.swift` holds `AnalyticsCard`
+second title, 2026-10-17); every capsule is `TintCapsule`. `AppCard.swift` holds `AppCard` (`AppCard` until 1.35, when Today, Program and Profile took it too; `.appCard(compact:border:tint:)` is its surface alone, for a card with no header)
 (uppercase caption header over content, secondary background, the app's card
 radius, full width; an optional `trailing:` view beside the header for a
 status badge, so a verdict never takes a row of its own). Every Analytics
@@ -1238,7 +1278,7 @@ selection; the sheet is the one methodology reference on the phone.
 ### 6.19 Log Tab
 
 **The record and the decision queue, apart from the interpretation.**
-`Views/LogView.swift`, the third tab, two sections:
+`Views/LogView.swift`, the fourth tab (after Analytics since 2026-10-16), two sections:
 
 - *Activity* (`LogActivityTab`): recorded activities (`WorkoutRow`, §6.23)
   and what was logged against planned sessions, in one list by date
@@ -1295,7 +1335,7 @@ a suggestion is decided here or on Today.
 ### 6.20 Blocks (Development Across Programs)
 
 **Every block, not just this one.** `Views/AnalyticsDevelopmentTab.swift`,
-the fourth Analytics section. Program is the current block measured against
+the second Analytics section (Progress · Blocks · Load · Recovery). Progress is the current block measured against
 what it is for; Blocks is how the athlete has developed across programs —
 the question the history tables exist to answer. The server reads them as
 one document (`GET /api/analytics/development`, `src/analytics/development.py`)
@@ -1303,7 +1343,7 @@ and the web's Analytics ▸ Development lays out the same one; nothing is
 computed on the phone (`DevelopmentModels.swift` decodes it tolerantly,
 section by section, like `ProgramAnalyticsModels`).
 
-Four cards, each an `AnalyticsCard` (§6.15):
+Four cards, each an `AppCard` (§6.15):
 
 - *Blocks*: a strip across the top — each activation's share of the span in
   its colour — then a row per block: methodology names, span, weeks, sessions
@@ -1502,7 +1542,7 @@ says why under "Not enough data yet".
 reads the server's `phase_summary` (`PhaseSummaryModels.swift`, from
 `src/phase_summary.py`), the same document the web lays out; the phone counts nothing.
 
-- **The Phases card** (`ProgramOverviewTab`, an `AnalyticsCard`, §6.15) is one row per
+- **The Phases card** (`ProgramOverviewTab`, an `AppCard`, §6.15) is one row per
   phase, divided: the kind's dot, the methodology's name for it, "Now" (`TintCapsule`)
   on the current one, and "Wk 5–20 · <focus>" under it. A row with a summary has a
   chevron and pushes `PhaseDetailView`; without one (an older server) it is a plain row.
@@ -1553,7 +1593,7 @@ can add one to the simulator's home screen.
 ### 6.28 Program Header Card
 
 **The program says what it is the same way wherever it is named.**
-`Views/ProgramHeaderCard.swift` — an `AnalyticsCard` headed "Program": the
+`Views/ProgramHeaderCard.swift` — an `AppCard` headed "Program": the
 methodology (a blend joined with "+") and the book (§6.18), the current
 phase as a pill in its kind's colour with `calendar` week/total and a
 deload mark, one symbol row per fact (`ProgramHeader.Tag`: track, how it
@@ -1629,7 +1669,7 @@ Top to bottom:
   sit two by two. The load and everything under *Effort* (training effect,
   the zone split as one `HRZoneStyle` bar, recovery hours) are the server's
   `analysis` from `GET /health/workouts/<id>`; without it the card is absent.
-- *The planned session* (`WorkoutCompletion.Match`), as an `AnalyticsCard`
+- *The planned session* (`WorkoutCompletion.Match`), as an `AppCard`
   with a status capsule:
   - **Linked** (green): the server, the watch or another client already
     linked it; the session row carries the check. A match the server dates
@@ -1826,7 +1866,7 @@ additional details"; a small chart previews "a larger version… in a different
 view" with the same style), and Apple Health is the model: a summary card, then
 a screen with the full chart, the numbers and, at the end, *About*.
 
-- **`AnalyticsDetailCard`** (`AppCard.swift`) is an `AnalyticsCard` that is
+- **`AnalyticsDetailCard`** (`AppCard.swift`) is an `AppCard` that is
   one `NavigationLink`: the whole card is the target, `chevron.right` follows
   the header's badge, `accessibilityHint` names the destination. Its content
   is the summary state only — the current value in its own currency, a status,
@@ -2025,6 +2065,10 @@ The series are the server's (`exerciseSeries` on `/analytics/program`,
 replaced, on 2026-10-23, the measure cards' sparklines, `MeasureDetailView`'s
 chart, and the Exercises section with its `ExerciseHistoryView` screen
 (`/progression/exercises`, which stays for installed builds).
+
+### 6.42 (unused)
+
+No pattern took this number; it is kept so the later ones do not move.
 
 ### 6.43 Session Actions (long press)
 

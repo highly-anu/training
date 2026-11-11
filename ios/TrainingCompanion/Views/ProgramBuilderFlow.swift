@@ -319,7 +319,7 @@ struct BuilderStep1PhilosophyView: View {
                     Spacer()
                     if selected {
                         Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(.blue)
+                            .foregroundStyle(AppColor.accent)
                     }
                 }
                 .padding(.trailing, 28)   // room for the ⓘ overlay
@@ -336,11 +336,11 @@ struct BuilderStep1PhilosophyView: View {
             }
             .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(selected ? Color.blue.opacity(0.1) : Color(.secondarySystemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .background(selected ? AppColor.accent.opacity(AppColor.Opacity.fill) : Color(.secondarySystemBackground))
+            .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusRow))
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(selected ? Color.blue : Color.clear, lineWidth: 2)
+                RoundedRectangle(cornerRadius: AppMetrics.radiusRow)
+                    .stroke(selected ? AppColor.accent : Color.clear, lineWidth: 2)
             )
         }
         .buttonStyle(.plain)
@@ -490,7 +490,7 @@ struct TrackChoiceRow: View {
                 }
                 Spacer()
                 if selected {
-                    Image(systemName: "checkmark.circle.fill").foregroundStyle(.blue)
+                    Image(systemName: "checkmark.circle.fill").foregroundStyle(AppColor.accent)
                 }
             }
             if let text = track.description, !text.isEmpty {
@@ -846,14 +846,14 @@ struct BuilderStep4ReviewView: View {
                         Spacer()
                     }
                 }
-                .buttonStyle(.borderedProminent)
+                .appButton(.primary)
                 .disabled(builder.isGenerating || !entryReady)
             }
 
             if let error = builder.generationError {
                 Section {
                     Label(error, systemImage: "exclamationmark.triangle")
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(AppColor.warning)
                         .font(.footnote)
                 }
             }
@@ -1000,7 +1000,7 @@ struct ProgramSettingsSheet: View {
                 if let err = settings.generationError {
                     Section {
                         Label(err, systemImage: "exclamationmark.triangle")
-                            .foregroundStyle(.orange).font(.footnote)
+                            .foregroundStyle(AppColor.warning).font(.footnote)
                     }
                 }
             }
@@ -1156,7 +1156,7 @@ struct ProgramSettingsSheet: View {
                     Spacer()
                 }
             }
-            .buttonStyle(.bordered)
+            .appButton(.secondary)
             .disabled(settings.isGenerating || isRegeneratingTail)
             Button {
                 Task { await regenerate() }
@@ -1172,7 +1172,7 @@ struct ProgramSettingsSheet: View {
                     Spacer()
                 }
             }
-            .buttonStyle(.borderedProminent)
+            .appButton(.primary)
             .disabled(settings.isGenerating || settings.selectedPhilosophyId.isEmpty)
         } footer: {
             // Both preview first and ask before they change anything; the

@@ -88,7 +88,7 @@ struct PMCChart: View {
                                 .font(.caption).monospacedDigit()
                         }
                         .padding(6)
-                        .background(.background.secondary, in: RoundedRectangle(cornerRadius: 6))
+                        .background(.background.secondary, in: RoundedRectangle(cornerRadius: AppMetrics.radiusChip))
                     }
             }
         }

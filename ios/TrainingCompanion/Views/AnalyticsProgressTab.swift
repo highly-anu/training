@@ -137,7 +137,7 @@ struct AnalyticsProgressTab: View {
                                                }) { key in
                             AppHaptics.light()
                             withAnimation(AppAnimation.springStandard) { chartSelection = .measure(id: key) }
-                            withAnimation { proxy.scrollTo("chart", anchor: .center) }
+                            withAnimation(AppAnimation.springStandard) { proxy.scrollTo("chart", anchor: .center) }
                         }
                     }
                     if let scorecard = doc.scorecard { ScorecardCard(scorecard: scorecard) }
@@ -154,7 +154,7 @@ struct AnalyticsProgressTab: View {
                 .padding(.horizontal)
                 .padding(.vertical, 12)
             }
-            .onChange(of: chartScrollRequest) { withAnimation { proxy.scrollTo("chart", anchor: .center) } }
+            .onChange(of: chartScrollRequest) { withAnimation(AppAnimation.springStandard) { proxy.scrollTo("chart", anchor: .center) } }
         }
         .task(id: doc.generatedAt) {
             if chartSelection.map({ ProgressChartModel.series($0, in: doc) == nil }) ?? true {
@@ -211,7 +211,7 @@ struct AnalyticsProgressTab: View {
         }
         if review.scoreBreakdown.map({ $0.basis != "not_started" }) ?? (review.overallScore != nil),
            review.recommendations.isEmpty, review.adjustments.isEmpty {
-            AnalyticsCard(header: "Recommendations") {
+            AppCard(header: "Recommendations") {
                 Label("Nothing to change — keep going.", systemImage: "checkmark.circle")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -220,14 +220,14 @@ struct AnalyticsProgressTab: View {
     }
 
     private func recommendationsSection(recommendations: [String]) -> some View {
-        AnalyticsCard(header: "Recommendations") {
+        AppCard(header: "Recommendations") {
             VStack(alignment: .leading, spacing: 8) {
                 // The text is the identity; a review never repeats a line.
                 ForEach(Array(NSOrderedSet(array: recommendations)) as! [String], id: \.self) { rec in
                     HStack(alignment: .top, spacing: 8) {
                         Image(systemName: "lightbulb")
                             .font(.subheadline)
-                            .foregroundStyle(.yellow)
+                            .foregroundStyle(AppColor.caution)
                             .frame(width: iconWidth)
                         Text(rec)
                             .font(.subheadline)
@@ -242,7 +242,7 @@ struct AnalyticsProgressTab: View {
     /// server can apply edit the stored program from the current week on, under
     /// the revision check, and this copy is replaced with what was saved.
     private func adjustmentsSection(adjustments: [ProgressionAdjustment]) -> some View {
-        AnalyticsCard(header: "Suggested adjustments") {
+        AppCard(header: "Suggested adjustments") {
             VStack(alignment: .leading, spacing: 10) {
                 ForEach(adjustments) { adj in
                     AdjustmentRow(adjustment: adj)
@@ -252,7 +252,7 @@ struct AnalyticsProgressTab: View {
             if let conflict = appState.programSaveConflict {
                 Label(conflict, systemImage: "exclamationmark.triangle")
                     .font(.caption)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(AppColor.warning)
             }
         }
     }
@@ -270,7 +270,7 @@ struct AnalyticsProgressTab: View {
         } description: {
             Text(message)
         } actions: {
-            Button(actionLabel, action: action).buttonStyle(.bordered)
+            Button(actionLabel, action: action).appButton(.secondary)
         }
     }
 
@@ -302,7 +302,7 @@ struct AnalyticsProgressTab: View {
     /// One fidelity field: its symbol, actual / ideal, and a mark.
     private func fidelityCell(_ row: ProgramAnalytics.Frame.Fidelity) -> some View {
         let meets = row.status == "meets_ideal"
-        let color: Color = meets ? .green : row.status == "below_minimum" ? .red : .yellow
+        let color: Color = meets ? AppColor.complete : row.status == "below_minimum" ? AppColor.destructive : AppColor.caution
         return ProgramHeaderStat(
             icon: Self.fidelityIcon(row.field),
             value: "\(Self.number(row.actual))/\(Self.number(row.ideal))",
@@ -358,7 +358,7 @@ struct AnalyticsProgressTab: View {
     // MARK: - Section errors
 
     private func sectionErrorsCard(_ errors: [String: String]) -> some View {
-        AnalyticsCard(header: "Not computed") {
+        AppCard(header: "Not computed") {
             VStack(alignment: .leading, spacing: 6) {
                 // The section's name and a mark; the engine's own message
                 // (an exception's text, at worst) is for VoiceOver (§1.4).
@@ -444,7 +444,7 @@ struct ScorecardRowView: View {
             .font(.subheadline)
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    Capsule().fill(Color.secondary.opacity(0.15))
+                    Capsule().fill(Color.secondary.opacity(AppColor.Opacity.fill))
                     Capsule().fill(colour).frame(width: geo.size.width * pct / 100)
                 }
             }
@@ -478,9 +478,9 @@ struct ScorecardRowView: View {
 
     private var doseIcon: (icon: String, color: Color)? {
         switch row.doseStatus {
-        case "under": return ("arrow.down.circle.fill", .yellow)
-        case "on": return ("checkmark.circle.fill", .green)
-        case "over": return ("arrow.up.circle.fill", .red)
+        case "under": return ("arrow.down.circle.fill", AppColor.caution)
+        case "on": return ("checkmark.circle.fill", AppColor.complete)
+        case "over": return ("arrow.up.circle.fill", AppColor.destructive)
         default: return nil
         }
     }
@@ -565,7 +565,7 @@ struct IntensityWeeksChart: View {
             }
         }
         .chartForegroundStyleScale(["Z1–2": Color.green, "Z3": Color.yellow,
-                                    "Z4–5": Color.orange, "Max effort": Color.red])
+                                    "Z4–5": AppColor.warning, "Max effort": AppColor.destructive])
         .chartYAxis {
             AxisMarks(position: .leading) { value in
                 AxisValueLabel {
@@ -646,7 +646,7 @@ struct MeasureRow: View {
         .padding(.leading, AppMetrics.cardPadding)
         .padding(.trailing, 8)
         .padding(.vertical, 10)
-        .background(selected ? Color.accentColor.opacity(0.12) : Color.clear)
+        .background(selected ? Color.accentColor.opacity(AppColor.Opacity.fill) : Color.clear)
         .overlay(alignment: .leading) {
             if selected { Rectangle().fill(Color.accentColor).frame(width: 3) }
         }
@@ -761,7 +761,7 @@ private struct MovementCard: View {
         AnalyticsDetailCard(header: "Movement", hint: "Opens movement") {
             if !outside.isEmpty {
                 TintCapsule(text: "\(outside.count) out of range", symbol: "exclamationmark.triangle.fill",
-                            color: outside.contains { $0.level == "warning" } ? .red : .yellow)
+                            color: outside.contains { $0.level == "warning" } ? AppColor.destructive : AppColor.caution)
             }
         } destination: {
             MovementDetailView(movement: movement)
@@ -901,13 +901,13 @@ private struct BalanceRow: View {
             if pair.outside {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.caption)
-                    .foregroundStyle(pair.level == "warning" ? Color.red : Color.yellow)
+                    .foregroundStyle(pair.level == "warning" ? AppColor.destructive : AppColor.caution)
                     .accessibilityLabel("out of range")
             }
             Text(pair.ratio.map { "\(AnalyticsProgressTab.number($0)) (\(AnalyticsProgressTab.number(pair.min))–\(AnalyticsProgressTab.number(pair.max)))" }
                  ?? "—")
                 .monospacedDigit()
-                .foregroundStyle(pair.outside ? (pair.level == "warning" ? Color.red : Color.yellow) : Color.secondary)
+                .foregroundStyle(pair.outside ? (pair.level == "warning" ? AppColor.destructive : AppColor.caution) : Color.secondary)
         }
         .font(.subheadline)
     }
@@ -920,7 +920,7 @@ private struct LoadCard: View {
 
     var body: some View {
         // The reading beside the header; the phase is the program card's pill.
-        AnalyticsCard(header: "Load") {
+        AppCard(header: "Load") {
             if let reading = load.reading { AnalyticsStatusBadge(status: reading) }
         } content: {
             VStack(alignment: .leading, spacing: 8) {
@@ -956,7 +956,7 @@ private struct AdjustmentRow: View {
             HStack(alignment: .top, spacing: 8) {
                 Image(systemName: adjustment.isAppliable ? "slider.horizontal.3" : "lightbulb")
                     .font(.subheadline)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(AppColor.warning)
                     .frame(width: iconWidth)
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 6) {
@@ -987,9 +987,9 @@ private struct AdjustmentRow: View {
                                 .fontWeight(.semibold)
                         }
                     }
-                    .buttonStyle(.bordered)
+                    .appButton(.secondary)
                     .controlSize(.regular)
-                    .tint(applied ? .green : .orange)
+                    .tint(applied ? AppColor.complete : AppColor.warning)
                     .disabled(isApplying || applied)
                 } else {
                     TintCapsule(text: "advice", color: .secondary)
@@ -998,7 +998,7 @@ private struct AdjustmentRow: View {
             if let outcome {
                 Text(outcome)
                     .font(.caption)
-                    .foregroundStyle(applied ? Color.green : Color.orange)
+                    .foregroundStyle(applied ? AppColor.complete : AppColor.warning)
             }
         }
     }
