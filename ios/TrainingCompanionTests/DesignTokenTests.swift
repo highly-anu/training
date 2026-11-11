@@ -27,6 +27,12 @@ final class DesignTokenTests: XCTestCase {
          #"\.presentationDetents\("#, ["AppNavigation.swift"]),
         ("a transition of its own — use .appZoom(from:in:)",
          #"\.navigationTransition\("#, ["AppNavigation.swift"]),
+        ("a content transition of its own — use .appNumeric or .appSymbolReplace",
+         #"\.contentTransition\("#, ["AppMotion.swift"]),
+        ("a symbol effect of its own — use .appSymbolBounce, .appSymbolReplace or .appSymbolSpin",
+         #"\.symbolEffect\("#, ["AppMotion.swift"]),
+        ("a scroll transition of its own — use AppScrollFade or .appScrollFade()",
+         #"\.scrollTransition\("#, ["AppMotion.swift"]),
     ]
 
     func testNoViewWritesWhatATokenOwns() throws {

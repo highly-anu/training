@@ -36,6 +36,7 @@ struct HRZoneDistributionView: View {
                         .frame(width: 32, alignment: .leading)
                 }
             }
+            .appChartEntry()
             .chartXAxis(.hidden)
             .chartYAxis {
                 AxisMarks(preset: .aligned) { value in

@@ -54,7 +54,7 @@ deferred is under *Later*.
 | 15 | Program preview on the phone; the regenerate offer that asks the server first (*IA*) | P2 | M | iOS, web |
 | 16 | Garmin's official Connect API, open again since 2026-10-21: verify the integration, then health data and workouts pushed to the watch | P2 | M | API, watch, web, iOS |
 | 17 | Explore: each philosophy's page read from its package — a server document, its week and rules, one colour system | P2 | M | API, web, iOS, content |
-| 18 | Phone design and interaction uplift: the foundation (1.35), states (1.36), iOS 26 chrome (1.37), discoverable actions (1.38) and the screen passes (1.39) are in; motion, accessibility left (*IA*) | P2 | L | iOS |
+| 18 | Phone design and interaction uplift: the foundation (1.35), states (1.36), iOS 26 chrome (1.37), discoverable actions (1.38), the screen passes (1.39) and motion (1.40) are in; accessibility left (*IA*) | P2 | L | iOS |
 
 ---
 
@@ -1620,10 +1620,18 @@ session". A workout's charts share one scrubber with a readout line. Profile's s
 cards and zone bar, Settings' Diagnostics row, `.searchable` in Replace, activity names
 capitalised in Linking. Design-system §6.10, §6.13, §6.49, §6.53–§6.55.
 
-**Left, in order:**
+**Done — 6. Motion** (1.40.0, `feat/ios-motion`). `AppMotion.swift` owns the small
+motions, each one modifier and still under Reduce Motion: numbers roll (Today's tiles,
+readiness, Load's totals, done of scheduled), symbols answer a state (the log circle, mark
+complete, linked pairs, the week strip's marks, pause / play), the card stacks of Today and
+Analytics ease in at the scroll's edge, and all 17 charts draw themselves once. Finishing a
+session is shown when Today is next seen (`AppState.justCompleted`): the card's stripe
+turns emerald, its check scales in, the week strip's dot fills. `DesignTokenTests` keeps
+`.contentTransition(`, `.symbolEffect(` and `.scrollTransition(` to that file.
+Design-system §7.5, §6.56.
 
-6. *Motion.* `numericText` on live numbers, `symbolEffect` on state changes,
-   `scrollTransition` on card stacks, the completion moment, chart entry once.
+**Left:**
+
 7. *Accessibility and system surfaces.* Labels and values on the screens with none, chart
    descriptors, a symbol wherever status is colour-only, 44 pt targets, the largest
    Dynamic Type size; widgets' tinted and clear rendering and Lock Screen accessories;

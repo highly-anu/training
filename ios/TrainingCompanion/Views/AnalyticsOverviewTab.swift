@@ -76,12 +76,14 @@ struct AnalyticsOverviewTab: View {
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 16) {
-                AnalyticsPeriodPicker(period: $period)
-                kpiGrid
-                if loadFocus.total > 0 { loadFocusCard }
-                if !modalities.isEmpty || !activities.isEmpty { mixCard }
-                weeklyCard
-                if !pmcEntries.isEmpty || isLoadingPMC { pmcCard }
+                AppScrollFade {
+                    AnalyticsPeriodPicker(period: $period)
+                    kpiGrid
+                    if loadFocus.total > 0 { loadFocusCard }
+                    if !modalities.isEmpty || !activities.isEmpty { mixCard }
+                    weeklyCard
+                    if !pmcEntries.isEmpty || isLoadingPMC { pmcCard }
+                }
             }
             .padding(.horizontal)
             .padding(.vertical, 12)
@@ -169,6 +171,7 @@ struct AnalyticsOverviewTab: View {
         VStack(alignment: .leading, spacing: 3) {
             HStack(alignment: .top, spacing: 2) {
                 Text(value).font(.title3).fontWeight(.semibold).monospacedDigit()
+                    .appNumeric(value: value)
                 if !unit.isEmpty {
                     Text(unit).font(.caption).foregroundStyle(.secondary).padding(.top, 4)
                 }

@@ -206,7 +206,7 @@ struct WorkoutPlayerView: View {
                     Text("\(left)")
                         .font(AppFont.hero(160))
                         .foregroundStyle(tint)
-                        .contentTransition(.numericText(countsDown: true))
+                        .appNumeric(countsDown: true)
                 }
             }
             .transition(.opacity)
@@ -244,7 +244,7 @@ struct PlayerStepView: View {
                             .font(AppFont.hero(96))
                             .lineLimit(1)
                             .minimumScaleFactor(0.4)
-                            .contentTransition(.numericText())
+                            .appNumeric()
                     }
                 }
                 if let b = WatchSpecText.fieldB(exercise, screen, st) {
@@ -407,6 +407,8 @@ struct PlayerControls: View {
             .font(.subheadline.weight(.medium))
             .lineLimit(1)
             .frame(maxWidth: .infinity)
+            // Pause becomes play in place.
+            .appSymbolReplace(value: systemImage)
         }
         .appButton(.secondary)
     }
@@ -464,7 +466,7 @@ struct PlayerRestView: View {
                     .animation(AppAnimation.tick, value: left)
                 Text(WatchSpecText.mmss(left))
                     .font(AppFont.hero(72))
-                    .contentTransition(.numericText(countsDown: true))
+                    .appNumeric(countsDown: true)
             }
             .frame(width: 260, height: 260)
             .accessibilityElement(children: .combine)

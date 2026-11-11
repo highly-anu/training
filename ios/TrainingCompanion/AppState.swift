@@ -48,6 +48,9 @@ final class AppState: ObservableObject {
     /// the active program (`inCurrentProgram`), because a key like "6-Monday-0"
     /// exists in every program the athlete has had.
     @Published var sessionLogs: [String: SessionLogEntry] = [:]
+    /// The session completed on this phone a moment ago, until Today has shown
+    /// it (`isShownComplete`).
+    @Published var justCompleted: String? = nil
     /// Earlier programs' logs, for Log ▸ Activity only.
     @Published var earlierSessionLogs: [SessionLogEntry] = []
 
@@ -793,6 +796,7 @@ final class AppState: ObservableObject {
             peakHR: nil,
             matchedWorkoutId: nil
         )
+        justCompleted = sessionKey
         try? await api.saveSessionComplete(sessionKey: sessionKey, completedAt: completedAt)
         rescheduleNotifications()
         writeHomeWidgets()
@@ -824,6 +828,7 @@ final class AppState: ObservableObject {
             avgHR: nil, peakHR: nil, matchedWorkoutId: before?.matchedWorkoutId)
         entry.exercises = before?.exercises ?? [:]
         sessionLogs[sessionKey] = entry
+        if before?.completedAt == nil { justCompleted = sessionKey }
         rescheduleNotifications()
         writeHomeWidgets()
         await loadRecentSessionLogs()
@@ -914,6 +919,7 @@ final class AppState: ObservableObject {
 
     func undoSessionComplete(sessionKey: String) async {
         sessionLogs.removeValue(forKey: sessionKey)
+        if justCompleted == sessionKey { justCompleted = nil }
         // The server keeps the sets and notes and clears only the completion;
         // without this call the completion came back on the next sync.
         try? await api?.clearSessionCompletion(sessionKey: sessionKey)
@@ -1149,6 +1155,13 @@ final class AppState: ObservableObject {
 
     func isSessionComplete(_ key: String) -> Bool {
         sessionLogs[key]?.completedAt != nil
+    }
+
+    /// Done, as Today shows it: a session just completed stays as it was until
+    /// Today is back on screen, so its card turns emerald in front of the
+    /// athlete rather than behind the sheet that completed it (§6.56).
+    func isShownComplete(_ key: String) -> Bool {
+        isSessionComplete(key) && justCompleted != key
     }
 
     // MARK: - Program Mutations

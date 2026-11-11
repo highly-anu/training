@@ -52,6 +52,7 @@ struct SleepStagesChartView: View {
                 .foregroundStyle(by: .value("Stage", pt.stage))
                 .cornerRadius(2)
             }
+            .appChartEntry()
             .chartForegroundStyleScale(domain: ["Deep", "REM", "Light", "Awake"],
                                        range: ["Deep", "REM", "Light", "Awake"].map { Self.stageColors[$0]! })
             .chartXAxis {

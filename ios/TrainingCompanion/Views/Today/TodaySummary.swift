@@ -126,6 +126,7 @@ struct TodayTile: View {
                 }
                 .font(AppFont.metricCompact)
                 .foregroundStyle(color.map { AnyShapeStyle($0) } ?? AnyShapeStyle(.tertiary))
+                .appNumeric(value: value)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
                 Text(note)

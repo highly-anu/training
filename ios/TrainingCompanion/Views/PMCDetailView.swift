@@ -92,6 +92,7 @@ struct PMCChart: View {
                     }
             }
         }
+        .appChartEntry()
         .chartXSelection(value: compact ? .constant(nil) : $selected)
         .chartXAxis {
             if !compact {

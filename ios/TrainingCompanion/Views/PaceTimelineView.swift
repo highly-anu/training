@@ -59,6 +59,7 @@ struct PaceTimelineView: View {
                             }
                     }
                 }
+                .appChartEntry()
                 // Inverted: faster pace (lower sec/km) at top
                 .chartYScale(domain: yHi...yLo)
                 .chartYAxis {

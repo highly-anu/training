@@ -251,6 +251,7 @@ struct SessionShapesCard: View {
                 HStack(spacing: 14) {
                     Label("\(done)/\(scheduled)", systemImage: "checkmark.circle")
                         .font(.title3).fontWeight(.semibold).monospacedDigit()
+                        .appNumeric(value: done)
                         .accessibilityLabel("\(done) of \(scheduled) sessions done")
                     if offEstimate > 0 {
                         Label("\(offEstimate)", systemImage: "clock.badge.exclamationmark")

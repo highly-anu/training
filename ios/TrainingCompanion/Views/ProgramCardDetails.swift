@@ -47,6 +47,7 @@ struct ScorecardDetailView: View {
                                     .font(.caption2).monospacedDigit().foregroundStyle(.secondary)
                             }
                     }
+                    .appChartEntry()
                     .chartYScale(domain: 0...110)
                     .chartXAxis {
                         AxisMarks { value in

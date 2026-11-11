@@ -299,7 +299,7 @@ struct SettingsView: View {
             } label: {
                 HStack {
                     Image(systemName: "arrow.clockwise")
-                        .symbolEffect(.rotate, options: .repeating, isActive: sync.isSyncing)
+                        .appSymbolSpin(isActive: sync.isSyncing)
                     Text(sync.isSyncing ? "Syncing…" : "Sync Now")
                 }
                 .frame(maxWidth: .infinity)
