@@ -311,6 +311,13 @@ def _report_analytics_specs(data: dict, installed: set) -> list:
                     problems.append(f"{where} names unknown benchmark {b!r}")
                 elif foreign_standard(b):
                     problems.append(f"{where} names {foreign_standard(b)}'s standard {b!r}, which it does not borrow")
+        for b in spec.get('elite_standards') or []:
+            # The standards that define the method's elite (docs/logic/levels.md).
+            if b not in benchmark_ids:
+                problems.append(f"{pkg}/analytics.yaml: elite_standards names unknown standard {b!r}")
+            elif foreign_standard(b):
+                problems.append(f"{pkg}/analytics.yaml: elite_standards names {foreign_standard(b)}'s "
+                                f"standard {b!r}, which it does not borrow")
         for b in spec.get('benchmarks') or []:
             if isinstance(b, dict):
                 for fw in b.get('frameworks') or []:

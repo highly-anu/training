@@ -8,6 +8,7 @@ sources:
 tracks:
   full_program:
     training_levels:
+    - novice
     - intermediate
     - advanced
     - elite
@@ -27,13 +28,13 @@ tracks:
       name: Long Day
       archetype_id: long_zone_2
       modality: aerobic_base
-      training_levels: [intermediate, advanced, elite]
+      training_levels: [novice, intermediate, advanced, elite]
       exposures_per_week: 1
       min_spacing_days: 1
       max_rpe: 6
       progression:
         model: weekly_volume
-        start_minutes: {intermediate: 330, advanced: 420, elite: 510}
+        start_minutes: {novice: 210, intermediate: 330, advanced: 420, elite: 510}
         ramp_pct: 10
         build_weeks: 3
         recovery_pct: 50
@@ -53,7 +54,7 @@ tracks:
       name: Aerobic
       archetype_id: recovery_jog
       modality: aerobic_base
-      training_levels: [intermediate, advanced, elite]
+      training_levels: [novice, intermediate, advanced, elite]
       exposures_per_week: 3
       exposures_by_phase:
         base_intensity: 2
@@ -66,7 +67,7 @@ tracks:
       max_rpe: 6
       progression:
         model: weekly_volume
-        start_minutes: {intermediate: 330, advanced: 420, elite: 510}
+        start_minutes: {novice: 210, intermediate: 330, advanced: 420, elite: 510}
         ramp_pct: 10
         build_weeks: 3
         recovery_pct: 50
@@ -87,7 +88,7 @@ tracks:
       name: Zone 3
       archetype_id: ant_threshold_intervals
       modality: anaerobic_intervals
-      training_levels: [intermediate, advanced, elite]
+      training_levels: [novice, intermediate, advanced, elite]
       phases: [base_intensity, specific, taper]
       exposures_per_week: 1
       exposures_by_phase:
@@ -96,7 +97,7 @@ tracks:
       max_rpe: 8
       progression:
         model: weekly_volume
-        start_minutes: {intermediate: 330, advanced: 420, elite: 510}
+        start_minutes: {novice: 210, intermediate: 330, advanced: 420, elite: 510}
         ramp_pct: 10
         build_weeks: 3
         recovery_pct: 50
@@ -127,7 +128,7 @@ tracks:
       name: General Strength
       archetype_id: general_strength_circuit
       modality: relative_strength
-      training_levels: [intermediate, advanced, elite]
+      training_levels: [novice, intermediate, advanced, elite]
       phases: [transition]
       exposures_per_week: 2
       min_spacing_days: 2
@@ -434,7 +435,7 @@ tracks:
       name: Max Strength
       archetype_id: me_max_strength_gym
       modality: max_strength
-      training_levels: [intermediate, advanced, elite]
+      training_levels: [novice, intermediate, advanced, elite]
       phases: [base, base_intensity, specific, taper]
       exposures_per_week: 2
       exposures_by_phase:
@@ -507,7 +508,7 @@ tracks:
       name: Muscular Endurance
       archetype_id: me_weighted_box_step_ups
       modality: strength_endurance
-      training_levels: [intermediate, advanced, elite]
+      training_levels: [novice, intermediate, advanced, elite]
       phases: [specific]
       exposures_per_week: 1
       min_spacing_days: 3

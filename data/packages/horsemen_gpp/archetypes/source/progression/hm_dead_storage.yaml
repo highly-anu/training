@@ -2,7 +2,9 @@ id: hm_dead_storage
 name: Dead Storage
 modality: mixed_modal_conditioning
 category: conditioning
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 30
 slots:
@@ -25,6 +27,7 @@ slots:
     exercise_ids: [wall_ball]
     ordered: true
   load: 9 kg (20 lb) ball
+  load_kg: 9
 - role: ball_slam
   slot_type: amrap_movement
   parent_slot_role: dead_storage
@@ -33,6 +36,7 @@ slots:
     exercise_ids: [ball_slam]
     ordered: true
   load: 9 kg (20 lb) ball
+  load_kg: 9
 required_equipment: [barbell, rack, plates, medicine_ball]
 sources: [Horsemen]
 notes: 'A chipper: 100 thrusters with a 20 kg (45 lb) bar, 100 wall balls and 100 ball slams with a 9 kg (20 lb)

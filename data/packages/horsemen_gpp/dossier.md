@@ -47,6 +47,10 @@ placed where it fits the method (I2).
   a stored program that names the track regenerates as the macro from its first
   month (the macro's `former_ids`).
 - I2: the PT test's placement — the macro's first and last hard job-specific days.
+- I3: every workout is written for the elite operator; advanced does 85 %, intermediate 70 %
+  and a novice half of it (the commons' shares), percentages of today's max and multiples of
+  bodyweight as written. Novices are taken in; the full Olympic lifts, the rope climb and the
+  handstand push-up are for intermediates and up, scaled below. The source has no novice path.
 
 ## Output review (2026-10-22)
 

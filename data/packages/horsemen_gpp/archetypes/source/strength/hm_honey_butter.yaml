@@ -2,7 +2,9 @@ id: hm_honey_butter
 name: Honey Butter
 modality: max_strength
 category: strength
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 45
 slots:
@@ -40,6 +42,7 @@ slots:
     exercise_ids: [sb_clean_and_squat]
     ordered: true
   load: 48 kg (105 lb)
+  load_kg: 48
   notes: '5 rounds, alternating: clean a heavy bag, squat it 3 times and run with it; 5 bench presses (start at
     65%, add weight each round); 1 rope climb (or 10 pull-ups) — not for time.'
 - role: sandbag_run
@@ -50,6 +53,7 @@ slots:
     exercise_ids: [sb_run]
     ordered: true
   load: 48 kg (105 lb)
+  load_kg: 48
   notes: Run with the bag after the squats; the source does not say how far.
 - role: bench_press
   slot_type: sets_reps
@@ -75,6 +79,7 @@ slots:
     exercise_ids: [db_crawl]
     ordered: true
   load: 25 kg (55 lb)
+  load_kg: 25
   notes: '3 rounds, alternating: 20 m dumbbell crawl (a bear crawl holding the dumbbells), 5 glute-ham raises —
     not for time.'
 - role: glute_ham_raise

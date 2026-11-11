@@ -63,7 +63,8 @@ None.
 - The heart-rate drift test is not scheduled; the zones are the app's heart-rate zones.
 - Pack weight past 15 % of bodyweight does not progress (up to 25 % on aerobic hikes).
 - More Transition for an aerobically deficient athlete is not modelled.
-- A novice track: Beginner Mountain Fitness is sold, not published; the next step.
+- Beginner Mountain Fitness is sold, not published: a novice runs the full program from the
+  untrained hours instead (I12).
 
 ## Inventions
 
@@ -71,8 +72,8 @@ None.
   with one Zone 3 session, Specific 8, Taper 1.
 - I2: each block starts one step above the last; the ramp holds from Specific on, its
   recovery weeks still at half. Peak about 11.4 hours (the plans: about 11).
-- I3: the first week's aerobic minutes by level — intermediate 5.5 h, advanced 7,
-  elite 8.5 (R6 less about 1.5 h of strength); no novice.
+- I3: the first week's aerobic minutes by level — novice 3.5 h, intermediate 5.5,
+  advanced 7, elite 8.5 (R6 less about 1.5 h of strength).
 - I4: a session longer than the athlete's longest day is capped there, and said.
 - I5: the max-strength session's sets (four), lifts (squat and deadlift alternating,
   weighted pull-ups) and the core routine.
@@ -85,6 +86,8 @@ None.
 - I9: a Zone 3 session's 15-minute warm-up and 10-minute cool-down.
 - I10: the aerobic-deficiency gate is said, never enforced (the owner's rule for Wildman).
 - I11: six training days required; at seven, the same six sessions.
+- I12: a novice runs the full program from the untrained hours; the source's beginner plan
+  is not published. Every level's volume is the source's: nothing is scaled.
 
 ## Output review (2026-10-22)
 

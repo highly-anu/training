@@ -114,6 +114,11 @@ def _prefixed(arch: dict, prefix: str, note: str = '', light: bool = False, bare
             slot['notes'] = f"{note}{slot.get('notes') or ''}".strip()
         if advice and k == 0:
             slot['notes'] = f"{slot.get('notes') or ''} {advice}".strip()
+        if arch.get('scaling_eligible'):
+            # The piece is the authored level's and the levels below scale it
+            # (src/level_scaling.py); the flag rides on its own slots, since a
+            # composed day mixes pieces.
+            slot['scaling_eligible'] = True
         if light and slot.get('slot_type') not in ('time_domain', 'distance', 'skill_practice'):
             written = slot.get('load')
             slot['load'] = 'Light, work on form' + (f' (written: {written})' if written else '')
@@ -143,6 +148,7 @@ def compose(pieces: list[tuple[str, dict]], warm: dict | None, light: bool, cate
                 'duration_estimate_minutes': minutes,
                 'required_equipment': sorted({e for _, a in pieces for e in a.get('required_equipment') or []}
                                              | set((warm or {}).get('required_equipment') or []))}
+    composed.pop('scaling_eligible', None)    # each slot says, from its own piece
     return composed
 
 

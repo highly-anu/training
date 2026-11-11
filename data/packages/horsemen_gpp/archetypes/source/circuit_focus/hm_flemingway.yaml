@@ -2,7 +2,9 @@ id: hm_flemingway
 name: "Flemingway"
 modality: mixed_modal_conditioning
 category: conditioning
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 duration_estimate_minutes: 6
 pool_only: true
 
@@ -24,6 +26,7 @@ slots:
     rep_scheme: [20, 15, 10, 5]
     parent_slot_role: run
     load: "5 kg (10 lb)"
+    load_kg: 5
     exercise_filter:
       exercise_ids: [ball_slam]
       ordered: true

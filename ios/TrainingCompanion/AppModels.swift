@@ -238,6 +238,20 @@ struct PhilosophyTrack: Codable, Identifiable, Hashable {
     /// A track the app made up rather than the source (the fidelity record's
     /// invention): the builders label it as the app's own.
     var invention: TrackInvention? = nil
+    /// The level its sessions are written for; a level below does them
+    /// scaled (src/level_scaling.py). Nil for a track done as written.
+    var authoredLevel: String? = nil
+
+    /// "Written for Elite · scaled for Novice" below the authored level, the
+    /// web's `scaledFor`; nil at or above it, or for a track not scaled.
+    func scaledFor(level: String?) -> String? {
+        let order = ClientVocab.trainingLevels
+        guard let authored = authoredLevel, let level,
+              let at = order.firstIndex(of: level), let top = order.firstIndex(of: authored), at < top
+        else { return nil }
+        func label(_ id: String) -> String { id.prefix(1).uppercased() + id.dropFirst() }
+        return "Written for \(label(authored)) · scaled for \(label(level))"
+    }
 
     struct TrackInvention: Codable, Hashable {
         let id: String
@@ -253,6 +267,7 @@ struct PhilosophyTrack: Codable, Identifiable, Hashable {
     enum CodingKeys: String, CodingKey {
         case id, name, description, phases, invention
         case entryRequirements = "entry_requirements"
+        case authoredLevel = "authored_level"
     }
 }
 

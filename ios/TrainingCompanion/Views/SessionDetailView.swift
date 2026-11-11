@@ -347,6 +347,9 @@ struct SessionDetailView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .monospacedDigit()
+            ForEach([LoadFormat.scaledFromText(ea), LoadFormat.scaledText(ea)].compactMap { $0 }, id: \.self) { line in
+                Text(line).font(.caption).foregroundStyle(.secondary)
+            }
             if case .bool(true)? = ea.load.extra["conditional"] {
                 Text("Forecast: advance only after clean completion at the prescribed effort.")
                     .font(.caption).foregroundStyle(.secondary)

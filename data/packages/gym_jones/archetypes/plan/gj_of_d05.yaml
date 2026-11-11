@@ -3,6 +3,8 @@ name: "Operator Fitness — Day 5: Circuit (Focus)"
 modality: mixed_modal_conditioning
 category: conditioning
 training_levels: [intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 duration_estimate_minutes: 60
 pool_only: true
 
@@ -25,6 +27,7 @@ slots:
       exercise_ids: [ball_slam]
       ordered: true
     load: "25 lb (11 kg) ball"
+    load_kg: 11
     notes: "30-20-10 reps of each: ball slam, KB step-up with 2 x 35 lb in the rack onto a 20 in box."
 
   - role: kb_step_ups
@@ -35,6 +38,7 @@ slots:
       exercise_ids: [kb_step_up]
       ordered: true
     load: "2 x 35 lb (16 kg) in the rack, 20 in box"
+    load_kg: 16
 
   - role: row_tabata
     slot_type: time_domain

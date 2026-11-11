@@ -3,9 +3,12 @@ name: 2 Minutes
 modality: mixed_modal_conditioning
 category: conditioning
 training_levels:
+- novice
 - intermediate
 - advanced
 - elite
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 45
 slots:
@@ -133,6 +136,7 @@ slots:
     - kb_tgu
     ordered: true
   load: 16 kg (35 lb)
+  load_kg: 16
 - role: jump_rope_9
   slot_type: time_domain
   duration_sec: 120

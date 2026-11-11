@@ -3,6 +3,8 @@ name: "Operator Fitness — Day 17: Breathing Ladder"
 modality: strength_endurance
 category: conditioning
 training_levels: [intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 duration_estimate_minutes: 50
 pool_only: true
 
@@ -23,6 +25,7 @@ slots:
       exercise_ids: [kb_swing_breathing_ladder]
       ordered: true
     load: "53 lb (24 kg)"
+    load_kg: 24
     notes: "1-20-1: a swing, then a breath; two swings, two breaths; up to 20 and down again (about 400 swings). Rest standing."
 
 required_equipment:

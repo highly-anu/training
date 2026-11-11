@@ -14,7 +14,7 @@ cannot disagree about what a phase is.
 """
 from __future__ import annotations
 
-from . import loader
+from . import levels as _levels, loader
 
 
 class PhaseResolutionError(ValueError):
@@ -151,7 +151,18 @@ def validate_philosophy_tracks(phil: dict, framework_ids: set | None = None) -> 
                 errors.append(f"{pid}/{tid}/{phid}: no framework_id")
             elif framework_ids is not None and fid not in framework_ids:
                 errors.append(f"{pid}/{tid}/{phid}: framework '{fid}' is not in this package")
-    former = [f for t in tracks for f in t.get('former_ids') or []]
+        # A level's own shares say what a level below the authored one does
+        # (src/level_scaling.py); one at or above it would never be read.
+        authored = track.get('authored_level')
+        for level in track.get('level_scaling') or {}:
+            if not authored:
+                errors.append(f"{pid}/{tid}: level_scaling without authored_level")
+                break
+            if level not in _levels.order():
+                errors.append(f"{pid}/{tid}: level_scaling names unknown level '{level}'")
+            elif _levels.rank(level) >= _levels.rank(authored):
+                errors.append(f"{pid}/{tid}: level_scaling for {level}, at or above the authored {authored}")
+    former =[f for t in tracks for f in t.get('former_ids') or []]
     for f in set(former):
         if f in track_ids or former.count(f) > 1:
             errors.append(f"{pid}: former track id '{f}' is a track or names two")
@@ -262,7 +273,7 @@ def phase_rules(philosophies: list, phase_id: str | None, framework_id: str | No
     packages; a framework id does not). Nothing found is the empty rule set.
     """
     if not phase_id:
-        return {'exclude_exercises': [], 'rotate_main_lifts': False}
+        return {'exclude_exercises': [], 'rotate_main_lifts': False, 'level_policy': None}
     for phil in philosophies or []:
         for track in tracks_of(phil):
             for ph in track.get('phases') or []:
@@ -270,9 +281,11 @@ def phase_rules(philosophies: list, phase_id: str | None, framework_id: str | No
                     continue
                 if framework_id and ph.get('framework_id') != framework_id:
                     continue
+                from . import level_scaling
                 return {'exclude_exercises': list(ph.get('exclude_exercises') or []),
-                        'rotate_main_lifts': bool(ph.get('rotate_main_lifts'))}
-    return {'exclude_exercises': [], 'rotate_main_lifts': False}
+                        'rotate_main_lifts': bool(ph.get('rotate_main_lifts')),
+                        'level_policy': level_scaling.policy_for(track)}
+    return {'exclude_exercises': [], 'rotate_main_lifts': False, 'level_policy': None}
 
 
 def week_entry(phase_entry: dict, week_in_phase: int, week_in_program: int) -> dict:

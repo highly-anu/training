@@ -2,7 +2,9 @@ id: cf_hspu_deadlift_couplet
 name: "5 Handstand Push-Ups / Deadlift x 5"
 modality: mixed_modal_conditioning
 category: conditioning
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written as Rx (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 duration_estimate_minutes: 20
 pool_only: true
 
@@ -24,6 +26,7 @@ slots:
       exercise_ids: [deadlift]
       ordered: true
     load: "225 lb (102 kg), +20 lb (9 kg) a round"
+    load_kg: 102
 
 required_equipment:
 - barbell

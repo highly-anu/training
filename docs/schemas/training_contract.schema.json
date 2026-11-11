@@ -48,6 +48,7 @@
         "id": {"type": "string"}, "name": {"type": "string"},
         "archetype_id": {"type": "string"}, "modality": {"type": "string"},
         "training_levels": {"$ref": "#/definitions/levels"},
+        "scaling_eligible": {"type": "boolean", "description": "The module is written for its track's `authored_level` (philosophy.yaml); the levels below in `training_levels` do a share of its sets, reps, holds and timed blocks (training_contract.with_level, src/level_scaling.py). Without it a level the module lists does it as written."},
         "exposures_per_week": {"type": "integer", "minimum": 1, "maximum": 6},
         "exposures_by_days": {"type": "object", "propertyNames": {"pattern": "^[1-7]$"}, "additionalProperties": {"type": "integer", "minimum": 0, "maximum": 6}, "description": "Weekly exposures by the days the athlete trains (the nearest listed count at or below theirs); 0 leaves the module out. Overrides exposures_per_week."},
         "min_spacing_days": {"type": "integer", "minimum": 1, "maximum": 7},

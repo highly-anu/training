@@ -2,7 +2,9 @@ id: hm_johnnie_walker_black
 name: "Johnnie Walker Black"
 modality: mixed_modal_conditioning
 category: conditioning
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 duration_estimate_minutes: 12
 pool_only: true
 
@@ -12,6 +14,7 @@ slots:
     sets: 5
     reps: 5
     load: "2 x 24 kg (2 x 53 lb)"
+    load_kg: 24
     exercise_filter:
       exercise_ids: [kb_clean_double]
       ordered: true

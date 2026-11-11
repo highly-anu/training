@@ -2,6 +2,10 @@
 # tolerance), and the times its rows and runs record.
 id: gym_jones
 
+# The operator's mark: the 2000 m row Operator Fitness rows on day 15, at
+# its ladder's elite rung (docs/logic/levels.md).
+elite_standards: [row_2km_minutes]
+
 progress:
   - id: plan_completion
     label: Days done as written

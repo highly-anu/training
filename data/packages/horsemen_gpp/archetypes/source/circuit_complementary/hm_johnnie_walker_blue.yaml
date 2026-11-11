@@ -2,7 +2,9 @@ id: hm_johnnie_walker_blue
 name: "Johnnie Walker Blue"
 modality: mixed_modal_conditioning
 category: conditioning
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 duration_estimate_minutes: 60
 pool_only: true
 
@@ -25,6 +27,7 @@ slots:
     reps_per_round: 30
     parent_slot_role: pull_ups
     load: "11 kg (25 lb)"
+    load_kg: 11
     exercise_filter:
       exercise_ids: [kb_tgu]
       ordered: true
@@ -42,6 +45,7 @@ slots:
     reps_per_round: 30
     parent_slot_role: pull_ups
     load: "11 kg (25 lb)"
+    load_kg: 11
     exercise_filter:
       exercise_ids: [kb_tgu]
       ordered: true
@@ -59,6 +63,7 @@ slots:
     reps_per_round: 30
     parent_slot_role: pull_ups
     load: "11 kg (25 lb)"
+    load_kg: 11
     exercise_filter:
       exercise_ids: [kb_tgu]
       ordered: true
@@ -76,6 +81,7 @@ slots:
     reps_per_round: 30
     parent_slot_role: pull_ups
     load: "11 kg (25 lb)"
+    load_kg: 11
     exercise_filter:
       exercise_ids: [kb_tgu]
       ordered: true

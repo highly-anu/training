@@ -2,7 +2,9 @@ id: hm_sherbert
 name: Sherbert
 modality: mixed_modal_conditioning
 category: conditioning
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 20
 slots:
@@ -25,6 +27,7 @@ slots:
     exercise_ids: [kb_swing_two_hand]
     ordered: true
   load: 24 kg (53 lb)
+  load_kg: 24
 - role: box_jump
   slot_type: amrap_movement
   parent_slot_role: sherbert

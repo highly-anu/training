@@ -2,7 +2,9 @@ id: hm_wasted_love
 name: Wasted Love
 modality: max_strength
 category: strength
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 25
 slots:
@@ -46,6 +48,7 @@ slots:
     exercise_ids: [ball_slam]
     ordered: true
   load: 11 kg (25 lb)
+  load_kg: 11
 required_equipment: [barbell, plates, pull_up_bar, sandbag, kettlebell, medicine_ball]
 sources: [Horsemen, Dan John]
 notes: Three rounds of Dan John's "The Exercise" (snatch to overhead squat) with knees to elbows, then 3 rounds

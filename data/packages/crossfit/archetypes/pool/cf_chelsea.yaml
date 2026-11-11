@@ -2,7 +2,9 @@ id: cf_chelsea
 name: "Chelsea"
 modality: mixed_modal_conditioning
 category: conditioning
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written as Rx (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 duration_estimate_minutes: 30
 pool_only: true
 

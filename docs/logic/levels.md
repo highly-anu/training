@@ -1,0 +1,153 @@
+# Levels: written for one athlete, done by every athlete
+
+A package writes its sessions as its source does, for the athlete the source
+writes for: CrossFit's Rx, Fran at 43 kg, 21-15-9. This framework lets the
+same package serve every training level (novice, intermediate, advanced,
+elite: `data/commons/training_levels.yaml`) in three layers, each data, none
+naming a package (`tools/check_code_neutral.py`).
+
+Since 2026-11-07 (CrossFit first); every package by 2026-11-08 (`docs/roadmap.md`,
+item 18). How each one serves the levels is the table at the end.
+
+## 1. Which movements: suitability
+
+An exercise's lowest suitable level is **computed**, never tagged:
+`src/level_suitability.py` asks `selector._get_unlocked` at each level, on the
+package's own copies (`provenance.scope`'s order: the package, then what it
+borrows). That reads
+
+- the exercise's `requires` chain, resolved to a fixed point;
+- the commons' level concepts (`data/commons/level_concepts.yaml`) and the
+  package's seeds (`level_seeds.yaml`, a training contract track's
+  `level_seeds`);
+- an exercise's optional `min_level`, for a movement no chain locks (a full
+  snatch): below it the exercise is locked whatever is known;
+
+raised to the lowest level any of the package's sessions names it for
+(`_named_by`: an archetype's slot or a contract's block, for the levels it
+lists) — Ido's advanced routine's moves are an advanced athlete's. An exercise
+no session names, only a filter reaches, keeps its unlock level. The commons'
+concepts cascade upward as a package's seeds do (`selector._level_known`): an
+advanced athlete knows what an intermediate does.
+
+`/api/explore/links` serves the table as `exerciseLevels`
+(`{package: {exercise: {minLevel, scalesTo}}}`), and Explore's exercise page
+says "Suits Intermediate and up". Without `requires` or `min_level` an
+exercise suits a novice: a package that converts says which of its movements
+do not.
+
+**A movement out of reach is scaled.** In a slot of a `scaling_eligible`
+archetype that names its movement, a written movement the athlete cannot do
+(locked at the level, or no equipment for it) is replaced by the first
+doable of its `scaling_down` list, nearest first (breadth first:
+`selector._scaled_slot`). The assignment says `scaled_from` (+ `_name`) and
+`scale_cause` (`level` or `constraint`). Only a slot whose movement nothing
+scales still empties, and a named workout that cannot be done is passed over
+as before (`generator._fits_as_written`). Scales are the package's own
+exercises, usually `named_only`, so adding one never changes an open slot.
+
+## 2. How much: dose
+
+A track opts in with `authored_level` (`philosophy.yaml`). Below it, a
+session whose archetype is `scaling_eligible` is done at a share of what is
+written, per dimension:
+
+| Dimension | Scales | Never |
+|-----------|--------|-------|
+| `load` | a slot's `load_kg` (a number, or `{male, female}` by the athlete's `sex`) | a % of 1RM or of bodyweight, RPE: already the athlete's own |
+| `volume` | the sets where there are several, else the reps, `rep_scheme`, reps a round — once, never both; a rep ladder ("25-20-15-10-5", one rung a set) rung by rung, its sets kept | rounds of a for-time piece (its structure) |
+| `time` | an AMRAP's or a cap's minutes, a block's minutes, holds; an interval's rounds (and its minutes with them) | an interval's length (every 30 s stays every 30 s), rest |
+| `distance` | metres, kilometres | |
+
+The share is the track's own `level_scaling.<level>.<dimension>` where its
+source says (CrossFit's Level 1 guide: half for a newcomer), else the
+commons' (`training_levels.yaml` `scaling`, relative to the authored level:
+novice 0.5, intermediate 0.7, advanced 0.85 of an elite prescription), never
+more than written. Counts round half up and never go under one; seconds to
+5 s, metres to 10 m, kilograms to 2.5 kg (1 kg under 20 kg: dumbbells and
+balls; 4 kg for a kettlebell).
+
+`src/level_scaling.scale_prescription` is the one function, called by
+`progression.calculate_load` (the generator, `POST /sessions/generate`,
+`/exercises/substitute`; a single-session route finds the track by the week's
+phase) and on a structural slot's load. The scaled load keeps each written
+value under `rx` and says `level_scaled: {level, from, shares, sources}`;
+`load_note` reads "15 kg · Rx 95 lb (43 kg); women 65 lb (30 kg)". Both
+clients word it (web `lib/levelScaling.ts`, iOS `LoadFormat.scaledText`):
+"Scaled for Novice · Rx 21-15-9 reps · 30 kg", "In place of Pull-Up".
+
+**A scaled benchmark is not its standard's result.** A named workout that is
+a selectable test (Fran) done below the authored level carries no `standard`
+on its scored slot (`scaled_standard` names it), so no suggestion places a
+scaled time on the Rx ladder. A test a phase places (a protocol) is never
+scaled.
+
+**Precedence.** A version the source wrote for the level wins: an archetype
+or track whose `training_levels` include it and which is not
+`scaling_eligible` runs as written (Ido's routines, Starting Strength's LP
+and Texas Method, Gym Jones's Soldier of Steel, ATG's programs), and so does a
+training contract's per-level volume (`start_minutes`: Uphill's first-week
+hours by fitness, R6, its novice the source's 5 hours untrained). Then the
+track's `level_scaling`, then the commons' shares.
+
+**Training contracts** scale in their module chain
+(`training_contract.with_level`, after `with_volume`), which generation and
+`verify` both resolve, so the contract's own checks see the scaled module: a
+`scaling_eligible` module's sets (once, each block's minutes with them), reps,
+holds and timed blocks. Never: the week's volume (`start_minutes`, the
+source's by level), a lift's weight (`load_per_exposure`) or a bell, a
+progressing block's cycle, an interval (EMOM), a test, practice
+(`skill_practice`: warm-ups, cooldowns, technique). An exercise's
+`starting_load_kg` stays per level as authored (no elite × share fallback
+yet).
+
+## 3. The elite target: standards
+
+`analytics.yaml` names `elite_standards`: the standards whose elite rung the
+authored prescriptions are for (CrossFit: the benchmark workouts) — or, where
+nothing honest measures the method's elite, `no_elite_standard` says why (ATG
+writes no pass mark; Built to Move's bands are not read). `tools/check_analytics.py`
+fails a package with neither; `tools/check_provenance.py` checks the ids. Each level trains toward its own
+rung (`standard_rung`: novice → entry, the rest by name): a standard's
+"intermediate" is roughly where a novice program ends, so the ladders are not
+one-to-one. Standards stay measures: the engine never moves a level.
+
+## Fidelity
+
+Scaling the source does not state is the app's. `package_fidelity.unrecorded_scaling`
+(in the S3 references) fails a package whose track takes the commons' shares
+without a rule or invention naming `tracks.<id>.authored_level`, or whose own
+`level_scaling.<level>` no rule cites. The scorecard and the fidelity gate read
+a scaled track's ideal athlete at its authored level (`check_fidelity._track_ranges`);
+its `eval-level-*` profiles read the levels below. `test_single_lane_golden.py`
+pins a scaled track at its authored level too.
+
+## Converting a package
+
+1. Set each track's `authored_level`; write `level_scaling` where the source
+   says, and record the rest as an invention.
+2. Give fixed loads `load_kg`; leave relative loads as text.
+3. Mark the archetypes the levels below reach by scaling `scaling_eligible`
+   and widen their `training_levels`; leave source-written versions alone.
+4. Give the hardest movements `min_level` or a `requires` chain, and every
+   movement that may be out of reach a `scaling_down` the package owns.
+5. Name `elite_standards`.
+6. Re-record: `test_single_lane_golden.py --record --package <id>`,
+   `tools/evaluate_packages.py --package <id> --update-baseline`; review the
+   output at the lowest level and the authored one.
+
+## Every package
+
+| Package | How a level is served | Scaled below | Elite standards |
+|---------|-----------------------|--------------|-----------------|
+| CrossFit | every workout written as Rx (elite); novices taken in | the Level 1 guide's half for a novice (R15), the commons' between (I7); hard movements scaled (I8) | the benchmark workouts |
+| Gym Jones | Operator Fitness elite; Soldier of Steel the source's novice plan | Operator Fitness for advanced and intermediate, the commons' (I7) | the 2 km row |
+| Horsemen | every workout elite; novices taken in | the commons' (I3); the full Olympic lifts, rope and HSPU from intermediate | the four-month goals (R8) |
+| Uphill | each level's volume the source's (R6); a novice from the untrained 5 hours (I12) | nothing | the pack-carry vertical pace |
+| Marcus Filly | the 3x samples elite; novices taken in | sets and conditioning minutes, the commons' (I6) | the back squat (I8) |
+| BJJ | the S&C elite; a class a class | sets, holds, minutes of the S&C, the commons' (I9) | the bench, max pull-ups (I10) |
+| Wildman | the bell the athlete chooses and the cycle they earn (R9); module levels as written | nothing: the cycle starts where every athlete starts and advances on clean sessions | the snatch test, the get-up, the pentathlon's events |
+| Starting Strength | the source's own versions: Linear Progression (novice), the Texas Method (intermediate); advanced refused (Practical Programming's advanced programs are not read) | nothing | the five lifts to bodyweight |
+| Ido Portal | the source's own versions of each routine (beginner, intermediate, advanced) | nothing | the free handstand |
+| ATG | the source's own programs by level (Zero, Program #2, Knee Ability Pro) | nothing | none: Patrick writes no pass mark |
+| Kelly Starrett | Built to Move is for every level as written | nothing | none: the book's bands are not read |

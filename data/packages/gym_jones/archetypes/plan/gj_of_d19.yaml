@@ -3,6 +3,8 @@ name: "Operator Fitness — Day 19: Accumulation"
 modality: mixed_modal_conditioning
 category: conditioning
 training_levels: [intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 duration_estimate_minutes: 60
 pool_only: true
 
@@ -47,6 +49,7 @@ slots:
       exercise_ids: [kb_squat_goblet]
       ordered: true
     load: "53 lb (24 kg)"
+    load_kg: 24
     notes: "Then 100 m sprint; 3 minutes rest."
 
   - role: round_2
@@ -57,6 +60,7 @@ slots:
       exercise_ids: [kb_swing_two_hand]
       ordered: true
     load: "53 lb (24 kg)"
+    load_kg: 24
     notes: "Then 100 m sprint, 100 m farmer carry with 2 x 53 lb; 3 minutes rest."
 
   - role: round_3
@@ -67,6 +71,7 @@ slots:
       exercise_ids: [kb_squat_goblet]
       ordered: true
     load: "53 lb (24 kg)"
+    load_kg: 24
     notes: "Then 100 m sprint, 100 m suitcase carry with 1 x 53 lb; 3 minutes rest."
 
   - role: flr

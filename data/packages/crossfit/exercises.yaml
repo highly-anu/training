@@ -129,6 +129,7 @@ exercises:
     '
 - id: jump_rope_double_under
   name: Jump Rope (Double Under)
+  min_level: intermediate
   category: aerobic
   modality:
   - anaerobic_intervals
@@ -149,7 +150,8 @@ exercises:
   - knee_meniscus_post_op
   progressions:
     volume: increase_reps_per_set
-  scaling_down: []
+  scaling_down:
+  - jump_rope_single_under
   typical_volume:
     sets: 5
     reps: 50
@@ -215,7 +217,8 @@ exercises:
     volume: increase_reps_per_set
     load: add_weight_vest
     complexity: pull_up_weighted
-  scaling_down: []
+  scaling_down:
+  - jumping_pull_up
   typical_volume:
     sets: 5
     reps: 5
@@ -253,7 +256,7 @@ exercises:
     volume: increase_reps_per_set
     complexity: muscle_up_ring
   scaling_down:
-  - dip
+  - push_up
   typical_volume:
     sets: 3
     reps: 8
@@ -300,6 +303,7 @@ exercises:
     '
 - id: handstand_push_up
   name: Handstand Push-Up (Wall)
+  min_level: advanced
   category: bodyweight
   modality:
   - relative_strength
@@ -321,7 +325,7 @@ exercises:
     volume: increase_reps_per_set
     complexity: handstand_push_up_ring
   scaling_down:
-  - handstand_hold
+  - pike_push_up
   typical_volume:
     sets: 4
     reps: 5
@@ -336,6 +340,7 @@ exercises:
     '
 - id: muscle_up_ring
   name: Muscle-Up (Rings)
+  min_level: advanced
   category: bodyweight
   modality:
   - relative_strength
@@ -358,6 +363,7 @@ exercises:
   progressions:
     volume: increase_reps_per_set
   scaling_down:
+  - pull_up
   - dip_ring
   typical_volume:
     sets: 3
@@ -889,6 +895,7 @@ exercises:
 
 - id: snatch
   name: Snatch
+  min_level: intermediate
   category: barbell
   modality:
   - power
@@ -906,12 +913,15 @@ exercises:
   - shoulder_impingement
   - shoulder_instability
   - wrist_injury
+  scaling_down:
+  - db_snatch
   sources:
   - CrossFit
   notes: 'From the floor to overhead in one movement, received in a squat.'
 
 - id: clean_and_jerk
   name: Clean and Jerk
+  min_level: intermediate
   category: barbell
   modality:
   - max_strength
@@ -930,12 +940,15 @@ exercises:
   - lumbar_disc
   - shoulder_impingement
   - wrist_injury
+  scaling_down:
+  - clean
   sources:
   - CrossFit
   notes: 'A clean to the shoulders, then a jerk overhead.'
 
 - id: overhead_squat
   name: Overhead Squat
+  min_level: intermediate
   category: barbell
   modality:
   - max_strength
@@ -951,6 +964,8 @@ exercises:
   - shoulder_impingement
   - shoulder_instability
   - knee_meniscus_post_op
+  scaling_down:
+  - front_squat
   sources:
   - CrossFit
   notes: 'A wide grip, the bar locked overhead, a full squat.'
@@ -1052,6 +1067,7 @@ exercises:
 
 - id: l_pull_up
   name: L-Pull-Up
+  min_level: intermediate
   category: bodyweight
   modality:
   - relative_strength
@@ -1064,7 +1080,72 @@ exercises:
   contraindicated_with:
   - tennis_elbow
   - golfers_elbow
+  scaling_down:
+  - pull_up
   sources:
   - CrossFit
   notes: 'A strict pull-up with the legs held straight out in an L.'
 
+- id: jumping_pull_up
+  name: Jumping Pull-Up
+  category: bodyweight
+  # A scale, never picked for an open slot: a slot that names a pull-up takes
+  # it when the pull-up is out of reach (src/level_scaling.py).
+  named_only: true
+  modality:
+  - relative_strength
+  - strength_endurance
+  equipment:
+  - pull_up_bar
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - vertical_pull
+  requires: []
+  unlocks:
+  - pull_up
+  scaling_down: []
+  sources:
+  - CrossFit
+  notes: 'From a box or the floor under the bar, jump to chin over the bar and lower
+    under control. The Level 1 guide''s scale for a pull-up.'
+- id: pike_push_up
+  name: Pike Push-Up
+  category: bodyweight
+  named_only: true
+  modality:
+  - relative_strength
+  equipment:
+  - none
+  effort: medium
+  bilateral: true
+  movement_patterns:
+  - vertical_push
+  requires: []
+  unlocks:
+  - handstand_push_up
+  scaling_down: []
+  sources:
+  - CrossFit
+  notes: 'Hips high, hands and feet on the floor (feet on a box to make it harder),
+    head to the floor between the hands. A scale for a handstand push-up.'
+- id: jump_rope_single_under
+  name: Jump Rope (Single Under)
+  category: aerobic
+  named_only: true
+  modality:
+  - anaerobic_intervals
+  equipment:
+  - jump_rope
+  effort: low
+  bilateral: true
+  movement_patterns:
+  - aerobic_monostructural
+  - locomotion
+  requires: []
+  unlocks:
+  - jump_rope_double_under
+  scaling_down: []
+  sources:
+  - CrossFit
+  notes: 'One pass of the rope a jump. The scale for double unders.'

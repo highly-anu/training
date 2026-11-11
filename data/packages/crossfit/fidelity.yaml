@@ -157,10 +157,18 @@ rules:
     cites: [{source: found02, at: '"not sustainable past forty-five minutes to an hour"'}]
     enforced_by:
       - data:frameworks/crossfit_template.yaml#expectations.ideal_session_minutes
+  - id: R15
+    text: "A newcomer does the same workouts scaled: load first, intensity and volume by half; the program is not changed, the athlete's dose is."
+    cites: [{source: l1, at: 'Scaling: load first, then intensity and volume by half for a newcomer'}]
+    enforced_by:
+      - data:philosophy.yaml#tracks.constantly_varied.level_scaling.novice
+      - data:philosophy.yaml#tracks.five_on_two_off.level_scaling.novice
+      - data:frameworks/crossfit_template.yaml#applicable_when.training_level
+      - test:tests/test_level_scaling.py::test_a_novice_fran_is_half_the_rx
 
 open:
   - "Grace, Isabel and Karen (one element at high reps, for time) fit none of the template's day types and are not placed."
-  - "The novice: the Level 1 guide scales load first, intensity and volume by half for two weeks or more, a month at least of significant scaling, with no set protocol for restoring it; a scaled track is not built."
+  - "The Level 1 guide keeps a newcomer scaled for two weeks or more, a month at least of significant scaling, with no set protocol for restoring it; the scale follows the athlete's level, which only the athlete moves."
   - "Of the 2005 archive's 138 training days, the workouts transcribed are those named in this record; the rest are not."
   - "Today's crossfit.com is not strictly three on, one off (October 2026 rests on irregular days)."
 
@@ -181,14 +189,23 @@ inventions:
     text: "At five training days a six-day week drops, in order, the skill day, the long-distance day, the heavy day, then the couplets; the sources do not say."
     implemented_by:
       - data:philosophy.yaml#tracks.constantly_varied.phases.constantly_varied.drop_order
-  - id: I5
-    text: The tracks are for intermediate athletes and up; novices are refused until a scaled track is built.
-    implemented_by:
-      - data:frameworks/crossfit_template.yaml#applicable_when.training_level
   - id: I6
     text: Each workout's minutes are an estimate; loads are given in pounds as written with kilograms beside them.
     implemented_by:
       - data:frameworks/crossfit_template.yaml#categories
+  - id: I7
+    text: "Every workout is written for the elite (Rx); an intermediate does 70 % and an advanced athlete 85 % of its load, volume, time and distance (the commons' shares, data/commons/training_levels.yaml). The Level 1 guide states only the newcomer's half."
+    implemented_by:
+      - data:philosophy.yaml#tracks.constantly_varied.authored_level
+      - data:philosophy.yaml#tracks.five_on_two_off.authored_level
+      - data:archetypes/pool/cf_fran.yaml#scaling_eligible
+  - id: I8
+    text: "A movement out of the athlete's reach is replaced by a scaled one the package owns (jumping pull-ups for pull-ups, pike push-ups for handstand push-ups, single unders for double unders, the pull-up for the muscle-up and the L pull-up, a dumbbell snatch, a squat clean or a front squat for the full Olympic lifts), and the muscle-up, the handstand push-up and the full Olympic lifts and double unders are for the levels named; the Level 1 guide scales by example, not by table."
+    implemented_by:
+      - data:exercises.yaml#exercises.pull_up.scaling_down
+      - data:exercises.yaml#exercises.muscle_up_ring.min_level
+      - data:exercises.yaml#exercises.snatch.min_level
+      - data:exercises.yaml#exercises.jumping_pull_up
 
 currency:
   constantly_varied: {entry: benchmark_wods, rule: R10}
@@ -196,9 +213,14 @@ currency:
 
 reviews:
   - kind: output_vs_dossier
+    date: '2026-11-07'
+    by: Claude (level framework)
+    scope: "Both tracks generated at novice (female), intermediate and elite, 12 weeks, every equipment item"
+    result: "The elite does every workout as written, the Girls as tests of their standards. A novice does each at half (R15): Fran 11-8-5 with 15 kg thrusters and jumping pull-ups, Cindy ten minutes of 3-5-8, Helen 200 m, 11 swings at 12 kg, 6 jumping pull-ups; the muscle-up, handstand push-up and full Olympic lifts scaled or passed over; no scaled benchmark scored as its standard. An intermediate does 70 % (Fran 15-11-6 at 30 kg, Helen's bell 16 kg)."
+  - kind: output_vs_dossier
     date: '2026-10-22'
     by: Claude (package audit)
     scope: "tools/print_package.py crossfit --profile ideal --weeks 4, both tracks"
     result: "Three on, one off and five on, two off run Glassman's cycle day for day (R1-R3), Table 4's twelve days first (R8), then the Girls and the 2005 workouts, each day type from its own pool. Fixed: the first movement of every couplet, triplet and Girl had no count — the slot that carries the rounds or the minutes is a movement too (Cindy's 5 pull-ups, the 400 m run of a triplet, the bench press x 10): written into the data and passed into the load; a movement the source does not count (Nicole's max pull-ups) said \"1 rep a round\" and now says nothing beyond its note; a for-time test that opens with a run (Helen) lost its rounds; Fran's test day read \"FOR_TIME\"; one-round workouts read \"1 rounds\" on the web; the review tool itself failed on a for-time load with no time cap."
 
-next: "A scaled novice track (the Level 1 guide's scaling, the benchmarks' beginner versions); more of the 2005 archive; exercise media."
+next: "The benchmarks' published beginner versions (where crossfit.com prints them, in place of the computed scale); more of the 2005 archive; exercise media."

@@ -3,6 +3,8 @@ name: "Operator Fitness — Day 22: Progression"
 modality: mixed_modal_conditioning
 category: conditioning
 training_levels: [intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 duration_estimate_minutes: 70
 pool_only: true
 
@@ -35,6 +37,7 @@ slots:
       exercise_ids: [wall_ball]
       ordered: true
     load: "20 lb (9 kg) ball"
+    load_kg: 9
 
   - role: ball_slams
     slot_type: amrap_movement
@@ -44,6 +47,7 @@ slots:
       exercise_ids: [ball_slam]
       ordered: true
     load: "20 lb (9 kg) ball"
+    load_kg: 9
 
   - role: row_500
     slot_type: for_time

@@ -3,9 +3,12 @@ name: Endurance Hike (30 min)
 modality: aerobic_base
 category: conditioning
 training_levels:
+- novice
 - intermediate
 - advanced
 - elite
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 30
 slots:

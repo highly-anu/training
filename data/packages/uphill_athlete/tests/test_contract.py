@@ -118,9 +118,8 @@ def test_uphill_caps_the_long_day_and_refuses_what_it_is_not_for():
     long_days = [d for d, ss in q['weeks'][0]['schedule'].items() for s in ss
                  for m in s['modules'] if m['id'] == 'long_day']
     assert long_days == [7], long_days
-    # No novice track yet; fewer than six days refuse with the reason.
-    novice, _, _ = _uphill(weeks=1, training_level='novice')
-    assert not novice['weeks'] and 'intermediate, advanced and elite athletes' in novice['validation_errors'][0]['message']
+    # Fewer than six days refuse with the reason (a novice runs the program:
+    # tests/test_level_scaling.py).
     five, _, _ = _uphill(weeks=1, days_per_week=5)
     assert not five['weeks'], 'six days a week (R2)'
 

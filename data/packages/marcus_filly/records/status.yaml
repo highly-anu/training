@@ -20,11 +20,16 @@ inventions:
   content; the conditioning''s movements are not separate exercises.'
 - 'I5: The sample''s "or" options are alternatives in its order (a cable machine first, the barbell after;
   the pull-up, then the lat pulldown); the leg press is not offered.'
-- 'I6: The tracks are for intermediate lifters and up; novices are refused until Base Camp''s sessions
-  can be read.'
+- 'I6: Every level runs the 3x tracks (Base Camp''s sessions, the source''s own for beginners, are sold,
+  not read): the samples are written for the elite, and an advanced lifter does 85 %, an intermediate
+  70 % and a novice half of each section''s sets and the conditioning''s minutes (the commons'' shares,
+  data/commons/training_levels.yaml); the warm-up and cooldown, the reps and the loads, chosen by RPE,
+  are as written.'
 - 'I7: At four or five training days the three sessions run on three of them (the 3x tracks; the 4x and
   5x weeks are not public).'
+- 'I8: The elite standard is the back squat at its ladder''s elite rung (back_squat_bw_ratio, estimated
+  from the program''s own back squat); the source names none.'
 last_review:
-  output_vs_dossier: '2026-10-22'
+  output_vs_dossier: '2026-11-08'
 next: The 4x and 5x tracks if their weeks become readable; the within-cycle progression; a novice track
   on Base Camp; exercise media.

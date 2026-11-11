@@ -4,6 +4,10 @@
 # (assessment gating, docs/package-fidelity/ido_portal.md).
 id: ido_portal
 
+# The mover's mark: the free handstand, at its ladder's elite rung
+# (docs/logic/levels.md). Each routine's level is the source's own version.
+elite_standards: [handstand_hold_free_seconds]
+
 progress:
   - id: plan_completion
     label: Routines done as written

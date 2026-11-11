@@ -85,6 +85,9 @@ tracks:
       # A lift an injury rules out is left out, the rest of the workout kept
       # (owner, 2026-10-21; I4).
       drop_when_injured: true
+      # Written for the elite; the levels below do a share of its sets and
+      # minutes (I9; training_contract.with_level).
+      scaling_eligible: true
       training_levels:
       - novice
       - intermediate
@@ -414,6 +417,9 @@ tracks:
       name: Competition Conditioning
       archetype_id: bjj_round_conditioning
       modality: anaerobic_intervals
+      # Written for the elite; the levels below do a share of its sets and
+      # minutes (I9; training_contract.with_level).
+      scaling_eligible: true
       training_levels:
       - intermediate
       - advanced

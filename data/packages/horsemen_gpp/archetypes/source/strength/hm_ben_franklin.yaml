@@ -2,7 +2,9 @@ id: hm_ben_franklin
 name: Ben Franklin
 modality: max_strength
 category: strength
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 35
 slots:
@@ -14,6 +16,7 @@ slots:
     exercise_ids: [kb_swing_two_hand]
     ordered: true
   load: 24 kg (53 lb)
+  load_kg: 24
   notes: '5 rounds, alternating: 1 min of kettlebell swings, 20 cauldrons, 15 ankles to bar, 20 GHD sit-ups, 20
     poor man''s reverse hypers — not for time.'
 - role: cauldron
@@ -24,6 +27,7 @@ slots:
     exercise_ids: [cauldron]
     ordered: true
   load: 14 kg (30 lb)
+  load_kg: 14
   notes: 10 each side, 20 in all.
 - role: ankles_to_bar
   slot_type: sets_reps

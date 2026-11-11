@@ -6,6 +6,7 @@ import { PerformanceLogger } from './PerformanceLogger'
 import { OutcomeLogger } from './OutcomeLogger'
 import { MetaSlot } from './MetaSlot'
 import { formatLoad } from '@/lib/formatLoad'
+import { scaledFromText, scaledLoadText } from '@/lib/levelScaling'
 import { formatClock, isHoldSlot, outcomeFieldsFor } from '@/lib/outcomeFields'
 import { useBioStore } from '@/store/bioStore'
 import { cn } from '@/lib/utils'
@@ -147,6 +148,12 @@ export function ExerciseRow({ assignment, index, sessionKey, sessionIdx, onSwap 
             </div>
             {loadStr && (
               <p className="mt-0.5 text-xs font-mono text-primary">{loadStr}</p>
+            )}
+            {scaledFromText(assignment) && (
+              <p className="mt-0.5 text-[11px] text-muted-foreground">{scaledFromText(assignment)}</p>
+            )}
+            {scaledLoadText(assignment) && (
+              <p className="mt-0.5 text-[11px] text-muted-foreground">{scaledLoadText(assignment)}</p>
             )}
             {assignment.load_note && (
               <p className="mt-0.5 text-[11px] text-muted-foreground">{assignment.load_note}</p>

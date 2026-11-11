@@ -1,7 +1,7 @@
 """Main program generator — orchestrates all modules."""
 from __future__ import annotations
 
-from . import blockers, loader, phases, provenance, recovery_regions, standard_tests, week_template
+from . import blockers, level_scaling, loader, phases, provenance, recovery_regions, standard_tests, week_template
 from .scheduler import schedule_week, select_framework
 from .selector import populate_session, select_archetype
 from .progression import calculate_load, ramps_for
@@ -182,6 +182,33 @@ def _resolve_session(sessions: list, archetypes: list, fallback_archetypes: list
         if not substituted:
             resolved.append(session)  # pass through; archetype will be None
     return resolved
+
+
+def _slot_level_policy(populated: dict, ea: dict, level_policy: dict | None) -> dict | None:
+    """The track's level policy for one slot, when its archetype lets it
+    scale (`scaling_eligible`: the archetype is the authored level's, and the
+    levels below reach it by scaling); a composed day's slots carry the flag
+    from their own piece (week_template._prefixed)."""
+    if not level_policy:
+        return None
+    if (ea.get('slot') or {}).get('scaling_eligible') or (populated.get('archetype') or {}).get('scaling_eligible'):
+        return level_policy
+    return None
+
+
+def _unscored(populated: dict, ea: dict, level_policy: dict | None, level: str) -> None:
+    """A named workout that carries a standard (a selectable test: Fran) done
+    scaled is not that standard's result: below the authored level its scored
+    slot is prescribed like any other and measures nothing (`scaled_standard`
+    names what it would have). A test a phase places is the protocol, as
+    written, at every level it is offered to."""
+    policy = _slot_level_policy(populated, ea, level_policy)
+    if not policy or not ea.get('standard') or standard_tests.is_test_only(populated.get('archetype')):
+        return
+    if level_scaling.factors(level, policy) is None:
+        return
+    ea['slot'] = {k: v for k, v in (ea.get('slot') or {}).items() if k != 'standard'}
+    ea['scaled_standard'] = ea.pop('standard')['id']
 
 
 def _fits_as_written(arch: dict, constraints: dict, phase: str, populate) -> bool:
@@ -552,6 +579,7 @@ def start(goal: dict, constraints: dict, data: dict, lib: dict, policy, injury_f
     arch_regions = {a['id']: recovery_regions.heavy(recovery_regions.archetype_load(a, lib['all_exercises'], modalities))
                     for a in fallback_archetypes}
     track_id = (goal.get('track') or {}).get('id')
+    level_policy = (goal.get('track') or {}).get('level_policy')
     program = {'weeks': []}
     # A templated phase's rotation through each category's workouts, and
     # whether each workout fits the athlete as written (per phase).
@@ -819,11 +847,22 @@ def start(goal: dict, constraints: dict, data: dict, lib: dict, policy, injury_f
                                 ea['exercise'], ea['slot'], prog, week_in_phase, phase,
                                 constraints.get('training_level', 'intermediate'), is_deload,
                                 session_time_minutes=constraints.get('session_time_minutes', 75),
-                                deload_keep=deload_keep, ramps=ramps)
+                                deload_keep=deload_keep, ramps=ramps,
+                                level_policy=_slot_level_policy(rotation_source, ea, level_policy),
+                                sex=constraints.get('sex'))
                     populated['test']['instead_of'] = _stand_in(rotation_source)
 
                 for ea in populated.get('exercises', []):
+                    _unscored(populated, ea, level_policy, constraints.get('training_level', 'intermediate'))
                     if ea.get('exercise') is None:
+                        # A structural round (a class's drilling minutes) is
+                        # prescribed by the selector; it scales the same way.
+                        _meta_policy = _slot_level_policy(populated, ea, level_policy) if ea.get('meta') else None
+                        if _meta_policy:
+                            ea['load'] = level_scaling.scale_prescription(
+                                ea.get('load') or {}, ea.get('slot') or {},
+                                constraints.get('training_level', 'intermediate'), _meta_policy,
+                                constraints.get('sex'))
                         continue
                     load = calculate_load(
                         ea['exercise'],
@@ -836,6 +875,8 @@ def start(goal: dict, constraints: dict, data: dict, lib: dict, policy, injury_f
                         session_time_minutes=constraints.get('session_time_minutes', 75),
                         deload_keep=deload_keep,
                         ramps=ramps,
+                        level_policy=_slot_level_policy(populated, ea, level_policy),
+                        sex=constraints.get('sex'),
                     )
                     ea['load'] = load
 

@@ -14,6 +14,7 @@ import { builderTrack, findTrack, mainFramework, primaryTrack, trackWeeks, track
 import { FrameworkDetailModal } from './FrameworkDetailModal'
 import { PhaseSpine } from '@/components/shared/PhaseSpine'
 import { LanePicker } from './LanePicker'
+import { scaledFor } from '@/lib/levelScaling'
 import type { Framework, ModalityId } from '@/api/types'
 
 const SECTION_LABEL = 'text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium'
@@ -298,6 +299,11 @@ export function ProgramTuner() {
                         {track.invention && (
                           <span className="text-[9px] text-muted-foreground font-medium" title={track.invention.text}>
                             The app's own track, not {philosophy.name}'s
+                          </span>
+                        )}
+                        {scaledFor(track, constraints.training_level) && (
+                          <span className="text-[9px] text-muted-foreground font-medium">
+                            {scaledFor(track, constraints.training_level)}
                           </span>
                         )}
                       </div>

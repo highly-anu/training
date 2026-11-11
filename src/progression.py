@@ -420,6 +420,8 @@ def calculate_load(
     session_time_minutes: int | None = None,
     deload_keep: float | None = None,
     ramps: dict | None = None,
+    level_policy: dict | None = None,
+    sex: str | None = None,
 ) -> dict:
     """Calculate the load prescription for one exercise in one slot.
 
@@ -428,6 +430,9 @@ def calculate_load(
     (0.6 of time, distance and sets, 0.7 of rounds). An archetype's own
     `scaling.deload.volume_multiplier` still wins for its sets. `ramps` are
     the week's framework's (`ramps_for`); None takes the commons'.
+    `level_policy` is the track's (`level_scaling.policy_for`), passed only
+    for a slot its archetype lets scale: the written prescription is then
+    done at the athlete's share of it (src/level_scaling.py).
     """
     if slot.get('standard'):
         # A test of a standard is a protocol: prescribed exactly as written
@@ -439,6 +444,10 @@ def calculate_load(
     else:
         load = _calculate_load(exercise, slot, progression_model, week_number, phase,
                                training_level, is_deload, session_time_minutes, deload_keep, ramps)
+    if level_policy:
+        from src.level_scaling import scale_prescription
+        bell = 'kettlebell' in ((exercise or {}).get('equipment') or [])
+        load = scale_prescription(load, slot, training_level, level_policy, sex, kg_step=4.0 if bell else None)
     rpm = paced_rpm(exercise, slot)
     if rpm is not None and isinstance(load, dict):
         load['target_rpm'] = rpm

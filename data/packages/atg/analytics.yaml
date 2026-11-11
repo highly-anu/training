@@ -4,6 +4,10 @@
 # docs/package-fidelity/atg.md).
 id: atg
 
+# Patrick writes no pass marks (I8): each program's level is the source's own
+# (Zero, Program #2, Knee Ability Pro).
+no_elite_standard: "Ben Patrick writes no test or numeric standard; the athlete works at the step of each ladder owned without pain (I8)."
+
 progress:
   - id: plan_completion
     label: Workouts done as written
