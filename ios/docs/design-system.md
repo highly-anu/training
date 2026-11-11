@@ -6,7 +6,7 @@ The visual language, interaction patterns, and implementation decisions for the 
 
 ## Table of Contents
 
-1. [Design Philosophy](#1-design-philosophy)
+1. [The Design Language](#1-the-design-language) — six principles, and §1.8: every rule with what holds it
 2. [Color Architecture](#2-color-architecture)
 3. [Semantic Color Systems](#3-semantic-color-systems)
 4. [Typography](#4-typography)
@@ -16,73 +16,105 @@ The visual language, interaction patterns, and implementation decisions for the 
 8. [Accessibility](#8-accessibility)
 9. [Watch-Specific Rules](#9-watch-specific-rules)
 
+**Components by job** (§6 is numbered in the order the patterns were written, not by theme):
+
+| Job | Sections |
+|---|---|
+| Surfaces and controls | 6.3 states · 6.4 section header · 6.6 buttons · 6.15 card and status · 6.37 card and detail · 6.47 floating controls and the action bar |
+| Navigation | 6.8 sub-tabs · 6.9 cross-tab routes · 6.13 tab structure · 6.48 sheets, pushes and zoom · 6.49 pager · 6.50 week strip |
+| Actions | 6.43 session actions · 6.51 row actions · 6.24 filter menu · 6.38 constraint toggles · 6.52 tips |
+| Sessions and the player | 6.1 session card · 6.2 modality badge · 6.5 load text · 6.14 exercise detail · 6.16 logging · 6.40 session icon · 6.44 player · 6.45 start and resume · 6.54 after the session |
+| Today and Program | 6.53 Today · 6.17 regenerate offer · 6.18 methodology · 6.22 tracks and phases · 6.26 phase changes · 6.28 header card · 6.36 phase bar · 6.39 preview · 6.55 builder |
+| Analytics | 6.11 period filter · 6.20 Blocks · 6.21 readiness · 6.25 score · 6.35 zone plan · 6.41 progress chart |
+| Log and workouts | 6.10 route and charts · 6.12 activity icons · 6.19 Log · 6.23 workout row · 6.30 Workout complete |
+| Standards | 6.31 ladder · 6.32 detail · 6.33 test badge · 6.34 suggestion |
+| Motion and accessibility | 6.56 motion helpers and the completion moment · 6.57 accessibility helpers and the largest sizes |
+| System surfaces | 6.27 home-screen widgets · 6.58 rendering modes and the Lock Screen · 6.44 the Live Activity · 6.29 sign-in |
+
 ---
 
-## 1. Design Philosophy
+## 1. The Design Language
 
-Six principles, inherited from the web app. The iOS translation follows each.
+The phone's language since the uplift of 1.35–1.41 (`docs/roadmap.md` item 18). Six
+principles and the rule that keeps them (§1.7); §1.8 lists what they come down to, each
+rule with the helper that carries it and what holds it. The web's principles
+(`docs/frontend-design.md` §1) are the same ones in another idiom.
 
-### 1.1 Substance Over Decoration
+### 1.1 Content Is Solid, Chrome Floats
 
-Every visual element earns its place by conveying information or guiding attention. No gradients for depth, no blurs for atmosphere, no shadows as decoration.
+Every visual element conveys information or guides attention. There are two layers and
+only two:
 
-**iOS:** Don't add `.shadow()`, `.blur()`, or layered backgrounds unless they carry meaning. SwiftUI's default `List` and `NavigationStack` chrome is acceptable — fight the urge to over-style it.
+- **Content** — cards, rows, charts, sheets — is solid: one card (`.appCard()`, radius 16,
+  `AppColor.surface`), no shadow, no blur, no gradient for depth.
+- **Chrome** — the tab bar and its accessory, navigation bars, a screen's bottom action
+  bar, the player's controls — is the system's Liquid Glass, with content scrolling
+  beneath it (§6.47). Glass is never a card's background and never decoration.
 
-### 1.2 Dark-First, Theme-Capable
+The system's own chrome (`TabView`, `NavigationStack`, `List`, `Form`) is used as it comes.
 
-The app defaults to dark mode. Light mode is supported via the system setting — do not override it unless explicitly required. All colors are defined as named Color assets with automatic dark/light variants. No hardcoded hex values in views.
+### 1.2 Colour Has Three Jobs
 
-```swift
-// Correct
-Color(.systemBackground)
-AppColor.surface
-.primary
+- **Amber is "tap me"**: the tint (`AppColor.accent`) on every control, link and selection,
+  and on load prescriptions. Nothing interactive or selected is blue.
+- **Emerald is "done"** (`AppColor.complete`): saved, linked, on track — apart from the
+  tint, so finished never reads as a button.
+- **Hue is data**: a modality, a phase kind, a heart-rate zone, a chart series, each from
+  its one owner (§3). Orange, yellow and red are states (`warning`, `caution`,
+  `destructive`).
 
-// Wrong
-Color(hex: "#141620")
-Color(.systemBackground)   // only for native-feeling chrome, not custom surfaces
-```
+Both appearances are designed; the app follows the system unless Settings ▸ Appearance
+says otherwise. A view writes no colour literal (§2).
 
 ### 1.3 Dense but Breathable
 
-Training data is complex. The interface must show it compactly without feeling cramped. Rule: tight internal padding within components, generous spacing between components.
-
-- Session card internal padding: 12pt
-- Gap between session cards: 8pt
-- Gap between sections on a page: 24pt
+Training data is complex. Tight inside a component, generous between components, on one
+scale (`AppMetrics`, §5): 4 pt inside a label, 8 between rows, 12 between cards, 16 at the
+page's edge and inside a card, 24 between sections. Type is the system's text styles, so
+it scales; the large numerals are `AppFont` (§4).
 
 ### 1.4 Progressive Disclosure
 
-Show only what the user needs at each level. The Today tab shows session cards. Tapping opens SessionDetail. Each exercise shows its load description; coaching cue is collapsed until tapped.
+A summary state and a detail state, never everything at once: Today shows the day and
+leads with the session to do next; a card opens its detail; an exercise shows its load and
+opens its reference. How the detail arrives says what it is — a zoom from the card it
+belongs to, a half-height sheet for a short choice, a push for a further step inside a
+sheet, never a sheet on a sheet (§6.48).
 
-Never show all information at once. Always have a summary state and a detail state.
+**Numbers and symbols, not sentences** (2026-10-16). A screen says what a value is with
+an SF Symbol and the number — `clock 21/18 min/wk`, `heart.fill 104/135`,
+`checkmark.circle 1/1` — and a status with a coloured mark or badge, not a sentence. No
+subtitle explains a section, no footnote names where a number came from unless it is the
+exception (`iphone` "On device" when the server could not answer), and no row points to
+another tab in words. The full sentence goes to VoiceOver (`appStat`, §6.57). Words stay
+where a symbol cannot carry them: an empty state's one line, a coverage reason that tells
+the athlete what to log, the server's recommendations.
 
-**Numbers and symbols, not sentences** (2026-10-16). A screen says what a value
-is with an SF Symbol and the number — `clock 21/18 min/wk`, `heart.fill 104/135`,
-`checkmark.circle 1/1` — and a status with a coloured mark or badge, not a
-sentence. No subtitle explains a section ("The blocks this program runs, in
-order"), no footnote names where a number came from unless it is the
-exception (`iphone` "On device" when the server could not answer), and no
-row points to another tab in words. The full sentence goes in the
-`accessibilityLabel`. Words stay where a symbol cannot carry them: an
-empty state's one line, a coverage reason that tells the athlete what to log,
-the server's recommendations.
+### 1.5 Nothing Is Hidden
 
-### 1.5 Motion with Purpose
+**Every action can be seen.** A gesture is a shortcut, never the only way. Each long
+press, swipe and drag has a visible twin built into the component: the "…" on a session
+card and a row (§6.43, §6.51), chevrons and a title on every pager (§6.49), the week strip
+(§6.50), "+ Add session" on a rest day. A screen's main action is one tap away and where
+the thumb is: its bottom action bar (§6.47), or on the card itself (Start workout, §6.53).
 
-Animation serves three functions: orientation (where am I?), feedback (did that register?), continuity (what appeared?). No decorative motion.
+**Every screen answers before its content.** Loading, failed, empty — from one reading
+(`AppLoadPhase`, §6.3). Loading is the content's own shape, redacted; a failure says so
+and offers Try again; empty offers the way forward. Content on screen is never replaced by
+a reload or its failure. A spinner is only for an action in flight.
 
-```swift
-// Correct duration range: 0.15–0.25s
-withAnimation(.easeOut(duration: 0.2)) { ... }
+### 1.6 Motion Answers, and Everyone Can Use It
 
-// Wrong: bouncy springs, long durations, sparkle effects
-withAnimation(.spring(response: 0.8, dampingFraction: 0.5)) { ... }
-```
+**Motion** has three jobs: orientation (where did this come from), feedback (did that
+register), continuity (what changed). Nothing moves that the athlete did not cause or that
+did not just arrive. Springs are the standard, three presets in `AppAnimation` (§7.1); a
+number rolls, a symbol follows its state, a chart draws once, and finishing a session is
+the one moment that celebrates (§6.56). A touch answers what happened (`AppHaptics`, §7.4).
 
-### 1.6 Accessibility as Foundation
-
-Dynamic Type supported on all text. VoiceOver labels on every icon-only button. Color is never the sole conveyor of meaning — always paired with an icon or text label.
+**Accessibility is part of each component, not a pass after it** (§8, §6.57): Reduce
+Motion is decided once, inside the presets; every control is 44 pt; a value, its unit and
+its caption read as one fact; every chart reads its numbers; colour is never the only
+carrier of meaning; and every screen holds at the largest Dynamic Type size.
 
 ### 1.7 One Pattern, One Implementation
 
@@ -114,6 +146,47 @@ so the next person meets a rule rather than a precedent.
 
 The counter-pressure is real: converting the second screen is always more work
 than copying the first. Do it anyway, or be explicit in review about why not.
+
+### 1.8 The Rules, and What Holds Each
+
+Each rule lives in one file, and where a breach can be read from the source a test fails
+on it: `DesignTokenTests` reads every Swift file of the app for the patterns below.
+
+| Rule | Use | Owner | Held by |
+|---|---|---|---|
+| No colour literal in a view | `AppColor`, `ModalityStyle`, `PhaseStyle`, `HRZoneStyle` | `AppTheme.swift`, generated `ClientVocab.swift` | test: `Color(red:` |
+| No fixed font size | a text style, or `AppFont` (`hero`, `metric`, `symbol`) | `AppTheme.swift` | test: `.system(size:` |
+| Colour over a surface on one scale | `AppColor.Opacity` (§2.2) | `AppTheme.swift` | review |
+| Spacing and radii on one scale; a card is 16 | `AppMetrics`, `.appCard()` / `AppCard` | `AppAnimationSettings.swift`, `AppCard.swift` | review |
+| One section header | `SectionLabel` | `AppCard.swift` | review |
+| One button family | `.appButton(.primary / .secondary / .destructive / .complete)` | `AppCard.swift` | test: `.buttonStyle(.bordered…)` |
+| Glass only on what floats | `.appActionBar { }`, `AppFloatingControls { }` | `AppCard.swift` | test: `.buttonStyle(.glass` |
+| Three states before content | `AppLoadPhase.resolve`, `AppLoadingState`, `AppEmptyState`, `AppFailedState`, `AppErrorBanner` | `Views/AppStates.swift` | `AppLoadPhaseTests` |
+| Sheet heights by content | `.appSheet(.compact / .flexible)` | `AppNavigation.swift` | test: `.presentationDetents(` |
+| No sheet on a sheet | `.appPush(item:)` inside the sheet's stack | `AppNavigation.swift` | review |
+| A detail grows from its source | `.appZoom(from:in:)` | `AppNavigation.swift` | test: `.navigationTransition(` |
+| One sub-tab selector | `AppSubTabScreen` / `AppSubTabPicker` (§6.8) | `AppSubTabs.swift` | review |
+| Tabs change through the router | `AppRouter`'s methods (§6.9) | `AppRouter.swift` | review |
+| Every gesture has a visible twin | `SessionActionsMenu`, a row's own "…", `AppPager`, the week strip | `Views/SessionActions.swift`, `AppPager.swift`, `Views/WeekStrip.swift` | review; `PagingTests` |
+| No animation or curve of a view's own | `AppAnimation` presets | `AppAnimationSettings.swift` | test: bare `withAnimation {`, `.easeOut(duration:` and its kin |
+| Small motions through one modifier each | `appNumeric`, `appSymbolBounce` / `Replace` / `Spin`, `AppScrollFade`, `appChartEntry` | `AppMotion.swift` | test: `.contentTransition(`, `.symbolEffect(`, `.scrollTransition(` |
+| Reduce Motion asked by no view | built into the presets and modifiers | the two files above | by construction |
+| Haptics through one API | `AppHaptics`, `AppRefresh.perform` | `AppAnimationSettings.swift` | review |
+| 44 pt targets | `.appTapTarget()`, `.appTapSlop()` | `AppAccessibility.swift` | review |
+| One fact, one element | `.appStat(_:)`, `.appTapRow(selected:)` | `AppAccessibility.swift` | review |
+| Every chart reads its numbers | `.appChartSummary(_:_:)` + `ChartSummary` | `AppAccessibility.swift` | `AccessibilityAndRemoteTests` (the wording) |
+| Colour never alone | words, a symbol, or `ColorTwin(symbol:)` | `AppAccessibility.swift` | review |
+| Rows hold at the largest text size | `AppAdaptiveStack`, `AppAdaptiveGrid` | `AppAccessibility.swift` | a screenshot at that size |
+| Prescriptions in one wording | `LoadFormat.describe` (§6.5) | `LoadFormat.swift` | `LoadFormatTests` |
+| Custom symbols draw | `Image(symbol:)` (`ios/docs/custom-icons.md`) | `AppSymbol` | `SessionIconTests` |
+| Widgets survive one tint | `.widgetAccentable()`, `widgetRenderingMode`, text styles (§6.58) | `TrainingWidgets/` | review |
+
+A "review" row is checked by eye: a change to a screen ends in the simulator, in both
+appearances, and — when a row or chart changed — at the largest Dynamic Type size
+(`xcrun simctl ui <udid> content_size accessibility-extra-extra-extra-large`).
+
+A new rule gets a row here, a helper in one file and, where the breach can be read from
+the source, a line in `DesignTokenTests`.
 
 ---
 
@@ -175,7 +248,7 @@ cards tinted with different colours weigh the same.
 
 ## 3. Semantic Color Systems
 
-These use literal `Color(hex:)` values (not named assets) because the specific color IS the information. Used for modality badges, session card top bars, chart series, and phase indicators.
+These are exact values (not the tint, not named assets) because the specific colour IS the information: modality badges, session card stripes, chart series and phase indicators. Each has one owner — the generated `ClientVocab.swift` for modalities and phase kinds, `AppTheme.swift` for the rest — and a view reads it through `ModalityStyle`, `PhaseStyle`, `HRZoneStyle` or `AppColor`, never as a literal (§1.8).
 
 ### 3.1 Modality Colors
 
@@ -968,196 +1041,6 @@ the same flag.
   inside it. Swap lives on the row that owns the slot.
 - It is the component the roadmap's "iOS Library tab" would promote; a
   Library tab is not worth adding until there is more than this to put in it.
-
----
-
-## 7. Motion & Animation
-
-### 7.1 Rules
-
-- **Springs are the standard**, three of them, in `AppAnimation`
-  (`AppAnimationSettings.swift`). A view never writes `withAnimation {` or a curve of its
-  own (`DesignTokenTests`). Until 1.35 this section banned springs while the code was six
-  of them.
-- **Reduce Motion is decided in one place**: with it on, every spring preset is
-  `crossfade`, so no caller asks.
-- Nothing moves that the athlete did not cause or that did not just arrive.
-
-| Preset | What | Use |
-|---|---|---|
-| `springStandard` | response 0.45, damping 0.82 | State changing in place: a card expanding, a selection moving |
-| `springSnappy` | response 0.35, damping 0.86 | A small, quick answer to a tap: a toggle, a chip, a tab |
-| `layoutChange` | response 0.5, damping 0.88 | Content arriving, leaving or moving in a list |
-| `crossfade` | ease in-out, 0.2 s | Loaded content fading in; every spring under Reduce Motion |
-| `tick` | linear, 1 s | A clock's hand between two seconds (the player's countdown ring) |
-| `chartEntry` | response 0.7, no bounce | A chart drawing itself the first time it appears (§7.5) |
-
-### 7.2 Standard Transitions
-
-```swift
-// State change (completion, toggle)
-withAnimation(AppAnimation.springSnappy) { isComplete = true }
-
-// A row arriving or leaving
-.animation(AppAnimation.layoutChange, value: rows)
-
-// Tab switch, sheet, push: the system's — do not override
-```
-
-### 7.3 Loading States
-
-A screen waiting for its content shows that content's shape, redacted
-(`redacted(reason: .placeholder)`), never a spinner: `AppLoadingState` (§6.3) draws three
-cards or seven rows with a slow pulse (`AppAnimation.shimmer`, the one curve that is not a
-spring; still under Reduce Motion). It shows only while there is nothing on screen — a
-pull to refresh keeps the content and the system's own indicator.
-
-### 7.4 Haptics
-
-`AppHaptics` is the one API; a touch answers what happened, never decorates.
-
-| Call | When |
-|---|---|
-| `selection()` | A picker, a sub-tab, a chip changing |
-| `light()` | A gesture taking hold: pull-to-refresh triggering, a page turning |
-| `medium()` / `rigid()` | A committed action: a set logged, a step advanced |
-| `success()` | Work finished: a session saved, a refresh done, a link confirmed |
-| `warning()` / `error()` | A refusal, a failed save |
-
-Pull-to-refresh goes through `AppRefresh.perform` (light on trigger, 600 ms minimum,
-success at the end).
-
-### 7.5 Small Motions
-
-One modifier each, in `AppMotion.swift`, timed by an `AppAnimation` preset and still under
-Reduce Motion. A view never writes `.contentTransition(`, `.symbolEffect(` or
-`.scrollTransition(` of its own (`DesignTokenTests`). Where each is used: §6.56.
-
-| Modifier | What | Under Reduce Motion |
-|---|---|---|
-| `appNumeric(value:countsDown:)` | A number rolls to its new value (`springSnappy`); without `value`, the roll alone, for a clock its owner already animates | Fades |
-| `appSymbolBounce(value:)` | A symbol bounces once: something was earned | Nothing |
-| `appSymbolReplace(value:)` | One image whose symbol follows a state: pause / play, linked or not, a day's mark | Fades |
-| `appSymbolSpin(isActive:)` | A symbol turns while work runs | Still |
-| `AppScrollFade { … }` / `appScrollFade()` | A card eases in and out at the scroll's edge (opacity to 0.65, scale to 0.97), settled once a third of it shows | Nothing |
-| `appChartEntry()` | A chart is drawn from its leading edge, once | Drawn at once |
-
----
-
-## 8. Accessibility
-
-- **Dynamic Type:** All `.font()` modifiers use semantic styles (`.subheadline`, `.caption`, etc.) — never `.system(size: 14)` for body text. The system scales these automatically.
-- **VoiceOver labels:** Every `Image(systemName:)` that conveys meaning must have `.accessibilityLabel()`. Icon-only buttons must have `.accessibilityLabel()`.
-- **Color + icon:** Modality colors are always accompanied by the modality label text or icon. Never color-only meaning.
-- **Minimum tap targets:** 44×44pt minimum for all interactive elements: `.appTapTarget()` on a small control, `.appTapSlop()` on a text button in running content (§6.57).
-- **The helpers are in `AppAccessibility.swift`** (§6.57): one fact read as one element, a chart's numbers as its value, a symbol beside a colour-only status, rows that stack at the accessibility sizes.
-- **Focus management:** When a sheet is dismissed, VoiceOver focus should return to the triggering element. Use `.accessibilityFocused()` if needed.
-
----
-
-## 9. Watch-Specific Rules
-
-The watch app shares the same design language but with tighter constraints.
-
-### 9.1 Typography on Watch
-
-Watch uses the same semantic scale but effectively one size smaller:
-
-| Role | Watch modifier |
-|---|---|
-| Exercise name | `.headline` |
-| Load description | `.footnote.monospaced()` |
-| Timer countdown | `.system(size: 36, weight: .bold, design: .rounded)` |
-| Badge/pill | `.caption2` |
-
-### 9.2 Layout on Watch
-
-- No horizontal scroll. Everything fits in the 44mm/45mm/49mm width.
-- Three-tab `TabView(.page)` for the active workout (exercise / progress / metrics).
-- `.fullScreenCover` for rest timer — non-dismissable by back gesture.
-- One primary action per screen. No more than two buttons visible at once.
-
-### 9.3 Color on Watch
-
-Same modality colors, but use them more sparingly — the watch face is small. The 2pt color stripe on cards translates to a 3pt stripe (slightly more prominent). HR zone colors are the primary semantic layer during active workout.
-
-### 9.4 Results on Watch
-
-A test step says what it is for under its prescription: "Best 7:32 · 7:00 for
-advanced" (`WatchExercise.standard`, the server's words) in `.caption2`, yellow —
-the one test accent on the watch, never a level colour. At the end of a test
-session `SessionCompleteView` lists each standard with what the watch captured
-(tap one to enter it with the crown: `ResultEntryView`), then **Save Results** /
-**Not a test** in place of *Save Workout* — still two buttons, as §9.2 asks. The
-answer travels in the summary (`standardResults`); the phone's §6.34 row is where an
-unanswered one is decided.
-
-### 9.5 Motion on Watch
-
-No custom animations. Use system defaults only. Haptics replace visual feedback for confirmations — do not add both haptic and animation for the same event.
-
-### 9.6 The step page (one page for every step)
-
-A step is drawn as the Garmin draws it, from its package's screen spec
-(`WatchSpecText`, docs/watch.md): the title line (`.headline`, two lines at most — the
-name and the title parts the spec names: side, load, wave %, zone, pack), two fields side
-by side (a `.caption2` secondary label over a 30 pt rounded semibold monospaced value,
-the second right-aligned; one field when the spec has one), a `Divider` for the rule, and
-two lines (`.footnote`, then `.caption2` secondary). A test's line is the §9.4 yellow.
-Under it, `StepControlsView`: **Start** until a clocked step runs, then one prominent
-button in the modality colour that says what the spec's LAP will do (Complete Set n,
-Start/End Hold, + Round / + Lap, Last Round / Last Lap, Switch Side, Next, Finish), and a
-plain **Skip** beside it — still two buttons (§9.2). `DataPageView` and `StepControlsView`
-(`Views/StepPageView.swift`) replaced the eight views the watch chose by slot type; a new
-template is drawn there, never in a view of its own.
-
-While a lead-in counts (`WorkoutSessionState.leadInLeft`: Countdown Start after Start, or
-a rest's last three seconds), the vocabulary's word ("Work in 3", "2", "1") stands over
-the buttons in `.title3` rounded semibold in the modality colour, and Start is hidden
-until the clock runs.
-
-### 9.7 Settings and the lead-in
-
-The watch's Settings (`WatchSettingsView`, `WatchCuePlayer.swift`) is the last menu row
-of the Today list before Sync: **Lead-in**, **Countdown Start** and **Voice** as system
-toggles, a footer saying what each does, and **Try it**, which plays the count. The values
-live on the watch (`@AppStorage`, `WatchCueSettings`), as the Garmin's live on the Garmin.
-A count is `.click`, the go `.start` (both sound unless the watch is silenced); with Voice
-on, `AVSpeechSynthesizer` also says the word, ducking other audio. The rule is
-`WatchCues.leadIn`, the Garmin's `Cues.leadIn`: change it in `watch_vocabulary.json`.
-
-### 9.8 One engine, two apps
-
-`WorkoutSessionState` (with `+Page` and `+Clock`) runs every step on the watch and in the
-phone's player (§6.44): both apps compile it, the watch through its membership
-exceptions. It never touches a device — haptics, tones and words go through
-`WorkoutCueOutput` (`WatchCueOutput` here, `PhoneCueOutput` on the phone) — and its clock
-is `tick()` once a second plus `catchUp(to:)`, which runs missed seconds silently. A
-change to how a step behaves is made there, once, with a case in `WorkoutEngineTests`;
-`WorkoutManager` keeps only what is the watch's own (HealthKit, the route, the metronome).
-
----
-
-## Color Utility
-
-Add this extension to both targets:
-
-```swift
-// ios/TrainingCompanion/Extensions/Color+Hex.swift
-extension Color {
-    init(hex: String) {
-        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        var int: UInt64 = 0
-        Scanner(string: hex).scanHexInt64(&int)
-        let r = Double((int >> 16) & 0xFF) / 255
-        let g = Double((int >> 8)  & 0xFF) / 255
-        let b = Double(int         & 0xFF) / 255
-        self.init(red: r, green: g, blue: b)
-    }
-}
-```
-
----
 
 ### 6.15 Analytics Card, Status and the Program Section
 
@@ -2515,3 +2398,174 @@ Standard sizes are unchanged by all of it; check both when a row changes.
   rectangular and inline ("Week 3 · 2 of 3 done"). `AccessoryText` is the one wording;
   both read `WidgetDataStore`, as the home-screen widgets do, and say "Open Training
   Companion" when the stored week is over.
+
+---
+
+## 7. Motion & Animation
+
+### 7.1 Rules
+
+- **Springs are the standard**, three of them, in `AppAnimation`
+  (`AppAnimationSettings.swift`). A view never writes `withAnimation {` or a curve of its
+  own (`DesignTokenTests`). Until 1.35 this section banned springs while the code was six
+  of them.
+- **Reduce Motion is decided in one place**: with it on, every spring preset is
+  `crossfade`, so no caller asks.
+- Nothing moves that the athlete did not cause or that did not just arrive.
+
+| Preset | What | Use |
+|---|---|---|
+| `springStandard` | response 0.45, damping 0.82 | State changing in place: a card expanding, a selection moving |
+| `springSnappy` | response 0.35, damping 0.86 | A small, quick answer to a tap: a toggle, a chip, a tab |
+| `layoutChange` | response 0.5, damping 0.88 | Content arriving, leaving or moving in a list |
+| `crossfade` | ease in-out, 0.2 s | Loaded content fading in; every spring under Reduce Motion |
+| `tick` | linear, 1 s | A clock's hand between two seconds (the player's countdown ring) |
+| `chartEntry` | response 0.7, no bounce | A chart drawing itself the first time it appears (§7.5) |
+
+### 7.2 Standard Transitions
+
+```swift
+// State change (completion, toggle)
+withAnimation(AppAnimation.springSnappy) { isComplete = true }
+
+// A row arriving or leaving
+.animation(AppAnimation.layoutChange, value: rows)
+
+// Tab switch, sheet, push: the system's — do not override
+```
+
+### 7.3 Loading States
+
+A screen waiting for its content shows that content's shape, redacted
+(`redacted(reason: .placeholder)`), never a spinner: `AppLoadingState` (§6.3) draws three
+cards or seven rows with a slow pulse (`AppAnimation.shimmer`, the one curve that is not a
+spring; still under Reduce Motion). It shows only while there is nothing on screen — a
+pull to refresh keeps the content and the system's own indicator.
+
+### 7.4 Haptics
+
+`AppHaptics` is the one API; a touch answers what happened, never decorates.
+
+| Call | When |
+|---|---|
+| `selection()` | A picker, a sub-tab, a chip changing |
+| `light()` | A gesture taking hold: pull-to-refresh triggering, a page turning |
+| `medium()` / `rigid()` | A committed action: a set logged, a step advanced |
+| `success()` | Work finished: a session saved, a refresh done, a link confirmed |
+| `warning()` / `error()` | A refusal, a failed save |
+
+Pull-to-refresh goes through `AppRefresh.perform` (light on trigger, 600 ms minimum,
+success at the end).
+
+### 7.5 Small Motions
+
+One modifier each, in `AppMotion.swift`, timed by an `AppAnimation` preset and still under
+Reduce Motion. A view never writes `.contentTransition(`, `.symbolEffect(` or
+`.scrollTransition(` of its own (`DesignTokenTests`). Where each is used: §6.56.
+
+| Modifier | What | Under Reduce Motion |
+|---|---|---|
+| `appNumeric(value:countsDown:)` | A number rolls to its new value (`springSnappy`); without `value`, the roll alone, for a clock its owner already animates | Fades |
+| `appSymbolBounce(value:)` | A symbol bounces once: something was earned | Nothing |
+| `appSymbolReplace(value:)` | One image whose symbol follows a state: pause / play, linked or not, a day's mark | Fades |
+| `appSymbolSpin(isActive:)` | A symbol turns while work runs | Still |
+| `AppScrollFade { … }` / `appScrollFade()` | A card eases in and out at the scroll's edge (opacity to 0.65, scale to 0.97), settled once a third of it shows | Nothing |
+| `appChartEntry()` | A chart is drawn from its leading edge, once | Drawn at once |
+
+---
+
+## 8. Accessibility
+
+- **Dynamic Type:** All `.font()` modifiers use semantic styles (`.subheadline`, `.caption`, etc.) — never `.system(size: 14)` for body text. The system scales these automatically.
+- **VoiceOver labels:** Every `Image(systemName:)` that conveys meaning must have `.accessibilityLabel()`. Icon-only buttons must have `.accessibilityLabel()`.
+- **Color + icon:** Modality colors are always accompanied by the modality label text or icon. Never color-only meaning.
+- **Minimum tap targets:** 44×44pt minimum for all interactive elements: `.appTapTarget()` on a small control, `.appTapSlop()` on a text button in running content (§6.57).
+- **The helpers are in `AppAccessibility.swift`** (§6.57): one fact read as one element, a chart's numbers as its value, a symbol beside a colour-only status, rows that stack at the accessibility sizes.
+- **Reduce Motion:** asked by no view — the `AppAnimation` presets and the `AppMotion` modifiers answer it (§7.1, §7.5); a zoom falls back to the system's transition.
+- **Differentiate Without Colour:** a status that has neither words nor a symbol of its own takes a `ColorTwin` (§6.57).
+- **Largest Dynamic Type size:** every tab is laid out at it; a row or chart that changes is checked there as well as at the standard size (§6.57).
+- **Charts:** every chart has an `appChartSummary` — what it draws as the label, its numbers as the value.
+- **Focus management:** When a sheet is dismissed, VoiceOver focus should return to the triggering element. Use `.accessibilityFocused()` if needed.
+
+---
+
+## 9. Watch-Specific Rules
+
+The watch app shares the same design language but with tighter constraints.
+
+### 9.1 Typography on Watch
+
+Watch uses the same semantic scale but effectively one size smaller:
+
+| Role | Watch modifier |
+|---|---|
+| Exercise name | `.headline` |
+| Load description | `.footnote.monospaced()` |
+| Timer countdown | `.system(size: 36, weight: .bold, design: .rounded)` |
+| Badge/pill | `.caption2` |
+
+### 9.2 Layout on Watch
+
+- No horizontal scroll. Everything fits in the 44mm/45mm/49mm width.
+- Three-tab `TabView(.page)` for the active workout (exercise / progress / metrics).
+- `.fullScreenCover` for rest timer — non-dismissable by back gesture.
+- One primary action per screen. No more than two buttons visible at once.
+
+### 9.3 Color on Watch
+
+Same modality colors, but use them more sparingly — the watch face is small. The 2pt color stripe on cards translates to a 3pt stripe (slightly more prominent). HR zone colors are the primary semantic layer during active workout.
+
+### 9.4 Results on Watch
+
+A test step says what it is for under its prescription: "Best 7:32 · 7:00 for
+advanced" (`WatchExercise.standard`, the server's words) in `.caption2`, yellow —
+the one test accent on the watch, never a level colour. At the end of a test
+session `SessionCompleteView` lists each standard with what the watch captured
+(tap one to enter it with the crown: `ResultEntryView`), then **Save Results** /
+**Not a test** in place of *Save Workout* — still two buttons, as §9.2 asks. The
+answer travels in the summary (`standardResults`); the phone's §6.34 row is where an
+unanswered one is decided.
+
+### 9.5 Motion on Watch
+
+No custom animations. Use system defaults only. Haptics replace visual feedback for confirmations — do not add both haptic and animation for the same event.
+
+### 9.6 The step page (one page for every step)
+
+A step is drawn as the Garmin draws it, from its package's screen spec
+(`WatchSpecText`, docs/watch.md): the title line (`.headline`, two lines at most — the
+name and the title parts the spec names: side, load, wave %, zone, pack), two fields side
+by side (a `.caption2` secondary label over a 30 pt rounded semibold monospaced value,
+the second right-aligned; one field when the spec has one), a `Divider` for the rule, and
+two lines (`.footnote`, then `.caption2` secondary). A test's line is the §9.4 yellow.
+Under it, `StepControlsView`: **Start** until a clocked step runs, then one prominent
+button in the modality colour that says what the spec's LAP will do (Complete Set n,
+Start/End Hold, + Round / + Lap, Last Round / Last Lap, Switch Side, Next, Finish), and a
+plain **Skip** beside it — still two buttons (§9.2). `DataPageView` and `StepControlsView`
+(`Views/StepPageView.swift`) replaced the eight views the watch chose by slot type; a new
+template is drawn there, never in a view of its own.
+
+While a lead-in counts (`WorkoutSessionState.leadInLeft`: Countdown Start after Start, or
+a rest's last three seconds), the vocabulary's word ("Work in 3", "2", "1") stands over
+the buttons in `.title3` rounded semibold in the modality colour, and Start is hidden
+until the clock runs.
+
+### 9.7 Settings and the lead-in
+
+The watch's Settings (`WatchSettingsView`, `WatchCuePlayer.swift`) is the last menu row
+of the Today list before Sync: **Lead-in**, **Countdown Start** and **Voice** as system
+toggles, a footer saying what each does, and **Try it**, which plays the count. The values
+live on the watch (`@AppStorage`, `WatchCueSettings`), as the Garmin's live on the Garmin.
+A count is `.click`, the go `.start` (both sound unless the watch is silenced); with Voice
+on, `AVSpeechSynthesizer` also says the word, ducking other audio. The rule is
+`WatchCues.leadIn`, the Garmin's `Cues.leadIn`: change it in `watch_vocabulary.json`.
+
+### 9.8 One engine, two apps
+
+`WorkoutSessionState` (with `+Page` and `+Clock`) runs every step on the watch and in the
+phone's player (§6.44): both apps compile it, the watch through its membership
+exceptions. It never touches a device — haptics, tones and words go through
+`WorkoutCueOutput` (`WatchCueOutput` here, `PhoneCueOutput` on the phone) — and its clock
+is `tick()` once a second plus `catchUp(to:)`, which runs missed seconds silently. A
+change to how a step behaves is made there, once, with a case in `WorkoutEngineTests`;
+`WorkoutManager` keeps only what is the watch's own (HealthKit, the route, the metronome).

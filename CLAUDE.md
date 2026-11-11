@@ -645,7 +645,12 @@ group's name.
 Before building or changing UI, read the design system for that platform — it
 is the source of the patterns, not the neighbouring screen:
 
-- **iOS / watchOS**: `ios/docs/design-system.md`. Colour, typography, spacing,
+- **iOS / watchOS**: `ios/docs/design-system.md`. §1 is the design language — content
+  is solid and chrome floats (glass), amber is "tap me" and emerald "done", nothing is
+  hidden behind a gesture, every screen answers loading / failed / empty, motion and
+  accessibility live in the components — and §1.8 is every rule in one table with the
+  helper that carries it and the test that holds it; the contents index §6's components
+  by job. Then colour, typography, spacing,
   motion, and the component patterns in §6. §1.7 covers the governing rule:
   when two screens need the same component, extract it and convert both in the
   same change, then document it in §6. Profile and Analytics each grew their
