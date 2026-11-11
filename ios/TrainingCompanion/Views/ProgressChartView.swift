@@ -1,4 +1,5 @@
 import SwiftUI
+import TipKit
 import Charts
 
 /// Analytics ▸ Progress's one chart (design-system §6.41): every exercise of
@@ -17,6 +18,7 @@ struct ProgressChartView: View {
     @EnvironmentObject private var appState: AppState
     @State private var touched: Date?
     @State private var showReference = false
+    private let scrubTip = ChartScrubTip()
 
     private var series: ProgressChartModel.Series? {
         selection.flatMap { ProgressChartModel.series($0, in: doc) }
@@ -40,7 +42,9 @@ struct ProgressChartView: View {
                             .font(.footnote).foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity, minHeight: 80)
                     }
-                    if let point = touchedPoint(series) { detail(point, series) }
+                    // Shown once, in line; gone for good at the first scrub (§6.52).
+                    TipView(scrubTip)
+                    if let point = readoutPoint(series) { detail(point, series) }
                     if let summary = finding?.changeSummary, !summary.isEmpty {
                         Text(summary).font(.footnote).foregroundStyle(.secondary)
                     }
@@ -225,11 +229,16 @@ struct ProgressChartView: View {
         }
         .frame(height: 220)
         .accessibilityLabel(accessibilitySummary(series))
+        .onChange(of: touched) { if touched != nil { scrubTip.invalidate(reason: .actionPerformed) } }
     }
 
-    /// The session nearest the finger.
-    private func touchedPoint(_ series: ProgressChartModel.Series) -> ProgressChartModel.Point? {
-        guard let t = touched else { return nil }
+    /// The session the readout is for: the one nearest the finger, and before
+    /// the first touch the last one done (else the first planned), so the
+    /// readout is there to be found and the card keeps its height.
+    private func readoutPoint(_ series: ProgressChartModel.Series) -> ProgressChartModel.Point? {
+        guard let t = touched else {
+            return series.points.last { $0.done != nil } ?? series.points.first
+        }
         return series.points.min { abs($0.date.timeIntervalSince(t)) < abs($1.date.timeIntervalSince(t)) }
     }
 
@@ -258,4 +267,12 @@ struct ProgressChartView: View {
         let latest = done.last.map { AnalyticsProgressTab.withUnit(AnalyticsProgressTab.number($0), series.unit) } ?? "nothing logged"
         return "\(series.label): \(done.count) sessions done of \(series.points.count), latest \(latest)"
     }
+}
+
+/// Shown once, on the Progress chart.
+struct ChartScrubTip: Tip {
+    var title: Text { Text("Drag across the chart") }
+    var message: Text? { Text("The box below follows your finger: what was planned and what was done, session by session.") }
+    var image: Image? { Image(systemName: "hand.draw") }
+    var options: [any TipOption] { [MaxDisplayCount(1)] }
 }

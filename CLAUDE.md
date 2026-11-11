@@ -186,8 +186,9 @@ revision-checked PUT — nothing is persisted by the endpoint.
 
 **Added sessions are extras.** An athlete may add a session on the fly to today or a later
 day (web: Today's rest card and the calendar's rest days, `ReplaceSessionSheet` in add mode;
-iOS: the long-press menu on Today's cards and the calendar's day rows, `Views/SessionActions.swift`
-— which also holds Move, Replace and Remove, so no card or detail screen shows them —
+iOS: the "…" on Today's cards and the calendar's day rows, "+ Add session" on a rest day and
+the long press as a shortcut, `Views/SessionActions.swift` — which also holds Move, Replace and
+Remove; the detail screen shows none of them —
 `ReplaceWorkoutSheet` in add mode; → `programStore.addSession` / `AppState.addSession` →
 the revision-checked PUT). It is marked `added`, appended after the day's others (indices
 already on the day keep their place), and only an added session can be removed. It counts
@@ -1308,7 +1309,8 @@ button k times; a set is logged as prescribed), `TC_PLAYER_END=1` (the end scree
 puts the Live Activity in the Dynamic Island.
 A simulator that has never answered the Health sheet shows it on every launch, over
 whatever route was asked for; `SIMCTL_CHILD_TC_SKIP_HEALTH=1` skips the request in
-debug builds (`HealthKitManager.skipsAuthorizationRequest`).
+debug builds (`HealthKitManager.skipsAuthorizationRequest`). `SIMCTL_CHILD_TC_TIPS=hide`
+(or `show`) keeps the two TipKit tips out of (or in) a screenshot.
 Settings ▸ API target shows the current target and, in debug builds, the switch.
 Never generate, adjust or swap from a simulator pointed at production.
 

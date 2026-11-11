@@ -1904,6 +1904,11 @@ a screen with the full chart, the numbers and, at the end, *About*.
   holds nothing interactive, since the card itself is the button.
 - **A row that opens something** inside a card (an exercise, a standard) is
   its own `NavigationLink` or button with a trailing chevron, not the card.
+  A row has one push target, the whole row. `MeasureRow` (Analytics ▸
+  Progress) pushes `MeasureDetailView`; a measure the chart can draw leads
+  with a chart button (`chart.line.uptrend.xyaxis.circle`, filled and amber
+  while it is the chart's series) that draws it there. Until 1.38 the row
+  drew and a small chevron pushed.
 - **The detail screen** is an inset-grouped `List` with an inline title (the
   card's name): the standing first, then the chart (200 pt, with a menu
   picker when it has several series — a display mode, §6.8), then every row
@@ -2084,9 +2089,12 @@ draws what the athlete did against what the program asked on one card
   legend names the dashed line only when there is one (a lift the method
   works up on the day prescribes no kg). The y-axis starts from the lightest
   value, not 0.
-- Touching the chart picks the nearest session and shows a panel under it:
-  the day, the workout, the prescription in the server's words and what was
-  done set by set ("100×5, 100×5, 100×4 · RPE 8").
+- A panel under the chart reads one session: the day, the workout, the
+  prescription in the server's words and what was done set by set ("100×5,
+  100×5, 100×4 · RPE 8"). Before the first touch it is the last session done
+  (else the first planned), so the readout is there to be found and the card
+  keeps its height; touching the chart moves it to the nearest session. A tip
+  in line above it says so once (§6.52).
 
 The series are the server's (`exerciseSeries` on `/analytics/program`,
 `src/analytics/exercise_series.py`); `ProgressChartModel`
@@ -2100,17 +2108,24 @@ chart, and the Exercises section with its `ExerciseHistoryView` screen
 
 No pattern took this number; it is kept so the later ones do not move.
 
-### 6.43 Session Actions (long press)
+### 6.43 Session Actions
 
-`Views/SessionActions.swift`, applied with `.sessionActions(weekIndex:dayName:sessionIndex:)`:
-the program's edits live in a long-press context menu, not on cards or the detail screen.
-On Today's session card and Program ▸ Calendar's day row it offers, per session, **Move to
-Another Day** (`MoveWorkoutSheet`), **Replace** (`ReplaceWorkoutSheet`) and, for a session the
-athlete added that is not done, **Remove Added Session** (destructive); a calendar row with
-several sessions groups them in sections by name. Today or a later day also offers **Add
-Session** — on a rest card too, whose menu holds only that. No screen shows an Add button,
-and `SessionDetailView` keeps only the exercise swap (one slot). A day with nothing to offer
-(a past rest day) has no menu.
+`Views/SessionActions.swift`: what a program day or one of its sessions can do, one set of
+items (`SessionActionSet`) with three ways in, on Today's session card and Program ▸
+Calendar's day row:
+
+- **`SessionActionsMenu`** — the visible "…" at the card's or row's trailing edge. It draws
+  nothing on a day with nothing to offer (a past rest day).
+- **`SessionAddButton`** — a rest day's quiet "+ Add session", today or later only.
+- **`.sessionActions(weekIndex:dayName:sessionIndex:)`** — the same menu on a long press,
+  the shortcut (§6.51).
+
+Per session it offers **Move to Another Day** (`MoveWorkoutSheet`), **Replace**
+(`ReplaceWorkoutSheet`) and, for a session the athlete added that is not done, **Remove
+Added Session** (destructive); a calendar row with several sessions groups them in sections
+by name. Today or a later day also offers **Add Session**. `SessionDetailView` carries none
+of these — it keeps the exercise swap (one slot). Until 1.38 the long press was the only
+way in and no screen showed an Add button; a tip (§6.52) now points at the "…" once.
 
 **Adding** is `ReplaceWorkoutSheet` with `mode: .add`. Its tabs, as when replacing, are
 **Browse** (every archetype, picked by hand) and **Search** (first when adding): a Kind picker
@@ -2248,3 +2263,71 @@ player. Under Reduce Motion `appZoom` does nothing and the system's own transiti
   (`DesignTokenTests`).
 - A screen that can be both pushed and presented takes `pushed:` and owns its
   `NavigationStack` only when presented (§6.14).
+
+### 6.49 Pager
+
+**Anything paged sideways has a visible control.** `AppPager.swift`:
+
+- **`AppPager(pages:selection:) { page in … }`** — one page at a time, full width, a
+  paging scroll view (`scrollTargetBehavior(.paging)` + `scrollPosition`). `selection` is
+  the page on show; setting it from outside scrolls there.
+- **`AppPagerHeader(pages:selection:unit:onTitle:) { title }`** — a chevron either side of
+  a title naming the page; the chevrons dim at the ends, and the title is a button when
+  `onTitle` is given (back to today, back to the current week). `unit` words the
+  chevrons for VoiceOver ("Previous day").
+- **`Paging`** — which pages there are and where a step lands, pure (`PagingTests`):
+  `dayRange` (the program's span around today, clamped to eight weeks either way, today
+  always a page; a week either way without a program), `week(around:)` (Monday to Sunday
+  as day offsets), `step`.
+
+Today's days and Program ▸ Calendar's weeks use it. Both were hand-rolled `DragGesture`s
+with no control until 1.38: nothing said another day was there.
+
+### 6.50 Week Strip
+
+`Views/WeekStrip.swift`, under Today's pager header: Monday to Sunday of the week on show,
+one mark a day under its letter — done (an emerald checkmark), planned (a dot in the
+session's modality colour), rest (a dash) — today's letter amber, the selected day on a
+filled ground. A tap selects the day, so the
+strip is the day pager's second control. Days outside the pager's range are dimmed and do
+nothing. A day is done once every session on it is.
+
+### 6.51 Row Actions
+
+**A gesture is a shortcut, never the only way.** Every action a swipe or long press holds
+has a visible twin, built into the row's own component:
+
+| Where | Visible | Shortcut kept |
+|---|---|---|
+| Session card, Calendar day row | "…" (`SessionActionsMenu`), "+ Add session" on a rest day (§6.43) | long press |
+| Session detail's exercise row | leading log circle (logs, or opens the logger); the row opens the exercise; trailing "…" (Log, Swap, About) | swipes |
+| Log ▸ Linking | "…" on a linked pair, a suggestion and a loose workout (Unlink, Open Workout); **Link…** a button on a declined workout too | swipe to unlink, long press |
+| Standard detail's result | "…" (Edit, Delete) | swipe |
+| Set logger's set | `minus.circle` | swipe |
+| Profile ▸ Injuries' custom flag | remove button | swipe |
+| Profile ▸ Schedule's session chip | a menu of Rest · Short · Long · Mobility, the current one ticked | — |
+
+**Rules**
+
+- The "…" is `ellipsis` in a 44 pt target at the trailing edge, secondary colour, labelled
+  "<name> actions" for VoiceOver ("Session actions" on a card); its items are the gesture's, in the same order.
+- One destructive item on a row is a plain button with the destructive role; a list of
+  them does not get an `EditButton` — these lists live in sheets and sub-tabs whose
+  toolbars are taken, and a per-row control needs no mode.
+- A value with a fixed set of choices is a menu with the current one ticked, never
+  tap-to-cycle (the schedule chips cycled until 1.38: Short to Rest was three taps).
+- No footer explains a gesture with symbols; if a control needs explaining, make it
+  visible.
+
+### 6.52 Tips
+
+TipKit, **two tips, each shown once** (`MaxDisplayCount(1)`), and gone for good as soon as
+the athlete does the thing:
+
+- `SessionActionsTip` — on today's first session card, pointing at its "…".
+- `ChartScrubTip` — in line (`TipView`) between the Progress chart and its readout; a
+  popover covered the card it was explaining.
+
+A tip teaches a control that is already visible; it never stands in for one. A third tip
+needs one of these to go. `Tips.configure()` runs at launch; debug builds take
+`SIMCTL_CHILD_TC_TIPS=show|hide` so a screenshot has every tip or none.

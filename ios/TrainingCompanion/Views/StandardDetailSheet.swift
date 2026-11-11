@@ -95,9 +95,25 @@ struct StandardDetailSheet: View {
                 if !entries.isEmpty {
                     Section("\(entries.count) result\(entries.count == 1 ? "" : "s")") {
                         ForEach(entries.reversed()) { entry in
-                            EntryRow(entry: entry, domain: subject.benchmark?.domain, showsLevel: subject.benchmark != nil)
-                                .contentShape(Rectangle())
-                                .onTapGesture { editing = entry }
+                            HStack(spacing: AppMetrics.gapSmall) {
+                                EntryRow(entry: entry, domain: subject.benchmark?.domain, showsLevel: subject.benchmark != nil)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture { editing = entry }
+                                // Visible; the swipe holds the same two (§6.51).
+                                Menu {
+                                    Button { editing = entry } label: { Label("Edit", systemImage: "pencil") }
+                                    Button(role: .destructive) { deleting = entry } label: { Label("Delete", systemImage: "trash") }
+                                } label: {
+                                    Image(systemName: "ellipsis")
+                                        .font(.body.weight(.semibold))
+                                        .foregroundStyle(.secondary)
+                                        .frame(width: 32, height: 44)
+                                        .contentShape(Rectangle())
+                                }
+                                .buttonStyle(.borderless)
+                                .accessibilityLabel("\(entry.valueText) actions")
+                            }
                                 .swipeActions {
                                     Button(role: .destructive) { deleting = entry } label: { Label("Delete", systemImage: "trash") }
                                     Button { editing = entry } label: { Label("Edit", systemImage: "pencil") }

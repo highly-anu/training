@@ -238,32 +238,31 @@ struct SessionDetailView: View {
                 Text("No exercises").foregroundStyle(.secondary)
             } else {
                 ForEach(rows) { item in
-                    Button {
-                        AppHaptics.selection()
-                        exerciseSheet = item
-                    } label: {
-                        exerciseRow(item.assignment)
-                    }
-                    .buttonStyle(.plain)
-                    .contextMenu {
+                    // Three visible controls (§6.51): the circle logs, the row
+                    // opens the exercise, "…" holds the rest. The swipes and
+                    // the long press are the same actions, faster.
+                    HStack(alignment: .top, spacing: AppMetrics.gapSmall) {
+                        logControl(item)
                         Button {
-                            logTarget = item
-                        } label: {
-                            Label(logLabel(item.assignment), systemImage: "square.and.pencil")
-                        }
-                        Button {
+                            AppHaptics.selection()
                             exerciseSheet = item
                         } label: {
-                            Label("About this exercise", systemImage: "info.circle")
+                            exerciseRow(item.assignment)
                         }
-                        if canSwap(item.assignment) {
-                            Button {
-                                swapTarget = SwapTarget(exerciseIndex: item.index)
-                            } label: {
-                                Label("Swap for an alternative", systemImage: "arrow.left.arrow.right")
-                            }
+                        .buttonStyle(.plain)
+                        Menu {
+                            exerciseActions(item)
+                        } label: {
+                            Image(systemName: "ellipsis")
+                                .font(.body.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                                .frame(width: 32, height: 44)
+                                .contentShape(Rectangle())
                         }
+                        .buttonStyle(.borderless)
+                        .accessibilityLabel("\(item.assignment.exercise?.name ?? "Exercise") actions")
                     }
+                    .contextMenu { exerciseActions(item) }
                     .swipeActions(edge: .leading, allowsFullSwipe: true) {
                         Button {
                             logTarget = item
@@ -287,21 +286,45 @@ struct SessionDetailView: View {
             }
         } header: {
             Text("Exercises")
-        } footer: {
-            if !rows.isEmpty {
-                // Gesture hints as symbols: tap for cues, swipe right to log,
-                // left to swap.
-                HStack(spacing: 14) {
-                    Label("Cues", systemImage: "hand.tap")
-                    Label("Log", systemImage: "arrow.right")
-                    if canEditProgram && rows.contains(where: { canSwap($0.assignment) }) {
-                        Label("Swap", systemImage: "arrow.left")
-                    }
-                }
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(canEditProgram && rows.contains(where: { canSwap($0.assignment) })
-                    ? "Tap an exercise for cues. Swipe right to log it, left to swap it."
-                    : "Tap an exercise for cues. Swipe right to log it.")
+        }
+    }
+
+    /// The row's leading circle: empty until the exercise is logged, then a
+    /// tick; either way it opens the logger.
+    private func logControl(_ item: ExerciseRowItem) -> some View {
+        let logged = loggedSummary(item.assignment) != nil
+        return Button {
+            AppHaptics.light()
+            logTarget = item
+        } label: {
+            Image(systemName: logged ? "checkmark.circle.fill" : "circle")
+                .font(.title3)
+                .foregroundStyle(logged ? AnyShapeStyle(AppColor.complete) : AnyShapeStyle(.tertiary))
+                .frame(width: 32, height: 44)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.borderless)
+        .accessibilityLabel("\(logLabel(item.assignment)): \(item.assignment.exercise?.name ?? "exercise")")
+        .accessibilityValue(logged ? "Logged" : "Not logged")
+    }
+
+    @ViewBuilder
+    private func exerciseActions(_ item: ExerciseRowItem) -> some View {
+        Button {
+            logTarget = item
+        } label: {
+            Label(logLabel(item.assignment), systemImage: "square.and.pencil")
+        }
+        Button {
+            exerciseSheet = item
+        } label: {
+            Label("About this exercise", systemImage: "info.circle")
+        }
+        if canSwap(item.assignment) {
+            Button {
+                swapTarget = SwapTarget(exerciseIndex: item.index)
+            } label: {
+                Label("Swap for an alternative", systemImage: "arrow.left.arrow.right")
             }
         }
     }
@@ -339,9 +362,6 @@ struct SessionDetailView: View {
                         .background(.quaternary)
                         .clipShape(Capsule())
                 }
-                Image(systemName: "info.circle")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
             }
             Text(LoadFormat.describe(ea))
                 .font(.subheadline)
@@ -356,7 +376,7 @@ struct SessionDetailView: View {
                     .font(.caption).foregroundStyle(Color.accentColor)
             }
             if let logged = loggedSummary(ea) {
-                Label(logged, systemImage: "checkmark.circle.fill")
+                Text(logged)
                     .font(.caption)
                     .foregroundStyle(AppColor.complete)
                     .monospacedDigit()
@@ -369,6 +389,7 @@ struct SessionDetailView: View {
             }
         }
         .padding(.vertical, 2)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
     }
 

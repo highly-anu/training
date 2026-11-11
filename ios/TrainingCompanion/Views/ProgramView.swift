@@ -21,11 +21,8 @@ struct ProgramView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var router: AppRouter
 
+    /// The week Calendar's pager shows (§6.49).
     @State private var weekIndex: Int = 0
-
-    // Swipe state
-    @State private var dragOffset: CGFloat = 0
-    @State private var lockedAdjacentIndex: Int? = nil
 
     @State private var showBuilder = false
     @State private var showSettings = false
@@ -47,8 +44,6 @@ struct ProgramView: View {
     }
 
     private let dayOrder = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
-    private var cardWidth: CGFloat { AppMetrics.screenWidth - 32 }
-    private var peekIndex: Int { lockedAdjacentIndex ?? weekIndex + (dragOffset <= 0 ? 1 : -1) }
 
     // MARK: - Body
 
@@ -128,8 +123,7 @@ struct ProgramView: View {
 
                 Divider().padding(.bottom, 12)
 
-                swipeableSection
-                    .padding(.horizontal)
+                weekPager
 
                 Spacer(minLength: 40)
             }
@@ -168,66 +162,57 @@ struct ProgramView: View {
         .overlay(RoundedRectangle(cornerRadius: AppMetrics.radiusControl).stroke(AppColor.warning.opacity(0.25), lineWidth: 1))
     }
 
-    // MARK: - Swipeable Section
+    // MARK: - Week Pager
 
-    private var swipeableSection: some View {
-        let gap: CGFloat = 14
-        let exitDistance = cardWidth + gap
-        let showPeek = dragOffset != 0
-        let peekSign: CGFloat = peekIndex > weekIndex ? 1 : -1
-
-        return ZStack(alignment: .topLeading) {
-            if showPeek {
-                weekCard(weekIdx: peekIndex)
-                    .offset(x: dragOffset + peekSign * exitDistance)
-                    .allowsHitTesting(false)
+    /// One week a page: the header's chevrons are the control, a swipe the
+    /// shortcut; the title goes back to the current week.
+    private var weekPager: some View {
+        let weeks = appState.allWeeks
+        let pages = 0...max(weeks.count - 1, 0)
+        let current = appState.currentWeekIndex
+        return VStack(alignment: .leading, spacing: AppMetrics.gapMedium) {
+            AppPagerHeader(pages: pages, selection: $weekIndex, unit: "week",
+                           onTitle: current == nil || current == weekIndex ? nil : { weekIndex = current ?? 0 }) {
+                weekTitle(weekIndex, current: current)
             }
-            weekCard(weekIdx: weekIndex)
-                .offset(x: dragOffset)
+            .padding(.horizontal)
+            AppPager(pages: pages, selection: $weekIndex) { index in
+                weekCard(weekIdx: index)
+            }
         }
-        .clipped()
-        .contentShape(Rectangle())
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 10)
-                .onChanged { value in
-                    let h = value.translation.width
-                    guard abs(h) > abs(value.translation.height) else { return }
-                    if lockedAdjacentIndex == nil {
-                        lockedAdjacentIndex = weekIndex + (h < 0 ? 1 : -1)
-                    }
-                    dragOffset = h
-                }
-                .onEnded { value in
-                    let h = value.translation.width
-                    guard abs(h) > abs(value.translation.height),
-                          abs(value.predictedEndTranslation.width) > AppMetrics.swipeThreshold
-                          || abs(value.velocity.width) > AppMetrics.swipeVelocityThreshold else {
-                        cancelSwipe(); return
-                    }
-                    let goNext = h < 0
-                    let next = weekIndex + (goNext ? 1 : -1)
-                    guard next >= 0 && next < appState.allWeeks.count else {
-                        cancelSwipe(); return
-                    }
-                    commitSwipe(goNext: goNext, exitDistance: exitDistance)
-                }
-        )
     }
 
-    private func cancelSwipe() {
-        lockedAdjacentIndex = nil
-        withAnimation(AppAnimation.springStandard) { dragOffset = 0 }
-    }
-
-    private func commitSwipe(goNext: Bool, exitDistance: CGFloat) {
-        AppHaptics.soft()
-        withAnimation(AppAnimation.springSnappy) {
-            dragOffset = goNext ? -exitDistance : exitDistance
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-            weekIndex += goNext ? 1 : -1
-            dragOffset = 0
-            lockedAdjacentIndex = nil
+    private func weekTitle(_ index: Int, current: Int?) -> some View {
+        let weeks = appState.allWeeks
+        return VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: AppMetrics.gapSmall) {
+                // Position in the program, not week.weekNumber.
+                // A program whose weeks are numbered 16...31 (the tail of
+                // an earlier plan) but whose programStartDate is this week
+                // showed "Week 16" on day one. programStartDate anchors
+                // weeks[0] as week 1, so position is the truth.
+                Text("Week \(index + 1) of \(weeks.count)").font(.headline)
+                if index == current {
+                    Text("Current")
+                        .font(.caption2).fontWeight(.semibold)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 7).padding(.vertical, 3)
+                        .background(AppColor.accent.gradient)
+                        .clipShape(Capsule())
+                } else if current != nil {
+                    Label("Current", systemImage: index > (current ?? 0) ? "arrow.uturn.backward" : "arrow.uturn.forward")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(AppColor.accent)
+                }
+            }
+            if let week = weeks[safe: index] {
+                HStack(spacing: 6) {
+                    Text(week.phaseLabel)
+                    if week.isDeload { Text("· Deload").foregroundStyle(AppColor.warning) }
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
         }
     }
 
@@ -238,36 +223,8 @@ struct ProgramView: View {
         let weeks = appState.allWeeks
         if weekIdx >= 0 && weekIdx < weeks.count {
             let week = weeks[weekIdx]
-            let isCurrent = weekIdx == (appState.currentWeekIndex ?? -1)
 
             VStack(alignment: .leading, spacing: 0) {
-                HStack(alignment: .firstTextBaseline) {
-                    HStack(spacing: 8) {
-                        // Position in the program, not week.weekNumber.
-                        // A program whose weeks are numbered 16...31 (the tail of
-                        // an earlier plan) but whose programStartDate is this week
-                        // showed "Week 16" on day one. programStartDate anchors
-                        // weeks[0] as week 1, so position is the truth.
-                        Text("Week \(weekIdx + 1) of \(weeks.count)").font(.headline)
-                        if isCurrent {
-                            Text("Current")
-                                .font(.caption2).fontWeight(.semibold)
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 7).padding(.vertical, 3)
-                                .background(AppColor.accent.gradient)
-                                .clipShape(Capsule())
-                        }
-                    }
-                    Spacer()
-                    HStack(spacing: 6) {
-                        Text(week.phaseLabel)
-                        if week.isDeload { Text("· Deload").foregroundStyle(AppColor.warning) }
-                    }
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                }
-                .padding(.bottom, 10)
-
                 VStack(spacing: 0) {
                     ForEach(dayOrder.indices, id: \.self) { i in
                         dayRow(day: dayOrder[i], week: week, weekIdx: weekIdx)
@@ -292,11 +249,14 @@ struct ProgramView: View {
         let sessions = week.schedule[day] ?? []
         let isToday = day == appState.todayDayName && weekIdx == (appState.currentWeekIndex ?? -1)
 
-        return Button {
+        // The row opens the day; its trailing control is the day's actions,
+        // visible (§6.43): "…" beside sessions, Add on a rest day ahead.
+        return HStack(spacing: 0) {
+          Button {
             guard !sessions.isEmpty else { return }
             AppHaptics.light()
             selectedDay = DaySelection(weekIndex: weekIdx, dayName: day)
-        } label: {
+          } label: {
             HStack(spacing: 12) {
                 Text(day.prefix(3))
                     .font(.subheadline)
@@ -336,19 +296,25 @@ struct ProgramView: View {
                     }
                 }
 
-                Spacer()
-                if !sessions.isEmpty {
-                    Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
-                }
+                Spacer(minLength: 0)
             }
-            .padding(.horizontal, 14)
+            .padding(.leading, 14)
             .padding(.vertical, 10)
-            .background(isToday ? AppColor.accent.opacity(0.06) : Color.clear)
+            .frame(minHeight: 44)
             .contentShape(Rectangle())
+          }
+          .buttonStyle(.plain)
+          if sessions.isEmpty {
+              SessionAddButton(weekIndex: weekIdx, dayName: day, title: "Add")
+                  .padding(.trailing, 14)
+          } else {
+              SessionActionsMenu(weekIndex: weekIdx, dayName: day)
+                  .padding(.trailing, 6)
+          }
         }
-        .buttonStyle(.plain)
-        // Long press: each session's Move, Replace, Remove (an added one); Add
-        // Session on today or a later day (design-system §6.43).
+        .background(isToday ? AppColor.accent.opacity(0.06) : Color.clear)
+        // The same as a long press: each session's Move, Replace, Remove (an
+        // added one); Add Session on today or a later day.
         .sessionActions(weekIndex: weekIdx, dayName: day)
     }
 

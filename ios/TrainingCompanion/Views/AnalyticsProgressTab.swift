@@ -570,9 +570,11 @@ struct IntensityWeeksChart: View {
 // MARK: - Progress entry
 
 /// One progress measure as a row (§6.37): where it stands in its own
-/// currency, its status and trend. Tapping it draws it on the Progress chart
-/// when the chart can (`chartable`); the chevron pushes `MeasureDetailView`
-/// with the evidence, the movements or standards and what the measure is.
+/// currency, its status and trend. The row is one target: it pushes
+/// `MeasureDetailView` with the evidence, the movements or standards and what
+/// the measure is. A measure the chart can draw (`chartable`) leads with a
+/// chart button that draws it there. Until 1.38 the row drew and a 32 pt
+/// chevron pushed, and nothing said which was which.
 /// It was a card with a sparkline until 2026-10-23, when the one chart took
 /// over every line.
 struct MeasureRow: View {
@@ -589,12 +591,30 @@ struct MeasureRow: View {
     private var unit: String { lead?.unit ?? entry.unit }
 
     var body: some View {
-        HStack(spacing: 8) {
-            Button(action: { if chartable { onChart() } }) {
+        HStack(spacing: AppMetrics.gapTight) {
+            if chartable {
+                Button {
+                    AppHaptics.selection()
+                    onChart()
+                } label: {
+                    Image(systemName: selected ? "chart.line.uptrend.xyaxis.circle.fill" : "chart.line.uptrend.xyaxis.circle")
+                        .font(.title3)
+                        .foregroundStyle(selected ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.secondary))
+                        .frame(width: 40, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Show \(entry.label) on the chart")
+                .accessibilityAddTraits(selected ? .isSelected : [])
+            }
+            NavigationLink {
+                MeasureDetailView(entry: entry)
+            } label: {
                 HStack(spacing: 10) {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(spacing: 6) {
                             Text(entry.label).font(.subheadline).fontWeight(.semibold).lineLimit(2)
+                                .multilineTextAlignment(.leading)
                             if entry.headline {
                                 Image(systemName: "star.fill").font(.caption2).foregroundStyle(Color.accentColor)
                                     .accessibilityLabel("Headline")
@@ -610,26 +630,16 @@ struct MeasureRow: View {
                             CoverageNoticeView(coverage: coverage)
                         }
                     }
+                    Image(systemName: "chevron.right")
+                        .font(.caption).fontWeight(.semibold).foregroundStyle(.tertiary)
                 }
+                .frame(minHeight: 44)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .disabled(!chartable)
-            .accessibilityHint(chartable ? "Draws it on the chart" : "")
-            .accessibilityAddTraits(selected ? .isSelected : [])
-            NavigationLink {
-                MeasureDetailView(entry: entry)
-            } label: {
-                Image(systemName: "chevron.right")
-                    .font(.caption).fontWeight(.semibold).foregroundStyle(.tertiary)
-                    .frame(minWidth: 32, minHeight: 44)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Open \(entry.label)")
         }
-        .padding(.leading, AppMetrics.cardPadding)
-        .padding(.trailing, 8)
+        .padding(.leading, chartable ? AppMetrics.gapSmall : AppMetrics.cardPadding)
+        .padding(.trailing, AppMetrics.cardPadding)
         .padding(.vertical, 10)
         .background(selected ? Color.accentColor.opacity(AppColor.Opacity.fill) : Color.clear)
         .overlay(alignment: .leading) {

@@ -1075,6 +1075,11 @@ final class AppState: ObservableObject {
         return weeks[idx]
     }
 
+    /// The program's first day.
+    var programStart: Date? {
+        serverProgram?.programStartDate.flatMap { dayFormatter.date(from: $0) }
+    }
+
     /// Whether a session may be added to that day: today or later (a past
     /// day would switch the program's version). The day's date follows the
     /// server's rule — start + week index × 7 + the weekday's place from

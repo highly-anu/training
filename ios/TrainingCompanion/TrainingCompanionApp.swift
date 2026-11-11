@@ -1,5 +1,6 @@
 import SwiftUI
 import BackgroundTasks
+import TipKit
 
 @main
 struct TrainingCompanionApp: App {
@@ -21,6 +22,16 @@ struct TrainingCompanionApp: App {
     }
 
     init() {
+        // Two tips, each shown once (design-system §6.52).
+        try? Tips.configure()
+        #if DEBUG
+        // Screenshots: TC_TIPS=show draws every tip, =hide none.
+        switch ProcessInfo.processInfo.environment["TC_TIPS"] {
+        case "show": Tips.showAllTipsForTesting()
+        case "hide": Tips.hideAllTipsForTesting()
+        default: break
+        }
+        #endif
         BGTaskScheduler.shared.register(
             forTaskWithIdentifier: "haerdsoft.sync",
             using: nil
