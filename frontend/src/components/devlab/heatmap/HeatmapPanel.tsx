@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { floatMotion, chartEntry } from '@/lib/motion'
 import { X, Loader2, ChevronLeft } from 'lucide-react'
 import { HeatmapGraph } from './HeatmapGraph'
 import { getConnectedNodeIds, prunePhilosophyScope } from './heatmapGraphSelectors'
@@ -100,10 +101,7 @@ function NodeInfoPanel({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 6 }}
-      transition={{ duration: 0.2 }}
+      {...floatMotion}
       className="rounded-lg border border-border bg-card p-4 space-y-3"
     >
       {/* Header */}
@@ -141,7 +139,7 @@ function NodeInfoPanel({
             style={{ backgroundColor: color }}
             initial={{ width: 0 }}
             animate={{ width: `${heatPct}%` }}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
+            transition={chartEntry}
           />
         </div>
       </div>

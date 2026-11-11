@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom'
+import { useLocation, useOutlet } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
@@ -8,13 +8,18 @@ import { cn } from '@/lib/utils'
 
 export function RootLayout() {
   const sidebarOpen = useUiStore((s) => s.sidebarOpen)
+  // The outlet is keyed by path, so the page leaving runs its exit before the
+  // next one enters (un-keyed, AnimatePresence never saw a child leave). The
+  // query is not part of the key: `?tab=` changes a page, it does not replace it.
+  const { pathname } = useLocation()
+  const outlet = useOutlet()
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       {/* Desktop Sidebar */}
       <div
         className={cn(
-          'hidden md:flex flex-col transition-all duration-200',
+          'hidden md:flex flex-col transition-[width] duration-(--motion-base)',
           sidebarOpen ? 'w-56' : 'w-0 overflow-hidden'
         )}
       >
@@ -40,7 +45,9 @@ export function RootLayout() {
         <ProgramSaveBanner />
         <main className="flex-1 overflow-hidden flex flex-col">
           <AnimatePresence mode="wait">
-            <Outlet />
+            <div key={pathname} className="contents">
+              {outlet}
+            </div>
           </AnimatePresence>
         </main>
       </div>

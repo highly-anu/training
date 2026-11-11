@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { Page } from '@/components/layout/Page'
 import {
   BarChart3,
   Activity,
@@ -540,11 +540,8 @@ export function WorkoutAnalytics() {
   const [period, setPeriod] = useState<Period>('30d')
 
   return (
-    <motion.div
+    <Page
       key="workout-analytics"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-      exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
       className="flex h-full flex-col overflow-hidden"
     >
       {/* Header */}
@@ -564,6 +561,6 @@ export function WorkoutAnalytics() {
         {activeTab === 'load'     && <LoadTab period={period} onPeriodChange={setPeriod} />}
         {activeTab === 'recovery' && <RecoveryTab />}
       </div>
-    </motion.div>
+    </Page>
   )
 }

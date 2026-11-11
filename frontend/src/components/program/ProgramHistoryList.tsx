@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { riseIn } from '@/lib/motion'
 import { differenceInCalendarDays, format, parseISO } from 'date-fns'
 import { History, ChevronRight, Link2, CheckCircle2, CalendarRange } from 'lucide-react'
 import { useProgramHistory } from '@/api/programHistory'
@@ -56,9 +57,7 @@ function HistoryCard({ entry, index }: { entry: ProgramHistoryEntry; index: numb
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.04, duration: 0.2 }}
+      {...riseIn(index)}
     >
       <Link
         to={`/program/history/${entry.versionId}`}

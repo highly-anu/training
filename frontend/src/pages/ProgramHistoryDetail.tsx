@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { riseIn } from '@/lib/motion'
 import { format, parseISO } from 'date-fns'
 import { ChevronLeft, CheckCircle2, Link2, Clock, CircleSlash } from 'lucide-react'
 import { useProgramVersion } from '@/api/programHistory'
@@ -160,9 +161,7 @@ export function ProgramHistoryDetail() {
             {weeks.map(([weekIndex, sessions], i) => (
               <motion.section
                 key={weekIndex}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: Math.min(i, 8) * 0.03, duration: 0.2 }}
+                {...riseIn(i, 'tight')}
                 className="space-y-2"
               >
                 <div className="flex items-center gap-2">

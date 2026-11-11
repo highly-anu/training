@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { swapMotion } from '@/lib/motion'
 import { BookOpen, GitMerge, Sliders, ChevronRight } from 'lucide-react'
 import { usePhilosophies } from '@/api/philosophies'
 import { useFrameworks } from '@/api/frameworks'
@@ -481,9 +482,7 @@ export function ProgramSource() {
         {activeMode && (
           <motion.div
             key={activeMode}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0, transition: { duration: 0.22, ease: [0.25, 0.1, 0.25, 1] } }}
-            exit={{ opacity: 0, y: -4, transition: { duration: 0.15 } }}
+            {...swapMotion}
             className="rounded-xl border border-border/50 bg-card/30 p-5 space-y-4"
           >
             {/* ── Mode 1: single philosophy ── */}

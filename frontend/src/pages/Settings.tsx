@@ -1,5 +1,5 @@
 import { useSearchParams } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { Page } from '@/components/layout/Page'
 import { Settings as SettingsIcon, Plug, UserCircle, Palette, Terminal } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useDevLabEnabled } from '@/lib/featureFlags'
@@ -47,11 +47,8 @@ export function Settings() {
   }
 
   return (
-    <motion.div
+    <Page
       key="settings"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-      exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
       className="flex h-full flex-col"
     >
       {/* Header — §17.2: icon, title, sub-tabs after a hairline */}
@@ -93,6 +90,6 @@ export function Settings() {
         {activeTab === 'appearance'  && <AppearanceSettings />}
         {activeTab === 'developer'   && devLab && <DeveloperSettings />}
       </div>
-    </motion.div>
+    </Page>
   )
 }

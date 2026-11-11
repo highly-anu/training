@@ -1,4 +1,5 @@
 import { motion, useReducedMotion } from 'framer-motion'
+import { loop } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 
 // All 5 Lucide "Dumbbell" paths (v1.7.0, 24×24 viewBox) — used for the dim base
@@ -78,7 +79,7 @@ export function DumbbellLoader({ className, label = 'Loading...' }: DumbbellLoad
             strokeLinejoin="round"
             initial={{ pathLength: 0.14, pathOffset: 0 }}
             animate={{ pathOffset: 1 }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+            transition={loop(2)}
           />
         )}
       </svg>

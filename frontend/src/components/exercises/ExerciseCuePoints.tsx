@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { staggerVariants } from '@/lib/motion'
 
 interface ExerciseCuePointsProps {
   cues: string[]
@@ -7,15 +8,7 @@ interface ExerciseCuePointsProps {
   title?: string
 }
 
-const listVariants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.06 } },
-}
-
-const itemVariants = {
-  hidden:  { opacity: 0, x: -8 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.2 } },
-}
+const { list: listVariants, item: itemVariants } = staggerVariants('loose')
 
 export function ExerciseCuePoints({
   cues,

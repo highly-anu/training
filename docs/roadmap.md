@@ -55,6 +55,7 @@ deferred is under *Later*.
 | 16 | Garmin's official Connect API, open again since 2026-10-21: verify the integration, then health data and workouts pushed to the watch | P2 | M | API, watch, web, iOS |
 | 17 | Explore: each philosophy's page read from its package — a server document, its week and rules, one colour system | P2 | M | API, web, iOS, content |
 | 18 | Phone design and interaction uplift: the foundation (1.35), states (1.36), iOS 26 chrome (1.37), discoverable actions (1.38), the screen passes (1.39), motion (1.40) and accessibility with the system surfaces (1.41) are in (*IA*) | P2 | L | iOS |
+| 19 | Web design and interaction uplift: the phone's design language on the web, each rule in one module and held by a test — the foundation is in; states, feedback, motion, actions and keyboard, colour and accessibility, the page passes follow (*IA*) | P2 | L | web |
 
 ---
 
@@ -1643,6 +1644,78 @@ Design-system §7.5, §6.56.
 
 Not in it: the `@Observable` migration (118 `@Published`, no visible change), Control
 Centre controls, App Shortcuts.
+
+### 19. Web design and interaction uplift — P2 · L
+
+The phone's uplift (item 18) left the two clients apart: the phone has a design language,
+one helper per rule and a test that fails on a breach; the web had a long design document
+whose rules lived in prose and copied class strings. Measured on 2026-11-11: ten durations
+typed inline in 31 files and a page transition pasted about twenty times whose exit never
+ran; six loading looks, three retries in the whole app, no error boundary; no toast, no
+optimistic write, three pending styles, four destructive actions with neither a
+confirmation nor an undo; a session card that is mouse-only with its complete toggle behind
+hover; six hand-copied tab selectors; emerald meaning done and six other things; 14 of 17
+chart files with no text alternative.
+
+Decided with the athlete: an action answers **in place**, and a toast appears only where
+the result leaves the screen (the undo of a removal, a background save that failed); the
+four themes stay, and "do this" and "done" become tokens each theme keeps apart; mobile web
+fixes what is broken (a drawer that starts closed, slides, traps focus and closes on
+Escape; 44 px targets; nothing behind hover) and gets no bottom tab bar. Seven phases, one
+PR each, each updating `docs/frontend-design.md`, adding its row to that document's rules
+table (§1.8) and its line to `frontend/test/designRules.test.ts`.
+
+**Done — 1. Foundation** (`feat/web-foundation`). `lib/motion.ts` is the only file that
+writes a duration, an easing or a spring — the phone's presets by name (`springStandard`,
+`springSnappy`, `layoutChange`, `crossfade`, `chartEntry`) and the props built on them
+(`riseIn`, `pressMotion`, `collapseMotion`, `stepVariants`…); `globals.css` carries their
+CSS twins (`--motion-fast|base|slow`, `ease-standard`, `ease-exit`) and one
+`prefers-reduced-motion` block for everything outside Framer (sheets, dialogs, popovers,
+CSS transitions). `components/layout/Page.tsx` is every routed page's root and
+`RootLayout` keys the outlet by path, so the page leaving runs its exit — un-keyed, it
+never had. Sheets open in 250 ms and close in 150 (they took 500 and 300 beside pages at
+250 and 150). `--action` and `--done` exist in every theme; Military's olive and Zen's
+sage primaries sat 33° and 10° of hue from emerald, so a primary button read as a finished
+one — Military's is khaki and Zen's clay now, and `semanticContrast.test.ts` holds 55° of
+hue between the two and AA for the text on each. `--destructive-foreground` is defined (the
+button's text colour resolved to nothing). `test/designRules.test.ts` reads the sources
+and fails on a transition, duration or easing outside `lib/motion.ts`, a `duration-200`
+or `ease-in-out` class, and a page that writes its own transition. Frontend-design §1.7
+(the design language), §1.8 (every rule in one table) and §9 rewritten to what ships.
+
+**2. States.** `components/shared/states/`: one reading of a load (`loadPhase` — content is
+never replaced by a reload or its failure), `LoadingState` (the one loading look, in the
+content's shape), `FailedState` with Try again, `ErrorBanner` with a retry, `QueryState`
+around a query; a route error boundary that keeps the sidebar. Every page and tab that
+lacks a loading or failed state gets one; the hand-made spinners, "Loading…" lines and
+dashed empty blocks go.
+
+**3. Feedback.** `Button`'s `loading` prop in place of the three pending styles; the one
+toast (undo, failed background save); a confirmation that names what stops for a
+disconnect, an undo for a removal; the completion moment (stripe, check and week dot in
+one spring); optimistic standards results with rollback; pending and saved announced.
+
+**4. Motion.** `components/motion/` — a number that rolls when it changes, lists whose
+rows arrive and leave, a collapse, tab panels that crossfade by direction; one `SubTabs`
+(a tablist with arrow keys and a pill that slides) for the six copies and one `PageHeader`
+for the eleven; charts drawn once through `lib/chartMotion.ts` and still under Reduce
+Motion; the mobile drawer; a detail that grows from the card that opened it.
+
+**5. Actions, keyboard and touch.** A visible twin for every hover-only control and a "…"
+menu holding Move · Replace · Remove as on the phone; every clickable `div` a button with
+a focus ring, a press state and a 44 px touch target; tooltips with names for icon
+buttons; drag and drop from the keyboard; scroll restored per route; a few shortcuts.
+
+**6. Colour and accessibility.** Done through `--done` only, the other meanings of emerald
+on their own tokens, warning apart from the action amber, hex literals out of components;
+every chart reads its numbers (`lib/chartSummary.ts`, `ChartFrame`); colour never alone;
+one `h1` a page, a skip link, focus returned when a sheet closes; `eslint-plugin-jsx-a11y`.
+
+**7. The page passes.** Each page against the rules table, in sidebar order, at desktop
+and 390 px in two themes; §16's checklist rewritten to point at §1.8.
+
+Not doing: a bottom tab bar on mobile web; new modality or phase colours; in-app motion or
+density settings; a number computed on the client.
 
 ## Later
 

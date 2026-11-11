@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { Page } from '@/components/layout/Page'
 import { Terminal, Play } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -318,11 +318,8 @@ export function DevLab() {
   }
 
   return (
-    <motion.div
+    <Page
       key="devlab"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-      exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
       className="flex flex-col h-full min-h-0"
     >
       {/* Header */}
@@ -726,6 +723,6 @@ export function DevLab() {
           )}
         </div>
       </div>}
-    </motion.div>
+    </Page>
   )
 }

@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { TrackBadge } from '@/components/shared/TrackBadge'
 import { motion } from 'framer-motion'
+import { pressMotion } from '@/lib/motion'
 import { Clock, CheckCircle2, Activity, CircleSlash } from 'lucide-react'
 import { WorkoutIcon } from '@/components/icons/WorkoutIcon'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
@@ -48,8 +49,7 @@ export function SessionCard({ session, weekNumber, day, sessionIndex, className,
 
   return (
     <motion.button
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+      {...pressMotion}
       onClick={() => (onOpen ? onOpen() : navigate(`/program/${weekNumber}/${day}`))}
       className={cn(
         'w-full rounded-lg border bg-card p-3 text-left transition-shadow hover:shadow-sm',

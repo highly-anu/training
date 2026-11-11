@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { Page } from '@/components/layout/Page'
 import { User, Dumbbell, AlertTriangle, Trophy, Calendar, RotateCcw, Settings as SettingsIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -1019,11 +1019,8 @@ export function ProfileBenchmarks() {
     return <Navigate to={{ pathname: '/settings', search: qs ? `?${qs}` : '' }} replace />
   }
   return (
-    <motion.div
+    <Page
       key="profile"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-      exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
       className="flex h-full flex-col"
     >
       {/* Header */}
@@ -1052,6 +1049,6 @@ export function ProfileBenchmarks() {
           {activeTab === 'schedule'   && <ScheduleOverview />}
         </div>
       </div>
-    </motion.div>
+    </Page>
   )
 }

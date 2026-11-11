@@ -12,7 +12,7 @@ Where this document and the code disagree, the divergence is marked inline at th
 
 > **Code diverges — doc is correct.** The rule below is the target. The code has drifted and should be brought back. Tracked in `docs/frontend-fix-plan.md`.
 
-Anything not marked is believed to match the code as of 2026-07-30.
+Anything not marked is believed to match the code as of 2026-07-30; §1.7, §1.8 and §9.0–§9.1, §9.9–§9.10 as of 2026-11-11 (roadmap item 19, which brings the rest up to date phase by phase).
 
 ---
 
@@ -103,6 +103,61 @@ Radix UI primitives handle ARIA roles, keyboard navigation, and focus management
 - Every color-carried meaning is duplicated in text or icon
 - Every text/background pair clears 4.5:1 **in all four themes**, not just the one being developed in
 - Focus is visible on every focusable element (Radix gives this; do not remove it with `outline-none` unless a `focus-visible:ring` replaces it)
+
+### 1.7 The Design Language
+
+The phone states its language in seven short rules (`ios/docs/design-system.md` §1); these
+are the same ones in the web's idiom. A screen that follows them reads as the same product
+on either client. §1.8 says where each lives in code and what holds it.
+
+1. **Content is solid; chrome is quiet.** Cards, rows and charts sit on `bg-card`, opaque.
+   Blur and translucency belong to what floats over content — the sheet's scrim, the
+   drawer, a sticky bar — never to the content itself.
+2. **One colour says "do this", another says "done".** The theme's `--action` (its primary:
+   amber in Light and Dark, khaki in Military, clay in Zen) is the one filled button of a
+   view and the selected state. `--done` (emerald) is completion and nothing else. A theme
+   may choose both; it may not let them meet (§8.10 holds 55° of hue between them). Every
+   other hue is data: a modality, a phase, a zone, a status.
+3. **Nothing is behind hover or a gesture alone.** A pointer may reveal a shortcut; the
+   action itself is on screen, focusable, and reachable by touch. A drag has a menu twin.
+4. **Three states before content.** Every screen that loads answers loading (the shape of
+   what is coming), failed (what went wrong, Try again) and empty (why, and the way
+   forward). Content on screen is never replaced by a reload or by its failure.
+5. **Every action answers, in place.** The control that was pressed shows pending, then
+   the result where the athlete is looking. A toast is for a result that left the screen:
+   the undo of a removal, a save that failed in the background.
+6. **Motion has three jobs** (§1.5): it orients, it answers, it shows what changed.
+   Anything else is still. One set of presets (`lib/motion.ts`), named as on the phone.
+7. **Accessibility lives in the component.** The focus ring, the 44 px touch target, the
+   accessible name, the chart's sentence and the reduced-motion answer are in the shared
+   piece, so a screen gets them by using it — not by remembering them.
+
+### 1.8 Every Rule in One Table
+
+A rule is real when one module carries it and a check fails without it. Rules whose row
+says *planned* are roadmap item 19's later phases; they are listed so the table is the
+whole contract, and each gets its module and its check in the phase that lands it.
+
+| Rule | Carried by | Held by |
+|---|---|---|
+| Durations, easings and springs are written once | `lib/motion.ts`; `--motion-*`, `ease-standard`, `ease-exit` (`styles/globals.css`) | `test/designRules.test.ts` — no transition, duration or easing literal, no `duration-200` / `ease-in-out` class, anywhere else |
+| A page arrives and leaves the same way | `components/layout/Page.tsx`; `RootLayout` keys the outlet by path | `designRules` — no page writes its own transition |
+| Reduce Motion stops movement, keeps fades | `<MotionConfig reducedMotion="user">` (`App.tsx`); the `prefers-reduced-motion` block in `globals.css` | by construction: both are global (§9.10) |
+| "Do this" and "done" are two colours in every theme | `--action`, `--done` and their foregrounds, per theme | `test/semanticContrast.test.ts` — ≥ 55° of hue apart, AA for the text on each fill |
+| Semantic text clears AA in all four themes | `lib/modalityColors`, `phaseColors`, `completionColors`, `statusColors`, `movementColors` | `semanticContrast` (§8.10) |
+| Modality and phase colours, labels and icons are generated | `lib/gen/clientVocab.ts` (`tools/gen_client_vocab.py`) | `test_client_vocab.py` |
+| Three states before content | *planned (phase 2)* — `components/shared/states/` | `loadPhase` unit test; no `animate-spin` or `border-dashed` outside the owners |
+| Every action answers in place | *planned (phase 3)* — `Button` `loading`, `lib/toast.ts`, `ConfirmDialog` | unit tests; no hand-made pending label |
+| One tab selector, one page header | *planned (phase 4)* — `components/layout/SubTabs.tsx`, `PageHeader.tsx` | keyboard test; no hand-written tablist or header |
+| Charts draw once, and not at all under Reduce Motion | *planned (phase 4)* — `lib/chartMotion.ts` | no Recharts animation prop outside it |
+| Nothing behind hover; everything focusable | *planned (phase 5)* — `Pressable`, the row "…" menu | no `onClick` on a `div`, no hover-only control without a twin |
+| Done is `--done` only; hue is data | *planned (phase 6)* — `lib/completionColors.ts` | no raw `emerald-` / `green-` class or hex literal outside the colour modules |
+| A chart reads its numbers | *planned (phase 6)* — `lib/chartSummary.ts`, `ChartFrame` | no Recharts container outside `ChartFrame` |
+
+**Adding a rule.** Put it in one module, convert every call site in the same change, add
+the row here and the line to `designRules.test.ts`. No baseline is kept: a ban lands with
+its conversions, so the test is green the day it is written and red the day someone types
+the thing by hand again.
 
 ---
 
@@ -244,14 +299,17 @@ Military and Zen go beyond token swaps. They are the only places in the app wher
 
 | | Military | Zen |
 |---|---|---|
-| `--primary` | olive `oklch(0.58 0.13 130)` | sage `oklch(0.55 0.1 155)` |
+| `--primary` | khaki `oklch(0.72 0.11 95)` | clay `oklch(0.56 0.11 45)` |
+| `--done` | emerald-400 | emerald-600 |
 | `--radius` | `0.25rem` (hard corners) | `0.75rem` (soft) |
 | Font | `"IBM Plex Mono"` — sans *and* mono slots | `"Lora", Georgia, serif` |
-| Body texture | 20px radial dot-grid in primary @ 14% | two soft radial gradient washes (sage NW, stone SE) |
+| Body texture | 20px radial dot-grid in olive @ 14% | two soft radial gradient washes (sage NW, stone SE) |
 | Letter-spacing | `-0.01em` (tightened) | `0.012em` + `line-height: 1.65` |
 | Scrollbar | 4px, square thumb | 6px, pill thumb |
 
-**Rule for new themes:** override tokens in a class block, and only reach for `body` background-image / letter-spacing if the theme is a *character* theme. Light and dark must stay texture-free.
+**The primary is never green.** Until 2026-11-11 Military's primary was olive and Zen's sage — 33° and 10° of hue from the emerald that means done, so every primary button looked finished. The olive and the sage stay where they are texture (the dot grid, the washes, the scrollbar); the action colour moved, and §8.10's guard fails a theme that brings them back together.
+
+**Rule for new themes:** override tokens in a class block, define `--done` and keep it 55° of hue from `--primary`, and only reach for `body` background-image / letter-spacing if the theme is a *character* theme. Light and dark must stay texture-free.
 
 **Web fonts:** `IBM Plex Mono` and `Lora` are loaded from Google Fonts in `index.html:9-11` (`preconnect` ×2 + one stylesheet `<link>`, `display=swap`). This is the only external font dependency in the app. Note it loads **unconditionally**, so light and dark users pay for two fonts they never render — see `docs/frontend-fix-plan.md` for the deferred-load option.
 
@@ -999,12 +1057,14 @@ sections, the four schemas' enums) and what each slot type logs
 
 ### 8.10 The Contrast Guard
 
-`test/semanticContrast.test.ts` is the only thing keeping §8 honest. Run by `npm test` and by CI on every frontend PR.
+`test/semanticContrast.test.ts` is what keeps §8 honest. Run by `npm test` and by the pre-push hook's frontend area (GitHub runs no checks since 2026-10-26).
 
 **What it checks.** Every entry of `MODALITY_COLORS`, `PHASE_COLORS`, `MOVEMENT_GROUP_COLORS` (§8.11), `COMPLETION`, `STATUS_STYLES` and `STATUS_TEXT`, against all four themes:
 
 1. **Contrast ≥ 4.5:1** — composites the `/N` tint over that theme's `--background`, picks the light or dark half of the pair depending on the theme, and measures.
 2. **Both halves declared** — a bare `text-*` and a `dark:text-*`. This is the structural half of the rule: a single mid-shade cannot serve both themes, so an entry missing one half is wrong even if it happens to pass numerically today.
+
+3. **Action and done stay apart** — in each theme `--action` and `--done` are at least 55° of hue apart, the text on each fill (and on `--destructive`) clears 4.5:1, and `--done` reads at 3:1 on the page. Light's amber is 2.2:1 on white, which is why an action is a filled button with dark text and never amber text on the page.
 
 **Why it reads from source rather than a table.** The palette comes from `node_modules/tailwindcss/theme.css` and the backgrounds from `src/styles/globals.css`. A hardcoded hex table would drift the moment Tailwind updated a shade or a theme changed its background — and drift silently, since the test would keep passing against stale values. Two self-checks assert the parsers actually matched something, so a regex that silently matches nothing fails loudly instead of passing everything.
 
@@ -1053,35 +1113,69 @@ fallbacks), a movement by group.
 
 ## 9. Motion & Animation
 
+### 9.0 One File Writes Motion
+
+`frontend/src/lib/motion.ts` is the only file that writes a duration, an easing or a
+spring; `test/designRules.test.ts` fails on one anywhere else. A component picks a preset
+by what the motion is *for*. The names and the feel are the phone's (`AppAnimation`,
+`ios/docs/design-system.md` §7), so a card settles the same way on both clients.
+
+| Preset | For | Value |
+|---|---|---|
+| `springStandard` | most state changes: a card settling, a detail opening | spring, 0.45 s, bounce 0.18 |
+| `springSnappy` | small answers: a press, a toggle, a check | spring, 0.35 s, bounce 0.14 |
+| `layoutChange` | size and position: a row expanding, a panel opening, a reorder | spring, 0.5 s, bounce 0.12 |
+| `crossfade` | content swapping in place; what a spring becomes under Reduce Motion | 0.2 s, ease-in-out |
+| `chartEntry` | a chart or bar drawing once — data never overshoots | spring, 0.7 s, no bounce |
+| `pageEnter` / `pageExit` | a page, a block, a list item arriving / leaving | 250 ms standard / 150 ms exit |
+
+Built on them, spread onto a motion element: `pageMotion` and `fadeMotion` (through
+`<Page>`), `riseIn(index, density)`, `swapMotion`, `nudgeIn`, `floatMotion`, `fadeIn`,
+`collapseMotion`, `panelMotion(width)`, `pressMotion`, `tickMotion`; as variants,
+`staggerVariants(density)` and `stepVariants(direction)`. If none fits, add one there,
+named for its job — not a number at the call site.
+
+CSS has the same vocabulary (`styles/globals.css`): `--motion-fast` 150 ms, `--motion-base`
+250 ms, `--motion-slow` 400 ms, written `duration-(--motion-base)`; `ease-standard`
+(decelerate into place) and `ease-exit` (accelerate away). A bare `transition-colors`
+already takes `--motion-fast` and the standard curve, so most classes need no duration at
+all. Sheets open in `--motion-base` and close in `--motion-fast`, as pages do.
+
+The code samples in §9.2–§9.7 show the shape of each motion; the numbers in them are the
+presets' and are not typed at a call site.
+
 ### 9.1 Page Transitions (Universal)
 
-Every page uses the same transition. This creates the sense of a single coherent application rather than separate pages.
+Every routed page's root is `<Page>` (`components/layout/Page.tsx`), which carries the
+transition — rise 16 px and fade in over 250 ms, leave upward 8 px in 150 ms. A screen that
+is only waiting takes `<Page enter="fade">`. A page never writes `initial` / `animate` /
+`exit` on its root.
 
 ```tsx
-// Applied to the outermost element of every page component
-<motion.div
-  key="unique-page-key"
-  initial={{ opacity: 0, y: 16 }}
-  animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-  exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
-  className="flex h-full flex-col"
->
+export function Explore() {
+  return (
+    <Page className="flex h-full flex-col">
+      …
+    </Page>
+  )
+}
 ```
 
-**Rules:**
-- `key` must be unique per route — without it AnimatePresence can't distinguish pages
-- Exit is always faster than enter (0.15 vs 0.25s) — leaving is quicker than arriving
-- `y: 16` enter, `y: -8` exit — content slightly rises as it exits (sense of upward motion)
-- Wrap in `AnimatePresence mode="wait"` in the router to sequence enter/exit
+`RootLayout` keys the outlet by path, which is what makes the exit run:
 
-**Router setup:**
 ```tsx
+const { pathname } = useLocation()
+const outlet = useOutlet()
+
 <AnimatePresence mode="wait">
-  <Routes location={location} key={location.pathname}>
-    ...
-  </Routes>
+  <div key={pathname} className="contents">{outlet}</div>
 </AnimatePresence>
 ```
+
+Until 2026-11-11 `AnimatePresence` wrapped a bare `<Outlet />`: with no key it never saw a
+child leave, so the exit every page declared never played and the next page appeared over
+a hard cut. The query is not part of the key — `?tab=` changes a page, it does not replace
+it.
 
 ### 9.2 Staggered List Entry
 
@@ -1250,6 +1344,20 @@ Skeleton widths (2/3, full, 1/2) simulate text line lengths. Multiple lines at d
 
 **When to reach for it:** one per view, on waits over ~400ms, where the user has nothing else to look at. Everywhere else use skeletons — a skeleton communicates *what is coming*, a loader only communicates *that something is coming*. Do not add a second branded loader; if a new one seems necessary, the wait is probably a skeleton case.
 
+### 9.9 Timing Reference
+
+| Use case | Preset or token | Value |
+|---|---|---|
+| Page, block or list item entering | `pageEnter` | 250 ms, standard curve |
+| Page, block or list item leaving | `pageExit` | 150 ms, exit curve |
+| Sheet / dialog open · close | `--motion-base` · `--motion-fast` | 250 ms · 150 ms |
+| Hover and colour changes | the default transition | 150 ms, standard curve |
+| Collapse / expand, side panel, reorder | `layoutChange` | spring 0.5 s |
+| Press, tick, toggle | `springSnappy` | spring 0.35 s |
+| Step wizard | `stepVariants` | `pageEnter` / `pageExit`, ±60 px |
+| Stagger | `stagger(index, density)` | 30 / 40 / 60 ms an item, the first eight |
+| Chart entry | `chartEntry` | spring 0.7 s, no bounce (Recharts: phase 4) |
+
 ### 9.10 Reduced Motion
 
 > **Resolved 2026-07-30 (was FIX-2).** The app previously had no reduced-motion handling at all — every animation in §9 played at full amplitude for users who had asked their OS to stop them. `MotionConfig` now wraps the tree in `src/App.tsx`, and `DumbbellLoader` gates its loop explicitly.
@@ -1266,32 +1374,19 @@ import { MotionConfig } from 'framer-motion'
 
 `reducedMotion="user"` reads `prefers-reduced-motion` and disables *transform and layout* animations — `x`, `y`, `scale`, `rotate`, `height` — while letting `opacity` and `backgroundColor` through. That is the correct split for this design system: §9.1 page transitions degrade to clean cross-fades, §9.7's set-completion still flashes its color confirmation, and §9.6's expand/collapse snaps instead of sliding. Orientation and feedback survive; only the movement stops.
 
-**What the provider does not cover** — handle these individually:
+**CSS is covered by one block** (`styles/globals.css`, since 2026-11-11): under `prefers-reduced-motion: reduce` the tw-animate enter and exit travel (`--tw-enter-*`, `--tw-exit-*`) is zeroed, so sheets, dialogs and popovers fade where they slid or zoomed; CSS transitions keep colour, opacity and shadow and drop size and position; `animate-pulse` stops. A new sheet or popover is covered without doing anything.
+
+**What neither covers** — handle these individually:
 
 | Not covered | Why | Handling |
 |---|---|---|
-| `animate-pulse` skeletons | Tailwind CSS keyframes, not Framer | acceptable to leave — low-amplitude opacity only |
 | `animate-spin` spinners | Tailwind CSS keyframes | acceptable — conveys liveness, no translation |
 | `DumbbellLoader` | `pathOffset` is an SVG *attribute* animation, not a transform | ✅ done — gated on `useReducedMotion()`, falls back to the static glyph at `opacity 0.6` |
-| Recharts entry animations | library-internal | still open — set `isAnimationActive={false}` when reduced |
+| Recharts entry animations | library-internal | still open — roadmap 19 phase 4 (`lib/chartMotion.ts`) |
 
 The `DumbbellLoader` case is the general lesson: **`reducedMotion="user"` only suppresses transform and layout values.** Anything animating an SVG attribute, a gradient stop, or a CSS keyframe needs its own `useReducedMotion()` gate.
 
 **Rule for new motion:** if an animation moves an element more than a few pixels, it must have a reduced-motion answer. "It's subtle" is not an exemption — vestibular triggers are not proportional to how subtle the author thinks the motion is.
-
-### 9.9 Timing Reference
-
-| Use case | Duration | Easing |
-|---|---|---|
-| Page exit | 150ms | ease |
-| Set button color | 150ms | ease |
-| Collapse/expand | 180ms | ease |
-| Page enter | 250ms | ease |
-| Panel slide | 250ms | easeInOut |
-| Modal content | 250ms, 100ms delay | ease |
-| Step wizard | 280ms enter, 180ms exit | cubic-bezier(0.25,0.1,0.25,1) |
-| Pie chart | 500–800ms | Recharts default |
-| Spring (goal cards) | physics | stiffness: 300, damping: 20 |
 
 ---
 
@@ -1799,7 +1894,7 @@ Two non-Recharts geospatial views:
 <div className="flex h-screen overflow-hidden bg-background">
 
   {/* Desktop sidebar */}
-  <aside className="hidden md:flex flex-col w-56 border-r bg-card/50 transition-all duration-200">
+  <aside className="hidden md:flex flex-col w-56 border-r bg-card/50 transition-[width] duration-(--motion-base)">
     <Sidebar />
   </aside>
 
@@ -1820,7 +1915,7 @@ Two non-Recharts geospatial views:
     <TopBar />
     <main className="flex-1 overflow-hidden flex flex-col">
       <AnimatePresence mode="wait">
-        <Outlet />
+        <div key={pathname} className="contents">{outlet}</div>   {/* §9.1 */}
       </AnimatePresence>
     </main>
   </div>
@@ -1865,7 +1960,7 @@ phone keeps the same split with Settings pushed from Profile's gear.
 
 | Group | Items | Why it is a group |
 |---|---|---|
-| Train | Home `/` · Program `/program` · Analytics `/analytics` · Log `/log` | Where the athlete lives day to day: today, the plan, how it is going, the record — the phone's tab order (Analytics before Log since 2026-10-16, which folded the Insight group in) |
+| Train | Today `/` · Program `/program` · Analytics `/analytics` · Log `/log` | Where the athlete lives day to day: today, the plan, how it is going, the record — the phone's tab order (Analytics before Log since 2026-10-16, which folded the Insight group in) |
 | Library | Explore `/explore` | Reference and inspiration; its CTAs start the builder |
 | You | Profile `/profile` | Configuration — visited to change something |
 | Dev | Dev Lab `/dev` | Developer tooling; dev builds, and in production users whose Supabase `app_metadata.roles` has `dev` (`src/lib/featureFlags.ts`) |

@@ -422,7 +422,7 @@ export function ProgramTuner() {
                 <div className="flex items-center gap-2">
                   <div className="flex-1 h-1.5 rounded-full bg-border overflow-hidden">
                     <div
-                      className="h-full rounded-full transition-all duration-150"
+                      className="h-full rounded-full transition-[width]"
                       style={{ width: `${pct}%`, backgroundColor: c.hex }}
                     />
                   </div>

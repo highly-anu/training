@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { Page } from '@/components/layout/Page'
 import { ArrowLeft, Compass, Search, X, Wand2 } from 'lucide-react'
 import { LoadingCard } from '@/components/shared/LoadingCard'
 import { ErrorBanner } from '@/components/shared/ErrorBanner'
@@ -1791,11 +1791,8 @@ export function Explore() {
     : topic === 'modalities' ? modError : topic === 'movements' ? linksError : null
 
   return (
-    <motion.div
+    <Page
       key="explore"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-      exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
       className="flex h-full flex-col"
     >
       {/* Header */}
@@ -1917,6 +1914,6 @@ export function Explore() {
           <HeatmapPanel program={null} />
         </div>
       )}
-    </motion.div>
+    </Page>
   )
 }

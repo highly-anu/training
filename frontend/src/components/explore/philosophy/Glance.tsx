@@ -154,7 +154,7 @@ export function InlinePanel({ title, subtitle, accent, onClose, children }: {
   }, [])
   return (
     <div ref={ref} role="region" aria-label={typeof title === 'string' ? title : undefined}
-      className="overflow-hidden rounded-lg border border-border/60 bg-card/70 animate-in fade-in-0 slide-in-from-top-1 duration-200">
+      className="overflow-hidden rounded-lg border border-border/60 bg-card/70 animate-in fade-in-0 slide-in-from-top-1 duration-(--motion-base)">
       {accent && <div className="h-0.5" style={{ backgroundColor: accent }} />}
       <div className="flex items-start justify-between gap-3 px-4 pt-3">
         <div className="min-w-0">

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { motion } from 'framer-motion'
+import { Page } from '@/components/layout/Page'
 import { ChevronLeft, Loader2, Play, ScanEye, SlidersHorizontal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -188,10 +188,8 @@ export function ProgramPreview() {
   }
 
   return (
-    <motion.div
+    <Page
       key="program-preview"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
       className="flex h-full flex-col"
     >
       {/* Header: identity row, then the phase strip (frontend-design §17.8, as Program). */}
@@ -339,6 +337,6 @@ export function ProgramPreview() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </motion.div>
+    </Page>
   )
 }

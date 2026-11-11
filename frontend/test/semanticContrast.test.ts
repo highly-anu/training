@@ -23,7 +23,9 @@ import { COMPLETION } from '../src/lib/completionColors'
 import { STATUS_STYLES, STATUS_TEXT } from '../src/lib/statusColors'
 import { MOVEMENT_GROUP_COLORS, MOVEMENT_OTHER_COLOR } from '../src/lib/movementColors'
 
-import { AA_NORMAL, PALETTE, THEME_BG, parseText, ratioFor } from './contrastUtils'
+import {
+  AA_NORMAL, PALETTE, THEME_BG, contrast, hueDistance, parseText, ratioFor, themeToken, toRgb,
+} from './contrastUtils'
 
 // ── the cases ────────────────────────────────────────────────────────────────
 
@@ -87,5 +89,38 @@ describe('semantic colour pairing', () => {
     const { light, dark } = parseText(c.text)
     expect(light, `no bare text-* shade in "${c.text}"`).toBeTruthy()
     expect(dark, `no dark:text-* shade in "${c.text}"`).toBeTruthy()
+  })
+})
+
+/**
+ * "Do this" and "done" are two colours in every theme (docs/frontend-design.md
+ * §1.7). Military's olive and Zen's sage primaries once sat 33° and 10° of hue
+ * from emerald, so a primary button read as a finished one. A new theme, or a
+ * retuned one, has to keep them apart to pass.
+ */
+describe('action and done', () => {
+  const MIN_HUE_APART = 55
+
+  it.each(THEMES)('%s keeps the action colour apart from done', (theme) => {
+    const action = themeToken(theme, 'action')
+    const done = themeToken(theme, 'done')
+    const apart = hueDistance(action, done)
+    expect(apart, `${theme}: --action and --done are ${apart.toFixed(0)}° of hue apart`).toBeGreaterThanOrEqual(MIN_HUE_APART)
+  })
+
+  it.each(THEMES)('%s: text on the action and done fills clears AA', (theme) => {
+    for (const [fill, text] of [['action', 'action-foreground'], ['done', 'done-foreground'], ['destructive', 'destructive-foreground']]) {
+      const ratio = contrast(toRgb(themeToken(theme, text)), toRgb(themeToken(theme, fill)))
+      expect(ratio, `${theme}: --${text} on --${fill} is ${ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA_NORMAL)
+    }
+  })
+
+  it.each(THEMES)('%s: done reads on the page', (theme) => {
+    // As a check, a stripe or a dot: 3:1, WCAG's non-text floor. The action
+    // colour is not held to it: Light's amber is the brand's and is 2.2:1 on
+    // white, which is why an action is a filled button with dark text, never
+    // amber text on the page.
+    const ratio = contrast(toRgb(themeToken(theme, 'done')), THEME_BG[theme])
+    expect(ratio, `${theme}: --done on the background is ${ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(3)
   })
 })
