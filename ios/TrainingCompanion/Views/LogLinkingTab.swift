@@ -8,6 +8,8 @@ import SwiftUI
 /// Suggestions stay inside a day; linking across days is the athlete's call:
 /// tap Link… on a workout, then any session on any day. The web drags a
 /// workout onto a session; a long list on a phone is no place to drag.
+/// Every row's actions are in its "…" (§6.51); the swipe and the long press
+/// are the same ones.
 struct LogLinkingTab: View {
     @EnvironmentObject var appState: AppState
     @Binding var reviewWorkout: ImportedWorkout?
@@ -103,7 +105,11 @@ struct LogLinkingTab: View {
     @ViewBuilder
     private func rows(for day: LinkingDay) -> some View {
         ForEach(day.links) { pair in
-            pairRow(pair.workout, pair.session, linked: true)
+            HStack {
+                pairRow(pair.workout, pair.session, linked: true)
+                Spacer(minLength: 0)
+                moreMenu(pair.workout, unlink: true)
+            }
                 .swipeActions {
                     Button("Unlink", role: .destructive) { act { await appState.unlink(workoutId: pair.workout.id) } }
                 }
@@ -114,7 +120,11 @@ struct LogLinkingTab: View {
         }
         ForEach(day.suggestions) { s in
             VStack(alignment: .leading, spacing: 10) {
-                pairRow(s.workout, s.session, linked: false)
+                HStack {
+                    pairRow(s.workout, s.session, linked: false)
+                    Spacer(minLength: 0)
+                    moreMenu(s.workout)
+                }
                 HStack {
                     Button("Link") { act { await appState.link(workoutId: s.workout.id, to: s.session) } }
                         .appButton(.primary)
@@ -139,6 +149,7 @@ struct LogLinkingTab: View {
                 }
                 .appButton(.secondary).font(.subheadline)
                 .accessibilityLabel("Select \(w.title) to link")
+                moreMenu(w)
             }
             .contextMenu { openButton(w) }
         }
@@ -150,17 +161,30 @@ struct LogLinkingTab: View {
             }
         }
         ForEach(day.elsewhere) { e in
-            VStack(alignment: .leading, spacing: 2) {
-                workoutLine(e.workout)
-                Text("Linked to a session not shown here").font(.caption).foregroundStyle(.secondary)
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    workoutLine(e.workout)
+                    Text("Linked to a session not shown here").font(.caption).foregroundStyle(.secondary)
+                }
+                Spacer(minLength: 0)
+                moreMenu(e.workout)
             }
             .contextMenu { openButton(e.workout) }
         }
         ForEach(day.declined) { w in
             HStack {
-                workoutLine(w)
+                VStack(alignment: .leading, spacing: 2) {
+                    workoutLine(w)
+                    Text("Set aside: no session").font(.caption).foregroundStyle(.secondary)
+                }
                 Spacer()
-                Text("No session").font(.caption).foregroundStyle(.secondary)
+                Button(picking?.id == w.id ? "Picking…" : "Link…") {
+                    AppHaptics.selection()
+                    picking = picking?.id == w.id ? nil : w
+                }
+                .appButton(.secondary).font(.subheadline)
+                .accessibilityLabel("Select \(w.title) to link")
+                moreMenu(w)
             }
             .swipeActions {
                 Button("Link…") { picking = w }.tint(.accentColor)
@@ -218,6 +242,31 @@ struct LogLinkingTab: View {
                 Text(s.name).font(.subheadline).lineLimit(1)
                 Text(Self.sessionDetail(s)).font(.caption).foregroundStyle(.secondary)
             }
+        }
+    }
+
+    /// The row's visible "…": Unlink for a linked pair, Open Workout when the
+    /// phone has the recording. Nothing when it would be empty.
+    @ViewBuilder
+    private func moreMenu(_ w: LinkWorkout, unlink: Bool = false) -> some View {
+        let canOpen = appState.importedWorkouts.contains { $0.id == w.id }
+        if unlink || canOpen {
+            Menu {
+                openButton(w)
+                if unlink {
+                    Button("Unlink", systemImage: "link.badge.plus", role: .destructive) {
+                        act { await appState.unlink(workoutId: w.id) }
+                    }
+                }
+            } label: {
+                Image(systemName: "ellipsis")
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 32, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.borderless)
+            .accessibilityLabel("\(w.title) actions")
         }
     }
 

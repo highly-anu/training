@@ -8,14 +8,13 @@ struct TodayView: View {
     /// A session's detail grows out of its card (§6.48).
     @Namespace private var zoom
     @State private var selectedSession: (session: ProgramSession, key: String, weekIndex: Int, dayName: String, sessionIndex: Int)? = nil
-    /// A program day, for its long-press actions (design-system §6.43).
+    /// A program day, for its actions (design-system §6.43).
     struct DayTarget {
         let weekIndex: Int
         let dayName: String
     }
-    @State private var dayOffset: Int = 0          // 0 = today, ±n = days from today
-    @State private var dragOffset: CGFloat = 0
-    @State private var lockedAdjacentOffset: Int? = nil  // the peek card's day, locked at drag start
+    /// The day the pager shows: 0 = today, ±n = days from today (§6.49).
+    @State private var dayOffset: Int = 0
     @ScaledMetric(relativeTo: .body) private var sessionsListHeight: CGFloat = 256
     @State private var showBuilder = false
     @State private var reviewWorkout: ImportedWorkout? = nil
@@ -27,13 +26,10 @@ struct TodayView: View {
     private let dayOrder = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
     private let weekdayNames = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
 
-    private var cardWidth: CGFloat { AppMetrics.screenWidth - 32 }
-
-    private var peekDayOffset: Int {
-        lockedAdjacentOffset ?? dayOffset + (dragOffset <= 0 ? 1 : -1)
+    /// The days the pager can show: the program's span around today.
+    private var dayPages: ClosedRange<Int> {
+        Paging.dayRange(today: Date(), programStart: appState.programStart, weeks: appState.allWeeks.count)
     }
-
-    private var showPeek: Bool { dragOffset != 0 }
 
     private func dateFor(_ offset: Int) -> Date {
         Calendar.current.date(byAdding: .day, value: offset, to: Date()) ?? Date()
@@ -188,128 +184,81 @@ struct TodayView: View {
 
     // MARK: - Sessions Section
 
+    /// The day's sessions, one day a page: the header's chevrons and the week
+    /// strip are the controls, a swipe the shortcut (§6.49, §6.50).
     private var todaySection: some View {
-        let gap: CGFloat = 14
-        let exitDistance = cardWidth + gap
-
-        return VStack(alignment: .leading, spacing: 10) {
-            SectionLabel("Sessions")
-            ZStack(alignment: .topLeading) {
-                if showPeek {
-                    let peekSign: CGFloat = peekDayOffset > dayOffset ? 1 : -1
-                    dayCardView(dayOff: peekDayOffset, interactive: false)
-                        .offset(x: dragOffset + peekSign * exitDistance)
-                        .allowsHitTesting(false)
+        let pages = dayPages
+        return VStack(alignment: .leading, spacing: AppMetrics.gapMedium) {
+            AppPagerHeader(pages: pages, selection: $dayOffset, unit: "day",
+                           onTitle: dayOffset == 0 ? nil : { dayOffset = 0 }) {
+                HStack(spacing: AppMetrics.gapSmall) {
+                    Text(dayOffset == 0 ? "Today" : dayFmt.string(from: dateFor(dayOffset)))
+                        .font(.headline)
+                    if dayOffset != 0 {
+                        Label("Today", systemImage: dayOffset > 0 ? "arrow.uturn.backward" : "arrow.uturn.forward")
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(AppColor.accent)
+                    }
                 }
-                dayCardView(dayOff: dayOffset, interactive: true)
-                    .offset(x: dragOffset)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(dayOffset == 0 ? "Today" : "\(dayFmt.string(from: dateFor(dayOffset))). Back to today")
             }
-            .clipped()
-            .contentShape(Rectangle())
-            .simultaneousGesture(
-                DragGesture(minimumDistance: 10)
-                    .onChanged { value in
-                        let h = value.translation.width
-                        guard abs(h) > abs(value.translation.height) else { return }
-                        if lockedAdjacentOffset == nil {
-                            lockedAdjacentOffset = dayOffset + (h < 0 ? 1 : -1)
-                        }
-                        dragOffset = h
-                    }
-                    .onEnded { value in
-                        let h = value.translation.width
-                        guard abs(h) > abs(value.translation.height),
-                              abs(value.predictedEndTranslation.width) > AppMetrics.swipeThreshold
-                              || abs(value.velocity.width) > AppMetrics.swipeVelocityThreshold else {
-                            lockedAdjacentOffset = nil
-                            withAnimation(AppAnimation.springStandard) { dragOffset = 0 }
-                            return
-                        }
-                        let goNext = h < 0
-                        AppHaptics.soft()
-                        withAnimation(AppAnimation.springSnappy) {
-                            dragOffset = goNext ? -exitDistance : exitDistance
-                        }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                            dayOffset += goNext ? 1 : -1
-                            dragOffset = 0
-                            lockedAdjacentOffset = nil
-                        }
-                    }
-            )
+            WeekStrip(days: Paging.week(around: dayOffset, today: Date()).map(stripDay), selection: $dayOffset)
+            AppPager(pages: pages, selection: $dayOffset) { offset in
+                dayCardView(dayOff: offset)
+            }
+            // Pages slide edge to edge; each keeps the screen's margin.
+            .padding(.horizontal, -AppMetrics.gapLarge)
         }
     }
 
-    private func dayCardView(dayOff: Int, interactive: Bool) -> some View {
-        let date = dateFor(dayOff)
+    /// One day of the week strip: what is planned and whether it is done.
+    private func stripDay(_ offset: Int) -> WeekStrip.Day {
+        let date = dateFor(offset)
+        let sessions = sessionsFor(offset)
+        let done = sessions.filter { appState.isSessionComplete($0.sessionKey) }.count
+        let status: WeekStrip.Status = sessions.isEmpty ? .rest
+            : (done == sessions.count ? .done : .planned)
+        return WeekStrip.Day(offset: offset, date: date, status: status,
+                             color: sessions.first.map { ModalityStyle.color(for: $0.session.modality) },
+                             isToday: offset == 0, isEnabled: dayPages.contains(offset))
+    }
+
+    private func dayCardView(dayOff: Int) -> some View {
         let sessions = sessionsFor(dayOff)
-        return VStack(alignment: .leading, spacing: 10) {
-            // Day label header
-            HStack {
-                if dayOff == 0 {
-                    Label("Today", systemImage: "sun.max.fill")
-                        .font(.subheadline).fontWeight(.semibold)
-                        .foregroundStyle(AppColor.warning)
-                } else {
-                    Text(dayFmt.string(from: date))
-                        .font(.subheadline).fontWeight(.semibold)
-                }
-                Spacer()
-                if interactive && dayOff != 0 {
-                    Button {
-                        dayOffset = 0
-                        dragOffset = 0
-                        lockedAdjacentOffset = nil
-                    } label: {
-                        HStack(spacing: 3) {
-                            if dayOff < 0 {
-                                // Viewing a future day — today is to the left
-                                Image(systemName: "chevron.left").font(.caption2)
-                            }
-                            Text("Today").font(.caption)
-                            if dayOff > 0 {
-                                // Viewing a past day — today is to the right
-                                Image(systemName: "chevron.right").font(.caption2)
-                            }
-                        }
-                        .foregroundStyle(AppColor.accent)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            // Fixed-height sessions area — scrollable only when >2 sessions
-            ScrollView(.vertical, showsIndicators: sessions.count > 2) {
-                VStack(spacing: 12) {
-                    if sessions.isEmpty {
-                        // A rest day can still take one (long press: Add Session).
-                        if interactive, let day = dayTarget(for: dayOff) {
-                            restDayCardView(dayOff: dayOff)
-                                .sessionActions(weekIndex: day.weekIndex, dayName: day.dayName)
-                        } else {
-                            restDayCardView(dayOff: dayOff)
-                        }
+        // Fixed-height sessions area — scrollable only when >2 sessions
+        return ScrollView(.vertical, showsIndicators: sessions.count > 2) {
+            VStack(spacing: 12) {
+                if sessions.isEmpty {
+                    // A rest day can still take one: its Add session row, or a long press.
+                    if let day = dayTarget(for: dayOff) {
+                        restDayCardView(dayOff: dayOff, day: day)
+                            .sessionActions(weekIndex: day.weekIndex, dayName: day.dayName)
                     } else {
-                        ForEach(sessions, id: \.sessionKey) { pair in
-                            sessionCard(pair.session, key: pair.sessionKey)
-                                .matchedTransitionSource(id: pair.sessionKey, in: zoom)
-                                .onTapGesture {
-                                    guard interactive else { return }
-                                    AppHaptics.light()
-                                    selectedSession = (session: pair.session, key: pair.sessionKey,
-                                                       weekIndex: pair.weekIndex, dayName: pair.dayName,
-                                                       sessionIndex: pair.sessionIndex)
-                                }
-                                // Long press: Move, Replace, Remove (an added one), Add Session.
-                                .sessionActions(weekIndex: pair.weekIndex, dayName: pair.dayName,
-                                                sessionIndex: pair.sessionIndex)
-                        }
+                        restDayCardView(dayOff: dayOff, day: nil)
+                    }
+                } else {
+                    ForEach(sessions, id: \.sessionKey) { pair in
+                        sessionCard(pair.session, key: pair.sessionKey,
+                                    weekIndex: pair.weekIndex, dayName: pair.dayName, sessionIndex: pair.sessionIndex,
+                                    showsTip: dayOff == 0 && pair.sessionIndex == 0)
+                            .matchedTransitionSource(id: pair.sessionKey, in: zoom)
+                            .onTapGesture {
+                                AppHaptics.light()
+                                selectedSession = (session: pair.session, key: pair.sessionKey,
+                                                   weekIndex: pair.weekIndex, dayName: pair.dayName,
+                                                   sessionIndex: pair.sessionIndex)
+                            }
+                            // The card's "…" as a long press: Move, Replace, Remove (an added one), Add Session.
+                            .sessionActions(weekIndex: pair.weekIndex, dayName: pair.dayName,
+                                            sessionIndex: pair.sessionIndex)
                     }
                 }
-                .padding(.vertical, 6)
             }
-            .frame(height: sessionsListHeight)
-            .scrollDisabled(sessions.count <= 2)
+            .padding(.vertical, 6)
         }
+        .frame(height: sessionsListHeight)
+        .scrollDisabled(sessions.count <= 2)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -320,7 +269,7 @@ struct TodayView: View {
         return DayTarget(weekIndex: wi, dayName: weekdayNames[Calendar.current.component(.weekday, from: date) - 1])
     }
 
-    private func restDayCardView(dayOff: Int) -> some View {
+    private func restDayCardView(dayOff: Int, day: DayTarget?) -> some View {
         HStack(spacing: 14) {
             Image(systemName: "battery.100.bolt")
                 .font(.title2)
@@ -336,11 +285,16 @@ struct TodayView: View {
                 }
             }
             Spacer()
+            // Today or later: an extra session may go here (§6.43).
+            if let day {
+                SessionAddButton(weekIndex: day.weekIndex, dayName: day.dayName)
+            }
         }
         .appCard()
     }
 
-    private func sessionCard(_ session: ProgramSession, key: String) -> some View {
+    private func sessionCard(_ session: ProgramSession, key: String,
+                             weekIndex: Int, dayName: String, sessionIndex: Int, showsTip: Bool) -> some View {
         let done = appState.isSessionComplete(key)
         let linked = appState.linkedWorkout(forSessionKey: key) != nil
         let color = ModalityStyle.color(for: session.modality)
@@ -408,8 +362,8 @@ struct TodayView: View {
                 }
             }
 
-            Image(systemName: "chevron.right")
-                .foregroundStyle(.tertiary).font(.caption)
+            // The session's actions, visible (§6.43); the card itself opens it.
+            SessionActionsMenu(weekIndex: weekIndex, dayName: dayName, sessionIndex: sessionIndex, showsTip: showsTip)
         }
         .appCard(border: done ? AppColor.complete : nil)
     }

@@ -54,7 +54,7 @@ deferred is under *Later*.
 | 15 | Program preview on the phone; the regenerate offer that asks the server first (*IA*) | P2 | M | iOS, web |
 | 16 | Garmin's official Connect API, open again since 2026-10-21: verify the integration, then health data and workouts pushed to the watch | P2 | M | API, watch, web, iOS |
 | 17 | Explore: each philosophy's page read from its package — a server document, its week and rules, one colour system | P2 | M | API, web, iOS, content |
-| 18 | Phone design and interaction uplift: the foundation (1.35), states (1.36) and iOS 26 chrome (1.37) are in; discoverable actions, screen passes, motion, accessibility left (*IA*) | P2 | L | iOS |
+| 18 | Phone design and interaction uplift: the foundation (1.35), states (1.36), iOS 26 chrome (1.37) and discoverable actions (1.38) are in; screen passes, motion, accessibility left (*IA*) | P2 | L | iOS |
 
 ---
 
@@ -1601,16 +1601,21 @@ exercise reference and swap pushed inside a sheet, zoom from a session card, an 
 card, a workout row, Start workout and the accessory. The sub-tab picker stays an inset
 (`safeAreaBar` still blurs the title on 26.2). Design-system §6.45, §6.47, §6.48.
 
+**Done — 4. Discoverable actions** (1.38.0, `feat/ios-actions`). Every swipe and long
+press has a visible twin: "…" on session cards and Calendar rows and "+ Add session" on a
+rest day; Today's days and the Calendar's weeks as `AppPager` with chevrons, a title that
+returns to today, and Today's `WeekStrip`; a log circle and "…" on exercise rows; "…" in
+Log ▸ Linking, on a standard's results; remove buttons on logger sets and custom injuries
+(per row, not an `EditButton`: those toolbars are taken); schedule chips as menus;
+`MeasureRow` one push target with a chart button; the Progress chart's readout shown
+before the first touch; two TipKit tips. Design-system §6.43, §6.49–§6.52.
+
 **Left, in order:**
 
-4. *Discoverable actions.* A `…` menu on session cards and Calendar rows beside the
-   long-press (§6.43 says no card shows them), `+ Add session` on rest days; Today's day
-   carousel and Calendar's week as paging scroll views with chevrons and a week strip;
-   visible Log and `…` on exercise rows; menus in Log ▸ Linking; `EditButton` for deletes;
-   schedule chips as menus; two TipKit tips.
 5. *Screen passes.* Today (split per card; the session as the hero with Start on it;
    Readiness / Adherence / Progress three-up; the match-suggestion row wraps its date
-   and the carousel leaves a gap under it), the builder (a step indicator, the glance
+   and the pager leaves a gap under it; the pager title reads "Today" under the date
+   heading; Linking shows activity names in lower case), the builder (a step indicator, the glance
    facts, a bottom bar), Session detail, Workout detail (one scrubber across the charts),
    Profile, Settings (grouped, debug behind one row), `.searchable` in Replace.
 6. *Motion.* `numericText` on live numbers, `symbolEffect` on state changes,

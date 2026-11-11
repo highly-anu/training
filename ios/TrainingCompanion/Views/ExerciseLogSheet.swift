@@ -107,6 +107,22 @@ struct ExerciseLogSheet: View {
                         Text("Set \((sets.firstIndex { $0.id == set.id } ?? 0) + 1)")
                             .font(.subheadline).fontWeight(.semibold)
                         Spacer()
+                        // Visible; the swipe removes it too (§6.51).
+                        if sets.count > 1 {
+                            Button {
+                                AppHaptics.light()
+                                let id = set.id
+                                withAnimation(AppAnimation.layoutChange) { sets.removeAll { $0.id == id } }
+                            } label: {
+                                Image(systemName: "minus.circle")
+                                    .font(.title3)
+                                    .foregroundStyle(AppColor.destructive)
+                                    .frame(width: 44, height: 32)
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.borderless)
+                            .accessibilityLabel("Remove set")
+                        }
                         Toggle("Done", isOn: $set.completed).labelsHidden()
                     }
                     HStack(spacing: 12) {
@@ -143,7 +159,7 @@ struct ExerciseLogSheet: View {
         } header: {
             Text(isHold ? "Holds" : "Sets")
         } footer: {
-            Text("Prefilled from the prescription. Switch off a set you skipped; swipe to remove one.")
+            Text("Prefilled from the prescription. Switch off a set you skipped; remove one you never started.")
         }
     }
 

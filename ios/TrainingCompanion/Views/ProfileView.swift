@@ -166,11 +166,25 @@ private struct InjuriesSection: View {
 
             ForEach(appState.profile.customInjuryFlags) { custom in
                 HStack {
-                    Text(custom.description)
-                    Spacer()
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(AppColor.warning)
                         .font(.caption)
+                    Text(custom.description)
+                    Spacer()
+                    // Visible; the swipe removes it too (§6.51).
+                    Button {
+                        AppHaptics.light()
+                        appState.profile.customInjuryFlags.removeAll { $0.id == custom.id }
+                        Task { await appState.saveProfile() }
+                    } label: {
+                        Image(systemName: "minus.circle.fill")
+                            .font(.title3)
+                            .foregroundStyle(AppColor.destructive)
+                            .frame(width: 32, height: 44)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.borderless)
+                    .accessibilityLabel("Remove \(custom.description)")
                 }
                 .swipeActions {
                     Button(role: .destructive) {
@@ -683,27 +697,24 @@ private let defaultWeeklySchedule: WeeklySchedule = [
     "Sunday":    DaySchedule(session1: .rest,  session2: .rest,     session3: .rest, session4: .rest),
 ]
 
-private func nextSessionType(_ t: SessionType) -> SessionType {
-    switch t {
-    case .rest:     return .short
-    case .short:    return .long
-    case .long:     return .mobility
-    case .mobility: return .rest
+private let sessionTypeChoices: [SessionType] = [.rest, .short, .long, .mobility]
+
+private func sessionTypeText(_ type: SessionType) -> String {
+    switch type {
+    case .rest:     return "Rest"
+    case .short:    return "Short"
+    case .long:     return "Long"
+    case .mobility: return "Mobility"
     }
 }
 
+/// One session slot of a day: a menu of the four types, the current one
+/// ticked (§6.51). Until 1.38 a tap cycled to the next type, so reaching
+/// Rest from Short took three taps and nothing said what came next.
 private struct SessionChip: View {
+    let label: String
     let type: SessionType
-    let action: () -> Void
-
-    private var chipText: String {
-        switch type {
-        case .rest:     return "Rest"
-        case .short:    return "Short"
-        case .long:     return "Long"
-        case .mobility: return "Mobility"
-        }
-    }
+    let onPick: (SessionType) -> Void
 
     private var chipColor: Color {
         switch type {
@@ -715,19 +726,38 @@ private struct SessionChip: View {
     }
 
     var body: some View {
-        Button(action: action) {
-            Text(chipText)
-                .font(AppFont.microStrong)
-                .textCase(.uppercase)
-                .tracking(0.5)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(chipColor.opacity(AppColor.Opacity.fill))
-                .foregroundStyle(chipColor)
-                .clipShape(RoundedRectangle(cornerRadius: 5))
-                .overlay(RoundedRectangle(cornerRadius: 5).stroke(chipColor.opacity(0.4)))
+        Menu {
+            Picker(label, selection: Binding(get: { type }, set: { picked in
+                AppHaptics.selection()
+                onPick(picked)
+            })) {
+                ForEach(sessionTypeChoices, id: \.self) { choice in
+                    Text(sessionTypeText(choice)).tag(choice)
+                }
+            }
+        } label: {
+            HStack(spacing: 3) {
+                Text(sessionTypeText(type))
+                    .font(AppFont.microStrong)
+                    .textCase(.uppercase)
+                    .tracking(0.5)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(AppFont.micro)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(chipColor.opacity(AppColor.Opacity.fill))
+            .foregroundStyle(chipColor)
+            .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusChip))
+            .overlay(RoundedRectangle(cornerRadius: AppMetrics.radiusChip).stroke(chipColor.opacity(0.4)))
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(label)
+        .accessibilityValue(sessionTypeText(type))
     }
 }
 
@@ -753,25 +783,25 @@ private struct DayRow: View {
                 .fontWeight(.medium)
                 .frame(width: 86, alignment: .leading)
             HStack(spacing: 6) {
-                slotView(label: "1", type: daySchedule.session1) {
-                    daySchedule.session1 = nextSessionType(daySchedule.session1)
+                SessionChip(label: "\(day), session 1", type: daySchedule.session1) {
+                    daySchedule.session1 = $0
                     onChanged()
                 }
                 if showS2 {
-                    slotView(label: "2", type: daySchedule.session2) {
-                        daySchedule.session2 = nextSessionType(daySchedule.session2)
+                    SessionChip(label: "\(day), session 2", type: daySchedule.session2) {
+                        daySchedule.session2 = $0
                         onChanged()
                     }
                 }
                 if showS3 {
-                    slotView(label: "3", type: daySchedule.session3) {
-                        daySchedule.session3 = nextSessionType(daySchedule.session3)
+                    SessionChip(label: "\(day), session 3", type: daySchedule.session3) {
+                        daySchedule.session3 = $0
                         onChanged()
                     }
                 }
                 if showS4 {
-                    slotView(label: "4", type: daySchedule.session4) {
-                        daySchedule.session4 = nextSessionType(daySchedule.session4)
+                    SessionChip(label: "\(day), session 4", type: daySchedule.session4) {
+                        daySchedule.session4 = $0
                         onChanged()
                     }
                 }
@@ -797,15 +827,6 @@ private struct DayRow: View {
         case .rest:     return Color.accentColor
         }
     }
-
-    private func slotView(label: String, type: SessionType, action: @escaping () -> Void) -> some View {
-        HStack(spacing: 3) {
-            Text("\(label):")
-                .font(AppFont.micro)
-                .foregroundStyle(.tertiary)
-            SessionChip(type: type, action: action)
-        }
-    }
 }
 
 private struct ScheduleTab: View {
@@ -826,7 +847,7 @@ private struct ScheduleTab: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Weekly availability.")
                         .font(.headline)
-                    Text("Configure your weekly schedule. Short = 30–45 min, Long = 60+ min, Mobility = 15–20 min. Tap each session to cycle through types.")
+                    Text("Configure your weekly schedule. Short = 30–45 min, Long = 60+ min, Mobility = 15–20 min. Tap a session to choose its type; a day's next session appears once the one before it is set.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
