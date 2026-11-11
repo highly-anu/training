@@ -110,7 +110,7 @@ struct AnalyticsOverviewTab: View {
 
     private var kpiGrid: some View {
         // "On device" beside the header when the server could not answer.
-        AnalyticsCard(header: "Totals") {
+        AppCard(header: "Totals") {
             if summary == nil && appState.loadSummaryFailed.contains(period) { onDeviceMark }
         } content: {
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
@@ -194,7 +194,7 @@ struct AnalyticsOverviewTab: View {
                     Text(String(format: "%.0f%%", pct)).monospacedDigit()
                 }
                 .font(.caption)
-                .foregroundStyle(isGood ? .green : .red)
+                .foregroundStyle(isGood ? AppColor.complete : AppColor.destructive)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(String(format: "%.0f percent %@ than the previous period", pct, isPositive ? "more" : "less"))
             }
@@ -282,7 +282,7 @@ struct AnalyticsOverviewTab: View {
     @ViewBuilder
     private var pmcCard: some View {
         if isLoadingPMC {
-            AnalyticsCard(header: "Performance Management") {
+            AppCard(header: "Performance Management") {
                 ProgressView().frame(maxWidth: .infinity, minHeight: 80)
             }
         } else {

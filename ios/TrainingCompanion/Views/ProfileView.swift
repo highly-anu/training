@@ -58,10 +58,10 @@ private struct SelectionCard: View {
                 .padding(.vertical, 10)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .background(isSelected ? accentColor.opacity(0.10) : Color(.secondarySystemGroupedBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .background(isSelected ? accentColor.opacity(AppColor.Opacity.fill) : Color(.secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusControl))
             .overlay(
-                RoundedRectangle(cornerRadius: 10)
+                RoundedRectangle(cornerRadius: AppMetrics.radiusControl)
                     .stroke(isSelected ? accentColor.opacity(0.4) : Color(.separator).opacity(0.3))
             )
         }
@@ -150,7 +150,7 @@ private struct InjuriesSection: View {
                             title: flag.name,
                             subtitle: isSelected ? "\(patternCount) patterns excluded" : "Not active",
                             isSelected: isSelected,
-                            accentColor: .red
+                            accentColor: AppColor.destructive
                         ) {
                             if isSelected {
                                 appState.profile.injuryFlags.removeAll { $0 == flag.id }
@@ -169,7 +169,7 @@ private struct InjuriesSection: View {
                     Text(custom.description)
                     Spacer()
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(AppColor.warning)
                         .font(.caption)
                 }
                 .swipeActions {
@@ -253,7 +253,7 @@ private struct StandardsTab: View {
                     Text(appState.profile.sex.map { "Showing the \($0) standards." }
                          ?? "Showing the male standards until you set your sex under Athlete.")
                         .font(.caption2)
-                        .foregroundStyle(appState.profile.sex == nil ? Color.orange : Color.secondary)
+                        .foregroundStyle(appState.profile.sex == nil ? AppColor.warning : Color.secondary)
                     if let bw = appState.standardResults?.bodyweight {
                         Text("Bodyweight \(bw.valueText) — used for the ×BW standards.")
                             .font(.caption2).foregroundStyle(.secondary)
@@ -472,7 +472,7 @@ private struct AthleteTab: View {
                         .disabled(bodyweightInput.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
                 if let bodyweightError {
-                    Text(bodyweightError).font(.caption).foregroundStyle(.red)
+                    Text(bodyweightError).font(.caption).foregroundStyle(AppColor.destructive)
                 }
                 if bodyweight != nil {
                     Button("Bodyweight history") { showBodyweightHistory = true }
@@ -705,22 +705,22 @@ private struct SessionChip: View {
 
     private var chipColor: Color {
         switch type {
-        case .rest:     return Color(.systemGray3)
-        case .short:    return .yellow
-        case .long:     return Color(red: 0.36, green: 0.77, blue: 0.96)
-        case .mobility: return Color(red: 0.67, green: 0.44, blue: 0.96)
+        case .rest:     return AppColor.Schedule.rest
+        case .short:    return AppColor.Schedule.short
+        case .long:     return AppColor.Schedule.long
+        case .mobility: return AppColor.Schedule.mobility
         }
     }
 
     var body: some View {
         Button(action: action) {
             Text(chipText)
-                .font(.system(size: 10, weight: .semibold))
+                .font(AppFont.microStrong)
                 .textCase(.uppercase)
                 .tracking(0.5)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
-                .background(chipColor.opacity(0.15))
+                .background(chipColor.opacity(AppColor.Opacity.fill))
                 .foregroundStyle(chipColor)
                 .clipShape(RoundedRectangle(cornerRadius: 5))
                 .overlay(RoundedRectangle(cornerRadius: 5).stroke(chipColor.opacity(0.4)))
@@ -789,9 +789,9 @@ private struct DayRow: View {
 
     private var accentLeftColor: Color {
         switch daySchedule.session1 {
-        case .long:     return Color(red: 0.36, green: 0.77, blue: 0.96)
-        case .short:    return .yellow
-        case .mobility: return Color(red: 0.67, green: 0.44, blue: 0.96)
+        case .long:     return AppColor.Schedule.long
+        case .short:    return AppColor.Schedule.short
+        case .mobility: return AppColor.Schedule.mobility
         case .rest:     return Color.accentColor
         }
     }
@@ -799,7 +799,7 @@ private struct DayRow: View {
     private func slotView(label: String, type: SessionType, action: @escaping () -> Void) -> some View {
         HStack(spacing: 3) {
             Text("\(label):")
-                .font(.system(size: 9))
+                .font(AppFont.micro)
                 .foregroundStyle(.tertiary)
             SessionChip(type: type, action: action)
         }

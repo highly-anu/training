@@ -23,7 +23,7 @@ enum SleepFormat {
             self.hours = Double(max(0, Self.targetMinutes * nights.count - nights.reduce(0, +))) / 60
         }
 
-        var color: Color { hours < 2 ? .green : hours < 5 ? .orange : .red }
+        var color: Color { hours < 2 ? AppColor.complete : hours < 5 ? AppColor.warning : AppColor.destructive }
     }
 }
 

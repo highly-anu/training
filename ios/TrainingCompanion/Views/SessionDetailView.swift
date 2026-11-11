@@ -162,7 +162,7 @@ struct SessionDetailView: View {
                             }
                             if currentSession.isDeload {
                                 Label("Deload", systemImage: "arrow.down.circle")
-                                    .foregroundStyle(.orange)
+                                    .foregroundStyle(AppColor.warning)
                             }
                             if currentSession.testInfo != nil { TestBadge() }
                         }
@@ -190,11 +190,11 @@ struct SessionDetailView: View {
 
             if let log = appState.sessionLogs[sessionKey], let completedAt = log.completedAt {
                 Label("Completed · \(shortDateTime(completedAt))", systemImage: "checkmark.circle.fill")
-                    .foregroundStyle(.green)
+                    .foregroundStyle(AppColor.complete)
                     .font(.footnote)
                 if let avgHR = log.avgHR {
                     Label("Avg HR: \(avgHR) bpm", systemImage: "heart.fill")
-                        .foregroundStyle(.red)
+                        .foregroundStyle(AppColor.destructive)
                         .font(.footnote)
                 }
             }
@@ -270,7 +270,7 @@ struct SessionDetailView: View {
                         } label: {
                             Label("Log", systemImage: "square.and.pencil")
                         }
-                        .tint(.green)
+                        .tint(AppColor.complete)
                     }
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         if canSwap(item.assignment) {
@@ -279,7 +279,7 @@ struct SessionDetailView: View {
                             } label: {
                                 Label("Swap", systemImage: "arrow.left.arrow.right")
                             }
-                            .tint(.blue)
+                            .tint(AppColor.info)
                         }
                     }
                 }
@@ -358,7 +358,7 @@ struct SessionDetailView: View {
             if let logged = loggedSummary(ea) {
                 Label(logged, systemImage: "checkmark.circle.fill")
                     .font(.caption)
-                    .foregroundStyle(.green)
+                    .foregroundStyle(AppColor.complete)
                     .monospacedDigit()
             }
             if let note = ea.notes ?? ex.notes {
@@ -398,7 +398,7 @@ struct SessionDetailView: View {
                     Label(verdict.clean ? "Clean, as written\(verdict.rpe.map { " · RPE \($0)" } ?? "")"
                                         : "Not clean — the cycle holds here",
                           systemImage: verdict.clean ? "checkmark.seal.fill" : "minus.circle")
-                        .foregroundStyle(verdict.clean ? Color.green : Color.secondary)
+                        .foregroundStyle(verdict.clean ? AppColor.complete : Color.secondary)
                     Spacer()
                     Button("Change") { changingVerdict = true }
                         .font(.caption)
@@ -412,16 +412,16 @@ struct SessionDetailView: View {
                     Button { confirm(clean: true) } label: {
                         Label("Clean, as written", systemImage: "checkmark.seal")
                     }
-                    .buttonStyle(.borderedProminent)
+                    .appButton(.primary)
                     Button("Not clean") { confirm(clean: false) }
-                        .buttonStyle(.bordered)
+                        .appButton(.secondary)
                 }
                 .disabled(isConfirming)
             }
             if confirmFailed {
                 Text("Not saved — try again when online.")
                     .font(.caption)
-                    .foregroundStyle(.red)
+                    .foregroundStyle(AppColor.destructive)
             }
         } header: {
             Text("Progress")
@@ -455,7 +455,7 @@ struct SessionDetailView: View {
                     let kg = appState.sessionLogs[sessionKey]?.exercises[lift.id]?.weightKg
                     HStack {
                         Label(lift.name, systemImage: made ? "checkmark.seal.fill" : "minus.circle")
-                            .foregroundStyle(made ? Color.green : Color.secondary)
+                            .foregroundStyle(made ? AppColor.complete : Color.secondary)
                         Spacer()
                         Text([kg.map { "\(LoadFormat.kilograms($0)) kg" }, made ? nil : "missed, repeats"]
                                 .compactMap { $0 }.joined(separator: " · "))
@@ -499,10 +499,10 @@ struct SessionDetailView: View {
                     Button { confirmLifts(allMade: true) } label: {
                         Label("All made", systemImage: "checkmark.seal")
                     }
-                    .buttonStyle(.borderedProminent)
+                    .appButton(.primary)
                     .disabled(LiftConfirmation.unweighed(loadLifts, answers: liftAnswers, allMade: true))
                     Button("Save") { confirmLifts(allMade: false) }
-                        .buttonStyle(.bordered)
+                        .appButton(.secondary)
                         .disabled(LiftConfirmation.unweighed(loadLifts, answers: liftAnswers, allMade: false))
                 }
                 .disabled(isConfirming)
@@ -515,7 +515,7 @@ struct SessionDetailView: View {
             if confirmFailed {
                 Text("Not saved — try again when online.")
                     .font(.caption)
-                    .foregroundStyle(.red)
+                    .foregroundStyle(AppColor.destructive)
             }
         } header: {
             Text("Progress")
@@ -571,7 +571,7 @@ struct SessionDetailView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 4)
         }
-        .buttonStyle(.borderedProminent)
+        .appButton(.primary)
         .tint(ModalityStyle.color(for: currentSession.modality))
         .disabled(playerTarget == nil)
     }
@@ -615,8 +615,8 @@ struct SessionDetailView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 4)
         }
-        .buttonStyle(.borderedProminent)
-        .tint(isDone ? .secondary : .green)
+        .appButton(.primary)
+        .tint(isDone ? .secondary : AppColor.complete)
         .disabled(isSaving)
     }
 

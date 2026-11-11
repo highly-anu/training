@@ -54,6 +54,7 @@ deferred is under *Later*.
 | 15 | Program preview on the phone; the regenerate offer that asks the server first (*IA*) | P2 | M | iOS, web |
 | 16 | Garmin's official Connect API, open again since 2026-10-21: verify the integration, then health data and workouts pushed to the watch | P2 | M | API, watch, web, iOS |
 | 17 | Explore: each philosophy's page read from its package — a server document, its week and rules, one colour system | P2 | M | API, web, iOS, content |
+| 18 | Phone design and interaction uplift: the foundation is in (1.35); states, iOS 26 chrome, discoverable actions, screen passes, motion, accessibility left (*IA*) | P2 | L | iOS |
 
 ---
 
@@ -1567,6 +1568,53 @@ named workouts, which the selector never picks by modality, so the add path take
 workouts that fit as written), and the session counts only once done. Not yet: adding from
 the watches themselves, and a Garmin-side resync after a phone add (the Garmin app reads the
 added session at its next sync).
+
+### 18. Phone design and interaction uplift — P2 · L
+
+A review of every phone screen on 2026-11-11 (about 60 screens and sheets) against
+`ios/docs/design-system.md` and the iOS 26 SDK the app already targets. Decided with the
+athlete: the amber accent as designed, with modality, phase, zone and status colours
+unchanged; every hidden action gets a visible twin and keeps its gesture; Liquid Glass on
+chrome and floating controls, content cards solid. The five tabs and their sections stay.
+Seven phases, each one PR ending in the simulator with the design system updated.
+
+**Done — 1. Foundation** (1.35.0, `feat/ios-design-foundation`). The system exists in code:
+`AppColor`, `AppFont` (`AppTheme.swift`), the `AppMetrics` scale, three `AppAnimation`
+springs that crossfade under Reduce Motion, one card (`AppCard` / `.appCard()`, radius 16),
+one `SectionLabel`, one button family (`.appButton`). `AccentColor` is amber in all four
+targets (it was empty: the app shipped system blue). `DesignTokenTests` fails on a fixed
+font size, a colour literal, a bare `withAnimation`, a curve or a button style outside
+their owners. Design-system §2, §4, §5, §6.4, §6.6, §7 rewritten to what ships.
+
+**Left, in order:**
+
+2. *States.* `AppStateView` (loading as a redacted placeholder of the screen's own cards,
+   empty and failed as `ContentUnavailableView` with an action) in place of ten hand-built
+   empty states; `AppState.programError` shown on Today and Program — a failed load says
+   "No Program" today; error states for History, Load, Recovery, Log ▸ Activity, Profile.
+3. *Navigation and chrome.* The `Tab` API with `tabBarMinimizeBehavior`; the kept workout
+   as the tab bar's bottom accessory; the four bottom action bars and the player's
+   controls as glass; zoom transitions from a session card, an Analytics card, a workout
+   row; detents by content; exercise detail and swap pushed inside a sheet, not stacked.
+4. *Discoverable actions.* A `…` menu on session cards and Calendar rows beside the
+   long-press (§6.43 says no card shows them), `+ Add session` on rest days; Today's day
+   carousel and Calendar's week as paging scroll views with chevrons and a week strip;
+   visible Log and `…` on exercise rows; menus in Log ▸ Linking; `EditButton` for deletes;
+   schedule chips as menus; two TipKit tips.
+5. *Screen passes.* Today (split per card; the session as the hero with Start on it;
+   Readiness / Adherence / Progress three-up; the match-suggestion row wraps its date
+   and the carousel leaves a gap under it), the builder (a step indicator, the glance
+   facts, a bottom bar), Session detail, Workout detail (one scrubber across the charts),
+   Profile, Settings (grouped, debug behind one row), `.searchable` in Replace.
+6. *Motion.* `numericText` on live numbers, `symbolEffect` on state changes,
+   `scrollTransition` on card stacks, the completion moment, chart entry once.
+7. *Accessibility and system surfaces.* Labels and values on the screens with none, chart
+   descriptors, a symbol wherever status is colour-only, 44 pt targets, the largest
+   Dynamic Type size; widgets' tinted and clear rendering and Lock Screen accessories;
+   Pause / Skip on the Live Activity.
+
+Not in it: the `@Observable` migration (118 `@Published`, no visible change), Control
+Centre controls, App Shortcuts.
 
 ## Later
 

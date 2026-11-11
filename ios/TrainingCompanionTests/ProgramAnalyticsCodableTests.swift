@@ -299,10 +299,10 @@ final class ProgramAnalyticsCodableTests: XCTestCase {
     }
 
     func testStatusStyleMatchesTheWebsMapping() {
-        XCTAssertEqual(AnalyticsStatusStyle.color("on_plan"), .green)
-        XCTAssertEqual(AnalyticsStatusStyle.color("on_track"), .green)
+        XCTAssertEqual(AnalyticsStatusStyle.color("on_plan"), AppColor.complete)
+        XCTAssertEqual(AnalyticsStatusStyle.color("on_track"), AppColor.complete)
         XCTAssertEqual(AnalyticsStatusStyle.color("behind"), .yellow)
-        XCTAssertEqual(AnalyticsStatusStyle.color("off_plan"), .red)
+        XCTAssertEqual(AnalyticsStatusStyle.color("off_plan"), AppColor.destructive)
         XCTAssertEqual(AnalyticsStatusStyle.color("stalled"), .red)
         XCTAssertEqual(AnalyticsStatusStyle.color("insufficient_data"), .secondary)
         XCTAssertEqual(AnalyticsStatusStyle.color("something_new"), .secondary, "an unknown status degrades to neutral")

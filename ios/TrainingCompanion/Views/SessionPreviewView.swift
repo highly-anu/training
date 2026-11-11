@@ -76,13 +76,13 @@ struct SessionPreviewView: View {
             VStack(spacing: 8) {
                 if let error {
                     Label(error, systemImage: "exclamationmark.triangle")
-                        .font(.footnote).foregroundStyle(.orange)
+                        .font(.footnote).foregroundStyle(AppColor.warning)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 Button(action: onConfirm) {
                     Text(confirmTitle).frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent)
+                .appButton(.primary)
                 .controlSize(.large)
                 .disabled(isSearching)
                 if let onSearchAgain {
@@ -93,7 +93,7 @@ struct SessionPreviewView: View {
                         }
                         .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.bordered)
+                    .appButton(.secondary)
                     .controlSize(.large)
                     .disabled(isSearching)
                 }

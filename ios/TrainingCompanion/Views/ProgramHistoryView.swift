@@ -70,7 +70,7 @@ private struct ProgramHistoryRow: View {
                     Text("Active")
                         .font(.caption2).fontWeight(.semibold)
                         .padding(.horizontal, 6).padding(.vertical, 2)
-                        .background(Color.accentColor.opacity(0.2))
+                        .background(Color.accentColor.opacity(AppColor.Opacity.fillStrong))
                         .foregroundStyle(Color.accentColor)
                         .clipShape(Capsule())
                 }
@@ -88,7 +88,7 @@ private struct ProgramHistoryRow: View {
                 }
                 if entry.loggedCount > 0 {
                     Label("\(entry.loggedCount)", systemImage: "checkmark.circle")
-                        .foregroundStyle(.green)
+                        .foregroundStyle(AppColor.complete)
                 }
             }
             .font(.caption2)
@@ -194,7 +194,7 @@ private struct PlannedSessionRow: View {
                     .font(.caption2).foregroundStyle(.secondary)
                 HStack(spacing: 4) {
                     if session.completedAt != nil {
-                        Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                        Image(systemName: "checkmark.circle.fill").foregroundStyle(AppColor.complete)
                     }
                     if session.matchedWorkoutId != nil {
                         Image(systemName: "link").foregroundStyle(.secondary)

@@ -84,14 +84,14 @@ struct WorkoutCompleteSheet: View {
                 guard loaded?.id == workout.id else { return }
                 full = loaded
                 track = loaded?.gpsTrack ?? []
-                withAnimation(.easeOut(duration: 0.2)) { analysis = loaded?.analysis }
+                withAnimation(AppAnimation.crossfade) { analysis = loaded?.analysis }
             }
         }
         .presentationDragIndicator(.visible)
         .onAppear {
             appState.completedWorkoutOnScreen = true
             AppHaptics.success()
-            withAnimation(.easeOut(duration: 0.25)) { appeared = true }
+            withAnimation(AppAnimation.crossfade) { appeared = true }
         }
     }
 
@@ -123,18 +123,18 @@ struct WorkoutCompleteSheet: View {
         return VStack(spacing: 10) {
             ZStack(alignment: .bottomTrailing) {
                 Circle()
-                    .fill(tint.opacity(0.15))
-                    .overlay(Circle().stroke(tint.opacity(0.35), lineWidth: 2))
+                    .fill(tint.opacity(AppColor.Opacity.fill))
+                    .overlay(Circle().stroke(tint.opacity(AppColor.Opacity.border), lineWidth: 2))
                     .frame(width: 104, height: 104)
                     .overlay(
                         Image(symbol: ActivityIcon.forWorkout(activityType: workout.activityType,
                                                               modalityId: modalityId(for: match)))
-                            .font(.system(size: 44, weight: .semibold))
+                            .font(AppFont.symbol(44).weight(.semibold))
                             .foregroundStyle(tint)
                     )
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 34))
-                    .foregroundStyle(.white, .green)
+                    .font(AppFont.symbol(34))
+                    .foregroundStyle(.white, AppColor.complete)
                     .background(Circle().fill(Color(.systemBackground)).padding(-3))
                     .symbolEffect(.bounce, value: celebrations)
                     .offset(x: 4, y: 4)
@@ -148,7 +148,7 @@ struct WorkoutCompleteSheet: View {
                 .font(.caption).fontWeight(.semibold)
                 .textCase(.uppercase)
                 .tracking(0.8)
-                .foregroundStyle(.green)
+                .foregroundStyle(AppColor.complete)
             Text(workout.recordedTitle)
                 .font(.title2).fontWeight(.bold)
                 .multilineTextAlignment(.center)
@@ -206,7 +206,7 @@ struct WorkoutCompleteSheet: View {
                             spoken: String(format: "%.1f %@", d.value, d.unit)))
         }
         if let avg = workout.heartRate?.avg {
-            out.append(Stat(id: "avg", symbol: "heart.fill", color: .red,
+            out.append(Stat(id: "avg", symbol: "heart.fill", color: AppColor.destructive,
                             value: "\(avg)", unit: "avg bpm", spoken: "average heart rate \(avg)"))
         }
         if let trimp = analysis?.trimp {
@@ -219,11 +219,11 @@ struct WorkoutCompleteSheet: View {
                             value: "+\(Int(gain.rounded()))", unit: "m", spoken: "\(Int(gain)) metres climbed"))
         }
         if let kcal = workout.calories, kcal >= 1 {
-            out.append(Stat(id: "kcal", symbol: "flame.fill", color: .orange,
+            out.append(Stat(id: "kcal", symbol: "flame.fill", color: AppColor.warning,
                             value: "\(Int(kcal.rounded()))", unit: "kcal", spoken: "\(Int(kcal)) calories"))
         }
         if let max = workout.heartRate?.max {
-            out.append(Stat(id: "max", symbol: "bolt.heart.fill", color: .red,
+            out.append(Stat(id: "max", symbol: "bolt.heart.fill", color: AppColor.destructive,
                             value: "\(max)", unit: "max bpm", spoken: "peak heart rate \(max)"))
         }
         // Two full rows at most: the first six, in this order of interest.
@@ -253,12 +253,9 @@ struct WorkoutCompleteSheet: View {
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
                     }
-                    .padding(12)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(.background.secondary)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .appCard(compact: true)
                     .opacity(appeared ? 1 : 0)
-                    .animation(.easeOut(duration: 0.2).delay(0.1 + Double(index) * 0.04), value: appeared)
+                    .animation(AppAnimation.crossfade.delay(0.1 + Double(index) * 0.04), value: appeared)
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel(stat.spoken)
                 }
@@ -271,10 +268,10 @@ struct WorkoutCompleteSheet: View {
     /// Where it went, flat; the 3D Swiss view and the charts are one tap away
     /// under Details.
     private var routeCard: some View {
-        AnalyticsCard(header: "Route") {
+        AppCard(header: "Route") {
             WorkoutRouteMapView(points: WorkoutRoute.fixes(track))
                 .frame(height: 180)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusRow))
                 .accessibilityLabel("Map of the route")
         }
     }
@@ -282,7 +279,7 @@ struct WorkoutCompleteSheet: View {
     // MARK: - Effort
 
     private func effortCard(_ a: WorkoutAnalysis) -> some View {
-        AnalyticsCard(header: "Effort") {
+        AppCard(header: "Effort") {
             if let effect = a.effect {
                 TintCapsule(text: effect.rawValue, symbol: effect.icon, color: effect.color, bordered: true)
                     .accessibilityLabel("Training effect: \(effect.rawValue)")
@@ -346,14 +343,14 @@ struct WorkoutCompleteSheet: View {
     private func matchCard(_ match: WorkoutCompletion.Match) -> some View {
         switch match {
         case .linked(let key, let session):
-            AnalyticsCard(header: "Planned session") {
-                TintCapsule(text: "Linked", symbol: "link", color: .green)
+            AppCard(header: "Planned session") {
+                TintCapsule(text: "Linked", symbol: "link", color: AppColor.complete)
             } content: {
                 if let session {
                     sessionRow(session, key: key) {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.title3)
-                            .foregroundStyle(.green)
+                            .foregroundStyle(AppColor.complete)
                             .symbolEffect(.bounce, value: celebrations)
                             .accessibilityLabel("Complete")
                     }
@@ -365,17 +362,17 @@ struct WorkoutCompleteSheet: View {
             }
 
         case .suggested(let key, let session, let others):
-            AnalyticsCard(header: "Is this the session?") {
-                TintCapsule(text: "Suggested", symbol: "sparkles", color: .orange)
+            AppCard(header: "Is this the session?") {
+                TintCapsule(text: "Suggested", symbol: "sparkles", color: AppColor.warning)
             } content: {
                 VStack(alignment: .leading, spacing: 8) {
                     if let session {
-                        sessionRow(session, key: key, highlight: .orange) {
+                        sessionRow(session, key: key, highlight: AppColor.warning) {
                             Button("Not this") {
                                 AppHaptics.light()
                                 Task { await appState.dismissSuggestion(workoutId: workout.id) }
                             }
-                            .buttonStyle(.bordered)
+                            .appButton(.secondary)
                             .controlSize(.small)
                         }
                     }
@@ -388,7 +385,7 @@ struct WorkoutCompleteSheet: View {
             }
 
         case .candidates(let candidates):
-            AnalyticsCard(header: "Planned that day") {
+            AppCard(header: "Planned that day") {
                 TintCapsule(text: "Unlinked", symbol: "link.badge.plus", color: .secondary)
             } content: {
                 VStack(alignment: .leading, spacing: 8) {
@@ -398,7 +395,7 @@ struct WorkoutCompleteSheet: View {
             }
 
         case .unplanned:
-            AnalyticsCard(header: "Planned session") {
+            AppCard(header: "Planned session") {
                 TintCapsule(text: "Extra", symbol: "plus.circle", color: .secondary)
             } content: {
                 Label("Nothing planned that day", systemImage: "calendar")
@@ -419,7 +416,7 @@ struct WorkoutCompleteSheet: View {
                     Text("Link")
                 }
             }
-            .buttonStyle(.bordered)
+            .appButton(.secondary)
             .controlSize(.small)
             .tint(ModalityStyle.color(for: c.session.modality))
             .disabled(linkingKey != nil)
@@ -455,8 +452,8 @@ struct WorkoutCompleteSheet: View {
         }
         .padding(12)
         .background(color.opacity(0.06))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12)
+        .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusRow))
+        .overlay(RoundedRectangle(cornerRadius: AppMetrics.radiusRow)
             .stroke((highlight ?? color).opacity(0.35), lineWidth: 1))
     }
 
@@ -469,7 +466,7 @@ struct WorkoutCompleteSheet: View {
         if let linkError {
             Label(linkError, systemImage: "exclamationmark.triangle.fill")
                 .font(.caption)
-                .foregroundStyle(.red)
+                .foregroundStyle(AppColor.destructive)
         }
     }
 
@@ -487,23 +484,23 @@ struct WorkoutCompleteSheet: View {
 
     private func weekCard(_ dots: [WorkoutCompletion.WeekDot], number: Int?) -> some View {
         let done = dots.filter(\.done).count
-        return AnalyticsCard(header: number.map { "Week \($0)" } ?? "This week") {
+        return AppCard(header: number.map { "Week \($0)" } ?? "This week") {
             Label("\(done)/\(dots.count)", systemImage: "checkmark.circle")
                 .font(.caption).fontWeight(.semibold)
                 .monospacedDigit()
-                .foregroundStyle(done == dots.count ? .green : .secondary)
+                .foregroundStyle(done == dots.count ? AppColor.complete : .secondary)
                 .contentTransition(.numericText())
         } content: {
             HStack(spacing: 6) {
                 ForEach(dots) { dot in
                     let color = ModalityStyle.color(for: dot.modality)
                     Circle()
-                        .fill(dot.done ? color : color.opacity(0.12))
+                        .fill(dot.done ? color : color.opacity(AppColor.Opacity.fill))
                         .overlay(Circle().stroke(color.opacity(dot.done ? 0 : 0.5), lineWidth: 1.5))
                         .overlay {
                             if dot.done {
                                 Image(systemName: "checkmark")
-                                    .font(.system(size: 8, weight: .heavy))
+                                    .font(AppFont.micro.weight(.heavy))
                                     .foregroundStyle(.white)
                             }
                         }
@@ -533,10 +530,10 @@ struct WorkoutCompleteSheet: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(Color.green)
+                    .background(AppColor.complete)
                     .foregroundStyle(.white)
                     .font(.subheadline).fontWeight(.semibold)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusControl))
                 }
                 .disabled(linkingKey != nil)
             } else {
@@ -550,7 +547,7 @@ struct WorkoutCompleteSheet: View {
                         .background(Color.accentColor)
                         .foregroundStyle(.white)
                         .font(.subheadline).fontWeight(.semibold)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusControl))
                 }
             }
         }
@@ -569,7 +566,7 @@ struct WorkoutCompleteSheet: View {
             do {
                 try await appState.matchAndComplete(workout: workout, sessionKey: key)
                 AppHaptics.success()
-                withAnimation(.easeOut(duration: 0.2)) { celebrations += 1 }
+                withAnimation(AppAnimation.springSnappy) { celebrations += 1 }
             } catch {
                 AppHaptics.warning()
                 linkError = "Couldn't link — try again from Log ▸ Linking."

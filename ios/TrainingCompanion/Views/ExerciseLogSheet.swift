@@ -182,7 +182,7 @@ struct ExerciseLogSheet: View {
             Text("What you did")
         } footer: {
             if clockInvalid {
-                Text("Enter the time as m:ss, like 7:32.").foregroundStyle(.red)
+                Text("Enter the time as m:ss, like 7:32.").foregroundStyle(AppColor.destructive)
             } else if assignment.standardId != nil {
                 Text("This is a test: what you log comes back as a result to save on the standard.")
             } else {

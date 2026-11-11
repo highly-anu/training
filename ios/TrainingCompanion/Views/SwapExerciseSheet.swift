@@ -59,7 +59,7 @@ struct SwapExerciseSheet: View {
                     } else if let error {
                         Label(error, systemImage: "exclamationmark.triangle")
                             .font(.subheadline)
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(AppColor.warning)
                     } else if alternatives.isEmpty {
                         Text("Nothing else fits this slot under the program's methodology, your equipment and injury flags.")
                             .font(.subheadline)

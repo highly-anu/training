@@ -54,18 +54,18 @@ struct StandardSuggestionRow: View {
                 Button { Task { await decide("confirm") } } label: {
                     Label("Save result", systemImage: "checkmark")
                 }
-                .buttonStyle(.borderedProminent)
+                .appButton(.primary)
                 if !correcting {
                     Button("Correct") { text = s.valueText; correcting = true }
-                        .buttonStyle(.bordered)
+                        .appButton(.secondary)
                 }
                 Button("Not a test") { Task { await decide("dismiss") } }
-                    .buttonStyle(.bordered)
+                    .appButton(.secondary)
             }
             .controlSize(.small)
             .disabled(busy)
             if let failure {
-                Text(failure).font(.caption).foregroundStyle(.red)
+                Text(failure).font(.caption).foregroundStyle(AppColor.destructive)
             }
         }
         .padding(.vertical, compact ? 0 : 2)

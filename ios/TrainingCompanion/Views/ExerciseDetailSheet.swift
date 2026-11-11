@@ -36,7 +36,7 @@ struct ExerciseDetailSheet: View {
                 }
                 bulletSection("Cues", items: media?.cuePoints ?? [], icon: "checkmark.circle")
                 bulletSection("Common errors", items: media?.commonErrors ?? [], icon: "xmark.circle",
-                              tint: .orange)
+                              tint: AppColor.warning)
                 requirementsSection
                 if isLoading && media == nil && catalogEntry == nil {
                     Section { ProgressView().frame(maxWidth: .infinity) }
@@ -115,7 +115,7 @@ struct ExerciseDetailSheet: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusControl))
             // Opens in Safari — the sheet stays a reference, not a browser.
             Link(destination: url) {
                 Label(media?.animation?.gifSource.map { "Source: \($0.replacingOccurrences(of: "_", with: " "))" }
@@ -129,7 +129,7 @@ struct ExerciseDetailSheet: View {
 
     @ViewBuilder
     private func bulletSection(_ title: String, items: [String], icon: String,
-                               tint: Color = .green) -> some View {
+                               tint: Color = AppColor.complete) -> some View {
         if !items.isEmpty {
             Section(title) {
                 ForEach(items, id: \.self) { item in

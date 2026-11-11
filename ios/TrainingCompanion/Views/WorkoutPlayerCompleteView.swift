@@ -25,8 +25,8 @@ struct WorkoutPlayerCompleteView: View {
                 Section {
                     VStack(spacing: 8) {
                         Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 56))
-                            .foregroundStyle(.green)
+                            .font(AppFont.symbol(56))
+                            .foregroundStyle(AppColor.complete)
                         Text("Workout complete").font(.title2.bold())
                         Text(session.archetypeName).foregroundStyle(.secondary)
                     }
@@ -89,7 +89,7 @@ struct WorkoutPlayerCompleteView: View {
                 } footer: {
                     if failed {
                         Text("Not saved — the server could not be reached. The workout is kept; try again.")
-                            .foregroundStyle(.red)
+                            .foregroundStyle(AppColor.destructive)
                     }
                 }
             }

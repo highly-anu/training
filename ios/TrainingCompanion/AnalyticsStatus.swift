@@ -9,11 +9,11 @@ enum AnalyticsStatusStyle {
     static func color(_ status: String) -> Color {
         switch status {
         case "ahead", "on_track", "met", "on_target", "stable_by_design", "on_plan", "loading_as_expected", "fresh":
-            return .green
+            return AppColor.complete
         case "behind", "partial", "off_target", "no_target", "very_fatigued", "still_fatigued_in_recovery":
-            return .yellow
+            return AppColor.caution
         case "stalled", "below", "off_plan", "error":
-            return .red
+            return AppColor.destructive
         default:
             return .secondary
         }

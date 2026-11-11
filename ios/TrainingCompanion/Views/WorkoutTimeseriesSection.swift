@@ -68,7 +68,7 @@ struct WorkoutRouteSection: View {
                             .frame(height: 220)
                     }
                 }
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusControl))
                 .listRowInsets(EdgeInsets(top: 4, leading: 8, bottom: 8, trailing: 8))
             }
         }
@@ -148,7 +148,7 @@ struct WorkoutChartsSection: View {
 
                     chart
                         .frame(height: 160)
-                        .animation(.easeInOut(duration: 0.2), value: selected)
+                        .animation(AppAnimation.crossfade, value: selected)
                 }
                 .listRowInsets(EdgeInsets(top: 12, leading: 12, bottom: 12, trailing: 12))
             } header: {

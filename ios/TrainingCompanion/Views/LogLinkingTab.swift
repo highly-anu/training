@@ -118,12 +118,12 @@ struct LogLinkingTab: View {
                 pairRow(s.workout, s.session, linked: false)
                 HStack {
                     Button("Link") { act { await appState.link(workoutId: s.workout.id, to: s.session) } }
-                        .buttonStyle(.borderedProminent)
+                        .appButton(.primary)
                         .accessibilityLabel("Link \(s.workout.title) to \(s.session.name)")
                     Button("Not this") {
                         act { await appState.dismissLink(workoutId: s.workout.id, sessionKey: s.session.key) }
                     }
-                    .buttonStyle(.bordered)
+                    .appButton(.secondary)
                     if picking != nil { pickTarget(s.session) }
                 }
                 .font(.subheadline)
@@ -138,7 +138,7 @@ struct LogLinkingTab: View {
                     AppHaptics.selection()
                     picking = picking?.id == w.id ? nil : w
                 }
-                .buttonStyle(.bordered).font(.subheadline)
+                .appButton(.secondary).font(.subheadline)
                 .accessibilityLabel("Select \(w.title) to link")
             }
             .contextMenu { openButton(w) }
@@ -176,7 +176,7 @@ struct LogLinkingTab: View {
             picking = nil
             act { await appState.link(workoutId: w.id, to: session) }
         }
-        .buttonStyle(.borderedProminent).font(.subheadline)
+        .appButton(.primary).font(.subheadline)
         .accessibilityLabel("Link to \(session.name)")
     }
 
@@ -185,7 +185,7 @@ struct LogLinkingTab: View {
             workoutLine(w, linkedTo: linked ? s : nil)
             HStack(spacing: 8) {
                 Image(systemName: linked ? "checkmark.circle.fill" : "arrow.turn.down.right")
-                    .foregroundStyle(linked ? Color.green : Color.secondary)
+                    .foregroundStyle(linked ? AppColor.complete : Color.secondary)
                     .frame(width: 22)
                 sessionLine(s)
             }
@@ -233,12 +233,12 @@ struct LogLinkingTab: View {
                        actionLabel: String? = nil, action: (() -> Void)? = nil) -> some View {
         VStack(spacing: 16) {
             Spacer()
-            Image(systemName: icon).font(.system(size: 48)).foregroundStyle(.secondary)
+            Image(systemName: icon).font(AppFont.symbol(48)).foregroundStyle(.secondary)
             Text(title).font(.headline)
             Text(message).font(.subheadline).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center).padding(.horizontal, 24)
             if let actionLabel, let action {
-                Button(actionLabel, action: action).buttonStyle(.bordered)
+                Button(actionLabel, action: action).appButton(.secondary)
             }
             Spacer()
         }

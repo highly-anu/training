@@ -209,10 +209,10 @@ struct SettingsView: View {
                     ProgressView().scaleEffect(0.8)
                 } else if sync.lastError != nil {
                     Label("Error", systemImage: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.orange).font(.footnote)
+                        .foregroundStyle(AppColor.warning).font(.footnote)
                 } else {
                     Text(sync.lastSyncDate != nil ? "Connected" : "Not synced")
-                        .foregroundStyle(sync.lastSyncDate != nil ? .green : .secondary)
+                        .foregroundStyle(sync.lastSyncDate != nil ? AppColor.complete : .secondary)
                         .font(.footnote)
                 }
             }
@@ -225,10 +225,10 @@ struct SettingsView: View {
                 if !watchPaired {
                     Text("Not paired").foregroundStyle(.secondary).font(.footnote)
                 } else if !watchAppInstalled {
-                    Text("App not installed").foregroundStyle(.orange).font(.footnote)
+                    Text("App not installed").foregroundStyle(AppColor.warning).font(.footnote)
                 } else {
                     Text(watchReachable ? "Reachable" : "Paired")
-                        .foregroundStyle(watchReachable ? .green : .secondary).font(.footnote)
+                        .foregroundStyle(watchReachable ? AppColor.complete : .secondary).font(.footnote)
                 }
             }
             if watchPaired && !watchAppInstalled {
@@ -260,7 +260,7 @@ struct SettingsView: View {
                             Text(String(last.prefix(10)))
                                 .foregroundStyle(.secondary).font(.footnote)
                         } else {
-                            Text("Paired").foregroundStyle(.green).font(.footnote)
+                            Text("Paired").foregroundStyle(AppColor.complete).font(.footnote)
                         }
                     }
                 }
@@ -283,14 +283,14 @@ struct SettingsView: View {
                 }
                 .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
+            .appButton(.primary)
             .disabled(sync.isSyncing)
 
         } header: {
             Text("Devices")
         } footer: {
             if let err = sync.lastError {
-                Text(err).foregroundStyle(.orange)
+                Text(err).foregroundStyle(AppColor.warning)
             } else if let last = sync.lastSyncDate {
                 Text("Last full sync: \(timeFmt.string(from: last))")
             }
@@ -322,12 +322,12 @@ struct SettingsView: View {
             .disabled(!canClaim)
 
             if let claimError {
-                Text(claimError).foregroundStyle(.red).font(.footnote)
+                Text(claimError).foregroundStyle(AppColor.destructive).font(.footnote)
             }
             if justPaired {
                 Label("Paired! Open the Training app on your watch to sync.",
                       systemImage: "checkmark.circle.fill")
-                    .foregroundStyle(.green).font(.footnote)
+                    .foregroundStyle(AppColor.complete).font(.footnote)
             }
         } header: {
             Text("Pair Garmin Watch")
@@ -387,7 +387,7 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(result.summaryLine)
                 .font(.caption)
-                .foregroundStyle(result.total == 0 ? Color.orange : Color.secondary)
+                .foregroundStyle(result.total == 0 ? AppColor.warning : Color.secondary)
 
             ForEach(result.sources, id: \.bundle) { source in
                 HStack(spacing: 6) {
@@ -400,7 +400,7 @@ struct SettingsView: View {
                         .font(.caption2).fontWeight(.semibold)
                     Text(source.disposition)
                         .font(.caption2)
-                        .foregroundStyle(source.disposition.hasPrefix("skip") ? Color.secondary : Color.green)
+                        .foregroundStyle(source.disposition.hasPrefix("skip") ? Color.secondary : AppColor.complete)
                 }
             }
 
@@ -680,11 +680,11 @@ struct SettingsView: View {
     private func logEntryRow(_ entry: AppLogger.Entry) -> some View {
         HStack(alignment: .top, spacing: 6) {
             Text(monFmt.string(from: entry.date))
-                .font(.system(size: 10, design: .monospaced))
+                .font(AppFont.mono)
                 .foregroundStyle(.secondary)
                 .frame(width: 58, alignment: .leading)
             Text(entry.message)
-                .font(.system(size: 11, design: .monospaced))
+                .font(AppFont.mono)
                 .foregroundStyle(.primary)
                 .fixedSize(horizontal: false, vertical: true)
         }

@@ -9,10 +9,10 @@ struct SleepStagesChartView: View {
     /// One colour per stage, for this chart and Last Night's stage row —
     /// "Awake" was tan here and orange there.
     static let stageColors: [String: Color] = [
-        "Deep":  Color(red: 0.2, green: 0.2, blue: 0.7),
-        "REM":   Color(red: 0.4, green: 0.3, blue: 0.8),
-        "Light": Color(red: 0.45, green: 0.65, blue: 0.9),
-        "Awake": Color(red: 0.8, green: 0.7, blue: 0.4),
+        "Deep":  AppColor.Sleep.deep,
+        "REM":   AppColor.Sleep.rem,
+        "Light": AppColor.Sleep.light,
+        "Awake": AppColor.Sleep.awake,
     ]
 
     private struct SleepPoint: Identifiable {

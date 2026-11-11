@@ -99,7 +99,7 @@ struct WorkoutPlayerView: View {
                     .font(.title3.weight(.semibold))
                     .frame(maxWidth: .infinity, minHeight: 56)
             }
-            .buttonStyle(.borderedProminent)
+            .appButton(.primary)
             .tint(tint)
             .padding()
         }
@@ -110,7 +110,7 @@ struct WorkoutPlayerView: View {
             Image(systemName: "wifi.exclamationmark").font(.largeTitle).foregroundStyle(.secondary)
             Text(why).multilineTextAlignment(.center).foregroundStyle(.secondary)
             Button("Try again") { Task { await player.load(api: appState.api, fallback: fallback) } }
-                .buttonStyle(.borderedProminent)
+                .appButton(.primary)
             Button("Close") { onClose() }
         }
         .padding(32)
@@ -185,7 +185,7 @@ struct WorkoutPlayerView: View {
                 ForEach(steps, id: \.self) { i in
                     Capsule()
                         .fill(engine.completedExerciseIds.contains(session.exercises[i].exerciseId) ? tint
-                              : i == index ? tint.opacity(0.55) : Color.secondary.opacity(0.2))
+                              : i == index ? tint.opacity(0.55) : Color.secondary.opacity(AppColor.Opacity.fillStrong))
                         .frame(height: 4)
                 }
             }
@@ -204,7 +204,7 @@ struct WorkoutPlayerView: View {
                 VStack(spacing: 8) {
                     Text("Work in").font(.title2.weight(.medium)).foregroundStyle(.white.opacity(0.8))
                     Text("\(left)")
-                        .font(.system(size: 160, weight: .bold, design: .rounded).monospacedDigit())
+                        .font(AppFont.hero(160))
                         .foregroundStyle(tint)
                         .contentTransition(.numericText(countsDown: true))
                 }
@@ -241,7 +241,7 @@ struct PlayerStepView: View {
                     VStack(alignment: .leading, spacing: 0) {
                         Text(a.label.uppercased()).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
                         Text(a.value)
-                            .font(.system(size: 96, weight: .bold, design: .rounded).monospacedDigit())
+                            .font(AppFont.hero(96))
                             .lineLimit(1)
                             .minimumScaleFactor(0.4)
                             .contentTransition(.numericText())
@@ -258,7 +258,7 @@ struct PlayerStepView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(lines.0)
                         .font(.title3)
-                        .foregroundStyle(screen.lines == .standardTarget && exercise.standard != nil ? .yellow : .primary)
+                        .foregroundStyle(screen.lines == .standardTarget && exercise.standard != nil ? AppColor.caution : .primary)
                     if let second = lines.1 {
                         Text(second).font(.body).foregroundStyle(.secondary)
                     }
@@ -393,7 +393,7 @@ struct PlayerControls: View {
             .font(.title2.weight(.bold))
             .frame(maxWidth: .infinity, minHeight: 64)
         }
-        .buttonStyle(.borderedProminent)
+        .appButton(.primary)
         .tint(tint)
     }
 
@@ -442,14 +442,14 @@ struct PlayerRestView: View {
             Spacer(minLength: 0)
             Text("Rest").font(.title2.weight(.semibold)).foregroundStyle(.secondary)
             ZStack {
-                Circle().stroke(Color.secondary.opacity(0.15), lineWidth: 18)
+                Circle().stroke(Color.secondary.opacity(AppColor.Opacity.fill), lineWidth: 18)
                 Circle()
                     .trim(from: 0, to: CGFloat(left) / CGFloat(total))
                     .stroke(tint, style: StrokeStyle(lineWidth: 18, lineCap: .round))
                     .rotationEffect(.degrees(-90))
-                    .animation(.linear(duration: 1), value: left)
+                    .animation(AppAnimation.tick, value: left)
                 Text(WatchSpecText.mmss(left))
-                    .font(.system(size: 72, weight: .bold, design: .rounded).monospacedDigit())
+                    .font(AppFont.hero(72))
                     .contentTransition(.numericText(countsDown: true))
             }
             .frame(width: 260, height: 260)
@@ -468,14 +468,14 @@ struct PlayerRestView: View {
                 } label: {
                     Text("+30 s").frame(maxWidth: .infinity, minHeight: 52)
                 }
-                .buttonStyle(.bordered)
+                .appButton(.secondary)
                 Button {
                     AppHaptics.medium()
                     engine.skipRest(exerciseIndex: index, completedSet: completedSet)
                 } label: {
                     Text("Skip rest").frame(maxWidth: .infinity, minHeight: 52)
                 }
-                .buttonStyle(.borderedProminent)
+                .appButton(.primary)
                 .tint(tint)
             }
             .font(.headline)
@@ -568,7 +568,7 @@ struct PlayerStepList: View {
                             HStack {
                                 Image(systemName: engine.completedExerciseIds.contains(ex.exerciseId) ? "checkmark.circle.fill"
                                       : engine.phase.exerciseIndex == i ? "play.circle.fill" : "circle")
-                                    .foregroundStyle(engine.completedExerciseIds.contains(ex.exerciseId) ? .green
+                                    .foregroundStyle(engine.completedExerciseIds.contains(ex.exerciseId) ? AppColor.complete
                                                      : engine.phase.exerciseIndex == i ? .accentColor : .secondary)
                                 VStack(alignment: .leading) {
                                     Text(ex.name).foregroundStyle(.primary)

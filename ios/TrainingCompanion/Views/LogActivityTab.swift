@@ -102,7 +102,7 @@ struct LogActivityTab: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Image(systemName: row.isComplete ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(row.isComplete ? Color.green : Color.secondary)
+                        .foregroundStyle(row.isComplete ? AppColor.complete : Color.secondary)
                         .font(.caption)
                     Text(row.title).font(.subheadline).fontWeight(.medium)
                     Spacer()
@@ -130,7 +130,7 @@ struct LogActivityTab: View {
         return VStack(spacing: 16) {
             Spacer()
             Image(systemName: filter.show == .sessions ? "square.and.pencil" : "figure.run.circle")
-                .font(.system(size: 48)).foregroundStyle(.secondary)
+                .font(AppFont.symbol(48)).foregroundStyle(.secondary)
             Text(filter.activity.map { "No \($0) workouts" }
                  ?? (filter.show == .sessions ? "No sessions logged" : "Nothing recorded"))
                 .font(.headline)
@@ -142,9 +142,9 @@ struct LogActivityTab: View {
             if !filter.isDefault {
                 Button("Reset Filters") {
                     AppHaptics.light()
-                    withAnimation { filter = WorkoutListFilter() }
+                    withAnimation(AppAnimation.springStandard) { filter = WorkoutListFilter() }
                 }
-                .buttonStyle(.bordered)
+                .appButton(.secondary)
             }
             Spacer()
         }

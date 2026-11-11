@@ -42,7 +42,7 @@ struct ProgramHeaderCard<Footer: View>: View {
     @State private var sheet: PhilosophyCard?
 
     var body: some View {
-        AnalyticsCard(header: "Program") {
+        AppCard(header: "Program") {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(name).font(.subheadline).fontWeight(.semibold)
@@ -73,7 +73,7 @@ struct ProgramHeaderCard<Footer: View>: View {
                 .accessibilityLabel("Week \(phase.week) of \(phase.totalWeeks)")
             if phase.isDeload {
                 Image(systemName: "arrow.down.circle.fill")
-                    .font(.caption).foregroundStyle(.blue)
+                    .font(.caption).foregroundStyle(AppColor.accent)
                     .accessibilityLabel("Deload")
             }
         }

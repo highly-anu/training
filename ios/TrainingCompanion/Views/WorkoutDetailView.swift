@@ -190,7 +190,7 @@ struct WorkoutDetailView: View {
             HStack(spacing: 12) {
                 Image(symbol: ActivityIcon.forWorkout(activityType: detail.activityType, modalityId: detail.inferredModalityId))
                     .font(.title2)
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(AppColor.accent)
                     .frame(width: 36)
                 VStack(alignment: .leading, spacing: 3) {
                     Text(ImportedWorkout.activityLabel(detail.activityType))
@@ -204,9 +204,9 @@ struct WorkoutDetailView: View {
                 if linkedSessionKey != nil {
                     Label("Linked", systemImage: "link")
                         .font(.caption2)
-                        .foregroundStyle(.green)
+                        .foregroundStyle(AppColor.complete)
                         .padding(.horizontal, 6).padding(.vertical, 3)
-                        .background(.green.opacity(0.12))
+                        .background(AppColor.complete.opacity(AppColor.Opacity.fill))
                         .clipShape(Capsule())
                 }
             }
@@ -256,7 +256,7 @@ struct WorkoutDetailView: View {
                         if let avg = avgHR {
                             VStack(spacing: 2) {
                                 Image(systemName: "heart.fill")
-                                    .font(.caption).foregroundStyle(.red)
+                                    .font(.caption).foregroundStyle(AppColor.destructive)
                                 Text("\(avg)")
                                     .font(.title3).fontWeight(.semibold)
                                 Text("avg bpm")
@@ -270,7 +270,7 @@ struct WorkoutDetailView: View {
                         if let peak = maxHR {
                             VStack(spacing: 2) {
                                 Image(systemName: "heart.fill")
-                                    .font(.caption).foregroundStyle(.orange)
+                                    .font(.caption).foregroundStyle(AppColor.warning)
                                 Text("\(peak)")
                                     .font(.title3).fontWeight(.semibold)
                                 Text("peak bpm")
@@ -397,7 +397,7 @@ struct WorkoutDetailView: View {
                     Text(dc.label.capitalized)
                         .font(.caption).foregroundStyle(dc.color)
                         .padding(.horizontal, 6).padding(.vertical, 2)
-                        .background(dc.color.opacity(0.12))
+                        .background(dc.color.opacity(AppColor.Opacity.fill))
                         .clipShape(Capsule())
                 }
             }
@@ -415,9 +415,9 @@ struct WorkoutDetailView: View {
                         if effort.isPersonalRecord {
                             Text("Personal Record")
                                 .font(.caption2)
-                                .foregroundStyle(.yellow)
+                                .foregroundStyle(AppColor.caution)
                                 .padding(.horizontal, 6).padding(.vertical, 2)
-                                .background(Color.yellow.opacity(0.15))
+                                .background(AppColor.caution.opacity(AppColor.Opacity.fill))
                                 .clipShape(Capsule())
                         }
                     }
@@ -454,9 +454,9 @@ struct WorkoutDetailView: View {
 
     private func fatigueColor(_ rating: Int) -> Color {
         switch rating {
-        case 1, 2: return .green
+        case 1, 2: return AppColor.complete
         case 3: return .yellow
-        default: return .orange
+        default: return AppColor.warning
         }
     }
 
@@ -507,7 +507,7 @@ struct WorkoutDetailView: View {
                         }
                         .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.borderedProminent).tint(.green)
+                    .appButton(.primary).tint(AppColor.complete)
                     .disabled(sessions.count > 1 && selectedSessionKey == nil)
 
                     Button {
@@ -565,7 +565,7 @@ struct WorkoutDetailView: View {
                         }
                         .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.borderedProminent).tint(.green)
+                    .appButton(.primary).tint(AppColor.complete)
                 }
                 .listRowBackground(Color.clear)
             }
@@ -580,11 +580,11 @@ struct WorkoutDetailView: View {
         VStack(spacing: 24) {
             Spacer()
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 64)).foregroundStyle(.green)
+                .font(AppFont.symbol(64)).foregroundStyle(AppColor.complete)
             Text("Session Linked").font(.title2).fontWeight(.semibold)
             VStack(spacing: 8) {
                 if let avg = workout.heartRate?.avg {
-                    Label("Avg HR: \(avg) bpm", systemImage: "heart.fill").foregroundStyle(.red)
+                    Label("Avg HR: \(avg) bpm", systemImage: "heart.fill").foregroundStyle(AppColor.destructive)
                 }
                 if let dist = workout.distance {
                     Label(String(format: "%.2f %@", dist.value, dist.unit), systemImage: "arrow.forward")
@@ -593,7 +593,7 @@ struct WorkoutDetailView: View {
             .font(.subheadline).foregroundStyle(.secondary)
             Spacer()
             Button("Done") { dismiss() }
-                .buttonStyle(.borderedProminent).padding(.horizontal)
+                .appButton(.primary).padding(.horizontal)
         }
         .frame(maxWidth: .infinity)
     }
@@ -604,12 +604,12 @@ struct WorkoutDetailView: View {
         VStack(spacing: 20) {
             Spacer()
             Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 48)).foregroundStyle(.orange)
+                .font(AppFont.symbol(48)).foregroundStyle(AppColor.warning)
             Text("Something went wrong").font(.headline)
             Text(message).font(.footnote).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center).padding(.horizontal)
             Button("Back") { state = .viewing }
-                .buttonStyle(.bordered)
+                .appButton(.secondary)
             Spacer()
         }
         .frame(maxWidth: .infinity)
@@ -620,7 +620,7 @@ struct WorkoutDetailView: View {
     private var workoutSummaryCard: some View {
         HStack(spacing: 12) {
             Image(symbol: ActivityIcon.forWorkout(activityType: workout.activityType, modalityId: workout.inferredModalityId))
-                .foregroundStyle(.blue).font(.title3)
+                .foregroundStyle(AppColor.accent).font(.title3)
             VStack(alignment: .leading, spacing: 2) {
                 Text(ImportedWorkout.activityLabel(workout.activityType))
                     .font(.headline)
@@ -637,7 +637,7 @@ struct WorkoutDetailView: View {
     private func sessionMatchRow(_ item: (session: ProgramSession, key: String), selected: Bool) -> some View {
         HStack(spacing: 12) {
             Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                .foregroundStyle(selected ? .green : .secondary)
+                .foregroundStyle(selected ? AppColor.complete : .secondary)
                 .font(.title3).frame(width: 28)
             VStack(alignment: .leading, spacing: 3) {
                 Text(item.session.archetype?.name ?? ModalityStyle.label(for: item.session.modality))
@@ -655,7 +655,7 @@ struct WorkoutDetailView: View {
     private func manualSessionRow(_ item: (session: ProgramSession, key: String, dateLabel: String), selected: Bool) -> some View {
         HStack(spacing: 12) {
             Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                .foregroundStyle(selected ? .green : .secondary)
+                .foregroundStyle(selected ? AppColor.complete : .secondary)
                 .font(.title3).frame(width: 28)
             VStack(alignment: .leading, spacing: 3) {
                 Text(item.session.archetype?.name ?? ModalityStyle.label(for: item.session.modality))
@@ -725,7 +725,7 @@ struct WorkoutDetailView: View {
         }
         .padding(10)
         .background(.quaternary.opacity(0.5))
-        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusControl))
     }
 
     private func avgPaceString(dist: WorkoutDistance?, durMin: Double?) -> String? {

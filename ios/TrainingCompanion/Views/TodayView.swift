@@ -170,7 +170,7 @@ struct TodayView: View {
                 AppHaptics.medium()
                 resumed = kept.target
             }
-            .buttonStyle(.borderedProminent)
+            .appButton(.primary)
             .controlSize(.small)
             Menu {
                 Button("Discard workout", role: .destructive) {
@@ -183,8 +183,7 @@ struct TodayView: View {
             }
             .foregroundStyle(.secondary)
         }
-        .padding(14)
-        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
+        .appCard()
     }
 
     // MARK: - Program Header
@@ -205,7 +204,7 @@ struct TodayView: View {
                     .foregroundStyle(.white)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
-                    .background(Color.orange.gradient)
+                    .background(AppColor.warning.gradient)
                     .clipShape(Capsule())
                 }
             }
@@ -221,7 +220,7 @@ struct TodayView: View {
                     Text("·")
                     Text(week.phaseLabel)
                     if week.isDeload {
-                        Text("· Deload").foregroundStyle(.orange)
+                        Text("· Deload").foregroundStyle(AppColor.warning)
                     }
                 }
                 .font(.subheadline)
@@ -237,7 +236,7 @@ struct TodayView: View {
         let exitDistance = cardWidth + gap
 
         return VStack(alignment: .leading, spacing: 10) {
-            sectionLabel("Sessions")
+            SectionLabel("Sessions")
             ZStack(alignment: .topLeading) {
                 if showPeek {
                     let peekSign: CGFloat = peekDayOffset > dayOffset ? 1 : -1
@@ -293,7 +292,7 @@ struct TodayView: View {
                 if dayOff == 0 {
                     Label("Today", systemImage: "sun.max.fill")
                         .font(.subheadline).fontWeight(.semibold)
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(AppColor.warning)
                 } else {
                     Text(dayFmt.string(from: date))
                         .font(.subheadline).fontWeight(.semibold)
@@ -316,7 +315,7 @@ struct TodayView: View {
                                 Image(systemName: "chevron.right").font(.caption2)
                             }
                         }
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(AppColor.accent)
                     }
                     .buttonStyle(.plain)
                 }
@@ -367,7 +366,7 @@ struct TodayView: View {
         HStack(spacing: 14) {
             Image(systemName: "battery.100.bolt")
                 .font(.title2)
-                .foregroundStyle(.green)
+                .foregroundStyle(AppColor.complete)
                 .frame(width: 36)
             VStack(alignment: .leading, spacing: 4) {
                 Text("Rest")
@@ -380,9 +379,7 @@ struct TodayView: View {
             }
             Spacer()
         }
-        .padding(14)
-        .background(.background.secondary)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .appCard()
     }
 
     private func sessionCard(_ session: ProgramSession, key: String) -> some View {
@@ -404,7 +401,7 @@ struct TodayView: View {
                         .font(.caption)
                         .foregroundStyle(color)
                         .padding(.horizontal, 8).padding(.vertical, 3)
-                        .background(color.opacity(0.12))
+                        .background(color.opacity(AppColor.Opacity.fill))
                         .clipShape(Capsule())
                     if session.isAdded {
                         // An extra the athlete added: it counts once done.
@@ -420,7 +417,7 @@ struct TodayView: View {
                             .accessibilityLabel("Linked to a recorded workout")
                     }
                     if done {
-                        Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                        Image(systemName: "checkmark.circle.fill").foregroundStyle(AppColor.complete)
                     }
                 }
                 HStack(spacing: 6) {
@@ -456,13 +453,7 @@ struct TodayView: View {
             Image(systemName: "chevron.right")
                 .foregroundStyle(.tertiary).font(.caption)
         }
-        .padding(14)
-        .background(.background.secondary)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(done ? Color.green.opacity(0.3) : Color.clear, lineWidth: 1)
-        )
+        .appCard(border: done ? AppColor.complete : nil)
     }
 
     // MARK: - Suggestions Section
@@ -477,7 +468,7 @@ struct TodayView: View {
         let pending = appState.pendingMatchSuggestions()
         if !pending.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
-                sectionLabel(pending.count == 1
+                SectionLabel(pending.count == 1
                              ? "1 workout looks like a planned session"
                              : "\(pending.count) workouts look like planned sessions")
                 VStack(spacing: 8) {
@@ -526,14 +517,11 @@ struct TodayView: View {
         let pending = appState.standardSuggestions
         if !pending.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
-                sectionLabel(pending.count == 1 ? "1 result to confirm" : "\(pending.count) results to confirm")
+                SectionLabel(pending.count == 1 ? "1 result to confirm" : "\(pending.count) results to confirm")
                 VStack(spacing: 8) {
                     ForEach(pending.prefix(3)) { s in
                         StandardSuggestionRow(suggestion: s)
-                            .padding(12)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(.background.secondary)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .appCard(compact: true)
                     }
                     if pending.count > 3 {
                         Button {
@@ -568,7 +556,7 @@ struct TodayView: View {
 
     private var readinessSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionLabel("Readiness")
+            SectionLabel("Readiness")
             Button {
                 router.showAnalytics(.recovery)
             } label: {
@@ -589,7 +577,7 @@ struct TodayView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(alignment: .firstTextBaseline, spacing: 4) {
                             Text("\(result.score)")
-                                .font(.system(size: 42, weight: .bold, design: .rounded))
+                                .font(AppFont.metric)
                                 .foregroundStyle(color)
                             Text("/ 100")
                                 .font(.subheadline)
@@ -600,7 +588,7 @@ struct TodayView: View {
                             .fontWeight(.semibold)
                             .foregroundStyle(color)
                             .padding(.horizontal, 8).padding(.vertical, 3)
-                            .background(color.opacity(0.12))
+                            .background(color.opacity(AppColor.Opacity.fill))
                             .clipShape(Capsule())
                     }
                     Spacer()
@@ -627,13 +615,7 @@ struct TodayView: View {
                 }
 
             }
-            .padding(14)
-            .background(.background.secondary)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .strokeBorder(color.opacity(0.4), lineWidth: 1)
-            )
+            .appCard(border: color)
         } else {
             HStack {
                 Image(systemName: "waveform.path.ecg")
@@ -646,10 +628,7 @@ struct TodayView: View {
                     .font(.caption)
                     .foregroundStyle(.tertiary)
             }
-            .padding(14)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.background.secondary)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .appCard()
         }
     }
 
@@ -681,7 +660,7 @@ struct TodayView: View {
     /// Analytics ▸ Program said off plan. The web's `AdherenceWidget`.
     private var adherenceSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionLabel("Adherence")
+            SectionLabel("Adherence")
             adherenceCard
         }
     }
@@ -719,10 +698,7 @@ struct TodayView: View {
             Text(title).font(.subheadline).fontWeight(.medium)
             Spacer()
         }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.background.secondary)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .appCard()
     }
 
     private func adherenceScoreCard(_ stats: ComplianceStats) -> some View {
@@ -733,7 +709,7 @@ struct TodayView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
                         Text("\(stats.overall)")
-                            .font(.system(size: 42, weight: .bold, design: .rounded))
+                            .font(AppFont.metric)
                             .foregroundStyle(color)
                         Text("% done")
                             .font(.subheadline)
@@ -744,7 +720,7 @@ struct TodayView: View {
                         .fontWeight(.semibold)
                         .foregroundStyle(color)
                         .padding(.horizontal, 8).padding(.vertical, 3)
-                        .background(color.opacity(0.12))
+                        .background(color.opacity(AppColor.Opacity.fill))
                         .clipShape(Capsule())
                 }
                 Spacer()
@@ -755,7 +731,7 @@ struct TodayView: View {
                         HStack(spacing: 4) {
                             Image(systemName: trend >= 0 ? "arrow.up.right" : "arrow.down.right")
                                 .font(.caption2)
-                                .foregroundStyle(trend >= 0 ? .green : .orange)
+                                .foregroundStyle(trend >= 0 ? AppColor.complete : AppColor.warning)
                             Text("vs last week")
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
@@ -772,7 +748,7 @@ struct TodayView: View {
                     Label("\(cw.completed)/\(cw.due) this week", systemImage: "checkmark.circle")
                     Label("\(cw.total) planned", systemImage: "calendar")
                     if cw.isDeload ?? false {
-                        Label("Deload", systemImage: "arrow.down.circle").foregroundStyle(.orange)
+                        Label("Deload", systemImage: "arrow.down.circle").foregroundStyle(AppColor.warning)
                     }
                 }
                 .font(.caption)
@@ -808,13 +784,7 @@ struct TodayView: View {
                 }
             }
         }
-        .padding(14)
-        .background(.background.secondary)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .strokeBorder(color.opacity(0.4), lineWidth: 1)
-        )
+        .appCard(border: color)
     }
 
     private struct ComplianceStats {
@@ -847,9 +817,9 @@ struct TodayView: View {
 
     /// A week's bar: 70 % and 45 %, as on the web.
     private func complianceColor(_ pct: Int) -> Color {
-        if pct >= 70 { return .green }
-        if pct >= 45 { return .yellow }
-        return .red
+        if pct >= 70 { return AppColor.complete }
+        if pct >= 45 { return AppColor.caution }
+        return AppColor.destructive
     }
 
     // MARK: - Progress Section
@@ -862,7 +832,7 @@ struct TodayView: View {
     /// Analytics ▸ Progress, which this card opens.
     private var progressSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionLabel("Progress")
+            SectionLabel("Progress")
             if let method = appState.programAnalytics?.methodologies.first,
                let summary = method.headlineSummary {
                 // A blend says whose measure the headline is; a single
@@ -896,7 +866,7 @@ struct TodayView: View {
                             .fontWeight(.semibold)
                             .foregroundStyle(color)
                             .padding(.horizontal, 8).padding(.vertical, 3)
-                            .background(color.opacity(0.12))
+                            .background(color.opacity(AppColor.Opacity.fill))
                             .clipShape(Capsule())
                     }
                     Image(systemName: "chevron.right")
@@ -922,28 +892,13 @@ struct TodayView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            .padding(14)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.background.secondary)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .strokeBorder(color.opacity(0.4), lineWidth: 1)
-            )
+            .appCard(border: color)
         }
         .buttonStyle(.plain)
         .accessibilityHint("Opens Analytics, Progress")
     }
 
     // MARK: - Shared Helpers
-
-    private func sectionLabel(_ text: String) -> some View {
-        Text(text.uppercased())
-            .font(.caption)
-            .fontWeight(.semibold)
-            .foregroundStyle(.secondary)
-            .tracking(0.8)
-    }
 
     private var programGoalName: String? {
         guard let ids = appState.serverProgram?.sourceGoalIds, let first = ids.first else { return nil }
@@ -996,7 +951,7 @@ struct TodayView: View {
     private var noProgramView: some View {
         VStack(spacing: 20) {
             Image(systemName: "calendar.badge.exclamationmark")
-                .font(.system(size: 56)).foregroundStyle(.orange.gradient)
+                .font(AppFont.symbol(56)).foregroundStyle(AppColor.warning.gradient)
             Text("No Program").font(.title2).fontWeight(.medium)
             Text("Pick a methodology and generate your first program.")
                 .font(.subheadline).foregroundStyle(.secondary)
@@ -1005,7 +960,7 @@ struct TodayView: View {
                 AppHaptics.light()
                 showBuilder = true
             }
-            .buttonStyle(.borderedProminent)
+            .appButton(.primary)
         }
         .padding().frame(maxWidth: .infinity, maxHeight: .infinity)
     }

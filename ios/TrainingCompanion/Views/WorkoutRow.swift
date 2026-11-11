@@ -23,7 +23,7 @@ struct WorkoutRow: View {
         // row keeps its place in the palette.
         let iconName  = ActivityIcon.forWorkout(activityType: workout.activityType,
                                                 modalityId: modality)
-        let iconColor = modality.map { ModalityStyle.color(for: $0) } ?? Color.blue
+        let iconColor = modality.map { ModalityStyle.color(for: $0) } ?? AppColor.info
 
         return HStack(spacing: 12) {
             Image(symbol: iconName)
@@ -55,7 +55,7 @@ struct WorkoutRow: View {
                         }
                         if let avg = workout.heartRate?.avg {
                             Label("\(avg) bpm", systemImage: "heart.fill")
-                                .font(.caption).foregroundStyle(.red)
+                                .font(.caption).foregroundStyle(AppColor.destructive)
                         }
                     }
                 }
@@ -119,7 +119,7 @@ struct WorkoutRow: View {
             TintCapsule(text: session.archetype?.name ?? ModalityStyle.label(for: session.modality),
                         color: ModalityStyle.color(for: session.modality), bordered: true)
         } else if isMatched {
-            TintCapsule(text: "Linked", symbol: "link", color: .green)
+            TintCapsule(text: "Linked", symbol: "link", color: AppColor.complete)
         } else {
             Text("Unmatched")
                 .font(.caption2)
