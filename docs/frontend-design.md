@@ -147,7 +147,8 @@ whole contract, and each gets its module and its check in the phase that lands i
 | Semantic text clears AA in all four themes | `lib/modalityColors`, `phaseColors`, `completionColors`, `statusColors`, `movementColors` | `semanticContrast` (§8.10) |
 | Modality and phase colours, labels and icons are generated | `lib/gen/clientVocab.ts` (`tools/gen_client_vocab.py`) | `test_client_vocab.py` |
 | Three states before content | `components/shared/states/` (`loadPhase`, `LoadingState`, `FailedState`, `QueryState`), `ErrorBanner` `onRetry`, `ui/spinner.tsx`, `RouteErrorBoundary` (§11.2) | `loadPhase.test.ts`; no `animate-spin`, `animate-pulse`, "Loading…", bare `error.message` or new `border-dashed` outside the owners |
-| Every action answers in place | *planned (phase 3)* — `Button` `loading`, `lib/toast.ts`, `ConfirmDialog` | unit tests; no hand-made pending label |
+| Every action answers in place | `Button` `loading` (`ui/button.tsx`), `DoneMark`, `lib/announce.ts` + `LiveRegion` (§11.5, §11.7, §11.8) | `button.test.tsx`; `designRules` — no label that changes while pending |
+| A toast only where the answer has left the screen | `lib/toast.ts` (`toast.undo`, `toast.failed`), `components/shared/Toaster.tsx`; `ConfirmDialog` for what cannot be undone (§11.6) | `toast.test.ts`; `designRules` — sonner imported nowhere else, no `window.confirm` |
 | One tab selector, one page header | *planned (phase 4)* — `components/layout/SubTabs.tsx`, `PageHeader.tsx` | keyboard test; no hand-written tablist or header |
 | Charts draw once, and not at all under Reduce Motion | *planned (phase 4)* — `lib/chartMotion.ts` | no Recharts animation prop outside it |
 | Nothing behind hover; everything focusable | *planned (phase 5)* — `Pressable`, the row "…" menu | no `onClick` on a `div`, no hover-only control without a twin |
@@ -1561,6 +1562,58 @@ These are intentionally distinct:
 | Complete/done | `emerald` | Work finished, not necessarily viewing |
 | Today | `primary` bg | Calendar: today's date |
 | Today + complete | `emerald` | Calendar: today's session done |
+
+### 11.5 Every Action Answers
+
+Pressing something is answered **where it was pressed**, within the frame:
+
+- **Pending.** `<Button loading={mutation.isPending}>`: the spinner takes the icon's place,
+  the button is disabled and `aria-busy`, and **the label does not change** — "Save" stays
+  "Save", so the button keeps its width and the eye its place. No "Saving…".
+- **Done.** The thing itself changes: the row leaves, the value updates, the mark turns to
+  done (§11.8). A line of `role="status"` text ("Applied") where nothing else would show it.
+  Never a toast.
+- **Failed.** §11.3: an `ErrorBanner` beside the button; the button is the retry.
+- **At once, when the answer is known.** Deleting a result and deciding a suggestion change
+  the cache in `onMutate` and put it back in `onError` (`api/standards.ts`); the program
+  store has always worked this way. A write whose answer the server computes (a logged
+  result's level) waits for it, with the button loading.
+
+### 11.6 Undo, Confirm and the Toast
+
+A removal that can be put back **does not ask**: it happens, and `toast.undo("Workout
+removed", { undo, commit })` offers the way back for six seconds. With `commit` the server
+is told only when the window closes (or the page is left); without it the write is already
+made and `undo` reverses it (an added session: removed, then added again).
+
+An action that cannot be undone from here — disconnecting an account, replacing a program —
+asks through `<ConfirmDialog>`: the title is the question, the description says what stops
+and what stays, the confirm button carries the verb.
+
+The toast (`lib/toast.ts`, the only importer of sonner) has **two uses** and no others:
+
+| Use | When |
+|---|---|
+| `toast.undo` | The row that was removed is gone, so it cannot carry its own Undo |
+| `toast.failed` | A write made in the background failed — an optimistic change rolled back, a removal already off screen |
+
+Not for success ("Saved!"), not for a failure whose button is still on screen, not for
+information. `window.confirm` and `alert` are not used.
+
+### 11.7 Said Once
+
+A change the eye catches is silent to a screen reader. `announce("…")` (`lib/announce.ts`)
+puts one sentence in the page's polite live region (`LiveRegion`, mounted once in `App`):
+a session marked complete, a removal and its undo. Not for what already speaks — a
+`role="status"` line, an `ErrorBanner` (`role="alert"`), a toast.
+
+### 11.8 The Completion Moment
+
+Completing a session is the one action the app celebrates, and it does so quietly:
+`<DoneMark done>` scales the check in with `springStandard` where the athlete pressed, the
+card's border and fill move to done in the same beat, and the day's header gains its check.
+It plays only for a change — what was already done when the screen opened is simply done —
+and undoing it is the same button, without ceremony.
 
 ---
 

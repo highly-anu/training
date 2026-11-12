@@ -1,4 +1,3 @@
-import { Spinner } from '@/components/ui/spinner'
 import { LoadingState } from '@/components/shared/states'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -594,13 +593,10 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
                     size="sm"
                     className="h-8 text-xs"
                     onClick={handleGenerateComparison}
-                    disabled={!compareGoalId || generateMutation.isPending}
+                    disabled={!compareGoalId}
+                    loading={generateMutation.isPending}
                   >
-                    {generateMutation.isPending ? (
-                      <Spinner className="size-3" />
-                    ) : (
-                      'Generate'
-                    )}
+                    Generate
                   </Button>
                 </div>
               </div>

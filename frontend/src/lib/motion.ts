@@ -143,6 +143,13 @@ export const pressMotion = {
   transition: springSnappy,
 } as const
 
+/** The mark of something just done: scales in once, in the standard spring. */
+export const doneIn = {
+  initial: { scale: 0.4, opacity: 0 },
+  animate: { scale: 1, opacity: 1 },
+  transition: springStandard,
+} as const
+
 /** A small control that is ticked (a set's check): pops under the press. */
 export const tickMotion = {
   whileTap: { scale: 1.3 },

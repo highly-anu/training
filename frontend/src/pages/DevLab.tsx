@@ -555,10 +555,11 @@ export function DevLab() {
                 size="sm"
                 onClick={handleGenerate}
                 disabled={!canGenerate}
+                loading={generateMutation.isPending}
                 className="h-8 ml-auto"
               >
-                <Play className="size-3 mr-1.5" />
-                {generateMutation.isPending ? 'Running…' : 'Generate'}
+                <Play className="size-3" />
+                Generate
               </Button>
             </div>
 

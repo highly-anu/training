@@ -169,9 +169,9 @@ export function AddModalityDialog({ open, onClose }: Props) {
 
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={() => { reset(); onClose() }}>Cancel</Button>
-          <Button size="sm" onClick={handleSubmit} disabled={!canSubmit}>
-            <Plus className="size-3 mr-1" />
-            {createMutation.isPending ? 'Adding…' : 'Add Modality'}
+          <Button size="sm" onClick={handleSubmit} disabled={!canSubmit} loading={createMutation.isPending}>
+            <Plus className="size-3" />
+            Add Modality
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 import { LoadingState, FailedState } from '@/components/shared/states'
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -316,16 +317,9 @@ export function ProgramView() {
 
             <Separator />
 
-            <button
-              type="button"
-              onClick={handleRegenerate}
-              disabled={regenerate.isPending}
-              className="w-full h-9 rounded-md bg-primary text-sm font-medium text-primary-foreground disabled:opacity-50 transition-opacity"
-            >
-              {regenerate.isPending
-                ? 'Building a preview…'
-                : `Preview from Week ${weekIndex + 1}`}
-            </button>
+            <Button className="h-9 w-full" onClick={handleRegenerate} loading={regenerate.isPending}>
+              Preview from week {weekIndex + 1}
+            </Button>
             {regenerate.error && (
               <p className="text-xs text-red-700 dark:text-red-300">
                 {regenerate.error.message || 'Could not regenerate'}

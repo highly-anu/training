@@ -78,11 +78,6 @@ export function SuggestionRow({ suggestion: s, compact = false, showName = true 
                 className="inline-flex items-center gap-1 rounded border border-border px-2 py-0.5 text-[11px] text-muted-foreground hover:bg-muted disabled:opacity-60">
           <X className="size-3" aria-hidden="true" /> Not a test
         </button>
-        {decide.isError && (
-          <span role="alert" className="text-[11px] text-red-700 dark:text-red-300">
-            {decide.error?.message || 'Could not save — try again'}
-          </span>
-        )}
       </div>
     </div>
   )

@@ -1,4 +1,4 @@
-import { Working, Spinner } from '@/components/ui/spinner'
+import { Working } from '@/components/ui/spinner'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { differenceInCalendarDays, format, parseISO } from 'date-fns'
 import { Check, ScanEye } from 'lucide-react'
@@ -182,11 +182,9 @@ export function RegenerateFromWeekBanner() {
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button size="sm" onClick={preview} disabled={regenerate.isPending}>
-            {regenerate.isPending
-              ? <Spinner className="size-3.5" />
-              : <ScanEye className="size-3.5" aria-hidden="true" />}
-            {regenerate.isPending ? 'Building a preview…' : refused ? 'See why' : 'Preview changes'}
+          <Button size="sm" onClick={preview} loading={regenerate.isPending}>
+            <ScanEye className="size-3.5" aria-hidden="true" />
+            {refused ? 'See why' : 'Preview changes'}
           </Button>
         </div>
       </div>

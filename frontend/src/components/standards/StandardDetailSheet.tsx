@@ -102,7 +102,7 @@ function ResultForm({ standard, initial, submitLabel, pending, error, onSubmit, 
       )}
       {error && <p className="text-[11px] text-red-700 dark:text-red-300">{error}</p>}
       <div className="flex gap-2">
-        <Button type="submit" size="sm" className="h-7 text-xs" disabled={!ready || pending}>{submitLabel}</Button>
+        <Button type="submit" size="sm" className="h-7 text-xs" disabled={!ready} loading={pending}>{submitLabel}</Button>
         {onCancel && <Button type="button" size="sm" variant="ghost" className="h-7 text-xs" onClick={onCancel}>Cancel</Button>}
       </div>
     </form>
@@ -153,7 +153,7 @@ function EntryRow({ entry, standard }: { entry: StandardEntry; standard?: Benchm
       {confirming ? (
         <div className="flex shrink-0 items-center gap-1">
           <span className="text-[11px] text-muted-foreground">Delete this result?</span>
-          <Button size="sm" variant="destructive" className="h-6 px-2 text-[11px]" disabled={remove.isPending}
+          <Button size="sm" variant="destructive" className="h-6 px-2 text-[11px]" loading={remove.isPending}
                   onClick={() => remove.mutate(entry.id!)}>Delete</Button>
           <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px]" onClick={() => setConfirming(false)}>Keep</Button>
         </div>

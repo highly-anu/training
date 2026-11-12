@@ -387,15 +387,11 @@ export function ReplaceSessionSheet({
                 <Button
                   className="w-full"
                   onClick={handleGenerate}
-                  disabled={generateSession.isPending}
+                  loading={generateSession.isPending}
                 >
                   {/* A fitting session from the library — found, not invented;
                       its full preview comes next, before anything is saved. */}
-                  {generateSession.isPending ? (
-                    <><Spinner className="mr-2" /> Searching…</>
-                  ) : (
-                    <><Search className="size-4 mr-2" /> Search</>
-                  )}
+                  <Search className="size-4" /> Search
                 </Button>
               </div>
             </TabsContent>
