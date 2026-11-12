@@ -1,3 +1,7 @@
+import { ChartFrame } from '@/components/shared/ChartFrame'
+import * as say from '@/lib/chartSummary'
+import { ZONES, ZONE_COLORS } from '@/lib/hrZones'
+import { KPI_TEXT, LOAD_STEPS, NEUTRAL_HEX, UNASSIGNED_HEX } from '@/lib/dataColors'
 import { TabPanels } from '@/components/motion/TabPanels'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { SubTabs } from '@/components/layout/SubTabs'
@@ -18,8 +22,7 @@ import {
 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import {
-  ResponsiveContainer,
-  BarChart,
+    BarChart,
   Bar,
   Cell,
   XAxis,
@@ -168,7 +171,7 @@ function VolumeSection({ period, onPeriodChange }: { period: Period; onPeriodCha
       hours: Math.round((a.minutes / 60) * 10) / 10,
       sessions: a.sessions,
       modalityId,
-      color: modalityId ? MODALITY_COLORS[modalityId]?.hex ?? '#94a3b8' : '#94a3b8',
+      color: modalityId ? MODALITY_COLORS[modalityId]?.hex ?? NEUTRAL_HEX : NEUTRAL_HEX,
     }
   }), [summary])
 
@@ -176,7 +179,7 @@ function VolumeSection({ period, onPeriodChange }: { period: Period; onPeriodCha
     id: m.id ?? '__unclassified__',
     label: m.id == null ? 'Unclassified' : (MODALITY_COLORS[m.id as ModalityId]?.label ?? m.id),
     pct: m.pct,
-    color: m.id == null ? '#475569' : (MODALITY_COLORS[m.id as ModalityId]?.hex ?? '#94a3b8'),
+    color: m.id == null ? UNASSIGNED_HEX : (MODALITY_COLORS[m.id as ModalityId]?.hex ?? NEUTRAL_HEX),
   })), [summary])
 
   const weeklyConsistency = useMemo(() => {
@@ -189,10 +192,10 @@ function VolumeSection({ period, onPeriodChange }: { period: Period; onPeriodCha
 
   function consistencyColor(count: number): string {
     if (count === 0) return 'var(--color-muted)'
-    if (count <= 2) return '#10b981'
-    if (count <= 4) return '#38bdf8'
-    if (count <= 6) return '#f59e0b'
-    return '#ef4444'
+    if (count <= 2) return LOAD_STEPS[0].hex
+    if (count <= 4) return LOAD_STEPS[1].hex
+    if (count <= 6) return LOAD_STEPS[2].hex
+    return LOAD_STEPS[3].hex
   }
 
   const dominantModality = modalityBreakdown[0]
@@ -213,11 +216,11 @@ function VolumeSection({ period, onPeriodChange }: { period: Period; onPeriodCha
         <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Totals</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <KpiCard label="Sessions"  value={stats.sessions > 0 ? String(stats.sessions) : null} icon={Activity}     color="text-primary"        />
-          <KpiCard label="Time"      value={stats.hours}         icon={Timer}        color="text-sky-700 dark:text-sky-300"        />
-          <KpiCard label="Distance"  value={stats.distance}      icon={Footprints}   color="text-emerald-700 dark:text-emerald-300"    />
-          <KpiCard label="Ascended"  value={stats.ascended}      icon={TrendingUp}   color="text-amber-700 dark:text-amber-300"      />
-          <KpiCard label="Descended" value={stats.descended}     icon={TrendingDown} color="text-rose-700 dark:text-rose-300"       />
-          <KpiCard label="Calories"  value={stats.calories}      icon={Flame}        color="text-orange-700 dark:text-orange-300"     />
+          <KpiCard label="Time"      value={stats.hours}         icon={Timer}        color={KPI_TEXT.time}        />
+          <KpiCard label="Distance"  value={stats.distance}      icon={Footprints}   color={KPI_TEXT.distance}    />
+          <KpiCard label="Ascended"  value={stats.ascended}      icon={TrendingUp}   color={KPI_TEXT.ascended}      />
+          <KpiCard label="Descended" value={stats.descended}     icon={TrendingDown} color={KPI_TEXT.descended}       />
+          <KpiCard label="Calories"  value={stats.calories}      icon={Flame}        color={KPI_TEXT.calories}     />
         </div>
       </div>
 
@@ -237,7 +240,8 @@ function VolumeSection({ period, onPeriodChange }: { period: Period; onPeriodCha
             <div>
               <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">By Activity Type</h2>
               <div className="rounded-xl border bg-card p-4">
-                <ResponsiveContainer width="100%" height={Math.max(80, activityBreakdown.length * 32)}>
+                <ChartFrame label="Hours by activity type" height={Math.max(80, activityBreakdown.length * 32)}
+                  summary={say.shares(activityBreakdown.map((a) => ({ name: a.type, value: a.hours })))}>
                   <BarChart
                     data={activityBreakdown}
                     layout="vertical"
@@ -279,7 +283,7 @@ function VolumeSection({ period, onPeriodChange }: { period: Period; onPeriodCha
                       ))}
                     </Bar>
                   </BarChart>
-                </ResponsiveContainer>
+                </ChartFrame>
               </div>
             </div>
           )}
@@ -291,7 +295,8 @@ function VolumeSection({ period, onPeriodChange }: { period: Period; onPeriodCha
               <div className="rounded-xl border bg-card p-4">
                 <div className="flex items-center gap-6">
                   <div className="relative shrink-0">
-                    <ResponsiveContainer width={140} height={140}>
+                    <ChartFrame label="Training by modality" width={140} height={140}
+                      summary={say.shares(modalityBreakdown.map((m) => ({ name: m.label, value: m.pct })))}>
                       <PieChart>
                         <Pie {...drawIn}
                           data={modalityBreakdown}
@@ -316,7 +321,7 @@ function VolumeSection({ period, onPeriodChange }: { period: Period; onPeriodCha
                           formatter={(v: unknown, name: unknown) => [`${String(v)}%`, String(name)]}
                         />
                       </PieChart>
-                    </ResponsiveContainer>
+                    </ChartFrame>
                     {dominantModality && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                         <span className="text-lg font-bold tabular-nums">{dominantModality.pct}%</span>
@@ -342,7 +347,8 @@ function VolumeSection({ period, onPeriodChange }: { period: Period; onPeriodCha
           <div>
             <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Weekly Consistency (12 weeks)</h2>
             <div className="rounded-xl border bg-card p-4">
-              <ResponsiveContainer width="100%" height={80}>
+              <ChartFrame label="Sessions a week, last twelve weeks" height={80}
+                summary={say.series(weeklyConsistency.map((w) => w.count), 'sessions')}>
                 <BarChart data={weeklyConsistency} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
                   <XAxis
                     dataKey="label"
@@ -368,12 +374,13 @@ function VolumeSection({ period, onPeriodChange }: { period: Period; onPeriodCha
                     ))}
                   </Bar>
                 </BarChart>
-              </ResponsiveContainer>
+              </ChartFrame>
               <div className="flex items-center gap-3 mt-2 text-[10px] text-muted-foreground">
-                <span className="flex items-center gap-1"><span className="inline-block size-2 rounded-sm bg-emerald-500" /> 1–2</span>
-                <span className="flex items-center gap-1"><span className="inline-block size-2 rounded-sm bg-sky-400" /> 3–4</span>
-                <span className="flex items-center gap-1"><span className="inline-block size-2 rounded-sm bg-amber-400" /> 5–6</span>
-                <span className="flex items-center gap-1"><span className="inline-block size-2 rounded-sm bg-red-500" /> 7+</span>
+                {['1–2', '3–4', '5–6', '7+'].map((label, i) => (
+                  <span key={label} className="flex items-center gap-1">
+                    <span className="inline-block size-2 rounded-sm" style={{ backgroundColor: LOAD_STEPS[i].hex }} /> {label}
+                  </span>
+                ))}
               </div>
             </div>
           </div>
@@ -403,8 +410,7 @@ function LoadTab({ period, onPeriodChange }: { period: Period; onPeriodChange: (
   const zoneData = useMemo(() => {
     const m = summary?.zones?.minutes
     if (!m) return null
-    const colors = ['#10b981', '#38bdf8', '#f59e0b', '#f97316', '#ef4444']
-    return m.map((minutes, i) => ({ zone: `Z${i + 1}`, minutes: Math.round(minutes), color: colors[i] }))
+    return m.map((minutes, i) => ({ zone: `Z${i + 1}`, minutes: Math.round(minutes), color: ZONE_COLORS[i] }))
   }, [summary])
 
   // Before the first answer the tab used to draw every total as zero.
@@ -448,13 +454,14 @@ function LoadTab({ period, onPeriodChange }: { period: Period; onPeriodChange: (
           {zoneData ? (
             <div className="space-y-2">
               <div className="flex items-center gap-3 text-[11px] text-muted-foreground mb-3">
-                <span className="flex items-center gap-1"><span className="inline-block size-2 rounded-sm bg-emerald-500" /> Z1 Recovery</span>
-                <span className="flex items-center gap-1"><span className="inline-block size-2 rounded-sm bg-sky-400" /> Z2 Aerobic</span>
-                <span className="flex items-center gap-1"><span className="inline-block size-2 rounded-sm bg-amber-400" /> Z3 Tempo</span>
-                <span className="flex items-center gap-1"><span className="inline-block size-2 rounded-sm bg-orange-400" /> Z4 Threshold</span>
-                <span className="flex items-center gap-1"><span className="inline-block size-2 rounded-sm bg-red-500" /> Z5 VO2max</span>
+                {ZONES.map((z) => (
+                  <span key={z.key} className="flex items-center gap-1">
+                    <span className="inline-block size-2 rounded-sm" style={{ backgroundColor: z.color }} /> {z.label} {z.description}
+                  </span>
+                ))}
               </div>
-              <ResponsiveContainer width="100%" height={100}>
+              <ChartFrame label="Minutes in each heart-rate zone" height={100}
+                summary={say.shares(zoneData.map((z) => ({ name: z.zone, value: z.minutes })))}>
                 <BarChart data={zoneData} margin={{ top: 0, right: 8, left: -20, bottom: 0 }}>
                   <XAxis
                     dataKey="zone"
@@ -489,7 +496,7 @@ function LoadTab({ period, onPeriodChange }: { period: Period; onPeriodChange: (
                     ))}
                   </Bar>
                 </BarChart>
-              </ResponsiveContainer>
+              </ChartFrame>
               <p className="text-[10px] text-muted-foreground/60 mt-1">
                 {zoneFootnote(summary?.zones?.workoutsMeasured ?? 0, summary?.zones?.workoutsEstimated ?? 0)}
               </p>

@@ -1,3 +1,4 @@
+import { FALLBACK_HEX, SOURCE_MODE_HEX } from '@/lib/dataColors'
 import { FailedState, LoadingState } from '@/components/shared/states'
 import { useState, useMemo } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -21,21 +22,21 @@ const MODES: { id: SourceMode; label: string; sub: string; color: string; Icon: 
     id: 'philosophy',
     label: 'From a Philosophy',
     sub: 'One source methodology drives the program',
-    color: '#8b5cf6',
+    color: SOURCE_MODE_HEX.philosophy,
     Icon: BookOpen,
   },
   {
     id: 'blend',
     label: 'Blend Philosophies',
     sub: 'Mix 2–4 systems with custom weights',
-    color: '#6366f1',
+    color: SOURCE_MODE_HEX.blend,
     Icon: GitMerge,
   },
   {
     id: 'custom',
     label: 'Custom Priorities',
     sub: 'Set modality emphasis directly from scratch',
-    color: '#10b981',
+    color: SOURCE_MODE_HEX.custom,
     Icon: Sliders,
   },
 ]
@@ -88,7 +89,7 @@ function PhilCard({
   isDisabled: boolean
   onClick: () => void
 }) {
-  const hex = MODALITY_COLORS[phil.bias?.[0] as ModalityId]?.hex ?? '#6366f1'
+  const hex = MODALITY_COLORS[phil.bias?.[0] as ModalityId]?.hex ?? FALLBACK_HEX
 
   return (
     <button
@@ -142,7 +143,7 @@ function PhilWeightBar({
       <div className="flex rounded overflow-hidden h-2 gap-px">
         {selectedIds.map((id) => {
           const phil = philosophies.find((p) => p.id === id)
-          const hex = MODALITY_COLORS[(phil?.bias?.[0] ?? '') as ModalityId]?.hex ?? '#6366f1'
+          const hex = MODALITY_COLORS[(phil?.bias?.[0] ?? '') as ModalityId]?.hex ?? FALLBACK_HEX
           const pct = ((weights[id] ?? 50) / total) * 100
           return (
             <div
@@ -157,7 +158,7 @@ function PhilWeightBar({
       <div className="space-y-2.5">
         {selectedIds.map((id) => {
           const phil = philosophies.find((p) => p.id === id)
-          const hex = MODALITY_COLORS[(phil?.bias?.[0] ?? '') as ModalityId]?.hex ?? '#6366f1'
+          const hex = MODALITY_COLORS[(phil?.bias?.[0] ?? '') as ModalityId]?.hex ?? FALLBACK_HEX
           const pct = Math.round(((weights[id] ?? 50) / total) * 100)
           return (
             <div key={id} className="space-y-1">

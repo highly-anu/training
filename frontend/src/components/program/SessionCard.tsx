@@ -54,7 +54,7 @@ export function SessionCard({ session, weekNumber, day, sessionIndex, className,
       className={cn(
         'w-full rounded-lg border bg-card p-3 text-left transition-shadow hover:shadow-sm',
         isComplete
-          ? cn(COMPLETION.border, COMPLETION.bg, 'hover:border-emerald-500/50')
+          ? cn(COMPLETION.border, COMPLETION.bg, 'hover:border-done/50')
           : 'hover:border-primary/50',
         highlight && 'border-primary/60 ring-1 ring-primary/30',
         className

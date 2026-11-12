@@ -101,7 +101,7 @@ function HistoryCard({ entry, index }: { entry: ProgramHistoryEntry; index: numb
               </span>
             )}
             {entry.loggedCount > 0 && (
-              <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-300">
+              <span className="inline-flex items-center gap-1 text-done">
                 <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
                 {entry.loggedCount} logged
               </span>

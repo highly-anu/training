@@ -1,6 +1,7 @@
+import { ChartFrame } from '@/components/shared/ChartFrame'
+import * as say from '@/lib/chartSummary'
 import {
-  ResponsiveContainer,
-  BarChart,
+    BarChart,
   Bar,
   XAxis,
   YAxis,
@@ -48,7 +49,8 @@ export function HRZoneChart({ zones, showEstimateLabel = true }: HRZoneChartProp
 
   return (
     <div className="space-y-1">
-      <ResponsiveContainer width="100%" height={100}>
+      <ChartFrame label="Time in heart-rate zones" height={100}
+        summary={say.shares(data.map((d) => ({ name: `${d.label} ${d.description}`, value: d.value })))}>
         <BarChart data={data} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
           <XAxis
             dataKey="label"
@@ -69,7 +71,7 @@ export function HRZoneChart({ zones, showEstimateLabel = true }: HRZoneChartProp
             ))}
           </Bar>
         </BarChart>
-      </ResponsiveContainer>
+      </ChartFrame>
       {showEstimateLabel && zones.method === 'summary_estimate' && (
         <p className="text-[10px] text-muted-foreground/60 text-center italic">
           Estimated — no sample-level HR data available

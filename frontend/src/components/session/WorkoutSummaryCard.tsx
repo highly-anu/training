@@ -36,9 +36,9 @@ interface WorkoutSummaryCardProps {
 }
 
 const SEVERITY_STYLES = {
-  positive: { icon: CheckCircle2, color: 'text-emerald-700 dark:text-emerald-300' },
+  positive: { icon: CheckCircle2, color: 'text-good' },
   neutral: { icon: Info, color: 'text-muted-foreground' },
-  warning: { icon: AlertTriangle, color: 'text-amber-700 dark:text-amber-300' },
+  warning: { icon: AlertTriangle, color: 'text-warn' },
 } as const
 
 function InsightRow({ item }: { item: InsightItem }) {
@@ -60,9 +60,9 @@ function InsightRow({ item }: { item: InsightItem }) {
 }
 
 const SCORE_RING = {
-  green: 'ring-emerald-500/40 text-emerald-700 dark:text-emerald-300',
-  yellow: 'ring-amber-500/40 text-amber-700 dark:text-amber-300',
-  red: 'ring-red-500/40 text-red-700 dark:text-red-300',
+  green: 'ring-good/40 text-good',
+  yellow: 'ring-warn/40 text-warn',
+  red: 'ring-bad/40 text-bad',
 } as const
 
 export function WorkoutSummaryCard({ sessionKey, sessions, weekIndex: weekIndexProp }: WorkoutSummaryCardProps) {
@@ -157,7 +157,7 @@ export function WorkoutSummaryCard({ sessionKey, sessions, weekIndex: weekIndexP
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-7 text-xs border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/10"
+                  className="h-7 text-xs border-done/40 text-done hover:bg-done/10"
                   onClick={() => confirmMatch(suggestion.workout.id, sessionKey)}
                 >
                   <CheckCircle2 className="size-3 mr-1" />
@@ -292,7 +292,7 @@ export function WorkoutSummaryCard({ sessionKey, sessions, weekIndex: weekIndexP
         )}
         {matched.elevation?.gain != null && matched.elevation.gain > 0 && (
           <div className="flex items-center gap-1.5">
-            <TrendingUp className="size-3.5 text-emerald-700 dark:text-emerald-300" />
+            <TrendingUp className="size-3.5 text-good" />
             <span className="text-sm">Ascended {matched.elevation.gain}m</span>
           </div>
         )}

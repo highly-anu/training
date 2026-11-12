@@ -160,8 +160,10 @@ whole contract, and each gets its module and its check in the phase that lands i
 | A drag has a keyboard and a menu | `lib/dndKeyboard.ts`, dnd-kit `KeyboardSensor` and announcements, *Move to* in the card's menu (`WeekOverview`); Linking's select-then-pick | `dndKeyboard.test.ts`; `designRules` |
 | One list of keyboard shortcuts | `lib/shortcuts.ts`, `components/layout/Shortcuts.tsx` (`?` lists them) | `shortcuts.test.ts`; `designRules` — no other `keydown` listener on the window |
 | Back returns to where you were | `lib/useScrollRestore.ts` (per history entry); `TabPanels` carries it | `useScrollRestore.test.ts` |
-| Done is `--done` only; hue is data | *planned (phase 6)* — `lib/completionColors.ts` | no raw `emerald-` / `green-` class or hex literal outside the colour modules |
-| A chart reads its numbers | *planned (phase 6)* — `lib/chartSummary.ts`, `ChartFrame` | no Recharts container outside `ChartFrame` |
+| Done is `--done`; a verdict is `--good` / `--warn` / `--bad` | the tokens per theme (`globals.css`); `lib/completionColors.ts`, `lib/statusColors.ts` (§8.3, §8.8, §8.12) | `semanticContrast` — each token AA as text on the page, a card and its own tint in every theme; `designRules` — no raw `emerald-` / `green-` class |
+| Hue is data, and it has a name | `lib/dataColors.ts` beside the modality, phase, zone and movement modules (§8.12) | `designRules` — no hex literal in a component |
+| A chart reads its numbers | `components/shared/ChartFrame.tsx`, `lib/chartSummary.ts` (§12.11) | `chartSummary.test.ts`; `designRules` — no Recharts container outside `ChartFrame`, no frame without a label |
+| The page can be skipped to and has one name | the skip link and `main#main` in `RootLayout`; `PageHeader`'s `h1` | `designRules`; `eslint-plugin-jsx-a11y` (recommended) in `npm run lint` |
 
 **Adding a rule.** Put it in one module, convert every call site in the same change, add
 the row here and the line to `designRules.test.ts`. No baseline is kept: a ban lands with
@@ -880,42 +882,42 @@ const PHASE_COLORS = {
 
 ### 8.3 Completion State (Emerald)
 
-One color owns the "done" state throughout the entire application: `emerald-500`.
-
-```typescript
-// Complete: all three properties use the same hue, different opacity
-const completeStyles = {
-  border: 'border-emerald-500/30',
-  bg:     'bg-emerald-500/10',
-  text:   'text-emerald-500',
-  hover:  'hover:bg-emerald-500/20',
-  icon:   CheckCircle2,
-}
-```
-
-Applied to: session cards, day headers, completion buttons, "all done" state of TodaySession, week-complete banners.
-
-> **Resolved 2026-07-30 (was FIX-1).** Completion styles were previously written inline at every call site with no `dark:` variant, so `text-emerald-500` measured **2.33:1** in light mode. Now extracted to `lib/completionColors.ts`.
+One colour owns "done" throughout the application: the `--done` token, emerald in every
+theme, and no other meaning may use it (§8.12).
 
 **The module** (`lib/completionColors.ts`):
 
 ```typescript
 export const COMPLETION = {
-  border:   'border-emerald-500/30',
-  bg:       'bg-emerald-500/5',          // card/panel surface
-  bgStrong: 'bg-emerald-500/10',         // interactive controls
-  hover:    'hover:bg-emerald-500/20',
-  text:     'text-emerald-700 dark:text-emerald-300',
-  hex:      '#10b981',                   // charts, SVG, inline style
+  border:   'border-done/30',
+  bg:       'bg-done/5',          // card/panel surface
+  bgStrong: 'bg-done/10',         // interactive controls
+  hover:    'hover:bg-done/20',
+  text:     'text-done',
+  css:      'var(--done)',        // charts, SVG, inline style
 } as const
 
 export const COMPLETION_SURFACE     = `${COMPLETION.border} ${COMPLETION.bg} ${COMPLETION.text}`
 export const COMPLETION_INTERACTIVE = `${COMPLETION.border} ${COMPLETION.bgStrong} ${COMPLETION.text} ${COMPLETION.hover}`
 ```
 
-Two fill strengths, because the original inline copies had silently diverged: cards used `/5`, interactive controls `/10`. Both are correct for their context, so the module names them rather than flattening them.
+Applied to: session cards, day headers, completion buttons, the "all done" state of Today,
+week-complete banners, the done series of a chart. A component may write `text-done` or
+`bg-done/10` directly; it may not write `emerald-` (the design test fails on it).
 
-**Completion is not "good".** Do not reach for `COMPLETION` to mean positive, on-track, or passing — that is §8.8's axis, and it has its own module. Completion means the work is finished, regardless of how it went. A session completed badly is still complete.
+Two fill strengths, because the original inline copies had silently diverged: cards used
+`/5`, interactive controls `/10`. Both are correct for their context, so the module names
+them rather than flattening them.
+
+**Completion is not "good".** Do not reach for `COMPLETION` to mean positive, on-track, or
+passing — that is §8.8's axis, with its own token. Completion means the work is finished,
+regardless of how it went. A session completed badly is still complete.
+
+> **History.** Until 2026-07-30 the styles were inline at every call site with no `dark:`
+> variant (`text-emerald-500` measured 2.33:1 in light mode); the module then carried
+> `text-emerald-700 dark:text-emerald-300`. Since 2026-11-11 it is the token, because 136
+> raw emerald classes had grown beside seven users of the module and emerald had come to
+> mean done, going well, a trend up, a connected account and three data categories.
 
 ### 8.4 Fatigue Gradient
 
@@ -1003,11 +1005,14 @@ export const ZONE_BG:     readonly string[] = ZONES.map((z) => z.bg)
 
 ```typescript
 export const STATUS_STYLES: Record<StatusLevel, StatusStyle> = {
-  green:  { ring: 'ring-emerald-500/30', score: 'text-emerald-700 dark:text-emerald-300', badge: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30' },
-  yellow: { ring: 'ring-amber-500/30',   score: 'text-amber-700 dark:text-amber-300',     badge: 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30'         },
-  red:    { ring: 'ring-red-500/30',     score: 'text-red-700 dark:text-red-300',         badge: 'bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/30'                 },
+  green:  { ring: 'ring-good/30', score: 'text-good', badge: 'bg-good/10 text-good border-good/30' },
+  yellow: { ring: 'ring-warn/30', score: 'text-warn', badge: 'bg-warn/10 text-warn border-warn/30' },
+  red:    { ring: 'ring-bad/30',  score: 'text-bad',  badge: 'bg-bad/10 text-bad border-bad/30'   },
 }
 ```
+
+`STATUS_TEXT`, `STATUS_FILL` (a bar or dot) and `STATUS_CSS` (`var(--good)` for a chart or
+SVG) are the same three tokens for the other places a verdict is drawn (§8.12).
 
 > **Resolved 2026-07-30 (was FIX-1).** This triplet was duplicated **verbatim** in `ReadinessWidget`, `DevelopmentWidget` and `ProgressionReviewCard` — identical `ring`/`score`/`badge` values in all three, differing only in `label`. Found while fixing the contrast bug; extracted at the same time.
 
@@ -1018,7 +1023,6 @@ Two things worth copying from this component:
 1. **The score renders `text-4xl font-bold tabular-nums`.** `tabular-nums` is mandatory on any number that updates in place — without it the score jitters horizontally as digits change.
 2. **The status is never color-only.** A text badge sits beside the number, and `ReadinessFlag` values (`elevated_rhr_3d`, `suppressed_hrv_3d`, `insufficient_sleep`, …) surface as written reasons. This is §1.6 done properly.
 
-> **Code diverges — doc is correct.** The `-500` family used here is *better* than the `-400` of §8.1 but still does not clear WCAG AA on a `/10` tint over white. Measured: `text-amber-500` **2.00:1**, `text-emerald-500` **2.33:1**, `text-red-500` **3.29:1** — floor is 4.5:1. Rolled into FIX-1.
 
 **The corrected rule.** The pairing shape is always:
 
@@ -1068,7 +1072,7 @@ sections, the four schemas' enums) and what each slot type logs
 
 `test/semanticContrast.test.ts` is what keeps §8 honest. Run by `npm test` and by the pre-push hook's frontend area (GitHub runs no checks since 2026-10-26).
 
-**What it checks.** Every entry of `MODALITY_COLORS`, `PHASE_COLORS`, `MOVEMENT_GROUP_COLORS` (§8.11), `COMPLETION`, `STATUS_STYLES` and `STATUS_TEXT`, against all four themes:
+**What it checks.** Every entry of `MODALITY_COLORS`, `PHASE_COLORS`, `MOVEMENT_GROUP_COLORS` (§8.11), against all four themes — and the `--done`, `--good`, `--warn` and `--bad` tokens as text on the page, a card and their own tints (§8.12):
 
 1. **Contrast ≥ 4.5:1** — composites the `/N` tint over that theme's `--background`, picks the light or dark half of the pair depending on the theme, and measures.
 2. **Both halves declared** — a bare `text-*` and a `dark:text-*`. This is the structural half of the rule: a single mid-shade cannot serve both themes, so an entry missing one half is wrong even if it happens to pass numerically today.
@@ -1117,6 +1121,53 @@ lineage pills (§13.8): a philosophy in its first bias's modality colour, a
 framework in its philosophy's, a modality in its own (§8.1), an archetype and an
 exercise by category (`ARCH_CAT_COLORS`, `EX_CATEGORY_COLORS`, with the landings'
 fallbacks), a movement by group.
+
+### 8.12 Done, Verdicts and Data Hues
+
+Emerald used to mean seven things. Each colour now has one job and one home:
+
+| It says | Written as | Home |
+|---|---|---|
+| Do this | `primary` / `--action` | the theme |
+| Finished | `text-done`, `bg-done/10`, `COMPLETION` | `--done`; `lib/completionColors.ts` (§8.3) |
+| Going well · watch it · off | `text-good`, `text-warn`, `text-bad`, `STATUS_*` | `--good`, `--warn`, `--bad`; `lib/statusColors.ts` (§8.8) |
+| Remove this, it failed | `destructive` | the theme |
+| Which one it is — a modality, phase, zone, movement group | the module's lookup | `modalityColors`, `phaseColors`, `hrZones`, `movementColors` (§8.1, §8.2, §8.7, §8.11) |
+| Any other data — a series, a scale step, a category, a brand | a named constant | `lib/dataColors.ts` |
+
+**The tokens** (`styles/globals.css`, exposed to Tailwind as `--color-done`, `--color-good`,
+`--color-warn`, `--color-bad`). Light and Zen share one dark set; Dark and Military one
+light set. Each is text, so each clears 4.5:1 on the page, on a card and on its own `/5`,
+`/10` and `/15` tint in all four themes — `semanticContrast.test.ts` computes it from the
+CSS, so a retuned theme fails there. A component therefore never writes a `dark:` pair for
+them.
+
+- `--warn` is not the action amber. In Dark the primary is amber; a warning is a paler
+  yellow (hue 92 against the primary's 70) and never fills a button.
+- `--bad` is a verdict, `destructive` an action. A missed week is `text-bad`; Delete is
+  `variant="destructive"`.
+- `--good` is green, `--done` emerald: neighbours on purpose (both read "nothing to do"),
+  never on the same mark.
+
+**`lib/dataColors.ts`** holds what the specific modules do not: `SERIES` (a chart's named
+lines), `LOAD_STEPS`, `EFFORT_HEX`, `RECOVERY_COST_HEX`, `TIER_HEX`, `VOLUME_HEX`, `ROUTE`,
+`SOURCE_MODE_HEX`, `BRAND` (Strava's orange is Strava's), the neutral and fallback greys,
+and the class maps `EXERCISE_CATEGORY_TEXT`, `FATIGUE_STEP`, `SCALE_BADGE`, `KPI_TEXT`. A
+green that is a scale's low end lives here under the scale's name; the design test allows
+`emerald-` and `green-` in this file and `movementColors.ts` only.
+
+**A component writes no hex.** A theme colour in a chart or SVG is `var(--border)`,
+`var(--muted-foreground)`, `COMPLETION.css`, `STATUS_CSS.green`; a data colour is imported
+by name. `designRules.test.ts` fails on a hex literal outside the colour modules,
+`lib/hrZones.ts`, `lib/themes.ts`, `lib/developmentShaping.ts`, `lib/gen/` and the Dev Lab.
+
+**Never alone.** A verdict's colour sits beside its word or number: the band dot beside
+"On track", the adherence bar beside "86%", the badge with its label (§1.6).
+
+**Not converted.** About 150 `amber-` / `red-` / `orange-` / `yellow-` classes remain in
+components where the colour is a notice, an injury or a heat step rather than one of the
+three verdicts. Only emerald and green are banned; each of those sites clears AA by its own
+`-700 dark:-300` pair. Moving them to tokens is page-pass work, a site at a time.
 
 ---
 
@@ -2005,6 +2056,37 @@ Two non-Recharts geospatial views:
 | How are fixed spans laid out in sequence? | flex timeline, no library (§12.5) | phase bar |
 
 **Before adding a new chart:** find its row here first. If nothing fits, the new form needs a subsection in this section, not a one-off in a page component.
+
+
+### 12.11 A Chart Reads Its Numbers
+
+A chart is a picture to a screen reader, and Recharts' marks say nothing useful one by one.
+Every chart sits in `components/shared/ChartFrame.tsx` — the only file that imports
+`ResponsiveContainer` — which makes it one image named by what it draws and what its
+numbers are:
+
+```tsx
+<ChartFrame label="Resting heart rate by day" height={160}
+  summary={say.series(data.map((d) => d.rhr), 'bpm')}>
+  <LineChart data={data}>…</LineChart>
+</ChartFrame>
+// role="img" aria-label="Resting heart rate by day. Latest 48 bpm, average 50, from 46 to 55"
+```
+
+`lib/chartSummary.ts` (`import * as say`) words the numbers as the phone does
+(`ChartSummary`, design-system §6.57), so the two clients say a chart the same way:
+
+| Function | For | Says |
+|---|---|---|
+| `say.series(values, unit, format?)` | a value over time | "Latest 48 bpm, average 50, from 46 to 55" |
+| `say.range(values, unit, format?)` | a recording, where no point is "the latest" | "Average 142 bpm, from 98 to 171" |
+| `say.shares([{ name, value }])` | parts of a whole | "Zone 2 62 percent, Zone 3 20 percent" — largest first, zeros left out |
+| `say.named(name, summary)` / `say.join(...)` | several series in one chart | "Fitness: latest 45, … . Fatigue: latest 52, …" |
+
+Each returns `null` with nothing to say, and the frame then reads its label alone. The
+`label` is required (the design test fails on a frame without one) and says what is drawn,
+not the card's title again when the title is vaguer. `say.oneDecimal` is the format for
+loads and hours; the default rounds.
 
 ---
 

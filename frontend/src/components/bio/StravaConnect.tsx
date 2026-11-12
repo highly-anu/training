@@ -1,3 +1,4 @@
+import { BRAND } from '@/lib/dataColors'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useEffect, useState } from 'react'
@@ -19,7 +20,7 @@ import { useCurrentProgram } from '@/api/programs'
 import { autoMatchWorkouts } from '@/lib/workoutMatcher'
 
 // Strava brand colour
-const STRAVA_ORANGE = '#FC4C02'
+const STRAVA_ORANGE = BRAND.strava
 
 export function StravaConnect() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -107,7 +108,7 @@ export function StravaConnect() {
             size="sm"
             onClick={() => authorize.mutate()}
             loading={authorize.isPending}
-            style={{ backgroundColor: STRAVA_ORANGE, color: '#fff' }}
+            style={{ backgroundColor: STRAVA_ORANGE, color: BRAND.onStrava }}
             className="shrink-0 hover:opacity-90 transition-opacity"
           >
             <Zap className="size-3.5" />
@@ -140,7 +141,7 @@ export function StravaConnect() {
                 <p className="text-sm font-medium">{status.athlete?.name ?? 'Strava'}</p>
                 <Badge
                   variant="outline"
-                  className="text-[10px] border-emerald-500/40 text-emerald-700 dark:text-emerald-300"
+                  className="text-[10px] border-done/40 text-done"
                 >
                   Connected
                 </Badge>
@@ -161,7 +162,7 @@ export function StravaConnect() {
 
         {/* Sync result feedback */}
         {sync.isSuccess && (
-          <p className="text-xs text-emerald-700 dark:text-emerald-300">
+          <p className="text-xs text-done">
             Synced {sync.data.count} activit{sync.data.count === 1 ? 'y' : 'ies'}.
           </p>
         )}

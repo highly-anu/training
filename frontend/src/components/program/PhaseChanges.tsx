@@ -1,3 +1,4 @@
+import { FALLBACK_HEX } from '@/lib/dataColors'
 import { useMemo, useState } from 'react'
 import type { ModalityId, PhaseSummary, PhaseSummaryItem } from '@/api/types'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
@@ -14,7 +15,7 @@ const VIEWS = [
 // number here is the server's (`phase_summary`, src/phase_summary.py); the
 // phone lays out the same document, so nothing is counted in the browser.
 
-const modalityHex = (m: string) => MODALITY_COLORS[m as ModalityId]?.hex ?? '#6366f1'
+const modalityHex = (m: string) => MODALITY_COLORS[m as ModalityId]?.hex ?? FALLBACK_HEX
 const modalityLabel = (m: string) => MODALITY_COLORS[m as ModalityId]?.label ?? m.replace(/_/g, ' ')
 
 function kg(n: number) {

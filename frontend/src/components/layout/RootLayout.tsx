@@ -19,6 +19,13 @@ export function RootLayout() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
+      {/* The first stop of the keyboard: past the sidebar, to the page. */}
+      <a
+        href="#main"
+        className="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:left-3 focus-visible:top-3 focus-visible:z-50 focus-visible:rounded-md focus-visible:bg-background focus-visible:px-3 focus-visible:py-2 focus-visible:text-sm focus-visible:font-medium focus-visible:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        Skip to content
+      </a>
       {/* Desktop Sidebar */}
       <div className="hidden w-56 flex-col md:flex">
         <Sidebar />
@@ -39,7 +46,7 @@ export function RootLayout() {
         <TopBar />
         <ProgramSaveBanner />
         <Shortcuts />
-        <main className="flex-1 overflow-hidden flex flex-col">
+        <main id="main" tabIndex={-1} className="flex-1 overflow-hidden flex flex-col focus-visible:outline-none">
           <AnimatePresence mode="wait">
             <div key={pathname} className="contents">
               <RouteErrorBoundary resetKey={pathname}>{outlet}</RouteErrorBoundary>

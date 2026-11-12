@@ -62,7 +62,7 @@ function CleanProgress({ session, logKey, serverKey }: Props) {
       {answered ? (
         <div className="flex items-center justify-between gap-2 text-sm">
           {verdict!.clean ? (
-            <span className="flex items-center gap-1.5 text-green-700 dark:text-green-400">
+            <span className="flex items-center gap-1.5 text-done">
               <BadgeCheck className="size-4" />
               Clean, as written{verdict!.rpe != null ? ` · RPE ${verdict!.rpe}` : ''}
             </span>
@@ -163,7 +163,7 @@ function LiftProgress({ session, logKey, serverKey }: Props) {
           {lifts.map((ea, i) => (
             <div key={ea.exercise!.id} className="flex items-center gap-1.5">
               {logged[i]!.made ? (
-                <BadgeCheck className="size-4 text-green-700 dark:text-green-400" />
+                <BadgeCheck className="size-4 text-done" />
               ) : (
                 <MinusCircle className="size-4 text-muted-foreground" />
               )}

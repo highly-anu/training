@@ -4,9 +4,9 @@ import { cn } from '@/lib/utils'
 import type { TrainingPhase } from '@/api/types'
 
 const FIDELITY_STYLE: Record<string, string> = {
-  meets_ideal:   'text-emerald-700 dark:text-emerald-300',
-  below_ideal:   'text-amber-800 dark:text-amber-300',
-  below_minimum: 'text-red-700 dark:text-red-300',
+  meets_ideal:   'text-good',
+  below_ideal:   'text-warn',
+  below_minimum: 'text-bad',
 }
 
 /** What this program is, and where the athlete is in it. */

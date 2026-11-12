@@ -1,9 +1,11 @@
+import { ChartFrame } from '@/components/shared/ChartFrame'
+import * as say from '@/lib/chartSummary'
+import { LOAD_STEPS } from '@/lib/dataColors'
 import { LoadingState, FailedState } from '@/components/shared/states'
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
-  ResponsiveContainer,
-  BarChart,
+    BarChart,
   Bar,
   Cell,
   XAxis,
@@ -53,12 +55,12 @@ function weekLabel(isoWeek: string): string {
 }
 
 function barColor(trimp: number, median: number): string {
-  if (median === 0) return '#38bdf8'
+  if (median === 0) return LOAD_STEPS[1].hex
   const ratio = trimp / median
-  if (ratio < 0.75) return '#10b981'   // light week — emerald
-  if (ratio < 1.25) return '#38bdf8'   // normal — sky
-  if (ratio < 1.5)  return '#f59e0b'   // heavy — amber
-  return '#ef4444'                      // overload — red
+  if (ratio < 0.75) return LOAD_STEPS[0].hex   // light week
+  if (ratio < 1.25) return LOAD_STEPS[1].hex   // normal
+  if (ratio < 1.5)  return LOAD_STEPS[2].hex   // heavy
+  return LOAD_STEPS[3].hex                // overload
 }
 
 export function WeeklyLoadChart() {
@@ -109,12 +111,14 @@ export function WeeklyLoadChart() {
   return (
     <div className="space-y-1">
       <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-        <span className="flex items-center gap-1"><span className="inline-block size-2 rounded-sm bg-emerald-500" /> Light</span>
-        <span className="flex items-center gap-1"><span className="inline-block size-2 rounded-sm bg-sky-400" /> Normal</span>
-        <span className="flex items-center gap-1"><span className="inline-block size-2 rounded-sm bg-amber-400" /> Heavy</span>
-        <span className="flex items-center gap-1"><span className="inline-block size-2 rounded-sm bg-red-500" /> Overload</span>
+        {LOAD_STEPS.map((step) => (
+          <span key={step.key} className="flex items-center gap-1">
+            <span className="inline-block size-2 rounded-sm" style={{ backgroundColor: step.hex }} /> {step.label}
+          </span>
+        ))}
       </div>
-      <ResponsiveContainer width="100%" height={160}>
+      <ChartFrame label="Training load by week" height={160}
+        summary={say.series(data.map((d) => d.trimp), 'TRIMP')}>
         <BarChart data={data} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
           <XAxis
             dataKey="label"
@@ -143,7 +147,7 @@ export function WeeklyLoadChart() {
             ))}
           </Bar>
         </BarChart>
-      </ResponsiveContainer>
+      </ChartFrame>
     </div>
   )
 }

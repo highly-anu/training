@@ -1,3 +1,4 @@
+import { NEUTRAL_HEX } from '@/lib/dataColors'
 import { cn } from '@/lib/utils'
 import { PHASE_COLORS } from '@/lib/phaseColors'
 import type { PhaseSegment } from '@/hooks/usePhaseCalendar'
@@ -16,7 +17,7 @@ export function PhaseBar({ segments, totalWeeks, currentWeek }: PhaseBarProps) {
       <div className="flex h-3 w-full overflow-hidden rounded-full bg-muted">
         {segments.map((seg) => {
           const pct = (seg.weeks / totalWeeks) * 100
-          const colors = PHASE_COLORS[seg.phase] ?? { bg: 'bg-muted', text: 'text-muted-foreground', label: seg.phase, hex: '#888' }
+          const colors = PHASE_COLORS[seg.phase] ?? { bg: 'bg-muted', text: 'text-muted-foreground', label: seg.phase, hex: NEUTRAL_HEX }
           return (
             <div
               key={seg.phase + seg.startWeek}
@@ -32,7 +33,7 @@ export function PhaseBar({ segments, totalWeeks, currentWeek }: PhaseBarProps) {
       <div className="flex w-full">
         {segments.map((seg) => {
           const pct = (seg.weeks / totalWeeks) * 100
-          const colors = PHASE_COLORS[seg.phase] ?? { bg: 'bg-muted', text: 'text-muted-foreground', label: seg.phase, hex: '#888' }
+          const colors = PHASE_COLORS[seg.phase] ?? { bg: 'bg-muted', text: 'text-muted-foreground', label: seg.phase, hex: NEUTRAL_HEX }
           const isCurrent = currentWeek >= seg.startWeek && currentWeek <= seg.endWeek
           return (
             <div

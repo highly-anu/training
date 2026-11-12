@@ -1,3 +1,4 @@
+import { FALLBACK_HEX } from '@/lib/dataColors'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useSimilarity, getTopSimilar } from '@/api/similarity'
 import { cn } from '@/lib/utils'
@@ -14,7 +15,7 @@ interface SimilarItemsProps {
 function ScoreBar({ value, hex }: { value: number; hex?: string }) {
   return (
     <div className="relative h-1 w-12 rounded-full bg-muted/30 overflow-hidden shrink-0">
-      <div className="absolute h-full rounded-full" style={{ width: `${value * 100}%`, backgroundColor: hex ?? '#6366f1', opacity: 0.7 }} />
+      <div className="absolute h-full rounded-full" style={{ width: `${value * 100}%`, backgroundColor: hex ?? FALLBACK_HEX, opacity: 0.7 }} />
     </div>
   )
 }

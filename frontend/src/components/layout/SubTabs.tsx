@@ -63,6 +63,8 @@ export function SubTabs<T extends string>({ tabs, active, onChange, label, id, c
   }
 
   return (
+    // The tabs inside take the focus (a roving tabindex); the list only hears their arrow keys.
+    // eslint-disable-next-line jsx-a11y/interactive-supports-focus
     <div
       ref={row}
       role="tablist"

@@ -112,8 +112,8 @@ export function AdherenceWidget() {
           {trend != null && (
             <span className="flex items-center gap-1 whitespace-nowrap">
               {trend >= 0
-                ? <TrendingUp className="size-3 text-emerald-600 dark:text-emerald-400" />
-                : <TrendingDown className="size-3 text-amber-600 dark:text-amber-400" />}
+                ? <TrendingUp className="size-3 text-good" />
+                : <TrendingDown className="size-3 text-warn" />}
               vs last week
             </span>
           )}
@@ -135,7 +135,7 @@ export function AdherenceWidget() {
               <span className="w-10 text-[10px] text-muted-foreground tabular-nums">Wk {w.weekNumber}</span>
               <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
                 <div
-                  className={cn('h-full rounded-full', statusFor(w.pct) === 'green' ? 'bg-emerald-500' : statusFor(w.pct) === 'yellow' ? 'bg-amber-500' : 'bg-red-500')}
+                  className={cn('h-full rounded-full', statusFor(w.pct) === 'green' ? 'bg-good' : statusFor(w.pct) === 'yellow' ? 'bg-warn' : 'bg-bad')}
                   style={{ width: `${Math.min(100, w.pct)}%` }}
                 />
               </div>

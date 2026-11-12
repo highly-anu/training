@@ -75,7 +75,7 @@ function SessionRow({ session }: { session: PlannedSession }) {
           {/* Icon plus title, never colour alone (design system §1.6). */}
           {session.completedAt && (
             <CheckCircle2
-              className="h-3.5 w-3.5 text-emerald-700 dark:text-emerald-300"
+              className="h-3.5 w-3.5 text-done"
               aria-hidden="true"
             />
           )}

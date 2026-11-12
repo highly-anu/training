@@ -138,7 +138,7 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
         <div className="space-y-5">
           {/* Event / goal date */}
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium">
+            <label htmlFor="program-event-date" className="flex items-center gap-2 text-sm font-medium">
               <Flag className="size-3.5 text-muted-foreground" />
               Event / Goal Date
             </label>
@@ -147,6 +147,7 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
             </p>
             <div className="flex items-center gap-2">
               <input
+                id="program-event-date"
                 type="date"
                 value={eventDate ?? ''}
                 min={today}
@@ -170,7 +171,7 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
                   ? 'border-muted text-muted-foreground'
                   : daysToEvent < 14
                     ? 'border-amber-500/30 bg-amber-500/5 text-amber-700 dark:text-amber-300'
-                    : 'border-emerald-500/30 bg-emerald-500/5 text-emerald-700 dark:text-emerald-300'
+                    : 'border-done/30 bg-done/5 text-done'
               }`}>
                 {daysToEvent < 0 ? (
                   <span>Event date has passed ({Math.abs(daysToEvent)} days ago)</span>
@@ -188,10 +189,10 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
 
           {/* Program start date */}
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium">
+            <p className="flex items-center gap-2 text-sm font-medium">
               <CalendarDays className="size-3.5 text-muted-foreground" />
               Program Start Date
-            </label>
+            </p>
             <p className="text-sm">
               {programStartDate ? format(parseISO(programStartDate), 'EEEE, MMM d, yyyy') : 'Not recorded'}
             </p>

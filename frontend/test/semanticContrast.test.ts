@@ -19,12 +19,10 @@ import { describe, it, expect } from 'vitest'
 
 import { MODALITY_COLORS } from '../src/lib/modalityColors'
 import { PHASE_COLORS } from '../src/lib/phaseColors'
-import { COMPLETION } from '../src/lib/completionColors'
-import { STATUS_STYLES, STATUS_TEXT } from '../src/lib/statusColors'
 import { MOVEMENT_GROUP_COLORS, MOVEMENT_OTHER_COLOR } from '../src/lib/movementColors'
 
 import {
-  AA_NORMAL, PALETTE, THEME_BG, contrast, hueDistance, parseText, ratioFor, themeToken, toRgb,
+  AA_NORMAL, PALETTE, THEME_BG, contrast, hueDistance, over, parseText, ratioFor, themeToken, toRgb,
 } from './contrastUtils'
 
 // ── the cases ────────────────────────────────────────────────────────────────
@@ -43,16 +41,6 @@ const CASES: Case[] = [
     { system: 'movement', name, text: c.text, bg: c.bg },
     { system: 'movement-label', name, text: c.text, bg: '' },
   ]),
-  { system: 'completion', name: 'surface', text: COMPLETION.text, bg: COMPLETION.bg },
-  { system: 'completion', name: 'interactive', text: COMPLETION.text, bg: COMPLETION.bgStrong },
-  ...Object.entries(STATUS_STYLES).flatMap(([name, s]) => [
-    // The badge string carries its own bg; the score sits directly on the card.
-    { system: 'status-badge', name, text: s.badge, bg: s.badge },
-    { system: 'status-score', name, text: s.score, bg: '' },
-  ]),
-  ...Object.entries(STATUS_TEXT).map(([name, text]) => ({
-    system: 'status-text', name, text, bg: '',
-  })),
 ]
 
 const THEMES = Object.keys(THEME_BG)
@@ -83,7 +71,7 @@ describe('semantic colour contrast', () => {
 describe('semantic colour pairing', () => {
   // The bug was structural, not just numeric: a single mid-shade cannot serve
   // both themes. Every semantic text class must therefore declare both halves.
-  const paired: Case[] = CASES.filter((c) => c.system !== 'status-badge')
+  const paired: Case[] = CASES
 
   it.each(paired)('$system/$name declares both a light and a dark shade', (c) => {
     const { light, dark } = parseText(c.text)
@@ -123,4 +111,32 @@ describe('action and done', () => {
     const ratio = contrast(toRgb(themeToken(theme, 'done')), THEME_BG[theme])
     expect(ratio, `${theme}: --done on the background is ${ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(3)
   })
+})
+
+/**
+ * Done and the three verdicts are tokens, each theme's own (docs/frontend-design.md
+ * §8.12). They are written as text — `text-done`, `text-good` — on the page, on
+ * a card and on their own tint, so each has to clear AA in all three places in
+ * every theme. A retuned theme that dims one fails here, not in a screenshot.
+ */
+describe('done and the verdicts as text', () => {
+  const TOKENS = ['done', 'good', 'warn', 'bad']
+  const TINTS = [0.05, 0.1, 0.15]
+
+  it.each(THEMES.flatMap((theme) => TOKENS.map((token) => ({ theme, token }))))(
+    '$theme: --$token reads on the page, a card and its own tint',
+    ({ theme, token }) => {
+      const fg = toRgb(themeToken(theme, token))
+      for (const surface of ['background', 'card']) {
+        const bg = toRgb(themeToken(theme, surface))
+        const plain = contrast(fg, bg)
+        expect(plain, `${theme}: --${token} on --${surface} is ${plain.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA_NORMAL)
+        for (const alpha of TINTS) {
+          const tinted = contrast(fg, over(fg, alpha, bg))
+          expect(tinted, `${theme}: --${token} on its /${alpha * 100} tint over --${surface} is ${tinted.toFixed(2)}:1`)
+            .toBeGreaterThanOrEqual(AA_NORMAL)
+        }
+      }
+    },
+  )
 })

@@ -21,7 +21,7 @@ import { useInjuryFlags } from '@/api/constraints'
 import { RegenerateFromWeekBanner } from '@/components/program/RegenerateFromWeekBanner'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { EQUIPMENT_CATEGORIES } from '@/lib/equipment'
-import { getEffectiveMaxHR, maxHRFromDOB, zoneBoundariesToBpm, DEFAULT_ZONE_BOUNDARIES } from '@/lib/hrZones'
+import { getEffectiveMaxHR, maxHRFromDOB, zoneBoundariesToBpm, DEFAULT_ZONE_BOUNDARIES, ZONE_COLORS } from '@/lib/hrZones'
 import type { BenchmarkStandard, Day, DaySchedule, EquipmentId, InjuryFlagId, SessionType, StandardResult, TrainingLevel, Sex } from '@/api/types'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -171,7 +171,7 @@ function InjuriesOverview() {
                       : 'border-border/30 bg-card/40 hover:border-primary/40 hover:shadow-md hover:-translate-y-px hover:bg-muted/20'
                   )}
                   style={{
-                    borderLeftColor: isSelected ? '#ef4444' : undefined,
+                    borderLeftColor: isSelected ? 'var(--destructive)' : undefined,
                     borderLeftWidth: isSelected ? 2 : 1
                   }}
                 >
@@ -637,7 +637,6 @@ function ScheduleOverview() {
 
 // ── Heart rate (a section of Athlete) ─────────────────────────────────────────
 
-const ZONE_COLORS = ['#94a3b8', '#38bdf8', '#fbbf24', '#f97316', '#ef4444']
 const ZONE_LABELS = ['Recovery', 'Aerobic', 'Tempo', 'Threshold', 'Max']
 
 /**

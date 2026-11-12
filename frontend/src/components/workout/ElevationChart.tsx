@@ -1,7 +1,9 @@
+import { ChartFrame } from '@/components/shared/ChartFrame'
+import * as say from '@/lib/chartSummary'
+import { SERIES } from '@/lib/dataColors'
 import { useMemo } from 'react'
 import {
-  ResponsiveContainer,
-  AreaChart,
+    AreaChart,
   Area,
   XAxis,
   YAxis,
@@ -60,12 +62,13 @@ export function ElevationChart({ track }: Props) {
   const maxElapsed = data[data.length - 1].elapsed
 
   return (
-    <ResponsiveContainer width="100%" height={120}>
+    <ChartFrame label="Elevation over the workout" height={120}
+      summary={say.range(data.map((d) => d.altitude), 'metres')}>
       <AreaChart data={data} margin={{ top: 4, right: 24, left: -8, bottom: 0 }}>
         <defs>
           <linearGradient id="elevGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#14b8a6" stopOpacity={0.4} />
-            <stop offset="100%" stopColor="#14b8a6" stopOpacity={0.05} />
+            <stop offset="0%" stopColor={SERIES.elevation} stopOpacity={0.4} />
+            <stop offset="100%" stopColor={SERIES.elevation} stopOpacity={0.05} />
           </linearGradient>
         </defs>
         <XAxis
@@ -87,12 +90,12 @@ export function ElevationChart({ track }: Props) {
         <Area {...drawIn}
           type="monotone"
           dataKey="altitude"
-          stroke="#14b8a6"
+          stroke={SERIES.elevation}
           strokeWidth={1.5}
           fill="url(#elevGrad)"
           dot={false}
         />
       </AreaChart>
-    </ResponsiveContainer>
+    </ChartFrame>
   )
 }

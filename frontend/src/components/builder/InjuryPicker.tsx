@@ -146,9 +146,9 @@ export function InjuryPicker({
             <div className="rounded-lg border bg-card p-3 space-y-3">
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <label className="text-[10px] text-muted-foreground">Body Part</label>
+                  <span className="block text-[10px] text-muted-foreground">Body Part</span>
                   <Select value={bodyPart} onValueChange={handleBodyPartChange}>
-                    <SelectTrigger className="h-8 text-xs">
+                    <SelectTrigger aria-label="Body part" className="h-8 text-xs">
                       <SelectValue placeholder="Select…" />
                     </SelectTrigger>
                     <SelectContent>
@@ -161,8 +161,9 @@ export function InjuryPicker({
                   </Select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] text-muted-foreground">Name</label>
+                  <label htmlFor="custom-injury-name" className="text-[10px] text-muted-foreground">Name</label>
                   <input
+                    id="custom-injury-name"
                     type="text"
                     className="flex h-8 w-full rounded-md border border-input bg-transparent px-3 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                     value={customName}

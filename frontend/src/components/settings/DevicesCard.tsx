@@ -49,7 +49,7 @@ export function DevicesCard() {
           Pair
         </Button>
         {claim.isError && <span className="text-[11px] text-red-700 dark:text-red-300">{claim.error.message}</span>}
-        {claim.isSuccess && <span className="text-[11px] text-emerald-700 dark:text-emerald-300">Paired</span>}
+        {claim.isSuccess && <span className="text-[11px] text-done">Paired</span>}
       </form>
 
       {isLoading && <LoadingState shape="lines" label="Loading devices" />}

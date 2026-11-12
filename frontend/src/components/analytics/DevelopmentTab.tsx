@@ -1,8 +1,11 @@
+import { ChartFrame } from '@/components/shared/ChartFrame'
+import * as say from '@/lib/chartSummary'
+import { SERIES } from '@/lib/dataColors'
 import { LoadingState, FailedState } from '@/components/shared/states'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  ResponsiveContainer, LineChart, Line, BarChart, Bar, Cell, XAxis, YAxis, Tooltip, ReferenceArea,
+  LineChart, Line, BarChart, Bar, Cell, XAxis, YAxis, Tooltip, ReferenceArea,
 } from 'recharts'
 import { format } from 'date-fns'
 import { ArrowRight } from 'lucide-react'
@@ -140,7 +143,7 @@ function SeriesChart({ series, bands, unit, blocks }: {
   const x1 = Math.min(bands[0]?.x1 ?? series[0].x, series[0].x)
   const x2 = Math.max(bands[bands.length - 1]?.x2 ?? series[series.length - 1].x, series[series.length - 1].x)
   return (
-    <ResponsiveContainer width="100%" height={200}>
+    <ChartFrame label={`Results over time${unit ? `, ${unit}` : ''}`} summary={say.series(series.map((p) => p.value), unit, say.oneDecimal)} height={200}>
       <LineChart data={series} margin={{ top: 8, right: 12, left: -16, bottom: 0 }}>
         {bands.map((b) => (
           <ReferenceArea key={b.id} x1={b.x1} x2={b.x2} fill={b.color} fillOpacity={0.08} strokeOpacity={0} />
@@ -151,14 +154,14 @@ function SeriesChart({ series, bands, unit, blocks }: {
         <YAxis tick={{ fontSize: 9, fill: 'var(--color-muted-foreground)' }} axisLine={false} tickLine={false}
                domain={['auto', 'auto']} unit={` ${unit}`} />
         <Tooltip content={<PointTooltip unit={unit} />} />
-        <Line {...drawIn} type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} connectNulls
+        <Line {...drawIn} type="monotone" dataKey="value" stroke={SERIES.result} strokeWidth={2} connectNulls
               dot={(props: { cx?: number; cy?: number; payload?: SeriesPoint }) => (
                 <circle key={`${props.cx}-${props.cy}`} cx={props.cx} cy={props.cy} r={4}
                         fill={props.payload?.isDeload ? 'var(--color-card)' : blockColor(blocks, props.payload?.blockId)}
                         stroke={blockColor(blocks, props.payload?.blockId)} strokeWidth={1.5} />
               )} />
       </LineChart>
-    </ResponsiveContainer>
+    </ChartFrame>
   )
 }
 
@@ -190,8 +193,8 @@ function PerBlockTable({ rows, blocks, unit }: { rows: DevelopmentPerBlock[]; bl
               <td className="py-1.5 text-right tabular-nums">{r.last} {unit}</td>
               <td className="py-1.5 text-right tabular-nums">{r.best} {unit}</td>
               <td className={cn('py-1.5 text-right tabular-nums font-medium',
-                                r.delta > 0 && 'text-emerald-700 dark:text-emerald-300',
-                                r.delta < 0 && 'text-amber-700 dark:text-amber-300')}>
+                                r.delta > 0 && 'text-good',
+                                r.delta < 0 && 'text-warn')}>
                 {formatDelta(r.delta)}
               </td>
             </tr>
@@ -206,8 +209,8 @@ function TrendLine({ trend }: { trend: DevelopmentLift['trend'] }) {
   if (trend.direction === 'insufficient_data') return <span className="text-muted-foreground">not enough points</span>
   const level = statusLevel(trend.direction === 'improving' ? 'on_track' : trend.direction === 'declining' ? 'behind' : 'stable_by_design')
   return (
-    <span className={cn(level === 'green' && 'text-emerald-700 dark:text-emerald-300',
-                        level === 'yellow' && 'text-amber-700 dark:text-amber-300',
+    <span className={cn(level === 'green' && 'text-good',
+                        level === 'yellow' && 'text-warn',
                         level !== 'green' && level !== 'yellow' && 'text-muted-foreground')}>
       {trend.direction} · {trend.slopePct > 0 ? '+' : ''}{trend.slopePct}%/session over {trend.pointsUsed}
     </span>
@@ -298,7 +301,7 @@ function LoadAcrossBlocks({ data }: { data: DevelopmentAnalytics }) {
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Load across blocks</p>
         <p className="text-[11px] text-muted-foreground">Weekly TRIMP, coloured by block</p>
       </div>
-      <ResponsiveContainer width="100%" height={160}>
+      <ChartFrame label="Weekly training load across blocks" summary={say.series(rows.map((r) => r.trimp), 'TRIMP')} height={160}>
         <BarChart data={rows} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
           <XAxis dataKey="label" tick={{ fontSize: 9, fill: 'var(--color-muted-foreground)' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
           <YAxis tick={{ fontSize: 9, fill: 'var(--color-muted-foreground)' }} axisLine={false} tickLine={false} />
@@ -307,7 +310,7 @@ function LoadAcrossBlocks({ data }: { data: DevelopmentAnalytics }) {
             {rows.map((r) => <Cell key={r.week} fill={blockColor(data.blocks, r.blockId)} fillOpacity={r.blockId == null ? 0.4 : 0.85} />)}
           </Bar>
         </BarChart>
-      </ResponsiveContainer>
+      </ChartFrame>
     </div>
   )
 }

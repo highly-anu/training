@@ -326,7 +326,7 @@ export function ConstraintsForm() {
                         : 'border-border/30 bg-card/40 hover:border-primary/40 hover:shadow-md hover:-translate-y-px hover:bg-muted/20'
                     )}
                     style={{
-                      borderLeftColor: isSelected ? '#ef4444' : undefined,
+                      borderLeftColor: isSelected ? 'var(--destructive)' : undefined,
                       borderLeftWidth: isSelected ? 2 : 1
                     }}
                   >

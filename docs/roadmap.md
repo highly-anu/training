@@ -1739,6 +1739,19 @@ Frontend-design §11.10. Left to the page passes: scroll restoration for Explore
 Profile's inner panels, Workout detail and Preview; a keyboard drag in Log ▸ Linking
 (select-then-pick is its twin today).
 
+**Done — 6. Colour** (`feat/web-colour`). Done is the `--done` token and a verdict
+`--good` / `--warn` / `--bad`, each theme's own and AA as text on the page, a card and its
+own tint (the contrast test computes it from the CSS; the light `--done` was darkened to
+pass). The 136 raw emerald and green classes are gone, and every hex literal left the
+components for a named constant (`lib/dataColors.ts` beside the modality, phase, zone and
+movement modules). All 17 chart files draw inside `ChartFrame`, one image whose name is
+what it draws and its numbers in the phone's words (`lib/chartSummary.ts`). A skip link,
+one `h1` a page (Today had two), form labels tied to their controls, and
+`eslint-plugin-jsx-a11y` in the lint. Design test: *hue is data, emerald is done*.
+Frontend-design §8.3, §8.8, §8.12, §12.11. Left: about 150 amber, red and orange classes
+that are notices rather than verdicts keep their `-700 dark:-300` pairs; focus returning
+to a sheet's trigger is Radix's own and was not re-tested per sheet.
+
 **2. States.** `components/shared/states/`: one reading of a load (`loadPhase` — content is
 never replaced by a reload or its failure), `LoadingState` (the one loading look, in the
 content's shape), `FailedState` with Try again, `ErrorBanner` with a retry, `QueryState`
@@ -1761,11 +1774,6 @@ Motion; the mobile drawer; a detail that grows from the card that opened it.
 menu holding Move · Replace · Remove as on the phone; every clickable `div` a button with
 a focus ring, a press state and a 44 px touch target; tooltips with names for icon
 buttons; drag and drop from the keyboard; scroll restored per route; a few shortcuts.
-
-**6. Colour and accessibility.** Done through `--done` only, the other meanings of emerald
-on their own tokens, warning apart from the action amber, hex literals out of components;
-every chart reads its numbers (`lib/chartSummary.ts`, `ChartFrame`); colour never alone;
-one `h1` a page, a skip link, focus returned when a sheet closes; `eslint-plugin-jsx-a11y`.
 
 **7. The page passes.** Each page against the rules table, in sidebar order, at desktop
 and 390 px in two themes; §16's checklist rewritten to point at §1.8.

@@ -1,7 +1,10 @@
+import { ChartFrame } from '@/components/shared/ChartFrame'
+import * as say from '@/lib/chartSummary'
+import { STATUS_CSS } from '@/lib/statusColors'
+import { SERIES } from '@/lib/dataColors'
 import { useMemo } from 'react'
 import {
-  ResponsiveContainer,
-  ComposedChart,
+    ComposedChart,
   Line,
   XAxis,
   YAxis,
@@ -104,22 +107,23 @@ export function HRVTrendChart({ bioLogs, days = 30 }: Props) {
 
   // For HRV: rising is green (good), falling is red (bad)
   const bandColor =
-    trend === 'rising' ? '#10b981' : trend === 'falling' ? '#ef4444' : '#f59e0b'
+    trend === 'rising' ? STATUS_CSS.green : trend === 'falling' ? STATUS_CSS.red : STATUS_CSS.yellow
   const hasRolling = data.some((d) => d.rolling != null)
 
   return (
     <div className="space-y-1">
       <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
         <span className={`font-medium ${
-          trend === 'rising'  ? 'text-emerald-700 dark:text-emerald-300' :
-          trend === 'falling' ? 'text-red-700 dark:text-red-300'     : 'text-amber-700 dark:text-amber-300'
+          trend === 'rising'  ? 'text-good' :
+          trend === 'falling' ? 'text-bad'     : 'text-warn'
         }`}>
           {trend === 'rising'  ? 'Trending up' :
            trend === 'falling' ? 'Trending down' : 'Stable'}
         </span>
         <span>· 7-day rolling average · RMSSD ms</span>
       </div>
-      <ResponsiveContainer width="100%" height={160}>
+      <ChartFrame label="Heart rate variability by day" height={160}
+        summary={say.series(data.map((d) => d.hrv), 'ms')}>
         <ComposedChart data={data} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
           <XAxis
             dataKey="date"
@@ -148,9 +152,9 @@ export function HRVTrendChart({ bioLogs, days = 30 }: Props) {
             type="monotone"
             dataKey="hrv"
             name="HRV"
-            stroke="#38bdf8"
+            stroke={SERIES.hrv}
             strokeWidth={1}
-            dot={{ r: 2, fill: '#38bdf8', strokeWidth: 0 }}
+            dot={{ r: 2, fill: SERIES.hrv, strokeWidth: 0 }}
             connectNulls
             opacity={0.5}
           />
@@ -159,14 +163,14 @@ export function HRVTrendChart({ bioLogs, days = 30 }: Props) {
               type="monotone"
               dataKey="rolling"
               name="7-day avg"
-              stroke="#0ea5e9"
+              stroke={SERIES.hrvBaseline}
               strokeWidth={2}
               dot={false}
               connectNulls
             />
           )}
         </ComposedChart>
-      </ResponsiveContainer>
+      </ChartFrame>
     </div>
   )
 }

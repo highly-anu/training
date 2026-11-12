@@ -223,7 +223,7 @@ function CleanToggle({ sessionKey, exerciseId, clean }: { sessionKey: string; ex
       aria-label={`Clean: ${exerciseId}`}
       className={cn(
         'rounded border px-2 py-0.5 text-[10px] font-medium transition-colors',
-        clean ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+        clean ? 'border-done/50 bg-done/10 text-done'
               : 'border-border text-muted-foreground hover:bg-muted',
       )}
     >

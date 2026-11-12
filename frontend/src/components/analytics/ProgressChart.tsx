@@ -1,7 +1,11 @@
+import { ChartFrame } from '@/components/shared/ChartFrame'
+import * as say from '@/lib/chartSummary'
+import { COMPLETION } from '@/lib/completionColors'
+import { SERIES } from '@/lib/dataColors'
 import { useMemo } from 'react'
 import { format } from 'date-fns'
 import {
-  ResponsiveContainer, ComposedChart, Line, XAxis, YAxis, Tooltip, Legend, ReferenceArea, ReferenceLine, CartesianGrid,
+  ComposedChart, Line, XAxis, YAxis, Tooltip, Legend, ReferenceArea, ReferenceLine, CartesianGrid,
 } from 'recharts'
 import type { AnalyticsProgressEntry, ExerciseFinding, ExerciseSeriesSection } from '@/api/types'
 import { chartableMeasures, deloadSpans, measureKey, seriesFor, type ChartPoint, type ChartSelection } from '@/lib/progressChart'
@@ -9,8 +13,8 @@ import { cn } from '@/lib/utils'
 import { useChartEntry } from '@/lib/chartMotion'
 
 // The one actual/expected pair, everywhere: done emerald, planned indigo dashed.
-const DONE = '#10b981'
-const PLANNED = '#6366f1'
+const DONE = COMPLETION.css
+const PLANNED = SERIES.planned
 const HALF_WEEK = 3.5 * 24 * 3600 * 1000
 
 /** 1, 2, 2.5 or 5 × a power of ten, at least `raw`; whole for counts. */
@@ -156,7 +160,11 @@ export function ProgressChart({ section, progress, selection, onSelect, findings
       </div>
 
       {hasDone || hasPlanned ? (
-        <ResponsiveContainer width="100%" height={240}>
+        <ChartFrame label="Done against planned, session by session" height={240}
+          summary={say.join(
+            say.named('Done', say.series(drawn.map((d) => d.done), series.unit, say.oneDecimal)),
+            say.named(series.plannedLabel, say.series(drawn.map((d) => d.planned), series.unit, say.oneDecimal)),
+          )}>
           <ComposedChart data={drawn} margin={{ top: 8, right: 12, left: -12, bottom: 0 }}>
             <CartesianGrid vertical={false} stroke="var(--color-border)" strokeOpacity={0.5} />
             <XAxis dataKey="t" type="number" scale="time" domain={[Math.min(...ts) - HALF_WEEK / 3, Math.max(...ts) + HALF_WEEK / 3]}
@@ -186,7 +194,7 @@ export function ProgressChart({ section, progress, selection, onSelect, findings
                               fill={props.payload?.isDeload ? 'var(--color-card)' : DONE}
                               stroke={props.payload?.isDeload ? DONE : 'var(--color-card)'} strokeWidth={props.payload?.isDeload ? 1.5 : 2} />} />
           </ComposedChart>
-        </ResponsiveContainer>
+        </ChartFrame>
       ) : (
         <p className="py-8 text-center text-xs text-muted-foreground">No values for this metric yet.</p>
       )}

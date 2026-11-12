@@ -43,6 +43,8 @@ export function SuggestionRow({ suggestion: s, compact = false, showName = true 
         {showName && <span className="font-medium text-foreground">{s.shortName ?? s.name}</span>}
         {editing ? (
           <input
+            // Correct was just pressed: the field it opens is where the typing goes.
+            // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
             value={text}
             onChange={(e) => setText(e.target.value)}

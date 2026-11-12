@@ -11,8 +11,9 @@
  * with the consumer: the scale is shared, the vocabulary is not ("Ready" vs
  * "On Track" vs "Ahead").
  *
- * Text shades pair -700 (light) with -300 (dark) — see docs/frontend-design.md
- * §8.8 for the contrast measurements that forced this.
+ * The colours are the `--good` / `--warn` / `--bad` tokens (styles/globals.css),
+ * each theme's own and AA as text on its page — docs/frontend-design.md §8.12.
+ * A component writes `text-good`, `bg-warn/10`, or takes a constant from here.
  */
 export type StatusLevel = 'green' | 'yellow' | 'red'
 
@@ -27,25 +28,39 @@ export interface StatusStyle {
 
 export const STATUS_STYLES: Record<StatusLevel, StatusStyle> = {
   green: {
-    ring: 'ring-emerald-500/30',
-    score: 'text-emerald-700 dark:text-emerald-300',
-    badge: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30',
+    ring: 'ring-good/30',
+    score: 'text-good',
+    badge: 'bg-good/10 text-good border-good/30',
   },
   yellow: {
-    ring: 'ring-amber-500/30',
-    score: 'text-amber-800 dark:text-amber-300',
-    badge: 'bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/30',
+    ring: 'ring-warn/30',
+    score: 'text-warn',
+    badge: 'bg-warn/10 text-warn border-warn/30',
   },
   red: {
-    ring: 'ring-red-500/30',
-    score: 'text-red-700 dark:text-red-300',
-    badge: 'bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/30',
+    ring: 'ring-bad/30',
+    score: 'text-bad',
+    badge: 'bg-bad/10 text-bad border-bad/30',
   },
 }
 
 /** Bare text colour for a status, when only the text is being tinted. */
 export const STATUS_TEXT: Record<StatusLevel, string> = {
-  green: 'text-emerald-700 dark:text-emerald-300',
-  yellow: 'text-amber-800 dark:text-amber-300',
-  red: 'text-red-700 dark:text-red-300',
+  green: 'text-good',
+  yellow: 'text-warn',
+  red: 'text-bad',
+}
+
+/** A status dot or bar fill. Always beside a word: colour is never the only sign. */
+export const STATUS_FILL: Record<StatusLevel, string> = {
+  green: 'bg-good',
+  yellow: 'bg-warn',
+  red: 'bg-bad',
+}
+
+/** The same three in SVG and inline styles, where a class cannot reach. */
+export const STATUS_CSS: Record<StatusLevel, string> = {
+  green: 'var(--good)',
+  yellow: 'var(--warn)',
+  red: 'var(--bad)',
 }
