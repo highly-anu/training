@@ -2376,14 +2376,17 @@ far as it must.
    tracks · phases; the fingerprint (`ModalityMix`, the main track's sessions a
    week by modality, weighted by phase weeks) with its `MixLegend` (modality
    icon + ×/wk) and the easy → hard `IntensityBar`.
-2. **Tracks & phases** (`PhilosophyTracks`) — every track as one row with the
-   same columns (name, `LevelPips`, length, `PhaseBar` on a scale shared by all
-   tracks, days · minutes, mix), then the chosen track's phases as cards: the
-   kind's colour, weeks, the `WeekGlyph` (a template's seven days split by
-   modality, rest dashed; else one dot per weekly session), the intensity bar,
-   days, minutes and tests as icons. A card opens the phase under the cards:
-   the full week (`PhaseWeek`), description, what it builds, how hard, tests;
-   *About this track* opens the track's words under its header.
+2. **Tracks & phases** (`PhilosophyTracks`) — one card a track, flipped through
+   (a scroll-snap strip: the track's name chip, the arrows or a swipe; the next
+   card shows at the edge; it opens on the main track). A card is the whole
+   track, nothing behind a button: name, who it is for, `LevelPips`, weeks,
+   days, minutes, tests, mix, the `PhaseBar` on a scale shared by all tracks,
+   the track's own words (description, what it needs, notes), then its phases
+   as cards: the kind's colour, weeks, the `WeekGlyph` (a template's seven days
+   split by modality, rest dashed; else one dot per weekly session), the
+   intensity bar, days, minutes and tests as icons. A phase card opens the
+   phase under them, inside the track's card: the full week (`PhaseWeek`),
+   description, what it builds, how hard, tests.
 3. **Goals** — what the main track builds (chips) and *progress is …* with the
    standards it is measured by (chips in their modality's colour, a flask on
    the ones a phase tests); a standard, or *How progress is measured*, opens the
@@ -2776,6 +2779,10 @@ them with ARIA.
   the chip look without the tablist.
 
 ### 17.6 Step Indicators (Wizard Flows)
+
+Back and Next sit together at the right of the step's own column (`max-w-3xl`),
+sticky at its foot inside the scroller — never in a full-width bar with one at
+each far edge. The first step has no Back; the last step's action is its own.
 
 For multi-step flows (Program Builder), replace sub-tabs with a step indicator pushed to the right:
 

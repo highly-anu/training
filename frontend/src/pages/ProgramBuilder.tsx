@@ -97,23 +97,28 @@ export function ProgramBuilder() {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
 
-      {/* Footer nav — always visible */}
-      <div className="border-t bg-card/50 px-6 py-3 flex items-center justify-between">
-        <Button variant="ghost" size="sm" onClick={goBack} disabled={step === 1} className="gap-1">
-          <ChevronLeft className="size-4" /> Back
-        </Button>
-        {step < 4 && (
-          <Button
-            size="sm"
-            onClick={goNext}
-            disabled={step === 1 && (sourceMode === null || selectedGoalIds.length === 0)}
-            className="gap-1"
-          >
-            Next <ChevronRight className="size-4" />
-          </Button>
-        )}
+        {/* Back and Next close the step's own column, where the eye already is,
+            and stay at its foot while a long step scrolls. */}
+        <div className="sticky bottom-0 z-10 bg-background/95 backdrop-blur-sm">
+          <div className="mx-auto flex max-w-3xl items-center justify-end gap-2 px-8 py-3">
+            {step > 1 && (
+              <Button variant="outline" size="sm" onClick={goBack} className="gap-1">
+                <ChevronLeft className="size-4" /> Back
+              </Button>
+            )}
+            {step < 4 && (
+              <Button
+                size="sm"
+                onClick={goNext}
+                disabled={step === 1 && (sourceMode === null || selectedGoalIds.length === 0)}
+                className="gap-1"
+              >
+                Next <ChevronRight className="size-4" />
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
     </Page>
   )
