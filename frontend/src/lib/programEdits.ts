@@ -24,11 +24,17 @@ export function withSessionReplaced(
  *  day's first). Indices already on the day keep their place, so logs and
  *  links keyed by them still point at their sessions. */
 export function withSessionAdded(
-  program: GeneratedProgram, weekIndex: number, day: string, newSession: Session,
+  program: GeneratedProgram, weekIndex: number, day: string, newSession: Session, at?: number,
 ): GeneratedProgram {
   if (weekIndex < 0 || weekIndex >= program.weeks.length) return program
-  const weeks = program.weeks.map((week, i) => i !== weekIndex ? week
-    : { ...week, schedule: { ...week.schedule, [day]: [...(week.schedule[day] ?? []), { ...newSession, added: true }] } })
+  const weeks = program.weeks.map((week, i) => {
+    if (i !== weekIndex) return week
+    const sessions = [...(week.schedule[day] ?? [])]
+    // `at` is an undone removal going back to its own place.
+    sessions.splice(at === undefined ? sessions.length : Math.max(0, Math.min(at, sessions.length)), 0,
+      { ...newSession, added: true })
+    return { ...week, schedule: { ...week.schedule, [day]: sessions } }
+  })
   return { ...program, weeks }
 }
 

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { rollMotion } from '@/lib/motion'
+import { rollRank } from '@/lib/rollRank'
 import { cn } from '@/lib/utils'
 
 interface RollingNumberProps {
@@ -22,7 +23,7 @@ interface RollingNumberProps {
  * to the new one (`MotionConfig` drops the movement).
  */
 export function RollingNumber({ value, order, className }: RollingNumberProps) {
-  const rank = order ?? (typeof value === 'number' ? value : Number.parseFloat(value))
+  const rank = order ?? rollRank(value)
   const [shown, setShown] = useState({ value, rank })
   const [direction, setDirection] = useState<1 | -1>(1)
   if (shown.value !== value) {

@@ -62,6 +62,9 @@ export function readKey(prefix: string | null, key: string): KeyResult {
 }
 
 /** A field has the keyboard: letters are text, not commands. */
+/** What owns the keyboard while it is open: a dialog, a sheet, a menu, a select's list. */
+export const OWNS_KEYBOARD = '[role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"]'
+
 export function isTyping(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false
   if (target.isContentEditable) return true

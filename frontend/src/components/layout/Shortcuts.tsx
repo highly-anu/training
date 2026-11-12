@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Keys } from '@/components/shared/Tip'
 import { announce } from '@/lib/announce'
-import { SEQUENCE_MS, SHORTCUTS, isTyping, readKey, type Shortcut } from '@/lib/shortcuts'
+import { OWNS_KEYBOARD, SEQUENCE_MS, SHORTCUTS, isTyping, readKey, type Shortcut } from '@/lib/shortcuts'
 import { useProgramStore } from '@/store/programStore'
 import { useUiStore } from '@/store/uiStore'
 
@@ -23,8 +23,7 @@ export function Shortcuts() {
     function onKeyDown(event: KeyboardEvent) {
       if (event.metaKey || event.ctrlKey || event.altKey || event.defaultPrevented) return
       if (isTyping(event.target)) return
-      // A dialog, sheet or menu owns the keyboard while it is open.
-      if (document.querySelector('[role="dialog"], [role="alertdialog"], [role="menu"]')) return
+      if (document.querySelector(OWNS_KEYBOARD)) return
 
       const waiting = prefix.current && Date.now() - prefix.current.at < SEQUENCE_MS ? prefix.current.key : null
       const result = readKey(waiting, event.key)

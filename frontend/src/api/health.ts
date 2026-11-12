@@ -46,8 +46,10 @@ export function useWorkoutDetail(workoutId: string | null | undefined) {
     queryFn: async () => {
       try {
         return await apiClient.get(`${BASE}/workouts/${encodeURIComponent(workoutId!)}`) as unknown as ImportedWorkout
-      } catch {
-        return null
+      } catch (e) {
+        // Only a workout the server does not have is "none"; a failed request is an error.
+        if ((e as { status?: number }).status === 404) return null
+        throw e
       }
     },
     enabled: !!workoutId,

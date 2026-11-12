@@ -1,12 +1,26 @@
 import { Shortcuts } from './Shortcuts'
-import { useLocation, useOutlet } from 'react-router-dom'
-import { AnimatePresence } from 'framer-motion'
+import { useContext, useEffect, useState, type ReactNode } from 'react'
+import { UNSAFE_LocationContext as LocationContext, useLocation, useOutlet } from 'react-router-dom'
+import { AnimatePresence, useIsPresent } from 'framer-motion'
 import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
 import { ProgramSaveBanner } from './ProgramSaveBanner'
 import { RouteErrorBoundary } from './RouteErrorBoundary'
 import { useUiStore } from '@/store/uiStore'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet'
+
+/**
+ * A page on its way out keeps the location it was shown at. Without it the
+ * leaving page read the next page's path and query while it faded, and drew
+ * one frame of the wrong tab or an empty detail.
+ */
+function HeldLocation({ children }: { children: ReactNode }) {
+  const present = useIsPresent()
+  const current = useContext(LocationContext)
+  const [held, setHeld] = useState(current)
+  if (present && held !== current) setHeld(current)
+  return <LocationContext.Provider value={present ? current : held}>{children}</LocationContext.Provider>
+}
 
 export function RootLayout() {
   const mobileNavOpen = useUiStore((s) => s.mobileNavOpen)
@@ -16,6 +30,16 @@ export function RootLayout() {
   // query is not part of the key: `?tab=` changes a page, it does not replace it.
   const { pathname } = useLocation()
   const outlet = useOutlet()
+
+  // The drawer is the phone's; a window widened past md with it open would
+  // keep its scrim over the page with nothing in it.
+  useEffect(() => {
+    const wide = window.matchMedia?.('(min-width: 768px)')
+    if (!wide) return
+    const close = () => { if (wide.matches) setMobileNavOpen(false) }
+    wide.addEventListener('change', close)
+    return () => wide.removeEventListener('change', close)
+  }, [setMobileNavOpen])
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -49,7 +73,9 @@ export function RootLayout() {
         <main id="main" tabIndex={-1} className="flex-1 overflow-hidden flex flex-col focus-visible:outline-none">
           <AnimatePresence mode="wait">
             <div key={pathname} className="contents">
-              <RouteErrorBoundary resetKey={pathname}>{outlet}</RouteErrorBoundary>
+              <HeldLocation>
+                <RouteErrorBoundary resetKey={pathname}>{outlet}</RouteErrorBoundary>
+              </HeldLocation>
             </div>
           </AnimatePresence>
         </main>
