@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import Network
 import WidgetKit
 
 /// Central state object for the iPhone app.
@@ -130,6 +131,13 @@ final class AppState: ObservableObject {
     // MARK: - Internal
 
     var api: APIClient?
+    private weak var auth: AuthManager?
+    /// Session logs saved here and not yet taken by the server (`SessionLogOutbox`).
+    @Published private(set) var pendingSessionLogs: [PendingSessionLog] = []
+    private var outboxURL: URL?
+    private var isFlushingSessionLogs = false
+    private var sessionLogRetry: Task<Void, Never>?
+    private var connection: NWPathMonitor?
     private let iso = ISO8601DateFormatter()
     /// Gregorian and POSIX: a phone set to the Buddhist or Japanese calendar
     /// would otherwise write "2569-10-13", which the server rejects.
@@ -145,7 +153,10 @@ final class AppState: ObservableObject {
 
     func configure(auth: AuthManager) {
         api = APIClient(auth: auth)
+        self.auth = auth
         isLoadingProgram = true  // show loading immediately, before the first async load starts
+        useSessionLogOutbox(at: SessionLogOutbox.defaultURL)
+        watchConnection()
     }
 
     // MARK: - Initial Load
@@ -775,33 +786,18 @@ final class AppState: ObservableObject {
         do {
             let logs = try await api.fetchRecentSessionLogs()
             let split = SessionLogScope.split(logs)
-            sessionLogs = split.current
+            // What is saved here and not yet sent stays on top of the server's copy.
+            sessionLogs = SessionLogOutbox.overlay(pendingSessionLogs, owner: sessionLogOwner, on: split.current)
             earlierSessionLogs = split.earlier
             rescheduleNotifications()   // a session completed elsewhere cancels its reminder
             writeHomeWidgets()          // and ticks it on the week widget
         } catch {}
     }
 
-    func markSessionComplete(sessionKey: String) async {
-        guard let api else { return }
-        let completedAt = iso.string(from: Date())
-        // Optimistic update
-        sessionLogs[sessionKey] = SessionLogEntry(
-            sessionKey: sessionKey,
-            completedAt: completedAt,
-            source: "manual",
-            notes: nil,
-            fatigueRating: nil,
-            avgHR: nil,
-            peakHR: nil,
-            matchedWorkoutId: nil
-        )
-        justCompleted = sessionKey
-        try? await api.saveSessionComplete(sessionKey: sessionKey, completedAt: completedAt)
-        rescheduleNotifications()
-        writeHomeWidgets()
-        // Today's completion is the program scorecard's.
-        await loadProgramAnalytics()
+    /// Done, on the phone first: the server hears of it in the background
+    /// (`saveSessionLog`). What was logged for its exercises stays.
+    func markSessionComplete(sessionKey: String) {
+        saveSessionLog(sessionKey: sessionKey, completedAt: iso.string(from: Date()))
     }
 
     /// A workout the phone's player ran (WorkoutPlayerModel): its log — the
@@ -869,27 +865,140 @@ final class AppState: ObservableObject {
         }
     }
 
-    /// Store what was done for one exercise of a session — sets, or the
-    /// slot's currency — locally first, then through the API. A session that
-    /// has no log yet gets one without a completion; completing it later
-    /// keeps the sets (the server merges per exercise).
-    func logExercise(sessionKey: String, exerciseId: String, performance: ExercisePerformanceLog) async {
-        var entry = sessionLogs[sessionKey] ?? SessionLogEntry(
-            sessionKey: sessionKey, completedAt: nil, source: "manual", notes: nil,
-            fatigueRating: nil, avgHR: nil, peakHR: nil, matchedWorkoutId: nil)
-        entry.exercises[exerciseId] = performance
-        sessionLogs[sessionKey] = entry
-        guard let api else { return }
-        do {
-            let standards = try await api.saveExerciseLog(sessionKey: sessionKey, exerciseId: exerciseId,
-                                                          performance: performance)
-            // A test slot's outcome comes back as a suggestion to save.
-            if standards != nil { await loadStandardSuggestions() }
-            // A logged set is a new point on the Progress chart.
-            if programAnalytics != nil { await loadProgramAnalytics() }
-        } catch {
-            AppLogger.logFromBackground("session log: save failed — \(error.localizedDescription)")
+    // MARK: - Session log outbox (design-system §6.16)
+
+    /// The account a log is saved under; nil against a local API.
+    var sessionLogOwner: String? { auth?.account?.id }
+
+    /// The notice for logs that did not reach the server (Today, the session).
+    func sessionLogNotice(sessionKey: String? = nil) -> SessionLogOutbox.Notice? {
+        SessionLogOutbox.notice(pendingSessionLogs, owner: sessionLogOwner, sessionKey: sessionKey)
+    }
+
+    /// Where unsent logs are kept, and what is waiting there. `configure`
+    /// names the app's file; an `AppState` nobody configured (a test) keeps
+    /// them in memory only.
+    func useSessionLogOutbox(at url: URL?) {
+        outboxURL = url
+        pendingSessionLogs = SessionLogOutbox.load(from: url)
+        sessionLogs = SessionLogOutbox.overlay(pendingSessionLogs, owner: sessionLogOwner, on: sessionLogs)
+    }
+
+    /// The session log form's Save, "Mark Session Complete" and its undo:
+    /// written to the phone at once — the screen never waits for the server —
+    /// and sent in the background. Exercises merge per id over what the
+    /// session already has; `completedAt` completes it, `clearsCompletion`
+    /// undoes that and keeps what was logged.
+    func saveSessionLog(sessionKey: String, exercises: [String: ExercisePerformanceLog] = [:],
+                        completedAt: String? = nil, clearsCompletion: Bool = false) {
+        guard !exercises.isEmpty || completedAt != nil || clearsCompletion else { return }
+        let wasComplete = isSessionComplete(sessionKey)
+        setPendingSessionLogs(SessionLogOutbox.merging(
+            pendingSessionLogs, sessionKey: sessionKey, owner: sessionLogOwner,
+            exercises: exercises, completedAt: completedAt, clearsCompletion: clearsCompletion))
+        sessionLogs = SessionLogOutbox.overlay(pendingSessionLogs, owner: sessionLogOwner, on: sessionLogs)
+        if completedAt != nil, !wasComplete { justCompleted = sessionKey }
+        if clearsCompletion, justCompleted == sessionKey { justCompleted = nil }
+        rescheduleNotifications()
+        writeHomeWidgets()
+        Task { await flushSessionLogs() }
+    }
+
+    /// Send what is waiting, one session at a time. A log the server took is
+    /// let go; one that did not get through stays, says so (`sessionLogNotice`)
+    /// and is tried again — after a while, when the app comes forward, when
+    /// the connection returns. One the server refused waits for the athlete.
+    func flushSessionLogs() async {
+        guard let api, !isFlushingSessionLogs else { return }
+        isFlushingSessionLogs = true
+        defer { isFlushingSessionLogs = false }
+        let owner = sessionLogOwner
+        var tried = Set<String>()
+        var sent = false
+        var bearsOnStandards = false
+        while let record = pendingSessionLogs.first(where: {
+            $0.owner == owner && !$0.rejected && !tried.contains("\($0.sessionKey)#\($0.revision)")
+        }) {
+            tried.insert("\(record.sessionKey)#\(record.revision)")
+            do {
+                if !record.exercises.isEmpty || record.completedAt != nil {
+                    let standards = try await api.saveSessionLog(
+                        sessionKey: record.sessionKey, exercises: record.exercises, completedAt: record.completedAt)
+                    // A test slot's outcome comes back as a suggestion to save.
+                    if standards != nil { bearsOnStandards = true }
+                }
+                if record.clearsCompletion {
+                    try await api.clearSessionCompletion(sessionKey: record.sessionKey)
+                }
+                setPendingSessionLogs(SessionLogOutbox.removing(pendingSessionLogs, sent: record))
+                sent = true
+            } catch {
+                AppLogger.logFromBackground("session log: send failed — \(error.localizedDescription)")
+                setPendingSessionLogs(SessionLogOutbox.failing(
+                    pendingSessionLogs, sent: record, error: SessionLogOutbox.describe(error),
+                    rejected: SessionLogOutbox.isRejection(error)))
+            }
         }
+        scheduleSessionLogRetry()
+        guard sent else { return }
+        await loadRecentSessionLogs()
+        if bearsOnStandards { await loadStandardSuggestions() }
+        // A logged set is a new point on the Progress chart; a completion is the scorecard's.
+        await loadProgramAnalytics()
+    }
+
+    /// "Try again" on the notice: everything waiting, the refused ones too.
+    func retrySessionLogs() async {
+        let owner = sessionLogOwner
+        setPendingSessionLogs(pendingSessionLogs.map { record in
+            guard record.owner == owner, record.rejected else { return record }
+            var r = record
+            r.rejected = false
+            return r
+        })
+        await flushSessionLogs()
+    }
+
+    /// "Discard" on a refused log: let it go and show what the server has.
+    func discardSessionLogs(keys: [String]) async {
+        let owner = sessionLogOwner
+        setPendingSessionLogs(pendingSessionLogs.filter { !($0.owner == owner && $0.rejected && keys.contains($0.sessionKey)) })
+        for key in keys { sessionLogs.removeValue(forKey: key) }
+        await loadRecentSessionLogs()
+    }
+
+    private func setPendingSessionLogs(_ pending: [PendingSessionLog]) {
+        pendingSessionLogs = pending
+        SessionLogOutbox.store(pending, to: outboxURL)
+    }
+
+    /// The next try by itself, for what is still waiting and not refused.
+    private func scheduleSessionLogRetry() {
+        sessionLogRetry?.cancel()
+        sessionLogRetry = nil
+        let owner = sessionLogOwner
+        let waiting = pendingSessionLogs.filter { $0.owner == owner && !$0.rejected }
+        guard let attempts = waiting.map(\.attempts).min() else { return }
+        let delay = SessionLogOutbox.retryDelay(attempts: attempts)
+        sessionLogRetry = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+            guard !Task.isCancelled, let self else { return }
+            // Forgotten before the send, which must not cancel itself.
+            self.sessionLogRetry = nil
+            await self.flushSessionLogs()
+        }
+    }
+
+    /// A connection coming back sends what is waiting.
+    private func watchConnection() {
+        guard connection == nil else { return }
+        let monitor = NWPathMonitor()
+        monitor.pathUpdateHandler = { [weak self] path in
+            guard path.status == .satisfied else { return }
+            Task { @MainActor [weak self] in await self?.flushSessionLogs() }
+        }
+        monitor.start(queue: .global(qos: .utility))
+        connection = monitor
     }
 
     /// A planned session located by its key ("<week number>-<Day>-<index>"),
@@ -917,14 +1026,10 @@ final class AppState: ObservableObject {
         return nil
     }
 
-    func undoSessionComplete(sessionKey: String) async {
-        sessionLogs.removeValue(forKey: sessionKey)
-        if justCompleted == sessionKey { justCompleted = nil }
-        // The server keeps the sets and notes and clears only the completion;
-        // without this call the completion came back on the next sync.
-        try? await api?.clearSessionCompletion(sessionKey: sessionKey)
-        rescheduleNotifications()
-        await loadProgramAnalytics()
+    /// The server keeps the sets and notes and clears only the completion;
+    /// so does the phone.
+    func undoSessionComplete(sessionKey: String) {
+        saveSessionLog(sessionKey: sessionKey, clearsCompletion: true)
     }
 
     // MARK: - Bio Logs

@@ -152,6 +152,8 @@ struct TodayView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppMetrics.gapSection) {
                 AppScrollFade {
+                    // A session log saved here that the server does not have yet (§6.16).
+                    SessionLogNoticeBanner()
                     programHeader
                     todaySection
                     TodayInbox { reviewWorkout = $0 }

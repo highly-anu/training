@@ -161,6 +161,7 @@ on it: `DesignTokenTests` reads every Swift file of the app for the patterns bel
 | One section header | `SectionLabel` | `AppCard.swift` | review |
 | One button family | `.appButton(.primary / .secondary / .destructive / .complete)` | `AppCard.swift` | test: `.buttonStyle(.bordered…)` |
 | Glass only on what floats | `.appActionBar { }`, `AppFloatingControls { }` | `AppCard.swift` | test: `.buttonStyle(.glass` |
+| A session log is saved on the phone first; no screen waits for the server | `AppState.saveSessionLog`, `SessionLogNoticeBanner` (§6.16) | `SessionLogOutbox.swift`, `Views/SessionLogForm.swift` | `SessionLogOutboxTests` |
 | Three states before content | `AppLoadPhase.resolve`, `AppLoadingState`, `AppEmptyState`, `AppFailedState`, `AppErrorBanner` | `Views/AppStates.swift` | `AppLoadPhaseTests` |
 | Sheet heights by content | `.appSheet(.compact / .flexible)` | `AppNavigation.swift` | test: `.presentationDetents(` |
 | No sheet on a sheet | `.appPush(item:)` inside the sheet's stack | `AppNavigation.swift` | review |
@@ -1123,21 +1124,50 @@ pull-to-refresh (`fresh=1` forces the server to recompute).
 
 ### 6.16 Session Logging
 
-**Log what you did on the session it belongs to.** `Views/ExerciseLogSheet.swift`,
-reached from a session row's leading swipe ("Log") or its context menu. The
-sheet dispatches on the slot type through `SessionLogging` (the phone's copy
-of the web's `lib/outcomeFields.ts`): a sets × reps or hold slot gets one row
-per set — reps or seconds, kg, RPE, done — prefilled from the prescription or
-from what was logged before; every other slot gets its currency fields
-(rounds, minutes, kilometres, reps). Two rules on the exercise, the web's
-too: a kettlebell in a timed slot logs reps beside minutes (cadence), and an
-isometric in a skill-practice slot logs the hold in seconds; both land on
-the first set, where the rate and hold primitives read them. Saving goes through
-`AppState.logExercise`, which writes `{exercises: {<id>: …}}` to
-`PUT /health/sessions/<key>`; the server merges per exercise and keeps the
-completion, notes and fatigue it already has, so logging before or after
-"Mark Session Complete" is the same. The row then shows "Logged: 3 sets · 3×5
-@ 80 kg" in green under the prescription.
+**One form for the session, one Save.** `Views/SessionLogForm.swift`, pushed
+(§6.48) from the session detail's **Log session** row, from an exercise's "…"
+and from its leading swipe ("Log"), which open it at that exercise. Every
+exercise of the session is a section (`SessionLogDraft.exercises`): a sets ×
+reps or hold slot has one row per set — reps or seconds, kg, RPE, done —
+prefilled from the prescription or from what was logged before; every other
+slot has its currency fields (rounds, minutes, kilometres, reps), dispatched
+through `SessionLogging` (the phone's copy of the web's `lib/outcomeFields.ts`).
+Two rules on the exercise, the web's too: a kettlebell in a timed slot logs
+reps beside minutes (cadence), and an isometric in a skill-practice slot logs
+the hold in seconds; both land on the first set, where the rate and hold
+primitives read them.
+
+**Only a ticked exercise is saved.** A section's tick says "I did this": it is
+on for an exercise already logged and for the one the form was opened at, and
+any change to a section turns it on, so a prefilled prescription nobody looked
+at is never written as a result. "Mark session complete" closes the form (on
+when the session is not done and the form was opened for the whole session);
+the action bar (§6.47) then reads **Save and complete**. Cancel asks before
+discarding changes.
+
+**Save never waits for the server** (`AppState.saveSessionLog`, not `async`).
+The log is written to the outbox — `SessionLogOutbox`, one JSON file in
+Application Support, one record per session, a later save merged into it — and
+laid over `sessionLogs` at once, so the form closes, the rows read "3 sets ·
+3×5 @ 80 kg" and the session is done before any request is made. Completing
+and un-completing a session from its button go the same way. `flushSessionLogs`
+then sends each record as one `PUT /health/sessions/<key>` (`{exercises,
+completedAt}`; the server merges per exercise and keeps the notes and fatigue
+it has): let go when the server took it, kept when it did not, and tried again
+after 15 s, 60 s, then every 5 min, when the app comes forward and when the
+connection returns (`NWPathMonitor`). A reload of the logs lays the outbox over
+the server's answer, so an unsent log never disappears from the screen, and it
+survives a relaunch. A save made while a send is in flight is kept (the
+record's `revision`).
+
+**A log that has not been sent says so, and blocks nothing.**
+`SessionLogNoticeBanner` — a warning-tinted card, on Today for any waiting log
+and at the top of the session for its own — appears only once a send has
+failed: "saved on this phone but not sent yet", with **Try again**. A log the
+server refused (a 4xx other than 401, 408 and 429) will not send by retrying:
+the card says what the server said and offers **Discard**, behind a
+confirmation. The outbox is per account (`owner`), so one athlete's unsent log
+is never sent as another's.
 
 `ExercisePerformanceLog` is the web's `ExercisePerformance`
 (`sets[].setIndex/repsActual/weightKg/rpe/completed/durationSeconds`,
@@ -1147,9 +1177,12 @@ and the analytics primitives read. `GET /health/sessions/recent` carries
 its own set logger (digital crown) and writes the same shape, with each
 set's `durationSeconds` from its start to the moment the logger opens.
 
-Rules: never log into a different session than the one on screen; the sheet
-is the one place sets are entered on the phone; a logged row never changes
-the prescription.
+Rules: never log into a different session than the one on screen; the form
+is the one place results are entered on the phone; a logged row never changes
+the prescription; no screen awaits a session-log write. Notes and fatigue
+(debounced) and a contract session's "done as written?" still save directly.
+`SessionLogOutboxTests`; debug builds open the form on launch with `TC_LOG`
+(`SessionLogDebug`).
 
 ---
 
@@ -1753,7 +1786,7 @@ the day, since the web logs under "3-Monday" and the phone under "3-Monday-0").
 - Today: "N results to confirm", the first three, then "All N in Profile".
 - Session detail: under each test standard's `StandardTargetRow` (§6.33) — not in
   the exercise row, whose tap and swipe actions would take the buttons' touches.
-- `ExerciseLogSheet` (§6.16): a for-time slot's **Time** field takes m:ss
+- `SessionLogForm` (§6.16): a for-time slot's **Time** field takes m:ss
   (`SessionLogging.parseClock`), starts empty (the cap is only its placeholder —
   prefilled, a test nobody changed would have saved its cap as the result) and keeps
   Save off while it does not read; a test slot asks first for its standard's
@@ -2166,7 +2199,7 @@ in after Start, Voice (`WatchCueSettings`; the Apple Watch keeps its own).
 |---|---|---|
 | Full-height sheet | A flow or a screen in its own right: the builder, a preview, a session, a workout, Preview ▸ Adjust (a form taller than half a screen) | `.sheet` alone |
 | `.appSheet(.compact)` | A short choice with nothing to type: Move, the player's Finish | half height, grabber |
-| `.appSheet(.flexible)` | Reference, a short list or a small form: the set logger, a standard's result, the check-in, a day's sessions, a philosophy, an exercise from the chart | half height, pulls up, grabber |
+| `.appSheet(.flexible)` | Reference, a short list or a small form: a standard's result, the check-in, a day's sessions, a philosophy, an exercise from the chart | half height, pulls up, grabber |
 | Push (`.appPush(item:)`) | A further step **inside** a sheet that owns a `NavigationStack`: an exercise's reference, a swap | Back button; never a sheet on a sheet |
 | Zoom (`.appZoom(from:in:)`) | A detail that belongs to the row or card that opened it | grows from its source |
 
@@ -2340,7 +2373,7 @@ and switch Browse / Search with `AppSubTabPicker`; its own search field is gone.
 
 **The completion moment.** A session is finished behind a cover — the detail sheet, the
 player — so its card would change unseen. `AppState.justCompleted` holds the key
-(`markSessionComplete`, `finishWorkout`; cleared by undo), and Today draws that session
+(`saveSessionLog` with a completion, `finishWorkout`; cleared by undo), and Today draws that session
 as not yet done (`isShownComplete`) until Today is uncovered: then, after 450 ms, the
 card's stripe turns from its modality colour to emerald, the check scales in, Start
 workout leaves and the week strip's dot becomes its check, in one `springStandard`. The

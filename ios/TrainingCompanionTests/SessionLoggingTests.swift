@@ -167,7 +167,7 @@ final class SessionLoggingTests: XCTestCase {
 
         let perf = ExercisePerformanceLog(sets: [WatchSetLog(setIndex: 0, repsActual: 5, weightKg: 80, rpe: nil, completed: true,
                                                              durationSeconds: nil, startOffset: nil, endOffset: nil)])
-        await appState.logExercise(sessionKey: "2-Monday-0", exerciseId: "back_squat", performance: perf)
+        appState.saveSessionLog(sessionKey: "2-Monday-0", exercises: ["back_squat": perf])
         let entry = try XCTUnwrap(appState.sessionLogs["2-Monday-0"])
         XCTAssertNil(entry.completedAt, "logging a set does not complete the session")
         XCTAssertEqual(entry.exercises["back_squat"], perf)
