@@ -1,4 +1,6 @@
-import { AnimatePresence, motion, type Variants } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
+import { stepVariants } from '@/lib/motion'
+import { Page } from '@/components/layout/Page'
 import { ChevronLeft, ChevronRight, Wand2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { StepIndicator } from '@/components/builder/StepIndicator'
@@ -15,18 +17,10 @@ const STEP_TITLES = {
   4: { title: 'Review & Preview', sub: 'Verify configuration and preview your program' },
 }
 
-function getStepVariants(direction: 'forward' | 'backward'): Variants {
-  return {
-    enter: { x: direction === 'forward' ? 60 : -60, opacity: 0 },
-    center: { x: 0, opacity: 1, transition: { duration: 0.28, ease: [0.25, 0.1, 0.25, 1] } },
-    exit: { x: direction === 'forward' ? -60 : 60, opacity: 0, transition: { duration: 0.18 } },
-  }
-}
-
 export function ProgramBuilder() {
   const { step, direction, selectedGoalIds, sourceMode, setStep } = useBuilderStore()
   const stepInfo = STEP_TITLES[step]
-  const variants = getStepVariants(direction)
+  const variants = stepVariants(direction)
 
   function goNext() {
     if (step < 4) setStep((step + 1) as 2 | 3 | 4, 'forward')
@@ -36,11 +30,8 @@ export function ProgramBuilder() {
   }
 
   return (
-    <motion.div
+    <Page
       key="builder"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-      exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
       className="flex h-full flex-col"
     >
       {/* Header */}
@@ -129,6 +120,6 @@ export function ProgramBuilder() {
           </Button>
         )}
       </div>
-    </motion.div>
+    </Page>
   )
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { riseIn } from '@/lib/motion'
 import { Play, ExternalLink, ArrowLeftRight } from 'lucide-react'
 import { PerformanceLogger } from './PerformanceLogger'
 import { OutcomeLogger } from './OutcomeLogger'
@@ -111,8 +112,7 @@ export function ExerciseRow({ assignment, index, sessionKey, sessionIdx, onSwap 
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0, transition: { delay: index * 0.05, duration: 0.2 } }}
+      {...riseIn(index)}
       className="flex items-start gap-4 rounded-lg border border-border bg-card p-4 hover:border-primary/30 transition-colors"
     >
       {/* Index + preview */}

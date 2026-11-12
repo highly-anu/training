@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { Page } from '@/components/layout/Page'
 import { format } from 'date-fns'
 import { Upload, CheckCircle2, AlertCircle, Link2, ClipboardList, ArrowDownToLine } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -129,7 +129,7 @@ function ImportPanel({
           {parseProgress && parseProgress.progress > 0 && (
             <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
               <div
-                className="h-full rounded-full bg-primary transition-all duration-500"
+                className="h-full rounded-full bg-primary transition-[width] duration-(--motion-slow)"
                 style={{ width: `${Math.round(parseProgress.progress * 100)}%` }}
               />
             </div>
@@ -409,11 +409,8 @@ export function Log() {
   ]
 
   return (
-    <motion.div
+    <Page
       key="log"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-      exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
       className="flex h-full flex-col overflow-hidden"
     >
       {/* Header */}
@@ -492,6 +489,6 @@ export function Log() {
       </Sheet>
 
       <MatchConfirmDialog match={activePending} onClose={() => setActivePending(null)} />
-    </motion.div>
+    </Page>
   )
 }

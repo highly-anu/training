@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { pressMotion } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
 import { ExerciseAnimationPanel } from './ExerciseAnimationPanel'
@@ -31,8 +32,7 @@ interface ExerciseCardProps {
 export function ExerciseCard({ exercise, onClick }: ExerciseCardProps) {
   return (
     <motion.button
-      whileHover={{ scale: 1.02, y: -1 }}
-      whileTap={{ scale: 0.98 }}
+      {...pressMotion}
       onClick={onClick}
       className="w-full rounded-xl border border-border bg-card p-4 text-left transition-shadow hover:shadow-sm hover:border-primary/40"
     >

@@ -27,6 +27,13 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  /* The two colours with a fixed meaning (docs/frontend-design.md §1.7):
+     action is "do this", done is "finished". Each theme keeps them apart. */
+  --color-action: var(--action);
+  --color-action-foreground: var(--action-foreground);
+  --color-done: var(--done);
+  --color-done-foreground: var(--done-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -38,6 +45,50 @@
 
   --font-sans: var(--font-sans-family);
   --font-mono: var(--font-mono-family);
+
+  /* Motion: `ease-standard` / `ease-exit` utilities, and what a bare
+     `transition-*` class runs at. Durations: `duration-(--motion-base)`. */
+  --ease-standard: var(--ease-standard-curve);
+  --ease-exit: var(--ease-exit-curve);
+  --default-transition-duration: var(--motion-fast);
+  --default-transition-timing-function: var(--ease-standard-curve);
+}
+
+/* ─── Motion ───────────────────────────────────────────────────
+ * The CSS twins of lib/motion.ts — the only durations and easings in the app.
+ * A class names one (`duration-(--motion-base)`, `ease-standard`); it never
+ * types a number (test/designRules.test.ts).
+ */
+:root {
+  --motion-fast: 150ms;   /* an answer: hover, press, a thing leaving */
+  --motion-base: 250ms;   /* an arrival: a sheet, a dialog, a page */
+  --motion-slow: 400ms;   /* a quantity changing: a bar filling */
+  --ease-standard-curve: cubic-bezier(0.2, 0, 0, 1);
+  --ease-exit-curve: cubic-bezier(0.4, 0, 1, 1);
+}
+
+/* Reduce Motion: nothing slides, grows or pulses; things fade and colours
+ * still change. tw-animate's enter/exit (sheets, dialogs, popovers, tooltips)
+ * lose their travel and keep their fade; a CSS transition keeps only its
+ * colour and opacity. framer-motion is handled by MotionConfig (App.tsx),
+ * Recharts by lib/chartMotion. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    --tw-enter-translate-x: 0 !important;
+    --tw-enter-translate-y: 0 !important;
+    --tw-enter-scale: 1 !important;
+    --tw-enter-rotate: 0 !important;
+    --tw-exit-translate-x: 0 !important;
+    --tw-exit-translate-y: 0 !important;
+    --tw-exit-scale: 1 !important;
+    --tw-exit-rotate: 0 !important;
+    transition-property: color, background-color, border-color, outline-color,
+      text-decoration-color, fill, stroke, opacity, box-shadow !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-pulse {
+    animation: none !important;
+  }
 }
 
 /* ─── Light Theme ──────────────────────────────────────────── */
@@ -65,6 +116,13 @@
   --accent-foreground: oklch(0.21 0.006 285.885);
 
   --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+
+  /* Action is the primary; done is emerald, dark enough to carry white text. */
+  --action: var(--primary);
+  --action-foreground: var(--primary-foreground);
+  --done: oklch(0.508 0.118 165.612);
+  --done-foreground: oklch(0.985 0.02 166);
 
   --border: oklch(0.92 0.004 286.32);
   --input: oklch(0.92 0.004 286.32);
@@ -100,6 +158,10 @@
   --accent-foreground: oklch(0.985 0 0);
 
   --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.141 0.005 285.823);
+
+  --done: oklch(0.765 0.177 163.223);
+  --done-foreground: oklch(0.262 0.051 172.552);
 
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
@@ -114,8 +176,10 @@
   --card-foreground: oklch(0.89 0.03 95);
   --popover: oklch(0.22 0.022 100);
   --popover-foreground: oklch(0.89 0.03 95);
-  --primary: oklch(0.58 0.13 130);
-  --primary-foreground: oklch(0.14 0.015 130);
+  /* Khaki, not olive: an olive primary sat 33° of hue from emerald, so "do
+     this" and "done" read as one colour. The olive stays in the dot grid. */
+  --primary: oklch(0.72 0.11 95);
+  --primary-foreground: oklch(0.2 0.03 95);
   --secondary: oklch(0.27 0.022 100);
   --secondary-foreground: oklch(0.82 0.03 95);
   --muted: oklch(0.27 0.022 100);
@@ -123,9 +187,12 @@
   --accent: oklch(0.27 0.022 100);
   --accent-foreground: oklch(0.82 0.03 95);
   --destructive: oklch(0.62 0.17 25);
+  --destructive-foreground: oklch(0.14 0.015 25);
+  --done: oklch(0.765 0.177 163.223);
+  --done-foreground: oklch(0.262 0.051 172.552);
   --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.58 0.13 130);
+  --ring: oklch(0.72 0.11 95);
   --radius: 0.25rem;
   --font-sans-family: "IBM Plex Mono", ui-monospace, monospace;
   --font-mono-family: "IBM Plex Mono", ui-monospace, monospace;
@@ -154,8 +221,10 @@
   --card-foreground: oklch(0.27 0.02 80);
   --popover: oklch(0.99 0.006 90);
   --popover-foreground: oklch(0.27 0.02 80);
-  --primary: oklch(0.55 0.1 155);
-  --primary-foreground: oklch(0.97 0.01 155);
+  /* Clay, not sage: a sage primary was emerald's neighbour (10° of hue), so
+     every button looked finished. The sage stays in the washes behind. */
+  --primary: oklch(0.56 0.11 45);
+  --primary-foreground: oklch(0.98 0.012 80);
   --secondary: oklch(0.93 0.016 90);
   --secondary-foreground: oklch(0.35 0.02 80);
   --muted: oklch(0.93 0.016 90);
@@ -163,9 +232,10 @@
   --accent: oklch(0.93 0.016 90);
   --accent-foreground: oklch(0.35 0.02 80);
   --destructive: oklch(0.52 0.18 25);
+  --destructive-foreground: oklch(0.985 0 0);
   --border: oklch(0.87 0.018 90);
   --input: oklch(0.87 0.018 90);
-  --ring: oklch(0.55 0.1 155);
+  --ring: oklch(0.56 0.11 45);
   --radius: 0.75rem;
   --font-sans-family: "Lora", Georgia, serif;
   /* Firefox scrollbar */

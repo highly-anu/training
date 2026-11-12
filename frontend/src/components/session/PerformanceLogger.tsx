@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { tickMotion, collapseMotion } from '@/lib/motion'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useProfileStore } from '@/store/profileStore'
@@ -92,10 +93,9 @@ export function PerformanceLogger({
         {completed.map((done, i) => (
           <motion.button
             key={`${exerciseId}-set-${i}`}
-            whileTap={{ scale: 1.3 }}
+            {...tickMotion}
             onClick={() => toggle(i)}
             animate={{ backgroundColor: done ? 'var(--color-primary)' : undefined }}
-            transition={{ duration: 0.15 }}
             className={cn(
               'size-6 rounded-md border transition-colors text-[10px] font-bold',
               done
@@ -124,10 +124,7 @@ export function PerformanceLogger({
       <AnimatePresence>
         {expanded && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.18 }}
+            {...collapseMotion}
             className="overflow-hidden"
           >
             <div className="rounded-md border border-border bg-muted/30 p-2 space-y-1">

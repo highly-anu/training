@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { layoutChange } from '@/lib/motion'
 import type { HeatEdge } from './useHeatmapData'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import type { ModalityId } from '@/api/types'
@@ -34,11 +35,7 @@ export function HeatmapEdge({ edge, x1, y1, x2, y2, highlighted }: HeatmapEdgePr
       stroke={color}
       initial={false}
       animate={{ d, strokeOpacity, strokeWidth }}
-      transition={{
-        d: { type: 'spring', damping: 25, stiffness: 180 },
-        strokeOpacity: { duration: 0.2 },
-        strokeWidth: { duration: 0.2 },
-      }}
+      transition={layoutChange}
     />
   )
 }

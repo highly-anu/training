@@ -1,6 +1,8 @@
 import { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { nudgeIn, panelMotion } from '@/lib/motion'
+import { Page } from '@/components/layout/Page'
 import { House, Wand2, ChevronRight, CheckCircle2, Flag, CloudOff } from 'lucide-react'
 import { differenceInCalendarDays, differenceInWeeks, parseISO, format } from 'date-fns'
 import { cn } from '@/lib/utils'
@@ -101,8 +103,7 @@ function WeekTab({
           {canAdvance && (
             <motion.button
               type="button"
-              initial={{ opacity: 0, x: 8 }}
-              animate={{ opacity: 1, x: 0 }}
+              {...nudgeIn}
               onClick={() => handleWeekChange(1)}
               aria-label={`Week ${weekIndex + 1} done — go to week ${weekIndex + 2}`}
               className={cn('ml-auto flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-opacity hover:opacity-80',
@@ -251,25 +252,20 @@ export function Dashboard() {
   // refetch keeps the current program on screen instead of blanking it.
   if (programLoadState !== 'loaded' && !program) {
     return (
-      <motion.div
+      <Page
+        enter="fade"
         key="dashboard-loading"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1, transition: { duration: 0.2 } }}
-        exit={{ opacity: 0 }}
         className="flex h-full items-center justify-center p-6"
       >
         <DumbbellLoader label="Retrieving your program..." />
-      </motion.div>
+      </Page>
     )
   }
 
   if (!program) {
     return (
-      <motion.div
+      <Page
         key="dashboard-empty"
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-        exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
         className="flex h-full items-center justify-center p-6"
       >
         <EmptyState
@@ -279,7 +275,7 @@ export function Dashboard() {
           icon={<Wand2 className="size-10" />}
           className="max-w-md"
         />
-      </motion.div>
+      </Page>
     )
   }
 
@@ -293,11 +289,8 @@ export function Dashboard() {
   const panelOpen = !!(selectedDay && currentWeek && (currentWeek.schedule[selectedDay] ?? []).length > 0)
 
   return (
-    <motion.div
+    <Page
       key="dashboard"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-      exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
       className="flex h-full flex-col overflow-hidden"
     >
       {/* Header */}
@@ -332,10 +325,7 @@ export function Dashboard() {
           {panelOpen && currentWeek && selectedDay && (
             <motion.div
               key={`${currentWeek.week_number}-${selectedDay}`}
-              initial={{ width: 0 }}
-              animate={{ width: 420 }}
-              exit={{ width: 0 }}
-              transition={{ duration: 0.25, ease: 'easeInOut' }}
+              {...panelMotion(420)}
               className="shrink-0 overflow-hidden border-l border-border bg-card"
             >
               <div className="w-[420px] h-full overflow-y-auto">
@@ -351,6 +341,6 @@ export function Dashboard() {
         </AnimatePresence>
 
       </div>
-    </motion.div>
+    </Page>
   )
 }

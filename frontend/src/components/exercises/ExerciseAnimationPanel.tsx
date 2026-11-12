@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { DotLottieReact } from '@lottiefiles/dotlottie-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { fadeIn } from '@/lib/motion'
 import { Dumbbell, Wind, Footprints, Heart, Flame, Layers } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -76,9 +77,7 @@ export function ExerciseAnimationPanel({
             alt={animation!.gif_alt ?? exerciseName}
             className="h-full w-full object-cover"
             loading="lazy"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
+            {...fadeIn}
             onError={() => setImgError(true)}
           />
         </AnimatePresence>

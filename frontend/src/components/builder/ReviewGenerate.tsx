@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { Loader2, Wand2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { springSnappy } from '@/lib/motion'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { ValidationAlert } from '@/components/shared/ValidationAlert'
@@ -406,7 +407,7 @@ export function ReviewGenerate() {
       )}
       <motion.div
         animate={{ scale: isPending ? 0.98 : 1 }}
-        transition={{ duration: 0.2 }}
+        transition={springSnappy}
       >
         <Button
           size="lg"

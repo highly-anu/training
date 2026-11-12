@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { layoutChange } from '@/lib/motion'
 import type { HeatNode } from './useHeatmapData'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import type { ModalityId } from '@/api/types'
@@ -50,11 +51,7 @@ export function HeatmapNode({ node, x, y, width, height, highlighted, onClick, o
       style={{ cursor: 'pointer' }}
       initial={false}
       animate={{ x, y, opacity: dimmed ? 0.3 : 1 }}
-      transition={{
-        x: { type: 'spring', damping: 25, stiffness: 200 },
-        y: { type: 'spring', damping: 25, stiffness: 200 },
-        opacity: { duration: 0.2 },
-      }}
+      transition={layoutChange}
     >
       {glowRadius > 0 && (
         <rect

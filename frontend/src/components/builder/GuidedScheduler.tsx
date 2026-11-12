@@ -498,7 +498,7 @@ export function GuidedScheduler() {
           </div>
           <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
             <div
-              className="h-full rounded-full bg-foreground/60 transition-all duration-300"
+              className="h-full rounded-full bg-foreground/60 transition-[width] duration-(--motion-slow)"
               style={{ width: `${Math.min(Math.round((coverage ?? 0) * 100), 100)}%` }}
             />
           </div>

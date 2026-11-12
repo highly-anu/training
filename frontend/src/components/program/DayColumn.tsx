@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { riseIn } from '@/lib/motion'
 import { Check, BatteryCharging, Plus } from 'lucide-react'
 import { SessionCard } from './SessionCard'
 import { cn } from '@/lib/utils'
@@ -41,8 +42,7 @@ export function DayColumn({ day, sessions, weekNumber, isToday, onOpenSession, i
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0, transition: { delay: dayIndex * 0.04, duration: 0.2 } }}
+      {...riseIn(dayIndex)}
       className="min-w-[120px] sm:min-w-0"
     >
       {/* Day header */}

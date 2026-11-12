@@ -2,7 +2,7 @@ import { useMemo, useState, lazy, Suspense } from 'react'
 import { parseSessionKey } from '@/lib/sessionKeys'
 import { formatActivityType } from '@/lib/activityType'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { Page } from '@/components/layout/Page'
 import {
   ChevronLeft,
   Clock,
@@ -259,11 +259,8 @@ export function WorkoutDetail() {
 
   if (!workout) {
     return (
-      <motion.div
+      <Page
         key="workout-not-found"
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-        exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
         className="flex h-full flex-col"
       >
         <div className="border-b bg-card/50 px-6 py-3">
@@ -283,7 +280,7 @@ export function WorkoutDetail() {
             )}
           </div>
         </div>
-      </motion.div>
+      </Page>
     )
   }
 
@@ -322,11 +319,8 @@ export function WorkoutDetail() {
   )
 
   return (
-    <motion.div
+    <Page
       key="workout-detail"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-      exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
       className="flex h-full flex-col"
     >
       {/* Sticky nav bar */}
@@ -677,6 +671,6 @@ export function WorkoutDetail() {
 
         </div>{/* max-w-2xl */}
       </div>{/* overflow-y-auto */}
-    </motion.div>
+    </Page>
   )
 }

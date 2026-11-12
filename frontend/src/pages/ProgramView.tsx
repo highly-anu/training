@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { Page } from '@/components/layout/Page'
 import { differenceInCalendarDays, format, parseISO } from 'date-fns'
 import { CalendarDays, Wand2, ShieldAlert, Plus } from 'lucide-react'
 import { useCurrentProgram } from '@/api/programs'
@@ -140,11 +140,8 @@ export function ProgramView() {
 
   if (!program) {
     return (
-      <motion.div
+      <Page
         key="program-empty"
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-        exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
         className="flex h-full items-center justify-center p-6"
       >
         <EmptyState
@@ -153,16 +150,13 @@ export function ProgramView() {
           action={{ label: 'Build a Program', onClick: () => navigate('/program/new') }}
           icon={<Wand2 className="size-10" />}
         />
-      </motion.div>
+      </Page>
     )
   }
 
   return (
-    <motion.div
+    <Page
       key="program"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-      exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
       className="flex h-full flex-col"
     >
       {/* Header */}
@@ -241,7 +235,7 @@ export function ProgramView() {
                 key={weekData.week_number}
                 ref={(el) => { weekRefs.current[idx] = el }}
                 className={cn(
-                  'space-y-3 rounded-xl p-3 -mx-3 transition-colors duration-300',
+                  'space-y-3 rounded-xl p-3 -mx-3 transition-colors duration-(--motion-slow)',
                   idx === weekIndex ? 'bg-primary/5 ring-1 ring-primary/20' : ''
                 )}
               >
@@ -320,6 +314,6 @@ export function ProgramView() {
           weekIndex={addTarget.weekIndex} weekData={program.weeks[addTarget.weekIndex]}
           day={addTarget.day} program={program} />
       )}
-    </motion.div>
+    </Page>
   )
 }
