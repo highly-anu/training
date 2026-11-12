@@ -1,4 +1,5 @@
-import { ChevronLeft, Clock, ListChecks, Loader2 } from 'lucide-react'
+import { Spinner } from '@/components/ui/spinner'
+import { ChevronLeft, Clock, ListChecks } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
 import { formatLoad } from '@/lib/formatLoad'
@@ -67,7 +68,7 @@ export function SessionPreviewPanel({ session, confirmLabel, note, onConfirm, on
         <Button className="w-full" onClick={onConfirm} disabled={searching}>{confirmLabel}</Button>
         {onSearchAgain && (
           <Button variant="outline" className="w-full" onClick={onSearchAgain} disabled={searching}>
-            {searching ? <><Loader2 className="size-4 mr-2 animate-spin" /> Searching…</> : 'Search again'}
+            {searching ? <><Spinner className="mr-2" /> Searching…</> : 'Search again'}
           </Button>
         )}
       </div>

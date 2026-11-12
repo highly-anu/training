@@ -1,3 +1,4 @@
+import { Spinner } from '@/components/ui/spinner'
 import { useState, useCallback, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Page } from '@/components/layout/Page'
@@ -123,7 +124,7 @@ function ImportPanel({
       {status === 'parsing' && (
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <div className="size-4 animate-spin rounded-full border-2 border-primary border-t-transparent shrink-0" />
+            <Spinner className="text-primary" />
             <span>{parseProgress?.stage ?? 'Parsing file…'}</span>
           </div>
           {parseProgress && parseProgress.progress > 0 && (

@@ -1,5 +1,7 @@
+import { ErrorBanner } from '@/components/shared/ErrorBanner'
+import { Spinner } from '@/components/ui/spinner'
 import { useMemo } from 'react'
-import { Loader2, Wand2 } from 'lucide-react'
+import { Wand2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { springSnappy } from '@/lib/motion'
@@ -314,9 +316,7 @@ export function ReviewGenerate() {
 
       {/* Post-generation validation feedback */}
       {data?.validation && <ValidationAlert validation={data.validation} />}
-      {error && (
-        <p className="text-sm text-destructive">{(error as Error).message}</p>
-      )}
+      {error && <ErrorBanner error={error} title="Could not build the preview" />}
 
       {/* Schedule adjustments/compromises */}
       {data?.compromises && data.compromises.length > 0 && (
@@ -417,7 +417,7 @@ export function ReviewGenerate() {
         >
           {isPending ? (
             <>
-              <Loader2 className="size-4 animate-spin" />
+              <Spinner />
               Generating…
             </>
           ) : (

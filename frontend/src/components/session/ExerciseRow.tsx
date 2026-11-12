@@ -1,3 +1,4 @@
+import { Skeleton } from '@/components/ui/skeleton'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
@@ -60,7 +61,7 @@ function ExercisePreviewPopover({ exerciseId, exerciseName, category }: { exerci
             <p className="text-[11px] text-muted-foreground italic">No animation available yet.</p>
           )
         ) : (
-          <div className="aspect-video w-full rounded bg-muted animate-pulse" />
+          <Skeleton className="aspect-video w-full rounded" />
         )}
         {media?.description && (
           <p className="mt-2 text-[11px] text-muted-foreground leading-relaxed line-clamp-3">{media.description}</p>

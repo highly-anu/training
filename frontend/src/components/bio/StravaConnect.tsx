@@ -1,3 +1,5 @@
+import { Skeleton } from '@/components/ui/skeleton'
+import { Spinner } from '@/components/ui/spinner'
 import { useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
@@ -108,7 +110,7 @@ export function StravaConnect() {
             className="shrink-0 hover:opacity-90 transition-opacity"
           >
             {authorize.isPending ? (
-              <RefreshCw className="size-3.5 animate-spin mr-1.5" />
+              <Spinner className="size-3.5 mr-1.5" />
             ) : (
               <Zap className="size-3.5 mr-1.5" />
             )}
@@ -178,7 +180,7 @@ export function StravaConnect() {
             className="flex-1"
           >
             {sync.isPending ? (
-              <RefreshCw className="size-3.5 animate-spin mr-1.5" />
+              <Spinner className="size-3.5 mr-1.5" />
             ) : (
               <RefreshCw className="size-3.5 mr-1.5" />
             )}
@@ -201,12 +203,13 @@ export function StravaConnect() {
 
   // Loading skeleton
   return (
-    <div className="rounded-xl border border-border bg-card p-4 animate-pulse">
+    <div role="status" aria-busy="true" className="rounded-xl border border-border bg-card p-4">
+      <span className="sr-only">Loading Strava</span>
       <div className="flex items-center gap-3">
-        <div className="size-8 rounded-full bg-muted" />
+        <Skeleton className="size-8 rounded-full" />
         <div className="space-y-1.5">
-          <div className="h-3 w-24 rounded bg-muted" />
-          <div className="h-2 w-40 rounded bg-muted" />
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="h-2 w-40" />
         </div>
       </div>
     </div>

@@ -1,8 +1,10 @@
+import { LoadingState, FailedState } from '@/components/shared/states'
+import { Working } from '@/components/ui/spinner'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { Page } from '@/components/layout/Page'
-import { ChevronLeft, Loader2, Play, ScanEye, SlidersHorizontal } from 'lucide-react'
+import { ChevronLeft, Play, ScanEye, SlidersHorizontal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -14,7 +16,6 @@ import { ProgramOverview } from '@/components/program/ProgramOverview'
 import { PhaseBar } from '@/components/program/PhaseBar'
 import { PhaseBadge } from '@/components/shared/PhaseBadge'
 import { ValidationAlert } from '@/components/shared/ValidationAlert'
-import { LoadingCard } from '@/components/shared/LoadingCard'
 import { HeldBackPanel, RefusedPanel, type HeldBackActions } from '@/components/preview/HeldBackPanel'
 import { AdjustSheet, type AdjustableConstraints } from '@/components/preview/AdjustSheet'
 import { PreviewSessionSheet, type PreviewSessionTarget } from '@/components/preview/PreviewSessionSheet'
@@ -179,10 +180,16 @@ export function ProgramPreview() {
   if (!draft || !params) {
     return (
       <div className="p-6">
-        <LoadingCard lines={4} />
-        {generate.isError && (
-          <p className="mt-4 text-sm text-destructive">{(generate.error as Error).message}</p>
-        )}
+        {generate.isError
+          ? (
+            <FailedState
+              title="Could not build the preview"
+              error={generate.error}
+              onRetry={() => navigate('/program/new')}
+              retryLabel="Back to the builder"
+            />
+          )
+          : <LoadingState shape="cards" label="Building the preview" />}
       </div>
     )
   }
@@ -241,9 +248,7 @@ export function ProgramPreview() {
 
       <div className="flex-1 overflow-y-auto">
         {generate.isPending && (
-          <p className="mx-6 mt-4 inline-flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="size-4 animate-spin" aria-hidden="true" /> Previewing again…
-          </p>
+          <Working className="mx-6 mt-4">Previewing again…</Working>
         )}
         {mode === 'regenerate' && !refused && (
           <p className="mx-6 mt-4 text-sm text-muted-foreground">

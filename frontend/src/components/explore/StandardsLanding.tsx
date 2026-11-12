@@ -1,9 +1,9 @@
+import { LoadingState, FailedState } from '@/components/shared/states'
 import { Link } from 'react-router-dom'
 import { Trophy } from 'lucide-react'
 import { useStandardResults, useStandards } from '@/api/standards'
 import { StandardLadder, StandardLevelBadge } from '@/components/standards/StandardLadder'
 import { thresholdTexts } from '@/lib/standards'
-import { LoadingCard } from '@/components/shared/LoadingCard'
 import type { BenchmarkStandard } from '@/api/types'
 
 /**
@@ -13,10 +13,17 @@ import type { BenchmarkStandard } from '@/api/types'
  * the server, so this and the Profile tab never disagree.
  */
 export function StandardsLanding() {
-  const { data: standards = [], isLoading } = useStandards()
+  const { data: standards = [], isLoading, error, refetch } = useStandards()
   const { data: results } = useStandardResults()
 
-  if (isLoading) return <div className="p-6"><LoadingCard /></div>
+  if (isLoading) return <LoadingState className="p-6" />
+  if (error && standards.length === 0) {
+    return (
+      <div className="p-6">
+        <FailedState title="Could not load the standards" error={error} onRetry={() => { void refetch() }} />
+      </div>
+    )
+  }
 
   const groups = new Map<string, { name: string; order: number; items: BenchmarkStandard[] }>()
   for (const s of standards) {

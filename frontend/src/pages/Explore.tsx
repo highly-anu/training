@@ -1,9 +1,8 @@
+import { LoadingState, FailedState } from '@/components/shared/states'
 import { useState, useMemo } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { Page } from '@/components/layout/Page'
 import { ArrowLeft, Compass, Search, X, Wand2 } from 'lucide-react'
-import { LoadingCard } from '@/components/shared/LoadingCard'
-import { ErrorBanner } from '@/components/shared/ErrorBanner'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
 import { PrereqChain } from '@/components/exercises/PrereqChain'
 import { ExerciseAnimationPanel } from '@/components/exercises/ExerciseAnimationPanel'
@@ -1754,12 +1753,12 @@ export function Explore() {
   const topic: Topic = topicParam && TOPIC_IDS.has(topicParam) ? topicParam as Topic : 'philosophies'
   const selectedId = searchParams.get('id')
 
-  const { data: philosophies = [], isLoading: philLoading, error: philError } = usePhilosophies()
-  const { data: frameworks = [], isLoading: fwLoading, error: fwError } = useFrameworks()
-  const { data: modalities = [], isLoading: modLoading, error: modError } = useModalities()
-  const { data: allArchetypes = [], isLoading: archLoading } = useArchetypes()
-  const { data: allExercises = [], isLoading: exLoading } = useExercises()
-  const { data: links, isLoading: linksLoading, error: linksError } = useExploreLinks()
+  const { data: philosophies = [], isLoading: philLoading, error: philError, refetch: philRetry } = usePhilosophies()
+  const { data: frameworks = [], isLoading: fwLoading, error: fwError, refetch: fwRetry } = useFrameworks()
+  const { data: modalities = [], isLoading: modLoading, error: modError, refetch: modRetry } = useModalities()
+  const { data: allArchetypes = [], isLoading: archLoading, error: archError, refetch: archRetry } = useArchetypes()
+  const { data: allExercises = [], isLoading: exLoading, error: exError, refetch: exRetry } = useExercises()
+  const { data: links, isLoading: linksLoading, error: linksError, refetch: linksRetry } = useExploreLinks()
   const movements = useMemo(() => links?.movements ?? [], [links])
 
   const pick = <T extends { id: string }>(t: Topic, rows: T[]) =>
@@ -1787,8 +1786,19 @@ export function Explore() {
     philosophies: philLoading, frameworks: fwLoading, modalities: modLoading, archetypes: archLoading,
     exercises: exLoading, movements: linksLoading, equipment: linksLoading, standards: false,
   }[topic]
-  const error = topic === 'philosophies' ? philError : topic === 'frameworks' ? fwError
-    : topic === 'modalities' ? modError : topic === 'movements' ? linksError : null
+  // A topic that failed with nothing to show says so, with Try again. Equipment
+  // and Standards read their own queries and answer for themselves.
+  const failed = {
+    philosophies: philosophies.length === 0 ? { error: philError, retry: philRetry } : null,
+    frameworks: frameworks.length === 0 ? { error: fwError, retry: fwRetry } : null,
+    modalities: modalities.length === 0 ? { error: modError, retry: modRetry } : null,
+    archetypes: allArchetypes.length === 0 ? { error: archError, retry: archRetry } : null,
+    exercises: allExercises.length === 0 ? { error: exError, retry: exRetry } : null,
+    movements: !links ? { error: linksError, retry: linksRetry } : null,
+    equipment: null,
+    standards: null,
+  }[topic]
+  const error = failed?.error ?? null
 
   return (
     <Page
@@ -1827,9 +1837,13 @@ export function Explore() {
       {section === 'explorer' && (
         // A deep link waits for its list rather than flashing the landing.
         (isLoading && (selectedId || topic === 'philosophies' || topic === 'modalities' || topic === 'frameworks'))
-          ? <div className="flex-1 p-6"><LoadingCard /></div>
+          ? <LoadingState shape="grid" className="flex-1 p-6" />
           : error
-          ? <div className="flex-1 p-6"><ErrorBanner error={error as Error} /></div>
+          ? (
+            <div className="flex-1 p-6">
+              <FailedState title={`Could not load the ${topic}`} error={error} onRetry={() => { void failed?.retry() }} />
+            </div>
+          )
           : (
             <div className="flex-1 min-h-0 overflow-hidden">
                 {topic === 'philosophies' && (

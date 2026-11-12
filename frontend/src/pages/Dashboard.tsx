@@ -1,9 +1,10 @@
+import { FailedState, LoadingState } from '@/components/shared/states'
 import { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { nudgeIn, panelMotion } from '@/lib/motion'
 import { Page } from '@/components/layout/Page'
-import { House, Wand2, ChevronRight, CheckCircle2, Flag, CloudOff } from 'lucide-react'
+import { House, Wand2, ChevronRight, CheckCircle2, Flag } from 'lucide-react'
 import { differenceInCalendarDays, differenceInWeeks, parseISO, format } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { useCurrentProgram } from '@/api/programs'
@@ -14,7 +15,6 @@ import { WeekOverview } from '@/components/dashboard/WeekOverview'
 import { DayWorkoutPanel } from '@/components/dashboard/DayWorkoutPanel'
 import { ProgramSettingsSheet } from '@/components/dashboard/ProgramSettingsSheet'
 import { EmptyState } from '@/components/shared/EmptyState'
-import { DumbbellLoader } from '@/components/shared/DumbbellLoader'
 import { WeekSelector } from '@/components/program/WeekSelector'
 import { ReadinessWidget } from '@/components/bio/ReadinessWidget'
 import { AdherenceWidget } from '@/components/dashboard/AdherenceWidget'
@@ -237,11 +237,10 @@ export function Dashboard() {
   if (programLoadState === 'error' && !program) {
     return (
       <div className="flex h-full items-center justify-center p-6">
-        <EmptyState
-          title="Couldn't load your program"
-          description="We couldn't reach the server. Your program is safe — try again in a moment."
-          action={{ label: 'Retry', onClick: () => void loadProgram() }}
-          icon={<CloudOff className="size-10" />}
+        <FailedState
+          title="Could not load your program"
+          error="The server could not be reached. Your program is safe — try again in a moment."
+          onRetry={() => { void loadProgram() }}
           className="max-w-md"
         />
       </div>
@@ -255,9 +254,9 @@ export function Dashboard() {
       <Page
         enter="fade"
         key="dashboard-loading"
-        className="flex h-full items-center justify-center p-6"
+        className="h-full p-6"
       >
-        <DumbbellLoader label="Retrieving your program..." />
+        <LoadingState shape="cards" count={3} label="Loading your program" className="mx-auto max-w-3xl" />
       </Page>
     )
   }

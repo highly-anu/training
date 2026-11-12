@@ -1,3 +1,4 @@
+import { LoadingState, FailedState } from '@/components/shared/states'
 import { useState } from 'react'
 import { Watch, X } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
@@ -16,7 +17,7 @@ function when(iso: string | null): string {
  * pairing routes existed; the web never did.
  */
 export function DevicesCard() {
-  const { data: devices = [], isLoading, isError } = useDevices()
+  const { data: devices = [], isLoading, isError, error, refetch } = useDevices()
   const claim = useClaimDevice()
   const revoke = useRevokeDevice()
   const { data: latest } = useLatestWellness()
@@ -51,8 +52,16 @@ export function DevicesCard() {
         {claim.isSuccess && <span className="text-[11px] text-emerald-700 dark:text-emerald-300">Paired</span>}
       </form>
 
-      {isLoading && <p className="text-[11px] text-muted-foreground">Loading devices…</p>}
-      {isError && <p className="text-[11px] text-muted-foreground">Could not reach the API.</p>}
+      {isLoading && <LoadingState shape="lines" label="Loading devices" />}
+      {isError && (
+        <FailedState
+          size="compact"
+          className="items-start border-0 bg-transparent p-0 text-left"
+          title="Could not load your devices"
+          error={error}
+          onRetry={() => { void refetch() }}
+        />
+      )}
       {!isLoading && !isError && devices.length === 0 && (
         <p className="text-[11px] text-muted-foreground/70">No watch paired yet.</p>
       )}

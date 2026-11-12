@@ -1,3 +1,4 @@
+import { Working } from '@/components/ui/spinner'
 import { useEffect, useRef, useState } from 'react'
 import type { GPSPoint } from '@/api/types'
 
@@ -193,9 +194,8 @@ export function Swiss3DMap({ track, className }: Swiss3DMapProps) {
     >
       <div ref={containerRef} style={{ height: '100%', width: '100%' }} />
       {status === 'loading' && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-slate-950/90 pointer-events-none">
-          <div className="size-5 animate-spin rounded-full border-2 border-sky-400 border-t-transparent" />
-          <p className="text-[11px] text-muted-foreground">Loading Swiss terrain…</p>
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-950/90 pointer-events-none">
+          <Working className="text-[11px]">Fetching the Swiss terrain</Working>
         </div>
       )}
       {status === 'error' && (

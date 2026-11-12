@@ -1,3 +1,4 @@
+import { LoadingState, FailedState } from '@/components/shared/states'
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
@@ -8,7 +9,6 @@ import { useApplyAdjustment } from '@/api/programs'
 import { useProgramStore } from '@/store/programStore'
 import type { ExerciseFinding, ProgressionAdjustment } from '@/api/types'
 import { EmptyState } from '@/components/shared/EmptyState'
-import { LoadingCard } from '@/components/shared/LoadingCard'
 import { ErrorBanner } from '@/components/shared/ErrorBanner'
 import { ProgressSummary } from '@/components/progression/ProgressSummary'
 import { chartableMeasures, resolveSelection, type ChartSelection } from '@/lib/progressChart'
@@ -32,7 +32,7 @@ import { StatusBadge } from './StatusBadge'
  * builds it).
  */
 export function ProgressTab() {
-  const { data, isLoading, isError, error } = useProgramAnalytics()
+  const { data, isLoading, isError, error, refetch } = useProgramAnalytics()
   const [params, setParams] = useSearchParams()
 
   // The review's period changes nothing it computes — compliance covers the
@@ -69,8 +69,14 @@ export function ProgressTab() {
     }, { replace: true })
   }
 
-  if (isLoading) return <div className="p-6 space-y-3"><LoadingCard lines={4} /><LoadingCard lines={6} /></div>
-  if (isError) return <div className="p-6"><ErrorBanner error={error as Error} title="Could not load program analytics" /></div>
+  if (isLoading) return <LoadingState shape="cards" className="p-6" />
+  if (isError && !data) {
+    return (
+      <div className="p-6">
+        <FailedState title="Could not load program analytics" error={error} onRetry={() => { void refetch() }} />
+      </div>
+    )
+  }
   if (!doc) {
     return (
       <div className="p-6">

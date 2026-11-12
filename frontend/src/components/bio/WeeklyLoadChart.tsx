@@ -1,3 +1,4 @@
+import { LoadingState, FailedState } from '@/components/shared/states'
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -61,7 +62,7 @@ function barColor(trimp: number, median: number): string {
 
 export function WeeklyLoadChart() {
   const navigate = useNavigate()
-  const { data: raw = [] } = useQuery({
+  const { data: raw = [], isLoading, error, refetch } = useQuery({
     queryKey: ['weeklyLoad'],
     queryFn: fetchWeeklyLoad,
     staleTime: 10 * 60 * 1000,
@@ -79,6 +80,18 @@ export function WeeklyLoadChart() {
     return { data: sorted, median: med }
   }, [raw])
 
+  if (isLoading) return <LoadingState shape="block" label="Loading weekly load" className="h-40" />
+  if (error && data.length === 0) {
+    return (
+      <FailedState
+        size="compact"
+        className="h-40 border-0 bg-transparent"
+        title="Could not load weekly load"
+        error={error}
+        onRetry={() => { void refetch() }}
+      />
+    )
+  }
   if (data.length === 0) {
     return (
       <EmptyState

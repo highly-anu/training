@@ -1,3 +1,4 @@
+import { Skeleton } from '@/components/ui/skeleton'
 import { ArrowDown } from 'lucide-react'
 import { LineagePill } from '@/components/explore/LineageSection'
 import type { ExerciseProgression } from '@/lib/exploreLinks'
@@ -9,7 +10,7 @@ interface PrereqChainProps {
 }
 
 export function PrereqChain({ name, progression }: PrereqChainProps) {
-  if (!progression) return <div className="h-10 rounded-md bg-muted/20 animate-pulse" />
+  if (!progression) return <Skeleton className="h-10" />
   const { before, after, easier } = progression
 
   if (!before.length && !after.length && !easier.length) {

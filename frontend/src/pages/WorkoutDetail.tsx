@@ -1,3 +1,6 @@
+import { EmptyState } from '@/components/shared/EmptyState'
+import { LoadingState, FailedState } from '@/components/shared/states'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useMemo, useState, lazy, Suspense } from 'react'
 import { parseSessionKey } from '@/lib/sessionKeys'
 import { formatActivityType } from '@/lib/activityType'
@@ -163,7 +166,7 @@ export function WorkoutDetail() {
   // Always fetch full workout from API — snapshot workouts omit gpsTrack and hr_samples
   // to keep the snapshot response small. State workout (from navigation) may also lack
   // these fields if it came from the list. Fetch unconditionally when workoutId is known.
-  const { data: fetchedWorkout, isLoading: fetchLoading } = useWorkoutDetail(workoutId)
+  const { data: fetchedWorkout, isLoading: fetchLoading, error: fetchError, refetch } = useWorkoutDetail(workoutId)
 
   // fetchedWorkout takes priority so GPS/HR samples are always present
   const workout = fetchedWorkout ?? stateWorkout ?? localWorkout ?? undefined
@@ -271,12 +274,16 @@ export function WorkoutDetail() {
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-2xl mx-auto w-full px-6 py-6">
             {fetchLoading ? (
-              <div className="flex items-center gap-2">
-                <div className="size-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                <p className="text-sm text-muted-foreground">Loading workout…</p>
-              </div>
+              <LoadingState shape="cards" label="Loading the workout" />
+            ) : fetchError ? (
+              // Not the same as a workout that is not there: this one may be, and can be asked for again.
+              <FailedState title="Could not load this workout" error={fetchError} onRetry={() => { void refetch() }} />
             ) : (
-              <p className="text-sm text-muted-foreground">Workout not found.</p>
+              <EmptyState
+                title="Workout not found"
+                description="It may have been removed, or merged into another recording of the same activity."
+                action={{ label: 'Back to Log', onClick: () => navigate('/log') }}
+              />
             )}
           </div>
         </div>
@@ -397,11 +404,7 @@ export function WorkoutDetail() {
             )}
           </div>
           <Suspense
-            fallback={
-              <div className="flex items-center justify-center h-[360px] rounded-lg border border-border bg-muted/20">
-                <div className="size-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-              </div>
-            }
+            fallback={<Skeleton className="h-[360px] w-full rounded-lg" />}
           >
             {isSwiss && mapMode === '3d' ? (
               <Swiss3DMap track={workout.gpsTrack!} />

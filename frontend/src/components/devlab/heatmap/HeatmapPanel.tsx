@@ -1,7 +1,9 @@
+import { Spinner } from '@/components/ui/spinner'
+import { LoadingState } from '@/components/shared/states'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { floatMotion, chartEntry } from '@/lib/motion'
-import { X, Loader2, ChevronLeft } from 'lucide-react'
+import { X, ChevronLeft } from 'lucide-react'
 import { HeatmapGraph } from './HeatmapGraph'
 import { getConnectedNodeIds, prunePhilosophyScope } from './heatmapGraphSelectors'
 import type { HeatmapSortMode } from './HeatmapGraph'
@@ -440,12 +442,7 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
   }, [selectedNodes])
 
   if (ontologyLoading) {
-    return (
-      <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">
-        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-        Loading ontology...
-      </div>
-    )
+    return <LoadingState shape="chart" label="Loading the ontology" className="p-4" />
   }
 
   if (!graphData) return null
@@ -600,7 +597,7 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
                     disabled={!compareGoalId || generateMutation.isPending}
                   >
                     {generateMutation.isPending ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
+                      <Spinner className="size-3" />
                     ) : (
                       'Generate'
                     )}

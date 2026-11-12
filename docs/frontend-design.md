@@ -146,7 +146,7 @@ whole contract, and each gets its module and its check in the phase that lands i
 | "Do this" and "done" are two colours in every theme | `--action`, `--done` and their foregrounds, per theme | `test/semanticContrast.test.ts` — ≥ 55° of hue apart, AA for the text on each fill |
 | Semantic text clears AA in all four themes | `lib/modalityColors`, `phaseColors`, `completionColors`, `statusColors`, `movementColors` | `semanticContrast` (§8.10) |
 | Modality and phase colours, labels and icons are generated | `lib/gen/clientVocab.ts` (`tools/gen_client_vocab.py`) | `test_client_vocab.py` |
-| Three states before content | *planned (phase 2)* — `components/shared/states/` | `loadPhase` unit test; no `animate-spin` or `border-dashed` outside the owners |
+| Three states before content | `components/shared/states/` (`loadPhase`, `LoadingState`, `FailedState`, `QueryState`), `ErrorBanner` `onRetry`, `ui/spinner.tsx`, `RouteErrorBoundary` (§11.2) | `loadPhase.test.ts`; no `animate-spin`, `animate-pulse`, "Loading…", bare `error.message` or new `border-dashed` outside the owners |
 | Every action answers in place | *planned (phase 3)* — `Button` `loading`, `lib/toast.ts`, `ConfirmDialog` | unit tests; no hand-made pending label |
 | One tab selector, one page header | *planned (phase 4)* — `components/layout/SubTabs.tsx`, `PageHeader.tsx` | keyboard test; no hand-written tablist or header |
 | Charts draw once, and not at all under Reduce Motion | *planned (phase 4)* — `lib/chartMotion.ts` | no Recharts animation prop outside it |
@@ -1511,65 +1511,47 @@ For larger lists (> 50), debounce with 250ms.
 4. **Disabled** — `disabled:opacity-50 disabled:pointer-events-none`
 5. **Complete/Success** — emerald palette (for completion-tracking components)
 
-### 11.2 Empty State Pattern
+### 11.2 Three States Before Content
 
-```tsx
-function EmptyState({ title, description, action, icon, className }) {
-  return (
-    <div className={cn(
-      'flex flex-col items-center justify-center rounded-lg border border-dashed bg-card/50 p-12 text-center',
-      className
-    )}>
-      {icon && (
-        <div className="mb-4 text-muted-foreground/40">{icon}</div>
-      )}
-      <h3 className="text-base font-semibold text-foreground">{title}</h3>
-      {description && (
-        <p className="mt-1 text-sm text-muted-foreground max-w-sm">{description}</p>
-      )}
-      {action && (
-        <Button onClick={action.onClick} className="mt-4">{action.label}</Button>
-      )}
-    </div>
-  )
-}
-```
+A screen that reads from the server is in one of four states, and `loadPhase(hasContent,
+isLoading, error)` (`components/shared/states/loadPhase.ts`) says which — the phone's
+`AppLoadPhase.resolve`:
 
-Always provide a `action` CTA that resolves the empty state (e.g., "Build a Program"). The dashed border (`border-dashed`) visually distinguishes empty slots from loaded content.
+| State | When | Component |
+|---|---|---|
+| Loading | nothing on screen yet, the request is out | `<LoadingState shape="cards \| grid \| list \| chart \| lines \| block \| tiles">` — skeletons in the shape of what is coming, `role="status"`, a spoken `label` |
+| Failed | nothing on screen, the request failed | `<FailedState title error onRetry>` — "Could not load …", the message, **Try again** |
+| Empty | the request answered with nothing | `<EmptyState>` — always with the way forward (`action`) |
+| Content | anything to show | the content. A reload never replaces it; a reload that failed is `<ErrorBanner title="Could not refresh …" onRetry>` above it |
 
-> **Code diverges — doc is correct.** `components/shared/EmptyState.tsx` is imported by **6** files, while **25** hand-rolled `border-dashed` empty states exist across the app. The *pattern* was adopted; the *component* was not. The cost is not visual — most copies look right — it is that the `action` CTA is optional in a hand-rolled block and consistently gets dropped, so a good share of the app's zero-data states are dead ends with no path forward. That is a direct §1.4 violation. Tracked as FIX-5.
+**Content wins.** Once something is on screen neither a refetch nor its failure takes it
+away. Failed is not Empty: Program and Today used to offer "Build a program" when the load
+had failed, and a workout that could not be fetched read "Workout not found".
 
-**Rule:** a zero-data view uses `<EmptyState>`. If it needs something the component cannot express, extend the component — do not fork it inline. The one legitimate exception is a *slot-sized* empty cell (an unscheduled day in the week grid), which is too small for a title/description/CTA and correctly uses a bare dashed cell.
+`<QueryState query={…}>` (`states/QueryState.tsx`) lays the four out around a TanStack
+query (`refetch` is the retry). A page with several queries calls the pieces itself.
+`components/layout/RouteErrorBoundary.tsx` wraps the outlet: a page that throws shows
+`FailedState` with Reload, and the sidebar stays.
 
-### 11.3 Loading Card Pattern
+**Running actions** are not a loading screen. A button that is working holds `<Spinner>`
+(`ui/spinner.tsx`); a sentence that says what is running is `<Working>` ("Checking whether
+this changes your program…"). These are the only spinners.
 
-```tsx
-function LoadingCard() {
-  return (
-    <div className="rounded-lg border bg-card p-4 space-y-3 animate-pulse">
-      <div className="h-4 rounded-md bg-muted w-2/3" />
-      <div className="h-3 rounded-md bg-muted w-full" />
-      <div className="h-3 rounded-md bg-muted w-1/2" />
-    </div>
-  )
-}
-```
+**The dashed border** means *absent or optional*, never "this list is empty": a rest day,
+an unfilled slot, a drop target, an integration that is not configured. The files that
+draw one are listed in the design test; a new one fails it. A zero-data view is
+`<EmptyState>`; if it needs something the component cannot express, extend the component.
 
-Match the skeleton's visual weight to the content it represents. A card with a title and two lines of metadata gets a taller block + two narrower blocks.
+Held by `test/designRules.test.ts` (*three states before content*): `animate-spin` only in
+`ui/spinner.tsx`, `animate-pulse` only in `ui/skeleton.tsx`, no "Loading…" text, no bare
+`error.message` in a page, `border-dashed` only in the listed files; `loadPhase.test.ts`.
 
-### 11.4 Error State
+### 11.3 A Failed Action
 
-```tsx
-<Alert variant="destructive" className="mt-4">
-  <AlertCircle className="size-4" />
-  <AlertTitle>Generation failed</AlertTitle>
-  <AlertDescription>
-    Could not connect to the API. Check that the server is running.
-  </AlertDescription>
-</Alert>
-```
+An action that fails (generate, save, sync) says so where it was taken, with
+`<ErrorBanner error title>`; the button that was pressed is the retry.
 
-### 11.5 Selected vs. Complete
+### 11.4 Selected vs. Complete
 
 These are intentionally distinct:
 

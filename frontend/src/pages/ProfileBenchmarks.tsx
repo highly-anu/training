@@ -1,3 +1,4 @@
+import { LoadingState, FailedState } from '@/components/shared/states'
 import { useState, useEffect } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { Page } from '@/components/layout/Page'
@@ -13,7 +14,6 @@ import { useProfileStore } from '@/store/profileStore'
 import { useBioStore } from '@/store/bioStore'
 import { useLogResult, useStandardResults, useStandardSuggestions, useStandards } from '@/api/standards'
 import { useInjuryFlags } from '@/api/constraints'
-import { LoadingCard } from '@/components/shared/LoadingCard'
 import { RegenerateFromWeekBanner } from '@/components/program/RegenerateFromWeekBanner'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { EQUIPMENT_CATEGORIES } from '@/lib/equipment'
@@ -121,13 +121,20 @@ function EquipmentOverview() {
 // ── Injuries Overview ──────────────────────────────────────────────────────────
 
 function InjuriesOverview() {
-  const { data: flags = [], isLoading } = useInjuryFlags()
+  const { data: flags = [], isLoading, error, refetch } = useInjuryFlags()
   const injuryFlags = useProfileStore((s) => s.injuryFlags)
   const toggleInjuryFlag = useProfileStore((s) => s.toggleInjuryFlag)
 
   const selectedSet = new Set(injuryFlags)
 
-  if (isLoading) return <LoadingCard />
+  if (isLoading) return <LoadingState shape="grid" className="max-w-2xl mx-auto px-8 py-12" />
+  if (error && flags.length === 0) {
+    return (
+      <div className="max-w-2xl mx-auto px-8 py-12">
+        <FailedState title="Could not load the injury list" error={error} onRetry={() => { void refetch() }} />
+      </div>
+    )
+  }
 
   return (
     <div className="h-full overflow-y-auto">
@@ -287,7 +294,7 @@ function StandardCard({ s, result, onOpen }: {
 }
 
 function StandardsOverview({ onOpenAthlete }: { onOpenAthlete: () => void }) {
-  const { data: standards = [], isLoading } = useStandards()
+  const { data: standards = [], isLoading, error, refetch } = useStandards()
   const { data: results } = useStandardResults()
   const { data: suggestions = [] } = useStandardSuggestions()
   const sex = useProfileStore((s) => s.sex)
@@ -295,7 +302,14 @@ function StandardsOverview({ onOpenAthlete }: { onOpenAthlete: () => void }) {
   const [showAll, setShowAll] = useState(false)
   const openStandard = standards.find((s) => s.id === openId)
 
-  if (isLoading) return <LoadingCard />
+  if (isLoading) return <LoadingState shape="cards" count={3} className="max-w-2xl mx-auto px-8 py-12" />
+  if (error && standards.length === 0) {
+    return (
+      <div className="max-w-2xl mx-auto px-8 py-12">
+        <FailedState title="Could not load the standards" error={error} onRetry={() => { void refetch() }} />
+      </div>
+    )
+  }
 
   const byId = new Map(standards.map((s) => [s.id, s]))
   // This program's own (declared by its package or tested), in the server's

@@ -1,5 +1,6 @@
+import { Spinner } from '@/components/ui/spinner'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ChevronDown, ChevronUp, Clock, Loader2, Plus, RefreshCw, Search } from 'lucide-react'
+import { ChevronDown, ChevronUp, Clock, Plus, RefreshCw, Search } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
@@ -274,7 +275,7 @@ export function ReplaceSessionSheet({
                             </div>
                             <div className="shrink-0 flex items-center gap-1.5 text-[10px] text-muted-foreground mt-0.5">
                               {isLoading ? (
-                                <Loader2 className="size-3.5 animate-spin text-primary" />
+                                <Spinner className="size-3.5 text-primary" />
                               ) : (
                                 <>
                                   <Clock className="size-3" />
@@ -391,7 +392,7 @@ export function ReplaceSessionSheet({
                   {/* A fitting session from the library — found, not invented;
                       its full preview comes next, before anything is saved. */}
                   {generateSession.isPending ? (
-                    <><Loader2 className="size-4 mr-2 animate-spin" /> Searching…</>
+                    <><Spinner className="mr-2" /> Searching…</>
                   ) : (
                     <><Search className="size-4 mr-2" /> Search</>
                   )}

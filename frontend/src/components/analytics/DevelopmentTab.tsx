@@ -1,3 +1,4 @@
+import { LoadingState, FailedState } from '@/components/shared/states'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
@@ -8,8 +9,6 @@ import { ArrowRight } from 'lucide-react'
 import { useDevelopmentAnalytics } from '@/api/analytics'
 import type { DevelopmentAnalytics, DevelopmentBlock, DevelopmentLift, DevelopmentCurrency, DevelopmentPerBlock } from '@/api/types'
 import { EmptyState } from '@/components/shared/EmptyState'
-import { LoadingCard } from '@/components/shared/LoadingCard'
-import { ErrorBanner } from '@/components/shared/ErrorBanner'
 import { cn } from '@/lib/utils'
 import { StandardLevelBadge } from '@/components/standards/StandardLadder'
 import { StandardHistoryChart } from '@/components/standards/StandardHistoryChart'
@@ -26,10 +25,16 @@ import { statusLevel } from './status'
  * this is every block.
  */
 export function DevelopmentTab() {
-  const { data, isLoading, isError, error } = useDevelopmentAnalytics()
+  const { data, isLoading, isError, error, refetch } = useDevelopmentAnalytics()
 
-  if (isLoading) return <div className="p-6"><LoadingCard /></div>
-  if (isError) return <div className="p-6"><ErrorBanner error={error as Error} title="Could not load development" /></div>
+  if (isLoading) return <LoadingState shape="cards" count={3} className="p-6" />
+  if (isError && !data) {
+    return (
+      <div className="p-6">
+        <FailedState title="Could not load your blocks" error={error} onRetry={() => { void refetch() }} />
+      </div>
+    )
+  }
   if (!data || data.status === 'no_history' || data.blocks.length === 0) {
     return (
       <div className="p-6">

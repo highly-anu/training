@@ -1,3 +1,4 @@
+import { Skeleton } from '@/components/ui/skeleton'
 import { useSimilarity, getTopSimilar } from '@/api/similarity'
 import { cn } from '@/lib/utils'
 
@@ -25,7 +26,7 @@ export function SimilarItems({ category, id, getLabel, onSelect, count = 5, acce
     <div className="space-y-1.5">
       <p className="text-[9px] uppercase tracking-wider text-muted-foreground/40 font-medium">Similar</p>
       {[...Array(3)].map((_, i) => (
-        <div key={i} className="h-7 rounded bg-muted/20 animate-pulse" />
+        <Skeleton key={i} className="h-7 rounded" />
       ))}
     </div>
   )

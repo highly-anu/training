@@ -1,3 +1,4 @@
+import { Skeleton } from '@/components/ui/skeleton'
 import { useMemo, useState, lazy, Suspense } from 'react'
 import { parseSessionKey } from '@/lib/sessionKeys'
 import { Link } from 'react-router-dom'
@@ -308,11 +309,7 @@ export function WorkoutSummaryCard({ sessionKey, sessions, weekIndex: weekIndexP
         <div>
           <p className="text-[10px] text-muted-foreground mb-1">Route</p>
           <Suspense
-            fallback={
-              <div className="flex items-center justify-center h-[200px] rounded-lg border border-border bg-muted/20">
-                <div className="size-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-              </div>
-            }
+            fallback={<Skeleton className="h-[200px] w-full rounded-lg" />}
           >
             <GPSMap
               track={matched.gpsTrack!}

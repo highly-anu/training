@@ -1,6 +1,6 @@
+import { LoadingState } from '@/components/shared/states'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { EmptyState } from '@/components/shared/EmptyState'
-import { LoadingCard } from '@/components/shared/LoadingCard'
 import { ExerciseDetail } from './detail/ExerciseDetail'
 import { ArchetypeDetail } from './detail/ArchetypeDetail'
 import { ModalityDetail } from './detail/ModalityDetail'
@@ -46,10 +46,7 @@ export function DetailPanel({ type, selectedId, data, navigateTo, onOpenInOntolo
 
   if (data.isLoading) {
     return (
-      <div className="flex-1 p-6 space-y-3">
-        <LoadingCard lines={5} />
-        <LoadingCard lines={3} />
-      </div>
+      <LoadingState shape="cards" className="flex-1 p-6" />
     )
   }
 

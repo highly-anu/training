@@ -6,11 +6,12 @@
  * worker reads them: a preference the browser kept to itself would do nothing
  * about activities Garmin is already pushing.
  */
+import { LoadingState } from '@/components/shared/states'
 import { useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { format, parseISO } from 'date-fns'
-import { AlertCircle, Check, Loader2, LogOut, Watch } from 'lucide-react'
+import { AlertCircle, Check, LogOut, Watch } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
@@ -66,11 +67,7 @@ function GarminConnect() {
   }, [garminParam, queryClient, setSearchParams])
 
   if (isLoading) {
-    return (
-      <div className="rounded-lg border border-border bg-card p-4">
-        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-      </div>
-    )
+    return <LoadingState shape="lines" label="Loading Garmin" className="rounded-lg border border-border bg-card p-4" />
   }
 
   // No server credentials — the whole integration is inert, so say so plainly

@@ -1,3 +1,5 @@
+import { ErrorBanner } from '@/components/shared/ErrorBanner'
+import { LoadingState } from '@/components/shared/states'
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowDownToLine, CheckCircle2, Circle, ChevronRight } from 'lucide-react'
@@ -37,7 +39,7 @@ export function ActivityTab({
   onImport: () => void
 }) {
   const navigate = useNavigate()
-  const { data: logs, isLoading, isError } = useRecentSessionLogs()
+  const { data: logs, isLoading, isError, error, refetch } = useRecentSessionLogs()
   const { data: exercises } = useExercises()
   const program = useCurrentProgram()
   const programStartDate = useProgramStore((s) => s.programStartDate)
@@ -101,12 +103,13 @@ export function ActivityTab({
       </div>
 
       {isError && show !== 'workouts' && (
-        <p className="text-xs text-muted-foreground">Could not load the session logs.</p>
+        <ErrorBanner error={error} title="Could not load the session logs" onRetry={() => { void refetch() }} />
       )}
-      {entries.length === 0 ? (
+      {entries.length === 0 && isLoading && show === 'sessions' ? (
+        <LoadingState shape="list" count={4} label="Loading sessions" />
+      ) : entries.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          {isLoading && show === 'sessions' ? 'Loading sessions…'
-            : show === 'sessions' ? 'Nothing logged against a session yet.'
+          {show === 'sessions' ? 'Nothing logged against a session yet.'
             : show === 'workouts' && match !== 'all' ? `No ${match} workouts.`
             : 'No workouts yet.'}
         </p>
