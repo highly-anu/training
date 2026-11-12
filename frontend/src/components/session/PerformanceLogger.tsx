@@ -95,7 +95,6 @@ export function PerformanceLogger({
             key={`${exerciseId}-set-${i}`}
             {...tickMotion}
             onClick={() => toggle(i)}
-            animate={{ backgroundColor: done ? 'var(--color-primary)' : undefined }}
             className={cn(
               'size-6 rounded-md border transition-colors text-[10px] font-bold',
               done

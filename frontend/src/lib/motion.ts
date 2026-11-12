@@ -48,6 +48,9 @@ export const crossfade: Transition = { duration: 0.2, ease: 'easeInOut' }
 /** A chart or bar drawing once: no bounce — data never overshoots. */
 export const chartEntry: Transition = { type: 'spring', duration: 0.7, bounce: 0 }
 
+/** The same draw for a library that takes milliseconds (Recharts, through lib/chartMotion.ts). */
+export const CHART_ENTRY_MS = 700
+
 /** A page arriving and leaving. */
 export const pageEnter: Transition = { duration: BASE, ease: EASE_STANDARD }
 export const pageExit: Transition = { duration: FAST, ease: EASE_EXIT }
@@ -156,7 +159,35 @@ export const tickMotion = {
   transition: springSnappy,
 } as const
 
+/** The selected tab's pill sliding to its new place (a shared `layoutId`). */
+export const pillMotion = { transition: springSnappy } as const
+
+/** A row joining or leaving a list: the others close the gap. Wrap in `AnimatePresence`. */
+export const rowMotion = {
+  layout: true,
+  initial: { opacity: 0, height: 0 },
+  animate: { opacity: 1, height: 'auto' },
+  exit: { opacity: 0, height: 0 },
+  transition: layoutChange,
+} as const
+
+/** A number replaced by its new value: the new one comes from the side it moved to. */
+export function rollMotion(direction: 1 | -1) {
+  return {
+    initial: { y: 8 * direction, opacity: 0 },
+    animate: { y: 0, opacity: 1, transition: springSnappy },
+    exit: { y: -8 * direction, opacity: 0, transition: pageExit },
+  } as const
+}
+
 // ── variants ────────────────────────────────────────────────────────────────
+
+/** A tab's panel: comes from the side of the tab that was picked (`custom` = 1 | -1). */
+export const tabVariants: Variants = {
+  enter: (direction: number) => ({ opacity: 0, x: 12 * direction }),
+  center: { opacity: 1, x: 0, transition: pageEnter },
+  exit: (direction: number) => ({ opacity: 0, x: -12 * direction, transition: pageExit }),
+}
 
 /** A list whose children arrive one after another: `initial="hidden" animate="visible"`. */
 export function staggerVariants(density: StaggerDensity = 'normal'): { list: Variants; item: Variants } {

@@ -1,7 +1,9 @@
+import { TabPanels } from '@/components/motion/TabPanels'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { SubTabs } from '@/components/layout/SubTabs'
 import { useSearchParams } from 'react-router-dom'
 import { Page } from '@/components/layout/Page'
 import { Settings as SettingsIcon, Plug, UserCircle, Palette, Terminal } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { useDevLabEnabled } from '@/lib/featureFlags'
 import { ConnectionsSettings } from '@/components/settings/ConnectionsSettings'
 import { AccountSettings } from '@/components/settings/AccountSettings'
@@ -51,45 +53,18 @@ export function Settings() {
       key="settings"
       className="flex h-full flex-col"
     >
-      {/* Header — §17.2: icon, title, sub-tabs after a hairline */}
-      <div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
-        <SettingsIcon className="size-5 text-primary" />
-        <h1 className="text-lg font-semibold">Settings</h1>
-        <div className="ml-4 flex items-center gap-2">
-          <div className="w-px h-4 bg-border/60 shrink-0" />
-          <div className="flex items-center gap-1" role="tablist" aria-label="Settings sections">
-            {tabs.map((tab) => {
-              const isActive = tab.id === activeTab
-              const Icon = tab.Icon
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={isActive}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={cn(
-                    'flex items-center gap-1.5 px-3 py-1 text-xs rounded border transition-colors',
-                    isActive
-                      ? 'bg-primary/15 border-primary/40 text-primary'
-                      : 'border-border text-muted-foreground hover:bg-muted'
-                  )}
-                >
-                  <Icon className="size-3.5" />
-                  {tab.label}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        icon={SettingsIcon}
+        title="Settings"
+        tabs={<SubTabs id="settings-tabs" label="Settings sections" tabs={tabs} active={activeTab} onChange={setActiveTab} />}
+      />
 
-      <div className="flex-1 overflow-hidden">
+      <TabPanels active={activeTab} order={tabs.map((t) => t.id)} tabsId="settings-tabs" className="flex-1 overflow-hidden">
         {activeTab === 'connections' && <ConnectionsSettings />}
         {activeTab === 'account'     && <AccountSettings />}
         {activeTab === 'appearance'  && <AppearanceSettings />}
         {activeTab === 'developer'   && devLab && <DeveloperSettings />}
-      </div>
+      </TabPanels>
     </Page>
   )
 }

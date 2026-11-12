@@ -5,10 +5,11 @@ import { TopBar } from './TopBar'
 import { ProgramSaveBanner } from './ProgramSaveBanner'
 import { RouteErrorBoundary } from './RouteErrorBoundary'
 import { useUiStore } from '@/store/uiStore'
-import { cn } from '@/lib/utils'
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet'
 
 export function RootLayout() {
-  const sidebarOpen = useUiStore((s) => s.sidebarOpen)
+  const mobileNavOpen = useUiStore((s) => s.mobileNavOpen)
+  const setMobileNavOpen = useUiStore((s) => s.setMobileNavOpen)
   // The outlet is keyed by path, so the page leaving runs its exit before the
   // next one enters (un-keyed, AnimatePresence never saw a child leave). The
   // query is not part of the key: `?tab=` changes a page, it does not replace it.
@@ -18,27 +19,19 @@ export function RootLayout() {
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       {/* Desktop Sidebar */}
-      <div
-        className={cn(
-          'hidden md:flex flex-col transition-[width] duration-(--motion-base)',
-          sidebarOpen ? 'w-56' : 'w-0 overflow-hidden'
-        )}
-      >
+      <div className="hidden w-56 flex-col md:flex">
         <Sidebar />
       </div>
 
-      {/* Mobile Sidebar Overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 md:hidden"
-          onClick={() => useUiStore.getState().setSidebarOpen(false)}
-        >
-          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
-          <div className="absolute left-0 top-0 h-full w-56 z-50">
-            <Sidebar />
-          </div>
-        </div>
-      )}
+      {/* Under md the same sidebar is a drawer: closed on load, slides in from
+          the menu button, holds focus, closes on Escape, the scrim and a link. */}
+      <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+        <SheetContent side="left" className="w-56 p-0 md:hidden">
+          <SheetTitle className="sr-only">Navigation</SheetTitle>
+          <SheetDescription className="sr-only">The app's sections</SheetDescription>
+          <Sidebar onNavigate={() => setMobileNavOpen(false)} />
+        </SheetContent>
+      </Sheet>
 
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">

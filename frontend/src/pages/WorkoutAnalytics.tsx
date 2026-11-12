@@ -1,3 +1,6 @@
+import { TabPanels } from '@/components/motion/TabPanels'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { SubTabs } from '@/components/layout/SubTabs'
 import { ErrorBanner } from '@/components/shared/ErrorBanner'
 import { LoadingState, FailedState } from '@/components/shared/states'
 import { useMemo, useState } from 'react'
@@ -36,6 +39,8 @@ import { useLoadSummary } from '@/api/health'
 import type { ModalityId } from '@/api/types'
 import { formatActivityType } from '@/lib/activityType'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { useChartEntry } from '@/lib/chartMotion'
+import { RollingNumber } from '@/components/motion/RollingNumber'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -54,7 +59,8 @@ const SUB_TABS: { id: SubTab; label: string }[] = [
   { id: 'load',     label: 'Load'     },
   { id: 'recovery', label: 'Recovery' },
 ]
-const SUB_TAB_IDS = new Set<string>(SUB_TABS.map((t) => t.id))
+const SUB_TAB_ORDER = SUB_TABS.map((t) => t.id)
+const SUB_TAB_IDS = new Set<string>(SUB_TAB_ORDER)
 const TAB_ALIASES: Record<string, SubTab> = { development: 'blocks', program: 'progress' }
 
 const PERIODS: { id: Period; label: string; days: number | null }[] = [
@@ -78,38 +84,6 @@ function fmtDist(km: number): string {
 
 function fmtElev(m: number): string {
   return `${Math.round(m).toLocaleString()} m`
-}
-
-// ── Tab Selector ───────────────────────────────────────────────────────────────
-
-function TabSelector({
-  active,
-  onChange,
-  tabs,
-}: {
-  active: string
-  onChange: (t: SubTab) => void
-  tabs: typeof SUB_TABS
-}) {
-  return (
-    <div className="flex items-center gap-1">
-      {tabs.map((tab) => (
-        <button
-          key={tab.id}
-          type="button"
-          onClick={() => onChange(tab.id as SubTab)}
-          className={cn(
-            'px-3 py-1 text-xs rounded border transition-colors',
-            tab.id === active
-              ? 'bg-primary/15 border-primary/40 text-primary'
-              : 'border-border text-muted-foreground hover:bg-muted'
-          )}
-        >
-          {tab.label}
-        </button>
-      ))}
-    </div>
-  )
 }
 
 // ── Period Selector ────────────────────────────────────────────────────────────
@@ -155,9 +129,8 @@ function KpiCard({
         <Icon className={cn('size-3.5', color)} />
         <span className="text-xs text-muted-foreground">{label}</span>
       </div>
-      <span className="text-2xl font-bold tabular-nums text-foreground">
-        {value ?? '—'}
-      </span>
+      {/* Rolls when the period changes under it. */}
+      <RollingNumber value={value ?? '—'} className="text-2xl font-bold text-foreground" />
     </div>
   )
 }
@@ -169,6 +142,7 @@ function KpiCard({
  * consistency — the first half of the Load tab.
  */
 function VolumeSection({ period, onPeriodChange }: { period: Period; onPeriodChange: (p: Period) => void }) {
+  const drawIn = useChartEntry()
   const navigate = useNavigate()
   // Totals, mixes and consistency are the server's (GET /health/load/summary),
   // the same document the phone's Load section reads.
@@ -299,7 +273,7 @@ function VolumeSection({ period, onPeriodChange }: { period: Period; onPeriodCha
                         'Training',
                       ]}
                     />
-                    <Bar dataKey="hours" radius={[0, 3, 3, 0]}>
+                    <Bar {...drawIn} dataKey="hours" radius={[0, 3, 3, 0]}>
                       {activityBreakdown.map((entry, i) => (
                         <Cell key={i} fill={entry.color} />
                       ))}
@@ -319,7 +293,7 @@ function VolumeSection({ period, onPeriodChange }: { period: Period; onPeriodCha
                   <div className="relative shrink-0">
                     <ResponsiveContainer width={140} height={140}>
                       <PieChart>
-                        <Pie
+                        <Pie {...drawIn}
                           data={modalityBreakdown}
                           cx="50%"
                           cy="50%"
@@ -327,8 +301,6 @@ function VolumeSection({ period, onPeriodChange }: { period: Period; onPeriodCha
                           outerRadius={64}
                           paddingAngle={2}
                           dataKey="pct"
-                          animationBegin={200}
-                          animationDuration={600}
                         >
                           {modalityBreakdown.map((entry, i) => (
                             <Cell key={i} fill={entry.color} stroke="transparent" />
@@ -390,7 +362,7 @@ function VolumeSection({ period, onPeriodChange }: { period: Period; onPeriodCha
                     }}
                     formatter={(v: unknown) => [`${String(v)} session${Number(v) !== 1 ? 's' : ''}`, 'Week']}
                   />
-                  <Bar dataKey="count" radius={[2, 2, 0, 0]}>
+                  <Bar {...drawIn} dataKey="count" radius={[2, 2, 0, 0]}>
                     {weeklyConsistency.map((entry, i) => (
                       <Cell key={i} fill={consistencyColor(entry.count)} />
                     ))}
@@ -423,6 +395,7 @@ function zoneFootnote(measured: number, estimated: number): string {
 }
 
 function LoadTab({ period, onPeriodChange }: { period: Period; onPeriodChange: (p: Period) => void }) {
+  const drawIn = useChartEntry()
   // Zone minutes over the period from the per-workout metrics cache — the
   // numbers the weekly load and PMC are built from. This used to estimate
   // every workout from its mean HR alone, ignoring the samples.
@@ -510,7 +483,7 @@ function LoadTab({ period, onPeriodChange }: { period: Period; onPeriodChange: (
                       return [h > 0 ? `${h}h ${m}m` : `${m}m`, 'Time']
                     }}
                   />
-                  <Bar dataKey="minutes" radius={[3, 3, 0, 0]}>
+                  <Bar {...drawIn} dataKey="minutes" radius={[3, 3, 0, 0]}>
                     {zoneData.map((entry, i) => (
                       <Cell key={i} fill={entry.color} />
                     ))}
@@ -562,23 +535,19 @@ export function WorkoutAnalytics() {
       key="workout-analytics"
       className="flex h-full flex-col overflow-hidden"
     >
-      {/* Header */}
-      <div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
-        <BarChart3 className="size-5 text-primary" />
-        <h1 className="text-lg font-semibold">Analytics</h1>
-        <div className="ml-4 flex items-center gap-2">
-          <div className="w-px h-4 bg-border/60 shrink-0" />
-          <TabSelector active={activeTab} onChange={setActiveTab} tabs={SUB_TABS} />
-        </div>
-      </div>
+      <PageHeader
+        icon={BarChart3}
+        title="Analytics"
+        tabs={<SubTabs id="analytics-tabs" label="Analytics sections" tabs={SUB_TABS} active={activeTab} onChange={setActiveTab} />}
+      />
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <TabPanels active={activeTab} order={SUB_TAB_ORDER} tabsId="analytics-tabs" className="flex-1 overflow-y-auto">
         {activeTab === 'progress' && <ProgressTab />}
         {activeTab === 'blocks'   && <DevelopmentTab />}
         {activeTab === 'load'     && <LoadTab period={period} onPeriodChange={setPeriod} />}
         {activeTab === 'recovery' && <RecoveryTab />}
-      </div>
+      </TabPanels>
     </Page>
   )
 }

@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/layout/PageHeader'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Watch } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -23,10 +24,7 @@ export function PairDevice() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
-        <Watch className="size-5 text-primary" />
-        <h1 className="text-lg font-semibold">Pair a watch</h1>
-      </div>
+      <PageHeader icon={Watch} title="Pair a watch" />
 
       <div className="flex flex-1 items-start justify-center p-6">
         <div className="w-full max-w-sm rounded-lg border border-border/30 bg-card/40 p-5 space-y-4">

@@ -1,3 +1,5 @@
+import { PageHeader } from '@/components/layout/PageHeader'
+import { SubTabs, tabDomId } from '@/components/layout/SubTabs'
 import { Button } from '@/components/ui/button'
 import { LoadingState, FailedState } from '@/components/shared/states'
 import { useState, useEffect, useRef, useMemo } from 'react'
@@ -31,6 +33,11 @@ import { ReplaceSessionSheet } from '@/components/session/ReplaceSessionSheet'
 type ProgramTab = 'overview' | 'calendar' | 'history'
 // Overview leads since 2026-10-17, the same order as the phone's (information-architecture.md §2).
 const PROGRAM_TABS: ProgramTab[] = ['overview', 'calendar', 'history']
+const PROGRAM_TAB_ITEMS = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'calendar', label: 'Calendar' },
+  { id: 'history', label: 'History' },
+] as const satisfies readonly { id: ProgramTab; label: string }[]
 
 export function ProgramView() {
   const navigate = useNavigate()
@@ -185,33 +192,12 @@ export function ProgramView() {
       key="program"
       className="flex h-full flex-col"
     >
-      {/* Header */}
-      <div className="border-b px-6 py-4 space-y-3 shrink-0">
-        {/* Wraps rather than overflows: a long title, the tabs, the actions and
-            the week selector do not fit one row of a narrow window. */}
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-3">
-          <CalendarDays className="size-5 text-primary shrink-0" />
-          <h1 className="text-lg font-semibold shrink-0 max-w-full">{programTitle}</h1>
-          <div className="ml-4 flex items-center gap-2">
-            <div className="w-px h-4 bg-border/60 shrink-0" />
-            <div className="flex items-center gap-1">
-              {PROGRAM_TABS.map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={cn(
-                    'px-3 py-1 rounded text-xs border transition-colors capitalize',
-                    activeTab === tab
-                      ? 'bg-primary/15 border-primary/40 text-primary'
-                      : 'border-border text-muted-foreground hover:bg-muted'
-                  )}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+      <PageHeader
+        icon={CalendarDays}
+        title={programTitle}
+        tabs={<SubTabs id="program-tabs" label="Program sections" tabs={PROGRAM_TAB_ITEMS} active={activeTab} onChange={setActiveTab} />}
+        actions={
+          <>
             <button
               type="button"
               onClick={() => navigate('/program/new')}
@@ -244,16 +230,16 @@ export function ProgramView() {
                 onNext={() => setWeekIndex((i) => Math.min(program.weeks.length - 1, i + 1))}
               />
             )}
-          </div>
-        </div>
-
+          </>
+        }
+      >
         {activeTab !== 'history' && (
           <PhaseBar segments={segments} totalWeeks={totalWeeks} currentWeek={weekIndex + 1} />
         )}
-      </div>
+      </PageHeader>
 
-      {/* Body */}
-      <div className="flex-1 overflow-y-auto">
+      {/* Body. Not <TabPanels>: the calendar scrolls to its week as it mounts. */}
+      <div className="flex-1 overflow-y-auto" role="tabpanel" aria-labelledby={tabDomId('program-tabs', activeTab)}>
         {activeTab === 'calendar' ? (
           <div className="max-w-5xl mx-auto px-6 py-6 space-y-8">
             {program.weeks.map((weekData, idx) => (

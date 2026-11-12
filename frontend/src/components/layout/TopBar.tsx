@@ -5,11 +5,11 @@ import { useUiStore } from '@/store/uiStore'
 import { Activity } from 'lucide-react'
 
 export function TopBar() {
-  const toggleSidebar = useUiStore((s) => s.toggleSidebar)
+  const setMobileNavOpen = useUiStore((s) => s.setMobileNavOpen)
 
   return (
     <header className="flex h-14 items-center gap-3 border-b bg-card px-4 md:hidden">
-      <Button variant="ghost" size="icon" onClick={toggleSidebar} className="size-8" aria-label="Toggle navigation menu">
+      <Button variant="ghost" size="icon" onClick={() => setMobileNavOpen(true)} className="size-11" aria-label="Open navigation">
         <Menu className="size-4" />
       </Button>
       <div className="flex items-center gap-2">

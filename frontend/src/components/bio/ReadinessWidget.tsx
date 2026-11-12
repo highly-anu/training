@@ -10,6 +10,8 @@ import { readinessSourceNote, type ReadinessFlag } from '@/lib/readiness'
 import { fetchReadiness } from '@/api/health'
 import { useBioStore } from '@/store/bioStore'
 import { STATUS_STYLES } from '@/lib/statusColors'
+import { useChartEntry } from '@/lib/chartMotion'
+import { RollingNumber } from '@/components/motion/RollingNumber'
 
 const FLAG_LABELS: Record<ReadinessFlag, string> = {
   elevated_rhr_3d: 'Elevated resting HR (3+ days)',
@@ -26,6 +28,7 @@ const FLAG_LABELS: Record<ReadinessFlag, string> = {
 const STATUS_LABEL = { green: 'Ready', yellow: 'Moderate', red: 'Low' } as const
 
 export function ReadinessWidget() {
+  const drawIn = useChartEntry()
   const dailyBioLogs = useBioStore((s) => s.dailyBioLogs)
 
   const { data: result, isLoading, isError } = useQuery({
@@ -62,9 +65,7 @@ export function ReadinessWidget() {
 
       {/* Score + status */}
       <div className="flex items-end gap-3">
-        <span className={cn('text-4xl font-bold tabular-nums', styles.score)}>
-          {result?.score ?? '—'}
-        </span>
+        <RollingNumber value={result?.score ?? '—'} className={cn('text-4xl font-bold', styles.score)} />
         <div className="mb-0.5 space-y-0.5">
           {/* No score yet is not "Ready": the badge waits for the answer. */}
           {result ? (
@@ -98,7 +99,7 @@ export function ReadinessWidget() {
                     ) : null
                   }
                 />
-                <Line
+                <Line {...drawIn}
                   type="monotone"
                   dataKey="rhr"
                   stroke={status === 'green' ? '#10b981' : status === 'yellow' ? '#f59e0b' : '#ef4444'}

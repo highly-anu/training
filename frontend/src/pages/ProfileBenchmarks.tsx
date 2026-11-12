@@ -1,3 +1,6 @@
+import { TabPanels } from '@/components/motion/TabPanels'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { SubTabs } from '@/components/layout/SubTabs'
 import { LoadingState, FailedState } from '@/components/shared/states'
 import { useState, useEffect } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
@@ -978,54 +981,30 @@ function AthleteOverview() {
   )
 }
 
-// ── Tab Selector (like Explore) ───────────────────────────────────────────────
-
-function TabSelector({
-  active,
-  onChange,
-}: {
-  active: SubTab
-  onChange: (t: SubTab) => void
-}) {
-  return (
-    <div className="flex items-center gap-1">
-      {SUB_TABS.map((tab) => {
-        const isActive = tab.id === active
-        const Icon = tab.Icon
-        return (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => onChange(tab.id)}
-            className={cn(
-              'flex items-center gap-1.5 px-3 py-1 text-xs rounded border transition-colors',
-              isActive
-                ? 'bg-primary/15 border-primary/40 text-primary'
-                : 'border-border text-muted-foreground hover:bg-muted'
-            )}
-          >
-            <Icon className="size-3.5" />
-            {tab.label}
-          </button>
-        )
-      })}
-    </div>
-  )
-}
-
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 export function ProfileBenchmarks() {
-  // Seeded from ?tab= so the Garmin and Strava OAuth callbacks can land
-  // straight on Connections — they redirect to /profile?tab=connections.
-  const [searchParams] = useSearchParams()
+  // The section lives in ?tab=, as on every page: a link can land on it and
+  // Back returns to it (it was local state seeded from the URL until 2026-11-11).
+  const [searchParams, setSearchParams] = useSearchParams()
   // Heart Rate folded into Athlete on 2026-10-13, and Benchmarks was renamed
   // Standards on 2026-10-17; old links land on the new names.
   const tabParam = searchParams.get('tab')
   const requestedTab = (tabParam === 'heartrate' ? 'athlete' : tabParam === 'benchmarks' ? 'standards' : tabParam) as SubTab | null
-  const [activeTab, setActiveTab] = useState<SubTab>(
-    requestedTab && SUB_TAB_IDS.includes(requestedTab) ? requestedTab : 'athlete'
-  )
+  const activeTab: SubTab = requestedTab && SUB_TAB_IDS.includes(requestedTab) ? requestedTab : 'athlete'
+  function setActiveTab(tab: SubTab) {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        // A standard's sheet belongs to Standards.
+        next.delete('standard')
+        if (tab === 'athlete') next.delete('tab')
+        else next.set('tab', tab)
+        return next
+      },
+      { replace: true },
+    )
+  }
   // Connections moved to Settings on 2026-10-01. Old links and any OAuth
   // callback still pointing here land on the new home with their query intact.
   if (searchParams.get('tab') === 'connections') {
@@ -1037,31 +1016,24 @@ export function ProfileBenchmarks() {
       key="profile"
       className="flex h-full flex-col"
     >
-      {/* Header */}
-      <div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
-        <User className="size-5 text-primary" />
-        <h1 className="text-lg font-semibold">Profile</h1>
-
-        {/* Sub-tab selector (like Explore) */}
-        <div className="ml-4 flex items-center gap-2">
-          <div className="w-px h-4 bg-border/60 shrink-0" />
-          <TabSelector active={activeTab} onChange={setActiveTab} />
-        </div>
-
-      </div>
+      <PageHeader
+        icon={User}
+        title="Profile"
+        tabs={<SubTabs id="profile-tabs" label="Profile sections" tabs={SUB_TABS} active={activeTab} onChange={setActiveTab} />}
+      />
 
       {/* Content */}
       <div className="flex-1 overflow-hidden flex flex-col">
         {/* A change here that the active program was not built for offers a
             regenerate from the current week — every tab that feeds constraints. */}
         {(['athlete', 'equipment', 'injuries', 'schedule'] as SubTab[]).includes(activeTab) && <RegenerateFromWeekBanner />}
-        <div className="flex-1 overflow-hidden">
+        <TabPanels active={activeTab} order={SUB_TAB_IDS} tabsId="profile-tabs" className="flex-1 overflow-hidden">
           {activeTab === 'athlete'    && <AthleteOverview />}
           {activeTab === 'equipment'  && <EquipmentOverview />}
           {activeTab === 'injuries'   && <InjuriesOverview />}
           {activeTab === 'standards'  && <StandardsOverview onOpenAthlete={() => setActiveTab('athlete')} />}
           {activeTab === 'schedule'   && <ScheduleOverview />}
-        </div>
+        </TabPanels>
       </div>
     </Page>
   )

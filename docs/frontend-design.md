@@ -12,7 +12,7 @@ Where this document and the code disagree, the divergence is marked inline at th
 
 > **Code diverges — doc is correct.** The rule below is the target. The code has drifted and should be brought back. Tracked in `docs/frontend-fix-plan.md`.
 
-Anything not marked is believed to match the code as of 2026-07-30; §1.7, §1.8 and §9.0–§9.1, §9.9–§9.10 as of 2026-11-11 (roadmap item 19, which brings the rest up to date phase by phase).
+Anything not marked is believed to match the code as of 2026-07-30; §1.7, §1.8, §9.0–§9.1, §9.9–§9.10, §11.2–§11.9, §12.1, §13.1 and §17.2–§17.5 as of 2026-11-11 (roadmap item 19, which brings the rest up to date phase by phase).
 
 ---
 
@@ -149,8 +149,10 @@ whole contract, and each gets its module and its check in the phase that lands i
 | Three states before content | `components/shared/states/` (`loadPhase`, `LoadingState`, `FailedState`, `QueryState`), `ErrorBanner` `onRetry`, `ui/spinner.tsx`, `RouteErrorBoundary` (§11.2) | `loadPhase.test.ts`; no `animate-spin`, `animate-pulse`, "Loading…", bare `error.message` or new `border-dashed` outside the owners |
 | Every action answers in place | `Button` `loading` (`ui/button.tsx`), `DoneMark`, `lib/announce.ts` + `LiveRegion` (§11.5, §11.7, §11.8) | `button.test.tsx`; `designRules` — no label that changes while pending |
 | A toast only where the answer has left the screen | `lib/toast.ts` (`toast.undo`, `toast.failed`), `components/shared/Toaster.tsx`; `ConfirmDialog` for what cannot be undone (§11.6) | `toast.test.ts`; `designRules` — sonner imported nowhere else, no `window.confirm` |
-| One tab selector, one page header | *planned (phase 4)* — `components/layout/SubTabs.tsx`, `PageHeader.tsx` | keyboard test; no hand-written tablist or header |
-| Charts draw once, and not at all under Reduce Motion | *planned (phase 4)* — `lib/chartMotion.ts` | no Recharts animation prop outside it |
+| One tab selector, one page header | `components/layout/SubTabs.tsx`, `PageHeader.tsx` (§17) | `SubTabs.test.tsx` (arrow keys, roving tab stop); `designRules` — no hand-written header row, `role="tablist"` or `TabSelector` |
+| What changed is shown, not swapped | `components/motion/` — `RollingNumber`, `TabPanels`, `Collapse`, `PresenceList`, `Stagger` (§11.9) | `RollingNumber.test.tsx`; `designRules` — no `initial` / `animate` / `exit` / `whileTap` literal outside `components/motion`, `components/layout` and `lib/motion.ts` |
+| Charts draw once, and not at all under Reduce Motion | `lib/chartMotion.ts` (`useChartEntry`, §12.1) | `chartMotion.test.ts`; `designRules` — every series starts `{...drawIn}`, no Recharts animation prop elsewhere |
+| The navigation drawer starts closed | `RootLayout` over `ui/sheet`; `uiStore.mobileNavOpen`, never persisted (§13.1) | `designRules` |
 | Nothing behind hover; everything focusable | *planned (phase 5)* — `Pressable`, the row "…" menu | no `onClick` on a `div`, no hover-only control without a twin |
 | Done is `--done` only; hue is data | *planned (phase 6)* — `lib/completionColors.ts` | no raw `emerald-` / `green-` class or hex literal outside the colour modules |
 | A chart reads its numbers | *planned (phase 6)* — `lib/chartSummary.ts`, `ChartFrame` | no Recharts container outside `ChartFrame` |
@@ -1615,6 +1617,24 @@ card's border and fill move to done in the same beat, and the day's header gains
 It plays only for a change — what was already done when the screen opened is simply done —
 and undoing it is the same button, without ceremony.
 
+### 11.9 What Changed
+
+Motion's third job (§1.7) is to show what changed and where it came from. Five components
+carry it (`components/motion/`); a screen uses them and writes no `initial` / `animate` /
+`exit` of its own.
+
+| Component | When | What it does |
+|---|---|---|
+| `RollingNumber` | A number that changes while it is looked at: done of due, readiness, a total under a period switch | The old value rolls out and the new one in — up when it grew, down when it fell (`order` decides for text like "3 of 5"). Not on first paint. A number that is simply there is plain text |
+| `TabPanels` | The body under a page's `SubTabs`, when the body is only the panels | The leaving panel fades, the arriving one comes from the side the pill moved to. `role="tabpanel"`, labelled by its tab |
+| `Collapse` | A block that opens under its trigger | Height and opacity; the rows below move with it. The trigger carries `aria-expanded` |
+| `PresenceList` | Rows that arrive or leave while the list is on screen | The arriving row opens, the leaving one closes, the rest slide to their places (`layout`) |
+| `Stagger` | A list or grid arriving with its page | Children rise in order (`riseIn`), capped so a long list does not make the last row wait |
+
+Under Reduce Motion each keeps its fade and drops its movement (§9.10) — none needs a
+branch of its own. Program and Preview keep a plain body under their tabs: the calendar
+scrolls to its week as it mounts, which a waiting exit would delay.
+
 ---
 
 ## 12. Data Visualization
@@ -1631,6 +1651,20 @@ All charts use Recharts with minimal configuration. Custom components handle wra
   </BarChart>
 </ResponsiveContainer>
 ```
+
+**Entry.** Every chart draws once, in `chartEntry`'s time (700 ms), decelerating with no
+bounce — data never overshoots — and not at all under Reduce Motion, which Recharts does not
+read by itself. One hook says it (`lib/chartMotion.ts`); a series spreads it first and writes
+no `isAnimationActive`, `animationDuration` or `animationBegin` of its own:
+
+```tsx
+const drawIn = useChartEntry()
+…
+<Line {...drawIn} dataKey="value" … />
+```
+
+Before 2026-11-11 there were three regimes: the library's 1500 ms default, two donuts with
+their own delay and duration, and eight series switched off outright.
 
 ### 12.1.1 Chart Inventory
 
@@ -1928,26 +1962,21 @@ Two non-Recharts geospatial views:
 ```tsx
 <div className="flex h-screen overflow-hidden bg-background">
 
-  {/* Desktop sidebar */}
-  <aside className="hidden md:flex flex-col w-56 border-r bg-card/50 transition-[width] duration-(--motion-base)">
+  {/* Desktop: always there */}
+  <div className="hidden w-56 flex-col md:flex">
     <Sidebar />
-  </aside>
+  </div>
 
-  {/* Mobile overlay */}
-  <AnimatePresence>
-    {sidebarOpen && (
-      <div className="fixed inset-0 z-40 md:hidden">
-        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={close} />
-        <aside className="relative z-50 w-56 h-full bg-card border-r">
-          <Sidebar />
-        </aside>
-      </div>
-    )}
-  </AnimatePresence>
+  {/* Under md: the same sidebar as a drawer */}
+  <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+    <SheetContent side="left" className="w-56 p-0 md:hidden">
+      <Sidebar onNavigate={() => setMobileNavOpen(false)} />
+    </SheetContent>
+  </Sheet>
 
   {/* Main area */}
   <div className="flex flex-1 flex-col overflow-hidden">
-    <TopBar />
+    <TopBar />   {/* the menu button, under md */}
     <main className="flex-1 overflow-hidden flex flex-col">
       <AnimatePresence mode="wait">
         <div key={pathname} className="contents">{outlet}</div>   {/* §9.1 */}
@@ -1957,6 +1986,13 @@ Two non-Recharts geospatial views:
 
 </div>
 ```
+
+**The drawer** (`uiStore.mobileNavOpen`) starts closed and is never persisted. It slides in
+from the menu button (44 px), holds focus, and closes on Escape, the scrim and a followed
+link — all of it `ui/sheet`'s. Until 2026-11-11 one persisted `sidebarOpen`, true by
+default, drove both the desktop column and an unanimated overlay, so a phone opened every
+page behind the navigation. Nothing on desktop ever toggled the column; it is now simply
+there. Links in the drawer are 44 px tall on a coarse pointer.
 
 ### 13.2 Sidebar Navigation
 
@@ -2544,86 +2580,63 @@ This pattern applies to every **primary tab** (top-level page reachable from the
 - Detail views that navigate back to a parent (Session Detail, Workout Detail) — these use the back-nav pattern (§13)
 - The Dashboard — see §17.9 for the Program View Header exception
 
-### 17.2 Container & Spacing
+### 17.2 One Component
+
+A page does not write its header. `components/layout/PageHeader.tsx` is the row:
 
 ```tsx
-<div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
-  {/* content */}
-</div>
+<PageHeader
+  icon={BarChart3}
+  title="Analytics"
+  tabs={<SubTabs id="analytics-tabs" label="Analytics sections" tabs={SUB_TABS} active={tab} onChange={setTab} />}
+  actions={<Button …/>}
+>
+  {/* optional second row: the program's phase bar */}
+</PageHeader>
 ```
 
-| Property | Value | Reason |
-|---|---|---|
-| `flex items-center` | All children vertically centered | Consistent alignment across icon sizes |
-| `gap-2` | 8px between icon and title | Tight identity pairing |
-| `border-b` | Separator from content | Always present on primary headers |
-| `px-6 py-4` | Standard header padding | Matches page content horizontal padding |
-| `shrink-0` | Prevents flex compression | Required in `flex-col` page layouts |
-
-**Always one horizontal row.** Do not stack the header into two rows for primary tabs — if content won't fit, it means there's too much content, not that the layout needs a second row.
+It is a `<header>` with `border-b px-6 py-4 shrink-0`, and renders the page's only `h1`.
+The first row wraps rather than overflows: a long program title, the tabs, the actions and
+the week selector do not fit one row of a narrow window. `onBack` puts a flow's way back
+before the icon (Preview).
 
 ### 17.3 Identity Block (Icon + Title)
 
-```tsx
-<Icon className="size-5 text-primary" />
-<h1 className="text-lg font-semibold">{PageName}</h1>
-```
+- **Icon:** `size-5 text-primary`, Lucide, the page's sidebar icon. Decorative
+  (`aria-hidden`).
+- **Title:** `text-lg font-semibold`. The larger scales are for content titles (program
+  names, workout names), not page chrome.
+- **Title is the page's name** — "Log", "Profile", "Dev Lab". Program is the exception: its
+  title is the program's.
 
-- **Icon:** `size-5 text-primary` — always amber, always Lucide React. Every primary tab gets an icon; no exceptions.
-- **Title:** `text-lg font-semibold` — not `text-xl` or `text-2xl`. The larger scales are for content titles (program names, workout names), not page chrome.
-- **Title is the canonical page name** — not a dynamic value, not a description. "Bio Log", "Exercises", "Profile", "Dev Lab". Short and stable.
+### 17.4 Subtitle
 
-### 17.4 Subtitle Rules
+`subtitle` is one short line under the title: a builder step's hint, the previewed
+program's name. Most pages have none; a sentence that restates the icon and title is left
+out.
 
-Subtitles go on the same row, inline, after a muted dot separator:
+### 17.5 Sub-tabs
 
-```tsx
-<span className="text-muted-foreground/50 text-xs select-none">·</span>
-<span className="text-xs text-muted-foreground">{subtitle}</span>
-```
-
-**When to include a subtitle:**
-- The subtitle must be ≤ 6 words and genuinely informative at a glance (e.g., "Readiness · Sleep · HRV", "198 exercises")
-- Dynamic counts ("198 exercises") are ideal — they carry live information
-- Facet summaries ("Readiness · Sleep · HRV") are ideal — they orient the user to what's inside
-
-**When to omit:**
-- Descriptive sentences ("The source methodologies that shape how programs are generated") → drop entirely or move to an empty state
-- Anything that restates what the icon + title already communicate
-- Long phrases that force the header to wrap
-
-**Default: no subtitle** unless one of the above applies. Most tabs are self-explanatory.
-
-### 17.5 Sub-tab Style
-
-Sub-tabs in the header row use **pill button style** — not Radix `TabsList`. This is a deliberate distinction:
-
-- **Header-level sub-tabs** (views of the same page): pill buttons
-- **Content-level tabs** (tab groups within a section of the page): Radix `TabsList` with the standard `bg-muted` track
+`components/layout/SubTabs.tsx` is the only tab selector — there were six copies, one of
+them with ARIA.
 
 ```tsx
-<div className="ml-4 flex gap-1">
-  {TABS.map(tab => (
-    <button
-      key={tab.id}
-      onClick={() => setTab(tab.id)}
-      className={cn(
-        'px-3 py-1 rounded text-xs border transition-colors',
-        activeTab === tab.id
-          ? 'bg-primary/15 border-primary/40 text-primary'
-          : 'border-border text-muted-foreground hover:bg-muted'
-      )}
-    >
-      {tab.label}
-    </button>
-  ))}
-</div>
+<SubTabs id="log-tabs" label="Log sections" tabs={[{ id, label, Icon?, badge? }]} active={tab} onChange={setTab} />
 ```
 
-- `ml-4` creates a visual separation from the identity block (not `gap-2` — the gap between identity and nav should be wider than the internal `gap-2`)
-- Active: `bg-primary/15 border-primary/40 text-primary`
-- Inactive: `border-border text-muted-foreground hover:bg-muted`
-- Size: `px-3 py-1 text-xs` — compact, never taller than the title
+- **Looks:** pills, `px-3 py-1 text-xs`; the selected one `text-primary` over a pill
+  (`border-primary/40 bg-primary/15`) that **slides** to it (`layoutId`, `pillMotion`), so
+  the eye follows the selection instead of finding it again.
+- **Keyboard:** a `role="tablist"` with one tab stop; Left and Right move and wrap, Home
+  and End jump (`nextTab`, tested). Selection follows focus.
+- **Touch:** 44 px tall on a coarse pointer; the row scrolls sideways before it wraps.
+- **The URL holds the tab** (`?tab=`), Profile included since 2026-11-11, so a link lands
+  on a section and Back returns to it. The page's default tab leaves the parameter out.
+- **The body** is `<TabPanels active order tabsId>` when it is only the panels (§11.9).
+- A second selector may follow a hairline (Explore: views, then topics). The same component
+  is the small switch inside a card (Program ▸ Overview's Sessions · Exercises).
+- A *filter* chip (All · Workouts · Sessions) is not a tab: it narrows one list and keeps
+  the chip look without the tablist.
 
 ### 17.6 Step Indicators (Wizard Flows)
 

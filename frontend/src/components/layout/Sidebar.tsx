@@ -57,7 +57,7 @@ const NAV_GROUPS: NavGroup[] = [
 // absent for everyone else (src/lib/featureFlags.ts).
 const DEV_GROUP: NavGroup = { label: 'Dev', items: [{ to: '/dev', label: 'Dev Lab', icon: Terminal }] }
 
-export function Sidebar() {
+export function Sidebar({ onNavigate }: { /** A link was followed (the drawer closes). */ onNavigate?: () => void }) {
   const groups = useDevLabEnabled() ? [...NAV_GROUPS, DEV_GROUP] : NAV_GROUPS
   return (
     <aside className="flex h-full w-56 flex-col border-r bg-card">
@@ -80,9 +80,10 @@ export function Sidebar() {
                   key={to}
                   to={to}
                   end={end}
+                  onClick={onNavigate}
                   className={({ isActive }) =>
                     cn(
-                      'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                      'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors [@media(pointer:coarse)]:min-h-11',
                       isActive
                         ? 'bg-primary/10 text-primary'
                         : 'text-muted-foreground hover:bg-accent hover:text-foreground'

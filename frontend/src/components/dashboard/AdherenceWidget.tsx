@@ -9,6 +9,7 @@ import { queryKeys } from '@/api/queryKeys'
 import { useBioStore } from '@/store/bioStore'
 import { STATUS_STYLES } from '@/lib/statusColors'
 import { statusLabel, statusLevel } from '@/components/analytics/status'
+import { RollingNumber } from '@/components/motion/RollingNumber'
 
 /** Per-week bar colour: the phone's thresholds (TodayView), 70 % and 45 %. */
 function statusFor(pct: number): 'green' | 'yellow' | 'red' {
@@ -100,7 +101,7 @@ export function AdherenceWidget() {
 
       <div className="space-y-1.5">
         <div className="flex items-baseline gap-1 whitespace-nowrap">
-          <span className={cn('text-4xl font-bold tabular-nums', styles.score)}>{overall}</span>
+          <RollingNumber value={overall} className={cn('text-4xl font-bold', styles.score)} />
           <span className="text-xs text-muted-foreground">% done</span>
         </div>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
@@ -121,7 +122,7 @@ export function AdherenceWidget() {
 
       {cw && (
         <p className="text-[11px] text-muted-foreground tabular-nums">
-          This week: <span className="font-semibold text-foreground">{cw.completed} of {cw.due}</span> due so far
+          This week: <RollingNumber value={`${cw.completed} of ${cw.due}`} order={cw.completed} className="font-semibold text-foreground" /> due so far
           {' · '}{cw.total} in the week{cw.isDeload ? ' · deload' : ''}
         </p>
       )}

@@ -9,6 +9,7 @@ import {
 } from 'recharts'
 import { parseISO } from 'date-fns'
 import type { GPSPoint } from '@/api/types'
+import { useChartEntry } from '@/lib/chartMotion'
 
 interface Props {
   track: GPSPoint[]
@@ -33,6 +34,7 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<
 }
 
 export function ElevationChart({ track }: Props) {
+  const drawIn = useChartEntry()
   const data = useMemo((): DataPoint[] => {
     const withAlt = track.filter(p => p.altitude != null)
     if (withAlt.length < 2) return []
@@ -82,14 +84,13 @@ export function ElevationChart({ track }: Props) {
           tickFormatter={(v: number) => `${Math.round(v)}`}
         />
         <Tooltip content={<CustomTooltip />} />
-        <Area
+        <Area {...drawIn}
           type="monotone"
           dataKey="altitude"
           stroke="#14b8a6"
           strokeWidth={1.5}
           fill="url(#elevGrad)"
           dot={false}
-          isAnimationActive={false}
         />
       </AreaChart>
     </ResponsiveContainer>

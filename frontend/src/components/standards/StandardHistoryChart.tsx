@@ -6,6 +6,7 @@ import { format } from 'date-fns'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { levelName, STANDARD_LEVELS } from '@/lib/standards'
 import type { ModalityId, StandardBlock } from '@/api/types'
+import { useChartEntry } from '@/lib/chartMotion'
 
 /** A result as the chart needs it — a Profile entry or a Blocks history point. */
 export interface ChartEntry {
@@ -73,6 +74,7 @@ function PointTooltip({ active, payload }: TooltipProps) {
  * across programs. Hover a point for its day, value, level and source.
  */
 export function StandardHistoryChart({ entries, thresholds, thresholdText, domain, blocks = [], height = 200 }: Props) {
+  const drawIn = useChartEntry()
   const color = (domain && MODALITY_COLORS[domain as ModalityId]?.hex) || 'var(--color-primary)'
   const data = useMemo(() => entries.map((e) => ({ ...e, x: dayMs(e.date) })), [entries])
 
@@ -117,8 +119,7 @@ export function StandardHistoryChart({ entries, thresholds, thresholdText, domai
               "1.5×BW") and the tooltip each point's — the client formats nothing. */}
           <YAxis domain={domainY} hide />
           <Tooltip content={<PointTooltip />} cursor={{ stroke: 'var(--color-muted-foreground)', strokeWidth: 1 }} />
-          <Line type="linear" dataKey="value" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
-                isAnimationActive={false}
+          <Line {...drawIn} type="linear" dataKey="value" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
                 dot={{ r: 4, fill: color, stroke: 'var(--color-card)', strokeWidth: 2 }}
                 activeDot={{ r: 6, fill: color, stroke: 'var(--color-card)', strokeWidth: 2 }} />
         </LineChart>

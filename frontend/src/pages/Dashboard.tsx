@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/layout/PageHeader'
 import { FailedState, LoadingState } from '@/components/shared/states'
 import { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -292,14 +293,7 @@ export function Dashboard() {
       key="dashboard"
       className="flex h-full flex-col overflow-hidden"
     >
-      {/* Header */}
-      <div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
-        <House className="size-5 text-primary" />
-        <h1 className="text-lg font-semibold">Today</h1>
-        <div className="ml-auto">
-          <ProgramSettingsSheet program={program} />
-        </div>
-      </div>
+      <PageHeader icon={House} title="Today" actions={<ProgramSettingsSheet program={program} />} />
 
       {/* Content + optional right panel */}
       <div className="flex flex-1 overflow-hidden">

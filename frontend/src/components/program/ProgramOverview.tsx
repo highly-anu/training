@@ -14,6 +14,7 @@ import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { PhaseChangeList, PhaseMatrix } from './PhaseChanges'
 import { findPhaseSummary } from '@/lib/phaseSummary'
 import { CompositionTracks } from './CompositionTracks'
+import { useChartEntry } from '@/lib/chartMotion'
 
 // ── Category config (for backend volume summary bars — 4 fixed buckets) ───────
 
@@ -136,6 +137,7 @@ interface ProgramOverviewProps {
 }
 
 export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
+  const drawIn = useChartEntry()
   const [expandedPhases, setExpandedPhases] = useState<Set<string>>(new Set())
 
   const { data: philosophies } = usePhilosophies()
@@ -654,10 +656,10 @@ export function ProgramOverview({ program, segments }: ProgramOverviewProps) {
                 />
               ))}
 
-              <Bar dataKey="Conditioning" fill="#0ea5e9" radius={[2, 2, 0, 0]} />
-              <Bar dataKey="Durability"   fill="#f59e0b" radius={[2, 2, 0, 0]} />
-              <Bar dataKey="Strength"     fill="#ef4444" radius={[2, 2, 0, 0]} />
-              <Bar dataKey="Mobility"     fill="#10b981" radius={[2, 2, 0, 0]} />
+              <Bar {...drawIn} dataKey="Conditioning" fill="#0ea5e9" radius={[2, 2, 0, 0]} />
+              <Bar {...drawIn} dataKey="Durability"   fill="#f59e0b" radius={[2, 2, 0, 0]} />
+              <Bar {...drawIn} dataKey="Strength"     fill="#ef4444" radius={[2, 2, 0, 0]} />
+              <Bar {...drawIn} dataKey="Mobility"     fill="#10b981" radius={[2, 2, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
