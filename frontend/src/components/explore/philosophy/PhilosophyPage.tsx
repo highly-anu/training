@@ -1,3 +1,4 @@
+import { Tip } from '@/components/shared/Tip'
 import { LoadingState, FailedState } from '@/components/shared/states'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -65,7 +66,7 @@ function Chip({ children, hex, onClick, title }: {
   const cls = 'inline-flex max-w-full items-center gap-1 rounded-full border border-border/50 bg-card/60 px-2 py-0.5 text-[11px] text-muted-foreground'
   const style = hex ? { borderLeftColor: hex, borderLeftWidth: 2 } : undefined
   return onClick
-    ? <button type="button" onClick={onClick} title={title} className={`${cls} hover:border-primary/40 hover:text-foreground`} style={style}>{children}</button>
+    ? <Tip label={title}><button type="button" onClick={onClick} className={`${cls} hover:border-primary/40 hover:text-foreground`} style={style}>{children}</button></Tip>
     : <span title={title} className={cls} style={style}>{children}</span>
 }
 

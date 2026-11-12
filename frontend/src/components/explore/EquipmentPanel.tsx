@@ -1,3 +1,4 @@
+import { Tip } from '@/components/shared/Tip'
 import { LoadingState, FailedState } from '@/components/shared/states'
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
@@ -96,17 +97,16 @@ function EquipmentChips({ selected, used, unlock, bodyweight, onToggle, onBodywe
     <div className="space-y-3">
       <div className="space-y-1.5">
         <p className="text-[10px] text-muted-foreground/60">No equipment</p>
-        <button
+        <Tip label={bodyweight ? 'Counted: turn off to see only what your equipment adds' : 'Left out: only what needs your equipment'}><button
           type="button"
           aria-pressed={bodyweight}
           onClick={onBodyweight}
-          title={bodyweight ? 'Counted: turn off to see only what your equipment adds' : 'Left out: only what needs your equipment'}
           className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono transition-all"
           style={toggleStyle(bodyweight)}
         >
           <div className="size-1.5 rounded-full" style={{ backgroundColor: bodyweight ? PRIMARY : 'var(--muted-foreground)' }} />
           Bodyweight / open space
-        </button>
+        </button></Tip>
       </div>
       {EQUIPMENT_GROUPS.map((g) => (
         <div key={g.name} className="space-y-1.5">
@@ -117,12 +117,10 @@ function EquipmentChips({ selected, used, unlock, bodyweight, onToggle, onBodywe
               const usable = used.has(id)
               const u = unlock[id]
               return (
-                <button
-                  key={id}
+                <Tip key={id} label={usable ? (on ? 'Selected' : unlockTitle(u)) : 'Nothing in the library needs it'}><button
                   type="button"
-                  disabled={!usable}
-                  onClick={() => onToggle(id)}
-                  title={usable ? (on ? 'Selected' : unlockTitle(u)) : 'Nothing in the library needs it'}
+                  aria-disabled={!usable}
+                  onClick={() => usable && onToggle(id)}
                   className={cn('flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono transition-all',
                     !usable && 'cursor-not-allowed')}
                   aria-pressed={usable ? on : undefined}
@@ -131,7 +129,7 @@ function EquipmentChips({ selected, used, unlock, bodyweight, onToggle, onBodywe
                   <div className="size-1.5 rounded-full" style={{ backgroundColor: on ? PRIMARY : 'var(--muted-foreground)' }} />
                   {label}
                   {!on && usable && u && u.total > 0 && <span className="opacity-70">+{u.total}</span>}
-                </button>
+                </button></Tip>
               )
             })}
           </div>

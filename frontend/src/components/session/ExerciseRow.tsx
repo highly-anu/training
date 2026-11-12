@@ -1,3 +1,4 @@
+import { Tip } from '@/components/shared/Tip'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -38,15 +39,14 @@ function ExercisePreviewPopover({ exerciseId, exerciseName, category }: { exerci
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
+      <Tip label="Preview exercise"><PopoverTrigger asChild>
         <button
           className="shrink-0 flex size-6 items-center justify-center rounded-full bg-muted hover:bg-muted/80 transition-colors mt-0.5"
           aria-label={`Preview ${exerciseName}`}
-          title="Preview exercise"
         >
           <Play className="size-3 text-muted-foreground" />
         </button>
-      </PopoverTrigger>
+      </PopoverTrigger></Tip>
       <PopoverContent className="w-72 p-2" align="start" side="top">
         <p className="text-xs font-semibold mb-1.5 text-foreground">{exerciseName}</p>
         {media ? (
@@ -135,15 +135,14 @@ export function ExerciseRow({ assignment, index, sessionKey, sessionIdx, onSwap 
             <div className="flex items-center gap-1.5">
               <h4 className="text-sm font-semibold text-foreground">{assignment.exercise.name}</h4>
               {onSwap && !assignment.load.module_id && (
-                <button
+                <Tip label="Swap for an alternative"><button
                   type="button"
                   onClick={onSwap}
                   className="rounded p-0.5 text-muted-foreground/60 hover:text-primary transition-colors"
                   aria-label={`Swap ${assignment.exercise.name}`}
-                  title="Swap for an alternative"
                 >
                   <ArrowLeftRight className="size-3" />
-                </button>
+                </button></Tip>
               )}
             </div>
             {loadStr && (
@@ -217,12 +216,11 @@ export function ExerciseRow({ assignment, index, sessionKey, sessionIdx, onSwap 
 function CleanToggle({ sessionKey, exerciseId, clean }: { sessionKey: string; exerciseId: string; clean: boolean }) {
   const setExerciseClean = useBioStore((s) => s.setExerciseClean)
   return (
-    <button
+    <Tip label="Every rep owned"><button
       type="button"
       onClick={() => setExerciseClean(sessionKey, exerciseId, !clean)}
       aria-pressed={clean}
       aria-label={`Clean: ${exerciseId}`}
-      title="Every rep owned"
       className={cn(
         'rounded border px-2 py-0.5 text-[10px] font-medium transition-colors',
         clean ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
@@ -230,7 +228,7 @@ function CleanToggle({ sessionKey, exerciseId, clean }: { sessionKey: string; ex
       )}
     >
       {clean ? 'Clean ✓' : 'Clean?'}
-    </button>
+    </button></Tip>
   )
 }
 

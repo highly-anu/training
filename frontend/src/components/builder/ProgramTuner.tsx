@@ -1,3 +1,4 @@
+import { Tip } from '@/components/shared/Tip'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AlertTriangle, Check, Info, Layers } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -274,16 +275,16 @@ export function ProgramTuner() {
                     </span>
                   )}
 
-                  <button
+                  <Tip label={blocker?.message}><button
                     onClick={() => {
+                      if (!selectable && !isSelected) return
                       setTrack(track.id)
                       // Let effectiveNumWeeks fall back to the track's length; the
                       // tight-event effect owns numWeeks when an event date is set.
                       if (!eventDate) setNumWeeks(null)
                     }}
-                    disabled={!selectable && !isSelected}
-                    title={blocker?.message}
-                    className="flex items-start gap-2 pr-6 text-left disabled:cursor-not-allowed"
+                    aria-disabled={!selectable && !isSelected}
+                    className="flex items-start gap-2 pr-6 text-left aria-disabled:cursor-not-allowed"
                   >
                     <Layers className="size-3.5 mt-0.5 shrink-0 text-muted-foreground" />
                     <div className="min-w-0">
@@ -307,7 +308,7 @@ export function ProgramTuner() {
                         </p>
                       )}
                     </div>
-                  </button>
+                  </button></Tip>
 
                   <PhaseSpine phases={track.phases} />
 

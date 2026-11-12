@@ -37,15 +37,15 @@ function workoutDateLabel(w: ImportedWorkout): string {
 export function WorkoutRow({ workout, status, sessionLabel, onOpen, onMatch, onRemove }: WorkoutRowProps) {
   const activity = formatActivityType(workout.activityType)
   return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={onOpen}
-      onKeyDown={(e) => e.key === 'Enter' && onOpen()}
-      className="flex items-center gap-3 rounded-lg border border-border/30 bg-card/40 px-3 py-2.5 cursor-pointer hover:bg-card/60 transition-colors"
-    >
-      <FileText className="size-4 shrink-0 text-muted-foreground" />
-      <div className="flex-1 min-w-0">
+    <div className="relative flex items-center gap-3 rounded-lg border border-border/30 bg-card/40 px-3 py-2.5 hover:bg-card/60 transition-colors">
+      <button
+        type="button"
+        onClick={onOpen}
+        aria-label={`Open ${activity}, ${workoutDateLabel(workout)}`}
+        className="absolute inset-0 rounded-lg"
+      />
+      <FileText className="pointer-events-none relative size-4 shrink-0 text-muted-foreground" />
+      <div className="pointer-events-none relative flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <p className="text-sm font-medium truncate">{activity}</p>
           <Badge variant="outline" className={cn('text-[10px] shrink-0', STATUS_CLASS[status])}>
@@ -65,8 +65,8 @@ export function WorkoutRow({ workout, status, sessionLabel, onOpen, onMatch, onR
         <Button
           size="sm"
           variant="ghost"
-          onClick={(e) => { e.stopPropagation(); onMatch() }}
-          className="text-xs text-amber-700 dark:text-amber-300"
+          onClick={onMatch}
+          className="relative text-xs text-amber-700 dark:text-amber-300"
         >
           Match
         </Button>
@@ -74,14 +74,14 @@ export function WorkoutRow({ workout, status, sessionLabel, onOpen, onMatch, onR
       {onRemove && (
         <button
           type="button"
-          onClick={(e) => { e.stopPropagation(); onRemove() }}
-          className="p-1 text-muted-foreground hover:text-foreground transition-colors rounded"
+          onClick={onRemove}
+          className="relative p-1 text-muted-foreground hover:text-foreground transition-colors rounded"
           aria-label={`Remove ${activity}`}
         >
           <X className="size-3.5" />
         </button>
       )}
-      <ChevronRight className="size-4 shrink-0 text-muted-foreground/50" />
+      <ChevronRight className="pointer-events-none relative size-4 shrink-0 text-muted-foreground/50" />
     </div>
   )
 }

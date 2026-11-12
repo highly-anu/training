@@ -153,7 +153,13 @@ whole contract, and each gets its module and its check in the phase that lands i
 | What changed is shown, not swapped | `components/motion/` — `RollingNumber`, `TabPanels`, `Collapse`, `PresenceList`, `Stagger` (§11.9) | `RollingNumber.test.tsx`; `designRules` — no `initial` / `animate` / `exit` / `whileTap` literal outside `components/motion`, `components/layout` and `lib/motion.ts` |
 | Charts draw once, and not at all under Reduce Motion | `lib/chartMotion.ts` (`useChartEntry`, §12.1) | `chartMotion.test.ts`; `designRules` — every series starts `{...drawIn}`, no Recharts animation prop elsewhere |
 | The navigation drawer starts closed | `RootLayout` over `ui/sheet`; `uiStore.mobileNavOpen`, never persisted (§13.1) | `designRules` |
-| Nothing behind hover; everything focusable | *planned (phase 5)* — `Pressable`, the row "…" menu | no `onClick` on a `div`, no hover-only control without a twin |
+| What can be clicked is a button or a link | `<button>` / `<Link>`; a card with controls inside takes one stretched button under its content (`WeekOverview`'s `SessionCard`, `WorkoutRow`) (§11.10) | `designRules` — no `onClick` or `role="button"` on a `div`, `span`, `li`, row, cell or `Card` |
+| No control waits for a hover | the row's "…" menu (`ui/dropdown-menu`); `.reveal` inside `.reveal-host` (`globals.css`) for a pointer's shortcut, shown on focus and on touch | `designRules` — no `opacity-0` / `invisible` with `group-hover` |
+| Focus, press and the touch target are written once | `globals.css`: the `:focus-visible` ring, the press on a button, the 44 px hit area under `pointer: coarse` | `designRules` — the three blocks exist; no `outline-none` without a focus style on the same element |
+| A button explains itself | `components/shared/Tip.tsx` (`Tip`, `Keys`, `TipProvider` in `App.tsx`) | `designRules` — no `title` on a button, no second `TooltipProvider` |
+| A drag has a keyboard and a menu | `lib/dndKeyboard.ts`, dnd-kit `KeyboardSensor` and announcements, *Move to* in the card's menu (`WeekOverview`); Linking's select-then-pick | `dndKeyboard.test.ts`; `designRules` |
+| One list of keyboard shortcuts | `lib/shortcuts.ts`, `components/layout/Shortcuts.tsx` (`?` lists them) | `shortcuts.test.ts`; `designRules` — no other `keydown` listener on the window |
+| Back returns to where you were | `lib/useScrollRestore.ts` (per history entry); `TabPanels` carries it | `useScrollRestore.test.ts` |
 | Done is `--done` only; hue is data | *planned (phase 6)* — `lib/completionColors.ts` | no raw `emerald-` / `green-` class or hex literal outside the colour modules |
 | A chart reads its numbers | *planned (phase 6)* — `lib/chartSummary.ts`, `ChartFrame` | no Recharts container outside `ChartFrame` |
 
@@ -1634,6 +1640,53 @@ carry it (`components/motion/`); a screen uses them and writes no `initial` / `a
 Under Reduce Motion each keeps its fade and drops its movement (§9.10) — none needs a
 branch of its own. Program and Preview keep a plain body under their tabs: the calendar
 scrolls to its week as it mounts, which a waiting exit would delay.
+
+### 11.10 Nothing Behind Hover
+
+A phone has no hover and a keyboard has no pointer. Whatever a screen can do is visible
+on it and reachable by Tab.
+
+**A control is a button or a link.** A `div` with `onClick` cannot be focused, does not
+answer Space or Enter and is not announced. A card that opens something *and* holds
+controls takes one stretched button under its content — `absolute inset-0`, an
+`aria-label` saying what opens — with the content `pointer-events-none` above it and each
+inner control `relative`. No `stopPropagation`: the controls are siblings, not children,
+of the button (`WeekOverview`'s `SessionCard`, `WorkoutRow`).
+
+**Nothing waits for a hover.** The week grid's complete toggle is always there. What a
+row can do beyond its first action is in its "…" menu (`ui/dropdown-menu`): Open · Mark
+complete · Move to a day. Only a pointer's shortcut for something the menu also does may
+wait — the drag handle — and it takes the class `reveal` inside a `reveal-host`, which
+shows it on hover, on focus within the row, and always where there is no hover.
+
+**Focus, press and target, once** (`styles/globals.css`). `:focus-visible` draws a 2 px
+ring in `--ring`, offset 2 px, on anything focusable; a component replaces it only with a
+`focus-visible:` style of its own on the same element, never with a bare `outline-none`.
+A button dims as it is pressed. Under `pointer: coarse` every button has a 44 px
+hit area, by a centred `::after` when the drawn control is smaller.
+
+**A button explains itself through `<Tip>`** (`components/shared/Tip.tsx`), not `title`: it
+opens after 400 ms, at once when moving from one to the next, on focus as on hover, and
+shows the shortcut (`keys="g p"`). An icon-only button keeps its `aria-label`; the tip is
+for the eyes. A control that is unavailable stays focusable with `aria-disabled` so its
+tip can say why.
+
+**A drag has a keyboard and a menu.** The week grid's handle takes Space to pick up, the
+arrow keys to move a day (`lib/dndKeyboard.ts`), Space to drop and Escape to cancel, each
+step announced; the same move is *Move to* in the card's menu, which is what touch uses.
+Log ▸ Linking's twin is select-then-pick: choose a workout, then the session; the banner
+is a `role="status"` and the link is announced.
+
+**Shortcuts** (`lib/shortcuts.ts`, one table). `g` then `t` `p` `a` `l` `e` `u` `s` goes to
+a section, `[` and `]` change the week, `?` lists them all. They never fire while typing
+or while a dialog, sheet or menu is open. A new shortcut is a row in that table — the
+list, the sidebar's tooltips and the handler read it.
+
+**Back returns to where you were** (`lib/useScrollRestore.ts`). A page's scroller keeps
+its place per history entry: Back lands on the row that was left, a fresh visit starts at
+the top. `TabPanels` carries it for every tabbed page; Today, Program, Session detail and
+the builder take the hook themselves. Not yet: Explore's and Profile's inner panels,
+Workout detail and Preview (page passes).
 
 ---
 

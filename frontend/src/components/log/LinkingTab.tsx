@@ -1,3 +1,4 @@
+import { Tip } from '@/components/shared/Tip'
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { format, parseISO } from 'date-fns'
@@ -21,6 +22,7 @@ import { WorkoutIcon } from '@/components/icons/WorkoutIcon'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { COMPLETION } from '@/lib/completionColors'
 import { formatActivityType } from '@/lib/activityType'
+import { announce } from '@/lib/announce'
 import { sourceShortLabel } from '@/lib/workoutSource'
 import { dismissKey, type LinkingDay, type LinkSession, type LinkSuggestion } from '@/lib/linking'
 import { useBioStore } from '@/store/bioStore'
@@ -170,17 +172,16 @@ function Connector({ kind, onAction, onDismiss, label }: {
   return (
     <div className="flex flex-col items-center justify-center gap-1 px-1">
       {kind === 'linked' ? (
-        <button
+        <Tip label="Unlink"><button
           type="button"
           onClick={onAction}
-          title="Unlink"
           aria-label={`Unlink ${label}`}
           className={cn('group/link flex size-7 items-center justify-center rounded-full border transition-colors',
             COMPLETION.border, COMPLETION.bgStrong, COMPLETION.text, 'hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-700 dark:hover:text-red-300')}
         >
           <Check className="size-3.5 group-hover/link:hidden" />
           <Unlink className="size-3.5 hidden group-hover/link:block" />
-        </button>
+        </button></Tip>
       ) : (
         <>
           <Button size="sm" variant="outline" onClick={onAction} className="h-7 px-1.5 sm:px-2 text-xs border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10" aria-label={`Link ${label}`}>
@@ -352,6 +353,7 @@ export function LinkingTab({ days, hasProgram, programLabels = {}, onImport }: {
     // this program's completion marks alone.
     confirmMatch(w.id, s.legacyKey, { sessionUid: s.uid, markComplete: !s.historical })
     setSelected(null)
+    announce(`${formatActivityType(w.activityType)} linked to ${s.name}.`)
   }
 
   function dismiss(p: LinkSuggestion) {
@@ -413,7 +415,7 @@ export function LinkingTab({ days, hasProgram, programLabels = {}, onImport }: {
         </div>
 
         {selected && (
-          <div className="sticky top-0 z-10 flex items-center gap-2 rounded-lg border border-primary/40 bg-background/95 backdrop-blur px-3 py-2 text-xs">
+          <div role="status" className="sticky top-0 z-10 flex items-center gap-2 rounded-lg border border-primary/40 bg-background/95 backdrop-blur px-3 py-2 text-xs">
             <Link2 className="size-3.5 text-primary" />
             <span className="flex-1 truncate">
               Pick a session for <span className="font-medium">{formatActivityType(selected.activityType)}</span> · {dayLabel(selected.date)}

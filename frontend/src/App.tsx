@@ -1,3 +1,4 @@
+import { TipProvider } from '@/components/shared/Tip'
 import { LiveRegion } from '@/components/shared/LiveRegion'
 import { Toaster } from '@/components/shared/Toaster'
 import { lazy, Suspense, useEffect } from 'react'
@@ -52,6 +53,7 @@ export default function App() {
           colour transitions still play. Page transitions degrade to clean
           cross-fades and feedback survives. See docs/frontend-design.md §9.10. */}
       <MotionConfig reducedMotion="user">
+        <TipProvider>
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
             <AuthInit>
@@ -103,6 +105,7 @@ export default function App() {
           <LiveRegion />
           <ReactQueryDevtools initialIsOpen={false} />
         </QueryClientProvider>
+        </TipProvider>
       </MotionConfig>
     </ThemeProvider>
   )

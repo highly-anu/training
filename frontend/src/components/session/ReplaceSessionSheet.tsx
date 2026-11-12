@@ -225,20 +225,14 @@ export function ReplaceSessionSheet({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
-                <div
-                  className="flex items-center gap-2 cursor-pointer"
-                  onClick={() => setSameModalityOnly((v) => !v)}
-                >
+                <Label htmlFor="same-modality" className="flex items-center gap-2 text-xs font-normal cursor-pointer">
                   <Checkbox
                     id="same-modality"
                     checked={sameModalityOnly}
                     onCheckedChange={(v) => setSameModalityOnly(Boolean(v))}
-                    className="pointer-events-none"
                   />
-                  <Label htmlFor="same-modality" className="text-xs cursor-pointer">
-                    Same modality only
-                  </Label>
-                </div>
+                  Same modality only
+                </Label>
               </div>
 
               <ScrollArea className="flex-1 mt-3 -mx-1 px-1">

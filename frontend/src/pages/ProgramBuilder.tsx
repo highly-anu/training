@@ -1,3 +1,4 @@
+import { useScrollRestore } from '@/lib/useScrollRestore'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { AnimatePresence, motion } from 'framer-motion'
 import { stepVariants } from '@/lib/motion'
@@ -19,6 +20,7 @@ const STEP_TITLES = {
 }
 
 export function ProgramBuilder() {
+  const scroller = useScrollRestore()
   const { step, direction, selectedGoalIds, sourceMode, setStep } = useBuilderStore()
   const stepInfo = STEP_TITLES[step]
   const variants = stepVariants(direction)
@@ -38,7 +40,7 @@ export function ProgramBuilder() {
       <PageHeader icon={Wand2} title={stepInfo.title} subtitle={stepInfo.sub} actions={<StepIndicator current={step} />} />
 
       {/* Step content */}
-      <div className="flex-1 overflow-y-auto">
+      <div ref={scroller} className="flex-1 overflow-y-auto">
         <AnimatePresence mode="wait" custom={direction}>
           {step === 1 && (
             <motion.div

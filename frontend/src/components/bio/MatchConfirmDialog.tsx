@@ -160,7 +160,7 @@ export function MatchConfirmDialog({ match, onClose }: MatchConfirmDialogProps) 
                           <span className="font-medium">{dayName}</span>
                           <span className="text-muted-foreground ml-2">{label}</span>
                         </div>
-                        <span className="text-[10px] text-primary opacity-0 group-hover:opacity-100">Select</span>
+                        <ChevronRight className="size-3.5 shrink-0 text-muted-foreground/60" />
                       </button>
                     ))}
                   </div>

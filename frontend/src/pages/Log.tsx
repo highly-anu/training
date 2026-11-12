@@ -1,3 +1,4 @@
+import { Tip } from '@/components/shared/Tip'
 import { TabPanels } from '@/components/motion/TabPanels'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { SubTabs } from '@/components/layout/SubTabs'
@@ -407,16 +408,15 @@ export function Log() {
         title="Log"
         tabs={<SubTabs id="log-tabs" label="Log sections" tabs={tabs} active={activeTab} onChange={setActiveTab} />}
         actions={
-          <Button
+          <Tip label="Import workouts"><Button
             variant="ghost"
             size="icon"
             className="size-8"
             onClick={() => setImportOpen(true)}
             aria-label="Import workouts"
-            title="Import workouts"
           >
             <ArrowDownToLine className="size-4" />
-          </Button>
+          </Button></Tip>
         }
       />
 

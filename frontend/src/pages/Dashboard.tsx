@@ -1,3 +1,4 @@
+import { useScrollRestore } from '@/lib/useScrollRestore'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { FailedState, LoadingState } from '@/components/shared/states'
 import { useMemo, useState, useEffect } from 'react'
@@ -199,6 +200,7 @@ function WeekTab({
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 export function Dashboard() {
+  const scroller = useScrollRestore()
   const navigate = useNavigate()
   const program = useCurrentProgram()
   const programLoadState = useProgramStore((s) => s.programLoadState)
@@ -299,7 +301,7 @@ export function Dashboard() {
       <div className="flex flex-1 overflow-hidden">
 
         {/* Scrollable main column */}
-        <div className="flex-1 min-w-0 overflow-y-auto">
+        <div ref={scroller} className="flex-1 min-w-0 overflow-y-auto">
           <WeekTab
             program={program}
             weekIndex={weekIndex}
