@@ -142,18 +142,20 @@ export function useDecideSuggestion() {
       apiClient.post(`/standards/suggestions/${id}/${action}`, { via: 'web', ...(text ? { text } : {}) }) as unknown as
         Promise<{ suggestion: StandardSuggestion | null }>,
     // A decided suggestion leaves the list at once. Reopen brings one back, so it waits for the server.
-    onMutate: async ({ id, action }) => {
-      if (action === 'reopen') return []
+    // A typed correction waits too: the server may refuse it, and its row
+    // is where the reason and the typed value belong.
+    onMutate: async ({ id, action, text }) => {
+      if (action === 'reopen' || text) return []
       await qc.cancelQueries({ queryKey: queryKeys.standards.suggestions })
       const before = qc.getQueriesData<StandardSuggestion[]>({ queryKey: queryKeys.standards.suggestions })
       qc.setQueriesData<StandardSuggestion[]>({ queryKey: queryKeys.standards.suggestions },
         (old) => old?.filter((s) => s.id !== id))
       return before
     },
-    onError: (_e, { action }, before) => {
+    onError: (_e, { action, text }, before) => {
       restore(qc, before)
       // Its row was already gone, so the failure has nowhere of its own to show.
-      if (action !== 'reopen') {
+      if (action !== 'reopen' && !text) {
         toast.failed(action === 'confirm' ? 'Could not save the result. It is waiting to be confirmed again.'
           : 'Could not dismiss the suggestion. It is back in the list.')
       }

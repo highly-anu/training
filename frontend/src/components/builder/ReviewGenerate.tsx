@@ -317,14 +317,14 @@ export function ReviewGenerate() {
 
       {/* Schedule adjustments/compromises */}
       {data?.compromises && data.compromises.length > 0 && (
-        <div className="rounded-lg border border-warning/40 bg-warning/10 p-4 space-y-2">
-          <h4 className="text-sm font-semibold text-warning-foreground">Schedule Adjustments</h4>
+        <div className="rounded-lg border border-warn/30 bg-warn/5 p-4 space-y-2">
+          <h4 className="text-sm font-semibold text-warn">Schedule Adjustments</h4>
           <ul className="text-xs text-muted-foreground space-y-1">
             {data.compromises.map((msg, i) => (
               <li key={i}>• {msg}</li>
             ))}
           </ul>
-          <p className="text-xs text-muted-foreground/80 pt-1 border-t border-warning/20">
+          <p className="text-xs text-muted-foreground/80 pt-1 border-t border-warn/20">
             Your program has been adapted to fit your availability. Consider adding more training days for the full program experience.
           </p>
         </div>

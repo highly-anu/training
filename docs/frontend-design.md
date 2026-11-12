@@ -1650,7 +1650,9 @@ Pressing something is answered **where it was pressed**, within the frame:
 A removal that can be put back **does not ask**: it happens, and `toast.undo("Workout
 removed", { undo, commit })` offers the way back for six seconds. With `commit` the server
 is told only when the window closes (or the page is left); without it the write is already
-made and `undo` reverses it (an added session: removed, then added again).
+made and `undo` reverses it (an added session: removed, then added again at its own
+index). The program's saves go one at a time (`programStore.persistProgram`), each on the
+revision the one before left, so an Undo pressed at once is not refused as stale.
 
 An action that cannot be undone from here — disconnecting an account, replacing a program —
 asks through `<ConfirmDialog>`: the title is the question, the description says what stops
@@ -1664,7 +1666,8 @@ The toast (`lib/toast.ts`, the only importer of sonner) has **two uses** and no 
 | `toast.failed` | A write made in the background failed — an optimistic change rolled back, a removal already off screen |
 
 Not for success ("Saved!"), not for a failure whose button is still on screen, not for
-information. `window.confirm` and `alert` are not used.
+information. A change the server may refuse for what was typed is not optimistic: a
+corrected suggestion waits, and a refusal is said in its row with the typed value kept. `window.confirm` and `alert` are not used.
 
 ### 11.7 Said Once
 
@@ -1711,7 +1714,9 @@ controls takes one stretched button under its content — `absolute inset-0`, an
 inner control `relative`. No `stopPropagation`: the controls are siblings, not children,
 of the button (`WeekOverview`'s `SessionCard`, `WorkoutRow`).
 
-**Nothing waits for a hover.** The week grid's complete toggle is always there. What a
+**Nothing waits for a hover.** The week grid's complete toggle is always there (on
+touch it keeps the card's right corner and the menu takes the left, so their 44 px
+targets never share a tap; the drag handle is left to the menu's *Move to*). What a
 row can do beyond its first action is in its "…" menu (`ui/dropdown-menu`): Open · Mark
 complete · Move to a day. Only a pointer's shortcut for something the menu also does may
 wait — the drag handle — and it takes the class `reveal` inside a `reveal-host`, which
@@ -1737,14 +1742,20 @@ is a `role="status"` and the link is announced.
 
 **Shortcuts** (`lib/shortcuts.ts`, one table). `g` then `t` `p` `a` `l` `e` `u` `s` goes to
 a section, `[` and `]` change the week, `?` lists them all. They never fire while typing
-or while a dialog, sheet or menu is open. A new shortcut is a row in that table — the
+or while a dialog, sheet, menu or a select's list is open (`OWNS_KEYBOARD`). A new shortcut is a row in that table — the
 list, the sidebar's tooltips and the handler read it.
 
 **Back returns to where you were** (`lib/useScrollRestore.ts`). A page's scroller keeps
 its place per history entry: Back lands on the row that was left, a fresh visit starts at
 the top. `TabPanels` carries it for every tabbed page; Today, Program, Session detail and
-the builder take the hook themselves. Not yet: Explore's and Profile's inner panels,
-Workout detail and Preview (page passes).
+the builder take the hook themselves; `ScrollPanel` is the hook for a tab's or topic's
+own body. A replace is the same place under a new history key, so `ScrollPanel` carries
+the position across it (a sheet writing `?standard=`), and an in-page back button that
+replaces names the entry it returns to (`state.scrollFrom`, Explore).
+
+**The page leaving keeps its own address.** `RootLayout`'s `HeldLocation` gives a page on
+its way out the location it was shown at, so it does not read the next page's path and
+query while it fades.
 
 ---
 

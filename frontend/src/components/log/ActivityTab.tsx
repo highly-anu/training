@@ -61,7 +61,8 @@ export function ActivityTab({
     : workouts
   const entries = mergeLogEntries(narrowed, rows, show)
 
-  if (workouts.length === 0 && rows.length === 0 && !isLoading) {
+  // Not when the logs failed to load: "nothing recorded" would be a guess.
+  if (workouts.length === 0 && rows.length === 0 && !isLoading && !isError) {
     return (
       <div className="max-w-2xl mx-auto px-8 py-12">
         <EmptyState

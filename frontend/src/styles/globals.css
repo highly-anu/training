@@ -130,7 +130,8 @@
   /* A verdict — going well, watch it, off — as text on the page. Not done
      (finished), not destructive (an action). Dark enough for AA on white. */
   --good: oklch(0.465 0.136 150.069);
-  --warn: oklch(0.473 0.137 46.201);
+  /* Amber-brown, well off the red's hue: at 46 a warning read as a failure. */
+  --warn: oklch(0.47 0.1 72);
   --bad: oklch(0.48 0.2 27.518);
 
   --border: oklch(0.92 0.004 286.32);

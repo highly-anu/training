@@ -406,7 +406,12 @@ function LoadTab({ period, onPeriodChange }: { period: Period; onPeriodChange: (
   // Zone minutes over the period from the per-workout metrics cache — the
   // numbers the weekly load and PMC are built from. This used to estimate
   // every workout from its mean HR alone, ignoring the samples.
-  const { data: summary, isLoading, error, refetch } = useLoadSummary(period)
+  const { data: answer, isLoading, error, refetch } = useLoadSummary(period)
+  // Another period's answer stays up while this one loads or fails, so the
+  // period selector never leaves the screen with nothing to go back to.
+  const [last, setLast] = useState(answer)
+  if (answer && answer !== last) setLast(answer)
+  const summary = answer ?? last
   const zoneData = useMemo(() => {
     const m = summary?.zones?.minutes
     if (!m) return null

@@ -1767,6 +1767,19 @@ ProgramHistoryDetail and WorkoutDetail's own header bars. Not checked on a devic
 44 px touch targets under `pointer: coarse`, OS Reduce Motion, and the Light, Military and
 Zen themes page by page (their contrast is computed, their look was not reviewed).
 
+**Done — review fixes** (`feat/web-review`, after six reviews of the stack). On touch the
+week card's "…" and complete toggle shared one 44 px target (a tap on the menu completed
+the session): they take opposite corners. A replace keeps a panel's scroll. Analytics ▸
+Load keeps the last period's answer while another loads or fails; a failed workout
+request is an error, not "not found"; a failed session-log load is not "nothing recorded";
+a failed disconnect says so. Program saves are serialised and an undone removal returns to
+its index. The leaving page keeps its location; the drawer closes when the window passes
+`md`; a refused correction is answered in its row; shortcuts wait for an open select;
+`RollingNumber` reads "1,234" and "4:58"; Light's `--warn` moved off the red's hue. Left: a
+workout removed inside the undo window is not deleted when the tab is closed at once (the
+request needs the token, read asynchronously — a `keepalive` send with a cached token);
+shortcuts during a keyboard drag; `QueryState` has no caller.
+
 **2. States.** `components/shared/states/`: one reading of a load (`loadPhase` — content is
 never replaced by a reload or its failure), `LoadingState` (the one loading look, in the
 content's shape), `FailedState` with Try again, `ErrorBanner` with a retry, `QueryState`

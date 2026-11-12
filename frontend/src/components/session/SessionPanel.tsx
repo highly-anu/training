@@ -148,7 +148,7 @@ export function SessionPanel({ program, weekData, weekIndex, day, compact = fals
                     <Button variant="ghost" size="sm"
                       onClick={() => {
                         removeSession(weekIndex, day, si)
-                        toast.undo('Session removed', { undo: () => addSession(weekIndex, day, session) })
+                        toast.undo('Session removed', { undo: () => addSession(weekIndex, day, session, si) })
                       }}
                       aria-label="Remove this added session">
                       <Trash2 className="size-3.5 mr-1.5" />

@@ -81,7 +81,7 @@ export function LanePicker() {
                 <div className="flex items-center gap-2 shrink-0">
                   <span className="text-xs font-semibold tabular-nums">{pct}%</span>
                   {siblings.length > 0 && (
-                    <Tip label="Remove this track"><button onClick={() => removeLane(i)}
+                    <Tip label="Remove this track"><button type="button" aria-label="Remove this track" onClick={() => removeLane(i)}
                             className="rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-muted">
                       <X className="size-3.5" />
                     </button></Tip>
