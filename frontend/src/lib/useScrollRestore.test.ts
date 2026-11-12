@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { rememberScroll } from './useScrollRestore'
+import { carryScroll, rememberScroll } from './useScrollRestore'
 
 describe('rememberScroll', () => {
   it('keeps the latest place per history entry', () => {
@@ -17,5 +17,21 @@ describe('rememberScroll', () => {
     rememberScroll('a|', 3, store, 2) // a is now the newest
     rememberScroll('c|', 4, store, 2)
     expect([...store.keys()]).toEqual(['a|', 'c|'])
+  })
+})
+
+describe('carryScroll', () => {
+  it('gives a replaced entry the place of the one it replaced', () => {
+    const store = new Map<string, number>([['a|panel', 300]])
+    carryScroll('a', 'b', 'panel', store)
+    expect(store.get('b|panel')).toBe(300)
+  })
+
+  it('leaves a place the new entry already has, and another part, alone', () => {
+    const store = new Map<string, number>([['a|panel', 300], ['b|panel', 40]])
+    carryScroll('a', 'b', 'panel', store)
+    carryScroll('a', 'c', 'detail', store)
+    expect(store.get('b|panel')).toBe(40)
+    expect(store.has('c|detail')).toBe(false)
   })
 })

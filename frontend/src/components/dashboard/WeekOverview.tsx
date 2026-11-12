@@ -158,7 +158,10 @@ function SessionCard({
         )}
       </div>
 
-      <div className="absolute bottom-1 right-1 flex items-center gap-0.5">
+      {/* On touch each control gets a 44 px target (globals.css), and two of
+          them side by side would share it: a tap on "…" completed the session.
+          There the menu takes the card's left corner and the toggle its right. */}
+      <div className="absolute bottom-1 right-1 flex items-center gap-0.5 pointer-coarse:left-1 pointer-coarse:justify-between">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
@@ -225,14 +228,15 @@ function DraggableSession({ dragId, ...card }: DraggableSessionProps) {
       <SessionCard
         {...card}
         handle={
-          // The pointer's shortcut for the menu's Move to.
+          // The pointer's shortcut for the menu's Move to. Not on touch: its
+          // target would cover the card's corner, and the menu moves the session.
           <button
             type="button"
             ref={setActivatorNodeRef}
             {...attributes}
             {...listeners}
             aria-label={`Move ${card.session.archetype?.name ?? 'session'} to another day`}
-            className="reveal absolute top-1.5 right-1 rounded p-0.5 cursor-grab touch-none text-muted-foreground hover:text-foreground active:cursor-grabbing"
+            className="reveal absolute top-1.5 right-1 rounded p-0.5 cursor-grab touch-none text-muted-foreground hover:text-foreground active:cursor-grabbing pointer-coarse:hidden"
           >
             <GripVertical className="size-3.5" />
           </button>
@@ -456,7 +460,8 @@ export function WeekOverview({ weekData, weekIndex, selectedDay, onDaySelect }: 
       }}
     >
       {/* Seven columns do not fit a phone: there the week scrolls sideways, opened on today. */}
-      <div ref={strip} className="overflow-x-auto sm:overflow-visible">
+      {/* The padding keeps the selected day's ring inside the strip's clip. */}
+      <div ref={strip} className="-m-1 overflow-x-auto p-1 sm:m-0 sm:overflow-visible sm:p-0">
       <div className="grid min-w-[40rem] grid-cols-7 gap-1.5 sm:min-w-0">
         {DAYS.map((day, i) => {
           const sessions = weekData?.schedule[day] ?? []

@@ -4,7 +4,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { SubTabs } from '@/components/layout/SubTabs'
 import { LoadingState, FailedState } from '@/components/shared/states'
 import { useState, useMemo } from 'react'
-import { useSearchParams, useNavigate } from 'react-router-dom'
+import { useSearchParams, useNavigate, useLocation } from 'react-router-dom'
 import { Page } from '@/components/layout/Page'
 import { ArrowLeft, Compass, Search, X, Wand2 } from 'lucide-react'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
@@ -1734,12 +1734,20 @@ export function Explore() {
   const selectedExercise = pick('exercises', allExercises)
   const selectedMovement = pick('movements', movements)
 
+  // A detail remembers the list entry it was opened from, along a trail of
+  // links too, so the back button's replace returns the list where it was left.
+  const location = useLocation()
+  const listEntry = selectedId
+    ? (location.state as { list?: string } | null)?.list
+    : location.key
+
   function open(t: Topic, id: string) {
-    setSearchParams({ topic: t, id })
+    setSearchParams({ topic: t, id }, { state: t === topic && listEntry ? { list: listEntry } : null })
   }
 
   function backToList() {
-    setSearchParams(topic === 'philosophies' ? {} : { topic }, { replace: true })
+    setSearchParams(topic === 'philosophies' ? {} : { topic },
+      { replace: true, state: listEntry ? { scrollFrom: listEntry } : null })
   }
 
   function handleTopicChange(t: Topic) {

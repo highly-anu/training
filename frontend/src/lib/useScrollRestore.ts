@@ -26,6 +26,15 @@ export function rememberScroll(id: string, top: number, store: Map<string, numbe
 }
 
 /**
+ * A replace gives the same place a new history key (a sheet writing its
+ * `?param`, an in-page back button): the position goes with it.
+ */
+export function carryScroll(from: string, to: string, part = '', store: Map<string, number> = positions): void {
+  const top = store.get(`${from}|${part}`)
+  if (top !== undefined && !store.has(`${to}|${part}`)) rememberScroll(`${to}|${part}`, top, store)
+}
+
+/**
  * `part` tells two scrollers on one page apart. `entry` pins the scroller to
  * one history entry: a tab panel on its way out must not take the next
  * entry's place.
