@@ -1,9 +1,10 @@
-import { useState } from 'react'
-import { CalendarDays, CalendarRange, FlaskConical, Info, Repeat, Timer } from 'lucide-react'
+import { useLayoutEffect, useRef, useState } from 'react'
+import { CalendarDays, CalendarRange, ChevronLeft, ChevronRight, FlaskConical, Info, Repeat, Timer } from 'lucide-react'
 import type { DescribedPhase, DescribedTrack, GlancePhase, GlanceTrack, PhilosophyDescription } from '@/api/types'
 import { PHASE_COLORS } from '@/lib/phaseColors'
 import { INTENSITY_BUCKETS } from '@/lib/hrZones'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 import { InlinePanel, IntensityBar, LevelPips, MixLegend, PhaseBar, WeekGlyph } from './Glance'
 import { PhaseWeek } from './PhaseWeek'
 
@@ -13,37 +14,6 @@ const LEVEL_WORDS: Record<string, string> = {
 
 const span = (r: { min: number; max: number } | null, unit = '') =>
   !r ? '—' : r.min === r.max ? `${r.min}${unit}` : `${r.min}–${r.max}${unit}`
-
-/** One track as a row: the same columns for every track, the phase bar on a
- *  scale shared by all of them, so tracks read — and later compare — at a glance. */
-function TrackRow({ track, scale, selected, onSelect }: {
-  track: GlanceTrack; scale: number; selected: boolean; onSelect: () => void
-}) {
-  return (
-    <button type="button" onClick={onSelect} aria-pressed={selected}
-      className={cn('grid w-full grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1.5 px-3 py-2 text-left transition-colors',
-        'sm:grid-cols-[minmax(9rem,1.1fr)_auto_3.5rem_minmax(8rem,2fr)_4.5rem_auto]',
-        selected ? 'bg-primary/10' : 'hover:bg-muted/30')}>
-      <div className="min-w-0">
-        <p className="truncate text-xs font-semibold">{track.name}</p>
-        <p className="truncate text-[9px] text-muted-foreground">
-          {track.primary ? 'main' : ''}{track.forLevels.length > 0 && `${track.primary ? ' · ' : ''}for ${track.forLevels.map((l) => LEVEL_WORDS[l]).join(', ')}`}
-        </p>
-      </div>
-      <LevelPips levels={track.levels} />
-      <span className="hidden text-right font-mono text-[11px] tabular-nums sm:block">
-        {track.weeks}<span className="text-muted-foreground"> wk</span>{track.repeatable && <Repeat className="ml-0.5 inline size-2.5 text-muted-foreground" />}
-      </span>
-      <div className="col-span-2 sm:col-span-1">
-        <PhaseBar phases={track.phases} scaleWeeks={scale} />
-      </div>
-      <span className="hidden font-mono text-[10px] text-muted-foreground sm:block">
-        {span(track.daysPerWeek)} d · {span(track.minutes)}′
-      </span>
-      <div className="col-span-2 sm:col-span-1"><MixLegend mix={track.mix} max={4} /></div>
-    </button>
-  )
-}
 
 /** One phase as a card: its kind's colour, its weeks, its week as a glyph,
  *  how hard. The words open under the cards. */
@@ -149,65 +119,164 @@ function PhaseDetail({ phase, track, onClose }: { phase: DescribedPhase; track: 
   )
 }
 
-/** How the philosophy runs: every track as a row on one week scale, the
- *  chosen track's phases as cards; a phase's words and week open in place
- *  under the cards, the track's own words under its header. */
-export function PhilosophyTracks({ doc }: { doc: PhilosophyDescription }) {
-  const tracks = doc.glance.tracks
-  const [trackId, setTrackId] = useState(doc.glance.primaryTrackId ?? tracks[0]?.id)
+/** A fact of the track: an icon, its number, its unit. */
+function Fact({ icon: Icon, children }: { icon: typeof CalendarDays; children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center gap-1 font-mono text-[11px] tabular-nums">
+      <Icon className="size-3 text-muted-foreground" />{children}
+    </span>
+  )
+}
+
+/** One track, whole: who it is for, its numbers, its phases on the scale every
+ *  track shares, its own words, and its phases as cards — a phase's words and
+ *  week open in place under them. Nothing of a track waits behind a button. */
+function TrackCard({ track, detail, scale, place, current }: {
+  track: GlanceTrack; detail: DescribedTrack; scale: number; place: string; current: boolean
+}) {
   const [phaseId, setPhaseId] = useState<string | null>(null)
-  const [aboutTrack, setAboutTrack] = useState(false)
-  const track = tracks.find((t) => t.id === trackId) ?? tracks[0]
-  const detail = doc.tracks.find((t) => t.id === track?.id)
-  if (!track || !detail) return null
-  const scale = Math.max(...tracks.map((t) => t.weeks), 1)
   const openPhase = detail.phases.find((p) => p.id === phaseId)
+  const who = [track.primary ? 'main track' : null,
+    track.forLevels.length > 0 ? `for ${track.forLevels.map((l) => LEVEL_WORDS[l]).join(', ')}` : null]
+    .filter(Boolean).join(' · ')
+  const needs = [detail.implement, ...track.requires].filter(Boolean).join(' · ')
 
   return (
-    <div className="space-y-3">
-      <div className="overflow-hidden rounded-lg border border-border/50 divide-y divide-border/40">
-        <div className="hidden grid-cols-[minmax(9rem,1.1fr)_auto_3.5rem_minmax(8rem,2fr)_4.5rem_auto] items-center gap-x-3 px-3 py-1 text-[9px] uppercase tracking-wider text-muted-foreground/60 sm:grid">
-          <span>Track</span><span>Level</span>
-          <span className="inline-flex items-center justify-end gap-1"><CalendarRange className="size-3" />Length</span>
-          <span>Phases</span>
-          <span className="inline-flex items-center gap-1"><CalendarDays className="size-3" />Week</span>
-          <span>Sessions / wk</span>
+    <div role="group" aria-roledescription="slide" aria-label={`${track.name}, ${place}`}
+      className={cn('space-y-4 rounded-lg border bg-card/40 p-4 transition-opacity',
+        current ? 'border-border/70' : 'border-border/40 opacity-60')}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="truncate text-sm font-semibold">{track.name}</h3>
+          {who && <p className="text-[11px] text-muted-foreground">{who}</p>}
         </div>
-        {tracks.map((t) => (
-          <TrackRow key={t.id} track={t} scale={scale} selected={t.id === track.id}
-            onSelect={() => { setTrackId(t.id); setPhaseId(null); setAboutTrack(false) }} />
-        ))}
+        <div className="flex shrink-0 items-center gap-2">
+          <LevelPips levels={track.levels} />
+          <span className="font-mono text-[10px] text-muted-foreground">{place}</span>
+        </div>
       </div>
 
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">
-          {track.name} — {track.phases.length > 1 ? `${track.phases.length} phases` : 'one phase'}
-        </p>
-        {(detail.description || detail.notes) && (
-          <button type="button" onClick={() => setAboutTrack((o) => !o)} aria-expanded={aboutTrack}
-            className={cn('inline-flex items-center gap-1 text-[11px] hover:text-foreground',
-              aboutTrack ? 'text-foreground' : 'text-muted-foreground')}>
-            <Info className="size-3" /> About this track
-          </button>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+        <Fact icon={CalendarRange}>
+          {track.weeks}<span className="text-muted-foreground"> wk</span>
+          {track.repeatable && <Repeat className="size-2.5 text-muted-foreground" aria-label="repeats" />}
+        </Fact>
+        <Fact icon={CalendarDays}>{span(track.daysPerWeek)}<span className="text-muted-foreground"> d/wk</span></Fact>
+        <Fact icon={Timer}>{span(track.minutes)}<span className="text-muted-foreground"> min</span></Fact>
+        {track.tests > 0 && (
+          <Fact icon={FlaskConical}>{track.tests}<span className="text-muted-foreground"> test{track.tests === 1 ? '' : 's'}</span></Fact>
         )}
-      </div>
-      {aboutTrack && (
-        <InlinePanel title={detail.name} subtitle={`${detail.weeks} weeks · ${detail.phases.length} phase${detail.phases.length === 1 ? '' : 's'}`}
-          onClose={() => setAboutTrack(false)}>
-          <div className="max-w-3xl space-y-3 text-xs leading-relaxed text-muted-foreground">
-            {detail.description && <p>{detail.description}</p>}
-            {detail.notes && <p className="rounded-md border border-border/40 bg-muted/30 px-3 py-2">{detail.notes}</p>}
-          </div>
-        </InlinePanel>
-      )}
-      <div className="grid gap-2 grid-cols-[repeat(auto-fill,minmax(10.5rem,1fr))]">
-        {track.phases.map((p) => (
-          <PhaseCard key={p.id} phase={p} selected={p.id === phaseId}
-            onOpen={() => setPhaseId((cur) => (cur === p.id ? null : p.id))} />
-        ))}
+        <MixLegend mix={track.mix} />
       </div>
 
-      {openPhase && <PhaseDetail phase={openPhase} track={detail} onClose={() => setPhaseId(null)} />}
+      <PhaseBar phases={track.phases} scaleWeeks={scale} />
+
+      {(detail.description || detail.notes || needs) && (
+        <div className="max-w-3xl space-y-2 text-xs leading-relaxed text-muted-foreground">
+          {detail.description && <p>{detail.description}</p>}
+          {needs && <p className="text-[11px]">Requires {needs}.</p>}
+          {detail.notes && <p className="rounded-md border border-border/40 bg-muted/30 px-3 py-2">{detail.notes}</p>}
+        </div>
+      )}
+
+      <div className="space-y-2">
+        <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">
+          {track.phases.length > 1 ? `${track.phases.length} phases` : 'One phase'}
+        </p>
+        <div className="grid gap-2 grid-cols-[repeat(auto-fill,minmax(10.5rem,1fr))]">
+          {track.phases.map((p) => (
+            <PhaseCard key={p.id} phase={p} selected={p.id === phaseId}
+              onOpen={() => setPhaseId((cur) => (cur === p.id ? null : p.id))} />
+          ))}
+        </div>
+        {openPhase && <PhaseDetail phase={openPhase} track={detail} onClose={() => setPhaseId(null)} />}
+      </div>
     </div>
+  )
+}
+
+/** How the philosophy runs: one card a track, flipped through — by the track's
+ *  name, the arrows or a swipe. Each card is the whole track (TrackCard); the
+ *  next one shows at the edge, and the phase bars share one week scale so two
+ *  tracks compare as they pass. */
+export function PhilosophyTracks({ doc }: { doc: PhilosophyDescription }) {
+  const tracks = doc.glance.tracks
+  const start = Math.max(0, tracks.findIndex((t) => t.id === doc.glance.primaryTrackId))
+  const [index, setIndex] = useState(start)
+  const strip = useRef<HTMLDivElement>(null)
+  const scale = Math.max(...tracks.map((t) => t.weeks), 1)
+  const many = tracks.length > 1
+
+  const leftOf = (i: number) => {
+    const el = strip.current
+    const card = el?.children[i] as HTMLElement | undefined
+    return el && card ? card.offsetLeft - (el.clientWidth - card.offsetWidth) / 2 : 0
+  }
+  function go(i: number) {
+    const to = Math.min(Math.max(i, 0), tracks.length - 1)
+    setIndex(to)
+    strip.current?.scrollTo?.({ left: leftOf(to), behavior: 'smooth' })
+  }
+  // Opens on the main track.
+  useLayoutEffect(() => {
+    strip.current?.scrollTo?.({ left: leftOf(start), behavior: 'auto' })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  // A swipe or the scrollbar: the card nearest the middle is the current one.
+  function onScroll() {
+    const el = strip.current
+    if (!el) return
+    const mid = el.scrollLeft + el.clientWidth / 2
+    let best = 0
+    let gap = Infinity
+    Array.from(el.children).forEach((c, i) => {
+      const card = c as HTMLElement
+      const d = Math.abs(card.offsetLeft + card.offsetWidth / 2 - mid)
+      if (d < gap) { gap = d; best = i }
+    })
+    if (best !== index) setIndex(best)
+  }
+
+  if (tracks.length === 0) return null
+  return (
+    <section aria-roledescription="carousel" aria-label="Tracks" className="space-y-3">
+      {many && (
+        <div className="flex items-center gap-2">
+          <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+            {tracks.map((t, i) => (
+              <button key={t.id} type="button" onClick={() => go(i)} aria-current={i === index}
+                className={cn('rounded-full border px-2.5 py-1 text-[11px] transition-colors',
+                  i === index ? 'border-primary/50 bg-primary/10 font-medium text-foreground'
+                    : 'border-border/50 text-muted-foreground hover:bg-muted/40 hover:text-foreground')}>
+                {t.name}
+                <span className="ml-1.5 font-mono text-[10px] text-muted-foreground">{t.weeks} wk</span>
+              </button>
+            ))}
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
+            <Button variant="outline" size="icon" className="size-7" onClick={() => go(index - 1)}
+              disabled={index === 0} aria-label="Previous track">
+              <ChevronLeft className="size-4" />
+            </Button>
+            <Button variant="outline" size="icon" className="size-7" onClick={() => go(index + 1)}
+              disabled={index === tracks.length - 1} aria-label="Next track">
+              <ChevronRight className="size-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+      <div ref={strip} onScroll={onScroll}
+        className="relative flex snap-x snap-mandatory items-start gap-3 overflow-x-auto [scrollbar-width:none]">
+        {tracks.map((t, i) => {
+          const detail = doc.tracks.find((d) => d.id === t.id)
+          return detail && (
+            <div key={t.id} className={cn('shrink-0 snap-center', many ? 'w-[calc(100%-2.5rem)]' : 'w-full')}>
+              <TrackCard track={t} detail={detail} scale={scale} current={i === index}
+                place={`${i + 1} of ${tracks.length}`} />
+            </div>
+          )
+        })}
+      </div>
+    </section>
   )
 }
