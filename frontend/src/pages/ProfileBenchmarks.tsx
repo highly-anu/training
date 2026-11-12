@@ -1,3 +1,4 @@
+import { ScrollPanel } from '@/components/layout/ScrollPanel'
 import { Tip } from '@/components/shared/Tip'
 import { TabPanels } from '@/components/motion/TabPanels'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -60,7 +61,7 @@ function EquipmentOverview() {
   }
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="max-w-3xl mx-auto px-8 py-12 space-y-10">
 
         <div className="space-y-3">
@@ -118,7 +119,7 @@ function EquipmentOverview() {
         </p>
 
       </div>
-    </div>
+    </ScrollPanel>
   )
 }
 
@@ -141,7 +142,7 @@ function InjuriesOverview() {
   }
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="max-w-2xl mx-auto px-8 py-12 space-y-10">
 
         <div className="space-y-3">
@@ -194,7 +195,7 @@ function InjuriesOverview() {
         </p>
 
       </div>
-    </div>
+    </ScrollPanel>
   )
 }
 
@@ -230,10 +231,10 @@ function ResultInput({ benchId, hint, label }: { benchId: string; hint: string; 
         disabled={log.isPending}
         className={cn(
           'w-20 h-7 rounded border bg-card/40 text-right text-xs text-foreground placeholder:text-muted-foreground/40 hover:border-input focus:border-primary focus:bg-card focus:outline-none px-2 transition-colors',
-          log.isError ? 'border-red-500/60' : 'border-border/30',
+          log.isError ? 'border-bad/60' : 'border-border/30',
         )}
       />
-      {log.isError && <span className="text-[10px] text-red-700 dark:text-red-300 max-w-48 text-right">{log.error.message}</span>}
+      {log.isError && <span className="text-[10px] text-bad max-w-48 text-right">{log.error.message}</span>}
     </div>
   )
 }
@@ -345,7 +346,7 @@ function StandardsOverview({ onOpenAthlete }: { onOpenAthlete: () => void }) {
   )
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="max-w-3xl mx-auto px-8 py-12 space-y-10">
 
         <div className="space-y-3">
@@ -362,7 +363,7 @@ function StandardsOverview({ onOpenAthlete }: { onOpenAthlete: () => void }) {
           {sex ? (
             <p className="text-[11px] text-muted-foreground/70">Showing the {sex} standards.</p>
           ) : (
-            <p className="text-[11px] text-amber-700 dark:text-amber-300">
+            <p className="text-[11px] text-warn">
               Showing the male standards until you set your sex under{' '}
               <button type="button" onClick={onOpenAthlete} className="underline underline-offset-2 hover:text-foreground">Athlete</button>.
             </p>
@@ -424,7 +425,7 @@ function StandardsOverview({ onOpenAthlete }: { onOpenAthlete: () => void }) {
                              onOpenChange={(o) => { if (!o) setOpenId(null) }}
                              standard={openId === 'bodyweight_kg' ? undefined : openStandard} />
       </div>
-    </div>
+    </ScrollPanel>
   )
 }
 
@@ -435,7 +436,7 @@ const DAYS: Day[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Sa
 function SessionButton({ type, onClick, label }: { type: SessionType; onClick: () => void; label: string }) {
   const config = {
     rest: { text: 'Rest', color: 'bg-muted/40 text-muted-foreground/50 border-muted-foreground/20' },
-    short: { text: 'Short', color: 'bg-yellow-500/15 text-yellow-700 dark:text-yellow-300 border-yellow-500/30' },
+    short: { text: 'Short', color: 'bg-warn/15 text-warn border-warn/30' },
     long: { text: 'Long', color: 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30' },
     mobility: { text: 'Mobility', color: 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30' },
   }
@@ -523,7 +524,7 @@ function ScheduleOverview() {
   )
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="max-w-2xl mx-auto px-8 py-12 space-y-10">
 
         <div className="space-y-3">
@@ -631,7 +632,7 @@ function ScheduleOverview() {
         </p>
 
       </div>
-    </div>
+    </ScrollPanel>
   )
 }
 
@@ -736,11 +737,11 @@ function HeartRateSection() {
                 {observedMax && (
                   <p className="text-xs text-muted-foreground">
                     Observed max from workouts:&nbsp;
-                    <span className={cn('font-medium', observedMax > effectiveMax ? 'text-amber-700 dark:text-amber-300' : 'text-foreground')}>
+                    <span className={cn('font-medium', observedMax > effectiveMax ? 'text-warn' : 'text-foreground')}>
                       {observedMax} bpm
                     </span>
                     {observedMax > effectiveMax && (
-                      <span className="ml-1 text-amber-700/70 dark:text-amber-300/70">— consider updating</span>
+                      <span className="ml-1 text-warn/70">— consider updating</span>
                     )}
                   </p>
                 )}
@@ -868,7 +869,7 @@ function AthleteOverview() {
   })()
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="max-w-2xl mx-auto px-8 py-12 space-y-10">
 
         <div className="space-y-3">
@@ -976,7 +977,7 @@ function AthleteOverview() {
         </div>
 
       </div>
-    </div>
+    </ScrollPanel>
   )
 }
 

@@ -6,6 +6,7 @@
  * worker reads them: a preference the browser kept to itself would do nothing
  * about activities Garmin is already pushing.
  */
+import { ScrollPanel } from '@/components/layout/ScrollPanel'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { LoadingState } from '@/components/shared/states'
 import { useEffect, useState } from 'react'
@@ -196,7 +197,7 @@ export function ConnectionsSettings() {
   }
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="max-w-2xl mx-auto px-8 py-12 space-y-10">
 
         <div className="space-y-3">
@@ -289,6 +290,6 @@ export function ConnectionsSettings() {
           <DevicesCard />
         </div>
       </div>
-    </div>
+    </ScrollPanel>
   )
 }

@@ -25,7 +25,7 @@ export function ValidationAlert({ validation }: ValidationAlertProps) {
       ))}
       {validation.warnings.map((warn, i) => (
         <Alert key={i}>
-          <AlertTriangle className="size-4 text-amber-700 dark:text-amber-300" />
+          <AlertTriangle className="size-4 text-warn" />
           <AlertTitle>Warning</AlertTitle>
           <AlertDescription>
             {warn.message}

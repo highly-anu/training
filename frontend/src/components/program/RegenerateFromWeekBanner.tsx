@@ -195,7 +195,7 @@ export function RegenerateFromWeekBanner() {
         {' '}The current plan stays in Program ▸ History.
       </p>
       {regenerate.error && (
-        <p className="text-xs text-red-700 dark:text-red-300">
+        <p className="text-xs text-bad">
           {regenerate.error.message || 'Could not regenerate'}
         </p>
       )}

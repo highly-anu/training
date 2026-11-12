@@ -21,7 +21,7 @@ interface WorkoutRowProps {
 
 const STATUS_CLASS: Record<WorkoutMatchStatus, string> = {
   matched:   'border-done/40 text-done',
-  pending:   'border-amber-500/40 text-amber-700 dark:text-amber-300',
+  pending:   'border-warn/40 text-warn',
   unmatched: 'border-border text-muted-foreground',
 }
 
@@ -66,7 +66,7 @@ export function WorkoutRow({ workout, status, sessionLabel, onOpen, onMatch, onR
           size="sm"
           variant="ghost"
           onClick={onMatch}
-          className="relative text-xs text-amber-700 dark:text-amber-300"
+          className="relative text-xs text-warn"
         >
           Match
         </Button>

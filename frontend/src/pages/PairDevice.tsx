@@ -55,7 +55,7 @@ export function PairDevice() {
                 Pair this watch
               </Button>
               {claim.isError && (
-                <p className="text-[11px] text-red-700 dark:text-red-300">
+                <p className="text-[11px] text-bad">
                   {claim.error.message}. Codes last ten minutes — open the app on the watch for a new one.
                 </p>
               )}

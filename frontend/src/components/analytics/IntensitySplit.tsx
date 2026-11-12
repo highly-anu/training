@@ -72,7 +72,7 @@ export function IntensitySplit({ intensity }: { intensity: AnalyticsIntensity })
             <span key={b.key}>
               <span className="inline-block size-2 rounded-sm align-middle mr-1" style={{ backgroundColor: b.color }} />
               {b.label} {current.actualPct[b.key] ?? 0}% vs {current.plannedPct![b.key]}%
-              <span className={Math.abs(current.deviationPts![b.key]) > 10 ? ' text-amber-800 dark:text-amber-300' : ''}>
+              <span className={Math.abs(current.deviationPts![b.key]) > 10 ? ' text-warn' : ''}>
                 {' '}({current.deviationPts![b.key] > 0 ? '+' : ''}{current.deviationPts![b.key]})
               </span>
             </span>

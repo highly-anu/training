@@ -1,3 +1,5 @@
+import { cn } from '@/lib/utils'
+import { METRIC_ICON } from '@/lib/dataColors'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useMemo, useState, lazy, Suspense } from 'react'
 import { parseSessionKey } from '@/lib/sessionKeys'
@@ -134,7 +136,7 @@ export function WorkoutSummaryCard({ sessionKey, sessions, weekIndex: weekIndexP
           {hasWatchData && (
             <div className="flex flex-wrap gap-4 pb-2 border-b border-border/40">
               <div className="flex items-center gap-1.5">
-                <Heart className="size-3.5 text-red-700 dark:text-red-300" />
+                <Heart className={cn('size-3.5', METRIC_ICON.heartRate)} />
                 {perfLog.avgHR != null && (
                   <span className="text-sm font-semibold">{Math.round(perfLog.avgHR)}</span>
                 )}
@@ -149,7 +151,7 @@ export function WorkoutSummaryCard({ sessionKey, sessions, weekIndex: weekIndexP
             <>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Zap className="size-3.5 text-amber-700 dark:text-amber-300" />
+                  <Zap className={cn('size-3.5', METRIC_ICON.effort)} />
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Suggested Match
                   </p>
@@ -262,7 +264,7 @@ export function WorkoutSummaryCard({ sessionKey, sessions, weekIndex: weekIndexP
       <div className="flex flex-wrap gap-4">
         {matched.heartRate.avg != null && (
           <div className="flex items-center gap-1.5">
-            <Heart className="size-3.5 text-red-700 dark:text-red-300" />
+            <Heart className={cn('size-3.5', METRIC_ICON.heartRate)} />
             <span className="text-sm font-semibold">{Math.round(matched.heartRate.avg)}</span>
             {matched.heartRate.max != null && (
               <span className="text-xs text-muted-foreground">/ {Math.round(matched.heartRate.max)} bpm</span>
@@ -275,13 +277,13 @@ export function WorkoutSummaryCard({ sessionKey, sessions, weekIndex: weekIndexP
         </div>
         {matched.calories != null && (
           <div className="flex items-center gap-1.5">
-            <Flame className="size-3.5 text-orange-700 dark:text-orange-300" />
+            <Flame className={cn('size-3.5', METRIC_ICON.calories)} />
             <span className="text-sm">{matched.calories} kcal</span>
           </div>
         )}
         {matched.distance && (
           <div className="flex items-center gap-1.5">
-            <MapPin className="size-3.5 text-blue-700 dark:text-blue-300" />
+            <MapPin className={cn('size-3.5', METRIC_ICON.distance)} />
             <span className="text-sm">
               {matched.distance.unit === 'km'
                 ? `${matched.distance.value.toFixed(1)} km`
@@ -298,7 +300,7 @@ export function WorkoutSummaryCard({ sessionKey, sessions, weekIndex: weekIndexP
         )}
         {matched.elevation?.loss != null && matched.elevation.loss > 0 && (
           <div className="flex items-center gap-1.5">
-            <TrendingDown className="size-3.5 text-rose-700 dark:text-rose-300" />
+            <TrendingDown className={cn('size-3.5', METRIC_ICON.descent)} />
             <span className="text-sm">Descended {matched.elevation.loss}m</span>
           </div>
         )}

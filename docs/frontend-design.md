@@ -159,8 +159,8 @@ whole contract, and each gets its module and its check in the phase that lands i
 | A button explains itself | `components/shared/Tip.tsx` (`Tip`, `Keys`, `TipProvider` in `App.tsx`) | `designRules` — no `title` on a button, no second `TooltipProvider` |
 | A drag has a keyboard and a menu | `lib/dndKeyboard.ts`, dnd-kit `KeyboardSensor` and announcements, *Move to* in the card's menu (`WeekOverview`); Linking's select-then-pick | `dndKeyboard.test.ts`; `designRules` |
 | One list of keyboard shortcuts | `lib/shortcuts.ts`, `components/layout/Shortcuts.tsx` (`?` lists them) | `shortcuts.test.ts`; `designRules` — no other `keydown` listener on the window |
-| Back returns to where you were | `lib/useScrollRestore.ts` (per history entry); `TabPanels` carries it | `useScrollRestore.test.ts` |
-| Done is `--done`; a verdict is `--good` / `--warn` / `--bad` | the tokens per theme (`globals.css`); `lib/completionColors.ts`, `lib/statusColors.ts` (§8.3, §8.8, §8.12) | `semanticContrast` — each token AA as text on the page, a card and its own tint in every theme; `designRules` — no raw `emerald-` / `green-` class |
+| Back returns to where you were | `lib/useScrollRestore.ts` (per history entry); `TabPanels` carries it; `components/layout/ScrollPanel.tsx` for a tab's or topic's body that scrolls by itself | `useScrollRestore.test.ts` |
+| Done is `--done`; a verdict is `--good` / `--warn` / `--bad` | the tokens per theme (`globals.css`); `lib/completionColors.ts`, `lib/statusColors.ts` (§8.3, §8.8, §8.12) | `semanticContrast` — each token AA as text on the page, a card and its own tint in every theme; `designRules` — no raw `emerald-` / `green-` class, and no raw `amber-` / `orange-` / `yellow-` / `red-` / `rose-` outside the colour modules |
 | Hue is data, and it has a name | `lib/dataColors.ts` beside the modality, phase, zone and movement modules (§8.12) | `designRules` — no hex literal in a component |
 | A chart reads its numbers | `components/shared/ChartFrame.tsx`, `lib/chartSummary.ts` (§12.11) | `chartSummary.test.ts`; `designRules` — no Recharts container outside `ChartFrame`, no frame without a label |
 | The page can be skipped to and has one name | the skip link and `main#main` in `RootLayout`; `PageHeader`'s `h1` | `designRules`; `eslint-plugin-jsx-a11y` (recommended) in `npm run lint` |
@@ -1168,6 +1168,13 @@ by name. `designRules.test.ts` fails on a hex literal outside the colour modules
 components where the colour is a notice, an injury or a heat step rather than one of the
 three verdicts. Only emerald and green are banned; each of those sites clears AA by its own
 `-700 dark:-300` pair. Moving them to tokens is page-pass work, a site at a time.
+
+**A notice is a verdict too.** "Needs attention" — a stale program, a lapsed connection, a
+constraint that held something back — is `text-warn` on `border-warn/30 bg-warn/5`; a failure
+is `text-bad` on `border-bad/30 bg-bad/5`. No component writes `amber-700 dark:amber-300`:
+the token is already each theme's own. A warm hue that is *data* has a name in
+`lib/dataColors.ts` — `METRIC_ICON` gives a recorded workout's figures (heart rate, effort,
+calories, distance, descent) one hue an icon, the quantity and never a judgement of it.
 
 ---
 
@@ -2491,7 +2498,9 @@ by picking results (`components/explore/EquipmentPanel.tsx`, logic in
 className="w-full sm:max-w-md"
 ```
 
-**Grid fallback:** 7-column week grid gets `overflow-x-auto` + `min-w-[700px]` to scroll rather than collapse.
+**Grid fallback:** a seven-column week does not fit a phone. Under `sm` Today's week
+(`WeekOverview`) is `min-w-[40rem]` inside an `overflow-x-auto` strip that opens with today's
+column in the middle; from `sm` up it is the plain grid. The page itself never scrolls sideways.
 
 **Sidebar:** Hidden on mobile, replaced by topbar hamburger + overlay.
 
@@ -2574,69 +2583,51 @@ own row above the name.
 
 ## 16. Implementation Checklist
 
-Use this to set up the design system in a new project.
+The rules are §1.8's table: each row names the module that carries the rule and the test that
+holds it. This list is the order to read a new or changed page in; every line is a row there.
 
-### Foundation
+### Before the content
 
-- [ ] Install: `tailwindcss`, `@radix-ui/*`, `class-variance-authority`, `clsx`, `tailwind-merge`, `framer-motion`, `lucide-react`
-- [ ] Create `lib/utils.ts` with `cn()` utility
-- [ ] Set up CSS custom properties for all color tokens (dark theme first)
-- [ ] Add `.light`, `.military`, `.zen` theme classes for optional variants
-- [ ] Set `--radius: 0.5rem` as base radius token
+- [ ] The page root is `Page`, its header `PageHeader` (the one `h1`), its sections `SubTabs`
+      writing `?tab=` (§17).
+- [ ] Loading, failed and empty each have their look before the content has one: `QueryState`
+      or `loadPhase` with `LoadingState`, `FailedState` (Try again) and `EmptyState` (the way
+      forward). A reload or its failure never replaces content on screen (§11).
+- [ ] The scroller keeps its place: `useScrollRestore` on a page's own scroller, `ScrollPanel`
+      for a tab's body (§11.10).
 
-### Colors
+### What is on it
 
-- [ ] Create `lib/categoryColors.ts` (or equivalent) mapping your domain categories to color token sets (`hex`, `bg`, `text`, `border`)
-- [ ] Create `lib/statusColors.ts` for any multi-value status fields (phases, states, severity)
-- [ ] Reserve `emerald` for completion/success states only — keep it consistent
-- [ ] Use amber as primary — it works in both light and dark themes
-- [ ] Establish the `/15` bg, `/30` border, full-opacity text pattern for semantic badges
+- [ ] Colour: "do this" is `primary`, done is `--done`, a verdict or notice is `good` / `warn` /
+      `bad`, anything else is data with a name in a colour module (§8.12). No hex, no raw
+      emerald, green, amber or red.
+- [ ] No meaning by colour alone — a word or an icon beside it.
+- [ ] A chart sits in `ChartFrame` with a summary from `lib/chartSummary.ts` and takes its
+      entry from `useChartEntry()` (§12.1, §12.11).
+- [ ] Numbers come from the server; the page lays them out.
 
-### Components
+### What can be done on it
 
-- [ ] Set up shadcn/ui base components (button, card, badge, tabs, sheet, dialog, input, select, slider, separator, scroll-area, skeleton, tooltip, popover)
-- [ ] Build shared: `EmptyState`, `LoadingCard`, semantic badge components
-- [ ] Ensure every component forwards `className` as a final override
+- [ ] What is clicked is a `<button>` or a `<Link>`; nothing waits for a hover — a row's
+      actions are in its "…" menu, `.reveal` only adds a pointer's shortcut (§11.10).
+- [ ] An icon button has an `aria-label` and a `Tip`; never a `title`.
+- [ ] Every action answers in place: `Button loading`, `DoneMark`, `announce()`. A toast only
+      for an undo or a failed background save; `ConfirmDialog` for what cannot be undone
+      (§11.5–§11.8).
+- [ ] A drag has a keyboard path and a menu entry.
 
-### Motion
+### How it moves
 
-- [ ] Wrap the app in `<MotionConfig reducedMotion="user">` — **do this before writing any animation**, not after (§9.10)
-- [ ] Set up `AnimatePresence mode="wait"` in the router
-- [ ] Apply the standard page transition to every page component
-- [ ] Add staggered entry to any list/grid with > 3 items
-- [ ] Use `whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}` on interactive cards
-- [ ] Use the expand/collapse pattern for any collapsible section
-- [ ] Gate any continuous/looping animation behind `useReducedMotion()`
+- [ ] No duration, easing or spring of its own: `lib/motion.ts`, `components/motion/`
+      (`RollingNumber`, `TabPanels`, `Collapse`, `PresenceList`, `Stagger`) (§9, §11.9).
+- [ ] Nothing loops; Reduce Motion is honoured by construction, not per component.
 
-### Accessibility
+### Before it ships
 
-- [ ] `aria-label` on every icon-only button (§17.7 headers are the usual offenders)
-- [ ] Verify every semantic color pair clears 4.5:1 in **all** themes, not just the default one
-- [ ] Confirm no meaning is carried by color alone — text or icon accompanies it
-- [ ] Test one full flow with reduced motion enabled at the OS level
-- [ ] Test one full flow by keyboard only
-
-### Data Visualization
-
-- [ ] Semantic marks read hex from a named system (§8); chrome reads `var(--color-*)` tokens
-- [ ] Tooltip surface uses tokens so it inverts with the theme
-- [ ] Check every chart in the non-default themes before shipping it
-
-### Patterns
-
-- [ ] Empty state for every zero-data view with a CTA that resolves it
-- [ ] Loading skeleton that matches the shape of the loaded content
-- [ ] Toggle buttons that show current state + "undo" affordance
-- [ ] Search inputs with `autoFocus` when opened in a modal/sheet
-- [ ] Truncate all text that may overflow (`truncate` + `min-w-0` on flex parents)
-
-### Layout
-
-- [ ] `h-screen overflow-hidden` on app root
-- [ ] Sidebar: `w-56` desktop, overlay on mobile
-- [ ] Page content: `flex-1 overflow-y-auto p-6`
-- [ ] Sheets: `flex flex-col p-0` with manual padding on children sections
-- [ ] Use `shrink-0` on headers/footers within flex columns
+- [ ] `npm run lint && npm run build && npx vitest run` — `test/designRules.test.ts` and
+      `test/semanticContrast.test.ts` read the sources and the CSS.
+- [ ] Looked at in the four themes, at desktop width and at 390 px (no sideways page scroll,
+      a wide table or week scrolls in its own strip — §14.2), and once by keyboard alone.
 
 ---
 

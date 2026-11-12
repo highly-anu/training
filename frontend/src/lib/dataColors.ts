@@ -129,3 +129,12 @@ export const KPI_TEXT = {
   descended: 'text-rose-700 dark:text-rose-300',
   calories: 'text-orange-700 dark:text-orange-300',
 } as const
+
+/** A recorded workout's figures, one hue an icon: the quantity, never a verdict. */
+export const METRIC_ICON = {
+  heartRate: 'text-red-700 dark:text-red-300',
+  effort: 'text-amber-700 dark:text-amber-300',
+  calories: 'text-orange-700 dark:text-orange-300',
+  distance: 'text-blue-700 dark:text-blue-300',
+  descent: 'text-rose-700 dark:text-rose-300',
+} as const

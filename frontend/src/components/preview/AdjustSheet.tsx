@@ -82,7 +82,7 @@ function AdjustForm({ constraints, edits, onApply, onEditSchedule }: Omit<Adjust
           </button>
         </p>
         {edits > 0 && (
-          <p className="text-xs text-amber-700 dark:text-amber-300">
+          <p className="text-xs text-warn">
             Previewing again replaces your {edits} swap{edits === 1 ? '' : 's'} on this draft.
           </p>
         )}

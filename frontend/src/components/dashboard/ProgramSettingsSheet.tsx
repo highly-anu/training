@@ -170,7 +170,7 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
                 daysToEvent < 0
                   ? 'border-muted text-muted-foreground'
                   : daysToEvent < 14
-                    ? 'border-amber-500/30 bg-amber-500/5 text-amber-700 dark:text-amber-300'
+                    ? 'border-warn/30 bg-warn/5 text-warn'
                     : 'border-done/30 bg-done/5 text-done'
               }`}>
                 {daysToEvent < 0 ? (
@@ -275,7 +275,7 @@ export function ProgramSettingsSheet({ program }: ProgramSettingsSheetProps) {
             </p>
           </button>
           {regenerate.error && (
-            <p className="text-xs text-red-700 dark:text-red-300">
+            <p className="text-xs text-bad">
               {regenerate.error.message || 'Could not regenerate'}
             </p>
           )}

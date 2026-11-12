@@ -1,9 +1,10 @@
+import { ScrollPanel } from '@/components/layout/ScrollPanel'
 import { EFFORT_HEX, FALLBACK_HEX, NEUTRAL_HEX, RECOVERY_COST_HEX, SCALE_BADGE, TIER_HEX } from '@/lib/dataColors'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { SubTabs } from '@/components/layout/SubTabs'
 import { LoadingState, FailedState } from '@/components/shared/states'
 import { useState, useMemo } from 'react'
-import { useSearchParams, useNavigate } from 'react-router-dom'
+import { useSearchParams, useNavigate, useLocation } from 'react-router-dom'
 import { Page } from '@/components/layout/Page'
 import { ArrowLeft, Compass, Search, X, Wand2 } from 'lucide-react'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
@@ -160,7 +161,7 @@ function PhilosophyOverview({ philosophies, onSelect }: {
   }, [philosophies, sort, matrix])
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="max-w-3xl mx-auto px-8 py-12 space-y-8">
 
         <div className="space-y-3">
@@ -230,7 +231,7 @@ function PhilosophyOverview({ philosophies, onSelect }: {
           Select a philosophy to explore its full structure
         </p>
       </div>
-    </div>
+    </ScrollPanel>
   )
 }
 
@@ -252,7 +253,7 @@ function ModalityOverview({
   }, [modalities, sort, matrix])
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="max-w-2xl mx-auto px-8 py-12 space-y-8">
         <div className="space-y-3">
           <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium">
@@ -297,7 +298,7 @@ function ModalityOverview({
           Select a modality to explore its full structure
         </p>
       </div>
-    </div>
+    </ScrollPanel>
   )
 }
 
@@ -487,7 +488,7 @@ function ModalityDetail({
   )
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="px-4 py-4 space-y-4">
         <button
           onClick={onBack}
@@ -584,12 +585,12 @@ function ModalityDetail({
               )}
               {mod.incompatible_in_session_with.length > 0 && (
                 <div className="space-y-1.5">
-                  <p className="text-[10px] text-red-700/70 dark:text-red-300/70 font-medium">Avoid combining</p>
+                  <p className="text-[10px] text-bad/70 font-medium">Avoid combining</p>
                   <div className="flex flex-wrap gap-1">
                     {mod.incompatible_in_session_with.map((id) => {
                       const c = MODALITY_COLORS[id]
                       return (
-                        <span key={id} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-red-500/10 text-red-700 dark:text-red-300 border border-red-500/20">
+                        <span key={id} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-bad/10 text-bad border border-bad/20">
                           <span className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: c?.hex ?? NEUTRAL_HEX }} />
                           {c?.label ?? prettify(id)}
                         </span>
@@ -670,7 +671,7 @@ function ModalityDetail({
           accentHex={hex}
         />
       </div>
-    </div>
+    </ScrollPanel>
   )
 }
 
@@ -707,7 +708,7 @@ function ExerciseLanding({ allExercises, onSelect }: { allExercises: Exercise[];
   }
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="max-w-3xl mx-auto px-8 py-12 space-y-8">
 
         <div className="space-y-3">
@@ -812,7 +813,7 @@ function ExerciseLanding({ allExercises, onSelect }: { allExercises: Exercise[];
           Select an exercise to explore its structure
         </p>
       </div>
-    </div>
+    </ScrollPanel>
   )
 }
 
@@ -834,7 +835,7 @@ function ExercisePanel({
     [index, exercise.id, exercise.scaling_down, names, colors],
   )
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="px-6 py-5 space-y-5">
 
         <button
@@ -961,7 +962,7 @@ function ExercisePanel({
         />
 
       </div>
-    </div>
+    </ScrollPanel>
   )
 }
 
@@ -1048,7 +1049,7 @@ function ArchetypeLanding({ archetypes, onSelect }: {
   }, [filtered, sort, matrix])
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="max-w-3xl mx-auto px-8 py-12 space-y-8">
 
         <div className="space-y-3">
@@ -1109,7 +1110,7 @@ function ArchetypeLanding({ archetypes, onSelect }: {
           Select an archetype to explore its full structure
         </p>
       </div>
-    </div>
+    </ScrollPanel>
   )
 }
 
@@ -1131,7 +1132,7 @@ function ArchetypeDetail({ archetype, allExercises, allArchetypes, onSelect, onB
   )
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="max-w-2xl mx-auto px-8 py-8 space-y-6">
 
         {/* Back link */}
@@ -1195,7 +1196,7 @@ function ArchetypeDetail({ archetype, allExercises, allArchetypes, onSelect, onB
           alwaysOpen
         />
       </div>
-    </div>
+    </ScrollPanel>
   )
 }
 
@@ -1248,7 +1249,7 @@ function FrameworkOverview({
   }, [filtered, sort, matrix])
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="max-w-3xl mx-auto px-8 py-12 space-y-8">
 
         <div className="space-y-3">
@@ -1347,7 +1348,7 @@ function FrameworkOverview({
           Select a framework to explore its full structure
         </p>
       </div>
-    </div>
+    </ScrollPanel>
   )
 }
 
@@ -1420,7 +1421,7 @@ function FrameworkExplorerDetail({
   const daysMax = fw.applicable_when?.days_per_week_max
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="px-4 py-4 space-y-4">
 
         <button
@@ -1632,9 +1633,9 @@ function FrameworkExplorerDetail({
                         <span className={cn(
                           'text-[9px] px-1.5 py-0.5 rounded font-mono',
                           item.interference_level === 'high'
-                            ? 'bg-red-500/15 text-red-700 dark:text-red-300'
+                            ? 'bg-bad/15 text-bad'
                             : item.interference_level === 'manageable'
-                            ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300'
+                            ? 'bg-warn/15 text-warn'
                             : 'bg-muted/50 text-muted-foreground'
                         )}>
                           {item.interference_level}
@@ -1692,7 +1693,7 @@ function FrameworkExplorerDetail({
         />
 
       </div>
-    </div>
+    </ScrollPanel>
   )
 }
 
@@ -1733,12 +1734,20 @@ export function Explore() {
   const selectedExercise = pick('exercises', allExercises)
   const selectedMovement = pick('movements', movements)
 
+  // A detail remembers the list entry it was opened from, along a trail of
+  // links too, so the back button's replace returns the list where it was left.
+  const location = useLocation()
+  const listEntry = selectedId
+    ? (location.state as { list?: string } | null)?.list
+    : location.key
+
   function open(t: Topic, id: string) {
-    setSearchParams({ topic: t, id })
+    setSearchParams({ topic: t, id }, { state: t === topic && listEntry ? { list: listEntry } : null })
   }
 
   function backToList() {
-    setSearchParams(topic === 'philosophies' ? {} : { topic }, { replace: true })
+    setSearchParams(topic === 'philosophies' ? {} : { topic },
+      { replace: true, state: listEntry ? { scrollFrom: listEntry } : null })
   }
 
   function handleTopicChange(t: Topic) {

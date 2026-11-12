@@ -245,7 +245,7 @@ function ExerciseCard({ exercise: ex }: { exercise: Exercise }) {
                   <p className="text-[9px] text-muted-foreground/50 mb-0.5">Contraindicated with</p>
                   <div className="flex flex-wrap gap-1">
                     {ex.contraindicated_with.map(f => (
-                      <span key={f} className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-orange-500/10 border border-orange-500/30 text-orange-700 dark:text-orange-300">
+                      <span key={f} className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-warn/10 border border-warn/30 text-warn">
                         {f.replace(/_/g, ' ')}
                       </span>
                     ))}

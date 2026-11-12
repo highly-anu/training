@@ -65,7 +65,7 @@ export function PreviewSessionSheet({ program, target, onClose, philosophyIds }:
           </SheetHeader>
 
           {notes.length > 0 && (
-            <ul className="mt-4 space-y-1 rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-xs">
+            <ul className="mt-4 space-y-1 rounded-md border border-warn/30 bg-warn/5 p-3 text-xs">
               {notes.map((n) => <li key={n}>{n}</li>)}
             </ul>
           )}
@@ -90,7 +90,7 @@ export function PreviewSessionSheet({ program, target, onClose, philosophyIds }:
                         </p>
                       )}
                       {empty && (
-                        <p className="mt-0.5 inline-flex items-start gap-1 text-[11px] text-amber-700 dark:text-amber-300">
+                        <p className="mt-0.5 inline-flex items-start gap-1 text-[11px] text-warn">
                           <CircleSlash className="mt-0.5 size-3 shrink-0" aria-hidden="true" />
                           {empty}
                         </p>
