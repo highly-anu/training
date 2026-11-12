@@ -332,23 +332,26 @@ final class APIClient {
         )
     }
 
-    /// Log what was done for one exercise. The server merges `exercises` per
-    /// key and keeps the completion, notes and fatigue it already has, so a
-    /// log before "Mark Session Complete" is fine and so is one after.
+    /// A session's log in one request: what was done per exercise and, with
+    /// `completedAt`, the completion. The server merges `exercises` per key
+    /// and keeps the completion, notes and fatigue it already has, so a log
+    /// before "Mark Session Complete" is fine and so is one after.
     /// What the save says about the standards: a test slot's outcome comes
     /// back as a suggestion (`standards.pending`), nil when the log bears on
     /// no standard.
     @discardableResult
-    func saveExerciseLog(sessionKey: String, exerciseId: String,
-                         performance: ExercisePerformanceLog) async throws -> SessionLogStandards? {
+    func saveSessionLog(sessionKey: String, exercises: [String: ExercisePerformanceLog],
+                        completedAt: String? = nil) async throws -> SessionLogStandards? {
         struct Body: Encodable {
-            let exercises: [String: ExercisePerformanceLog]
+            let exercises: [String: ExercisePerformanceLog]?
+            let completedAt: String?
             let source: String
         }
         struct Saved: Decodable { let standards: SessionLogStandards? }
         let escaped = sessionKey.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? sessionKey
         let data = try await put("/health/sessions/\(escaped)",
-                                 body: Body(exercises: [exerciseId: performance], source: "manual"))
+                                 body: Body(exercises: exercises.isEmpty ? nil : exercises,
+                                            completedAt: completedAt, source: "manual"))
         return (try? JSONDecoder().decode(Saved.self, from: data))?.standards
     }
 

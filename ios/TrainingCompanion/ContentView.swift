@@ -71,6 +71,8 @@ struct ContentView: View {
                         Task {
                             await appState.refreshIfStale()
                             appState.noticeCompletedWorkout()
+                            // Session logs saved while there was no connection.
+                            await appState.flushSessionLogs()
                         }
                     }
                 }

@@ -17,11 +17,10 @@ struct SessionDetailView: View {
     @State private var showFatigue = false
     /// "After the session" open: by itself once the session is begun or done.
     @State private var afterOpen = false
-    @State private var isSaving = false
     @State private var saveTask: Task<Void, Never>? = nil
     @State private var exerciseSheet: ExerciseRowItem? = nil
     @State private var swapTarget: SwapTarget? = nil
-    @State private var logTarget: ExerciseRowItem? = nil
+    @State private var logTarget: LogTarget? = nil
 
     /// A row's identity is its position plus the exercise: the same movement
     /// can appear twice in a session, and a swap must animate only its row.
@@ -30,6 +29,12 @@ struct SessionDetailView: View {
         let index: Int
         let assignment: ProgramExerciseAssignment
         var id: String { "\(index)-\(assignment.exercise?.id ?? "slot")" }
+    }
+
+    /// The session's log form, opened at one exercise or at the top.
+    private struct LogTarget: Identifiable {
+        var exerciseId: String? = nil
+        var id: String { exerciseId ?? "session" }
     }
 
     private struct SwapTarget: Identifiable {
@@ -62,6 +67,14 @@ struct SessionDetailView: View {
     var body: some View {
         NavigationStack {
             List {
+                // A log saved here that the server does not have yet (§6.16).
+                if appState.sessionLogNotice(sessionKey: sessionKey) != nil {
+                    Section {
+                        SessionLogNoticeBanner(sessionKey: sessionKey)
+                            .listRowInsets(EdgeInsets())
+                            .listRowBackground(Color.clear)
+                    }
+                }
                 headerSection
                 if let workout = linkedWorkout { linkedWorkoutSection(workout) }
                 exercisesSection
@@ -92,6 +105,8 @@ struct SessionDetailView: View {
             .onAppear {
                 // Debug builds: TC_PLAYER opens this session's player (WorkoutPlayerDebug).
                 if player == nil, WorkoutPlayerDebug.take(sessionKey) { openPlayer() }
+                // …and TC_LOG its log form (SessionLogDebug).
+                if SessionLogDebug.take(sessionKey) { logTarget = LogTarget() }
             }
             // The exercise reference (§6.14): what the movement is and how to
             // do it, without leaving the session — pushed, as the swap is
@@ -108,12 +123,10 @@ struct SessionDetailView: View {
                                       exerciseIndex: target.exerciseIndex, pushed: true)
                 }
             }
-            // What was done (§6.16): sets for a sets × reps slot, the slot's
-            // currency for the rest — the inputs the web's loggers offer.
-            .sheet(item: $logTarget) { item in
-                ExerciseLogSheet(sessionKey: sessionKey, assignment: item.assignment)
-                    .environmentObject(appState)
-                    .appSheet(.flexible)
+            // What was done (§6.16): every exercise on one form, saved once —
+            // sets for a sets × reps slot, the slot's currency for the rest.
+            .appPush(item: $logTarget) { target in
+                SessionLogForm(sessionKey: sessionKey, session: currentSession, openAt: target.exerciseId)
             }
             .task {
                 // A test names its standards: their names and the athlete's
@@ -180,8 +193,8 @@ struct SessionDetailView: View {
             // against, before the session starts.
             if let test = currentSession.testInfo {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(test.insteadOf.map { "A test, in place of \($0). Log each result on its exercise; it comes back here to save." }
-                         ?? "A test of this phase's standards. Log each result on its exercise; it comes back here to save.")
+                    Text(test.insteadOf.map { "A test, in place of \($0). Log each result with the session; it comes back here to save." }
+                         ?? "A test of this phase's standards. Log each result with the session; it comes back here to save.")
                         .font(.caption).foregroundStyle(.secondary)
                     ForEach(test.standards, id: \.self) { id in
                         StandardTargetRow(standardId: id)
@@ -241,7 +254,7 @@ struct SessionDetailView: View {
                 Text("No exercises").foregroundStyle(.secondary)
             } else {
                 ForEach(rows) { item in
-                    // Three visible controls (§6.51): the circle logs, the row
+                    // Three visible controls (§6.51): the circle opens the log at it, the row
                     // opens the exercise, "…" holds the rest. The swipes and
                     // the long press are the same actions, faster.
                     HStack(alignment: .top, spacing: AppMetrics.gapSmall) {
@@ -268,7 +281,7 @@ struct SessionDetailView: View {
                     .contextMenu { exerciseActions(item) }
                     .swipeActions(edge: .leading, allowsFullSwipe: true) {
                         Button {
-                            logTarget = item
+                            logTarget = LogTarget(exerciseId: item.assignment.exercise?.id)
                         } label: {
                             Label("Log", systemImage: "square.and.pencil")
                         }
@@ -286,6 +299,13 @@ struct SessionDetailView: View {
                     }
                 }
                 .animation(AppAnimation.layoutChange, value: rows.map(\.id))
+                // The whole session on one form, one save.
+                Button {
+                    AppHaptics.selection()
+                    logTarget = LogTarget()
+                } label: {
+                    Label("Log session", systemImage: "square.and.pencil")
+                }
             }
         } header: {
             Text("Exercises")
@@ -298,7 +318,7 @@ struct SessionDetailView: View {
         let logged = loggedSummary(item.assignment) != nil
         return Button {
             AppHaptics.light()
-            logTarget = item
+            logTarget = LogTarget(exerciseId: item.assignment.exercise?.id)
         } label: {
             Image(systemName: logged ? "checkmark.circle.fill" : "circle")
                 .font(.title3)
@@ -315,7 +335,7 @@ struct SessionDetailView: View {
     @ViewBuilder
     private func exerciseActions(_ item: ExerciseRowItem) -> some View {
         Button {
-            logTarget = item
+            logTarget = LogTarget(exerciseId: item.assignment.exercise?.id)
         } label: {
             Label(logLabel(item.assignment), systemImage: "square.and.pencil")
         }
@@ -644,40 +664,33 @@ struct SessionDetailView: View {
 
     // MARK: - Completion Button
 
+    /// Answers at once: the completion is written on the phone and sent in
+    /// the background (`AppState.saveSessionLog`).
     private var completionButton: some View {
         Button {
-            Task {
-                isSaving = true
-                if isDone {
-                    await appState.undoSessionComplete(sessionKey: sessionKey)
-                } else {
-                    await appState.markSessionComplete(sessionKey: sessionKey)
-                    AppHaptics.success()
-                }
-                isSaving = false
+            if isDone {
+                appState.undoSessionComplete(sessionKey: sessionKey)
+            } else {
+                appState.markSessionComplete(sessionKey: sessionKey)
+                AppHaptics.success()
             }
         } label: {
             HStack {
-                if isSaving {
-                    ProgressView().scaleEffect(0.9)
-                } else {
-                    Image(systemName: isDone ? "xmark.circle" : "checkmark.circle.fill")
-                        .appSymbolReplace(value: isDone)
-                }
+                Image(systemName: isDone ? "xmark.circle" : "checkmark.circle.fill")
+                    .appSymbolReplace(value: isDone)
                 Text(isDone ? "Mark Incomplete" : "Mark Session Complete")
                     .fontWeight(.semibold)
             }
             .frame(maxWidth: .infinity)
         }
         .appButton(isDone ? .secondary : .complete)
-        .disabled(isSaving)
     }
 
     // MARK: - Helpers
 
     private func shortDateTime(_ iso: String) -> String {
-        let f = ISO8601DateFormatter()
-        guard let date = f.date(from: iso) else { return iso }
+        // The server's own "2026-09-28 18:00:00+02:00" as well as the phone's ISO 8601.
+        guard let date = LogSessions.parseServerDate(iso) else { return iso }
         let out = DateFormatter(); out.dateStyle = .short; out.timeStyle = .short
         return out.string(from: date)
     }

@@ -2136,7 +2136,10 @@ program's span. Peak is 93 MB on the same data. `test_workout_metrics.py`.
   revision-checked PUT. `GenerateProgramRequest` now speaks blends
   (`philosophy_ids` + weights) and `periodization_week`. Until now the web
   offered this for injuries only and the phone only a full regenerate.
-- *Phone session logging*: `ExerciseLogSheet` on every session row (leading
+- *Phone session logging* (one form for the whole session with one Save, saved on
+  the phone first and sent in the background, since 2026-11-12: `SessionLogForm`,
+  `SessionLogOutbox`, `AppState.saveSessionLog`, design-system §6.16; what follows
+  is how it first shipped): `ExerciseLogSheet` on every session row (leading
   swipe or context menu) — sets for sets × reps and hold slots, the slot's
   currency for the rest, through `SessionLogging` (the web's outcome-field
   table) and `AppState.logExercise` → `PUT /health/sessions/<key>` with

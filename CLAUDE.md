@@ -984,8 +984,13 @@ writes.
   `OutcomeLogger`); `ExerciseRow.test.tsx` pins it, because the logger was once
   written and never mounted, which left every rounds/duration/distance
   primitive at zero coverage. The phone logs from the session detail
-  (`ExerciseLogSheet`, design-system §6.16) with the same dispatch
-  (`SessionLogging`) and the same payload; `GET /health/sessions/recent`
+  (`SessionLogForm`, design-system §6.16: every exercise of the session in one
+  form, one Save, since 2026-11-12) with the same dispatch (`SessionLogging`) and
+  the same payload. Save never waits: `AppState.saveSessionLog` writes the log to
+  the phone's outbox (`SessionLogOutbox`, Application Support), shows it at once
+  and sends it in the background, again until it is through; a log not sent yet
+  says so on Today and on its session (`SessionLogNoticeBanner`) and blocks
+  nothing (`SessionLogOutboxTests`); `GET /health/sessions/recent`
   carries `exercises` so it can read back. A skill-practice row on both
   clients has a **Clean** toggle (`exercises[id].clean`: every rep owned); an
   `unlocks` entry with `require_clean: true` (Ido) earns a movement
@@ -1335,7 +1340,9 @@ The workout player opens from the launch too, in debug builds (`WorkoutPlayerDeb
 `SIMCTL_CHILD_TC_PLAYER=<key>` starts that session's player afresh (a kept workout is let
 go); `TC_PLAYER_STEP=<n>`, `TC_PLAYER_RUN=1` (Start), `TC_PLAYER_LAPS=<k>` (the primary
 button k times; a set is logged as prescribed), `TC_PLAYER_END=1` (the end screen),
-`TC_PLAYER_SAVE=1` (and Save). Launching another app (`simctl launch … com.apple.Preferences`)
+`TC_PLAYER_SAVE=1` (and Save). The session log form opens the same way (`SessionLogDebug`):
+`SIMCTL_CHILD_TC_LOG=<key>` with the session's route, and `TC_LOG_SAVE=<seconds>` ticks every
+exercise and saves after that long (stop the API in between to see an unsent log). Launching another app (`simctl launch … com.apple.Preferences`)
 puts the Live Activity in the Dynamic Island.
 A simulator that has never answered the Health sheet shows it on every launch, over
 whatever route was asked for; `SIMCTL_CHILD_TC_SKIP_HEALTH=1` skips the request in
