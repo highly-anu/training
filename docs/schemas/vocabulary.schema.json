@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "vocabulary.schema.json",
   "title": "Package vocabulary",
-  "description": "What a package adds to the commons' vocabulary for its own use (data/packages/<id>/vocabulary.yaml, optional): modalities and movement patterns. Only the package, and a philosophy that borrows from it, may name them. A new id never replaces one the commons define. What stays the engine's: slot types, progression and contract models, phase kinds, levels, intensities, watch templates and icons.",
+  "description": "What a package adds to the commons' vocabulary for its own use (data/packages/<id>/vocabulary.yaml, optional): modalities, movement patterns and equipment. Only the package, and a philosophy that borrows from it, may name them. A new id never replaces one the commons define. What stays the engine's: slot types, progression and contract models, phase kinds, levels, intensities, watch templates and icons.",
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -11,9 +11,21 @@
       "description": "Modalities this package adds. Each is a modality (modality.schema.json: recovery cost, session position, display…) with the analytics family it rolls up into.",
       "items": {
         "type": "object",
-        "required": ["id", "name", "recovery_cost", "session_position", "progression_model", "family", "display"],
+        "required": [
+          "id",
+          "name",
+          "recovery_cost",
+          "session_position",
+          "progression_model",
+          "family",
+          "display"
+        ],
         "properties": {
-          "id": {"type": "string", "pattern": "^[a-z0-9_]+$", "description": "A new id; not one the commons define (data/commons/modalities)."},
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$",
+            "description": "A new id; not one the commons define (data/commons/modalities)."
+          },
           "family": {
             "type": "string",
             "description": "The analytics family it rolls up into: a key of data/commons/modality_families.json `families` (strength, aerobic, intervals, durability, skill, combat). Heart rate, load and the modality mix read it."
@@ -30,20 +42,60 @@
       "description": "Movement patterns this package's exercises name beyond the commons' (data/commons/recovery_regions.yaml `patterns` and `unloaded`).",
       "items": {
         "type": "object",
-        "required": ["id", "regions", "excluded_by"],
+        "required": [
+          "id",
+          "regions",
+          "excluded_by"
+        ],
         "additionalProperties": false,
         "properties": {
-          "id": {"type": "string", "pattern": "^[a-z0-9_]+$", "description": "A new id; not one the commons define."},
-          "name": {"type": "string"},
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$",
+            "description": "A new id; not one the commons define."
+          },
+          "name": {
+            "type": "string"
+          },
           "regions": {
             "type": "object",
             "description": "Where the pattern's work lands on the body, 0-1 per region (lower, upper_push, upper_pull, trunk, cardio: data/commons/recovery_regions.yaml `regions`). {} for a pattern that loads nothing (a mobilisation, breathing).",
-            "additionalProperties": {"type": "number", "minimum": 0, "maximum": 1}
+            "additionalProperties": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
           },
           "excluded_by": {
             "type": "array",
             "description": "The injury flags (data/commons/constraints/injury_flags.yaml ids) that rule this pattern out. Required, so it is stated: [] says no injury excludes it. An athlete with one of these flags gets no exercise of this pattern.",
-            "items": {"type": "string", "pattern": "^[a-z0-9_]+$"}
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9_]+$"
+            }
+          }
+        }
+      }
+    },
+    "equipment": {
+      "type": "array",
+      "description": "Implements this package's exercises and archetypes need beyond the commons' list (data/commons/constraints/equipment.yaml). The athlete ticks them like any other; an archetype or exercise that needs one is filtered out for an athlete without it.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "label"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$",
+            "description": "A new id; not one (or an alias of one) the commons list."
+          },
+          "label": {
+            "type": "string",
+            "description": "What the pickers show."
           }
         }
       }

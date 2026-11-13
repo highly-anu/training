@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { apiClient } from './client'
 import { queryKeys } from './queryKeys'
 import type { Equipment, EquipmentProfile, InjuryFlag } from './types'
 
@@ -7,11 +8,9 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000
 export function useEquipment() {
   return useQuery({
     queryKey: queryKeys.equipment.all,
-    queryFn: async () => {
-      const res = await fetch(`${API_BASE_URL}/equipment`)
-      if (!res.ok) throw new Error('Failed to fetch equipment')
-      return res.json() as Promise<Equipment[]>
-    },
+    // Through the client, so the request is the athlete's: the list then
+    // includes the implements their own packages add.
+    queryFn: () => apiClient.get('/equipment') as unknown as Promise<Equipment[]>,
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 }

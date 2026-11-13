@@ -67,6 +67,7 @@ _KEPT = {
     'standard': "data/benchmarks' copy, else the first package's (by folder name)",
     'modality': "the commons' copy, else the first package's (by folder name)",
     'movement_pattern': "the commons' copy, else the first package's (by folder name)",
+    'equipment': "the commons' copy, else the first package's (by folder name)",
 }
 # The commons' standards, as an owner beside the packages.
 _COMMONS_STANDARDS = 'data/benchmarks'
@@ -223,7 +224,8 @@ def _own_vocabulary(docs: dict) -> dict[str, set]:
     vocab = docs.get('vocabulary') if isinstance(docs.get('vocabulary'), dict) else {}
     return {'modalities': {m['id'] for m in vocab.get('modalities') or [] if isinstance(m, dict) and m.get('id')},
             'movement_patterns': {p['id'] for p in vocab.get('movement_patterns') or []
-                                  if isinstance(p, dict) and p.get('id')}}
+                                  if isinstance(p, dict) and p.get('id')},
+            'equipment': {e['id'] for e in vocab.get('equipment') or [] if isinstance(e, dict) and e.get('id')}}
 
 
 def _known_for(pkg: str, read: dict, known: dict[str, set]) -> dict[str, set]:
@@ -289,6 +291,7 @@ def _owned_ids(docs: dict) -> dict[str, dict[str, object]]:
                      if isinstance(b, dict) and b.get('id')},
         'modality': {m: None for m in _own_vocabulary(docs)['modalities']},
         'movement_pattern': {p: None for p in _own_vocabulary(docs)['movement_patterns']},
+        'equipment': {e: None for e in _own_vocabulary(docs)['equipment']},
     }
 
 
@@ -326,7 +329,8 @@ def _commons_vocabulary() -> dict[str, dict]:
     vocabulary.yaml that takes one of their ids collides."""
     known = _known()
     return {'modality': {m: None for m in known['modalities']},
-            'movement_pattern': {p: None for p in known['movement_patterns']}}
+            'movement_pattern': {p: None for p in known['movement_patterns']},
+            'equipment': {e: None for e in known['equipment'] if e != 'none'}}
 
 
 def _all_owned() -> dict[str, dict]:
@@ -357,7 +361,7 @@ def problems(pkg: str, report: dict) -> list[str]:
         for u in v['unknown']:
             out.append(f"{v['kind']}: '{u}' is not in the commons"
                        + (" nor in this package's vocabulary.yaml (or one it borrows from)"
-                          if v['kind'] in ('modalities', 'movement_patterns') else ''))
+                          if v['kind'] in ('modalities', 'movement_patterns', 'equipment') else ''))
     return out
 
 

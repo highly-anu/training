@@ -174,6 +174,9 @@ export interface AthleteConstraints {
 
 export interface Equipment {
   id: EquipmentId
+  label?: string
+  /** The package that brings it (its vocabulary.yaml); absent for the commons'. */
+  package?: string
 }
 
 export interface EquipmentProfile {

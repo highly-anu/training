@@ -2730,22 +2730,29 @@
    "title": "New equipment is a commons edit",
    "kind": "commons",
    "impact": "blocks",
-   "detail": "The equipment list is generated from the commons into four schema enums and both clients' pickers; an implement outside it fails the schema, and no athlete could tick it.",
+   "detail": "Was: an implement outside the commons' list failed four schema enums and no athlete could tick it. A package's vocabulary.yaml lists its own (`equipment`: id and label). The validator widens the schemas' equipment enums — still generated from the commons — by what the file's package and the packages it borrows from add; the equipment list (src/equipment.items, GET /api/equipment) carries them after the commons' with their `package`; the web's pickers and Profile file them under \"From your packages\". An athlete without one gets none of its exercises, as for any implement.",
    "anchors": [
     "tools/gen_client_vocab.py::SCHEMA_ENUMS",
     "src/portability.py::equipment.add('none')"
    ],
    "roadmap": "20.7",
-   "status": "open"
+   "status": "done",
+   "closed": "2026-11-13",
+   "evidence": [
+    "test_package_vocabulary.py::def test_in_the_view",
+    "test_package_vocabulary.py::def test_gate",
+    "frontend/src/lib/equipment.test.ts::equipmentGroups"
+   ]
   },
   {
    "id": "client_vocab_compiled",
-   "title": "The clients' vocabulary is compiled in",
+   "title": "The phone's vocabulary is compiled in",
    "kind": "client",
-   "impact": "cosmetic",
-   "detail": "Colours, labels and icons for modalities and the equipment list are generated into the web and the Apple targets at build time. An id a package brings falls back to a neutral style until the clients read display data from the API.",
+   "impact": "degrades",
+   "detail": "The web now draws a package's modality from the served display and lists a package's implements in its pickers (20.6, 20.7). The phone and the watches still read only the tables generated into them at build time: a package modality draws in the neutral style with its id for a name, and the phone's equipment picker cannot offer a package implement — an athlete who builds on the phone cannot tick it, so the exercises that need it are filtered out. Closing it means the Apple targets reading GET /api/modalities and /api/equipment, and a release.",
    "anchors": [
-    "tools/gen_client_vocab.py::clientVocab.ts"
+    "ios/TrainingCompanion/ModalityStyle.swift::static func",
+    "tools/gen_client_vocab.py::ClientVocab.swift"
    ],
    "roadmap": "20.7",
    "status": "open"

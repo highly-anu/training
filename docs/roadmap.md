@@ -1914,9 +1914,19 @@ Readiness, in order:
   would have thrown). The phone keeps its neutral fallback (gap `client_vocab_compiled`).
   Three schema texts no longer invite an undeclared modality or pattern.
   `test_package_vocabulary.py`.
-- **20.7 Vocabulary: equipment (M).** The package's implements in the equipment list and
-  the web picker; the phone's picker and compiled styles stay a recorded gap. May follow
-  the builder.
+- **20.7 Vocabulary: equipment (M).** Server and web done 2026-11-13; **the phone is
+  left**. `vocabulary.yaml` `equipment` (id, label). The four schemas' equipment enums
+  stay generated from the commons; the validator widens them, for a package's files, by
+  what that package and the ones it borrows from add (`_with_package_equipment`).
+  `equipment.items()` and `GET /api/equipment` list them after the commons' with their
+  `package`; Explore's equipment vocabulary and the gate's "everything" athlete include
+  them; an id or alias the commons list is refused. Web: the pickers (builder, Explore ▸
+  Equipment) and Profile ▸ Equipment file them under "From your packages"
+  (`lib/useEquipmentVocabulary.ts`), `equipmentLabel` says the package's word, and the
+  equipment request goes through the API client so it is the athlete's. Left (gap
+  `client_vocab_compiled`): the phone and the watches read only their generated tables —
+  a package modality draws neutral there, and the phone's picker cannot offer a package
+  implement — until the Apple targets read `/api/modalities` and `/api/equipment`.
 - **20.8 One package spec; a package from nothing (M).** `docs/schemas/PACKAGE_SPEC.md`
   (ships in the image; its valid values generated), the MCP templates read from it, and
   `test_package_dropin.py` runs a package written from scratch — its own exercise ids and

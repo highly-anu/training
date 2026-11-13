@@ -321,15 +321,16 @@ def load_vocabulary() -> dict:
     """What the packages the caller sees add to the commons' vocabulary
     (`vocabulary.yaml`, docs/schemas/vocabulary.schema.json), kept per view:
     {'modalities': {id: modality, with `_package`}, 'patterns': {id: {regions,
-    excluded_by, `_package`}}, 'by_package': {package: {'modalities': [ids],
-    'patterns': [ids]}}}. The first package to declare an id keeps it
+    excluded_by, `_package`}}, 'equipment': {id: {id, label, `package`}},
+    'by_package': {package: {'modalities': [ids], 'patterns': [ids],
+    'equipment': [ids]}}}. The first package to declare an id keeps it
     (validate_entities refuses a second, and a commons id)."""
-    out = {'modalities': {}, 'patterns': {}, 'by_package': {}}
+    out = {'modalities': {}, 'patterns': {}, 'equipment': {}, 'by_package': {}}
     for pkg, path in package_files('vocabulary.yaml'):
         doc = _load_yaml(path)
         if not isinstance(doc, dict):
             continue
-        mine = out['by_package'].setdefault(pkg, {'modalities': [], 'patterns': []})
+        mine = out['by_package'].setdefault(pkg, {'modalities': [], 'patterns': [], 'equipment': []})
         for mod in doc.get('modalities') or []:
             if isinstance(mod, dict) and mod.get('id'):
                 mine['modalities'].append(mod['id'])
@@ -339,6 +340,11 @@ def load_vocabulary() -> dict:
                 mine['patterns'].append(pat['id'])
                 out['patterns'].setdefault(pat['id'], {'regions': pat.get('regions') or {},
                                                        'excluded_by': pat.get('excluded_by') or [], '_package': pkg})
+        for item in doc.get('equipment') or []:
+            if isinstance(item, dict) and item.get('id'):
+                mine['equipment'].append(item['id'])
+                out['equipment'].setdefault(item['id'], {'id': item['id'], 'label': item.get('label') or item['id'],
+                                                         'package': pkg})
     return out
 
 
@@ -421,7 +427,8 @@ def load_equipment() -> list[dict]:
     (data/commons/constraints/equipment.yaml; src/equipment.py). It used to be
     a copy here, eight ids short of the constraints schema."""
     from . import equipment
-    return [{'id': e['id'], 'label': e['label']} for e in equipment.items()]
+    return [{'id': e['id'], 'label': e['label'], **({'package': e['package']} if e.get('package') else {})}
+            for e in equipment.items()]
 
 
 def load_equipment_profiles() -> list:

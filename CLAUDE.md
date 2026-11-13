@@ -1513,8 +1513,9 @@ reference routes need no sign-in, and with one add the athlete's own packages: a
 their view, kept bounded beside the shared answers (`api._USER_STATIC`, keyed by their overlay
 directory), sent `private`; the shared answers and the image's build are never touched (20.4).
 **A package may add vocabulary** (since 2026-11-13, roadmap 20.6): `vocabulary.yaml` — `modalities`
-(a modality with its `family` and `display`) and `movement_patterns` (`regions`, `excluded_by`: the
-injury flags that rule it out) — for itself and whoever borrows from it (`loader.load_vocabulary`).
+(a modality with its `family` and `display`), `movement_patterns` (`regions`, `excluded_by`: the
+injury flags that rule it out) and `equipment` (id, label; roadmap 20.7: the web's pickers list it
+under "From your packages", the phone's cannot yet) — for itself and whoever borrows from it (`loader.load_vocabulary`).
 Never a commons id. The web draws a served modality it does not know (`registerModalities`); slot
 types, progression and contract models, phase kinds, levels, intensities, watch templates and
 icons stay the engine's.
