@@ -1,0 +1,36 @@
+exercises:
+  - id: scratch_minimal_stone_to_shoulder
+    name: Stone to shoulder
+    category: accessory
+    modality: [scratch_odd_object_strength]
+    equipment: [scratch_stone]
+    effort: high
+    bilateral: false
+    movement_patterns: [scratch_shouldering]
+    typical_volume: {sets: 5, reps: 3}
+    starting_load_kg: {novice: 20, intermediate: 40, advanced: 60, elite: 80}
+    weekly_increment_kg: 2.5
+    sessions_per_week: 2
+
+  - id: scratch_minimal_stone_carry
+    name: Stone carry
+    category: accessory
+    modality: [scratch_odd_object_strength]
+    equipment: [scratch_stone]
+    effort: medium
+    movement_patterns: [loaded_carry]
+    # What a pattern does not say: the flags that rule this exercise out.
+    contraindicated_with: [lumbar_disc]
+    typical_volume: {sets: 3, reps: 1}
+    starting_load_kg: {novice: 20, intermediate: 40, advanced: 60, elite: 80}
+    weekly_increment_kg: 2.5
+    sessions_per_week: 2
+
+  - id: scratch_minimal_walk
+    name: Easy walk
+    category: aerobic
+    modality: [aerobic_base]
+    equipment: [open_space]
+    effort: low
+    movement_patterns: [locomotion, aerobic_monostructural]
+    typical_volume: {duration_sec: 2400}
