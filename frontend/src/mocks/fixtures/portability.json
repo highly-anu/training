@@ -2762,25 +2762,37 @@
    "title": "No one document says how to write a package",
    "kind": "docs",
    "impact": "blocks",
-   "detail": "The outline is spread over the author guide, the fidelity README, the contract notes and the schemas; week templates have no document; none of the prose ships in the image; and the MCP server's templates carry their own stale counts and cite a test file that does not exist.",
+   "detail": "Was: the outline was spread over four documents, none of which shipped, and the MCP templates carried stale lists. docs/schemas/PACKAGE_SPEC.md is the one document — what a package is, each file, how a week is built, every valid value, the gate, an athlete's own package, common mistakes, a worked example — in the part of docs/ the image carries. Its lists and its example are generated (tools/gen_package_spec.py --check, a push gate). The server serves it (GET /api/dev/package-spec, with the asker's id prefix and the limits) and so does the MCP server (get_package_spec); the MCP skeleton prints its value lists from the schemas when asked and passes every gate.",
    "anchors": [
     "mcp_server.py::12 core modalities",
     "mcp_server.py::test_mcp_server.py"
    ],
    "roadmap": "20.8",
-   "status": "open"
+   "status": "done",
+   "closed": "2026-11-13",
+   "evidence": [
+    "test_package_spec.py::def test_document",
+    "test_package_spec.py::def test_skeleton",
+    "docs/schemas/PACKAGE_SPEC.md::How to write a package"
+   ]
   },
   {
    "id": "dropin_renamed_copies",
    "title": "The drop-in test runs renamed copies of audited packages",
    "kind": "gate",
    "impact": "degrades",
-   "detail": "It renames archetypes and frameworks and keeps the shipped exercise ids, so the commons' injury flags and level concepts still match. It never runs a package written from nothing, a malformed one, or one added to a running process.",
+   "detail": "test_packages/scratch_minimal is a package written from nothing — its own exercise ids, modality, movement pattern and implement. test_package_dropin.py drops it in beside the three copies and runs it through the same end-to-end checks; test_private_packages.py installs it for one athlete while the process runs, under that athlete's prefix, and another athlete sees none of it; test_package_overlay.py and test_private_packages.py cover the malformed package (set aside alone) and the one that fails the gate (not stored).",
    "anchors": [
     "test_package_dropin.py::def _own_ids"
    ],
    "roadmap": "20.8",
-   "status": "open"
+   "status": "done",
+   "closed": "2026-11-13",
+   "evidence": [
+    "test_package_dropin.py::dropin_scratch",
+    "test_private_packages.py::def test_from_scratch",
+    "test_package_overlay.py::def test_quarantine"
+   ]
   },
   {
    "id": "trace_misses_engines",

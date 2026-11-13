@@ -55,17 +55,20 @@ def check(label: str, condition: bool, detail='') -> None:
         FAILURES.append(label)
 
 
-def package_for(user_id: str, name: str = 'blocks') -> tuple[str, dict]:
-    """The fixture as `user_id`'s own package: (package id, {path: yaml text}).
-    Its id, its frameworks, its archetypes and the exercises no shipped
-    package declares take the owner's prefix; a framework's file is named for
-    its id, as the loader finds it."""
+SCRATCH = os.path.join(ROOT, 'test_packages', 'scratch_minimal')
+
+
+def package_for(user_id: str, name: str = 'blocks', source: str = FIXTURE) -> tuple[str, dict]:
+    """A test package as `user_id`'s own: (package id, {path: yaml text}).
+    Its id, its frameworks, its archetypes, the exercises no shipped package
+    declares and whatever its vocabulary.yaml adds take the owner's prefix; a
+    framework's file is named for its id, as the loader finds it."""
     prefix = package_store.owner_prefix(user_id)
     shipped, _ = loader.load_all_exercises()
     texts = {}
-    for path in sorted(glob.glob(os.path.join(FIXTURE, '**', '*.yaml'), recursive=True)):
+    for path in sorted(glob.glob(os.path.join(source, '**', '*.yaml'), recursive=True)):
         with open(path, encoding='utf-8') as fh:
-            texts[os.path.relpath(path, FIXTURE).replace(os.sep, '/')] = fh.read()
+            texts[os.path.relpath(path, source).replace(os.sep, '/')] = fh.read()
     rename = {yaml.safe_load(texts['philosophy.yaml'])['id']: f'{prefix}{name}'}
     for rel, text in texts.items():
         doc = yaml.safe_load(text) or {}
@@ -75,6 +78,10 @@ def package_for(user_id: str, name: str = 'blocks') -> tuple[str, dict]:
             for ex in doc.get('exercises') or []:
                 if ex['id'] not in shipped:
                     rename[ex['id']] = prefix + ex['id']
+        elif rel == 'vocabulary.yaml':
+            for kind in ('modalities', 'movement_patterns', 'equipment'):
+                for item in doc.get(kind) or []:
+                    rename[item['id']] = prefix + item['id']
     pattern = re.compile(r'(?<![A-Za-z0-9_])(' + '|'.join(sorted(map(re.escape, rename), key=len, reverse=True))
                          + r')(?![A-Za-z0-9_])')
     files = {}
@@ -188,6 +195,40 @@ def test_install():
     package_store.remove(BEN, bpkg)
     left = [d for d in os.listdir(BASE) if not d.startswith('_')]
     check('at most the last overlay of each is left on disk', len(left) <= 2, left)
+
+
+def test_from_scratch():
+    print('a package written from nothing, with a vocabulary of its own, installed while the process runs')
+    pkg, files = package_for(ANN, 'stones', SCRATCH)
+    prefix = package_store.owner_prefix(ANN)
+    with loader.overlay(None):
+        commons = set(loader.load_all_modalities())
+        shipped_ex = set(loader.load_all_exercises()[0])
+    check('none of its exercises is one a shipped package declares',
+          not ({e['id'] for e in yaml.safe_load(files['exercises.yaml'])['exercises']} & shipped_ex))
+    result = package_store.install(ANN, files)
+    check('it passes every gate and installs', result['installed'] and result['ran'][-1] == 'provenance',
+          {'problems': result.get('problems', [])[:3], 'skipped': result.get('skipped')})
+    with loader.overlay(package_store.overlay_for(ANN)):
+        mods = loader.load_all_modalities()
+        own = sorted(set(mods) - commons)
+        check('its modality is its owner\'s, by the owner\'s prefix', own == [f'{prefix}scratch_odd_object_strength']
+              and mods[own[0]]['_package'] == pkg, own)
+        from src import equipment, package_smoke
+        check('its implement is in the athlete\'s equipment list',
+              f'{prefix}scratch_stone' in equipment.ids())
+        programs = [r['program'] for r in package_smoke.smoke_package(pkg) if r['program']]
+        used = {(e.get('exercise') or {}).get('id') for raw in programs for w in raw['weeks']
+                for day in w['schedule'].values() for s in day for e in s.get('exercises') or []}
+        check('its programs are built from its own exercises alone', used and all(str(u).startswith(prefix) for u in used),
+              sorted(map(str, used)))
+        flags = loader.load_injury_flags()
+        check('the injury flag its pattern names rules it out',
+              f'{prefix}scratch_shouldering' in flags['lumbar_disc']['excluded_movement_patterns'])
+    with loader.overlay(package_store.overlay_for(BEN)):
+        check('another athlete has no such modality, implement or package',
+              set(loader.load_all_modalities()) == commons and pkg not in ids())
+    check('removed', package_store.remove(ANN, pkg) and package_store.overlay_for(ANN) is None)
 
 
 def test_engine_change():
@@ -332,6 +373,7 @@ def main() -> int:
     test_limits()
     test_gate()
     test_install()
+    test_from_scratch()
     test_engine_change()
     test_routes()
     test_sql()

@@ -1926,6 +1926,20 @@ def delete_user_package(package_id):
     return jsonify({'removed': True})
 
 
+@app.get('/api/dev/package-spec')
+@require_auth
+@require_authoring
+def dev_package_spec():
+    """How to write a package — docs/schemas/PACKAGE_SPEC.md, whole and by
+    section — with what the asking athlete needs to write one of their own:
+    their id prefix and the limits (for the package builder and the Dev Lab)."""
+    from src import package_spec, package_store
+    return jsonify({'spec': package_spec.text(), 'sections': package_spec.sections(),
+                    'prefix': package_store.owner_prefix(g.user_id),
+                    'limits': {'files': package_store.MAX_FILES, 'bytes': package_store.MAX_BYTES,
+                               'packages': package_store.MAX_PACKAGES}})
+
+
 @app.get('/api/dev/portability')
 @require_auth
 @require_authoring

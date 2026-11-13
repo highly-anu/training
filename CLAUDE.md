@@ -1519,6 +1519,11 @@ under "From your packages", the phone's cannot yet) — for itself and whoever b
 Never a commons id. The web draws a served modality it does not know (`registerModalities`); slot
 types, progression and contract models, phase kinds, levels, intensities, watch templates and
 icons stay the engine's.
+**How to write a package is one document**: `docs/schemas/PACKAGE_SPEC.md` (ships in the image;
+`GET /api/dev/package-spec`, the MCP server's `get_package_spec`). Its lists and its worked example
+(`test_packages/scratch_minimal`, written from nothing) are generated — after a change to the
+commons' vocabulary, a schema enum, the gate's stages or that package, run
+`.venv/bin/python tools/gen_package_spec.py` (`--check` is a push gate).
 `src/package_gate.check_package(folder)` is every gate for one folder, in process and as data
 (files, schema, ids, a smoke generate of every track and phase, provenance — `src/package_smoke.py`
 is check_styles' loop and check_provenance's audit, which both tools call; roadmap 20.2).
@@ -1576,6 +1581,8 @@ SUPABASE_URL='' .venv/bin/python test_portability.py     # Dev Lab ▸ Builder r
 .venv/bin/python test_package_gate.py                    # src/package_gate.check_package: one folder through the gates' checks, as data
 SUPABASE_URL='' .venv/bin/python test_private_packages.py  # an athlete's own packages: store, install through the gate, routes; SQL half on its own database
 SUPABASE_URL='' .venv/bin/python test_package_vocabulary.py  # a package's vocabulary.yaml: modalities and patterns of its own
+.venv/bin/python tools/gen_package_spec.py [--check]     # the package spec's generated lists and worked example
+SUPABASE_URL='' .venv/bin/python test_package_spec.py     # the spec: what it says, where it ships, how it is served
 .venv/bin/python test_package_overlay.py                 # the loader's overlay: adds for its caller, never replaces, quarantines; caches per view
 .venv/bin/python test_add_package.py                     # one package's baselines recorded, every other's kept; add_package's refusals
 SUPABASE_URL='' .venv/bin/python test_explore_links.py     # Explore's lineage: slot links by the selector's rule, progression, movements

@@ -1927,10 +1927,20 @@ Readiness, in order:
   `client_vocab_compiled`): the phone and the watches read only their generated tables —
   a package modality draws neutral there, and the phone's picker cannot offer a package
   implement — until the Apple targets read `/api/modalities` and `/api/equipment`.
-- **20.8 One package spec; a package from nothing (M).** `docs/schemas/PACKAGE_SPEC.md`
-  (ships in the image; its valid values generated), the MCP templates read from it, and
-  `test_package_dropin.py` runs a package written from scratch — its own exercise ids and
-  vocabulary — a malformed one, and one added to a running process.
+- **20.8 One package spec; a package from nothing (M).** Done 2026-11-13.
+  `docs/schemas/PACKAGE_SPEC.md` — what a package is, the files, how a week is built
+  (which shape to start with), what goes in each file, every valid value, the gate, an
+  athlete's own package, common mistakes, a worked example — in the one part of `docs/`
+  the image carries. Its lists (files, values, gate stages, limits) and its example are
+  written by `tools/gen_package_spec.py` from the commons, the schemas, `portability.FILES`,
+  the gate and the store; `--check` is a push gate. Served by `GET /api/dev/package-spec`
+  (whole and by section, with the asker's prefix and the limits) and the MCP server's
+  `get_package_spec`. The MCP skeleton's comments print their value lists from the schemas
+  when asked (the typed copy lacked `as_written`); `list_valid_values` answers the sets
+  the checks use. `test_packages/scratch_minimal` is the example: written from nothing,
+  its own exercises, modality, movement pattern and implement. It goes through
+  `test_package_gate.py`, the drop-in test's end-to-end checks, and an install for one
+  athlete in a running process (`test_private_packages.py`). `test_package_spec.py`.
 
 The Dev Lab, independent of 20.2–20.8:
 
