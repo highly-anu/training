@@ -56,7 +56,7 @@ deferred is under *Later*.
 | 17 | Explore: each philosophy's page read from its package — a server document, its week and rules, one colour system | P2 | M | API, web, iOS, content |
 | 18 | Phone design and interaction uplift: the foundation (1.35), states (1.36), iOS 26 chrome (1.37), discoverable actions (1.38), the screen passes (1.39), motion (1.40) and accessibility with the system surfaces (1.41) are in (*IA*) | P2 | L | iOS |
 | 19 | Web design and interaction uplift: the phone's design language on the web, each rule in one module and held by a test — the foundation, states, feedback, motion, actions and keyboard, colour and accessibility, the page passes and the review fixes are in (*IA*) | P2 | L | web |
-| 20 | LLM package builder — the foundation: a package written at runtime, private to its athlete, picked up by the running app; the Dev Lab brought up to the engines that run. The gaps are recorded and shown (20.1); the rest is open | P1 | L | engine, API, web, content |
+| 20 | LLM package builder — the foundation: all twelve steps are in (the gate, the overlay, storage, per-athlete reference routes, package vocabulary, the spec, the trace and the Dev Lab). Left: the phone reading a package's vocabulary, migration 013 on production, the builder itself | P1 | L | engine, API, web, content |
 
 ---
 
@@ -1125,7 +1125,7 @@ the new tracks in both builders and on both watches; close editing paths (moving
 session) that can break module spacing; generalise catalog reachability
 (`check_exercise_coverage.py`) to every package once each is on a contract.
 
-**6. Then the Dev Lab (S–M).** The Impact tab over `POST /api/dev/constraint-impact`
+**6. Then the Dev Lab (S–M).** Done 2026-11-13 as item 20's steps 20.9–20.12. The Impact tab over `POST /api/dev/constraint-impact`
 and the trace's per-candidate reasons — the step-1 report seen per program.
 
 ### 10. Progress tracking: what phases A–E left open — P2 · M
@@ -1987,7 +1987,17 @@ The Dev Lab, independent of 20.2–20.8:
   on contracts, ten on templates, none on the scheduler) and its authoring table from the
   same file, now with the whole-package route. The dead `archetype_trace.selected` read
   is gone.
-- **20.12 The Impact tab (S).** Over `POST /api/dev/constraint-impact` (item 9, step 6).
+- **20.12 The Impact tab (S).** Done 2026-11-13 (item 9, step 6). Dev Lab ▸ Impact
+  (`components/devlab/ImpactPanel.tsx`) sends the Pipeline Trace form's request to `POST
+  /api/dev/constraint-impact` and shows: sessions changed (and how many directly), per
+  constraint what lifting it means with its sessions, slots and knock-on, the equipment
+  that would restore the most, every change with its causes and reasons — filtered by
+  cause — and, for a refused request, what alone would let it generate. Two real answers
+  are recorded for its test (`test_constraint_impact.py --write`).
+
+What is left of item 20 after these twelve steps: the phone and the watches reading a
+package's modalities and equipment from the API (gap `client_vocab_compiled`); migration
+013 on production; and the builder itself.
 
 ---
 

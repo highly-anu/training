@@ -24,6 +24,9 @@ import { HeatmapPanel } from './heatmap/HeatmapPanel'
 import { WeekCalendar } from '@/components/program/WeekCalendar'
 import portability from '@/mocks/fixtures/portability.json'
 import modelMap from '@/mocks/fixtures/model-map.json'
+import impacts from '@/mocks/fixtures/constraint-impact.json'
+import { ImpactResult } from './ImpactPanel'
+import type { ConstraintImpact } from '@/api/types'
 
 vi.mock('@/api/ontology', () => ({ useOntology: () => ({ data: undefined, isLoading: false }) }))
 // The server's portability report as test_portability.py records it (the
@@ -138,6 +141,31 @@ describe.each(scenarios)('%s', (_name, program) => {
     const shown = screen.getAllByRole('button').map((b) => b.textContent ?? '').filter((t) => order.includes(t))
     expect(shown).toEqual([...shown].sort((a, b) => order.indexOf(a) - order.indexOf(b)))
     expect(shown.length).toBeGreaterThan(0)
+  })
+})
+
+// Two real POST /dev/constraint-impact answers (test_constraint_impact.py --write).
+describe('Impact', () => {
+  const heldBack = impacts.held_back as unknown as ConstraintImpact
+  const refused = impacts.refused as unknown as ConstraintImpact
+
+  it('counts what the constraints change, by cause, and lists the direct changes', () => {
+    mount(<ImpactResult impact={heldBack} />)
+    expect(screen.getAllByText(String(heldBack.sessions!.changed)).length).toBeGreaterThan(0)
+    for (const cause of heldBack.lifted ?? []) {
+      expect(screen.getAllByText(heldBack.lifts![cause]).length).toBeGreaterThan(0)
+    }
+    const direct = (heldBack.changes ?? []).filter((c) => !c.knock_on)
+    expect(screen.getAllByRole('listitem').length).toBeGreaterThanOrEqual(direct.length)
+    for (const r of heldBack.restore?.equipment ?? []) {
+      expect(screen.getAllByText(new RegExp(` · ${r.changes}$`, 'm')).length).toBeGreaterThan(0)
+    }
+  })
+
+  it('says what alone would let a refused request generate', () => {
+    mount(<ImpactResult impact={refused} />)
+    expect(screen.getByText('The request is refused')).toBeTruthy()
+    for (const u of refused.unblocked_by ?? []) expect(screen.getByText(u.text)).toBeTruthy()
   })
 })
 
