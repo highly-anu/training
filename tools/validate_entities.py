@@ -313,7 +313,10 @@ def _standard_reference_errors(path: str | None, sid: str, b: dict) -> list[str]
 def _package_catalogs() -> dict[str, set]:
     """Each package's exercise ids, with those of the packages it borrows from."""
     own, borrows = {}, {}
-    for pkg_dir in sorted(glob.glob(os.path.join(_ROOT, 'data', 'packages', '*'))):
+    if _ROOT not in sys.path:
+        sys.path.insert(0, _ROOT)
+    from src import loader   # the folder the loader reads (TRAINING_PACKAGES_DIR in a test)
+    for pkg_dir in sorted(glob.glob(os.path.join(loader._PACKAGES_DIR, '*'))):
         pkg = os.path.basename(pkg_dir)
         ex_path = os.path.join(pkg_dir, 'exercises.yaml')
         if not os.path.exists(ex_path):
@@ -453,7 +456,10 @@ def main():
         # Everything lives under data/packages/ since the vertical migration; the
         # old top-level data/<type>/ directories are gone, so --all used to find
         # nothing and report "0/0 files valid".
-        packages_dir = os.path.join(_ROOT, 'data', 'packages')
+        if _ROOT not in sys.path:
+            sys.path.insert(0, _ROOT)
+        from src import loader
+        packages_dir = loader._PACKAGES_DIR   # the folder the loader reads
         if os.path.isdir(packages_dir):
             targets.append(packages_dir)
         commons_dir = os.path.join(_ROOT, 'data', 'commons')

@@ -87,12 +87,12 @@ def _yaml(path: str):
 
 def packages() -> list[str]:
     """Every package folder the loader would read, by its folder name."""
-    return sorted(os.path.basename(os.path.dirname(p))
-                  for p in glob.glob(os.path.join(loader._PACKAGES_DIR, '*', 'philosophy.yaml')))
+    return sorted(pkg for pkg, folder in loader.package_dirs()
+                  if os.path.exists(os.path.join(folder, 'philosophy.yaml')))
 
 
 def _documents(pkg: str, sub: str) -> list[dict]:
-    pattern = os.path.join(loader._PACKAGES_DIR, pkg, sub, '**', '*.yaml')
+    pattern = os.path.join(loader.package_dir(pkg), sub, '**', '*.yaml')
     return [d for d in (_yaml(p) for p in sorted(glob.glob(pattern, recursive=True))) if isinstance(d, dict)]
 
 
@@ -115,7 +115,7 @@ def _as_list(value) -> list:
 
 
 def _read(pkg: str) -> dict:
-    base = os.path.join(loader._PACKAGES_DIR, pkg)
+    base = loader.package_dir(pkg)
     exercises = (_yaml(os.path.join(base, 'exercises.yaml')) or {}).get('exercises') or []
     return {
         'philosophy': _yaml(os.path.join(base, 'philosophy.yaml')) or {},
@@ -142,7 +142,7 @@ def _in_checkout() -> bool:
 
 def _files(pkg: str) -> list[dict]:
     """`present` is None for a file the API image leaves out, when this is the image."""
-    base = os.path.join(loader._PACKAGES_DIR, pkg)
+    base = loader.package_dir(pkg)
     checkout = _in_checkout()
     return [{'id': fid, 'path': name, 'required': required,
              'present': (None if fid in _IMAGE_EXCLUDED and not checkout

@@ -52,7 +52,7 @@ def spec_version() -> int:
     return int(vocabulary()['version'])
 
 
-@lru_cache(maxsize=1)
+@loader.scoped_cache
 def _declared() -> dict:
     return loader.load_watch_specs()
 
@@ -142,7 +142,7 @@ def session_identity(package_id: str | None) -> dict:
     return out
 
 
-@lru_cache(maxsize=None)
+@loader.scoped_cache
 def _philosophy_name(package_id: str) -> str | None:
     try:
         return (loader.load_philosophy(package_id) or {}).get('name')
@@ -150,7 +150,7 @@ def _philosophy_name(package_id: str) -> str | None:
         return None
 
 
-@lru_cache(maxsize=1)
+@loader.scoped_cache
 def _owners() -> dict:
     return {a.get('id'): a.get('_package') for a in loader.load_all_archetypes()}
 

@@ -134,7 +134,7 @@ def smoke_package(phil_id: str) -> list[dict]:
     data = loader.load_all_data()
     phil = next((p for p in loader.load_philosophies() if p['id'] == phil_id), None)
     if phil is None:
-        raise LookupError(f"no philosophy '{phil_id}' in {loader._PACKAGES_DIR}")
+        raise LookupError(f"no philosophy '{phil_id}' among the packages the caller sees")
     return list(smoke_philosophy(phil, frameworks, fw_by_id, data))
 
 

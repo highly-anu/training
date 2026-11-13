@@ -2386,47 +2386,62 @@
    "title": "One packages folder, and three paths that ignore it",
    "kind": "runtime",
    "impact": "blocks",
-   "detail": "TRAINING_PACKAGES_DIR replaces data/packages, it never adds to it, so a package beside the shipped ones needs a copy of all of them. validate_entities' injury-flag catalogue and --all, and run_checks' search for package tests, read data/packages whatever the variable says.",
+   "detail": "Was: TRAINING_PACKAGES_DIR replaced data/packages and never added to it. Now the loader reads two roots: the shipped packages, and for the caller in context an overlay of its own (loader.overlay, a context variable — no loader call takes a parameter). Every module reaches a package through loader.package_dirs / package_dir / package_files; validate_entities reads the loader's root. tools/run_checks.py still looks for package tests in the checkout it checks, which is what it is for.",
    "anchors": [
     "src/loader.py::os.environ.get('TRAINING_PACKAGES_DIR')",
     "tools/validate_entities.py::'data', 'packages'",
     "tools/run_checks.py::'data', 'packages'"
    ],
    "roadmap": "20.3",
-   "status": "open"
+   "status": "done",
+   "closed": "2026-11-13",
+   "evidence": [
+    "test_package_overlay.py::def test_adds_for_its_caller",
+    "src/loader.py::def package_dirs"
+   ]
   },
   {
    "id": "no_fault_isolation",
    "title": "One malformed package breaks loading for every package",
    "kind": "runtime",
    "impact": "blocks",
-   "detail": "The loader reads every folder with no isolation: a YAML error or a framework or exercise without an id raises for every caller. Right for the shipped packages (the image build must fail); fatal for a package written at runtime, which must be refused or set aside alone.",
+   "detail": "Was: one YAML error or missing id raised for every caller. The shipped root stays fail-fast, so the image build fails on a broken shipped package. An overlay package is probed once for exactly what the loaders index unguarded (every file parses, the philosophy is the folder's, each framework, archetype and exercise has an id) and one that fails is set aside whole (loader.quarantined) — nobody else's packages, and none of its owner's others, are touched.",
    "anchors": [
     "src/loader.py::fw['id']",
     "src/loader.py::raw_ex['id']"
    ],
    "roadmap": "20.3",
-   "status": "open"
+   "status": "done",
+   "closed": "2026-11-13",
+   "evidence": [
+    "test_package_overlay.py::def test_quarantine",
+    "src/loader.py::def _probe"
+   ]
   },
   {
    "id": "silent_collisions",
    "title": "An id two packages declare is resolved silently at load",
    "kind": "runtime",
    "impact": "degrades",
-   "detail": "The first archetype, the last framework and the first philosophy win; only validate_entities --all and add_package refuse a collision. A built package must not be able to shadow a shipped id or another athlete's.",
+   "detail": "Among the shipped packages a collision is still refused by validate_entities --all and add_package. For a package written at runtime: the overlay only adds — a folder named as a shipped package is set aside, and a framework, archetype, philosophy or media id the shipped packages declare keeps the shipped copy — and the gate refuses the collision before install and, for an athlete's own package, any id without its owner's prefix (package_gate.check_package(owner_prefix=)).",
    "anchors": [
     "src/loader.py::seen_ids",
     "src/portability.py::_KEPT"
    ],
    "roadmap": "20.3",
-   "status": "open"
+   "status": "done",
+   "closed": "2026-11-13",
+   "evidence": [
+    "test_package_overlay.py::def test_never_replaces",
+    "src/package_gate.py::def _prefix"
+   ]
   },
   {
    "id": "process_caches",
    "title": "Caches that outlive a package change",
    "kind": "runtime",
    "impact": "degrades",
-   "detail": "Generation re-reads the packages on every call, but these are filled once per process and clear_static_cache does not clear them: the standards (each package's standards.yaml), exercise media, the similarity matrix, the analytics specs digest, the test archetypes and derived lifts. There is no single invalidation.",
+   "detail": "Was: seven caches filled once per process and never cleared. Now whatever a module keeps from the packages is kept per view (loader.view_store, loader.scoped_cache: the shipped view for the life of the process, the few most recent overlays beside it) — standards, exercise media, similarity, the analytics digest, test archetypes, derived lifts, session icons, watch owners, Explore's documents and links, the bells — and api.invalidate_package_data() forgets all of it in one call.",
    "anchors": [
     "src/analytics/benchmarks_data.py::lru_cache",
     "src/loader.py::_media_cache",
@@ -2435,7 +2450,12 @@
     "src/standard_results.py::_TEST_ARCHETYPES"
    ],
    "roadmap": "20.3",
-   "status": "open"
+   "status": "done",
+   "closed": "2026-11-13",
+   "evidence": [
+    "test_package_overlay.py::def test_kept_per_view",
+    "src/loader.py::def invalidate_package_data"
+   ]
   },
   {
    "id": "static_cache_shared",

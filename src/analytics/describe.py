@@ -15,9 +15,6 @@ import os
 from src import loader
 from src.analytics import benchmarks_data, spec, vocabulary
 
-_PACKAGES_DIR = loader._PACKAGES_DIR
-
-
 def describe_all() -> dict:
     frameworks = loader.load_all_frameworks()
     modalities = loader.load_all_modalities()
@@ -43,7 +40,7 @@ def describe(s: spec.Spec, phil: dict, names: '_Names') -> dict:
         'philosophy': pid,
         'name': phil.get('name', pid),
         'source': s.source,
-        'file': file if os.path.exists(os.path.join(_PACKAGES_DIR, pid, 'analytics.yaml')) else None,
+        'file': file if os.path.exists(os.path.join(loader.package_dir(pid), 'analytics.yaml')) else None,
         'progressionPhilosophy': phil.get('progression_philosophy'),
         'headlineId': headline,
         'progress': entries,

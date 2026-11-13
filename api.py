@@ -298,14 +298,20 @@ def _package_data_changed(response):
 def clear_static_cache() -> None:
     """Forget every reference answer — the build's too, which no longer
     matches the files."""
-    global _explore_links_cache, _BUILT
-    from src import explore_philosophy
+    global _BUILT
     with _STATIC_LOCK:
         _STATIC.clear()
         _BUILT = {}
-    _explore_links_cache = None
-    explore_philosophy.clear_cache()
-    _watch_spec.clear_cache()
+    invalidate_package_data()
+
+
+def invalidate_package_data() -> None:
+    """The packages changed (an authoring write, a package installed or
+    removed): forget every answer any module computed from them, in every
+    view — the one call. The modules keep such answers per view
+    (loader.view_store, loader.scoped_cache), never in a global of their own."""
+    loader.invalidate_package_data()
+    _watch_spec.vocabulary.cache_clear()
 
 
 def _static_paths() -> list[str]:
@@ -392,22 +398,21 @@ def _equipment_profiles() -> list[dict]:
 
 # Similarity cache — computed once at first request (lazy, not blocking startup),
 # by one thread: the four serving threads would otherwise each build it.
-_similarity_cache: dict | None = None
 _similarity_lock = threading.Lock()
 
 def _get_similarity() -> dict:
-    global _similarity_cache
     with _similarity_lock:
-        if _similarity_cache is None:
+        store = loader.view_store('api.similarity')
+        if 'matrix' not in store:
             philosophies = loader.load_philosophies()
             frameworks   = loader.load_all_frameworks()
             modalities   = loader.load_all_modalities()
             archetypes   = loader.load_all_archetypes()
             exercises, _ = loader.load_all_exercises()
-            _similarity_cache = compute_all_similarities(
+            store['matrix'] = compute_all_similarities(
                 philosophies, frameworks, modalities, archetypes, exercises
             )
-    return _similarity_cache
+        return store['matrix']
 
 
 def _injury_flags() -> list[dict]:
@@ -900,9 +905,6 @@ def get_ontology():
     })
 
 
-_explore_links_cache: dict | None = None
-
-
 @app.get('/api/explore/links')
 @static_json
 def get_explore_links():
@@ -910,11 +912,11 @@ def get_explore_links():
     "Follows from it": the movements, and every link between neighbouring
     levels with the selector's own slot rule (src/explore_links.py). Static
     data, built once like the similarity scores."""
-    global _explore_links_cache
-    if _explore_links_cache is None:
+    store = loader.view_store('api.explore_links')
+    if 'links' not in store:
         from src import explore_links
-        _explore_links_cache = explore_links.build_from_loader()
-    return jsonify(_explore_links_cache)
+        store['links'] = explore_links.build_from_loader()
+    return jsonify(store['links'])
 
 
 @app.get('/api/similarity')
@@ -4111,18 +4113,13 @@ def _humanize_role(role: str) -> str:
     return (role or 'Block').replace('_', ' ').title()
 
 
-_EXERCISE_BELLS: dict | None = None
-
-
+@loader.scoped_cache
 def _exercise_bells() -> dict:
     """{exercise id: bells} for the double-bell exercises (exercises.yaml
-    `bells`), read once. A program stored before the field keeps its own copy
-    of each exercise, so the watch reads the library's."""
-    global _EXERCISE_BELLS
-    if _EXERCISE_BELLS is None:
-        index, _ = loader.load_all_exercises()
-        _EXERCISE_BELLS = {i: e['bells'] for i, e in index.items() if e.get('bells')}
-    return _EXERCISE_BELLS
+    `bells`), read once per view of the packages. A program stored before the
+    field keeps its own copy of each exercise, so the watch reads the library's."""
+    index, _ = loader.load_all_exercises()
+    return {i: e['bells'] for i, e in index.items() if e.get('bells')}
 
 
 def _rest_until_hr(load: dict, max_hr: int | None) -> int | None:
@@ -5914,19 +5911,15 @@ def _program_analytics_hash(inputs, stored: dict, revision) -> str:
     return _h.sha256('|'.join(parts).encode()).hexdigest()
 
 
-_SPECS_DIGEST: str | None = None
-
-
+@loader.scoped_cache
 def _analytics_specs_digest() -> str:
-    """A digest of every package's analytics.yaml, once per process: the
-    files change only with a deploy, and a deploy starts a new process."""
-    global _SPECS_DIGEST
-    if _SPECS_DIGEST is None:
-        import hashlib as _h
-        import json as _j
-        _SPECS_DIGEST = _h.sha256(_j.dumps(loader.load_analytics_specs(), sort_keys=True,
-                                           default=str).encode()).hexdigest()[:16]
-    return _SPECS_DIGEST
+    """A digest of every package's analytics.yaml the caller sees, once per
+    view: the shipped files change only with a deploy, an athlete's own with
+    an install (invalidate_package_data)."""
+    import hashlib as _h
+    import json as _j
+    return _h.sha256(_j.dumps(loader.load_analytics_specs(), sort_keys=True,
+                              default=str).encode()).hexdigest()[:16]
 
 
 @app.get('/api/analytics/specs')

@@ -1494,7 +1494,15 @@ never enforced (Wildman's repeat after a week off). `test_package_dropin.py` cop
 packages (contract, templates, scheduler) under new ids into `TRAINING_PACKAGES_DIR`
 (`loader._PACKAGES_DIR`; every module finds packages through it) and runs them through
 validation, generation, the API, the watch payload, analytics and the scorecard with the
-repository unchanged. `src/package_gate.check_package(folder)` is every gate for one folder, in process and as data
+repository unchanged. **Two roots** (since 2026-11-13, roadmap 20.3): the shipped packages (`loader._PACKAGES_DIR`,
+fail-fast) and, for the caller in context, an overlay of its own packages (`loader.overlay(dir)`,
+a context variable — always reset; a new thread starts without one). A module never joins a
+path onto the packages directory: `loader.package_dirs()`, `package_dir(id)`,
+`package_files(...)`. The overlay only adds (a shipped id keeps the shipped copy) and a package
+in it that does not load is set aside alone (`loader.quarantined()`). **Anything kept from the
+packages is kept per view** — `loader.view_store(name)` or `@loader.scoped_cache`, never a module
+global or `lru_cache` — and `api.invalidate_package_data()` is the one call that forgets it.
+`src/package_gate.check_package(folder)` is every gate for one folder, in process and as data
 (files, schema, ids, a smoke generate of every track and phase, provenance — `src/package_smoke.py`
 is check_styles' loop and check_provenance's audit, which both tools call; roadmap 20.2).
 `tools/print_package.py <id>` prints a package's programs beside its
@@ -1549,6 +1557,7 @@ SUPABASE_URL='' .venv/bin/python test_devlab_trace.py    # the Dev Lab's recorde
 SUPABASE_URL='' .venv/bin/python test_constraint_impact.py  # what each constraint changes against the reference, and which (Dev Lab ▸ Impact)
 SUPABASE_URL='' .venv/bin/python test_portability.py     # Dev Lab ▸ Builder readiness' report; every open gap still anchored in the code, every closed one held by a test; --write re-records the web's copy
 .venv/bin/python test_package_gate.py                    # src/package_gate.check_package: one folder through the gates' checks, as data
+.venv/bin/python test_package_overlay.py                 # the loader's overlay: adds for its caller, never replaces, quarantines; caches per view
 .venv/bin/python test_add_package.py                     # one package's baselines recorded, every other's kept; add_package's refusals
 SUPABASE_URL='' .venv/bin/python test_explore_links.py     # Explore's lineage: slot links by the selector's rule, progression, movements
 SUPABASE_URL='' .venv/bin/python test_explore_philosophy.py  # Explore's philosophy page: weeks from contracts and templates, mixes, rules, sessions

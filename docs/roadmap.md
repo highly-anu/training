@@ -1849,11 +1849,22 @@ Readiness, in order:
   second a package. `mcp_server.validate_package` answers from it. A folder outside the
   loader's packages directory is checked as far as its schema and the rest is `skipped`,
   never passed — the overlay (20.3) lifts that. `test_package_gate.py`.
-- **20.3 Roots, overlay, quarantine, caches (L).** The loader reads the shipped root and,
-  for the caller in context, that athlete's overlay; an overlay id carries its owner's
-  prefix and never replaces a shipped one; a broken overlay package is set aside alone
-  (the shipped root stays fail-fast); every process cache is keyed by view and cleared by
-  one `invalidate_package_data()`. The one-track golden programs stay byte-identical.
+- **20.3 Roots, overlay, quarantine, caches (L).** Done 2026-11-13. The loader reads the
+  shipped root and, for the caller in context, an overlay of its own (`loader.overlay`,
+  a context variable set for a request or a job and always reset — a reused server thread
+  sees nothing of the caller before it, a thread started inside a view inherits none);
+  every module reaches a package through `package_dirs` / `package_dir` /
+  `package_files`. The overlay only adds: a folder named as a shipped package is set
+  aside, a shipped framework, archetype, philosophy or media id keeps the shipped copy,
+  and the gate takes `owner_prefix` — every id an athlete's package declares for itself
+  carries it (an exercise may instead be one a shipped package declares). An overlay
+  package that does not load is set aside whole (`loader.quarantined`); the shipped root
+  stays fail-fast. What a module keeps from the packages is kept per view
+  (`loader.view_store`, `scoped_cache`; the four most recent overlays) and
+  `api.invalidate_package_data()` forgets all of it. An overlay directory is immutable: a
+  changed set is a new directory. Without an overlay the loader returns exactly what it
+  did (the one-track golden programs unchanged). Nothing names an overlay for a request
+  yet — storage does (20.5). `test_package_overlay.py`.
 - **20.4 Reference routes per athlete (M).** The baked build stays for everyone without a
   package of their own; an athlete with one gets their own bounded variant.
 - **20.5 Storage and install (M).** `user_packages` (migration 013, a capped file map),

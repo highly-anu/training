@@ -62,7 +62,7 @@ def _document(path: str) -> dict:
 def load_contract(package: str, track: str) -> dict | None:
     from . import loader
     import os
-    path = os.path.join(loader._PACKAGES_DIR, package, 'training_contract.yaml')
+    path = os.path.join(loader.package_dir(package), 'training_contract.yaml')
     if not os.path.exists(path):
         return None
     document = _document(path)
@@ -1101,7 +1101,7 @@ def _level_refusal(contract: dict, level: str) -> str:
     phil = loader.load_philosophy(contract['package'])
     names = {t['id']: t.get('name', t['id']) for t in phil.get('tracks') or []}
     this = names.get(contract['track_id'], contract['track_id'])
-    document = _document(os.path.join(loader._PACKAGES_DIR, contract['package'], 'training_contract.yaml'))
+    document = _document(os.path.join(loader.package_dir(contract['package']), 'training_contract.yaml'))
     fits = [tid for tid, t in (document.get('tracks') or {}).items() if level in (t.get('training_levels') or [])]
     levels = contract['training_levels']
     who = levels[0] if len(levels) == 1 else f"{', '.join(levels[:-1])} and {levels[-1]}"
