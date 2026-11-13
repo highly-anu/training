@@ -794,8 +794,12 @@ def populate_session(
         arch = forced_archetype
         # Placed, not chosen (a test, a week template's named workout): the
         # trace keeps the shape the Dev Lab reads, with nothing to compare.
+        # `week_template` with the day's category when the source's week
+        # named it (the category used to stand as the reason itself, which no
+        # reader could tell from a reason); `forced` for a test placed there.
         arch_trace: dict = {'selected_id': arch.get('id'), 'filter_counts': {}, 'candidates': [],
-                            'selection_reason': session.get('category') or 'forced'}
+                            'selection_reason': 'week_template' if session.get('category') else 'forced',
+                            **({'category': session['category']} if session.get('category') else {})}
     elif collect_trace:
         arch_result = select_archetype(
             modality, constraints, phase, is_deload,

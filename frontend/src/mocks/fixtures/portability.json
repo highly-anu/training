@@ -2799,50 +2799,74 @@
    "title": "The generation trace covers the scheduler, not the engines that run",
    "kind": "devlab",
    "impact": "degrades",
-   "detail": "Every shipped package runs on a training contract or week templates. A contract traces its id and module ids, none of its placement, volume, period or forecast; a template week traces its categories, not what was picked, passed over or dropped; a test is not marked.",
+   "detail": "Was: a contract traced its id and module ids, a template week its categories, a test nothing. Each week now says its `engine`. A contract's week carries `contract_week`: the modules with their minutes, period week, step, model and deload, the placement chosen and the next best with their scores, optional work left short and the test; each session its `module_steps`. A template's week carries `template`: the days kept and dropped and, for each day, every pool asked, where its rotation stood, what was passed over and why, what was taken. A test session is marked with what it measures and stands in for; a week lists its placed and skipped tests. A composition carries each track's own decisions (`lane_weeks`) and its kept days. The trace is asked for, never paid for: the program is the same with it. Left: a passed-over workout says it does not fit as written, not which of level, equipment, injury or minutes ruled it out.",
    "anchors": [
     "src/training_contract.py::def _trace",
     "src/selector.py::session.get('category') or 'forced'"
    ],
    "roadmap": "20.9",
-   "status": "open"
+   "status": "done",
+   "closed": "2026-11-13",
+   "evidence": [
+    "test_devlab_trace.py::horsemen_with_wildman_composition",
+    "test_devlab_trace.py::def same_program",
+    "src/training_contract.py::contract_week"
+   ]
   },
   {
    "id": "trace_ui_scheduler_only",
    "title": "Pipeline Trace draws the scheduler's steps",
    "kind": "devlab",
    "impact": "degrades",
-   "detail": "Allocation and day assignment are empty for all eleven packages, a composition cannot be requested, and compromises, coverage and held-back slots are never shown.",
+   "detail": "Was: allocation and day assignment, empty for every shipped package; no way to ask for a composition; nothing of what the program says about itself. The Schedule step's card and the flow now follow the engine that built the week (EngineWeek.tsx): a contract's modules, steps and placement against the next best; a template's days, pools, rotation and what was passed over; a composition's tracks, each on its own. The form takes a second track and its equipment list is the vocabulary's; a session says its test, its modules' steps, its track and what it stands in for; the Output step lists compromises, coverage and what the constraints held back. A trace can be linked to (`/dev?philosophy=…&run=1`). Left: a contract track's options are not asked in the form (the defaults run).",
    "anchors": [
     "frontend/src/components/devlab/PipelineFlowPanel.tsx::No allocation trace",
     "frontend/src/components/devlab/ModelInteractionPanel.tsx::archetype_trace?.selected"
    ],
    "roadmap": "20.10",
-   "status": "open"
+   "status": "done",
+   "closed": "2026-11-13",
+   "evidence": [
+    "frontend/src/components/devlab/DevLabPanels.test.tsx::lays out what the engine decided",
+    "frontend/src/components/devlab/DevLabPanels.test.tsx::the flow follows the engine that built the week",
+    "frontend/src/components/devlab/EngineWeek.tsx::export function ContractWeek"
+   ]
   },
   {
    "id": "model_map_hardcoded",
    "title": "Model Interactions' map is written in the component",
    "kind": "devlab",
    "impact": "degrades",
-   "detail": "Its strip and edges are constants with no track, phase, contract, week template, composition or test, and nothing checks them against the code.",
+   "detail": "Was: the strip and its five edges were constants in the component, describing the scheduler's path as the pipeline, with nothing held to the code. The map is data (tools/model_map.json): eleven interactions — the track and its phases, a contract's week, a template's week, the scheduler's allocation and archetype score, slots and exercises, loads, compositions, tests, the athlete's constraints, which packages a caller sees — each with what it reads, what the engine decides, the constants in code and the anchors test_model_map.py checks. The server adds which engine each track runs on (twelve on contracts, ten on templates, none on the scheduler), and the panel reads the map one engine at a time, starting with the busiest or the last program's.",
    "anchors": [
     "frontend/src/components/devlab/ModelInteractionPanel.tsx::const EDGES"
    ],
    "roadmap": "20.11",
-   "status": "open"
+   "status": "done",
+   "closed": "2026-11-13",
+   "evidence": [
+    "test_model_map.py::def test_document",
+    "tools/model_map.json::anchors",
+    "frontend/src/components/devlab/DevLabPanels.test.tsx::reads the map one engine at a time"
+   ]
   },
   {
    "id": "no_impact_tab",
    "title": "No Impact tab",
    "kind": "devlab",
    "impact": "cosmetic",
-   "detail": "POST /dev/constraint-impact answers what each constraint changes against the reference; no screen calls it.",
+   "detail": "Dev Lab ▸ Impact sends the Pipeline Trace form's request to POST /dev/constraint-impact and lays the answer out: how many sessions change and how many directly, per constraint what lifting it means and how many sessions and slots it accounts for, the equipment that would restore the most, every change with its causes and reasons (filtered by cause, knock-on changes on request), and for a refused request what alone would let it generate.",
    "anchors": [
     "api.py::/dev/constraint-impact"
    ],
    "roadmap": "20.12",
-   "status": "open"
+   "status": "done",
+   "closed": "2026-11-13",
+   "evidence": [
+    "frontend/src/components/devlab/DevLabPanels.test.tsx::counts what the constraints change",
+    "test_constraint_impact.py::def test_recording",
+    "frontend/src/components/devlab/ImpactPanel.tsx::/dev/constraint-impact"
+   ]
   },
   {
    "id": "engine_vocabulary",

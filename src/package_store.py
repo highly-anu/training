@@ -53,6 +53,9 @@ _TTL_SECONDS = 60
 _SCHEMA_READY = False
 _LOCK = threading.RLock()
 _SETS: dict[str, tuple[float, str | None]] = {}   # user id → (asked at, overlay dir or None)
+# Until when the table is known not to exist (a write clears it).
+_NO_TABLE = {'until': 0.0}
+_NO_TABLE_SECONDS = 600
 
 _TABLE = '''
 CREATE TABLE IF NOT EXISTS user_packages (
@@ -206,6 +209,8 @@ def _live_rows(user_id: str) -> list[dict]:
     if conn is None:
         rows = [r for r in _file_rows(user_id).values() if not r.get('deleted_at')]
         return sorted(rows, key=lambda r: r['package_id'])
+    if time.monotonic() < _NO_TABLE['until']:
+        return []
     try:
         import psycopg2.errors
         import psycopg2.extras
@@ -215,7 +220,11 @@ def _live_rows(user_id: str) -> list[dict]:
                             'FROM user_packages WHERE user_id = %s AND deleted_at IS NULL ORDER BY package_id',
                             (str(user_id),))
             except psycopg2.errors.UndefinedTable:
-                return []   # nobody has installed one here yet (a write makes the table)
+                # Nobody has installed one here yet (a write, or migration 013,
+                # makes the table). Not asked again for a while: every athlete's
+                # first reference request would otherwise fail a query a minute.
+                _NO_TABLE['until'] = time.monotonic() + _NO_TABLE_SECONDS
+                return []
             return [dict(r) for r in cur.fetchall()]
     except Exception as e:
         raise StoreError(f'user_packages not read: {e}') from e
@@ -242,6 +251,7 @@ def _upsert(user_id: str, package_id: str, files: dict, name: str | None) -> int
         return revision
     try:
         _ensure_schema(conn)
+        _NO_TABLE['until'] = 0.0
         with conn.cursor() as cur:
             cur.execute('''
                 INSERT INTO user_packages (user_id, package_id, revision, name, files, status, problems, engine_rev)
