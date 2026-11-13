@@ -30,38 +30,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src import goals, implements, levels, loader, phases  # noqa: E402
 from src.generator import generate  # noqa: E402
-from src.validator import validate  # noqa: E402
+# The per-phase loop is shared with the gate for one package (src/package_gate.py).
+from src.package_smoke import days_for as _days_for, smoke_philosophy  # noqa: E402
 
 # Everything, so equipment is never the reason a style fails here.
 from src.package_eval import ALL_EQUIPMENT  # noqa: E402
-
-
-def _days_for(track: dict, fw_by_id: dict) -> int:
-    """A day count every framework in the track accepts, nearest the first
-    phase's ideal."""
-    first = fw_by_id.get(track['phases'][0]['framework_id'], {})
-    exp = first.get('expectations', {})
-    want = exp.get('ideal_days_per_week') or exp.get('min_days_per_week', 4)
-    lo, hi = 1, 7
-    for ph in track['phases']:
-        aw = fw_by_id.get(ph['framework_id'], {}).get('applicable_when', {})
-        lo = max(lo, aw.get('days_per_week_min', 1))
-        hi = min(hi, aw.get('days_per_week_max', 7))
-    return min(max(want, lo), hi)
-
-
-def _test_problems(weeks: list, ph: dict) -> list[str]:
-    from src import standard_tests
-    problems = []
-    for w in weeks:
-        entry = {'tests': ph['tests'], 'phase_weeks': ph['weeks'], 'repeatable': ph.get('repeatable'),
-                 'week_in_phase': w.get('week_in_phase')}
-        want = standard_tests.tests_for_week(entry)
-        got = [s for day in (w.get('schedule') or {}).values() for s in day if s.get('test')]
-        if len(got) != len(want):
-            why = [t.get('reason') for t in w.get('tests_skipped') or []]
-            problems.append(f"week {w.get('week_in_phase')}: {len(got)} of {len(want)} tests placed {why or ''}".rstrip())
-    return problems
 
 
 # Compositions (src/composition.py): tracks of different methods, and two of
@@ -247,71 +220,20 @@ def main() -> int:
 
     failures: list[str] = []
     for phil in sorted(loader.load_philosophies(), key=lambda p: p['id']):
-        phil_id = phil['id']
-        archetypes = [a for a in data['archetypes'] if a.get('_package') == phil_id]
-
-        for track in phases.tracks_of(phil):
-            goal = goals.philosophy_to_goal(phil_id, frameworks, track_id=track['id'])
-            days = _days_for(track, fw_by_id)
-            for ph in track['phases']:
-                label = f"{phil_id}/{track['id']}/{ph['id']}"
-                fw = fw_by_id.get(ph['framework_id'])
-                if fw is None:
-                    failures.append(f"{label}: framework '{ph['framework_id']}' not found")
-                    print(f"  {label:52} MISSING FRAMEWORK")
-                    continue
-                exp = fw.get('expectations', {})
-                constraints = {
-                    'days_per_week': days,
-                    'session_time_minutes': exp.get('ideal_session_minutes')
-                    or exp.get('min_session_minutes', 60),
-                    'training_level': 'intermediate',
-                    'equipment': ALL_EQUIPMENT,
-                    'injury_flags': [],
-                    'start_phase': ph['id'],
-                    'periodization_week': 1,
-                    'fatigue_state': 'normal',
-                }
-                if goal.get('training_contract'):
-                    # A level the track is written for (Starting Strength's
-                    # novice progression refuses an intermediate).
-                    levels = goal['training_contract']['training_levels']
-                    if constraints['training_level'] not in levels:
-                        constraints['training_level'] = levels[0]
-                    constraints = implements.confirm(constraints, goal['training_contract'])
-                    constraints['mastered_exercises'] = sorted({eid for m in goal['training_contract']['modules']
-                        for eid in m.get('requires_mastery', [])})
-
-                result = validate(goal, constraints, archetypes,
-                                  data['modalities'], data['injury_flags'])
-                sessions, ran = 0, None
-                if result.feasible:
-                    raw = generate(goal_id=goal['id'], goal_dict=goal,
-                                   constraints=constraints, num_weeks=1,
-                                   output_format='dict')
-                    weeks = raw.get('weeks', [])
-                    sessions = sum(len(day) for w in weeks
-                                   for day in w.get('schedule', {}).values())
-                    ran = weeks[0].get('framework') if weeks else None
-
-                wrong_fw = ran is not None and ran != ph['framework_id']
-                ok = result.feasible and sessions > 0 and not wrong_fw
-                codes = [e['code'] for e in result.errors]
-                why = codes or ([f"ran {ran}"] if wrong_fw else 'generated 0 sessions')
-                print(f"  {label:52} days={days} sessions={sessions:3} "
-                      f"{'ok' if ok else 'FAIL ' + str(why)}")
-                if not ok:
-                    failures.append(f"{label}: {why}")
-
-                # A phase that tests: generated at full length, every declared
-                # test must be placed — an intermediate with every piece of
-                # equipment can do each one, so a skip here is authoring.
-                if ok and ph.get('tests'):
-                    raw = generate(goal_id=goal['id'], goal_dict=goal, constraints=constraints,
-                                   num_weeks=int(ph['weeks']), output_format='dict')
-                    problems = _test_problems(raw.get('weeks', []), ph)
-                    print(f"  {label + ' (tests)':52} {'ok' if not problems else 'FAIL ' + '; '.join(problems)}")
-                    failures += [f"{label}: {p}" for p in problems]
+        for r in smoke_philosophy(phil, frameworks, fw_by_id, data):
+            label = r['label']
+            if r['missing_framework']:
+                failures.append(f"{label}: {r['why']}")
+                print(f"  {label:52} MISSING FRAMEWORK")
+                continue
+            print(f"  {label:52} days={r['days']} sessions={r['sessions']:3} "
+                  f"{'ok' if r['ok'] else 'FAIL ' + str(r['why'])}")
+            if not r['ok']:
+                failures.append(f"{label}: {r['why']}")
+            if r['test_problems'] is not None:
+                problems = r['test_problems']
+                print(f"  {label + ' (tests)':52} {'ok' if not problems else 'FAIL ' + '; '.join(problems)}")
+                failures += [f"{label}: {p}" for p in problems]
 
     failures += _check_compositions()
 

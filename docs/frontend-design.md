@@ -1812,7 +1812,6 @@ Visualization is now the largest single surface in the app — **18 files** rend
 | `workout/ElevationChart` | gradient area (§12.8) | teal `#14b8a6` |
 | `workout/GPSMap` | Leaflet polyline (§12.9) | zone ramp |
 | `workout/Swiss3DMap` | CesiumJS terrain (§12.9) | — |
-| `devlab/PhilosophyExplorerPanel` | bar | modality hex |
 | `pages/WorkoutAnalytics` | multiple, inline | mixed |
 
 **Program ▸ Overview's phase changes** (`program/PhaseChanges.tsx`) lay out the
@@ -2859,7 +2858,7 @@ Status as of 2026-10-01, after the information-architecture restructure
 | **Settings** | `Settings` | "Settings" | None | Connections · Account · Appearance (· Developer, dev builds) (`?tab=`) | None | ✅ — the OAuth callbacks land on `?tab=connections` |
 | **Program Builder** | `Wand2` | Dynamic step title | None | None | "Step N of 4" (right) | ✅ wizard variant, at `/program/new` |
 | **Program Preview** | Back-nav + `ScanEye` | "Preview" / "Preview changes" | Methodology name | Overview · Calendar · Held back (`?tab=`) | Adjust · Start this program / Apply from week N | ✅ two-row like Program (the `PhaseBar` strip); `/program/preview`, the builder's last step and the profile's regenerate offer (`?mode=regenerate`) |
-| **Dev Lab** | `Terminal` | "Dev Lab" | None | Pipeline Trace · Object Browser · Ontology · Model Interactions | None | ✅ — dev builds and `dev` users |
+| **Dev Lab** | `Terminal` | "Dev Lab" | None | Pipeline Trace · Impact · Object Browser · Ontology · Model Interactions · Builder readiness | None | ✅ — dev builds and `dev` users |
 | **Login** | — | "Training" | — | — | — | Exempt — pre-auth, centered card, outside app shell; returns to the page that sent it there (`lib/returnPath.ts`) |
 | **Pair a watch** | `Watch` | "Pair a watch" | None | None | None | ✅ — `/pair?code=…`, the watch QR's target; not in the sidebar |
 | **Session Detail** | Back-nav | Day/session context | — | — | — | Back-nav pattern, not tab header |
@@ -2912,7 +2911,7 @@ takes `exercise` | `measure` and `metric` too, the chart's selection — the
 `/bio` redirect on `?tab=recovery`, the builder's Rebuild dialog on
 `/program?tab=history`). A sub-tab nobody deep-links to may stay in local state.
 
-**On Dev Lab.** It remains the reference implementation for the header pattern, and carries the standard §9.1 page transition — so it is a valid whole-page reference. It exists only in dev builds.
+**On Dev Lab.** It remains the reference implementation for the header pattern, and carries the standard §9.1 page transition — so it is a valid whole-page reference. It exists in dev builds and for `dev` users.
 
 **Login is exempt.** It renders pre-auth, outside `RootLayout` and outside the router's `AnimatePresence`, so it has no sibling to transition against. It uses a centered card rather than a tab header. Intentional, not a gap.
 

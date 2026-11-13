@@ -23,25 +23,14 @@ JSON Schema (Draft-07) definitions for every data layer in the training system. 
 
 ### Package structure
 
-Each training methodology lives in its own self-contained package directory:
+Each training methodology is one self-contained folder, `data/packages/{name}/`. What it
+may hold, what each file is, every valid value and how a package is checked are in
+**[`PACKAGE_SPEC.md`](PACKAGE_SPEC.md)**, beside these schemas — its lists are generated
+from the commons, the schemas and the gate (`tools/gen_package_spec.py`), so they do not
+drift as a copy here did (it listed six files of fourteen).
 
-```
-data/packages/{name}/
-  philosophy.yaml          ← the package's philosophy (exactly one)
-  frameworks/
-    {id}.yaml              ← one file per framework (usually one)
-  archetypes/
-    strength/              ← barbell/free weight strength sessions
-    conditioning/          ← aerobic, intervals, AMRAPs, circuits
-    kettlebell/            ← KB-specific sessions
-    gpp_durability/        ← carries, sandbag, rucking
-    movement_skill/        ← mobility, joint prep, skill practice
-  exercises.yaml           ← all exercises for this package (list under exercises: key)
-  analytics.yaml           ← optional: what progress means for it
-  watch.yaml               ← optional: its watch screens, per archetype and slot role
-```
-
-Modalities are shared infrastructure (`data/commons/modalities/`) — they are not owned by any package and almost never change.
+Modalities, movement patterns and equipment are shared vocabulary (`data/commons/`); a
+package adds its own in `vocabulary.yaml` (`vocabulary.schema.json`).
 
 ---
 

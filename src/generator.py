@@ -653,9 +653,10 @@ def start(goal: dict, constraints: dict, data: dict, lib: dict, policy, injury_f
         if entry.get('week_template') and framework.get('categories'):
             # The source's own week, day by day: each day the next named
             # workout of its category the athlete can do as written.
+            template_trace = {} if include_trace else None
             week_schedule, week_compromises = week_template.plan_week(
                 entry, framework, plan_constraints or constraints, archetypes_by_id, template_rotation,
-                _template_fits(entry), template_recent, template_left_out)
+                _template_fits(entry), template_recent, template_left_out, template_trace)
         for compromise in week_compromises:
             if compromise not in all_compromises:
                 all_compromises.append(compromise)
@@ -669,15 +670,23 @@ def start(goal: dict, constraints: dict, data: dict, lib: dict, policy, injury_f
                 'week_in_phase': week_in_phase,
                 'phase': phase,
                 'is_deload': is_deload,
+                # What built the week: the modality scheduler, or the source's
+                # own week (a training contract's weeks say `training_contract`).
+                'engine': 'scheduler',
                 'scheduler': sched_result.get('scheduler_trace', {}),
                 'sessions': {},
             }
             if entry.get('week_template') and framework.get('categories'):
                 # The source's week decided the days, not the modality schedule.
+                week_trace['engine'] = 'week_templates'
                 week_trace['scheduler'] = {
                     'week_template': entry['week_template'], 'is_deload': is_deload,
                     'framework_selection': {'selected_id': framework['id'],
-                                            'selection_reason': 'week_template'}}
+                                            'selection_reason': 'week_template'},
+                    # What the week decided: the days kept and dropped, and for
+                    # each day the pools asked, where each rotation stood, what
+                    # was passed over and why (week_template.plan_week).
+                    'template': template_trace}
 
         # 2. Populate each session with archetype + exercises + loads
         populated_schedule: dict[int, list] = {}
@@ -928,6 +937,18 @@ def start(goal: dict, constraints: dict, data: dict, lib: dict, policy, injury_f
 
                 populated_sessions.append(populated)
                 if include_trace and session_trace is not None:
+                    # A test, said as one: what it measures and the session it
+                    # stands in for (the archetype's own reason says only how
+                    # the day was placed).
+                    if populated.get('test'):
+                        session_trace['test'] = {
+                            'archetype': populated['test'].get('archetype'),
+                            'standards': [s.get('id') if isinstance(s, dict) else s
+                                          for s in populated['test'].get('standards') or []],
+                            'instead_of': (populated['test'].get('instead_of') or {}).get('archetype')}
+                    for key in ('category', 'substituted_for', 'substitution_cause'):
+                        if populated.get(key):
+                            session_trace[key] = populated[key]
                     day_session_traces.append(session_trace)
 
             populated_schedule[day] = populated_sessions
@@ -954,6 +975,10 @@ def start(goal: dict, constraints: dict, data: dict, lib: dict, policy, injury_f
             week_out['tests_skipped'] = skipped_tests
         program['weeks'].append(week_out)
         if include_trace and generation_trace is not None and week_trace is not None:
+            week_trace['tests'] = {
+                'placed': [{'day': _GEN_DAY_NAMES[d - 1], 'archetype': (s.get('test') or {}).get('archetype')}
+                           for d, ss in sorted(populated_schedule.items()) for s in ss if s.get('test')],
+                'skipped': [{'archetypes': t.get('archetypes'), 'reason': t.get('reason')} for t in skipped_tests]}
             generation_trace['weeks'].append(week_trace)
         return week_out
 

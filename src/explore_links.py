@@ -177,7 +177,10 @@ def equipment_vocabulary() -> list[str]:
     """The equipment an athlete can declare: the constraints schema's enum,
     which the API validates against (loader.load_equipment's list is short)."""
     with open(_CONSTRAINTS_SCHEMA, encoding='utf-8') as f:
-        return list(json.load(f)['properties']['equipment']['items']['enum'])
+        commons = list(json.load(f)['properties']['equipment']['items']['enum'])
+    # And what the packages the caller sees add (their vocabulary.yaml).
+    from . import loader
+    return commons + [e for e in loader.load_vocabulary()['equipment'] if e not in commons]
 
 
 def _equipment(archetypes: list, exercises: dict, vocabulary: list) -> dict:

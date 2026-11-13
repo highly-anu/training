@@ -386,11 +386,53 @@ def test_review_fixes():
           [u['cause'] for u in gj.get('unblocked_by', [])] == ['schedule'], gj.get('unblocked_by'))
 
 
+RECORDING = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'frontend', 'src', 'mocks', 'fixtures',
+                         'constraint-impact.json')
+# What Dev Lab ▸ Impact draws (components/devlab/DevLabPanels.test.tsx): a
+# request the constraints change — an athlete with a bell and an injury on the
+# scheduler's fixture — and one they refuse.
+RECORDED = {
+    'held_back': {'philosophy_id': 'block_fixture', 'num_weeks': 2,
+                  'constraints': {'days_per_week': 5, 'session_time_minutes': 60, 'training_level': 'intermediate',
+                                  'equipment': ['kettlebell', 'open_space'], 'injury_flags': ['lumbar_disc'],
+                                  'avoid_movements': [], 'periodization_week': 1, 'fatigue_state': 'normal'}},
+    'refused': {'philosophy_id': 'block_fixture', 'num_weeks': 1,
+                'constraints': {'days_per_week': 1, 'session_time_minutes': 60, 'training_level': 'intermediate',
+                                'equipment': ['kettlebell', 'open_space'], 'injury_flags': [], 'avoid_movements': [],
+                                'periodization_week': 1, 'fatigue_state': 'normal'}},
+}
+
+
+def _shape(node):
+    if isinstance(node, dict):
+        return {k: _shape(v) for k, v in sorted(node.items())}
+    if isinstance(node, list):
+        return [_shape(node[0])] if node else []
+    return type(node).__name__ if node is not None else None
+
+
+def test_recording():
+    print("the web's recording of two answers (re-record: test_constraint_impact.py --write)")
+    import json
+    import api
+    client = api.app.test_client()
+    now = {name: client.post('/api/dev/constraint-impact', json=req).get_json() for name, req in RECORDED.items()}
+    check('the first is held back, the second refused', now['held_back']['feasible'] and now['held_back']['changes']
+          and now['refused']['feasible'] is False, {k: v.get('feasible') for k, v in now.items()})
+    if '--write' in sys.argv:
+        with open(RECORDING, 'w', encoding='utf-8') as fh:
+            json.dump(now, fh, indent=1, ensure_ascii=False)
+            fh.write('\n')
+    with open(RECORDING, encoding='utf-8') as fh:
+        recorded = json.load(fh)
+    check('recorded with the answers\' shape', _shape(recorded) == _shape(now))
+
+
 def main() -> int:
     for fn in (test_runs, test_slot_emptied_by_equipment, test_archetype_by_level_and_equipment,
                test_combined_and_alternatives, test_order_and_added_sessions,
                test_knock_on_and_level_locked, test_route, test_contract_rules, test_contract_route,
-               test_review_fixes):
+               test_review_fixes, test_recording):
         fn()
     if FAILURES:
         print(f'{len(FAILURES)} failed')
