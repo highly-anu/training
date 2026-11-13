@@ -207,8 +207,12 @@ One call checks a folder, in order, and stops at the first stage that finds some
 <!-- /gen:gate -->
 
 The answer is data: `ok`, and `problems`, each `{stage, code, file, message}` — fix the
-file a problem names and check again. `warnings` do not stop an install (a modality in
-scope that no archetype serves). `skipped` lists the stages that did not run and why;
+file a problem names and check again. `warnings` do not stop an install: a modality in
+scope that no archetype serves, and what the generated weeks could not cover with every
+implement to hand — a session no archetype serves (`unfilled_session`), one replaced by
+another modality (`substituted_session`), a slot no exercise fills (`unfilled_slot`). They
+are nearly always authoring, and the app's builder treats them as problems in a package it
+writes. `skipped` lists the stages that did not run and why;
 a result with anything skipped is not `ok`.
 
 Beside the schemas, the `schema` stage holds a package to:

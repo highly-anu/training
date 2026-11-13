@@ -1,6 +1,6 @@
 {
   "_comment": "What a package still cannot bring in its own folder, and what a package written at runtime (the LLM package builder, roadmap item 20) still cannot rely on (src/portability.py serves this to Dev Lab ▸ Builder readiness). Each anchor is `path::text` and must still be in that file while the gap is open; test_portability.py fails when one is gone, so closing a gap means changing its status here in the same change. kind: runtime | gate | tooling | commons | code | client | watch | docs | devlab. impact on a dropped-in or built package: blocks (it fails a gate, cannot be written or cannot be served), degrades (it works, worse or silently wrong), cosmetic. status: open | done (with `closed`, the day, and `evidence`, `path::text` of the test that holds it — checked like an anchor) | by_design (the engine's vocabulary is the contract between packages and the engine). roadmap: the step of docs/roadmap.md (9.x, 20.x) that closes it. steps: the roadmap steps of the builder's foundation, in order, each titled as docs/roadmap.md titles it; a step is done when it says so (`done`, the day) or when every gap citing it is.",
-  "verdict": "The code is package-neutral, and since item 20 a package written while the app runs is stored, checked by one gate, read privately beside the shipped ones for its owner, may bring its own vocabulary, and has one spec. What is open below is the builder itself (docs/roadmap.md item 21): the job a build runs as, the model loop, the screens on the web and the phone, and the production steps.",
+  "verdict": "The code is package-neutral, and since item 20 a package written while the app runs is stored, checked by one gate, read privately beside the shipped ones for its owner, may bring its own vocabulary, and has one spec. The builder (docs/roadmap.md item 21) has its gate, its durable job and its model loop; what is open below is the screens on the web and the phone, the real-model eval and the production steps.",
   "steps": [
     {
       "id": "20.1",
@@ -127,12 +127,19 @@
       "title": "Nothing calls a model",
       "kind": "code",
       "impact": "blocks",
-      "detail": "No LLM SDK, no key, no prompt: the spec and the gate exist, the loop that writes files, checks them and fixes what the gate finds does not.",
+      "detail": "src/package_builder.py is the loop: Claude Opus 5.5 through the Anthropic SDK (imported with the first build, never at startup), the instructions, the package spec and the four core schemas as a cached system prompt, the athlete's request as the first message. The model writes, reads and deletes files of a draft kept in the build's row, runs the app's gate on it (check_package, which also generates a week as the athlete who asked) and ends with finish or decline; web search and fetch are offered only when the request allows. Every completed turn is saved, so a restart resumes. Budgets on turns, checks, output tokens and time; a package the builder writes may leave no session unserved and no slot empty, which the gate only warns about.",
       "anchors": [
         "requirements.txt::requests>=2.31"
       ],
       "roadmap": "21.3",
-      "status": "open"
+      "status": "done",
+      "closed": "2026-11-13",
+      "evidence": [
+        "src/package_builder.py::def build",
+        "test_package_builder.py::def test_fix_and_retry",
+        "test_package_builder.py::def test_resume",
+        "test_package_builder.py::def test_budgets"
+      ]
     },
     {
       "id": "web_priorities_drop_package_modalities",
@@ -199,7 +206,7 @@
       "title": "Production has no table, key or role for it",
       "kind": "runtime",
       "impact": "blocks",
-      "detail": "Migrations 013 (and 014, with the build job) are not run on production, the model's key is not a Fly secret, and no account carries the dev role for it. Until then the builder says it is unavailable. Each is a step for the owner, after scripts/backup_prod.sh.",
+      "detail": "Migrations 013 and 014 are not run on production, the model's key is not a Fly secret, and no account carries the dev role for it. Until then the builder says it is unavailable. Two things come first: the real-model eval (tools/eval_package_builder.py, which costs money) has not been run, so the effort and the budgets are untested guesses; and a build leaves the 256 MB machine about 15 MB short of where its worker was killed before (the SDK adds some 40 MB to the worker, which stood at 126 MB after a build in the image at 0.25 CPU) — scale the machine to 512 MB before the key is set. Each is a step for the owner, after scripts/backup_prod.sh.",
       "anchors": [
         "migrations/013_user_packages.sql::scripts/backup_prod.sh"
       ],

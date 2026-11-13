@@ -1534,6 +1534,17 @@ worker thread runs** (`package_builds`, `migrations/014`; `src/build_store.py`,
 `POST …/<id>/cancel` stops it. The worker saves the draft and transcript after every turn, beats a
 heart, and a build whose worker died is claimed again — never keep a build's state in memory. It
 holds the one heavy slot (`src/heavy.py`) only around a gate check (`test_package_builds.py`).
+**The model loop is `src/package_builder.py`** (the worker's `BUILDER`): Claude Opus 5.5 through the
+Anthropic SDK, which is imported with the first build and never at startup (it adds ~40 MB to the
+worker — keep it out of module scope). The system prompt (instructions + `PACKAGE_SPEC.md` + the
+four core schemas) is the same bytes for every build and cached; what differs goes in the first
+user message. The model works through eight tools on a draft kept in the row; `check_package` is
+the real gate plus a week generated as the athlete who asked (`athlete_week`), and a package the
+builder writes may leave no session unserved and no slot empty — the gate reports those as
+**warnings** (`package_gate._coverage_warnings`), the builder as problems. History is append-only
+and each completed turn is saved, so a restart resumes; budgets are `package_builder.LIMITS`. Tests
+script the model at `package_builder.MODEL_TURN` (`test_package_builder.py`); the real model is
+called only by `tools/eval_package_builder.py --run`, **which costs money — ask first**.
 `src/package_gate.check_package(folder)` is every gate for one folder, in process and as data
 (files, schema, ids, a smoke generate of every track and phase, provenance — `src/package_smoke.py`
 is check_styles' loop and check_provenance's audit, which both tools call; roadmap 20.2).

@@ -57,7 +57,7 @@ deferred is under *Later*.
 | 18 | Phone design and interaction uplift: the foundation (1.35), states (1.36), iOS 26 chrome (1.37), discoverable actions (1.38), the screen passes (1.39), motion (1.40) and accessibility with the system surfaces (1.41) are in (*IA*) | P2 | L | iOS |
 | 19 | Web design and interaction uplift: the phone's design language on the web, each rule in one module and held by a test — the foundation, states, feedback, motion, actions and keyboard, colour and accessibility, the page passes and the review fixes are in (*IA*) | P2 | L | web |
 | 20 | LLM package builder — the foundation: all twelve steps are in (the gate, the overlay, storage, per-athlete reference routes, package vocabulary, the spec, the trace and the Dev Lab). Left: the phone reading a package's vocabulary, migration 013 on production, the builder itself | P1 | L | engine, API, web, content |
-| 21 | LLM package builder: an athlete describes a method and gets one to build a program from, on the web and the phone — dev role first. The gate and the methods list are in (21.1); the job, the model loop and the screens are open | P1 | L | API, web, iOS, watch |
+| 21 | LLM package builder: an athlete describes a method and gets one to build a program from, on the web and the phone — dev role first. The gate (21.1), the durable job (21.2) and the model loop (21.3) are in; the eval against the real model, the screens and the production steps are open | P1 | L | API, web, iOS, watch |
 
 ---
 
@@ -2053,11 +2053,33 @@ Training contracts are refused. Not planned: push notifications, sharing a metho
   waiting, at the next turn when running). `GET /api/methods` lists the builds and what
   is left of the day. The builder itself is `build_worker.BUILDER` — the model loop
   (21.3); the tests script one. `test_package_builds.py`.
-- **21.3 The model loop (L).** `src/package_builder.py`: the spec as a cached system
-  prompt; tools to write, read and delete draft files, read a schema, check the package
-  and finish; web search and fetch when asked for; budgets on turns, checks, tokens and
-  time; a refusal ends the build in plain words. `tools/eval_package_builder.py` runs real
-  descriptions against the real model — with approval, it costs money.
+- **21.3 The model loop (L).** Done 2026-11-13 (**the real-model eval not yet run** — it
+  costs money and waits for a go-ahead; the effort and budgets below are first guesses
+  until it has). `src/package_builder.py` is the worker's builder: Claude Opus 5.5 through
+  the Anthropic SDK (`anthropic` in requirements; imported with the first build, never at
+  startup — it adds some 40 MB to the worker), a loop of our own because every completed
+  turn is saved to the build's row and a restart resumes from it. The system prompt is the
+  instructions, `PACKAGE_SPEC.md` and the four core schemas — the same bytes for every
+  build, cached; the athlete's words, answers and id prefix are the first message. Tools:
+  `write_file` (YAML that does not parse is refused at once), `read_file`, `delete_file`,
+  `list_files`, `get_schema`, `check_package`, `finish`, `decline`; Anthropic's web search
+  and fetch only when the request allows them. `check_package` is the real gate
+  (`package_store.check`) and, when it passes, a week generated **as the athlete who
+  asked** (their days, minutes, level, equipment — `for_this_athlete`; the gate's own run
+  has every implement). A package the builder writes is held to more than the gate asks:
+  the gate now reports a session no archetype serves, one replaced by another modality
+  and a slot no exercise fills as **warnings** (`package_gate._coverage_warnings`; no
+  shipped package has one), and the builder treats them as problems — `exercises: []`
+  passed every gate before. Budgets, enforced by the loop: 40 turns, 10 checks, 200 000
+  output tokens, 25 minutes; `PACKAGE_BUILDER_EFFORT` (default `high`) and
+  `PACKAGE_BUILDER_MODEL` override. A refusal, a turn cut off at the output limit (never
+  run, never kept), a paused web search (sent back as it came), a turn of words alone
+  (a reminder, three times a failure) and a model that cannot be reached each end or
+  continue the build in plain words. Training contracts are refused; a revision keeps its
+  package id. `test_package_builder.py` scripts the model (`package_builder.MODEL_TURN`,
+  the one place a request leaves the process); `tools/eval_package_builder.py --run`
+  runs eight real descriptions against the real model and reports outcome, turns, checks,
+  tokens and cost.
 - **21.4 Web: the builder in the program builder (M).** The priorities bug fixed first
   (a package's own modalities were sent as zero). A "Your methods" group and a "Describe
   your own method" card in the first step; the describe form, the progress screen and the
@@ -2068,9 +2090,12 @@ Training contracts are refused. Not planned: push notifications, sharing a metho
 - **21.6 Phone: the builder (M).** The same group and card in the phone's builder, the
   describe, progress and result screens; version 1.42.0.
 - **21.7 Dev Lab: the builds (S).** Each build's turns, checks, problems and tokens.
-- **21.8 Production (S).** For the owner, each with a go-ahead: `scripts/backup_prod.sh`,
-  migrations 013 and 014, `fly secrets set ANTHROPIC_API_KEY`, the `dev` role on the
-  accounts that try it.
+- **21.8 Production (S).** For the owner, each with a go-ahead: the real-model eval
+  (21.3); `scripts/backup_prod.sh`, migrations 013 and 014; **the machine to 512 MB**
+  (`fly scale memory 512`, and `fly.toml`) — measured in the image at 0.25 CPU the worker
+  stands at 66 MB, 104 MB once the SDK is loaded and 126 MB after a build, and it was
+  killed at 140 MB on 2026-10-27; `fly secrets set ANTHROPIC_API_KEY`; the `dev` role on
+  the accounts that try it.
 
 ---
 

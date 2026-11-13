@@ -77,6 +77,7 @@ _SCHEMA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'docs', '
 # it is off. The model's key is a second condition for building, not for
 # listing or removing what was built.
 _BUILDER_MODES = ('off', 'dev', 'all')
+from src import package_builder as _package_builder  # noqa: E402,F401  the worker's builder; the SDK loads with the first build
 
 
 def _builder_mode() -> str:
