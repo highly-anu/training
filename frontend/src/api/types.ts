@@ -2588,6 +2588,43 @@ export interface PortabilityPackage {
   ready: boolean
 }
 
+/** One interaction of the model map (tools/model_map.json). */
+export interface ModelEdge {
+  id: string
+  from: string
+  to: string
+  title: string
+  /** The engine it belongs to; null for one every program takes. */
+  engine: TraceEngine | null
+  function: string
+  files: string
+  /** How much of it is code rather than package data (0 pure data, 100 pure code). */
+  baked_pct: number
+  reads_from_source: string[]
+  reads_from_target: string[]
+  engine_decides: string[]
+  constants: string[]
+  /** `path::text`, still in the code (test_model_map.py). */
+  anchors: string[]
+}
+
+export interface ModelMap {
+  checked: string
+  engines: Record<string, string>
+  nodes: Array<{ id: string; label: string; kind: string; count_of: string | null }>
+  edges: ModelEdge[]
+  authoring: Array<{
+    type: string
+    create: 'yes' | 'partial' | 'no' | 'n/a'
+    edit: 'yes' | 'partial' | 'no' | 'n/a'
+    remove: 'yes' | 'partial' | 'no' | 'n/a'
+    writes: string
+    notes: string[]
+  }>
+  /** Which engine each track the asker sees runs on. */
+  usage: Record<string, { tracks: number; packages: string[] }>
+}
+
 export interface PortabilityGap {
   id: string
   title: string

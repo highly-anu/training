@@ -38,6 +38,7 @@ suites:
   - test_phase_summary.py
   - test_devlab_trace.py
   - test_constraint_impact.py
+  - test_model_map.py                 # Dev Lab ▸ Model Interactions' map: every interaction still anchored in the code (roadmap 20.11)
   - test_portability.py               # the Dev Lab's portability report; the gaps' code anchors
   - test_package_gate.py              # one folder through the gates' own checks, as data (roadmap 20.2)
   - test_private_packages.py          # an athlete's own packages: the store, the gate on install, the routes; SQL half on its own database (roadmap 20.5)
