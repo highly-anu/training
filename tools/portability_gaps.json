@@ -397,12 +397,18 @@
       "title": "Model Interactions' map is written in the component",
       "kind": "devlab",
       "impact": "degrades",
-      "detail": "Its strip and edges are constants with no track, phase, contract, week template, composition or test, and nothing checks them against the code.",
+      "detail": "Was: the strip and its five edges were constants in the component, describing the scheduler's path as the pipeline, with nothing held to the code. The map is data (tools/model_map.json): eleven interactions — the track and its phases, a contract's week, a template's week, the scheduler's allocation and archetype score, slots and exercises, loads, compositions, tests, the athlete's constraints, which packages a caller sees — each with what it reads, what the engine decides, the constants in code and the anchors test_model_map.py checks. The server adds which engine each track runs on (twelve on contracts, ten on templates, none on the scheduler), and the panel reads the map one engine at a time, starting with the busiest or the last program's.",
       "anchors": [
         "frontend/src/components/devlab/ModelInteractionPanel.tsx::const EDGES"
       ],
       "roadmap": "20.11",
-      "status": "open"
+      "status": "done",
+      "closed": "2026-11-13",
+      "evidence": [
+        "test_model_map.py::def test_document",
+        "tools/model_map.json::anchors",
+        "frontend/src/components/devlab/DevLabPanels.test.tsx::reads the map one engine at a time"
+      ]
     },
     {
       "id": "no_impact_tab",

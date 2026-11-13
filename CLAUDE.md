@@ -1577,6 +1577,7 @@ SUPABASE_URL='' .venv/bin/python test_selection.py       # what the generator pi
 SUPABASE_URL='' .venv/bin/python test_phase_summary.py   # Program ▸ Overview's phase_summary, served and never stored
 SUPABASE_URL='' .venv/bin/python test_devlab_trace.py    # the Dev Lab's recorded trace has the server's shape; --record after a trace change
 SUPABASE_URL='' .venv/bin/python test_constraint_impact.py  # what each constraint changes against the reference, and which (Dev Lab ▸ Impact)
+SUPABASE_URL='' .venv/bin/python test_model_map.py       # Dev Lab ▸ Model Interactions' map (tools/model_map.json): each interaction anchored in the code; --write re-records the web's copy
 SUPABASE_URL='' .venv/bin/python test_portability.py     # Dev Lab ▸ Builder readiness' report; every open gap still anchored in the code, every closed one held by a test; --write re-records the web's copy
 .venv/bin/python test_package_gate.py                    # src/package_gate.check_package: one folder through the gates' checks, as data
 SUPABASE_URL='' .venv/bin/python test_private_packages.py  # an athlete's own packages: store, install through the gate, routes; SQL half on its own database
@@ -1594,6 +1595,11 @@ a contract's `scheduler.contract_week` (modules, minutes, steps, the placement c
 best, scored) and each session's `module_steps`; a template's `scheduler.template` (days kept and
 dropped, each pool's rotation, what was passed over and why); a composition's `lane_weeks`. Asking
 for it never changes the program (`test_devlab_trace.py`).
+
+**How the model's parts act on each other is data** (`tools/model_map.json`, served by `GET
+/api/dev/model-map` with which engine each track runs on; Dev Lab ▸ Model Interactions only lays it
+out). An interaction that changes — a function renamed, a rule moved — is a change to that file:
+its `anchors` are checked on every push.
 
 Pipeline Trace draws the engine that built each week (`components/devlab/EngineWeek.tsx`), takes a
 second track for a composition, and can be linked to: `/dev?philosophy=<id>&track=<id>&second=<id>

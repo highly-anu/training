@@ -23,6 +23,7 @@ import { ReadinessPanel } from './ReadinessPanel'
 import { HeatmapPanel } from './heatmap/HeatmapPanel'
 import { WeekCalendar } from '@/components/program/WeekCalendar'
 import portability from '@/mocks/fixtures/portability.json'
+import modelMap from '@/mocks/fixtures/model-map.json'
 
 vi.mock('@/api/ontology', () => ({ useOntology: () => ({ data: undefined, isLoading: false }) }))
 // The server's portability report as test_portability.py records it (the
@@ -31,7 +32,12 @@ vi.mock('@/api/ontology', () => ({ useOntology: () => ({ data: undefined, isLoad
 const served = vi.hoisted(() => ({ report: null as unknown }))
 vi.mock('@/api/devlab', async () => {
   const recorded = (await import('@/mocks/fixtures/portability.json')).default
-  return { usePortability: () => ({ data: served.report ?? recorded, isLoading: false, error: null }) }
+  // The model map as test_model_map.py records it.
+  const map = (await import('@/mocks/fixtures/model-map.json')).default
+  return {
+    usePortability: () => ({ data: served.report ?? recorded, isLoading: false, error: null }),
+    useModelMap: () => ({ data: map, isLoading: false, error: null }),
+  }
 })
 
 afterEach(() => {
@@ -132,6 +138,35 @@ describe.each(scenarios)('%s', (_name, program) => {
     const shown = screen.getAllByRole('button').map((b) => b.textContent ?? '').filter((t) => order.includes(t))
     expect(shown).toEqual([...shown].sort((a, b) => order.indexOf(a) - order.indexOf(b)))
     expect(shown.length).toBeGreaterThan(0)
+  })
+})
+
+describe('Model Interactions', () => {
+  it('reads the map one engine at a time, starting with the one most tracks run on', () => {
+    mount(<ModelInteractionPanel />)
+    const busiest = Object.entries(modelMap.usage).sort(([, a], [, b]) => b.tracks - a.tracks)[0][0]
+    const tab = screen.getByRole('tab', { selected: true })
+    expect(tab.textContent).toContain(modelMap.engines[busiest as keyof typeof modelMap.engines])
+    const own = modelMap.edges.filter((e) => e.engine === busiest)
+    const shared = modelMap.edges.filter((e) => e.engine === null)
+    for (const e of [...own, ...shared]) expect(screen.getAllByText(e.title).length).toBeGreaterThan(0)
+    // Another engine's interactions are not on this path.
+    for (const e of modelMap.edges.filter((x) => x.engine && x.engine !== busiest)) {
+      expect(screen.queryByText(e.title)).toBeNull()
+    }
+    // The engine's own interaction is the one opened, with the code that holds it.
+    for (const a of own[0].anchors) expect(screen.getByText(a)).toBeTruthy()
+  })
+
+  it('says how much each engine is used', () => {
+    mount(<ModelInteractionPanel />)
+    const busiest = Object.entries(modelMap.usage).sort(([, a], [, b]) => b.tracks - a.tracks)[0]
+    expect(screen.getByText(new RegExp(`^${busiest[1].tracks} tracks run on it: ${busiest[1].packages.join(', ')}\\.$`))).toBeTruthy()
+  })
+
+  it('lists what can be written where', () => {
+    mount(<ModelInteractionPanel />)
+    for (const row of modelMap.authoring) expect(screen.getByText(row.type)).toBeTruthy()
   })
 })
 

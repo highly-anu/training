@@ -1973,9 +1973,20 @@ The Dev Lab, independent of 20.2–20.8:
   the Output step lists compromises, the coverage counts and what the constraints held
   back. Step texts no longer say validation always runs first or that the scheduler
   places blends. Left: a contract track's `options` are not asked in the form.
-- **20.11 Model Interactions from data (M).** The map — philosophy, track, phase, contract
-  or week template or scheduler, archetype, exercise, load, with compositions and tests —
-  served with code anchors a test checks.
+- **20.11 Model Interactions from data (M).** Done 2026-11-13. `tools/model_map.json`:
+  the parts and eleven interactions — a track and its phases, a contract's week, a
+  template's week, the scheduler's allocation and its archetype score, slots and
+  exercises, loads, compositions, tests, the athlete's constraints, which packages a
+  caller sees and what a package may add — each with what it reads from either side, what
+  the engine decides, the constants in code, a judgement of how much is code, and
+  `anchors` (`path::text`) that `test_model_map.py` holds to the code. The five edges the
+  component carried moved there whole; the contract, template, composition, tests,
+  constraints and package-view ones are new. `GET /api/dev/model-map`
+  (`src/model_map.py`) adds which engine each track the asker sees runs on. The panel
+  reads the map one engine at a time (the last program's, else the busiest: twelve tracks
+  on contracts, ten on templates, none on the scheduler) and its authoring table from the
+  same file, now with the whole-package route. The dead `archetype_trace.selected` read
+  is gone.
 - **20.12 The Impact tab (S).** Over `POST /api/dev/constraint-impact` (item 9, step 6).
 
 ---
