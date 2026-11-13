@@ -1,7 +1,7 @@
 import { Tip } from '@/components/shared/Tip'
 import { cn } from '@/lib/utils'
 import type { EquipmentId } from '@/api/types'
-import { EQUIPMENT_GROUPS } from '@/lib/equipment'
+import { useEquipmentGroups } from '@/lib/useEquipmentVocabulary'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 
@@ -56,6 +56,7 @@ interface EquipmentPickerProps {
 }
 
 export function EquipmentPicker({ selected, onChange }: EquipmentPickerProps) {
+  const groups = useEquipmentGroups()
   const visibleSelected = selected.filter((e) => e !== SENTINEL)
 
   const activePreset = EQUIPMENT_PRESETS.find((p) => {
@@ -107,7 +108,7 @@ export function EquipmentPicker({ selected, onChange }: EquipmentPickerProps) {
       </div>
 
         <div className="space-y-3">
-          {EQUIPMENT_GROUPS.map((group) => (
+          {groups.map((group) => (
             <div key={group.name}>
               <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                 {group.name}

@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { EQUIPMENT_CATEGORIES, equipmentHex } from '@/lib/equipment'
+import {
+  EQUIPMENT_CATEGORIES, EQUIPMENT_GROUPS, PACKAGE_EQUIPMENT, equipmentCategories, equipmentGroups, equipmentHex,
+  equipmentLabel,
+} from '@/lib/equipment'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 
 // Explore's Requirements chips take the colour Profile ▸ Equipment files each item under.
@@ -18,5 +21,35 @@ describe('equipmentHex', () => {
 
   it('an unlisted id has no colour', () => {
     expect(equipmentHex('teleporter')).toBeUndefined()
+  })
+})
+
+// A package may bring implements no build knows (vocabulary.yaml; roadmap 20.7).
+const served = [
+  { id: 'barbell', label: 'Barbell' },
+  { id: 'u1a2b3c4d_prowler', label: 'Prowler', package: 'u1a2b3c4d_sleds' },
+]
+
+describe("the athlete's packages' implements", () => {
+  it('are a last group and a last section; the build\'s list is untouched', () => {
+    const groups = equipmentGroups(served)
+    expect(groups.slice(0, -1)).toEqual(EQUIPMENT_GROUPS)
+    expect(groups.at(-1)).toEqual({ name: PACKAGE_EQUIPMENT, items: [{ id: 'u1a2b3c4d_prowler', label: 'Prowler' }] })
+    const sections = equipmentCategories(served)
+    expect(sections.slice(0, -1)).toEqual(EQUIPMENT_CATEGORIES)
+    expect(sections.at(-1)?.items).toEqual(['u1a2b3c4d_prowler'])
+  })
+
+  it('take the package\'s label wherever an id is named', () => {
+    equipmentGroups(served)
+    expect(equipmentLabel('u1a2b3c4d_prowler')).toBe('Prowler')
+    expect(equipmentLabel('barbell')).toBe('Barbell')
+    expect(equipmentLabel('zz_never_served')).toBe('Zz never served')
+  })
+
+  it('without any, the lists are the build\'s own', () => {
+    expect(equipmentGroups(undefined)).toBe(EQUIPMENT_GROUPS)
+    expect(equipmentGroups([{ id: 'barbell' }])).toBe(EQUIPMENT_GROUPS)
+    expect(equipmentCategories(undefined)).toBe(EQUIPMENT_CATEGORIES)
   })
 })

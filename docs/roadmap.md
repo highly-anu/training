@@ -56,7 +56,7 @@ deferred is under *Later*.
 | 17 | Explore: each philosophy's page read from its package — a server document, its week and rules, one colour system | P2 | M | API, web, iOS, content |
 | 18 | Phone design and interaction uplift: the foundation (1.35), states (1.36), iOS 26 chrome (1.37), discoverable actions (1.38), the screen passes (1.39), motion (1.40) and accessibility with the system surfaces (1.41) are in (*IA*) | P2 | L | iOS |
 | 19 | Web design and interaction uplift: the phone's design language on the web, each rule in one module and held by a test — the foundation, states, feedback, motion, actions and keyboard, colour and accessibility, the page passes and the review fixes are in (*IA*) | P2 | L | web |
-| 20 | LLM package builder — the foundation: a package written at runtime, private to its athlete, picked up by the running app; the Dev Lab brought up to the engines that run. The gaps are recorded and shown (20.1); the rest is open | P1 | L | engine, API, web, content |
+| 20 | LLM package builder — the foundation: all twelve steps are in (the gate, the overlay, storage, per-athlete reference routes, package vocabulary, the spec, the trace and the Dev Lab). Left: the phone reading a package's vocabulary, migration 013 on production, the builder itself | P1 | L | engine, API, web, content |
 
 ---
 
@@ -1125,7 +1125,7 @@ the new tracks in both builders and on both watches; close editing paths (moving
 session) that can break module spacing; generalise catalog reachability
 (`check_exercise_coverage.py`) to every package once each is on a contract.
 
-**6. Then the Dev Lab (S–M).** The Impact tab over `POST /api/dev/constraint-impact`
+**6. Then the Dev Lab (S–M).** Done 2026-11-13 as item 20's steps 20.9–20.12. The Impact tab over `POST /api/dev/constraint-impact`
 and the trace's per-candidate reasons — the step-1 report seen per program.
 
 ### 10. Progress tracking: what phases A–E left open — P2 · M
@@ -1865,8 +1865,17 @@ Readiness, in order:
   changed set is a new directory. Without an overlay the loader returns exactly what it
   did (the one-track golden programs unchanged). Nothing names an overlay for a request
   yet — storage does (20.5). `test_package_overlay.py`.
-- **20.4 Reference routes per athlete (M).** The baked build stays for everyone without a
-  package of their own; an athlete with one gets their own bounded variant.
+- **20.4 Reference routes per athlete (M).** Done 2026-11-13. `api.static_json` reads the
+  bearer token when there is one (`auth.optional_user_id`, never an error) and asks the
+  store for that athlete's overlay. None — nobody signed in, no package — is the shared
+  answer, from the build, exactly as before. With one, the route is built in their view
+  (one build at a time, as the shared ones) and kept in `_USER_STATIC`: at most 96
+  answers and 12 MB, least recently used first out, keyed by the overlay directory, whose
+  name is the athlete's packages' revisions — an install or a removal is a new key, so
+  nothing is cleared and the build is never abandoned. Sent `Cache-Control: private,
+  no-cache` and `Vary: Authorization`; a route their packages do not change keeps the
+  shared bytes. The store reads on the thread's read connection (a new one per athlete a
+  minute would have used up the pooler). `test_static_cache.py`.
 - **20.5 Storage and install (M).** Done 2026-11-13 (migration 013 **not yet run on
   production** — `scripts/backup_prod.sh` first; until then `src/package_store.py` makes
   the table lazily, row security on and no policy). `user_packages`: one row per athlete
@@ -1886,29 +1895,109 @@ Readiness, in order:
   table like every public table with a `user_id`. Found on the way: the validator's
   cross-file checks raised on a sibling file that does not parse; they report now.
   `test_private_packages.py`.
-- **20.6 Vocabulary: movement patterns and modalities (M).** A package's
-  `vocabulary.yaml`; known = commons ∪ its own ∪ what it borrows; a package modality
-  brings its display, family and recovery; an exercise on package patterns states what
-  each injury flag rules out.
-- **20.7 Vocabulary: equipment (M).** The package's implements in the equipment list and
-  the web picker; the phone's picker and compiled styles stay a recorded gap. May follow
-  the builder.
-- **20.8 One package spec; a package from nothing (M).** `docs/schemas/PACKAGE_SPEC.md`
-  (ships in the image; its valid values generated), the MCP templates read from it, and
-  `test_package_dropin.py` runs a package written from scratch — its own exercise ids and
-  vocabulary — a malformed one, and one added to a running process.
+- **20.6 Vocabulary: movement patterns and modalities (M).** Done 2026-11-13. A package's
+  optional `vocabulary.yaml` (`docs/schemas/vocabulary.schema.json`,
+  `loader.load_vocabulary`, kept per view): `modalities` — each a modality (recovery
+  cost, session position, progression model, `display`) with the analytics `family` it
+  rolls up into — and `movement_patterns` — each with the body `regions` it loads and the
+  injury flags that rule it out (`excluded_by`, required: `[]` is an answer). The loader
+  adds the modalities after the commons' (tagged `_package`), regional recovery reads the
+  patterns, `families.family_of` the family, and a pattern joins its flags' excluded
+  patterns. Known to a package = the commons ∪ its own ∪ what it borrows from
+  (`portability._known_for`; movement patterns are now checked like modalities); an id
+  the commons define is refused by the validator and collides in the report; an
+  athlete's own must carry the owner's prefix. A modality's `display` is required
+  (`modality.schema.json`), so `POST /api/modalities` cannot write one the clients'
+  generator dies on. The web draws a modality no build knows from `GET /api/modalities`
+  (`lib/modalityColors.registerModalities`; its tint must be a colour family the commons
+  use, and an unknown id answers a neutral style instead of `undefined` — 26 lookups
+  would have thrown). The phone keeps its neutral fallback (gap `client_vocab_compiled`).
+  Three schema texts no longer invite an undeclared modality or pattern.
+  `test_package_vocabulary.py`.
+- **20.7 Vocabulary: equipment (M).** Server and web done 2026-11-13; **the phone is
+  left**. `vocabulary.yaml` `equipment` (id, label). The four schemas' equipment enums
+  stay generated from the commons; the validator widens them, for a package's files, by
+  what that package and the ones it borrows from add (`_with_package_equipment`).
+  `equipment.items()` and `GET /api/equipment` list them after the commons' with their
+  `package`; Explore's equipment vocabulary and the gate's "everything" athlete include
+  them; an id or alias the commons list is refused. Web: the pickers (builder, Explore ▸
+  Equipment) and Profile ▸ Equipment file them under "From your packages"
+  (`lib/useEquipmentVocabulary.ts`), `equipmentLabel` says the package's word, and the
+  equipment request goes through the API client so it is the athlete's. Left (gap
+  `client_vocab_compiled`): the phone and the watches read only their generated tables —
+  a package modality draws neutral there, and the phone's picker cannot offer a package
+  implement — until the Apple targets read `/api/modalities` and `/api/equipment`.
+- **20.8 One package spec; a package from nothing (M).** Done 2026-11-13.
+  `docs/schemas/PACKAGE_SPEC.md` — what a package is, the files, how a week is built
+  (which shape to start with), what goes in each file, every valid value, the gate, an
+  athlete's own package, common mistakes, a worked example — in the one part of `docs/`
+  the image carries. Its lists (files, values, gate stages, limits) and its example are
+  written by `tools/gen_package_spec.py` from the commons, the schemas, `portability.FILES`,
+  the gate and the store; `--check` is a push gate. Served by `GET /api/dev/package-spec`
+  (whole and by section, with the asker's prefix and the limits) and the MCP server's
+  `get_package_spec`. The MCP skeleton's comments print their value lists from the schemas
+  when asked (the typed copy lacked `as_written`); `list_valid_values` answers the sets
+  the checks use. `test_packages/scratch_minimal` is the example: written from nothing,
+  its own exercises, modality, movement pattern and implement. It goes through
+  `test_package_gate.py`, the drop-in test's end-to-end checks, and an install for one
+  athlete in a running process (`test_private_packages.py`). `test_package_spec.py`.
 
 The Dev Lab, independent of 20.2–20.8:
 
-- **20.9 The trace says what each engine decided (M).** A contract's weekly minutes,
-  periods, forecast and placement; a template's picked, passed-over and dropped days; the
-  tests; a composition's kept days and cuts. Opt-in, and the program is the same with it.
-- **20.10 Pipeline Trace per engine (M).** One flow per engine, compositions and contract
-  options in the form, the program's compromises, coverage and held-back slots.
-- **20.11 Model Interactions from data (M).** The map — philosophy, track, phase, contract
-  or week template or scheduler, archetype, exercise, load, with compositions and tests —
-  served with code anchors a test checks.
-- **20.12 The Impact tab (S).** Over `POST /api/dev/constraint-impact` (item 9, step 6).
+- **20.9 The trace says what each engine decided (M).** Done 2026-11-13
+  (`generate?trace=1`). Every week says its `engine` (`scheduler`, `week_templates`,
+  `training_contract`, `composition`) and its `tests` (placed, skipped with why). A
+  contract's week: `scheduler.contract_week` — each module's minutes, period week, step,
+  model and deload, the placement chosen and the next best with their scores (days stacked
+  or shared with another track, same-modality days back to back, regions loaded close, the
+  spread), optional work left short, the test — and each session's `module_steps` (step,
+  variant, light day, rounds, lifts). A template's week: `scheduler.template` — the days
+  kept and dropped, and per day every pool asked, where its rotation stood, what was
+  passed over (done in the last week, or does not fit as written) and what was taken. A
+  templated session's reason is `week_template` with its `category` (the category used to
+  stand as the reason); a test session carries `test` (what it measures, what it stands in
+  for). A composition: each track's own decisions (`lane_weeks`) and the kept days. The
+  program is the same with or without the trace (`test_devlab_trace.py` holds it, with a
+  composition scenario). Left: why a passed-over workout does not fit (level, equipment,
+  injury or minutes).
+- **20.10 Pipeline Trace per engine (M).** Done 2026-11-13. The Schedule step's card and
+  the pipeline flow draw what built the week from one module (`components/devlab/
+  EngineWeek.tsx`, `engine.ts`): a contract's modules (minutes, step, model, deload), its
+  placement and why it beat the next best; a template's days kept and dropped, each
+  pool's rotation, what was passed over; a composition's tracks, each with its own. The
+  scheduler's allocation shows only where the scheduler ran. The form takes a second
+  track (a composition), lists the vocabulary's equipment (it typed thirty ids) and can
+  be linked to (`/dev?philosophy=…&track=…&second=…&days=…&equipment=all&step=schedule&
+  run=1`). A session says its test, its modules' steps, its track, what it stands in
+  for and its `preferred` score; days are in the week's order (they were alphabetical);
+  the Output step lists compromises, the coverage counts and what the constraints held
+  back. Step texts no longer say validation always runs first or that the scheduler
+  places blends. Left: a contract track's `options` are not asked in the form.
+- **20.11 Model Interactions from data (M).** Done 2026-11-13. `tools/model_map.json`:
+  the parts and eleven interactions — a track and its phases, a contract's week, a
+  template's week, the scheduler's allocation and its archetype score, slots and
+  exercises, loads, compositions, tests, the athlete's constraints, which packages a
+  caller sees and what a package may add — each with what it reads from either side, what
+  the engine decides, the constants in code, a judgement of how much is code, and
+  `anchors` (`path::text`) that `test_model_map.py` holds to the code. The five edges the
+  component carried moved there whole; the contract, template, composition, tests,
+  constraints and package-view ones are new. `GET /api/dev/model-map`
+  (`src/model_map.py`) adds which engine each track the asker sees runs on. The panel
+  reads the map one engine at a time (the last program's, else the busiest: twelve tracks
+  on contracts, ten on templates, none on the scheduler) and its authoring table from the
+  same file, now with the whole-package route. The dead `archetype_trace.selected` read
+  is gone.
+- **20.12 The Impact tab (S).** Done 2026-11-13 (item 9, step 6). Dev Lab ▸ Impact
+  (`components/devlab/ImpactPanel.tsx`) sends the Pipeline Trace form's request to `POST
+  /api/dev/constraint-impact` and shows: sessions changed (and how many directly), per
+  constraint what lifting it means with its sessions, slots and knock-on, the equipment
+  that would restore the most, every change with its causes and reasons — filtered by
+  cause — and, for a refused request, what alone would let it generate. Two real answers
+  are recorded for its test (`test_constraint_impact.py --write`).
+
+What is left of item 20 after these twelve steps: the phone and the watches reading a
+package's modalities and equipment from the API (gap `client_vocab_compiled`); migration
+013 on production; and the builder itself.
 
 ---
 

@@ -55,7 +55,8 @@ def phase_constraints(goal: dict, ph: dict, fw: dict, days: int) -> dict:
         'days_per_week': days,
         'session_time_minutes': exp.get('ideal_session_minutes') or exp.get('min_session_minutes', 60),
         'training_level': 'intermediate',
-        'equipment': ALL_EQUIPMENT,
+        # Everything — the implements the packages in view add too (vocabulary.yaml).
+        'equipment': ALL_EQUIPMENT + [e for e in loader.load_vocabulary()['equipment'] if e not in ALL_EQUIPMENT],
         'injury_flags': [],
         'start_phase': ph['id'],
         'periodization_week': 1,

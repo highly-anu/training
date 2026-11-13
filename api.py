@@ -8,6 +8,7 @@ import re
 import sys
 import tempfile
 import threading
+from collections import OrderedDict
 from datetime import date as _date, datetime as _datetime, timedelta as _timedelta, timezone as _timezone
 
 import yaml
@@ -210,11 +211,22 @@ def _gzip(response):
 #   ask, every answer after an authoring write) is built once per process,
 #   one build at a time (`_BUILD_LOCK`), so a burst cannot multiply memory;
 # - a client that has the answer gets a 304.
+#
+# That is the shipped packages' answer, the same for everyone. An athlete with
+# packages of their own (src/package_store.py) gets a variant built in their
+# view, kept beside it in a small bounded store keyed by their overlay
+# directory — which is named from their packages' revisions, so an install or
+# a removal is a new key and nothing needs clearing — and marked private. The
+# shared answers and the build are never touched by it; a route their
+# packages do not change keeps the shared bytes.
 _STATIC_LOCK = threading.Lock()
 _BUILD_LOCK = threading.Lock()
 _STATIC: dict[str, tuple[bytes, bytes, str]] = {}   # full path → (json, gzip, etag)
 _STATIC_BUILD_DIR = os.environ.get('STATIC_BUILD_DIR') or None
 _BUILT: dict | None = None   # the build's manifest: full path → {json, gz, etag}; {} once data changed
+_USER_STATIC: 'OrderedDict[tuple[str, str], tuple[bytes, bytes, str]]' = OrderedDict()   # (overlay, full path) → answer
+_USER_STATIC_MAX = 96
+_USER_STATIC_MAX_BYTES = 12 * 1024 * 1024
 
 
 def _built(key: str) -> tuple[bytes, bytes, str] | None:
@@ -251,20 +263,51 @@ def static_json(view):
     successful answer."""
     from functools import wraps
 
-    @wraps(view)
-    def wrapper(*args, **kwargs):
-        key = request.full_path
+    def shared(key, *args, **kwargs):
         hit = _STATIC.get(key)
         if hit is None:
             with _BUILD_LOCK:
                 hit = _STATIC.get(key) or _built(key)
                 if hit is None:
-                    response = app.make_response(view(*args, **kwargs))
+                    with loader.overlay(None):
+                        response = app.make_response(view(*args, **kwargs))
                     if response.status_code != 200 or response.mimetype != 'application/json':
-                        return response
+                        return None, response
                     hit = _pack(response.get_data())
                 with _STATIC_LOCK:
                     _STATIC[key] = hit
+        return hit, None
+
+    def own(overlay, key, *args, **kwargs):
+        with _STATIC_LOCK:
+            hit = _USER_STATIC.get((overlay, key))
+            if hit is not None:
+                _USER_STATIC.move_to_end((overlay, key))
+                return hit, None
+        with _BUILD_LOCK:
+            with loader.overlay(overlay):
+                response = app.make_response(view(*args, **kwargs))
+        if response.status_code != 200 or response.mimetype != 'application/json':
+            return None, response
+        hit = _pack(response.get_data())
+        common = _STATIC.get(key) or _built(key)
+        if common is not None and common[2] == hit[2]:
+            hit = common   # their packages do not change this route: the shared bytes, kept once
+        with _STATIC_LOCK:
+            _USER_STATIC[(overlay, key)] = hit
+            total = sum(len(b) + len(z) for b, z, _ in _USER_STATIC.values())
+            while len(_USER_STATIC) > _USER_STATIC_MAX or (total > _USER_STATIC_MAX_BYTES and len(_USER_STATIC) > 1):
+                _, (b, z, _e) = _USER_STATIC.popitem(last=False)
+                total -= len(b) + len(z)
+        return hit, None
+
+    @wraps(view)
+    def wrapper(*args, **kwargs):
+        key = request.full_path
+        overlay = _own_overlay()
+        hit, refused = own(overlay, key, *args, **kwargs) if overlay else shared(key, *args, **kwargs)
+        if refused is not None:
+            return refused
         body, gz, etag = hit
         if etag in request.if_none_match:
             response = app.response_class(status=304)
@@ -277,9 +320,20 @@ def static_json(view):
             response = app.response_class(body, mimetype='application/json')
         response.set_etag(etag)
         # Revalidate every time (the ETag makes that a 304): data changes with a deploy.
-        response.headers['Cache-Control'] = 'no-cache'
+        response.headers['Cache-Control'] = 'private, no-cache' if overlay else 'no-cache'
+        if overlay:
+            response.vary.add('Authorization')
         return response
     return wrapper
+
+
+def _own_overlay() -> str | None:
+    """The asker's overlay when they have packages of their own, else None
+    (nobody signed in, no package, or the store cannot be read)."""
+    from src import auth as _auth
+    from src import package_store
+    user_id = _auth.optional_user_id()
+    return package_store.overlay_for(user_id) if user_id else None
 
 
 _AUTHORING_PREFIXES = ('/api/exercises', '/api/archetypes', '/api/modalities', '/api/frameworks')
@@ -301,6 +355,7 @@ def clear_static_cache() -> None:
     global _BUILT
     with _STATIC_LOCK:
         _STATIC.clear()
+        _USER_STATIC.clear()
         _BUILT = {}
     invalidate_package_data()
 
@@ -1869,6 +1924,32 @@ def delete_user_package(package_id):
     except package_store.StoreError as e:
         return _package_store_error(e)
     return jsonify({'removed': True})
+
+
+@app.get('/api/dev/model-map')
+@require_auth
+@require_authoring
+def dev_model_map():
+    """How the model's parts act on each other — each interaction with what
+    it reads, what the engine decides and the code that carries it — and
+    which engine each track the asker sees runs on (for Dev Lab ▸ Model
+    Interactions; tools/model_map.json, src/model_map.py)."""
+    from src import model_map
+    return jsonify(model_map.report())
+
+
+@app.get('/api/dev/package-spec')
+@require_auth
+@require_authoring
+def dev_package_spec():
+    """How to write a package — docs/schemas/PACKAGE_SPEC.md, whole and by
+    section — with what the asking athlete needs to write one of their own:
+    their id prefix and the limits (for the package builder and the Dev Lab)."""
+    from src import package_spec, package_store
+    return jsonify({'spec': package_spec.text(), 'sections': package_spec.sections(),
+                    'prefix': package_store.owner_prefix(g.user_id),
+                    'limits': {'files': package_store.MAX_FILES, 'bytes': package_store.MAX_BYTES,
+                               'packages': package_store.MAX_PACKAGES}})
 
 
 @app.get('/api/dev/portability')
