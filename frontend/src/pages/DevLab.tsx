@@ -30,6 +30,8 @@ import { ObjectBrowser } from '@/components/objectbrowser/ObjectBrowser'
 import { HeatmapPanel } from '@/components/devlab/heatmap/HeatmapPanel'
 import { ModelInteractionPanel } from '@/components/devlab/ModelInteractionPanel'
 import { ReadinessPanel } from '@/components/devlab/ReadinessPanel'
+import { ImpactPanel } from '@/components/devlab/ImpactPanel'
+import type { GenerateParams } from '@/api/programs'
 import type { EquipmentId, FatigueState, InjuryFlagId, TrainingLevel, TracedProgram, WeekData } from '@/api/types'
 import { TRAINING_LEVELS } from '@/lib/gen/clientVocab'
 import { useEquipmentGroups } from '@/lib/useEquipmentVocabulary'
@@ -265,10 +267,11 @@ function ProgramOutputs({ program }: { program: TracedProgram }) {
 
 // ─── DevLab page ──────────────────────────────────────────────────────────────
 
-type DevTab = 'pipeline' | 'browser' | 'heatmap' | 'interactions' | 'readiness'
+type DevTab = 'pipeline' | 'impact' | 'browser' | 'heatmap' | 'interactions' | 'readiness'
 
 const DEV_TABS: { id: DevTab; label: string }[] = [
   { id: 'pipeline', label: 'Pipeline Trace' },
+  { id: 'impact', label: 'Impact' },
   { id: 'browser', label: 'Object Browser' },
   { id: 'heatmap', label: 'Ontology' },
   { id: 'interactions', label: 'Model Interactions' },
@@ -366,10 +369,10 @@ export function DevLab() {
     )
   }
 
-  async function handleGenerate(useAll = false) {
-    if (!philosophyId) return
-    try {
-      const data = await generateMutation.mutateAsync({
+  /** The form as a generate request (Pipeline Trace and Impact send the same one). */
+  function requestOf(useAll = false): GenerateParams | null {
+    if (!philosophyId || (second && !second.philosophyId)) return null
+    return {
         philosophyId,
         ...(second?.philosophyId ? {
           lanes: [
@@ -391,7 +394,14 @@ export function DevLab() {
         },
         numWeeks,
         customInjuryFlags: [],
-      })
+    }
+  }
+
+  async function handleGenerate(useAll = false) {
+    const request = requestOf(useAll)
+    if (!request) return
+    try {
+      const data = await generateMutation.mutateAsync(request)
       setResult(data)
       setActiveStep(useAll && linked.step ? linked.step : 'inputs')
       setOutputWeekIdx(0)
@@ -478,7 +488,7 @@ export function DevLab() {
       )}
 
 
-      {devTab === 'pipeline' && <div className="flex-1 overflow-y-auto">
+      {(devTab === 'pipeline' || devTab === 'impact') && <div className="flex-1 overflow-y-auto">
         {/* ── Program Selector ── */}
         <div className="border-b bg-muted/20 px-6 py-4 shrink-0">
           <div className="max-w-5xl space-y-3">
@@ -740,8 +750,10 @@ export function DevLab() {
           </div>
         </div>
 
+        {devTab === 'impact' && <ImpactPanel params={requestOf()} />}
+
         {/* ── Pipeline Steps ── */}
-        <div className="px-6 py-4">
+        {devTab === 'pipeline' && <div className="px-6 py-4">
           {!result ? (
             <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
               <Terminal className="size-12 mb-4 opacity-20" />
@@ -841,7 +853,7 @@ export function DevLab() {
               </TabsContent>
             </Tabs>
           )}
-        </div>
+        </div>}
       </div>}
     </Page>
   )
