@@ -2475,12 +2475,25 @@ export interface PortabilityPackage {
 export interface PortabilityGap {
   id: string
   title: string
-  kind: 'gate' | 'tooling' | 'commons' | 'code' | 'client' | 'watch' | 'docs'
+  kind: 'runtime' | 'gate' | 'tooling' | 'commons' | 'code' | 'client' | 'watch' | 'docs' | 'devlab'
   impact: 'blocks' | 'degrades' | 'cosmetic'
   detail?: string
+  /** `path::text`, still in the code while the gap is open. */
   anchors: string[]
+  /** The roadmap step that closes it (9.x, 20.x). */
   roadmap: string | null
-  status: 'open' | 'by_design'
+  status: 'open' | 'done' | 'by_design'
+  /** A closed gap: the day, and the tests that hold it. */
+  closed?: string
+  evidence?: string[]
+}
+
+/** A step of the builder's foundation (docs/roadmap.md item 20), in order. */
+export interface PortabilityStep {
+  id: string
+  title: string
+  /** The day a step with no gap of its own was done. */
+  done: string | null
 }
 
 export interface PortabilityReport {
@@ -2491,5 +2504,6 @@ export interface PortabilityReport {
   packages: PortabilityPackage[]
   collisions: Array<{ kind: string; id: string; packages: string[]; kept: string }>
   sharedExercises: number
+  steps?: PortabilityStep[]
   gaps: PortabilityGap[]
 }

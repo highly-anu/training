@@ -3,14 +3,14 @@ import { ChevronRight, Code2, Database, AlertCircle, CheckCircle2, MinusCircle }
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import type { PortabilityGap, PortabilityPackage, PortabilityReport, TracedProgram } from '@/api/types'
+import type { TracedProgram } from '@/api/types'
 import { useOntology } from '@/api/ontology'
-import { usePortability } from '@/api/devlab'
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 // The edges describe the engine, not a package, so they stay written here;
-// checked against src/ on 2026-10-30 (and after roadmap 9.3 moved four tables to data). What a package can and cannot bring is
-// the server's (GET /api/dev/portability, src/portability.py).
+// checked against src/ on 2026-10-30 (and after roadmap 9.3 moved four tables to data). They describe the
+// modality scheduler, which no shipped package runs on any more (roadmap 20.11 serves the map from data).
+// What a package can and cannot bring is the server's, on Builder readiness (ReadinessPanel.tsx).
 
 interface Edge {
   id: string
@@ -369,222 +369,6 @@ function SectionTitle({ children }: { children: ReactNode }) {
   )
 }
 
-// ─── Portability ──────────────────────────────────────────────────────────────
-
-const SHAPE_LABEL: Record<string, string> = {
-  contract: 'contract',
-  templates: 'templates',
-  scheduler: 'scheduler',
-}
-
-const IMPACT_CLASS: Record<PortabilityGap['impact'], string> = {
-  blocks: 'bg-red-500/15 text-red-700 dark:text-red-300 border-red-500/30',
-  degrades: 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30',
-  cosmetic: 'bg-muted text-muted-foreground border-border',
-}
-
-const KIND_ORDER: PortabilityGap['kind'][] = ['gate', 'tooling', 'commons', 'code', 'client', 'watch', 'docs']
-const KIND_LABEL: Record<PortabilityGap['kind'], string> = {
-  gate: 'Push gates',
-  tooling: 'Tooling',
-  commons: 'Commons',
-  code: 'Engine code',
-  client: 'Clients',
-  watch: 'Watches',
-  docs: 'Docs',
-}
-
-function Tick({ done, title }: { done: boolean | null; title: string }) {
-  if (done === null) {
-    return <span title={`${title} — not in this deployment`} aria-label={`${title}: not checkable here`}
-      className="inline-flex size-3.5 items-center justify-center text-[10px] text-muted-foreground">—</span>
-  }
-  return done
-    ? <span title={title}><CheckCircle2 className="size-3.5 text-emerald-700 dark:text-emerald-300" aria-label={`${title}: yes`} /></span>
-    : <span title={title}><MinusCircle className="size-3.5 text-red-700 dark:text-red-300" aria-label={`${title}: missing`} /></span>
-}
-
-function PackageRow({ pkg, recordIds }: { pkg: PortabilityPackage; recordIds: string[] }) {
-  const shapes = [...new Set(pkg.tracks.map(t => t.shape))]
-  const optional = pkg.files.filter(f => !f.required && f.present !== null)
-  const unreadable = pkg.files.filter(f => f.present === null).length
-  const missingRequired = pkg.files.filter(f => f.required && !f.present)
-  const unknown = pkg.vocabulary.flatMap(v => v.unknown.map(u => `${v.kind}: ${u}`))
-  return (
-    <tr className="border-b border-border/50 last:border-0">
-      <td className="px-3 py-2">
-        <div className="font-medium">{pkg.name}</div>
-        <div className="font-mono text-[10px] text-muted-foreground">{pkg.id}</div>
-      </td>
-      <td className="px-3 py-2">
-        <div className="flex flex-wrap gap-1">
-          {shapes.map(s => (
-            <Badge key={s} variant="outline" className="text-[10px]">
-              {SHAPE_LABEL[s] ?? s} ×{pkg.tracks.filter(t => t.shape === s).length}
-            </Badge>
-          ))}
-        </div>
-      </td>
-      <td className="px-3 py-2 text-[11px]">
-        {missingRequired.length > 0
-          ? <span className="text-red-700 dark:text-red-300">missing {missingRequired.map(f => f.path).join(', ')}</span>
-          : <span className="text-muted-foreground" title={optional.filter(f => f.present).map(f => f.path).join(', ')}>
-              core + {optional.filter(f => f.present).length}/{optional.length} optional
-              {unreadable > 0 && ` (+${unreadable} not in this deployment)`}
-            </span>}
-      </td>
-      <td className="px-3 py-2">
-        <div className="flex gap-1">
-          {recordIds.map(id => {
-            const o = pkg.records.find(x => x.id === id)
-            return o ? <Tick key={id} done={o.done} title={o.done === false ? `${o.label} — ${o.how}` : o.label} /> : null
-          })}
-        </div>
-      </td>
-      <td className="px-3 py-2 text-[11px]">
-        {unknown.length
-          ? <span className="text-red-700 dark:text-red-300" title={unknown.join('\n')}>{unknown.length} unknown</span>
-          : <span className="text-muted-foreground">all in commons</span>}
-      </td>
-      <td className="px-3 py-2 text-[11px]">
-        {pkg.collisions
-          ? <span className="text-amber-700 dark:text-amber-300">{pkg.collisions}</span>
-          : <span className="text-muted-foreground">0</span>}
-      </td>
-      <td className="px-3 py-2 text-center">
-        <StatusIcon status={pkg.ready ? 'yes' : 'no'} />
-      </td>
-    </tr>
-  )
-}
-
-function GapItem({ gap }: { gap: PortabilityGap }) {
-  return (
-    <li className="space-y-1">
-      <div className="flex flex-wrap items-center gap-1.5">
-        <Badge className={cn('text-[10px] hover:bg-transparent', IMPACT_CLASS[gap.impact])}>{gap.impact}</Badge>
-        <span className="text-xs text-foreground">{gap.title}</span>
-        {gap.roadmap && (
-          <span className="text-[10px] font-mono text-muted-foreground">roadmap {gap.roadmap}</span>
-        )}
-      </div>
-      {gap.detail && <p className="text-[11px] text-muted-foreground leading-relaxed">{gap.detail}</p>}
-      <div className="flex flex-wrap gap-1">
-        {gap.anchors.map(a => (
-          <code key={a} className="bg-muted px-1 rounded text-[10px] font-mono text-muted-foreground break-all">{a}</code>
-        ))}
-      </div>
-    </li>
-  )
-}
-
-function PortabilitySection({ report }: { report: PortabilityReport }) {
-  const recordIds = report.packages[0]?.records.map(o => o.id) ?? []
-  const recordLabels = report.packages[0]?.records ?? []
-  const uncheckedLabels = report.unchecked.map(id =>
-    recordLabels.find(o => o.id === id)?.label
-      ?? report.packages[0]?.files.find(f => f.id === id)?.path
-      ?? id)
-  const open = report.gaps.filter(g => g.status === 'open')
-  const byDesign = report.gaps.filter(g => g.status === 'by_design')
-  const ready = report.packages.filter(p => p.ready).length
-  return (
-    <div className="space-y-4">
-      <p className="text-xs text-foreground/80 leading-relaxed max-w-3xl">{report.verdict}</p>
-
-      <div className="rounded-lg border border-border overflow-x-auto">
-        <table className="w-full text-xs min-w-[720px]">
-          <thead>
-            <tr className="border-b border-border bg-muted/30 text-muted-foreground">
-              <th className="text-left px-3 py-2 font-medium">Package</th>
-              <th className="text-left px-3 py-2 font-medium">Engine shape (tracks)</th>
-              <th className="text-left px-3 py-2 font-medium">In its folder</th>
-              <th className="text-left px-3 py-2 font-medium" title={recordLabels.map(o => o.label).join(' · ')}>
-                Its records
-              </th>
-              <th className="text-left px-3 py-2 font-medium">Vocabulary</th>
-              <th className="text-left px-3 py-2 font-medium">Id collisions</th>
-              <th className="px-3 py-2 font-medium text-center">Drops in</th>
-            </tr>
-          </thead>
-          <tbody>
-            {report.packages.map(p => <PackageRow key={p.id} pkg={p} recordIds={recordIds} />)}
-          </tbody>
-        </table>
-      </div>
-      <p className="text-[10px] text-muted-foreground">
-        {ready} of {report.packages.length} packages in <code className="bg-muted px-1 rounded">{report.packagesDir}</code> drop
-        in as they stand. The records the gates keep in each folder, in order: {recordLabels.map(o => o.label).join(' · ')}.{' '}
-        {report.sharedExercises} exercise ids are shared between packages by design; each keeps its own prescription.
-      </p>
-      {report.unchecked.length > 0 && (
-        <p className="text-[10px] text-amber-700 dark:text-amber-300">
-          Not checkable here: {uncheckedLabels.join(' · ')} — their files are not in this deployment (the API
-          image leaves every package's records, dossier and source weeks out). Run the local API to check them;
-          "drops in" covers the rest.
-        </p>
-      )}
-
-      {report.collisions.length > 0 && (
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-700/80 dark:text-amber-300/80 mb-1.5">
-            Ids two packages declare — resolved silently
-          </p>
-          <ul className="space-y-0.5">
-            {report.collisions.map(c => (
-              <li key={`${c.kind}:${c.id}`} className="text-[11px] text-muted-foreground">
-                <span className="font-mono text-foreground">{c.kind} {c.id}</span> in {c.packages.join(', ')} — keeps {c.kept}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {KIND_ORDER.map(kind => {
-          const gaps = open.filter(g => g.kind === kind)
-          if (!gaps.length) return null
-          return (
-            <div key={kind}>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-                {KIND_LABEL[kind]}
-              </p>
-              <ul className="space-y-2.5">
-                {gaps.map(g => <GapItem key={g.id} gap={g} />)}
-              </ul>
-            </div>
-          )
-        })}
-      </div>
-
-      {byDesign.length > 0 && (
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-            By design — the engine's vocabulary a package chooses from
-          </p>
-          <ul className="space-y-2.5">
-            {byDesign.map(g => <GapItem key={g.id} gap={g} />)}
-          </ul>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function Portability() {
-  const { data, isLoading, error } = usePortability()
-  if (isLoading) return <p className="text-xs text-muted-foreground">Reading the packages…</p>
-  if (error || !data) {
-    return (
-      <p className="text-xs text-muted-foreground">
-        The portability report needs the local API (or AUTHORING_ENABLED):{' '}
-        <code className="bg-muted px-1 rounded">GET /api/dev/portability</code>.
-      </p>
-    )
-  }
-  return <PortabilitySection report={data} />
-}
-
 // ─── Main component ───────────────────────────────────────────────────────────
 
 interface Props {
@@ -622,12 +406,6 @@ export function ModelInteractionPanel({ result }: Props) {
 
   return (
     <div className="space-y-6 px-4 md:px-6 py-4 max-w-5xl">
-
-      {/* ── Section 1: Portability ── */}
-      <div>
-        <SectionTitle>Packages — a folder that drops in?</SectionTitle>
-        <Portability />
-      </div>
 
       {/* ── Live program context banner ── */}
       {result && (
@@ -890,7 +668,8 @@ export function ModelInteractionPanel({ result }: Props) {
         <p className="text-[10px] text-muted-foreground mt-2">
           Every write route needs a signed-in user and <code className="bg-muted px-1 rounded">AUTHORING_ENABLED</code> (local
           dev enables them) and is checked against <code className="bg-muted px-1 rounded">docs/schemas</code>.
-          The gaps and the order they close in: <code className="bg-muted px-1 rounded">docs/roadmap.md</code> item 9.
+          The gaps and the order they close in: <code className="bg-muted px-1 rounded">docs/roadmap.md</code> items 9 and 20 —
+          Builder readiness.
         </p>
       </div>
 

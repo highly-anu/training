@@ -70,9 +70,16 @@ def check(label: str, condition: bool, detail='') -> None:
         FAILURES.append(label)
 
 
-KINDS = {'gate', 'tooling', 'commons', 'code', 'client', 'watch', 'docs'}
+KINDS = {'runtime', 'gate', 'tooling', 'commons', 'code', 'client', 'watch', 'docs', 'devlab'}
 IMPACTS = {'blocks', 'degrades', 'cosmetic'}
-STATUSES = {'open', 'by_design'}
+STATUSES = {'open', 'done', 'by_design'}
+
+
+def _there(anchor: str) -> bool:
+    """`path::text`: the file exists and still holds the text."""
+    path, _, text = anchor.partition('::')
+    full = os.path.join(ROOT, path)
+    return bool(text) and os.path.exists(full) and text in open(full, encoding='utf-8').read()
 
 
 def test_gaps():
@@ -81,8 +88,16 @@ def test_gaps():
     gaps = doc['gaps']
     check('a verdict', bool(doc.get('verdict')))
     check('ids unique', len({g['id'] for g in gaps}) == len(gaps))
+    check('the builder\'s foundation is tracked: open or done gaps on item 20',
+          any((g.get('roadmap') or '').startswith('20.') for g in gaps))
     with open(os.path.join(ROOT, 'docs', 'roadmap.md'), encoding='utf-8') as fh:
         roadmap = fh.read()
+    steps = doc.get('steps') or []
+    check('the foundation\'s steps, each titled as the roadmap titles it',
+          bool(steps) and all(f"**{s['id']} {s['title']} (" in roadmap for s in steps),
+          [s['id'] for s in steps if f"**{s['id']} {s['title']} (" not in roadmap])
+    check('every gap on item 20 cites a listed step',
+          all(g['roadmap'] in {s['id'] for s in steps} for g in gaps if (g.get('roadmap') or '').startswith('20.')))
     for g in gaps:
         check(f"{g['id']}: kind, impact, status", g.get('kind') in KINDS and g.get('impact') in IMPACTS
               and g.get('status') in STATUSES, g)
@@ -90,11 +105,15 @@ def test_gaps():
         if g['status'] == 'open':
             check(f"{g['id']}: a roadmap step", bool(g.get('roadmap')) and f"**{g['roadmap']} " in roadmap,
                   g.get('roadmap'))
+        if g['status'] == 'done':
+            # A closed gap is held by a test, not by the code it used to point at.
+            check(f"{g['id']}: closed on a day", bool(re.fullmatch(r'\d{4}-\d{2}-\d{2}', g.get('closed') or '')),
+                  g.get('closed'))
+            check(f"{g['id']}: the test that holds it", bool(g.get('evidence')) and all(_there(e) for e in g['evidence']),
+                  g.get('evidence'))
+            continue
         for anchor in g.get('anchors') or []:
-            path, _, text = anchor.partition('::')
-            full = os.path.join(ROOT, path)
-            found = os.path.exists(full) and text in open(full, encoding='utf-8').read()
-            check(f"{g['id']}: {anchor} still there (or the gap is closed — update its status)", found)
+            check(f"{g['id']}: {anchor} still there (or the gap is closed — update its status)", _there(anchor))
 
 
 def test_report():

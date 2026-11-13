@@ -1,7 +1,326 @@
 {
-  "_comment": "What a package still cannot bring in its own folder (src/portability.py serves this to Dev Lab ▸ Model Interactions). Each anchor is `path::text` and must still be in that file while the gap is open; test_portability.py fails when one is gone, so closing a gap means changing its status here in the same change. kind: gate | tooling | commons | code | client | watch | docs. impact on a dropped-in package: blocks (it fails a gate or cannot be written), degrades (it works, worse or silently wrong), cosmetic. status: open | by_design (the commons vocabulary is the contract between packages and the engine). roadmap: the step of docs/roadmap.md item 9 (9.1, 9.2, …) that closes it.",
-  "verdict": "The code is package-neutral: nothing in the server, the web, the phones or the watches names a package (tools/check_code_neutral.py), and test_package_dropin.py runs three packages under new ids beside the shipped ones with the repository unchanged. A package is one folder: its files, its standards, and the records the push gates keep (records/, dossier.md), which tools/add_package.py <id> writes. Anything beyond the commons vocabulary is still a shared edit.",
+  "_comment": "What a package still cannot bring in its own folder, and what a package written at runtime (the LLM package builder, roadmap item 20) still cannot rely on (src/portability.py serves this to Dev Lab ▸ Builder readiness). Each anchor is `path::text` and must still be in that file while the gap is open; test_portability.py fails when one is gone, so closing a gap means changing its status here in the same change. kind: runtime | gate | tooling | commons | code | client | watch | docs | devlab. impact on a dropped-in or built package: blocks (it fails a gate, cannot be written or cannot be served), degrades (it works, worse or silently wrong), cosmetic. status: open | done (with `closed`, the day, and `evidence`, `path::text` of the test that holds it — checked like an anchor) | by_design (the engine's vocabulary is the contract between packages and the engine). roadmap: the step of docs/roadmap.md (9.x, 20.x) that closes it. steps: the roadmap steps of the builder's foundation, in order, each titled as docs/roadmap.md titles it; a step is done when it says so (`done`, the day) or when every gap citing it is.",
+  "verdict": "The code is package-neutral: nothing in the server, the web, the phones or the watches names a package (tools/check_code_neutral.py), and test_package_dropin.py runs three packages under new ids beside the shipped ones with the repository unchanged. A package is one folder: its files, its standards, and the records the push gates keep (records/, dossier.md), which tools/add_package.py <id> writes. That is a package added to a checkout and shipped in the image. A package written while the app runs, for one athlete — what the LLM package builder needs — is not supported yet: the open gaps below are what stands between the two (docs/roadmap.md item 20).",
+  "steps": [
+    {
+      "id": "20.1",
+      "title": "The gaps recorded and shown",
+      "done": "2026-11-13"
+    },
+    {
+      "id": "20.2",
+      "title": "Callable gates",
+      "done": null
+    },
+    {
+      "id": "20.3",
+      "title": "Roots, overlay, quarantine, caches",
+      "done": null
+    },
+    {
+      "id": "20.4",
+      "title": "Reference routes per athlete",
+      "done": null
+    },
+    {
+      "id": "20.5",
+      "title": "Storage and install",
+      "done": null
+    },
+    {
+      "id": "20.6",
+      "title": "Vocabulary: movement patterns and modalities",
+      "done": null
+    },
+    {
+      "id": "20.7",
+      "title": "Vocabulary: equipment",
+      "done": null
+    },
+    {
+      "id": "20.8",
+      "title": "One package spec; a package from nothing",
+      "done": null
+    },
+    {
+      "id": "20.9",
+      "title": "The trace says what each engine decided",
+      "done": null
+    },
+    {
+      "id": "20.10",
+      "title": "Pipeline Trace per engine",
+      "done": null
+    },
+    {
+      "id": "20.11",
+      "title": "Model Interactions from data",
+      "done": null
+    },
+    {
+      "id": "20.12",
+      "title": "The Impact tab",
+      "done": null
+    }
+  ],
   "gaps": [
+    {
+      "id": "gates_not_callable",
+      "title": "The gates cannot be called for one package",
+      "kind": "tooling",
+      "impact": "blocks",
+      "detail": "validate_entities is importable and fast, but the checks that prove a package generates are not: check_styles and check_provenance loop every philosophy and print, and add_package shells out and writes records the API image does not carry. A builder needs one in-process check of one folder that returns structured problems it can hand back to the model.",
+      "anchors": [
+        "tools/check_styles.py::def main",
+        "tools/check_provenance.py::def main",
+        "tools/add_package.py::subprocess"
+      ],
+      "roadmap": "20.2",
+      "status": "open"
+    },
+    {
+      "id": "single_root",
+      "title": "One packages folder, and three paths that ignore it",
+      "kind": "runtime",
+      "impact": "blocks",
+      "detail": "TRAINING_PACKAGES_DIR replaces data/packages, it never adds to it, so a package beside the shipped ones needs a copy of all of them. validate_entities' injury-flag catalogue and --all, and run_checks' search for package tests, read data/packages whatever the variable says.",
+      "anchors": [
+        "src/loader.py::os.environ.get('TRAINING_PACKAGES_DIR')",
+        "tools/validate_entities.py::'data', 'packages'",
+        "tools/run_checks.py::'data', 'packages'"
+      ],
+      "roadmap": "20.3",
+      "status": "open"
+    },
+    {
+      "id": "no_fault_isolation",
+      "title": "One malformed package breaks loading for every package",
+      "kind": "runtime",
+      "impact": "blocks",
+      "detail": "The loader reads every folder with no isolation: a YAML error or a framework or exercise without an id raises for every caller. Right for the shipped packages (the image build must fail); fatal for a package written at runtime, which must be refused or set aside alone.",
+      "anchors": [
+        "src/loader.py::fw['id']",
+        "src/loader.py::raw_ex['id']"
+      ],
+      "roadmap": "20.3",
+      "status": "open"
+    },
+    {
+      "id": "silent_collisions",
+      "title": "An id two packages declare is resolved silently at load",
+      "kind": "runtime",
+      "impact": "degrades",
+      "detail": "The first archetype, the last framework and the first philosophy win; only validate_entities --all and add_package refuse a collision. A built package must not be able to shadow a shipped id or another athlete's.",
+      "anchors": [
+        "src/loader.py::seen_ids",
+        "src/portability.py::_KEPT"
+      ],
+      "roadmap": "20.3",
+      "status": "open"
+    },
+    {
+      "id": "process_caches",
+      "title": "Caches that outlive a package change",
+      "kind": "runtime",
+      "impact": "degrades",
+      "detail": "Generation re-reads the packages on every call, but these are filled once per process and clear_static_cache does not clear them: the standards (each package's standards.yaml), exercise media, the similarity matrix, the analytics specs digest, the test archetypes and derived lifts. There is no single invalidation.",
+      "anchors": [
+        "src/analytics/benchmarks_data.py::lru_cache",
+        "src/loader.py::_media_cache",
+        "api.py::_similarity_cache",
+        "api.py::_SPECS_DIGEST",
+        "src/standard_results.py::_TEST_ARCHETYPES"
+      ],
+      "roadmap": "20.3",
+      "status": "open"
+    },
+    {
+      "id": "static_cache_shared",
+      "title": "The reference routes are one answer for everyone",
+      "kind": "runtime",
+      "impact": "blocks",
+      "detail": "/philosophies, the Explore documents and the rest are baked into the image and cached by path alone. A package added at runtime is not in them, and clearing the cache abandons the baked build for the life of the process (every route rebuilt live on 256 MB).",
+      "anchors": [
+        "api.py::key = request.full_path",
+        "api.py::_BUILT = {}"
+      ],
+      "roadmap": "20.4",
+      "status": "open"
+    },
+    {
+      "id": "no_package_storage",
+      "title": "Nowhere to keep a package written at runtime",
+      "kind": "runtime",
+      "impact": "blocks",
+      "detail": "Packages are copied into the image; production has no volume and its disk is lost on every deploy, and Postgres has no package table.",
+      "anchors": [
+        "Dockerfile::COPY . ."
+      ],
+      "roadmap": "20.5",
+      "status": "open"
+    },
+    {
+      "id": "no_private_scope",
+      "title": "Every package is everyone's",
+      "kind": "runtime",
+      "impact": "blocks",
+      "detail": "Any folder with a philosophy.yaml is listed to every athlete: there is no owner, no visibility and no draft state.",
+      "anchors": [
+        "src/loader.py::def load_philosophies"
+      ],
+      "roadmap": "20.5",
+      "status": "open"
+    },
+    {
+      "id": "api_authoring_custom_only",
+      "title": "The API can author entities, never a package",
+      "kind": "tooling",
+      "impact": "blocks",
+      "detail": "The authoring routes write exercises, archetypes and frameworks into a `custom` package that has no philosophy, so nothing they write can reach a program; no route writes a philosophy, a contract or a whole folder. mcp_server.py can, but only as a local developer process.",
+      "anchors": [
+        "api.py::_NOT_CUSTOM"
+      ],
+      "roadmap": "20.5",
+      "status": "open"
+    },
+    {
+      "id": "modalities_commons_only",
+      "title": "A new modality is a commons edit",
+      "kind": "commons",
+      "impact": "blocks",
+      "detail": "Modalities load from data/commons only and an unknown one is refused, while the archetype schema tells an author to define one in the package.",
+      "anchors": [
+        "src/loader.py::def load_all_modalities",
+        "docs/schemas/archetype.schema.json::define a new one"
+      ],
+      "roadmap": "20.6",
+      "status": "open"
+    },
+    {
+      "id": "patterns_commons_only",
+      "title": "A new movement pattern is a commons edit",
+      "kind": "commons",
+      "impact": "blocks",
+      "detail": "An exercise may name any pattern, but the slot-filter aliases and the regional recovery weights are commons tables, and a pattern without a recovery region fails a gate.",
+      "anchors": [
+        "src/selector.py::_PATTERN_ALIASES: dict",
+        "test_recovery_regions.py::unloaded"
+      ],
+      "roadmap": "20.6",
+      "status": "open"
+    },
+    {
+      "id": "injury_flags_name_exercises",
+      "title": "Injury flags protect only the exercises the commons name",
+      "kind": "commons",
+      "impact": "degrades",
+      "detail": "A flag excludes movement patterns and a list of exercise ids. A package of all-new exercises gets the pattern rule alone; nothing makes it say which of its exercises a flag rules out.",
+      "anchors": [
+        "data/commons/constraints/injury_flags.yaml::excluded_exercises"
+      ],
+      "roadmap": "20.6",
+      "status": "open"
+    },
+    {
+      "id": "equipment_commons_only",
+      "title": "New equipment is a commons edit",
+      "kind": "commons",
+      "impact": "blocks",
+      "detail": "The equipment list is generated from the commons into four schema enums and both clients' pickers; an implement outside it fails the schema, and no athlete could tick it.",
+      "anchors": [
+        "tools/gen_client_vocab.py::SCHEMA_ENUMS",
+        "src/portability.py::equipment.add('none')"
+      ],
+      "roadmap": "20.7",
+      "status": "open"
+    },
+    {
+      "id": "client_vocab_compiled",
+      "title": "The clients' vocabulary is compiled in",
+      "kind": "client",
+      "impact": "cosmetic",
+      "detail": "Colours, labels and icons for modalities and the equipment list are generated into the web and the Apple targets at build time. An id a package brings falls back to a neutral style until the clients read display data from the API.",
+      "anchors": [
+        "tools/gen_client_vocab.py::clientVocab.ts"
+      ],
+      "roadmap": "20.7",
+      "status": "open"
+    },
+    {
+      "id": "no_package_spec",
+      "title": "No one document says how to write a package",
+      "kind": "docs",
+      "impact": "blocks",
+      "detail": "The outline is spread over the author guide, the fidelity README, the contract notes and the schemas; week templates have no document; none of the prose ships in the image; and the MCP server's templates carry their own stale counts and cite a test file that does not exist.",
+      "anchors": [
+        "mcp_server.py::12 core modalities",
+        "mcp_server.py::test_mcp_server.py"
+      ],
+      "roadmap": "20.8",
+      "status": "open"
+    },
+    {
+      "id": "dropin_renamed_copies",
+      "title": "The drop-in test runs renamed copies of audited packages",
+      "kind": "gate",
+      "impact": "degrades",
+      "detail": "It renames archetypes and frameworks and keeps the shipped exercise ids, so the commons' injury flags and level concepts still match. It never runs a package written from nothing, a malformed one, or one added to a running process.",
+      "anchors": [
+        "test_package_dropin.py::def _own_ids"
+      ],
+      "roadmap": "20.8",
+      "status": "open"
+    },
+    {
+      "id": "trace_misses_engines",
+      "title": "The generation trace covers the scheduler, not the engines that run",
+      "kind": "devlab",
+      "impact": "degrades",
+      "detail": "Every shipped package runs on a training contract or week templates. A contract traces its id and module ids, none of its placement, volume, period or forecast; a template week traces its categories, not what was picked, passed over or dropped; a test is not marked.",
+      "anchors": [
+        "src/training_contract.py::def _trace",
+        "src/selector.py::session.get('category') or 'forced'"
+      ],
+      "roadmap": "20.9",
+      "status": "open"
+    },
+    {
+      "id": "trace_ui_scheduler_only",
+      "title": "Pipeline Trace draws the scheduler's steps",
+      "kind": "devlab",
+      "impact": "degrades",
+      "detail": "Allocation and day assignment are empty for all eleven packages, a composition cannot be requested, and compromises, coverage and held-back slots are never shown.",
+      "anchors": [
+        "frontend/src/components/devlab/PipelineFlowPanel.tsx::No allocation trace",
+        "frontend/src/components/devlab/ModelInteractionPanel.tsx::archetype_trace?.selected"
+      ],
+      "roadmap": "20.10",
+      "status": "open"
+    },
+    {
+      "id": "model_map_hardcoded",
+      "title": "Model Interactions' map is written in the component",
+      "kind": "devlab",
+      "impact": "degrades",
+      "detail": "Its strip and edges are constants with no track, phase, contract, week template, composition or test, and nothing checks them against the code.",
+      "anchors": [
+        "frontend/src/components/devlab/ModelInteractionPanel.tsx::const EDGES"
+      ],
+      "roadmap": "20.11",
+      "status": "open"
+    },
+    {
+      "id": "no_impact_tab",
+      "title": "No Impact tab",
+      "kind": "devlab",
+      "impact": "cosmetic",
+      "detail": "POST /dev/constraint-impact answers what each constraint changes against the reference; no screen calls it.",
+      "anchors": [
+        "api.py::/dev/constraint-impact"
+      ],
+      "roadmap": "20.12",
+      "status": "open"
+    },
     {
       "id": "engine_vocabulary",
       "title": "Progression models, contract models and slot types are engine vocabulary",

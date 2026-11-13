@@ -1,6 +1,7 @@
 import { PageHeader } from '@/components/layout/PageHeader'
 import { SubTabs } from '@/components/layout/SubTabs'
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Page } from '@/components/layout/Page'
 import { Terminal, Play } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -28,6 +29,7 @@ import { PipelineFlowPanel } from '@/components/devlab/PipelineFlowPanel'
 import { ObjectBrowser } from '@/components/objectbrowser/ObjectBrowser'
 import { HeatmapPanel } from '@/components/devlab/heatmap/HeatmapPanel'
 import { ModelInteractionPanel } from '@/components/devlab/ModelInteractionPanel'
+import { ReadinessPanel } from '@/components/devlab/ReadinessPanel'
 import type { EquipmentId, FatigueState, InjuryFlagId, TrainingLevel, TracedProgram, WeekData } from '@/api/types'
 import { TRAINING_LEVELS } from '@/lib/gen/clientVocab'
 
@@ -222,13 +224,14 @@ function InputsPanel({ program }: { program: TracedProgram }) {
 
 // ─── DevLab page ──────────────────────────────────────────────────────────────
 
-type DevTab = 'pipeline' | 'browser' | 'heatmap' | 'interactions'
+type DevTab = 'pipeline' | 'browser' | 'heatmap' | 'interactions' | 'readiness'
 
 const DEV_TABS: { id: DevTab; label: string }[] = [
   { id: 'pipeline', label: 'Pipeline Trace' },
   { id: 'browser', label: 'Object Browser' },
   { id: 'heatmap', label: 'Ontology' },
   { id: 'interactions', label: 'Model Interactions' },
+  { id: 'readiness', label: 'Builder readiness' },
 ]
 
 export function DevLab() {
@@ -318,7 +321,16 @@ export function DevLab() {
   const trace = result?.generation_trace
   const canGenerate = !!philosophyId && !generateMutation.isPending
 
-  const [devTab, setDevTab] = useState<DevTab>('pipeline')
+  // The tab is in the URL (`?tab=readiness`), as on every other page, so a
+  // tool can be linked to; the trace form's state stays in the component.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const requested = searchParams.get('tab')
+  const devTab: DevTab = DEV_TABS.some(t => t.id === requested) ? (requested as DevTab) : 'pipeline'
+  function setDevTab(tab: DevTab) {
+    const next = new URLSearchParams(searchParams)
+    next.set('tab', tab)
+    setSearchParams(next, { replace: true })
+  }
   const [ontologyNodeId, setOntologyNodeId] = useState<string | null>(null)
   const [ontologyFromBrowser, setOntologyFromBrowser] = useState(false)
 
@@ -367,6 +379,12 @@ export function DevLab() {
       {devTab === 'interactions' && (
         <div className="flex-1 overflow-y-auto">
           <ModelInteractionPanel result={result} />
+        </div>
+      )}
+
+      {devTab === 'readiness' && (
+        <div className="flex-1 overflow-y-auto">
+          <ReadinessPanel />
         </div>
       )}
 

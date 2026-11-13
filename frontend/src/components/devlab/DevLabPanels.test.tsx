@@ -19,6 +19,7 @@ import { SessionsPanel } from './SessionsPanel'
 import { PipelineFlowPanel } from './PipelineFlowPanel'
 import { ValidationPanel } from './ValidationPanel'
 import { ModelInteractionPanel } from './ModelInteractionPanel'
+import { ReadinessPanel } from './ReadinessPanel'
 import { HeatmapPanel } from './heatmap/HeatmapPanel'
 import { WeekCalendar } from '@/components/program/WeekCalendar'
 import portability from '@/mocks/fixtures/portability.json'
@@ -81,19 +82,43 @@ describe.each(scenarios)('%s', (_name, program) => {
   })
 })
 
-describe('Model Interactions: portability', () => {
+describe('Builder readiness', () => {
   it('lays out the server\'s report', () => {
-    mount(<ModelInteractionPanel />)
+    mount(<ReadinessPanel />)
     expect(screen.getByText(portability.verdict)).toBeTruthy()
     for (const p of portability.packages) expect(screen.getByText(p.id)).toBeTruthy()
     const ready = portability.packages.filter((p) => p.ready).length
     expect(screen.getByText(new RegExp(`^${ready} of ${portability.packages.length} packages`))).toBeTruthy()
-    expect(screen.getByText(/resolved silently/)).toBeTruthy()
+    expect(screen.getByText(/^Ids two packages declare — resolved silently/)).toBeTruthy()
     for (const g of portability.gaps) expect(screen.getByText(g.title)).toBeTruthy()
+  })
+
+  it('lists the foundation\'s steps in order, each with its gaps, and counts what is open', () => {
+    mount(<ReadinessPanel />)
+    for (const s of portability.steps) expect(screen.getByText(s.title)).toBeTruthy()
+    const tracked = portability.gaps.filter((g) => g.status !== 'by_design')
+    const open = tracked.filter((g) => g.status === 'open')
+    const blocking = open.filter((g) => g.impact === 'blocks').length
+    expect(screen.getByText(new RegExp(`${tracked.length - open.length} of ${tracked.length} gaps closed`))).toBeTruthy()
+    expect(screen.getByText(new RegExp(`${blocking} open gaps? blocks? a built package`))).toBeTruthy()
+    // 20.1 has no gap of its own: the roadmap's day closes it.
+    expect(screen.getByText(`done ${portability.steps[0].done}`)).toBeTruthy()
+  })
+
+  it('shows a closed gap with its day and the test that holds it', () => {
+    const [first, ...rest] = portability.gaps
+    served.report = {
+      ...portability,
+      gaps: [{ ...first, status: 'done', closed: '2026-11-20', evidence: ['test_package_gate.py::def test_gate'] }, ...rest],
+    }
+    mount(<ReadinessPanel />)
+    expect(screen.getByText('done 2026-11-20')).toBeTruthy()
+    expect(screen.getByText('test_package_gate.py::def test_gate')).toBeTruthy()
+    expect(screen.queryByText(first.anchors[0])).toBeNull()
   })
 })
 
-describe('Model Interactions: a deployment without docs/', () => {
+describe('Builder readiness: a deployment without docs/', () => {
   it('shows the records it cannot read as unchecked, not missing', () => {
     const unread = new Set(['status', 'dossier'])
     served.report = {
@@ -105,7 +130,7 @@ describe('Model Interactions: a deployment without docs/', () => {
         records: p.records.map((o) => (unread.has(o.id) ? { ...o, done: null } : o)),
       })),
     }
-    mount(<ModelInteractionPanel />)
+    mount(<ReadinessPanel />)
     expect(screen.getByText(/Not checkable here: Source dossier · source_weeks.yaml · Status/)).toBeTruthy()
     expect(screen.getAllByText(/\(\+1 not in this deployment\)/).length).toBe(portability.packages.length)
     expect(screen.getAllByLabelText('Source dossier: not checkable here').length).toBe(portability.packages.length)

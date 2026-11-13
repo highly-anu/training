@@ -56,6 +56,7 @@ deferred is under *Later*.
 | 17 | Explore: each philosophy's page read from its package — a server document, its week and rules, one colour system | P2 | M | API, web, iOS, content |
 | 18 | Phone design and interaction uplift: the foundation (1.35), states (1.36), iOS 26 chrome (1.37), discoverable actions (1.38), the screen passes (1.39), motion (1.40) and accessibility with the system surfaces (1.41) are in (*IA*) | P2 | L | iOS |
 | 19 | Web design and interaction uplift: the phone's design language on the web, each rule in one module and held by a test — the foundation, states, feedback, motion, actions and keyboard, colour and accessibility, the page passes and the review fixes are in (*IA*) | P2 | L | web |
+| 20 | LLM package builder — the foundation: a package written at runtime, private to its athlete, picked up by the running app; the Dev Lab brought up to the engines that run. The gaps are recorded and shown (20.1); the rest is open | P1 | L | engine, API, web, content |
 
 ---
 
@@ -999,7 +1000,8 @@ Left — what a package still cannot bring in its folder, none of it naming a pa
 The list is `tools/portability_gaps.json` (each gap anchored in the code;
 `test_portability.py` fails when an anchor goes, so a closed gap changes its status
 there), shown per package beside the matrix of what each has in and outside its folder
-on Dev Lab ▸ Model Interactions (`GET /api/dev/portability`, `src/portability.py`).
+on Dev Lab ▸ Builder readiness (`GET /api/dev/portability`, `src/portability.py`; on Model
+Interactions until 2026-11-13).
 Today: the code is package-neutral, the repository is not yet drop-in. In order:
 - **9.1 One command to onboard a folder (S).** Done 2026-10-30 (branch `feat/add-package`):
   `tools/add_package.py <id>` checks the folder (schemas, no id another package declares,
@@ -1808,6 +1810,74 @@ and 390 px in two themes; §16's checklist rewritten to point at §1.8.
 
 Not doing: a bottom tab bar on mobile web; new modality or phase colours; in-app motion or
 density settings; a number computed on the client.
+
+### 20. LLM package builder: the foundation — P1 · L
+
+The next feature is a builder: an athlete describes a method, a model writes a whole
+package, and the running app picks it up. Item 9 made the *code* package-neutral and a
+folder droppable into a checkout; this item is what stands between that and a package
+written while the app runs. Analysed on 2026-11-13 — what holds: no code names a package,
+generation re-reads the packages on every call, `mcp_server.py` writes and validates a
+whole folder (a local developer process), standards live in the package. What does not is
+the list in `tools/portability_gaps.json`, each gap anchored in the code and citing its
+step here, shown on **Dev Lab ▸ Builder readiness** (`GET /api/dev/portability`).
+
+Decided with the athlete: a built package is **for any user and private to its owner**,
+stored in Postgres and laid over the shipped packages for that athlete only; a package
+**may bring its own vocabulary** (modalities, movement patterns, equipment) in its folder,
+as it already brings its standards; the Dev Lab is refreshed to the engines that run and
+says where the foundation stands. The builder itself (the model, its prompt, its screen)
+is planned once this is in.
+
+Stays the engine's, by design: slot types, progression and contract models, phase kinds,
+levels, intensities, watch templates and icons (compiled into the watches).
+
+Readiness, in order:
+
+- **20.1 The gaps recorded and shown (S).** Done 2026-11-13: twenty open gaps in
+  `tools/portability_gaps.json` (a gap now closes as `done` with the day and the test
+  that holds it), the Builder readiness tab (`components/devlab/ReadinessPanel.tsx`) —
+  the steps with their gaps, then the per-package table that was on Model Interactions.
+- **20.2 Callable gates (M).** `src/package_gate.check_package(folder)` → structured
+  problems: the schemas, add_package's checks, collisions, a smoke generate of every track
+  and phase (check_styles' loop, shared), the provenance audit. The tools and the MCP
+  server call it.
+- **20.3 Roots, overlay, quarantine, caches (L).** The loader reads the shipped root and,
+  for the caller in context, that athlete's overlay; an overlay id carries its owner's
+  prefix and never replaces a shipped one; a broken overlay package is set aside alone
+  (the shipped root stays fail-fast); every process cache is keyed by view and cleared by
+  one `invalidate_package_data()`. The one-track golden programs stay byte-identical.
+- **20.4 Reference routes per athlete (M).** The baked build stays for everyone without a
+  package of their own; an athlete with one gets their own bounded variant.
+- **20.5 Storage and install (M).** `user_packages` (migration 013, a capped file map),
+  materialised per athlete, installed atomically through the gate; soft delete, so a
+  stored program keeps resolving; `GET/POST/DELETE /api/packages` behind the authoring
+  gate until the builder ships.
+- **20.6 Vocabulary: movement patterns and modalities (M).** A package's
+  `vocabulary.yaml`; known = commons ∪ its own ∪ what it borrows; a package modality
+  brings its display, family and recovery; an exercise on package patterns states what
+  each injury flag rules out.
+- **20.7 Vocabulary: equipment (M).** The package's implements in the equipment list and
+  the web picker; the phone's picker and compiled styles stay a recorded gap. May follow
+  the builder.
+- **20.8 One package spec; a package from nothing (M).** `docs/schemas/PACKAGE_SPEC.md`
+  (ships in the image; its valid values generated), the MCP templates read from it, and
+  `test_package_dropin.py` runs a package written from scratch — its own exercise ids and
+  vocabulary — a malformed one, and one added to a running process.
+
+The Dev Lab, independent of 20.2–20.8:
+
+- **20.9 The trace says what each engine decided (M).** A contract's weekly minutes,
+  periods, forecast and placement; a template's picked, passed-over and dropped days; the
+  tests; a composition's kept days and cuts. Opt-in, and the program is the same with it.
+- **20.10 Pipeline Trace per engine (M).** One flow per engine, compositions and contract
+  options in the form, the program's compromises, coverage and held-back slots.
+- **20.11 Model Interactions from data (M).** The map — philosophy, track, phase, contract
+  or week template or scheduler, archetype, exercise, load, with compositions and tests —
+  served with code anchors a test checks.
+- **20.12 The Impact tab (S).** Over `POST /api/dev/constraint-impact` (item 9, step 6).
+
+---
 
 ## Later
 

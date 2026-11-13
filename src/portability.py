@@ -1,6 +1,6 @@
 """What each package brings in its own folder, and what the gates record there.
 
-The Dev Lab's Model Interactions tab asks of every package the question
+The Dev Lab's Builder readiness tab asks of every package the question
 test_package_dropin.py answers for three copies: is it a folder that works end
 to end when dropped in? The code half is held elsewhere (no code names a
 package: tools/check_code_neutral.py). This reads the other half, per package:
