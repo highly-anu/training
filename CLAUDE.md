@@ -1508,7 +1508,9 @@ laid out per athlete by `src/package_store.py` and named as the request's overla
 (`auth._as_user`; a thread that serves no request names it itself, as the Garmin worker does).
 `POST /api/packages {files, dry_run?}` installs through every gate with the owner's id prefix
 (422 with the problems), `GET /api/packages[/<id>]`, `DELETE` (409 `in_use`). The `@static_json`
-reference routes take no sign-in and still answer the shipped packages alone (20.4).
+reference routes need no sign-in, and with one add the athlete's own packages: a variant built in
+their view, kept bounded beside the shared answers (`api._USER_STATIC`, keyed by their overlay
+directory), sent `private`; the shared answers and the image's build are never touched (20.4).
 `src/package_gate.check_package(folder)` is every gate for one folder, in process and as data
 (files, schema, ids, a smoke generate of every track and phase, provenance — `src/package_smoke.py`
 is check_styles' loop and check_provenance's audit, which both tools call; roadmap 20.2).

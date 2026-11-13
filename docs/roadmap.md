@@ -1865,8 +1865,17 @@ Readiness, in order:
   changed set is a new directory. Without an overlay the loader returns exactly what it
   did (the one-track golden programs unchanged). Nothing names an overlay for a request
   yet — storage does (20.5). `test_package_overlay.py`.
-- **20.4 Reference routes per athlete (M).** The baked build stays for everyone without a
-  package of their own; an athlete with one gets their own bounded variant.
+- **20.4 Reference routes per athlete (M).** Done 2026-11-13. `api.static_json` reads the
+  bearer token when there is one (`auth.optional_user_id`, never an error) and asks the
+  store for that athlete's overlay. None — nobody signed in, no package — is the shared
+  answer, from the build, exactly as before. With one, the route is built in their view
+  (one build at a time, as the shared ones) and kept in `_USER_STATIC`: at most 96
+  answers and 12 MB, least recently used first out, keyed by the overlay directory, whose
+  name is the athlete's packages' revisions — an install or a removal is a new key, so
+  nothing is cleared and the build is never abandoned. Sent `Cache-Control: private,
+  no-cache` and `Vary: Authorization`; a route their packages do not change keeps the
+  shared bytes. The store reads on the thread's read connection (a new one per athlete a
+  minute would have used up the pooler). `test_static_cache.py`.
 - **20.5 Storage and install (M).** Done 2026-11-13 (migration 013 **not yet run on
   production** — `scripts/backup_prod.sh` first; until then `src/package_store.py` makes
   the table lazily, row security on and no policy). `user_packages`: one row per athlete

@@ -2462,13 +2462,19 @@
    "title": "The reference routes are one answer for everyone",
    "kind": "runtime",
    "impact": "blocks",
-   "detail": "/philosophies, the Explore documents and the rest are baked into the image and cached by path alone. A package added at runtime is not in them, and clearing the cache abandons the baked build for the life of the process (every route rebuilt live on 256 MB).",
+   "detail": "Was: one answer per path for everyone, and clearing it abandoned the image's baked build for the life of the process. The shared answers and the build are untouched. An athlete with packages of their own (the reference routes read the bearer token when there is one, never requiring it) gets a variant built in their view, kept in a bounded store keyed by their overlay directory — named from their packages' revisions, so an install or a removal is a new key and nothing is cleared — and sent `Cache-Control: private` with `Vary: Authorization`. A route their packages do not change keeps the shared bytes.",
    "anchors": [
     "api.py::key = request.full_path",
     "api.py::_BUILT = {}"
    ],
    "roadmap": "20.4",
-   "status": "open"
+   "status": "done",
+   "closed": "2026-11-13",
+   "evidence": [
+    "test_static_cache.py::class OwnPackagesTests",
+    "test_static_cache.py::def test_an_athletes_own_answers_leave_the_build_in_place",
+    "api.py::def _own_overlay"
+   ]
   },
   {
    "id": "no_package_storage",

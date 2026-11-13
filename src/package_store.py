@@ -198,21 +198,27 @@ def _public(row: dict, with_files: bool = False) -> dict:
 def _live_rows(user_id: str) -> list[dict]:
     """The athlete's packages that are not removed, by id. Raises StoreError
     when the database cannot be read."""
-    conn = _conn()
+    from src import db
+    # The thread's own read connection, never a new one: this runs once a
+    # minute for every athlete who asks for a reference route, and production
+    # has fifteen pooler slots.
+    conn = db.read_conn()
     if conn is None:
         rows = [r for r in _file_rows(user_id).values() if not r.get('deleted_at')]
         return sorted(rows, key=lambda r: r['package_id'])
     try:
+        import psycopg2.errors
         import psycopg2.extras
-        _ensure_schema(conn)
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-            cur.execute('SELECT package_id, revision, name, files, status, problems, updated_at FROM user_packages '
-                        'WHERE user_id = %s AND deleted_at IS NULL ORDER BY package_id', (str(user_id),))
+            try:
+                cur.execute('SELECT package_id, revision, name, files, status, problems, updated_at '
+                            'FROM user_packages WHERE user_id = %s AND deleted_at IS NULL ORDER BY package_id',
+                            (str(user_id),))
+            except psycopg2.errors.UndefinedTable:
+                return []   # nobody has installed one here yet (a write makes the table)
             return [dict(r) for r in cur.fetchall()]
     except Exception as e:
         raise StoreError(f'user_packages not read: {e}') from e
-    finally:
-        conn.close()
 
 
 def list_packages(user_id: str) -> list[dict]:

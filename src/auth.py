@@ -67,6 +67,26 @@ DEVICE_ROUTES = frozenset({
 })
 
 
+def optional_user_id() -> str | None:
+    """Who is asking, on a route that needs no sign-in: the user of a valid
+    bearer token, else None — never an error. The reference routes answer
+    everyone, and an athlete with packages of their own gets theirs added
+    (api.static_json)."""
+    header = request.headers.get('Authorization', '')
+    token = header.split(' ', 1)[1] if header.startswith('Bearer ') else ''
+    from src import device_store
+    if token.startswith(device_store.TOKEN_PREFIX):
+        return None
+    if not SUPABASE_URL:
+        return 'local-dev-user'
+    if not token:
+        return None
+    try:
+        return _decode_token(token)['sub']
+    except Exception:
+        return None
+
+
 def _as_user(f, *args, **kwargs):
     """Run a view as the signed-in athlete: the loader sees their own packages
     beside the shipped ones (src/package_store.py, loader.overlay) for the

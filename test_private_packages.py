@@ -64,7 +64,8 @@ def package_for(user_id: str, name: str = 'blocks') -> tuple[str, dict]:
     shipped, _ = loader.load_all_exercises()
     texts = {}
     for path in sorted(glob.glob(os.path.join(FIXTURE, '**', '*.yaml'), recursive=True)):
-        texts[os.path.relpath(path, FIXTURE).replace(os.sep, '/')] = open(path, encoding='utf-8').read()
+        with open(path, encoding='utf-8') as fh:
+            texts[os.path.relpath(path, FIXTURE).replace(os.sep, '/')] = fh.read()
     rename = {yaml.safe_load(texts['philosophy.yaml'])['id']: f'{prefix}{name}'}
     for rel, text in texts.items():
         doc = yaml.safe_load(text) or {}
