@@ -57,6 +57,7 @@ deferred is under *Later*.
 | 18 | Phone design and interaction uplift: the foundation (1.35), states (1.36), iOS 26 chrome (1.37), discoverable actions (1.38), the screen passes (1.39), motion (1.40) and accessibility with the system surfaces (1.41) are in (*IA*) | P2 | L | iOS |
 | 19 | Web design and interaction uplift: the phone's design language on the web, each rule in one module and held by a test — the foundation, states, feedback, motion, actions and keyboard, colour and accessibility, the page passes and the review fixes are in (*IA*) | P2 | L | web |
 | 20 | LLM package builder — the foundation: all twelve steps are in (the gate, the overlay, storage, per-athlete reference routes, package vocabulary, the spec, the trace and the Dev Lab). Left: the phone reading a package's vocabulary, migration 013 on production, the builder itself | P1 | L | engine, API, web, content |
+| 21 | LLM package builder: an athlete describes a method and gets one to build a program from, on the web and the phone — dev role first. The gate and the methods list are in (21.1); the job, the model loop and the screens are open | P1 | L | API, web, iOS, watch |
 
 ---
 
@@ -1998,6 +1999,63 @@ The Dev Lab, independent of 20.2–20.8:
 What is left of item 20 after these twelve steps: the phone and the watches reading a
 package's modalities and equipment from the API (gap `client_vocab_compiled`); migration
 013 on production; and the builder itself.
+
+---
+
+### 21. LLM package builder — P1 · L
+
+An athlete describes a training method in words and gets a method they can build a
+program from. Item 20 is what it stands on: storage, one gate, the private overlay, a
+package's own vocabulary, the spec. Decided with the athlete on 2026-11-13:
+
+- **Who**: accounts with the Supabase `dev` role first, read from the verified token on
+  the server, with a daily build limit; opening it to everyone is `PACKAGE_BUILDER=all`.
+- **How**: describe (with days, session length, level, equipment) → a background build →
+  the result; then revise with a note, which builds a new revision of the same method.
+- **From what**: the athlete's words, pasted text, and web search to ground a named method.
+  A method named after a published program is the athlete's version of it, never the
+  author's.
+- **Where**: inside the program builder's first step on both clients — a "Your methods"
+  group and a "Create your own" card. No new Profile or Explore section.
+- The athlete reads *method*; the code keeps *package* and *philosophy*.
+
+What the model may write in the first version: the modality scheduler and week templates.
+Training contracts are refused. Not planned: push notifications, sharing a method.
+
+- **21.1 Who may use it (S).** Done 2026-11-13. `require_auth` keeps the verified claims
+  (`g.claims`) and `auth.has_role('dev')` reads `app_metadata.roles` — the claim the web
+  reads to show the Dev Lab, now read on the server too. `PACKAGE_BUILDER` = `off | dev |
+  all` (default `dev`; local dev is allowed unless off): `api.require_builder` gates the
+  `/api/packages` routes (they were behind the developer authoring gate) and `DELETE
+  /api/methods/<id>`. `GET /api/methods` always answers 200 — `available`, a `reason`
+  (`not_enabled` for the account, `no_model_key` on the server), the athlete's methods
+  (name, revision, status, `inUse`) and the limits (`PACKAGE_BUILDER_DAILY_LIMIT`, five a
+  day; twenty kept) — so a client shows nothing, or the methods without the way to make
+  another. `test_builder_access.py`.
+- **21.2 The build as a durable job (M).** `package_builds` (migration 014): a row per
+  build with its request, draft files, transcript, progress, result and usage; one worker
+  thread, a heartbeat lease, a stale row re-claimed, kicked on enqueue and at startup,
+  cancellable; the transcript saved after every turn so a restart resumes. `POST
+  /api/methods/builds`, `GET …/<id>`, `POST …/<id>/cancel`. The gate's one slot is held
+  around each check only; install takes the passing check it was given.
+- **21.3 The model loop (L).** `src/package_builder.py`: the spec as a cached system
+  prompt; tools to write, read and delete draft files, read a schema, check the package
+  and finish; web search and fetch when asked for; budgets on turns, checks, tokens and
+  time; a refusal ends the build in plain words. `tools/eval_package_builder.py` runs real
+  descriptions against the real model — with approval, it costs money.
+- **21.4 Web: the builder in the program builder (M).** The priorities bug fixed first
+  (a package's own modalities were sent as zero). A "Your methods" group and a "Describe
+  your own method" card in the first step; the describe form, the progress screen and the
+  method's page with Build, Revise and Delete.
+- **21.5 Phone: a package's vocabulary (M).** The phone reads `/api/modalities` and
+  `/api/equipment`; a package's modality draws with its colour and label and its implement
+  can be ticked; widgets and both watches get the display; the philosophies refresh.
+- **21.6 Phone: the builder (M).** The same group and card in the phone's builder, the
+  describe, progress and result screens; version 1.42.0.
+- **21.7 Dev Lab: the builds (S).** Each build's turns, checks, problems and tokens.
+- **21.8 Production (S).** For the owner, each with a go-ahead: `scripts/backup_prod.sh`,
+  migrations 013 and 014, `fly secrets set ANTHROPIC_API_KEY`, the `dev` role on the
+  accounts that try it.
 
 ---
 

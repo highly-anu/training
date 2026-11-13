@@ -1503,8 +1503,7 @@ path onto the packages directory: `loader.package_dirs()`, `package_dir(id)`,
 in it that does not load is set aside alone (`loader.quarantined()`). **Anything kept from the
 packages is kept per view** — `loader.view_store(name)` or `@loader.scoped_cache`, never a module
 global or `lru_cache` — and `api.invalidate_package_data()` is the one call that forgets it.
-**An athlete's own packages** (since 2026-11-13, roadmap 20.5; behind the authoring gate until the
-builder ships): rows in `user_packages` (`migrations/013_user_packages.sql`, a capped file map),
+**An athlete's own packages** (since 2026-11-13, roadmap 20.5; behind the builder's gate, below): rows in `user_packages` (`migrations/013_user_packages.sql`, a capped file map),
 laid out per athlete by `src/package_store.py` and named as the request's overlay by `require_auth`
 (`auth._as_user`; a thread that serves no request names it itself, as the Garmin worker does).
 `POST /api/packages {files, dry_run?}` installs through every gate with the owner's id prefix
@@ -1524,6 +1523,12 @@ icons stay the engine's.
 (`test_packages/scratch_minimal`, written from nothing) are generated — after a change to the
 commons' vocabulary, a schema enum, the gate's stages or that package, run
 `.venv/bin/python tools/gen_package_spec.py` (`--check` is a push gate).
+**The package builder** (roadmap item 21, in progress): an athlete describes a method and a model
+writes the package. The athlete reads *method*; the code keeps *package*. `PACKAGE_BUILDER` = `off |
+dev | all` (default `dev`: the `dev` role in the verified token's `app_metadata.roles`,
+`auth.has_role`; local dev is allowed) gates `/api/packages` and `DELETE /api/methods/<id>`
+(`api.require_builder`); `GET /api/methods` always answers 200 with `available`, a `reason`, the
+athlete's methods and the limits (`test_builder_access.py`).
 `src/package_gate.check_package(folder)` is every gate for one folder, in process and as data
 (files, schema, ids, a smoke generate of every track and phase, provenance — `src/package_smoke.py`
 is check_styles' loop and check_provenance's audit, which both tools call; roadmap 20.2).
@@ -1580,6 +1585,7 @@ SUPABASE_URL='' .venv/bin/python test_constraint_impact.py  # what each constrai
 SUPABASE_URL='' .venv/bin/python test_model_map.py       # Dev Lab ▸ Model Interactions' map (tools/model_map.json): each interaction anchored in the code; --write re-records the web's copy
 SUPABASE_URL='' .venv/bin/python test_portability.py     # Dev Lab ▸ Builder readiness' report; every open gap still anchored in the code, every closed one held by a test; --write re-records the web's copy
 .venv/bin/python test_package_gate.py                    # src/package_gate.check_package: one folder through the gates' checks, as data
+SUPABASE_URL='' .venv/bin/python test_builder_access.py   # who may use the package builder: flag, dev role, GET /api/methods
 SUPABASE_URL='' .venv/bin/python test_private_packages.py  # an athlete's own packages: store, install through the gate, routes; SQL half on its own database
 SUPABASE_URL='' .venv/bin/python test_package_vocabulary.py  # a package's vocabulary.yaml: modalities and patterns of its own
 .venv/bin/python tools/gen_package_spec.py [--check]     # the package spec's generated lists and worked example

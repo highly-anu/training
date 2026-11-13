@@ -2440,7 +2440,7 @@
  ],
  "sharedExercises": 80,
  "_comment": "What a package still cannot bring in its own folder, and what a package written at runtime (the LLM package builder, roadmap item 20) still cannot rely on (src/portability.py serves this to Dev Lab ▸ Builder readiness). Each anchor is `path::text` and must still be in that file while the gap is open; test_portability.py fails when one is gone, so closing a gap means changing its status here in the same change. kind: runtime | gate | tooling | commons | code | client | watch | docs | devlab. impact on a dropped-in or built package: blocks (it fails a gate, cannot be written or cannot be served), degrades (it works, worse or silently wrong), cosmetic. status: open | done (with `closed`, the day, and `evidence`, `path::text` of the test that holds it — checked like an anchor) | by_design (the engine's vocabulary is the contract between packages and the engine). roadmap: the step of docs/roadmap.md (9.x, 20.x) that closes it. steps: the roadmap steps of the builder's foundation, in order, each titled as docs/roadmap.md titles it; a step is done when it says so (`done`, the day) or when every gap citing it is.",
- "verdict": "The code is package-neutral: nothing in the server, the web, the phones or the watches names a package (tools/check_code_neutral.py), and test_package_dropin.py runs three packages under new ids beside the shipped ones with the repository unchanged. A package is one folder: its files, its standards, and the records the push gates keep (records/, dossier.md), which tools/add_package.py <id> writes. That is a package added to a checkout and shipped in the image. A package written while the app runs, for one athlete — what the LLM package builder needs — is not supported yet: the open gaps below are what stands between the two (docs/roadmap.md item 20).",
+ "verdict": "The code is package-neutral, and since item 20 a package written while the app runs is stored, checked by one gate, read privately beside the shipped ones for its owner, may bring its own vocabulary, and has one spec. What is open below is the builder itself (docs/roadmap.md item 21): the job a build runs as, the model loop, the screens on the web and the phone, and the production steps.",
  "steps": [
   {
    "id": "20.1",
@@ -2501,9 +2501,145 @@
    "id": "20.12",
    "title": "The Impact tab",
    "done": null
+  },
+  {
+   "id": "21.1",
+   "title": "Who may use it",
+   "done": "2026-11-13"
+  },
+  {
+   "id": "21.2",
+   "title": "The build as a durable job",
+   "done": null
+  },
+  {
+   "id": "21.3",
+   "title": "The model loop",
+   "done": null
+  },
+  {
+   "id": "21.4",
+   "title": "Web: the builder in the program builder",
+   "done": null
+  },
+  {
+   "id": "21.5",
+   "title": "Phone: a package's vocabulary",
+   "done": null
+  },
+  {
+   "id": "21.6",
+   "title": "Phone: the builder",
+   "done": null
+  },
+  {
+   "id": "21.7",
+   "title": "Dev Lab: the builds",
+   "done": null
+  },
+  {
+   "id": "21.8",
+   "title": "Production",
+   "done": null
   }
  ],
  "gaps": [
+  {
+   "id": "no_build_job",
+   "title": "A build has nowhere to run",
+   "kind": "runtime",
+   "impact": "blocks",
+   "detail": "A build takes minutes; a request has 120 s and one of four threads. The only job the server keeps is an in-memory dictionary lost on every deploy, and the durable queue it has (Garmin's) never re-claims a row left processing and is not started at boot.",
+   "anchors": [
+    "api.py::_parse_jobs: dict"
+   ],
+   "roadmap": "21.2",
+   "status": "open"
+  },
+  {
+   "id": "no_model_loop",
+   "title": "Nothing calls a model",
+   "kind": "code",
+   "impact": "blocks",
+   "detail": "No LLM SDK, no key, no prompt: the spec and the gate exist, the loop that writes files, checks them and fixes what the gate finds does not.",
+   "anchors": [
+    "requirements.txt::requests>=2.31"
+   ],
+   "roadmap": "21.3",
+   "status": "open"
+  },
+  {
+   "id": "web_priorities_drop_package_modalities",
+   "title": "The web's builder zeroes a package's own modalities",
+   "kind": "client",
+   "impact": "blocks",
+   "detail": "The program builder sends priority overrides built from the modality list compiled into the build, and the server replaces the goal's priorities with them: a method made of its own modalities is sent all zeros and generates nothing.",
+   "anchors": [
+    "frontend/src/lib/philosophyPriorities.ts::MODALITY_ORDER"
+   ],
+   "roadmap": "21.4",
+   "status": "open"
+  },
+  {
+   "id": "web_no_builder",
+   "title": "No way to describe a method on the web",
+   "kind": "client",
+   "impact": "blocks",
+   "detail": "The program builder lists philosophies; it has no card to create one, no progress for a build, and no list of the athlete's own.",
+   "anchors": [
+    "frontend/src/components/builder/ProgramSource.tsx::const MODES"
+   ],
+   "roadmap": "21.4",
+   "status": "open"
+  },
+  {
+   "id": "phone_philosophies_fetched_once",
+   "title": "The phone fetches the philosophies once",
+   "kind": "client",
+   "impact": "degrades",
+   "detail": "A method built while the app is open never appears: the list is loaded when empty and never again.",
+   "anchors": [
+    "ios/TrainingCompanion/AppState.swift::func loadPhilosophiesIfNeeded"
+   ],
+   "roadmap": "21.5",
+   "status": "open"
+  },
+  {
+   "id": "phone_no_builder",
+   "title": "No way to describe a method on the phone",
+   "kind": "client",
+   "impact": "blocks",
+   "detail": "The phone's builder has no card to create a method, no progress for a build, and no list of the athlete's own.",
+   "anchors": [
+    "ios/TrainingCompanion/Views/ProgramBuilder/BuilderMethodologyStep.swift::appState.philosophies"
+   ],
+   "roadmap": "21.6",
+   "status": "open"
+  },
+  {
+   "id": "builds_not_observable",
+   "title": "Nothing shows what a build did",
+   "kind": "devlab",
+   "impact": "degrades",
+   "detail": "A build's turns, checks, the problems the gate found and the tokens it spent are the only way to judge quality and cost; no screen reads them.",
+   "anchors": [
+    "frontend/src/pages/DevLab.tsx::DEV_TABS"
+   ],
+   "roadmap": "21.7",
+   "status": "open"
+  },
+  {
+   "id": "production_not_ready",
+   "title": "Production has no table, key or role for it",
+   "kind": "runtime",
+   "impact": "blocks",
+   "detail": "Migrations 013 (and 014, with the build job) are not run on production, the model's key is not a Fly secret, and no account carries the dev role for it. Until then the builder says it is unavailable. Each is a step for the owner, after scripts/backup_prod.sh.",
+   "anchors": [
+    "migrations/013_user_packages.sql::scripts/backup_prod.sh"
+   ],
+   "roadmap": "21.8",
+   "status": "open"
+  },
   {
    "id": "gates_not_callable",
    "title": "The gates cannot be called for one package",
@@ -2754,7 +2890,7 @@
     "ios/TrainingCompanion/ModalityStyle.swift::static func",
     "tools/gen_client_vocab.py::ClientVocab.swift"
    ],
-   "roadmap": "20.7",
+   "roadmap": "21.5",
    "status": "open"
   },
   {

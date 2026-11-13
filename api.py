@@ -69,6 +69,64 @@ def _authoring_enabled() -> bool:
 _SCHEMA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'docs', 'schemas')
 
 
+# ── The package builder: who may use it ──────────────────────────────────────
+# An athlete describes a method and a model writes the package (docs/roadmap.md
+# item 21). PACKAGE_BUILDER says who: `off`; `dev` (the default) — accounts
+# whose verified token carries the `dev` role; `all` — every signed-in athlete.
+# Local dev (no SUPABASE_URL, every request `local-dev-user`) is allowed unless
+# it is off. The model's key is a second condition for building, not for
+# listing or removing what was built.
+_BUILDER_MODES = ('off', 'dev', 'all')
+
+
+def _builder_mode() -> str:
+    mode = os.environ.get('PACKAGE_BUILDER', '').strip().lower() or 'dev'
+    return mode if mode in _BUILDER_MODES else 'dev'
+
+
+def _builder_allowed() -> bool:
+    """Whether the signed-in athlete may use the builder and keep methods of
+    their own (call inside a require_auth view)."""
+    mode = _builder_mode()
+    if mode == 'off':
+        return False
+    if mode == 'all' or not os.environ.get('SUPABASE_URL'):
+        return True
+    from src import auth as _auth
+    return _auth.has_role('dev')
+
+
+def _builder_daily_limit() -> int:
+    try:
+        return max(0, int(os.environ.get('PACKAGE_BUILDER_DAILY_LIMIT', '5')))
+    except ValueError:
+        return 5
+
+
+def _builder_availability() -> tuple[bool, str | None]:
+    """(can a build start now, why not): `not_enabled` for this athlete, or
+    `no_model_key` when the server has no key for the model."""
+    if not _builder_allowed():
+        return False, 'not_enabled'
+    if not os.environ.get('ANTHROPIC_API_KEY'):
+        return False, 'no_model_key'
+    return True, None
+
+
+def require_builder(f):
+    """Gate for an athlete's own packages and the builder. Stack it under
+    require_auth: 403 `not_enabled` for an athlete it is not on for."""
+    from functools import wraps
+
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if not _builder_allowed():
+            return jsonify({'error': 'not_enabled', 'detail': 'Building your own methods is not available '
+                            'for this account.'}), 403
+        return f(*args, **kwargs)
+    return wrapper
+
+
 def _schema_errors(kind: str, obj: dict) -> list[str]:
     """Validate an authored entity against docs/schemas/<kind>.schema.json —
     the contract tools/validate_entities.py enforces on the YAML, applied to
@@ -1835,8 +1893,8 @@ def dev_constraint_impact():
 
 # ── An athlete's own packages ────────────────────────────────────────────────
 # Written at runtime, kept in Postgres, private to their owner
-# (src/package_store.py; docs/roadmap.md item 20). Behind the authoring gate
-# until the builder ships. Every write goes through the gates
+# (src/package_store.py; docs/roadmap.md items 20 and 21). Behind the builder's
+# gate (require_builder). Every write goes through the gates
 # (src/package_gate.py) and one runs at a time, as generation does.
 
 def _package_store_error(e):
@@ -1846,7 +1904,7 @@ def _package_store_error(e):
 
 @app.get('/api/packages')
 @require_auth
-@require_authoring
+@require_builder
 def list_user_packages():
     """The athlete's own packages, the prefix every id they declare must
     carry, and any that no longer loads (set aside, with why)."""
@@ -1867,7 +1925,7 @@ def list_user_packages():
 
 @app.get('/api/packages/<package_id>')
 @require_auth
-@require_authoring
+@require_builder
 def get_user_package(package_id):
     from src import package_store
     try:
@@ -1879,7 +1937,7 @@ def get_user_package(package_id):
 
 @app.post('/api/packages')
 @require_auth
-@require_authoring
+@require_builder
 def install_user_package():
     """Install (or replace) one package: `{files: {path: yaml text}}`, its id
     the philosophy's. `dry_run: true` checks only. 200 with `installed`; 422
@@ -1906,24 +1964,74 @@ def install_user_package():
 
 @app.delete('/api/packages/<package_id>')
 @require_auth
-@require_authoring
+@require_builder
 def delete_user_package(package_id):
     """Remove one of the athlete's packages. 409 while their program is built
     from it (the program would lose its method); 404 when they have none by
     that id."""
+    return _remove_user_package(package_id)
+
+
+def _program_uses(program, package_id: str) -> bool:
+    """Whether a stored program is built from a package: its id is named
+    somewhere in it (the goal's sources, a session's archetype)."""
+    return bool(program) and f'"{package_id}"' in json.dumps(program, default=str)
+
+
+def _remove_user_package(package_id: str):
     from src import package_store
     try:
         if package_store.get_package(g.user_id, package_id) is None:
             return jsonify({'error': 'not_found'}), 404
-        from src.db import get_user_program
-        program = get_user_program(g.user_id)
-        if program and f'"{package_id}"' in json.dumps(program, default=str):
-            return jsonify({'error': 'in_use', 'detail': 'Your program is built from this package. '
+        from src import db as _db
+        if _program_uses(_db.get_user_program(g.user_id), package_id):
+            return jsonify({'error': 'in_use', 'detail': 'Your program is built from this method. '
                             'Start another program first.'}), 409
         package_store.remove(g.user_id, package_id)
     except package_store.StoreError as e:
         return _package_store_error(e)
     return jsonify({'removed': True})
+
+
+# ── Methods: the athlete's reading of their own packages ─────────────────────
+# What both clients' program builders show under "Your methods" (item 21). The
+# athlete says *method*; the stored thing is a package.
+
+@app.get('/api/methods')
+@require_auth
+def list_methods():
+    """Whether the athlete can build methods of their own, and the ones they
+    have. Always 200: `available: false` with a `reason` (`not_enabled` for
+    this account, `no_model_key` on this server) tells a client to show
+    nothing, or the methods without the way to make another."""
+    from src import package_store
+    available, reason = _builder_availability()
+    daily = _builder_daily_limit()
+    body = {'available': available, 'reason': reason, 'methods': [], 'builds': [],
+            'limits': {'daily': daily, 'remaining': daily, 'kept': package_store.MAX_PACKAGES}}
+    if reason == 'not_enabled':
+        return jsonify(body)
+    try:
+        rows = package_store.list_packages(g.user_id)
+    except package_store.StoreError as e:
+        return _package_store_error(e)
+    from src import db as _db
+    program = _db.get_user_program(g.user_id) if rows else None
+    set_aside = {q['package'] for q in loader.quarantined()}
+    body['methods'] = [{'id': r['id'], 'name': r.get('name') or r['id'], 'revision': r['revision'],
+                        'status': 'quarantined' if r['id'] in set_aside else r.get('status') or 'installed',
+                        'updatedAt': r.get('updatedAt'), 'inUse': _program_uses(program, r['id'])}
+                       for r in rows]
+    return jsonify(body)
+
+
+@app.delete('/api/methods/<package_id>')
+@require_auth
+@require_builder
+def delete_method(package_id):
+    """Remove one of the athlete's methods: 409 `in_use` while their program
+    is built from it, 404 when they have none by that id."""
+    return _remove_user_package(package_id)
 
 
 @app.get('/api/dev/model-map')
