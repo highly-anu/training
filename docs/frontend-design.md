@@ -1812,7 +1812,6 @@ Visualization is now the largest single surface in the app — **18 files** rend
 | `workout/ElevationChart` | gradient area (§12.8) | teal `#14b8a6` |
 | `workout/GPSMap` | Leaflet polyline (§12.9) | zone ramp |
 | `workout/Swiss3DMap` | CesiumJS terrain (§12.9) | — |
-| `devlab/PhilosophyExplorerPanel` | bar | modality hex |
 | `pages/WorkoutAnalytics` | multiple, inline | mixed |
 
 **Program ▸ Overview's phase changes** (`program/PhaseChanges.tsx`) lay out the

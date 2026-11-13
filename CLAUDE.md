@@ -449,9 +449,9 @@ group's name.
   ranks it after the spacing terms. Fidelity reads a region loaded heavily on consecutive
   days as `region_back_to_back` (info, never gated). A source's own week is never
   rearranged for it. **Where scoring runs at all:** every shipped package places its
-  sessions by its own `week_templates` or a training contract, so the archetype picker
-  (and the scheduler) run only for blends a contract philosophy leads, for packages
-  without either, and for a single-session regenerate.
+  sessions by its own `week_templates` or a training contract — and a blend is a composition,
+  each track on its own engine — so the archetype picker (and the scheduler) run only for
+  packages without either and for a single-session regenerate.
 - **Exercise scoring**: prefers exercises with defined movement_patterns (+0.5) and forward-unlocking exercises (+0.5); penalizes recently used (-2 per recent use). AMRAP/for_time slots exclude `mobility` and `rehab` category exercises.
 - **Deload**: every `deload_protocol.frequency_weeks` (a framework without a protocol never
   deloads on schedule) or when `fatigue_state: overreached`; `volume_reduction_pct` is the
@@ -1594,6 +1594,10 @@ a contract's `scheduler.contract_week` (modules, minutes, steps, the placement c
 best, scored) and each session's `module_steps`; a template's `scheduler.template` (days kept and
 dropped, each pool's rotation, what was passed over and why); a composition's `lane_weeks`. Asking
 for it never changes the program (`test_devlab_trace.py`).
+
+Pipeline Trace draws the engine that built each week (`components/devlab/EngineWeek.tsx`), takes a
+second track for a composition, and can be linked to: `/dev?philosophy=<id>&track=<id>&second=<id>
+&days=4&equipment=all&step=schedule&run=1` generates on arrival.
 
 The Dev Lab's panels render a recorded `generate?trace=1` answer
 (`frontend/src/mocks/fixtures/traced-programs.json`) in

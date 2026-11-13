@@ -378,13 +378,19 @@
       "title": "Pipeline Trace draws the scheduler's steps",
       "kind": "devlab",
       "impact": "degrades",
-      "detail": "Allocation and day assignment are empty for all eleven packages, a composition cannot be requested, and compromises, coverage and held-back slots are never shown.",
+      "detail": "Was: allocation and day assignment, empty for every shipped package; no way to ask for a composition; nothing of what the program says about itself. The Schedule step's card and the flow now follow the engine that built the week (EngineWeek.tsx): a contract's modules, steps and placement against the next best; a template's days, pools, rotation and what was passed over; a composition's tracks, each on its own. The form takes a second track and its equipment list is the vocabulary's; a session says its test, its modules' steps, its track and what it stands in for; the Output step lists compromises, coverage and what the constraints held back. A trace can be linked to (`/dev?philosophy=…&run=1`). Left: a contract track's options are not asked in the form (the defaults run).",
       "anchors": [
         "frontend/src/components/devlab/PipelineFlowPanel.tsx::No allocation trace",
         "frontend/src/components/devlab/ModelInteractionPanel.tsx::archetype_trace?.selected"
       ],
       "roadmap": "20.10",
-      "status": "open"
+      "status": "done",
+      "closed": "2026-11-13",
+      "evidence": [
+        "frontend/src/components/devlab/DevLabPanels.test.tsx::lays out what the engine decided",
+        "frontend/src/components/devlab/DevLabPanels.test.tsx::the flow follows the engine that built the week",
+        "frontend/src/components/devlab/EngineWeek.tsx::export function ContractWeek"
+      ]
     },
     {
       "id": "model_map_hardcoded",

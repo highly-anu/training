@@ -1,6 +1,6 @@
 import { PageHeader } from '@/components/layout/PageHeader'
 import { SubTabs } from '@/components/layout/SubTabs'
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Page } from '@/components/layout/Page'
 import { Terminal, Play } from 'lucide-react'
@@ -32,42 +32,10 @@ import { ModelInteractionPanel } from '@/components/devlab/ModelInteractionPanel
 import { ReadinessPanel } from '@/components/devlab/ReadinessPanel'
 import type { EquipmentId, FatigueState, InjuryFlagId, TrainingLevel, TracedProgram, WeekData } from '@/api/types'
 import { TRAINING_LEVELS } from '@/lib/gen/clientVocab'
+import { useEquipmentGroups } from '@/lib/useEquipmentVocabulary'
+import { ENGINE_LABEL, engineOf } from '@/components/devlab/engine'
 
 // ─── Equipment picker options ─────────────────────────────────────────────────
-
-// Every id an exercise uses (EquipmentPicker leaves out the ones none does).
-const EQUIPMENT_OPTIONS: { id: EquipmentId; label: string }[] = [
-  { id: 'barbell', label: 'Barbell' },
-  { id: 'rack', label: 'Rack' },
-  { id: 'plates', label: 'Plates' },
-  { id: 'kettlebell', label: 'Kettlebell' },
-  { id: 'dumbbell', label: 'Dumbbell' },
-  { id: 'pull_up_bar', label: 'Pull-up Bar' },
-  { id: 'rings', label: 'Rings' },
-  { id: 'parallettes', label: 'Parallettes' },
-  { id: 'rope', label: 'Rope Climb' },
-  { id: 'box', label: 'Box' },
-  { id: 'rower', label: 'Rower' },
-  { id: 'bike', label: 'Assault Bike' },
-  { id: 'ski_erg', label: 'Ski Erg' },
-  { id: 'pool', label: 'Pool' },
-  { id: 'ruck_pack', label: 'Ruck Pack' },
-  { id: 'sandbag', label: 'Sandbag' },
-  { id: 'jump_rope', label: 'Jump Rope' },
-  { id: 'resistance_band', label: 'Band' },
-  { id: 'sled', label: 'Sled' },
-  { id: 'tire', label: 'Tire' },
-  { id: 'dip_belt', label: 'Dip Belt' },
-  { id: 'ghd', label: 'GHD' },
-  { id: 'medicine_ball', label: 'Medicine Ball' },
-  { id: 'hangboard', label: 'Hangboard' },
-  { id: 'sledgehammer', label: 'Sledgehammer' },
-  { id: 'cable_machine', label: 'Cable Machine' },
-  { id: 'hurdles', label: 'Hurdles' },
-  { id: 'agility_ladder', label: 'Agility Ladder' },
-  { id: 'training_partner', label: 'Training Partner' },
-  { id: 'open_space', label: 'Open Space' },
-]
 
 const FATIGUE_STATES: FatigueState[] = ['fresh', 'normal', 'accumulated', 'overreached']
 
@@ -106,7 +74,11 @@ function InputsPanel({ program }: { program: TracedProgram }) {
     .sort(([, a], [, b]) => b - a)
 
   const primarySources = trace?.primary_sources || goal.primary_sources || []
-  const isPhilosophyMode = trace?.philosophy_mode === 'synthetic_goal' || (goal.primary_sources && goal.primary_sources.length > 0)
+  const isPhilosophyMode = !!(goal.primary_sources && goal.primary_sources.length > 0)
+  // What builds the weeks, and so what of the inputs below is read.
+  const engines = [...new Set((trace?.weeks ?? []).map(engineOf))]
+  const scheduled = engines.includes('scheduler')
+  const lanes = (trace?.lanes ?? []) as Array<{ key?: string; philosophy_id?: string; track_id?: string; weight?: number; share?: number }>
 
   return (
     <div className="space-y-4 max-w-2xl">
@@ -116,11 +88,11 @@ function InputsPanel({ program }: { program: TracedProgram }) {
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
               <CardTitle className="text-sm">Philosophy Sources</CardTitle>
-              {isPhilosophyMode && (
-                <Badge className="text-[10px] bg-violet-500/20 text-violet-700 dark:text-violet-300 border-violet-500/40">
-                  {trace?.philosophy_mode === 'synthetic_goal' ? 'Synthetic Goal' : 'Direct'}
+              {engines.map(e => (
+                <Badge key={e} className="text-[10px] bg-violet-500/20 text-violet-700 dark:text-violet-300 border-violet-500/40">
+                  {ENGINE_LABEL[e]}
                 </Badge>
-              )}
+              ))}
             </div>
           </CardHeader>
           <CardContent>
@@ -132,8 +104,21 @@ function InputsPanel({ program }: { program: TracedProgram }) {
               ))}
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              Exercises and archetypes are filtered to only those from these philosophy packages.
+              Sessions and exercises come only from these packages and the ones each declares it borrows from;
+              what a package cannot fill is left empty and reported.
             </p>
+            {lanes.length > 1 && (
+              <ul className="mt-2 space-y-0.5 text-xs">
+                {lanes.map((l, i) => (
+                  <li key={l.key ?? i} className="font-mono">
+                    {l.key ?? `${l.philosophy_id}/${l.track_id}`}
+                    {typeof (l.share ?? l.weight) === 'number' && (
+                      <span className="text-muted-foreground"> · {Math.round(((l.share ?? l.weight) as number) * 100)}%</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
           </CardContent>
         </Card>
       )}
@@ -146,6 +131,13 @@ function InputsPanel({ program }: { program: TracedProgram }) {
         <CardContent className="space-y-3">
           {!isPhilosophyMode && goal.description && (
             <p className="text-xs text-muted-foreground">{goal.description}</p>
+          )}
+          {!scheduled && engines.length > 0 && (
+            <p className="text-xs text-muted-foreground">
+              Derived from the framework's sessions a week. Nothing places this program by them: a training
+              contract places its modules and a week template writes the source's days. Only the modality
+              scheduler allocates sessions from priorities.
+            </p>
           )}
           <div className="space-y-1.5">
             {sortedPriorities.map(([mod, prio]) => (
@@ -222,6 +214,55 @@ function InputsPanel({ program }: { program: TracedProgram }) {
   )
 }
 
+// ─── What the program says about itself ───────────────────────────────────────
+
+function ProgramOutputs({ program }: { program: TracedProgram }) {
+  const compromises = program.compromises ?? []
+  const coverage = (program.coverage_report ?? {}) as Record<string, unknown[] | undefined>
+  const held = program.held_back
+  const rows: Array<[string, string]> = [
+    ['unfilled_sessions', 'Sessions the package could not fill'],
+    ['unfilled_slots', 'Slots left empty'],
+    ['substituted_sessions', 'Sessions substituted'],
+    ['borrowed_sessions', 'Sessions borrowed from another package'],
+    ['placed_tests', 'Tests placed'],
+    ['skipped_tests', 'Tests skipped'],
+  ]
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm">What the program says about itself</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3 text-xs">
+        <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-1">
+          {rows.map(([key, label]) => (
+            <div key={key} className="flex justify-between gap-3">
+              <dt className="text-muted-foreground">{label}</dt>
+              <dd className="font-mono">{(coverage[key] ?? []).length}</dd>
+            </div>
+          ))}
+          {held && (
+            <div className="flex justify-between gap-3">
+              <dt className="text-muted-foreground">Held back by the constraints</dt>
+              <dd className="font-mono">{held.sessions} sessions · {held.slots} slots</dd>
+            </div>
+          )}
+        </dl>
+        {compromises.length > 0 ? (
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">Compromises</p>
+            <ul className="space-y-0.5 list-disc pl-4">
+              {compromises.map((c, i) => <li key={i}>{c}</li>)}
+            </ul>
+          </div>
+        ) : (
+          <p className="text-muted-foreground">No compromise: the program is as its package writes it.</p>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
 // ─── DevLab page ──────────────────────────────────────────────────────────────
 
 type DevTab = 'pipeline' | 'browser' | 'heatmap' | 'interactions' | 'readiness'
@@ -238,18 +279,50 @@ export function DevLab() {
   const { data: philosophies = [], isLoading: loadingPhilosophies } = usePhilosophies()
   const { data: injuryFlagOptions = [] } = useInjuryFlags()
   const generateMutation = useGenerateWithTrace()
+  // The equipment an athlete can tick: the commons' list (generated) and what
+  // the athlete's own packages add — never a list typed here — plus open space,
+  // which the pickers assume and this form lets be taken away.
+  const equipmentGroups = useEquipmentGroups()
+  const equipmentOptions = useMemo(
+    () => [...equipmentGroups.flatMap(g => g.items), { id: 'open_space' as EquipmentId, label: 'Open space' }],
+    [equipmentGroups],
+  )
+
+  // The tab is in the URL (`?tab=readiness`), as on every other page, so a
+  // tool can be linked to. A trace can be linked to as well: the form starts
+  // from `?philosophy=&track=&second=&second_track=&level=&days=&minutes=&weeks=
+  // &equipment=all&step=` and `run=1` generates once on arrival.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [linked] = useState(() => ({
+    philosophy: searchParams.get('philosophy') ?? '',
+    track: searchParams.get('track'),
+    second: searchParams.get('second'),
+    secondTrack: searchParams.get('second_track'),
+    level: searchParams.get('level') as TrainingLevel | null,
+    days: Number(searchParams.get('days')) || null,
+    minutes: Number(searchParams.get('minutes')) || null,
+    weeks: Number(searchParams.get('weeks')) || null,
+    allEquipment: searchParams.get('equipment') === 'all',
+    step: searchParams.get('step'),
+    run: searchParams.get('run') === '1',
+  }))
 
   // Form state
-  const [philosophyId, setPhilosophyId] = useState<string>('')
+  const [philosophyId, setPhilosophyId] = useState<string>(linked.philosophy)
   // null = the philosophy's primary track / the track's first phase, as the builder sends.
-  const [trackId, setTrackId] = useState<string | null>(null)
+  const [trackId, setTrackId] = useState<string | null>(linked.track)
   const [startPhaseId, setStartPhaseId] = useState<string | null>(null)
-  const [level, setLevel] = useState<TrainingLevel>('intermediate')
+  // A second track makes the request a composition (`lanes`): two tracks of
+  // different methods, or two of one, each on its own engine.
+  const [second, setSecond] = useState<{ philosophyId: string; trackId: string | null } | null>(
+    linked.second ? { philosophyId: linked.second, trackId: linked.secondTrack } : null,
+  )
+  const [level, setLevel] = useState<TrainingLevel>(linked.level ?? 'intermediate')
   const [fatigue, setFatigue] = useState<FatigueState>('normal')
   const [injuryFlags, setInjuryFlags] = useState<InjuryFlagId[]>([])
-  const [days, setDays] = useState(4)
-  const [sessionTime, setSessionTime] = useState(60)
-  const [numWeeks, setNumWeeks] = useState(2)
+  const [days, setDays] = useState(linked.days ?? 4)
+  const [sessionTime, setSessionTime] = useState(linked.minutes ?? 60)
+  const [numWeeks, setNumWeeks] = useState(linked.weeks ?? 2)
   const [equipment, setEquipment] = useState<EquipmentId[]>([
     'barbell',
     'kettlebell',
@@ -266,6 +339,9 @@ export function DevLab() {
   const tracks = tracksOf(philosophy)
   const track = resolveTrack(philosophy, trackId)
   const startPhase = track?.phases.find(p => p.id === startPhaseId) ?? track?.phases[0]
+  const secondPhilosophy = philosophies.find(p => p.id === second?.philosophyId)
+  const secondTracks = tracksOf(secondPhilosophy)
+  const secondTrack = resolveTrack(secondPhilosophy, second?.trackId ?? null)
 
   function selectPhilosophy(id: string) {
     setPhilosophyId(id)
@@ -290,15 +366,21 @@ export function DevLab() {
     )
   }
 
-  async function handleGenerate() {
+  async function handleGenerate(useAll = false) {
     if (!philosophyId) return
     try {
       const data = await generateMutation.mutateAsync({
         philosophyId,
+        ...(second?.philosophyId ? {
+          lanes: [
+            { philosophyId, trackId: track?.id ?? null, weight: 0.5, startPhaseId: startPhase?.id ?? null },
+            { philosophyId: second.philosophyId, trackId: secondTrack?.id ?? null, weight: 0.5 },
+          ],
+        } : {}),
         trackId: track?.id ?? null,
         startPhaseId: startPhase?.id ?? null,
         constraints: {
-          equipment,
+          equipment: useAll ? equipmentOptions.map(o => o.id) : equipment,
           days_per_week: days,
           session_time_minutes: sessionTime,
           training_level: level,
@@ -311,7 +393,7 @@ export function DevLab() {
         customInjuryFlags: [],
       })
       setResult(data)
-      setActiveStep('inputs')
+      setActiveStep(useAll && linked.step ? linked.step : 'inputs')
       setOutputWeekIdx(0)
     } catch (_) {
       // error shown via mutation.isError
@@ -319,11 +401,18 @@ export function DevLab() {
   }
 
   const trace = result?.generation_trace
-  const canGenerate = !!philosophyId && !generateMutation.isPending
+  const canGenerate = !!philosophyId && (!second || !!second.philosophyId) && !generateMutation.isPending
 
-  // The tab is in the URL (`?tab=readiness`), as on every other page, so a
-  // tool can be linked to; the trace form's state stays in the component.
-  const [searchParams, setSearchParams] = useSearchParams()
+  // A linked trace (`run=1`) generates once, when the philosophies it names are known.
+  const ran = useRef(false)
+  useEffect(() => {
+    if (!linked.run || ran.current || !philosophy || (second?.philosophyId && !secondPhilosophy)) return
+    ran.current = true
+    void handleGenerate(linked.allEquipment)
+    // Once, on arrival: later edits to the form are generated by the button.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [philosophy, secondPhilosophy])
+
   const requested = searchParams.get('tab')
   const devTab: DevTab = DEV_TABS.some(t => t.id === requested) ? (requested as DevTab) : 'pipeline'
   function setDevTab(tab: DevTab) {
@@ -536,7 +625,7 @@ export function DevLab() {
               {/* Generate */}
               <Button
                 size="sm"
-                onClick={handleGenerate}
+                onClick={() => handleGenerate()}
                 disabled={!canGenerate}
                 loading={generateMutation.isPending}
                 className="h-8 ml-auto"
@@ -546,11 +635,57 @@ export function DevLab() {
               </Button>
             </div>
 
+            {/* A second track: the request becomes a composition */}
+            <div className="flex flex-wrap items-end gap-3">
+              {second ? (
+                <>
+                  <div className="min-w-[200px]">
+                    <Label className="text-xs mb-1 block">Second track — philosophy</Label>
+                    <Select value={second.philosophyId} onValueChange={v => setSecond({ philosophyId: v, trackId: null })}>
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Select philosophy…" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {philosophies.map(p => (
+                          <SelectItem key={p.id} value={p.id} className="text-xs">{p.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="min-w-[180px]">
+                    <Label className="text-xs mb-1 block">Its track</Label>
+                    <Select value={secondTrack?.id ?? ''} disabled={secondTracks.length < 2}
+                            onValueChange={v => setSecond({ philosophyId: second.philosophyId, trackId: v })}>
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="—" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {secondTracks.map(t => (
+                          <SelectItem key={t.id} value={t.id} className="text-xs">{t.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setSecond(null)}>
+                    Remove the second track
+                  </Button>
+                  <p className="text-[10px] text-muted-foreground basis-full">
+                    Two tracks are a composition, half the week each: every track runs its own phases on its own
+                    engine (a contract track or a templated one; a scheduler track cannot be composed).
+                  </p>
+                </>
+              ) : (
+                <Button size="sm" variant="ghost" className="h-7 text-xs px-2" onClick={() => setSecond({ philosophyId: '', trackId: null })}>
+                  + Add a second track (a composition)
+                </Button>
+              )}
+            </div>
+
             {/* Equipment */}
             <div className="flex flex-wrap gap-1.5 items-center">
               <span className="text-xs text-muted-foreground">Equipment:</span>
               <button
-                onClick={() => setEquipment(EQUIPMENT_OPTIONS.map(o => o.id))}
+                onClick={() => setEquipment(equipmentOptions.map(o => o.id))}
                 className="px-2 py-0.5 rounded text-xs text-muted-foreground underline-offset-2 hover:underline"
               >
                 all
@@ -561,7 +696,7 @@ export function DevLab() {
               >
                 none
               </button>
-              {EQUIPMENT_OPTIONS.map(opt => (
+              {equipmentOptions.map(opt => (
                 <button
                   key={opt.id}
                   onClick={() => toggleEquipment(opt.id)}
@@ -625,9 +760,9 @@ export function DevLab() {
               {/* ① Inputs */}
               <TabsContent value="inputs">
                 <StepMeta
-                  reads={['philosophy selection', 'athlete constraints']}
-                  outputs={['priority weights', 'phase sequence', 'primary_sources (package filter)', 'constraint envelope']}
-                  description="Philosophy selection generates priority weights and primary_sources (package IDs). These define what to optimize for and which exercises/archetypes are allowed. Constraints define what the athlete can do. All feed every downstream stage."
+                  reads={['philosophy and track (or several: a composition)', 'athlete constraints']}
+                  outputs={['phase sequence', 'primary_sources (package filter)', 'priority weights', 'constraint envelope']}
+                  description="A track of a philosophy becomes the goal: its phases in order, each naming the framework that builds its weeks, and the packages the program may draw from. The priority weights are derived from the framework's sessions a week and are read only by the modality scheduler — a training contract and a week template place their weeks themselves. Constraints say what the athlete can do."
                 />
                 <InputsPanel program={result} />
               </TabsContent>
@@ -637,7 +772,7 @@ export function DevLab() {
                 <StepMeta
                   reads={['goal priorities', 'archetypes', 'modalities', 'equipment', 'injury flags']}
                   outputs={['feasibility flag', 'equipment warnings', 'time-cap checks', 'injury conflicts']}
-                  description="Pre-flight check before building any sessions. Fails fast on impossible constraints so the generator never runs on infeasible inputs."
+                  description="The pre-flight check of a scheduler or templated track: equipment, days, session time, injuries, phases. A training contract refuses for itself, as it builds — a week whose required modules do not fit is an error here with no weeks — and a composition is checked track by track as it is composed; what a templated week could not fit is a compromise on the program, not a refusal."
                 />
                 <ValidationPanel validation={result.validation} />
               </TabsContent>
@@ -647,7 +782,7 @@ export function DevLab() {
                 <StepMeta
                   reads={['phase priority weights', 'framework.sessions_per_week', 'framework.cadence_options', 'modality.recovery_cost / recovery_hours_min', 'modality.incompatible_in_session_with', 'phase.week_templates', 'training contract modules']}
                   outputs={['session counts per modality', 'day-of-week assignment', 'deload flag']}
-                  description="Converts priority weights into session counts via the framework, then places them on the framework's cadence days, hardest first: a modality keeps its recovery window from itself and two high-cost modalities 48 h apart, checked against the days before and after and last week's end. A phase that writes its own week (week_templates) takes the source's days instead, and a training contract places its modules itself — alternating them, spacing each module's sessions and keeping heavily loaded body regions apart. Every shipped package does one or the other; the scheduler places blends a contract philosophy leads and packages with neither."
+                  description="Converts priority weights into session counts via the framework, then places them on the framework's cadence days, hardest first: a modality keeps its recovery window from itself and two high-cost modalities 48 h apart, checked against the days before and after and last week's end. A phase that writes its own week (week_templates) takes the source's days instead, and a training contract places its modules itself — alternating them, spacing each module's sessions and keeping heavily loaded body regions apart. Every shipped package does one or the other, and a composition runs each of its tracks on its own; the scheduler builds only a package with neither. Each week's card says which engine built it and what it decided."
                 />
                 {trace ? (
                   <SchedulerPanel weeks={trace.weeks} />
@@ -661,7 +796,7 @@ export function DevLab() {
                 <StepMeta
                   reads={['assigned modality', 'the package and the packages it borrows from', 'training phase', 'equipment', 'archetypes', 'exercises', 'injury flags', 'progression model']}
                   outputs={['selected archetype', 'exercises per slot', 'load prescriptions']}
-                  description="Each session gets its archetype: a template day the next named workout of its category the athlete can do as written, a contract its module's, a test its own. Only a session left to choose is scored — after the hard filters (modality, phase, level, equipment, time): +6 equipment met, −3 used in the last 14, ±3 day fit, injury and blocked-equipment penalties, −2/−1 per body region a session a day or two before loaded heavily; ties go to the least recently used, then the first authored. Slots fill from the archetype's own package and those its philosophy borrows from: named exercises (in order where the slot says so) or its pattern and category, filtered by equipment, injury, level unlocks, phase exclusions and the taper rule; −2 per recent use, +0.5 for a pattern and for an unlock, ties to the first authored. A main lift stays the same through a phase. Load comes from the framework's progression model for the modality where it overrides one, else the modality's."
+                  description="Each session gets its archetype: a template day the next named workout of its category the athlete can do as written, a contract its module's, a test its own. Only a session left to choose is scored — after the hard filters (modality, phase, level, equipment, time): +10 preferred, +6 equipment met, −3 used in the last 14, +3 or −2 day fit, injury and blocked-equipment penalties, −2/−1 per body region a session a day or two before loaded heavily; ties go to the least recently used, then the first authored. Slots fill from the archetype's own package and those its philosophy borrows from: named exercises (in order where the slot says so) or its pattern and category, filtered by equipment, injury, level unlocks, phase exclusions and the taper rule; −2 per recent use, +0.5 for a pattern and for an unlock, ties to the first authored. A main lift stays the same through a phase. Load comes from the framework's progression model for the modality where it overrides one, else the modality's."
                 />
                 {trace ? (
                   <>
@@ -677,11 +812,12 @@ export function DevLab() {
               {/* ⑤ Output */}
               <TabsContent value="output">
                 <StepMeta
-                  reads={['populated sessions', 'week/phase metadata', 'complementary recovery work']}
-                  outputs={['weekly calendar', 'volume summary']}
-                  description="Final program — all ontology decisions resolved into a weekly training calendar."
+                  reads={['populated sessions', 'week/phase metadata']}
+                  outputs={['weekly calendar', 'compromises', 'coverage report', 'held-back count']}
+                  description="The program as the clients get it, and what it says about itself: what was compromised, what the package could not fill, what was substituted, which tests were placed or skipped, and how much the athlete's constraints held back."
                 />
                 <div className="space-y-4">
+                  <ProgramOutputs program={result} />
                   <div className="flex flex-wrap gap-1">
                     {result.weeks.map((w, i) => (
                       <button

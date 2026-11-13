@@ -72,13 +72,66 @@ describe.each(scenarios)('%s', (_name, program) => {
 
   it('says what placed each week', () => {
     mount(<SchedulerPanel weeks={weeks} />)
-    if (program.generation_trace!.philosophy_mode === 'training_contract') {
+    const mode = program.generation_trace!.philosophy_mode
+    if (mode === 'composition') {
+      expect(screen.getAllByText(/Several tracks on one week/)).toHaveLength(weeks.length)
+    } else if (mode === 'training_contract') {
       expect(screen.getAllByText(/Placed by the training contract/)).toHaveLength(weeks.length)
     } else if (weeks.every((w) => w.scheduler.week_template)) {
       expect(screen.getAllByText(/Written by the source's week/)).toHaveLength(weeks.length)
     } else {
       expect(screen.getAllByText("Named by the week's phase:")).toHaveLength(weeks.length)
     }
+  })
+
+  // What each engine decided (roadmap 20.9), laid out by the Schedule step.
+  it('lays out what the engine decided', () => {
+    mount(<SchedulerPanel weeks={weeks} />)
+    const week = weeks[0]
+    const decided = [week.scheduler, ...Object.values(week.lane_weeks ?? {}).map((l) => l.scheduler)]
+    for (const scheduler of decided) {
+      const contract = scheduler?.contract_week
+      if (contract) {
+        for (const m of contract.modules) expect(screen.getAllByText(m.id).length).toBeGreaterThan(0)
+        expect(screen.getByText(`Placement — the best of ${contract.placement.considered} looked at`)).toBeTruthy()
+        expect(screen.getByText(/Same modality on days back to back/)).toBeTruthy()
+      }
+      const template = scheduler?.template
+      if (template) {
+        const picked = Object.values(template.days).flatMap((d) => d.asked).filter((p) => p.picked)
+        for (const p of picked) expect(screen.getAllByText(p.picked!).length).toBeGreaterThan(0)
+        if (template.dropped.length) expect(screen.getByText(template.dropped.join(', '))).toBeTruthy()
+      }
+    }
+    for (const key of Object.keys(week.lane_weeks ?? {})) expect(screen.getByText(key)).toBeTruthy()
+    for (const t of week.tests?.skipped ?? []) {
+      expect(screen.getAllByText((t.archetypes ?? []).join(', ')).length).toBeGreaterThan(0)
+    }
+  })
+
+  it('the flow follows the engine that built the week', () => {
+    mount(<PipelineFlowPanel program={program} weeks={weeks} />)
+    const week = weeks[0]
+    const first = Object.values(week.sessions).flat()[0]
+    const lane = first?.lane_key ? week.lane_weeks?.[first.lane_key] : undefined
+    const engine = week.engine === 'composition' ? lane?.engine : week.engine
+    if (engine === 'training_contract') {
+      expect(screen.getByText('③ ④ CONTRACT — MODULES AND PLACEMENT')).toBeTruthy()
+      expect(screen.queryByText('No allocation trace.')).toBeNull()
+    } else if (engine === 'week_templates') {
+      expect(screen.getByText('③ ④ WEEK TEMPLATE — THE DAY AND ITS POOLS')).toBeTruthy()
+      expect(screen.queryByText('No allocation trace.')).toBeNull()
+    } else {
+      expect(screen.getByText('③ ALLOCATION')).toBeTruthy()
+    }
+  })
+
+  it('walks the days in the order of the week', () => {
+    mount(<PipelineFlowPanel program={program} weeks={weeks} />)
+    const order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    const shown = screen.getAllByRole('button').map((b) => b.textContent ?? '').filter((t) => order.includes(t))
+    expect(shown).toEqual([...shown].sort((a, b) => order.indexOf(a) - order.indexOf(b)))
+    expect(shown.length).toBeGreaterThan(0)
   })
 })
 

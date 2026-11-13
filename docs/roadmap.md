@@ -1960,8 +1960,19 @@ The Dev Lab, independent of 20.2–20.8:
   program is the same with or without the trace (`test_devlab_trace.py` holds it, with a
   composition scenario). Left: why a passed-over workout does not fit (level, equipment,
   injury or minutes).
-- **20.10 Pipeline Trace per engine (M).** One flow per engine, compositions and contract
-  options in the form, the program's compromises, coverage and held-back slots.
+- **20.10 Pipeline Trace per engine (M).** Done 2026-11-13. The Schedule step's card and
+  the pipeline flow draw what built the week from one module (`components/devlab/
+  EngineWeek.tsx`, `engine.ts`): a contract's modules (minutes, step, model, deload), its
+  placement and why it beat the next best; a template's days kept and dropped, each
+  pool's rotation, what was passed over; a composition's tracks, each with its own. The
+  scheduler's allocation shows only where the scheduler ran. The form takes a second
+  track (a composition), lists the vocabulary's equipment (it typed thirty ids) and can
+  be linked to (`/dev?philosophy=…&track=…&second=…&days=…&equipment=all&step=schedule&
+  run=1`). A session says its test, its modules' steps, its track, what it stands in
+  for and its `preferred` score; days are in the week's order (they were alphabetical);
+  the Output step lists compromises, the coverage counts and what the constraints held
+  back. Step texts no longer say validation always runs first or that the scheduler
+  places blends. Left: a contract track's `options` are not asked in the form.
 - **20.11 Model Interactions from data (M).** The map — philosophy, track, phase, contract
   or week template or scheduler, archetype, exercise, load, with compositions and tests —
   served with code anchors a test checks.
