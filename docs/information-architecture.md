@@ -111,6 +111,9 @@ Flows and details, not nav items: `/program/new` (the builder, launched from the
 and Program empty states, the Program header, the settings sheet's Rebuild/New, and
 Explore CTAs; its header gains a back link to `/program`), `/program/:week/:day`,
 `/program/history/:versionId`, `/log/:workoutId`, `/login`, and a catch-all 404.
+Inside the builder's flow: `/program/new/method` (describe a method of your own, or with
+`?revise=<id>` say what to change in one) and `/program/new/method/<build>` (its build, then the
+method) — reached from the Your methods group in the builder's first step, never from the nav.
 
 Redirects, query and `location.state` preserved: `/builder` → `/program/new`,
 `/import` → `/log`, `/import/:id` → `/log/:id`, `/bio` → `/analytics?tab=recovery`,

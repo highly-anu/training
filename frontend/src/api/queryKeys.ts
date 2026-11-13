@@ -50,6 +50,10 @@ export const queryKeys = {
   philosophies: {
     all: ['philosophies'] as const,
   },
+  methods: {
+    all: ['methods'] as const,
+    build: (id: string) => ['methods', 'build', id] as const,
+  },
   frameworks: {
     all: ['frameworks'] as const,
   },

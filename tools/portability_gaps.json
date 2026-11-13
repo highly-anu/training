@@ -1,6 +1,6 @@
 {
   "_comment": "What a package still cannot bring in its own folder, and what a package written at runtime (the LLM package builder, roadmap item 20) still cannot rely on (src/portability.py serves this to Dev Lab ▸ Builder readiness). Each anchor is `path::text` and must still be in that file while the gap is open; test_portability.py fails when one is gone, so closing a gap means changing its status here in the same change. kind: runtime | gate | tooling | commons | code | client | watch | docs | devlab. impact on a dropped-in or built package: blocks (it fails a gate, cannot be written or cannot be served), degrades (it works, worse or silently wrong), cosmetic. status: open | done (with `closed`, the day, and `evidence`, `path::text` of the test that holds it — checked like an anchor) | by_design (the engine's vocabulary is the contract between packages and the engine). roadmap: the step of docs/roadmap.md (9.x, 20.x) that closes it. steps: the roadmap steps of the builder's foundation, in order, each titled as docs/roadmap.md titles it; a step is done when it says so (`done`, the day) or when every gap citing it is.",
-  "verdict": "The code is package-neutral, and since item 20 a package written while the app runs is stored, checked by one gate, read privately beside the shipped ones for its owner, may bring its own vocabulary, and has one spec. The builder (docs/roadmap.md item 21) has its gate, its durable job and its model loop; what is open below is the screens on the web and the phone, the real-model eval and the production steps.",
+  "verdict": "The code is package-neutral, and since item 20 a package written while the app runs is stored, checked by one gate, read privately beside the shipped ones for its owner, may bring its own vocabulary, and has one spec. The builder (docs/roadmap.md item 21) has its gate, its durable job and its model loop; and the web has its screens; what is open below is the phone, the real-model eval and the production steps.",
   "steps": [
     {
       "id": "20.1",
@@ -146,24 +146,35 @@
       "title": "The web's builder zeroes a package's own modalities",
       "kind": "client",
       "impact": "blocks",
-      "detail": "The program builder sends priority overrides built from the modality list compiled into the build, and the server replaces the goal's priorities with them: a method made of its own modalities is sent all zeros and generates nothing.",
+      "detail": "The web's priority vector now covers every modality the source's framework schedules, a package's own included (derivePhilosophyPriorities, deriveBlendedPriorities), and the builder sends no override that only repeats what the source implies (buildPostBody): an override replaces the goal's priorities outright, and the compiled list knew none of a package's modalities, so a method made of its own was sent as all zeros and generated nothing.",
       "anchors": [
         "frontend/src/lib/philosophyPriorities.ts::MODALITY_ORDER"
       ],
       "roadmap": "21.4",
-      "status": "open"
+      "status": "done",
+      "closed": "2026-11-13",
+      "evidence": [
+        "frontend/src/lib/philosophyPriorities.test.ts::gives a modality the package brings itself its share",
+        "frontend/src/api/programs.test.ts::sends no override that only repeats what the source implies"
+      ]
     },
     {
       "id": "web_no_builder",
       "title": "No way to describe a method on the web",
       "kind": "client",
       "impact": "blocks",
-      "detail": "The program builder lists philosophies; it has no card to create one, no progress for a build, and no list of the athlete's own.",
+      "detail": "The program builder's first step has a Your methods group (each method picked like a philosophy, with Revise and Delete; the build that is running; the card to describe another). /program/new/method is the description — the athlete's words, days, session length and level, their profile's equipment, pasted notes, a web-search switch — or the change to one of theirs; /program/new/method/<build> is the build, asked again every two seconds, then the method with Build a program, Read the method and Revise, or why it was not built. A finished build has every list of packages read again.",
       "anchors": [
         "frontend/src/components/builder/ProgramSource.tsx::const MODES"
       ],
       "roadmap": "21.4",
-      "status": "open"
+      "status": "done",
+      "closed": "2026-11-13",
+      "evidence": [
+        "frontend/src/components/methods/methods.test.tsx::sends the description with the athlete",
+        "frontend/src/components/methods/methods.test.tsx::shows the method once built, reads the lists again and builds a program from it",
+        "test_package_builder.py::def test_fixture"
+      ]
     },
     {
       "id": "phone_philosophies_fetched_once",

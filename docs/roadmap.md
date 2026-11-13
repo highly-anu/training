@@ -57,7 +57,7 @@ deferred is under *Later*.
 | 18 | Phone design and interaction uplift: the foundation (1.35), states (1.36), iOS 26 chrome (1.37), discoverable actions (1.38), the screen passes (1.39), motion (1.40) and accessibility with the system surfaces (1.41) are in (*IA*) | P2 | L | iOS |
 | 19 | Web design and interaction uplift: the phone's design language on the web, each rule in one module and held by a test — the foundation, states, feedback, motion, actions and keyboard, colour and accessibility, the page passes and the review fixes are in (*IA*) | P2 | L | web |
 | 20 | LLM package builder — the foundation: all twelve steps are in (the gate, the overlay, storage, per-athlete reference routes, package vocabulary, the spec, the trace and the Dev Lab). Left: the phone reading a package's vocabulary, migration 013 on production, the builder itself | P1 | L | engine, API, web, content |
-| 21 | LLM package builder: an athlete describes a method and gets one to build a program from, on the web and the phone — dev role first. The gate (21.1), the durable job (21.2) and the model loop (21.3) are in; the eval against the real model, the screens and the production steps are open | P1 | L | API, web, iOS, watch |
+| 21 | LLM package builder: an athlete describes a method and gets one to build a program from, on the web and the phone — dev role first. The gate (21.1), the durable job (21.2) and the model loop (21.3) and the web's screens (21.4) are in; the eval against the real model, the phone and the production steps are open | P1 | L | API, web, iOS, watch |
 
 ---
 
@@ -2080,10 +2080,27 @@ Training contracts are refused. Not planned: push notifications, sharing a metho
   the one place a request leaves the process); `tools/eval_package_builder.py --run`
   runs eight real descriptions against the real model and reports outcome, turns, checks,
   tokens and cost.
-- **21.4 Web: the builder in the program builder (M).** The priorities bug fixed first
-  (a package's own modalities were sent as zero). A "Your methods" group and a "Describe
-  your own method" card in the first step; the describe form, the progress screen and the
-  method's page with Build, Revise and Delete.
+- **21.4 Web: the builder in the program builder (M).** Done 2026-11-13. **The priorities
+  bug first**: the builder seeded `priority_overrides` from the modality list compiled
+  into the build and the server replaces the goal's priorities with an override, so a
+  method made of its own modalities was sent as all zeros and generated nothing. The
+  vector now covers every modality the source's framework schedules
+  (`lib/philosophyPriorities`), and no override is sent that only repeats the source
+  (`buildPostBody`, `samePriorities`). Then the screens: in the first step's philosophy
+  list a **Your methods** group (`components/methods/YourMethods.tsx`) — each method
+  picked like a philosophy, with Revise and Delete (refused in words while the program
+  runs on it), the build that is running, and a "Describe your own method" card; absent
+  for an account the builder is not on for. `/program/new/method`
+  (`pages/MethodBuilder.tsx`, `DescribeMethod`): the athlete's words, days, session
+  length and level (from the builder and the profile), the profile's equipment, pasted
+  notes, a web-search switch; `?revise=<id>` asks for the change instead.
+  `/program/new/method/<build>` (`MethodBuildProgress`) asks the build again every two
+  seconds — leaving does not stop it — then shows the method with Build a program, Read
+  the method and Revise, or why it was not built with what the checks still found. A
+  finished build and a delete have every list of packages read again
+  (`refreshAfterMethodChange`). The words are `lib/methodBuild.ts`; the mock answers
+  (`mocks/fixtures/methods.json`) are recorded by `test_package_builder.py --write`,
+  which fails when the routes' shape parts from them.
 - **21.5 Phone: a package's vocabulary (M).** The phone reads `/api/modalities` and
   `/api/equipment`; a package's modality draws with its colour and label and its implement
   can be ticked; widgets and both watches get the display; the philosophies refresh.

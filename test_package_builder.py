@@ -9,7 +9,7 @@ real: the tools, the gates on the draft (the from-scratch test package,
 test_packages/scratch_minimal), the worker, the store, the install and the
 routes.
 
-Run: SUPABASE_URL='' .venv/bin/python test_package_builder.py
+Run: SUPABASE_URL='' .venv/bin/python test_package_builder.py   (--write re-records the web's fixture)
 """
 from __future__ import annotations
 
@@ -539,10 +539,112 @@ def test_imports():
           wanted <= set(inspect.signature(stream).parameters), wanted - set(inspect.signature(stream).parameters))
 
 
+# ── The web's recorded answers ───────────────────────────────────────────────
+
+FIXTURE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'frontend', 'src', 'mocks', 'fixtures', 'methods.json')
+
+
+def _steady(value, names):
+    """A recorded answer without what changes from run to run: build ids and
+    timestamps become fixed ones."""
+    if isinstance(value, dict):
+        out = {}
+        for k, v in value.items():
+            if k in ('createdAt', 'updatedAt') and v:
+                out[k] = '2026-11-13 10:00:00+00:00'
+            elif k == 'id' and isinstance(v, str) and v in names:
+                out[k] = names[v]
+            elif k == 'revision' and isinstance(v, int):
+                out[k] = 1
+            elif k == 'remaining' and isinstance(v, int):
+                out[k] = 4
+            else:
+                out[k] = _steady(v, names)
+        return out
+    if isinstance(value, list):
+        return [_steady(v, names) for v in value]
+    return value
+
+
+def _shape(value):
+    """The keys of an answer, all the way down (a list by its first item)."""
+    if isinstance(value, dict):
+        return {k: _shape(v) for k, v in sorted(value.items())}
+    if isinstance(value, list):
+        return [_shape(value[0])] if value else []
+    return type(value).__name__ if value is not None else 'null'
+
+
+def recorded() -> dict:
+    """What the routes answer through a method's life: a build running, done
+    and failed, and the methods list while one runs and once it is built."""
+    clean()
+    for row in build_store.recent(ME, 50):
+        if row['status'] in build_store.OPEN:
+            build_store.finish(row['id'], 'cancelled')
+    build_worker.BUILDER = package_builder.build
+    broken = dict(FILES)
+    broken['exercises.yaml'] = 'exercises: []\n'
+    package_builder.MODEL_TURN = Script(write_all(broken), say(use('check_package')), say(use('list_files')))
+    saved = dict(package_builder.LIMITS)
+    package_builder.LIMITS['turns'] = 3
+    try:
+        failed = client.post('/api/methods/builds', json={'description': DESCRIPTION, 'answers': ANSWERS}).get_json()['build']['id']
+        build_worker.join(120)
+        build_worker.drain()
+    finally:
+        package_builder.LIMITS.update(saved)
+    failed_build = client.get(f'/api/methods/builds/{failed}').get_json()
+
+    # A build held at its second turn: what a client polling it sees.
+    row = build_store.create(ME, {'description': DESCRIPTION, 'answers': ANSWERS, 'pastedText': '', 'webSearch': False})
+    build_store.claim_next()
+    build_store.save(row['id'], progress={'stage': 'writing', 'detail': '4 files written', 'turns': 2, 'checks': 0, 'files': 4,
+                                          'problems': 0})
+    running_build = client.get(f"/api/methods/builds/{row['id']}").get_json()
+    while_running = client.get('/api/methods').get_json()
+    package_builder.MODEL_TURN = Script(write_all(), say(use('check_package')),
+                                        say(use('finish', summary='Two stone days and two easy walks a week, eight '
+                                                'weeks. The stone work is kept light for the first fortnight.')))
+    try:
+        build_worker.run_build(build_store.get(None, row['id']))
+    finally:
+        package_builder.MODEL_TURN = None
+    done_build = client.get(f"/api/methods/builds/{row['id']}").get_json()
+    built = client.get('/api/methods').get_json()
+    names = {failed: 'build-failed', row['id']: 'build-1'}
+    return _steady({'running': running_build, 'done': done_build, 'failed': failed_build,
+                    'methodsWhileRunning': while_running, 'methods': built,
+                    'unavailable': {**built, 'available': False, 'reason': 'no_model_key'}}, names)
+
+
+def test_fixture(write: bool):
+    print("the web's recorded answers")
+    fresh = recorded()
+    if write:
+        with open(FIXTURE, 'w', encoding='utf-8') as fh:
+            json.dump(fresh, fh, indent=2, ensure_ascii=False)
+            fh.write('\n')
+        print(f'  wrote {os.path.relpath(FIXTURE)}')
+        return
+    try:
+        with open(FIXTURE, encoding='utf-8') as fh:
+            kept = json.load(fh)
+    except OSError:
+        kept = None
+    check('frontend/src/mocks/fixtures/methods.json has the shape the routes answer with (--write re-records it)',
+          kept is not None and _shape(kept) == _shape(fresh),
+          'run: .venv/bin/python test_package_builder.py --write')
+    check('a running build is the list\'s first build, and a built method is listed',
+          fresh['methodsWhileRunning']['builds'][0]['status'] == 'running' and fresh['methods']['methods'][0]['id'] == PKG
+          and fresh['done']['build']['result']['packageId'] == PKG and fresh['failed']['build']['error']['problems'])
+
+
 if __name__ == '__main__':
     for test in (test_built, test_fix_and_retry, test_tools, test_stops, test_budgets, test_model_errors, test_resume,
                  test_revise, test_athlete_week, test_routes, test_imports):
         test()
+    test_fixture('--write' in sys.argv)
     clean()
     print()
     if FAILURES:

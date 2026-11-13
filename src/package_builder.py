@@ -573,7 +573,9 @@ def _stage(names: list[str], run: _Run) -> tuple[str, str]:
         return 'checking', 'The checks pass'
     if 'write_file' in names or 'delete_file' in names:
         return ('fixing' if run.usage['checks'] else 'writing'), f'{files} file{"s" if files != 1 else ""} written'
-    return ('fixing' if run.usage['checks'] else 'writing'), 'Reading'
+    if run.problems:
+        return 'fixing', f'{len(run.problems)} thing{"s" if len(run.problems) != 1 else ""} to fix'
+    return ('fixing' if run.usage['checks'] else 'writing'), 'Reviewing the draft'
 
 
 def _failed(code: str, message: str, run: _Run, **more) -> dict:

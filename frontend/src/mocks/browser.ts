@@ -4,6 +4,7 @@ import { programHandlers } from './handlers/programs'
 import { constraintHandlers } from './handlers/constraints'
 import { modalityHandlers } from './handlers/modalities'
 import { devlabHandlers } from './handlers/devlab'
+import { methodHandlers } from './handlers/methods'
 
 export const worker = setupWorker(
   ...exerciseHandlers,
@@ -11,4 +12,5 @@ export const worker = setupWorker(
   ...constraintHandlers,
   ...modalityHandlers,
   ...devlabHandlers,
+  ...methodHandlers,
 )

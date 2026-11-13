@@ -1545,6 +1545,15 @@ builder writes may leave no session unserved and no slot empty — the gate repo
 and each completed turn is saved, so a restart resumes; budgets are `package_builder.LIMITS`. Tests
 script the model at `package_builder.MODEL_TURN` (`test_package_builder.py`); the real model is
 called only by `tools/eval_package_builder.py --run`, **which costs money — ask first**.
+**On the web the builder is part of the program builder** (`/program/new`): a Your methods group in
+the first step's philosophy list (`components/methods/YourMethods.tsx`), `/program/new/method`
+(describe, or `?revise=<id>`) and `/program/new/method/<build>` (progress, then the method) —
+`pages/MethodBuilder.tsx`, words in `lib/methodBuild.ts`, hooks in `api/methods.ts`. A finished
+build or a delete calls `refreshAfterMethodChange`: every query that lists packages was read before
+the method existed. The builder sends **no `priority_overrides` that only repeat the source**
+(`buildPostBody`): the override replaces the goal's priorities, and the web's vector once knew only
+the compiled modalities, which zeroed a package's own. After a change to the methods or builds
+routes' answers, `test_package_builder.py --write` re-records `mocks/fixtures/methods.json`.
 `src/package_gate.check_package(folder)` is every gate for one folder, in process and as data
 (files, schema, ids, a smoke generate of every track and phase, provenance — `src/package_smoke.py`
 is check_styles' loop and check_provenance's audit, which both tools call; roadmap 20.2).
