@@ -306,7 +306,40 @@ def load_all_modalities() -> dict:
         mod.setdefault('priority_tier', 3)
         mod.setdefault('typical_duration_minutes', 60)
         result[mod['id']] = mod
+    # A package's own (its vocabulary.yaml), tagged with it; never a commons id.
+    for mod_id, mod in load_vocabulary()['modalities'].items():
+        if mod_id not in result:
+            mod = dict(mod)
+            mod.setdefault('priority_tier', 3)
+            mod.setdefault('typical_duration_minutes', 60)
+            result[mod_id] = mod
     return result
+
+
+@scoped_cache
+def load_vocabulary() -> dict:
+    """What the packages the caller sees add to the commons' vocabulary
+    (`vocabulary.yaml`, docs/schemas/vocabulary.schema.json), kept per view:
+    {'modalities': {id: modality, with `_package`}, 'patterns': {id: {regions,
+    excluded_by, `_package`}}, 'by_package': {package: {'modalities': [ids],
+    'patterns': [ids]}}}. The first package to declare an id keeps it
+    (validate_entities refuses a second, and a commons id)."""
+    out = {'modalities': {}, 'patterns': {}, 'by_package': {}}
+    for pkg, path in package_files('vocabulary.yaml'):
+        doc = _load_yaml(path)
+        if not isinstance(doc, dict):
+            continue
+        mine = out['by_package'].setdefault(pkg, {'modalities': [], 'patterns': []})
+        for mod in doc.get('modalities') or []:
+            if isinstance(mod, dict) and mod.get('id'):
+                mine['modalities'].append(mod['id'])
+                out['modalities'].setdefault(mod['id'], {**mod, '_package': pkg})
+        for pat in doc.get('movement_patterns') or []:
+            if isinstance(pat, dict) and pat.get('id'):
+                mine['patterns'].append(pat['id'])
+                out['patterns'].setdefault(pat['id'], {'regions': pat.get('regions') or {},
+                                                       'excluded_by': pat.get('excluded_by') or [], '_package': pkg})
+    return out
 
 
 def load_all_archetypes() -> list:
@@ -371,7 +404,16 @@ def load_all_exercises() -> tuple[dict, dict]:
 def load_injury_flags() -> dict:
     """Return dict of flag_id -> flag data."""
     raw = _load_yaml(os.path.join(_COMMONS_DIR, 'constraints', 'injury_flags.yaml'))
-    return {flag['id']: flag for flag in raw.get('injury_flags', [])}
+    flags = {flag['id']: flag for flag in raw.get('injury_flags', [])}
+    # A package's movement pattern says which flags rule it out
+    # (vocabulary.yaml `excluded_by`): it joins those flags' excluded patterns,
+    # so an exercise that names only package patterns is still filtered.
+    for pat_id, pat in load_vocabulary()['patterns'].items():
+        for flag_id in pat['excluded_by']:
+            flag = flags.get(flag_id)
+            if flag is not None and pat_id not in (flag.get('excluded_movement_patterns') or []):
+                flag['excluded_movement_patterns'] = list(flag.get('excluded_movement_patterns') or []) + [pat_id]
+    return flags
 
 
 def load_equipment() -> list[dict]:

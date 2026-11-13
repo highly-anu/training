@@ -60,6 +60,7 @@ SCHEMA_FILES = {
     'fidelity':          'fidelity.schema.json',
     'source_weeks':      'source_weeks.schema.json',
     'standards':         'standards.schema.json',
+    'vocabulary':        'vocabulary.schema.json',
 }
 # Where each kind lives in a package folder: validate_entities finds its schema
 # (and the checks beside it) by the file's place.
@@ -68,6 +69,7 @@ KIND_PATHS = {
     'archetype': 'archetypes/{id}.yaml', 'exercise': 'exercises.yaml',
     'analytics': 'analytics.yaml', 'watch': 'watch.yaml', 'training_contract': 'training_contract.yaml',
     'fidelity': 'fidelity.yaml', 'source_weeks': 'source_weeks.yaml', 'standards': 'standards.yaml',
+    'vocabulary': 'vocabulary.yaml',
 }
 
 mcp = FastMCP("training")

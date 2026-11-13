@@ -236,38 +236,54 @@
       "title": "A new modality is a commons edit",
       "kind": "commons",
       "impact": "blocks",
-      "detail": "Modalities load from data/commons only and an unknown one is refused, while the archetype schema tells an author to define one in the package.",
+      "detail": "Was: modalities loaded from data/commons only, while the schemas told an author to define one in the package. A package now declares its own in vocabulary.yaml — a modality (recovery cost, session position, progression model, display) with the analytics family it rolls up into — read for the package and whoever borrows from it, never replacing a commons id. The scheduler, the families and GET /api/modalities read it; the web draws a modality it has never met from the served display (the phone falls back to a neutral style: client_vocab_compiled). The schema texts now say where a new one is declared.",
       "anchors": [
         "src/loader.py::def load_all_modalities",
         "docs/schemas/archetype.schema.json::define a new one"
       ],
       "roadmap": "20.6",
-      "status": "open"
+      "status": "done",
+      "closed": "2026-11-13",
+      "evidence": [
+        "test_package_vocabulary.py::def test_in_the_view",
+        "docs/schemas/vocabulary.schema.json::modalities",
+        "frontend/src/lib/modalityColors.test.ts::registerModalities"
+      ]
     },
     {
       "id": "patterns_commons_only",
       "title": "A new movement pattern is a commons edit",
       "kind": "commons",
       "impact": "blocks",
-      "detail": "An exercise may name any pattern, but the slot-filter aliases and the regional recovery weights are commons tables, and a pattern without a recovery region fails a gate.",
+      "detail": "Was: a pattern outside the commons' recovery table failed a gate, and nothing said so to an author. A package's vocabulary.yaml declares its patterns with the body regions each loads; regional recovery reads them beside the commons'. A pattern nobody declares is now a finding of the id check (portability, the gate's `unknown_id`), which says to declare it. Slot-filter aliases stay the commons': a slot names a package pattern directly.",
       "anchors": [
         "src/selector.py::_PATTERN_ALIASES: dict",
         "test_recovery_regions.py::unloaded"
       ],
       "roadmap": "20.6",
-      "status": "open"
+      "status": "done",
+      "closed": "2026-11-13",
+      "evidence": [
+        "test_package_vocabulary.py::def test_gate",
+        "test_package_vocabulary.py::def test_in_the_view"
+      ]
     },
     {
       "id": "injury_flags_name_exercises",
       "title": "Injury flags protect only the exercises the commons name",
       "kind": "commons",
       "impact": "degrades",
-      "detail": "A flag excludes movement patterns and a list of exercise ids. A package of all-new exercises gets the pattern rule alone; nothing makes it say which of its exercises a flag rules out.",
+      "detail": "A package pattern must say which injury flags rule it out (`excluded_by`, required — [] is an answer), and it joins those flags' excluded patterns, so an exercise that names only package patterns is still filtered for an injured athlete. The commons' flags still list shipped exercise ids for what a pattern does not catch; a package states the same per exercise with `contraindicated_with`.",
       "anchors": [
         "data/commons/constraints/injury_flags.yaml::excluded_exercises"
       ],
       "roadmap": "20.6",
-      "status": "open"
+      "status": "done",
+      "closed": "2026-11-13",
+      "evidence": [
+        "test_package_vocabulary.py::def test_in_the_view",
+        "test_package_vocabulary.py::def test_validator"
+      ]
     },
     {
       "id": "equipment_commons_only",

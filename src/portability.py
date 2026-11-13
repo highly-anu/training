@@ -45,6 +45,7 @@ FILES = (
     ('watch', 'watch.yaml', False),
     ('contract', 'training_contract.yaml', False),
     ('standards', 'standards.yaml', False),
+    ('vocabulary', 'vocabulary.yaml', False),
     ('fidelity', 'fidelity.yaml', False),
     ('source_weeks', 'source_weeks.yaml', False),
     ('tests', 'tests', False),
@@ -64,9 +65,13 @@ _KEPT = {
     'archetype': 'the first (by folder name)',
     'media': 'the last (by folder name)',
     'standard': "data/benchmarks' copy, else the first package's (by folder name)",
+    'modality': "the commons' copy, else the first package's (by folder name)",
+    'movement_pattern': "the commons' copy, else the first package's (by folder name)",
 }
 # The commons' standards, as an owner beside the packages.
 _COMMONS_STANDARDS = 'data/benchmarks'
+# The commons' vocabulary (modalities, movement patterns), as another.
+_COMMONS = 'data/commons'
 
 
 def _json(path: str):
@@ -127,6 +132,7 @@ def _read(pkg: str) -> dict:
         'watch': _yaml(os.path.join(base, 'watch.yaml')) or {},
         'contract': _yaml(os.path.join(base, 'training_contract.yaml')) or {},
         'standards': _yaml(os.path.join(base, 'standards.yaml')) or {},
+        'vocabulary': _yaml(os.path.join(base, 'vocabulary.yaml')) or {},
     }
 
 
@@ -199,13 +205,37 @@ def _known() -> dict[str, set]:
     equipment = set((((schema.get('properties') or {}).get('equipment') or {}).get('items') or {}).get('enum') or [])
     equipment.add('none')
     vocab = _json(os.path.join(loader._COMMONS_DIR, 'watch_vocabulary.json')) or {}
+    from . import recovery_regions
+    regions = recovery_regions.config()
     return {
-        'modalities': set(loader.load_all_modalities()),
+        # The commons' own; a package's vocabulary.yaml adds to these for
+        # itself and whoever borrows from it (_known_for).
+        'modalities': {mid for mid, m in loader.load_all_modalities().items() if not m.get('_package')},
+        'movement_patterns': set(regions.get('patterns') or {}) | set(regions.get('unloaded') or []),
         'phase_kinds': set(loader.load_phase_kinds()),
         'equipment': equipment,
         'standards': set(benchmarks_data.known_ids()) | {benchmarks_data.BODYWEIGHT_ID},
         'watch_templates': set(vocab.get('templates') or {}),
     }
+
+
+def _own_vocabulary(docs: dict) -> dict[str, set]:
+    vocab = docs.get('vocabulary') if isinstance(docs.get('vocabulary'), dict) else {}
+    return {'modalities': {m['id'] for m in vocab.get('modalities') or [] if isinstance(m, dict) and m.get('id')},
+            'movement_patterns': {p['id'] for p in vocab.get('movement_patterns') or []
+                                  if isinstance(p, dict) and p.get('id')}}
+
+
+def _known_for(pkg: str, read: dict, known: dict[str, set]) -> dict[str, set]:
+    """What one package may name: the commons, what its own vocabulary.yaml
+    adds, and what the packages it borrows from add."""
+    out = dict(known)
+    sources = [pkg] + [b for b in _as_list((read.get(pkg) or {}).get('philosophy', {}).get('borrows_from'))
+                       if isinstance(b, str)]
+    for source in sources:
+        for kind, ids in _own_vocabulary(read.get(source) or {}).items():
+            out[kind] = out[kind] | ids
+    return out
 
 
 def _references(docs: dict) -> dict[str, set]:
@@ -225,6 +255,8 @@ def _references(docs: dict) -> dict[str, set]:
         refs['equipment'] |= set(_as_list(arch.get('required_equipment')))
     for ex in docs['exercises']:
         refs['equipment'] |= set(_as_list(ex.get('equipment')))
+        refs['modalities'] |= {m for m in _as_list(ex.get('modality')) if isinstance(m, str)}
+        refs['movement_patterns'] |= {p for p in _as_list(ex.get('movement_patterns')) if isinstance(p, str)}
     for doc in (*docs['archetypes'], docs['contract'], docs['philosophy']):
         for value in _walk(doc, 'standard'):
             sid = value.get('id') if isinstance(value, dict) else value
@@ -255,6 +287,8 @@ def _owned_ids(docs: dict) -> dict[str, dict[str, object]]:
         'media': {k: json.dumps(v, sort_keys=True, default=str) for k, v in media.items()},
         'standard': {b['id']: None for b in (docs['standards'] or {}).get('standards') or []
                      if isinstance(b, dict) and b.get('id')},
+        'modality': {m: None for m in _own_vocabulary(docs)['modalities']},
+        'movement_pattern': {p: None for p in _own_vocabulary(docs)['movement_patterns']},
     }
 
 
@@ -287,10 +321,19 @@ def _commons_standards() -> dict[str, dict]:
     return {'standard': {b['id']: None for b in benchmarks_data.load_benchmarks() if not b.get('package')}}
 
 
+def _commons_vocabulary() -> dict[str, dict]:
+    """The commons' modalities and movement patterns, so a package's
+    vocabulary.yaml that takes one of their ids collides."""
+    known = _known()
+    return {'modality': {m: None for m in known['modalities']},
+            'movement_pattern': {p: None for p in known['movement_patterns']}}
+
+
 def _all_owned() -> dict[str, dict]:
     """Every package's ids, and the commons' standards as one more owner, so a
     package standard that takes a commons id collides like any other."""
-    return {**{pkg: _owned_ids(_read(pkg)) for pkg in packages()}, _COMMONS_STANDARDS: _commons_standards()}
+    return {**{pkg: _owned_ids(_read(pkg)) for pkg in packages()}, _COMMONS_STANDARDS: _commons_standards(),
+            _COMMONS: _commons_vocabulary()}
 
 
 def id_collisions() -> list[dict]:
@@ -312,7 +355,9 @@ def problems(pkg: str, report: dict) -> list[str]:
             out.append(f"{c['kind']} '{c['id']}' is also declared by {others} (the loader keeps {c['kept']})")
     for v in row['vocabulary']:
         for u in v['unknown']:
-            out.append(f"{v['kind']}: '{u}' is not in the commons")
+            out.append(f"{v['kind']}: '{u}' is not in the commons"
+                       + (" nor in this package's vocabulary.yaml (or one it borrows from)"
+                          if v['kind'] in ('modalities', 'movement_patterns') else ''))
     return out
 
 
@@ -324,7 +369,8 @@ def report() -> dict:
     known = _known()
     names = packages()
     read = {pkg: _read(pkg) for pkg in names}
-    owned = {**{pkg: _owned_ids(docs) for pkg, docs in read.items()}, _COMMONS_STANDARDS: _commons_standards()}
+    owned = {**{pkg: _owned_ids(docs) for pkg, docs in read.items()}, _COMMONS_STANDARDS: _commons_standards(),
+            _COMMONS: _commons_vocabulary()}
     found, shared = collisions(owned)
     colliding = defaultdict(int)
     for c in found:
@@ -335,7 +381,7 @@ def report() -> dict:
         docs = read[pkg]
         files = _files(pkg)
         records = _records(pkg)
-        vocabulary = _vocabulary(_references(docs), known)
+        vocabulary = _vocabulary(_references(docs), _known_for(pkg, read, known))
         unknown = sum(len(v['unknown']) for v in vocabulary)
         rows.append({
             'id': pkg,

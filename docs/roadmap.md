@@ -1895,10 +1895,25 @@ Readiness, in order:
   table like every public table with a `user_id`. Found on the way: the validator's
   cross-file checks raised on a sibling file that does not parse; they report now.
   `test_private_packages.py`.
-- **20.6 Vocabulary: movement patterns and modalities (M).** A package's
-  `vocabulary.yaml`; known = commons ∪ its own ∪ what it borrows; a package modality
-  brings its display, family and recovery; an exercise on package patterns states what
-  each injury flag rules out.
+- **20.6 Vocabulary: movement patterns and modalities (M).** Done 2026-11-13. A package's
+  optional `vocabulary.yaml` (`docs/schemas/vocabulary.schema.json`,
+  `loader.load_vocabulary`, kept per view): `modalities` — each a modality (recovery
+  cost, session position, progression model, `display`) with the analytics `family` it
+  rolls up into — and `movement_patterns` — each with the body `regions` it loads and the
+  injury flags that rule it out (`excluded_by`, required: `[]` is an answer). The loader
+  adds the modalities after the commons' (tagged `_package`), regional recovery reads the
+  patterns, `families.family_of` the family, and a pattern joins its flags' excluded
+  patterns. Known to a package = the commons ∪ its own ∪ what it borrows from
+  (`portability._known_for`; movement patterns are now checked like modalities); an id
+  the commons define is refused by the validator and collides in the report; an
+  athlete's own must carry the owner's prefix. A modality's `display` is required
+  (`modality.schema.json`), so `POST /api/modalities` cannot write one the clients'
+  generator dies on. The web draws a modality no build knows from `GET /api/modalities`
+  (`lib/modalityColors.registerModalities`; its tint must be a colour family the commons
+  use, and an unknown id answers a neutral style instead of `undefined` — 26 lookups
+  would have thrown). The phone keeps its neutral fallback (gap `client_vocab_compiled`).
+  Three schema texts no longer invite an undeclared modality or pattern.
+  `test_package_vocabulary.py`.
 - **20.7 Vocabulary: equipment (M).** The package's implements in the equipment list and
   the web picker; the phone's picker and compiled styles stay a recorded gap. May follow
   the builder.

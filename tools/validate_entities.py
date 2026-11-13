@@ -77,6 +77,8 @@ def _detect_schema(path: str) -> tuple[str | None, bool]:
         return 'benchmark.schema.json', True
     if basename == 'standards.yaml' and os.path.exists(os.path.join(os.path.dirname(path), 'philosophy.yaml')):
         return 'standards.schema.json', False
+    if basename == 'vocabulary.yaml' and os.path.exists(os.path.join(os.path.dirname(path), 'philosophy.yaml')):
+        return 'vocabulary.schema.json', False
     for part in norm.split('/'):
         if part in _PATH_TO_SCHEMA:
             return _PATH_TO_SCHEMA[part], part in _LIST_SCHEMAS
@@ -256,6 +258,84 @@ def _category_errors(item: dict, own: set) -> list[str]:
             "package's own categories"]
 
 
+def _commons_vocabulary() -> dict:
+    """What the commons define that a package's vocabulary.yaml is checked
+    against: modality ids and the tints they use, movement patterns, body
+    regions, families, injury flags, progression models."""
+    commons = os.path.join(_ROOT, 'data', 'commons')
+    modalities, tints = set(), set()
+    for f in glob.glob(os.path.join(commons, 'modalities', '*.yaml')):
+        with open(f, encoding='utf-8') as fh:
+            mod = yaml.safe_load(fh) or {}
+        modalities.add(mod.get('id'))
+        tints.add((mod.get('display') or {}).get('tint'))
+    with open(os.path.join(commons, 'recovery_regions.yaml'), encoding='utf-8') as fh:
+        regions = yaml.safe_load(fh) or {}
+    with open(os.path.join(commons, 'modality_families.json'), encoding='utf-8') as fh:
+        families = set((json.load(fh).get('families') or {}))
+    with open(os.path.join(commons, 'constraints', 'injury_flags.yaml'), encoding='utf-8') as fh:
+        flags = {f.get('id') for f in (yaml.safe_load(fh) or {}).get('injury_flags') or []}
+    models = set(_load_schema('framework.schema.json')['properties']['progression_model'].get('enum') or [])
+    return {'modalities': modalities, 'tints': tints - {None}, 'families': families, 'flags': flags,
+            'models': models, 'regions': set(regions.get('regions') or {}),
+            'patterns': set(regions.get('patterns') or {}) | set(regions.get('unloaded') or [])}
+
+
+def _package_vocabulary_errors(data: dict, schema: dict) -> list[str]:
+    """A package's vocabulary.yaml: its shape; each modality a modality
+    (modality.schema.json) with a family, a progression model and a tint the
+    commons know; each pattern's regions and injury flags the commons'; every
+    id new. (An id another package declares fails the --all collision gate.)"""
+    try:
+        jsonschema.validate(instance=data, schema=schema)
+    except jsonschema.ValidationError as e:
+        return [e.message]
+    errors, commons = [], _commons_vocabulary()
+    modality_schema = _load_schema('modality.schema.json')
+    own = {m.get('id') for m in data.get('modalities') or []}
+    for i, mod in enumerate(data.get('modalities') or []):
+        where = f"modalities[{i}] ({mod.get('id', '?')})"
+        try:   # a modality, less the key only a package's carries
+            jsonschema.validate(instance={k: v for k, v in mod.items() if k != 'family'}, schema=modality_schema)
+        except jsonschema.ValidationError as e:
+            errors.append(f'{where}: {e.message}')
+            continue
+        if mod['id'] in commons['modalities']:
+            errors.append(f"{where}: the commons already define '{mod['id']}' (data/commons/modalities); "
+                          'a package modality needs an id of its own')
+        if mod['family'] not in commons['families']:
+            errors.append(f"{where}: family '{mod['family']}' is not one of {sorted(commons['families'])} "
+                          '(data/commons/modality_families.json)')
+        if mod['progression_model'] not in commons['models']:
+            errors.append(f"{where}: progression_model '{mod['progression_model']}' is not one of the engine's "
+                          f"({sorted(commons['models'])})")
+        if mod['display']['tint'] not in commons['tints']:
+            errors.append(f"{where}: display.tint '{mod['display']['tint']}' is not a colour family the clients "
+                          f"carry ({sorted(commons['tints'])})")
+        for key in ('compatible_in_session_with', 'incompatible_in_session_with'):
+            for other in mod.get(key) or []:
+                if other not in commons['modalities'] and other not in own:
+                    errors.append(f"{where}: {key} names '{other}', which is neither a commons modality nor this "
+                                  "package's")
+    seen = set()
+    for i, pat in enumerate(data.get('movement_patterns') or []):
+        where = f"movement_patterns[{i}] ({pat.get('id', '?')})"
+        if pat['id'] in commons['patterns']:
+            errors.append(f"{where}: the commons already define '{pat['id']}' (data/commons/recovery_regions.yaml); "
+                          'a package pattern needs an id of its own')
+        if pat['id'] in seen:
+            errors.append(f'{where}: declared twice')
+        seen.add(pat['id'])
+        for region in pat['regions']:
+            if region not in commons['regions']:
+                errors.append(f"{where}: region '{region}' is not one of {sorted(commons['regions'])}")
+        for flag in pat['excluded_by']:
+            if flag not in commons['flags']:
+                errors.append(f"{where}: excluded_by names '{flag}', which is not an injury flag "
+                              '(data/commons/constraints/injury_flags.yaml)')
+    return errors
+
+
 def _package_standards_errors(data: dict, schema: dict, path: str) -> list[str]:
     """A package's standards.yaml: the file's shape, each entry against
     benchmark.schema.json, each category known, each id new. (An id another
@@ -395,6 +475,8 @@ def validate_file(path: str, verbose: bool = True) -> list[str]:
                 errors.extend(f"[{i}] ({item.get('id', '?')}): {e}" for e in _category_errors(item, set()))
     elif schema_filename == 'standards.schema.json':
         errors.extend(_package_standards_errors(data, schema, path))
+    elif schema_filename == 'vocabulary.schema.json':
+        errors.extend(_package_vocabulary_errors(data, schema))
     else:
         try:
             jsonschema.validate(instance=data, schema=schema)

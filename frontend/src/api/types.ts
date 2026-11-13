@@ -1058,6 +1058,10 @@ export interface Modality {
   intensity_zones?: Array<{ label: string; description?: string; hr_pct_range?: [number, number] }>
   sources?: string[]
   notes?: string
+  /** How the clients draw it (the modality's file, or a package's vocabulary.yaml). */
+  display?: { label: string; short?: string; order?: number; color: string; tint: string; text_shade?: number }
+  /** The package that brings it; absent for the commons'. */
+  _package?: string
 }
 
 // ─── Philosophy ───────────────────────────────────────────────────────────────

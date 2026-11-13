@@ -108,6 +108,7 @@ training/
 │   │       ├── archetypes/          # session shapes, one subdir per modality
 │   │       ├── exercises.yaml       # the movements it owns
 │   │       ├── exercise_media.yaml  # demo links
+│       ├── vocabulary.yaml      # optional; modalities and movement patterns it adds
 │   │       └── level_seeds.yaml     # optional; per-level assumed knowledge
 │   ├── commons/              # shared, owned by no philosophy
 │   │   ├── phase_kinds.yaml         # the phase kinds the engine keys on
@@ -1511,6 +1512,12 @@ laid out per athlete by `src/package_store.py` and named as the request's overla
 reference routes need no sign-in, and with one add the athlete's own packages: a variant built in
 their view, kept bounded beside the shared answers (`api._USER_STATIC`, keyed by their overlay
 directory), sent `private`; the shared answers and the image's build are never touched (20.4).
+**A package may add vocabulary** (since 2026-11-13, roadmap 20.6): `vocabulary.yaml` — `modalities`
+(a modality with its `family` and `display`) and `movement_patterns` (`regions`, `excluded_by`: the
+injury flags that rule it out) — for itself and whoever borrows from it (`loader.load_vocabulary`).
+Never a commons id. The web draws a served modality it does not know (`registerModalities`); slot
+types, progression and contract models, phase kinds, levels, intensities, watch templates and
+icons stay the engine's.
 `src/package_gate.check_package(folder)` is every gate for one folder, in process and as data
 (files, schema, ids, a smoke generate of every track and phase, provenance — `src/package_smoke.py`
 is check_styles' loop and check_provenance's audit, which both tools call; roadmap 20.2).
@@ -1567,6 +1574,7 @@ SUPABASE_URL='' .venv/bin/python test_constraint_impact.py  # what each constrai
 SUPABASE_URL='' .venv/bin/python test_portability.py     # Dev Lab ▸ Builder readiness' report; every open gap still anchored in the code, every closed one held by a test; --write re-records the web's copy
 .venv/bin/python test_package_gate.py                    # src/package_gate.check_package: one folder through the gates' checks, as data
 SUPABASE_URL='' .venv/bin/python test_private_packages.py  # an athlete's own packages: store, install through the gate, routes; SQL half on its own database
+SUPABASE_URL='' .venv/bin/python test_package_vocabulary.py  # a package's vocabulary.yaml: modalities and patterns of its own
 .venv/bin/python test_package_overlay.py                 # the loader's overlay: adds for its caller, never replaces, quarantines; caches per view
 .venv/bin/python test_add_package.py                     # one package's baselines recorded, every other's kept; add_package's refusals
 SUPABASE_URL='' .venv/bin/python test_explore_links.py     # Explore's lineage: slot links by the selector's rule, progression, movements
