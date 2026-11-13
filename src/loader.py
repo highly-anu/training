@@ -64,14 +64,39 @@ _VIEW_LOCK = threading.RLock()
 _OVERLAY_PACKAGES: dict[str, tuple[list, list]] = {}   # overlay dir → (loadable, quarantined)
 
 
+class _Later:
+    """An overlay named by a function, asked once, the first time a loader
+    needs it: most requests read no package, and naming an athlete's overlay
+    may cost a query (src/package_store.py)."""
+    __slots__ = ('resolve', 'path', 'asked')
+
+    def __init__(self, resolve):
+        self.resolve, self.path, self.asked = resolve, None, False
+
+    def get(self) -> str | None:
+        if not self.asked:
+            self.asked = True
+            try:
+                path = self.resolve()
+            except Exception as e:   # naming it failed: the shipped packages alone, never an error
+                _log.warning('overlay not resolved: %s', e)
+                path = None
+            self.path = os.path.abspath(path) if path else None
+        return self.path
+
+
 def overlay_dir() -> str | None:
     """The overlay the caller sees, or None: the shipped packages alone."""
-    return _OVERLAY.get()
+    value = _OVERLAY.get()
+    return value.get() if isinstance(value, _Later) else value
 
 
-def set_overlay(path: str | None):
-    """Name the caller's overlay; returns the token `reset_overlay` takes.
+def set_overlay(path):
+    """Name the caller's overlay — a directory, or a function that returns one
+    (or None) when first asked; returns the token `reset_overlay` takes.
     A server thread is reused, so every set is reset (see `overlay`)."""
+    if callable(path):
+        return _OVERLAY.set(_Later(path))
     return _OVERLAY.set(os.path.abspath(path) if path else None)
 
 
@@ -145,19 +170,19 @@ def _overlay_packages(path: str) -> tuple[list, list]:
 def package_dirs() -> list[tuple[str, str]]:
     """[(package id, folder)] the caller sees: the shipped packages, sorted,
     then its overlay's loadable ones."""
-    path = _OVERLAY.get()
+    path = overlay_dir()
     return _shipped_dirs() + (list(_overlay_packages(path)[0]) if path else [])
 
 
 def overlay_packages() -> list[str]:
     """The ids of the caller's own (overlay) packages that load."""
-    path = _OVERLAY.get()
+    path = overlay_dir()
     return [pkg for pkg, _ in _overlay_packages(path)[0]] if path else []
 
 
 def quarantined() -> list[dict]:
     """The caller's overlay packages that were set aside: [{package, dir, problem}]."""
-    path = _OVERLAY.get()
+    path = overlay_dir()
     return list(_overlay_packages(path)[1]) if path else []
 
 
@@ -181,7 +206,7 @@ def package_files(*parts: str, recursive: bool = False) -> list[tuple[str, str]]
 
 
 def _is_overlay(pkg: str) -> bool:
-    path = _OVERLAY.get()
+    path = overlay_dir()
     return bool(path) and any(pkg == name for name, _ in _overlay_packages(path)[0])
 
 
@@ -199,7 +224,7 @@ _OVERLAY_STORES: 'OrderedDict[str, dict[str, dict]]' = OrderedDict()
 
 
 def view_store(name: str) -> dict:
-    path = _OVERLAY.get()
+    path = overlay_dir()
     with _VIEW_LOCK:
         if path is None:
             return _SHIPPED_STORES.setdefault(name, {})

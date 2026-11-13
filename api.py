@@ -1778,6 +1778,99 @@ def dev_constraint_impact():
     return jsonify(out), status
 
 
+# ── An athlete's own packages ────────────────────────────────────────────────
+# Written at runtime, kept in Postgres, private to their owner
+# (src/package_store.py; docs/roadmap.md item 20). Behind the authoring gate
+# until the builder ships. Every write goes through the gates
+# (src/package_gate.py) and one runs at a time, as generation does.
+
+def _package_store_error(e):
+    app.logger.warning('user_packages: %s', e)
+    return jsonify({'error': 'store_unavailable', 'detail': 'Your packages could not be saved. Try again.'}), 503
+
+
+@app.get('/api/packages')
+@require_auth
+@require_authoring
+def list_user_packages():
+    """The athlete's own packages, the prefix every id they declare must
+    carry, and any that no longer loads (set aside, with why)."""
+    from src import package_store
+    try:
+        rows = package_store.list_packages(g.user_id)
+    except package_store.StoreError as e:
+        return _package_store_error(e)
+    set_aside = {q['package']: q['problem'] for q in loader.quarantined()}
+    for row in rows:
+        if row['id'] in set_aside:
+            row['status'], row['problems'] = 'quarantined', [{'stage': 'load', 'code': 'not_loadable', 'file': None,
+                                                             'message': set_aside[row['id']]}]
+    return jsonify({'prefix': package_store.owner_prefix(g.user_id), 'packages': rows,
+                    'limits': {'files': package_store.MAX_FILES, 'bytes': package_store.MAX_BYTES,
+                               'packages': package_store.MAX_PACKAGES}})
+
+
+@app.get('/api/packages/<package_id>')
+@require_auth
+@require_authoring
+def get_user_package(package_id):
+    from src import package_store
+    try:
+        row = package_store.get_package(g.user_id, package_id)
+    except package_store.StoreError as e:
+        return _package_store_error(e)
+    return (jsonify(row), 200) if row else (jsonify({'error': 'not_found'}), 404)
+
+
+@app.post('/api/packages')
+@require_auth
+@require_authoring
+def install_user_package():
+    """Install (or replace) one package: `{files: {path: yaml text}}`, its id
+    the philosophy's. `dry_run: true` checks only. 200 with `installed`; 422
+    with the gate's `problems` when it does not pass; 429 while another check
+    runs; 503 when the write fails."""
+    from src import package_store
+    body = request.get_json(silent=True) or {}
+    user_id = g.user_id
+
+    def run(b):
+        try:
+            if b.get('dry_run'):
+                result = {**package_store.check(user_id, b.get('files')), 'installed': False}
+            else:
+                result = package_store.install(user_id, b.get('files'))
+        except package_store.StoreError as e:
+            app.logger.warning('user_packages: %s', e)
+            return {'error': 'store_unavailable', 'detail': 'Your package could not be saved. Try again.'}, 503
+        return result, (200 if result['ok'] else 422)
+
+    out, status = _heavy_run('package', body, run)
+    return jsonify(out), status
+
+
+@app.delete('/api/packages/<package_id>')
+@require_auth
+@require_authoring
+def delete_user_package(package_id):
+    """Remove one of the athlete's packages. 409 while their program is built
+    from it (the program would lose its method); 404 when they have none by
+    that id."""
+    from src import package_store
+    try:
+        if package_store.get_package(g.user_id, package_id) is None:
+            return jsonify({'error': 'not_found'}), 404
+        from src.db import get_user_program
+        program = get_user_program(g.user_id)
+        if program and f'"{package_id}"' in json.dumps(program, default=str):
+            return jsonify({'error': 'in_use', 'detail': 'Your program is built from this package. '
+                            'Start another program first.'}), 409
+        package_store.remove(g.user_id, package_id)
+    except package_store.StoreError as e:
+        return _package_store_error(e)
+    return jsonify({'removed': True})
+
+
 @app.get('/api/dev/portability')
 @require_auth
 @require_authoring

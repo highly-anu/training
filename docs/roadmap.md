@@ -1867,10 +1867,25 @@ Readiness, in order:
   yet — storage does (20.5). `test_package_overlay.py`.
 - **20.4 Reference routes per athlete (M).** The baked build stays for everyone without a
   package of their own; an athlete with one gets their own bounded variant.
-- **20.5 Storage and install (M).** `user_packages` (migration 013, a capped file map),
-  materialised per athlete, installed atomically through the gate; soft delete, so a
-  stored program keeps resolving; `GET/POST/DELETE /api/packages` behind the authoring
-  gate until the builder ships.
+- **20.5 Storage and install (M).** Done 2026-11-13 (migration 013 **not yet run on
+  production** — `scripts/backup_prod.sh` first; until then `src/package_store.py` makes
+  the table lazily, row security on and no policy). `user_packages`: one row per athlete
+  and package, a capped file map of YAML text (200 files, 512 KB, only the paths a
+  package holds; 20 packages an athlete). The store lays an athlete's set out as folders
+  under `TRAINING_USER_PACKAGES_DIR` (the temp directory without it) in a directory named
+  from every (package, revision) — built beside the old one and renamed in, the same from
+  any process — and `require_auth` names it as the request's overlay (`auth._as_user`:
+  asked only when a loader runs, at most one query a minute per athlete and process,
+  always reset; the Garmin worker names it for its own thread). `POST /api/packages`
+  `{files}` runs every gate with the owner's prefix (`u<8 hex>_`) and the athlete's other
+  packages beside it, stores it when it passes and answers 422 with the gate's problems
+  when not (`dry_run` checks only; one at a time, 429 `busy`); `GET /api/packages` (with
+  the prefix and the limits) and `/<id>` (its files); `DELETE` removes — the row is kept
+  and marked — and answers 409 `in_use` while the athlete's program is built from it.
+  All behind the authoring gate until the builder ships. Account deletion empties the
+  table like every public table with a `user_id`. Found on the way: the validator's
+  cross-file checks raised on a sibling file that does not parse; they report now.
+  `test_private_packages.py`.
 - **20.6 Vocabulary: movement patterns and modalities (M).** A package's
   `vocabulary.yaml`; known = commons ∪ its own ∪ what it borrows; a package modality
   brings its display, family and recovery; an exercise on package patterns states what

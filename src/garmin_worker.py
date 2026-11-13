@@ -183,10 +183,14 @@ def process_activity_notification(notification: dict) -> dict:
     # raise_on_error: a silently failed write here would lose the activity with
     # nothing left to retry from.
     health_store.upsert_workouts(user_id, workouts, raise_on_error=True)
-    matched = workout_matcher.match_and_store(user_id, workouts)
-    # A run's fastest mile, 3 or 5 miles can be a result on a run standard.
-    from src import standard_results
-    standard_results.after_workouts_import(user_id, workouts)
+    # This thread serves no request, so nothing named the athlete's own
+    # packages for it (auth._as_user does that for a view): a test of a
+    # package of theirs is a test here too.
+    from src import loader, package_store, standard_results
+    with loader.overlay(lambda: package_store.overlay_for(user_id)):
+        matched = workout_matcher.match_and_store(user_id, workouts)
+        # A run's fastest mile, 3 or 5 miles can be a result on a run standard.
+        standard_results.after_workouts_import(user_id, workouts)
 
     if summary_id:
         garmin_connect.record_import(garmin_user_id, summary_id, user_id, workouts[0]['id'])

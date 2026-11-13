@@ -223,7 +223,10 @@ def check_package(pkg_dir: str, *, smoke: bool = True, owner_prefix: str | None 
         return finish()
 
     ran.append('schema')
-    problems += _schema(pkg_dir)
+    try:
+        problems += _schema(pkg_dir)
+    except Exception as e:   # the validator met something it does not expect: a finding, never a crash
+        problems.append(_problem('schema', 'raised', f'{type(e).__name__}: {e}'))
     warnings += _scope_warnings(pkg_dir)
     if problems:
         skip(STAGES[2:], 'its files do not validate')

@@ -400,7 +400,17 @@ def validate_file(path: str, verbose: bool = True) -> list[str]:
             jsonschema.validate(instance=data, schema=schema)
         except jsonschema.ValidationError as e:
             errors.append(e.message)
-        extra = _extra_checks(data, schema_filename, path)
+        # The checks beside the schema read the package's other files (a
+        # philosophy its frameworks and archetypes, a slot its standards). One
+        # of those that does not parse or is not the shape expected is that
+        # file's own finding; here it must be an error, never a raise — the
+        # gate for one package (src/package_gate.py) runs this on files nobody
+        # has read.
+        try:
+            extra = _extra_checks(data, schema_filename, path)
+        except Exception as e:  # noqa: BLE001
+            extra = [f"could not be checked against the package's other files ({type(e).__name__}: "
+                     f"{str(e).splitlines()[0] if str(e) else 'no detail'}); fix the file that does not load first"]
         errors.extend(extra)
 
     return errors

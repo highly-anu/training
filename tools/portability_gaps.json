@@ -178,36 +178,52 @@
       "title": "Nowhere to keep a package written at runtime",
       "kind": "runtime",
       "impact": "blocks",
-      "detail": "Packages are copied into the image; production has no volume and its disk is lost on every deploy, and Postgres has no package table.",
+      "detail": "Was: packages lived only in the image, whose disk is lost on every deploy. Now an athlete's own package is a row in user_packages (migration 013): a capped file map of YAML text. src/package_store.py lays the athlete's set out as folders for the loader — a directory named from every (package, revision), built beside the old one and renamed in, so any process or machine builds the same one and no reader sees half of it. Migration 013 has not been run on production; the store creates the table lazily (row security on, deny-by-default) until it is.",
       "anchors": [
         "Dockerfile::COPY . ."
       ],
       "roadmap": "20.5",
-      "status": "open"
+      "status": "done",
+      "closed": "2026-11-13",
+      "evidence": [
+        "test_private_packages.py::def test_install",
+        "test_private_packages.py::def test_sql",
+        "migrations/013_user_packages.sql::CREATE TABLE IF NOT EXISTS user_packages"
+      ]
     },
     {
       "id": "no_private_scope",
       "title": "Every package is everyone's",
       "kind": "runtime",
       "impact": "blocks",
-      "detail": "Any folder with a philosophy.yaml is listed to every athlete: there is no owner, no visibility and no draft state.",
+      "detail": "Was: any folder with a philosophy.yaml was everyone's. An athlete's package is read only inside their own view: require_auth names their overlay for the length of the request (auth._as_user; asked only if a loader runs, always reset), every store read takes the user id, the table's row security is per user, and each id the package declares carries its owner's prefix. The reference routes that take no sign-in still answer the shipped packages alone (20.4).",
       "anchors": [
         "src/loader.py::def load_philosophies"
       ],
       "roadmap": "20.5",
-      "status": "open"
+      "status": "done",
+      "closed": "2026-11-13",
+      "evidence": [
+        "test_private_packages.py::def test_routes",
+        "src/auth.py::def _as_user"
+      ]
     },
     {
       "id": "api_authoring_custom_only",
       "title": "The API can author entities, never a package",
       "kind": "tooling",
       "impact": "blocks",
-      "detail": "The authoring routes write exercises, archetypes and frameworks into a `custom` package that has no philosophy, so nothing they write can reach a program; no route writes a philosophy, a contract or a whole folder. mcp_server.py can, but only as a local developer process.",
+      "detail": "The entity routes still write only `custom` (a shipped-root, developer path). A whole package now has its own way in: POST /api/packages takes a file map, runs every gate with the owner's prefix (dry_run checks only), stores it when it passes and answers the gate's problems when it does not; GET lists and reads back, DELETE removes (409 while the athlete's program is built from it). Behind the authoring gate until the builder ships.",
       "anchors": [
         "api.py::_NOT_CUSTOM"
       ],
       "roadmap": "20.5",
-      "status": "open"
+      "status": "done",
+      "closed": "2026-11-13",
+      "evidence": [
+        "test_private_packages.py::def test_routes",
+        "api.py::def install_user_package"
+      ]
     },
     {
       "id": "modalities_commons_only",
