@@ -28,11 +28,18 @@ const PLACED_BY: Record<string, string> = {
   forced: 'a test or a named workout',
 }
 
-function ArchetypeSelectionBlock({ trace }: { trace: SessionTrace['archetype'] }) {
+function ArchetypeSelectionBlock({ trace, session }: { trace: SessionTrace['archetype']; session?: SessionTrace }) {
   if (trace.candidates.length === 0) {
     if (trace.selected_id && trace.selection_reason) {
-      const by = PLACED_BY[trace.selection_reason] ?? `its day category (${trace.selection_reason.replace(/_/g, ' ')})`
-      return <p className="text-xs text-muted-foreground">Placed by {by}, not scored.</p>
+      // A trace recorded before 20.9 gave the day's category as the reason itself.
+      const by = session?.test ? 'a test'
+        : PLACED_BY[trace.selection_reason] ?? `its day category (${trace.selection_reason.replace(/_/g, ' ')})`
+      const category = session?.category ?? (trace as { category?: string }).category
+      return (
+        <p className="text-xs text-muted-foreground">
+          Placed by {by}{category && !session?.test ? ` — the next ${category.replace(/_/g, ' ')} workout that fits` : ''}, not scored.
+        </p>
+      )
     }
     return <p className="text-xs text-destructive">No archetype candidates found.</p>
   }
@@ -45,6 +52,7 @@ function ArchetypeSelectionBlock({ trace }: { trace: SessionTrace['archetype'] }
             <tr className="text-left text-muted-foreground">
               <th className="pb-1 pr-3">Archetype</th>
               <th className="pb-1 pr-3 text-right">Score</th>
+              <th className="pb-1 pr-3 text-right" title="An archetype the day prefers (a split day's complement)">Preferred</th>
               <th className="pb-1 pr-3 text-right">Equip</th>
               <th className="pb-1 pr-3 text-right">Recency</th>
               <th className="pb-1 pr-3 text-right">Day fit</th>
@@ -69,6 +77,7 @@ function ArchetypeSelectionBlock({ trace }: { trace: SessionTrace['archetype'] }
                   {c.name || c.id}
                 </td>
                 <td className="py-1 pr-3 text-right font-mono font-bold">{c.score}</td>
+                <td className="py-1 pr-3 text-right font-mono text-teal-700 dark:text-teal-300">{c.breakdown.preferred ?? 0}</td>
                 <td className="py-1 pr-3 text-right font-mono text-sky-700 dark:text-sky-300">{c.breakdown.equipment ?? 0}</td>
                 <td className="py-1 pr-3 text-right font-mono text-amber-700 dark:text-amber-300">{c.breakdown.recency ?? 0}</td>
                 <td className="py-1 pr-3 text-right font-mono text-emerald-700 dark:text-emerald-300">{c.breakdown.day_fit ?? 0}</td>
@@ -122,7 +131,7 @@ function SlotRow({ slot }: { slot: SlotTrace }) {
             <span className="text-destructive text-[10px]">no match</span>
           )}
           <span className="text-muted-foreground text-[10px]">
-            ({slot.filter_counts.final ?? 0} candidates)
+            {slot.module_id ? `module ${slot.module_id}` : `(${slot.filter_counts.final ?? 0} candidates)`}
           </span>
           <span className="text-muted-foreground">{expanded ? '▲' : '▼'}</span>
         </span>
@@ -238,7 +247,10 @@ export function SessionsPanel({ weeks }: Props) {
   const week = weeks[weekIdx]
   if (!week) return null
 
+  // In the week's order: a composition's merged days arrive track by track.
+  const order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
   const days = Object.keys(week.sessions).filter(d => week.sessions[d].length > 0)
+    .sort((a, b) => order.indexOf(a) - order.indexOf(b))
   const currentDay = activeDay ?? days[0] ?? null
 
   return (
@@ -289,6 +301,7 @@ export function SessionsPanel({ weeks }: Props) {
               <CardHeader className="pb-2">
                 <CardTitle className="flex flex-wrap items-center gap-2 text-sm">
                   <ModalityBadge modality={session.modality as ModalityId} />
+                  {session.lane_key && <Badge variant="outline" className="text-[10px] font-mono">{session.lane_key}</Badge>}
                   <span className="font-mono text-xs text-muted-foreground">→</span>
                   <span className="text-xs font-mono">
                     {session.archetype.selected_id ?? (
@@ -306,7 +319,36 @@ export function SessionsPanel({ weeks }: Props) {
                   <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-2">
                     Archetype Selection
                   </p>
-                  <ArchetypeSelectionBlock trace={session.archetype} />
+                  <ArchetypeSelectionBlock trace={session.archetype} session={session} />
+                  {session.test && (
+                    <p className="text-xs">
+                      <Badge variant="outline" className="text-[10px] mr-1.5">test</Badge>
+                      measures <span className="font-mono">{session.test.standards.join(', ') || '—'}</span>
+                      {session.test.instead_of && (
+                        <span className="text-muted-foreground"> in place of {session.test.instead_of}</span>
+                      )}
+                    </p>
+                  )}
+                  {(session.module_steps ?? []).length > 0 && (
+                    <div className="text-xs space-y-0.5">
+                      {session.module_steps!.map(m => (
+                        <p key={m.id}>
+                          <span className="font-mono">{m.id}</span>{' '}
+                          <span className="text-muted-foreground">
+                            step {m.step ?? '—'}{m.variant ? ` · variant ${m.variant}` : ''}
+                            {m.rounds ? ` · ${m.rounds} rounds` : ''}{m.max_rpe ? ` · RPE ≤ ${m.max_rpe}` : ''}
+                            {m.deload ? ' · deload' : ''}{m.light_day ? ' · light day' : ''}
+                          </span>
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                  {session.substituted_for && (
+                    <p className="text-xs text-amber-700 dark:text-amber-300">
+                      Stands in for {session.substituted_for.replace(/_/g, ' ')}
+                      {session.substitution_cause ? ` (${session.substitution_cause.replace(/_/g, ' ')})` : ''}.
+                    </p>
+                  )}
                 </div>
 
                 {/* Exercise slots */}

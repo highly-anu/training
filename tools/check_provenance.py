@@ -48,60 +48,8 @@ def constraints_for(profile: dict) -> dict:
     }
 
 
-def sessions_of(raw: dict):
-    for week in raw.get('weeks', []):
-        for day in week.get('schedule', {}).values():
-            for session in day:
-                yield session
-
-
-def audit_program(raw: dict, policy, ex_index: dict) -> dict:
-    """Return {'archetypes': Counter(package), 'exercises': Counter, 'foreign': [...]}"""
-    arch_pkgs: Counter = Counter()
-    ex_pkgs: Counter = Counter()
-    foreign: list = []
-
-    for session in sessions_of(raw):
-        arch = session.get('archetype')
-        session_policy = (provenance.SourcePolicy(owner_packages=frozenset({arch.get('_package')}),
-                          borrows=policy.borrows, strict=policy.strict) if arch else policy)
-        if arch:
-            pkg = arch.get('_package')
-            arch_pkgs[pkg] += 1
-            if not provenance.allows_archetype(arch, policy):
-                foreign.append(f"archetype {arch.get('id')} from {pkg}")
-
-        assignments = list(session.get('exercises') or [])
-        modality = session.get('modality')
-        for assignment in assignments:
-            ex = assignment.get('exercise')
-            if not ex:
-                continue
-            full = ex_index.get(ex.get('id'), ex)
-            pkgs = provenance.exercise_packages(full)
-            ex_pkgs[pkgs[0] if pkgs else None] += 1
-            if arch and not provenance.allows_exercise(full, session_policy, modality):
-                foreign.append(
-                    f"exercise {ex.get('id')} absent from {arch.get('_package')}/exercises.yaml")
-            if not provenance.allows_exercise(full, policy, modality):
-                foreign.append(f"exercise {ex.get('id')} from {pkgs}")
-
-        # Complementary work drew from the unfiltered global index and is the
-        # easiest regression to reintroduce — audit it explicitly.
-        for comp in session.get('complementary_work') or []:
-            ex = comp.get('exercise') if isinstance(comp, dict) and 'exercise' in comp else comp
-            if not isinstance(ex, dict) or 'id' not in ex:
-                continue
-            full = ex_index.get(ex['id'], ex)
-            pkgs = provenance.exercise_packages(full)
-            ex_pkgs[pkgs[0] if pkgs else None] += 1
-            if arch and not provenance.allows_exercise(full, session_policy):
-                foreign.append(
-                    f"complementary {ex['id']} absent from {arch.get('_package')}/exercises.yaml")
-            if not provenance.allows_exercise(full, policy):
-                foreign.append(f"complementary {ex['id']} from {pkgs}")
-
-    return {'archetypes': arch_pkgs, 'exercises': ex_pkgs, 'foreign': foreign}
+# The audit is shared with the gate for one package (src/package_gate.py).
+from src.package_smoke import audit_program, sessions_of  # noqa: E402,F401
 
 
 def _valid_exercise_categories() -> set:
