@@ -29,7 +29,7 @@ scratch folder for a trial package). Without the SDK the tools still import, whi
 | `get_package_template(name)`, `get_archetype_template(modality, slot_type)` | Skeleton files with every required field |
 | `validate_yaml(entity_type, content, package_name?)` | One file, as the gates check it: philosophy, framework, archetype, exercise, analytics, watch, training_contract, fidelity, source_weeks, standards |
 | `write_package_file(package, path, content, overwrite?)` | Writes a file after checking it as the file it will be (a file no schema covers — media, level seeds — is written as is); never outside the packages folder |
-| `validate_package(name)` | Every file (`tools/validate_entities.py`), then `tools/add_package.py`'s checks: no id another package declares, every id in the commons, the files a package needs; warns of a modality in scope no archetype serves |
+| `validate_package(name, smoke=True)` | `src/package_gate.check_package`, the gates' own checks in order, stopping at the first stage that finds a problem: its files, every file's schema (`tools/validate_entities.py`), its ids (no id another package declares, every id in the commons, the files a package needs), a smoke generate of every track and phase, provenance. Returns `problems` (`stage`, `code`, `file`, `message`), `ran`, `skipped`; warns of a modality in scope no archetype serves |
 | `get_package_summary(name)`, `list_package_exercises(name)` | What a package has |
 | `delete_package(name)` | Removes a package folder (never one outside the packages folder) |
 

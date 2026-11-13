@@ -513,60 +513,53 @@ def _validate_text(package_name: str, relative_path: str, content: str) -> dict:
 
 
 @mcp.tool()
-def validate_package(package_path: str) -> dict:
+def validate_package(package_path: str, smoke: bool = True) -> dict:
     """
-    Validate a package folder with the gates' own checks.
+    Validate a package folder with the gates' own checks, in order
+    (src/package_gate.check_package — the stages stop at the first that finds
+    a problem):
+
+      files       a philosophy.yaml whose id is the folder's name
+      schema      every file against its schema and the checks beside it
+                  (tools/validate_entities.py: tracks and phases, templates and
+                  pools, tests and standards, contracts, analytics, watch
+                  screens, fidelity)
+      ids         the files a package needs, no id another package declares,
+                  every id in the commons (src/portability.py)
+      smoke       every phase of every track validates and generates on the
+                  framework it names, and places its tests
+      provenance  nothing in those programs from outside the package and what
+                  it borrows
 
     package_path: package name ('yoga') or path ('data/packages/yoga').
+    smoke: False stops before generating.
 
-    Checks:
-      - every file against its schema and the checks beside it
-        (tools/validate_entities.py: tracks and phases, templates and pools,
-        tests and standards, contracts, analytics, watch screens, fidelity);
-      - no id another package declares, every id in the commons, the files a
-        package needs (tools/add_package.py, src/portability.py);
-      - a warning for a modality in the philosophy's scope that no archetype serves.
+    A folder outside the packages directory is checked as far as `schema`;
+    the rest is listed in `skipped`. A modality in the philosophy's scope that
+    no archetype serves is a warning.
 
     Then bring it in: .venv/bin/python tools/add_package.py <id> (--check first).
 
-    Returns: {"valid": bool, "files": {filename: [error strings]}}
+    Returns: {"valid": bool, "files": {filename: [error strings]},
+              "problems": [{stage, code, file, message}], "warnings": [...],
+              "ran": [stage], "skipped": [{stage, why}], "tracks": [...]}
+    `files` groups the same findings by file ('(package)' for one that names
+    none; a warning starts 'Warning:').
     """
+    from src import package_gate
     pkg_dir = PACKAGES_DIR / package_path if '/' not in package_path and '\\' not in package_path \
               else ROOT / package_path
     if not pkg_dir.exists():
         return {'valid': False, 'files': {'(setup)': [f'Directory not found: {pkg_dir}']}}
 
+    result = package_gate.check_package(str(pkg_dir), smoke=smoke)
     file_errors: dict[str, list[str]] = {}
-    for path, errors in ve.validate_path(str(pkg_dir), verbose=False).items():
-        if errors:
-            file_errors[Path(path).relative_to(pkg_dir).as_posix()] = list(errors)
-
-    if pkg_dir.resolve().parent == PACKAGES_DIR.resolve():
-        from src import portability
-        from tools.add_package import _problems
-        problems = _problems(pkg_dir.name, portability.report()) \
-            if any(p['id'] == pkg_dir.name for p in portability.report()['packages']) else []
-        if problems:
-            file_errors['(package)'] = problems
-
-    phil_file = pkg_dir / 'philosophy.yaml'
-    if phil_file.exists():
-        try:
-            phil_data = yaml.safe_load(phil_file.read_text(encoding='utf-8')) or {}
-            arch_modalities = set()
-            for arch_path in pkg_dir.glob('archetypes/**/*.yaml'):
-                arch = yaml.safe_load(arch_path.read_text(encoding='utf-8')) or {}
-                if arch.get('modality'):
-                    arch_modalities.add(arch['modality'])
-            warnings = [f"Warning: modality '{m}' is in scope but has no archetype in this package."
-                        for m in sorted(set(phil_data.get('scope') or []) - arch_modalities)]
-            if warnings:
-                file_errors.setdefault('philosophy.yaml', []).extend(warnings)
-        except Exception:
-            pass
-
-    valid = not any(e for f, errs in file_errors.items() for e in errs if not e.startswith('Warning:'))
-    return {'valid': valid, 'files': file_errors}
+    for p in result['problems']:
+        file_errors.setdefault(p['file'] or '(package)', []).append(p['message'])
+    for w in result['warnings']:
+        file_errors.setdefault(w['file'] or '(package)', []).append(f"Warning: {w['message']}.")
+    return {'valid': not result['problems'], 'files': file_errors,
+            **{k: result[k] for k in ('problems', 'warnings', 'ran', 'skipped', 'tracks')}}
 
 
 @mcp.tool()

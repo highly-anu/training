@@ -69,14 +69,20 @@
       "title": "The gates cannot be called for one package",
       "kind": "tooling",
       "impact": "blocks",
-      "detail": "validate_entities is importable and fast, but the checks that prove a package generates are not: check_styles and check_provenance loop every philosophy and print, and add_package shells out and writes records the API image does not carry. A builder needs one in-process check of one folder that returns structured problems it can hand back to the model.",
+      "detail": "Was: check_styles and check_provenance looped every philosophy and printed, and add_package shelled out. Now src/package_gate.check_package(folder) runs the gates' own code for one folder, stage by stage — files, schema, ids, a smoke generate of every track and phase, provenance — and returns structured problems; the tools and the MCP server call the same code. It needs the folder in the loader's packages directory until 20.3.",
       "anchors": [
         "tools/check_styles.py::def main",
         "tools/check_provenance.py::def main",
         "tools/add_package.py::subprocess"
       ],
       "roadmap": "20.2",
-      "status": "open"
+      "status": "done",
+      "closed": "2026-11-13",
+      "evidence": [
+        "test_package_gate.py::def test_passes",
+        "test_package_gate.py::def test_generation_findings",
+        "src/package_gate.py::def check_package"
+      ]
     },
     {
       "id": "single_root",

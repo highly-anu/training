@@ -299,6 +299,23 @@ def id_collisions() -> list[dict]:
     return collisions(_all_owned())[0]
 
 
+def problems(pkg: str, report: dict) -> list[str]:
+    """What stops one package of a report being brought in: a required file it
+    lacks, an id another package declares, an id the commons do not define."""
+    row = next((p for p in report['packages'] if p['id'] == pkg), None)
+    if row is None:
+        return [f"'{pkg}' is not a package folder in {report['packagesDir']} (no philosophy.yaml)"]
+    out = [f"{f['path']} is missing" for f in row['files'] if f['required'] and not f['present']]
+    for c in report['collisions']:
+        if pkg in c['packages']:
+            others = ', '.join(p for p in c['packages'] if p != pkg)
+            out.append(f"{c['kind']} '{c['id']}' is also declared by {others} (the loader keeps {c['kept']})")
+    for v in row['vocabulary']:
+        for u in v['unknown']:
+            out.append(f"{v['kind']}: '{u}' is not in the commons")
+    return out
+
+
 def gaps() -> dict:
     return _json(GAPS) or {'gaps': []}
 

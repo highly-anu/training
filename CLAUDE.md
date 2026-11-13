@@ -1494,7 +1494,10 @@ never enforced (Wildman's repeat after a week off). `test_package_dropin.py` cop
 packages (contract, templates, scheduler) under new ids into `TRAINING_PACKAGES_DIR`
 (`loader._PACKAGES_DIR`; every module finds packages through it) and runs them through
 validation, generation, the API, the watch payload, analytics and the scorecard with the
-repository unchanged. `tools/print_package.py <id>` prints a package's programs beside its
+repository unchanged. `src/package_gate.check_package(folder)` is every gate for one folder, in process and as data
+(files, schema, ids, a smoke generate of every track and phase, provenance — `src/package_smoke.py`
+is check_styles' loop and check_provenance's audit, which both tools call; roadmap 20.2).
+`tools/print_package.py <id>` prints a package's programs beside its
 rules for the output review, recorded in the record's `reviews` (S6, hygiene).
 A phase's `checks:` may now state its defining claims — `max_substituted_share`,
 `modality_outnumbers`, `max_archetype_share`, `min_distinct_archetypes`
@@ -1545,6 +1548,7 @@ SUPABASE_URL='' .venv/bin/python test_phase_summary.py   # Program ▸ Overview'
 SUPABASE_URL='' .venv/bin/python test_devlab_trace.py    # the Dev Lab's recorded trace has the server's shape; --record after a trace change
 SUPABASE_URL='' .venv/bin/python test_constraint_impact.py  # what each constraint changes against the reference, and which (Dev Lab ▸ Impact)
 SUPABASE_URL='' .venv/bin/python test_portability.py     # Dev Lab ▸ Builder readiness' report; every open gap still anchored in the code, every closed one held by a test; --write re-records the web's copy
+.venv/bin/python test_package_gate.py                    # src/package_gate.check_package: one folder through the gates' checks, as data
 .venv/bin/python test_add_package.py                     # one package's baselines recorded, every other's kept; add_package's refusals
 SUPABASE_URL='' .venv/bin/python test_explore_links.py     # Explore's lineage: slot links by the selector's rule, progression, movements
 SUPABASE_URL='' .venv/bin/python test_explore_philosophy.py  # Explore's philosophy page: weeks from contracts and templates, mixes, rules, sessions

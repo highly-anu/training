@@ -102,7 +102,7 @@ describe('Builder readiness', () => {
     expect(screen.getByText(new RegExp(`${tracked.length - open.length} of ${tracked.length} gaps closed`))).toBeTruthy()
     expect(screen.getByText(new RegExp(`${blocking} open gaps? blocks? a built package`))).toBeTruthy()
     // 20.1 has no gap of its own: the roadmap's day closes it.
-    expect(screen.getByText(`done ${portability.steps[0].done}`)).toBeTruthy()
+    expect(screen.getAllByText(`done ${portability.steps[0].done}`).length).toBeGreaterThan(0)
   })
 
   it('shows a closed gap with its day and the test that holds it', () => {

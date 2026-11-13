@@ -1838,10 +1838,17 @@ Readiness, in order:
   `tools/portability_gaps.json` (a gap now closes as `done` with the day and the test
   that holds it), the Builder readiness tab (`components/devlab/ReadinessPanel.tsx`) —
   the steps with their gaps, then the per-package table that was on Model Interactions.
-- **20.2 Callable gates (M).** `src/package_gate.check_package(folder)` → structured
-  problems: the schemas, add_package's checks, collisions, a smoke generate of every track
-  and phase (check_styles' loop, shared), the provenance audit. The tools and the MCP
-  server call it.
+- **20.2 Callable gates (M).** Done 2026-11-13: `src/package_gate.check_package(folder)`
+  → `{ok, problems: [{stage, code, file, message}], warnings, ran, skipped, tracks}`, the
+  stages in order and each only when the ones before found nothing — files (a
+  philosophy whose id is the folder's), schema (`validate_entities`), ids (the files a
+  package needs, collisions, the commons: `portability.problems`, add_package's checks
+  moved there), smoke (every track and phase validates and generates on its framework and
+  places its tests: `src/package_smoke.py`, check_styles' loop, which now calls it),
+  provenance (`audit_program`, check_provenance's, on the smoke run's programs). About a
+  second a package. `mcp_server.validate_package` answers from it. A folder outside the
+  loader's packages directory is checked as far as its schema and the rest is `skipped`,
+  never passed — the overlay (20.3) lifts that. `test_package_gate.py`.
 - **20.3 Roots, overlay, quarantine, caches (L).** The loader reads the shipped root and,
   for the caller in context, that athlete's overlay; an overlay id carries its owner's
   prefix and never replaces a shipped one; a broken overlay package is set aside alone
