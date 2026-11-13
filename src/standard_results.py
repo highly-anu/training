@@ -422,31 +422,27 @@ def now_iso() -> str:
 
 # ── after a session log is saved ─────────────────────────────────────────────
 
-_TEST_ARCHETYPES: frozenset | None = None
-_DERIVED_NAMES: dict | None = None
-
-
 def _test_archetype_ids() -> frozenset:
     """Every archetype that is a test — the cheap gate: a log of any other
-    session reads no snapshot. Built once per process (an archetype authored
-    as a test at runtime is seen after a restart)."""
-    global _TEST_ARCHETYPES
-    if _TEST_ARCHETYPES is None:
-        from src import loader
+    session reads no snapshot. Built once per view of the packages
+    (loader.view_store; forgotten when the packages change)."""
+    from src import loader
+    store = loader.view_store('standard_results')
+    if 'tests' not in store:
         from src.standard_tests import is_test
-        _TEST_ARCHETYPES = frozenset(a['id'] for a in loader.load_all_archetypes() if is_test(a))
-    return _TEST_ARCHETYPES
+        store['tests'] = frozenset(a['id'] for a in loader.load_all_archetypes() if is_test(a))
+    return store['tests']
 
 
 def _derived_names(derived: dict) -> dict:
     """{case-folded exercise name: id} for the lifts a ×BW standard reads —
     Garmin keys its logs by name."""
-    global _DERIVED_NAMES
-    if _DERIVED_NAMES is None:
-        from src import loader
+    from src import loader
+    store = loader.view_store('standard_results')
+    if 'names' not in store:
         catalog, _ = loader.load_all_exercises()
-        _DERIVED_NAMES = {str(catalog[i].get('name') or i).casefold(): i for i in derived if i in catalog}
-    return _DERIVED_NAMES
+        store['names'] = {str(catalog[i].get('name') or i).casefold(): i for i in derived if i in catalog}
+    return store['names']
 
 
 def _log_day(row: dict | None, tz: str | None) -> str:

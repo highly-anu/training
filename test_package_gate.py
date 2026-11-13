@@ -36,6 +36,8 @@ atexit.register(shutil.rmtree, OUTSIDE, True)
 for _name in SHIPPED:
     shutil.copytree(os.path.join(ROOT, 'data', 'packages', _name), os.path.join(FOLDER, _name))
 shutil.copytree(os.path.join(ROOT, 'test_packages', FIXTURE), os.path.join(FOLDER, FIXTURE))
+SCRATCH = 'scratch_minimal'   # written from nothing, with a vocabulary of its own (the spec's worked example)
+shutil.copytree(os.path.join(ROOT, 'test_packages', SCRATCH), os.path.join(FOLDER, SCRATCH))
 os.environ['TRAINING_PACKAGES_DIR'] = FOLDER
 
 from src import package_gate, package_smoke  # noqa: E402
@@ -70,7 +72,8 @@ def codes(result: dict) -> set:
 def test_passes():
     print('packages that run')
     shapes = {}
-    for name in ('wildman_kettlebell', 'horsemen_gpp', FIXTURE):   # a contract, week templates, the scheduler
+    # a contract, week templates, the scheduler, and one written from nothing
+    for name in ('wildman_kettlebell', 'horsemen_gpp', FIXTURE, SCRATCH):
         r = package_gate.check_package(os.path.join(FOLDER, name))
         shapes[name] = r
         check(f'{name}: ok, every stage ran', r['ok'] and r['ran'] == list(package_gate.STAGES) and not r['skipped'],

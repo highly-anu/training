@@ -1,5 +1,5 @@
 import { Shortcuts } from './Shortcuts'
-import { useContext, useEffect, useState, type ReactNode } from 'react'
+import { useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { UNSAFE_LocationContext as LocationContext, useLocation, useOutlet } from 'react-router-dom'
 import { AnimatePresence, useIsPresent } from 'framer-motion'
 import { Sidebar } from './Sidebar'
@@ -7,6 +7,8 @@ import { TopBar } from './TopBar'
 import { ProgramSaveBanner } from './ProgramSaveBanner'
 import { RouteErrorBoundary } from './RouteErrorBoundary'
 import { useUiStore } from '@/store/uiStore'
+import { useModalities } from '@/api/modalities'
+import { modalityVocabularyVersion, registerModalities } from '@/lib/modalityColors'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet'
 
 /**
@@ -30,6 +32,15 @@ export function RootLayout() {
   // query is not part of the key: `?tab=` changes a page, it does not replace it.
   const { pathname } = useLocation()
   const outlet = useOutlet()
+
+  // A package may bring modalities this build has never met (roadmap 20.6):
+  // their labels and colours come from the server. The page is drawn again
+  // once, when one is first learned, so nothing keeps the neutral style.
+  const { data: modalities } = useModalities()
+  const vocabulary = useMemo(() => {
+    registerModalities(modalities)
+    return modalityVocabularyVersion()
+  }, [modalities])
 
   // The drawer is the phone's; a window widened past md with it open would
   // keep its scrim over the page with nothing in it.
@@ -72,7 +83,7 @@ export function RootLayout() {
         <Shortcuts />
         <main id="main" tabIndex={-1} className="flex-1 overflow-hidden flex flex-col focus-visible:outline-none">
           <AnimatePresence mode="wait">
-            <div key={pathname} className="contents">
+            <div key={`${pathname}:${vocabulary}`} className="contents">
               <HeldLocation>
                 <RouteErrorBoundary resetKey={pathname}>{outlet}</RouteErrorBoundary>
               </HeldLocation>

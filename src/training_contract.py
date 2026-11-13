@@ -62,7 +62,7 @@ def _document(path: str) -> dict:
 def load_contract(package: str, track: str) -> dict | None:
     from . import loader
     import os
-    path = os.path.join(loader._PACKAGES_DIR, package, 'training_contract.yaml')
+    path = os.path.join(loader.package_dir(package), 'training_contract.yaml')
     if not os.path.exists(path):
         return None
     document = _document(path)
@@ -1101,7 +1101,7 @@ def _level_refusal(contract: dict, level: str) -> str:
     phil = loader.load_philosophy(contract['package'])
     names = {t['id']: t.get('name', t['id']) for t in phil.get('tracks') or []}
     this = names.get(contract['track_id'], contract['track_id'])
-    document = _document(os.path.join(loader._PACKAGES_DIR, contract['package'], 'training_contract.yaml'))
+    document = _document(os.path.join(loader.package_dir(contract['package']), 'training_contract.yaml'))
     fits = [tid for tid, t in (document.get('tracks') or {}).items() if level in (t.get('training_levels') or [])]
     levels = contract['training_levels']
     who = levels[0] if len(levels) == 1 else f"{', '.join(levels[:-1])} and {levels[-1]}"
@@ -1216,6 +1216,9 @@ def start(contract: dict, entries: list, constraints: dict, data: dict, policy,
     program['training_contract']['longest_minutes'] = longest
     capped_said: set = set()
     held: dict = {}
+    # What each week decided, for the Dev Lab's trace (finish(include_trace));
+    # nothing reads it to build the program.
+    decisions: list[dict] = []
 
     def week(entry: dict, day_room: dict | None = None, others: dict | None = None,
              essential_days=None, search: int = 500) -> dict:
@@ -1326,6 +1329,8 @@ def start(contract: dict, entries: list, constraints: dict, data: dict, policy,
         # optional work, then alternates and spaces the work best; the search
         # is small (a week, a few modules).
         best = None
+        runner_up = None
+        considered = 0
         essential_caps = day_caps if essential_days is None else \
             {d: (day_caps[d] if d in essential_days else 0) for d in pool}
         for i, candidate in enumerate(_placements(essential, estimates, pool, cap, essential_caps)):
@@ -1339,8 +1344,11 @@ def start(contract: dict, entries: list, constraints: dict, data: dict, policy,
             shared = sum(1 for d in candidate if d in (others or {}))
             key = (closes, -shared, -stacked, sum(len(v) for v in fit.values()),
                    *_spacing(candidate, module_regions, others))
+            considered += 1
             if best is None or key > best[0]:
-                best = (key, candidate, fit)
+                best, runner_up = (key, candidate, fit), best
+            elif runner_up is None or key > runner_up[0]:
+                runner_up = (key, candidate, fit)
             if i >= search:
                 break
         if best is None:
@@ -1352,7 +1360,32 @@ def start(contract: dict, entries: list, constraints: dict, data: dict, policy,
             error.volume_minutes = sum(estimates[m['id']] * m['exposures_per_week'] for m in essential
                                        if m['progression']['model'] == 'weekly_volume')
             raise error
-        _, placed, fit = best
+        chosen_key, placed, fit = best
+
+        def _placement(found) -> dict:
+            key, candidate, _fit = found
+            names = ('closes_with_test', 'days_shared_with_other_tracks', 'days_stacked', 'optional_sessions',
+                     'same_modality_back_to_back', 'same_modality_neighbours', 'regions_loaded_close', 'spread')
+            # The key ranks higher-is-better with counts negated: said here as the counts.
+            score = {n: (bool(v) if n == 'closes_with_test' else abs(v)) for n, v in zip(names, key)}
+            return {'days': {d: [m['id'] for m in ms] for d, ms in sorted(candidate.items())}, 'score': score}
+
+        decisions.append({
+            'week': entry['week_in_program'], 'phase_id': entry.get('phase_id'), 'day_pool': list(pool),
+            'session_minutes': cap,
+            'deload': {'week': bool(deload), 'forced': bool(forced), 'frequency_weeks': frequency,
+                       'modules': {mid: bool(v) for mid, v in deloads.items()}},
+            'modules': [{'id': m['id'], 'name': m['name'], 'optional': bool(m.get('optional')),
+                         'exposures_per_week': m['exposures_per_week'], 'minutes': round(estimates[m['id']], 1),
+                         'period_week': weeks_of[m['id']], 'step': cursor[m['id']],
+                         'model': m['progression']['model'], 'deload': bool(deloads[m['id']]),
+                         'blocked': optional_out.get(m['id']) or None} for m in modules],
+            'placement': {'considered': considered, 'chosen': _placement(best),
+                          'runner_up': _placement(runner_up) if runner_up else None},
+            'test': ({'archetypes': pending_test.get('archetypes'), 'day': pending_test.get('day')}
+                     if pending_test else None),
+            'optional_short': [],
+        })
         previous = {}
         skipped = []
         for m in modules:
@@ -1489,6 +1522,7 @@ def start(contract: dict, entries: list, constraints: dict, data: dict, policy,
                                  'framework': fw['id'], 'schedule': schedule,
                                  'is_deload': deload or bool(deloads and all(deloads.values())),
                                  **({'modules_skipped': skipped} if skipped else {})})
+        decisions[-1]['optional_short'] = [dict(item) for item in skipped]
         for item in skipped:
             shortfalls.setdefault((item['name'], item['placed'], item['of'], item['reason']), []).append(
                 entry['week_in_program'])
@@ -1506,10 +1540,10 @@ def start(contract: dict, entries: list, constraints: dict, data: dict, policy,
             program['compromises'].append(f"{name}: {placed} of {of} weekly sessions{when} — {reason}.")
         verify(program, contract, constraints)
         if include_trace:
-            program['generation_trace'] = _trace(program, contract, constraints)
+            program['generation_trace'] = _trace(program, contract, constraints, decisions)
         return program
 
-    return ContractRun(week=week, finish=finish, program=program, state=state, pool=pool)
+    return ContractRun(week=week, finish=finish, program=program, state=state, pool=pool, decisions=decisions)
 
 
 class ContractRun(NamedTuple):
@@ -1518,6 +1552,7 @@ class ContractRun(NamedTuple):
     program: dict
     state: dict
     pool: list
+    decisions: list
 
 
 def generate(contract: dict, entries: list, constraints: dict, data: dict, policy,
@@ -1529,11 +1564,16 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
     return run.finish(include_trace)
 
 
-def _trace(program: dict, contract: dict, constraints: dict) -> dict:
+def _trace(program: dict, contract: dict, constraints: dict, decisions: list | None = None) -> dict:
     """The generation trace in the shape the selector's has (the Dev Lab reads
     one shape; test_devlab_trace.py keeps it): the framework is the phase's,
     nothing was chosen among candidates, and every slot and progression entry
-    names the module that placed it."""
+    names the module that placed it. What the contract itself decided rides
+    beside it: each week's `scheduler.contract_week` (the modules with their
+    minutes, period week, step and deload; the placement chosen and the next
+    best, scored; optional work left short; the test) and each session's
+    `module_steps` (the step, variant, light day and rounds each module ran)."""
+    by_week = {d['week']: d for d in decisions or []}
     names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     contract_id = program['training_contract']['id']
     level = constraints.get('training_level', 'intermediate')
@@ -1545,6 +1585,13 @@ def _trace(program: dict, contract: dict, constraints: dict) -> dict:
             'archetype': {'selected_id': s['archetype']['id'], 'filter_counts': {}, 'candidates': [],
                           'selection_reason': 'training_contract'},
             'modules': [m['id'] for m in s.get('modules') or []],
+            'module_steps': [{'id': m['id'], 'step': m.get('forecast_step'), 'deload': bool(m.get('deload')),
+                              'variant': m.get('variant'), 'light_day': m.get('light_day'),
+                              'rounds': m.get('rounds'), 'max_rpe': m.get('max_rpe'),
+                              'lifts': m.get('lifts')} for m in s.get('modules') or []],
+            **({'test': {'archetype': s['test'].get('archetype'),
+                         'standards': [x.get('id') if isinstance(x, dict) else x for x in s['test'].get('standards') or []],
+                         'instead_of': (s['test'].get('instead_of') or {}).get('archetype')}} if s.get('test') else {}),
             'slots': [{'slot_index': i, 'slot_role': ea['slot_role'], 'slot_type': ea.get('slot_type'),
                        'meta': bool(ea.get('meta')), 'movement_pattern': None,
                        'selected_id': (ea.get('exercise') or {}).get('id'),
@@ -1562,10 +1609,15 @@ def _trace(program: dict, contract: dict, constraints: dict) -> dict:
 
     return {'primary_sources': [contract['package']], 'philosophy_mode': 'training_contract',
             'weeks': [{'week_number': w['week_number'], 'week_in_phase': w['week_in_phase'],
-                       'phase': w['phase'], 'is_deload': w['is_deload'],
+                       'phase': w['phase'], 'is_deload': w['is_deload'], 'engine': 'training_contract',
                        'scheduler': {'contract': contract_id, 'is_deload': w['is_deload'],
                                      'framework_selection': {'selected_id': w['framework'],
-                                                             'selection_reason': 'training_contract'}},
+                                                             'selection_reason': 'training_contract'},
+                                     'contract_week': by_week.get(w['week_number'])},
+                       'tests': {'placed': [{'day': names[d - 1], 'archetype': s['test'].get('archetype')}
+                                            for d, ss in sorted(w['schedule'].items()) for s in ss if s.get('test')],
+                                 'skipped': [{'archetypes': t.get('archetypes'), 'reason': t.get('reason')}
+                                             for t in w.get('tests_skipped') or []]},
                        'sessions': {names[d - 1]: [session(s, w) for s in ss]
                                     for d, ss in w['schedule'].items()}}
                       for w in program['weeks']]}

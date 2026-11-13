@@ -40,11 +40,11 @@ def packages() -> list[str]:
 
 
 def path(pkg: str, name: str) -> str:
-    return os.path.join(loader._PACKAGES_DIR, pkg, RECORDS, name)
+    return os.path.join(loader.package_dir(pkg), RECORDS, name)
 
 
 def dossier_path(pkg: str) -> str:
-    return os.path.join(loader._PACKAGES_DIR, pkg, DOSSIER)
+    return os.path.join(loader.package_dir(pkg), DOSSIER)
 
 
 def _read(pkg: str, name: str, default):

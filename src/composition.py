@@ -596,7 +596,11 @@ def _merge(lanes: list[Lane], result: dict, pool: list[int], day_cap: dict) -> d
 
 
 def _trace(lanes: list[Lane], result: dict, merged: dict) -> dict:
-    """The Dev Lab's trace: the lead track's week shape, every track's sessions."""
+    """The Dev Lab's trace: the lead track's week shape, every track's
+    sessions (each with its `lane_key`), and beside them what each track's own
+    engine decided that week (`lane_weeks`: its engine, its scheduler block —
+    a contract's `contract_week`, a template's `template` — and its tests),
+    with the composition's kept days and cuts at the top (`composition`)."""
     traces = {}
     for lane in lanes:
         program = result['programs'][lane.key]
@@ -605,13 +609,18 @@ def _trace(lanes: list[Lane], result: dict, merged: dict) -> dict:
     for i, week in enumerate(merged['weeks']):
         lead = (traces[lanes[0].key][i:i + 1] or [{}])[0]
         sessions: dict = {}
+        lane_weeks: dict = {}
         for lane in lanes:
             lane_week = (traces[lane.key][i:i + 1] or [{}])[0]
             for day, items in (lane_week.get('sessions') or {}).items():
                 sessions.setdefault(day, []).extend({**t, 'lane_key': lane.key} for t in items)
-        weeks.append({**lead, 'sessions': sessions, 'lanes': week['lanes']})
+            lane_weeks[lane.key] = {'engine': lane_week.get('engine'), 'scheduler': lane_week.get('scheduler'),
+                                    'tests': lane_week.get('tests')}
+        weeks.append({**lead, 'engine': 'composition', 'sessions': sessions, 'lanes': week['lanes'],
+                      'lane_weeks': lane_weeks})
     return {'weeks': weeks, 'primary_sources': [l.philosophy_id for l in lanes],
             'philosophy_mode': 'composition',
+            'composition': {'days': merged['composition'].get('days')},
             'lanes': [{k: v for k, v in l.items() if k != 'module_state'} for l in merged['composition']['lanes']]}
 
 

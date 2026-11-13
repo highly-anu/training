@@ -11,7 +11,8 @@ runs the gates' own code, stage by stage:
   schema      every file against its schema and the checks beside it
               (tools/validate_entities.py)
   ids         the files a package needs, no id another package declares,
-              every id in the commons (src/portability.py)
+              every id in the commons (src/portability.py); for an athlete's
+              own package, every id it declares carries its owner's prefix
   smoke       every phase of every track validates and generates on the
               framework it names, and places its tests (src/package_smoke.py)
   provenance  no session or exercise from outside the package and what it
@@ -20,8 +21,9 @@ runs the gates' own code, stage by stage:
 A stage runs only when the ones before it found nothing: generating from a
 folder whose files do not validate raises wherever the loader trips. `ids`,
 `smoke` and `provenance` read through the loader, so they need the folder to
-sit in the loader's packages directory; elsewhere they are listed in
-`skipped`, never silently passed.
+sit in a directory the loader reads for the caller — the shipped packages'
+or its overlay (loader.overlay); elsewhere they are listed in `skipped`,
+never silently passed.
 
 The result:
   {package, ok, problems: [{stage, code, file, message}],
@@ -99,8 +101,56 @@ def _ids(pkg: str) -> list[dict]:
     for message in portability.problems(pkg, portability.report()):
         code = ('missing_file' if message.endswith('is missing')
                 else 'collision' if 'is also declared by' in message
-                else 'not_in_commons' if 'is not in the commons' in message else 'not_a_package')
+                else 'unknown_id' if 'is not in the commons' in message else 'not_a_package')
         out.append(_problem('ids', code, message))
+    return out
+
+
+def _prefix(pkg_dir: str, pkg: str, prefix: str) -> list[dict]:
+    """An athlete's own package (docs/roadmap.md 20.3): its id and every id it
+    declares for itself — frameworks, archetypes, standards and their
+    categories — carry the owner's prefix, so nothing it brings can be taken
+    for a shipped id or another athlete's. An exercise id either carries it or
+    is one a shipped package declares (an exercise is shared by design, the
+    shipped copy the structural one)."""
+    out = []
+
+    def want(kind: str, value, file: str):
+        if not str(value or '').startswith(prefix):
+            out.append(_problem('ids', 'not_prefixed', f"{kind} '{value}' must start with '{prefix}'", file))
+
+    def docs(*parts, recursive=False):
+        import glob
+        for path in sorted(glob.glob(os.path.join(pkg_dir, *parts), recursive=recursive)):
+            with open(path, encoding='utf-8') as fh:
+                yield os.path.relpath(path, pkg_dir).replace(os.sep, '/'), yaml.safe_load(fh) or {}
+
+    want('package', pkg, 'philosophy.yaml')
+    for rel, doc in docs('frameworks', '*.yaml'):
+        want('framework', doc.get('id'), rel)
+    for rel, doc in docs('archetypes', '**', '*.yaml', recursive=True):
+        want('archetype', doc.get('id'), rel)
+    for rel, doc in docs('standards.yaml'):
+        for item in doc.get('standards') or []:
+            want('standard', item.get('id'), rel)
+        for item in doc.get('categories') or []:
+            want('standard category', item.get('id'), rel)
+    for rel, doc in docs('vocabulary.yaml'):
+        for item in doc.get('modalities') or []:
+            want('modality', item.get('id'), rel)
+        for item in doc.get('movement_patterns') or []:
+            want('movement pattern', item.get('id'), rel)
+        for item in doc.get('equipment') or []:
+            want('equipment', item.get('id'), rel)
+    with loader.overlay(None):   # what the shipped packages declare, whoever asks
+        shipped, _ = loader.load_all_exercises()
+    for rel, doc in docs('exercises.yaml'):
+        for item in doc.get('exercises') or []:
+            eid = str(item.get('id') or '')
+            if not eid.startswith(prefix) and eid not in shipped:
+                out.append(_problem('ids', 'not_prefixed',
+                                    f"exercise '{eid}' must start with '{prefix}' or be an exercise a shipped "
+                                    'package declares', rel))
     return out
 
 
@@ -149,14 +199,17 @@ def _tracks(pkg: str) -> list[dict]:
     return [{'track': t['id'], 'phases': [ph['id'] for ph in t['phases']]} for t in phases.tracks_of(phil)] if phil else []
 
 
-def check_package(pkg_dir: str, *, smoke: bool = True) -> dict:
+def check_package(pkg_dir: str, *, smoke: bool = True, owner_prefix: str | None = None) -> dict:
     """Check one package folder. `smoke=False` stops before generating (the
     schema and id stages take well under a second; a smoke run about a second
-    a phase)."""
+    a phase). `owner_prefix`: the folder is an athlete's own package, and every
+    id it declares for itself must carry that prefix (`_prefix`)."""
     started = time.monotonic()
     pkg_dir = os.path.abspath(pkg_dir)
     pkg = os.path.basename(pkg_dir.rstrip(os.sep))
-    in_root = os.path.realpath(os.path.dirname(pkg_dir)) == os.path.realpath(loader._PACKAGES_DIR)
+    # In a root the loader reads for this caller: the shipped packages, or its overlay.
+    roots = [loader._PACKAGES_DIR] + ([loader.overlay_dir()] if loader.overlay_dir() else [])
+    in_root = os.path.realpath(os.path.dirname(pkg_dir)) in {os.path.realpath(r) for r in roots}
     problems: list[dict] = []
     warnings: list[dict] = []
     ran: list[str] = []
@@ -177,19 +230,24 @@ def check_package(pkg_dir: str, *, smoke: bool = True) -> dict:
         return finish()
 
     ran.append('schema')
-    problems += _schema(pkg_dir)
+    try:
+        problems += _schema(pkg_dir)
+    except Exception as e:   # the validator met something it does not expect: a finding, never a crash
+        problems.append(_problem('schema', 'raised', f'{type(e).__name__}: {e}'))
     warnings += _scope_warnings(pkg_dir)
     if problems:
         skip(STAGES[2:], 'its files do not validate')
         return finish()
 
     if not in_root:
-        skip(STAGES[2:], "the folder is not in the loader's packages directory "
-                         f'({os.path.relpath(loader._PACKAGES_DIR, portability.ROOT)})')
+        skip(STAGES[2:], "the folder is not in a packages directory the loader reads "
+                         f'({os.path.relpath(loader._PACKAGES_DIR, portability.ROOT)}, or the caller\'s overlay)')
         return finish()
 
     ran.append('ids')
     problems += _ids(pkg)
+    if owner_prefix:
+        problems += _prefix(pkg_dir, pkg, owner_prefix)
     if problems:
         skip(STAGES[3:], 'its ids collide or are not in the commons')
         return finish()

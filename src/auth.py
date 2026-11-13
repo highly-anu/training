@@ -67,6 +67,41 @@ DEVICE_ROUTES = frozenset({
 })
 
 
+def optional_user_id() -> str | None:
+    """Who is asking, on a route that needs no sign-in: the user of a valid
+    bearer token, else None — never an error. The reference routes answer
+    everyone, and an athlete with packages of their own gets theirs added
+    (api.static_json)."""
+    header = request.headers.get('Authorization', '')
+    token = header.split(' ', 1)[1] if header.startswith('Bearer ') else ''
+    from src import device_store
+    if token.startswith(device_store.TOKEN_PREFIX):
+        return None
+    if not SUPABASE_URL:
+        return 'local-dev-user'
+    if not token:
+        return None
+    try:
+        return _decode_token(token)['sub']
+    except Exception:
+        return None
+
+
+def _as_user(f, *args, **kwargs):
+    """Run a view as the signed-in athlete: the loader sees their own packages
+    beside the shipped ones (src/package_store.py, loader.overlay) for the
+    length of the call. The overlay is named only if a loader asks — most
+    requests read no package — and always reset: the thread serves someone
+    else next."""
+    from src import loader, package_store
+    user_id = g.user_id
+    token = loader.set_overlay(lambda: package_store.overlay_for(user_id))
+    try:
+        return f(*args, **kwargs)
+    finally:
+        loader.reset_overlay(token)
+
+
 def require_auth(f):
     """Decorator that validates Supabase JWTs (or watch device tokens) and sets g.user_id."""
     @wraps(f)
@@ -84,13 +119,13 @@ def require_auth(f):
             user_id = device_store.user_for_token(token)
             if user_id:
                 g.user_id = user_id
-                return f(*args, **kwargs)
+                return _as_user(f, *args, **kwargs)
             return jsonify({'detail': 'Invalid or unpaired device token'}), 401
 
         if not SUPABASE_URL:
             # Dev mode: no Supabase URL configured — bypass auth
             g.user_id = 'local-dev-user'
-            return f(*args, **kwargs)
+            return _as_user(f, *args, **kwargs)
 
         if not header.startswith('Bearer '):
             return jsonify({'detail': 'Missing authorization token'}), 401
@@ -105,7 +140,7 @@ def require_auth(f):
         except Exception as e:
             return jsonify({'detail': f'Auth error: {e}'}), 401
 
-        return f(*args, **kwargs)
+        return _as_user(f, *args, **kwargs)
 
     decorated.requires_auth = True
     return decorated

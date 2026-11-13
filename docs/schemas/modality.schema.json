@@ -4,7 +4,7 @@
   "title": "Training Modality",
   "description": "A category of physical quality. Goal profiles weight these; the scheduler uses recovery cost and compatibility rules to place sessions. One file per modality.",
   "type": "object",
-  "required": ["id", "name", "recovery_cost", "session_position"],
+  "required": ["id", "name", "recovery_cost", "session_position", "display"],
   "additionalProperties": false,
   "properties": {
     "id": {

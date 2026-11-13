@@ -26,7 +26,7 @@
     "modality": {
       "type": "string",
       "pattern": "^[a-z0-9_]+$",
-      "description": "Primary modality this archetype develops. Use an existing modality ID or define a new one in your package's philosophy scope."
+      "description": "Primary modality this archetype develops. A modality the commons define (data/commons/modalities) or one this package adds in its vocabulary.yaml (docs/schemas/vocabulary.schema.json); naming it in the philosophy's scope does not define it."
     },
     "training_levels": {
       "type": "array",
