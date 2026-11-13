@@ -2799,13 +2799,19 @@
    "title": "The generation trace covers the scheduler, not the engines that run",
    "kind": "devlab",
    "impact": "degrades",
-   "detail": "Every shipped package runs on a training contract or week templates. A contract traces its id and module ids, none of its placement, volume, period or forecast; a template week traces its categories, not what was picked, passed over or dropped; a test is not marked.",
+   "detail": "Was: a contract traced its id and module ids, a template week its categories, a test nothing. Each week now says its `engine`. A contract's week carries `contract_week`: the modules with their minutes, period week, step, model and deload, the placement chosen and the next best with their scores, optional work left short and the test; each session its `module_steps`. A template's week carries `template`: the days kept and dropped and, for each day, every pool asked, where its rotation stood, what was passed over and why, what was taken. A test session is marked with what it measures and stands in for; a week lists its placed and skipped tests. A composition carries each track's own decisions (`lane_weeks`) and its kept days. The trace is asked for, never paid for: the program is the same with it. Left: a passed-over workout says it does not fit as written, not which of level, equipment, injury or minutes ruled it out.",
    "anchors": [
     "src/training_contract.py::def _trace",
     "src/selector.py::session.get('category') or 'forced'"
    ],
    "roadmap": "20.9",
-   "status": "open"
+   "status": "done",
+   "closed": "2026-11-13",
+   "evidence": [
+    "test_devlab_trace.py::horsemen_with_wildman_composition",
+    "test_devlab_trace.py::def same_program",
+    "src/training_contract.py::contract_week"
+   ]
   },
   {
    "id": "trace_ui_scheduler_only",

@@ -1589,6 +1589,12 @@ SUPABASE_URL='' .venv/bin/python test_explore_links.py     # Explore's lineage: 
 SUPABASE_URL='' .venv/bin/python test_explore_philosophy.py  # Explore's philosophy page: weeks from contracts and templates, mixes, rules, sessions
 ```
 
+**The trace says what each engine decided** (roadmap 20.9): every week its `engine` and `tests`;
+a contract's `scheduler.contract_week` (modules, minutes, steps, the placement chosen and the next
+best, scored) and each session's `module_steps`; a template's `scheduler.template` (days kept and
+dropped, each pool's rotation, what was passed over and why); a composition's `lane_weeks`. Asking
+for it never changes the program (`test_devlab_trace.py`).
+
 The Dev Lab's panels render a recorded `generate?trace=1` answer
 (`frontend/src/mocks/fixtures/traced-programs.json`) in
 `components/devlab/DevLabPanels.test.tsx`; `test_devlab_trace.py` fails when the

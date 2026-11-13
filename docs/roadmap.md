@@ -1944,9 +1944,22 @@ Readiness, in order:
 
 The Dev Lab, independent of 20.2–20.8:
 
-- **20.9 The trace says what each engine decided (M).** A contract's weekly minutes,
-  periods, forecast and placement; a template's picked, passed-over and dropped days; the
-  tests; a composition's kept days and cuts. Opt-in, and the program is the same with it.
+- **20.9 The trace says what each engine decided (M).** Done 2026-11-13
+  (`generate?trace=1`). Every week says its `engine` (`scheduler`, `week_templates`,
+  `training_contract`, `composition`) and its `tests` (placed, skipped with why). A
+  contract's week: `scheduler.contract_week` — each module's minutes, period week, step,
+  model and deload, the placement chosen and the next best with their scores (days stacked
+  or shared with another track, same-modality days back to back, regions loaded close, the
+  spread), optional work left short, the test — and each session's `module_steps` (step,
+  variant, light day, rounds, lifts). A template's week: `scheduler.template` — the days
+  kept and dropped, and per day every pool asked, where its rotation stood, what was
+  passed over (done in the last week, or does not fit as written) and what was taken. A
+  templated session's reason is `week_template` with its `category` (the category used to
+  stand as the reason); a test session carries `test` (what it measures, what it stands in
+  for). A composition: each track's own decisions (`lane_weeks`) and the kept days. The
+  program is the same with or without the trace (`test_devlab_trace.py` holds it, with a
+  composition scenario). Left: why a passed-over workout does not fit (level, equipment,
+  injury or minutes).
 - **20.10 Pipeline Trace per engine (M).** One flow per engine, compositions and contract
   options in the form, the program's compromises, coverage and held-back slots.
 - **20.11 Model Interactions from data (M).** The map — philosophy, track, phase, contract
