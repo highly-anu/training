@@ -336,9 +336,13 @@ def test_sql():
         importlib.reload(src.db)                # it reads DATABASE_URL at import time
         package_store._SCHEMA_READY = False
         package_store._SETS.clear()
+        package_store._NO_TABLE['until'] = 0.0
         pkg, files = package_for(ANN)
         check('nothing yet (the table is made on first use)', package_store.list_packages(ANN) == [])
+        check('and a missing table is not asked for again at once', package_store._NO_TABLE['until'] > 0)
         check('installs', package_store.install(ANN, files)['revision'] == 1)
+        check('the first write makes the table and reads ask again', package_store._NO_TABLE['until'] == 0.0
+              and len(package_store.list_packages(ANN)) == 1)
         check('again is revision 2 of the same row', package_store.install(ANN, files)['revision'] == 2
               and len(package_store.list_packages(ANN)) == 1)
         check('reads back', package_store.get_package(ANN, pkg)['files'] == files)
