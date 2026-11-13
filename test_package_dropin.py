@@ -34,7 +34,12 @@ import tempfile
 ROOT = os.path.dirname(os.path.abspath(__file__))
 COPIES = {'dropin_contract': 'data/packages/wildman_kettlebell',
           'dropin_templates': 'data/packages/horsemen_gpp',
-          'dropin_scheduler': 'test_packages/block_fixture'}
+          'dropin_scheduler': 'test_packages/block_fixture',
+          # Written from nothing: its own exercise ids, modality, movement
+          # pattern and implement (vocabulary.yaml) — the other three are
+          # copies of audited packages and keep shipped exercise ids, which
+          # the commons' injury flags and level concepts still match.
+          'dropin_scratch': 'test_packages/scratch_minimal'}
 FAILURES: list[str] = []
 
 

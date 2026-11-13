@@ -174,6 +174,9 @@ export interface AthleteConstraints {
 
 export interface Equipment {
   id: EquipmentId
+  label?: string
+  /** The package that brings it (its vocabulary.yaml); absent for the commons'. */
+  package?: string
 }
 
 export interface EquipmentProfile {
@@ -823,13 +826,108 @@ export interface ProgressionEntry {
   output: Record<string, number | string>
 }
 
+/** What one contract module ran in a session (training_contract._trace). */
+export interface ModuleStepTrace {
+  id: string
+  /** The exposure it stood at; a deload holds it. */
+  step: number | null
+  deload: boolean
+  variant?: string | null
+  light_day?: unknown
+  rounds?: number | null
+  max_rpe?: number | null
+  lifts?: Record<string, { lift?: string; kg?: number | null; sets?: number | null; reps?: number | string | null }> | null
+}
+
+/** A session that tests a standard: what it measures and what it stands in for. */
+export interface TestTrace {
+  archetype?: string | null
+  standards: string[]
+  instead_of?: string | null
+}
+
 export interface SessionTrace {
   modality: string
   /** The contract modules the session carries. */
   modules?: string[]
+  module_steps?: ModuleStepTrace[]
+  /** A templated day's category. */
+  category?: string
+  test?: TestTrace
+  /** In a composition, the track the session belongs to. */
+  lane_key?: string
+  substituted_for?: string
+  substitution_cause?: string
   archetype: ArchetypeTrace
   slots: SlotTrace[]
   progression: ProgressionEntry[]
+}
+
+/** How a contract's placement scored (training_contract._spacing; counts, lower is better but `spread`). */
+export interface PlacementTrace {
+  days: Record<string, string[]>
+  score: {
+    closes_with_test: boolean
+    days_shared_with_other_tracks: number
+    days_stacked: number
+    optional_sessions: number
+    same_modality_back_to_back: number
+    same_modality_neighbours: number
+    regions_loaded_close: number
+    spread: number
+  }
+}
+
+/** What a training contract decided for one week. */
+export interface ContractWeekTrace {
+  week: number
+  phase_id?: string | null
+  day_pool: number[]
+  session_minutes: number
+  deload: { week: boolean; forced: boolean; frequency_weeks: number | null; modules: Record<string, boolean> }
+  modules: Array<{
+    id: string
+    name: string
+    optional: boolean
+    exposures_per_week: number
+    minutes: number
+    period_week: number
+    step: number
+    model: string
+    deload: boolean
+    /** Why an optional module is out this week. */
+    blocked: string | null
+  }>
+  placement: { considered: number; chosen: PlacementTrace; runner_up: PlacementTrace | null }
+  test: { archetypes?: string[]; day?: string | null } | null
+  optional_short: Array<{ id: string; name: string; placed: number; of: number; reason: string }>
+}
+
+/** One pool a templated day asked for a workout. */
+export interface TemplatePoolTrace {
+  category: string
+  pool: number
+  /** Where the pool's rotation stood. */
+  rotation_at: number
+  minutes: number
+  picked: string | null
+  passed_over: Array<{ id: string; why: string }>
+}
+
+/** What a week the source writes day by day decided (week_template.plan_week). */
+export interface TemplateWeekTrace {
+  training_days: number
+  source_days: number
+  dropped: string[]
+  placed: Record<string, string[]>
+  days: Record<string, { categories: string[]; minutes: number; asked: TemplatePoolTrace[]; left_out: boolean }>
+}
+
+export type TraceEngine = 'scheduler' | 'week_templates' | 'training_contract' | 'composition'
+
+export interface WeekTestsTrace {
+  placed: Array<{ day: string; archetype?: string | null }>
+  skipped: Array<{ archetypes?: string[]; reason?: string }>
 }
 
 /**
@@ -859,7 +957,11 @@ export interface FrameworkSelectionTrace {
 export interface SchedulerTrace {
   framework_selection: FrameworkSelectionTrace
   contract?: string
+  /** What the contract decided this week (roadmap 20.9). */
+  contract_week?: ContractWeekTrace | null
   week_template?: unknown[]
+  /** What the templated week decided. */
+  template?: TemplateWeekTrace | null
   allocation?: {
     phase_priorities: Record<string, number>
     raw: Record<string, number>
@@ -879,14 +981,24 @@ export interface WeekTrace {
   week_in_phase: number
   phase: string
   is_deload: boolean
+  /** What built the week. Absent in a trace recorded before 20.9. */
+  engine?: TraceEngine
   scheduler: SchedulerTrace
+  tests?: WeekTestsTrace
   sessions: Record<string, SessionTrace[]>
+  /** A composition: each track's phase and framework this week… */
+  lanes?: Array<Record<string, unknown>>
+  /** …and what each track's own engine decided. */
+  lane_weeks?: Record<string, { engine?: TraceEngine | null; scheduler?: SchedulerTrace | null; tests?: WeekTestsTrace | null }>
 }
 
 export interface GenerationTrace {
   weeks: WeekTrace[]
   primary_sources?: string[]  // Philosophy package IDs (e.g. ['starting_strength'])
-  philosophy_mode?: 'synthetic_goal' | 'explicit_goal' | 'training_contract'
+  philosophy_mode?: 'explicit_goal' | 'training_contract' | 'composition'
+  /** A composition: the days the week keeps, and each track's share, days and cuts. */
+  composition?: { days?: number[] }
+  lanes?: Array<Record<string, unknown>>
 }
 
 export interface TracedProgram extends GeneratedProgram {
@@ -1058,6 +1170,10 @@ export interface Modality {
   intensity_zones?: Array<{ label: string; description?: string; hr_pct_range?: [number, number] }>
   sources?: string[]
   notes?: string
+  /** How the clients draw it (the modality's file, or a package's vocabulary.yaml). */
+  display?: { label: string; short?: string; order?: number; color: string; tint: string; text_shade?: number }
+  /** The package that brings it; absent for the commons'. */
+  _package?: string
 }
 
 // ─── Philosophy ───────────────────────────────────────────────────────────────
@@ -2470,6 +2586,43 @@ export interface PortabilityPackage {
   vocabulary: Array<{ kind: string; count: number; unknown: string[] }>
   collisions: number
   ready: boolean
+}
+
+/** One interaction of the model map (tools/model_map.json). */
+export interface ModelEdge {
+  id: string
+  from: string
+  to: string
+  title: string
+  /** The engine it belongs to; null for one every program takes. */
+  engine: TraceEngine | null
+  function: string
+  files: string
+  /** How much of it is code rather than package data (0 pure data, 100 pure code). */
+  baked_pct: number
+  reads_from_source: string[]
+  reads_from_target: string[]
+  engine_decides: string[]
+  constants: string[]
+  /** `path::text`, still in the code (test_model_map.py). */
+  anchors: string[]
+}
+
+export interface ModelMap {
+  checked: string
+  engines: Record<string, string>
+  nodes: Array<{ id: string; label: string; kind: string; count_of: string | null }>
+  edges: ModelEdge[]
+  authoring: Array<{
+    type: string
+    create: 'yes' | 'partial' | 'no' | 'n/a'
+    edit: 'yes' | 'partial' | 'no' | 'n/a'
+    remove: 'yes' | 'partial' | 'no' | 'n/a'
+    writes: string
+    notes: string[]
+  }>
+  /** Which engine each track the asker sees runs on. */
+  usage: Record<string, { tracks: number; packages: string[] }>
 }
 
 export interface PortabilityGap {

@@ -7,7 +7,8 @@ import { GuidedScheduler } from './GuidedScheduler'
 import { useBuilderStore } from '@/store/builderStore'
 import { useProfileStore } from '@/store/profileStore'
 import { useInjuryFlags } from '@/api/constraints'
-import { EQUIPMENT_CATEGORIES, equipmentLabel } from '@/lib/equipment'
+import { equipmentLabel } from '@/lib/equipment'
+import { useEquipmentCategories } from '@/lib/useEquipmentVocabulary'
 import { usePhilosophies } from '@/api/philosophies'
 import { builderTrack, findTrack, primaryTrack } from '@/lib/tracks'
 import type { InjuryFlagId, TrainingLevel, FatigueState } from '@/api/types'
@@ -24,6 +25,7 @@ const TABS: { id: Tab; label: string }[] = [
 
 export function ConstraintsForm() {
   const [activeTab, setActiveTab] = useState<Tab>('schedule')
+  const equipmentCategories = useEquipmentCategories()
 
   const constraints = useBuilderStore((s) => s.constraints)
   const update = useBuilderStore((s) => s.updateConstraints)
@@ -148,7 +150,7 @@ export function ConstraintsForm() {
             Select equipment you have access to. Pre-filled from your profile — adjust as needed for this program.
           </p>
 
-          {EQUIPMENT_CATEGORIES.map((category) => {
+          {equipmentCategories.map((category) => {
             const selectedSet = new Set(constraints.equipment ?? [])
 
             return (

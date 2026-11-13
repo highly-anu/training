@@ -45,6 +45,7 @@ export const queryKeys = {
   },
   dev: {
     portability: ['dev', 'portability'] as const,
+    modelMap: ['dev', 'model-map'] as const,
   },
   philosophies: {
     all: ['philosophies'] as const,
