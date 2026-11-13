@@ -2032,12 +2032,27 @@ Training contracts are refused. Not planned: push notifications, sharing a metho
   (name, revision, status, `inUse`) and the limits (`PACKAGE_BUILDER_DAILY_LIMIT`, five a
   day; twenty kept) — so a client shows nothing, or the methods without the way to make
   another. `test_builder_access.py`.
-- **21.2 The build as a durable job (M).** `package_builds` (migration 014): a row per
-  build with its request, draft files, transcript, progress, result and usage; one worker
-  thread, a heartbeat lease, a stale row re-claimed, kicked on enqueue and at startup,
-  cancellable; the transcript saved after every turn so a restart resumes. `POST
-  /api/methods/builds`, `GET …/<id>`, `POST …/<id>/cancel`. The gate's one slot is held
-  around each check only; install takes the passing check it was given.
+- **21.2 The build as a durable job (M).** Done 2026-11-13 (migration 014 **not yet run
+  on production**; `src/build_store.py` makes the table on the first build, row security
+  on and no policy — a read never makes it). `package_builds`: a row per build with its
+  request, the draft files, the transcript, the progress the clients poll, a result or an
+  error, usage, attempts and a heartbeat. `src/build_worker.py`: one thread per process
+  claims the oldest (`FOR UPDATE SKIP LOCKED`), gives the builder a `Session` (save,
+  check, stop if cancelled), installs what it returns and writes the result; a running
+  row with no heartbeat for three minutes is claimed again, twice, then failed as
+  `interrupted`; the worker is kicked when a build is queued and on a process's first
+  request when one was left open, so a deploy mid-build resumes from the last saved turn
+  (Garmin's queue, which it is modelled on, does neither). It holds the process's one
+  heavy slot (`src/heavy.py`, shared with `api._heavy_run`) only around each gate check —
+  previews keep answering — and `package_store.install(checked=)` takes the passing check
+  it was just given instead of running the gates twice. Routes, all behind the builder's
+  gate: `POST /api/methods/builds` (`{description, answers, pastedText?, webSearch?}` or
+  `{revise: {packageId, note}}`, whose draft starts from the installed files; 202; 422;
+  409 `build_running` / `too_many_methods`; 429 `daily_limit`; 503 without a model key),
+  `GET …/<id>` (never the draft or the transcript), `POST …/<id>/cancel` (at once when
+  waiting, at the next turn when running). `GET /api/methods` lists the builds and what
+  is left of the day. The builder itself is `build_worker.BUILDER` — the model loop
+  (21.3); the tests script one. `test_package_builds.py`.
 - **21.3 The model loop (L).** `src/package_builder.py`: the spec as a cached system
   prompt; tools to write, read and delete draft files, read a schema, check the package
   and finish; web search and fetch when asked for; budgets on turns, checks, tokens and

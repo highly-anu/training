@@ -415,7 +415,7 @@ def check(user_id: str, files, *, smoke: bool = True) -> dict:
     finally:
         loader.forget_overlay(os.path.join(stage, 'overlay'))
         shutil.rmtree(stage, ignore_errors=True)
-    return {**result, 'package': package_id, 'prefix': prefix}
+    return {**result, 'package': package_id, 'prefix': prefix, 'digest': files_digest(files)}
 
 
 def _ensure_base() -> str:
@@ -423,11 +423,21 @@ def _ensure_base() -> str:
     return base_dir()
 
 
-def install(user_id: str, files) -> dict:
+def files_digest(files) -> str:
+    """A fingerprint of a file map: what a passing check was a check of."""
+    return hashlib.sha256(json.dumps(files, sort_keys=True).encode()).hexdigest()
+
+
+def install(user_id: str, files, checked: dict | None = None) -> dict:
     """Check, and store when every gate passes. → check()'s result plus
-    `installed` and, when stored, `revision`. Raises StoreError when the
-    write fails."""
-    result = check(user_id, files)
+    `installed` and, when stored, `revision`. `checked` is a result check()
+    just gave for these very files (its `digest` says so): the gates are not
+    run a second time — a build that ends on a passing check pays for one, not
+    two. Raises StoreError when the write fails."""
+    if checked and checked.get('ok') and checked.get('digest') == files_digest(files):
+        result = checked
+    else:
+        result = check(user_id, files)
     if not result['ok']:
         return {**result, 'installed': False}
     revision = _upsert(user_id, result['package'], files, _name(files))

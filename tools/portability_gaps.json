@@ -109,12 +109,18 @@
       "title": "A build has nowhere to run",
       "kind": "runtime",
       "impact": "blocks",
-      "detail": "A build takes minutes; a request has 120 s and one of four threads. The only job the server keeps is an in-memory dictionary lost on every deploy, and the durable queue it has (Garmin's) never re-claims a row left processing and is not started at boot.",
+      "detail": "A build is a row in package_builds (migration 014): its request, the draft as written so far, the model conversation, the progress the clients poll, a result or an error. One worker thread per process claims it and holds it by a heartbeat; a running row whose heartbeat is older than the lease is claimed again (twice, then failed as interrupted), and the worker is kicked when a build is queued and on a process's first request if one was left open — so a deploy mid-build resumes from the last saved turn. The worker takes the process's one heavy slot only around each gate check, and install accepts the passing check it was just given.",
       "anchors": [
         "api.py::_parse_jobs: dict"
       ],
       "roadmap": "21.2",
-      "status": "open"
+      "status": "done",
+      "closed": "2026-11-13",
+      "evidence": [
+        "test_package_builds.py::def test_restart",
+        "test_package_builds.py::def test_built",
+        "src/build_worker.py::def run_build"
+      ]
     },
     {
       "id": "no_model_loop",

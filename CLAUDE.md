@@ -1528,7 +1528,12 @@ writes the package. The athlete reads *method*; the code keeps *package*. `PACKA
 dev | all` (default `dev`: the `dev` role in the verified token's `app_metadata.roles`,
 `auth.has_role`; local dev is allowed) gates `/api/packages` and `DELETE /api/methods/<id>`
 (`api.require_builder`); `GET /api/methods` always answers 200 with `available`, a `reason`, the
-athlete's methods and the limits (`test_builder_access.py`).
+athlete's methods, their builds and the limits (`test_builder_access.py`). **A build is a row a
+worker thread runs** (`package_builds`, `migrations/014`; `src/build_store.py`,
+`src/build_worker.py`): `POST /api/methods/builds` queues it, `GET …/<id>` is what clients poll,
+`POST …/<id>/cancel` stops it. The worker saves the draft and transcript after every turn, beats a
+heart, and a build whose worker died is claimed again — never keep a build's state in memory. It
+holds the one heavy slot (`src/heavy.py`) only around a gate check (`test_package_builds.py`).
 `src/package_gate.check_package(folder)` is every gate for one folder, in process and as data
 (files, schema, ids, a smoke generate of every track and phase, provenance — `src/package_smoke.py`
 is check_styles' loop and check_provenance's audit, which both tools call; roadmap 20.2).
@@ -1585,6 +1590,7 @@ SUPABASE_URL='' .venv/bin/python test_constraint_impact.py  # what each constrai
 SUPABASE_URL='' .venv/bin/python test_model_map.py       # Dev Lab ▸ Model Interactions' map (tools/model_map.json): each interaction anchored in the code; --write re-records the web's copy
 SUPABASE_URL='' .venv/bin/python test_portability.py     # Dev Lab ▸ Builder readiness' report; every open gap still anchored in the code, every closed one held by a test; --write re-records the web's copy
 .venv/bin/python test_package_gate.py                    # src/package_gate.check_package: one folder through the gates' checks, as data
+SUPABASE_URL='' .venv/bin/python test_package_builds.py   # a build as a durable job, scripted builder; SQL half on its own database
 SUPABASE_URL='' .venv/bin/python test_builder_access.py   # who may use the package builder: flag, dev role, GET /api/methods
 SUPABASE_URL='' .venv/bin/python test_private_packages.py  # an athlete's own packages: store, install through the gate, routes; SQL half on its own database
 SUPABASE_URL='' .venv/bin/python test_package_vocabulary.py  # a package's vocabulary.yaml: modalities and patterns of its own
