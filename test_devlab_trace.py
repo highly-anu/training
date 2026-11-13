@@ -61,11 +61,29 @@ SCENARIOS: dict[str, dict] = {
         'constraints': {**_ATHLETE, 'days_per_week': 4, 'training_level': 'intermediate',
                         'equipment': ['kettlebell', 'open_space']},
     },
+    # Two tracks on one week (src/composition.py): a templated track and a
+    # contract, each on its own engine. The trace carries every track's
+    # sessions with their `lane_key`, and each track's own decisions
+    # (`lane_weeks`).
+    'horsemen_with_wildman_composition': {
+        'lanes': [{'philosophy_id': 'horsemen_gpp', 'weight': 0.5},
+                  {'philosophy_id': 'wildman_kettlebell', 'track_id': 'general_practice', 'weight': 0.5}],
+        'num_weeks': 1,
+        'constraints': {**_ATHLETE, 'days_per_week': 6, 'session_time_minutes': 75,
+                        'training_level': 'intermediate',
+                        'equipment': ['barbell', 'rack', 'plates', 'kettlebell', 'pull_up_bar', 'open_space', 'box',
+                                      'rower', 'sandbag', 'ruck_pack', 'medicine_ball', 'sled', 'tire', 'rope',
+                                      'dumbbell', 'jump_rope', 'rings', 'ghd'],
+                        'mastered_exercises': ['wk_kb_clean_single', 'wk_kb_press_single', 'wk_kb_snatch',
+                                               'wk_kb_swing_single_arm']},
+    },
 }
 
 # Maps keyed by data (day names, modality ids, a progression model's outputs):
 # their keys are not the trace's shape.
-_DATA_MAPS = {'sessions', 'phase_priorities', 'raw', 'final', 'assignments', 'output'}
+_DATA_MAPS = {'sessions', 'phase_priorities', 'raw', 'final', 'assignments', 'output',
+              # by weekday (a template's days, a contract's placement), by track, by module, by lift
+              'days', 'placed', 'lane_weeks', 'modules', 'lifts'}
 
 
 def key_paths(node, path: str = '', out: set | None = None) -> set[str]:
@@ -88,6 +106,14 @@ def generate(client, request: dict) -> dict:
     body = res.get_json()
     assert body.get('generation_trace', {}).get('weeks'), 'no trace: the request is infeasible'
     return body
+
+
+def same_program(client, request: dict, traced: dict) -> bool:
+    """The trace is asked for, never paid for: the program with it is the
+    program without it."""
+    plain = client.post('/api/programs/generate', json=request).get_json()
+    return json.dumps({k: v for k, v in traced.items() if k != 'generation_trace'}, sort_keys=True) \
+        == json.dumps(plain, sort_keys=True)
 
 
 def main() -> int:
@@ -118,7 +144,11 @@ def main() -> int:
             failures += 1
             continue
         then = key_paths(recorded[name]['response']['generation_trace'])
-        now = key_paths(generate(client, req)['generation_trace'])
+        answer = generate(client, req)
+        now = key_paths(answer['generation_trace'])
+        if not same_program(client, req, answer):
+            failures += 1
+            print(f'  FAIL {name}: asking for the trace changed the program')
         if then == now:
             print(f'  ok   {name}: {len(now)} trace keys as recorded')
             continue

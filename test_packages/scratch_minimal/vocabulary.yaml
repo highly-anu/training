@@ -1,0 +1,32 @@
+# What this package adds to the commons' vocabulary, for itself
+# (docs/schemas/vocabulary.schema.json). Never an id the commons define.
+modalities:
+  - id: scratch_odd_object_strength
+    name: Odd-object strength
+    description: Lifting, shouldering and carrying stones and other awkward loads.
+    recovery_cost: high
+    recovery_hours_min: 48
+    session_position: first
+    priority_tier: 1
+    typical_duration_minutes: 45
+    progression_model: linear_load
+    family: strength
+    compatible_in_session_with: [mobility]
+    display:
+      label: Odd object
+      short: Stone
+      order: 20
+      color: '#ef4444'
+      tint: red
+      text_shade: 700
+      icon: {web: Weight, ios: figure.strengthtraining.traditional, watch: figure.strengthtraining.traditional}
+
+movement_patterns:
+  - id: scratch_shouldering
+    name: Ground to shoulder
+    regions: {lower: 1, trunk: 1, upper_pull: 0.5}
+    # The injury flags that rule it out. Required: [] would say none does.
+    excluded_by: [lumbar_disc]
+
+equipment:
+  - {id: scratch_stone, label: Atlas stone}

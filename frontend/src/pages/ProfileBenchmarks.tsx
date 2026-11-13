@@ -21,7 +21,7 @@ import { useLogResult, useStandardResults, useStandardSuggestions, useStandards 
 import { useInjuryFlags } from '@/api/constraints'
 import { RegenerateFromWeekBanner } from '@/components/program/RegenerateFromWeekBanner'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
-import { EQUIPMENT_CATEGORIES } from '@/lib/equipment'
+import { useEquipmentCategories } from '@/lib/useEquipmentVocabulary'
 import { getEffectiveMaxHR, maxHRFromDOB, zoneBoundariesToBpm, DEFAULT_ZONE_BOUNDARIES, ZONE_COLORS } from '@/lib/hrZones'
 import type { BenchmarkStandard, Day, DaySchedule, EquipmentId, InjuryFlagId, SessionType, StandardResult, TrainingLevel, Sex } from '@/api/types'
 
@@ -48,6 +48,7 @@ const SUB_TAB_IDS = SUB_TABS.map((t) => t.id)
 // ── Equipment Overview ─────────────────────────────────────────────────────────
 
 function EquipmentOverview() {
+  const equipmentCategories = useEquipmentCategories()
   const equipment = useProfileStore((s) => s.equipment)
   const setEquipment = useProfileStore((s) => s.setEquipment)
 
@@ -76,7 +77,7 @@ function EquipmentOverview() {
           </p>
         </div>
 
-        {EQUIPMENT_CATEGORIES.map((category) => (
+        {equipmentCategories.map((category) => (
           <div key={category.name} className="space-y-3">
             <h3 className="text-xs uppercase tracking-wider text-muted-foreground/50 font-medium">
               {category.name}

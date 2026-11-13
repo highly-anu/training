@@ -32,7 +32,7 @@ os.environ.pop('TRAINING_PACKAGES_DIR', None)
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 FIXTURE = 'block_fixture'
-MODALITY, PATTERN, FLAG = 'sled_work', 'sled_push', 'knee_meniscus_post_op'
+MODALITY, PATTERN, FLAG, IMPLEMENT = 'sled_work', 'sled_push', 'knee_meniscus_post_op', 'zz_prowler'
 
 import yaml  # noqa: E402
 
@@ -67,6 +67,8 @@ movement_patterns:
     name: Sled push
     regions: {{lower: 1, trunk: 0.5}}
     excluded_by: [{FLAG}]
+equipment:
+  - {{id: {IMPLEMENT}, label: Prowler}}
 '''
 
 EXERCISE = f'''- id: zz_sled_push
@@ -75,7 +77,7 @@ EXERCISE = f'''- id: zz_sled_push
   modality:
   - {MODALITY}
   equipment:
-  - sled
+  - {IMPLEMENT}
   effort: high
   movement_patterns:
   - {PATTERN}
@@ -115,7 +117,10 @@ def stage(vocabulary: str | None = VOCABULARY) -> tuple[str, str]:
          lambda t: t.replace('  - power\n', f'  - {MODALITY}\n').replace('  power: 1\n', f'  {MODALITY}: 1\n')
                     .replace('core: [mixed_modal_conditioning, power]', f'core: [mixed_modal_conditioning, {MODALITY}]'))
     edit(os.path.join(pkg, 'philosophy.yaml'), lambda t: re.sub(r'^  - power$', f'  - {MODALITY}', t, flags=re.M))
-    edit(os.path.join(pkg, 'exercises.yaml'), lambda t: t.replace('exercises:\n', 'exercises:\n' + EXERCISE, 1))
+    # Without a vocabulary the exercise needs a commons implement: the schema
+    # refuses any other before the id check is reached (test_gate).
+    exercise = EXERCISE if vocabulary is not None else EXERCISE.replace(IMPLEMENT, 'sled')
+    edit(os.path.join(pkg, 'exercises.yaml'), lambda t: t.replace('exercises:\n', 'exercises:\n' + exercise, 1))
     if vocabulary is not None:
         with open(os.path.join(pkg, 'vocabulary.yaml'), 'w', encoding='utf-8') as fh:
             fh.write(vocabulary)
@@ -161,6 +166,12 @@ def test_validator():
     check('a pattern id the commons define', has(errors_of(with_pattern(id='squat')), 'already define'))
     check('a region that is not one', has(errors_of(with_pattern(regions={'arms': 1})), "region 'arms'"))
     check('an injury flag that is not one', has(errors_of(with_pattern(excluded_by=['bad_mood'])), "'bad_mood'"))
+    taken = yaml.safe_load(VOCABULARY)
+    taken['equipment'][0]['id'] = 'barbell'
+    alias = yaml.safe_load(VOCABULARY)
+    alias['equipment'][0]['id'] = 'assault_bike'
+    check('an implement id the commons list, or an alias of one', has(errors_of(yaml.safe_dump(taken)), 'already list')
+          and has(errors_of(yaml.safe_dump(alias)), 'already list'))
     silent = yaml.safe_load(VOCABULARY)
     del silent['movement_patterns'][0]['excluded_by']
     check('a pattern must say which injuries rule it out (none is an answer)', bool(errors_of(yaml.safe_dump(silent)))
@@ -176,8 +187,8 @@ def test_gate():
                                                                              'skipped': result['skipped']})
         loose = package_gate.check_package(pkg, smoke=False, owner_prefix='u1a2b3c4d_')
         named = {p['message'].split("'")[1] for p in loose['problems'] if p['code'] == 'not_prefixed'}
-        check("as an athlete's own, its modality and pattern need the owner's prefix", {MODALITY, PATTERN} <= named,
-              sorted(named))
+        check("as an athlete's own, its modality, pattern and implement need the owner's prefix",
+              {MODALITY, PATTERN, IMPLEMENT} <= named, sorted(named))
     bare, bare_pkg = stage(vocabulary=None)
     with loader.overlay(bare):
         result = package_gate.check_package(bare_pkg, smoke=False)
@@ -185,6 +196,12 @@ def test_gate():
         check('without its vocabulary the modality and the pattern are nobody\'s',
               any(MODALITY in m for m in unknown) and any(PATTERN in m for m in unknown), result['problems'][:4])
         check('and the message says where to declare them', any('vocabulary.yaml' in m for m in unknown), unknown[:1])
+    undeclared, undeclared_pkg = stage(VOCABULARY.replace(f'id: {IMPLEMENT}', 'id: zz_other'))
+    with loader.overlay(undeclared):
+        result = package_gate.check_package(undeclared_pkg, smoke=False)
+        check('an implement nobody declares is refused by the schema, in the file that names it',
+              any(p['stage'] == 'schema' and p['file'] == 'exercises.yaml' and IMPLEMENT in p['message']
+                  for p in result['problems']), result['problems'][:2])
     clash, clash_pkg = stage(VOCABULARY.replace(f'id: {MODALITY}', 'id: power', 1))
     with loader.overlay(clash):
         report = portability.report()
@@ -199,13 +216,16 @@ def test_borrowed():
     read = {'owner': {'philosophy': {'id': 'owner'}, 'vocabulary': yaml.safe_load(VOCABULARY)},
             'borrower': {'philosophy': {'id': 'borrower', 'borrows_from': ['owner']}, 'vocabulary': {}},
             'stranger': {'philosophy': {'id': 'stranger'}, 'vocabulary': {}}}
-    known = {'modalities': {'power'}, 'movement_patterns': {'squat'}}
+    known = {'modalities': {'power'}, 'movement_patterns': {'squat'}, 'equipment': {'barbell'}}
     check('the package that declares it', MODALITY in portability._known_for('owner', read, known)['modalities'])
     check('a package that borrows from it', MODALITY in portability._known_for('borrower', read, known)['modalities']
           and PATTERN in portability._known_for('borrower', read, known)['movement_patterns'])
     check('nobody else', MODALITY not in portability._known_for('stranger', read, known)['modalities'])
+    check('its implements go the same way', IMPLEMENT in portability._known_for('borrower', read, known)['equipment']
+          and IMPLEMENT not in portability._known_for('stranger', read, known)['equipment'])
     check('and the commons\' set is not changed by asking', known == {'modalities': {'power'},
-                                                                        'movement_patterns': {'squat'}})
+                                                                        'movement_patterns': {'squat'},
+                                                                        'equipment': {'barbell'}})
 
 
 def test_in_the_view():
@@ -236,6 +256,17 @@ def test_in_the_view():
                      for s in day}
         check('a program schedules the package\'s modality', MODALITY in scheduled, sorted(scheduled))
 
+        from src import equipment
+        listed = {e['id']: e for e in equipment.items()}
+        check('its implement is in the equipment list, after the commons\', with its package',
+              listed[IMPLEMENT] == {'id': IMPLEMENT, 'label': 'Prowler', 'package': FIXTURE}
+              and list(listed)[-1] == IMPLEMENT and loader.load_equipment()[-1]['package'] == FIXTURE)
+        from src import explore_links
+        check('and among what an athlete can declare', IMPLEMENT in explore_links.equipment_vocabulary())
+        ex = loader.load_all_exercises()[0]['zz_sled_push']
+        check('an athlete without it gets none of its exercises', not selector._equipment_ok(ex, {'barbell', 'sled'})
+              and selector._equipment_ok(ex, {IMPLEMENT}))
+
         import api
         served = {m['id']: m for m in api._all_modalities()}
         check('the API serves it with its display and its package', served[MODALITY]['display']['label'] == 'Sled'
@@ -249,6 +280,8 @@ def test_in_the_view():
     check('no family', families.family_of(MODALITY) == 'other')
     check('no pattern', recovery_regions.pattern_weights([PATTERN]) == {})
     check('no exclusion', PATTERN not in loader.load_injury_flags()[FLAG]['excluded_movement_patterns'])
+    from src import equipment
+    check('no implement', IMPLEMENT not in equipment.ids() and equipment.ids() == [e['id'] for e in equipment.commons_items()])
 
 
 def test_shipped():

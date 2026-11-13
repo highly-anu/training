@@ -140,6 +140,8 @@ def _prefix(pkg_dir: str, pkg: str, prefix: str) -> list[dict]:
             want('modality', item.get('id'), rel)
         for item in doc.get('movement_patterns') or []:
             want('movement pattern', item.get('id'), rel)
+        for item in doc.get('equipment') or []:
+            want('equipment', item.get('id'), rel)
     with loader.overlay(None):   # what the shipped packages declare, whoever asks
         shipped, _ = loader.load_all_exercises()
     for rel, doc in docs('exercises.yaml'):

@@ -1,0 +1,30 @@
+id: scratch_minimal_stone_day
+name: "Stone day"
+modality: scratch_odd_object_strength
+category: strength
+duration_estimate_minutes: 40
+required_equipment:
+  - scratch_stone
+applicable_phases: [base, build]
+training_levels: [novice, intermediate, advanced, elite]
+
+slots:
+  - role: stone_to_shoulder
+    slot_type: sets_reps
+    sets: 5
+    reps: 3
+    intensity: heavy
+    rest_sec: 120
+    exercise_filter:
+      movement_pattern: scratch_shouldering   # this package's own pattern, named directly
+  - role: stone_carry
+    slot_type: sets_reps
+    sets: 3
+    reps: 1
+    intensity: moderate
+    rest_sec: 90
+    exercise_filter:
+      exercise_ids: [scratch_minimal_stone_carry]
+
+sources:
+  - "Written for the repository's tests."

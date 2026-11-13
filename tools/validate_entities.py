@@ -258,6 +258,60 @@ def _category_errors(item: dict, own: set) -> list[str]:
             "package's own categories"]
 
 
+def _package_of(path: str) -> str | None:
+    """The package folder a file is in (the nearest one up with a philosophy.yaml)."""
+    folder = os.path.dirname(os.path.abspath(path))
+    for _ in range(6):
+        if os.path.exists(os.path.join(folder, 'philosophy.yaml')):
+            return folder
+        folder = os.path.dirname(folder)
+    return None
+
+
+def _vocabulary_equipment(pkg_dir: str) -> set:
+    """The implements a package may name beyond the commons': its own
+    vocabulary.yaml's and those of the packages it borrows from."""
+    def read(folder, name):
+        try:
+            with open(os.path.join(folder, name), encoding='utf-8') as fh:
+                doc = yaml.safe_load(fh)
+            return doc if isinstance(doc, dict) else {}
+        except (OSError, yaml.YAMLError):
+            return {}
+    folders = [pkg_dir]
+    borrows = read(pkg_dir, 'philosophy.yaml').get('borrows_from') or []
+    if borrows:
+        if _ROOT not in sys.path:
+            sys.path.insert(0, _ROOT)
+        from src import loader
+        folders += [loader.package_dir(b) for b in borrows if isinstance(b, str)]
+    return {e.get('id') for f in folders for e in read(f, 'vocabulary.yaml').get('equipment') or []
+            if isinstance(e, dict) and e.get('id')}
+
+
+def _with_package_equipment(schema: dict, path: str) -> dict:
+    """The schema with its equipment enums — generated from the commons' list —
+    widened by what the file's package adds in its vocabulary.yaml."""
+    pkg_dir = _package_of(path) if path else None
+    extra = sorted(_vocabulary_equipment(pkg_dir)) if pkg_dir else []
+    if not extra:
+        return schema
+
+    def widen(node):
+        if isinstance(node, dict):
+            out = {}
+            for key, value in node.items():
+                enum = value.get('items', {}).get('enum') if isinstance(value, dict) \
+                    and isinstance(value.get('items'), dict) else None
+                if key in ('equipment', 'required_equipment') and isinstance(enum, list):
+                    out[key] = {**value, 'items': {**value['items'], 'enum': enum + [e for e in extra if e not in enum]}}
+                else:
+                    out[key] = widen(value)
+            return out
+        return [widen(v) for v in node] if isinstance(node, list) else node
+    return widen(schema)
+
+
 def _commons_vocabulary() -> dict:
     """What the commons define that a package's vocabulary.yaml is checked
     against: modality ids and the tints they use, movement patterns, body
@@ -276,7 +330,10 @@ def _commons_vocabulary() -> dict:
     with open(os.path.join(commons, 'constraints', 'injury_flags.yaml'), encoding='utf-8') as fh:
         flags = {f.get('id') for f in (yaml.safe_load(fh) or {}).get('injury_flags') or []}
     models = set(_load_schema('framework.schema.json')['properties']['progression_model'].get('enum') or [])
-    return {'modalities': modalities, 'tints': tints - {None}, 'families': families, 'flags': flags,
+    with open(os.path.join(commons, 'constraints', 'equipment.yaml'), encoding='utf-8') as fh:
+        listed = (yaml.safe_load(fh) or {}).get('equipment') or []
+    equipment = {e.get('id') for e in listed} | {a for e in listed for a in e.get('aliases') or []} | {'none'}
+    return {'equipment': equipment,'modalities': modalities, 'tints': tints - {None}, 'families': families, 'flags': flags,
             'models': models, 'regions': set(regions.get('regions') or {}),
             'patterns': set(regions.get('patterns') or {}) | set(regions.get('unloaded') or [])}
 
@@ -317,6 +374,11 @@ def _package_vocabulary_errors(data: dict, schema: dict) -> list[str]:
                 if other not in commons['modalities'] and other not in own:
                     errors.append(f"{where}: {key} names '{other}', which is neither a commons modality nor this "
                                   "package's")
+    for i, item in enumerate(data.get('equipment') or []):
+        if item['id'] in commons['equipment']:
+            errors.append(f"equipment[{i}] ({item['id']}): the commons already list '{item['id']}' "
+                          '(data/commons/constraints/equipment.yaml, an id or an alias); a package implement needs '
+                          'an id of its own')
     seen = set()
     for i, pat in enumerate(data.get('movement_patterns') or []):
         where = f"movement_patterns[{i}] ({pat.get('id', '?')})"
@@ -456,7 +518,7 @@ def validate_file(path: str, verbose: bool = True) -> list[str]:
             print(f"  SKIP  {path} (no schema detected for this path)")
         return []
 
-    schema = _load_schema(schema_filename)
+    schema = _with_package_equipment(_load_schema(schema_filename), path)
 
     # For exercise files: validate each item in the list individually
     if is_list_file:

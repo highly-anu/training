@@ -148,7 +148,7 @@ def compose(pieces: list[tuple[str, dict]], warm: dict | None, light: bool, cate
 
 def plan_week(entry: dict, framework: dict, constraints: dict, archetypes: dict,
               rotation: dict, fits, recent: list | None = None,
-              left_out: dict | None = None) -> tuple[dict, list[str]]:
+              left_out: dict | None = None, trace: dict | None = None) -> tuple[dict, list[str]]:
     """The week's sessions, {weekday: [session]}, and its compromises.
 
     `archetypes` is the allowed library by id, `rotation` each category's next
@@ -157,7 +157,11 @@ def plan_week(entry: dict, framework: dict, constraints: dict, archetypes: dict,
     `recent` the last week or so of picks (kept by the
     caller): a workout two pools share is not repeated within a week while
     another fits. `left_out` collects the days nothing fitted, {weekday:
-    category}, where a phase's test may still go."""
+    category}, where a phase's test may still go. `trace`, when given, is
+    filled with what the week decided — the days kept and dropped, and for
+    each day every pool it asked: where the rotation stood, which workouts
+    were passed over (and why: done in the last week, or does not fit as
+    written), which was taken. The week is the same with or without it."""
     recent = recent if recent is not None else []
     categories = framework.get('categories') or {}
     days = constraints.get('days_per_week', 6)
@@ -178,6 +182,10 @@ def plan_week(entry: dict, framework: dict, constraints: dict, archetypes: dict,
                         lambda spec: categories.get(spec['categories'][0], {}).get('long_day', False))
     warm_cat = framework.get('warm_up_category')
     schedule: dict = {}
+    asking: list[dict] = []   # every pool asked for the day in hand (the trace)
+    if trace is not None:
+        trace.update({'training_days': days, 'source_days': total, 'dropped': list(dropped),
+                      'placed': {day: list(spec['categories']) for day, spec in placed}, 'days': {}})
 
     def own(cat: str, minutes: float) -> dict | None:
         """The next workout of the category's own pool that fits, a fresh one
@@ -187,15 +195,25 @@ def plan_week(entry: dict, framework: dict, constraints: dict, archetypes: dict,
             return None
         pool = [aid for aid in spec['archetypes'] if aid in archetypes]
         start = rotation.get(cat, 0)
+        passed: dict[str, str] = {}
+        record = {'category': cat, 'pool': len(pool), 'rotation_at': start, 'minutes': minutes, 'picked': None,
+                  'passed_over': []}
+        if trace is not None:
+            asking.append(record)
         for fresh_only in (True, False):
             for k in range(len(pool)):
                 aid = pool[(start + k) % len(pool)]
                 if fresh_only and aid in recent[-RECENT:]:
+                    passed.setdefault(aid, 'done in the last week')
                     continue
                 if fits(archetypes[aid], minutes):
                     rotation[cat] = (start + k + 1) % len(pool)
                     recent.append(aid)
+                    passed.pop(aid, None)
+                    record.update(picked=aid, passed_over=[{'id': i, 'why': w} for i, w in passed.items()])
                     return archetypes[aid]
+                passed[aid] = 'does not fit as written'
+        record['passed_over'] = [{'id': i, 'why': w} for i, w in passed.items()]
         return None
 
     def fallback(cat: str, minutes: float) -> tuple[str, dict] | None:
@@ -216,6 +234,9 @@ def plan_week(entry: dict, framework: dict, constraints: dict, archetypes: dict,
 
     for day, spec in placed:
         limit = day_minutes[day]
+        if trace is not None:
+            asking = trace['days'].setdefault(day, {'categories': list(spec['categories']), 'minutes': limit,
+                                                    'asked': [], 'left_out': False})['asked']
         warm_spec = categories.get(warm_cat) if warm_cat else None
         wants_warm = bool(warm_spec) and (spec['warm_up'] if spec['warm_up'] is not None else
                                           categories.get(spec['categories'][0], {}).get('warm_up', True))
@@ -250,6 +271,8 @@ def plan_week(entry: dict, framework: dict, constraints: dict, archetypes: dict,
         if not pieces:
             if left_out is not None:
                 left_out[day] = spec['categories'][0]
+            if trace is not None:
+                trace['days'][day]['left_out'] = True
             continue
         warm = None
         if wants_warm:

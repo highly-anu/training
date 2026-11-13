@@ -1,0 +1,928 @@
+{
+ "held_back": {
+  "feasible": true,
+  "validation": {
+   "feasible": true,
+   "errors": [],
+   "warnings": [
+    {
+     "code": "EQUIPMENT_MISSING",
+     "message": "Archetype '2 km Row — Test' requires {'rower'} — not available. This archetype will be skipped in selection.",
+     "suggested_fix": null
+    }
+   ],
+   "info": [
+    {
+     "code": "EQUIPMENT_SCALED",
+     "message": "'Gym Jones Operator Circuit' will use equipment-limited scaling (missing: {'barbell', 'plates', 'pull_up_bar', 'rower'})."
+    },
+    {
+     "code": "EQUIPMENT_SCALED",
+     "message": "'Barbell Power Complex (Olympic Lift Derivatives)' will use equipment-limited scaling (missing: {'barbell', 'plates'})."
+    },
+    {
+     "code": "EQUIPMENT_SCALED",
+     "message": "'EMOM Strength Wave (10×1)' will use equipment-limited scaling (missing: {'barbell', 'plates', 'rack'})."
+    },
+    {
+     "code": "INJURY_ACTIVE",
+     "message": "Injury flag(s) ['lumbar_disc'] active — exercises using movement patterns ['ballistic', 'hip_hinge', 'loaded_carry', 'olympic_lift', 'rotation', 'scratch_shouldering'] will be excluded from selection."
+    }
+   ]
+  },
+  "lifts": {
+   "equipment": "add barbell, box, dumbbell, parallettes, plates, pool, pull_up_bar, rack, rings, rower, ruck_pack",
+   "injury": "without Lumbar Disc Injury"
+  },
+  "reference": {
+   "equipment": [
+    "barbell",
+    "box",
+    "dumbbell",
+    "kettlebell",
+    "open_space",
+    "parallettes",
+    "plates",
+    "pool",
+    "pull_up_bar",
+    "rack",
+    "rings",
+    "rower",
+    "ruck_pack"
+   ],
+   "training_level": "intermediate",
+   "injury_flags": []
+  },
+  "lifted": [
+   "equipment",
+   "injury"
+  ],
+  "sessions": {
+   "total": 10,
+   "actual": 10,
+   "reference": 10,
+   "changed": 9,
+   "direct": 9
+  },
+  "totals": {
+   "injury": {
+    "slots": 1,
+    "sessions": 1
+   },
+   "combined": {
+    "slots": 8,
+    "sessions": 1,
+    "knock_on": 1
+   },
+   "equipment": {
+    "sessions": 1,
+    "slots": 4
+   }
+  },
+  "restore": {
+   "equipment": [
+    {
+     "id": "rower",
+     "changes": 2
+    },
+    {
+     "id": "pool",
+     "changes": 1
+    },
+    {
+     "id": "pull_up_bar",
+     "changes": 1
+    },
+    {
+     "id": "rings",
+     "changes": 1
+    }
+   ]
+  },
+  "changes": [
+   {
+    "week_index": 0,
+    "week_number": 1,
+    "day": "Tuesday",
+    "session_index": 0,
+    "reference": {
+     "modality": "durability",
+     "archetype": {
+      "id": "gym_jones_tgu_recovery",
+      "name": "Gym Jones TGU Recovery (100 Total Reps)"
+     },
+     "test": false,
+     "substituted_for": null
+    },
+    "actual": {
+     "modality": "durability",
+     "archetype": {
+      "id": "gym_jones_tgu_recovery",
+      "name": "Gym Jones TGU Recovery (100 Total Reps)"
+     },
+     "test": false,
+     "substituted_for": null
+    },
+    "change": "slots",
+    "slots": [
+     {
+      "index": 0,
+      "role": "tgu_volume",
+      "kind": "emptied",
+      "from": {
+       "id": "kb_tgu",
+       "name": "Kettlebell Turkish Get-Up"
+      },
+      "to": null,
+      "gap_reason": "INJURY_EXCLUDED",
+      "substituted_for": null,
+      "causes": [
+       "injury"
+      ],
+      "why": [
+       {
+        "cause": "injury",
+        "text": "Kettlebell Turkish Get-Up is blocked by Lumbar Disc Injury (rotation)"
+       }
+      ],
+      "knock_on": false,
+      "alternatives": [
+       {
+        "cause": "equipment",
+        "exercise": {
+         "id": "ring_support_hold",
+         "name": "Ring Support Hold (FLR on Rings)"
+        }
+       }
+      ]
+     }
+    ],
+    "knock_on": false
+   },
+   {
+    "week_index": 0,
+    "week_number": 1,
+    "day": "Wednesday",
+    "session_index": 0,
+    "reference": {
+     "modality": "power",
+     "archetype": {
+      "id": "barbell_power_complex",
+      "name": "Barbell Power Complex (Olympic Lift Derivatives)"
+     },
+     "test": false,
+     "substituted_for": null
+    },
+    "actual": {
+     "modality": "power",
+     "archetype": {
+      "id": "barbell_power_complex",
+      "name": "Barbell Power Complex (Olympic Lift Derivatives)"
+     },
+     "test": false,
+     "substituted_for": null
+    },
+    "change": "slots",
+    "slots": [
+     {
+      "index": 1,
+      "role": "primary_power_pull",
+      "kind": "emptied",
+      "from": {
+       "id": "push_jerk",
+       "name": "Push Jerk"
+      },
+      "to": null,
+      "gap_reason": "INJURY_EXCLUDED",
+      "substituted_for": null,
+      "causes": [
+       "combined"
+      ],
+      "why": [
+       {
+        "cause": "equipment",
+        "text": "Push Jerk needs barbell, plates, rack"
+       },
+       {
+        "cause": "injury",
+        "text": "Push Jerk is blocked by Lumbar Disc Injury (ballistic, olympic_lift)"
+       }
+      ],
+      "knock_on": false,
+      "alternatives": []
+     },
+     {
+      "index": 2,
+      "role": "overhead_press_power",
+      "kind": "emptied",
+      "from": {
+       "id": "overhead_squat",
+       "name": "Overhead Squat"
+      },
+      "to": null,
+      "gap_reason": "EQUIPMENT_UNAVAILABLE",
+      "substituted_for": null,
+      "causes": [
+       "combined"
+      ],
+      "why": [
+       {
+        "cause": "equipment",
+        "text": "Overhead Squat needs barbell, plates"
+       },
+       {
+        "cause": "injury",
+        "text": "Overhead Squat is blocked by Lumbar Disc Injury"
+       }
+      ],
+      "knock_on": false,
+      "alternatives": [
+       {
+        "cause": "equipment",
+        "exercise": {
+         "id": "floor_press",
+         "name": "Floor Press"
+        }
+       }
+      ]
+     },
+     {
+      "index": 3,
+      "role": "posterior_chain_accessory",
+      "kind": "emptied",
+      "from": {
+       "id": "back_squat",
+       "name": "Back Squat"
+      },
+      "to": null,
+      "gap_reason": "INJURY_EXCLUDED",
+      "substituted_for": null,
+      "causes": [
+       "combined"
+      ],
+      "why": [
+       {
+        "cause": "equipment",
+        "text": "Back Squat needs barbell, plates, rack"
+       },
+       {
+        "cause": "injury",
+        "text": "Back Squat is blocked by Lumbar Disc Injury"
+       }
+      ],
+      "knock_on": false,
+      "alternatives": [
+       {
+        "cause": "equipment",
+        "exercise": {
+         "id": "kb_squat_goblet",
+         "name": "Kettlebell Goblet Squat"
+        }
+       }
+      ]
+     }
+    ],
+    "knock_on": false
+   },
+   {
+    "week_index": 0,
+    "week_number": 1,
+    "day": "Friday",
+    "session_index": 0,
+    "reference": {
+     "modality": "mixed_modal_conditioning",
+     "archetype": {
+      "id": "gym_jones_row_2k_test",
+      "name": "2 km Row — Test"
+     },
+     "test": true,
+     "substituted_for": null
+    },
+    "actual": {
+     "modality": "mixed_modal_conditioning",
+     "archetype": {
+      "id": "gym_jones_accumulation",
+      "name": "Gym Jones Accumulation Circuit (Goblet Squat / Bear Crawl / Carry)"
+     },
+     "test": false,
+     "substituted_for": null
+    },
+    "change": "archetype",
+    "causes": [
+     "combined",
+     "equipment",
+     "injury"
+    ],
+    "why": [
+     {
+      "cause": "combined",
+      "text": "no one constraint lifted alone brings it back"
+     },
+     {
+      "cause": "equipment",
+      "text": "2 of 3 of its exercises need rower"
+     },
+     {
+      "cause": "injury",
+      "text": "1 of 3 of its exercises are blocked by an injury flag"
+     }
+    ],
+    "knock_on": false,
+    "alternatives": [],
+    "reference_slots": [
+     {
+      "role": "warm_up",
+      "exercise": {
+       "id": "row_easy",
+       "name": "Easy Row (Zone 1–2)"
+      },
+      "gap_reason": null,
+      "blocked_by": [
+       {
+        "cause": "equipment",
+        "text": "Easy Row (Zone 1–2) needs rower"
+       }
+      ]
+     },
+     {
+      "role": "row_2k",
+      "exercise": {
+       "id": "row_2km_test",
+       "name": "2000m Row Time Trial"
+      },
+      "gap_reason": null,
+      "blocked_by": [
+       {
+        "cause": "equipment",
+        "text": "2000m Row Time Trial needs rower"
+       },
+       {
+        "cause": "injury",
+        "text": "2000m Row Time Trial is blocked by Lumbar Disc Injury"
+       }
+      ]
+     },
+     {
+      "role": "cool_down",
+      "exercise": {
+       "id": "wall_squat",
+       "name": "Wall Squat (Mobility Drill)"
+      },
+      "gap_reason": null
+     }
+    ],
+    "actual_slots": [
+     {
+      "role": "warm_up",
+      "exercise": null,
+      "gap_reason": "EQUIPMENT_UNAVAILABLE"
+     },
+     {
+      "role": "squat_volume",
+      "exercise": {
+       "id": "kb_squat_goblet",
+       "name": "Kettlebell Goblet Squat"
+      },
+      "gap_reason": null
+     },
+     {
+      "role": "locomotion_block",
+      "exercise": {
+       "id": "lunge",
+       "name": "Walking Lunge"
+      },
+      "gap_reason": null
+     },
+     {
+      "role": "carry_finisher",
+      "exercise": null,
+      "gap_reason": "EQUIPMENT_UNAVAILABLE"
+     }
+    ]
+   },
+   {
+    "week_index": 0,
+    "week_number": 1,
+    "day": "Sunday",
+    "session_index": 0,
+    "reference": {
+     "modality": "aerobic_base",
+     "archetype": {
+      "id": "gym_jones_aerobic_recovery",
+      "name": "Gym Jones Aerobic Recovery (Row / Swim / Ruck)"
+     },
+     "test": false,
+     "substituted_for": null
+    },
+    "actual": {
+     "modality": "aerobic_base",
+     "archetype": {
+      "id": "gym_jones_aerobic_recovery",
+      "name": "Gym Jones Aerobic Recovery (Row / Swim / Ruck)"
+     },
+     "test": false,
+     "substituted_for": null
+    },
+    "change": "slots",
+    "slots": [
+     {
+      "index": 0,
+      "role": "aerobic_main",
+      "kind": "emptied",
+      "from": {
+       "id": "swim_easy",
+       "name": "Easy Swim (Zone 1–2)"
+      },
+      "to": null,
+      "gap_reason": "EQUIPMENT_UNAVAILABLE",
+      "substituted_for": null,
+      "causes": [
+       "equipment"
+      ],
+      "why": [
+       {
+        "cause": "equipment",
+        "text": "Easy Swim (Zone 1–2) needs pool"
+       }
+      ],
+      "knock_on": false,
+      "alternatives": []
+     }
+    ],
+    "knock_on": false
+   },
+   {
+    "week_index": 1,
+    "week_number": 2,
+    "day": "Monday",
+    "session_index": 0,
+    "reference": {
+     "modality": "max_strength",
+     "archetype": {
+      "id": "gym_jones_operator_strength",
+      "name": "Gym Jones Operator Strength (SL Squat / Step-Up / FLR)"
+     },
+     "test": false,
+     "substituted_for": null
+    },
+    "actual": {
+     "modality": "max_strength",
+     "archetype": {
+      "id": "gym_jones_operator_strength",
+      "name": "Gym Jones Operator Strength (SL Squat / Step-Up / FLR)"
+     },
+     "test": false,
+     "substituted_for": null
+    },
+    "change": "slots",
+    "slots": [
+     {
+      "index": 3,
+      "role": "shoulder_core_endurance",
+      "kind": "swapped",
+      "from": {
+       "id": "dead_hang",
+       "name": "Dead Hang"
+      },
+      "to": {
+       "id": "plank_hold",
+       "name": "Plank Hold (FLR — Front Leaning Rest)"
+      },
+      "gap_reason": null,
+      "substituted_for": null,
+      "causes": [
+       "equipment"
+      ],
+      "why": [
+       {
+        "cause": "equipment",
+        "text": "Dead Hang needs pull_up_bar"
+       }
+      ],
+      "knock_on": false,
+      "alternatives": []
+     }
+    ],
+    "knock_on": false
+   },
+   {
+    "week_index": 1,
+    "week_number": 2,
+    "day": "Tuesday",
+    "session_index": 0,
+    "reference": {
+     "modality": "durability",
+     "archetype": {
+      "id": "gym_jones_tgu_recovery",
+      "name": "Gym Jones TGU Recovery (100 Total Reps)"
+     },
+     "test": false,
+     "substituted_for": null
+    },
+    "actual": {
+     "modality": "durability",
+     "archetype": {
+      "id": "gym_jones_tgu_recovery",
+      "name": "Gym Jones TGU Recovery (100 Total Reps)"
+     },
+     "test": false,
+     "substituted_for": null
+    },
+    "change": "slots",
+    "slots": [
+     {
+      "index": 0,
+      "role": "tgu_volume",
+      "kind": "emptied",
+      "from": {
+       "id": "ring_support_hold",
+       "name": "Ring Support Hold (FLR on Rings)"
+      },
+      "to": null,
+      "gap_reason": "INJURY_EXCLUDED",
+      "substituted_for": null,
+      "causes": [
+       "equipment"
+      ],
+      "why": [
+       {
+        "cause": "equipment",
+        "text": "Ring Support Hold (FLR on Rings) needs rings"
+       }
+      ],
+      "knock_on": false,
+      "alternatives": [
+       {
+        "cause": "injury",
+        "exercise": {
+         "id": "kb_tgu",
+         "name": "Kettlebell Turkish Get-Up"
+        }
+       }
+      ]
+     }
+    ],
+    "knock_on": false
+   },
+   {
+    "week_index": 1,
+    "week_number": 2,
+    "day": "Thursday",
+    "session_index": 0,
+    "reference": {
+     "modality": "power",
+     "archetype": {
+      "id": "barbell_power_complex",
+      "name": "Barbell Power Complex (Olympic Lift Derivatives)"
+     },
+     "test": false,
+     "substituted_for": null
+    },
+    "actual": {
+     "modality": "power",
+     "archetype": {
+      "id": "barbell_power_complex",
+      "name": "Barbell Power Complex (Olympic Lift Derivatives)"
+     },
+     "test": false,
+     "substituted_for": null
+    },
+    "change": "slots",
+    "slots": [
+     {
+      "index": 1,
+      "role": "primary_power_pull",
+      "kind": "emptied",
+      "from": {
+       "id": "push_jerk",
+       "name": "Push Jerk"
+      },
+      "to": null,
+      "gap_reason": "INJURY_EXCLUDED",
+      "substituted_for": null,
+      "causes": [
+       "combined"
+      ],
+      "why": [
+       {
+        "cause": "equipment",
+        "text": "Push Jerk needs barbell, plates, rack"
+       },
+       {
+        "cause": "injury",
+        "text": "Push Jerk is blocked by Lumbar Disc Injury (ballistic, olympic_lift)"
+       }
+      ],
+      "knock_on": false,
+      "alternatives": []
+     },
+     {
+      "index": 2,
+      "role": "overhead_press_power",
+      "kind": "emptied",
+      "from": {
+       "id": "overhead_squat",
+       "name": "Overhead Squat"
+      },
+      "to": null,
+      "gap_reason": "EQUIPMENT_UNAVAILABLE",
+      "substituted_for": null,
+      "causes": [
+       "combined"
+      ],
+      "why": [
+       {
+        "cause": "equipment",
+        "text": "Overhead Squat needs barbell, plates"
+       },
+       {
+        "cause": "injury",
+        "text": "Overhead Squat is blocked by Lumbar Disc Injury"
+       }
+      ],
+      "knock_on": false,
+      "alternatives": [
+       {
+        "cause": "equipment",
+        "exercise": {
+         "id": "floor_press",
+         "name": "Floor Press"
+        }
+       }
+      ]
+     },
+     {
+      "index": 3,
+      "role": "posterior_chain_accessory",
+      "kind": "emptied",
+      "from": {
+       "id": "back_squat",
+       "name": "Back Squat"
+      },
+      "to": null,
+      "gap_reason": "INJURY_EXCLUDED",
+      "substituted_for": null,
+      "causes": [
+       "combined"
+      ],
+      "why": [
+       {
+        "cause": "equipment",
+        "text": "Back Squat needs barbell, plates, rack"
+       },
+       {
+        "cause": "injury",
+        "text": "Back Squat is blocked by Lumbar Disc Injury"
+       }
+      ],
+      "knock_on": false,
+      "alternatives": [
+       {
+        "cause": "equipment",
+        "exercise": {
+         "id": "kb_squat_goblet",
+         "name": "Kettlebell Goblet Squat"
+        }
+       }
+      ]
+     }
+    ],
+    "knock_on": false
+   },
+   {
+    "week_index": 1,
+    "week_number": 2,
+    "day": "Friday",
+    "session_index": 0,
+    "reference": {
+     "modality": "aerobic_base",
+     "archetype": {
+      "id": "gym_jones_aerobic_recovery",
+      "name": "Gym Jones Aerobic Recovery (Row / Swim / Ruck)"
+     },
+     "test": false,
+     "substituted_for": null
+    },
+    "actual": {
+     "modality": "aerobic_base",
+     "archetype": {
+      "id": "gym_jones_aerobic_recovery",
+      "name": "Gym Jones Aerobic Recovery (Row / Swim / Ruck)"
+     },
+     "test": false,
+     "substituted_for": null
+    },
+    "change": "slots",
+    "slots": [
+     {
+      "index": 0,
+      "role": "aerobic_main",
+      "kind": "emptied",
+      "from": {
+       "id": "row_easy",
+       "name": "Easy Row (Zone 1–2)"
+      },
+      "to": null,
+      "gap_reason": "EQUIPMENT_UNAVAILABLE",
+      "substituted_for": null,
+      "causes": [
+       "equipment"
+      ],
+      "why": [
+       {
+        "cause": "equipment",
+        "text": "Easy Row (Zone 1–2) needs rower"
+       }
+      ],
+      "knock_on": false,
+      "alternatives": []
+     }
+    ],
+    "knock_on": false
+   },
+   {
+    "week_index": 1,
+    "week_number": 2,
+    "day": "Sunday",
+    "session_index": 0,
+    "reference": {
+     "modality": "mixed_modal_conditioning",
+     "archetype": {
+      "id": "gym_jones_accumulation",
+      "name": "Gym Jones Accumulation Circuit (Goblet Squat / Bear Crawl / Carry)"
+     },
+     "test": false,
+     "substituted_for": null
+    },
+    "actual": {
+     "modality": "mixed_modal_conditioning",
+     "archetype": {
+      "id": "gym_jones_accumulation",
+      "name": "Gym Jones Accumulation Circuit (Goblet Squat / Bear Crawl / Carry)"
+     },
+     "test": false,
+     "substituted_for": null
+    },
+    "change": "slots",
+    "slots": [
+     {
+      "index": 0,
+      "role": "warm_up",
+      "kind": "emptied",
+      "from": {
+       "id": "swim_easy",
+       "name": "Easy Swim (Zone 1–2)"
+      },
+      "to": null,
+      "gap_reason": "EQUIPMENT_UNAVAILABLE",
+      "substituted_for": null,
+      "causes": [
+       "combined"
+      ],
+      "why": [
+       {
+        "cause": "equipment",
+        "text": "Easy Swim (Zone 1–2) needs pool"
+       }
+      ],
+      "knock_on": false,
+      "alternatives": []
+     },
+     {
+      "index": 2,
+      "role": "locomotion_block",
+      "kind": "swapped",
+      "from": {
+       "id": "lunge",
+       "name": "Walking Lunge"
+      },
+      "to": {
+       "id": "lunge_overhead",
+       "name": "Overhead Lunge"
+      },
+      "gap_reason": null,
+      "substituted_for": null,
+      "causes": [
+       "combined"
+      ],
+      "why": [
+       {
+        "cause": "knock_on",
+        "text": "Walking Lunge is open to the athlete: an earlier change moved the rotation"
+       }
+      ],
+      "knock_on": true,
+      "alternatives": [
+       {
+        "cause": "injury",
+        "exercise": {
+         "id": "lunge_jumping",
+         "name": "Split Jump Lunge"
+        }
+       }
+      ]
+     },
+     {
+      "index": 3,
+      "role": "carry_finisher",
+      "kind": "emptied",
+      "from": {
+       "id": "farmer_carry_barbell",
+       "name": "Farmer Carry (Barbell)"
+      },
+      "to": null,
+      "gap_reason": "EQUIPMENT_UNAVAILABLE",
+      "substituted_for": null,
+      "causes": [
+       "combined"
+      ],
+      "why": [
+       {
+        "cause": "equipment",
+        "text": "Farmer Carry (Barbell) needs barbell, plates"
+       },
+       {
+        "cause": "injury",
+        "text": "Farmer Carry (Barbell) is blocked by Lumbar Disc Injury (loaded_carry)"
+       }
+      ],
+      "knock_on": false,
+      "alternatives": []
+     }
+    ],
+    "knock_on": false
+   }
+  ]
+ },
+ "refused": {
+  "feasible": false,
+  "refused": {
+   "detail": "Framework 'Block Periodization' requires at least 4 days/week. Athlete has 1.",
+   "validation": {
+    "feasible": false,
+    "errors": [
+     {
+      "code": "INSUFFICIENT_DAYS",
+      "message": "Framework 'Block Periodization' requires at least 4 days/week. Athlete has 1.",
+      "suggested_fix": "Increase days_per_week to 4, or see goal.framework_selection.alternatives for lower-day options."
+     }
+    ],
+    "warnings": [
+     {
+      "code": "EQUIPMENT_MISSING",
+      "message": "Archetype '2 km Row — Test' requires {'rower'} — not available. This archetype will be skipped in selection.",
+      "suggested_fix": null
+     }
+    ],
+    "info": [
+     {
+      "code": "EQUIPMENT_SCALED",
+      "message": "'Gym Jones Operator Circuit' will use equipment-limited scaling (missing: {'barbell', 'plates', 'pull_up_bar', 'rower'})."
+     },
+     {
+      "code": "EQUIPMENT_SCALED",
+      "message": "'Barbell Power Complex (Olympic Lift Derivatives)' will use equipment-limited scaling (missing: {'barbell', 'plates'})."
+     },
+     {
+      "code": "EQUIPMENT_SCALED",
+      "message": "'EMOM Strength Wave (10×1)' will use equipment-limited scaling (missing: {'barbell', 'plates', 'rack'})."
+     }
+    ]
+   }
+  },
+  "reference": {
+   "equipment": [
+    "barbell",
+    "box",
+    "dumbbell",
+    "kettlebell",
+    "open_space",
+    "parallettes",
+    "plates",
+    "pool",
+    "pull_up_bar",
+    "rack",
+    "rings",
+    "rower",
+    "ruck_pack"
+   ],
+   "training_level": "intermediate",
+   "injury_flags": []
+  },
+  "lifted": [
+   "equipment",
+   "schedule"
+  ],
+  "lifts": {
+   "equipment": "add barbell, box, dumbbell, parallettes, plates, pool, pull_up_bar, rack, rings, rower, ruck_pack",
+   "schedule": "5 days, 90 min"
+  },
+  "unblocked_by": [
+   {
+    "cause": "schedule",
+    "text": "5 days, 90 min"
+   }
+  ],
+  "reference_generates": false
+ }
+}
