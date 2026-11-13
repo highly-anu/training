@@ -12,7 +12,7 @@ checks too (no id another package declares, every id in the commons).
 Setup (Claude Code CLI), from the checkout:
   claude mcp add --transport stdio training -- .venv/bin/python mcp_server.py
 It needs the MCP SDK (`pip install mcp`); without it the tools still import,
-which is how test_mcp_server.py runs them. docs/mcp/README.md lists the tools.
+which is how test_authoring.py runs them. docs/mcp/README.md lists the tools.
 """
 
 import json
@@ -30,7 +30,7 @@ from tools import validate_entities as ve  # noqa: E402
 
 try:
     from mcp.server.fastmcp import FastMCP  # noqa: E402
-except ImportError:  # the tools stay importable (test_mcp_server.py) without the SDK
+except ImportError:  # the tools stay importable (test_authoring.py) without the SDK
     class FastMCP:  # type: ignore[no-redef]
         def __init__(self, name: str):
             self.name = name
@@ -60,6 +60,7 @@ SCHEMA_FILES = {
     'fidelity':          'fidelity.schema.json',
     'source_weeks':      'source_weeks.schema.json',
     'standards':         'standards.schema.json',
+    'vocabulary':        'vocabulary.schema.json',
 }
 # Where each kind lives in a package folder: validate_entities finds its schema
 # (and the checks beside it) by the file's place.
@@ -68,6 +69,7 @@ KIND_PATHS = {
     'archetype': 'archetypes/{id}.yaml', 'exercise': 'exercises.yaml',
     'analytics': 'analytics.yaml', 'watch': 'watch.yaml', 'training_contract': 'training_contract.yaml',
     'fidelity': 'fidelity.yaml', 'source_weeks': 'source_weeks.yaml', 'standards': 'standards.yaml',
+    'vocabulary': 'vocabulary.yaml',
 }
 
 mcp = FastMCP("training")
@@ -90,7 +92,7 @@ def list_modality_ids() -> list[str]:
     """
     Return all modality IDs in use across installed packages.
 
-    Includes the 12 core modalities plus any package-specific modalities
+    Includes the commons' modalities plus any a package adds (vocabulary.yaml)
     (e.g. 'swimming', 'cycling') introduced by installed packages.
     Use this as a reference — new packages may define additional modalities
     in their philosophy scope without restriction.
@@ -134,22 +136,31 @@ def list_valid_values(field: str) -> list[str]:
     Supported fields:
       intensity, slot_type, training_level, training_phase, equipment,
       exercise_category, intensity_model, progression_philosophy,
-      movement_pattern, progression_model, exercise_effort, archetype_category
+      movement_pattern, slot_filter_alias, progression_model, exercise_effort,
+      archetype_category, modality, injury_flag, body_region, modality_family
+    (get_package_spec(5) prints them all at once.)
     """
-    # movement_pattern and modality are open — read from installed packages dynamically
+    # What the commons define plus what the installed packages add
+    # (vocabulary.yaml): the same sets the checks hold a package to.
     if field == 'movement_pattern':
-        patterns: set[str] = set()
-        # Seed from commons aliases file
+        from src import recovery_regions
+        regions = recovery_regions.config()
+        return sorted(set(regions['patterns']) | set(regions.get('unloaded') or [])
+                      | set(loader.load_vocabulary()['patterns']))
+    if field == 'slot_filter_alias':
         commons_mp = ROOT / 'data' / 'commons' / 'movement_patterns.yaml'
-        if commons_mp.exists():
-            data = yaml.safe_load(commons_mp.read_text(encoding='utf-8'))
-            for alias_data in data.get('aliases', {}).values():
-                patterns.update(alias_data.get('patterns', []))
-        # Collect from all installed exercises
-        ex_global, _ = loader.load_all_exercises()
-        for ex in ex_global.values():
-            patterns.update(ex.get('movement_patterns', []))
-        return sorted(patterns)
+        return sorted((yaml.safe_load(commons_mp.read_text(encoding='utf-8')) or {}).get('aliases') or {})
+    if field == 'equipment':
+        from src import equipment
+        return equipment.ids()
+    if field == 'injury_flag':
+        return sorted(loader.load_injury_flags())
+    if field == 'body_region':
+        from src import recovery_regions
+        return list(recovery_regions.config()['regions'])
+    if field == 'modality_family':
+        from src.analytics import families
+        return list(families.families())
 
     if field == 'modality':
         return list_modality_ids()
@@ -159,7 +170,6 @@ def list_valid_values(field: str) -> list[str]:
         'slot_type':              ('archetype', ['properties', 'slots', 'items', 'properties', 'slot_type', 'enum']),
         'training_level':         ('archetype', ['properties', 'training_levels', 'items', 'enum']),
         'training_phase':         ('archetype', ['properties', 'applicable_phases', 'items', 'enum']),
-        'equipment':              ('philosophy', ['properties', 'required_equipment', 'items', 'enum']),
         'exercise_category':      ('exercise',   ['properties', 'category', 'enum']),
         'intensity_model':        ('philosophy', ['properties', 'intensity_model', 'enum']),
         'progression_philosophy': ('philosophy', ['properties', 'progression_philosophy', 'enum']),
@@ -170,13 +180,38 @@ def list_valid_values(field: str) -> list[str]:
 
     entry = field_map.get(field)
     if not entry:
-        return [f"Unknown field '{field}'. Supported: {sorted(['movement_pattern', 'modality'] + list(field_map.keys()))}"]
+        return [f"Unknown field '{field}'. Supported: {sorted(['movement_pattern', 'slot_filter_alias', 'modality', 'equipment', 'injury_flag', 'body_region', 'modality_family'] + list(field_map.keys()))}"]
 
     schema_type, path = entry
     node = _load_schema(schema_type)
     for key in path:
         node = node[key]
     return node
+
+
+# ── The spec ──────────────────────────────────────────────────────────────────
+
+@mcp.tool()
+def get_package_spec(section: int | None = None) -> str:
+    """
+    How to write a package: what a package is, what goes in each file, every
+    valid value, how it is checked, and a worked example written from nothing
+    (docs/schemas/PACKAGE_SPEC.md). Read it before writing a file.
+
+    section: one numbered section alone (1 what a package is, 2 the files,
+      3 how a week is built, 4 what goes in each file, 5 valid values, 6 how it
+      is checked, 7 an athlete's own package, 8 common mistakes, 9 the worked
+      example); omit for the whole document.
+
+    The lists are generated from the commons and the schemas, so they are
+    current — unlike any value quoted in a comment or remembered.
+    """
+    from src import package_spec
+    if section is None:
+        return package_spec.text()
+    hit = next((s for s in package_spec.sections() if s['number'] == section), None)
+    return f"## {hit['number']}. {hit['title']}\n\n{hit['text']}" if hit else \
+        f'No section {section}; the spec has {len(package_spec.sections())}.'
 
 
 # ── Template tools ────────────────────────────────────────────────────────────
@@ -196,6 +231,20 @@ def get_package_template(package_name: str) -> dict[str, str]:
     slug = package_name.lower().replace(' ', '_').replace('-', '_')
     title = package_name.replace('_', ' ').title()
 
+    def values(field: str, column: int, width: int = 88) -> str:
+        """A field's valid values as comment lines from `column`, read now
+        (list_valid_values) — never a list typed here, which goes stale."""
+        lines, line = [], ''
+        for value in list_valid_values(field):
+            piece = value if not line else f' | {value}'
+            if line and column + 2 + len(line) + len(piece) > width:
+                lines.append(line + ' |')
+                line, piece = '', value
+            line += piece
+        lines.append(line)
+        pad = ' ' * column
+        return ('\n' + pad).join(f'# {ln}' for ln in lines)
+
     philosophy_yaml = f"""\
 id: {slug}
 name: "{title}"
@@ -203,24 +252,18 @@ core_principles:
   - principle_one        # Non-negotiable beliefs as short slugs
   - principle_two
 scope:
-  - mobility             # Modalities this philosophy claims authority over.
-                         # Valid: max_strength | strength_endurance | relative_strength |
-                         #        aerobic_base | anaerobic_intervals | mixed_modal_conditioning |
-                         #        power | mobility | movement_skill | durability | combat_sport | rehab
+  - mobility             # Modalities this philosophy claims authority over: the
+                         # commons' (get_package_spec(5), list_modality_ids) or
+                         # one this package adds in vocabulary.yaml.
 bias:
   - mobility             # Subset of scope — what this philosophy emphasizes most.
 # avoid_with: []         # Modality IDs that conflict at high volume.
-# required_equipment: [] # barbell | rack | plates | kettlebell | dumbbell | pull_up_bar |
-                         # rings | parallettes | rower | bike | ski_erg | ruck_pack | sandbag |
-                         # sled | tire | medicine_ball | resistance_band | rope | box |
-                         # ghd | jump_rope | open_space
+# required_equipment: [] # list_valid_values('equipment'), or an implement this
+                         # package adds in vocabulary.yaml
 intensity_model: skill_based
-                         # linear_progression | polarized_80_20 | block_periodization |
-                         # autoregulation_rpe | constant_variation | skill_based |
-                         # hard_easy_alternation | operator_readiness
+                         {values('intensity_model', 25)}
 progression_philosophy: complexity_based
-                         # load_based | volume_based | complexity_based | time_based |
-                         # density_based | feel_based | rpm_based | range_based
+                         {values('progression_philosophy', 25)}
 
 primary_track_id: default
                          # Default track. Each track is one way to follow this
@@ -234,9 +277,8 @@ tracks:
     phases:
       - id: {slug}_block
         name: "{title} Block"
-        kind: base           # transition | base | build | specific | peak | taper |
-                             # maintenance | deload | recovery | rehab | post_op | active
-                             # (data/commons/phase_kinds.yaml — the engine keys on this)
+        kind: base           # data/commons/phase_kinds.yaml — the engine keys on this:
+                             {values('training_phase', 29)}
         weeks: 8
         framework_id: {slug}_framework
         focus: "One-line focus"
@@ -275,8 +317,7 @@ intensity_distribution:
   max_effort_pct: 0.0
 
 progression_model: complexity
-                         # linear_load | density | volume_block | complexity | time_to_task |
-                         # intensity_split_shift | rpe_autoregulation | pentathlon_rpm | range_progression
+                         {values('progression_model', 25)}
 
 applicable_when:
   training_level:
@@ -310,29 +351,24 @@ sources: []
 id: {slug}_session
 name: "{title} Session"
 modality: mobility
-           # max_strength | strength_endurance | relative_strength | aerobic_base |
-           # anaerobic_intervals | mixed_modal_conditioning | power | mobility |
-           # movement_skill | durability | combat_sport | rehab
+           # list_modality_ids(): the commons', or one this package adds in vocabulary.yaml
 category: movement_skill
-           # strength | conditioning | movement_skill | gpp_durability |
-           # kettlebell | recovery | rehab | combat_sport
+           {values('archetype_category', 11)}
 training_levels:
   - novice
   - intermediate
   - advanced
   - elite
 duration_estimate_minutes: 45
-# applicable_phases: []  # base | build | peak | taper | deload | maintenance | rehab | recovery
+# applicable_phases: []  # the phase kinds it suits (as `kind` in philosophy.yaml); none listed = every kind
 
 slots:
   - role: warmup
     slot_type: time_domain
-               # sets_reps | time_domain | distance | amrap | amrap_movement |
-               # emom | for_time | rounds_for_time | skill_practice | static_hold
+               {values('slot_type', 15)}
     duration_minutes: 10
     intensity: low
-               # max | max_effort | heavy | submaximal | progressing | moderate |
-               # medium | light | low | high | bodyweight | zone1 | zone2 | zone3 | zone4 | zone4_5 | zone5
+               {values('intensity', 15)}
     exercise_filter:
       category: mobility
 
@@ -351,23 +387,17 @@ sources: []
 exercises:
   - id: {slug}_example
     name: "Example Exercise"
-    category: mobility   # barbell | kettlebell | bodyweight | aerobic | loaded_carry |
-                         # carries | sandbag | mobility | skill | rehab | accessory
+    category: mobility   {values('exercise_category', 25)}
     modality:
       - mobility         # one or more valid modality IDs
     equipment:
-      - none             # barbell | rack | plates | kettlebell | dumbbell | pull_up_bar |
-                         # rings | parallettes | rower | bike | ski_erg | ruck_pack |
-                         # sandbag | sled | tire | medicine_ball | resistance_band |
-                         # rope | box | ghd | jump_rope | open_space | pool | none
-    effort: low          # low | medium | high | max
+      - none             # list_valid_values('equipment'), `none`, or an implement
+                         # this package adds in vocabulary.yaml
+    effort: low          {values('exercise_effort', 25)}
     bilateral: true
     movement_patterns:
-      - isometric        # hip_hinge | squat | horizontal_push | horizontal_pull |
-                         # vertical_push | vertical_pull | loaded_carry | rotation |
-                         # hip_flexion | knee_extension | locomotion | ballistic |
-                         # olympic_lift | isometric | aerobic_monostructural |
-                         # farmer_carry | rack_carry | step_up
+      - isometric        # list_valid_values('movement_pattern'), or a pattern this
+                         # package adds in vocabulary.yaml
     # requires: []
     # unlocks: []
     # contraindicated_with: []

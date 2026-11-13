@@ -101,7 +101,7 @@ def _ids(pkg: str) -> list[dict]:
     for message in portability.problems(pkg, portability.report()):
         code = ('missing_file' if message.endswith('is missing')
                 else 'collision' if 'is also declared by' in message
-                else 'not_in_commons' if 'is not in the commons' in message else 'not_a_package')
+                else 'unknown_id' if 'is not in the commons' in message else 'not_a_package')
         out.append(_problem('ids', code, message))
     return out
 
@@ -135,6 +135,13 @@ def _prefix(pkg_dir: str, pkg: str, prefix: str) -> list[dict]:
             want('standard', item.get('id'), rel)
         for item in doc.get('categories') or []:
             want('standard category', item.get('id'), rel)
+    for rel, doc in docs('vocabulary.yaml'):
+        for item in doc.get('modalities') or []:
+            want('modality', item.get('id'), rel)
+        for item in doc.get('movement_patterns') or []:
+            want('movement pattern', item.get('id'), rel)
+        for item in doc.get('equipment') or []:
+            want('equipment', item.get('id'), rel)
     with loader.overlay(None):   # what the shipped packages declare, whoever asks
         shipped, _ = loader.load_all_exercises()
     for rel, doc in docs('exercises.yaml'):
@@ -223,7 +230,10 @@ def check_package(pkg_dir: str, *, smoke: bool = True, owner_prefix: str | None 
         return finish()
 
     ran.append('schema')
-    problems += _schema(pkg_dir)
+    try:
+        problems += _schema(pkg_dir)
+    except Exception as e:   # the validator met something it does not expect: a finding, never a crash
+        problems.append(_problem('schema', 'raised', f'{type(e).__name__}: {e}'))
     warnings += _scope_warnings(pkg_dir)
     if problems:
         skip(STAGES[2:], 'its files do not validate')

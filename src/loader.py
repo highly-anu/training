@@ -64,14 +64,39 @@ _VIEW_LOCK = threading.RLock()
 _OVERLAY_PACKAGES: dict[str, tuple[list, list]] = {}   # overlay dir → (loadable, quarantined)
 
 
+class _Later:
+    """An overlay named by a function, asked once, the first time a loader
+    needs it: most requests read no package, and naming an athlete's overlay
+    may cost a query (src/package_store.py)."""
+    __slots__ = ('resolve', 'path', 'asked')
+
+    def __init__(self, resolve):
+        self.resolve, self.path, self.asked = resolve, None, False
+
+    def get(self) -> str | None:
+        if not self.asked:
+            self.asked = True
+            try:
+                path = self.resolve()
+            except Exception as e:   # naming it failed: the shipped packages alone, never an error
+                _log.warning('overlay not resolved: %s', e)
+                path = None
+            self.path = os.path.abspath(path) if path else None
+        return self.path
+
+
 def overlay_dir() -> str | None:
     """The overlay the caller sees, or None: the shipped packages alone."""
-    return _OVERLAY.get()
+    value = _OVERLAY.get()
+    return value.get() if isinstance(value, _Later) else value
 
 
-def set_overlay(path: str | None):
-    """Name the caller's overlay; returns the token `reset_overlay` takes.
+def set_overlay(path):
+    """Name the caller's overlay — a directory, or a function that returns one
+    (or None) when first asked; returns the token `reset_overlay` takes.
     A server thread is reused, so every set is reset (see `overlay`)."""
+    if callable(path):
+        return _OVERLAY.set(_Later(path))
     return _OVERLAY.set(os.path.abspath(path) if path else None)
 
 
@@ -145,19 +170,19 @@ def _overlay_packages(path: str) -> tuple[list, list]:
 def package_dirs() -> list[tuple[str, str]]:
     """[(package id, folder)] the caller sees: the shipped packages, sorted,
     then its overlay's loadable ones."""
-    path = _OVERLAY.get()
+    path = overlay_dir()
     return _shipped_dirs() + (list(_overlay_packages(path)[0]) if path else [])
 
 
 def overlay_packages() -> list[str]:
     """The ids of the caller's own (overlay) packages that load."""
-    path = _OVERLAY.get()
+    path = overlay_dir()
     return [pkg for pkg, _ in _overlay_packages(path)[0]] if path else []
 
 
 def quarantined() -> list[dict]:
     """The caller's overlay packages that were set aside: [{package, dir, problem}]."""
-    path = _OVERLAY.get()
+    path = overlay_dir()
     return list(_overlay_packages(path)[1]) if path else []
 
 
@@ -181,7 +206,7 @@ def package_files(*parts: str, recursive: bool = False) -> list[tuple[str, str]]
 
 
 def _is_overlay(pkg: str) -> bool:
-    path = _OVERLAY.get()
+    path = overlay_dir()
     return bool(path) and any(pkg == name for name, _ in _overlay_packages(path)[0])
 
 
@@ -199,7 +224,7 @@ _OVERLAY_STORES: 'OrderedDict[str, dict[str, dict]]' = OrderedDict()
 
 
 def view_store(name: str) -> dict:
-    path = _OVERLAY.get()
+    path = overlay_dir()
     with _VIEW_LOCK:
         if path is None:
             return _SHIPPED_STORES.setdefault(name, {})
@@ -281,7 +306,46 @@ def load_all_modalities() -> dict:
         mod.setdefault('priority_tier', 3)
         mod.setdefault('typical_duration_minutes', 60)
         result[mod['id']] = mod
+    # A package's own (its vocabulary.yaml), tagged with it; never a commons id.
+    for mod_id, mod in load_vocabulary()['modalities'].items():
+        if mod_id not in result:
+            mod = dict(mod)
+            mod.setdefault('priority_tier', 3)
+            mod.setdefault('typical_duration_minutes', 60)
+            result[mod_id] = mod
     return result
+
+
+@scoped_cache
+def load_vocabulary() -> dict:
+    """What the packages the caller sees add to the commons' vocabulary
+    (`vocabulary.yaml`, docs/schemas/vocabulary.schema.json), kept per view:
+    {'modalities': {id: modality, with `_package`}, 'patterns': {id: {regions,
+    excluded_by, `_package`}}, 'equipment': {id: {id, label, `package`}},
+    'by_package': {package: {'modalities': [ids], 'patterns': [ids],
+    'equipment': [ids]}}}. The first package to declare an id keeps it
+    (validate_entities refuses a second, and a commons id)."""
+    out = {'modalities': {}, 'patterns': {}, 'equipment': {}, 'by_package': {}}
+    for pkg, path in package_files('vocabulary.yaml'):
+        doc = _load_yaml(path)
+        if not isinstance(doc, dict):
+            continue
+        mine = out['by_package'].setdefault(pkg, {'modalities': [], 'patterns': [], 'equipment': []})
+        for mod in doc.get('modalities') or []:
+            if isinstance(mod, dict) and mod.get('id'):
+                mine['modalities'].append(mod['id'])
+                out['modalities'].setdefault(mod['id'], {**mod, '_package': pkg})
+        for pat in doc.get('movement_patterns') or []:
+            if isinstance(pat, dict) and pat.get('id'):
+                mine['patterns'].append(pat['id'])
+                out['patterns'].setdefault(pat['id'], {'regions': pat.get('regions') or {},
+                                                       'excluded_by': pat.get('excluded_by') or [], '_package': pkg})
+        for item in doc.get('equipment') or []:
+            if isinstance(item, dict) and item.get('id'):
+                mine['equipment'].append(item['id'])
+                out['equipment'].setdefault(item['id'], {'id': item['id'], 'label': item.get('label') or item['id'],
+                                                         'package': pkg})
+    return out
 
 
 def load_all_archetypes() -> list:
@@ -346,7 +410,16 @@ def load_all_exercises() -> tuple[dict, dict]:
 def load_injury_flags() -> dict:
     """Return dict of flag_id -> flag data."""
     raw = _load_yaml(os.path.join(_COMMONS_DIR, 'constraints', 'injury_flags.yaml'))
-    return {flag['id']: flag for flag in raw.get('injury_flags', [])}
+    flags = {flag['id']: flag for flag in raw.get('injury_flags', [])}
+    # A package's movement pattern says which flags rule it out
+    # (vocabulary.yaml `excluded_by`): it joins those flags' excluded patterns,
+    # so an exercise that names only package patterns is still filtered.
+    for pat_id, pat in load_vocabulary()['patterns'].items():
+        for flag_id in pat['excluded_by']:
+            flag = flags.get(flag_id)
+            if flag is not None and pat_id not in (flag.get('excluded_movement_patterns') or []):
+                flag['excluded_movement_patterns'] = list(flag.get('excluded_movement_patterns') or []) + [pat_id]
+    return flags
 
 
 def load_equipment() -> list[dict]:
@@ -354,7 +427,8 @@ def load_equipment() -> list[dict]:
     (data/commons/constraints/equipment.yaml; src/equipment.py). It used to be
     a copy here, eight ids short of the constraints schema."""
     from . import equipment
-    return [{'id': e['id'], 'label': e['label']} for e in equipment.items()]
+    return [{'id': e['id'], 'label': e['label'], **({'package': e['package']} if e.get('package') else {})}
+            for e in equipment.items()]
 
 
 def load_equipment_profiles() -> list:

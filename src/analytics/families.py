@@ -33,7 +33,13 @@ def family_of(modality: str | None) -> str:
     modality id from a package that has since been renamed, and analytics must
     degrade to "unclassified" rather than refuse to run.
     """
-    return _family_index().get(modality or '', 'other')
+    known = _family_index().get(modality or '')
+    if known:
+        return known
+    # A package's own modality says its family (vocabulary.yaml).
+    from src import loader
+    own = (loader.load_vocabulary()['modalities'].get(modality or '') or {}).get('family')
+    return own if own in _load()['families'] else 'other'
 
 
 def label_of(family: str) -> str:

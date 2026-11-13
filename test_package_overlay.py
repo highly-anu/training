@@ -296,7 +296,7 @@ def test_generation_unchanged():
 # Where the shipped root may still be named: the authoring routes write there,
 # the gate lists the roots it accepts, and the push gates' records and fidelity
 # files are a checkout's.
-_ROOT_USERS = {'api.py': 2, 'src/package_gate.py': 2, 'src/package_records.py': 1, 'src/package_fidelity.py': 1,
+_ROOT_USERS = {'api.py': 1, 'src/package_gate.py': 2, 'src/package_records.py': 1, 'src/package_fidelity.py': 1,
                'src/portability.py': 1}
 
 
@@ -308,7 +308,7 @@ def test_no_module_joins_the_root():
         rel = os.path.relpath(os.path.join(ROOT, path), ROOT).replace(os.sep, '/')
         if rel == 'src/loader.py':
             continue
-        n = open(os.path.join(ROOT, rel), encoding='utf-8').read().count('_PACKAGES_DIR')
+        n = len(re.findall(r'(?<![A-Za-z])_PACKAGES_DIR', open(os.path.join(ROOT, rel), encoding='utf-8').read()))
         if n:
             found[rel] = n
     check('loader.package_dirs / package_dir / package_files instead (the known uses are listed here)',

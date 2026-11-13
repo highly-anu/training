@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
 import { PhaseBadge } from '@/components/shared/PhaseBadge'
 import type { ModalityId, TrainingPhase, WeekTrace } from '@/api/types'
+import { EngineDecisions, WeekTests } from './EngineWeek'
+import { ENGINE_LABEL, engineOf, placedBy, words } from './engine'
 
 interface Props {
   weeks: WeekTrace[]
@@ -11,10 +13,12 @@ interface Props {
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
-/** A week with no allocation: a training contract's fixed modules, or the
- * source's own week (a week template), each day a category's named workout. */
+/** A week with no allocation: a training contract's fixed modules, the
+ * source's own week (a week template), or a composition of several tracks —
+ * with what each engine decided (EngineWeek.tsx). */
 function PlacedWeek({ week }: { week: WeekTrace }) {
-  const templated = !!week.scheduler.week_template
+  const engine = engineOf(week)
+  const lanes = Object.entries(week.lane_weeks ?? {})
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -22,16 +26,13 @@ function PlacedWeek({ week }: { week: WeekTrace }) {
           <span>Week {week.week_number}</span>
           <PhaseBadge phase={week.phase as TrainingPhase} />
           {week.is_deload && <Badge variant="outline" className="text-xs">Deload</Badge>}
+          <Badge variant="outline" className="text-xs">{ENGINE_LABEL[engine]}</Badge>
           <Badge variant="secondary" className="font-mono text-xs">{week.scheduler.framework_selection.selected_id}</Badge>
           <span className="text-xs text-muted-foreground ml-auto font-mono">{week.scheduler.contract}</span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2">
-        <p className="text-xs text-muted-foreground">
-          {templated
-            ? "Written by the source's week: each day is a category, and its workout the next of the category's named workouts the athlete can do as written."
-            : "Placed by the training contract: each module's movements, weekly exposures and recovery spacing are fixed, so no priorities are allocated and no framework is chosen."}
-        </p>
+      <CardContent className="space-y-4">
+        <p className="text-xs text-muted-foreground">{placedBy(engine)}</p>
         <div className="grid grid-cols-7 gap-1">
           {DAY_NAMES.map((day, i) => {
             const sessions = week.sessions[day] ?? []
@@ -41,9 +42,9 @@ function PlacedWeek({ week }: { week: WeekTrace }) {
                 <div className="min-h-[28px] space-y-0.5">
                   {sessions.length > 0 ? sessions.map((s, si) => (
                     <div key={si} className="rounded px-1 py-0.5 text-[9px] font-medium bg-primary/10 text-primary"
-                         title={s.archetype.selected_id ?? s.modality}>
-                      {(s.modules?.length ? s.modules.join(' + ')
-                        : templated ? (s.archetype.selection_reason ?? s.modality) : s.modality).replace(/_/g, ' ')}
+                         title={[s.lane_key, s.archetype.selected_id ?? s.modality].filter(Boolean).join(' · ')}>
+                      {s.test ? 'test: ' : ''}
+                      {words(s.modules?.length ? s.modules.join(' + ') : s.category ?? s.modality)}
                     </div>
                   )) : (
                     <div className="rounded px-1 py-1 text-[9px] text-muted-foreground/30 text-center">—</div>
@@ -53,6 +54,28 @@ function PlacedWeek({ week }: { week: WeekTrace }) {
             )
           })}
         </div>
+
+        {engine === 'composition' ? lanes.map(([key, lane]) => {
+          const laneEngine = lane.engine ?? 'scheduler'
+          return (
+            <div key={key} className="rounded-md border border-border/60 p-3 space-y-3">
+              <p className="text-xs flex flex-wrap items-center gap-2">
+                <span className="font-mono">{key}</span>
+                <Badge variant="outline" className="text-[10px]">{ENGINE_LABEL[laneEngine]}</Badge>
+                {lane.scheduler?.framework_selection && (
+                  <Badge variant="secondary" className="font-mono text-[10px]">{lane.scheduler.framework_selection.selected_id}</Badge>
+                )}
+              </p>
+              <EngineDecisions engine={laneEngine} scheduler={lane.scheduler} />
+              <WeekTests tests={lane.tests} />
+            </div>
+          )
+        }) : (
+          <>
+            <EngineDecisions engine={engine} scheduler={week.scheduler} />
+            <WeekTests tests={week.tests} />
+          </>
+        )}
       </CardContent>
     </Card>
   )
@@ -65,7 +88,7 @@ export function SchedulerPanel({ weeks }: Props) {
         const fw = week.scheduler.framework_selection
         const alloc = week.scheduler.allocation
         const assign = week.scheduler.day_assignment
-        if (week.scheduler.contract || week.scheduler.week_template || !alloc || !assign) {
+        if (engineOf(week) !== 'scheduler' || !alloc || !assign) {
           return <PlacedWeek key={week.week_number} week={week} />
         }
 
@@ -141,6 +164,8 @@ export function SchedulerPanel({ weeks }: Props) {
                   Day pool: [{assign.day_pool.join(', ')}] · Modality order: {assign.modality_order.join(' → ')}
                 </p>
               </div>
+
+              <WeekTests tests={week.tests} />
 
               {/* Framework details (collapsible) */}
               <details className="text-xs">

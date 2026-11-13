@@ -38,8 +38,13 @@ suites:
   - test_phase_summary.py
   - test_devlab_trace.py
   - test_constraint_impact.py
+  - test_model_map.py                 # Dev Lab ▸ Model Interactions' map: every interaction still anchored in the code (roadmap 20.11)
   - test_portability.py               # the Dev Lab's portability report; the gaps' code anchors
   - test_package_gate.py              # one folder through the gates' own checks, as data (roadmap 20.2)
+  - test_private_packages.py          # an athlete's own packages: the store, the gate on install, the routes; SQL half on its own database (roadmap 20.5)
+  - test_package_vocabulary.py        # a package's own modalities and movement patterns (vocabulary.yaml; roadmap 20.6)
+  - tools/gen_package_spec.py --check  # docs/schemas/PACKAGE_SPEC.md's generated blocks are current
+  - test_package_spec.py              # the package spec: what it says, where it ships, how it is served (roadmap 20.8)
   - test_package_overlay.py           # the loader's two roots: an overlay adds for its caller, never replaces, sets a broken package aside (roadmap 20.3)
   - test_add_package.py               # one package's baselines recorded, every other's kept
   - test_package_standards.py         # a package's own standards: loaded, served, owned, refused when taken

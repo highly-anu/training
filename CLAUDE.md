@@ -108,6 +108,7 @@ training/
 │   │       ├── archetypes/          # session shapes, one subdir per modality
 │   │       ├── exercises.yaml       # the movements it owns
 │   │       ├── exercise_media.yaml  # demo links
+│       ├── vocabulary.yaml      # optional; modalities and movement patterns it adds
 │   │       └── level_seeds.yaml     # optional; per-level assumed knowledge
 │   ├── commons/              # shared, owned by no philosophy
 │   │   ├── phase_kinds.yaml         # the phase kinds the engine keys on
@@ -153,7 +154,7 @@ All prefixed `/api/`:
 | GET | `/constraints/injury-flags` | `InjuryFlag[]` |
 | POST | `/programs/generate` | `GeneratedProgram` (`week_in_program` numbers a partial regenerate's tail from the kept head's length + 1) |
 | POST | `/sessions/generate` | `Session` (single session regeneration). `add: true`: a session the athlete adds on the fly to today or a later day — any package (a borrowed one carries `provenance`), named workouts included, the ones that fit as written within the session's time, one at random (`current_archetype_id` asks for another); never refused by a training contract or a template day; the answer is marked `added` |
-| POST | `/dev/constraint-impact` | For the Dev Lab (no screen calls it yet): generate's body run against a reference with nothing in the way (the packages' equipment, no injuries, the framework's level, a training contract's mastery and bell pair for that level) and once per constraint lifted alone (equipment, injury, level, proficiency); every changed session or slot with what was planned, its `causes`, why, `knock_on` when an earlier direct change moved the rotation, and the equipment that would restore the most changes (`src/constraint_impact.py`). A refused request (200, no weeks) answers `feasible: false` and `unblocked_by`: the one constraint, or the framework's ideal days and minutes, that alone lets it generate, else `combined`; a reference that cannot generate answers `reference_generates: false`. At most 12 weeks and seven generations; local dev or `AUTHORING_ENABLED` only |
+| POST | `/dev/constraint-impact` | For Dev Lab ▸ Impact (`components/devlab/ImpactPanel.tsx`): generate's body run against a reference with nothing in the way (the packages' equipment, no injuries, the framework's level, a training contract's mastery and bell pair for that level) and once per constraint lifted alone (equipment, injury, level, proficiency); every changed session or slot with what was planned, its `causes`, why, `knock_on` when an earlier direct change moved the rotation, and the equipment that would restore the most changes (`src/constraint_impact.py`). A refused request (200, no weeks) answers `feasible: false` and `unblocked_by`: the one constraint, or the framework's ideal days and minutes, that alone lets it generate, else `combined`; a reference that cannot generate answers `reference_generates: false`. At most 12 weeks and seven generations; local dev or `AUTHORING_ENABLED` only |
 | GET | `/dev/portability` | For Dev Lab ▸ Builder readiness (`components/devlab/ReadinessPanel.tsx`): the steps of the LLM package builder's foundation (roadmap item 20) with every gap, open or done; per package its engine shape per track, the files it carries, the records it still needs outside its folder (scorecard, coverage, status, golden hashes, dossier; `done: null` and listed in `unchecked` where the deployment lacks the file — the API image has no `docs/`), any id the commons do not define, and ids two packages declare (which copy the loader keeps); with `tools/portability_gaps.json`, what no package can bring in its folder yet, each gap anchored in the code (`src/portability.py`, `test_portability.py`). Local dev or `AUTHORING_ENABLED` only |
 | POST | `/exercises/substitute` | `{alternatives: [{assignment, score, reasons}]}` — ranked swaps for one slot, selector-scored, loads for the week; 422 when nothing fits |
 | POST | `/programs/impact` | The preview's Held back: `/dev/constraint-impact`'s answer for any signed-in athlete (`api._constraint_impact`, shared); ≤ 7 generations, 12 weeks; one run in the process at a time and one per athlete — a taken gate answers 429 `busy` at once, never waiting (the clients retry); small answers cached ten minutes per body and day. Clients send the draft's own first phase and length (`impactParams`, `impactRequest(for:)`), never its event date |
@@ -448,9 +449,9 @@ group's name.
   ranks it after the spacing terms. Fidelity reads a region loaded heavily on consecutive
   days as `region_back_to_back` (info, never gated). A source's own week is never
   rearranged for it. **Where scoring runs at all:** every shipped package places its
-  sessions by its own `week_templates` or a training contract, so the archetype picker
-  (and the scheduler) run only for blends a contract philosophy leads, for packages
-  without either, and for a single-session regenerate.
+  sessions by its own `week_templates` or a training contract — and a blend is a composition,
+  each track on its own engine — so the archetype picker (and the scheduler) run only for
+  packages without either and for a single-session regenerate.
 - **Exercise scoring**: prefers exercises with defined movement_patterns (+0.5) and forward-unlocking exercises (+0.5); penalizes recently used (-2 per recent use). AMRAP/for_time slots exclude `mobility` and `rehab` category exercises.
 - **Deload**: every `deload_protocol.frequency_weeks` (a framework without a protocol never
   deloads on schedule) or when `fatigue_state: overreached`; `volume_reduction_pct` is the
@@ -1502,6 +1503,27 @@ path onto the packages directory: `loader.package_dirs()`, `package_dir(id)`,
 in it that does not load is set aside alone (`loader.quarantined()`). **Anything kept from the
 packages is kept per view** — `loader.view_store(name)` or `@loader.scoped_cache`, never a module
 global or `lru_cache` — and `api.invalidate_package_data()` is the one call that forgets it.
+**An athlete's own packages** (since 2026-11-13, roadmap 20.5; behind the authoring gate until the
+builder ships): rows in `user_packages` (`migrations/013_user_packages.sql`, a capped file map),
+laid out per athlete by `src/package_store.py` and named as the request's overlay by `require_auth`
+(`auth._as_user`; a thread that serves no request names it itself, as the Garmin worker does).
+`POST /api/packages {files, dry_run?}` installs through every gate with the owner's id prefix
+(422 with the problems), `GET /api/packages[/<id>]`, `DELETE` (409 `in_use`). The `@static_json`
+reference routes need no sign-in, and with one add the athlete's own packages: a variant built in
+their view, kept bounded beside the shared answers (`api._USER_STATIC`, keyed by their overlay
+directory), sent `private`; the shared answers and the image's build are never touched (20.4).
+**A package may add vocabulary** (since 2026-11-13, roadmap 20.6): `vocabulary.yaml` — `modalities`
+(a modality with its `family` and `display`), `movement_patterns` (`regions`, `excluded_by`: the
+injury flags that rule it out) and `equipment` (id, label; roadmap 20.7: the web's pickers list it
+under "From your packages", the phone's cannot yet) — for itself and whoever borrows from it (`loader.load_vocabulary`).
+Never a commons id. The web draws a served modality it does not know (`registerModalities`); slot
+types, progression and contract models, phase kinds, levels, intensities, watch templates and
+icons stay the engine's.
+**How to write a package is one document**: `docs/schemas/PACKAGE_SPEC.md` (ships in the image;
+`GET /api/dev/package-spec`, the MCP server's `get_package_spec`). Its lists and its worked example
+(`test_packages/scratch_minimal`, written from nothing) are generated — after a change to the
+commons' vocabulary, a schema enum, the gate's stages or that package, run
+`.venv/bin/python tools/gen_package_spec.py` (`--check` is a push gate).
 `src/package_gate.check_package(folder)` is every gate for one folder, in process and as data
 (files, schema, ids, a smoke generate of every track and phase, provenance — `src/package_smoke.py`
 is check_styles' loop and check_provenance's audit, which both tools call; roadmap 20.2).
@@ -1555,13 +1577,33 @@ SUPABASE_URL='' .venv/bin/python test_selection.py       # what the generator pi
 SUPABASE_URL='' .venv/bin/python test_phase_summary.py   # Program ▸ Overview's phase_summary, served and never stored
 SUPABASE_URL='' .venv/bin/python test_devlab_trace.py    # the Dev Lab's recorded trace has the server's shape; --record after a trace change
 SUPABASE_URL='' .venv/bin/python test_constraint_impact.py  # what each constraint changes against the reference, and which (Dev Lab ▸ Impact)
+SUPABASE_URL='' .venv/bin/python test_model_map.py       # Dev Lab ▸ Model Interactions' map (tools/model_map.json): each interaction anchored in the code; --write re-records the web's copy
 SUPABASE_URL='' .venv/bin/python test_portability.py     # Dev Lab ▸ Builder readiness' report; every open gap still anchored in the code, every closed one held by a test; --write re-records the web's copy
 .venv/bin/python test_package_gate.py                    # src/package_gate.check_package: one folder through the gates' checks, as data
+SUPABASE_URL='' .venv/bin/python test_private_packages.py  # an athlete's own packages: store, install through the gate, routes; SQL half on its own database
+SUPABASE_URL='' .venv/bin/python test_package_vocabulary.py  # a package's vocabulary.yaml: modalities and patterns of its own
+.venv/bin/python tools/gen_package_spec.py [--check]     # the package spec's generated lists and worked example
+SUPABASE_URL='' .venv/bin/python test_package_spec.py     # the spec: what it says, where it ships, how it is served
 .venv/bin/python test_package_overlay.py                 # the loader's overlay: adds for its caller, never replaces, quarantines; caches per view
 .venv/bin/python test_add_package.py                     # one package's baselines recorded, every other's kept; add_package's refusals
 SUPABASE_URL='' .venv/bin/python test_explore_links.py     # Explore's lineage: slot links by the selector's rule, progression, movements
 SUPABASE_URL='' .venv/bin/python test_explore_philosophy.py  # Explore's philosophy page: weeks from contracts and templates, mixes, rules, sessions
 ```
+
+**The trace says what each engine decided** (roadmap 20.9): every week its `engine` and `tests`;
+a contract's `scheduler.contract_week` (modules, minutes, steps, the placement chosen and the next
+best, scored) and each session's `module_steps`; a template's `scheduler.template` (days kept and
+dropped, each pool's rotation, what was passed over and why); a composition's `lane_weeks`. Asking
+for it never changes the program (`test_devlab_trace.py`).
+
+**How the model's parts act on each other is data** (`tools/model_map.json`, served by `GET
+/api/dev/model-map` with which engine each track runs on; Dev Lab ▸ Model Interactions only lays it
+out). An interaction that changes — a function renamed, a rule moved — is a change to that file:
+its `anchors` are checked on every push.
+
+Pipeline Trace draws the engine that built each week (`components/devlab/EngineWeek.tsx`), takes a
+second track for a composition, and can be linked to: `/dev?philosophy=<id>&track=<id>&second=<id>
+&days=4&equipment=all&step=schedule&run=1` generates on arrival.
 
 The Dev Lab's panels render a recorded `generate?trace=1` answer
 (`frontend/src/mocks/fixtures/traced-programs.json`) in

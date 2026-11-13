@@ -9,7 +9,8 @@ import { TOPIC_ICONS, useExploreNavigate } from '@/components/explore/topics'
 import { useLinkIndex } from '@/components/explore/useLineage'
 import { useExploreLinks } from '@/api/exploreLinks'
 import { useEquipmentProfiles } from '@/api/constraints'
-import { EQUIPMENT_GROUPS, equipmentLabel } from '@/lib/equipment'
+import { equipmentLabel } from '@/lib/equipment'
+import { useEquipmentGroups } from '@/lib/useEquipmentVocabulary'
 import {
   FACETS, explore, indexEquipment, unlocks, type Facet, type FacetItem, type Picked, type Unlock,
 } from '@/lib/equipmentExplorer'
@@ -94,6 +95,7 @@ function EquipmentChips({ selected, used, unlock, bodyweight, onToggle, onBodywe
   onToggle: (id: string) => void
   onBodyweight: () => void
 }) {
+  const groups = useEquipmentGroups()
   return (
     <div className="space-y-3">
       <div className="space-y-1.5">
@@ -109,7 +111,7 @@ function EquipmentChips({ selected, used, unlock, bodyweight, onToggle, onBodywe
           Bodyweight / open space
         </button></Tip>
       </div>
-      {EQUIPMENT_GROUPS.map((g) => (
+      {groups.map((g) => (
         <div key={g.name} className="space-y-1.5">
           <p className="text-[10px] text-muted-foreground/60">{g.name}</p>
           <div className="flex flex-wrap gap-2">

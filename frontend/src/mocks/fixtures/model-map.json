@@ -1,0 +1,612 @@
+{
+ "checked": "2026-11-13",
+ "engines": {
+  "training_contract": "Training contract",
+  "week_templates": "Week templates",
+  "scheduler": "Modality scheduler",
+  "composition": "Composition"
+ },
+ "nodes": [
+  {
+   "id": "package",
+   "label": "Package",
+   "kind": "data",
+   "count_of": null
+  },
+  {
+   "id": "philosophy",
+   "label": "Philosophy",
+   "kind": "data",
+   "count_of": "philosophies"
+  },
+  {
+   "id": "phase",
+   "label": "Track → Phase",
+   "kind": "data",
+   "count_of": null
+  },
+  {
+   "id": "contract",
+   "label": "Training contract",
+   "kind": "engine",
+   "count_of": null
+  },
+  {
+   "id": "template",
+   "label": "Week template",
+   "kind": "engine",
+   "count_of": null
+  },
+  {
+   "id": "scheduler",
+   "label": "Modality scheduler",
+   "kind": "engine",
+   "count_of": "modalities"
+  },
+  {
+   "id": "session",
+   "label": "Session (archetype)",
+   "kind": "data",
+   "count_of": "archetypes"
+  },
+  {
+   "id": "exercise",
+   "label": "Exercise",
+   "kind": "data",
+   "count_of": "exercises"
+  },
+  {
+   "id": "load",
+   "label": "Load",
+   "kind": "output",
+   "count_of": null
+  },
+  {
+   "id": "composition",
+   "label": "Composition",
+   "kind": "engine",
+   "count_of": null
+  },
+  {
+   "id": "tests",
+   "label": "Tests",
+   "kind": "engine",
+   "count_of": null
+  },
+  {
+   "id": "athlete",
+   "label": "Athlete",
+   "kind": "input",
+   "count_of": null
+  }
+ ],
+ "edges": [
+  {
+   "id": "philosophy-framework",
+   "from": "philosophy",
+   "to": "phase",
+   "title": "A track of a philosophy becomes the goal; each phase names its framework",
+   "engine": null,
+   "function": "goals.philosophy_to_goal(track_id) + generator._build_phase_entries()",
+   "files": "src/goals.py + src/phases.py + src/generator.py",
+   "baked_pct": 30,
+   "reads_from_source": [
+    "tracks[] (ways to follow the philosophy; the builder picks one)",
+    "tracks[].phases[] (id, name, kind, weeks, framework_id, text)",
+    "phase rules the generator reads: priority_override, exclude_exercises, rotate_main_lifts, tests, week_templates, drop_order",
+    "track_for_level, then primary_track_id, then the first track",
+    "bias (else scope) — fallback priorities",
+    "training_contract.yaml — the track's contract, when the package has one",
+    "training_contract.yaml tracks.<id>.options — choices the athlete makes for the track, each with a default (Wildman's swing minutes); both builders ask",
+    "fidelity.yaml inventions — a track the app made up rather than the source is labelled in both builders"
+   ],
+   "reads_from_target": [
+    "sessions_per_week",
+    "expectations (ideal days and session minutes are read)",
+    "applicable_when + days_per_week — only for a goal whose phase names no framework"
+   ],
+   "engine_decides": [
+    "goals.philosophy_to_goal builds the synthetic goal (api._philosophy_to_goal wraps it; never shown to the user)",
+    "Track phases → phase timeline; every week runs the framework its phase names (phases.week_entry)",
+    "Phase kind (data/commons/phase_kinds.yaml) drives archetype filters, multipliers, cadence spreading and the deload reading",
+    "A legacy framework_id maps to the track and phase that run it (goals.owner_track_for_framework)",
+    "Priorities from the longest phase's framework sessions_per_week (the first wins a tie), else the bias",
+    "The goal carries the track's training contract; a blend drops it and composes lanes (src/composition.py)",
+    "The athlete's answers ride in the constraints as contract_options; an option left out, or a choice it does not offer, takes its default"
+   ],
+   "constants": [],
+   "anchors": [
+    "src/goals.py::def philosophy_to_goal",
+    "src/phases.py::def tracks_of",
+    "src/phases.py::def week_entry",
+    "src/scheduler.py::phase_framework_override"
+   ]
+  },
+  {
+   "id": "phase-contract",
+   "from": "phase",
+   "to": "contract",
+   "title": "A training contract places its modules as written",
+   "engine": "training_contract",
+   "function": "training_contract.load_contract() → start().week() → _placements() + _spacing()",
+   "files": "src/training_contract.py",
+   "baked_pct": 40,
+   "reads_from_source": [
+    "training_contract.yaml tracks.<track id>: modules (blocks, exposures a week, spacing, requires_mastery, optional, variants + rotation, periods, phases)",
+    "progression per module: density_cycle, timed_cycle, weekly_volume, load_per_exposure, ladder",
+    "implement, test_module, deload_phases, options (the athlete's choices, each with a default)"
+   ],
+   "reads_from_target": [
+    "the phase's framework: deload_protocol.frequency_weeks, expectations",
+    "the athlete's days, minutes, level, mastered exercises, implements, confirmed module state"
+   ],
+   "engine_decides": [
+    "Each week: the modules its phase runs, each at the step its confirmed sessions earned (a plan forecasts every exposure clean)",
+    "Every placement of the essential modules on the day pool is scored — closes a test week with its test, days shared with another track, modules stacked, optional work fitted, then spacing: same-modality days back to back, same-modality neighbours, body regions loaded heavily a day or two apart, the gap between each module's own sessions — and the best is taken",
+    "A module with periods deloads in its own deload period; otherwise the framework's frequency does",
+    "Optional work is offered by the last build week's minutes and never costs an essential session its day",
+    "A week whose required modules cannot fit is refused (ContractError), never trimmed; verify() refuses a program that breaks the phase's own claims",
+    "A slot is the module's block: no archetype is chosen and no exercise scored"
+   ],
+   "constants": [
+    "min_spacing_days defaults to 2",
+    "the placement search looks at up to 500 candidates"
+   ],
+   "anchors": [
+    "src/training_contract.py::def load_contract",
+    "src/training_contract.py::def _placements",
+    "src/training_contract.py::def _spacing",
+    "src/training_contract.py::def module_deload",
+    "src/training_contract.py::def confirmed_state",
+    "src/training_contract.py::def verify"
+   ]
+  },
+  {
+   "id": "phase-template",
+   "from": "phase",
+   "to": "template",
+   "title": "A week template writes the source's week day by day",
+   "engine": "week_templates",
+   "function": "week_template.plan_week() → training_days() + place_days() + compose()",
+   "files": "src/week_template.py (called from src/generator.py)",
+   "baked_pct": 35,
+   "reads_from_source": [
+    "the phase's week_templates: seven days per week of the phase — rest, a day category, several, or {categories, warm_up, light}",
+    "drop_order: which days go when the athlete trains fewer days"
+   ],
+   "reads_from_target": [
+    "the framework's categories: pools of named-workout archetypes (pool_only), each with a fallback order, long_day, advice; warm_up_category",
+    "each named workout's level, required_equipment, minutes and movements"
+   ],
+   "engine_decides": [
+    "The athlete keeps the template's days in order, dropping by drop_order; days keep their positions, honouring preferred and forced-rest days",
+    "Each day takes the next workout of its pool the athlete can do as written (level, every implement, every movement fillable, the day's minutes), passing one done in the last week while another fits; then the category's fallbacks",
+    "A warm-up from the warm-up pool opens the day when both fit; the two become one session",
+    "Loads are as written: the slot's load text, no ramp, level, phase or deload scaling",
+    "A day nothing fits is left out (a test may still take it); a program in which nothing fits is TEMPLATE_UNFILLED"
+   ],
+   "constants": [
+    "a workout counts as recent for the last week of picks (RECENT)"
+   ],
+   "anchors": [
+    "src/week_template.py::def plan_week",
+    "src/week_template.py::def training_days",
+    "src/week_template.py::def place_days",
+    "src/week_template.py::def compose"
+   ]
+  },
+  {
+   "id": "framework-modality",
+   "from": "phase",
+   "to": "scheduler",
+   "title": "The modality scheduler allocates sessions and assigns days",
+   "engine": "scheduler",
+   "function": "scheduler.allocate_sessions() + assign_to_days()",
+   "files": "src/scheduler.py (week_template.plan_week, training_contract._placements place their own)",
+   "baked_pct": 65,
+   "reads_from_source": [
+    "synthetic_goal.priorities (modality weights)",
+    "phase_sequence[].priority_override — matched on the phase kind, so two phases of one kind share the first's",
+    "framework.sessions_per_week, allocation_mode, modality_priority (committed / core)",
+    "framework.cadence_options (rotating week to week)",
+    "framework.deload_protocol.frequency_weeks",
+    "framework.recovery.allow_consecutive (+ phases)"
+   ],
+   "reads_from_target": [
+    "recovery_cost (high/medium/low)",
+    "recovery_hours_min",
+    "incompatible_in_session_with",
+    "session_position",
+    "priority_tier (kept when days are scarce), typical_duration_minutes"
+   ],
+   "engine_decides": [
+    "Largest-remainder rounding converts priority weights → integer session counts",
+    "_RECOVERY_COST_RANK {high:3, medium:2, low:1} — placement order; an unknown cost counts as low",
+    "Recovery windows: a modality's own recovery_hours_min (24 h without one); two high-cost modalities max(48 h, either's); checked both ways and against last week's end (_neighbours)",
+    "recovery.allow_consecutive lifts a pair whose window is 24 h or less",
+    "Days from cadence_options; a phase kind that spreads cadence takes the first pattern; _DEFAULT_SPREAD without one",
+    "Incompatibility: no two incompatible_in_session_with modalities share a day",
+    "Templated phases and training contracts place their own sessions — every shipped single-philosophy track"
+   ],
+   "constants": [
+    "_RECOVERY_COST_RANK — only 3 cost levels recognised",
+    "_HIGH_COST_FLOOR_HOURS = 48 (the modality schema agrees: never under 48)",
+    "Day scoring (+3, −6, ×1.25, −12 a session), allocation thresholds 0.8 / 0.7, 75 ideal minutes"
+   ],
+   "anchors": [
+    "src/scheduler.py::def allocate_sessions",
+    "src/scheduler.py::def assign_to_days",
+    "src/scheduler.py::def recovery_window",
+    "src/scheduler.py::_RECOVERY_COST_RANK"
+   ]
+  },
+  {
+   "id": "modality-archetype",
+   "from": "scheduler",
+   "to": "session",
+   "title": "The scheduler's session picks its archetype by score",
+   "engine": "scheduler",
+   "function": "selector.select_archetype()",
+   "files": "src/selector.py",
+   "baked_pct": 50,
+   "reads_from_source": [
+    "modality id (primary filter)",
+    "recent sessions (the last 14 archetype ids, heavy body regions)"
+   ],
+   "reads_from_target": [
+    "applicable_phases",
+    "training_levels",
+    "required_equipment",
+    "scaling.equipment_limited",
+    "scaling.time_limited",
+    "duration_estimate_minutes (and scaling.deload's)",
+    "pool_only / test-only — never picked by modality",
+    "modality fallback_rank, or the framework's fallback_modalities — the cross-modality fallback order",
+    "data/commons/constraints/category_equipment.yaml — the equipment each exercise category needs",
+    "slots → regional load (data/commons/recovery_regions.yaml; regional_load overrides)"
+   ],
+   "engine_decides": [
+    "Runs only for a session left to choose: template days, contract modules and tests are placed, not scored",
+    "Scoring: +6 full equipment, −3 if in the last 14, +3/−2 day fit, up to −8 injury impact, −10 per slot whose category the equipment blocks, +10 the preferred (split-day) archetype",
+    "Regional load: −2/−1 per body region a session a day/two days before loaded heavily, cap −4 (recovery_regions.yaml)",
+    "Ties: the least recently used, then the first authored",
+    "scaling.equipment_limited (or the generator's relaxed pass) lets an archetype past the equipment filter, without the +6",
+    "scaling.time_limited lets an over-long archetype through; with none fitting, the shortest is kept and trimmed to the session (populate_session)",
+    "No archetype for the phase: fall back in the framework's or the modalities' order (aerobic_base → durability → mobility), recorded as substituted_for"
+   ],
+   "constants": [
+    "Short-day cap 50 min (api TIME_MAP short 40 / long 75)"
+   ],
+   "anchors": [
+    "src/selector.py::def select_archetype",
+    "src/recovery_regions.py::def penalty",
+    "src/generator.py::def fallback_order"
+   ]
+  },
+  {
+   "id": "archetype-exercise",
+   "from": "session",
+   "to": "exercise",
+   "title": "A slot takes an exercise from its own package",
+   "engine": null,
+   "function": "selector.select_exercise()",
+   "files": "src/selector.py",
+   "baked_pct": 55,
+   "reads_from_source": [
+    "slot.slot_type",
+    "slot.exercise_filter: exercise_ids, ordered, movement_pattern, category, bilateral, equipment_required, exclude_movement_pattern, intensity",
+    "slot.intensity (heavy sets × reps make a main lift)"
+   ],
+   "reads_from_target": [
+    "movement_patterns",
+    "category",
+    "equipment",
+    "requires / unlocks",
+    "contraindicated_with",
+    "effort",
+    "named_only / test_only",
+    "data/commons/movement_patterns.yaml complements — what a complementary mobility block recovers",
+    "data/commons/training_levels.yaml — the level order, and the level that unlocks everything",
+    "data/commons/intensities.yaml — the intensities that make a main lift"
+   ],
+   "engine_decides": [
+    "Candidates: the goal's packages and those they borrow from (provenance), plus unattributed exercises; the whole library only under a non-strict policy",
+    "exercise_ids (in order when ordered), movement_pattern aliases (data/commons/movement_patterns.yaml) and category filter together",
+    "Level prerequisites: requires resolved transitively against data/commons/level_concepts.yaml and the package's level_seeds.yaml",
+    "Slot constraints: AMRAP / for_time slots reject skill, mobility and rehab; zone1–2 aerobic slots keep low effort; phase exclude_exercises",
+    "Scoring: −2 per recent use (last 40), +0.5 for unlocks (not in a slot that names its exercises), +0.5 for defined movement_patterns; ties to the first authored",
+    "Main lifts (heavy sets × reps) keep one exercise through a phase unless it rotate_main_lifts",
+    "A phase kind that excludes_max_effort (taper) drops effort: max exercises"
+   ],
+   "constants": [],
+   "anchors": [
+    "src/selector.py::def select_exercise",
+    "src/explore_links.py::def slot_exercises",
+    "src/selector.py::def is_main_lift_slot",
+    "src/provenance.py::def allows_archetype"
+   ]
+  },
+  {
+   "id": "exercise-progression",
+   "from": "exercise",
+   "to": "load",
+   "title": "The progression model writes the load",
+   "engine": null,
+   "function": "progression.calculate_load()",
+   "files": "src/progression.py",
+   "baked_pct": 75,
+   "reads_from_source": [
+    "slot.slot_type",
+    "slot.sets / reps / intensity / rpe_target",
+    "slot.rest_sec, work_sec, time_cap_sec, hold_seconds",
+    "slot.duration_minutes / duration_sec",
+    "slot.distance_m",
+    "slot.scaling.intensity_pct / volume_multiplier",
+    "slot.load (as written), slot.standard (a test's scored slot)",
+    "slot.switch_at_sec, rest_until_hr_pct (watch cues)",
+    "block.alternate {exercise_id, when} — an EMOM block's even rounds another movement when the track's options say so"
+   ],
+   "reads_from_target": [
+    "exercise.starting_load_kg (by level), weekly_increment_kg and sessions_per_week",
+    "exercise.competition_pace",
+    "exercise.category — only for the no-start-load note",
+    "data/commons/progression.yaml — RPE load factors and the weekly ramps (a framework's progression_defaults overrides them)",
+    "data/commons/training_levels.yaml — each level's share of a distance slot",
+    "data/commons/intensities.yaml — which intensities prescribe heart-rate zones, and their bands"
+   ],
+   "engine_decides": [
+    "Model (training_contract.resolve_model): the framework's progression_overrides for the modality, its own model when prescription_policy is framework, else the modality's, else linear_load",
+    "Dispatch by model and slot type",
+    "Time and distance ceilings: the phase kind's volume_multiplier (data/commons/phase_kinds.yaml)",
+    "Deload: deload_protocol.volume_reduction_pct is the share kept; a counts_as_deload kind's share is the total",
+    "as_written frameworks and a test's scored slot (standard_tests.protocol_load) are prescribed exactly as the source writes them",
+    "An alternating interval (Wildman's Option C): odd rounds the block's movement, even rounds its alternate if the athlete's equipment and injuries allow it; the load carries alternate, its note leads with it, and both watches title each round (alternateName)"
+   ],
+   "constants": [
+    "_DEFAULT_INCREMENT_KG 2.5 and the other defaults: 3 × 5, deload share 0.6, density 0.70 / 0.75, AMRAP 1200 s"
+   ],
+   "anchors": [
+    "src/progression.py::def calculate_load",
+    "src/progression.py::def _as_written",
+    "src/training_contract.py::def resolve_model"
+   ]
+  },
+  {
+   "id": "tracks-composition",
+   "from": "philosophy",
+   "to": "composition",
+   "title": "Several tracks compose one program",
+   "engine": "composition",
+   "function": "composition.build_lanes() → composition.generate()",
+   "files": "src/composition.py",
+   "baked_pct": 55,
+   "reads_from_source": [
+    "lanes: [{philosophy_id, track_id, weight, start_phase}] — tracks of different methods, or two of one",
+    "each track's contract or week templates (a scheduler track cannot be composed)"
+   ],
+   "reads_from_target": [
+    "the athlete's days and minutes, shared by weight"
+   ],
+   "engine_decides": [
+    "Every track runs its own phases on its own engine; a week's own fields are the lead track's",
+    "Each week the contracts place first, lightest first, on the days each keeps (reserve_days); then the templates, each into the minutes the others left (day_room)",
+    "A placement avoids another track's days and a body region it loads heavily",
+    "A week that cannot fit gives way cheapest first, for the whole program: optional work, then one weekly session of the module with the fewest minutes, then the weekly volume — each cut a compromise naming its track; a cut that breaks a track's own phase rules is undone",
+    "A track that cannot run alone is refused as such at once"
+   ],
+   "constants": [],
+   "anchors": [
+    "src/composition.py::def build_lanes",
+    "src/composition.py::def generate",
+    "src/composition.py::reserve_days",
+    "src/composition.py::day_room"
+   ]
+  },
+  {
+   "id": "phase-tests",
+   "from": "phase",
+   "to": "tests",
+   "title": "A phase tests its standards",
+   "engine": null,
+   "function": "standard_tests.tests_for_week() → generator._plan_week_tests()",
+   "files": "src/standard_tests.py + src/generator.py",
+   "baked_pct": 45,
+   "reads_from_source": [
+    "the phase's tests: when (week: first | last | <n>, or every: <n>), a rotation of archetypes, in_place_of, on_deload",
+    "an archetype marked test:, each scored slot pointing at a standard"
+   ],
+   "reads_from_target": [
+    "the standard (the commons' or the package's standards.yaml), the athlete's level, equipment and minutes"
+   ],
+   "engine_decides": [
+    "The test takes the place of one session of the week — same day, same count — when the athlete can do it as written; else the week records tests_skipped with why",
+    "The session it stands in for is still selected, so the rest of the program is what it would have been, and is recorded as test.instead_of",
+    "A scored slot is prescribed as written (no ramp, level, phase or deload scaling); adjust and swap leave it alone",
+    "A training contract places its test in its test module's session"
+   ],
+   "constants": [
+    "a test fits when its minutes are within 1.1× the session's"
+   ],
+   "anchors": [
+    "src/standard_tests.py::def tests_for_week",
+    "src/generator.py::def _plan_week_tests",
+    "src/standard_tests.py::def is_test"
+   ]
+  },
+  {
+   "id": "athlete-constraints",
+   "from": "athlete",
+   "to": "session",
+   "title": "The athlete's constraints filter, and the program says what they held back",
+   "engine": null,
+   "function": "validator.validate() · selector filters · blockers.held_back()",
+   "files": "src/validator.py + src/selector.py + src/blockers.py",
+   "baked_pct": 50,
+   "reads_from_source": [
+    "equipment, injury_flags, training_level, days_per_week, session_time_minutes, mastered exercises"
+   ],
+   "reads_from_target": [
+    "an archetype's required_equipment and training_levels; an exercise's equipment, movement_patterns, contraindicated_with and requires",
+    "injury flags (the commons'; a package pattern's excluded_by joins them)"
+   ],
+   "engine_decides": [
+    "An injury flag excludes movement patterns and named exercises; a slot whose pattern is fully excluded is injury_skip",
+    "An exercise needs every implement it lists; prerequisites resolve transitively from the level's concepts and the package's level_seeds",
+    "An empty slot always says why (blocked_by); a session that stands in says so (substitution_cause)",
+    "The pre-flight check applies to scheduler and templated tracks; a contract refuses as it builds"
+   ],
+   "constants": [],
+   "anchors": [
+    "src/validator.py::def validate",
+    "src/blockers.py::def held_back",
+    "src/provenance.py::def resolve_source_policy"
+   ]
+  },
+  {
+   "id": "package-view",
+   "from": "package",
+   "to": "philosophy",
+   "title": "Which packages a caller sees, and what a package may add",
+   "engine": null,
+   "function": "loader.package_dirs() · loader.load_vocabulary() · package_gate.check_package()",
+   "files": "src/loader.py + src/package_store.py + src/package_gate.py",
+   "baked_pct": 60,
+   "reads_from_source": [
+    "a package folder: philosophy, frameworks, archetypes, exercises; optional analytics, watch, contract, standards, vocabulary"
+   ],
+   "reads_from_target": [
+    "the shipped packages (data/packages) and, for the caller, their own overlay (user_packages)"
+   ],
+   "engine_decides": [
+    "The shipped root is everyone's and fail-fast; an overlay only adds — a shipped id keeps the shipped copy — and a package in it that does not load is set aside alone",
+    "A package may add modalities, movement patterns and equipment (vocabulary.yaml) and standards (standards.yaml), never an id the commons define",
+    "An athlete's package is installed only through every gate, its ids carrying the owner's prefix",
+    "Slot types, progression and contract models, phase kinds, levels, intensities, watch templates and icons stay the engine's"
+   ],
+   "constants": [],
+   "anchors": [
+    "src/loader.py::def package_dirs",
+    "src/loader.py::def load_vocabulary",
+    "src/package_gate.py::def check_package",
+    "src/package_store.py::def install"
+   ]
+  }
+ ],
+ "authoring": [
+  {
+   "type": "Philosophy (tracks, phases)",
+   "create": "no",
+   "edit": "no",
+   "remove": "no",
+   "writes": "—",
+   "notes": [
+    "No route; the file is written by hand or through the MCP server",
+    "src/phases.validate_philosophy_tracks checks track and phase ids (validate_entities.py)"
+   ]
+  },
+  {
+   "type": "Framework",
+   "create": "no",
+   "edit": "partial",
+   "remove": "no",
+   "writes": "the custom package only",
+   "notes": [
+    "PUT /api/frameworks/<id> ✅ — name, source_philosophy, sessions_per_week, cadence_options, deload_protocol, applicable_when, notes, recovery — custom package only",
+    "No POST, no DELETE"
+   ]
+  },
+  {
+   "type": "Modality",
+   "create": "yes",
+   "edit": "no",
+   "remove": "no",
+   "writes": "data/commons/modalities/ (shared)",
+   "notes": [
+    "POST /api/modalities ✅ — the schema requires its display block, so the clients' generator can always read it",
+    "A package adds its own in vocabulary.yaml instead (roadmap 20.6)"
+   ]
+  },
+  {
+   "type": "Archetype",
+   "create": "yes",
+   "edit": "yes",
+   "remove": "yes",
+   "writes": "the custom package only",
+   "notes": [
+    "POST, PUT, DELETE /api/archetypes ✅ — the custom package only (403 elsewhere)",
+    "slot_type is a schema enum, checked on create and edit"
+   ]
+  },
+  {
+   "type": "Exercise",
+   "create": "yes",
+   "edit": "yes",
+   "remove": "yes",
+   "writes": "the custom package only",
+   "notes": [
+    "POST, PUT, DELETE /api/exercises ✅ — the custom package only (403 elsewhere)",
+    "Loads come from starting_load_kg / weekly_increment_kg / sessions_per_week; without them, generic defaults"
+   ]
+  },
+  {
+   "type": "Other package files",
+   "create": "no",
+   "edit": "no",
+   "remove": "no",
+   "writes": "—",
+   "notes": [
+    "No per-file route for analytics, watch, level_seeds, exercise_media, training_contract, fidelity, source_weeks, standards or vocabulary: a whole package goes through POST /api/packages"
+   ]
+  },
+  {
+   "type": "A whole package (an athlete's own)",
+   "create": "yes",
+   "edit": "yes",
+   "remove": "yes",
+   "writes": "user_packages (Postgres), laid out as the athlete's overlay",
+   "notes": [
+    "POST /api/packages {files} ✅ — every gate with the owner's id prefix; dry_run checks only; 422 with the problems",
+    "GET /api/packages, /api/packages/<id>; DELETE (409 while the athlete's program is built from it)",
+    "Private to its owner; behind the authoring gate until the builder ships (roadmap 20.5)"
+   ]
+  },
+  {
+   "type": "MCP server",
+   "create": "yes",
+   "edit": "yes",
+   "remove": "yes",
+   "writes": "any file under data/packages/",
+   "notes": [
+    "mcp_server.py: write_package_file, validate_package, delete_package — local, inside the packages folder",
+    "Checks every file kind with the gates' own validator, and a package with add_package's checks (docs/mcp/README.md)"
+   ]
+  }
+ ],
+ "usage": {
+  "training_contract": {
+   "tracks": 12,
+   "packages": [
+    "bjj",
+    "marcus_filly",
+    "starting_strength",
+    "uphill_athlete",
+    "wildman_kettlebell"
+   ]
+  },
+  "week_templates": {
+   "tracks": 10,
+   "packages": [
+    "atg",
+    "crossfit",
+    "gym_jones",
+    "horsemen_gpp",
+    "ido_portal",
+    "kelly_starrett"
+   ]
+  },
+  "scheduler": {
+   "tracks": 0,
+   "packages": []
+  }
+ }
+}
