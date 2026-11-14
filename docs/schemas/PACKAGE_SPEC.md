@@ -78,6 +78,63 @@ scarce: a modality's `priority_tier` (1 kept first; `mobility` is tier 4 and is 
 under five days) and its recovery cost (two high-cost sessions are kept 48 h apart). Write
 `sessions_per_week` so that its total is the framework's `expectations.ideal_days_per_week`.
 
+### What the engine does with what you write
+
+None of this fails a check; all of it decides what the athlete is prescribed.
+
+- **Which days.** A framework's `cadence_options` — keyed by days per week, each a list of
+  patterns of day numbers (1 = Monday) that rotate week to week — are the training days;
+  without an entry for the athlete's days the week is spread evenly. The scheduler then
+  puts the modalities on those days hardest first, under the recovery windows, and an
+  athlete may name the days they prefer. **Nothing pins a modality to a weekday** on the
+  scheduler; only week templates say what a given day is.
+- **Which session shape.** Among a modality's archetypes that apply (phase kind, level,
+  equipment, the day's length), one used in the last sessions scores lower, so several
+  archetypes of one modality take turns — give a phase its own version of a session by
+  its `applicable_phases`, or the versions alternate. A template category's pool is taken
+  in order.
+- **What each slot is prescribed from**, by its `slot_type` and the model of the session's
+  modality (the table in section 5; a framework's `progression_overrides` changes it):
+  - `sets_reps` under `linear_load`, `volume_block` or `density`: sets × reps at a
+    **computed load** — the exercise's `starting_load_kg` for the level, plus
+    `weekly_increment_kg` × `sessions_per_week` for every week **of the phase** already
+    behind (a deload week counts as one), rounded to 2.5 kg. The count starts again in
+    each phase, so a second phase starts again at the starting load: a method whose loads
+    climb through the whole program is one phase. `weekly_increment_kg: 0` is a load that
+    never moves (one kettlebell, one stone), shown exactly as written. An exercise with no
+    `starting_load_kg` gets no weight. Under `rpe_autoregulation` it is an RPE target;
+    under **any other model** (`complexity`, `time_to_task`, `intensity_split_shift`,
+    `range_progression`) sets × reps and **no weight at all**.
+  - `time_domain`: the slot's minutes, growing 10 % a week up to the phase kind's
+    ceiling (section 5: a `base` or `specific` phase does not grow them at all, `build`
+    to ×1.25), from the slot's own minutes again in each phase, never longer than the
+    athlete's session.
+  - `distance`: one distance. From 500 m it is scaled by level and phase kind and grows
+    8 % a week; under 500 m (a carry) it is the slot's metres, unchanged. Its `sets` and
+    the exercise's load are **not** prescribed — "6 × 800 m" or a carry's weight is said
+    in an as-written `load` text, or written as `sets_reps` with the distance in the
+    exercise's name.
+  - `amrap_movement` (a movement inside an AMRAP or for-time piece, tied to it by
+    `parent_slot_role`, the parent being the `amrap`, `for_time` or `rounds_for_time`
+    slot that carries the rounds or minutes): its reps or metres a round, no weight.
+  - `static_hold`: sets × seconds as written. `skill_practice`: its minutes.
+
+  A framework's `progression_defaults.ramps` sets its own weekly rates (0 holds minutes
+  or metres still).
+- **Deloads.** `deload_protocol.frequency_weeks` counts the weeks of the phase too: every
+  fourth week *of each phase*. `volume_reduction_pct` is the share kept.
+- **As written.** A slot's `load` text ("75% of training max", "24 kg") reaches the
+  athlete only where the session is prescribed as written: the framework says
+  `prescription_policy: framework` with `progression_model: as_written`, or names the
+  modality in `progression_overrides: {<modality>: as_written}`. Then nothing is computed
+  or ramped — sets, reps, minutes and metres are the slot's own, every week, and no
+  deload is applied (a `deload_protocol` still marks the week as a deload). Without it
+  the modality's own model computes the load and the text is not shown. A slot's `notes`
+  are the athlete's to read beside the prescription; they change nothing. The engine computes no percentage of a max: a percentage is text.
+- **Vocabulary of your own.** The schemas' equipment, modality and movement-pattern lists
+  are the commons'; an id the package's `vocabulary.yaml` declares is accepted wherever
+  they are.
+
 ## 4. What goes in each file
 
 **`philosophy.yaml`** — required: `id` (the folder's name), `name`, `core_principles`,
@@ -157,6 +214,8 @@ entry a `primitive` with a `scope`. One entry is the `headline`.
 
 **Phase kinds** (a phase's `kind`, an archetype's `applicable_phases`): `transition`, `base`, `build`, `specific`, `peak`, `taper`, `maintenance`, `deload`, `recovery`, `rehab`, `post_op`, `active`.
 
+**What a kind does to minutes and metres** (the ceiling a timed or distance slot grows to, as a multiple of what the slot writes; at 1 it does not grow): `transition` ×1, `base` ×1, `build` ×1.25, `specific` ×1, `peak` ×1.4, `taper` ×0.6, `maintenance` ×1, `deload` ×0.6, `recovery` ×1, `rehab` ×1, `post_op` ×1, `active` ×1.
+
 **Training levels**: `novice`, `intermediate`, `advanced`, `elite`.
 
 **Slot types** (`slot_type`): `sets_reps`, `time_domain`, `distance`, `amrap`, `amrap_movement`, `emom`, `for_time`, `rounds_for_time`, `skill_practice`, `static_hold`.
@@ -174,6 +233,8 @@ entry a `primitive` with a `scope`. One entry is the `headline`.
 **Philosophy `progression_philosophy`**: `load_based`, `volume_based`, `complexity_based`, `time_based`, `density_based`, `feel_based`, `rpm_based`, `range_based`.
 
 **Equipment** (`data/commons/constraints/equipment.yaml`; an exercise may also say `none`; a package adds its own in `vocabulary.yaml`): `barbell`, `rack`, `plates`, `kettlebell`, `dumbbell`, `pull_up_bar`, `rings`, `parallettes`, `hangboard`, `rope`, `box`, `dip_belt`, `rower`, `bike`, `ski_erg`, `pool`, `ruck_pack`, `sandbag`, `jump_rope`, `resistance_band`, `ghd`, `medicine_ball`, `sled`, `tire`, `sledgehammer`, `cable_machine`, `hurdles`, `agility_ladder`, `training_partner`, `open_space`.
+
+**Colour families** (a package modality's `display.tint`; `color` is any `#rrggbb`, `icon` a lucide-react name for `web` and an SF Symbol for `ios` and `watch`): `amber`, `cyan`, `emerald`, `lime`, `orange`, `pink`, `red`, `rose`, `sky`, `teal`, `violet`, `yellow`.
 
 **Body regions** (a package pattern's `regions`): `lower`, `upper_push`, `upper_pull`, `trunk`, `cardio`.
 
@@ -227,7 +288,10 @@ Beside the schemas, the `schema` stage holds a package to:
 ## 7. An athlete's own package
 
 A package installed for one athlete (`POST /api/packages {files: {path: yaml text}}`) is
-private to them and read beside the shipped packages only in their own requests.
+private to them and read beside the shipped packages only in their own requests. It has
+no folder: its id is the `id` its `philosophy.yaml` gives it, and the author chooses it.
+Track, phase, day-category, slot-role and analytics-entry ids are local to their file and
+need no prefix.
 
 <!-- gen:limits -->
 - at most **200 files** and **512 KB** of YAML in a package, and **20 packages** an athlete;

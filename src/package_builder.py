@@ -100,13 +100,18 @@ server for several seconds and you have a limited number of them, so write the w
 then fix everything the answer names before you check again. The checks run in stages and stop at the first stage \
 that finds something, so a clean schema stage is usually followed by findings from the next one; that is normal.
 
-When the checks pass, `check_package` also reports `for_this_athlete`: one week generated with the athlete's own \
-days, session length, level and equipment, where the gate's own run uses an athlete with every implement. A missing \
-session or an empty slot there is yours to fix — usually an exercise that needs equipment they did not list, or a \
-session shape with no version for their level — unless the method truly cannot be done without something they lack, \
-in which case leave it and say so in the summary.
+When the checks pass, `check_package` also reports `for_this_athlete`: the whole program of each track, generated \
+with the athlete's own days, session length, level and equipment, where the gate's own run is one week per phase \
+for an athlete with every implement. `program` is that program in lines: every week with its phase and whether it is \
+a deload, every day's session, every slot's prescription (the numbers and an as-written `load` text; a slot's \
+`notes` are not in it, and `check_these` is absent when there is nothing to point out). Read it as the athlete will, against what they asked for: \
+the days, the loads and how they move from week to week, the minutes, the easier weeks, what changes at a new phase. \
+The checks cannot tell a program that passes from one that is right; this is where you can. `check_these` lists \
+things the engine did with your files that authors rarely mean. A missing session, an empty slot, a load that does \
+not move as the method says, a number the athlete cannot do with what they own — these are yours to fix, unless the \
+method truly cannot be done otherwise, in which case leave it and say so in the summary.
 
-When `check_package` answers `ok: true` and that week looks right, call `finish`. If the request cannot be made into \
+When `check_package` answers `ok: true` and that program is what the athlete asked for, call `finish`. If the request cannot be made into \
 a training method at all — it is not about training, or it asks for something no package can express — call \
 `decline` with one or two plain sentences the athlete will read.
 
@@ -130,9 +135,28 @@ week and session length, the archetypes should exist for their level, and the ex
 equipment. Give exercises sensible, conservative starting loads and increments for that level.
 - Use the shared vocabulary — modalities, movement patterns, equipment — wherever it fits. Add a `vocabulary.yaml` \
 only for something the method needs that the shared lists really lack.
-- Every id the package declares starts with the athlete's id prefix, which the request gives you.
+- Every id the package declares starts with the athlete's id prefix, which the request gives you. That includes the \
+package's own id — `philosophy.yaml`'s `id`, which you choose: the prefix and two or three words. There is no folder \
+to match. Exercises are prefixed too: you cannot see the shipped ids.
+- How the engine turns the files into days, loads and deloads is in the spec's section 3, "What the engine does \
+with what you write". Read it before you choose between the scheduler and week templates: the scheduler computes \
+and ramps loads but puts sessions on days itself; week templates fix the days and the workouts, and prescribe as \
+written only when the framework says so.
+- What a package cannot express yet: a load computed as a percentage of a max, a load that goes up only after a \
+session went well, sets or reps that grow week by week at one load (write a phase per step, each with its own \
+version of the session), a set of as many reps as possible recorded as such, a session pinned to a weekday on the \
+scheduler. Write the nearest form, put the rule in the words the athlete reads (a slot's `load` or `notes`, the \
+phase's description), and say in the summary what the app will not do for them.
 - The words in the package — the method's name and description, its beliefs, each phase's focus — are read by the \
 athlete in the app. Write them plainly and specifically, in the second person or neutrally, without hype.
+
+# Revising a method
+
+When the request is a change to a method the athlete already has, the draft starts as that method. Change what the \
+note asks for and what follows from it — a session removed takes its archetype and the exercises nothing else uses \
+with it (`delete_file`, or rewrite the file), and the names and descriptions the athlete reads should still be true \
+afterwards. Keep the package id and every id that still means the same thing, even where its wording has become \
+loose; leave alone what the note does not touch.
 
 # Sources
 
@@ -191,8 +215,8 @@ TOOLS = [
           {'kind': {'type': 'string', 'enum': list(MORE_SCHEMAS)}}),
     _tool('check_package', 'Run the app\'s checks on the whole draft: files, schema, ids, a generated week for every '
           'phase of every track, provenance. Answers {ok, problems: [{stage, code, file, message}], warnings, '
-          'skipped, checks_left} and, when ok, for_this_athlete — a week generated with the athlete\'s own days, '
-          'minutes, level and equipment. Takes several seconds and the number of checks is limited: call it when '
+          'skipped, checks_left} and, when ok, for_this_athlete — the whole program generated with the athlete\'s own '
+          'days, minutes, level and equipment, week by week in `program`, with `check_these`. Takes several seconds and the number of checks is limited: call it when '
           'the draft is complete, and after fixing everything the last answer named.'),
     _tool('finish', 'The method is done. Call it once check_package has answered ok for the draft as it stands; if '
           'the draft changed since, it is checked again first. Ends the build and installs the method.',
@@ -291,65 +315,188 @@ def first_message(session) -> str:
     return '\n'.join(lines)
 
 
-# ── A week as the athlete who asked ──────────────────────────────────────────
+# ── The program as the athlete who asked ─────────────────────────────────────
 
-def athlete_week(answers: dict):
+PROBE = {'weeks': 16, 'tracks': 2, 'chars': 14_000}
+_DAYS = ('Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun')
+
+
+def _day_name(day) -> str:
+    return _DAYS[day - 1] if isinstance(day, int) and 1 <= day <= 7 else str(day)
+
+
+def _prescription(ea: dict) -> str:
+    """One filled slot in a few words: "Back squat 3×5 40 kg"."""
+    from src.analytics.exercise_series import prescribed_text
+    load = ea.get('load') if isinstance(ea.get('load'), dict) else {}
+    text = (prescribed_text(load) or '').split(' | ')[0]      # the numbers, without the engine's note
+    if isinstance(load.get('sets'), int) and load['sets'] > 1 and '×' not in text:
+        text = f"{load['sets']} × {text}"                     # 6 × 800 m, where the words give one distance
+    written = (ea.get('slot') or {}).get('load')
+    if written and load.get('load_note') == written and written not in text:
+        text = f'{text} ({written})'.strip()
+    return f"{(ea.get('exercise') or {}).get('name') or '?'} {text}".strip()
+
+
+def _program_text(weeks: list) -> str:
+    """Every week in lines — its phase, whether it is a deload, each day's
+    session with every slot's prescription — a week that repeats the one
+    before it said once."""
+    out, before = [], None
+    for week in weeks:
+        lines, said = [], {}
+        for day, sessions in sorted((week.get('schedule') or {}).items(), key=lambda kv: str(kv[0])):
+            for s in sessions:
+                slots = [_prescription(ea) if ea.get('exercise') else f"[{ea.get('slot_role') or 'slot'}: EMPTY]"
+                         for ea in s.get('exercises', [])]
+                body = f"{(s.get('archetype') or {}).get('name') or s.get('modality')}: " + '; '.join(slots)
+                lines.append(f"  {_day_name(day)}  " + (f'as {said[body]}' if body in said else body))
+                said.setdefault(body, _day_name(day))
+        head = (f"Week {week.get('week_number')} · {week.get('phase_name') or week.get('phase_id') or week.get('phase')}"
+                f" ({week.get('phase')})" + (' · deload' if week.get('is_deload') else ''))
+        out.append(head + (f" — the same as week {before[0]}" if before and before[1] == lines else ''))
+        if not before or before[1] != lines:
+            out += lines
+            before = (week.get('week_number'), lines)
+    text = '\n'.join(out)
+    if len(text) > PROBE['chars']:
+        text = text[:PROBE['chars']].rsplit('\n', 1)[0] + '\n… (cut here: the program is longer than a check shows)'
+    return text
+
+
+def _check_these(weeks: list) -> list[str]:
+    """What the program shows that an author rarely means, in words: none of
+    it fails a check, all of it is the engine reading the files as written."""
+    notes, unused, restarts = [], [], []
+    last: dict = {}      # exercise id → (phase id, weight, week) of its last week that was not a deload
+    for week in weeks:
+        seen: dict = {}
+        for sessions in (week.get('schedule') or {}).values():
+            for s in sessions:
+                for ea in s.get('exercises', []):
+                    ex, load, slot = ea.get('exercise') or {}, ea.get('load'), ea.get('slot') or {}
+                    if not ex or not isinstance(load, dict):
+                        continue
+                    written = slot.get('load')
+                    if written and written not in json.dumps(load, ensure_ascii=False) and len(unused) < 3 \
+                            and not any(u[0] == ex.get('name') for u in unused):
+                        unused.append((ex.get('name'), written, _prescription(ea)))
+                    if isinstance(load.get('weight_kg'), (int, float)):
+                        seen.setdefault(ex['id'], (ex.get('name'), load['weight_kg']))
+        for ex_id, (name, weight) in seen.items():
+            prior = last.get(ex_id)
+            if prior and prior[0] != week.get('phase_id') and weight < prior[1] and not week.get('is_deload') \
+                    and len(restarts) < 3:
+                restarts.append(f"{name} {prior[1]:g} kg in week {prior[2]}, {weight:g} kg in week {week.get('week_number')}")
+            if not week.get('is_deload'):
+                last[ex_id] = (week.get('phase_id'), weight, week.get('week_number'))
+    flat, run = [], []
+    for week in list(weeks) + [{}]:
+        shape = None if week.get('is_deload') or not week else (week.get('phase_id'), json.dumps(
+            [[day, [_prescription(ea) for s in sessions for ea in s.get('exercises', []) if ea.get('exercise')]]
+             for day, sessions in sorted((week.get('schedule') or {}).items(), key=lambda kv: str(kv[0]))]))
+        if run and shape == run[-1][1]:
+            run.append((week.get('week_number'), shape))
+            continue
+        if len(run) >= 3:
+            flat.append(f'weeks {run[0][0]}–{run[-1][0]}')
+        run = [(week.get('week_number'), shape)] if shape else []
+    if flat:
+        notes.append('Nothing changes from week to week in ' + ', '.join(flat[:4]) + ': the same sessions with the '
+                     'same numbers. If the method progresses there, see what each slot is prescribed from (spec '
+                     'section 3); if it does not, say so in the words the athlete reads.')
+    if unused:
+        notes.append('A slot\'s `load` text is not in its prescription: '
+                     + '; '.join(f'{n} writes "{w}" and is prescribed as "{p}"' for n, w, p in unused)
+                     + '. The text is shown only where the session is prescribed as written — the framework\'s '
+                     '`prescription_policy: framework` with `progression_model: as_written`, or its '
+                     '`progression_overrides` for that modality; otherwise the modality\'s own model computes the load.')
+    if restarts:
+        notes.append('Loads start again at a new phase (' + '; '.join(restarts) + '): a computed load counts the '
+                     'weeks of its phase. A method whose loads climb through the whole program is one phase.')
+    return notes
+
+
+def athlete_program(answers: dict):
     """A probe for package_store.check: with the draft laid out and every gate
-    passed, one week of the first track generated with the athlete's own
-    constraints — what they will get, where the gate's smoke run is an
-    intermediate with everything."""
-    def probe(package_id: str) -> dict:
-        from src import goals, loader, package_smoke, phases
+    passed, each track's whole program generated with the athlete's own
+    constraints — what they will get, week by week, where the gate's smoke run
+    is one week per phase for an intermediate with everything."""
+    def one(package_id, phil, track, frameworks, fw_by_id, data) -> dict:
+        from src import goals, package_smoke
         from src.generator import generate
         from src.validator import validate
+        phase = track['phases'][0]
+        goal = goals.philosophy_to_goal(package_id, frameworks, track_id=track['id'])
+        constraints = package_smoke.phase_constraints(goal, phase, fw_by_id[phase['framework_id']],
+                                                      package_smoke.days_for(track, fw_by_id))
+        if 'days' in answers:
+            constraints['days_per_week'] = answers['days']
+        if 'minutes' in answers:
+            constraints['session_time_minutes'] = answers['minutes']
+        if 'level' in answers:
+            constraints['training_level'] = answers['level']
+        if 'equipment' in answers:
+            constraints['equipment'] = answers['equipment']
+        out: dict = {'track': track['id'], 'phase': phase['id'],
+                     'as': {'days_per_week': constraints['days_per_week'],
+                            'session_time_minutes': constraints['session_time_minutes'],
+                            'training_level': constraints['training_level'],
+                            'equipment': constraints['equipment'] if 'equipment' in answers else 'everything'}}
+        if 'equipment' not in answers:
+            out['as']['note'] = ('the athlete listed no equipment, so this was generated with every implement to '
+                                 'hand: it does not show what they get without one')
+        archetypes = [a for a in data['archetypes'] if a.get('_package') == package_id]
+        verdict = validate(goal, constraints, archetypes, data['modalities'], data['injury_flags'])
+        out['feasible'] = verdict.feasible
+        out['errors'] = [{'code': e['code'], 'message': e['message']} for e in verdict.errors][:8]
+        out['warnings'] = [{'code': w['code'], 'message': w['message']} for w in verdict.warnings][:8]
+        if not verdict.feasible:
+            return out
+        written = sum(p.get('weeks') or 0 for p in track['phases']) or 4
+        shown = max(1, min(written, PROBE['weeks']))
+        raw = generate(goal_id=goal['id'], goal_dict=goal, constraints=constraints, num_weeks=shown,
+                       output_format='dict')
+        weeks = raw.get('weeks') or [{}]
+        out['week'] = [{'day': day, 'modality': s.get('modality'), 'archetype': (s.get('archetype') or {}).get('id'),
+                        'exercises': sum(1 for e in s.get('exercises', []) if e.get('exercise'))}
+                       for day, sessions in sorted((weeks[0].get('schedule') or {}).items(), key=lambda kv: str(kv[0]))
+                       for s in sessions]
+        out['weeks'] = {'shown': len(weeks), 'of': written}
+        out['program'] = _program_text(weeks)
+        report = raw.get('coverage_report') or {}
+        for key in ('unfilled_sessions', 'unfilled_slots', 'substituted_sessions'):
+            if report.get(key):
+                out[key] = report[key][:10]
+        if raw.get('compromises'):
+            out['compromises'] = [str(c)[:300] for c in raw['compromises']][:8]
+        notes = _check_these(weeks)
+        if notes:
+            out['check_these'] = notes
+        return out
+
+    def probe(package_id: str) -> dict:
+        from src import loader, phases
         try:
             phil = next(p for p in loader.load_philosophies() if p['id'] == package_id)
             frameworks = list(loader.load_all_frameworks().values())
             fw_by_id = {f['id']: f for f in frameworks}
             data = loader.load_all_data()
-            track = phases.tracks_of(phil)[0]
-            phase = track['phases'][0]
-            goal = goals.philosophy_to_goal(package_id, frameworks, track_id=track['id'])
-            constraints = package_smoke.phase_constraints(goal, phase, fw_by_id[phase['framework_id']],
-                                                          package_smoke.days_for(track, fw_by_id))
-            if 'days' in answers:
-                constraints['days_per_week'] = answers['days']
-            if 'minutes' in answers:
-                constraints['session_time_minutes'] = answers['minutes']
-            if 'level' in answers:
-                constraints['training_level'] = answers['level']
-            if 'equipment' in answers:
-                constraints['equipment'] = answers['equipment']
-            out: dict = {'track': track['id'], 'phase': phase['id'],
-                         'as': {'days_per_week': constraints['days_per_week'],
-                                'session_time_minutes': constraints['session_time_minutes'],
-                                'training_level': constraints['training_level'],
-                                'equipment': constraints['equipment'] if 'equipment' in answers else 'everything'}}
-            archetypes = [a for a in data['archetypes'] if a.get('_package') == package_id]
-            verdict = validate(goal, constraints, archetypes, data['modalities'], data['injury_flags'])
-            out['feasible'] = verdict.feasible
-            out['errors'] = [{'code': e['code'], 'message': e['message']} for e in verdict.errors][:8]
-            out['warnings'] = [{'code': w['code'], 'message': w['message']} for w in verdict.warnings][:8]
-            if not verdict.feasible:
-                return out
-            raw = generate(goal_id=goal['id'], goal_dict=goal, constraints=constraints, num_weeks=1,
-                           output_format='dict')
-            week = (raw.get('weeks') or [{}])[0]
-            out['week'] = [{'day': day, 'modality': s.get('modality'), 'archetype': (s.get('archetype') or {}).get('id'),
-                            'exercises': sum(1 for e in s.get('exercises', []) if e.get('exercise'))}
-                           for day, sessions in sorted((week.get('schedule') or {}).items(), key=lambda kv: str(kv[0]))
-                           for s in sessions]
-            report = raw.get('coverage_report') or {}
-            for key in ('unfilled_sessions', 'unfilled_slots', 'substituted_sessions'):
-                if report.get(key):
-                    out[key] = report[key][:10]
-            if raw.get('compromises'):
-                out['compromises'] = [str(c)[:300] for c in raw['compromises']][:8]
+            tracks = phases.tracks_of(phil)
+            out = one(package_id, phil, tracks[0], frameworks, fw_by_id, data)
+            more = [one(package_id, phil, t, frameworks, fw_by_id, data) for t in tracks[1:PROBE['tracks']]]
+            if more:
+                out['more_tracks'] = more
+            if len(tracks) > PROBE['tracks']:
+                out['tracks_not_shown'] = [t['id'] for t in tracks[PROBE['tracks']:]]
             return out
         except Exception as e:   # the probe is advice; it never fails a check that passed
-            _log.warning('athlete week probe failed: %s', e)
+            _log.warning('athlete program probe failed: %s', e)
             return {'error': f'{type(e).__name__}: {e}'[:300]}
     return probe
+
+
+athlete_week = athlete_program      # the name tools/eval_package_builder.py and older callers use
 
 
 # ── The tools ────────────────────────────────────────────────────────────────
@@ -405,11 +552,11 @@ class _Run:
         return _schema(kind), False
 
     def _check(self) -> dict:
-        """The gates on the draft as it stands (counted), with the week as the
+        """The gates on the draft as it stands (counted), with the program as the
         athlete; a revision that renamed its package is a problem too."""
         self.usage['checks'] += 1
         self.session.save(stage='checking', detail='Checking the method', checks=self.usage['checks'])
-        result = self.session.check(probe=athlete_week(answers_of(self.session.request)))
+        result = self.session.check(probe=athlete_program(answers_of(self.session.request)))
         revise = self.session.request.get('revise')
         if revise and result.get('package') != revise['packageId']:
             result = {**result, 'ok': False, 'problems': [{

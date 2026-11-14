@@ -180,6 +180,10 @@ def test_built():
           week.get('feasible') is True and week.get('as', {}).get('days_per_week') == 4
           and week['as']['session_time_minutes'] == 45 and week['as']['equipment'] == 'everything'
           and len(week.get('week') or []) == 4, week)
+    check('whole: every week of the track in lines, and a word on the equipment nobody listed',
+          week.get('weeks', {}).get('shown') == week['weeks']['of'] > 1 and week['program'].startswith('Week 1 · ')
+          and f"Week {week['weeks']['shown']} · " in week['program'] and '  Mon  ' in week['program']
+          and 'every implement' in week['as'].get('note', ''), {k: v for k, v in week.items() if k != 'week'})
     usage = row['usage']
     check('the usage is recorded on the build', usage['turns'] == 3 and usage['checks'] == 1
           and usage['output_tokens'] == 300 and usage['cache_read_input_tokens'] == 3000 and usage['model'] == 'scripted',
@@ -479,6 +483,57 @@ def test_athlete_week():
                or any(s['exercises'] == 0 for s in week.get('week', []))), week)
 
 
+def _week(number, phase, sessions, deload=False):
+    return {'week_number': number, 'phase': 'build', 'phase_id': phase, 'phase_name': phase.title(),
+            'is_deload': deload, 'schedule': {day: [s] for day, s in sessions.items()}}
+
+
+def _session(name, *slots):
+    return {'archetype': {'name': name}, 'modality': 'max_strength', 'exercises': [
+        {'exercise': {'id': ex, 'name': ex.title()}, 'slot_role': ex, 'slot': slot, 'load': load}
+        for ex, slot, load in slots]}
+
+
+def test_program_text():
+    print('the program in lines')
+    squat = lambda kg, **slot: ('squat', slot, {'sets': 3, 'reps': 5, 'weight_kg': kg})   # noqa: E731
+    weeks = [_week(1, 'first', {1: _session('Legs', squat(40.0)), 3: _session('Legs', squat(40.0))}),
+             _week(2, 'first', {1: _session('Legs', squat(40.0)), 3: _session('Legs', squat(40.0))}),
+             _week(3, 'first', {1: _session('Legs', squat(45.0)), 3: {**_session('Legs', squat(45.0)), 'exercises': [
+                 {'exercise': None, 'slot_role': 'carry', 'slot': {}}]}}),
+             _week(4, 'second', {1: _session('Legs', squat(40.0))})]
+    text = package_builder._program_text(weeks)
+    check('each week leads with its phase, each day with its session and every slot\'s numbers',
+          'Week 1 · First (build)\n  Mon  Legs: Squat 3 × 5 @ 40 kg' in text, text)
+    check('a day that repeats an earlier one and a week that repeats the last are said once',
+          '  Wed  as Mon' in text and 'Week 2 · First (build) — the same as week 1' in text, text)
+    check('an empty slot is named', '[carry: EMPTY]' in text, text)
+    notes = package_builder._check_these(weeks)
+    check('a load that starts again at a new phase is pointed out, with its numbers',
+          len(notes) == 1 and 'Squat 45 kg in week 3, 40 kg in week 4' in notes[0] and 'one phase' in notes[0], notes)
+    written = [_week(1, 'first', {1: _session('Press', ('press', {'load': '85% of training max'},
+                                                        {'sets': 1, 'reps': 5, 'weight_kg': 40.0}))})]
+    notes = package_builder._check_these(written)
+    check('so is a written load the prescription does not carry, with what would carry it',
+          len(notes) == 1 and '85% of training max' in notes[0] and 'prescription_policy: framework' in notes[0], notes)
+    as_written = [_week(1, 'first', {1: _session('Press', ('press', {'load': '85% of training max'},
+                                                           {'sets': 1, 'reps': 5, 'load_note': '85% of training max'}))})]
+    check('and nothing is said when it does, where the line shows it',
+          package_builder._check_these(as_written) == []
+          and '(85% of training max)' in package_builder._program_text(as_written),
+          package_builder._program_text(as_written))
+    same = [_week(n, 'first', {1: _session('Legs', squat(40.0))}) for n in (1, 2, 3)] \
+        + [_week(4, 'first', {1: _session('Legs', squat(40.0))}, deload=True)]
+    notes = package_builder._check_these(same)
+    check('and three weeks running with the same sessions and numbers', len(notes) == 1 and 'weeks 1–3' in notes[0], notes)
+    deload = [_week(1, 'first', {1: _session('Legs', squat(50.0))}),
+              _week(2, 'second', {1: _session('Legs', squat(45.0))}, deload=True)]
+    check('a deload week\'s lighter load is not a restart', package_builder._check_these(deload) == [])
+    long = package_builder._program_text([_week(n, 'first', {1: _session('Legs', squat(40.0 + n))}) for n in range(1, 900)])
+    check('a program longer than a check shows is cut at a line, and says so',
+          len(long) < package_builder.PROBE['chars'] + 80 and long.endswith('than a check shows)'), len(long))
+
+
 def test_routes():
     print('through the routes and the worker')
     clean()
@@ -541,7 +596,7 @@ def test_imports():
 
 if __name__ == '__main__':
     for test in (test_built, test_fix_and_retry, test_tools, test_stops, test_budgets, test_model_errors, test_resume,
-                 test_revise, test_athlete_week, test_routes, test_imports):
+                 test_revise, test_athlete_week, test_program_text, test_routes, test_imports):
         test()
     clean()
     print()
