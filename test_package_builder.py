@@ -9,7 +9,7 @@ real: the tools, the gates on the draft (the from-scratch test package,
 test_packages/scratch_minimal), the worker, the store, the install and the
 routes.
 
-Run: SUPABASE_URL='' .venv/bin/python test_package_builder.py
+Run: SUPABASE_URL='' .venv/bin/python test_package_builder.py   (--write re-records the web's fixture)
 """
 from __future__ import annotations
 
@@ -594,10 +594,256 @@ def test_imports():
           wanted <= set(inspect.signature(stream).parameters), wanted - set(inspect.signature(stream).parameters))
 
 
+# ── The web's recorded answers ───────────────────────────────────────────────
+
+FIXTURE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'frontend', 'src', 'mocks', 'fixtures', 'methods.json')
+
+
+def _steady(value, names):
+    """A recorded answer without what changes from run to run: build ids and
+    timestamps become fixed ones."""
+    if isinstance(value, dict):
+        out = {}
+        for k, v in value.items():
+            if k in ('createdAt', 'updatedAt') and v:
+                out[k] = '2026-11-13 10:00:00+00:00'
+            elif k == 'id' and isinstance(v, str) and v in names:
+                out[k] = names[v]
+            elif k == 'revision' and isinstance(v, int):
+                out[k] = 1
+            elif k == 'remaining' and isinstance(v, int):
+                out[k] = 4
+            elif k == 'seconds' and 'inputTokens' in value:
+                out[k] = 42.0
+            else:
+                out[k] = _steady(v, names)
+        return out
+    if isinstance(value, list):
+        return [_steady(v, names) for v in value]
+    return value
+
+
+def _shape(value):
+    """The keys of an answer, all the way down (a list by its first item)."""
+    if isinstance(value, dict):
+        return {k: _shape(v) for k, v in sorted(value.items())}
+    if isinstance(value, list):
+        return [_shape(value[0])] if value else []
+    return type(value).__name__ if value is not None else 'null'
+
+
+def recorded() -> dict:
+    """What the routes answer through a method's life: a build running, done
+    and failed, and the methods list while one runs and once it is built."""
+    clean()
+    for row in build_store.recent(ME, 50):
+        if row['status'] in build_store.OPEN:
+            build_store.finish(row['id'], 'cancelled')
+    build_worker.BUILDER = package_builder.build
+    broken = dict(FILES)
+    broken['exercises.yaml'] = 'exercises: []\n'
+    package_builder.MODEL_TURN = Script(write_all(broken), say(use('check_package')), say(use('list_files')))
+    saved = dict(package_builder.LIMITS)
+    package_builder.LIMITS['turns'] = 3
+    try:
+        failed = client.post('/api/methods/builds', json={'description': DESCRIPTION, 'answers': ANSWERS}).get_json()['build']['id']
+        build_worker.join(120)
+        build_worker.drain()
+    finally:
+        package_builder.LIMITS.update(saved)
+    failed_build = client.get(f'/api/methods/builds/{failed}').get_json()
+
+    # A build held at its second turn: what a client polling it sees.
+    row = build_store.create(ME, {'description': DESCRIPTION, 'answers': ANSWERS, 'pastedText': '', 'webSearch': False})
+    build_store.claim_next()
+    build_store.save(row['id'], progress={'stage': 'writing', 'detail': '4 files written', 'turns': 2, 'checks': 0, 'files': 4,
+                                          'problems': 0})
+    running_build = client.get(f"/api/methods/builds/{row['id']}").get_json()
+    while_running = client.get('/api/methods').get_json()
+    package_builder.MODEL_TURN = Script(write_all(), say(use('check_package')),
+                                        say(use('finish', summary='Two stone days and two easy walks a week, eight '
+                                                'weeks. The stone work is kept light for the first fortnight.')))
+    try:
+        build_worker.run_build(build_store.get(None, row['id']))
+    finally:
+        package_builder.MODEL_TURN = None
+    done_build = client.get(f"/api/methods/builds/{row['id']}").get_json()
+    built = client.get('/api/methods').get_json()
+    names = {failed: 'build-failed', row['id']: 'build-1'}
+    return _steady({'running': running_build, 'done': done_build, 'failed': failed_build,
+                    'methodsWhileRunning': while_running, 'methods': built,
+                    'unavailable': {**built, 'available': False, 'reason': 'no_model_key'}}, names)
+
+
+def test_fixture(write: bool):
+    print("the web's recorded answers")
+    fresh = recorded()
+    if write:
+        with open(FIXTURE, 'w', encoding='utf-8') as fh:
+            json.dump(fresh, fh, indent=2, ensure_ascii=False)
+            fh.write('\n')
+        print(f'  wrote {os.path.relpath(FIXTURE)}')
+        return
+    try:
+        with open(FIXTURE, encoding='utf-8') as fh:
+            kept = json.load(fh)
+    except OSError:
+        kept = None
+    check('frontend/src/mocks/fixtures/methods.json has the shape the routes answer with (--write re-records it)',
+          kept is not None and _shape(kept) == _shape(fresh),
+          'run: .venv/bin/python test_package_builder.py --write')
+    check('a running build is the list\'s first build, and a built method is listed',
+          fresh['methodsWhileRunning']['builds'][0]['status'] == 'running' and fresh['methods']['methods'][0]['id'] == PKG
+          and fresh['done']['build']['result']['packageId'] == PKG and fresh['failed']['build']['error']['problems'])
+
+
+# ── Dev Lab ▸ Builds ─────────────────────────────────────────────────────────
+
+BUILDS_FIXTURE = os.path.join(os.path.dirname(FIXTURE), 'builds.json')
+
+
+def _two_builds() -> tuple[str, str]:
+    """A build that fixed what its first check found, and one that ran out of
+    turns after a reply cut off at the output limit. → their ids."""
+    clean()
+    for row in build_store.recent(ME, 50):
+        if row['status'] in build_store.OPEN:
+            build_store.finish(row['id'], 'cancelled')
+    broken = dict(FILES)
+    broken['exercises.yaml'] = 'exercises: []\n'
+    done = run(Script(
+        say(text('I will write the four files first.'), *write_all(broken)['content'], out=4000, input_tokens=9000,
+            cache_read_input_tokens=0, cache_creation_input_tokens=30000),
+        say(use('check_package'), out=200),
+        say({'type': 'thinking', 'thinking': '', 'signature': 's'}, text('The stone slots are empty: the exercises are missing.'),
+            use('write_file', path='exercises.yaml', content=FILES['exercises.yaml']), out=1500),
+        say(use('check_package'), out=150),
+        say(use('finish', summary='Two stone days and two easy walks a week.'), out=120)))
+    failed = run(Script(write_all(broken), say(text('…'), stop='max_tokens', out=32000), say(use('check_package')),
+                        say(use('list_files'))),
+                 request={'description': DESCRIPTION, 'answers': ANSWERS, 'pastedText': 'Stones, twice a week.',
+                          'webSearch': True}, limits={'turns': 4})
+    return done['id'], failed['id']
+
+
+def test_build_report(write: bool):
+    print('Dev Lab ▸ Builds: what a build did')
+    from src import build_report
+    done_id, failed_id = _two_builds()
+    other = build_store.create('someone-else', {'description': DESCRIPTION, 'answers': {}})
+    build_store.finish(other['id'], 'cancelled')
+
+    listed = client.get('/api/dev/builds')
+    body = listed.get_json()
+    ids = [b['id'] for b in body['builds']]
+    check('the list is the athlete\'s own builds, newest first, without draft or transcript',
+          listed.status_code == 200 and ids[:2] == [failed_id, done_id] and other['id'] not in ids
+          and not any(k in b for b in body['builds'] for k in ('transcript', 'draft_files', 'files', 'turns')), ids)
+    done = next(b for b in body['builds'] if b['id'] == done_id)
+    used = done['usage']
+    check('each with what it spent', used['turns'] == 5 and used['checks'] == 2 and used['outputTokens'] == 5970
+          and used['inputTokens'] == 9040 and used['cacheReadTokens'] == 4000 and used['cacheWriteTokens'] == 30000
+          and used['model'] == 'scripted', used)
+    price = package_builder.PRICE
+    expected = (9040 * price['input_tokens'] + 5970 * price['output_tokens'] + 4000 * price['cache_read_input_tokens']
+                + 30000 * price['cache_creation_input_tokens']) / 1e6
+    check('and its cost at the model\'s list price', abs(done['costUsd'] - expected) < 0.0001, (done['costUsd'], expected))
+    totals = body['totals']
+    mine = [b for b in body['builds']]
+    check('the totals are the listed builds\' sums', totals['builds'] == len(mine)
+          and totals['outputTokens'] == sum(b['usage']['outputTokens'] for b in mine)
+          and totals['byStatus'].get('done', 0) >= 1 and totals['byStatus'].get('failed', 0) >= 1
+          and abs(totals['costUsd'] - sum(b['costUsd'] for b in mine)) < 0.01 and 0 < totals['doneShare'] < 1, totals)
+    check('limit is honoured', len(client.get('/api/dev/builds?limit=1').get_json()['builds']) == 1)
+
+    detail = client.get(f'/api/dev/builds/{done_id}').get_json()['build']
+    turns, checks = detail['turns'], detail['checks']
+    check('a build in full has its turns in order, each with its calls',
+          [t['n'] for t in turns] == [1, 2, 3, 4, 5]
+          and [c['tool'] for c in turns[0]['calls']] == ['write_file'] * len(FILES)
+          and turns[0]['calls'][0]['bytes'] and turns[0]['calls'][0]['result'].startswith('written: ')
+          and turns[0]['said'] == 'I will write the four files first.' and turns[2]['thought'] and not turns[0]['thought'],
+          [(t['n'], [c['tool'] for c in t['calls']]) for t in turns])
+    check('each turn has its own tokens', turns[0]['tokens'] == {'input': 9000, 'output': 4000, 'cacheRead': 0,
+                                                                 'cacheWrite': 30000}
+          and turns[4]['tokens']['output'] == 120, turns[0]['tokens'])
+    check('the checks are the gate\'s answers: the problems first, then a pass',
+          [c['ok'] for c in checks] == [False, True] and [c['turn'] for c in checks] == [2, 4]
+          and checks[0]['problems'] and all(p['stage'] == 'smoke' and p['code'] == 'unfilled_slot' for p in checks[0]['problems'])
+          and turns[1]['calls'][0]['check'] == 0 and turns[1]['calls'][0]['result'].endswith('to fix')
+          and turns[3]['calls'][0]['result'] == 'passes' and checks[1]['checksLeft'] == package_builder.LIMITS['checks'] - 2,
+          checks[0])
+    athlete = checks[1]['athlete']
+    check('with the program the model was shown for this athlete', athlete and athlete['feasible'] is True
+          and athlete['as']['days_per_week'] == 4 and 'Week 1' in (athlete['program'] or ''), athlete)
+    check('the problems counted by kind', detail['problemCounts'] and detail['problemCounts'][0]['code'] == 'unfilled_slot'
+          and detail['problemCounts'][0]['count'] == len(checks[0]['problems']), detail['problemCounts'])
+    check('the request as it was made, the files as installed, the limits in force',
+          detail['request']['description'] == DESCRIPTION and detail['request']['answers'] == ANSWERS
+          and {f['path']: f['content'] for f in detail['files']} == FILES
+          and detail['limits'] == {'turns': 40, 'checks': 10, 'outputTokens': 200_000, 'seconds': 1500}
+          and detail['result']['packageId'] == PKG and detail['effort'] == 'high', detail['limits'])
+
+    failed = client.get(f'/api/dev/builds/{failed_id}').get_json()['build']
+    check('a reply cut off at the output limit is counted and paid for but is no turn',
+          failed['status'] == 'failed' and failed['error']['code'] == 'budget' and failed['usage']['turns'] == 4
+          and len(failed['turns']) == 3 and len(failed['droppedTurns']) == 1
+          and failed['droppedTurns'][0] == {'stop': 'max_tokens', 'tokens': {'input': 10, 'output': 32000,
+                                                                              'cacheRead': 1000, 'cacheWrite': 0}}
+          and failed['turns'][1]['tokens']['output'] == 100, (failed['usage'], failed['droppedTurns']))
+    check('with what it asked for', failed['webSearch'] is True and failed['pastedChars'] == 21
+          and failed['request']['pastedText'] == 'Stones, twice a week.')
+
+    check('another athlete\'s build is not found', client.get(f"/api/dev/builds/{other['id']}").status_code == 404
+          and client.get('/api/dev/builds/nothing').status_code == 404)
+    os.environ['PACKAGE_BUILDER'] = 'off'
+    try:
+        check('and the routes are the builder\'s: off for an account it is off for',
+              client.get('/api/dev/builds').status_code == 403 and client.get(f'/api/dev/builds/{done_id}').status_code == 403)
+    finally:
+        os.environ.pop('PACKAGE_BUILDER', None)
+
+    old = build_report.conversation([{'role': 'user', 'content': 'x'},
+                                     {'role': 'assistant', 'content': [use('finish', summary='Done.')]},
+                                     {'role': 'user', 'content': [{'type': 'tool_result', 'tool_use_id': 'nope',
+                                                                   'content': 'finished'}]}])
+    check('a row from before per-turn tokens reads without them', old[0][0]['tokens'] is None
+          and old[0][0]['calls'][0]['result'] == 'Done.' and old[1] == [] and old[2] == [])
+    searched = build_report.conversation([
+        {'role': 'user', 'content': [text('request')]},
+        {'role': 'assistant', 'content': [{'type': 'server_tool_use', 'id': 's1', 'name': 'web_search',
+                                           'input': {'query': '5/3/1 four days'}}]},
+        {'role': 'assistant', 'content': [text('Nothing yet.')]},
+        {'role': 'user', 'content': [text('Nothing is finished until you call a tool.')]}])[0]
+    check('a web search is a call with its query, and the loop\'s nudge is a note on the turn before it',
+          searched[0]['calls'][0]['tool'] == 'web_search' and searched[0]['calls'][0]['query'] == '5/3/1 four days'
+          and searched[1]['note'] == 'Nothing is finished until you call a tool.' and searched[0]['note'] is None, searched)
+
+    names = {done_id: 'build-1', failed_id: 'build-failed'}
+    fresh = _steady({'list': {'builds': [b for b in body['builds'] if b['id'] in names], 'totals': build_report.totals(
+                         [b for b in body['builds'] if b['id'] in names])},
+                     'done': {'build': detail}, 'failed': {'build': failed}}, names)
+    if write:
+        with open(BUILDS_FIXTURE, 'w', encoding='utf-8') as fh:
+            json.dump(fresh, fh, indent=2, ensure_ascii=False)
+            fh.write('\n')
+        print(f'  wrote {os.path.relpath(BUILDS_FIXTURE)}')
+        return
+    try:
+        with open(BUILDS_FIXTURE, encoding='utf-8') as fh:
+            kept = json.load(fh)
+    except OSError:
+        kept = None
+    check('frontend/src/mocks/fixtures/builds.json has the shape the routes answer with (--write re-records it)',
+          kept is not None and _shape(kept) == _shape(fresh), 'run: .venv/bin/python test_package_builder.py --write')
+
+
 if __name__ == '__main__':
     for test in (test_built, test_fix_and_retry, test_tools, test_stops, test_budgets, test_model_errors, test_resume,
                  test_revise, test_athlete_week, test_program_text, test_routes, test_imports):
         test()
+    test_fixture('--write' in sys.argv)
+    test_build_report('--write' in sys.argv)
     clean()
     print()
     if FAILURES:

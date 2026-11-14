@@ -1,6 +1,6 @@
 {
   "_comment": "What a package still cannot bring in its own folder, and what a package written at runtime (the LLM package builder, roadmap item 20) still cannot rely on (src/portability.py serves this to Dev Lab ▸ Builder readiness). Each anchor is `path::text` and must still be in that file while the gap is open; test_portability.py fails when one is gone, so closing a gap means changing its status here in the same change. kind: runtime | gate | tooling | commons | code | client | watch | docs | devlab. impact on a dropped-in or built package: blocks (it fails a gate, cannot be written or cannot be served), degrades (it works, worse or silently wrong), cosmetic. status: open | done (with `closed`, the day, and `evidence`, `path::text` of the test that holds it — checked like an anchor) | by_design (the engine's vocabulary is the contract between packages and the engine). roadmap: the step of docs/roadmap.md (9.x, 20.x) that closes it. steps: the roadmap steps of the builder's foundation, in order, each titled as docs/roadmap.md titles it; a step is done when it says so (`done`, the day) or when every gap citing it is.",
-  "verdict": "The code is package-neutral, and since item 20 a package written while the app runs is stored, checked by one gate, read privately beside the shipped ones for its owner, may bring its own vocabulary, and has one spec. The builder (docs/roadmap.md item 21) has its gate, its durable job and its model loop; what is open below is the screens on the web and the phone, the real-model eval and the production steps.",
+  "verdict": "The code is package-neutral, and since item 20 a package written while the app runs is stored, checked by one gate, read privately beside the shipped ones for its owner, may bring its own vocabulary, and has one spec. The builder (docs/roadmap.md item 21) has its gate, its durable job and its model loop; and the web has its screens; what is open below is the phone, the real-model eval and the production steps.",
   "steps": [
     {
       "id": "20.1",
@@ -146,60 +146,86 @@
       "title": "The web's builder zeroes a package's own modalities",
       "kind": "client",
       "impact": "blocks",
-      "detail": "The program builder sends priority overrides built from the modality list compiled into the build, and the server replaces the goal's priorities with them: a method made of its own modalities is sent all zeros and generates nothing.",
+      "detail": "The web's priority vector now covers every modality the source's framework schedules, a package's own included (derivePhilosophyPriorities, deriveBlendedPriorities), and the builder sends no override that only repeats what the source implies (buildPostBody): an override replaces the goal's priorities outright, and the compiled list knew none of a package's modalities, so a method made of its own was sent as all zeros and generated nothing.",
       "anchors": [
         "frontend/src/lib/philosophyPriorities.ts::MODALITY_ORDER"
       ],
       "roadmap": "21.4",
-      "status": "open"
+      "status": "done",
+      "closed": "2026-11-13",
+      "evidence": [
+        "frontend/src/lib/philosophyPriorities.test.ts::gives a modality the package brings itself its share",
+        "frontend/src/api/programs.test.ts::sends no override that only repeats what the source implies"
+      ]
     },
     {
       "id": "web_no_builder",
       "title": "No way to describe a method on the web",
       "kind": "client",
       "impact": "blocks",
-      "detail": "The program builder lists philosophies; it has no card to create one, no progress for a build, and no list of the athlete's own.",
+      "detail": "The program builder's first step has a Your methods group (each method picked like a philosophy, with Revise and Delete; the build that is running; the card to describe another). /program/new/method is the description — the athlete's words, days, session length and level, their profile's equipment, pasted notes, a web-search switch — or the change to one of theirs; /program/new/method/<build> is the build, asked again every two seconds, then the method with Build a program, Read the method and Revise, or why it was not built. A finished build has every list of packages read again.",
       "anchors": [
         "frontend/src/components/builder/ProgramSource.tsx::const MODES"
       ],
       "roadmap": "21.4",
-      "status": "open"
+      "status": "done",
+      "closed": "2026-11-13",
+      "evidence": [
+        "frontend/src/components/methods/methods.test.tsx::sends the description with the athlete",
+        "frontend/src/components/methods/methods.test.tsx::shows the method once built, reads the lists again and builds a program from it",
+        "test_package_builder.py::def test_fixture"
+      ]
     },
     {
       "id": "phone_philosophies_fetched_once",
       "title": "The phone fetches the philosophies once",
       "kind": "client",
       "impact": "degrades",
-      "detail": "A method built while the app is open never appears: the list is loaded when empty and never again.",
+      "detail": "Was: a method built while the app was open never appeared: the list was loaded when empty and never again. Every full load now reads the philosophies again (AppState.reloadPhilosophies), keeping the list it has when the request fails.",
       "anchors": [
-        "ios/TrainingCompanion/AppState.swift::func loadPhilosophiesIfNeeded"
+        "ios/TrainingCompanion/AppState.swift::func reloadPhilosophies"
       ],
       "roadmap": "21.5",
-      "status": "open"
+      "status": "done",
+      "closed": "2026-11-14",
+      "evidence": [
+        "ios/TrainingCompanion/AppState.swift::await reloadPhilosophies()"
+      ]
     },
     {
       "id": "phone_no_builder",
       "title": "No way to describe a method on the phone",
       "kind": "client",
       "impact": "blocks",
-      "detail": "The phone's builder has no card to create a method, no progress for a build, and no list of the athlete's own.",
+      "detail": "The phone's builder leads its first step with Your methods (the build that is running, each method picked like a methodology with About, Revise and Delete, the row to create another). Describe — the athlete's words, days, session length and level, their equipment, pasted notes, a web-search switch, or the change to one of theirs — and the build, asked again every two seconds while its screen is in front, then the method with Build a program with it and Revise, or why it was not built, are pushed inside the builder. A finished build has the methods, the methodologies and the vocabulary read again.",
       "anchors": [
-        "ios/TrainingCompanion/Views/ProgramBuilder/BuilderMethodologyStep.swift::appState.philosophies"
+        "ios/TrainingCompanion/Views/ProgramBuilder/BuilderMethodologyStep.swift::private var yourMethods"
       ],
       "roadmap": "21.6",
-      "status": "open"
+      "status": "done",
+      "closed": "2026-11-14",
+      "evidence": [
+        "ios/TrainingCompanionTests/MethodBuilderTests.swift::testTheListHasTheMethodsAndTheOpenBuild",
+        "ios/TrainingCompanionTests/MethodBuilderTests.swift::testAStartIsABuildOrARefusalInWords",
+        "ios/TrainingCompanion/Views/ProgramBuilder/MethodBuilderViews.swift::struct MethodBuildView"
+      ]
     },
     {
       "id": "builds_not_observable",
       "title": "Nothing shows what a build did",
       "kind": "devlab",
       "impact": "degrades",
-      "detail": "A build's turns, checks, the problems the gate found and the tokens it spent are the only way to judge quality and cost; no screen reads them.",
+      "detail": "Dev Lab ▸ Builds lists the account's own builds with what each spent and their totals, and lays one out in full: the request, each turn's calls, answers and tokens, each check's problems and the program the model was shown, replies thrown away at the output limit and the draft's files (GET /api/dev/builds, src/build_report.py). An owner's view across accounts is not built: a transcript holds what its athlete wrote.",
       "anchors": [
         "frontend/src/pages/DevLab.tsx::DEV_TABS"
       ],
       "roadmap": "21.7",
-      "status": "open"
+      "status": "done",
+      "closed": "2026-11-14",
+      "evidence": [
+        "test_package_builder.py::def test_build_report",
+        "frontend/src/components/devlab/BuildsPanel.test.tsx::says why a build failed and what was thrown away"
+      ]
     },
     {
       "id": "production_not_ready",
@@ -458,13 +484,19 @@
       "title": "The phone's vocabulary is compiled in",
       "kind": "client",
       "impact": "degrades",
-      "detail": "The web now draws a package's modality from the served display and lists a package's implements in its pickers (20.6, 20.7). The phone and the watches still read only the tables generated into them at build time: a package modality draws in the neutral style with its id for a name, and the phone's equipment picker cannot offer a package implement — an athlete who builds on the phone cannot tick it, so the exercises that need it are filtered out. Closing it means the Apple targets reading GET /api/modalities and /api/equipment, and a release.",
+      "detail": "Was: the phone and the watches read only the tables generated into them at build time, so a package modality drew in the neutral style with its id for a name and the phone's equipment picker could not offer a package implement. The phone now reads GET /api/modalities and /api/equipment for what the compiled tables lack, keeps a package's modalities in the app group for its widgets and relays each session's modalityDisplay to the Apple Watch; every Apple target looks a modality up through ClientVocab.modality. A package's implements are a group of their own in the phone's pickers. The Garmin draws an unknown modality in its neutral colour with the session's name.",
       "anchors": [
-        "ios/TrainingCompanion/ModalityStyle.swift::static func",
-        "tools/gen_client_vocab.py::ClientVocab.swift"
+        "tools/gen_client_vocab.py::static func modality(_ id: String)",
+        "ios/TrainingCompanion/AppState.swift::func loadVocabulary"
       ],
       "roadmap": "21.5",
-      "status": "open"
+      "status": "done",
+      "closed": "2026-11-14",
+      "evidence": [
+        "ios/TrainingCompanionTests/ServedVocabularyTests.swift::testARememberedModalityIsFoundByEveryReader",
+        "test_package_vocabulary.py::modalityDisplay",
+        "ios/TrainingCompanion/ServedVocabulary.swift::From your methods"
+      ]
     },
     {
       "id": "no_package_spec",

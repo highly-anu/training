@@ -190,7 +190,10 @@ struct BuilderDebugLaunch {
     let philosophyId: String?
 
     static var current: BuilderDebugLaunch? {
-        guard let value = ProcessInfo.processInfo.environment["TC_BUILDER"], !value.isEmpty else { return nil }
+        guard let value = ProcessInfo.processInfo.environment["TC_BUILDER"], !value.isEmpty else {
+            // A method route alone opens the builder on its first step.
+            return MethodRoute.debugLaunch == nil ? nil : BuilderDebugLaunch(step: 1, philosophyId: nil)
+        }
         let parts = value.split(separator: ":", maxSplits: 1).map(String.init)
         return BuilderDebugLaunch(step: min(max(Int(parts[0]) ?? 1, 1), 4),
                                   philosophyId: parts.count > 1 ? parts[1] : nil)

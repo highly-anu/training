@@ -312,11 +312,11 @@ private var todayShortLabel: String {
 /// table (ClientVocab.swift, tools/gen_client_vocab.py).
 enum WidgetModalityStyle {
     static func color(for id: String) -> Color {
-        ClientVocab.modalities[id].map { ClientVocab.color($0.hex) } ?? .secondary
+        ClientVocab.modality(id).map { ClientVocab.color($0.hex) } ?? .secondary
     }
 
     static func label(for id: String) -> String {
-        ClientVocab.modalities[id]?.label ?? id.replacingOccurrences(of: "_", with: " ").capitalized
+        ClientVocab.modality(id)?.label ?? id.replacingOccurrences(of: "_", with: " ").capitalized
     }
 
     /// A session's workout icon (design-system §6.40), else its modality's.
@@ -326,6 +326,6 @@ enum WidgetModalityStyle {
     }
 
     static func icon(for id: String) -> String {
-        ClientVocab.modalities[id]?.icon ?? "figure.strengthtraining.traditional"
+        ClientVocab.modality(id)?.icon ?? "figure.strengthtraining.traditional"
     }
 }

@@ -6,16 +6,16 @@ import SwiftUI
 
 struct ModalityStyle {
     static func color(for modalityId: String) -> Color {
-        ClientVocab.modalities[modalityId].map { ClientVocab.color($0.hex) } ?? .secondary
+        ClientVocab.modality(modalityId).map { ClientVocab.color($0.hex) } ?? .secondary
     }
 
     static func label(for modalityId: String) -> String {
-        ClientVocab.modalities[modalityId]?.label
+        ClientVocab.modality(modalityId)?.label
             ?? modalityId.replacingOccurrences(of: "_", with: " ").capitalized
     }
 
     static func icon(for modalityId: String) -> String {
-        ClientVocab.modalities[modalityId]?.icon ?? "figure.strengthtraining.traditional"
+        ClientVocab.modality(modalityId)?.icon ?? "figure.strengthtraining.traditional"
     }
 }
 
