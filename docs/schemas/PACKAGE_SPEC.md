@@ -303,6 +303,13 @@ need no prefix.
 It can never replace anything shipped: a shipped framework, archetype or philosophy id keeps
 the shipped copy.
 
+The app's builder writes such a package from an athlete's description. This document and
+the philosophy, framework, archetype and exercise schemas are what it is given; its
+`check_package` is section 6's checks on the draft, then the whole program generated for
+the athlete who asked, in lines, so that what the athlete will get can be read before it is
+installed. What it installs is a package as described here and nothing more; revising one
+writes its files again under the same id, as a new revision.
+
 ## 8. Common mistakes
 
 - **A phase kind used as a phase id.** `kind: base` is shared vocabulary; `id` and `name`

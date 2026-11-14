@@ -50,7 +50,7 @@
       "status": "failed",
       "progress": {
         "stage": "fixing",
-        "detail": "Reading",
+        "detail": "3 things to fix",
         "turns": 3,
         "checks": 1,
         "files": 7,
@@ -116,7 +116,7 @@
         "status": "failed",
         "progress": {
           "stage": "fixing",
-          "detail": "Reading",
+          "detail": "3 things to fix",
           "turns": 3,
           "checks": 1,
           "files": 7,
@@ -154,7 +154,7 @@
         "updatedAt": "2026-11-13 10:00:00+00:00"
       },
       {
-        "id": "199fe4cb83cd4544b24231bc0fd687c9",
+        "id": "f23053fb59a94bfd8d870fedc019ba43",
         "status": "cancelled",
         "progress": {
           "stage": "reading",
@@ -171,7 +171,7 @@
         "updatedAt": "2026-11-13 10:00:00+00:00"
       },
       {
-        "id": "15c820329aae450793ea05c8456a181e",
+        "id": "b36c288abf1b42fbb612fc3415f7f12d",
         "status": "done",
         "progress": {
           "stage": "done",
@@ -194,11 +194,11 @@
         "updatedAt": "2026-11-13 10:00:00+00:00"
       },
       {
-        "id": "e8e55420dac84807a5f1d3cd3844fe29",
+        "id": "cc0cb33f1ebb44cea762e39b35f5d230",
         "status": "failed",
         "progress": {
           "stage": "fixing",
-          "detail": "Reading",
+          "detail": "Reviewing the draft",
           "turns": 3,
           "checks": 1,
           "files": 7,
@@ -263,7 +263,7 @@
         "status": "failed",
         "progress": {
           "stage": "fixing",
-          "detail": "Reading",
+          "detail": "3 things to fix",
           "turns": 3,
           "checks": 1,
           "files": 7,
@@ -301,7 +301,7 @@
         "updatedAt": "2026-11-13 10:00:00+00:00"
       },
       {
-        "id": "199fe4cb83cd4544b24231bc0fd687c9",
+        "id": "f23053fb59a94bfd8d870fedc019ba43",
         "status": "cancelled",
         "progress": {
           "stage": "reading",
@@ -318,7 +318,7 @@
         "updatedAt": "2026-11-13 10:00:00+00:00"
       },
       {
-        "id": "15c820329aae450793ea05c8456a181e",
+        "id": "b36c288abf1b42fbb612fc3415f7f12d",
         "status": "done",
         "progress": {
           "stage": "done",
@@ -341,11 +341,11 @@
         "updatedAt": "2026-11-13 10:00:00+00:00"
       },
       {
-        "id": "e8e55420dac84807a5f1d3cd3844fe29",
+        "id": "cc0cb33f1ebb44cea762e39b35f5d230",
         "status": "failed",
         "progress": {
           "stage": "fixing",
-          "detail": "Reading",
+          "detail": "Reviewing the draft",
           "turns": 3,
           "checks": 1,
           "files": 7,
@@ -410,7 +410,7 @@
         "status": "failed",
         "progress": {
           "stage": "fixing",
-          "detail": "Reading",
+          "detail": "3 things to fix",
           "turns": 3,
           "checks": 1,
           "files": 7,
@@ -448,7 +448,7 @@
         "updatedAt": "2026-11-13 10:00:00+00:00"
       },
       {
-        "id": "199fe4cb83cd4544b24231bc0fd687c9",
+        "id": "f23053fb59a94bfd8d870fedc019ba43",
         "status": "cancelled",
         "progress": {
           "stage": "reading",
@@ -465,7 +465,7 @@
         "updatedAt": "2026-11-13 10:00:00+00:00"
       },
       {
-        "id": "15c820329aae450793ea05c8456a181e",
+        "id": "b36c288abf1b42fbb612fc3415f7f12d",
         "status": "done",
         "progress": {
           "stage": "done",
@@ -488,11 +488,11 @@
         "updatedAt": "2026-11-13 10:00:00+00:00"
       },
       {
-        "id": "e8e55420dac84807a5f1d3cd3844fe29",
+        "id": "cc0cb33f1ebb44cea762e39b35f5d230",
         "status": "failed",
         "progress": {
           "stage": "fixing",
-          "detail": "Reading",
+          "detail": "Reviewing the draft",
           "turns": 3,
           "checks": 1,
           "files": 7,

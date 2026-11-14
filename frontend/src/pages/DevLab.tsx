@@ -30,6 +30,7 @@ import { ObjectBrowser } from '@/components/objectbrowser/ObjectBrowser'
 import { HeatmapPanel } from '@/components/devlab/heatmap/HeatmapPanel'
 import { ModelInteractionPanel } from '@/components/devlab/ModelInteractionPanel'
 import { ReadinessPanel } from '@/components/devlab/ReadinessPanel'
+import { BuildsPanel } from '@/components/devlab/BuildsPanel'
 import { ImpactPanel } from '@/components/devlab/ImpactPanel'
 import type { GenerateParams } from '@/api/programs'
 import type { EquipmentId, FatigueState, InjuryFlagId, TrainingLevel, TracedProgram, WeekData } from '@/api/types'
@@ -267,7 +268,7 @@ function ProgramOutputs({ program }: { program: TracedProgram }) {
 
 // ─── DevLab page ──────────────────────────────────────────────────────────────
 
-type DevTab = 'pipeline' | 'impact' | 'browser' | 'heatmap' | 'interactions' | 'readiness'
+type DevTab = 'pipeline' | 'impact' | 'browser' | 'heatmap' | 'interactions' | 'readiness' | 'builds'
 
 const DEV_TABS: { id: DevTab; label: string }[] = [
   { id: 'pipeline', label: 'Pipeline Trace' },
@@ -276,6 +277,7 @@ const DEV_TABS: { id: DevTab; label: string }[] = [
   { id: 'heatmap', label: 'Ontology' },
   { id: 'interactions', label: 'Model Interactions' },
   { id: 'readiness', label: 'Builder readiness' },
+  { id: 'builds', label: 'Builds' },
 ]
 
 export function DevLab() {
@@ -484,6 +486,12 @@ export function DevLab() {
       {devTab === 'readiness' && (
         <div className="flex-1 overflow-y-auto">
           <ReadinessPanel />
+        </div>
+      )}
+
+      {devTab === 'builds' && (
+        <div className="flex-1 overflow-y-auto">
+          <BuildsPanel />
         </div>
       )}
 

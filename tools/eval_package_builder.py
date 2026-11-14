@@ -31,9 +31,6 @@ import time
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
-# $ per million tokens, Claude Opus 5.5 (input, output, cache read, cache write at 5 minutes).
-PRICE = {'input_tokens': 4.0, 'output_tokens': 20.0, 'cache_read_input_tokens': 0.20,
-         'cache_creation_input_tokens': 5.0}
 
 HOME_GYM = ['barbell', 'rack', 'plates', 'pull_up_bar', 'open_space']
 CASES = [
@@ -82,7 +79,8 @@ CASES = [
 
 
 def cost(usage: dict) -> float:
-    return sum((usage.get(k) or 0) * price for k, price in PRICE.items()) / 1e6
+    from src import build_report
+    return build_report.cost_usd(usage)
 
 
 def main() -> int:

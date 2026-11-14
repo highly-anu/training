@@ -45,6 +45,10 @@ from src import build_worker, equipment as equipment_ids, levels, package_spec, 
 _log = logging.getLogger(__name__)
 
 MODEL = 'claude-opus-5-5'
+# $ per million tokens at MODEL's list price (input, output, cache read, cache write at 5 minutes): what
+# Dev Lab ▸ Builds and the eval cost a build at.
+PRICE = {'input_tokens': 4.0, 'output_tokens': 20.0, 'cache_read_input_tokens': 0.20,
+         'cache_creation_input_tokens': 5.0}
 EFFORTS = ('low', 'medium', 'high', 'xhigh', 'max')
 BETAS = ['server-side-fallback-2026-07-01']        # `fallbacks: "default"`: a declined request is re-run server-side
 MAX_TOKENS = 32_000                                # one turn's output, thinking included
@@ -709,6 +713,11 @@ def _count(usage: dict, message: dict) -> None:
     usage['web_fetches'] += server.get('web_fetch_requests') or 0
     usage['turns'] += 1
     usage['model'] = message.get('model') or usage.get('model')
+    # Each request's own tokens, for Dev Lab ▸ Builds; `kept` once its turn is in the transcript.
+    usage.setdefault('per_turn', []).append({
+        'in': used.get('input_tokens') or 0, 'out': used.get('output_tokens') or 0,
+        'cached': used.get('cache_read_input_tokens') or 0, 'written': used.get('cache_creation_input_tokens') or 0,
+        'stop': message.get('stop_reason')})
 
 
 def _stage(names: list[str], run: _Run) -> tuple[str, str]:
@@ -812,6 +821,7 @@ def build(session) -> dict:
         cut_off = 0
 
         session.transcript.append({'role': 'assistant', 'content': content})
+        run.usage['per_turn'][-1]['kept'] = True
         if stop == 'pause_turn':
             # A server tool (web search) is still running: send the turn back as it is and the model carries on.
             session.save(stage='researching', detail='Reading about the method', turns=run.usage['turns'])

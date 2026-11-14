@@ -105,7 +105,7 @@ with a new **Overview** (methodology, phases, priority mix) beside it.
 | Library | **Explore** | `/explore` | Philosophies · Frameworks · Modalities · Archetypes · Exercises · Movements · Equipment · Standards | — |
 | You | **Profile** | `/profile` | Athlete (incl. heart-rate zones) · Equipment · Injuries · Schedule · Standards | — |
 | You | **Settings** | `/settings` | Connections · Appearance · Account (· Developer in dev builds and for `dev` users) | — |
-| Dev (build flag) | Dev Lab | `/dev` | Pipeline Trace · Object Browser · Ontology · Model Interactions | — |
+| Dev (build flag, or the `dev` role) | Dev Lab | `/dev` | Pipeline Trace · Impact · Object Browser · Ontology · Model Interactions · Builder readiness · Builds | — |
 
 Flows and details, not nav items: `/program/new` (the builder, launched from the Home
 and Program empty states, the Program header, the settings sheet's Rebuild/New, and
