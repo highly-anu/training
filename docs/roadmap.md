@@ -57,7 +57,7 @@ deferred is under *Later*.
 | 18 | Phone design and interaction uplift: the foundation (1.35), states (1.36), iOS 26 chrome (1.37), discoverable actions (1.38), the screen passes (1.39), motion (1.40) and accessibility with the system surfaces (1.41) are in (*IA*) | P2 | L | iOS |
 | 19 | Web design and interaction uplift: the phone's design language on the web, each rule in one module and held by a test — the foundation, states, feedback, motion, actions and keyboard, colour and accessibility, the page passes and the review fixes are in (*IA*) | P2 | L | web |
 | 20 | LLM package builder — the foundation: all twelve steps are in (the gate, the overlay, storage, per-athlete reference routes, package vocabulary, the spec, the trace and the Dev Lab). Left: the phone reading a package's vocabulary, migration 013 on production, the builder itself | P1 | L | engine, API, web, content |
-| 21 | LLM package builder: an athlete describes a method and gets one to build a program from, on the web and the phone — dev role first. The gate and the methods list are in (21.1); the job, the model loop and the screens are open | P1 | L | API, web, iOS, watch |
+| 21 | LLM package builder: an athlete describes a method and gets one to build a program from, on the web and the phone — dev role first. The gate (21.1), the durable job (21.2), the model loop (21.3), the web's screens (21.4), the phone's vocabulary (21.5) and its screens (21.6) are in; and the Dev Lab's builds view (21.7) are in; the eval against the real model and the production steps are open | P1 | L | API, web, iOS, watch |
 
 ---
 
@@ -2032,30 +2032,142 @@ Training contracts are refused. Not planned: push notifications, sharing a metho
   (name, revision, status, `inUse`) and the limits (`PACKAGE_BUILDER_DAILY_LIMIT`, five a
   day; twenty kept) — so a client shows nothing, or the methods without the way to make
   another. `test_builder_access.py`.
-- **21.2 The build as a durable job (M).** `package_builds` (migration 014): a row per
-  build with its request, draft files, transcript, progress, result and usage; one worker
-  thread, a heartbeat lease, a stale row re-claimed, kicked on enqueue and at startup,
-  cancellable; the transcript saved after every turn so a restart resumes. `POST
-  /api/methods/builds`, `GET …/<id>`, `POST …/<id>/cancel`. The gate's one slot is held
-  around each check only; install takes the passing check it was given.
-- **21.3 The model loop (L).** `src/package_builder.py`: the spec as a cached system
-  prompt; tools to write, read and delete draft files, read a schema, check the package
-  and finish; web search and fetch when asked for; budgets on turns, checks, tokens and
-  time; a refusal ends the build in plain words. `tools/eval_package_builder.py` runs real
-  descriptions against the real model — with approval, it costs money.
-- **21.4 Web: the builder in the program builder (M).** The priorities bug fixed first
-  (a package's own modalities were sent as zero). A "Your methods" group and a "Describe
-  your own method" card in the first step; the describe form, the progress screen and the
-  method's page with Build, Revise and Delete.
-- **21.5 Phone: a package's vocabulary (M).** The phone reads `/api/modalities` and
-  `/api/equipment`; a package's modality draws with its colour and label and its implement
-  can be ticked; widgets and both watches get the display; the philosophies refresh.
-- **21.6 Phone: the builder (M).** The same group and card in the phone's builder, the
-  describe, progress and result screens; version 1.42.0.
-- **21.7 Dev Lab: the builds (S).** Each build's turns, checks, problems and tokens.
-- **21.8 Production (S).** For the owner, each with a go-ahead: `scripts/backup_prod.sh`,
-  migrations 013 and 014, `fly secrets set ANTHROPIC_API_KEY`, the `dev` role on the
-  accounts that try it.
+- **21.2 The build as a durable job (M).** Done 2026-11-13 (migration 014 **not yet run
+  on production**; `src/build_store.py` makes the table on the first build, row security
+  on and no policy — a read never makes it). `package_builds`: a row per build with its
+  request, the draft files, the transcript, the progress the clients poll, a result or an
+  error, usage, attempts and a heartbeat. `src/build_worker.py`: one thread per process
+  claims the oldest (`FOR UPDATE SKIP LOCKED`), gives the builder a `Session` (save,
+  check, stop if cancelled), installs what it returns and writes the result; a running
+  row with no heartbeat for three minutes is claimed again, twice, then failed as
+  `interrupted`; the worker is kicked when a build is queued and on a process's first
+  request when one was left open, so a deploy mid-build resumes from the last saved turn
+  (Garmin's queue, which it is modelled on, does neither). It holds the process's one
+  heavy slot (`src/heavy.py`, shared with `api._heavy_run`) only around each gate check —
+  previews keep answering — and `package_store.install(checked=)` takes the passing check
+  it was just given instead of running the gates twice. Routes, all behind the builder's
+  gate: `POST /api/methods/builds` (`{description, answers, pastedText?, webSearch?}` or
+  `{revise: {packageId, note}}`, whose draft starts from the installed files; 202; 422;
+  409 `build_running` / `too_many_methods`; 429 `daily_limit`; 503 without a model key),
+  `GET …/<id>` (never the draft or the transcript), `POST …/<id>/cancel` (at once when
+  waiting, at the next turn when running). `GET /api/methods` lists the builds and what
+  is left of the day. The builder itself is `build_worker.BUILDER` — the model loop
+  (21.3); the tests script one. `test_package_builds.py`.
+- **21.3 The model loop (L).** Done 2026-11-13 (**the real-model eval not yet run** — it
+  costs money and waits for a go-ahead; the effort and budgets below are first guesses
+  until it has). `src/package_builder.py` is the worker's builder: Claude Opus 5.5 through
+  the Anthropic SDK (`anthropic` in requirements; imported with the first build, never at
+  startup — it adds some 40 MB to the worker), a loop of our own because every completed
+  turn is saved to the build's row and a restart resumes from it. The system prompt is the
+  instructions, `PACKAGE_SPEC.md` and the four core schemas — the same bytes for every
+  build, cached; the athlete's words, answers and id prefix are the first message. Tools:
+  `write_file` (YAML that does not parse is refused at once), `read_file`, `delete_file`,
+  `list_files`, `get_schema`, `check_package`, `finish`, `decline`; Anthropic's web search
+  and fetch only when the request allows them. `check_package` is the real gate
+  (`package_store.check`) and, when it passes, the whole program of each track generated
+  **as the athlete who asked** (their days, minutes, level, equipment — `for_this_athlete`:
+  `program`, every week in lines with each slot's prescription, and `check_these`, what the
+  engine did that authors rarely mean; the gate's own run is one week per phase with every
+  implement). A package the builder writes is held to more than the gate asks:
+  the gate now reports a session no archetype serves, one replaced by another modality
+  and a slot no exercise fills as **warnings** (`package_gate._coverage_warnings`; no
+  shipped package has one), and the builder treats them as problems — `exercises: []`
+  passed every gate before. Budgets, enforced by the loop: 40 turns, 10 checks, 200 000
+  output tokens, 25 minutes; `PACKAGE_BUILDER_EFFORT` (default `high`) and
+  `PACKAGE_BUILDER_MODEL` override. A refusal, a turn cut off at the output limit (never
+  run, never kept), a paused web search (sent back as it came), a turn of words alone
+  (a reminder, three times a failure) and a model that cannot be reached each end or
+  continue the build in plain words. Training contracts are refused; a revision keeps its
+  package id. `test_package_builder.py` scripts the model (`package_builder.MODEL_TURN`,
+  the one place a request leaves the process); `tools/eval_package_builder.py --run`
+  runs eight real descriptions against the real model and reports outcome, turns, checks,
+  tokens and cost.
+- **21.4 Web: the builder in the program builder (M).** Done 2026-11-13. **The priorities
+  bug first**: the builder seeded `priority_overrides` from the modality list compiled
+  into the build and the server replaces the goal's priorities with an override, so a
+  method made of its own modalities was sent as all zeros and generated nothing. The
+  vector now covers every modality the source's framework schedules
+  (`lib/philosophyPriorities`), and no override is sent that only repeats the source
+  (`buildPostBody`, `samePriorities`). Then the screens: in the first step's philosophy
+  list a **Your methods** group (`components/methods/YourMethods.tsx`) — each method
+  picked like a philosophy, with Revise and Delete (refused in words while the program
+  runs on it), the build that is running, and a "Describe your own method" card; absent
+  for an account the builder is not on for. `/program/new/method`
+  (`pages/MethodBuilder.tsx`, `DescribeMethod`): the athlete's words, days, session
+  length and level (from the builder and the profile), the profile's equipment, pasted
+  notes, a web-search switch; `?revise=<id>` asks for the change instead.
+  `/program/new/method/<build>` (`MethodBuildProgress`) asks the build again every two
+  seconds — leaving does not stop it — then shows the method with Build a program, Read
+  the method and Revise, or why it was not built with what the checks still found. A
+  finished build and a delete have every list of packages read again
+  (`refreshAfterMethodChange`). The words are `lib/methodBuild.ts`; the mock answers
+  (`mocks/fixtures/methods.json`) are recorded by `test_package_builder.py --write`,
+  which fails when the routes' shape parts from them.
+- **21.5 Phone: a package's vocabulary (M).** Done 2026-11-14. The phone reads
+  `/api/modalities` and `/api/equipment` on every load (`AppState.loadVocabulary`,
+  `ServedVocabulary.swift`) for what the compiled tables lack: a package's modality is
+  kept in the app group (`ClientVocab.remember`, generated into all four targets) and
+  every reader — the phone, its widgets, the watch and its complication — looks a modality
+  up through `ClientVocab.modality(_:)`, compiled first, then served, then neutral. A
+  package's implements are a "From your methods" group in Profile ▸ Equipment and the
+  builder's and the preview's pickers. `today-session` gives a session of a package
+  modality `modalityDisplay` (label, short, colour, icon), which the phone relays with
+  the day and the Apple Watch remembers; the Garmin draws an unknown modality in its
+  neutral colour with the session's name (docs/watch.md). The philosophies are read
+  again on every load, so a method built elsewhere appears. `ServedVocabularyTests`,
+  `test_package_vocabulary.py`.
+- **21.6 Phone: the builder (M).** Done 2026-11-14 (1.43.0 — 1.42.0 had shipped). The
+  program builder's first step leads with **Your methods** when the account may build or
+  has methods: the build in progress, each method as a card with its "…" (About, Revise,
+  Delete, asked before), and **Create your own**. Describe (`MethodDescribeView`: the
+  words, days, session length and level from the builder, the equipment said, pasted notes,
+  the web switch) and the build (`MethodBuildView`: the four steps, asked again every two
+  seconds while the screen is in front; free to leave, offered again on the first step;
+  then the method with its tracks and **Build a program with it**, or why there is none)
+  are pushed inside the builder. A finished build reads the methods, the methodologies
+  and the vocabulary again (`AppState.methodsChanged`). The words are `MethodBuildWords`,
+  the web's `lib/methodBuild.ts` in Swift; `MethodBuilderTests` decodes the answers the
+  server's test records for the web. `AppLongTextField` is the one multi-line field (the
+  session's notes and the workout's now use it). Debug builds open any of the screens with
+  `SIMCTL_CHILD_TC_METHOD_BUILDER=describe | revise:<method id> | build:<build id>`.
+  No notification when a build ends: the phone has no push.
+- **21.7 Dev Lab: the builds (S).** Done 2026-11-14. Dev Lab ▸ **Builds**
+  (`components/devlab/BuildsPanel.tsx`, `?tab=builds&build=<id>`): the account's own last
+  builds with what each spent and their totals, and one build in full — the request, what
+  it spent against `package_builder.LIMITS`, the problems counted by kind, each check with
+  its problems and **the program the model was shown**, each turn's calls, answers and own
+  tokens (`usage.per_turn`, recorded by the loop from now on), replies thrown away at the
+  output limit, and the draft's files. `GET /api/dev/builds` and `/api/dev/builds/<id>`
+  (`src/build_report.py`, pure over a row; the builder's gate; the list never reads a
+  transcript — `build_store.history`). Own builds only: a transcript holds what its athlete
+  wrote and pasted, so an owner's view across accounts is a later decision. The cost is
+  tokens at `package_builder.PRICE` (the builder model's list price, which the eval uses
+  too); web searches are billed apart. `test_package_builder.py` records
+  `mocks/fixtures/builds.json` (`--write`).
+- **21.8 Production (S).** For the owner, each with a go-ahead: the real-model eval
+  (21.3); `scripts/backup_prod.sh`, migrations 013 and 014; **the machine to 512 MB**
+  (`fly scale memory 512`, and `fly.toml`) — measured in the image at 0.25 CPU the worker
+  stands at 66 MB, 104 MB once the SDK is loaded and 126 MB after a build, and it was
+  killed at 140 MB on 2026-10-27; `fly secrets set ANTHROPIC_API_KEY`; the `dev` role on
+  the accounts that try it.
+- **21.9 What the simulated eval found (M).** 2026-11-14: the eight eval cases run by
+  stand-in models that saw only the system prompt, the request and the builder's tools
+  (the real tool code and gates; no API call, so no tokens or cost measured). All eight
+  ended as expected, seven on one or two checks — and three of the built methods
+  prescribed what the athlete had not asked for, which no check could see. Fixed with it:
+  `weekly_increment_kg: 0` was read as missing (one 16 kg kettlebell was prescribed 15,
+  22.5, 30 kg; now a load that stays put, shown as written); a `cadence_options` key
+  written `"4"` passed the schema and was ignored; the check showed one week of counts
+  (now the program); the spec says what the engine does with the files (section 3) and
+  lists the colour families; the instructions cover revisions and what a package cannot
+  express. **Open, each an engine change of its own:** a computed load starts again at
+  every phase (week-in-phase) — carry it across phases; nothing pins a session to a
+  weekday on the scheduler; no load is computed as a percentage of a max (5/3/1 is text),
+  nothing goes up only after a session went well outside a training contract, an
+  as-many-reps set is not recorded as one, a computed `distance` slot drops its `sets`
+  and its load (6 × 800 m, a carry's weight), the equipment list has no bench, and
+  `MINIMAL_DAYS` warns of dropped modalities on a week template that fits its days. The real-model eval (21.8) still decides the
+  effort and the budgets.
 
 ---
 

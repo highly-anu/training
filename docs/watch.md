@@ -90,6 +90,7 @@ As of 2026-10-18. *Server* is the payload key; *—* means the server has no par
 | Screens by template (package `watch.yaml`) | `screens`, `screen` | yes | yes — the same data page (`StepPageView`) | yes — the same specs at a phone's size (`PlayerStepView`) |
 | Done today, on any device | `completed` | yes | yes | — (Start workout leaves a done session's sheet) |
 | Last time per exercise | `last` | yes | yes | yes, under the step and in the step list |
+| A package's own modality: its label, colour and icon | `modalityDisplay` (only on a session whose modality the commons lack) | neutral colour, the session's name (no change needed: it never drew a modality's label) | yes — remembered from the relayed day (`ClientVocab.remember`), the complication too | yes — also from `/api/modalities` |
 | Test step: best and the next level, Save results / Not a test | `standard` | yes | yes | yes: the completion screen's Results, Save results / Not a test |
 | Week progress | `progress.week` | glance, Progress page | This Week count, complication ring | — (Today has it) |
 | Programme %, headline, trend | `progress.program`, `.headline` | Progress page | Progress page (Today ▸ Progress) | — (Analytics has it) |

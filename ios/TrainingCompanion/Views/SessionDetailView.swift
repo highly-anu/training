@@ -613,8 +613,7 @@ struct SessionDetailView: View {
 
     private var notesRows: some View {
         Group {
-            TextField("Notes", text: $notes, axis: .vertical)
-                .lineLimit(3...8)
+            AppLongTextField(prompt: "Notes", text: $notes)
                 .onChange(of: notes) { _, _ in
                     debouncedSaveNotes()
                 }

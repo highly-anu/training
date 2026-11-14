@@ -41,6 +41,8 @@ suites:
   - test_model_map.py                 # Dev Lab ▸ Model Interactions' map: every interaction still anchored in the code (roadmap 20.11)
   - test_portability.py               # the Dev Lab's portability report; the gaps' code anchors
   - test_package_gate.py              # one folder through the gates' own checks, as data (roadmap 20.2)
+  - test_package_builder.py           # the model loop that writes a method, on a scripted model: tools, the fix-and-retry on real gate problems, budgets, refusal, resume; Dev Lab ▸ Builds' report (roadmap 21.3, 21.7)
+  - test_package_builds.py            # a build as a durable job: the store, the worker, the routes, a restart resumed; SQL half on its own database (roadmap 21.2)
   - test_builder_access.py            # who may use the package builder: the flag, the dev role from the verified token, GET /api/methods (roadmap 21.1)
   - test_private_packages.py          # an athlete's own packages: the store, the gate on install, the routes; SQL half on its own database (roadmap 20.5)
   - test_package_vocabulary.py        # a package's own modalities and movement patterns (vocabulary.yaml; roadmap 20.6)

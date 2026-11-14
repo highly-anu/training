@@ -17,7 +17,7 @@ type BuilderState = ReturnType<typeof useBuilderStore.getState>
 export function builderGenerateParams(
   b: Pick<BuilderState, 'sourceMode' | 'selectedPhilosophyIds' | 'philosophyWeights' | 'constraints'
     | 'eventDate' | 'startDate' | 'numWeeks' | 'selectedTrackId' | 'startPhaseId' | 'priorityOverrides'>
-    & Partial<Pick<BuilderState, 'lanes'>>,
+    & Partial<Pick<BuilderState, 'lanes' | 'sourcePriorities'>>,
   weeklySchedule: Record<Day, DaySchedule> | null,
   customInjuryFlags: CustomInjuryFlag[],
 ): GenerateParams {
@@ -57,6 +57,7 @@ export function builderGenerateParams(
     trackId: b.selectedTrackId,
     startPhaseId: b.startPhaseId,
     priorityOverrides: b.priorityOverrides,
+    sourcePriorities: b.sourcePriorities,
     customInjuryFlags,
   }
 }

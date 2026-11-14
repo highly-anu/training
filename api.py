@@ -77,6 +77,7 @@ _SCHEMA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'docs', '
 # it is off. The model's key is a second condition for building, not for
 # listing or removing what was built.
 _BUILDER_MODES = ('off', 'dev', 'all')
+from src import package_builder as _package_builder  # noqa: E402,F401  the worker's builder; the SDK loads with the first build
 
 
 def _builder_mode() -> str:
@@ -2011,9 +2012,12 @@ def list_methods():
             'limits': {'daily': daily, 'remaining': daily, 'kept': package_store.MAX_PACKAGES}}
     if reason == 'not_enabled':
         return jsonify(body)
+    from src import build_store
     try:
         rows = package_store.list_packages(g.user_id)
-    except package_store.StoreError as e:
+        body['builds'] = [build_store.public(b) for b in build_store.recent(g.user_id)]
+        body['limits']['remaining'] = max(0, daily - build_store.started_since(g.user_id))
+    except (package_store.StoreError, build_store.StoreError) as e:
         return _package_store_error(e)
     from src import db as _db
     program = _db.get_user_program(g.user_id) if rows else None
@@ -2023,6 +2027,163 @@ def list_methods():
                         'updatedAt': r.get('updatedAt'), 'inUse': _program_uses(program, r['id'])}
                        for r in rows]
     return jsonify(body)
+
+
+# A build is a row a worker thread runs (src/build_store.py, src/build_worker.py):
+# minutes of work a request cannot hold and a deploy must not lose. These
+# routes queue one, say how it stands and cancel it.
+_BUILD_DESCRIPTION = (20, 8000)     # characters: enough to say something, short of a book
+_BUILD_PASTED_MAX = 60000
+_BUILD_NOTE = (5, 2000)
+
+
+def _build_request(body: dict) -> tuple[dict | None, str | None]:
+    """The request a build keeps, or why the body is not one."""
+    answers = body.get('answers') if isinstance(body.get('answers'), dict) else {}
+    pasted = body.get('pastedText') or ''
+    if not isinstance(pasted, str) or len(pasted) > _BUILD_PASTED_MAX:
+        return None, f'pastedText is text of at most {_BUILD_PASTED_MAX} characters'
+    revise = body.get('revise')
+    out = {'answers': {k: answers[k] for k in ('days', 'minutes', 'level', 'equipment') if k in answers},
+           'pastedText': pasted, 'webSearch': bool(body.get('webSearch'))}
+    if revise is not None:
+        note = (revise.get('note') or '').strip() if isinstance(revise, dict) else ''
+        if not isinstance(revise, dict) or not isinstance(revise.get('packageId'), str):
+            return None, 'revise names the method (packageId) and says what to change (note)'
+        if not _BUILD_NOTE[0] <= len(note) <= _BUILD_NOTE[1]:
+            return None, f'the note is {_BUILD_NOTE[0]} to {_BUILD_NOTE[1]} characters'
+        return {**out, 'description': note, 'revise': {'packageId': revise['packageId'], 'note': note}}, None
+    description = (body.get('description') or '').strip() if isinstance(body.get('description'), str) else ''
+    if not _BUILD_DESCRIPTION[0] <= len(description) <= _BUILD_DESCRIPTION[1]:
+        return None, f'the description is {_BUILD_DESCRIPTION[0]} to {_BUILD_DESCRIPTION[1]} characters'
+    return {**out, 'description': description}, None
+
+
+@app.post('/api/methods/builds')
+@require_auth
+@require_builder
+def start_method_build():
+    """Queue a build: `{description, answers{days, minutes, level, equipment},
+    pastedText?, webSearch?}`, or `{revise: {packageId, note}}` for a new
+    revision of one of the athlete's methods. 202 with the build; 422 a body
+    that is not a request; 404 a method to revise that is not theirs; 409
+    `build_running` (with it) or `too_many_methods`; 429 `daily_limit`; 503
+    `builder_unavailable` without a model key, `store_unavailable` when the
+    write fails."""
+    from src import build_store, build_worker, package_store
+    available, reason = _builder_availability()
+    if not available:
+        return jsonify({'error': 'builder_unavailable', 'reason': reason,
+                        'detail': 'Methods cannot be built right now.'}), 503
+    request_body, problem = _build_request(request.get_json(silent=True) or {})
+    if problem:
+        return jsonify({'error': 'invalid', 'detail': problem}), 422
+    try:
+        running = build_store.active(g.user_id)
+        if running:
+            return jsonify({'error': 'build_running', 'detail': 'A method is already being built.',
+                            'build': build_store.public(running)}), 409
+        if build_store.started_since(g.user_id) >= _builder_daily_limit():
+            return jsonify({'error': 'daily_limit', 'detail': "You have used today's builds. Try again tomorrow."}), 429
+        draft = {}
+        if request_body.get('revise'):
+            current = package_store.get_package(g.user_id, request_body['revise']['packageId'])
+            if current is None:
+                return jsonify({'error': 'not_found'}), 404
+            draft = current['files']
+        elif len(package_store.list_packages(g.user_id)) >= package_store.MAX_PACKAGES:
+            return jsonify({'error': 'too_many_methods', 'detail':
+                            f'You keep at most {package_store.MAX_PACKAGES} methods. Remove one first.'}), 409
+        row = build_store.create(g.user_id, request_body, draft)
+    except (package_store.StoreError, build_store.StoreError) as e:
+        return _package_store_error(e)
+    build_worker.kick()
+    return jsonify({'build': build_store.public(row)}), 202
+
+
+@app.get('/api/methods/builds/<build_id>')
+@require_auth
+@require_builder
+def get_method_build(build_id):
+    """How one of the athlete's builds stands — what a client polls. 404 when
+    it is not theirs."""
+    from src import build_store
+    try:
+        row = build_store.get(g.user_id, build_id)
+    except build_store.StoreError as e:
+        return _package_store_error(e)
+    return (jsonify({'build': build_store.public(row)}), 200) if row else (jsonify({'error': 'not_found'}), 404)
+
+
+@app.post('/api/methods/builds/<build_id>/cancel')
+@require_auth
+@require_builder
+def cancel_method_build(build_id):
+    """Stop a build: at once when it is waiting, at its next turn when it is
+    running; one already ended is answered as it ended. 404 when not theirs."""
+    from src import build_store
+    try:
+        row = build_store.request_cancel(g.user_id, build_id)
+    except build_store.StoreError as e:
+        return _package_store_error(e)
+    return (jsonify({'build': build_store.public(row)}), 200) if row else (jsonify({'error': 'not_found'}), 404)
+
+
+# Dev Lab ▸ Builds (src/build_report.py): what a build did — its turns, checks,
+# problems and tokens. The athlete's own builds only: a transcript holds what
+# they wrote and pasted.
+@app.get('/api/dev/builds')
+@require_auth
+@require_builder
+def dev_builds():
+    """The signed-in athlete's last builds (`limit`, 30 by default, 100 at
+    most) with what each spent, and their totals."""
+    from src import build_report, build_store
+    try:
+        limit = min(max(int(request.args.get('limit', 30)), 1), 100)
+    except ValueError:
+        limit = 30
+    try:
+        rows = build_store.history(g.user_id, limit)
+    except build_store.StoreError as e:
+        return _package_store_error(e)
+    builds = [build_report.summary(r) for r in rows]
+    return jsonify({'builds': builds, 'totals': build_report.totals(builds)})
+
+
+@app.get('/api/dev/builds/<build_id>')
+@require_auth
+@require_builder
+def dev_build(build_id):
+    """One of the athlete's builds in full: the request, each turn's tool
+    calls, each check's problems and the program the model was shown, the
+    draft's files. 404 when it is not theirs."""
+    from src import build_report, build_store
+    try:
+        row = build_store.get(g.user_id, build_id)
+    except build_store.StoreError as e:
+        return _package_store_error(e)
+    return (jsonify({'build': build_report.detail(row)}), 200) if row else (jsonify({'error': 'not_found'}), 404)
+
+
+_BUILDS_RESUMED = False
+
+
+@app.before_request
+def _resume_builds():
+    """Once a process: a build left open when the last one stopped (a deploy,
+    a crash) is taken up again. Its row kept the draft and the transcript."""
+    global _BUILDS_RESUMED
+    if _BUILDS_RESUMED:
+        return None
+    _BUILDS_RESUMED = True
+    from src import build_store, build_worker
+    try:
+        if build_store.has_open():
+            build_worker.kick()
+    except build_store.StoreError as e:
+        app.logger.warning('builds not resumed: %s', e)
+    return None
 
 
 @app.delete('/api/methods/<package_id>')
@@ -2082,7 +2243,8 @@ def dev_portability():
 # generated program (~1 MB, several as dicts), and the clients already keep
 # theirs per program revision. The generator reads state the body does not
 # carry (a contract's confirmed sessions), so nothing is kept long.
-_HEAVY_GATE = threading.BoundedSemaphore(1)
+from src import heavy as _heavy
+_HEAVY_GATE = _heavy.GATE   # shared with the package builder's worker (src/heavy.py)
 _HEAVY_USERS: set = set()
 _HEAVY_LOCK = threading.Lock()   # guards _HEAVY_USERS and _HEAVY_CACHE
 _HEAVY_CACHE: 'dict[str, tuple[float, tuple[dict, int]]]' = {}
@@ -4569,6 +4731,13 @@ def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
     icon = _session_icon.session_icon(s)
     if icon:
         out['icon'] = icon
+    # A modality one of the athlete's own packages brings (vocabulary.yaml) is
+    # in no client's compiled table: its display rides with the session, so the
+    # watch draws its colour and label. Never for a commons modality.
+    own = loader.load_vocabulary()['modalities'].get(modality)
+    if own and isinstance(own.get('display'), dict):
+        out['modalityDisplay'] = {k: own['display'][k] for k in ('label', 'short', 'color', 'icon')
+                                  if k in own['display']}
     if spec_level >= 1:
         package_id = _watch_spec.session_package(s)
         table, keys = _watch_spec.session_screens(

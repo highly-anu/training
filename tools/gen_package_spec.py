@@ -131,6 +131,7 @@ def block_values() -> str:
     from src.analytics import vocabulary as analytics_vocabulary
     primitives = sorted(analytics_vocabulary.to_client().get('primitives') or {})
     out = []
+    tints = sorted({(m.get('display') or {}).get('tint') for m in modalities.values()} - {None})
 
     out += ['**Modalities** (`data/commons/modalities/`; a package adds its own in `vocabulary.yaml`):', '',
             '| id | name | family | recovery cost | progression model |', '|---|---|---|---|---|']
@@ -140,6 +141,9 @@ def block_values() -> str:
                    f"`{mod.get('progression_model', 'linear_load')}` |")
     out += ['', f'**Modality families** (`vocabulary.yaml` `family`): {_code(fams)}.', '',
             f"**Phase kinds** (a phase's `kind`, an archetype's `applicable_phases`): {_code(kinds)}.", '',
+            "**What a kind does to minutes and metres** (the ceiling a timed or distance slot grows to, as a "
+            "multiple of what the slot writes; at 1 it does not grow): "
+            + ', '.join(f"`{k}` ×{float((v or {}).get('volume_multiplier', 1.0)):g}" for k, v in kinds.items()) + '.', '',
             '**Training levels**: ' + _code(lv['id'] for lv in levels['levels']) + '.' if isinstance(levels, dict)
             and isinstance(levels.get('levels'), list) else
             '**Training levels**: ' + _code(archetype['properties']['training_levels']['items']['enum']) + '.', '',
@@ -154,6 +158,8 @@ def block_values() -> str:
             f"**Philosophy `progression_philosophy`**: {_code(philosophy['properties']['progression_philosophy']['enum'])}.", '',
             '**Equipment** (`data/commons/constraints/equipment.yaml`; an exercise may also say `none`; a package '
             'adds its own in `vocabulary.yaml`): ' + _code(e['id'] for e in equipment.commons_items()) + '.', '',
+            "**Colour families** (a package modality's `display.tint`; `color` is any `#rrggbb`, `icon` a "
+            'lucide-react name for `web` and an SF Symbol for `ios` and `watch`): ' + _code(tints) + '.', '',
             f"**Body regions** (a package pattern's `regions`): {_code(regions['regions'])}.", '',
             '**Movement patterns that load a region** (`data/commons/recovery_regions.yaml`): '
             + _code(regions['patterns']) + '.', '',
