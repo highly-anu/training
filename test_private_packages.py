@@ -303,12 +303,13 @@ def test_routes():
                                                        'num_weeks': 1, 'persist': False})
     check('and nothing generates from it any more', not (gone.get_json() or {}).get('weeks'), gone.status_code)
 
-    print('the routes are behind the authoring gate')
-    os.environ['SUPABASE_URL'] = 'https://example.invalid'   # as production: authoring off unless switched on
+    print("the routes are behind the builder's gate (test_builder_access.py holds it)")
+    os.environ['PACKAGE_BUILDER'] = 'off'
     try:
-        check('off, they answer 403', not api._authoring_enabled())
+        check('off, they answer 403', client.get('/api/packages').status_code == 403
+              and client.post('/api/packages', json={'files': files, 'dry_run': True}).status_code == 403)
     finally:
-        os.environ['SUPABASE_URL'] = ''
+        os.environ.pop('PACKAGE_BUILDER', None)
 
 
 def test_sql():

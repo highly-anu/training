@@ -89,7 +89,7 @@ def test_gaps():
     check('a verdict', bool(doc.get('verdict')))
     check('ids unique', len({g['id'] for g in gaps}) == len(gaps))
     check('the builder\'s foundation is tracked: open or done gaps on item 20',
-          any((g.get('roadmap') or '').startswith('20.') for g in gaps))
+          any((g.get('roadmap') or '').startswith(('20.', '21.')) for g in gaps))
     with open(os.path.join(ROOT, 'docs', 'roadmap.md'), encoding='utf-8') as fh:
         roadmap = fh.read()
     steps = doc.get('steps') or []
@@ -97,7 +97,8 @@ def test_gaps():
           bool(steps) and all(f"**{s['id']} {s['title']} (" in roadmap for s in steps),
           [s['id'] for s in steps if f"**{s['id']} {s['title']} (" not in roadmap])
     check('every gap on item 20 cites a listed step',
-          all(g['roadmap'] in {s['id'] for s in steps} for g in gaps if (g.get('roadmap') or '').startswith('20.')))
+          all(g['roadmap'] in {s['id'] for s in steps} for g in gaps
+              if (g.get('roadmap') or '').startswith(('20.', '21.'))))
     for g in gaps:
         check(f"{g['id']}: kind, impact, status", g.get('kind') in KINDS and g.get('impact') in IMPACTS
               and g.get('status') in STATUSES, g)

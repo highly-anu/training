@@ -10,10 +10,13 @@ import { useBuilderStore } from '@/store/builderStore'
 import { cn } from '@/lib/utils'
 import { MODALITY_COLORS, modalityHex, modalityLabel } from '@/lib/modalityColors'
 import {
-  MODALITY_ORDER, DEFAULT_PRIORITIES, derivePhilosophyPriorities,
+  MODALITY_ORDER, DEFAULT_PRIORITIES, deriveBlendedPriorities, derivePhilosophyPriorities,
 } from '@/lib/philosophyPriorities'
-import type { Framework, ModalityId, Philosophy } from '@/api/types'
+import type { ModalityId, Philosophy } from '@/api/types'
 import type { SourceMode } from '@/store/builderStore'
+import { YourMethods } from '@/components/methods/YourMethods'
+import { useMethods } from '@/api/methods'
+import { Badge } from '@/components/ui/badge'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -41,35 +44,6 @@ const MODES: { id: SourceMode; label: string; sub: string; color: string; Icon: 
   },
 ]
 
-// ─── Priority derivation ──────────────────────────────────────────────────────
-
-/**
- * Weighted average of priorities across multiple philosophies.
- */
-function deriveBlendedPriorities(
-  philIds: string[],
-  philWeights: Record<string, number>,
-  philosophies: Philosophy[],
-  frameworks: Framework[]
-): Record<ModalityId, number> {
-  const totalW = philIds.reduce((s, id) => s + (philWeights[id] ?? 50), 0)
-  const blended = Object.fromEntries(MODALITY_ORDER.map((id) => [id, 0])) as Record<ModalityId, number>
-
-  for (const philId of philIds) {
-    const phil = philosophies.find((p) => p.id === philId)
-    if (!phil) continue
-    const w = (philWeights[philId] ?? 50) / totalW
-    const priorities = derivePhilosophyPriorities(phil, frameworks)
-    for (const id of MODALITY_ORDER) {
-      blended[id] += priorities[id] * w
-    }
-  }
-
-  const sum = Object.values(blended).reduce((s, v) => s + v, 0)
-  if (sum === 0) return DEFAULT_PRIORITIES
-  return Object.fromEntries(MODALITY_ORDER.map((id) => [id, blended[id] / sum])) as Record<ModalityId, number>
-}
-
 function normalizePriorities(raw: Record<ModalityId, number>): Record<ModalityId, number> {
   const total = Object.values(raw).reduce((s, v) => s + v, 0)
   if (total === 0) return raw
@@ -83,11 +57,14 @@ function PhilCard({
   isSelected,
   isDisabled,
   onClick,
+  yours = false,
 }: {
   phil: Philosophy
   isSelected: boolean
   isDisabled: boolean
   onClick: () => void
+  /** One of the athlete's own methods (shown among the others in a blend). */
+  yours?: boolean
 }) {
   const hex = MODALITY_COLORS[phil.bias?.[0] as ModalityId]?.hex ?? FALLBACK_HEX
 
@@ -109,11 +86,14 @@ function PhilCard({
       }
     >
       <div className="min-w-0 flex-1">
-        <p className={cn(
-          'text-xs font-medium leading-snug truncate transition-colors',
-          isSelected ? 'text-foreground' : 'group-hover:text-primary',
-        )}>
-          {phil.name}
+        <p className="flex items-center gap-1.5">
+          <span className={cn(
+            'text-xs font-medium leading-snug truncate transition-colors',
+            isSelected ? 'text-foreground' : 'group-hover:text-primary',
+          )}>
+            {phil.name}
+          </span>
+          {yours && <Badge variant="outline" className="shrink-0 px-1.5 py-0 text-[9px]">Yours</Badge>}
         </p>
         <p className="text-[10px] text-muted-foreground/60 mt-0.5">
           {phil.bias?.length ?? 0} modalities · {phil.core_principles?.length ?? 0} principles
@@ -299,6 +279,11 @@ export function ProgramSource() {
     />
   ) : null
   const { data: frameworks = [] } = useFrameworks()
+  // The athlete's own methods are philosophies too; in the single-source list
+  // they have a group of their own above the shipped ones.
+  const { data: methods } = useMethods()
+  const mine = useMemo(() => new Set((methods?.methods ?? []).map((m) => m.id)), [methods])
+  const shipped = useMemo(() => philosophies.filter((p) => !mine.has(p.id)), [philosophies, mine])
 
   const {
     setSourceMode, setGoalIds, setGoalWeightsBulk, setPriorityOverrides,
@@ -505,17 +490,28 @@ export function ProgramSource() {
                 {isLoading ? (
                   <LoadingState shape="tiles" label="Loading the philosophies" />
                 ) : philFailed ?? (
-                  <div className="grid grid-cols-2 gap-2">
-                    {philosophies.map((phil) => (
-                      <PhilCard
-                        key={phil.id}
-                        phil={phil}
-                        isSelected={selectedPhilIds[0] === phil.id}
-                        isDisabled={false}
-                        onClick={() => handleSelectPhilosophy(phil)}
-                      />
-                    ))}
-                  </div>
+                  <>
+                    <YourMethods
+                      philosophies={philosophies}
+                      selectedId={selectedPhilIds[0] ?? null}
+                      onSelect={handleSelectPhilosophy}
+                      onDeleted={(id) => {
+                        const phil = philosophies.find((p) => p.id === id)
+                        if (phil && selectedPhilIds[0] === id) handleSelectPhilosophy(phil)   // lets go of it
+                      }}
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      {shipped.map((phil) => (
+                        <PhilCard
+                          key={phil.id}
+                          phil={phil}
+                          isSelected={selectedPhilIds[0] === phil.id}
+                          isDisabled={false}
+                          onClick={() => handleSelectPhilosophy(phil)}
+                        />
+                      ))}
+                    </div>
+                  </>
                 )}
 
                 {mode1Preview && (
@@ -560,6 +556,7 @@ export function ProgramSource() {
                         isSelected={selectedPhilIds.includes(phil.id)}
                         isDisabled={!selectedPhilIds.includes(phil.id) && selectedPhilIds.length >= 4}
                         onClick={() => handleTogglePhilosophy(phil)}
+                        yours={mine.has(phil.id)}
                       />
                     ))}
                   </div>

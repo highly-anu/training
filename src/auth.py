@@ -87,6 +87,18 @@ def optional_user_id() -> str | None:
         return None
 
 
+def has_role(role: str) -> bool:
+    """Whether the signed-in user's verified token carries `role` in
+    `app_metadata.roles` — set with Supabase's admin API and the service-role
+    key (a user cannot write app_metadata), in force from their next token
+    refresh. The web reads the same claim to show the Dev Lab
+    (lib/featureFlags.ts); this is the server's reading of it. False for a
+    device token and in local dev, which have no claims."""
+    claims = getattr(g, 'claims', None) or {}
+    roles = (claims.get('app_metadata') or {}).get('roles') or []
+    return isinstance(roles, list) and role in roles
+
+
 def _as_user(f, *args, **kwargs):
     """Run a view as the signed-in athlete: the loader sees their own packages
     beside the shipped ones (src/package_store.py, loader.overlay) for the
@@ -119,12 +131,14 @@ def require_auth(f):
             user_id = device_store.user_for_token(token)
             if user_id:
                 g.user_id = user_id
+                g.claims = {}   # a device token carries no claims, so no role
                 return _as_user(f, *args, **kwargs)
             return jsonify({'detail': 'Invalid or unpaired device token'}), 401
 
         if not SUPABASE_URL:
             # Dev mode: no Supabase URL configured — bypass auth
             g.user_id = 'local-dev-user'
+            g.claims = {}
             return _as_user(f, *args, **kwargs)
 
         if not header.startswith('Bearer '):
@@ -133,6 +147,9 @@ def require_auth(f):
         try:
             payload = _decode_token(token)
             g.user_id = payload['sub']
+            # Kept for the request: a role is read from the verified token
+            # (has_role), never from anything the client says about itself.
+            g.claims = payload
         except pyjwt.ExpiredSignatureError:
             return jsonify({'detail': 'Token expired'}), 401
         except pyjwt.InvalidTokenError as e:

@@ -25,6 +25,27 @@ describe('buildPostBody', () => {
   })
 })
 
+describe('buildPostBody and priorities', () => {
+  const source = { max_strength: 0.75, aerobic_base: 0.25 }
+
+  it('sends no override that only repeats what the source implies', () => {
+    // An override replaces the goal's priorities outright; the builder seeds
+    // it with the source's own, which the server already has.
+    const body = buildPostBody({ philosophyId: 'a', constraints, priorityOverrides: { ...source, mobility: 0 }, sourcePriorities: source })
+    expect(body).not.toHaveProperty('priority_overrides')
+  })
+
+  it('sends one the athlete changed', () => {
+    const changed = { max_strength: 0.5, aerobic_base: 0.5 }
+    const body = buildPostBody({ philosophyId: 'a', constraints, priorityOverrides: changed, sourcePriorities: source })
+    expect(body).toMatchObject({ priority_overrides: changed })
+  })
+
+  it('sends one when the caller names no source (a regenerate)', () => {
+    expect(buildPostBody({ philosophyId: 'a', constraints, priorityOverrides: source })).toMatchObject({ priority_overrides: source })
+  })
+})
+
 describe('buildPostBody without a philosophy', () => {
   it('says so instead of failing on an index', () => {
     expect(() => buildPostBody({ constraints })).toThrow(/methodology/)

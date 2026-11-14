@@ -178,6 +178,32 @@ def _smoke(pkg: str) -> tuple[list[dict], list[dict]]:
     return problems, programs
 
 
+def _coverage_warnings(programs: list) -> list[dict]:
+    """What the generated weeks could not cover although the athlete had every
+    implement: a session no archetype serves, one that stands in for another
+    modality, a slot no exercise fills. Legal — a shipped method may leave a
+    level unserved — and nearly always authoring; the app's builder holds its
+    own packages to none (src/package_builder.py)."""
+    out, seen = [], set()
+
+    def add(code, label, message):
+        phase = label.rsplit('/', 1)[0]            # once per track, not per phase
+        if (code, phase, message) not in seen:
+            seen.add((code, phase, message))
+            out.append(_problem('smoke', code, f'{label}: {message}'))
+    for label, raw in programs:
+        report = raw.get('coverage_report') or {}
+        for s in report.get('unfilled_sessions') or []:
+            add('unfilled_session', label, f"no archetype of this package serves a '{s.get('modality')}' session")
+        for s in report.get('substituted_sessions') or []:
+            add('substituted_session', label, f"a '{s.get('substituted_for')}' session was replaced by "
+                f"'{s.get('modality')}' ({s.get('reason')})")
+        for s in report.get('unfilled_slots') or []:
+            add('unfilled_slot', label, f"slot '{s.get('slot_role')}' of archetype '{s.get('archetype')}' is empty"
+                + (f" ({s.get('reason')})" if s.get('reason') else ''))
+    return out
+
+
 def _provenance(pkg: str, programs: list) -> list[dict]:
     from src import goals, package_smoke
     frameworks = list(loader.load_all_frameworks().values())
@@ -260,6 +286,7 @@ def check_package(pkg_dir: str, *, smoke: bool = True, owner_prefix: str | None 
     ran.append('smoke')
     found, programs = _smoke(pkg)
     problems += found
+    warnings += _coverage_warnings(programs)
     if any(p['code'] == 'raised' for p in found):
         skip(STAGES[4:], 'generation raised')
         return finish()

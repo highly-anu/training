@@ -223,7 +223,7 @@ struct SessionStartWidgetView: View {
     /// (ClientVocab.swift, tools/gen_client_vocab.py); it used to be the nearest
     /// system colour.
     private func modalityColor(_ id: String) -> Color {
-        ClientVocab.modalities[id].map { ClientVocab.color($0.hex) } ?? .blue
+        ClientVocab.modality(id).map { ClientVocab.color($0.hex) } ?? .secondary
     }
 
     /// A session's workout icon, else its modality's. The inline complication
@@ -235,11 +235,11 @@ struct SessionStartWidgetView: View {
 
     /// The phone's modality icon: the complication renders system symbols.
     private func watchIcon(_ id: String) -> String {
-        ClientVocab.modalities[id]?.icon ?? "figure.strengthtraining.traditional"
+        ClientVocab.modality(id)?.icon ?? "figure.strengthtraining.traditional"
     }
 
     /// The word a complication has room for ("Zone 2"; the modality's `display.short`).
     private func modalityShortLabel(_ id: String) -> String {
-        ClientVocab.modalities[id]?.short ?? id.replacingOccurrences(of: "_", with: " ").capitalized
+        ClientVocab.modality(id)?.short ?? id.replacingOccurrences(of: "_", with: " ").capitalized
     }
 }

@@ -1,0 +1,518 @@
+{
+  "running": {
+    "build": {
+      "id": "build-1",
+      "status": "running",
+      "progress": {
+        "stage": "writing",
+        "detail": "4 files written",
+        "turns": 2,
+        "checks": 0,
+        "files": 4,
+        "problems": 0
+      },
+      "result": null,
+      "error": null,
+      "description": "Lift an atlas stone to the shoulder twice a week and walk easily twice a week, eight weeks.",
+      "revise": null,
+      "createdAt": "2026-11-13 10:00:00+00:00",
+      "updatedAt": "2026-11-13 10:00:00+00:00"
+    }
+  },
+  "done": {
+    "build": {
+      "id": "build-1",
+      "status": "done",
+      "progress": {
+        "stage": "done",
+        "detail": "The checks pass",
+        "turns": 3,
+        "checks": 1,
+        "files": 7,
+        "problems": 0
+      },
+      "result": {
+        "packageId": "ub544b040_stones",
+        "revision": 1,
+        "name": "Odd-object strength (from scratch)",
+        "summary": "Two stone days and two easy walks a week, eight weeks. The stone work is kept light for the first fortnight."
+      },
+      "error": null,
+      "description": "Lift an atlas stone to the shoulder twice a week and walk easily twice a week, eight weeks.",
+      "revise": null,
+      "createdAt": "2026-11-13 10:00:00+00:00",
+      "updatedAt": "2026-11-13 10:00:00+00:00"
+    }
+  },
+  "failed": {
+    "build": {
+      "id": "build-failed",
+      "status": "failed",
+      "progress": {
+        "stage": "fixing",
+        "detail": "3 things to fix",
+        "turns": 3,
+        "checks": 1,
+        "files": 7,
+        "problems": 3
+      },
+      "result": null,
+      "error": {
+        "code": "budget",
+        "message": "This method took more tries than a build allows. Describe it more simply, or in fewer parts, and try again.",
+        "spent": "turns",
+        "problems": [
+          {
+            "stage": "smoke",
+            "code": "unfilled_slot",
+            "file": null,
+            "message": "ub544b040_stones/standard/scratch_foundation: slot 'stone_to_shoulder' of archetype 'ub544b040_scratch_minimal_stone_day' is empty (NO_EXERCISE_IN_ALLOWED_PACKAGES)"
+          },
+          {
+            "stage": "smoke",
+            "code": "unfilled_slot",
+            "file": null,
+            "message": "ub544b040_stones/standard/scratch_foundation: slot 'stone_carry' of archetype 'ub544b040_scratch_minimal_stone_day' is empty (NO_EXERCISE_IN_ALLOWED_PACKAGES)"
+          },
+          {
+            "stage": "smoke",
+            "code": "unfilled_slot",
+            "file": null,
+            "message": "ub544b040_stones/standard/scratch_foundation: slot 'walk' of archetype 'ub544b040_scratch_minimal_easy_walk' is empty (NO_EXERCISE_IN_ALLOWED_PACKAGES)"
+          }
+        ]
+      },
+      "description": "Lift an atlas stone to the shoulder twice a week and walk easily twice a week, eight weeks.",
+      "revise": null,
+      "createdAt": "2026-11-13 10:00:00+00:00",
+      "updatedAt": "2026-11-13 10:00:00+00:00"
+    }
+  },
+  "methodsWhileRunning": {
+    "available": true,
+    "reason": null,
+    "methods": [],
+    "builds": [
+      {
+        "id": "build-1",
+        "status": "running",
+        "progress": {
+          "stage": "writing",
+          "detail": "4 files written",
+          "turns": 2,
+          "checks": 0,
+          "files": 4,
+          "problems": 0
+        },
+        "result": null,
+        "error": null,
+        "description": "Lift an atlas stone to the shoulder twice a week and walk easily twice a week, eight weeks.",
+        "revise": null,
+        "createdAt": "2026-11-13 10:00:00+00:00",
+        "updatedAt": "2026-11-13 10:00:00+00:00"
+      },
+      {
+        "id": "build-failed",
+        "status": "failed",
+        "progress": {
+          "stage": "fixing",
+          "detail": "3 things to fix",
+          "turns": 3,
+          "checks": 1,
+          "files": 7,
+          "problems": 3
+        },
+        "result": null,
+        "error": {
+          "code": "budget",
+          "message": "This method took more tries than a build allows. Describe it more simply, or in fewer parts, and try again.",
+          "spent": "turns",
+          "problems": [
+            {
+              "stage": "smoke",
+              "code": "unfilled_slot",
+              "file": null,
+              "message": "ub544b040_stones/standard/scratch_foundation: slot 'stone_to_shoulder' of archetype 'ub544b040_scratch_minimal_stone_day' is empty (NO_EXERCISE_IN_ALLOWED_PACKAGES)"
+            },
+            {
+              "stage": "smoke",
+              "code": "unfilled_slot",
+              "file": null,
+              "message": "ub544b040_stones/standard/scratch_foundation: slot 'stone_carry' of archetype 'ub544b040_scratch_minimal_stone_day' is empty (NO_EXERCISE_IN_ALLOWED_PACKAGES)"
+            },
+            {
+              "stage": "smoke",
+              "code": "unfilled_slot",
+              "file": null,
+              "message": "ub544b040_stones/standard/scratch_foundation: slot 'walk' of archetype 'ub544b040_scratch_minimal_easy_walk' is empty (NO_EXERCISE_IN_ALLOWED_PACKAGES)"
+            }
+          ]
+        },
+        "description": "Lift an atlas stone to the shoulder twice a week and walk easily twice a week, eight weeks.",
+        "revise": null,
+        "createdAt": "2026-11-13 10:00:00+00:00",
+        "updatedAt": "2026-11-13 10:00:00+00:00"
+      },
+      {
+        "id": "f23053fb59a94bfd8d870fedc019ba43",
+        "status": "cancelled",
+        "progress": {
+          "stage": "reading",
+          "detail": "Reading your description"
+        },
+        "result": null,
+        "error": {
+          "code": "cancelled",
+          "message": "Cancelled."
+        },
+        "description": "Lift an atlas stone to the shoulder twice a week and walk easily twice a week, eight weeks.",
+        "revise": null,
+        "createdAt": "2026-11-13 10:00:00+00:00",
+        "updatedAt": "2026-11-13 10:00:00+00:00"
+      },
+      {
+        "id": "b36c288abf1b42fbb612fc3415f7f12d",
+        "status": "done",
+        "progress": {
+          "stage": "done",
+          "detail": "The checks pass",
+          "turns": 3,
+          "checks": 1,
+          "files": 7,
+          "problems": 0
+        },
+        "result": {
+          "packageId": "ub544b040_stones",
+          "revision": 1,
+          "name": "Odd-object strength (from scratch)",
+          "summary": "Stones and walks."
+        },
+        "error": null,
+        "description": "Lift an atlas stone to the shoulder twice a week and walk easily twice a week, eight weeks.",
+        "revise": null,
+        "createdAt": "2026-11-13 10:00:00+00:00",
+        "updatedAt": "2026-11-13 10:00:00+00:00"
+      },
+      {
+        "id": "cc0cb33f1ebb44cea762e39b35f5d230",
+        "status": "failed",
+        "progress": {
+          "stage": "fixing",
+          "detail": "Reviewing the draft",
+          "turns": 3,
+          "checks": 1,
+          "files": 7,
+          "problems": 0
+        },
+        "result": null,
+        "error": {
+          "code": "declined",
+          "message": "Enough."
+        },
+        "description": "Lift an atlas stone to the shoulder twice a week and walk easily twice a week, eight weeks.",
+        "revise": null,
+        "createdAt": "2026-11-13 10:00:00+00:00",
+        "updatedAt": "2026-11-13 10:00:00+00:00"
+      }
+    ],
+    "limits": {
+      "daily": 1000,
+      "remaining": 4,
+      "kept": 20
+    }
+  },
+  "methods": {
+    "available": true,
+    "reason": null,
+    "methods": [
+      {
+        "id": "ub544b040_stones",
+        "name": "Odd-object strength (from scratch)",
+        "revision": 1,
+        "status": "installed",
+        "updatedAt": "2026-11-13 10:00:00+00:00",
+        "inUse": false
+      }
+    ],
+    "builds": [
+      {
+        "id": "build-1",
+        "status": "done",
+        "progress": {
+          "stage": "done",
+          "detail": "The checks pass",
+          "turns": 3,
+          "checks": 1,
+          "files": 7,
+          "problems": 0
+        },
+        "result": {
+          "packageId": "ub544b040_stones",
+          "revision": 1,
+          "name": "Odd-object strength (from scratch)",
+          "summary": "Two stone days and two easy walks a week, eight weeks. The stone work is kept light for the first fortnight."
+        },
+        "error": null,
+        "description": "Lift an atlas stone to the shoulder twice a week and walk easily twice a week, eight weeks.",
+        "revise": null,
+        "createdAt": "2026-11-13 10:00:00+00:00",
+        "updatedAt": "2026-11-13 10:00:00+00:00"
+      },
+      {
+        "id": "build-failed",
+        "status": "failed",
+        "progress": {
+          "stage": "fixing",
+          "detail": "3 things to fix",
+          "turns": 3,
+          "checks": 1,
+          "files": 7,
+          "problems": 3
+        },
+        "result": null,
+        "error": {
+          "code": "budget",
+          "message": "This method took more tries than a build allows. Describe it more simply, or in fewer parts, and try again.",
+          "spent": "turns",
+          "problems": [
+            {
+              "stage": "smoke",
+              "code": "unfilled_slot",
+              "file": null,
+              "message": "ub544b040_stones/standard/scratch_foundation: slot 'stone_to_shoulder' of archetype 'ub544b040_scratch_minimal_stone_day' is empty (NO_EXERCISE_IN_ALLOWED_PACKAGES)"
+            },
+            {
+              "stage": "smoke",
+              "code": "unfilled_slot",
+              "file": null,
+              "message": "ub544b040_stones/standard/scratch_foundation: slot 'stone_carry' of archetype 'ub544b040_scratch_minimal_stone_day' is empty (NO_EXERCISE_IN_ALLOWED_PACKAGES)"
+            },
+            {
+              "stage": "smoke",
+              "code": "unfilled_slot",
+              "file": null,
+              "message": "ub544b040_stones/standard/scratch_foundation: slot 'walk' of archetype 'ub544b040_scratch_minimal_easy_walk' is empty (NO_EXERCISE_IN_ALLOWED_PACKAGES)"
+            }
+          ]
+        },
+        "description": "Lift an atlas stone to the shoulder twice a week and walk easily twice a week, eight weeks.",
+        "revise": null,
+        "createdAt": "2026-11-13 10:00:00+00:00",
+        "updatedAt": "2026-11-13 10:00:00+00:00"
+      },
+      {
+        "id": "f23053fb59a94bfd8d870fedc019ba43",
+        "status": "cancelled",
+        "progress": {
+          "stage": "reading",
+          "detail": "Reading your description"
+        },
+        "result": null,
+        "error": {
+          "code": "cancelled",
+          "message": "Cancelled."
+        },
+        "description": "Lift an atlas stone to the shoulder twice a week and walk easily twice a week, eight weeks.",
+        "revise": null,
+        "createdAt": "2026-11-13 10:00:00+00:00",
+        "updatedAt": "2026-11-13 10:00:00+00:00"
+      },
+      {
+        "id": "b36c288abf1b42fbb612fc3415f7f12d",
+        "status": "done",
+        "progress": {
+          "stage": "done",
+          "detail": "The checks pass",
+          "turns": 3,
+          "checks": 1,
+          "files": 7,
+          "problems": 0
+        },
+        "result": {
+          "packageId": "ub544b040_stones",
+          "revision": 1,
+          "name": "Odd-object strength (from scratch)",
+          "summary": "Stones and walks."
+        },
+        "error": null,
+        "description": "Lift an atlas stone to the shoulder twice a week and walk easily twice a week, eight weeks.",
+        "revise": null,
+        "createdAt": "2026-11-13 10:00:00+00:00",
+        "updatedAt": "2026-11-13 10:00:00+00:00"
+      },
+      {
+        "id": "cc0cb33f1ebb44cea762e39b35f5d230",
+        "status": "failed",
+        "progress": {
+          "stage": "fixing",
+          "detail": "Reviewing the draft",
+          "turns": 3,
+          "checks": 1,
+          "files": 7,
+          "problems": 0
+        },
+        "result": null,
+        "error": {
+          "code": "declined",
+          "message": "Enough."
+        },
+        "description": "Lift an atlas stone to the shoulder twice a week and walk easily twice a week, eight weeks.",
+        "revise": null,
+        "createdAt": "2026-11-13 10:00:00+00:00",
+        "updatedAt": "2026-11-13 10:00:00+00:00"
+      }
+    ],
+    "limits": {
+      "daily": 1000,
+      "remaining": 4,
+      "kept": 20
+    }
+  },
+  "unavailable": {
+    "available": false,
+    "reason": "no_model_key",
+    "methods": [
+      {
+        "id": "ub544b040_stones",
+        "name": "Odd-object strength (from scratch)",
+        "revision": 1,
+        "status": "installed",
+        "updatedAt": "2026-11-13 10:00:00+00:00",
+        "inUse": false
+      }
+    ],
+    "builds": [
+      {
+        "id": "build-1",
+        "status": "done",
+        "progress": {
+          "stage": "done",
+          "detail": "The checks pass",
+          "turns": 3,
+          "checks": 1,
+          "files": 7,
+          "problems": 0
+        },
+        "result": {
+          "packageId": "ub544b040_stones",
+          "revision": 1,
+          "name": "Odd-object strength (from scratch)",
+          "summary": "Two stone days and two easy walks a week, eight weeks. The stone work is kept light for the first fortnight."
+        },
+        "error": null,
+        "description": "Lift an atlas stone to the shoulder twice a week and walk easily twice a week, eight weeks.",
+        "revise": null,
+        "createdAt": "2026-11-13 10:00:00+00:00",
+        "updatedAt": "2026-11-13 10:00:00+00:00"
+      },
+      {
+        "id": "build-failed",
+        "status": "failed",
+        "progress": {
+          "stage": "fixing",
+          "detail": "3 things to fix",
+          "turns": 3,
+          "checks": 1,
+          "files": 7,
+          "problems": 3
+        },
+        "result": null,
+        "error": {
+          "code": "budget",
+          "message": "This method took more tries than a build allows. Describe it more simply, or in fewer parts, and try again.",
+          "spent": "turns",
+          "problems": [
+            {
+              "stage": "smoke",
+              "code": "unfilled_slot",
+              "file": null,
+              "message": "ub544b040_stones/standard/scratch_foundation: slot 'stone_to_shoulder' of archetype 'ub544b040_scratch_minimal_stone_day' is empty (NO_EXERCISE_IN_ALLOWED_PACKAGES)"
+            },
+            {
+              "stage": "smoke",
+              "code": "unfilled_slot",
+              "file": null,
+              "message": "ub544b040_stones/standard/scratch_foundation: slot 'stone_carry' of archetype 'ub544b040_scratch_minimal_stone_day' is empty (NO_EXERCISE_IN_ALLOWED_PACKAGES)"
+            },
+            {
+              "stage": "smoke",
+              "code": "unfilled_slot",
+              "file": null,
+              "message": "ub544b040_stones/standard/scratch_foundation: slot 'walk' of archetype 'ub544b040_scratch_minimal_easy_walk' is empty (NO_EXERCISE_IN_ALLOWED_PACKAGES)"
+            }
+          ]
+        },
+        "description": "Lift an atlas stone to the shoulder twice a week and walk easily twice a week, eight weeks.",
+        "revise": null,
+        "createdAt": "2026-11-13 10:00:00+00:00",
+        "updatedAt": "2026-11-13 10:00:00+00:00"
+      },
+      {
+        "id": "f23053fb59a94bfd8d870fedc019ba43",
+        "status": "cancelled",
+        "progress": {
+          "stage": "reading",
+          "detail": "Reading your description"
+        },
+        "result": null,
+        "error": {
+          "code": "cancelled",
+          "message": "Cancelled."
+        },
+        "description": "Lift an atlas stone to the shoulder twice a week and walk easily twice a week, eight weeks.",
+        "revise": null,
+        "createdAt": "2026-11-13 10:00:00+00:00",
+        "updatedAt": "2026-11-13 10:00:00+00:00"
+      },
+      {
+        "id": "b36c288abf1b42fbb612fc3415f7f12d",
+        "status": "done",
+        "progress": {
+          "stage": "done",
+          "detail": "The checks pass",
+          "turns": 3,
+          "checks": 1,
+          "files": 7,
+          "problems": 0
+        },
+        "result": {
+          "packageId": "ub544b040_stones",
+          "revision": 1,
+          "name": "Odd-object strength (from scratch)",
+          "summary": "Stones and walks."
+        },
+        "error": null,
+        "description": "Lift an atlas stone to the shoulder twice a week and walk easily twice a week, eight weeks.",
+        "revise": null,
+        "createdAt": "2026-11-13 10:00:00+00:00",
+        "updatedAt": "2026-11-13 10:00:00+00:00"
+      },
+      {
+        "id": "cc0cb33f1ebb44cea762e39b35f5d230",
+        "status": "failed",
+        "progress": {
+          "stage": "fixing",
+          "detail": "Reviewing the draft",
+          "turns": 3,
+          "checks": 1,
+          "files": 7,
+          "problems": 0
+        },
+        "result": null,
+        "error": {
+          "code": "declined",
+          "message": "Enough."
+        },
+        "description": "Lift an atlas stone to the shoulder twice a week and walk easily twice a week, eight weeks.",
+        "revise": null,
+        "createdAt": "2026-11-13 10:00:00+00:00",
+        "updatedAt": "2026-11-13 10:00:00+00:00"
+      }
+    ],
+    "limits": {
+      "daily": 1000,
+      "remaining": 4,
+      "kept": 20
+    }
+  }
+}

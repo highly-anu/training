@@ -6,7 +6,7 @@ import type { PortabilityGap, PortabilityPackage, PortabilityReport, Portability
 import { usePortability } from '@/api/devlab'
 
 // Dev Lab ▸ Builder readiness: where the foundation of the LLM package builder
-// stands (docs/roadmap.md item 20). Everything here is the server's — the
+// and the builder itself stand (docs/roadmap.md items 20 and 21). Everything here is the server's — the
 // steps, the gaps with their code anchors and the per-package report
 // (GET /api/dev/portability, src/portability.py, tools/portability_gaps.json);
 // this file only lays it out. A gap closes in the JSON, in the change that
@@ -185,7 +185,7 @@ export function ReadinessSection({ report }: { report: PortabilityReport }) {
   return (
     <div className="space-y-8">
       <div>
-        <SectionTitle>Can the app take a package written while it runs?</SectionTitle>
+        <SectionTitle>Can an athlete describe a method and get one?</SectionTitle>
         <p className="text-xs text-foreground/80 leading-relaxed max-w-3xl">{report.verdict}</p>
         <p className="mt-2 text-sm text-foreground">
           {stepsDone} of {steps.length} steps done · {tracked.length - open.length} of {tracked.length} gaps
@@ -195,14 +195,14 @@ export function ReadinessSection({ report }: { report: PortabilityReport }) {
 
       {steps.length > 0 && (
         <div>
-          <SectionTitle>The foundation, in order</SectionTitle>
+          <SectionTitle>The steps, in order</SectionTitle>
           <ol className="space-y-2">
             {steps.map(s => (
               <StepCard key={s.id} step={s} gaps={report.gaps.filter(g => g.roadmap === s.id)} />
             ))}
           </ol>
           <p className="mt-2 text-[10px] text-muted-foreground">
-            The steps are <code className="bg-muted px-1 rounded">docs/roadmap.md</code> item 20; the gaps and their
+            The steps are <code className="bg-muted px-1 rounded">docs/roadmap.md</code> items 20 (the foundation) and 21 (the builder); the gaps and their
             anchors <code className="bg-muted px-1 rounded">tools/portability_gaps.json</code>. An open gap's anchors
             are still in the code; a closed one names the test that holds it.
           </p>

@@ -100,6 +100,11 @@ def owner_prefix(user_id: str) -> str:
 
 # ── Limits ────────────────────────────────────────────────────────────────────
 
+def path_allowed(path) -> bool:
+    """Whether a path is a file an athlete's package may hold."""
+    return isinstance(path, str) and (path in _TOP_LEVEL or bool(_NESTED.match(path)))
+
+
 def file_problems(files) -> list[dict]:
     """Why a file map cannot be a package, before anything is laid out."""
     def problem(code, message, file=None):
@@ -111,7 +116,7 @@ def file_problems(files) -> list[dict]:
         out.append(problem('too_many_files', f'{len(files)} files; a package holds at most {MAX_FILES}'))
     total = 0
     for path, content in files.items():
-        if not isinstance(path, str) or not (path in _TOP_LEVEL or _NESTED.match(path)):
+        if not path_allowed(path):
             out.append(problem('path_not_allowed', 'not a file a package holds (philosophy.yaml, exercises.yaml, '
                                'frameworks/<id>.yaml, archetypes/<…>/<id>.yaml, analytics.yaml, watch.yaml, '
                                'training_contract.yaml, standards.yaml, vocabulary.yaml, level_seeds.yaml, '
@@ -384,10 +389,13 @@ def forget(user_id: str) -> None:
 
 # ── In and out ────────────────────────────────────────────────────────────────
 
-def check(user_id: str, files, *, smoke: bool = True) -> dict:
+def check(user_id: str, files, *, smoke: bool = True, probe=None) -> dict:
     """The gate's answer for a file map as this athlete's package, with their
     other packages beside it; nothing is stored. → the gate's result, plus
-    `package` (its id) and `prefix`."""
+    `package` (its id) and `prefix`. `probe(package_id)`, when every gate
+    passed, is called while the draft is still laid out and readable through
+    the loader; what it returns is the result's `probe` (the builder generates
+    a week as the athlete who asked)."""
     from src import loader, package_gate
     prefix = owner_prefix(user_id)
     problems = file_problems(files)
@@ -412,10 +420,12 @@ def check(user_id: str, files, *, smoke: bool = True) -> dict:
         overlay = os.path.join(stage, 'overlay')
         with loader.overlay(overlay):
             result = package_gate.check_package(os.path.join(overlay, package_id), smoke=smoke, owner_prefix=prefix)
+            if probe is not None and result['ok']:
+                result = {**result, 'probe': probe(package_id)}
     finally:
         loader.forget_overlay(os.path.join(stage, 'overlay'))
         shutil.rmtree(stage, ignore_errors=True)
-    return {**result, 'package': package_id, 'prefix': prefix}
+    return {**result, 'package': package_id, 'prefix': prefix, 'digest': files_digest(files)}
 
 
 def _ensure_base() -> str:
@@ -423,11 +433,21 @@ def _ensure_base() -> str:
     return base_dir()
 
 
-def install(user_id: str, files) -> dict:
+def files_digest(files) -> str:
+    """A fingerprint of a file map: what a passing check was a check of."""
+    return hashlib.sha256(json.dumps(files, sort_keys=True).encode()).hexdigest()
+
+
+def install(user_id: str, files, checked: dict | None = None) -> dict:
     """Check, and store when every gate passes. → check()'s result plus
-    `installed` and, when stored, `revision`. Raises StoreError when the
-    write fails."""
-    result = check(user_id, files)
+    `installed` and, when stored, `revision`. `checked` is a result check()
+    just gave for these very files (its `digest` says so): the gates are not
+    run a second time — a build that ends on a passing check pays for one, not
+    two. Raises StoreError when the write fails."""
+    if checked and checked.get('ok') and checked.get('digest') == files_digest(files):
+        result = checked
+    else:
+        result = check(user_id, files)
     if not result['ok']:
         return {**result, 'installed': False}
     revision = _upsert(user_id, result['package'], files, _name(files))
