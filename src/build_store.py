@@ -194,6 +194,21 @@ def recent(user_id: str, limit: int = 5) -> list[dict]:
                 (str(user_id), limit), fetch='all')
 
 
+_LIGHT = ('id', 'user_id', 'status', 'request', 'progress', 'result', 'error', 'usage', 'attempts', 'created_at',
+          'updated_at')
+
+
+def history(user_id: str, limit: int = 30) -> list[dict]:
+    """The athlete's last builds, newest first, without the draft and the
+    transcript (hundreds of kilobytes a build): what a list of them reads."""
+    if _pg() is None:
+        rows = sorted((r for r in _file_rows().values() if r['user_id'] == str(user_id)),
+                      key=lambda r: r['created_at'], reverse=True)
+        return [{k: r.get(k) for k in _LIGHT} for r in rows[:limit]]
+    return _sql(f"SELECT {', '.join(_LIGHT)} FROM package_builds WHERE user_id = %s ORDER BY created_at DESC LIMIT %s",
+                (str(user_id), limit), fetch='all')
+
+
 def active(user_id: str) -> dict | None:
     """The athlete's build that is queued or running, if any."""
     return next((r for r in recent(user_id, 0) if r['status'] in OPEN), None)

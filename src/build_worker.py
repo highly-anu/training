@@ -27,7 +27,7 @@ _worker_lock = threading.Lock()
 
 # The builder: Session → {'ok': True, 'files', 'name', 'summary', 'check'} or
 # {'ok': False, 'error': {'code', 'message'}}. Set by src/package_builder.py
-# when it is imported (api.py); tests set a scripted one.
+# when it is imported (api.py does); tests set a scripted one.
 BUILDER = None
 
 
@@ -67,12 +67,12 @@ class Session:
         if build_store.cancel_requested(self.id):
             raise Cancelled()
 
-    def check(self, smoke: bool = True) -> dict:
+    def check(self, smoke: bool = True, probe=None) -> dict:
         """Every gate on the draft as this athlete's package, with their other
         packages beside it (package_store.check), holding the heavy slot for
-        the length of the check."""
+        the length of the check. `probe`: package_store.check's."""
         with heavy.slot():
-            return package_store.check(self.user_id, self.draft_files, smoke=smoke)
+            return package_store.check(self.user_id, self.draft_files, smoke=smoke, probe=probe)
 
 
 def run_build(row: dict) -> None:

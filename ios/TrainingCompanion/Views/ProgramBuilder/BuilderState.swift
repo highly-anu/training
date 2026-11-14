@@ -30,6 +30,15 @@ final class BuilderState: ObservableObject {
     // Step 3
     @Published var constraints = GenerateConstraints()
 
+    /// The describe form's words for a method of the athlete's own, kept
+    /// while the builder is open so a failed build is not typed again.
+    struct MethodDraft {
+        var description = ""
+        var pastedText = ""
+        var webSearch = false
+    }
+    @Published var methodDraft = MethodDraft()
+
     // Generation
     @Published var isGenerating = false
     @Published var generationError: String? = nil

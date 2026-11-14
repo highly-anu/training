@@ -74,8 +74,7 @@ struct WorkoutPlayerCompleteView: View {
                     }
                 }
                 Section("Notes") {
-                    TextField("How did it go?", text: $player.notes, axis: .vertical)
-                        .lineLimit(2...6)
+                    AppLongTextField(prompt: "How did it go?", text: $player.notes, lines: 2...6)
                 }
                 Section {
                     if testSteps.isEmpty {

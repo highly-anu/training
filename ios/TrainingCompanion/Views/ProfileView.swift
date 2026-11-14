@@ -95,27 +95,13 @@ private struct EquipmentTab: View {
             ForEach(equipmentCategories, id: \.name) { category in
                 let items = EquipmentItem.all.filter { $0.group == category.name }
                 if !items.isEmpty {
-                    Section(category.name) {
-                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                            ForEach(items) { item in
-                                let isSelected = appState.profile.equipment.contains(item.id)
-                                SelectionCard(
-                                    title: item.label,
-                                    subtitle: isSelected ? "Available" : "Not selected",
-                                    isSelected: isSelected,
-                                    accentColor: category.color
-                                ) {
-                                    if isSelected {
-                                        appState.profile.equipment.removeAll { $0 == item.id }
-                                    } else {
-                                        appState.profile.equipment.append(item.id)
-                                    }
-                                    Task { await appState.saveProfile() }
-                                }
-                            }
-                        }
-                        .padding(.vertical, 4)
-                    }
+                    Section(category.name) { equipmentGrid(items, color: category.color) }
+                }
+            }
+            // What the athlete's own methods bring (their vocabulary.yaml).
+            if !appState.servedEquipment.isEmpty {
+                Section(ServedVocabulary.equipmentGroup) {
+                    equipmentGrid(appState.servedEquipment, color: AppColor.accent)
                 }
             }
 
@@ -966,5 +952,30 @@ extension ProfileView {
             withAnimation(AppAnimation.springStandard) { selectedTab = requested }
         }
         router.clearProfileSection()
+    }
+}
+
+private extension EquipmentTab {
+    /// A section's tiles: tap to say you have it, saved at once.
+    func equipmentGrid(_ items: [EquipmentItem], color: Color) -> some View {
+        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+            ForEach(items) { item in
+                let isSelected = appState.profile.equipment.contains(item.id)
+                SelectionCard(
+                    title: item.label,
+                    subtitle: isSelected ? "Available" : "Not selected",
+                    isSelected: isSelected,
+                    accentColor: color
+                ) {
+                    if isSelected {
+                        appState.profile.equipment.removeAll { $0 == item.id }
+                    } else {
+                        appState.profile.equipment.append(item.id)
+                    }
+                    Task { await appState.saveProfile() }
+                }
+            }
+        }
+        .padding(.vertical, 4)
     }
 }

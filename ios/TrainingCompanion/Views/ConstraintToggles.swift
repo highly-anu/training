@@ -6,19 +6,27 @@ import SwiftUI
 /// Profile ▸ Equipment is the profile's own screen and keeps its tiles.
 struct EquipmentToggleSection: View {
     @Binding var selection: [String]
+    @EnvironmentObject var appState: AppState
     var title = "Equipment"
 
     var body: some View {
-        Section(title) {
-            ForEach(EquipmentItem.all) { item in
-                Toggle(item.label, isOn: Binding(
-                    get: { selection.contains(item.id) },
-                    set: { on in
-                        if on { if !selection.contains(item.id) { selection.append(item.id) } }
-                        else { selection.removeAll { $0 == item.id } }
-                    }
-                ))
-            }
+        Section(title) { toggles(EquipmentItem.all) }
+        // What the athlete's own methods bring (their vocabulary.yaml): served,
+        // in no build's list, so it has its own heading after the shared one.
+        if !appState.servedEquipment.isEmpty {
+            Section(ServedVocabulary.equipmentGroup) { toggles(appState.servedEquipment) }
+        }
+    }
+
+    private func toggles(_ items: [EquipmentItem]) -> some View {
+        ForEach(items) { item in
+            Toggle(item.label, isOn: Binding(
+                get: { selection.contains(item.id) },
+                set: { on in
+                    if on { if !selection.contains(item.id) { selection.append(item.id) } }
+                    else { selection.removeAll { $0 == item.id } }
+                }
+            ))
         }
     }
 }

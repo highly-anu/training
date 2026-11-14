@@ -271,6 +271,20 @@ def test_in_the_view():
         served = {m['id']: m for m in api._all_modalities()}
         check('the API serves it with its display and its package', served[MODALITY]['display']['label'] == 'Sled'
               and served[MODALITY]['_package'] == FIXTURE)
+        # The watches and the phone have only the commons compiled in: a session
+        # of the package's modality carries how to draw it (roadmap 21.5).
+        theirs = next(s for raw in programs for w in raw['weeks'] for day in w['schedule'].values() for s in day
+                      if s.get('modality') == MODALITY)
+        sent = api.encode_watch_session(theirs, '1-Monday-0')
+        own_display = served[MODALITY]['display']
+        check('a watch session of its modality carries the display: label, short, colour, icons',
+              sent.get('modalityDisplay') == {k: own_display[k] for k in ('label', 'short', 'color', 'icon') if k in own_display}
+              and sent['modalityDisplay']['color'].startswith('#'), sent.get('modalityDisplay'))
+        check('and with the screen specs too', 'modalityDisplay' in api.encode_watch_session(theirs, '1-Monday-0', spec_level=1))
+        common = next((s for raw in programs for w in raw['weeks'] for day in w['schedule'].values() for s in day
+                       if s.get('modality') in commons), None)
+        check('a session of a commons modality carries none (every build has those)',
+              common is None or 'modalityDisplay' not in api.encode_watch_session(common, '1-Tuesday-0'))
         row = next(p for p in portability.report()['packages'] if p['id'] == FIXTURE)
         check('the report finds nothing unknown in the package', not any(v['unknown'] for v in row['vocabulary']),
               row['vocabulary'])

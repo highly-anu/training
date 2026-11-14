@@ -46,9 +46,15 @@ export const queryKeys = {
   dev: {
     portability: ['dev', 'portability'] as const,
     modelMap: ['dev', 'model-map'] as const,
+    builds: ['dev', 'builds'] as const,
+    build: (id: string) => ['dev', 'builds', id] as const,
   },
   philosophies: {
     all: ['philosophies'] as const,
+  },
+  methods: {
+    all: ['methods'] as const,
+    build: (id: string) => ['methods', 'build', id] as const,
   },
   frameworks: {
     all: ['frameworks'] as const,

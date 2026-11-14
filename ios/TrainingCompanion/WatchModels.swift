@@ -688,10 +688,49 @@ struct WatchSession: Codable, Identifiable, Hashable {
     /// Its stable identity in the plan (program_history), where the plan is in
     /// history: the phone's player uploads by it.
     var sessionUid: String? = nil
+    /// How to draw a modality one of the athlete's own methods brings: its
+    /// colour, label and icons. Nil for a commons modality, which every build
+    /// has compiled in (ClientVocab).
+    var modalityDisplay: ModalityDisplay? = nil
 
     enum CodingKeys: String, CodingKey {
         case sessionId, modalityId, archetypeName, estimatedMinutes, isDeload, exercises, completed
-        case packageId, screens, watch, icon, sessionUid
+        case packageId, screens, watch, icon, sessionUid, modalityDisplay
+    }
+}
+
+/// A modality file's `display` block as the server sends it with a session.
+struct ModalityDisplay: Codable, Hashable {
+    struct Icon: Codable, Hashable {
+        var ios: String? = nil
+        var watch: String? = nil
+    }
+    var label: String? = nil
+    var short: String? = nil
+    /// "#rrggbb".
+    var color: String? = nil
+    var icon: Icon? = nil
+
+    /// The shape `ClientVocab.remember(served:)` keeps.
+    var stored: [String: Any] {
+        var out: [String: Any] = [:]
+        if let label { out["label"] = label }
+        if let short { out["short"] = short }
+        if let color { out["color"] = color }
+        var icons: [String: Any] = [:]
+        if let ios = icon?.ios { icons["ios"] = ios }
+        if let watch = icon?.watch { icons["watch"] = watch }
+        if !icons.isEmpty { out["icon"] = icons }
+        return out
+    }
+}
+
+extension Sequence where Element == WatchSession {
+    /// id → display for the sessions whose modality a method brought.
+    var servedModalities: [String: [String: Any]] {
+        reduce(into: [:]) { out, session in
+            if let display = session.modalityDisplay { out[session.modalityId] = display.stored }
+        }
     }
 }
 
@@ -712,6 +751,7 @@ extension WatchSession {
         watch = try? c.decodeIfPresent(WatchIdentity.self, forKey: .watch)
         icon = try? c.decodeIfPresent(String.self, forKey: .icon)
         sessionUid = try? c.decodeIfPresent(String.self, forKey: .sessionUid)
+        modalityDisplay = try? c.decodeIfPresent(ModalityDisplay.self, forKey: .modalityDisplay)
     }
 
     /// The screen an exercise is drawn with (`WatchScreen.forExercise`).
