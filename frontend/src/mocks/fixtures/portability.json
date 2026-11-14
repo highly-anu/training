@@ -2621,12 +2621,16 @@
    "title": "The phone fetches the philosophies once",
    "kind": "client",
    "impact": "degrades",
-   "detail": "A method built while the app is open never appears: the list is loaded when empty and never again.",
+   "detail": "Was: a method built while the app was open never appeared: the list was loaded when empty and never again. Every full load now reads the philosophies again (AppState.reloadPhilosophies), keeping the list it has when the request fails.",
    "anchors": [
-    "ios/TrainingCompanion/AppState.swift::func loadPhilosophiesIfNeeded"
+    "ios/TrainingCompanion/AppState.swift::func reloadPhilosophies"
    ],
    "roadmap": "21.5",
-   "status": "open"
+   "status": "done",
+   "closed": "2026-11-14",
+   "evidence": [
+    "ios/TrainingCompanion/AppState.swift::await reloadPhilosophies()"
+   ]
   },
   {
    "id": "phone_no_builder",
@@ -2909,13 +2913,19 @@
    "title": "The phone's vocabulary is compiled in",
    "kind": "client",
    "impact": "degrades",
-   "detail": "The web now draws a package's modality from the served display and lists a package's implements in its pickers (20.6, 20.7). The phone and the watches still read only the tables generated into them at build time: a package modality draws in the neutral style with its id for a name, and the phone's equipment picker cannot offer a package implement — an athlete who builds on the phone cannot tick it, so the exercises that need it are filtered out. Closing it means the Apple targets reading GET /api/modalities and /api/equipment, and a release.",
+   "detail": "Was: the phone and the watches read only the tables generated into them at build time, so a package modality drew in the neutral style with its id for a name and the phone's equipment picker could not offer a package implement. The phone now reads GET /api/modalities and /api/equipment for what the compiled tables lack, keeps a package's modalities in the app group for its widgets and relays each session's modalityDisplay to the Apple Watch; every Apple target looks a modality up through ClientVocab.modality. A package's implements are a group of their own in the phone's pickers. The Garmin draws an unknown modality in its neutral colour with the session's name.",
    "anchors": [
-    "ios/TrainingCompanion/ModalityStyle.swift::static func",
-    "tools/gen_client_vocab.py::ClientVocab.swift"
+    "tools/gen_client_vocab.py::static func modality(_ id: String)",
+    "ios/TrainingCompanion/AppState.swift::func loadVocabulary"
    ],
    "roadmap": "21.5",
-   "status": "open"
+   "status": "done",
+   "closed": "2026-11-14",
+   "evidence": [
+    "ios/TrainingCompanionTests/ServedVocabularyTests.swift::testARememberedModalityIsFoundByEveryReader",
+    "test_package_vocabulary.py::modalityDisplay",
+    "ios/TrainingCompanion/ServedVocabulary.swift::From your methods"
+   ]
   },
   {
    "id": "no_package_spec",

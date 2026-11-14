@@ -4694,6 +4694,13 @@ def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
     icon = _session_icon.session_icon(s)
     if icon:
         out['icon'] = icon
+    # A modality one of the athlete's own packages brings (vocabulary.yaml) is
+    # in no client's compiled table: its display rides with the session, so the
+    # watch draws its colour and label. Never for a commons modality.
+    own = loader.load_vocabulary()['modalities'].get(modality)
+    if own and isinstance(own.get('display'), dict):
+        out['modalityDisplay'] = {k: own['display'][k] for k in ('label', 'short', 'color', 'icon')
+                                  if k in own['display']}
     if spec_level >= 1:
         package_id = _watch_spec.session_package(s)
         table, keys = _watch_spec.session_screens(

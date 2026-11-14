@@ -253,7 +253,7 @@ These are exact values (not the tint, not named assets) because the specific col
 
 ### 3.1 Modality Colors
 
-Exact values match the web `MODALITY_COLORS` table because both are generated from the modality files' `display` blocks (`tools/gen_client_vocab.py` → `ClientVocab.swift` in each target folder; frontend-design §8.9). All iOS screens that show modality identity use these — no approximations; the watch complication now does too (it drew the nearest system colours).
+Exact values match the web `MODALITY_COLORS` table because both are generated from the modality files' `display` blocks (`tools/gen_client_vocab.py` → `ClientVocab.swift` in each target folder; frontend-design §8.9). All iOS screens that show modality identity use these — no approximations; the watch complication now does too (it drew the nearest system colours). A modality a package brings (an athlete's own method) is not in the compiled table: `ClientVocab.modality(_:)` — the one lookup every target uses — falls back to the display the server sent (`/api/modalities`, a watch session's `modalityDisplay`; kept in the app group by `ClientVocab.remember`), then to a neutral style. A package's implements are listed after the compiled groups as "From your methods" (`ServedVocabulary.equipmentGroup`) wherever equipment is picked.
 
 ```swift
 // ModalityStyle.swift reads the generated ClientVocab; no view holds a hex.

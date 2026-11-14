@@ -2103,9 +2103,19 @@ Training contracts are refused. Not planned: push notifications, sharing a metho
   (`refreshAfterMethodChange`). The words are `lib/methodBuild.ts`; the mock answers
   (`mocks/fixtures/methods.json`) are recorded by `test_package_builder.py --write`,
   which fails when the routes' shape parts from them.
-- **21.5 Phone: a package's vocabulary (M).** The phone reads `/api/modalities` and
-  `/api/equipment`; a package's modality draws with its colour and label and its implement
-  can be ticked; widgets and both watches get the display; the philosophies refresh.
+- **21.5 Phone: a package's vocabulary (M).** Done 2026-11-14. The phone reads
+  `/api/modalities` and `/api/equipment` on every load (`AppState.loadVocabulary`,
+  `ServedVocabulary.swift`) for what the compiled tables lack: a package's modality is
+  kept in the app group (`ClientVocab.remember`, generated into all four targets) and
+  every reader — the phone, its widgets, the watch and its complication — looks a modality
+  up through `ClientVocab.modality(_:)`, compiled first, then served, then neutral. A
+  package's implements are a "From your methods" group in Profile ▸ Equipment and the
+  builder's and the preview's pickers. `today-session` gives a session of a package
+  modality `modalityDisplay` (label, short, colour, icon), which the phone relays with
+  the day and the Apple Watch remembers; the Garmin draws an unknown modality in its
+  neutral colour with the session's name (docs/watch.md). The philosophies are read
+  again on every load, so a method built elsewhere appears. `ServedVocabularyTests`,
+  `test_package_vocabulary.py`.
 - **21.6 Phone: the builder (M).** The same group and card in the phone's builder, the
   describe, progress and result screens; version 1.42.0.
 - **21.7 Dev Lab: the builds (S).** Each build's turns, checks, problems and tokens.

@@ -291,6 +291,15 @@ final class APIClient {
         return (try JSONDecoder().decode(Body.self, from: data).terms ?? [:]).compactMapValues(\.value)
     }
 
+    /// What the athlete's own methods add to the vocabulary: each such
+    /// modality's display and the equipment they bring (ServedVocabulary).
+    func fetchServedVocabulary() async throws -> (modalities: [String: [String: Any]], equipment: [EquipmentItem]) {
+        async let modalities = get("/modalities")
+        async let equipment = get("/equipment")
+        return (ServedVocabulary.modalityDisplays(from: try await modalities),
+                ServedVocabulary.equipment(from: try await equipment))
+    }
+
     func fetchPhilosophies() async throws -> [PhilosophyCard] {
         let data = try await get("/philosophies")
         return (try? JSONDecoder().decode([PhilosophyCard].self, from: data)) ?? []

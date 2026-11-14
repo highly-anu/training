@@ -684,7 +684,12 @@ block, `data/commons/constraints/equipment.yaml` and `data/commons/outcome_field
 `tools/gen_client_vocab.py` → `frontend/src/lib/gen/clientVocab.ts`, `ClientVocab.swift` in
 each Apple target folder and the four schemas' equipment enums (frontend-design §8.9). A
 stored equipment alias (`assault_bike`) is read as its id by `src/equipment.canonical`.
-Never edit a generated file.
+Never edit a generated file. What a package adds for itself (an athlete's own method) is
+served, not compiled: the web draws it from `/api/modalities` and `/api/equipment`, and so does
+the phone (`AppState.loadVocabulary`, `ServedVocabulary.swift`) — every Apple target looks a
+modality up through the generated `ClientVocab.modality(_:)` (compiled, then the served display
+kept in the app group, then neutral), `today-session` carries `modalityDisplay` for such a
+session, and a package's implements are the pickers' "From your methods" group.
 
 Shared web primitives live in `frontend/src`: `lib/motion.ts` (the only file that writes a
 duration, easing or spring) and `components/motion/` (`RollingNumber`, `TabPanels`,
