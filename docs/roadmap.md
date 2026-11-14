@@ -57,7 +57,7 @@ deferred is under *Later*.
 | 18 | Phone design and interaction uplift: the foundation (1.35), states (1.36), iOS 26 chrome (1.37), discoverable actions (1.38), the screen passes (1.39), motion (1.40) and accessibility with the system surfaces (1.41) are in (*IA*) | P2 | L | iOS |
 | 19 | Web design and interaction uplift: the phone's design language on the web, each rule in one module and held by a test — the foundation, states, feedback, motion, actions and keyboard, colour and accessibility, the page passes and the review fixes are in (*IA*) | P2 | L | web |
 | 20 | LLM package builder — the foundation: all twelve steps are in (the gate, the overlay, storage, per-athlete reference routes, package vocabulary, the spec, the trace and the Dev Lab). Left: the phone reading a package's vocabulary, migration 013 on production, the builder itself | P1 | L | engine, API, web, content |
-| 21 | LLM package builder: an athlete describes a method and gets one to build a program from, on the web and the phone — dev role first. The gate (21.1), the durable job (21.2), the model loop (21.3), the web's screens (21.4), the phone's vocabulary (21.5) and its screens (21.6) are in; the eval against the real model, the Dev Lab's builds view and the production steps are open | P1 | L | API, web, iOS, watch |
+| 21 | LLM package builder: an athlete describes a method and gets one to build a program from, on the web and the phone — dev role first. The gate (21.1), the durable job (21.2), the model loop (21.3), the web's screens (21.4), the phone's vocabulary (21.5) and its screens (21.6) are in; and the Dev Lab's builds view (21.7) are in; the eval against the real model and the production steps are open | P1 | L | API, web, iOS, watch |
 
 ---
 
@@ -2131,7 +2131,19 @@ Training contracts are refused. Not planned: push notifications, sharing a metho
   session's notes and the workout's now use it). Debug builds open any of the screens with
   `SIMCTL_CHILD_TC_METHOD_BUILDER=describe | revise:<method id> | build:<build id>`.
   No notification when a build ends: the phone has no push.
-- **21.7 Dev Lab: the builds (S).** Each build's turns, checks, problems and tokens.
+- **21.7 Dev Lab: the builds (S).** Done 2026-11-14. Dev Lab ▸ **Builds**
+  (`components/devlab/BuildsPanel.tsx`, `?tab=builds&build=<id>`): the account's own last
+  builds with what each spent and their totals, and one build in full — the request, what
+  it spent against `package_builder.LIMITS`, the problems counted by kind, each check with
+  its problems and **the program the model was shown**, each turn's calls, answers and own
+  tokens (`usage.per_turn`, recorded by the loop from now on), replies thrown away at the
+  output limit, and the draft's files. `GET /api/dev/builds` and `/api/dev/builds/<id>`
+  (`src/build_report.py`, pure over a row; the builder's gate; the list never reads a
+  transcript — `build_store.history`). Own builds only: a transcript holds what its athlete
+  wrote and pasted, so an owner's view across accounts is a later decision. The cost is
+  tokens at `package_builder.PRICE` (the builder model's list price, which the eval uses
+  too); web searches are billed apart. `test_package_builder.py` records
+  `mocks/fixtures/builds.json` (`--write`).
 - **21.8 Production (S).** For the owner, each with a go-ahead: the real-model eval
   (21.3); `scripts/backup_prod.sh`, migrations 013 and 014; **the machine to 512 MB**
   (`fly scale memory 512`, and `fly.toml`) — measured in the image at 0.25 CPU the worker

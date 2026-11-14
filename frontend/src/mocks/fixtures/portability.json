@@ -2655,12 +2655,17 @@
    "title": "Nothing shows what a build did",
    "kind": "devlab",
    "impact": "degrades",
-   "detail": "A build's turns, checks, the problems the gate found and the tokens it spent are the only way to judge quality and cost; no screen reads them.",
+   "detail": "Dev Lab ▸ Builds lists the account's own builds with what each spent and their totals, and lays one out in full: the request, each turn's calls, answers and tokens, each check's problems and the program the model was shown, replies thrown away at the output limit and the draft's files (GET /api/dev/builds, src/build_report.py). An owner's view across accounts is not built: a transcript holds what its athlete wrote.",
    "anchors": [
     "frontend/src/pages/DevLab.tsx::DEV_TABS"
    ],
    "roadmap": "21.7",
-   "status": "open"
+   "status": "done",
+   "closed": "2026-11-14",
+   "evidence": [
+    "test_package_builder.py::def test_build_report",
+    "frontend/src/components/devlab/BuildsPanel.test.tsx::says why a build failed and what was thrown away"
+   ]
   },
   {
    "id": "production_not_ready",
