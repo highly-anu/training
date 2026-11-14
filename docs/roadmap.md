@@ -57,7 +57,7 @@ deferred is under *Later*.
 | 18 | Phone design and interaction uplift: the foundation (1.35), states (1.36), iOS 26 chrome (1.37), discoverable actions (1.38), the screen passes (1.39), motion (1.40) and accessibility with the system surfaces (1.41) are in (*IA*) | P2 | L | iOS |
 | 19 | Web design and interaction uplift: the phone's design language on the web, each rule in one module and held by a test — the foundation, states, feedback, motion, actions and keyboard, colour and accessibility, the page passes and the review fixes are in (*IA*) | P2 | L | web |
 | 20 | LLM package builder — the foundation: all twelve steps are in (the gate, the overlay, storage, per-athlete reference routes, package vocabulary, the spec, the trace and the Dev Lab). Left: the phone reading a package's vocabulary, migration 013 on production, the builder itself | P1 | L | engine, API, web, content |
-| 21 | LLM package builder: an athlete describes a method and gets one to build a program from, on the web and the phone — dev role first. The gate (21.1), the durable job (21.2) and the model loop (21.3) and the web's screens (21.4) are in; the eval against the real model, the phone and the production steps are open | P1 | L | API, web, iOS, watch |
+| 21 | LLM package builder: an athlete describes a method and gets one to build a program from, on the web and the phone — dev role first. The gate (21.1), the durable job (21.2), the model loop (21.3), the web's screens (21.4), the phone's vocabulary (21.5) and its screens (21.6) are in; the eval against the real model, the Dev Lab's builds view and the production steps are open | P1 | L | API, web, iOS, watch |
 
 ---
 
@@ -2116,8 +2116,21 @@ Training contracts are refused. Not planned: push notifications, sharing a metho
   neutral colour with the session's name (docs/watch.md). The philosophies are read
   again on every load, so a method built elsewhere appears. `ServedVocabularyTests`,
   `test_package_vocabulary.py`.
-- **21.6 Phone: the builder (M).** The same group and card in the phone's builder, the
-  describe, progress and result screens; version 1.42.0.
+- **21.6 Phone: the builder (M).** Done 2026-11-14 (1.43.0 — 1.42.0 had shipped). The
+  program builder's first step leads with **Your methods** when the account may build or
+  has methods: the build in progress, each method as a card with its "…" (About, Revise,
+  Delete, asked before), and **Create your own**. Describe (`MethodDescribeView`: the
+  words, days, session length and level from the builder, the equipment said, pasted notes,
+  the web switch) and the build (`MethodBuildView`: the four steps, asked again every two
+  seconds while the screen is in front; free to leave, offered again on the first step;
+  then the method with its tracks and **Build a program with it**, or why there is none)
+  are pushed inside the builder. A finished build reads the methods, the methodologies
+  and the vocabulary again (`AppState.methodsChanged`). The words are `MethodBuildWords`,
+  the web's `lib/methodBuild.ts` in Swift; `MethodBuilderTests` decodes the answers the
+  server's test records for the web. `AppLongTextField` is the one multi-line field (the
+  session's notes and the workout's now use it). Debug builds open any of the screens with
+  `SIMCTL_CHILD_TC_METHOD_BUILDER=describe | revise:<method id> | build:<build id>`.
+  No notification when a build ends: the phone has no push.
 - **21.7 Dev Lab: the builds (S).** Each build's turns, checks, problems and tokens.
 - **21.8 Production (S).** For the owner, each with a go-ahead: the real-model eval
   (21.3); `scripts/backup_prod.sh`, migrations 013 and 014; **the machine to 512 MB**

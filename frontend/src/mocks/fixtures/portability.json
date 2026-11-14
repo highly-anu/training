@@ -2637,12 +2637,18 @@
    "title": "No way to describe a method on the phone",
    "kind": "client",
    "impact": "blocks",
-   "detail": "The phone's builder has no card to create a method, no progress for a build, and no list of the athlete's own.",
+   "detail": "The phone's builder leads its first step with Your methods (the build that is running, each method picked like a methodology with About, Revise and Delete, the row to create another). Describe — the athlete's words, days, session length and level, their equipment, pasted notes, a web-search switch, or the change to one of theirs — and the build, asked again every two seconds while its screen is in front, then the method with Build a program with it and Revise, or why it was not built, are pushed inside the builder. A finished build has the methods, the methodologies and the vocabulary read again.",
    "anchors": [
-    "ios/TrainingCompanion/Views/ProgramBuilder/BuilderMethodologyStep.swift::appState.philosophies"
+    "ios/TrainingCompanion/Views/ProgramBuilder/BuilderMethodologyStep.swift::private var yourMethods"
    ],
    "roadmap": "21.6",
-   "status": "open"
+   "status": "done",
+   "closed": "2026-11-14",
+   "evidence": [
+    "ios/TrainingCompanionTests/MethodBuilderTests.swift::testTheListHasTheMethodsAndTheOpenBuild",
+    "ios/TrainingCompanionTests/MethodBuilderTests.swift::testAStartIsABuildOrARefusalInWords",
+    "ios/TrainingCompanion/Views/ProgramBuilder/MethodBuilderViews.swift::struct MethodBuildView"
+   ]
   },
   {
    "id": "builds_not_observable",

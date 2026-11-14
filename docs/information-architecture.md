@@ -114,6 +114,8 @@ Explore CTAs; its header gains a back link to `/program`), `/program/:week/:day`
 Inside the builder's flow: `/program/new/method` (describe a method of your own, or with
 `?revise=<id>` say what to change in one) and `/program/new/method/<build>` (its build, then the
 method) — reached from the Your methods group in the builder's first step, never from the nav.
+The phone has the same two screens, pushed inside its builder from the same group
+(`MethodDescribeView`, `MethodBuildView`; design-system §6.60).
 
 Redirects, query and `location.state` preserved: `/builder` → `/program/new`,
 `/import` → `/log`, `/import/:id` → `/log/:id`, `/bio` → `/analytics?tab=recovery`,

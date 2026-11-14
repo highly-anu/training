@@ -300,6 +300,47 @@ final class APIClient {
                 ServedVocabulary.equipment(from: try await equipment))
     }
 
+    // MARK: - Methods of the athlete's own (roadmap 21)
+
+    func fetchMethods() async throws -> MethodsAnswer {
+        try JSONDecoder().decode(MethodsAnswer.self, from: try await get("/methods"))
+    }
+
+    /// Queues a build. A refusal is an answer, not an error: only a request
+    /// that never reached the server throws.
+    func startMethodBuild(_ request: MethodBuildRequest) async throws -> MethodBuildStart {
+        let (data, status) = try await postForStatus("/methods/builds", body: try JSONEncoder().encode(request))
+        return MethodBuildWords.start(status: status, body: data)
+    }
+
+    /// How one build stands; nil when it is not the athlete's.
+    func fetchMethodBuild(_ id: String) async throws -> MethodBuild? {
+        let (data, status) = try await sendForStatus("GET", "/methods/builds/\(Self.segment(id))")
+        if status == 404 { return nil }
+        guard (200..<300).contains(status) else { throw APIError.serverError(status) }
+        return try Self.build(in: data)
+    }
+
+    func cancelMethodBuild(_ id: String) async throws -> MethodBuild {
+        try Self.build(in: try await postRaw("/methods/builds/\(Self.segment(id))/cancel", body: Data("{}".utf8)))
+    }
+
+    /// Deletes a method; answers why not when it is refused, nil when done.
+    func deleteMethod(_ id: String) async throws -> String? {
+        let (data, status) = try await sendForStatus("DELETE", "/methods/\(Self.segment(id))")
+        return MethodBuildWords.deleteRefusal(status: status, body: data)
+    }
+
+    private static func build(in data: Data) throws -> MethodBuild {
+        struct Envelope: Decodable { let build: MethodBuild }
+        guard let build = try? JSONDecoder().decode(Envelope.self, from: data).build else { throw APIError.decodingError }
+        return build
+    }
+
+    private static func segment(_ id: String) -> String {
+        id.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed.subtracting(CharacterSet(charactersIn: "/"))) ?? id
+    }
+
     func fetchPhilosophies() async throws -> [PhilosophyCard] {
         let data = try await get("/philosophies")
         return (try? JSONDecoder().decode([PhilosophyCard].self, from: data)) ?? []
@@ -901,6 +942,15 @@ final class APIClient {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         try await addAuth(to: &request)
         request.httpBody = body
+        let (data, response) = try await URLSession.shared.data(for: request)
+        return (data, (response as? HTTPURLResponse)?.statusCode ?? 0)
+    }
+
+    /// A request whose status is the caller's to read (404 not theirs, 409 in use).
+    private func sendForStatus(_ method: String, _ path: String) async throws -> (Data, Int) {
+        var request = URLRequest(url: URL(string: APIClient.baseURL + path)!)
+        request.httpMethod = method
+        try await addAuth(to: &request)
         let (data, response) = try await URLSession.shared.data(for: request)
         return (data, (response as? HTTPURLResponse)?.statusCode ?? 0)
     }

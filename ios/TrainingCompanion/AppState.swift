@@ -110,6 +110,9 @@ final class AppState: ObservableObject {
     /// Each methodology's comparable facts, by id (the builder's cards).
     @Published var philosophyGlance: [String: PhilosophyGlance] = [:]
     @Published var injuryFlagDefs: [InjuryFlagDef] = []
+    /// The athlete's own methods and their builds (`GET /methods`); nil until
+    /// read. The program builder's first step shows them.
+    @Published var methods: MethodsAnswer? = nil
     /// Equipment the athlete's own methods bring (ServedVocabulary), offered
     /// by the pickers after the commons'.
     @Published var servedEquipment: [EquipmentItem] = []
@@ -1140,6 +1143,24 @@ final class AppState: ObservableObject {
         if let glance = try? await api.fetchPhilosophyGlance(), !glance.isEmpty {
             philosophyGlance = Dictionary(glance.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         }
+    }
+
+    /// The athlete's methods and builds; a failed read keeps what there was.
+    /// Answers whether the read succeeded.
+    @discardableResult
+    func loadMethods() async -> Bool {
+        guard let api, let answer = try? await api.fetchMethods() else { return false }
+        methods = answer
+        return true
+    }
+
+    /// A method was built, revised or deleted: the list of methods, the
+    /// methodologies it is one of, and the vocabulary it may bring are no
+    /// longer what was read.
+    func methodsChanged() async {
+        await loadMethods()
+        await reloadPhilosophies()
+        await loadVocabulary()
     }
 
     /// What the athlete's own methods add to the vocabulary (roadmap 21.5): the

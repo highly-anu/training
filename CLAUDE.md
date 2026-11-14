@@ -1357,6 +1357,12 @@ debug builds (`HealthKitManager.skipsAuthorizationRequest`). `SIMCTL_CHILD_TC_TI
 Settings ▸ Diagnostics shows the current API target and, in debug builds, the switch.
 The program builder (`Views/ProgramBuilder/`, a file a step) opens on launch in debug
 builds with `SIMCTL_CHILD_TC_BUILDER=<step>[:<philosophy id>]` (`BuilderDebugLaunch`).
+Its first step leads with the athlete's own methods and the way to describe one (roadmap
+21.6, design-system §6.60): `MethodBuilderViews.swift` over `MethodModels.swift`, whose
+`MethodBuildWords` are the web's `lib/methodBuild.ts` — change the words in both.
+`SIMCTL_CHILD_TC_METHOD_BUILDER=describe | revise:<method id> | build:<build id>` opens the
+describe form or a build; a local API with `ANTHROPIC_API_KEY` set to anything and
+`build_worker.BUILDER` replaced by a scripted builder shows every state without a model.
 Never generate, adjust or swap from a simulator pointed at production.
 
 **Releases.** `ios/VERSION` is the version testers see (MAJOR.MINOR.PATCH:
