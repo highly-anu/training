@@ -2064,9 +2064,11 @@ Training contracts are refused. Not planned: push notifications, sharing a metho
   `write_file` (YAML that does not parse is refused at once), `read_file`, `delete_file`,
   `list_files`, `get_schema`, `check_package`, `finish`, `decline`; Anthropic's web search
   and fetch only when the request allows them. `check_package` is the real gate
-  (`package_store.check`) and, when it passes, a week generated **as the athlete who
-  asked** (their days, minutes, level, equipment — `for_this_athlete`; the gate's own run
-  has every implement). A package the builder writes is held to more than the gate asks:
+  (`package_store.check`) and, when it passes, the whole program of each track generated
+  **as the athlete who asked** (their days, minutes, level, equipment — `for_this_athlete`:
+  `program`, every week in lines with each slot's prescription, and `check_these`, what the
+  engine did that authors rarely mean; the gate's own run is one week per phase with every
+  implement). A package the builder writes is held to more than the gate asks:
   the gate now reports a session no archetype serves, one replaced by another modality
   and a slot no exercise fills as **warnings** (`package_gate._coverage_warnings`; no
   shipped package has one), and the builder treats them as problems — `exercises: []`
@@ -2113,6 +2115,24 @@ Training contracts are refused. Not planned: push notifications, sharing a metho
   stands at 66 MB, 104 MB once the SDK is loaded and 126 MB after a build, and it was
   killed at 140 MB on 2026-10-27; `fly secrets set ANTHROPIC_API_KEY`; the `dev` role on
   the accounts that try it.
+- **21.9 What the simulated eval found (M).** 2026-11-14: the eight eval cases run by
+  stand-in models that saw only the system prompt, the request and the builder's tools
+  (the real tool code and gates; no API call, so no tokens or cost measured). All eight
+  ended as expected, seven on one or two checks — and three of the built methods
+  prescribed what the athlete had not asked for, which no check could see. Fixed with it:
+  `weekly_increment_kg: 0` was read as missing (one 16 kg kettlebell was prescribed 15,
+  22.5, 30 kg; now a load that stays put, shown as written); a `cadence_options` key
+  written `"4"` passed the schema and was ignored; the check showed one week of counts
+  (now the program); the spec says what the engine does with the files (section 3) and
+  lists the colour families; the instructions cover revisions and what a package cannot
+  express. **Open, each an engine change of its own:** a computed load starts again at
+  every phase (week-in-phase) — carry it across phases; nothing pins a session to a
+  weekday on the scheduler; no load is computed as a percentage of a max (5/3/1 is text),
+  nothing goes up only after a session went well outside a training contract, an
+  as-many-reps set is not recorded as one, a computed `distance` slot drops its `sets`
+  and its load (6 × 800 m, a carry's weight), the equipment list has no bench, and
+  `MINIMAL_DAYS` warns of dropped modalities on a week template that fits its days. The real-model eval (21.8) still decides the
+  effort and the budgets.
 
 ---
 

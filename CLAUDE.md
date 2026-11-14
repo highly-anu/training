@@ -1539,7 +1539,9 @@ Anthropic SDK, which is imported with the first build and never at startup (it a
 worker — keep it out of module scope). The system prompt (instructions + `PACKAGE_SPEC.md` + the
 four core schemas) is the same bytes for every build and cached; what differs goes in the first
 user message. The model works through eight tools on a draft kept in the row; `check_package` is
-the real gate plus a week generated as the athlete who asked (`athlete_week`), and a package the
+the real gate plus the whole program generated as the athlete who asked (`athlete_program`: every
+week in lines, and `check_these` — a written load the prescription drops, a load that starts again
+at a new phase; the gates cannot tell a program that passes from one that is right), and a package the
 builder writes may leave no session unserved and no slot empty — the gate reports those as
 **warnings** (`package_gate._coverage_warnings`), the builder as problems. History is append-only
 and each completed turn is saved, so a restart resumes; budgets are `package_builder.LIMITS`. Tests

@@ -426,13 +426,32 @@ def test_substitution_is_recorded() -> None:
           str(result.warnings))
 
 
+def test_a_load_that_stays_put() -> None:
+    print('an increment of 0, and a cadence keyed by text')
+    bell = {'id': 'bell', 'category': 'kettlebell', 'starting_load_kg': {'novice': 16}, 'weekly_increment_kg': 0,
+            'sessions_per_week': 3}
+    slot = {'slot_type': 'sets_reps', 'sets': 5, 'reps': 10}
+    loads = [progression.calculate_load(bell, slot, 'linear_load', w, 'build', 'novice', False) for w in (1, 2, 6)]
+    check('an increment of 0 keeps the load, shown as written and not rounded to a plate',
+          [l['weight_kg'] for l in loads] == [16, 16, 16], str(loads))
+    deload = progression.calculate_load(bell, slot, 'linear_load', 4, 'build', 'novice', True)
+    check('its deload takes sets off and leaves the implement alone',
+          deload['weight_kg'] == 16 and deload['sets'] < 5, str(deload))
+    default = progression.calculate_load({**bell, 'weekly_increment_kg': None}, slot, 'linear_load', 2, 'build',
+                                         'novice', False)
+    check('only a missing increment takes the default', default['weight_kg'] > 16, str(default))
+    as_int = scheduler._select_cadence('', 4, 'build', 1, {'cadence_options': {4: [[1, 3, 5, 6]]}})
+    as_text = scheduler._select_cadence('', 4, 'build', 1, {'cadence_options': {'4': [[1, 3, 5, 6]]}})
+    check('a cadence keyed "4" is the four-day week, as 4 is', as_int == as_text == [1, 3, 5, 6], f'{as_int} {as_text}')
+
+
 def main() -> int:
     for t in (test_starting_strength, test_main_lift_pinning, test_deloads, test_constraints,
               test_cadence, test_phase_exclusions, test_injury_substitute_rules, test_gap_reasons,
               test_blocked_by_names_the_constraint, test_pins_never_repeat_a_lift, test_unfilled_cache,
               test_taper_keeps_the_framework_share_for_sets, test_declared_deloads,
               test_single_session_routes, test_a_framework_prescribes_its_own_way,
-              test_substitution_is_recorded):
+              test_substitution_is_recorded, test_a_load_that_stays_put):
         t()
     print()
     if FAILURES:
