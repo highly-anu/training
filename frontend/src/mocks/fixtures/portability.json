@@ -2637,24 +2637,35 @@
    "title": "No way to describe a method on the phone",
    "kind": "client",
    "impact": "blocks",
-   "detail": "The phone's builder has no card to create a method, no progress for a build, and no list of the athlete's own.",
+   "detail": "The phone's builder leads its first step with Your methods (the build that is running, each method picked like a methodology with About, Revise and Delete, the row to create another). Describe — the athlete's words, days, session length and level, their equipment, pasted notes, a web-search switch, or the change to one of theirs — and the build, asked again every two seconds while its screen is in front, then the method with Build a program with it and Revise, or why it was not built, are pushed inside the builder. A finished build has the methods, the methodologies and the vocabulary read again.",
    "anchors": [
-    "ios/TrainingCompanion/Views/ProgramBuilder/BuilderMethodologyStep.swift::appState.philosophies"
+    "ios/TrainingCompanion/Views/ProgramBuilder/BuilderMethodologyStep.swift::private var yourMethods"
    ],
    "roadmap": "21.6",
-   "status": "open"
+   "status": "done",
+   "closed": "2026-11-14",
+   "evidence": [
+    "ios/TrainingCompanionTests/MethodBuilderTests.swift::testTheListHasTheMethodsAndTheOpenBuild",
+    "ios/TrainingCompanionTests/MethodBuilderTests.swift::testAStartIsABuildOrARefusalInWords",
+    "ios/TrainingCompanion/Views/ProgramBuilder/MethodBuilderViews.swift::struct MethodBuildView"
+   ]
   },
   {
    "id": "builds_not_observable",
    "title": "Nothing shows what a build did",
    "kind": "devlab",
    "impact": "degrades",
-   "detail": "A build's turns, checks, the problems the gate found and the tokens it spent are the only way to judge quality and cost; no screen reads them.",
+   "detail": "Dev Lab ▸ Builds lists the account's own builds with what each spent and their totals, and lays one out in full: the request, each turn's calls, answers and tokens, each check's problems and the program the model was shown, replies thrown away at the output limit and the draft's files (GET /api/dev/builds, src/build_report.py). An owner's view across accounts is not built: a transcript holds what its athlete wrote.",
    "anchors": [
     "frontend/src/pages/DevLab.tsx::DEV_TABS"
    ],
    "roadmap": "21.7",
-   "status": "open"
+   "status": "done",
+   "closed": "2026-11-14",
+   "evidence": [
+    "test_package_builder.py::def test_build_report",
+    "frontend/src/components/devlab/BuildsPanel.test.tsx::says why a build failed and what was thrown away"
+   ]
   },
   {
    "id": "production_not_ready",

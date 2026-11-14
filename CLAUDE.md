@@ -156,6 +156,7 @@ All prefixed `/api/`:
 | POST | `/sessions/generate` | `Session` (single session regeneration). `add: true`: a session the athlete adds on the fly to today or a later day — any package (a borrowed one carries `provenance`), named workouts included, the ones that fit as written within the session's time, one at random (`current_archetype_id` asks for another); never refused by a training contract or a template day; the answer is marked `added` |
 | POST | `/dev/constraint-impact` | For Dev Lab ▸ Impact (`components/devlab/ImpactPanel.tsx`): generate's body run against a reference with nothing in the way (the packages' equipment, no injuries, the framework's level, a training contract's mastery and bell pair for that level) and once per constraint lifted alone (equipment, injury, level, proficiency); every changed session or slot with what was planned, its `causes`, why, `knock_on` when an earlier direct change moved the rotation, and the equipment that would restore the most changes (`src/constraint_impact.py`). A refused request (200, no weeks) answers `feasible: false` and `unblocked_by`: the one constraint, or the framework's ideal days and minutes, that alone lets it generate, else `combined`; a reference that cannot generate answers `reference_generates: false`. At most 12 weeks and seven generations; local dev or `AUTHORING_ENABLED` only |
 | GET | `/dev/portability` | For Dev Lab ▸ Builder readiness (`components/devlab/ReadinessPanel.tsx`): the steps of the LLM package builder's foundation (roadmap item 20) with every gap, open or done; per package its engine shape per track, the files it carries, the records it still needs outside its folder (scorecard, coverage, status, golden hashes, dossier; `done: null` and listed in `unchecked` where the deployment lacks the file — the API image has no `docs/`), any id the commons do not define, and ids two packages declare (which copy the loader keeps); with `tools/portability_gaps.json`, what no package can bring in its folder yet, each gap anchored in the code (`src/portability.py`, `test_portability.py`). Local dev or `AUTHORING_ENABLED` only |
+| GET | `/dev/builds`, `/dev/builds/<id>` | For Dev Lab ▸ Builds (`components/devlab/BuildsPanel.tsx`): the signed-in account's own last builds of a method with what each spent (turns, checks, tokens, seconds, the tokens' cost at `package_builder.PRICE`) and their totals; one build in full — the request, each turn's calls, answers and tokens, each check's problems and the program the model was shown, replies thrown away at the output limit, the draft's files (`src/build_report.py`, pure over a `package_builds` row; the list reads no transcript). The builder's gate (`require_builder`), never another account's build (404) |
 | POST | `/exercises/substitute` | `{alternatives: [{assignment, score, reasons}]}` — ranked swaps for one slot, selector-scored, loads for the week; 422 when nothing fits |
 | POST | `/programs/impact` | The preview's Held back: `/dev/constraint-impact`'s answer for any signed-in athlete (`api._constraint_impact`, shared); ≤ 7 generations, 12 weeks; one run in the process at a time and one per athlete — a taken gate answers 429 `busy` at once, never waiting (the clients retry); small answers cached ten minutes per body and day. Clients send the draft's own first phase and length (`impactParams`, `impactRequest(for:)`), never its event date |
 | POST | `/programs/constraint-change` | Does a profile change change the program? The regenerate body (`constraints` = the profile's) + `baseline_constraints` (the program's): both generated, diffed by `constraint_impact.diff_programs` (exercises *and* each slot's numbers, so a level change that moves only loads is affected) → `{affected, sessions, first_week_number, changes, program?}` (`program`, the new tail, only when affected); same gate as impact, never cached on the server |
@@ -1357,6 +1358,12 @@ debug builds (`HealthKitManager.skipsAuthorizationRequest`). `SIMCTL_CHILD_TC_TI
 Settings ▸ Diagnostics shows the current API target and, in debug builds, the switch.
 The program builder (`Views/ProgramBuilder/`, a file a step) opens on launch in debug
 builds with `SIMCTL_CHILD_TC_BUILDER=<step>[:<philosophy id>]` (`BuilderDebugLaunch`).
+Its first step leads with the athlete's own methods and the way to describe one (roadmap
+21.6, design-system §6.60): `MethodBuilderViews.swift` over `MethodModels.swift`, whose
+`MethodBuildWords` are the web's `lib/methodBuild.ts` — change the words in both.
+`SIMCTL_CHILD_TC_METHOD_BUILDER=describe | revise:<method id> | build:<build id>` opens the
+describe form or a build; a local API with `ANTHROPIC_API_KEY` set to anything and
+`build_worker.BUILDER` replaced by a scripted builder shows every state without a model.
 Never generate, adjust or swap from a simulator pointed at production.
 
 **Releases.** `ios/VERSION` is the version testers see (MAJOR.MINOR.PATCH:
@@ -1528,7 +1535,7 @@ icons stay the engine's.
 (`test_packages/scratch_minimal`, written from nothing) are generated — after a change to the
 commons' vocabulary, a schema enum, the gate's stages or that package, run
 `.venv/bin/python tools/gen_package_spec.py` (`--check` is a push gate).
-**The package builder** (roadmap item 21, in progress): an athlete describes a method and a model
+**The package builder** (roadmap item 21; production steps open, 21.8): an athlete describes a method and a model
 writes the package. The athlete reads *method*; the code keeps *package*. `PACKAGE_BUILDER` = `off |
 dev | all` (default `dev`: the `dev` role in the verified token's `app_metadata.roles`,
 `auth.has_role`; local dev is allowed) gates `/api/packages` and `DELETE /api/methods/<id>`
@@ -1560,7 +1567,10 @@ build or a delete calls `refreshAfterMethodChange`: every query that lists packa
 the method existed. The builder sends **no `priority_overrides` that only repeat the source**
 (`buildPostBody`): the override replaces the goal's priorities, and the web's vector once knew only
 the compiled modalities, which zeroed a package's own. After a change to the methods or builds
-routes' answers, `test_package_builder.py --write` re-records `mocks/fixtures/methods.json`.
+routes' answers, `test_package_builder.py --write` re-records `mocks/fixtures/methods.json` and
+`builds.json`. **What a build did is Dev Lab ▸ Builds** (`/dev?tab=builds`, `src/build_report.py`): read it
+after any change to the prompt, the spec or the budgets — the checks' problems by kind say what the
+model keeps getting wrong, the per-turn tokens (`usage.per_turn`) where the output goes.
 `src/package_gate.check_package(folder)` is every gate for one folder, in process and as data
 (files, schema, ids, a smoke generate of every track and phase, provenance — `src/package_smoke.py`
 is check_styles' loop and check_provenance's audit, which both tools call; roadmap 20.2).

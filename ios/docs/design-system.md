@@ -20,11 +20,11 @@ The visual language, interaction patterns, and implementation decisions for the 
 
 | Job | Sections |
 |---|---|
-| Surfaces and controls | 6.3 states · 6.4 section header · 6.6 buttons · 6.15 card and status · 6.37 card and detail · 6.47 floating controls and the action bar |
+| Surfaces and controls | 6.3 states · 6.4 section header · 6.6 buttons · 6.15 card and status · 6.37 card and detail · 6.47 floating controls and the action bar · 6.59 long text |
 | Navigation | 6.8 sub-tabs · 6.9 cross-tab routes · 6.13 tab structure · 6.48 sheets, pushes and zoom · 6.49 pager · 6.50 week strip |
 | Actions | 6.43 session actions · 6.51 row actions · 6.24 filter menu · 6.38 constraint toggles · 6.52 tips |
 | Sessions and the player | 6.1 session card · 6.2 modality badge · 6.5 load text · 6.14 exercise detail · 6.16 logging · 6.40 session icon · 6.44 player · 6.45 start and resume · 6.54 after the session |
-| Today and Program | 6.53 Today · 6.17 regenerate offer · 6.18 methodology · 6.22 tracks and phases · 6.26 phase changes · 6.28 header card · 6.36 phase bar · 6.39 preview · 6.55 builder |
+| Today and Program | 6.53 Today · 6.17 regenerate offer · 6.18 methodology · 6.22 tracks and phases · 6.26 phase changes · 6.28 header card · 6.36 phase bar · 6.39 preview · 6.55 builder · 6.60 your methods and the method builder |
 | Analytics | 6.11 period filter · 6.20 Blocks · 6.21 readiness · 6.25 score · 6.35 zone plan · 6.41 progress chart |
 | Log and workouts | 6.10 route and charts · 6.12 activity icons · 6.19 Log · 6.23 workout row · 6.30 Workout complete |
 | Standards | 6.31 ladder · 6.32 detail · 6.33 test badge · 6.34 suggestion |
@@ -2433,6 +2433,45 @@ Standard sizes are unchanged by all of it; check both when a row changes.
   Companion" when the stored week is over.
 
 ---
+
+
+### 6.59 Long Text
+
+`AppLongTextField(prompt:text:lines:label:)` (`AppLongTextField.swift`) is the one field
+for words that run to several lines: a session's notes, how a workout went, a method
+described. It grows with what is typed between `lines` and scrolls beyond; `label` is what
+VoiceOver calls it when the prompt is an example rather than a name. No view writes
+`TextField(axis: .vertical)` of its own — three screens had three limits.
+
+### 6.60 Your Methods and the Method Builder
+
+A method of the athlete's own (roadmap 21) lives **inside the program builder's first
+step**, never in a tab or a sheet of its own (`BuilderMethodologyStep`,
+`MethodBuilderViews.swift`; words in `MethodBuildWords`, the web's `lib/methodBuild.ts`).
+
+- **Your methods** leads the step when the account may build or has methods
+  (`MethodsAnswer.isShown`); "Methodologies" then heads the shipped ones. In order: the
+  build in progress (a row with a spinner and what it is doing, which opens it), each
+  method as the same selection card as any methodology — its "…" holds About, Revise and
+  Delete (§6.51; Delete asks first, and a refusal is said under the group) — and
+  **Create your own**, a full-width row with `sparkles`, absent while a build runs.
+- **Describe** and **the build** are pushed in the builder's stack (§6.48: no sheet on a
+  sheet), each with its own inline title and no step indicator. Describe is a `Form`:
+  the words (`AppLongTextField`, the example as its prompt), *Written for* (days, session
+  length, level — the builder's own constraints, so they carry into the program — with
+  the equipment said in the footer), pasted notes, the web switch; its one action is the
+  action bar's "Build the method". A text too short is said under the field only after
+  the first try; a refusal is the server's words.
+- **The build** is four rows: done (emerald check), now (spinner, with the server's
+  detail under it), to come (tertiary circle). The footer says the athlete may leave.
+  "Stop the build" is the one destructive row. Done is the method's name, the summary the
+  builder wrote, its tracks (`TrackPhaseList`), Revise, and the action bar's "Build a
+  program with it", which selects it and returns to the step. Failed or stopped is the
+  empty state with the server's message and "Describe it again" — the draft is kept in
+  `BuilderState.methodDraft`.
+- The screen asks every two seconds only while it is in front; nothing notifies.
+  Debug builds: `SIMCTL_CHILD_TC_METHOD_BUILDER=describe | revise:<method id> |
+  build:<build id>`.
 
 ## 7. Motion & Animation
 
