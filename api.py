@@ -2129,6 +2129,43 @@ def cancel_method_build(build_id):
     return (jsonify({'build': build_store.public(row)}), 200) if row else (jsonify({'error': 'not_found'}), 404)
 
 
+# Dev Lab ▸ Builds (src/build_report.py): what a build did — its turns, checks,
+# problems and tokens. The athlete's own builds only: a transcript holds what
+# they wrote and pasted.
+@app.get('/api/dev/builds')
+@require_auth
+@require_builder
+def dev_builds():
+    """The signed-in athlete's last builds (`limit`, 30 by default, 100 at
+    most) with what each spent, and their totals."""
+    from src import build_report, build_store
+    try:
+        limit = min(max(int(request.args.get('limit', 30)), 1), 100)
+    except ValueError:
+        limit = 30
+    try:
+        rows = build_store.history(g.user_id, limit)
+    except build_store.StoreError as e:
+        return _package_store_error(e)
+    builds = [build_report.summary(r) for r in rows]
+    return jsonify({'builds': builds, 'totals': build_report.totals(builds)})
+
+
+@app.get('/api/dev/builds/<build_id>')
+@require_auth
+@require_builder
+def dev_build(build_id):
+    """One of the athlete's builds in full: the request, each turn's tool
+    calls, each check's problems and the program the model was shown, the
+    draft's files. 404 when it is not theirs."""
+    from src import build_report, build_store
+    try:
+        row = build_store.get(g.user_id, build_id)
+    except build_store.StoreError as e:
+        return _package_store_error(e)
+    return (jsonify({'build': build_report.detail(row)}), 200) if row else (jsonify({'error': 'not_found'}), 404)
+
+
 _BUILDS_RESUMED = False
 
 
@@ -4694,6 +4731,13 @@ def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
     icon = _session_icon.session_icon(s)
     if icon:
         out['icon'] = icon
+    # A modality one of the athlete's own packages brings (vocabulary.yaml) is
+    # in no client's compiled table: its display rides with the session, so the
+    # watch draws its colour and label. Never for a commons modality.
+    own = loader.load_vocabulary()['modalities'].get(modality)
+    if own and isinstance(own.get('display'), dict):
+        out['modalityDisplay'] = {k: own['display'][k] for k in ('label', 'short', 'color', 'icon')
+                                  if k in own['display']}
     if spec_level >= 1:
         package_id = _watch_spec.session_package(s)
         table, keys = _watch_spec.session_screens(
