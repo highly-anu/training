@@ -662,8 +662,14 @@ struct SessionDetailView: View {
             Section("Before you start") {
                 SessionBriefingView(loader: briefing, tint: ModalityStyle.color(for: currentSession.modality),
                                     onOpenSession: { key in
+                                        // This sheet first: its closing clears the
+                                        // session Today presents, and would take the
+                                        // one being opened with it.
                                         dismiss()
-                                        router.openSession(key)
+                                        Task {
+                                            try? await Task.sleep(for: .milliseconds(450))
+                                            router.openSession(key)
+                                        }
                                     }) { await loadBriefing(force: true) }
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
