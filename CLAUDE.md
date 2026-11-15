@@ -1201,7 +1201,8 @@ roadmap 22). `GET /api/sessions/briefing?key=<week>-<Day>-<i>` answers, per item
 session, today's numbers, the earlier occurrences of the same thing, where it stands in its
 cycle and one suggestion. The phone lays it out (`Views/SessionBriefingView.swift`,
 design-system §6.61: the player's pre-start screen and an undone session's detail; debug
-builds rest there with `TC_PLAYER_OVERVIEW=1`); the web's block is open (22.3). Every
+builds rest there with `TC_PLAYER_OVERVIEW=1`) and so does the web
+(`components/session/SessionBriefing.tsx` in `SessionPanel`, frontend-design §13.10). Every
 sentence is the server's.
 
 - **The package says what "the same session" is.** `data/packages/<id>/briefing.yaml`
@@ -1215,6 +1216,14 @@ sentence is the server's.
   or skill module by module, a `load_per_exposure` lift by exercise, a named workout by
   archetype, anything else by exercise. Wildman declares its density cycle. Nothing in
   `src/` names a package; the schema's enums are the vocabulary.
+- **Exercise by exercise.** Each item carries `exercises`: per exercise today's line and
+  that exercise's own earlier rows (the occurrence's `_parts`); the item's own `history`
+  row is the lead exercise's line, never the exercises joined. An earlier row leaves the
+  interval out, and a logged interval reads as a clean one does ("5 × 5 · 20 kg · RPE 8":
+  the log has the rounds, the plan the reps). `next_step` says a change in one direction
+  as a difference ("2 more a round than Thursday") and one number up with another down as
+  a new stage ("A new stage: 10 × 1. Wednesday was 5 × 5.") — the first real program read
+  "5 more rounds and 4 fewer a round".
 - **A contract module's preparation and recovery blocks make no item** — only the exercises
   its record lists (`modules[].exercise_ids`) do; a templated day's warm-up makes none.
 - **History is joined through the version a log was written against.** Session logs carry

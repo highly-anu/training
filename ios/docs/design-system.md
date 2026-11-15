@@ -2482,6 +2482,10 @@ nothing: every sentence and number arrives as text.
 
 - **A session to confirm first** leads, on the warning tint: "Thursday: done as written?".
   With `onOpenSession` it is a button that opens that session; in the player it is said only.
+- **Exercise by exercise.** An item of several exercises (a clean and a press in one
+  module) shows each exercise's name with today's line beside it and that exercise's own
+  earlier rows under it — never the exercises joined in one row, and no chart. Only the
+  earliest session to confirm is shown, with how many wait behind it.
 - **One card per item** — a contract module, a named workout, an exercise. Header: the
   item's name, its cycle position trailing ("Step 7 of 32 · stage 1 of 4"). Then today's
   prescription in `AppFont.metricCompact` (several exercises with different numbers: one

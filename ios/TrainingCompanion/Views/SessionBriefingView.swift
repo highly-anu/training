@@ -17,8 +17,10 @@ struct SessionBriefingView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: AppMetrics.gapMedium) {
             if let briefing = loader.briefing {
-                ForEach(briefing.pending) { pending in
-                    PendingRow(pending: pending, open: onOpenSession)
+                // The earliest session to confirm, and how many wait behind it:
+                // four banners pushed the briefing itself off the screen.
+                if let pending = briefing.pending.first {
+                    PendingRow(pending: pending, more: briefing.pending.count - 1, open: onOpenSession)
                 }
                 ForEach(briefing.items) { item in
                     ItemCard(item: item, tint: tint)
@@ -41,12 +43,13 @@ struct SessionBriefingView: View {
 
     private struct PendingRow: View {
         let pending: SessionBriefing.Pending
+        var more = 0
         let open: ((String) -> Void)?
 
         var body: some View {
             let row = HStack(alignment: .firstTextBaseline, spacing: AppMetrics.gapSmall) {
                 Image(systemName: "questionmark.circle.fill").foregroundStyle(AppColor.warning)
-                Text(pending.text).font(.footnote)
+                Text(more > 0 ? "\(pending.text) And \(more) more after it." : pending.text).font(.footnote)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 if open != nil {
                     Text("Confirm").font(.footnote.weight(.semibold)).foregroundStyle(AppColor.accent)
@@ -75,7 +78,7 @@ struct SessionBriefingView: View {
                     Text(cycle).font(.caption).monospacedDigit().foregroundStyle(.secondary)
                 }
             } content: {
-                today
+                if item.exercises.count <= 1 { today }
                 if let suggestion = item.suggestion {
                     Label(suggestion.text, systemImage: Self.symbol(suggestion.kind))
                         .font(.subheadline)
@@ -90,7 +93,25 @@ struct SessionBriefingView: View {
                 if !item.series.isEmpty {
                     SeriesChart(item: item, tint: tint)
                 }
-                if !item.history.isEmpty {
+                if item.exercises.count > 1 {
+                    // Exercise by exercise: today's line, then that exercise's own earlier ones.
+                    ForEach(item.exercises) { exercise in
+                        VStack(alignment: .leading, spacing: AppMetrics.gapTight) {
+                            AppAdaptiveStack(alignment: .firstTextBaseline, spacing: AppMetrics.gapSmall) {
+                                Text(exercise.name).font(.subheadline.weight(.semibold))
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                Text(exercise.todayText).font(.headline).monospacedDigit()
+                                    .accessibilityLabel("Today: \(exercise.todayText)")
+                            }
+                            ForEach(exercise.history.reversed()) { occurrence in
+                                OccurrenceRow(occurrence: occurrence)
+                            }
+                        }
+                    }
+                    if item.times == 0 {
+                        Text("The first time on record.").font(.footnote).foregroundStyle(.secondary)
+                    }
+                } else if !item.history.isEmpty {
                     VStack(alignment: .leading, spacing: AppMetrics.gapTight) {
                         ForEach(item.history.reversed()) { occurrence in
                             OccurrenceRow(occurrence: occurrence)

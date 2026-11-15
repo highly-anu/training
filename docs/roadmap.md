@@ -58,7 +58,7 @@ deferred is under *Later*.
 | 19 | Web design and interaction uplift: the phone's design language on the web, each rule in one module and held by a test — the foundation, states, feedback, motion, actions and keyboard, colour and accessibility, the page passes and the review fixes are in (*IA*) | P2 | L | web |
 | 20 | LLM package builder — the foundation: all twelve steps are in (the gate, the overlay, storage, per-athlete reference routes, package vocabulary, the spec, the trace and the Dev Lab). Left: the phone reading a package's vocabulary, migration 013 on production, the builder itself | P1 | L | engine, API, web, content |
 | 21 | LLM package builder: an athlete describes a method and gets one to build a program from, on the web and the phone — dev role first. The gate (21.1), the durable job (21.2), the model loop (21.3), the web's screens (21.4), the phone's vocabulary (21.5) and its screens (21.6) are in; and the Dev Lab's builds view (21.7) are in; the eval against the real model and the production steps are open | P1 | L | API, web, iOS, watch |
-| 22 | Pre-workout briefing: before a session, today's numbers beside the earlier times the same session was done, its place in the cycle and one suggestion — declared by the package (`briefing.yaml`), built on the server. The server and Wildman's file (22.1) and the phone's screen (22.2) are in; the web's block (22.3) is open | P2 | M | engine, API, iOS, web, content |
+| 22 | Pre-workout briefing: before a session, today's numbers beside the earlier times the same session was done, its place in the cycle and one suggestion — declared by the package (`briefing.yaml`), built on the server. The server and Wildman's file (22.1) the phone's screen (22.2) and the web's block (22.3) are in; reading the other packages' defaults (22.4) is open | P2 | M | engine, API, iOS, web, content |
 
 ---
 
@@ -2190,7 +2190,7 @@ where today stands in it, or what today assumes.
 - **22.2 The phone — done.** One `SessionBriefingView` (design-system §6.61) in the player's
   "Before the start" and in the session detail of an undone session: today's numbers, the
   suggestion, the earlier occurrences with their status and a small bar series of the item's metric, the standard to beat, a banner for a session to confirm first.
-- **22.3 The web.** The same block in `SessionPanel`, between the header and the exercises.
+- **22.3 The web — done.** The same block in `SessionPanel`, between the header and the exercises.
 - **22.4 Other packages.** Read the default briefing of Starting Strength, CrossFit, BJJ and
   Uphill beside their programs; write a `briefing.yaml` only where the default reads poorly.
 - **Later.** A wrist summary (a `today-session` key and both watches, per `docs/watch.md`);

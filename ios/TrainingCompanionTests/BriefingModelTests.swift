@@ -66,6 +66,38 @@ final class BriefingModelTests: XCTestCase {
         XCTAssertNil(SessionBriefing.seriesSummary(row))
     }
 
+    func testAnItemOfSeveralExercisesIsReadExerciseByExercise() throws {
+        let b = try JSONDecoder().decode(SessionBriefing.self, from: Data("""
+        {"items": [{"id": "module:clean_press", "title": "Clean and Press",
+          "today": {"text": "10 × 1", "values": {"total_reps": 10}},
+          "metric": {"id": "total_reps", "label": "Total reps", "unit": "reps"}, "times": 3,
+          "history": [{"date": "2026-11-01", "status": "clean", "values": {"total_reps": 15}},
+                      {"date": "2026-11-04", "status": "clean", "values": {"total_reps": 20}},
+                      {"date": "2026-11-08", "status": "clean", "values": {"total_reps": 25}}],
+          "exercises": [
+            {"exerciseId": "clean", "name": "Clean", "today": {"text": "10 × 1 · on the minute"},
+             "history": [{"date": "2026-11-08", "dayText": "8 Nov", "text": "5 × 5 · 20 kg · RPE 6", "status": "clean"}]},
+            {"exerciseId": "press", "name": "Press", "today": {"text": "10 × 1 · on the minute"},
+             "history": [{"date": "2026-11-08", "dayText": "8 Nov", "text": "5 × 5 · 16 kg · RPE 6", "status": "clean"}]},
+            {"name": "an exercise without an id is left out"}]}]}
+        """.utf8))
+        let item = b.items[0]
+        XCTAssertEqual(item.exercises.map(\.name), ["Clean", "Press"])
+        XCTAssertEqual(item.exercises[1].history.first?.text, "5 × 5 · 16 kg · RPE 6")
+        XCTAssertEqual(item.exercises[0].todayText, "10 × 1 · on the minute")
+        XCTAssertTrue(item.series.isEmpty)   // two runs are not one chart
+    }
+
+    func testARunThatNeverChangesIsNoSeries() throws {
+        let b = try JSONDecoder().decode(SessionBriefing.self, from: Data("""
+        {"items": [{"id": "module:getup", "title": "Get-up", "today": {"text": "10 × 1", "values": {"total_reps": 10}},
+          "metric": {"id": "total_reps", "label": "Total reps", "unit": "reps"}, "times": 2,
+          "history": [{"date": "2026-11-09", "status": "clean", "values": {"total_reps": 10}},
+                      {"date": "2026-11-12", "status": "clean", "values": {"total_reps": 10}}]}]}
+        """.utf8))
+        XCTAssertTrue(b.items[0].series.isEmpty)
+    }
+
     func testAPrescriptionAloneSaysNothing() throws {
         let b = try JSONDecoder().decode(SessionBriefing.self, from: Data("""
         {"items": [{"id": "exercise:x", "title": "X", "today": {"text": "3 × 5"}, "history": [], "times": 0}]}

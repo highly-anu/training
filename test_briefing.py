@@ -131,7 +131,7 @@ def test_clean_sessions_are_the_history_and_the_step_is_worded():
     swing = item(doc, 'module:swing')
     assert [h['status'] for h in swing['history']] == ['clean'] * 3
     assert [h['values']['reps_per_round'] for h in swing['history']] == [6, 8, 10]
-    assert swing['history'][-1]['text'] == '10 × 10 · on the minute · 24 kg · RPE 6', swing['history'][-1]
+    assert swing['history'][-1]['text'] == '10 × 10 · 24 kg · RPE 6', swing['history'][-1]
     assert swing['last']['date'] == swings[2]['date'] and swing['times'] == 3
     assert swing['suggestion']['kind'] == 'next_step'
     assert swing['suggestion']['text'].startswith('2 more a round than '), swing['suggestion']
@@ -200,6 +200,42 @@ def test_two_modules_on_one_day_are_two_items_each_with_its_own_history():
     for m in mods:
         assert item(doc, f'module:{m}')['times'] == len(
             [r for r in with_module(rows, m) if r['date'] < target['date']])
+
+
+def test_a_module_of_two_exercises_is_read_exercise_by_exercise():
+    rows = sessions(program('wildman_kettlebell', 'intermediate'))
+    cp = with_module(rows, 'clean_press')
+    done = [confirm(r) for r in cp[:2]]
+    done[0]['log']['exercises']['wk_kb_clean_single']['weightKg'] = 20
+    done[0]['log']['exercises']['wk_kb_press_single']['weightKg'] = 16
+    target = cp[2]
+    doc = briefing.build(target['session'], date=target['date'], history=done, modules=wildman_modules())
+    it = item(doc, 'module:clean_press')
+    assert [e['exerciseId'] for e in it['exercises']] == ['wk_kb_clean_single', 'wk_kb_press_single']
+    clean, press = it['exercises']
+    assert clean['today']['text'] == '5 × 3 · on the minute', clean['today']
+    assert [h['text'] for h in clean['history']] == ['5 × 1 · 20 kg · RPE 6', '5 × 2 · RPE 6'], clean['history']
+    assert [h['text'] for h in press['history']] == ['5 × 1 · 16 kg · RPE 6', '5 × 2 · RPE 6'], press['history']
+    assert all(h['status'] == 'clean' for h in clean['history'] + press['history'])
+    # The item's own row is one exercise's line, never the two joined.
+    assert ';' not in it['history'][0]['text'] and 'Kettlebell' not in it['history'][0]['text']
+
+
+def test_a_new_stage_is_said_as_one_not_as_a_sum_of_differences():
+    rows = sessions(program('wildman_kettlebell', 'intermediate'))
+    cp = with_module(rows, 'clean_press')
+    last, target = copy.deepcopy(cp[0]), copy.deepcopy(cp[1])
+    for row, (rounds, reps) in ((last, (5, 5)), (target, (10, 1))):
+        for ea in row['session']['exercises']:
+            if ea['load'].get('advances_module'):
+                ea['load'].update(target_rounds=rounds, reps_per_round=reps)
+        for m in row['session']['modules']:
+            m['rounds'] = rounds
+            m['requirements'] = {e: {'rounds': rounds, 'duration_sec': 0} for e in m['exercise_ids']}
+    doc = briefing.build(target['session'], date=target['date'], history=[confirm(last)], modules=wildman_modules())
+    text = item(doc, 'module:clean_press')['suggestion']['text']
+    assert text.startswith('A new stage: 10 × 1. ') and text.endswith(' was 5 × 5.'), text
+    assert 'fewer' not in text and 'more' not in text
 
 
 # ── A loaded lift, a named workout, a standard ───────────────────────────────
