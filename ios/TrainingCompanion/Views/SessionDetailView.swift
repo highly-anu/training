@@ -50,6 +50,8 @@ struct SessionDetailView: View {
     @State private var liftAnswers: [String: LiftConfirmation.Answer] = [:]
     /// The workout player, full screen (design-system §6.44).
     @State private var player: WorkoutPlayerModel.Target? = nil
+    @StateObject private var briefing = SessionBriefingLoader()
+    @EnvironmentObject private var router: AppRouter
     /// The player grows out of Start workout.
     @Namespace private var zoom
 
@@ -76,6 +78,7 @@ struct SessionDetailView: View {
                     }
                 }
                 headerSection
+                briefingSection
                 if let workout = linkedWorkout { linkedWorkoutSection(workout) }
                 exercisesSection
                 afterSection
@@ -128,6 +131,7 @@ struct SessionDetailView: View {
             .appPush(item: $logTarget) { target in
                 SessionLogForm(sessionKey: sessionKey, session: currentSession, openAt: target.exerciseId)
             }
+            .task { await loadBriefing() }
             .task {
                 // A test names its standards: their names and the athlete's
                 // results come from the catalog and the results.
@@ -647,6 +651,36 @@ struct SessionDetailView: View {
         .tint(ModalityStyle.color(for: currentSession.modality))
         .disabled(playerTarget == nil)
         .matchedTransitionSource(id: "player", in: zoom)
+    }
+
+    // MARK: - Before you start
+
+    /// Today against the earlier times it was done (§6.61), for a session
+    /// still to do; nothing when the server has nothing to add.
+    @ViewBuilder private var briefingSection: some View {
+        if !isDone, briefing.briefing?.saysSomething ?? (briefing.isLoading || briefing.error != nil) {
+            Section("Before you start") {
+                SessionBriefingView(loader: briefing, tint: ModalityStyle.color(for: currentSession.modality),
+                                    onOpenSession: { key in
+                                        // This sheet first: its closing clears the
+                                        // session Today presents, and would take the
+                                        // one being opened with it.
+                                        dismiss()
+                                        Task {
+                                            try? await Task.sleep(for: .milliseconds(450))
+                                            router.openSession(key)
+                                        }
+                                    }) { await loadBriefing(force: true) }
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+            }
+        }
+    }
+
+    private func loadBriefing(force: Bool = false) async {
+        guard !isDone else { return }
+        let date = weekIndex.flatMap { wi in dayName.flatMap { appState.sessionDate(weekIndex: wi, dayName: $0) } }
+        await briefing.load(api: appState.api, sessionKey: sessionKey, date: date, force: force)
     }
 
     private var playerTarget: WorkoutPlayerModel.Target? {
