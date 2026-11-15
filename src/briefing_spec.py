@@ -19,20 +19,26 @@ SHOW = ('sets', 'reps', 'rounds', 'reps_per_round', 'weight', 'interval', 'time'
 CHART = ('weight', 'reps', 'sets', 'total_reps', 'rounds', 'reps_per_round', 'time', 'hold', 'distance', 'rpe')
 SUGGEST = ('confirm_pending', 'next_step', 'cycle_end', 'next_load', 'beat_last', 'standard_target', 'repeat_last')
 SCOPE_KEYS = ('progression_models', 'modules', 'archetypes', 'exercises', 'slot_types', 'slot_roles',
-              'named_workout', 'scored')
+              'named_workout', 'scored', 'contract', 'earns')
 DEFAULT_HISTORY = 5
 
 # Tried after a package's own entries, in this order.
 DEFAULT_ENTRIES = (
     {'id': 'default_scored', 'scope': {'scored': True, 'named_workout': False}, 'same_as': 'exercise',
      'suggest': ['standard_target', 'beat_last']},
-    {'id': 'default_cycle', 'scope': {'progression_models': ['density_cycle', 'timed_cycle', 'skill_hold']},
+    {'id': 'default_cycle', 'scope': {'progression_models': ['density_cycle', 'timed_cycle', 'skill_hold'],
+                                      'earns': True},
      'same_as': 'module', 'show': ['rounds', 'reps_per_round', 'interval', 'time', 'hold', 'weight'],
      'chart': 'total_reps', 'cycle': True, 'suggest': ['confirm_pending', 'next_step', 'cycle_end']},
     {'id': 'default_lift', 'scope': {'progression_models': ['load_per_exposure']}, 'same_as': 'exercise',
      'show': ['sets', 'reps', 'weight'], 'chart': 'weight', 'suggest': ['next_load', 'repeat_last']},
     {'id': 'default_volume', 'scope': {'progression_models': ['weekly_volume']}, 'same_as': 'module',
      'show': ['time', 'distance'], 'chart': 'time', 'suggest': ['next_step']},
+    # A contract session done as written, with nothing to earn (a class, a
+    # strength workout whose weights are the athlete's own): the same workout
+    # before, exercise by exercise, and nothing to confirm.
+    {'id': 'default_as_written', 'scope': {'contract': True, 'earns': False}, 'same_as': 'module',
+     'show': ['sets', 'reps', 'weight', 'time', 'hold', 'distance'], 'suggest': []},
     {'id': 'default_named', 'scope': {'named_workout': True}, 'same_as': 'archetype',
      'suggest': ['standard_target', 'beat_last']},
     {'id': 'default_exercise', 'same_as': 'exercise', 'suggest': ['next_step', 'repeat_last']},
@@ -85,7 +91,8 @@ def matches(entry: dict, facts: dict) -> bool:
     """Does an entry's scope hold for one exercise of a session? `facts`:
     progression_model, module, archetypes (the session's, and a templated
     day's named workouts), exercise, slot_type, slot_role, named_workout,
-    scored."""
+    scored, contract (an exercise of a contract module), earns (it carries
+    the module's progress)."""
     scope = entry.get('scope') or {}
     for key, fact in (('progression_models', 'progression_model'), ('modules', 'module'),
                       ('exercises', 'exercise'), ('slot_types', 'slot_type'), ('slot_roles', 'slot_role')):
@@ -93,7 +100,7 @@ def matches(entry: dict, facts: dict) -> bool:
             return False
     if 'archetypes' in scope and not set(scope['archetypes'] or []) & set(facts.get('archetypes') or []):
         return False
-    for key in ('named_workout', 'scored'):
+    for key in ('named_workout', 'scored', 'contract', 'earns'):
         if key in scope and bool(scope[key]) != bool(facts.get(key)):
             return False
     return True
