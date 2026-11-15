@@ -29,7 +29,7 @@ A training logic system that algorithmically generates periodized training progr
   falls back to MSW mock data otherwise. With `VITE_SUPABASE_URL` empty it skips login and
   runs as the same `local-dev-user`.
 - **Production serves on four threads in one process** (Dockerfile: gunicorn
-  `gthread --threads 4`, 256 MB machine). `src/db.get_conn()` is per thread;
+  `gthread --threads 4`, 512 MB machine since 2026-11-15, for the method builder's worker thread; 256 MB before). `src/db.get_conn()` is per thread;
   `api._bound_send` fails a send that makes no progress for 30 s and `api._gzip`
   compresses large JSON (never for a `ciqdev_` watch request). With the old single
   sync worker, a phone that stopped reading mid-download of `/user/program` held
