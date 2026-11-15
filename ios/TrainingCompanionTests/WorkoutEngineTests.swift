@@ -15,7 +15,7 @@ final class WorkoutEngineTests: XCTestCase {
         // The cue settings as an athlete who switched the counts off has
         // them: a Start starts at once (no "Work in 3, 2, 1" task to wait for).
         for key in [WatchCueSettings.leadInKey, WatchCueSettings.countdownStartKey, WatchCueSettings.voiceKey] {
-            saved[key] = UserDefaults.standard.object(forKey: key)
+            saved.updateValue(UserDefaults.standard.object(forKey: key), forKey: key)
             UserDefaults.standard.set(false, forKey: key)
         }
     }
@@ -112,6 +112,55 @@ final class WorkoutEngineTests: XCTestCase {
         wait(e, 20 + 60 + 60)
         XCTAssertEqual(e.phase, .active(exerciseIndex: 1, setIndex: 0), "three rounds, then the next step")
         XCTAssertEqual(e.outcomes["swing"]?.rounds, 3)
+    }
+
+    func testARestlessIntervalCountsItsMinuteOutIntoTheNextRound() async throws {
+        // An EMOM: the work's last three seconds lead into the next round,
+        // on the page as in the ticks; the last round has nothing to lead into.
+        UserDefaults.standard.set(true, forKey: WatchCueSettings.leadInKey)
+        let swing = try interval(rounds: 2, work: 60, rest: 0)
+        let s = session([swing, try squat()])
+        let e = engine(s)
+        e.start(0, swing, s.screen(for: swing))
+        XCTAssertTrue(e.isWorkingInterval(0))
+        wait(e, 56)
+        XCTAssertNil(e.leadInLeft(0), "four seconds left")
+        var counted: [Int?] = []
+        for _ in 0..<3 { wait(e, 1); counted.append(e.leadInLeft(0)) }
+        XCTAssertEqual(counted, [3, 2, 1])
+        wait(e, 1)
+        XCTAssertEqual(e.phase, .emomInterval(exerciseIndex: 0, round: 2, isWork: true, remaining: 60))
+        XCTAssertNil(e.leadInLeft(0))
+        wait(e, 58)
+        XCTAssertNil(e.leadInLeft(0), "the last round leads into nothing")
+
+        // With a rest, the work ends in its rest: no count over the work.
+        let rested = try interval(rounds: 2, work: 40, rest: 20)
+        let s2 = session([rested, try squat()])
+        let e2 = engine(s2)
+        e2.start(0, rested, s2.screen(for: rested))
+        wait(e2, 38)
+        XCTAssertNil(e2.leadInLeft(0))
+    }
+
+    func testThePlayerLeadsWithTheStepsClock() async throws {
+        // The phone draws the clock large: B when only B is one.
+        func fields(_ slot: String) throws -> (WatchVocab.Field?, WatchVocab.Field?) {
+            let x = try ex(#"{"exerciseId": "x", "name": "X", "slotType": "\#(slot)"}"#)
+            let f = WatchSpecText.playerFields(session([x]).screen(for: x))
+            return (f.lead, f.second)
+        }
+        var f = try fields("emom")
+        XCTAssertEqual(f.0, .intervalLeft); XCTAssertEqual(f.1, .interval)
+        f = try fields("amrap")
+        XCTAssertEqual(f.0, .capLeft); XCTAssertEqual(f.1, .rounds)
+        f = try fields("for_time")
+        XCTAssertEqual(f.0, .elapsed); XCTAssertEqual(f.1, .roundsOfTarget)
+        f = try fields("sets_reps")
+        XCTAssertFalse(WatchSpecText.isClock(f.0), "a set's fields stay as written")
+        let sets = try ex(#"{"exerciseId": "x", "name": "X", "slotType": "sets_reps"}"#)
+        let screen = session([sets]).screen(for: sets)
+        XCTAssertEqual(f.0, screen.a); XCTAssertEqual(f.1, screen.b)
     }
 
     func testARestThatEndsOnHeartRateRunsItsCapWithoutABand() async throws {

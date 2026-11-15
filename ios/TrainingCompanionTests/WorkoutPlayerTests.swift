@@ -11,7 +11,7 @@ final class WorkoutPlayerTests: XCTestCase {
 
     override func setUp() async throws {
         for key in [WatchCueSettings.leadInKey, WatchCueSettings.countdownStartKey, WatchCueSettings.voiceKey] {
-            saved[key] = UserDefaults.standard.object(forKey: key)
+            saved.updateValue(UserDefaults.standard.object(forKey: key), forKey: key)
             UserDefaults.standard.set(false, forKey: key)
         }
     }

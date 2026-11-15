@@ -9,7 +9,7 @@ import SwiftUI
 /// - `compact`: 12 pt of padding, for a card that is one row of a stack.
 /// - `border`: a ring in the card's colour, for a card whose colour is its
 ///   state (readiness, adherence, a pending suggestion).
-/// - `tint`: the card washed with a colour (a completed session).
+/// - `tint`: the card washed with a colour (a notice, a saved state).
 struct AppCardSurface: ViewModifier {
     var compact = false
     var border: Color? = nil

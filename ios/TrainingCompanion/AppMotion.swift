@@ -61,6 +61,25 @@ private struct SymbolSpin: ViewModifier {
     }
 }
 
+// MARK: - A count's last seconds
+
+/// A beat each time the value changes: the number swells and settles. For a
+/// countdown's last seconds, where the change itself is the message.
+private struct Pulse<Value: Equatable>: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    let value: Value
+
+    func body(content: Content) -> some View {
+        if reduceMotion {
+            content
+        } else {
+            content.phaseAnimator([false, true, false], trigger: value) { view, swollen in
+                view.scaleEffect(swollen ? 1.14 : 1)
+            } animation: { _ in AppAnimation.springSnappy }
+        }
+    }
+}
+
 // MARK: - Scroll
 
 private struct ScrollFade: ViewModifier {
@@ -129,6 +148,11 @@ extension View {
     /// clock's tick).
     func appNumeric(countsDown: Bool = false) -> some View {
         modifier(NumericText(countsDown: countsDown))
+    }
+
+    /// A beat on every change of the value (a lead-in's 3, 2, 1).
+    func appPulse<Value: Equatable>(value: Value) -> some View {
+        modifier(Pulse(value: value))
     }
 
     /// A symbol that bounces when the value changes: something was earned.
