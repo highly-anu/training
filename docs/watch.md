@@ -112,6 +112,7 @@ As of 2026-10-18. *Server* is the payload key; *—* means the server has no par
 | Upload: sets by id, rounds, clock, distance | — | `Wire.mc` | `WatchUpload` | `WorkoutPlayerModel.sessionLog` → `PUT /health/sessions/by-uid/<sessionUid>`, `source: phone`, step windows with `startAt`/`endAt` |
 | Interval rounds, timed seconds; reps counted at the end | `logs` | `noteStepEnd`, Results menu | `stepLeft`, completion screen | the completion screen |
 | An interval's new round is shown as it begins | — | a 3 s "Work n/N" alert when the work is a minute or longer (`StepAlertView`) | "Round n" over the buttons for 2 s; the lead-in word counts a rest-less minute out | a band "ROUND n" across the step; the clock leads the page in a ring that empties with the round (`PlayerStepView`) |
+| Pause the whole workout (every clock, the session's time) | — | the watch's own Stop/Resume | *pending* — a timed step's clock only | Pause on every step and rest, `PlayerPausedView`, the Live Activity's Pause / Resume (`pauseWorkout`) |
 | An alternating interval names each round's movement (Option C) | `alternateName` | `roundName` | `WatchSpecText.roundName` | the same |
 | **Native, not shared** | | glance (64 KB; Next up or Day bar, `glanceStyle`; a press opens Today), wellness posting, pairing QR | HealthKit workout and route, complication, overtime prompt | Live Activity and lock-screen cues, resume after a relaunch, the stored program when offline |
 

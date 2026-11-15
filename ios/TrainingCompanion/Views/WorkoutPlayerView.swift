@@ -141,13 +141,17 @@ struct WorkoutPlayerView: View {
         let tint = ModalityStyle.color(for: session.modalityId)
         return VStack(spacing: 0) {
             header(session, index: index, tint: tint)
-            if case let .resting(ei, cs, left) = engine.phase {
-                PlayerRestView(engine: engine, session: session, index: ei, completedSet: cs, left: left, tint: tint)
+            if engine.isPaused {
+                PlayerPausedView(engine: engine, exercise: ex, tint: tint) { player.togglePause() }
+            } else if case let .resting(ei, cs, left) = engine.phase {
+                PlayerRestView(engine: engine, session: session, index: ei, completedSet: cs, left: left, tint: tint) {
+                    player.togglePause()
+                }
             } else {
                 PlayerStepView(engine: engine, session: session, exercise: ex, index: index, tint: tint)
                 Spacer(minLength: 0)
                 PlayerControls(engine: engine, session: session, exercise: ex, index: index, tint: tint,
-                               showLogger: $showLogger)
+                               showLogger: $showLogger) { player.togglePause() }
             }
         }
         .overlay { leadIn(index, tint: tint) }
@@ -460,6 +464,8 @@ struct PlayerControls: View {
     let index: Int
     let tint: Color
     @Binding var showLogger: Bool
+    /// Pause the whole workout.
+    var onPause: () -> Void = {}
 
     var body: some View {
         let screen = session.screen(for: exercise)
@@ -484,12 +490,8 @@ struct PlayerControls: View {
                     small("−0.1 km") { addKm(-0.1, st) }
                     small("+0.1 km") { addKm(0.1, st) }
                 }
-                if running, case .timedWork = engine.phase {
-                    small(engine.isTimerPaused ? "Resume" : "Pause",
-                          systemImage: engine.isTimerPaused ? "play.fill" : "pause.fill") {
-                        engine.isTimerPaused ? engine.resumeTimer() : engine.pauseTimer()
-                    }
-                }
+                // Every clock of the workout, on any step.
+                small("Pause", systemImage: "pause.fill") { onPause() }
                 small("Skip", systemImage: "forward.end.fill") { engine.finishStep(index, exercise, screen) }
             }
             .controlSize(.large)
@@ -551,6 +553,47 @@ struct PlayerControls: View {
     }
 }
 
+// MARK: - Paused
+
+/// The workout held: every clock stands where it was, and the one thing to
+/// do is carry on. Leaving and the step list stay in the header.
+struct PlayerPausedView: View {
+    @ObservedObject var engine: WorkoutSessionState
+    let exercise: WatchExercise
+    let tint: Color
+    let onResume: () -> Void
+
+    var body: some View {
+        VStack(spacing: 20) {
+            Spacer(minLength: 0)
+            Image(systemName: "pause.circle.fill")
+                .font(AppFont.hero(96))
+                .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
+            Text("Paused").font(.largeTitle.bold())
+            VStack(spacing: 4) {
+                Text(exercise.name).font(.title3.weight(.semibold))
+                Text("\(WatchSpecText.mmss(engine.elapsedSeconds)) so far · the clocks wait")
+                    .foregroundStyle(.secondary)
+            }
+            .multilineTextAlignment(.center)
+            Spacer(minLength: 0)
+            Button {
+                AppHaptics.medium()
+                onResume()
+            } label: {
+                Label("Resume", systemImage: "play.fill")
+                    .font(.title2.weight(.bold))
+                    .frame(maxWidth: .infinity, minHeight: 64)
+            }
+            .appButton(.primary)
+            .tint(tint)
+            .padding()
+        }
+        .padding(.horizontal)
+    }
+}
+
 // MARK: - A countdown's ring
 
 /// The player's countdown ring: what is left of a rest or of an interval's
@@ -590,6 +633,8 @@ struct PlayerRestView: View {
     let completedSet: Int
     let left: Int
     let tint: Color
+    /// Pause the whole workout.
+    var onPause: () -> Void = {}
 
     var body: some View {
         let ex = session.exercises[index]
@@ -613,6 +658,11 @@ struct PlayerRestView: View {
             .multilineTextAlignment(.center)
             Spacer(minLength: 0)
             HStack(spacing: 16) {
+                Button { onPause() } label: {
+                    Image(systemName: "pause.fill").frame(minWidth: 52, minHeight: 52)
+                }
+                .appButton(.secondary)
+                .accessibilityLabel("Pause workout")
                 Button {
                     engine.extendRest(exerciseIndex: index, completedSet: completedSet, current: left)
                 } label: {

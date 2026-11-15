@@ -1181,6 +1181,12 @@ next. No heart rate on the phone: a heart-rate rest runs its cap.
   interval (an EMOM) counts its last three seconds in place and a band says "ROUND n" as
   the minute turns, and the Apple Watch shows the lead-in word and "Round n" there
   (`leadInLeft` covers a rest-less interval's work; design-system §6.44, §9.6).
+- **Pause holds the whole workout** (`pauseWorkout` / `resumeWorkout`, `pausedAt` in the
+  snapshot): no tick, no forecast, the wall-clock starts moved on by the time away at
+  Resume; the Live Activity's Pause is the same one. The clock counts whole seconds from
+  the last whole second (`catchUp` keeps the fraction; the player looks four times a
+  second) — set to the moment asked for, a timer a few milliseconds late skipped a tick
+  and lost a second (`testALateTimerLosesNoSecond`).
 - **Away from the app**: the screen stays awake while the player is open; in the
   background each forecast moment is a notification (`WorkoutLockScreen`, prefix
   `workout-cue-`, at most 40) and the Live Activity shows the step and its countdown
@@ -1420,7 +1426,7 @@ The workout player opens from the launch too, in debug builds (`WorkoutPlayerDeb
 `SIMCTL_CHILD_TC_ROUTE='trainingcompanion://session?key=<key>'` with
 `SIMCTL_CHILD_TC_PLAYER=<key>` starts that session's player afresh (a kept workout is let
 go); `TC_PLAYER_STEP=<n>`, `TC_PLAYER_RUN=1` (Start), `TC_PLAYER_LAPS=<k>` (the primary
-button k times; a set is logged as prescribed), `TC_PLAYER_END=1` (the end screen),
+button k times; a set is logged as prescribed), `TC_PLAYER_PAUSE=<seconds>` (Pause that long after the start), `TC_PLAYER_END=1` (the end screen),
 `TC_PLAYER_SAVE=1` (and Save). The session log form opens the same way (`SessionLogDebug`):
 `SIMCTL_CHILD_TC_LOG=<key>` with the session's route, and `TC_LOG_SAVE=<seconds>` ticks every
 exercise and saves after that long (stop the API in between to see an unsent log). Launching another app (`simctl launch … com.apple.Preferences`)

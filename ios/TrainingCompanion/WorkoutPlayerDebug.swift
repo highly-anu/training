@@ -10,6 +10,7 @@ import Foundation
 /// - `TC_PLAYER_STEP=<n>` — go to step n; `TC_PLAYER_RUN=1` — press its
 ///   Start; `TC_PLAYER_LAPS=<k>` — press its primary button k times (a set
 ///   is logged as prescribed; the last set's rest is left running).
+/// - `TC_PLAYER_PAUSE=<seconds>` — press Pause that long after the start.
 /// - `TC_PLAYER_END=1` — then finish the workout (its completion screen);
 ///   `TC_PLAYER_SAVE=1` — and save it, as Save workout does.
 enum WorkoutPlayerDebug {
@@ -23,6 +24,7 @@ enum WorkoutPlayerDebug {
     static var step: Int? { env["TC_PLAYER_STEP"].flatMap(Int.init) }
     static var run: Bool { env["TC_PLAYER_RUN"] == "1" }
     static var laps: Int { env["TC_PLAYER_LAPS"].flatMap(Int.init) ?? 0 }
+    static var pause: Double? { env["TC_PLAYER_PAUSE"].flatMap(Double.init) }
     static var end: Bool { env["TC_PLAYER_END"] == "1" }
     static var save: Bool { env["TC_PLAYER_SAVE"] == "1" }
     /// `TC_PLAYER_OVERVIEW=1` — open the player and leave it before the start.
@@ -63,6 +65,12 @@ enum WorkoutPlayerDebug {
                 }
             } else {
                 engine.perform(outcome, i, ex, screen)
+            }
+        }
+        if let pause {
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: UInt64(pause * 1_000_000_000))
+                player.togglePause()
             }
         }
         guard end else { return }

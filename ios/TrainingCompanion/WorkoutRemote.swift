@@ -33,14 +33,13 @@ enum WorkoutRemote {
     }
 
     /// What a button does to the engine, as the player's own buttons do it:
-    /// Skip ends a rest, else the step; Pause holds a timed step's clock and
-    /// does nothing anywhere else. Past the last step nothing moves.
+    /// Skip ends a rest, else the step; Pause holds the whole workout, Resume
+    /// lets it run on. Past the last step nothing moves.
     static func apply(_ action: WorkoutActivityControl.Action, to engine: WorkoutSessionState, session: WatchSession) {
         guard let index = engine.phase.exerciseIndex, session.exercises.indices.contains(index) else { return }
         switch action {
         case .pauseResume:
-            guard case .timedWork = engine.phase else { return }
-            engine.isTimerPaused ? engine.resumeTimer() : engine.pauseTimer()
+            engine.isPaused ? engine.resumeWorkout() : engine.pauseWorkout()
         case .skip:
             if case let .resting(ei, set, _) = engine.phase {
                 engine.skipRest(exerciseIndex: ei, completedSet: set)

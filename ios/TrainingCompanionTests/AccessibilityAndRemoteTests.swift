@@ -81,7 +81,7 @@ final class AccessibilityAndRemoteTests: XCTestCase {
         return e
     }
 
-    func testPauseHoldsATimedStepAndTheActivitySaysSo() async throws {
+    func testPauseHoldsTheWorkoutAndTheActivitySaysSo() async throws {
         let s = try session()
         let e = engine(s)
         e.start(0, s.exercises[0], s.screen(for: s.exercises[0]))
@@ -89,11 +89,12 @@ final class AccessibilityAndRemoteTests: XCTestCase {
         XCTAssertFalse(WorkoutLockScreen.state(e, session: s).paused)
 
         WorkoutRemote.apply(.pauseResume, to: e, session: s)
-        XCTAssertTrue(e.isTimerPaused)
+        XCTAssertTrue(e.isPaused)
         XCTAssertTrue(WorkoutLockScreen.state(e, session: s).paused)
+        XCTAssertNil(WorkoutLockScreen.state(e, session: s).endsAt, "nothing counts down while paused")
 
         WorkoutRemote.apply(.pauseResume, to: e, session: s)
-        XCTAssertFalse(e.isTimerPaused)
+        XCTAssertFalse(e.isPaused)
     }
 
     func testSkipFinishesTheStep() async throws {
@@ -104,7 +105,7 @@ final class AccessibilityAndRemoteTests: XCTestCase {
         XCTAssertEqual(e.phase.exerciseIndex, 1, "the timed step left, the sets step current")
     }
 
-    func testPauseDoesNothingOnASetAndSkipEndsItsRest() async throws {
+    func testPauseHoldsASetTooAndSkipEndsItsRest() async throws {
         let s = try session()
         let e = engine(s)
         let squat = s.exercises[1]
@@ -112,8 +113,9 @@ final class AccessibilityAndRemoteTests: XCTestCase {
         XCTAssertEqual(e.phase.exerciseIndex, 1)
 
         WorkoutRemote.apply(.pauseResume, to: e, session: s)
-        XCTAssertFalse(e.isTimerPaused, "a set has no clock to hold")
-        XCTAssertFalse(WorkoutLockScreen.state(e, session: s).canPause)
+        XCTAssertTrue(e.isPaused, "a set pauses too: the session's time waits")
+        XCTAssertTrue(WorkoutLockScreen.state(e, session: s).canPause)
+        WorkoutRemote.apply(.pauseResume, to: e, session: s)
 
         e.completeSet(WatchSetLog(setIndex: 0, repsActual: 5, weightKg: 100, rpe: nil, completed: true,
                                   durationSeconds: nil, startOffset: nil, endOffset: nil), for: squat.exerciseId)

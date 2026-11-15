@@ -163,6 +163,43 @@ final class WorkoutEngineTests: XCTestCase {
         XCTAssertEqual(f.0, screen.a); XCTAssertEqual(f.1, screen.b)
     }
 
+    func testAPausedWorkoutStandsStillAndRunsOnFromWhereItWas() async throws {
+        let swing = try interval(rounds: 3, work: 60, rest: 0)
+        let s = session([swing, try squat()])
+        let e = engine(s)
+        e.start(0, swing, s.screen(for: swing))
+        wait(e, 20)
+        e.pauseWorkout()
+        XCTAssertTrue(e.forecast().isEmpty, "nothing is coming while it is paused")
+        wait(e, 300)
+        XCTAssertEqual(e.phase, .emomInterval(exerciseIndex: 0, round: 1, isWork: true, remaining: 40))
+        XCTAssertEqual(e.elapsedSeconds, 20, "the session's time waits too")
+        e.resumeWorkout()
+        wait(e, 40)
+        XCTAssertEqual(e.phase, .emomInterval(exerciseIndex: 0, round: 2, isWork: true, remaining: 60))
+        XCTAssertEqual(e.elapsedSeconds, 60)
+
+        // Saved paused, restored paused.
+        e.pauseWorkout()
+        let copy = WorkoutSessionState()
+        copy.restore(e.snapshot(), session: s)
+        XCTAssertTrue(copy.isPaused)
+    }
+
+    func testALateTimerLosesNoSecond() async throws {
+        // A timer that fires a little late, then on time: each whole second
+        // is ticked once and the fraction is carried, never dropped.
+        let swing = try interval(rounds: 3, work: 60, rest: 0)
+        let s = session([swing, try squat()])
+        let e = engine(s)
+        e.start(0, swing, s.screen(for: swing))
+        for fire in [1.04, 2.0, 3.03, 4.0, 5.0, 6.02, 7.0, 8.0, 9.0, 10.0] {
+            e.catchUp(to: t0.addingTimeInterval(fire))
+        }
+        XCTAssertEqual(e.elapsedSeconds, 10)
+        XCTAssertEqual(e.phase, .emomInterval(exerciseIndex: 0, round: 1, isWork: true, remaining: 50))
+    }
+
     func testARestThatEndsOnHeartRateRunsItsCapWithoutABand() async throws {
         // The phone reads no heart rate: a gated rest is its time cap.
         let swing = try interval(rounds: 2, work: 30, rest: 90, gate: 120)
