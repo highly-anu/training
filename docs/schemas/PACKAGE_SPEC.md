@@ -52,6 +52,7 @@ reported; nothing is taken from another method.
 | `level_seeds.yaml` | no | — | yes | What an athlete of each level is assumed to know already (unlocks `requires`). |
 | `analytics.yaml` | no | `analytics.schema.json` | yes | What progress means for the method. Without it a spec is synthesised from the frameworks. |
 | `watch.yaml` | no | `watch.schema.json` | yes | How its sessions look on the watches. Without it, the slot types' default screens. |
+| `briefing.yaml` | no | `briefing.schema.json` | yes | What the athlete sees before a session: which earlier sessions count as the same one, the numbers that lead, the suggestions. Without it, the default entries. |
 | `training_contract.yaml` | no | `training_contract.schema.json` | yes | Per track, modules the engine places as written, with earned progress (the advanced shape). |
 | `standards.yaml` | no | `standards.schema.json` | yes | Standards the method tests that the commons lack. |
 | `vocabulary.yaml` | no | `vocabulary.schema.json` | yes | Modalities, movement patterns and equipment the package adds for itself. |
@@ -295,7 +296,7 @@ need no prefix.
 
 <!-- gen:limits -->
 - at most **200 files** and **512 KB** of YAML in a package, and **20 packages** an athlete;
-- only the files the table above marks, as lower-case paths: `analytics.yaml`, `exercise_media.yaml`, `exercises.yaml`, `fidelity.yaml`, `level_seeds.yaml`, `philosophy.yaml`, `standards.yaml`, `training_contract.yaml`, `vocabulary.yaml`, `watch.yaml`, `frameworks/<id>.yaml`, `archetypes/<…>/<id>.yaml` (up to three subfolders);
+- only the files the table above marks, as lower-case paths: `analytics.yaml`, `briefing.yaml`, `exercise_media.yaml`, `exercises.yaml`, `fidelity.yaml`, `level_seeds.yaml`, `philosophy.yaml`, `standards.yaml`, `training_contract.yaml`, `vocabulary.yaml`, `watch.yaml`, `frameworks/<id>.yaml`, `archetypes/<…>/<id>.yaml` (up to three subfolders);
 - the package id is 3–64 characters of `a-z`, `0-9` and `_`, starting with a letter;
 - every id the package declares for itself — the package, frameworks, archetypes, standards and their categories, modalities, movement patterns, equipment — starts with the owner's prefix, `u<8 hex>_` (`GET /api/packages` says it). An exercise id either carries it or is an exercise a shipped package declares, which the package may re-declare with its own loads.
 <!-- /gen:limits -->

@@ -475,6 +475,75 @@ def seed_lifts(current: dict, logs: dict, module: dict) -> dict:
     return out
 
 
+def modules_for(package: str | None, module_ids, track: str | None = None) -> dict:
+    """{module id: module} of the package's contract track that has these
+    modules — the named track first, else the first that holds them all; {}
+    for a package without a contract. For readers of a stored session (the
+    briefing), which carries module ids and no track."""
+    from . import loader
+    import os
+    wanted = {m for m in module_ids or [] if m}
+    if not package or not wanted:
+        return {}
+    path = os.path.join(loader.package_dir(package), 'training_contract.yaml')
+    if not os.path.exists(path):
+        return {}
+    try:
+        tracks = list((_document(path).get('tracks') or {}))
+    except Exception:  # noqa: BLE001 — an unreadable contract names nothing
+        return {}
+    for name in ([track] if track in tracks else []) + [t for t in tracks if t != track]:
+        try:
+            contract = load_contract(package, name)
+        except ContractError:
+            continue
+        by_id = {m['id']: m for m in (contract or {}).get('modules') or []}
+        if wanted <= by_id.keys():
+            return by_id
+    return {}
+
+
+def clean_outcomes(module: dict, exercises: dict | None) -> list | None:
+    """A session's logged outcomes for one module record when they earn it —
+    every progressing exercise clean, at or below the module's RPE, its rounds
+    or seconds done, any bell weight a real number — else None. The one
+    reading of "clean" (`confirmed_state` advances on it; the briefing says
+    which earlier sessions were)."""
+    exercises = exercises if isinstance(exercises, dict) else {}
+    outcomes = [exercises.get(eid, {}) for eid in module['exercise_ids']]
+    if not outcomes or not all(isinstance(o, dict) and o.get('clean') is True and not isinstance(o.get('rpe'), bool) and isinstance(o.get('rpe'), (int, float))
+                               and 0 < o['rpe'] <= module['max_rpe'] for o in outcomes):
+        return None
+    if any(o.get(k) is not None and (isinstance(o[k], bool) or not isinstance(o[k], (int, float)) or not math.isfinite(o[k]))
+           for o in outcomes for k in ('durationSec', 'rounds')):
+        return None
+    requirements = module.get('requirements') or {eid: {
+        'duration_sec': module.get('duration_sec', 0), 'rounds': module['rounds']}
+        for eid in module['exercise_ids']}
+    if not all((o.get('durationSec') or 0) >= requirements[eid].get('duration_sec', 0)
+               if requirements[eid].get('duration_sec') else
+               (o.get('rounds') or len(o.get('sets') or [])) >= requirements[eid]['rounds']
+               for eid, o in zip(module['exercise_ids'], outcomes)):
+        return None
+    if any(isinstance(o.get('weightKg'), bool) or not isinstance(o.get('weightKg'), (int, float))
+           or not math.isfinite(o['weightKg']) or o['weightKg'] <= 0
+           for o in outcomes if o.get('weightKg') is not None):
+        return None
+    return outcomes
+
+
+def cycle_position(progression: dict | None, step: int) -> dict | None:
+    """Where a step stands in a density cycle: {step, of, stage, stages}, all
+    counted from 1; None for a model without a cycle of steps."""
+    spec = progression or {}
+    if spec.get('model') != 'density_cycle':
+        return None
+    reps = len(range(spec['reps_start'], spec['reps_max'] + 1, spec['reps_step']))
+    stages = len(spec['rounds'])
+    index = min(max(int(step), 0), reps * stages - 1)
+    return {'step': index + 1, 'of': reps * stages, 'stage': index // reps + 1, 'stages': stages}
+
+
 def confirmed_state(current: dict, logs: dict, contract: dict) -> dict:
     """Consume successful exposures once, in prescription order, never by date alone.
 
@@ -527,24 +596,10 @@ def confirmed_state(current: dict, logs: dict, contract: dict) -> dict:
                         # attending moves the rotation on.
                         record['completed'] += 1
                         continue
-                    outcomes = [log.get('exercises', {}).get(eid, {}) for eid in module['exercise_ids']]
-                    if not outcomes or not all(isinstance(o, dict) and o.get('clean') is True and not isinstance(o.get('rpe'), bool) and isinstance(o.get('rpe'), (int, float))
-                                               and 0 < o['rpe'] <= module['max_rpe'] for o in outcomes):
-                        continue
-                    if any(o.get(k) is not None and (isinstance(o[k], bool) or not isinstance(o[k], (int, float)) or not math.isfinite(o[k]))
-                           for o in outcomes for k in ('durationSec', 'rounds')):
-                        continue
-                    requirements = module.get('requirements') or {eid: {
-                        'duration_sec': module.get('duration_sec', 0), 'rounds': module['rounds']}
-                        for eid in module['exercise_ids']}
-                    if not all((o.get('durationSec') or 0) >= requirements[eid].get('duration_sec', 0)
-                               if requirements[eid].get('duration_sec') else
-                               (o.get('rounds') or len(o.get('sets') or [])) >= requirements[eid]['rounds']
-                               for eid, o in zip(module['exercise_ids'], outcomes)):
+                    outcomes = clean_outcomes(module, log.get('exercises'))
+                    if outcomes is None:
                         continue
                     logged_weights = [o.get('weightKg') for o in outcomes if o.get('weightKg') is not None]
-                    if any(isinstance(w, bool) or not isinstance(w, (int, float)) or not math.isfinite(w) or w <= 0 for w in logged_weights):
-                        continue
                     weights = set(logged_weights)
                     if weights:
                         if len(weights) != 1 or any(isinstance(w, bool) or not isinstance(w, (int, float)) or not math.isfinite(w) or w <= 0 for w in weights):

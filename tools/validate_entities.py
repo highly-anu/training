@@ -60,6 +60,8 @@ def _detect_schema(path: str) -> tuple[str | None, bool]:
         return 'analytics.schema.json', False
     if basename == 'watch.yaml':
         return 'watch.schema.json', False
+    if basename == 'briefing.yaml':
+        return 'briefing.schema.json', False
     if basename == 'fidelity.yaml':
         return 'fidelity.schema.json', False
     if basename == 'source_weeks.yaml':

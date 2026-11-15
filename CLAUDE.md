@@ -153,6 +153,7 @@ All prefixed `/api/`:
 | GET | `/constraints/equipment-profiles` | `EquipmentProfile[]` |
 | GET | `/constraints/injury-flags` | `InjuryFlag[]` |
 | POST | `/programs/generate` | `GeneratedProgram` (`week_in_program` numbers a partial regenerate's tail from the kept head's length + 1) |
+| GET | `/sessions/briefing?key=&date=` | Before a session: per item (a contract module, a named workout, an exercise — the package's `briefing.yaml` says which, `src/briefing_spec.py`) today's numbers, the earlier occurrences with their status (clean, made, missed, logged, unconfirmed), the cycle position and one suggestion; `pending` — sessions to confirm first (`src/briefing.py`); 404 when the key names no session of the program |
 | POST | `/sessions/generate` | `Session` (single session regeneration). `add: true`: a session the athlete adds on the fly to today or a later day — any package (a borrowed one carries `provenance`), named workouts included, the ones that fit as written within the session's time, one at random (`current_archetype_id` asks for another); never refused by a training contract or a template day; the answer is marked `added` |
 | POST | `/dev/constraint-impact` | For Dev Lab ▸ Impact (`components/devlab/ImpactPanel.tsx`): generate's body run against a reference with nothing in the way (the packages' equipment, no injuries, the framework's level, a training contract's mastery and bell pair for that level) and once per constraint lifted alone (equipment, injury, level, proficiency); every changed session or slot with what was planned, its `causes`, why, `knock_on` when an earlier direct change moved the rotation, and the equipment that would restore the most changes (`src/constraint_impact.py`). A refused request (200, no weeks) answers `feasible: false` and `unblocked_by`: the one constraint, or the framework's ideal days and minutes, that alone lets it generate, else `combined`; a reference that cannot generate answers `reference_generates: false`. At most 12 weeks and seven generations; local dev or `AUTHORING_ENABLED` only |
 | GET | `/dev/portability` | For Dev Lab ▸ Builder readiness (`components/devlab/ReadinessPanel.tsx`): the steps of the LLM package builder's foundation (roadmap item 20) with every gap, open or done; per package its engine shape per track, the files it carries, the records it still needs outside its folder (scorecard, coverage, status, golden hashes, dossier; `done: null` and listed in `unchecked` where the deployment lacks the file — the API image has no `docs/`), any id the commons do not define, and ids two packages declare (which copy the loader keeps); with `tools/portability_gaps.json`, what no package can bring in its folder yet, each gap anchored in the code (`src/portability.py`, `test_portability.py`). Local dev or `AUTHORING_ENABLED` only |
@@ -1192,6 +1193,51 @@ next. No heart rate on the phone: a heart-rate rest runs its cap.
 - Settings ▸ Workout: Count in before work, Count in after Start, Voice
   (`WatchCueSettings`, the same keys the Apple Watch keeps on its own).
 - `WorkoutEngineTests` (every template on a simulated clock), `WorkoutLockScreenTests`.
+
+## Pre-workout Briefing
+
+**Before a session, the server says what it is against what was done** (since 2026-11-15,
+roadmap 22). `GET /api/sessions/briefing?key=<week>-<Day>-<i>` answers, per item of the
+session, today's numbers, the earlier occurrences of the same thing, where it stands in its
+cycle and one suggestion. The clients lay it out (22.2, 22.3 — open); every sentence is the
+server's.
+
+- **The package says what "the same session" is.** `data/packages/<id>/briefing.yaml`
+  (optional; `docs/schemas/briefing.schema.json`): entries tried in order, each with a
+  `scope` (progression models, modules, archetypes, exercises, slot types, slot roles,
+  `named_workout`, `scored`), `same_as` (`module` — a contract module and its variant;
+  `archetype` — a templated day's named workout; `exercise`), `show` (the numbers that word
+  a prescription), `chart`, `history`, `cycle` and `suggest`. The default entries
+  (`briefing_spec.DEFAULT_ENTRIES`) follow a package's own, so a package without the file —
+  and whatever a file leaves out — is read by how its loads were written: a density, timed
+  or skill module by module, a `load_per_exposure` lift by exercise, a named workout by
+  archetype, anything else by exercise. Wildman declares its density cycle. Nothing in
+  `src/` names a package; the schema's enums are the vocabulary.
+- **A contract module's preparation and recovery blocks make no item** — only the exercises
+  its record lists (`modules[].exercise_ids`) do; a templated day's warm-up makes none.
+- **History is joined through the version a log was written against.** Session logs carry
+  no module id. This program's sessions are walked with their logs and matches; earlier
+  programs' logged sessions come from `get_session_logs_by_uid` →
+  `program_history.session_lookup` (180 days, the newest 80). Only a done session (logged
+  complete or matched) is an occurrence; a missed one is left out.
+- **Statuses have one reading each.** `clean` is `training_contract.clean_outcomes` — the
+  predicate `confirmed_state` advances on, extracted so the two cannot part; `made` /
+  `missed` is `_lift_outcome`; `logged` has an outcome that earns nothing; `unconfirmed` is
+  done with no outcome (a watch-recorded or linked workout).
+- **Suggestions are advice** (`confirm_pending`, `next_step`, `cycle_end`, `next_load`,
+  `beat_last`, `standard_target`, `repeat_last`; the first of the entry's list with
+  something to say). None changes the program. `confirm_pending` — an earlier session of
+  the module in this program is done but not clean while today's load is `conditional` —
+  also fills `pending`, the sessions to confirm first.
+- A new package file is wired in nine places, all of which `briefing.yaml` is in:
+  `loader` (its loader and `_probe`), `validate_entities._detect_schema`, a
+  `check_provenance` step, `portability.FILES` and `_read`, `package_store._TOP_LEVEL`,
+  `package_builder.MORE_SCHEMAS`, `mcp_server`'s two maps, `gen_package_spec` (then run it:
+  `PACKAGE_SPEC.md` is generated) and `docs/schemas/README.md`.
+
+```bash
+SUPABASE_URL='' .venv/bin/python test_briefing.py   # the spec, history by module, statuses, suggestions, the route (no DB)
+```
 
 ## Program History
 

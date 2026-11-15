@@ -45,7 +45,7 @@ MAX_PACKAGES = 20
 # What a package folder may hold (src/portability.FILES), all YAML. Records,
 # dossiers and tests belong to a package that ships in the repository.
 _TOP_LEVEL = {'philosophy.yaml', 'exercises.yaml', 'exercise_media.yaml', 'level_seeds.yaml', 'analytics.yaml',
-              'watch.yaml', 'training_contract.yaml', 'standards.yaml', 'vocabulary.yaml', 'fidelity.yaml'}
+              'watch.yaml', 'briefing.yaml', 'training_contract.yaml', 'standards.yaml', 'vocabulary.yaml', 'fidelity.yaml'}
 _NESTED = re.compile(r'^(frameworks/[a-z0-9_]+|archetypes/([a-z0-9_]+/){0,3}[a-z0-9_]+)\.yaml$')
 _ID = re.compile(r'^[a-z][a-z0-9_]{2,63}$')
 _TTL_SECONDS = 60
@@ -118,7 +118,7 @@ def file_problems(files) -> list[dict]:
     for path, content in files.items():
         if not path_allowed(path):
             out.append(problem('path_not_allowed', 'not a file a package holds (philosophy.yaml, exercises.yaml, '
-                               'frameworks/<id>.yaml, archetypes/<…>/<id>.yaml, analytics.yaml, watch.yaml, '
+                               'frameworks/<id>.yaml, archetypes/<…>/<id>.yaml, analytics.yaml, watch.yaml, briefing.yaml, '
                                'training_contract.yaml, standards.yaml, vocabulary.yaml, level_seeds.yaml, '
                                'exercise_media.yaml, fidelity.yaml; lower-case names)', str(path)))
         elif not isinstance(content, str):

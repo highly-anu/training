@@ -19,6 +19,7 @@ JSON Schema (Draft-07) definitions for every data layer in the training system. 
 | `standards.schema.json` | A package's own standards and the groups it adds | `data/packages/{id}/standards.yaml` (optional) |
 | `standard_categories.schema.json` | The groups standards are listed in, in order | `data/benchmarks/categories.yaml` |
 | `analytics.schema.json` | What progress means for one methodology (optional) | `data/packages/{name}/analytics.yaml` |
+| `briefing.schema.json` | What the athlete sees before a session of the methodology (optional): what an earlier occurrence is, the numbers that lead, the suggestions | `data/packages/{name}/briefing.yaml` |
 | `watch.schema.json` | How the methodology's sessions look on the watch (optional); ids from `data/commons/watch_vocabulary.json` | `data/packages/{name}/watch.yaml` |
 
 ### Package structure

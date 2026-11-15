@@ -144,6 +144,35 @@ def report_authoring() -> list:
     #    the watch vocabulary that the watch's core implements.
     problems.extend(_report_watch_specs(data, installed))
 
+    # 7. A package's briefing.yaml may only scope what the package has: its own
+    #    contract modules, and archetypes and exercises it owns or borrows.
+    problems.extend(_report_briefing_specs(data, installed))
+
+    return problems
+
+
+def _report_briefing_specs(data: dict, installed: set) -> list:
+    import os
+
+    from src import briefing_spec, training_contract
+    from src.provenance import SourcePolicy, _parse_borrows
+
+    problems: list = []
+    philosophies = {p['id']: p for p in loader.load_philosophies()}
+    for pkg, spec in loader.load_briefing_specs().items():
+        if pkg not in installed:
+            problems.append(f"{pkg}/briefing.yaml: no philosophy.yaml beside it")
+            continue
+        allowed = {pkg} | set(_parse_borrows(philosophies.get(pkg) or {}))
+        modules: set = set()
+        path = os.path.join(loader.package_dir(pkg), 'training_contract.yaml')
+        if os.path.exists(path):
+            for track in (training_contract._document(path).get('tracks') or {}).values():
+                modules |= {m.get('id') for m in track.get('modules') or []}
+        problems.extend(briefing_spec.spec_errors(
+            spec, pkg, modules=modules,
+            archetypes={a['id'] for a in data['archetypes'] if a.get('_package') in allowed},
+            exercises={eid for eid, ex in data['exercises'].items() if ex.get('_package') in allowed}))
     return problems
 
 
