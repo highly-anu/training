@@ -5353,6 +5353,128 @@ def health_confirm_session(session_key: str):
                                    'completedAt': log.get('completedAt') or existing.get('completedAt')})
 
 
+_BRIEFING_DAYS = 180     # how far back an earlier program's logs are read
+_BRIEFING_SESSIONS = 80  # and how many of them, newest first
+
+
+def _briefing_target(weeks: list, start: _date, key: str, on: str | None, today: _date):
+    """(week index, day name, session index, date) of the session a
+    program-relative key names. A spliced program can carry one week number
+    at two indices: `on` (a date) decides, else the first not behind today."""
+    from src.workout_matcher import session_calendar_date
+    hits = []
+    for wi, w in enumerate(weeks):
+        for day, sessions in (w.get('schedule') or {}).items():
+            for i in range(len(sessions or [])):
+                if key in (f"{_pick(w, 'week_number', 'weekNumber')}-{day}-{i}",
+                           f"{_pick(w, 'week_number', 'weekNumber')}-{day}" if len(sessions) == 1 else None):
+                    hits.append((wi, day, i, session_calendar_date(str(start), wi, day)))
+    if on:
+        hits = [h for h in hits if h[3] == on[:10]]
+    ahead = [h for h in hits if h[3] >= str(today)]
+    return (ahead or hits[-1:] or [None])[0]
+
+
+def _briefing_history(user_id: str, weeks: list, start: _date, before: str) -> list[dict]:
+    """Every planned session before a day with its log: this program's, then
+    the logged sessions of earlier programs through the version each was
+    written against (`program_history.session_lookup`), bounded."""
+    from src.workout_matcher import session_calendar_date
+    logs = _health.get_session_logs(user_id) or {}
+    try:
+        matched_uids, matched_keys = _today_match_sets(_health.get_matches(user_id))
+    except Exception as e:  # noqa: BLE001
+        app.logger.warning('briefing: matches failed: %s', e)
+        matched_uids, matched_keys = set(), set()
+    vid = _active_version_or_none(user_id)
+    out, mine = [], set()
+    for wi, w in enumerate(weeks):
+        for day, sessions in (w.get('schedule') or {}).items():
+            on = session_calendar_date(str(start), wi, day)
+            if not on or on >= before:
+                continue
+            for i, s in enumerate(sessions or []):
+                key = f"{_pick(w, 'week_number', 'weekNumber')}-{day}-{i}"
+                uid = _program_history_uid(vid, wi, day, i)
+                mine.add(uid)
+                log = logs.get(key) or (logs.get(key.rsplit('-', 1)[0]) if len(sessions) == 1 else None)
+                out.append({'date': on, 'key': key, 'uid': uid, 'session': s, 'log': log, 'current': True,
+                            'matched': (uid in matched_uids) if uid else (key in matched_keys)})
+    try:
+        from src import program_history
+        floor = (_date.fromisoformat(before) - _timedelta(days=_BRIEFING_DAYS)).isoformat()
+        by_uid = {u: l for u, l in (_health.get_session_logs_by_uid(user_id) or {}).items()
+                  if u not in mine and str(l.get('completedAt') or '')[:10] >= floor}
+        newest = sorted(by_uid, key=lambda u: str(by_uid[u].get('completedAt')), reverse=True)[:_BRIEFING_SESSIONS]
+        for row in program_history.session_lookup(user_id, newest):
+            if str(row['date']) < before:
+                out.append({'date': str(row['date']), 'key': None, 'uid': row['session_uid'],
+                            'session': row['session'], 'log': by_uid.get(row['session_uid']),
+                            'current': False, 'matched': False})
+    except Exception as e:  # noqa: BLE001 — no history (local dev without a database) is this program alone
+        app.logger.warning('briefing: earlier programs not read: %s', e)
+    return out
+
+
+@app.get('/api/sessions/briefing')
+@require_auth
+def session_briefing():
+    """Before a session: today's numbers beside the earlier times the same
+    session was done, where it stands in its cycle and one suggestion — as the
+    session's package says (its briefing.yaml, else the default entries;
+    src/briefing_spec.py), built by src/briefing.py. `?key=` is the
+    program-relative key ('3-Monday-0'), `date=` the day when a week number
+    repeats. 404 when the key names no session of the athlete's program."""
+    from src import briefing as _briefing, briefing_spec as _briefing_spec, training_contract as _tc
+    from src.db import get_user_program
+    key = (request.args.get('key') or '').strip()
+    program = get_user_program(g.user_id)
+    program = _normalize_program_keys(program) if isinstance(program, dict) else {}
+    weeks = (program.get('currentProgram') or {}).get('weeks') or []
+    try:
+        start = _date.fromisoformat(str(program.get('programStartDate'))[:10])
+    except (ValueError, TypeError):
+        start = None
+    tz = None
+    try:
+        tz = (_db.get_user_profile(g.user_id) or {}).get('timezone')
+    except Exception:  # noqa: BLE001
+        pass
+    hit = _briefing_target(weeks, start, key, request.args.get('date'), _today_for(tz)) if key and start else None
+    if not hit:
+        return jsonify({'detail': f'{key!r} is no session of the current program'}), 404
+    wi, day, i, on = hit
+    week = weeks[wi]
+    session = week['schedule'][day][i]
+    package = _watch_spec.session_package(session)
+
+    history = _briefing_history(g.user_id, weeks, start, on)
+    lane_track = str(session.get('lane_key') or '').partition('/')[2] or None
+    by_id = _tc.modules_for(package, [m.get('id') for m in session.get('modules') or []],
+                            lane_track or week.get('track_id'))
+    modules = {mid: {'name': m.get('name'), 'progression': m.get('progression')} for mid, m in by_id.items()}
+
+    standards = {}
+    wanted = {(ea['standard'].get('id') if isinstance(ea['standard'], dict) else ea['standard'])
+              for ea in session.get('exercises') or [] if ea.get('standard')}
+    if wanted:
+        try:
+            sex, std_tz = _standards_context(g.user_id)
+            results = _standards_mod.summarise(
+                _bd.load_benchmarks(), _health.get_performance_logs(g.user_id), sex, std_tz)['standards']
+            known = _bd.by_id()
+            standards = {sid: _standards_mod.watch_standard(known[sid], results.get(sid), sex)
+                         for sid in wanted if sid in known}
+        except Exception as e:  # noqa: BLE001
+            app.logger.warning('briefing: standards failed: %s', e)
+
+    vid = _active_version_or_none(g.user_id)
+    return jsonify(_briefing.build(
+        session, date=on, key=f"{_pick(week, 'week_number', 'weekNumber')}-{day}-{i}",
+        uid=_program_history_uid(vid, wi, day, i), spec=_briefing_spec.spec_for(package),
+        history=history, modules=modules, standards=standards))
+
+
 @app.put('/api/health/sessions/<path:session_key>')
 @require_auth
 def health_upsert_session(session_key: str):

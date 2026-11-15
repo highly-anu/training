@@ -56,6 +56,7 @@ SCHEMA_FILES = {
     'exercise':          'exercise.schema.json',
     'analytics':         'analytics.schema.json',
     'watch':             'watch.schema.json',
+    'briefing':          'briefing.schema.json',
     'training_contract': 'training_contract.schema.json',
     'fidelity':          'fidelity.schema.json',
     'source_weeks':      'source_weeks.schema.json',
@@ -67,7 +68,7 @@ SCHEMA_FILES = {
 KIND_PATHS = {
     'philosophy': 'philosophy.yaml', 'framework': 'frameworks/{id}.yaml',
     'archetype': 'archetypes/{id}.yaml', 'exercise': 'exercises.yaml',
-    'analytics': 'analytics.yaml', 'watch': 'watch.yaml', 'training_contract': 'training_contract.yaml',
+    'analytics': 'analytics.yaml', 'watch': 'watch.yaml', 'briefing': 'briefing.yaml', 'training_contract': 'training_contract.yaml',
     'fidelity': 'fidelity.yaml', 'source_weeks': 'source_weeks.yaml', 'standards': 'standards.yaml',
     'vocabulary': 'vocabulary.yaml',
 }

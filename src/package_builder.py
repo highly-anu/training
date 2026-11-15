@@ -58,7 +58,7 @@ INLINE_DRAFT_BYTES = 60_000                        # a method under revision is 
 BEAT_SECONDS = 20
 _SCHEMAS_DIR = os.path.dirname(package_spec.PATH)
 CORE_SCHEMAS = ('philosophy', 'framework', 'archetype', 'exercise')            # in the system prompt
-MORE_SCHEMAS = ('vocabulary', 'analytics', 'watch', 'standards', 'benchmark')  # through get_schema
+MORE_SCHEMAS = ('vocabulary', 'analytics', 'watch', 'briefing', 'standards', 'benchmark')  # through get_schema
 REFUSED_FILES = {'training_contract.yaml': 'the builder does not write training contracts yet; write the method '
                                            'on the modality scheduler or week templates'}
 
@@ -524,7 +524,7 @@ class _Run:
             return f'not written: {REFUSED_FILES[path]}', True
         if not package_store.path_allowed(path):
             return ('not written: not a path a package holds (philosophy.yaml, exercises.yaml, frameworks/<id>.yaml, '
-                    'archetypes/<…>/<id>.yaml, analytics.yaml, watch.yaml, standards.yaml, vocabulary.yaml, '
+                    'archetypes/<…>/<id>.yaml, analytics.yaml, watch.yaml, briefing.yaml, standards.yaml, vocabulary.yaml, '
                     'level_seeds.yaml, exercise_media.yaml, fidelity.yaml; lower-case names)'), True
         files = {**self.session.draft_files, path: content}
         size = sum(len(c.encode('utf-8')) for c in files.values())

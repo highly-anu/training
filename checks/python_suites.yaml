@@ -73,6 +73,7 @@ suites:
   - test_today_session.py
   - test_added_sessions.py
   - test_last_time.py
+  - test_briefing.py                  # the pre-workout briefing: a package's entries, history by module, suggestions, the route
   # Standards
   - test_standards.py
   - test_standard_results_sql.py      # makes and drops its own database (TEST_ADMIN_DSN)

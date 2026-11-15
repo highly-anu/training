@@ -73,6 +73,17 @@ final class APIClient {
         try await get("/user/today-session?date=\(date)&spec=1&week=1")
     }
 
+    /// Before a session: today's numbers beside the earlier times it was
+    /// done, as its package says (src/briefing.py).
+    func fetchBriefing(sessionKey: String, date: String?) async throws -> SessionBriefing {
+        var items = [URLQueryItem(name: "key", value: sessionKey)]
+        if let date { items.append(URLQueryItem(name: "date", value: date)) }
+        var query = URLComponents()
+        query.queryItems = items
+        let data = try await get("/sessions/briefing?\(query.percentEncodedQuery ?? "")")
+        return try JSONDecoder().decode(SessionBriefing.self, from: data)
+    }
+
     func fetchTodaySessionStatus() async throws -> String {
         let data = try await get("/user/today-session")
         let json = (try? JSONSerialization.jsonObject(with: data) as? [String: Any]) ?? [:]

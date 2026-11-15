@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "briefing.schema.json",
+  "title": "Package Session Briefing",
+  "description": "What the athlete is shown before a session of one methodology: which earlier sessions count as the same one, which numbers lead, how much history is listed and which suggestions apply. A package ships this file beside its philosophy.yaml; anything its entries do not cover falls to the default entries (src/briefing_spec.py), which is all a package without the file gets. Entries are tried in order and the first whose scope holds for an exercise of the session decides. This schema checks the shape; tools/check_provenance.py checks that the scoped ids are the package's. src/briefing.py builds the document, and the clients only lay it out.",
+  "type": "object",
+  "required": ["id", "spec_version", "entries"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$",
+      "description": "Must equal the package directory name and the philosophy id."
+    },
+    "spec_version": {"type": "integer", "minimum": 1, "maximum": 1},
+    "entries": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 24,
+      "items": {
+        "type": "object",
+        "required": ["id", "same_as"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z0-9_]+$"},
+          "scope": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Every key given must hold; an entry without a scope takes whatever reaches it.",
+            "properties": {
+              "progression_models": {"type": "array", "items": {"type": "string"}, "description": "The model that wrote the exercise's load: a training contract module's, else the modality's."},
+              "modules": {"type": "array", "items": {"type": "string"}, "description": "Training contract module ids of the package."},
+              "archetypes": {"type": "array", "items": {"type": "string"}, "description": "The session's archetype, or the named workout of a templated day."},
+              "exercises": {"type": "array", "items": {"type": "string"}},
+              "slot_types": {"type": "array", "items": {"type": "string"}},
+              "slot_roles": {"type": "array", "items": {"type": "string"}},
+              "named_workout": {"type": "boolean", "description": "true: only sessions a week template composed from named workouts."},
+              "scored": {"type": "boolean", "description": "true: only a slot that tests a standard."}
+            }
+          },
+          "same_as": {
+            "enum": ["module", "archetype", "exercise"],
+            "description": "What an earlier occurrence is: the same contract module (and variant), the same named workout or archetype, or the same exercise wherever it was done."
+          },
+          "show": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {"enum": ["sets", "reps", "rounds", "reps_per_round", "weight", "interval", "time", "hold", "distance", "rpe"]},
+            "description": "The numbers that word today's prescription and each earlier one, in order."
+          },
+          "chart": {
+            "enum": ["weight", "reps", "sets", "total_reps", "rounds", "reps_per_round", "time", "hold", "distance", "rpe"],
+            "description": "The one number a client may draw across the occurrences."
+          },
+          "history": {"type": "integer", "minimum": 0, "maximum": 20, "description": "Earlier occurrences listed (default 5)."},
+          "cycle": {"type": "boolean", "description": "Say where the session stands in its module's cycle (a density or timed cycle)."},
+          "suggest": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {"enum": ["confirm_pending", "next_step", "cycle_end", "next_load", "beat_last", "standard_target", "repeat_last"]},
+            "description": "Suggestions tried in order; the first that has something to say is shown. Advice only: nothing here changes the program."
+          },
+          "notes": {"type": "string", "maxLength": 400, "description": "The method's own words about this kind of session, shown under the item."}
+        }
+      }
+    }
+  }
+}

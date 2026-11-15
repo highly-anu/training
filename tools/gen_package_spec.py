@@ -39,7 +39,7 @@ SCHEMAS = os.path.join(ROOT, 'docs', 'schemas')
 
 # The schema that checks each file of a package.
 _SCHEMA_OF = {'philosophy': 'philosophy', 'frameworks': 'framework', 'archetypes': 'archetype', 'exercises': 'exercise',
-              'analytics': 'analytics', 'watch': 'watch', 'contract': 'training_contract', 'standards': 'standards',
+              'analytics': 'analytics', 'watch': 'watch', 'briefing': 'briefing', 'contract': 'training_contract', 'standards': 'standards',
               'vocabulary': 'vocabulary', 'fidelity': 'fidelity', 'source_weeks': 'source_weeks'}
 _WHAT = {
     'philosophy': 'The method: its beliefs, scope and tracks, each an ordered list of its own phases.',
@@ -50,6 +50,8 @@ _WHAT = {
     'level_seeds': 'What an athlete of each level is assumed to know already (unlocks `requires`).',
     'analytics': 'What progress means for the method. Without it a spec is synthesised from the frameworks.',
     'watch': 'How its sessions look on the watches. Without it, the slot types\' default screens.',
+    'briefing': 'What the athlete sees before a session: which earlier sessions count as the same one, the numbers '
+                'that lead, the suggestions. Without it, the default entries.',
     'contract': 'Per track, modules the engine places as written, with earned progress (the advanced shape).',
     'standards': 'Standards the method tests that the commons lack.',
     'vocabulary': 'Modalities, movement patterns and equipment the package adds for itself.',

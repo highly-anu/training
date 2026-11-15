@@ -198,6 +198,18 @@ def child(folder: str) -> int:
           contract_payload['watch'].get('label') == watch_spec.session_identity('dropin_contract').get('label')
           and watch_spec.package_spec('dropin_contract'))
 
+    print('the briefing')
+    from src import briefing, briefing_spec
+    for (pkg, tid), (_, _, prog) in sorted(programs.items()):
+        firsts = [s for w in prog['weeks'][:1] for ss in w['schedule'].values() for s in ss]
+        docs = [briefing.build(s, date='2026-01-05', spec=briefing_spec.spec_for(pkg), history=[]) for s in firsts]
+        empty = [d['session']['name'] for d, s in zip(docs, firsts) if briefing._assignments(s) and not d['items']]
+        check(f'{pkg}/{tid}: every session with a movement has a briefing', bool(docs) and not empty, f'{empty}')
+    check("the contract package's own briefing.yaml is read",
+          briefing_spec.spec_for('dropin_contract')['source'] == 'declared')
+    check('a package without one gets the default entries',
+          briefing_spec.spec_for('dropin_scheduler')['source'] == 'default')
+
     print('analytics')
     start = date(2026, 1, 5)
     for (pkg, tid), (goal, constraints, program) in sorted(programs.items()):

@@ -138,7 +138,7 @@ def _probe(folder: str, pkg: str) -> str | None:
                 items = doc.get('exercises') if isinstance(doc, dict) else None
                 if not isinstance(items, list) or not all(isinstance(e, dict) and e.get('id') for e in items):
                     return 'exercises.yaml: every exercise needs an id'
-            elif rel in ('analytics.yaml', 'watch.yaml', 'level_seeds.yaml', 'exercise_media.yaml',
+            elif rel in ('analytics.yaml', 'watch.yaml', 'briefing.yaml', 'level_seeds.yaml', 'exercise_media.yaml',
                          'standards.yaml', 'training_contract.yaml') and doc is not None and not isinstance(doc, dict):
                 return f'{rel} is not a mapping'
     except (OSError, yaml.YAMLError) as e:
@@ -482,6 +482,22 @@ def load_watch_specs() -> dict:
     """
     specs: dict = {}
     for pkg_id, path in package_files('watch.yaml'):
+        data = _load_yaml(path) or {}
+        data['_package'] = pkg_id
+        specs[pkg_id] = data
+    return specs
+
+
+def load_briefing_specs() -> dict:
+    """Return {package_id: briefing spec} for every package that declares one.
+
+    A package's briefing.yaml says what the athlete sees before a session
+    (docs/schemas/briefing.schema.json); src/briefing_spec.py resolves it.
+    Optional, like analytics.yaml: a package without one gets the default
+    entries.
+    """
+    specs: dict = {}
+    for pkg_id, path in package_files('briefing.yaml'):
         data = _load_yaml(path) or {}
         data['_package'] = pkg_id
         specs[pkg_id] = data

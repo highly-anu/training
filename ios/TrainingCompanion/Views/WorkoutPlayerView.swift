@@ -16,6 +16,7 @@ struct WorkoutPlayerView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.scenePhase) private var scenePhase
 
+    @StateObject private var briefing = SessionBriefingLoader()
     @State private var showSteps = false
     @State private var showLogger = false
     @State private var confirmLeave = false
@@ -76,13 +77,22 @@ struct WorkoutPlayerView: View {
                     }
                     .listRowBackground(Color.clear)
                 }
+                // Today against the earlier times it was done (§6.61); with
+                // nothing to add, or unread, the steps' own "Last time" stay.
+                if briefing.briefing?.saysSomething ?? (briefing.isLoading || briefing.error != nil) {
+                    Section {
+                        SessionBriefingView(loader: briefing, tint: tint) { await loadBriefing(force: true) }
+                            .listRowInsets(EdgeInsets())
+                            .listRowBackground(Color.clear)
+                    }
+                }
                 Section("Steps") {
                     ForEach(Array(session.exercises.enumerated()), id: \.offset) { i, ex in
                         if !WatchSteps.isFolded(session, i) {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(ex.name).font(.body.weight(.medium))
                                 Text(WatchSteps.preview(ex, session.screen(for: ex))).font(.subheadline).foregroundStyle(.secondary)
-                                if let last = ex.lastTime {
+                                if briefing.briefing?.saysSomething != true, let last = ex.lastTime {
                                     Text("Last time \(last)").font(.caption).foregroundStyle(.tertiary)
                                 }
                             }
@@ -103,6 +113,12 @@ struct WorkoutPlayerView: View {
             .tint(tint)
             .padding()
         }
+        .task { await loadBriefing() }
+    }
+
+    private func loadBriefing(force: Bool = false) async {
+        await briefing.load(api: appState.api, sessionKey: player.target.sessionKey, date: player.target.date,
+                            force: force)
     }
 
     private func failed(_ why: String) -> some View {
