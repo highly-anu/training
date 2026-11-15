@@ -282,10 +282,62 @@ def test_a_named_workout_is_followed_by_its_archetype_and_its_warm_up_left_out()
     doc = briefing.build(target['session'], date=target['date'], history=[earlier])
     named = item(doc, f"archetype:{piece['archetype_id']}")
     assert named['title'] == piece['name'] and named['entry'] == 'default_named'
-    assert named['history'][0]['status'] == 'logged' and '7 rounds' in named['history'][0]['text']
-    assert named['suggestion']['kind'] == 'beat_last' and 'the number to beat' in named['suggestion']['text']
+    assert named['history'][0]['status'] == 'logged'
+    # Many movements have many numbers: none of them is "the number to beat".
+    assert 'suggestion' not in named
+    assert [e['exerciseId'] for e in named['exercises']] == named['exerciseIds'] and len(named['exercises']) > 1
     warm = (target['session'].get('warm_up') or {}).get('archetype_id')
     assert warm is None or not any(i['id'] == f'archetype:{warm}' for i in doc['items'])
+
+
+def test_a_workout_with_one_result_has_a_number_to_beat():
+    session = {'modality': 'conditioning', 'pieces': [{'category': 'girls', 'archetype_id': 'w_fran', 'name': 'Fran'}],
+               'archetype': {'id': 'w_fran', 'name': 'Fran', '_package': 'p'},
+               'exercises': [
+                   {'exercise': {'id': 'thruster', 'name': 'Thruster'}, 'slot_type': 'for_time', 'slot_role': 'thruster',
+                    'load': {'target_rounds': 3}},
+                   {'exercise': {'id': 'pull_up', 'name': 'Pull-Up'}, 'slot_type': 'amrap_movement',
+                    'slot_role': 'pull_up', 'load': {}}]}
+    earlier = {'date': '2026-10-01', 'session': copy.deepcopy(session), 'current': False,
+               'log': {'completedAt': '2026-10-01T07:00:00Z', 'exercises': {'thruster': {'durationSec': 372}}}}
+    fran = item(briefing.build(session, date='2026-11-10', history=[earlier]), 'archetype:w_fran')
+    assert fran['entry'] == 'default_named' and fran['suggestion']['kind'] == 'beat_last', fran
+    assert fran['suggestion']['text'].endswith('on 1 Oct — the number to beat.'), fran['suggestion']
+
+
+def test_a_contract_session_with_nothing_to_earn_is_read_as_written():
+    rows = sessions(program('bjj', 'intermediate', days=5))
+    strength = [r for r in rows if any(ea['exercise']['id'] == 'trap_bar_deadlift' for ea in r['session']['exercises'])]
+    first, again = strength[0], next(r for r in strength[1:] if r['session']['modules'][0].get('variant')
+                                     == strength[0]['session']['modules'][0].get('variant'))
+    done = dict(first, log={'completedAt': first['date'] + 'T07:00:00Z', 'exercises': {
+        'trap_bar_deadlift': {'sets': [{'setIndex': k, 'repsActual': 5, 'weightKg': 100, 'completed': True}
+                                       for k in range(4)]}}})
+    doc = briefing.build(again['session'], date=again['date'], history=[done])
+    it = next(i for i in doc['items'] if 'trap_bar_deadlift' in i['exerciseIds'])
+    assert it['entry'] == 'default_as_written' and it['kind'] == 'module'
+    assert 'suggestion' not in it and doc['pending'] == []        # nothing to confirm, nothing to earn
+    lift = next(e for e in it['exercises'] if e['exerciseId'] == 'trap_bar_deadlift')
+    assert lift['today']['text'] == '4 × 5' and lift['history'][-1]['text'] == '4 × 5 · 100 kg', lift
+    pull = next(e for e in it['exercises'] if e['exerciseId'] == 'pull_up')
+    assert pull['today']['text'] == '3 × max', pull['today']          # the source's own words for the reps
+
+
+def test_a_made_lift_says_the_next_weight_the_stored_program_does_not_carry_yet():
+    _, squats = _lift_rows()
+    first, second = copy.deepcopy(squats[0]), copy.deepcopy(squats[1])
+    for row in (first, second):
+        for ea in row['session']['exercises']:
+            if ea['exercise']['id'] == 'back_squat':
+                ea['load'].pop('weight_kg', None)
+                ea['load']['work_up'] = False
+    step = next(ea['load']['increment_kg'] for ea in first['session']['exercises']
+                if ea['exercise']['id'] == 'back_squat')
+    made = dict(first, log={'completedAt': first['date'] + 'T07:00:00Z', 'exercises': {
+        'back_squat': {'made': True, 'weightKg': 60}}})
+    text = item(briefing.build(second['session'], date=second['date'], history=[made]),
+                'exercise:back_squat')['suggestion']['text']
+    assert text.endswith(f'with the usual {step:g} kg step, {60 + step:g} kg today.'), text
 
 
 def test_a_scored_slot_says_its_standard():

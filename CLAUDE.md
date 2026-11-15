@@ -1208,7 +1208,7 @@ sentence is the server's.
 - **The package says what "the same session" is.** `data/packages/<id>/briefing.yaml`
   (optional; `docs/schemas/briefing.schema.json`): entries tried in order, each with a
   `scope` (progression models, modules, archetypes, exercises, slot types, slot roles,
-  `named_workout`, `scored`), `same_as` (`module` — a contract module and its variant;
+  `named_workout`, `scored`, `contract`, `earns`), `same_as` (`module` — a contract module and its variant;
   `archetype` — a templated day's named workout; `exercise`), `show` (the numbers that word
   a prescription), `chart`, `history`, `cycle` and `suggest`. The default entries
   (`briefing_spec.DEFAULT_ENTRIES`) follow a package's own, so a package without the file —
@@ -1224,6 +1224,16 @@ sentence is the server's.
   as a difference ("2 more a round than Thursday") and one number up with another down as
   a new stage ("A new stage: 10 × 1. Wednesday was 5 × 5.") — the first real program read
   "5 more rounds and 4 fewer a round".
+- **The defaults were read on every package** (22.4, `tools/print_briefings.py`), and none
+  needed a file of its own; the defaults did. A contract session with nothing to earn (a
+  BJJ class, StrengthLog's and Persist's workouts, Uphill's general strength:
+  `default_as_written`, scope `contract` + `earns: false`) is the same workout before,
+  exercise by exercise, with nothing to confirm — it used to read "not confirmed as clean"
+  every time. `beat_last` speaks only for a workout with one result (a for-time or AMRAP
+  slot, a scored slot, a single movement), never for the first of ten exercises. A made
+  lift whose next weight the stored program does not carry yet is said with the step that
+  session's load carried, for the same sets and reps only. Reps the source writes in
+  words keep them ("3 × max", "3 × 12-15"); equal sets are said once ("4 × 5 · 100 kg").
 - **A contract module's preparation and recovery blocks make no item** — only the exercises
   its record lists (`modules[].exercise_ids`) do; a templated day's warm-up makes none.
 - **History is joined through the version a log was written against.** Session logs carry
@@ -1248,6 +1258,7 @@ sentence is the server's.
 
 ```bash
 SUPABASE_URL='' .venv/bin/python test_briefing.py   # the spec, history by module, statuses, suggestions, the route (no DB)
+SUPABASE_URL='' .venv/bin/python tools/print_briefings.py [package id …]   # each package's briefing beside its programs, for reading
 ```
 
 ## Program History

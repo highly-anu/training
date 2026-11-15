@@ -35,7 +35,9 @@
               "slot_types": {"type": "array", "items": {"type": "string"}},
               "slot_roles": {"type": "array", "items": {"type": "string"}},
               "named_workout": {"type": "boolean", "description": "true: only sessions a week template composed from named workouts."},
-              "scored": {"type": "boolean", "description": "true: only a slot that tests a standard."}
+              "scored": {"type": "boolean", "description": "true: only a slot that tests a standard."},
+              "contract": {"type": "boolean", "description": "true: only exercises of a training contract module."},
+              "earns": {"type": "boolean", "description": "Whether the exercise carries its contract module's progress (false: a session done as written, with nothing to earn)."}
             }
           },
           "same_as": {

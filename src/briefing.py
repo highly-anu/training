@@ -26,6 +26,8 @@ _METRICS = {
     'distance': ('Distance', 'km'), 'rpe': ('RPE', ''),
 }
 _MAX_ITEMS = 12
+# Slots whose log is one result: a clock, a count of rounds.
+_RESULT_SLOTS = frozenset({'for_time', 'rounds_for_time', 'amrap'})
 
 
 def _num(v) -> float | None:
@@ -99,6 +101,8 @@ def _facts(ea: dict, session: dict) -> dict:
         'slot_role': ea.get('slot_role'),
         'named_workout': bool(session.get('pieces')),
         'scored': bool(_standard_id(ea)),
+        'contract': bool(load.get('module_id')),
+        'earns': bool(load.get('advances_module')),
     }
 
 
@@ -159,7 +163,31 @@ def _show_text(values: dict, show: list[str]) -> str:
 
 
 def _text(ea: dict, values: dict, show: list[str]) -> str:
+    # Reps the source writes in words ("max", "12-15", "20 m") keep its words;
+    # a dash is a number the athlete finds on the day.
+    reps = (ea.get('load') or {}).get('reps')
+    if 'sets' in show and values.get('sets') is not None and values.get('reps') is None \
+            and values.get('reps_per_round') is None and isinstance(reps, str):
+        written = reps.strip()
+        lead = _plural(values['sets'], 'set') if written in ('', '—', '-') else f"{_n(values['sets'])} × {written}"
+        rest = _show_text(values, [k for k in show if k not in ('sets', 'reps')])
+        return f'{lead} · {rest}' if rest else lead
     return _show_text(values, show) or prescribed_text(ea.get('load') or {}) or ''
+
+
+def _same_sets(sets_done: list, done: dict) -> str | None:
+    """Sets that were all the same, said once: "4 × 5 · 100 kg"."""
+    if len(sets_done) < 2:
+        return None
+    kinds = {(s.get('weightKg'), s.get('reps')) for s in sets_done}
+    if len(kinds) != 1:
+        return None
+    weight, reps = next(iter(kinds))
+    if not reps:
+        return None
+    parts = [f'{len(sets_done)} × {_n(reps)}'] + ([f'{_n(weight)} kg'] if weight else []) \
+        + ([f"RPE {_n(done['rpe'])}"] if done.get('rpe') is not None else [])
+    return ' · '.join(parts)
 
 
 def _joined(named: list[tuple[str, str]]) -> str:
@@ -236,7 +264,7 @@ def _occurrence(kind: str, ident, occ: dict, eas: list[dict], show: list[str], t
     # An earlier row says what was done, not how the clock ran: today's line
     # carries the interval, and a change of it is the suggestion's to say.
     show = [k for k in show if k != 'interval']
-    named, lead_values, parts = [], None, {}
+    named, lead_values, parts, result = [], None, {}, None
     for ea in eas:
         entry = logged.get(_eid(ea)) if isinstance(logged.get(_eid(ea)), dict) else {}
         values = _values(ea, session)
@@ -258,10 +286,13 @@ def _occurrence(kind: str, ident, occ: dict, eas: list[dict], show: list[str], t
                                               and values.get('reps_per_round') is not None):
                 text = _show_text(values, show + [k for k in ('weight', 'rpe') if k not in show]) or planned
             else:
-                text = done_text(done, sets_done) or last_time.describe(entry) or planned
+                text = _same_sets(sets_done, done) or done_text(done, sets_done) or last_time.describe(entry) or planned
         else:
             text = planned
         named.append(((ea.get('exercise') or {}).get('name') or _eid(ea), text))
+        if result is None and entry and status != 'unconfirmed' and (
+                ea.get('slot_type') in _RESULT_SLOTS or _standard_id(ea) or len(eas) == 1):
+            result = text
         parts.setdefault(_eid(ea), {'text': text, 'values': {k: v for k, v in values.items() if v is not None}})
         lead_values = lead_values or values
     record = _records(session).get((eas[0].get('load') or {}).get('module_id')) or {}
@@ -269,11 +300,12 @@ def _occurrence(kind: str, ident, occ: dict, eas: list[dict], show: list[str], t
     return {
         # The lead exercise's line; each exercise's own is in `_parts`.
         'date': str(occ.get('date'))[:10], 'dayText': name, 'text': named[0][1] if named else '',
-        '_parts': parts,
+        '_parts': parts, '_result': result,
         'values': {k: v for k, v in (lead_values or {}).items() if v is not None},
         'status': status, 'isDeload': bool(record.get('deload', session.get('is_deload'))),
         'sessionKey': occ.get('key') if occ.get('current') else None,
         '_step': record.get('forecast_step'), '_current': bool(occ.get('current')),
+        '_increment': _num((eas[0].get('load') or {}).get('increment_kg')),
     }
 
 
@@ -328,7 +360,24 @@ def _next_load(lead: dict, today_values: dict, history: list[dict], today: str) 
     kg = today_values.get('weight')
     if load.get('work_up') and kg is None:
         return 'No weight yet: work up to a heavy set today and log it.'
-    if not history or kg is None:
+    if not history:
+        return None
+    if kg is None:
+        # The stored program learns a made weight when it is next rebuilt;
+        # until then the step is known and the sum is the method's.
+        # The step is the one that session's load carried ("make every rep and
+        # next time it is so much more"), and only for the same sets and reps:
+        # a light day or a percentage of another day is not last time plus a step.
+        made = history[-1]
+        was, step = made['values'].get('weight'), made.get('_increment')
+        same = all(made['values'].get(k) == today_values.get(k) for k in ('sets', 'reps'))
+        if made['status'] == 'made' and was is not None and step and same and not load.get('pct'):
+            name, _ = _day(made['date'], today)
+            return (f'Made {_n(was)} kg {name if name == "yesterday" else "on " + name} — with the usual '
+                    f'{_n(step)} kg step, {_n(was + step)} kg today.')
+        if made['status'] == 'missed' and was is not None:
+            name, _ = _day(made['date'], today)
+            return f'Missed at {_n(was)} kg {name if name == "yesterday" else "on " + name} — the same weight again.'
         return None
     last = history[-1]
     name, poss = _day(last['date'], today)
@@ -347,7 +396,7 @@ def _next_load(lead: dict, today_values: dict, history: list[dict], today: str) 
 def _suggestion(kind: str, entry: dict, lead: dict, today_values: dict, history: list[dict],
                 all_history: list[dict], cycle: dict | None, standard: dict | None, today: str) -> str | None:
     if kind == 'confirm_pending':
-        if not (lead.get('load') or {}).get('conditional'):
+        if not (lead.get('load') or {}).get('conditional') or not (lead.get('load') or {}).get('advances_module'):
             return None
         open_ = [h for h in all_history if h['_current'] and not h['isDeload']
                  and h['status'] in ('unconfirmed', 'logged')]
@@ -365,11 +414,13 @@ def _suggestion(kind: str, entry: dict, lead: dict, today_values: dict, history:
     if kind == 'next_load':
         return _next_load(lead, today_values, history, today)
     if kind == 'beat_last':
-        scored = [h for h in history if h['status'] == 'logged']
+        # Only a workout with one result has a number to beat: a clock, a
+        # count of rounds, a single movement. Ten exercises have ten.
+        scored = [h for h in history if h.get('_result')]
         if not scored:
             return None
         name, _ = _day(scored[-1]['date'], today)
-        return f"{scored[-1]['text']} {name if name == 'yesterday' else 'on ' + name} — the number to beat."
+        return f"{scored[-1]['_result']} {name if name == 'yesterday' else 'on ' + name} — the number to beat."
     if kind == 'standard_target':
         if not standard or not (standard.get('best') or standard.get('target')):
             return None
@@ -457,7 +508,8 @@ def build(session: dict, *, date: str, spec: dict | None = None, history: list[d
             if text:
                 suggestion = {'kind': s_kind, 'text': text}
                 break
-        if kind == 'module' and 'confirm_pending' in entry['suggest'] and (lead.get('load') or {}).get('conditional'):
+        if kind == 'module' and 'confirm_pending' in entry['suggest'] and (lead.get('load') or {}).get('conditional') \
+                and (lead.get('load') or {}).get('advances_module'):
             for h in all_history:
                 if h['_current'] and h['sessionKey'] and not h['isDeload'] and h['status'] in ('unconfirmed', 'logged'):
                     pending.setdefault(h['sessionKey'], {
