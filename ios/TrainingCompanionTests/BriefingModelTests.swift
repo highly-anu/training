@@ -66,6 +66,16 @@ final class BriefingModelTests: XCTestCase {
         XCTAssertNil(SessionBriefing.seriesSummary(row))
     }
 
+    func testARunThatNeverChangesIsNoSeries() throws {
+        let b = try JSONDecoder().decode(SessionBriefing.self, from: Data("""
+        {"items": [{"id": "module:getup", "title": "Get-up", "today": {"text": "10 × 1", "values": {"total_reps": 10}},
+          "metric": {"id": "total_reps", "label": "Total reps", "unit": "reps"}, "times": 2,
+          "history": [{"date": "2026-11-09", "status": "clean", "values": {"total_reps": 10}},
+                      {"date": "2026-11-12", "status": "clean", "values": {"total_reps": 10}}]}]}
+        """.utf8))
+        XCTAssertTrue(b.items[0].series.isEmpty)
+    }
+
     func testAPrescriptionAloneSaysNothing() throws {
         let b = try JSONDecoder().decode(SessionBriefing.self, from: Data("""
         {"items": [{"id": "exercise:x", "title": "X", "today": {"text": "3 × 5"}, "history": [], "times": 0}]}

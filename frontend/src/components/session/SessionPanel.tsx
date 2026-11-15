@@ -14,6 +14,7 @@ import { ExerciseRow } from '@/components/session/ExerciseRow'
 import { SessionNotes } from '@/components/session/SessionNotes'
 import { WorkoutSummaryCard } from '@/components/session/WorkoutSummaryCard'
 import { ModuleProgress } from '@/components/session/ModuleProgress'
+import { SessionBriefing } from '@/components/session/SessionBriefing'
 import { useProfileStore } from '@/store/profileStore'
 import { useBioStore } from '@/store/bioStore'
 import { useProgramStore } from '@/store/programStore'
@@ -161,6 +162,10 @@ export function SessionPanel({ program, weekData, weekIndex, day, compact = fals
                   </Button>
                 </div>
               </div>
+
+              {!complete && (
+                <SessionBriefing sessionKey={`${sessionKey}-${si}`} modality={session.modality} />
+              )}
 
               <div className="space-y-2">
                 {session.exercises.map((assignment, i) => (

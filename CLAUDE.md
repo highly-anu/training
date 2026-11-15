@@ -1201,7 +1201,8 @@ roadmap 22). `GET /api/sessions/briefing?key=<week>-<Day>-<i>` answers, per item
 session, today's numbers, the earlier occurrences of the same thing, where it stands in its
 cycle and one suggestion. The phone lays it out (`Views/SessionBriefingView.swift`,
 design-system §6.61: the player's pre-start screen and an undone session's detail; debug
-builds rest there with `TC_PLAYER_OVERVIEW=1`); the web's block is open (22.3). Every
+builds rest there with `TC_PLAYER_OVERVIEW=1`) and so does the web
+(`components/session/SessionBriefing.tsx` in `SessionPanel`, frontend-design §13.10). Every
 sentence is the server's.
 
 - **The package says what "the same session" is.** `data/packages/<id>/briefing.yaml`

@@ -57,14 +57,14 @@ struct SessionBriefing: Decodable, Equatable {
 
         /// The series a chart draws: each earlier occurrence's value of the
         /// item's metric, then today's as planned. Fewer than three points
-        /// is a list, not a line.
+        /// is a list, not a chart, and so is a run that never changes.
         var series: [SeriesPoint] {
             guard let key = metric?.id else { return [] }
             var out = history.compactMap { h in
                 h.values[key].map { SeriesPoint(label: h.dayText, value: $0, planned: false, isDeload: h.isDeload) }
             }
             if let v = todayValues[key] { out.append(SeriesPoint(label: "Today", value: v, planned: true, isDeload: false)) }
-            return out.count >= 3 ? out : []
+            return out.count >= 3 && Set(out.map(\.value)).count > 1 ? out : []
         }
     }
 

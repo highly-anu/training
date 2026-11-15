@@ -2487,6 +2487,33 @@ by picking results (`components/explore/EquipmentPanel.tsx`, logic in
 - With nothing selected the lists show what bodyweight and open space alone
   enable, or nothing with bodyweight off.
 
+### 13.10 Session Briefing
+
+Before a session: today's numbers beside the earlier times the same session was done.
+`components/session/SessionBriefing.tsx` lays out the server's document
+(`GET /sessions/briefing`, `api/briefing.ts`; the package's `briefing.yaml` decides what
+an item is) between a session's header and its exercises, while the session is still to
+do. It formats nothing: every sentence arrives as text.
+
+- **A session to confirm first** leads, on the warn tint, with a Confirm link to that
+  session's page.
+- **One card per item**: its name with the cycle position trailing, today's prescription
+  large (several exercises with different numbers: a row each), the one suggestion with
+  its icon (warn-coloured only for `confirm_pending`), the cycle as a thin bar in the
+  modality colour, the series, the earlier occurrences newest first, the standard's best
+  and target, the package's note.
+- **The series is bars**, one a session, in `--done`, today's as the plan in the modality
+  colour, each with its value; one image to a screen reader, named by its metric and
+  `chartSummary.series`. Fewer than three points, or a run that never changes, is no
+  chart (`lib/briefing.briefingSeries`).
+- **An occurrence's status is an icon and a word** (the word for screen readers): clean and
+  made `--done`, missed `--bad`, not confirmed `--warn`, logged muted.
+- **States**: nothing while it loads (the session is already on screen), `ErrorBanner`
+  with Try again when it fails, and nothing at all when the briefing adds nothing to the
+  prescription (`saysSomething`). Mock mode answers an empty briefing.
+
+The phone's is design-system §6.61. `SessionBriefing.test.tsx`.
+
 ## 14. Responsive Design
 
 ### 14.1 Breakpoint Usage
