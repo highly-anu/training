@@ -1175,6 +1175,12 @@ makes the phone the contract's third reader): cues through `WorkoutCueOutput`
 `catchUp(to:)` on return from the background), `forecast` for what the clock will do
 next. No heart rate on the phone: a heart-rate rest runs its cap.
 
+- **The clock leads.** On a step the clock runs, the phone draws the clock large and the
+  round count beside it (`WatchSpecText.playerFields`; the watches keep A and B at one
+  size). An interval's time sits in a ring that empties with the round; a rest-less
+  interval (an EMOM) counts its last three seconds in place and a band says "ROUND n" as
+  the minute turns, and the Apple Watch shows the lead-in word and "Round n" there
+  (`leadInLeft` covers a rest-less interval's work; design-system §6.44, §9.6).
 - **Away from the app**: the screen stays awake while the player is open; in the
   background each forecast moment is a notification (`WorkoutLockScreen`, prefix
   `workout-cue-`, at most 40) and the Live Activity shows the step and its countdown

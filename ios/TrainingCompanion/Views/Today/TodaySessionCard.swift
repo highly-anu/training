@@ -39,9 +39,9 @@ struct TodaySessionCard: View {
 
         VStack(alignment: .leading, spacing: AppMetrics.gapMedium) {
             HStack(spacing: 14) {
-                // Its modality's colour until it is done, then emerald (§6.56).
+                // Its modality's colour, done or not: the check says done (§6.53).
                 RoundedRectangle(cornerRadius: 3)
-                    .fill(done ? AppColor.complete : color)
+                    .fill(color)
                     .frame(width: 4)
                     .frame(maxHeight: .infinity)
 
@@ -123,7 +123,7 @@ struct TodaySessionCard: View {
                 .tint(color)
             }
         }
-        .appCard(border: done ? AppColor.complete : nil)
+        .appCard()
     }
 }
 

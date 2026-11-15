@@ -213,9 +213,11 @@ struct WorkoutPlayerView: View {
     }
 
     /// "3, 2, 1, go": a Start's count, or a rest's last seconds, over everything.
+    /// A rest-less interval counts its minute out in place (PlayerStepView):
+    /// the work is still going on under it.
     @ViewBuilder
     private func leadIn(_ index: Int, tint: Color) -> some View {
-        if let left = player.engine.leadInLeft(index) {
+        if let left = player.engine.leadInLeft(index), !player.engine.isWorkingInterval(index) {
             ZStack {
                 Color.black.opacity(0.55).ignoresSafeArea()
                 VStack(spacing: 8) {
@@ -234,8 +236,11 @@ struct WorkoutPlayerView: View {
 
 // MARK: - A step
 
-/// A step as both watches draw it, phone-sized: the title, field A large,
-/// field B beside it, the step's gauge, the two lines and its notes.
+/// A step as both watches draw it, phone-sized: the title, the step's clock
+/// large — field A, or B when only B is the clock — the other field beside
+/// it, the step's gauge, the two lines and its notes. An interval's clock
+/// sits in a ring that empties with the round, counts its last seconds out
+/// in place and is covered for a moment by the new round's number.
 struct PlayerStepView: View {
     @ObservedObject var engine: WorkoutSessionState
     let session: WatchSession
@@ -243,33 +248,51 @@ struct PlayerStepView: View {
     let index: Int
     let tint: Color
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showNotes = false
+    /// The round that has just begun, while its band shows.
+    @State private var turn: RoundTurn?
+
+    /// A step and its round: a change of the round alone is a turn.
+    private struct RoundKey: Equatable { let step: Int; let round: Int; let running: Bool }
+    private struct RoundTurn: Equatable { let round: Int; let name: String? }
 
     var body: some View {
         let screen = session.screen(for: exercise)
         let st = engine.stepState(exercise, index: index, screen: screen)
         let lines = WatchSpecText.lines(exercise, screen, st, lapWord: "the button")
+        let fields = WatchSpecText.playerFields(screen)
+        let lead = WatchSpecText.field(fields.lead, exercise, screen, st)
+        let second = WatchSpecText.field(fields.second, exercise, screen, st)
+        let running = engine.isWorkingInterval(index) || engine.isRestingInterval(index)
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 Text(WatchSpecText.title(exercise, screen, st))
                     .font(.title.bold())
                     .fixedSize(horizontal: false, vertical: true)
-                if let a = WatchSpecText.fieldA(exercise, screen, st) {
+                if screen.template == .interval, let lead {
+                    intervalClock(lead, st)
+                } else if let lead {
                     VStack(alignment: .leading, spacing: 0) {
-                        Text(a.label.uppercased()).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
-                        Text(a.value)
+                        Text(lead.label.uppercased()).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                        Text(lead.value)
                             .font(AppFont.hero(96))
                             .lineLimit(1)
                             .minimumScaleFactor(0.4)
-                            .appNumeric()
+                            .appNumeric(countsDown: fields.lead != .elapsed && WatchSpecText.isClock(fields.lead))
                     }
                 }
-                if let b = WatchSpecText.fieldB(exercise, screen, st) {
-                    HStack {
-                        Text(b.label.uppercased()).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                if let second {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(second.label.uppercased()).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
                         Spacer()
-                        Text(b.value).font(.system(.title, design: .rounded).weight(.semibold).monospacedDigit())
+                        Text(second.value)
+                            .font(AppFont.hero(44))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.5)
+                            .appNumeric()
                     }
+                    .accessibilityElement(children: .combine)
                 }
                 gauge(screen, st)
                 VStack(alignment: .leading, spacing: 6) {
@@ -284,10 +307,78 @@ struct PlayerStepView: View {
             }
             .padding()
         }
+        .overlay { turnBand }
+        .clipped()
+        .animation(AppAnimation.springStandard, value: turn)
+        .onChange(of: RoundKey(step: index, round: st.intervalRound, running: running)) { old, new in
+            // The same step, still running, one round on: the minute turned.
+            guard old.step == new.step, old.running, new.running, new.round > old.round else { return }
+            let name = exercise.alternateName == nil ? nil : WatchSpecText.roundName(exercise, screen, st)
+            let shown = RoundTurn(round: new.round, name: name)
+            turn = shown
+            Task {
+                try? await Task.sleep(nanoseconds: 1_100_000_000)
+                if turn == shown { turn = nil }
+            }
+        }
     }
 
-    /// Sets as dots, an interval's rounds as a bar with its phase, a timed
-    /// step's time as a bar: where the step stands at a glance.
+    /// An interval's clock in its ring: the round's time left, the ring
+    /// emptying with it and full again at the turn. In the last seconds
+    /// before the next round's work the ring thickens and the number beats.
+    private func intervalClock(_ lead: WatchSpecText.Field, _ st: WatchStepState) -> some View {
+        let total = st.intervalWorking ? st.intervalWorkSec : st.intervalRestSec
+        // Shown whatever the cue settings say: the count is on the page.
+        let closing = engine.isWorkingInterval(index) && st.intervalRestSec == 0
+            && st.intervalRound < st.intervalTotal && st.intervalLeftSec <= WatchVocab.leadInSeconds
+        return PlayerCountdownRing(left: st.intervalLeftSec, total: total,
+                                   tint: st.intervalWorking ? tint : .secondary, closing: closing) {
+            VStack(spacing: 0) {
+                Text(lead.label.uppercased()).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                Text(lead.value)
+                    .font(AppFont.hero(96))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.4)
+                    .foregroundStyle(closing ? tint : .primary)
+                    .appNumeric(countsDown: true)
+                    .appPulse(value: closing ? st.intervalLeftSec : 0)
+                Text(st.intervalWorking ? "Work" : "Rest")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(st.intervalWorking ? tint : .secondary)
+                    .opacity(engine.isWorkingInterval(index) || engine.isRestingInterval(index) ? 1 : 0)
+            }
+            .padding(.horizontal, 28)
+        }
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(st.intervalWorking ? "Work" : "Rest"), \(lead.label.lowercased()) \(lead.value)")
+    }
+
+    /// The new round, said across the step as its minute begins.
+    @ViewBuilder
+    private var turnBand: some View {
+        if let turn {
+            ZStack {
+                tint
+                VStack(spacing: 4) {
+                    Text("ROUND").font(.title2.weight(.semibold)).opacity(0.85)
+                    Text("\(turn.round)").font(AppFont.hero(160)).minimumScaleFactor(0.4).lineLimit(1)
+                    if let name = turn.name {
+                        Text(name).font(.title2.weight(.semibold)).multilineTextAlignment(.center)
+                    }
+                }
+                .foregroundStyle(.white)
+                .padding()
+            }
+            .transition(reduceMotion ? .opacity
+                        : .asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)))
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+        }
+    }
+
+    /// Sets as dots, an interval's rounds as pips, a timed step's time as a
+    /// bar: where the step stands at a glance.
     @ViewBuilder
     private func gauge(_ screen: WatchScreen, _ st: WatchStepState) -> some View {
         switch screen.template {
@@ -305,18 +396,22 @@ struct PlayerStepView: View {
                 .accessibilityLabel("\(st.setsDone) of \(total) sets done")
             }
         case .interval:
-            VStack(alignment: .leading, spacing: 4) {
-                // The whole step's time: the rounds behind, then this one's
-                // work and rest as far as they have run.
-                let round = st.intervalWorkSec + st.intervalRestSec
-                let inRound = st.intervalWorking ? st.intervalWorkSec - st.intervalLeftSec
-                                                 : st.intervalWorkSec + st.intervalRestSec - st.intervalLeftSec
-                ProgressView(value: Double(max(0, (st.intervalRound - 1) * round + max(0, inRound))),
-                             total: Double(max(1, st.intervalTotal * round)))
+            // One pip a round: those behind, the one running, those to come.
+            // Past thirty they would be hairlines: the rounds as one bar.
+            if st.intervalTotal > 30 {
+                ProgressView(value: Double(max(0, st.intervalRound - 1)), total: Double(max(1, st.intervalTotal)))
                     .tint(tint)
-                Text(st.intervalWorking ? "Work" : "Rest")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(st.intervalWorking ? tint : .secondary)
+            } else if st.intervalTotal > 1 {
+                HStack(spacing: 3) {
+                    ForEach(1...st.intervalTotal, id: \.self) { round in
+                        Capsule()
+                            .fill(round < st.intervalRound ? tint
+                                  : round == st.intervalRound ? tint.opacity(0.55)
+                                  : Color.secondary.opacity(AppColor.Opacity.fillStrong))
+                            .frame(height: 8)
+                    }
+                }
+                .accessibilityHidden(true)
             }
         case .timed, .roundTimer:
             if let minutes = exercise.durationMinutes, minutes > 0 {
@@ -456,6 +551,34 @@ struct PlayerControls: View {
     }
 }
 
+// MARK: - A countdown's ring
+
+/// The player's countdown ring: what is left of a rest or of an interval's
+/// round as the arc, the clock inside. `closing` thickens it for the last
+/// seconds before work.
+struct PlayerCountdownRing<Content: View>: View {
+    let left: Int
+    let total: Int
+    let tint: Color
+    var closing = false
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        let width: CGFloat = closing ? 26 : 18
+        ZStack {
+            Circle().stroke(Color.secondary.opacity(AppColor.Opacity.fill), lineWidth: width)
+            Circle()
+                .trim(from: 0, to: CGFloat(max(0, left)) / CGFloat(max(1, total, left)))
+                .stroke(tint, style: StrokeStyle(lineWidth: width, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+                .animation(AppAnimation.tick, value: left)
+            content
+        }
+        .frame(width: 260, height: 260)
+        .animation(AppAnimation.springSnappy, value: closing)
+    }
+}
+
 // MARK: - A rest
 
 /// A rest: a ring counting down from the rest's length, what comes next,
@@ -475,18 +598,11 @@ struct PlayerRestView: View {
         VStack(spacing: 28) {
             Spacer(minLength: 0)
             Text("Rest").font(.title2.weight(.semibold)).foregroundStyle(.secondary)
-            ZStack {
-                Circle().stroke(Color.secondary.opacity(AppColor.Opacity.fill), lineWidth: 18)
-                Circle()
-                    .trim(from: 0, to: CGFloat(left) / CGFloat(total))
-                    .stroke(tint, style: StrokeStyle(lineWidth: 18, lineCap: .round))
-                    .rotationEffect(.degrees(-90))
-                    .animation(AppAnimation.tick, value: left)
+            PlayerCountdownRing(left: left, total: total, tint: tint) {
                 Text(WatchSpecText.mmss(left))
                     .font(AppFont.hero(72))
                     .appNumeric(countsDown: true)
             }
-            .frame(width: 260, height: 260)
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Rest, \(left) seconds left")
             VStack(spacing: 4) {

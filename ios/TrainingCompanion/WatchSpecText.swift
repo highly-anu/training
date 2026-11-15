@@ -280,6 +280,25 @@ enum WatchSpecText {
         field(screen.gauge, ex, screen, st)
     }
 
+    /// Whether a field is the step's clock. The phone's player leads with it
+    /// (§6.44): a step the clock runs is read by its time first.
+    static func isClock(_ id: WatchVocab.Field?) -> Bool {
+        guard let id else { return false }
+        switch id {
+        case .intervalLeft, .capLeft, .elapsed, .timeLeft, .blockLeft:
+            return true
+        case .reps, .set, .rpeOrSet, .cumulative, .rounds, .roundsOfTarget, .rung, .zoneOrTime, .distance,
+             .distanceTarget, .distanceKm, .hold, .interval, .intervalRound, .rpm, .packKg, .hr:
+            return false
+        }
+    }
+
+    /// The player's two fields in the order it draws them, large then small:
+    /// the screen's A and B, swapped when only B is the clock.
+    static func playerFields(_ screen: WatchScreen) -> (lead: WatchVocab.Field?, second: WatchVocab.Field?) {
+        !isClock(screen.a) && isClock(screen.b) ? (screen.b, screen.a) : (screen.a, screen.b)
+    }
+
     static func field(_ id: WatchVocab.Field?, _ ex: WatchExercise, _ screen: WatchScreen,
                       _ st: WatchStepState) -> Field? {
         guard let id else { return nil }

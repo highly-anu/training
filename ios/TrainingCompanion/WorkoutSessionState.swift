@@ -319,9 +319,25 @@ final class WorkoutSessionState: ObservableObject {
             return left - 1
         case let .emomInterval(ei, _, false, left) where ei == index && left - 1 > 0 && left - 1 <= WatchVocab.leadInSeconds:
             return left - 1
+        case let .emomInterval(ei, round, true, left) where ei == index && left <= WatchVocab.leadInSeconds:
+            // A rest-less interval's minute: its work's last seconds lead
+            // into the next round's, counted as the ticks say them.
+            guard let exercises = session?.exercises, exercises.indices.contains(ei), left > 0 else { return nil }
+            let plan = exercises[ei].emomPlan
+            return plan.restSec == 0 && round < plan.rounds ? left : nil
         default:
             return nil
         }
+    }
+
+    /// Whether `index` is an interval in its work (or its rest).
+    func isWorkingInterval(_ index: Int) -> Bool {
+        if case let .emomInterval(ei, _, true, _) = phase { return ei == index }
+        return false
+    }
+    func isRestingInterval(_ index: Int) -> Bool {
+        if case let .emomInterval(ei, _, false, _) = phase { return ei == index }
+        return false
     }
 
     /// Start a step's clock — after "Work in 3, 2, 1" when Countdown Start is

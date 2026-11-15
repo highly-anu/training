@@ -323,9 +323,8 @@ else grey.
 One color owns "done" throughout the entire app: `#10b981` (emerald-500). Same as `CompleteGreen` asset.
 
 ```swift
-// Completed session card overlay
-.background(AppColor.complete.opacity(0.08))
-.overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColor.complete.opacity(0.25)))
+// A done session keeps its modality colour (§6.53): done is the checkmark,
+// never a card turned emerald.
 
 // Completion checkmark
 Image(systemName: "checkmark.circle.fill")
@@ -2100,10 +2099,23 @@ reads the steps on the phone: no heart rate is shown or kept.
 - **Header:** close (✕, "Leave the workout?" — Finish and save / Leave, resume later / Discard workout), the
   session's name over the elapsed time, the step list (≡); a segmented bar of the steps,
   the current one in the modality colour, done ones dimmed; "Step n of N".
-- **Step page:** the title in `.title` bold, field A (label `.caption` semibold secondary
-  uppercase over a 96 pt rounded bold monospaced value), field B on one row beside its
-  label (`.title` rounded), the template's gauge (set dots, an interval's bar over the whole step with Work /
-  Rest under it, a timed step's or AMRAP cap's bar), the two lines (`.title3`, then
+- **Step page:** the title in `.title` bold, the lead field (label `.caption` semibold
+  secondary uppercase over a 96 pt rounded bold monospaced value), the second field on one
+  row beside its label (44 pt rounded bold), the template's gauge (set dots, an interval's
+  round pips, a timed step's or AMRAP cap's bar), the two lines. **A step the clock runs
+  leads with its clock**: the lead field is the screen's A, or B when only B is a clock
+  (`WatchSpecText.playerFields` — an interval's time left, an AMRAP's cap, a for-time
+  step's time), so the round count is the second field. Both watches draw A and B at one
+  size; the order is the phone's own.
+- **An interval's minute:** its time left sits in the countdown ring (`PlayerCountdownRing`,
+  the rest's ring) with Work / Rest under it; the ring empties with the round and is full
+  again at the turn. In a rest-less interval's last three seconds the ring thickens and
+  the number takes the modality colour and beats once a second (`appPulse`) — in place,
+  never the lead-in's cover, since the work is still going on — whatever the cue settings
+  say. As the next round begins a band in the modality colour crosses the step with
+  "ROUND n" (and the round's movement when it alternates) for about a second; under
+  Reduce Motion it fades. Past thirty rounds the pips are one bar.
+- **The lines:** the two lines (`.title3`, then
   `.title3` secondary), **Notes** as a disclosure (load note, coach cue, focus).
 - **Controls:** one 64 pt capsule in the modality colour saying what the spec's LAP does
   (Complete set n, Start/End hold, + Round, Switch side, Next, Finish), **Skip** under it
@@ -2299,7 +2311,9 @@ needs one of these to go. `Tips.configure()` runs at launch; debug builds take
    `TodaySessionCard`: the modality capsule, the session's icon and name, minutes and
    exercise count, its "…" (§6.43). **The session to do next carries Start workout**, in
    its modality colour, which opens the player (§6.44) straight from the tab; the card
-   itself still opens the detail. A done session shows its emerald mark and no button;
+   itself still opens the detail. A done session keeps its modality colour — stripe, capsule, icon — and shows the
+   emerald check, its name in secondary and no button (the hue says what it was, the check
+   that it is done);
    a later day's session none either.
 3. **The inbox** (`TodayInbox`): workouts that look like planned sessions and results to
    confirm, three of each at most, each row the shared component (§6.34, the match
@@ -2375,7 +2389,7 @@ and switch Browse / Search with `AppSubTabPicker`; its own search field is gone.
 player — so its card would change unseen. `AppState.justCompleted` holds the key
 (`saveSessionLog` with a completion, `finishWorkout`; cleared by undo), and Today draws that session
 as not yet done (`isShownComplete`) until Today is uncovered: then, after 450 ms, the
-card's stripe turns from its modality colour to emerald, the check scales in, Start
+check scales in, the name dims, Start
 workout leaves and the week strip's dot becomes its check, in one `springStandard`. The
 success haptic stays with the tap that finished it. Under Reduce Motion the same change
 crossfades.
@@ -2578,6 +2592,7 @@ Reduce Motion. A view never writes `.contentTransition(`, `.symbolEffect(` or
 | `appSymbolBounce(value:)` | A symbol bounces once: something was earned | Nothing |
 | `appSymbolReplace(value:)` | One image whose symbol follows a state: pause / play, linked or not, a day's mark | Fades |
 | `appSymbolSpin(isActive:)` | A symbol turns while work runs | Still |
+| `appPulse(value:)` | A number swells and settles on each change: a countdown's last seconds | Nothing |
 | `AppScrollFade { … }` / `appScrollFade()` | A card eases in and out at the scroll's edge (opacity to 0.65, scale to 0.97), settled once a third of it shows | Nothing |
 | `appChartEntry()` | A chart is drawn from its leading edge, once | Drawn at once |
 
@@ -2654,10 +2669,12 @@ plain **Skip** beside it — still two buttons (§9.2). `DataPageView` and `Step
 (`Views/StepPageView.swift`) replaced the eight views the watch chose by slot type; a new
 template is drawn there, never in a view of its own.
 
-While a lead-in counts (`WorkoutSessionState.leadInLeft`: Countdown Start after Start, or
-a rest's last three seconds), the vocabulary's word ("Work in 3", "2", "1") stands over
+While a lead-in counts (`WorkoutSessionState.leadInLeft`: Countdown Start after Start, a
+rest's last three seconds, or a rest-less interval's — an EMOM's minute running out), the
+vocabulary's word ("Work in 3", "2", "1") stands over
 the buttons in `.title3` rounded semibold in the modality colour, and Start is hidden
-until the clock runs.
+until the clock runs. As an interval's next round begins, "Round n" (or the round's
+movement when it alternates) stands there for two seconds.
 
 ### 9.7 Settings and the lead-in
 
