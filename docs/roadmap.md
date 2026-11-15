@@ -2187,7 +2187,7 @@ where today stands in it, or what today assumes.
   briefing. `src/briefing.py` builds the document, pure; `GET /api/sessions/briefing?key=`
   gathers this program's sessions and logs and earlier programs' logged sessions through the
   version each was written against. Wildman declares its density cycle. `test_briefing.py`.
-- **22.2 The phone — done.** One `SessionBriefingView` (design-system §6.60) in the player's
+- **22.2 The phone — done.** One `SessionBriefingView` (design-system §6.61) in the player's
   "Before the start" and in the session detail of an undone session: today's numbers, the
   suggestion, the earlier occurrences with their status and a small bar series of the item's metric, the standard to beat, a banner for a session to confirm first.
 - **22.3 The web.** The same block in `SessionPanel`, between the header and the exercises.

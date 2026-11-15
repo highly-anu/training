@@ -655,7 +655,7 @@ struct SessionDetailView: View {
 
     // MARK: - Before you start
 
-    /// Today against the earlier times it was done (§6.60), for a session
+    /// Today against the earlier times it was done (§6.61), for a session
     /// still to do; nothing when the server has nothing to add.
     @ViewBuilder private var briefingSection: some View {
         if !isDone, briefing.briefing?.saysSomething ?? (briefing.isLoading || briefing.error != nil) {

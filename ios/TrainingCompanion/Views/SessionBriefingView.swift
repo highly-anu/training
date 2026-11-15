@@ -3,7 +3,7 @@ import Charts
 
 /// Before a session: per item of it, today's numbers, the suggestion, the
 /// earlier times the same session was done and where it stands in its cycle
-/// (design-system §6.60). The document is the server's (`SessionBriefing`);
+/// (design-system §6.61). The document is the server's (`SessionBriefing`);
 /// this only lays it out. Used before the start in the workout player and
 /// in the detail of a session that is not done — never after one, which is
 /// §6.54's.

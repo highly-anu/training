@@ -23,7 +23,7 @@ The visual language, interaction patterns, and implementation decisions for the 
 | Surfaces and controls | 6.3 states · 6.4 section header · 6.6 buttons · 6.15 card and status · 6.37 card and detail · 6.47 floating controls and the action bar · 6.59 long text |
 | Navigation | 6.8 sub-tabs · 6.9 cross-tab routes · 6.13 tab structure · 6.48 sheets, pushes and zoom · 6.49 pager · 6.50 week strip |
 | Actions | 6.43 session actions · 6.51 row actions · 6.24 filter menu · 6.38 constraint toggles · 6.52 tips |
-| Sessions and the player | 6.1 session card · 6.2 modality badge · 6.5 load text · 6.14 exercise detail · 6.16 logging · 6.40 session icon · 6.44 player · 6.45 start and resume · 6.54 after the session · 6.60 briefing |
+| Sessions and the player | 6.1 session card · 6.2 modality badge · 6.5 load text · 6.14 exercise detail · 6.16 logging · 6.40 session icon · 6.44 player · 6.45 start and resume · 6.54 after the session · 6.61 briefing |
 | Today and Program | 6.53 Today · 6.17 regenerate offer · 6.18 methodology · 6.22 tracks and phases · 6.26 phase changes · 6.28 header card · 6.36 phase bar · 6.39 preview · 6.55 builder · 6.60 your methods and the method builder |
 | Analytics | 6.11 period filter · 6.20 Blocks · 6.21 readiness · 6.25 score · 6.35 zone plan · 6.41 progress chart |
 | Log and workouts | 6.10 route and charts · 6.12 activity icons · 6.19 Log · 6.23 workout row · 6.30 Workout complete |
@@ -2473,7 +2473,7 @@ step**, never in a tab or a sheet of its own (`BuilderMethodologyStep`,
   Debug builds: `SIMCTL_CHILD_TC_METHOD_BUILDER=describe | revise:<method id> |
   build:<build id>`.
 
-### 6.60 Session Briefing
+### 6.61 Session Briefing
 
 Before a session: today's numbers beside the earlier times the same session was done.
 `SessionBriefingView` lays out the server's document (`GET /api/sessions/briefing`,

@@ -1200,7 +1200,7 @@ next. No heart rate on the phone: a heart-rate rest runs its cap.
 roadmap 22). `GET /api/sessions/briefing?key=<week>-<Day>-<i>` answers, per item of the
 session, today's numbers, the earlier occurrences of the same thing, where it stands in its
 cycle and one suggestion. The phone lays it out (`Views/SessionBriefingView.swift`,
-design-system §6.60: the player's pre-start screen and an undone session's detail; debug
+design-system §6.61: the player's pre-start screen and an undone session's detail; debug
 builds rest there with `TC_PLAYER_OVERVIEW=1`); the web's block is open (22.3). Every
 sentence is the server's.
 
@@ -1407,7 +1407,7 @@ Settings ▸ Diagnostics shows the current API target and, in debug builds, the 
 The program builder (`Views/ProgramBuilder/`, a file a step) opens on launch in debug
 builds with `SIMCTL_CHILD_TC_BUILDER=<step>[:<philosophy id>]` (`BuilderDebugLaunch`).
 Its first step leads with the athlete's own methods and the way to describe one (roadmap
-21.6, design-system §6.60): `MethodBuilderViews.swift` over `MethodModels.swift`, whose
+21.6, design-system §6.61): `MethodBuilderViews.swift` over `MethodModels.swift`, whose
 `MethodBuildWords` are the web's `lib/methodBuild.ts` — change the words in both.
 `SIMCTL_CHILD_TC_METHOD_BUILDER=describe | revise:<method id> | build:<build id>` opens the
 describe form or a build; a local API with `ANTHROPIC_API_KEY` set to anything and

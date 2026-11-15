@@ -77,7 +77,7 @@ struct WorkoutPlayerView: View {
                     }
                     .listRowBackground(Color.clear)
                 }
-                // Today against the earlier times it was done (§6.60); with
+                // Today against the earlier times it was done (§6.61); with
                 // nothing to add, or unread, the steps' own "Last time" stay.
                 if briefing.briefing?.saysSomething ?? (briefing.isLoading || briefing.error != nil) {
                     Section {
