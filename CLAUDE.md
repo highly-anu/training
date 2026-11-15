@@ -1199,8 +1199,10 @@ next. No heart rate on the phone: a heart-rate rest runs its cap.
 **Before a session, the server says what it is against what was done** (since 2026-11-15,
 roadmap 22). `GET /api/sessions/briefing?key=<week>-<Day>-<i>` answers, per item of the
 session, today's numbers, the earlier occurrences of the same thing, where it stands in its
-cycle and one suggestion. The clients lay it out (22.2, 22.3 — open); every sentence is the
-server's.
+cycle and one suggestion. The phone lays it out (`Views/SessionBriefingView.swift`,
+design-system §6.60: the player's pre-start screen and an undone session's detail; debug
+builds rest there with `TC_PLAYER_OVERVIEW=1`); the web's block is open (22.3). Every
+sentence is the server's.
 
 - **The package says what "the same session" is.** `data/packages/<id>/briefing.yaml`
   (optional; `docs/schemas/briefing.schema.json`): entries tried in order, each with a

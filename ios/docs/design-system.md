@@ -23,7 +23,7 @@ The visual language, interaction patterns, and implementation decisions for the 
 | Surfaces and controls | 6.3 states · 6.4 section header · 6.6 buttons · 6.15 card and status · 6.37 card and detail · 6.47 floating controls and the action bar · 6.59 long text |
 | Navigation | 6.8 sub-tabs · 6.9 cross-tab routes · 6.13 tab structure · 6.48 sheets, pushes and zoom · 6.49 pager · 6.50 week strip |
 | Actions | 6.43 session actions · 6.51 row actions · 6.24 filter menu · 6.38 constraint toggles · 6.52 tips |
-| Sessions and the player | 6.1 session card · 6.2 modality badge · 6.5 load text · 6.14 exercise detail · 6.16 logging · 6.40 session icon · 6.44 player · 6.45 start and resume · 6.54 after the session |
+| Sessions and the player | 6.1 session card · 6.2 modality badge · 6.5 load text · 6.14 exercise detail · 6.16 logging · 6.40 session icon · 6.44 player · 6.45 start and resume · 6.54 after the session · 6.60 briefing |
 | Today and Program | 6.53 Today · 6.17 regenerate offer · 6.18 methodology · 6.22 tracks and phases · 6.26 phase changes · 6.28 header card · 6.36 phase bar · 6.39 preview · 6.55 builder · 6.60 your methods and the method builder |
 | Analytics | 6.11 period filter · 6.20 Blocks · 6.21 readiness · 6.25 score · 6.35 zone plan · 6.41 progress chart |
 | Log and workouts | 6.10 route and charts · 6.12 activity icons · 6.19 Log · 6.23 workout row · 6.30 Workout complete |
@@ -2144,7 +2144,7 @@ The player is reached from `SessionDetailView`, so every place that opens a sess
 (Today, Program ▸ Calendar, Log) can start one: **Start workout** (play.fill, prominent,
 the modality colour) stands above **Mark Session Complete** in the action bar (§6.47) while
 the session is not done. The player grows out of the button (§6.48). It is disabled only when the session's day cannot be placed in the
-program. Cards and the long-press menu (§6.43) do not offer it.
+program, and from Today's card for the session to do next (§6.53). The long-press menu (§6.43) does not offer it.
 
 A kept workout — one the athlete left with Resume later, or that an earlier launch left
 behind — is the **tab bar's bottom accessory** (`tabViewBottomAccessory`,
@@ -2472,6 +2472,39 @@ step**, never in a tab or a sheet of its own (`BuilderMethodologyStep`,
 - The screen asks every two seconds only while it is in front; nothing notifies.
   Debug builds: `SIMCTL_CHILD_TC_METHOD_BUILDER=describe | revise:<method id> |
   build:<build id>`.
+
+### 6.60 Session Briefing
+
+Before a session: today's numbers beside the earlier times the same session was done.
+`SessionBriefingView` lays out the server's document (`GET /api/sessions/briefing`,
+`SessionBriefing`; the package's `briefing.yaml` decides what an item is) and formats
+nothing: every sentence and number arrives as text.
+
+- **A session to confirm first** leads, on the warning tint: "Thursday: done as written?".
+  With `onOpenSession` it is a button that opens that session; in the player it is said only.
+- **One card per item** — a contract module, a named workout, an exercise. Header: the
+  item's name, its cycle position trailing ("Step 7 of 32 · stage 1 of 4"). Then today's
+  prescription in `AppFont.metricCompact` (several exercises with different numbers: one
+  row each), the one suggestion with its symbol (warning-coloured only for
+  `confirm_pending`), the cycle as a thin progress bar in the modality colour, the series,
+  the earlier occurrences newest first, the standard's best and target, the package's note.
+- **The series is bars**, one a session — the item's metric (`metric.id`) across the
+  occurrences in emerald (a deload ghosted), today's as the plan in the modality colour,
+  each with its value above; no axes. Fewer than three points is no chart. It carries a
+  chart summary (§6.57).
+- **An occurrence row**: status symbol, day, the server's text. Clean and made are
+  emerald check marks, missed a destructive cross, not confirmed a warning question mark,
+  logged a secondary dot — the symbol's shape differs with the colour, and VoiceOver reads
+  the status in words.
+- **States (§6.3)**: `SessionBriefingLoader` publishes loading, the failure and the
+  document. Loading is one quiet row, a failure `AppErrorBanner` with Try again. A document
+  that adds nothing to the prescription (`saysSomething` false) shows no section at all.
+
+Where: the workout player before the start (§6.44), above the steps — whose own "Last
+time" lines show only when the briefing has nothing or could not be read — and the session
+detail of a session not yet done, as "Before you start". **Not** after a session: what was
+done and the confirm are §6.54's. Debug builds rest on the player's pre-start screen with
+`SIMCTL_CHILD_TC_PLAYER=<key>` + `TC_PLAYER_OVERVIEW=1`. `BriefingModelTests`.
 
 ## 7. Motion & Animation
 

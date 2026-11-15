@@ -5,7 +5,8 @@ import Foundation
 /// watch's (WatchDebugLaunch). Pass them as `SIMCTL_CHILD_<name>` with the
 /// session's route (`TC_ROUTE=trainingcompanion://session?key=<key>`):
 ///
-/// - `TC_PLAYER=<sessionKey>` — open that session's player and start it.
+/// - `TC_PLAYER=<sessionKey>` — open that session's player and start it
+///   (`TC_PLAYER_OVERVIEW=1`: leave it before the start, on the briefing).
 /// - `TC_PLAYER_STEP=<n>` — go to step n; `TC_PLAYER_RUN=1` — press its
 ///   Start; `TC_PLAYER_LAPS=<k>` — press its primary button k times (a set
 ///   is logged as prescribed; the last set's rest is left running).
@@ -24,6 +25,8 @@ enum WorkoutPlayerDebug {
     static var laps: Int { env["TC_PLAYER_LAPS"].flatMap(Int.init) ?? 0 }
     static var end: Bool { env["TC_PLAYER_END"] == "1" }
     static var save: Bool { env["TC_PLAYER_SAVE"] == "1" }
+    /// `TC_PLAYER_OVERVIEW=1` — open the player and leave it before the start.
+    static var overview: Bool { env["TC_PLAYER_OVERVIEW"] == "1" }
 
     private static var taken = false
 
@@ -39,7 +42,7 @@ enum WorkoutPlayerDebug {
     /// Carries the switches out on a loaded player, once.
     @MainActor static func apply(_ player: WorkoutPlayerModel, appState: AppState) {
         guard let key = sessionKey, key == player.target.sessionKey, let session = player.session,
-              player.startedAt == nil else { return }
+              player.startedAt == nil, !overview else { return }
         player.begin()
         let engine = player.engine
         if let n = step, n < session.exercises.count { engine.advance(to: n) }
