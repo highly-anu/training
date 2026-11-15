@@ -42,12 +42,14 @@ export function SessionBriefing({ sessionKey, modality }: SessionBriefingProps) 
   return (
     <section aria-label="Before you start" className="space-y-2">
       <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Before you start</h4>
-      {briefing.pending.map((p) => {
+      {/* The earliest session to confirm, and how many wait behind it. */}
+      {briefing.pending.slice(0, 1).map((p) => {
         const to = sessionPath(p.sessionKey)
+        const more = briefing.pending.length - 1
         return (
           <div key={p.sessionKey} className="flex items-center gap-2 rounded-lg border border-warn/40 bg-warn/5 px-3 py-2 text-sm">
             <CircleHelp aria-hidden="true" className="size-4 shrink-0 text-warn" />
-            <span className="flex-1">{p.text}</span>
+            <span className="flex-1">{more > 0 ? `${p.text} And ${more} more after it.` : p.text}</span>
             {to && <Link to={to} className="shrink-0 text-xs font-semibold text-primary hover:underline">Confirm</Link>}
           </div>
         )
@@ -59,23 +61,15 @@ export function SessionBriefing({ sessionKey, modality }: SessionBriefingProps) 
 
 function Item({ item, hex }: { item: BriefingItem; hex: string }) {
   const Icon = item.suggestion ? SUGGESTION_ICON[item.suggestion.kind] ?? History : History
-  const several = item.today.lines.length > 1 && new Set(item.today.lines.map((l) => l.text)).size > 1
+  const exercises = item.exercises ?? []
+  const byExercise = exercises.length > 1
   return (
     <div className="space-y-3 rounded-lg border bg-card p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <h5 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{item.title}</h5>
         {item.cycle && <span className="text-xs tabular-nums text-muted-foreground">{item.cycle.text}</span>}
       </div>
-      {several ? (
-        <ul className="space-y-1 text-sm">
-          {item.today.lines.map((l) => (
-            <li key={l.exerciseId} className="flex flex-wrap justify-between gap-x-3">
-              <span>{l.name}</span>
-              <span className="font-semibold tabular-nums">{l.text}</span>
-            </li>
-          ))}
-        </ul>
-      ) : (
+      {!byExercise && (
         <p className="text-2xl font-bold tabular-nums leading-tight">
           <span className="sr-only">Today: </span>{item.today.lines[0]?.text ?? item.today.text}
         </p>
@@ -93,7 +87,20 @@ function Item({ item, hex }: { item: BriefingItem; hex: string }) {
         </div>
       )}
       <Series item={item} hex={hex} />
-      {item.history.length > 0 ? (
+      {byExercise ? (
+        // Exercise by exercise: today's line, then that exercise's own earlier ones.
+        exercises.map((e) => (
+          <div key={e.exerciseId} className="space-y-1">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+              <h6 className="text-sm font-semibold">{e.name}</h6>
+              <span className="text-sm font-semibold tabular-nums"><span className="sr-only">Today: </span>{e.today.text}</span>
+            </div>
+            <ul className="space-y-1">
+              {[...e.history].reverse().map((h) => <Occurrence key={`${h.date}-${h.sessionKey ?? h.text}`} occurrence={h} />)}
+            </ul>
+          </div>
+        ))
+      ) : item.history.length > 0 ? (
         <ul className="space-y-1">
           {[...item.history].reverse().map((h) => <Occurrence key={`${h.date}-${h.sessionKey ?? h.text}`} occurrence={h} />)}
         </ul>

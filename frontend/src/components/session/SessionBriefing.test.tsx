@@ -60,6 +60,20 @@ describe('SessionBriefing', () => {
     expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('7')
   })
 
+  it('reads an item of several exercises exercise by exercise, without a chart', async () => {
+    const row = (text: string) => ({ ...occurrence('2026-11-08', '8 Nov', 250, 'clean', '2-Sunday-0'), text })
+    get.mockResolvedValue({ headline: null, pending: [], items: [{ ...swing, id: 'module:clean_press', exercises: [
+      { exerciseId: 'clean', name: 'KB Clean', today: { text: '10 × 1 · on the minute' }, history: [row('5 × 5 · 20 kg · RPE 6')] },
+      { exerciseId: 'press', name: 'KB Press', today: { text: '10 × 1 · on the minute' }, history: [row('5 × 5 · 16 kg · RPE 6')] },
+    ] }] })
+    mount()
+    await waitFor(() => expect(screen.getByText('KB Clean')).toBeTruthy())
+    expect(screen.getByText('KB Press')).toBeTruthy()
+    expect(screen.getByText('5 × 5 · 20 kg · RPE 6')).toBeTruthy()
+    expect(screen.getByText('5 × 5 · 16 kg · RPE 6')).toBeTruthy()
+    expect(screen.queryByRole('img')).toBeNull()
+  })
+
   it('shows nothing when the briefing adds nothing to the prescription', async () => {
     get.mockResolvedValue({ headline: null, pending: [],
                             items: [{ ...swing, history: [], times: 0, cycle: undefined, suggestion: undefined }] })

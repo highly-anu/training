@@ -18,6 +18,9 @@ struct SessionBriefing: Decodable, Equatable {
         var lines: [Line]
         var conditional: Bool
         var todayValues: [String: Double]
+        /// Exercise by exercise: each one's line today and its own earlier
+        /// ones. Empty from a server that does not send it yet.
+        var exercises: [Exercise]
         var history: [Occurrence]
         var times: Int
         var metric: Metric?
@@ -29,7 +32,7 @@ struct SessionBriefing: Decodable, Equatable {
         var notes: String?
 
         private enum Keys: String, CodingKey {
-            case id, title, today, history, times, metric, cycle, suggestion, standard, notes
+            case id, title, today, exercises, history, times, metric, cycle, suggestion, standard, notes
         }
         private enum TodayKeys: String, CodingKey { case text, lines, conditional, values }
         private enum CycleKeys: String, CodingKey { case text, step, of }
@@ -44,6 +47,7 @@ struct SessionBriefing: Decodable, Equatable {
             conditional = (try? today?.decodeIfPresent(Bool.self, forKey: .conditional)) ?? false
             todayValues = (try? today?.decodeIfPresent([String: Double].self, forKey: .values)) ?? [:]
             history = ((try? c.decodeIfPresent([Lossy<Occurrence>].self, forKey: .history)) ?? []).compactMap(\.value)
+            exercises = ((try? c.decodeIfPresent([Lossy<Exercise>].self, forKey: .exercises)) ?? []).compactMap(\.value)
             times = (try? c.decodeIfPresent(Int.self, forKey: .times)) ?? history.count
             metric = try? c.decodeIfPresent(Metric.self, forKey: .metric)
             let cycle = try? c.nestedContainer(keyedBy: CycleKeys.self, forKey: .cycle)
@@ -59,12 +63,34 @@ struct SessionBriefing: Decodable, Equatable {
         /// item's metric, then today's as planned. Fewer than three points
         /// is a list, not a chart, and so is a run that never changes.
         var series: [SeriesPoint] {
-            guard let key = metric?.id else { return [] }
+            // Several exercises have several runs: their rows say it, one
+            // chart of the first would not.
+            guard let key = metric?.id, exercises.count <= 1 else { return [] }
             var out = history.compactMap { h in
                 h.values[key].map { SeriesPoint(label: h.dayText, value: $0, planned: false, isDeload: h.isDeload) }
             }
             if let v = todayValues[key] { out.append(SeriesPoint(label: "Today", value: v, planned: true, isDeload: false)) }
             return out.count >= 3 && Set(out.map(\.value)).count > 1 ? out : []
+        }
+    }
+
+    struct Exercise: Decodable, Equatable, Identifiable {
+        var id: String { exerciseId }
+        var exerciseId: String
+        var name: String
+        var todayText: String
+        var history: [Occurrence]
+
+        private enum Keys: String, CodingKey { case exerciseId, name, today, history }
+        private enum TodayKeys: String, CodingKey { case text }
+
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: Keys.self)
+            exerciseId = try c.decode(String.self, forKey: .exerciseId)
+            name = (try? c.decodeIfPresent(String.self, forKey: .name)) ?? exerciseId
+            let today = try? c.nestedContainer(keyedBy: TodayKeys.self, forKey: .today)
+            todayText = (try? today?.decodeIfPresent(String.self, forKey: .text)) ?? ""
+            history = ((try? c.decodeIfPresent([Lossy<Occurrence>].self, forKey: .history)) ?? []).compactMap(\.value)
         }
     }
 

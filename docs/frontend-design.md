@@ -2497,6 +2497,9 @@ do. It formats nothing: every sentence arrives as text.
 
 - **A session to confirm first** leads, on the warn tint, with a Confirm link to that
   session's page.
+- **Exercise by exercise.** An item of several exercises shows each exercise's name with
+  today's line beside it and that exercise's own earlier rows under it — never joined in
+  one row, and no chart. Only the earliest session to confirm is shown, with how many wait.
 - **One card per item**: its name with the cycle position trailing, today's prescription
   large (several exercises with different numbers: a row each), the one suggestion with
   its icon (warn-coloured only for `confirm_pending`), the cycle as a thin bar in the

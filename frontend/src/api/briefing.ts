@@ -20,9 +20,18 @@ export interface BriefingOccurrence {
   values: Record<string, number>
 }
 
+export interface BriefingExercise {
+  exerciseId: string
+  name: string
+  today: { text: string; values?: Record<string, number> }
+  history: BriefingOccurrence[]
+}
+
 export interface BriefingItem {
   id: string
   title: string
+  /** Exercise by exercise: each one's line today and its own earlier ones. */
+  exercises?: BriefingExercise[]
   today: {
     text: string
     values: Record<string, number>

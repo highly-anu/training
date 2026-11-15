@@ -233,7 +233,10 @@ def _status(kind: str, ident, occ: dict, eas: list[dict]) -> str:
 def _occurrence(kind: str, ident, occ: dict, eas: list[dict], show: list[str], today: str) -> dict:
     session, logged = occ.get('session') or {}, (occ.get('log') or {}).get('exercises') or {}
     status = _status(kind, ident, occ, eas)
-    named, lead_values = [], None
+    # An earlier row says what was done, not how the clock ran: today's line
+    # carries the interval, and a change of it is the suggestion's to say.
+    show = [k for k in show if k != 'interval']
+    named, lead_values, parts = [], None, {}
     for ea in eas:
         entry = logged.get(_eid(ea)) if isinstance(logged.get(_eid(ea)), dict) else {}
         values = _values(ea, session)
@@ -248,18 +251,25 @@ def _occurrence(kind: str, ident, occ: dict, eas: list[dict], show: list[str], t
                     values[k] = done[k_done]
             if values.get('rounds') is not None and values.get('reps_per_round') is not None:
                 values['total_reps'] = values['rounds'] * values['reps_per_round']
-            if status in _DONE_AS_WRITTEN:
+            # Rounds of so many reps read the same whether or not they earned
+            # the step ("5 × 5 · 20 kg · RPE 8"): the log has the rounds, the
+            # plan the reps in each.
+            if status in _DONE_AS_WRITTEN or (values.get('rounds') is not None
+                                              and values.get('reps_per_round') is not None):
                 text = _show_text(values, show + [k for k in ('weight', 'rpe') if k not in show]) or planned
             else:
                 text = done_text(done, sets_done) or last_time.describe(entry) or planned
         else:
             text = planned
         named.append(((ea.get('exercise') or {}).get('name') or _eid(ea), text))
+        parts.setdefault(_eid(ea), {'text': text, 'values': {k: v for k, v in values.items() if v is not None}})
         lead_values = lead_values or values
     record = _records(session).get((eas[0].get('load') or {}).get('module_id')) or {}
     name, _ = _day(str(occ.get('date')), today)
     return {
-        'date': str(occ.get('date'))[:10], 'dayText': name, 'text': _joined(named),
+        # The lead exercise's line; each exercise's own is in `_parts`.
+        'date': str(occ.get('date'))[:10], 'dayText': name, 'text': named[0][1] if named else '',
+        '_parts': parts,
         'values': {k: v for k, v in (lead_values or {}).items() if v is not None},
         'status': status, 'isDeload': bool(record.get('deload', session.get('is_deload'))),
         'sessionKey': occ.get('key') if occ.get('current') else None,
@@ -297,6 +307,16 @@ def _next_step(today_values: dict, show: list[str], history: list[dict], today: 
             changes.append(_CHANGE[k][0 if a > b else 1].format(n=_n(abs(a - b))))
     if not changes:
         return f'{interval}; the rest is the same as {name}.' if interval else f'The same as {name}.'
+    ups = [today_values[k] > last['values'][k] for k in show
+           if k in _CHANGE and today_values.get(k) is not None and last['values'].get(k) is not None
+           and today_values[k] != last['values'][k]]
+    if any(ups) and not all(ups):
+        # One number up and another down is a new stage, not a step: the two
+        # sessions side by side say it; a sum of differences says nothing.
+        quiet = [k for k in show if k != 'interval']
+        was, now = _show_text(last['values'], quiet), _show_text(today_values, quiet)
+        if was and now:
+            return f'A new stage: {now}. {name[0].upper()}{name[1:]} was {was}.' + (f' {interval}.' if interval else '')
     sentence = ', '.join(changes[:-1]) + (' and ' if len(changes) > 1 else '') + changes[-1]
     return f'{sentence[0].upper()}{sentence[1:]} than {name}.' + (f' {interval}.' if interval else '')
 
@@ -446,8 +466,21 @@ def build(session: dict, *, date: str, spec: dict | None = None, history: list[d
 
         chart = entry['chart'] or next((k for k in show if k in _METRICS and (
             today_values.get(k) is not None or any(h['values'].get(k) is not None for h in all_history))), None)
+        # Exercise by exercise: today's line and that exercise's own earlier ones.
+        exercises = []
+        for ea, ln in zip(eas, lines):
+            values = _values(ea, session)
+            exercises.append({
+                'exerciseId': ln['exerciseId'], 'name': ln['name'],
+                'today': {'text': ln['text'], 'values': {k: v for k, v in values.items() if v is not None}},
+                'history': [{'date': h['date'], 'dayText': h['dayText'], 'status': h['status'],
+                             'isDeload': h['isDeload'], 'sessionKey': h['sessionKey'],
+                             **h['_parts'][ln['exerciseId']]}
+                            for h in history_rows if ln['exerciseId'] in h['_parts']],
+            })
         item = {
             'id': f"{kind}:{ident}", 'entry': entry['id'], 'kind': kind, 'title': group['title'],
+            'exercises': exercises,
             'exerciseIds': [_eid(ea) for ea in eas],
             'today': {'text': _joined([(ln['name'], ln['text']) for ln in lines]),
                       'values': {k: v for k, v in today_values.items() if v is not None},

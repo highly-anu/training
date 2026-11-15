@@ -22,7 +22,8 @@ export function saysSomething(b: SessionBriefing | undefined): boolean {
  */
 export function briefingSeries(item: BriefingItem): BriefingPoint[] {
   const key = item.metric?.id
-  if (!key) return []
+  // Several exercises have several runs: their rows say it, one chart of the first would not.
+  if (!key || (item.exercises?.length ?? 0) > 1) return []
   const out: BriefingPoint[] = item.history
     .filter((h) => typeof h.values?.[key] === 'number')
     .map((h) => ({ label: h.dayText, value: h.values[key], planned: false, isDeload: h.isDeload }))
