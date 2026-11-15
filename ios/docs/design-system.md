@@ -2118,8 +2118,12 @@ reads the steps on the phone: no heart rate is shown or kept.
 - **The lines:** the two lines (`.title3`, then
   `.title3` secondary), **Notes** as a disclosure (load note, coach cue, focus).
 - **Controls:** one 64 pt capsule in the modality colour saying what the spec's LAP does
-  (Complete set n, Start/End hold, + Round, Switch side, Next, Finish), **Skip** under it
-  in plain secondary. A completed set opens the **set logger** sheet (reps, kg, RPE
+  (Complete set n, Start/End hold, + Round, Switch side, Next, Finish), **Pause** and **Skip** under it
+  as secondary capsules (a rest has Pause beside +30 s). **Pause holds the whole workout**
+  (`WorkoutSessionState.pauseWorkout`): the session's time, a rest, an interval, a hold
+  and a for-time clock all stand still, the page becomes `PlayerPausedView` — "Paused",
+  the step, the time so far and one **Resume** — nothing is forecast, and the Live
+  Activity says Paused with Resume. A completed set opens the **set logger** sheet (reps, kg, RPE
   steppers, prefilled from the prescription and last time; Save logs it).
 - **Rest:** a 260 pt ring in the modality colour counting down, "Up next" with the step
   and its set, then **+30 s** (secondary capsule) and **Skip rest** (prominent). A rest

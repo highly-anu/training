@@ -14,6 +14,7 @@ extension WorkoutSessionState {
     /// the AMRAP's cap and a hold each count down on it. The watch's
     /// WorkoutManager ticked these itself; a running clock lives here now.
     func tick() {
+        guard !isPaused else { return }
         tickElapsed()
         defer { lastTickAt = now }
         guard let session else { return }
@@ -86,8 +87,9 @@ extension WorkoutSessionState {
     /// locked or in the background catches its workout up when it comes
     /// back. Only the last second sounds. At most four hours are replayed.
     func catchUp(to target: Date) {
-        guard let last = lastTickAt else { lastTickAt = target; return }
-        let missed = min(Int(target.timeIntervalSince(last)), 4 * 3600)
+        guard let last = lastTickAt, !isPaused else { lastTickAt = target; return }
+        let whole = Int(target.timeIntervalSince(last))
+        let missed = min(whole, 4 * 3600)
         guard missed > 0 else { return }
         let wasMuted = muted
         for second in 1...missed {
@@ -98,13 +100,18 @@ extension WorkoutSessionState {
         }
         muted = wasMuted
         simulatedNow = nil
-        lastTickAt = target
+        // The last whole second, not the moment asked for: the fraction left
+        // over counts toward the next one. Set to `target`, a timer a few
+        // milliseconds late made the next fire fall short of a second — no
+        // tick, a clock that stood still for two seconds and lost one.
+        lastTickAt = whole > missed ? target : last.addingTimeInterval(TimeInterval(missed))
     }
 
     /// Whether a clock is running that will move the workout on by itself: a
     /// rest, a timed step, an interval, a capped AMRAP, a hold. A set waits
     /// for the athlete.
     var clockDrivesNext: Bool {
+        guard !isPaused else { return false }
         switch phase {
         case .resting, .emomInterval, .amrapRunning: return true
         case .timedWork: return !isTimerPaused
@@ -229,6 +236,7 @@ extension WorkoutSessionState {
         var showOvertimePrompt: Bool
         var lastAutoAdvancedIndex: Int
         var lastTickAt: Date?
+        var pausedAt: Date?
     }
 
     func snapshot() -> Snapshot {
@@ -240,7 +248,7 @@ extension WorkoutSessionState {
                  restAdvances: restAdvances, restTotalSec: restTotalSec, workingSets: workingSets, metronomeOn: metronomeOn,
                  restGateBelow: restGate.below, isTimerPaused: isTimerPaused,
                  showOvertimePrompt: showOvertimePrompt, lastAutoAdvancedIndex: lastAutoAdvancedIndex,
-                 lastTickAt: lastTickAt)
+                 lastTickAt: lastTickAt, pausedAt: pausedAt)
     }
 
     /// The engine as a snapshot left it, on its session. Nothing sounds.
@@ -269,6 +277,7 @@ extension WorkoutSessionState {
         showOvertimePrompt = s.showOvertimePrompt
         lastAutoAdvancedIndex = s.lastAutoAdvancedIndex
         lastTickAt = s.lastTickAt
+        pausedAt = s.pausedAt
     }
 
     // MARK: - What the session produced

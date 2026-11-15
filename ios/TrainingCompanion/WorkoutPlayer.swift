@@ -138,7 +138,9 @@ final class WorkoutPlayerModel: ObservableObject {
 
     private func startClock() {
         timer?.invalidate()
-        let t = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
+        // Four looks a second: a second shows within a quarter of one of
+        // passing, however late a fire is (catchUp counts whole seconds).
+        let t = Timer(timeInterval: 0.25, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.engine.catchUp(to: Date()) }
         }
         RunLoop.main.add(t, forMode: .common)
@@ -150,6 +152,15 @@ final class WorkoutPlayerModel: ObservableObject {
         timer?.invalidate()
         timer = nil
         UIApplication.shared.isIdleTimerDisabled = false
+    }
+
+    /// Pause, or Resume: every clock of the workout held where it stands.
+    func togglePause() {
+        guard startedAt != nil, !finished else { return }
+        engine.catchUp(to: Date())
+        engine.isPaused ? engine.resumeWorkout() : engine.pauseWorkout()
+        save()
+        WorkoutLockScreen.shared.update(self)
     }
 
     /// Back in the foreground: the seconds the phone was away, caught up

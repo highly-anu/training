@@ -83,7 +83,31 @@ final class WorkoutSessionState: ObservableObject {
 
     /// The engine's clock: the wall clock, or the second a catch-up or a
     /// forecast is replaying (WorkoutSessionState+Clock).
-    var now: Date { simulatedNow ?? Date() }
+    var now: Date { simulatedNow ?? pausedAt ?? Date() }
+
+    /// When the whole workout was paused (the phone's Pause): every clock
+    /// stands still from then — the session's time, a rest, an interval, a
+    /// hold, a for-time clock — until Resume, which moves the clocks that
+    /// started on the wall clock on by the time away.
+    @Published var pausedAt: Date? = nil
+    var isPaused: Bool { pausedAt != nil }
+
+    func pauseWorkout() {
+        guard pausedAt == nil, phase != .idle, phase != .sessionComplete else { return }
+        pausedAt = simulatedNow ?? Date()
+        play(.stop)
+    }
+
+    func resumeWorkout() {
+        guard let paused = pausedAt else { return }
+        let real = simulatedNow ?? Date()
+        let away = max(0, real.timeIntervalSince(paused))
+        pausedAt = nil
+        holdStartedAt = holdStartedAt?.addingTimeInterval(away)
+        clockStarts = clockStarts.mapValues { $0.addingTimeInterval(away) }
+        lastTickAt = real
+        play(.start)
+    }
     var simulatedNow: Date? = nil
     /// No haptics, no voice: a catch-up replaying missed seconds, a forecast.
     var muted = false
@@ -219,7 +243,7 @@ final class WorkoutSessionState: ObservableObject {
     func reset() {
         phase = .idle
         lastAutoAdvancedIndex = -1; lastTickAt = nil
-        isTimerPaused = false
+        isTimerPaused = false; pausedAt = nil
         currentHR = 0; peakHR = 0
         avgHRSamples = []
         hrOutOfZoneSeconds = 0; isHRAlertActive = false

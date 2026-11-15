@@ -123,11 +123,10 @@ final class WorkoutLockScreen: NSObject, UNUserNotificationCenterDelegate {
         default: phase = engine.clockDrivesNext ? .work : .waiting
         }
         let index = engine.phase.exerciseIndex ?? 0
-        var canPause = false
-        if case .timedWork = engine.phase { canPause = true }
+        let canPause = engine.phase != .idle && engine.phase != .sessionComplete
         return .init(title: engine.cueText, phase: phase, endsAt: forecast.first?.at,
                      next: forecast.first?.text, step: min(index + 1, session.exercises.count),
                      steps: session.exercises.count,
-                     canPause: canPause, paused: canPause && engine.isTimerPaused)
+                     canPause: canPause, paused: engine.isPaused)
     }
 }
