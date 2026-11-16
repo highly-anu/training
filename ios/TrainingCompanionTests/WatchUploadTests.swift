@@ -158,6 +158,20 @@ final class WatchUploadTests: XCTestCase {
         XCTAssertNil(WatchUpload.sessionLog(summary: summary())["standardResults"], "no answer, no key")
     }
 
+    /// What the player sent reads back as the phone's own log does — the log
+    /// form that follows Save workout opens on it (SessionLogDraft), before
+    /// the server has answered.
+    func testASessionLogReadsBackAsTheLogFormReadsIt() throws {
+        var s = summary(gps: false)
+        s.outcomes = ["kb_swing": WatchOutcome(rounds: 10, durationSec: 600)]
+        let read = WatchUpload.performances(in: WatchUpload.sessionLog(summary: s))
+        XCTAssertEqual(read["kb_swing"]?.rounds, 10)
+        XCTAssertEqual(read["kb_swing"]?.durationSec, 600)
+        XCTAssertEqual(read["back_squat"]?.sets.first?.repsActual, 5)
+        XCTAssertEqual(read["back_squat"]?.sets.first?.completed, true)
+        XCTAssertTrue(WatchUpload.performances(in: ["notes": "x"]).isEmpty, "no exercises, nothing read")
+    }
+
     /// An interval's rounds and seconds, and a timed kettlebell set's reps
     /// counted at the end beside its seconds, go up in the keys the rounds and
     /// rate primitives read (src/analytics/primitives/outcome.py): Wildman's

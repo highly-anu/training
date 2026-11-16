@@ -34,7 +34,7 @@ struct TodayInbox: View {
                     ForEach(pending.prefix(3), id: \.suggestion.id) { item in
                         SuggestionRowView(
                             suggestion: item.suggestion, workout: item.workout,
-                            planned: plannedSession(for: item.suggestion.sessionKey),
+                            planned: appState.plannedSession(forKey: item.suggestion.sessionKey),
                             // Accept here as in Log ▸ Linking and on the web's
                             // Today card — the decision belongs where the
                             // suggestion is shown.
@@ -92,15 +92,5 @@ struct TodayInbox: View {
         .foregroundStyle(.secondary)
         .frame(maxWidth: .infinity, alignment: .trailing)
         .accessibilityHint(hint)
-    }
-
-    /// "3-Monday-0" → the planned session, from the loaded program.
-    private func plannedSession(for sessionKey: String) -> ProgramSession? {
-        let parts = sessionKey.split(separator: "-")
-        guard parts.count == 3, let weekNum = Int(parts[0]), let idx = Int(parts[2]) else { return nil }
-        let dayName = String(parts[1])
-        guard let week = appState.allWeeks.first(where: { $0.weekNumber == weekNum }),
-              let sessions = week.schedule[dayName], idx < sessions.count else { return nil }
-        return sessions[idx]
     }
 }

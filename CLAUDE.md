@@ -1197,7 +1197,9 @@ next. No heart rate on the phone: a heart-rate rest runs its cap.
   (`ActiveWorkoutStore`, Application Support); the tab bar's accessory offers it again from any tab (`KeptWorkout`).
 - **Saving**: one `PUT /health/sessions/by-uid/<sessionUid>` (`today-session` carries
   `sessionUid`), `source: phone`, each step's window with absolute `startAt` / `endAt`, the
-  tests' `standardResults` — then `AppState.finishWorkout` refreshes Today. The band's
+  tests' `standardResults` — then `AppState.finishWorkout` refreshes Today, and the session's
+  log form (`SessionLogForm` with `onFinish`, design-system §6.16) opens on what the player
+  recorded, for the numbers it could not see; Save there or Not now closes the player. The band's
   recording links to it **by time**: `workout_matcher.match_by_time`, a pre-pass in
   `match_and_store`, takes the one completed log of the workout's day whose timeline
   overlaps the recording by half the shorter span (a minute at least), and
@@ -1427,7 +1429,7 @@ The workout player opens from the launch too, in debug builds (`WorkoutPlayerDeb
 `SIMCTL_CHILD_TC_PLAYER=<key>` starts that session's player afresh (a kept workout is let
 go); `TC_PLAYER_STEP=<n>`, `TC_PLAYER_RUN=1` (Start), `TC_PLAYER_LAPS=<k>` (the primary
 button k times; a set is logged as prescribed), `TC_PLAYER_PAUSE=<seconds>` (Pause that long after the start), `TC_PLAYER_END=1` (the end screen),
-`TC_PLAYER_SAVE=1` (and Save). The session log form opens the same way (`SessionLogDebug`):
+`TC_PLAYER_SAVE=1` (and Save workout pressed, so the log form follows). The session log form opens the same way (`SessionLogDebug`):
 `SIMCTL_CHILD_TC_LOG=<key>` with the session's route, and `TC_LOG_SAVE=<seconds>` ticks every
 exercise and saves after that long (stop the API in between to see an unsent log). Launching another app (`simctl launch … com.apple.Preferences`)
 puts the Live Activity in the Dynamic Island.

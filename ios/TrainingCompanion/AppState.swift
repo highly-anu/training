@@ -830,7 +830,10 @@ final class AppState: ObservableObject {
             sessionKey: sessionKey, completedAt: log["completedAt"] as? String ?? iso.string(from: Date()),
             source: WorkoutPlayerModel.source, notes: log["notes"] as? String, fatigueRating: before?.fatigueRating,
             avgHR: nil, peakHR: nil, matchedWorkoutId: before?.matchedWorkoutId)
-        entry.exercises = before?.exercises ?? [:]
+        // What the player recorded, here at once: the log form that follows
+        // Save (WorkoutPlayerCompleteView) opens on it whether or not the
+        // reload below gets through.
+        entry.exercises = (before?.exercises ?? [:]).merging(WatchUpload.performances(in: log)) { _, new in new }
         sessionLogs[sessionKey] = entry
         if before?.completedAt == nil { justCompleted = sessionKey }
         rescheduleNotifications()
@@ -1740,6 +1743,15 @@ final class AppState: ObservableObject {
 
     /// All weeks for the full program calendar.
     var allWeeks: [ProgramWeek] { serverProgram?.currentProgram?.weeks ?? [] }
+
+    /// "3-Monday-0" → the planned session, from the loaded program.
+    func plannedSession(forKey sessionKey: String) -> ProgramSession? {
+        let parts = sessionKey.split(separator: "-")
+        guard parts.count == 3, let weekNum = Int(parts[0]), let idx = Int(parts[2]) else { return nil }
+        guard let week = allWeeks.first(where: { $0.weekNumber == weekNum }),
+              let sessions = week.schedule[String(parts[1])], idx < sessions.count else { return nil }
+        return sessions[idx]
+    }
 
     // MARK: - FIT Import
 
