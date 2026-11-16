@@ -1,3 +1,9 @@
+# One machine, on purpose: fly.toml cannot set the count, so check it after any
+# deploy trouble with `fly machines list -a training-api` and fix it with
+# `fly scale count 1 -a training-api`. Each thread keeps its own database
+# connections and Supabase's session pooler allows 15; per-process gates and
+# caches (/programs/impact, the static build) assume one process. See CLAUDE.md,
+# "Production runs on one machine".
 app = "training-api"
 primary_region = "cdg"
 

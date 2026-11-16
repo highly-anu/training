@@ -35,6 +35,22 @@ A training logic system that algorithmically generates periodized training progr
   sync worker, a phone that stopped reading mid-download of `/user/program` held
   it until the 120 s kill, again and again overnight on 2026-10-12, and the
   watch's morning sync queued behind it (`test_worker_stalls.py`).
+- **Production runs on one machine.** fly.toml cannot pin the count, so the deploy
+  passes `--ha=false` and then fails unless `fly machines list` shows exactly one.
+  Each thread holds its connections (`get_conn`, `read_conn`) for the life of the
+  process, and Supabase's session pooler (`DATABASE_URL`, port 5432) allows 15
+  clients: one machine fits, three do not. On 2026-10-31 racing deploys left no
+  machine for a moment, the next run launched one plus flyctl's default spare,
+  and production ran on three. By 11-05 the pool was full (`EMAXCONNSESSION` in
+  `fly logs`), so any thread without a connection failed. `record_version`, which
+  opens its own, gave up silently: a moved session never reached
+  `planned_sessions`, and its confirm answered 404. The `/programs/impact` gate
+  and the in-process caches assume one process too. When the logs show
+  `EMAXCONNSESSION` or "No database connection available", run
+  `fly machines list -a training-api` and `fly scale count 1 -a training-api`;
+  the next `GET /user/program` archives what was missed. Before running two
+  machines (for deploys without downtime), move to the transaction pooler (6543)
+  or close idle connections, and make those gates shared.
 - **Reference routes are built into the image** (since 2026-10-27, `api.static_json`). The
   package-data routes (`/philosophies`, `/frameworks`, `/archetypes`, `/exercises`, the
   Explore documents, `/analytics/specs`, `/similarity`…) are pure functions of the YAML: the
