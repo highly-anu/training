@@ -12,7 +12,7 @@ import Foundation
 ///   is logged as prescribed; the last set's rest is left running).
 /// - `TC_PLAYER_PAUSE=<seconds>` — press Pause that long after the start.
 /// - `TC_PLAYER_END=1` — then finish the workout (its completion screen);
-///   `TC_PLAYER_SAVE=1` — and save it, as Save workout does.
+///   `TC_PLAYER_SAVE=1` — and press Save workout (the log form follows).
 enum WorkoutPlayerDebug {
     #if DEBUG
     private static let env = ProcessInfo.processInfo.environment
@@ -31,6 +31,14 @@ enum WorkoutPlayerDebug {
     static var overview: Bool { env["TC_PLAYER_OVERVIEW"] == "1" }
 
     private static var taken = false
+    private static var saveTaken = false
+
+    /// Whether the completion screen should press Save workout: once.
+    @MainActor static func takeSave() -> Bool {
+        guard save, end, !saveTaken else { return false }
+        saveTaken = true
+        return true
+    }
 
     /// Whether this launch should open `key`'s player: once, and from the
     /// start (a kept workout from an earlier launch is let go).
@@ -75,6 +83,5 @@ enum WorkoutPlayerDebug {
         }
         guard end else { return }
         player.finish()
-        if save { Task { _ = await player.save(decision: nil, appState: appState) } }
     }
 }

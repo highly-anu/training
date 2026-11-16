@@ -32,7 +32,7 @@ struct WorkoutPlayerView: View {
             case .ready:
                 if let session = player.session {
                     if player.finished {
-                        WorkoutPlayerCompleteView(player: player, session: session, onClose: onClose)
+                        WorkoutPlayerCompleteView(player: player, session: session, planned: fallback, onClose: onClose)
                     } else if player.startedAt == nil {
                         overview(session)
                     } else {

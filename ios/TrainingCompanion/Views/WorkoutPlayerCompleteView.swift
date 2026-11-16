@@ -4,16 +4,27 @@ import SwiftUI
 /// SessionCompleteView at a phone's size: the package's summary — time, sets,
 /// volume, each step's log — then a test's results to save or not, the reps
 /// a timed step asks for at the end, notes, and Save. A training-contract
+/// Save then opens the session's log form (SessionLogForm, §6.16) on what
+/// the player recorded, for the numbers it could not see — the bell, the
+/// reps of each set, RPE, clean. A training-contract
 /// session's "done as written?" is asked on the session once it is saved
 /// (SessionDetailView's Progress), where it has always been.
 struct WorkoutPlayerCompleteView: View {
     @ObservedObject var player: WorkoutPlayerModel
     let session: WatchSession
+    /// The stored program's session, when the player was opened from one.
+    var planned: ProgramSession? = nil
     var onClose: () -> Void
 
     @EnvironmentObject var appState: AppState
     @State private var failed = false
     @State private var confirmDiscard = false
+    /// The log form, once the workout is saved.
+    @State private var logging: LogAfter?
+
+    private struct LogAfter {
+        let session: ProgramSession
+    }
 
     private var engine: WorkoutSessionState { player.engine }
     private var testSteps: [WatchExercise] { session.exercises.filter { $0.standard != nil } }
@@ -93,6 +104,13 @@ struct WorkoutPlayerCompleteView: View {
                 }
             }
             .navigationTitle("")
+            .appPush(item: $logging) { after in
+                SessionLogForm(sessionKey: player.target.sessionKey, session: after.session, onFinish: onClose)
+            }
+            .task {
+                // Debug builds: TC_PLAYER_SAVE presses Save workout (WorkoutPlayerDebug).
+                if WorkoutPlayerDebug.takeSave() { await save(nil) }
+            }
             .confirmationDialog("Discard this workout?", isPresented: $confirmDiscard, titleVisibility: .visible) {
                 Button("Discard", role: .destructive) { player.discard(); onClose() }
             } message: {
@@ -117,7 +135,14 @@ struct WorkoutPlayerCompleteView: View {
         failed = false
         if await player.save(decision: decision, appState: appState) {
             AppHaptics.success()
-            onClose()
+            // The numbers next: the session's log form, when it has an
+            // exercise to log.
+            if let planned = planned ?? appState.plannedSession(forKey: player.target.sessionKey),
+               !SessionLogDraft.exercises(of: planned, log: nil).isEmpty {
+                logging = LogAfter(session: planned)
+            } else {
+                onClose()
+            }
         } else {
             failed = true
             AppHaptics.error()

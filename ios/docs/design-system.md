@@ -1144,6 +1144,12 @@ when the session is not done and the form was opened for the whole session);
 the action bar (§6.47) then reads **Save and complete**. Cancel asks before
 discarding changes.
 
+**After the player's Save workout the form opens by itself** (`onFinish`, §6.44): the
+workout is already saved and the session done, so the note at the top says so, Cancel
+reads **Not now**, and leaving the form either way closes the player. It opens on what the
+player sent (`WatchUpload.performances(in:)`, laid on the phone's log at once by
+`AppState.finishWorkout`).
+
 **Save never waits for the server** (`AppState.saveSessionLog`, not `async`).
 The log is written to the outbox — `SessionLogOutbox`, one JSON file in
 Application Support, one record per session, a later save merged into it — and
@@ -2134,7 +2140,12 @@ reads the steps on the phone: no heart rate is shown or kept.
   (time, sets, volume, steps done), each step's log, a test's **Results**, the reps a
   timed step asks for, notes; **Save workout** (or **Save results** / **Not a test**) and
   **Discard workout**. A failed save says so in red under the buttons and keeps the
-  workout. Save is one `PUT /health/sessions/by-uid/<uid>`, then Today refreshes.
+  workout. Save is one `PUT /health/sessions/by-uid/<uid>`, then Today refreshes — and
+  **the session's log form follows** (§6.16, pushed on the end screen): every exercise with
+  what the player recorded ticked and filled in, the rest as prescribed, for the numbers
+  the phone could not see (the bell, each set's reps, RPE, clean). Its Save goes through
+  the outbox and closes the player; **Not now** closes it with the workout as saved. A
+  session with no exercise to log closes at once.
 - **While away:** the screen stays awake while the player is open; leaving the app
   schedules a notification per forecast moment and starts the **Live Activity**
   (`TrainingWidgets/WorkoutLiveActivity.swift`): on the Lock Screen the session and phase in

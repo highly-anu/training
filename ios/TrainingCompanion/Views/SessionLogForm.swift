@@ -15,6 +15,10 @@ struct SessionLogForm: View {
     let session: ProgramSession
     /// The exercise the athlete asked to log: ticked, and scrolled to.
     var openAt: String? = nil
+    /// Given when the form follows the player's Save workout (§6.44): the
+    /// workout is saved already, the form opens on what the player recorded,
+    /// and leaving it — saved or not — closes the player.
+    var onFinish: (() -> Void)? = nil
 
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
@@ -37,7 +41,9 @@ struct SessionLogForm: View {
         ScrollViewReader { proxy in
             Form {
                 Section {
-                    Text("Tick what you did. An exercise you change is ticked for you; nothing is sent until you save.")
+                    Text(onFinish == nil
+                         ? "Tick what you did. An exercise you change is ticked for you; nothing is sent until you save."
+                         : "The workout is saved. Check the numbers and add what the phone could not count — an exercise you change is ticked for you.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
@@ -72,8 +78,8 @@ struct SessionLogForm: View {
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") {
-                    if isDirty { confirmsDiscard = true } else { dismiss() }
+                Button(onFinish == nil ? "Cancel" : "Not now") {
+                    if isDirty { confirmsDiscard = true } else { close() }
                 }
             }
             ToolbarItemGroup(placement: .keyboard) {
@@ -82,7 +88,7 @@ struct SessionLogForm: View {
             }
         }
         .confirmationDialog("Discard what you entered?", isPresented: $confirmsDiscard, titleVisibility: .visible) {
-            Button("Discard", role: .destructive) { dismiss() }
+            Button("Discard", role: .destructive) { close() }
             Button("Keep editing", role: .cancel) {}
         }
         .appActionBar {
@@ -340,8 +346,12 @@ struct SessionLogForm: View {
             appState.saveSessionLog(sessionKey: sessionKey, exercises: performances,
                                     completedAt: completes ? ISO8601DateFormatter().string(from: Date()) : nil)
             AppHaptics.success()
-            dismiss()
+            close()
         }
+    }
+
+    private func close() {
+        if let onFinish { onFinish() } else { dismiss() }
     }
 }
 
