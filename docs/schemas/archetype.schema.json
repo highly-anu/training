@@ -225,6 +225,15 @@
             "type": "string",
             "description": "The load as the source writes it, shown with the prescription: '75% of today's 1RM', '24 kg (53 lb)', '1.25x bodyweight', 'heavy'. Read by the as_written progression model."
           },
+          "load_kg": {
+            "description": "The written fixed weight in kilograms, beside the `load` text, so a level below the track's `authored_level` can do a share of it (src/level_scaling.py): a number, or the men's and women's weights. Never a % of 1RM or of bodyweight.",
+            "oneOf": [
+              {"type": "number", "exclusiveMinimum": 0},
+              {"type": "object", "additionalProperties": false, "required": ["male"],
+               "properties": {"male": {"type": "number", "exclusiveMinimum": 0},
+                              "female": {"type": "number", "exclusiveMinimum": 0}}}
+            ]
+          },
           "notes": {
             "type": "string"
           },
@@ -466,6 +475,10 @@
       "additionalProperties": { "type": "number", "minimum": 0 },
       "propertyNames": { "enum": ["lower", "upper_push", "upper_pull", "trunk", "cardio"] },
       "description": "Where the session's work lands on the body, for an archetype whose slots name no exercises to read it from (data/commons/recovery_regions.yaml; src/recovery_regions.py). Region -> load, 0.5 and over is heavy. Without it the load is derived from the slots."
+    },
+    "scaling_eligible": {
+      "type": "boolean",
+      "description": "The archetype is written for its track's `authored_level`, and the levels below it in `training_levels` do it scaled (src/level_scaling.py): a share of its volume, time, distance and fixed loads, and a written movement out of reach replaced by its `scaling_down`. Without it a level the archetype lists does it as written."
     },
     "pool_only": {
       "type": "boolean",

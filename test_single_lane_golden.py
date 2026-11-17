@@ -61,7 +61,13 @@ def _cases():
                                ((contract or {}).get('level_seeds') or {}).get(lv, [])})
             requires = sorted({e for m in (contract or {}).get('modules', [])
                                for e in m.get('requires_mastery') or []})
-            for level in [lv for lv in ('novice', 'intermediate', 'advanced') if lv in levels][:2]:
+            hashed = [lv for lv in ('novice', 'intermediate', 'advanced') if lv in levels][:2]
+            # A track scaled from its authored level (src/level_scaling.py) is
+            # pinned at that level too: the written program, which the levels
+            # below are shares of.
+            if track.get('authored_level') and track['authored_level'] not in hashed:
+                hashed.append(track['authored_level'])
+            for level in hashed:
                 for pname, profile in PROFILES.items():
                     constraints = {'equipment': GYM, 'training_level': level, 'injury_flags': [],
                                    'mastered_exercises': sorted(set(mastered) | set(requires)),

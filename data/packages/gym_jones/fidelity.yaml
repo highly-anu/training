@@ -161,12 +161,24 @@ inventions:
     text: Operator Fitness is for intermediate athletes and up, Soldier of Steel for novices and intermediates; the plans name their audiences (operators, the newly training), not levels.
     implemented_by:
       - data:frameworks/operator_fitness.yaml#applicable_when.training_level
+  - id: I7
+    text: "Operator Fitness is written for the elite (the operator): an advanced athlete does 85 % and an intermediate 70 % of each day's sets, reps, minutes, distances and fixed weights (the commons' shares, data/commons/training_levels.yaml); a % of 1RM, a range and a pack stay as written. The plan names no level and gives no scale; Soldier of Steel, the newly training's own plan, runs as written."
+    implemented_by:
+      - data:philosophy.yaml#tracks.operator_fitness.authored_level
+      - data:archetypes/plan/gj_of_d19.yaml#scaling_eligible
+      - data:archetypes/plan/gj_of_d19.yaml#slots
+      - test:tests/test_level_scaling.py::test_an_intermediate_does_the_commons_share_of_each_day
 
 currency:
   operator_fitness: {entry: plan_completion, rule: R4}
   soldier_of_steel: {entry: plan_completion, rule: R9}
 
 reviews:
+  - kind: output_vs_dossier
+    date: '2026-11-07'
+    by: Claude (level framework)
+    scope: "Operator Fitness at intermediate and elite, Soldier of Steel at novice and intermediate, 4 weeks, every equipment item, six days, 120 minutes"
+    result: "The elite does Operator Fitness as written. An intermediate does 70 % (I7): day 1's deadlift 4 x 3 at 80 % of 1RM (written 5 x 3), the 1000 m row 700 m, the recovery 53 minutes, the hike 74; day 3's swings 14 at 16 kg, the push press 3 minutes at 8 kg dumbbells; percentages, ranges and the pack as written. Soldier of Steel is unchanged at both of its levels, its beginners' lines the source's own."
   - kind: output_vs_dossier
     date: '2026-10-22'
     by: Claude (package audit)

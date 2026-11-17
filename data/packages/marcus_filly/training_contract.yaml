@@ -8,7 +8,7 @@ sources:
 - https://functional-bodybuilding.com/blogs/articles/deload-week
 tracks:
   functional_bodybuilding:
-    training_levels: [intermediate, advanced, elite]
+    training_levels: [novice, intermediate, advanced, elite]
     notes: 'Three full-body days a week, each a warm-up, strength intensity, strength balance, conditioning and a cooldown. Tempo reads down, hold, up, pause (20X1: two seconds down, no pause, explosive up, a one-second pause). Choose your loads: work to the top of the reps, then add a little; RPE 7 leaves three reps in reserve. Every six weeks a cycle ends; after two, the Bridge week takes everything to RPE 6–7. In your first week, take a set or two off and the loads 10–20 lb lighter.
 
       '
@@ -17,7 +17,9 @@ tracks:
       name: Pump Condition
       archetype_id: fbb_pump_condition_day_1
       modality: max_strength
-      training_levels: [intermediate, advanced, elite]
+      training_levels: [novice, intermediate, advanced, elite]
+      # Written for the elite; the levels below do a share of its sets and minutes (I8).
+      scaling_eligible: true
       exposures_per_week: 3
       min_spacing_days: 1
       max_rpe: 9
@@ -186,7 +188,7 @@ tracks:
           notes: "Banded bully stretch 30 s/side; band pass-through 10/side; shinbox switch 10/side."
 
   pump_lift:
-    training_levels: [intermediate, advanced, elite]
+    training_levels: [novice, intermediate, advanced, elite]
     notes: 'Three full-body days a week, each a warm-up, strength intensity, strength balance, a finisher (no conditioning) and a cooldown. Tempo reads down, hold, up, pause (20X1: two seconds down, no pause, explosive up, a one-second pause). Choose your loads: work to the top of the reps, then add a little; RPE 7 leaves three reps in reserve. Every six weeks a cycle ends; after two, the Bridge week takes everything to RPE 6–7. In your first week, take a set or two off and the loads 10–20 lb lighter.
 
       '
@@ -195,7 +197,9 @@ tracks:
       name: Pump Lift
       archetype_id: fbb_pump_lift_day_1
       modality: max_strength
-      training_levels: [intermediate, advanced, elite]
+      training_levels: [novice, intermediate, advanced, elite]
+      # Written for the elite; the levels below do a share of its sets and minutes (I8).
+      scaling_eligible: true
       exposures_per_week: 3
       min_spacing_days: 1
       max_rpe: 9

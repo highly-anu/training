@@ -59,6 +59,7 @@ deferred is under *Later*.
 | 20 | LLM package builder — the foundation: all twelve steps are in (the gate, the overlay, storage, per-athlete reference routes, package vocabulary, the spec, the trace and the Dev Lab). Left: the phone reading a package's vocabulary, migration 013 on production, the builder itself | P1 | L | engine, API, web, content |
 | 21 | LLM package builder: an athlete describes a method and gets one to build a program from, on the web and the phone — dev role first. The gate (21.1), the durable job (21.2), the model loop (21.3), the web's screens (21.4), the phone's vocabulary (21.5) and its screens (21.6) are in; and the Dev Lab's builds view (21.7) are in; the eval against the real model and the production steps are open | P1 | L | API, web, iOS, watch |
 | 22 | Pre-workout briefing: before a session, today's numbers beside the earlier times the same session was done, its place in the cycle and one suggestion — declared by the package (`briefing.yaml`), built on the server. The server and Wildman's file (22.1) the phone's screen (22.2), the web's block (22.3) and the reading of every package's default (22.4) are in | P2 | M | engine, API, iOS, web, content |
+| 23 | Levels: every package from novice to elite — all eleven done 2026-11-08; what is left is listed under Open | P2 | S | engine, content |
 
 ---
 
@@ -2201,6 +2202,61 @@ where today stands in it, or what today assumes.
   a missed session said as such (today it is left out of the history).
 
 ---
+
+### 23. Levels: every package from novice to elite — P1 · L
+
+**Why.** Before 2026-11-07 a level chose a track, archetypes and unlocked exercises, but
+changed almost no number: templated packages prescribe `as_written`, contracts never
+called `calculate_load`, and the per-level `starting_load_kg` tables (four packages) were
+mostly unread. Four packages refused novices outright.
+
+**Done (2026-11-07, `feat/level-framework`).** The framework (docs/logic/levels.md): a
+track's `authored_level`, the commons' per-level shares, a track's own `level_scaling`,
+`load_kg` on fixed loads, `scaling_eligible` archetypes, `scaling_down` substitution,
+`min_level`, the computed suitability table on Explore, `elite_standards`, the fidelity
+check that a scaled level is recorded. CrossFit converted: Rx for the elite, the Level 1
+guide's half for a newcomer (R15), the commons' shares between (I7), scaled movements (I8).
+
+**Next, one package a change** (the recipe in docs/logic/levels.md):
+
+1. ~~**Gym Jones**~~ — done 2026-11-07 (`feat/levels-gym-jones`): Operator Fitness written
+   for the elite, the commons' shares for advanced and intermediate (I7); Soldier of Steel,
+   with its own beginners' lines, is the novice's and never scaled. Its elite standard is
+   the 2 km row Operator Fitness rows.
+2. ~~**Horsemen**~~ — done 2026-11-08 (`feat/levels-horsemen`): every workout written for the
+   elite operator, the commons' shares below, novices taken in (I3) with the full Olympic
+   lifts, the rope and the handstand push-up kept for intermediates and up and scaled below;
+   % of today's max and ×BW as written; the PT test a protocol for intermediates and up.
+   Elite standards: the source's four-month goals (R8).
+3. ~~**Uphill**~~ — done 2026-11-08 (`feat/levels-uphill`): no scaling needed — the source
+   writes each level's first-week hours (R6), so the novice is the source's 5 hours untrained
+   (210 aerobic minutes) and runs the full program (I12; Beginner Mountain Fitness is not
+   published). Elite standard: the pack-carry vertical pace. `distance_multiplier` stays:
+   only the modality scheduler reads it, and no shipped package runs on it.
+4. ~~**Marcus Filly, BJJ**~~ — done 2026-11-08 (`feat/levels-contracts`): the contract hook,
+   `training_contract.with_level`, in the module chain generation and `verify` share. Filly's
+   3x samples are the elite's, novices taken in (I6); BJJ's strength and competition
+   conditioning the elite's, a class a class at every level (I9). Elite standards: the back
+   squat (Filly), the bench and max pull-ups (BJJ), the app's choice (the sources name none).
+5. ~~**Wildman**~~ — done 2026-11-08 (`feat/levels-rest`): nothing scaled. A level is the
+   bell the athlete chooses and the cycle they earn (R9), the modules' levels as written;
+   advanced and elite differ from intermediate by those, never by an inferred weight.
+6. ~~**Kelly Starrett, ATG**~~ — done: their levels are the source's own (ATG's programs by
+   level, Built to Move for all); neither names an elite standard and each says why
+   (`no_elite_standard`).
+7. ~~**Starting Strength, Ido**~~ — done: the source's own versions; elite standards the five
+   lifts and the free handstand. An exercise named only in a version written for higher
+   levels now suits from that level (Ido's advanced routines), and the commons' level
+   concepts cascade upward (an advanced athlete had lost the ring dip). Horsemen's two
+   kettlebell carries required an id that does not exist and were elite-only; fixed.
+
+**Open.** Starting Strength refuses advanced and elite lifters (Practical Programming's
+advanced programs are not read). Built to Move's bands would make its tests standards. A
+contract's EMOM and timed-cycle progressions are never scaled (Wildman needs none). A
+scaled benchmark measures nothing, so a non-elite CrossFit athlete's Progress
+has no tested standard; a "scaled" result kind on the standards would let it count. The
+benchmarks' own published beginner versions should replace the computed scale where
+crossfit.com prints them. `starting_load_kg` has no elite × share fallback yet.
 
 ## Later
 

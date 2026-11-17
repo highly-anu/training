@@ -2,7 +2,9 @@ id: cf_run_thruster_couplet
 name: "Run / 115 lb Thruster"
 modality: mixed_modal_conditioning
 category: conditioning
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written as Rx (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 duration_estimate_minutes: 25
 pool_only: true
 
@@ -24,6 +26,7 @@ slots:
       exercise_ids: [thruster]
       ordered: true
     load: "115 lb (52 kg)"
+    load_kg: 52
 
   - role: couplet_3
     slot_type: amrap_movement
@@ -41,6 +44,7 @@ slots:
       exercise_ids: [thruster]
       ordered: true
     load: "115 lb (52 kg)"
+    load_kg: 52
 
   - role: couplet_5
     slot_type: amrap_movement
@@ -58,6 +62,7 @@ slots:
       exercise_ids: [thruster]
       ordered: true
     load: "115 lb (52 kg)"
+    load_kg: 52
 
 required_equipment:
 - open_space

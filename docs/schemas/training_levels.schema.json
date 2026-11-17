@@ -11,13 +11,29 @@
       "type": "array", "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["id", "label", "distance_multiplier"],
+        "required": ["id", "label", "distance_multiplier", "scaling", "standard_rung"],
         "additionalProperties": false,
         "properties": {
           "id": {"type": "string", "pattern": "^[a-z_]+$"},
           "label": {"type": "string"},
           "distance_multiplier": {"type": "number", "exclusiveMinimum": 0},
-          "unlocks_all": {"type": "boolean"}
+          "unlocks_all": {"type": "boolean"},
+          "scaling": {
+            "description": "The share of an elite prescription this level does, per dimension (src/level_scaling.py).",
+            "type": "object",
+            "required": ["load", "volume", "time", "distance"],
+            "additionalProperties": false,
+            "properties": {
+              "load": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+              "volume": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+              "time": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+              "distance": {"type": "number", "exclusiveMinimum": 0, "maximum": 1}
+            }
+          },
+          "standard_rung": {
+            "description": "The rung of a standard's ladder (benchmarks_data.LEVELS) this level trains toward.",
+            "enum": ["entry", "intermediate", "advanced", "elite"]
+          }
         }
       }
     }

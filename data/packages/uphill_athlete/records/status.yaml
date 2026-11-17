@@ -18,8 +18,8 @@ inventions:
   Specific and Taper (R17), its recovery weeks still at half. The published plans peak near 11 hours;
   this one peaks near 11.4.'
 - 'I3: The first week''s aerobic minutes by level, from R6''s hours less about 1.5 hours of strength:
-  intermediate 5.5 hours (lean and active), advanced 7 (can jog 10 miles), elite 8.5. No novice: that
-  track comes separately.'
+  novice 3.5 hours (untrained), intermediate 5.5 (lean and active), advanced 7 (can jog 10 miles), elite
+  8.5.'
 - 'I4: A session longer than the athlete''s longest day is capped there, and the program says so; the
   sources set the long day by the week''s time, not by the athlete''s days.'
 - 'I5: The max-strength session: four sets of the squat or the deadlift (alternating), four of weighted
@@ -37,7 +37,10 @@ inventions:
 - 'I10: The aerobic-deficiency gate (R9) is said in the Zone 3 and ME notes, never enforced — the athlete
   measures their thresholds (the owner''s rule for Wildman, 2026-10-21).'
 - 'I11: Six training days are required (R2 writes six); at seven the same six sessions run.'
+- 'I12: A novice runs the full program — the same phases, the General Strength circuit before max strength,
+  Zone 3 behind the aerobic-deficiency gate — from the untrained athlete''s hours (R6, I3); the source''s
+  beginner plan is sold, not published. The volume is the source''s at every level, so nothing is scaled
+  (docs/logic/levels.md).'
 last_review:
-  output_vs_dossier: '2026-10-22'
-next: A novice track on the mountaineering article's numbers (5 hours over six days, hikes, the General
-  Strength circuit); exercise media.
+  output_vs_dossier: '2026-11-08'
+next: Beginner Mountain Fitness, if it is ever read; exercise media.

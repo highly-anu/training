@@ -2,7 +2,9 @@ id: hm_bloody_nose
 name: Bloody Nose
 modality: max_strength
 category: strength
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 35
 slots:
@@ -29,6 +31,7 @@ slots:
     exercise_ids: [curtis_p]
     ordered: true
   load: 43 kg (95 lb)
+  load_kg: 43
   notes: '15-10-5 reps of each, alternating: Curtis P''s, GHD sit-ups, ring dips, back extensions, pull-ups. The
     source does not say for time. A Curtis P is a hang squat clean, a forward lunge on each leg and a push press.'
 - role: ghd_sit_up

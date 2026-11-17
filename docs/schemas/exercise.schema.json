@@ -124,6 +124,21 @@
       },
       "default": []
     },
+    "min_level": {
+      "description": "The lowest training level this exercise suits where no `requires` chain says it (a heavy snatch): below it the exercise is locked (selector._get_unlocked).",
+      "enum": ["novice", "intermediate", "advanced", "elite"]
+    },
+    "starting_load_kg": {
+      "type": "object",
+      "description": "A linear or RPE-prescribed lift's starting working weight by training level (progression._linear_load).",
+      "propertyNames": {"pattern": "^[a-z_]+$"},
+      "additionalProperties": {"type": "number", "minimum": 0}
+    },
+    "weekly_increment_kg": {
+      "type": "number",
+      "minimum": 0,
+      "description": "What a linear load adds each session (progression._linear_load)."
+    },
     "requires": {
       "type": "array",
       "description": "Prerequisite IDs that must be mastered before this exercise can be programmed. Can reference other exercise IDs or abstract skill IDs (e.g. 'hip_hinge_pattern', 'bracing_mechanics').",

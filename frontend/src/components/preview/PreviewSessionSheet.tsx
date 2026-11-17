@@ -10,6 +10,7 @@ import { ReplaceSessionSheet } from '@/components/session/ReplaceSessionSheet'
 import { useHeldBackNames } from '@/hooks/useHeldBackNames'
 import { emptySlotText, idLabel, sessionNotes } from '@/lib/heldBack'
 import { formatLoad } from '@/lib/formatLoad'
+import { scaledFromText, scaledLoadText } from '@/lib/levelScaling'
 import { usePreviewStore } from '@/store/previewStore'
 import type { GeneratedProgram } from '@/api/types'
 
@@ -83,6 +84,9 @@ export function PreviewSessionSheet({ program, target, onClose, philosophyIds }:
                         {ea.exercise?.name ?? <span className="text-muted-foreground">{idLabel(ea.slot_role ?? 'slot')}</span>}
                       </p>
                       {load && <p className="mt-0.5 text-xs font-mono text-primary">{load}</p>}
+                      {[scaledFromText(ea), scaledLoadText(ea)].filter(Boolean).map((line) => (
+                        <p key={line} className="mt-0.5 text-[11px] text-muted-foreground">{line}</p>
+                      ))}
                       {ea.substituted_for && (
                         <p className="mt-0.5 text-[11px] text-muted-foreground">
                           In place of {names.exercise?.(ea.substituted_for) ?? idLabel(ea.substituted_for)}

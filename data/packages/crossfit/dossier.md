@@ -37,6 +37,7 @@ Read on 2026-10-21:
 | R12 | Heavy days at descending or repeated low reps (tmpl03, wod05) | category `w` |
 | R13 | No deload; the off day is the rest (tmpl03, wif02) | no `deload_protocol` |
 | R14 | About an hour a session (found02) | `ideal_session_minutes: 60` |
+| R15 | A newcomer does the same workouts scaled: load first, intensity and volume by half (l1) | each track's `level_scaling.novice`; `applicable_when` takes novices |
 
 ## Debt (rules nothing enforces yet)
 
@@ -45,7 +46,8 @@ None.
 ## Open
 
 - Grace, Isabel and Karen fit none of the template's day types and are not placed.
-- A scaled novice track (the Level 1 guide's scaling) is not built.
+- The Level 1 guide keeps a newcomer scaled for weeks, with no protocol for restoring it;
+  the scale follows the athlete's level, which only the athlete moves.
 - The rest of the 2005 archive is not transcribed.
 - Today's crossfit.com is not strictly three on, one off.
 
@@ -57,7 +59,13 @@ None.
   of either track); the next one the athlete can do, passing over one used in the last week.
 - I3: another couplet or triplet when none of the day's type fits.
 - I4: the drop order at five days.
-- I5: intermediate and up; novices refused.
+- I7: every workout is written for the elite (Rx); an intermediate does 70 % and an advanced
+  athlete 85 % of it (the commons' shares; the guide states only the newcomer's half). A
+  scaled benchmark is not a result on its standard's ladder.
+- I8: a movement out of reach is replaced by a scaled one the package owns (jumping pull-ups,
+  pike push-ups, single unders, the pull-up for the muscle-up, a dumbbell snatch, a squat
+  clean or a front squat for the full lifts), and the hardest movements name the level they
+  suit; the guide scales by example, not by table.
 - I6: estimated minutes; pounds as written, kilograms beside.
 
 ## Removed in this review

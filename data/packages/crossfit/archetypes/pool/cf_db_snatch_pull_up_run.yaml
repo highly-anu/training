@@ -2,7 +2,9 @@ id: cf_db_snatch_pull_up_run
 name: "Dumbbell Snatch / Pull-Ups / Run x 3"
 modality: mixed_modal_conditioning
 category: conditioning
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written as Rx (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 duration_estimate_minutes: 25
 pool_only: true
 
@@ -15,6 +17,7 @@ slots:
       exercise_ids: [db_snatch]
       ordered: true
     load: "55 lb (25 kg), alternating arms"
+    load_kg: 25
     notes: "3 rounds for time. Post time."
 
   - role: triplet_2

@@ -7,6 +7,23 @@
 #
 #   distance_multiplier  a distance slot's metres at this level (progression._distance_slot)
 #   unlocks_all          every exercise is open, prerequisites or not (selector._get_unlocked)
+#   scaling              the share of an elite prescription this level does, by
+#                        dimension (src/level_scaling.py, docs/logic/levels.md):
+#                          load      a fixed weight the source writes (Rx kg,
+#                                    a bell) — never a % of 1RM or of bodyweight,
+#                                    which is already the athlete's own
+#                          volume    sets, reps and reps a round
+#                          time      minutes and seconds of work, time caps
+#                          distance  metres
+#                        Only a track that declares `authored_level` is scaled,
+#                        and only below it: a lower level never does more than
+#                        written. A track's own `level_scaling` (what its source
+#                        says) wins per dimension; these are the app's, recorded
+#                        as an invention by every package that uses them.
+#   standard_rung        the rung of a standard's ladder (data/benchmarks/,
+#                        benchmarks_data.LEVELS) this level trains toward: a
+#                        standard's "intermediate" is roughly where a novice
+#                        program ends, so the two ladders are not one-to-one.
 
 default: intermediate
 
@@ -14,13 +31,21 @@ levels:
   - id: novice
     label: Novice
     distance_multiplier: 0.5
+    scaling: {load: 0.5, volume: 0.5, time: 0.5, distance: 0.5}
+    standard_rung: entry
   - id: intermediate
     label: Intermediate
     distance_multiplier: 0.75
+    scaling: {load: 0.7, volume: 0.7, time: 0.7, distance: 0.7}
+    standard_rung: intermediate
   - id: advanced
     label: Advanced
     distance_multiplier: 1.0
+    scaling: {load: 0.85, volume: 0.85, time: 0.85, distance: 0.85}
+    standard_rung: advanced
   - id: elite
     label: Elite
     distance_multiplier: 1.25
     unlocks_all: true
+    scaling: {load: 1.0, volume: 1.0, time: 1.0, distance: 1.0}
+    standard_rung: elite

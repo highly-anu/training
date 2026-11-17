@@ -2,7 +2,9 @@ id: hm_grace
 name: "Grace"
 modality: mixed_modal_conditioning
 category: conditioning
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 duration_estimate_minutes: 8
 pool_only: true
 
@@ -13,6 +15,7 @@ slots:
     duration_sec: 420
     intensity: max_effort
     load: "61 kg (135 lb)"
+    load_kg: 61
     exercise_filter:
       exercise_ids: [clean_and_jerk]
       ordered: true

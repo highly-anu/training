@@ -3,9 +3,12 @@ name: 12-Minute Kettlebell Complex
 modality: mixed_modal_conditioning
 category: conditioning
 training_levels:
+- novice
 - intermediate
 - advanced
 - elite
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 12
 slots:
@@ -13,6 +16,7 @@ slots:
   slot_type: time_domain
   duration_sec: 720
   load: 16 kg (35 lb)
+  load_kg: 16
   exercise_filter:
     exercise_ids:
     - kb_complex_12min

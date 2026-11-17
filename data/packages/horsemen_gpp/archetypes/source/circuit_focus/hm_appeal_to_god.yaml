@@ -2,7 +2,9 @@ id: hm_appeal_to_god
 name: "Appeal to God"
 modality: mixed_modal_conditioning
 category: conditioning
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 duration_estimate_minutes: 24
 pool_only: true
 

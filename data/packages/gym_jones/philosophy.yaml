@@ -39,6 +39,11 @@ tracks:
     # The three-block periodization track, dropped on 2026-10-21: a stored
     # program that names it regenerates as Operator Fitness.
     former_ids: [block_periodization]
+    # Written for the operator: the elite does each day as written; an
+    # intermediate and an advanced athlete do the commons' shares of it
+    # (src/level_scaling.py; I7). A novice takes Soldier of Steel, the plan
+    # Gym Jones wrote for the newly training.
+    authored_level: elite
     description: >
       Gym Jones' one-month Foundation plan, day by day, six days a week:
       strength, circuits and accumulation, recovery days and a long hike with

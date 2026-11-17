@@ -29,8 +29,10 @@ def test_crossfit_runs_glassmans_cycle_and_the_girls_as_written():
     from src.generator import generate
     from src.package_eval import ALL_EQUIPMENT
     goal = goals.philosophy_to_goal(PKG, list(loader.load_all_frameworks().values()), 'constantly_varied')
+    # The elite athlete does every workout as written (Rx); the levels below
+    # do it scaled (R15, tests/test_level_scaling.py).
     c = dict(equipment=list(ALL_EQUIPMENT) + ['rings'], days_per_week=6, session_time_minutes=60,
-             training_level='intermediate')
+             training_level='elite')
     p = generate(None, c, num_weeks=12, goal_dict=goal, output_format='dict')
     days = [(w['week_number'], d, s) for w in p['weeks'] for d, ss in sorted(w['schedule'].items()) for s in ss]
     cycle = ['m', 'gw', 'triplet', None, 'g', 'wm', 'triplet', None, 'w', 'mg', 'triplet', None]

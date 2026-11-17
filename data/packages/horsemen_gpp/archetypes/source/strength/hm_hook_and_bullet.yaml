@@ -2,7 +2,9 @@ id: hm_hook_and_bullet
 name: Hook and Bullet
 modality: max_strength
 category: strength
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 45
 slots:
@@ -14,6 +16,7 @@ slots:
     exercise_ids: [mr_spectacular]
     ordered: true
   load: 2 x 16 kg (2 x 35 lb)
+  load_kg: 16
   notes: '5 rounds, alternating: 5 Mr. Spectaculars, 15 m dumbbell crawl, 10 cauldrons each direction — not for
     time. A Mr. Spectacular is a two-hand kettlebell clean and press, then a walk-out to a push-up and back.'
 - role: db_crawl
@@ -24,6 +27,7 @@ slots:
     exercise_ids: [db_crawl]
     ordered: true
   load: 2 x 11 kg (2 x 25 lb)
+  load_kg: 11
 - role: cauldron
   slot_type: sets_reps
   sets: 5
@@ -32,6 +36,7 @@ slots:
     exercise_ids: [cauldron]
     ordered: true
   load: 11 kg (25 lb)
+  load_kg: 11
   notes: 10 each direction, 20 in all.
 - role: one_arm_sit_up
   slot_type: sets_reps

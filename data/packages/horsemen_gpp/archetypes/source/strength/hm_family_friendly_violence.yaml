@@ -2,7 +2,9 @@ id: hm_family_friendly_violence
 name: Family Friendly Violence
 modality: max_strength
 category: strength
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 55
 slots:
@@ -23,6 +25,7 @@ slots:
     exercise_ids: [kb_tgu]
     ordered: true
   load: 16 kg (35 lb)
+  load_kg: 16
 - role: ankles_to_bar
   slot_type: sets_reps
   sets: 7
@@ -38,6 +41,7 @@ slots:
     exercise_ids: [hang_squat_clean]
     ordered: true
   load: 75 kg (165 lb)
+  load_kg: 75
   notes: '5 rounds, alternating: 8 hang squat cleans, 30 m tire drag, 10 m dumbbell crawl — not for time.'
 - role: tire_drag
   slot_type: distance
@@ -54,6 +58,7 @@ slots:
     exercise_ids: [db_crawl]
     ordered: true
   load: 2 x 25 kg (2 x 55 lb)
+  load_kg: 25
 - role: pull_up
   slot_type: sets_reps
   sets: 10

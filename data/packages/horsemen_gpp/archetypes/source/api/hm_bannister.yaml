@@ -3,9 +3,12 @@ name: Bannister
 modality: mixed_modal_conditioning
 category: conditioning
 training_levels:
+- novice
 - intermediate
 - advanced
 - elite
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 45
 slots:
@@ -18,6 +21,7 @@ slots:
     - single_arm_deadlift
     ordered: true
   load: 61 kg (135 lb)
+  load_kg: 61
   notes: >-
     50 each arm. In order, each set followed by a 270-yard run: 100 one-arm deadlifts, 50 close-grip bench,
     20 tire flips, 40 push presses, 25 hurdle over/unders, 50 bent-over rows, 2 lengths of cable crawl.
@@ -38,6 +42,7 @@ slots:
     - close_grip_bench
     ordered: true
   load: 61 kg (135 lb)
+  load_kg: 61
 - role: run_2
   slot_type: distance
   distance_m: 247
@@ -71,6 +76,7 @@ slots:
     - push_press
     ordered: true
   load: 61 kg (135 lb)
+  load_kg: 61
 - role: run_4
   slot_type: distance
   distance_m: 247
@@ -105,6 +111,7 @@ slots:
     - barbell_row
     ordered: true
   load: 61 kg (135 lb)
+  load_kg: 61
 - role: run_6
   slot_type: distance
   distance_m: 247

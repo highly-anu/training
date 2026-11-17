@@ -2369,7 +2369,11 @@
       "id": "four_month_macro",
       "name": "4-Month Macro",
       "description": "The source's four months — strength, power endurance, job specific, maintenance — each a 28-day template started on the 1st of the month, with the days left over free, and the whole run two or three times. Every week is six training days and a rest day. The strength and conditioning numbers the source names are what it aims to reach in four months.\n",
-      "philosophy_id": "horsemen_gpp"
+      "philosophy_id": "horsemen_gpp",
+      "level_policy": {
+       "authored_level": "elite",
+       "level_scaling": {}
+      }
      },
      "phase_sequence": [
       {
@@ -3246,6 +3250,370 @@
       "is_deload": false,
       "framework": "concurrent_training",
       "schedule": {
+       "Monday": [
+        {
+         "modality": "max_strength",
+         "archetype": {
+          "id": "hm_riley_black_overhead_squat",
+          "name": "Riley Black (Overhead Squat)",
+          "modality": "max_strength",
+          "category": "strength",
+          "training_levels": [
+           "novice",
+           "intermediate",
+           "advanced",
+           "elite"
+          ],
+          "pool_only": true,
+          "duration_estimate_minutes": 30,
+          "slots": [
+           {
+            "role": "ladder_1_rep",
+            "slot_type": "sets_reps",
+            "sets": 5,
+            "reps": 1,
+            "rest_sec": 0,
+            "exercise_filter": {
+             "exercise_ids": [
+              "overhead_squat"
+             ],
+             "ordered": true
+            },
+            "load": "95% of 1RM",
+            "notes": "3 to 5 ladders of 1-2-3 reps: 1 rep on bar 1, 2 on bar 2, 3 on bar 3, with no rest inside a ladder. 18-30 reps in all; every rep technically perfect.",
+            "scaling_eligible": true
+           },
+           {
+            "role": "ladder_2_reps",
+            "slot_type": "sets_reps",
+            "sets": 5,
+            "reps": 2,
+            "rest_sec": 0,
+            "exercise_filter": {
+             "exercise_ids": [
+              "overhead_squat"
+             ],
+             "ordered": true
+            },
+            "load": "90% of 1RM",
+            "notes": "Straight from bar 1, no rest.",
+            "scaling_eligible": true
+           },
+           {
+            "role": "ladder_3_reps",
+            "slot_type": "sets_reps",
+            "sets": 5,
+            "reps": 3,
+            "rest_sec": 180,
+            "exercise_filter": {
+             "exercise_ids": [
+              "overhead_squat"
+             ],
+             "ordered": true
+            },
+            "load": "85% of 1RM",
+            "notes": "Straight from bar 2; then rest no less than 3 minutes before the next ladder.",
+            "scaling_eligible": true
+           }
+          ],
+          "required_equipment": [
+           "barbell",
+           "plates",
+           "rack"
+          ],
+          "sources": [
+           "Horsemen"
+          ],
+          "notes": "The Riley Black method on the overhead squat: 3 to 5 ladders of 1-2-3 reps (18-30 reps in all) with progressive loading on three bars set up at 95, 90 and 85% of 1RM, the weight falling as the reps rise. No rest inside a ladder, at least 3 minutes between ladders, and every rep technically perfect. Five ladders are written here, the top of the source's range.",
+          "_package": "horsemen_gpp"
+         },
+         "is_deload": false,
+         "provenance": {
+          "package": "horsemen_gpp",
+          "borrowed": false
+         },
+         "category": "strength",
+         "category_name": "Strength",
+         "pieces": [
+          {
+           "category": "strength",
+           "archetype_id": "hm_riley_black_overhead_squat",
+           "name": "Riley Black (Overhead Squat)"
+          }
+         ],
+         "exercises": [
+          {
+           "exercise": {
+            "id": "kb_squat_goblet",
+            "name": "Kettlebell Goblet Squat",
+            "category": "kettlebell",
+            "modality": [
+             "strength_endurance",
+             "mobility"
+            ],
+            "equipment": [
+             "kettlebell"
+            ],
+            "effort": "low",
+            "bilateral": true,
+            "movement_patterns": [
+             "squat"
+            ],
+            "requires": [
+             "hip_hinge"
+            ],
+            "unlocks": [
+             "kb_squat_double",
+             "kb_clean_single"
+            ],
+            "contraindicated_with": [
+             "knee_meniscus_post_op",
+             "hip_flexor_strain"
+            ],
+            "progressions": {
+             "load": "increase_bell_weight",
+             "volume": "increase_reps_per_set",
+             "complexity": "kb_squat_double"
+            },
+            "scaling_down": [],
+            "typical_volume": {
+             "sets": 3,
+             "reps": 10
+            },
+            "sources": [
+             "Gym Jones",
+             "Horsemen"
+            ],
+            "notes": "Bell held at chest level with both hands, elbows track inside knees. Gym Jones uses goblet squat (25#) in strength day warm-up: 2×5. Excellent teaching tool for squat mechanics. Low technical demand; appropriate as first-session squat pattern.\n",
+            "_package": "horsemen_gpp",
+            "_packages": [
+             "horsemen_gpp"
+            ]
+           },
+           "load": {
+            "sets": 4,
+            "reps": 1,
+            "rx": {
+             "sets": 5
+            },
+            "level_scaled": {
+             "level": "intermediate",
+             "from": "elite",
+             "shares": {
+              "load": 0.7,
+              "volume": 0.7,
+              "time": 0.7,
+              "distance": 0.7
+             },
+             "sources": {
+              "load": "commons",
+              "volume": "commons",
+              "time": "commons",
+              "distance": "commons"
+             }
+            }
+           },
+           "slot_role": "ladder_1_rep",
+           "slot_type": "sets_reps",
+           "rest_sec": 0,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": false,
+           "gap_reason": null,
+           "substituted_for": null,
+           "error": null,
+           "load_note": "95% of 1RM",
+           "notes": "3 to 5 ladders of 1-2-3 reps: 1 rep on bar 1, 2 on bar 2, 3 on bar 3, with no rest inside a ladder. 18-30 reps in all; every rep technically perfect.",
+           "parent_slot_role": null,
+           "skip_exercise": false,
+           "scaled_from": "overhead_squat",
+           "scaled_from_name": "Overhead Squat",
+           "scale_cause": "level"
+          },
+          {
+           "exercise": {
+            "id": "kb_squat_goblet",
+            "name": "Kettlebell Goblet Squat",
+            "category": "kettlebell",
+            "modality": [
+             "strength_endurance",
+             "mobility"
+            ],
+            "equipment": [
+             "kettlebell"
+            ],
+            "effort": "low",
+            "bilateral": true,
+            "movement_patterns": [
+             "squat"
+            ],
+            "requires": [
+             "hip_hinge"
+            ],
+            "unlocks": [
+             "kb_squat_double",
+             "kb_clean_single"
+            ],
+            "contraindicated_with": [
+             "knee_meniscus_post_op",
+             "hip_flexor_strain"
+            ],
+            "progressions": {
+             "load": "increase_bell_weight",
+             "volume": "increase_reps_per_set",
+             "complexity": "kb_squat_double"
+            },
+            "scaling_down": [],
+            "typical_volume": {
+             "sets": 3,
+             "reps": 10
+            },
+            "sources": [
+             "Gym Jones",
+             "Horsemen"
+            ],
+            "notes": "Bell held at chest level with both hands, elbows track inside knees. Gym Jones uses goblet squat (25#) in strength day warm-up: 2×5. Excellent teaching tool for squat mechanics. Low technical demand; appropriate as first-session squat pattern.\n",
+            "_package": "horsemen_gpp",
+            "_packages": [
+             "horsemen_gpp"
+            ]
+           },
+           "load": {
+            "sets": 4,
+            "reps": 2,
+            "rx": {
+             "sets": 5
+            },
+            "level_scaled": {
+             "level": "intermediate",
+             "from": "elite",
+             "shares": {
+              "load": 0.7,
+              "volume": 0.7,
+              "time": 0.7,
+              "distance": 0.7
+             },
+             "sources": {
+              "load": "commons",
+              "volume": "commons",
+              "time": "commons",
+              "distance": "commons"
+             }
+            }
+           },
+           "slot_role": "ladder_2_reps",
+           "slot_type": "sets_reps",
+           "rest_sec": 0,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": false,
+           "gap_reason": null,
+           "substituted_for": null,
+           "error": null,
+           "load_note": "90% of 1RM",
+           "notes": "Straight from bar 1, no rest.",
+           "parent_slot_role": null,
+           "skip_exercise": false,
+           "scaled_from": "overhead_squat",
+           "scaled_from_name": "Overhead Squat",
+           "scale_cause": "level"
+          },
+          {
+           "exercise": {
+            "id": "kb_squat_goblet",
+            "name": "Kettlebell Goblet Squat",
+            "category": "kettlebell",
+            "modality": [
+             "strength_endurance",
+             "mobility"
+            ],
+            "equipment": [
+             "kettlebell"
+            ],
+            "effort": "low",
+            "bilateral": true,
+            "movement_patterns": [
+             "squat"
+            ],
+            "requires": [
+             "hip_hinge"
+            ],
+            "unlocks": [
+             "kb_squat_double",
+             "kb_clean_single"
+            ],
+            "contraindicated_with": [
+             "knee_meniscus_post_op",
+             "hip_flexor_strain"
+            ],
+            "progressions": {
+             "load": "increase_bell_weight",
+             "volume": "increase_reps_per_set",
+             "complexity": "kb_squat_double"
+            },
+            "scaling_down": [],
+            "typical_volume": {
+             "sets": 3,
+             "reps": 10
+            },
+            "sources": [
+             "Gym Jones",
+             "Horsemen"
+            ],
+            "notes": "Bell held at chest level with both hands, elbows track inside knees. Gym Jones uses goblet squat (25#) in strength day warm-up: 2×5. Excellent teaching tool for squat mechanics. Low technical demand; appropriate as first-session squat pattern.\n",
+            "_package": "horsemen_gpp",
+            "_packages": [
+             "horsemen_gpp"
+            ]
+           },
+           "load": {
+            "sets": 4,
+            "reps": 3,
+            "rx": {
+             "sets": 5
+            },
+            "level_scaled": {
+             "level": "intermediate",
+             "from": "elite",
+             "shares": {
+              "load": 0.7,
+              "volume": 0.7,
+              "time": 0.7,
+              "distance": 0.7
+             },
+             "sources": {
+              "load": "commons",
+              "volume": "commons",
+              "time": "commons",
+              "distance": "commons"
+             }
+            }
+           },
+           "slot_role": "ladder_3_reps",
+           "slot_type": "sets_reps",
+           "rest_sec": 180,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": false,
+           "gap_reason": null,
+           "substituted_for": null,
+           "error": null,
+           "load_note": "85% of 1RM",
+           "notes": "Straight from bar 2; then rest no less than 3 minutes before the next ladder.",
+           "parent_slot_role": null,
+           "skip_exercise": false,
+           "scaled_from": "overhead_squat",
+           "scaled_from_name": "Overhead Squat",
+           "scale_cause": "level"
+          }
+         ],
+         "complementary_work": [],
+         "icon": "kettlebell"
+        }
+       ],
        "Wednesday": [
         {
          "modality": "mixed_modal_conditioning",
@@ -3255,6 +3623,7 @@
           "modality": "mixed_modal_conditioning",
           "category": "conditioning",
           "training_levels": [
+           "novice",
            "intermediate",
            "advanced",
            "elite"
@@ -3275,7 +3644,8 @@
              ],
              "ordered": true
             },
-            "notes": "3 miles all out; the source's target is under 20:00."
+            "notes": "3 miles all out; the source's target is under 20:00.",
+            "scaling_eligible": true
            }
           ],
           "required_equipment": [
@@ -3350,8 +3720,28 @@
            "load": {
             "target_rounds": 1,
             "format": "FOR TIME",
-            "time_minutes": 20,
-            "distance_km": 4.83
+            "time_minutes": 14,
+            "distance_km": 3.38,
+            "rx": {
+             "time_minutes": 20,
+             "distance_km": 4.83
+            },
+            "level_scaled": {
+             "level": "intermediate",
+             "from": "elite",
+             "shares": {
+              "load": 0.7,
+              "volume": 0.7,
+              "time": 0.7,
+              "distance": 0.7
+             },
+             "sources": {
+              "load": "commons",
+              "volume": "commons",
+              "time": "commons",
+              "distance": "commons"
+             }
+            }
            },
            "slot_role": "run_3_mile",
            "slot_type": "for_time",
@@ -3381,6 +3771,7 @@
           "modality": "strength_endurance",
           "category": "gpp_durability",
           "training_levels": [
+           "novice",
            "intermediate",
            "advanced",
            "elite"
@@ -3405,7 +3796,8 @@
              ]
             },
             "load": "50% of 1RM",
-            "notes": "100 reps of any big lift at 50% of its 1RM; the list is the choice of lifts, not an order of preference. The source gives no time."
+            "notes": "100 reps of any big lift at 50% of its 1RM; the list is the choice of lifts, not an order of preference. The source gives no time.",
+            "scaling_eligible": true
            }
           ],
           "required_equipment": [
@@ -3483,7 +3875,26 @@
            },
            "load": {
             "sets": 1,
-            "reps": 100
+            "reps": 70,
+            "rx": {
+             "reps": 100
+            },
+            "level_scaled": {
+             "level": "intermediate",
+             "from": "elite",
+             "shares": {
+              "load": 0.7,
+              "volume": 0.7,
+              "time": 0.7,
+              "distance": 0.7
+             },
+             "sources": {
+              "load": "commons",
+              "volume": "commons",
+              "time": "commons",
+              "distance": "commons"
+             }
+            }
            },
            "slot_role": "big_lift",
            "slot_type": "sets_reps",
@@ -3505,6 +3916,370 @@
          "complementary_work": [],
          "icon": "kettlebell"
         }
+       ],
+       "Friday": [
+        {
+         "modality": "max_strength",
+         "archetype": {
+          "id": "hm_riley_black_overhead_squat",
+          "name": "Riley Black (Overhead Squat)",
+          "modality": "max_strength",
+          "category": "strength",
+          "training_levels": [
+           "novice",
+           "intermediate",
+           "advanced",
+           "elite"
+          ],
+          "pool_only": true,
+          "duration_estimate_minutes": 30,
+          "slots": [
+           {
+            "role": "ladder_1_rep",
+            "slot_type": "sets_reps",
+            "sets": 5,
+            "reps": 1,
+            "rest_sec": 0,
+            "exercise_filter": {
+             "exercise_ids": [
+              "overhead_squat"
+             ],
+             "ordered": true
+            },
+            "load": "95% of 1RM",
+            "notes": "3 to 5 ladders of 1-2-3 reps: 1 rep on bar 1, 2 on bar 2, 3 on bar 3, with no rest inside a ladder. 18-30 reps in all; every rep technically perfect.",
+            "scaling_eligible": true
+           },
+           {
+            "role": "ladder_2_reps",
+            "slot_type": "sets_reps",
+            "sets": 5,
+            "reps": 2,
+            "rest_sec": 0,
+            "exercise_filter": {
+             "exercise_ids": [
+              "overhead_squat"
+             ],
+             "ordered": true
+            },
+            "load": "90% of 1RM",
+            "notes": "Straight from bar 1, no rest.",
+            "scaling_eligible": true
+           },
+           {
+            "role": "ladder_3_reps",
+            "slot_type": "sets_reps",
+            "sets": 5,
+            "reps": 3,
+            "rest_sec": 180,
+            "exercise_filter": {
+             "exercise_ids": [
+              "overhead_squat"
+             ],
+             "ordered": true
+            },
+            "load": "85% of 1RM",
+            "notes": "Straight from bar 2; then rest no less than 3 minutes before the next ladder.",
+            "scaling_eligible": true
+           }
+          ],
+          "required_equipment": [
+           "barbell",
+           "plates",
+           "rack"
+          ],
+          "sources": [
+           "Horsemen"
+          ],
+          "notes": "The Riley Black method on the overhead squat: 3 to 5 ladders of 1-2-3 reps (18-30 reps in all) with progressive loading on three bars set up at 95, 90 and 85% of 1RM, the weight falling as the reps rise. No rest inside a ladder, at least 3 minutes between ladders, and every rep technically perfect. Five ladders are written here, the top of the source's range.",
+          "_package": "horsemen_gpp"
+         },
+         "is_deload": false,
+         "provenance": {
+          "package": "horsemen_gpp",
+          "borrowed": false
+         },
+         "category": "strength",
+         "category_name": "Strength",
+         "pieces": [
+          {
+           "category": "strength",
+           "archetype_id": "hm_riley_black_overhead_squat",
+           "name": "Riley Black (Overhead Squat)"
+          }
+         ],
+         "exercises": [
+          {
+           "exercise": {
+            "id": "kb_squat_goblet",
+            "name": "Kettlebell Goblet Squat",
+            "category": "kettlebell",
+            "modality": [
+             "strength_endurance",
+             "mobility"
+            ],
+            "equipment": [
+             "kettlebell"
+            ],
+            "effort": "low",
+            "bilateral": true,
+            "movement_patterns": [
+             "squat"
+            ],
+            "requires": [
+             "hip_hinge"
+            ],
+            "unlocks": [
+             "kb_squat_double",
+             "kb_clean_single"
+            ],
+            "contraindicated_with": [
+             "knee_meniscus_post_op",
+             "hip_flexor_strain"
+            ],
+            "progressions": {
+             "load": "increase_bell_weight",
+             "volume": "increase_reps_per_set",
+             "complexity": "kb_squat_double"
+            },
+            "scaling_down": [],
+            "typical_volume": {
+             "sets": 3,
+             "reps": 10
+            },
+            "sources": [
+             "Gym Jones",
+             "Horsemen"
+            ],
+            "notes": "Bell held at chest level with both hands, elbows track inside knees. Gym Jones uses goblet squat (25#) in strength day warm-up: 2×5. Excellent teaching tool for squat mechanics. Low technical demand; appropriate as first-session squat pattern.\n",
+            "_package": "horsemen_gpp",
+            "_packages": [
+             "horsemen_gpp"
+            ]
+           },
+           "load": {
+            "sets": 4,
+            "reps": 1,
+            "rx": {
+             "sets": 5
+            },
+            "level_scaled": {
+             "level": "intermediate",
+             "from": "elite",
+             "shares": {
+              "load": 0.7,
+              "volume": 0.7,
+              "time": 0.7,
+              "distance": 0.7
+             },
+             "sources": {
+              "load": "commons",
+              "volume": "commons",
+              "time": "commons",
+              "distance": "commons"
+             }
+            }
+           },
+           "slot_role": "ladder_1_rep",
+           "slot_type": "sets_reps",
+           "rest_sec": 0,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": false,
+           "gap_reason": null,
+           "substituted_for": null,
+           "error": null,
+           "load_note": "95% of 1RM",
+           "notes": "3 to 5 ladders of 1-2-3 reps: 1 rep on bar 1, 2 on bar 2, 3 on bar 3, with no rest inside a ladder. 18-30 reps in all; every rep technically perfect.",
+           "parent_slot_role": null,
+           "skip_exercise": false,
+           "scaled_from": "overhead_squat",
+           "scaled_from_name": "Overhead Squat",
+           "scale_cause": "level"
+          },
+          {
+           "exercise": {
+            "id": "kb_squat_goblet",
+            "name": "Kettlebell Goblet Squat",
+            "category": "kettlebell",
+            "modality": [
+             "strength_endurance",
+             "mobility"
+            ],
+            "equipment": [
+             "kettlebell"
+            ],
+            "effort": "low",
+            "bilateral": true,
+            "movement_patterns": [
+             "squat"
+            ],
+            "requires": [
+             "hip_hinge"
+            ],
+            "unlocks": [
+             "kb_squat_double",
+             "kb_clean_single"
+            ],
+            "contraindicated_with": [
+             "knee_meniscus_post_op",
+             "hip_flexor_strain"
+            ],
+            "progressions": {
+             "load": "increase_bell_weight",
+             "volume": "increase_reps_per_set",
+             "complexity": "kb_squat_double"
+            },
+            "scaling_down": [],
+            "typical_volume": {
+             "sets": 3,
+             "reps": 10
+            },
+            "sources": [
+             "Gym Jones",
+             "Horsemen"
+            ],
+            "notes": "Bell held at chest level with both hands, elbows track inside knees. Gym Jones uses goblet squat (25#) in strength day warm-up: 2×5. Excellent teaching tool for squat mechanics. Low technical demand; appropriate as first-session squat pattern.\n",
+            "_package": "horsemen_gpp",
+            "_packages": [
+             "horsemen_gpp"
+            ]
+           },
+           "load": {
+            "sets": 4,
+            "reps": 2,
+            "rx": {
+             "sets": 5
+            },
+            "level_scaled": {
+             "level": "intermediate",
+             "from": "elite",
+             "shares": {
+              "load": 0.7,
+              "volume": 0.7,
+              "time": 0.7,
+              "distance": 0.7
+             },
+             "sources": {
+              "load": "commons",
+              "volume": "commons",
+              "time": "commons",
+              "distance": "commons"
+             }
+            }
+           },
+           "slot_role": "ladder_2_reps",
+           "slot_type": "sets_reps",
+           "rest_sec": 0,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": false,
+           "gap_reason": null,
+           "substituted_for": null,
+           "error": null,
+           "load_note": "90% of 1RM",
+           "notes": "Straight from bar 1, no rest.",
+           "parent_slot_role": null,
+           "skip_exercise": false,
+           "scaled_from": "overhead_squat",
+           "scaled_from_name": "Overhead Squat",
+           "scale_cause": "level"
+          },
+          {
+           "exercise": {
+            "id": "kb_squat_goblet",
+            "name": "Kettlebell Goblet Squat",
+            "category": "kettlebell",
+            "modality": [
+             "strength_endurance",
+             "mobility"
+            ],
+            "equipment": [
+             "kettlebell"
+            ],
+            "effort": "low",
+            "bilateral": true,
+            "movement_patterns": [
+             "squat"
+            ],
+            "requires": [
+             "hip_hinge"
+            ],
+            "unlocks": [
+             "kb_squat_double",
+             "kb_clean_single"
+            ],
+            "contraindicated_with": [
+             "knee_meniscus_post_op",
+             "hip_flexor_strain"
+            ],
+            "progressions": {
+             "load": "increase_bell_weight",
+             "volume": "increase_reps_per_set",
+             "complexity": "kb_squat_double"
+            },
+            "scaling_down": [],
+            "typical_volume": {
+             "sets": 3,
+             "reps": 10
+            },
+            "sources": [
+             "Gym Jones",
+             "Horsemen"
+            ],
+            "notes": "Bell held at chest level with both hands, elbows track inside knees. Gym Jones uses goblet squat (25#) in strength day warm-up: 2×5. Excellent teaching tool for squat mechanics. Low technical demand; appropriate as first-session squat pattern.\n",
+            "_package": "horsemen_gpp",
+            "_packages": [
+             "horsemen_gpp"
+            ]
+           },
+           "load": {
+            "sets": 4,
+            "reps": 3,
+            "rx": {
+             "sets": 5
+            },
+            "level_scaled": {
+             "level": "intermediate",
+             "from": "elite",
+             "shares": {
+              "load": 0.7,
+              "volume": 0.7,
+              "time": 0.7,
+              "distance": 0.7
+             },
+             "sources": {
+              "load": "commons",
+              "volume": "commons",
+              "time": "commons",
+              "distance": "commons"
+             }
+            }
+           },
+           "slot_role": "ladder_3_reps",
+           "slot_type": "sets_reps",
+           "rest_sec": 180,
+           "meta": false,
+           "injury_skip": false,
+           "coverage_gap": false,
+           "equipment_gap": false,
+           "gap_reason": null,
+           "substituted_for": null,
+           "error": null,
+           "load_note": "85% of 1RM",
+           "notes": "Straight from bar 2; then rest no less than 3 minutes before the next ladder.",
+           "parent_slot_role": null,
+           "skip_exercise": false,
+           "scaled_from": "overhead_squat",
+           "scaled_from_name": "Overhead Squat",
+           "scale_cause": "level"
+          }
+         ],
+         "complementary_work": [],
+         "icon": "kettlebell"
+        }
        ]
       },
       "phase_id": "strength",
@@ -3515,12 +4290,12 @@
     "volume_summary": [
      {
       "week_number": 1,
-      "strength_sets": 1,
+      "strength_sets": 25,
       "strength_minutes": 0,
       "cond_minutes": 20,
       "dur_minutes": 0,
       "mob_minutes": 0,
-      "total_minutes": 40
+      "total_minutes": 100
      }
     ],
     "phase_summary": [
@@ -3534,21 +4309,30 @@
       "weeks": 1,
       "deload_weeks": 0,
       "sessions_per_week": {
+       "max_strength": 2.0,
        "mixed_modal_conditioning": 1.0,
        "strength_endurance": 1.0
       },
       "minutes_per_week": {
-       "first": 40,
-       "last": 40,
-       "mean": 40
+       "first": 94,
+       "last": 94,
+       "mean": 94
       },
       "intensity": {
        "zone1_2": 0.0,
-       "zone3": 0.5,
+       "zone3": 0.149,
        "zone4_5": 0.0,
-       "max_effort": 0.5
+       "max_effort": 0.851
       },
       "archetypes": [
+       {
+        "id": "hm_riley_black_overhead_squat",
+        "name": "Riley Black (Overhead Squat)",
+        "modality": "max_strength",
+        "sessions": 2,
+        "per_week": 2.0,
+        "status": null
+       },
        {
         "id": "hm_100_rep_challenge",
         "name": "100 Rep Challenge",
@@ -3570,9 +4354,9 @@
        {
         "id": "kb_squat_goblet",
         "name": "Kettlebell Goblet Squat",
-        "modality": "strength_endurance",
-        "sessions": 1,
-        "per_week": 1.0,
+        "modality": "max_strength",
+        "sessions": 7,
+        "per_week": 7.0,
         "status": null
        },
        {
@@ -3599,7 +4383,6 @@
     },
     "compromises": [
      "With 5 training days the week leaves out: Recovery (the source trains 6 days).",
-     "No Strength workout fits as written (equipment, injuries or 60 minutes); the day is left out.",
      "No Job specific (long) workout fits as written (equipment, injuries or 60 minutes); the day is left out."
     ],
     "coverage_report": {
@@ -3670,7 +4453,7 @@
              "pool": 23,
              "rotation_at": 0,
              "minutes": 60,
-             "picked": null,
+             "picked": "hm_riley_black_overhead_squat",
              "passed_over": [
               {
                "id": "hm_tongue_lashing",
@@ -3731,112 +4514,11 @@
               {
                "id": "hm_well_done_is_better_than_well_said",
                "why": "does not fit as written"
-              },
-              {
-               "id": "hm_riley_black_overhead_squat",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_bloody_nose",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_wasted_love",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_max_out",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_riley_black_military_press",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_brollicked",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_riley_black_squat",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_riley_black_weighted_pull_up",
-               "why": "does not fit as written"
-              }
-             ]
-            },
-            {
-             "category": "strength_maintenance",
-             "pool": 15,
-             "rotation_at": 0,
-             "minutes": 60,
-             "picked": null,
-             "passed_over": [
-              {
-               "id": "hm_honey_butter",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_tongue_lashing",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_riley_black_bench_press",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_ben_franklin",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_hook_and_bullet",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_riley_black_deadlift",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_well_done_is_better_than_well_said",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_bloody_nose",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_riley_black_front_squat",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_wasted_love",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_brollicked",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_riley_black_overhead_squat",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_riley_black_military_press",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_riley_black_squat",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_riley_black_weighted_pull_up",
-               "why": "does not fit as written"
               }
              ]
             }
            ],
-           "left_out": true
+           "left_out": false
           },
           "2": {
            "categories": [
@@ -4043,10 +4725,38 @@
             {
              "category": "strength",
              "pool": 23,
-             "rotation_at": 0,
+             "rotation_at": 16,
              "minutes": 60,
-             "picked": null,
+             "picked": "hm_riley_black_overhead_squat",
              "passed_over": [
+              {
+               "id": "hm_bloody_nose",
+               "why": "does not fit as written"
+              },
+              {
+               "id": "hm_wasted_love",
+               "why": "does not fit as written"
+              },
+              {
+               "id": "hm_max_out",
+               "why": "does not fit as written"
+              },
+              {
+               "id": "hm_riley_black_military_press",
+               "why": "does not fit as written"
+              },
+              {
+               "id": "hm_brollicked",
+               "why": "does not fit as written"
+              },
+              {
+               "id": "hm_riley_black_squat",
+               "why": "does not fit as written"
+              },
+              {
+               "id": "hm_riley_black_weighted_pull_up",
+               "why": "does not fit as written"
+              },
               {
                "id": "hm_tongue_lashing",
                "why": "does not fit as written"
@@ -4106,117 +4816,174 @@
               {
                "id": "hm_well_done_is_better_than_well_said",
                "why": "does not fit as written"
-              },
-              {
-               "id": "hm_riley_black_overhead_squat",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_bloody_nose",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_wasted_love",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_max_out",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_riley_black_military_press",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_brollicked",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_riley_black_squat",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_riley_black_weighted_pull_up",
-               "why": "does not fit as written"
-              }
-             ]
-            },
-            {
-             "category": "strength_maintenance",
-             "pool": 15,
-             "rotation_at": 0,
-             "minutes": 60,
-             "picked": null,
-             "passed_over": [
-              {
-               "id": "hm_honey_butter",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_tongue_lashing",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_riley_black_bench_press",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_ben_franklin",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_hook_and_bullet",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_riley_black_deadlift",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_well_done_is_better_than_well_said",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_bloody_nose",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_riley_black_front_squat",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_wasted_love",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_brollicked",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_riley_black_overhead_squat",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_riley_black_military_press",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_riley_black_squat",
-               "why": "does not fit as written"
-              },
-              {
-               "id": "hm_riley_black_weighted_pull_up",
-               "why": "does not fit as written"
               }
              ]
             }
            ],
-           "left_out": true
+           "left_out": false
           }
          }
         }
        },
        "sessions": {
+        "Monday": [
+         {
+          "modality": "max_strength",
+          "archetype": {
+           "selected_id": "hm_riley_black_overhead_squat",
+           "filter_counts": {},
+           "candidates": [],
+           "selection_reason": "week_template",
+           "category": "strength"
+          },
+          "slots": [
+           {
+            "slot_index": 0,
+            "slot_role": "ladder_1_rep",
+            "slot_type": "sets_reps",
+            "meta": false,
+            "movement_pattern": null,
+            "selected_id": "kb_squat_goblet",
+            "injury_blocked": false,
+            "scaled_from": "overhead_squat",
+            "filter_counts": {},
+            "candidates": []
+           },
+           {
+            "slot_index": 1,
+            "slot_role": "ladder_2_reps",
+            "slot_type": "sets_reps",
+            "meta": false,
+            "movement_pattern": null,
+            "selected_id": "kb_squat_goblet",
+            "injury_blocked": false,
+            "scaled_from": "overhead_squat",
+            "filter_counts": {},
+            "candidates": []
+           },
+           {
+            "slot_index": 2,
+            "slot_role": "ladder_3_reps",
+            "slot_type": "sets_reps",
+            "meta": false,
+            "movement_pattern": null,
+            "selected_id": "kb_squat_goblet",
+            "injury_blocked": false,
+            "scaled_from": "overhead_squat",
+            "filter_counts": {},
+            "candidates": []
+           }
+          ],
+          "progression": [
+           {
+            "exercise_id": "kb_squat_goblet",
+            "exercise_name": "Kettlebell Goblet Squat",
+            "slot_role": "ladder_1_rep",
+            "slot_type": "sets_reps",
+            "model": "as_written",
+            "week": 1,
+            "phase": "base",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "sets": 4,
+             "reps": 1,
+             "load_note": "95% of 1RM",
+             "rx": {
+              "sets": 5
+             },
+             "level_scaled": {
+              "level": "intermediate",
+              "from": "elite",
+              "shares": {
+               "load": 0.7,
+               "volume": 0.7,
+               "time": 0.7,
+               "distance": 0.7
+              },
+              "sources": {
+               "load": "commons",
+               "volume": "commons",
+               "time": "commons",
+               "distance": "commons"
+              }
+             }
+            }
+           },
+           {
+            "exercise_id": "kb_squat_goblet",
+            "exercise_name": "Kettlebell Goblet Squat",
+            "slot_role": "ladder_2_reps",
+            "slot_type": "sets_reps",
+            "model": "as_written",
+            "week": 1,
+            "phase": "base",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "sets": 4,
+             "reps": 2,
+             "load_note": "90% of 1RM",
+             "rx": {
+              "sets": 5
+             },
+             "level_scaled": {
+              "level": "intermediate",
+              "from": "elite",
+              "shares": {
+               "load": 0.7,
+               "volume": 0.7,
+               "time": 0.7,
+               "distance": 0.7
+              },
+              "sources": {
+               "load": "commons",
+               "volume": "commons",
+               "time": "commons",
+               "distance": "commons"
+              }
+             }
+            }
+           },
+           {
+            "exercise_id": "kb_squat_goblet",
+            "exercise_name": "Kettlebell Goblet Squat",
+            "slot_role": "ladder_3_reps",
+            "slot_type": "sets_reps",
+            "model": "as_written",
+            "week": 1,
+            "phase": "base",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "sets": 4,
+             "reps": 3,
+             "load_note": "85% of 1RM",
+             "rx": {
+              "sets": 5
+             },
+             "level_scaled": {
+              "level": "intermediate",
+              "from": "elite",
+              "shares": {
+               "load": 0.7,
+               "volume": 0.7,
+               "time": 0.7,
+               "distance": 0.7
+              },
+              "sources": {
+               "load": "commons",
+               "volume": "commons",
+               "time": "commons",
+               "distance": "commons"
+              }
+             }
+            }
+           }
+          ],
+          "category": "strength"
+         }
+        ],
         "Wednesday": [
          {
           "modality": "mixed_modal_conditioning",
@@ -4275,8 +5042,28 @@
             "output": {
              "target_rounds": 1,
              "format": "FOR TIME",
-             "time_minutes": 20,
-             "distance_km": 4.83
+             "time_minutes": 14,
+             "distance_km": 3.38,
+             "rx": {
+              "time_minutes": 20,
+              "distance_km": 4.83
+             },
+             "level_scaled": {
+              "level": "intermediate",
+              "from": "elite",
+              "shares": {
+               "load": 0.7,
+               "volume": 0.7,
+               "time": 0.7,
+               "distance": 0.7
+              },
+              "sources": {
+               "load": "commons",
+               "volume": "commons",
+               "time": "commons",
+               "distance": "commons"
+              }
+             }
             }
            }
           ],
@@ -4325,12 +5112,189 @@
             "is_deload": false,
             "output": {
              "sets": 1,
-             "reps": 100,
-             "load_note": "50% of 1RM"
+             "reps": 70,
+             "load_note": "50% of 1RM",
+             "rx": {
+              "reps": 100
+             },
+             "level_scaled": {
+              "level": "intermediate",
+              "from": "elite",
+              "shares": {
+               "load": 0.7,
+               "volume": 0.7,
+               "time": 0.7,
+               "distance": 0.7
+              },
+              "sources": {
+               "load": "commons",
+               "volume": "commons",
+               "time": "commons",
+               "distance": "commons"
+              }
+             }
             }
            }
           ],
           "category": "smmf"
+         }
+        ],
+        "Friday": [
+         {
+          "modality": "max_strength",
+          "archetype": {
+           "selected_id": "hm_riley_black_overhead_squat",
+           "filter_counts": {},
+           "candidates": [],
+           "selection_reason": "week_template",
+           "category": "strength"
+          },
+          "slots": [
+           {
+            "slot_index": 0,
+            "slot_role": "ladder_1_rep",
+            "slot_type": "sets_reps",
+            "meta": false,
+            "movement_pattern": null,
+            "selected_id": "kb_squat_goblet",
+            "injury_blocked": false,
+            "scaled_from": "overhead_squat",
+            "filter_counts": {},
+            "candidates": []
+           },
+           {
+            "slot_index": 1,
+            "slot_role": "ladder_2_reps",
+            "slot_type": "sets_reps",
+            "meta": false,
+            "movement_pattern": null,
+            "selected_id": "kb_squat_goblet",
+            "injury_blocked": false,
+            "scaled_from": "overhead_squat",
+            "filter_counts": {},
+            "candidates": []
+           },
+           {
+            "slot_index": 2,
+            "slot_role": "ladder_3_reps",
+            "slot_type": "sets_reps",
+            "meta": false,
+            "movement_pattern": null,
+            "selected_id": "kb_squat_goblet",
+            "injury_blocked": false,
+            "scaled_from": "overhead_squat",
+            "filter_counts": {},
+            "candidates": []
+           }
+          ],
+          "progression": [
+           {
+            "exercise_id": "kb_squat_goblet",
+            "exercise_name": "Kettlebell Goblet Squat",
+            "slot_role": "ladder_1_rep",
+            "slot_type": "sets_reps",
+            "model": "as_written",
+            "week": 1,
+            "phase": "base",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "sets": 4,
+             "reps": 1,
+             "load_note": "95% of 1RM",
+             "rx": {
+              "sets": 5
+             },
+             "level_scaled": {
+              "level": "intermediate",
+              "from": "elite",
+              "shares": {
+               "load": 0.7,
+               "volume": 0.7,
+               "time": 0.7,
+               "distance": 0.7
+              },
+              "sources": {
+               "load": "commons",
+               "volume": "commons",
+               "time": "commons",
+               "distance": "commons"
+              }
+             }
+            }
+           },
+           {
+            "exercise_id": "kb_squat_goblet",
+            "exercise_name": "Kettlebell Goblet Squat",
+            "slot_role": "ladder_2_reps",
+            "slot_type": "sets_reps",
+            "model": "as_written",
+            "week": 1,
+            "phase": "base",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "sets": 4,
+             "reps": 2,
+             "load_note": "90% of 1RM",
+             "rx": {
+              "sets": 5
+             },
+             "level_scaled": {
+              "level": "intermediate",
+              "from": "elite",
+              "shares": {
+               "load": 0.7,
+               "volume": 0.7,
+               "time": 0.7,
+               "distance": 0.7
+              },
+              "sources": {
+               "load": "commons",
+               "volume": "commons",
+               "time": "commons",
+               "distance": "commons"
+              }
+             }
+            }
+           },
+           {
+            "exercise_id": "kb_squat_goblet",
+            "exercise_name": "Kettlebell Goblet Squat",
+            "slot_role": "ladder_3_reps",
+            "slot_type": "sets_reps",
+            "model": "as_written",
+            "week": 1,
+            "phase": "base",
+            "level": "intermediate",
+            "is_deload": false,
+            "output": {
+             "sets": 4,
+             "reps": 3,
+             "load_note": "85% of 1RM",
+             "rx": {
+              "sets": 5
+             },
+             "level_scaled": {
+              "level": "intermediate",
+              "from": "elite",
+              "shares": {
+               "load": 0.7,
+               "volume": 0.7,
+               "time": 0.7,
+               "distance": 0.7
+              },
+              "sources": {
+               "load": "commons",
+               "volume": "commons",
+               "time": "commons",
+               "distance": "commons"
+              }
+             }
+            }
+           }
+          ],
+          "category": "strength"
          }
         ]
        },
@@ -7789,7 +8753,11 @@
       "id": "four_month_macro",
       "name": "4-Month Macro",
       "description": "The source's four months — strength, power endurance, job specific, maintenance — each a 28-day template started on the 1st of the month, with the days left over free, and the whole run two or three times. Every week is six training days and a rest day. The strength and conditioning numbers the source names are what it aims to reach in four months.\n",
-      "philosophy_id": "horsemen_gpp"
+      "philosophy_id": "horsemen_gpp",
+      "level_policy": {
+       "authored_level": "elite",
+       "level_scaling": {}
+      }
      },
      "phase_sequence": [
       {
@@ -8629,6 +9597,7 @@
           "modality": "max_strength",
           "category": "strength",
           "training_levels": [
+           "novice",
            "intermediate",
            "advanced",
            "elite"
@@ -8648,7 +9617,8 @@
              ],
              "ordered": true
             },
-            "notes": "Warm-up (Barbell Complex). 4 complexes, the bar heavier each time. One complex is 6 reps each of deadlift, bent-over row, hang power clean, front squat, push press, back squat and push-up; sprint through and don't put the bar down until the push-ups."
+            "notes": "Warm-up (Barbell Complex). 4 complexes, the bar heavier each time. One complex is 6 reps each of deadlift, bent-over row, hang power clean, front squat, push press, back squat and push-up; sprint through and don't put the bar down until the push-ups.",
+            "scaling_eligible": true
            },
            {
             "role": "work_up_1rm",
@@ -8663,7 +9633,8 @@
              "ordered": true
             },
             "load": "today's 1RM",
-            "notes": "Work up to a 1-rep max for the day; the percentages below are of it."
+            "notes": "Work up to a 1-rep max for the day; the percentages below are of it.",
+            "scaling_eligible": true
            },
            {
             "role": "press",
@@ -8677,7 +9648,8 @@
              "ordered": true
             },
             "load": "75-80% of today's 1RM",
-            "notes": "6 rounds, alternating: 3 standing presses, 10 m walking lunges holding dumbbells — not for time."
+            "notes": "6 rounds, alternating: 3 standing presses, 10 m walking lunges holding dumbbells — not for time.",
+            "scaling_eligible": true
            },
            {
             "role": "walking_lunge",
@@ -8690,7 +9662,8 @@
              ],
              "ordered": true
             },
-            "notes": "10 m holding dumbbells; no load given."
+            "notes": "10 m holding dumbbells; no load given.",
+            "scaling_eligible": true
            },
            {
             "role": "curtis_p",
@@ -8703,7 +9676,8 @@
              ],
              "ordered": true
             },
-            "notes": "5 rounds, alternating: 5 Curtis P's, 1 rope climb (or 10 pull-ups), 30 s jingle jangles / 30 s rest — not for time. A Curtis P is a hang squat clean, a forward lunge on each leg and a push press."
+            "notes": "5 rounds, alternating: 5 Curtis P's, 1 rope climb (or 10 pull-ups), 30 s jingle jangles / 30 s rest — not for time. A Curtis P is a hang squat clean, a forward lunge on each leg and a push press.",
+            "scaling_eligible": true
            },
            {
             "role": "rope_climb",
@@ -8717,7 +9691,8 @@
              ],
              "ordered": true
             },
-            "notes": "1 rope climb, or 10 pull-ups without a rope."
+            "notes": "1 rope climb, or 10 pull-ups without a rope.",
+            "scaling_eligible": true
            },
            {
             "role": "jingle_jangles",
@@ -8731,7 +9706,8 @@
              ],
              "ordered": true
             },
-            "notes": "30 s of jingle jangles (5-yard sprints back and forth), 30 s rest."
+            "notes": "30 s of jingle jangles (5-yard sprints back and forth), 30 s rest.",
+            "scaling_eligible": true
            }
           ],
           "required_equipment": [
@@ -8837,8 +9813,27 @@
             ]
            },
            "load": {
-            "sets": 4,
-            "reps": 6
+            "sets": 3,
+            "reps": 6,
+            "rx": {
+             "sets": 4
+            },
+            "level_scaled": {
+             "level": "intermediate",
+             "from": "elite",
+             "shares": {
+              "load": 0.7,
+              "volume": 0.7,
+              "time": 0.7,
+              "distance": 0.7
+             },
+             "sources": {
+              "load": "commons",
+              "volume": "commons",
+              "time": "commons",
+              "distance": "commons"
+             }
+            }
            },
            "slot_role": "warm_up__hm_barbell_complex__barbell_complex",
            "slot_type": "sets_reps",
@@ -9001,8 +9996,27 @@
             ]
            },
            "load": {
-            "sets": 6,
-            "reps": 3
+            "sets": 4,
+            "reps": 3,
+            "rx": {
+             "sets": 6
+            },
+            "level_scaled": {
+             "level": "intermediate",
+             "from": "elite",
+             "shares": {
+              "load": 0.7,
+              "volume": 0.7,
+              "time": 0.7,
+              "distance": 0.7
+             },
+             "sources": {
+              "load": "commons",
+              "volume": "commons",
+              "time": "commons",
+              "distance": "commons"
+             }
+            }
            },
            "slot_role": "press",
            "slot_type": "sets_reps",
@@ -9056,7 +10070,26 @@
            },
            "load": {
             "distance_m": 10,
-            "sets": 6
+            "sets": 4,
+            "rx": {
+             "sets": 6
+            },
+            "level_scaled": {
+             "level": "intermediate",
+             "from": "elite",
+             "shares": {
+              "load": 0.7,
+              "volume": 0.7,
+              "time": 0.7,
+              "distance": 0.7
+             },
+             "sources": {
+              "load": "commons",
+              "volume": "commons",
+              "time": "commons",
+              "distance": "commons"
+             }
+            }
            },
            "slot_role": "walking_lunge",
            "slot_type": "distance",
@@ -9117,8 +10150,27 @@
             ]
            },
            "load": {
-            "sets": 5,
-            "reps": 5
+            "sets": 4,
+            "reps": 5,
+            "rx": {
+             "sets": 5
+            },
+            "level_scaled": {
+             "level": "intermediate",
+             "from": "elite",
+             "shares": {
+              "load": 0.7,
+              "volume": 0.7,
+              "time": 0.7,
+              "distance": 0.7
+             },
+             "sources": {
+              "load": "commons",
+              "volume": "commons",
+              "time": "commons",
+              "distance": "commons"
+             }
+            }
            },
            "slot_role": "curtis_p",
            "slot_type": "sets_reps",
@@ -9139,6 +10191,10 @@
            "exercise": {
             "id": "rope_climb",
             "named_only": true,
+            "min_level": "intermediate",
+            "scaling_down": [
+             "pull_up"
+            ],
             "name": "Rope Climb",
             "category": "bodyweight",
             "modality": [
@@ -9169,8 +10225,27 @@
             ]
            },
            "load": {
-            "sets": 5,
-            "reps": 1
+            "sets": 4,
+            "reps": 1,
+            "rx": {
+             "sets": 5
+            },
+            "level_scaled": {
+             "level": "intermediate",
+             "from": "elite",
+             "shares": {
+              "load": 0.7,
+              "volume": 0.7,
+              "time": 0.7,
+              "distance": 0.7
+             },
+             "sources": {
+              "load": "commons",
+              "volume": "commons",
+              "time": "commons",
+              "distance": "commons"
+             }
+            }
            },
            "slot_role": "rope_climb",
            "slot_type": "sets_reps",
@@ -9224,9 +10299,28 @@
             ]
            },
            "load": {
-            "target_rounds": 5,
+            "target_rounds": 4,
             "work_sec": 30,
-            "rest_sec": 30
+            "rest_sec": 30,
+            "rx": {
+             "target_rounds": 5
+            },
+            "level_scaled": {
+             "level": "intermediate",
+             "from": "elite",
+             "shares": {
+              "load": 0.7,
+              "volume": 0.7,
+              "time": 0.7,
+              "distance": 0.7
+             },
+             "sources": {
+              "load": "commons",
+              "volume": "commons",
+              "time": "commons",
+              "distance": "commons"
+             }
+            }
            },
            "slot_role": "jingle_jangles",
            "slot_type": "time_domain",
@@ -9537,6 +10631,7 @@
           "modality": "durability",
           "category": "gpp_durability",
           "training_levels": [
+           "novice",
            "intermediate",
            "advanced",
            "elite"
@@ -9549,13 +10644,15 @@
             "slot_type": "time_domain",
             "duration_sec": 720,
             "load": "16 kg (35 lb)",
+            "load_kg": 16,
             "exercise_filter": {
              "exercise_ids": [
               "kb_complex_12min"
              ],
              "ordered": true
             },
-            "notes": "Warm-up (12-Minute Kettlebell Complex). 1 minute each, in order: 1-arm swing right, figure 8 right to left, 1-arm swing left, figure 8 left to right, clean and press right arm, slasher to halo, clean and press left arm, slasher to halo, snatch right arm, right-leg lunge (KB in the left arm), snatch left arm, left-leg lunge (KB in the right arm). Move straight from one to the next; don't put the KB down or stop moving."
+            "notes": "Warm-up (12-Minute Kettlebell Complex). 1 minute each, in order: 1-arm swing right, figure 8 right to left, 1-arm swing left, figure 8 left to right, clean and press right arm, slasher to halo, clean and press left arm, slasher to halo, snatch right arm, right-leg lunge (KB in the left arm), snatch left arm, left-leg lunge (KB in the right arm). Move straight from one to the next; don't put the KB down or stop moving.",
+            "scaling_eligible": true
            },
            {
             "role": "step_ups",
@@ -9568,7 +10665,8 @@
              ],
              "ordered": true
             },
-            "notes": "10 rounds, in order: 1 min step-ups onto a 20 in (51 cm) box with weight, a 30 s squat hold, 10 s rest. The weight is not given (the source's step-ups take a rucksack, DBs or KBs)."
+            "notes": "10 rounds, in order: 1 min step-ups onto a 20 in (51 cm) box with weight, a 30 s squat hold, 10 s rest. The weight is not given (the source's step-ups take a rucksack, DBs or KBs).",
+            "scaling_eligible": true
            },
            {
             "role": "squat_hold",
@@ -9582,7 +10680,8 @@
              ],
              "ordered": true
             },
-            "notes": "30 s isometric hold in the squat position, then 10 s rest before the next round."
+            "notes": "30 s isometric hold in the squat position, then 10 s rest before the next round.",
+            "scaling_eligible": true
            },
            {
             "role": "turkish_get_ups",
@@ -9595,7 +10694,9 @@
              "ordered": true
             },
             "load": "16 kg (35 lb)",
-            "notes": "12 minutes of Turkish get-ups."
+            "load_kg": 16,
+            "notes": "12 minutes of Turkish get-ups.",
+            "scaling_eligible": true
            },
            {
             "role": "jingle_jangles",
@@ -9608,7 +10709,8 @@
              ],
              "ordered": true
             },
-            "notes": "10 rounds, in order: 1 min jingle jangles (5-yard sprint back and forth between two cones), 5 box/depth jump combos, 10 s rest."
+            "notes": "10 rounds, in order: 1 min jingle jangles (5-yard sprint back and forth between two cones), 5 box/depth jump combos, 10 s rest.",
+            "scaling_eligible": true
            },
            {
             "role": "box_jumps",
@@ -9621,7 +10723,8 @@
              ],
              "ordered": true
             },
-            "notes": "5 box/depth jump combos each round: a box jump, then a depth jump. Box height not given."
+            "notes": "5 box/depth jump combos each round: a box jump, then a depth jump. Box height not given.",
+            "scaling_eligible": true
            },
            {
             "role": "depth_jumps",
@@ -9635,7 +10738,8 @@
              ],
              "ordered": true
             },
-            "notes": "The depth jump of each combo; 10 s rest after the combos."
+            "notes": "The depth jump of each combo; 10 s rest after the combos.",
+            "scaling_eligible": true
            }
           ],
           "required_equipment": [
@@ -9738,7 +10842,28 @@
             ]
            },
            "load": {
-            "duration_minutes": 12
+            "duration_minutes": 8,
+            "weight_kg": 12.0,
+            "rx": {
+             "duration_minutes": 12,
+             "weight_kg": 16.0
+            },
+            "level_scaled": {
+             "level": "intermediate",
+             "from": "elite",
+             "shares": {
+              "load": 0.7,
+              "volume": 0.7,
+              "time": 0.7,
+              "distance": 0.7
+             },
+             "sources": {
+              "load": "commons",
+              "volume": "commons",
+              "time": "commons",
+              "distance": "commons"
+             }
+            }
            },
            "slot_role": "warm_up__hm_twelve_minute_kettlebell_complex__kb_complex",
            "slot_type": "time_domain",
@@ -9750,7 +10875,7 @@
            "gap_reason": null,
            "substituted_for": null,
            "error": null,
-           "load_note": "16 kg (35 lb)",
+           "load_note": "12 kg · Rx 16 kg (35 lb)",
            "notes": "Warm-up (12-Minute Kettlebell Complex). 1 minute each, in order: 1-arm swing right, figure 8 right to left, 1-arm swing left, figure 8 left to right, clean and press right arm, slasher to halo, clean and press left arm, slasher to halo, snatch right arm, right-leg lunge (KB in the left arm), snatch left arm, left-leg lunge (KB in the right arm). Move straight from one to the next; don't put the KB down or stop moving.",
            "parent_slot_role": null,
            "skip_exercise": false
@@ -9792,7 +10917,26 @@
            },
            "load": {
             "duration_minutes": 1,
-            "sets": 10
+            "sets": 7,
+            "rx": {
+             "sets": 10
+            },
+            "level_scaled": {
+             "level": "intermediate",
+             "from": "elite",
+             "shares": {
+              "load": 0.7,
+              "volume": 0.7,
+              "time": 0.7,
+              "distance": 0.7
+             },
+             "sources": {
+              "load": "commons",
+              "volume": "commons",
+              "time": "commons",
+              "distance": "commons"
+             }
+            }
            },
            "slot_role": "step_ups",
            "slot_type": "time_domain",
@@ -9844,8 +10988,28 @@
             ]
            },
            "load": {
-            "sets": 10,
-            "hold_seconds": 30
+            "sets": 7,
+            "hold_seconds": 20,
+            "rx": {
+             "sets": 10,
+             "hold_seconds": 30
+            },
+            "level_scaled": {
+             "level": "intermediate",
+             "from": "elite",
+             "shares": {
+              "load": 0.7,
+              "volume": 0.7,
+              "time": 0.7,
+              "distance": 0.7
+             },
+             "sources": {
+              "load": "commons",
+              "volume": "commons",
+              "time": "commons",
+              "distance": "commons"
+             }
+            }
            },
            "slot_role": "squat_hold",
            "slot_type": "static_hold",
@@ -9924,7 +11088,28 @@
             ]
            },
            "load": {
-            "duration_minutes": 12
+            "duration_minutes": 8,
+            "weight_kg": 12.0,
+            "rx": {
+             "duration_minutes": 12,
+             "weight_kg": 16.0
+            },
+            "level_scaled": {
+             "level": "intermediate",
+             "from": "elite",
+             "shares": {
+              "load": 0.7,
+              "volume": 0.7,
+              "time": 0.7,
+              "distance": 0.7
+             },
+             "sources": {
+              "load": "commons",
+              "volume": "commons",
+              "time": "commons",
+              "distance": "commons"
+             }
+            }
            },
            "slot_role": "turkish_get_ups",
            "slot_type": "time_domain",
@@ -9936,7 +11121,7 @@
            "gap_reason": null,
            "substituted_for": null,
            "error": null,
-           "load_note": "16 kg (35 lb)",
+           "load_note": "12 kg · Rx 16 kg (35 lb)",
            "notes": "12 minutes of Turkish get-ups.",
            "parent_slot_role": null,
            "skip_exercise": false
@@ -9979,7 +11164,26 @@
            },
            "load": {
             "duration_minutes": 1,
-            "sets": 10
+            "sets": 7,
+            "rx": {
+             "sets": 10
+            },
+            "level_scaled": {
+             "level": "intermediate",
+             "from": "elite",
+             "shares": {
+              "load": 0.7,
+              "volume": 0.7,
+              "time": 0.7,
+              "distance": 0.7
+             },
+             "sources": {
+              "load": "commons",
+              "volume": "commons",
+              "time": "commons",
+              "distance": "commons"
+             }
+            }
            },
            "slot_role": "jingle_jangles",
            "slot_type": "time_domain",
@@ -10031,8 +11235,27 @@
             ]
            },
            "load": {
-            "sets": 10,
-            "reps": 5
+            "sets": 7,
+            "reps": 5,
+            "rx": {
+             "sets": 10
+            },
+            "level_scaled": {
+             "level": "intermediate",
+             "from": "elite",
+             "shares": {
+              "load": 0.7,
+              "volume": 0.7,
+              "time": 0.7,
+              "distance": 0.7
+             },
+             "sources": {
+              "load": "commons",
+              "volume": "commons",
+              "time": "commons",
+              "distance": "commons"
+             }
+            }
            },
            "slot_role": "box_jumps",
            "slot_type": "sets_reps",
@@ -10084,8 +11307,27 @@
             ]
            },
            "load": {
-            "sets": 10,
-            "reps": 5
+            "sets": 7,
+            "reps": 5,
+            "rx": {
+             "sets": 10
+            },
+            "level_scaled": {
+             "level": "intermediate",
+             "from": "elite",
+             "shares": {
+              "load": 0.7,
+              "volume": 0.7,
+              "time": 0.7,
+              "distance": 0.7
+             },
+             "sources": {
+              "load": "commons",
+              "volume": "commons",
+              "time": "commons",
+              "distance": "commons"
+             }
+            }
            },
            "slot_role": "depth_jumps",
            "slot_type": "sets_reps",
@@ -10817,6 +12059,7 @@
           "modality": "max_strength",
           "category": "strength",
           "training_levels": [
+           "novice",
            "intermediate",
            "advanced",
            "elite"
@@ -10830,13 +12073,15 @@
             "sets": 2,
             "reps": 20,
             "load": "36 kg (80 lb)",
+            "load_kg": 36,
             "exercise_filter": {
              "exercise_ids": [
               "sb_getup"
              ],
              "ordered": true
             },
-            "notes": "Warm-up (Sandbag Get-ups). 20 get-ups with the sandbag on each shoulder."
+            "notes": "Warm-up (Sandbag Get-ups). 20 get-ups with the sandbag on each shoulder.",
+            "scaling_eligible": true
            },
            {
             "role": "kb_swing",
@@ -10850,7 +12095,9 @@
              "ordered": true
             },
             "load": "24 kg (53 lb)",
-            "notes": "5 rounds, alternating: 1 min of kettlebell swings, 20 cauldrons, 15 ankles to bar, 20 GHD sit-ups, 20 poor man's reverse hypers — not for time."
+            "load_kg": 24,
+            "notes": "5 rounds, alternating: 1 min of kettlebell swings, 20 cauldrons, 15 ankles to bar, 20 GHD sit-ups, 20 poor man's reverse hypers — not for time.",
+            "scaling_eligible": true
            },
            {
             "role": "cauldron",
@@ -10864,7 +12111,9 @@
              "ordered": true
             },
             "load": "14 kg (30 lb)",
-            "notes": "10 each side, 20 in all."
+            "load_kg": 14,
+            "notes": "10 each side, 20 in all.",
+            "scaling_eligible": true
            },
            {
             "role": "ankles_to_bar",
@@ -10876,7 +12125,8 @@
               "ankles_to_bar"
              ],
              "ordered": true
-            }
+            },
+            "scaling_eligible": true
            },
            {
             "role": "ghd_sit_up",
@@ -10888,7 +12138,8 @@
               "ghd_sit_up"
              ],
              "ordered": true
-            }
+            },
+            "scaling_eligible": true
            },
            {
             "role": "poor_mans_reverse_hyper",
@@ -10901,7 +12152,8 @@
              ],
              "ordered": true
             },
-            "notes": "The source does not describe the movement."
+            "notes": "The source does not describe the movement.",
+            "scaling_eligible": true
            }
           ],
           "required_equipment": [
@@ -10996,8 +12248,29 @@
             ]
            },
            "load": {
-            "sets": 2,
-            "reps": 20
+            "sets": 1,
+            "reps": 20,
+            "weight_kg": 25.0,
+            "rx": {
+             "sets": 2,
+             "weight_kg": 36.0
+            },
+            "level_scaled": {
+             "level": "intermediate",
+             "from": "elite",
+             "shares": {
+              "load": 0.7,
+              "volume": 0.7,
+              "time": 0.7,
+              "distance": 0.7
+             },
+             "sources": {
+              "load": "commons",
+              "volume": "commons",
+              "time": "commons",
+              "distance": "commons"
+             }
+            }
            },
            "slot_role": "warm_up__hm_sandbag_get_ups__sandbag_get_ups",
            "slot_type": "sets_reps",
@@ -11009,7 +12282,7 @@
            "gap_reason": null,
            "substituted_for": null,
            "error": null,
-           "load_note": "36 kg (80 lb)",
+           "load_note": "25 kg · Rx 36 kg (80 lb)",
            "notes": "Warm-up (Sandbag Get-ups). 20 get-ups with the sandbag on each shoulder.",
            "parent_slot_role": null,
            "skip_exercise": false
@@ -11077,7 +12350,28 @@
            },
            "load": {
             "duration_minutes": 1,
-            "sets": 5
+            "sets": 4,
+            "weight_kg": 16.0,
+            "rx": {
+             "sets": 5,
+             "weight_kg": 24.0
+            },
+            "level_scaled": {
+             "level": "intermediate",
+             "from": "elite",
+             "shares": {
+              "load": 0.7,
+              "volume": 0.7,
+              "time": 0.7,
+              "distance": 0.7
+             },
+             "sources": {
+              "load": "commons",
+              "volume": "commons",
+              "time": "commons",
+              "distance": "commons"
+             }
+            }
            },
            "slot_role": "kb_swing",
            "slot_type": "time_domain",
@@ -11089,7 +12383,7 @@
            "gap_reason": null,
            "substituted_for": null,
            "error": null,
-           "load_note": "24 kg (53 lb)",
+           "load_note": "16 kg · Rx 24 kg (53 lb)",
            "notes": "5 rounds, alternating: 1 min of kettlebell swings, 20 cauldrons, 15 ankles to bar, 20 GHD sit-ups, 20 poor man's reverse hypers — not for time.",
            "parent_slot_role": null,
            "skip_exercise": false
@@ -11129,8 +12423,29 @@
             ]
            },
            "load": {
-            "sets": 5,
-            "reps": 20
+            "sets": 4,
+            "reps": 20,
+            "weight_kg": 10.0,
+            "rx": {
+             "sets": 5,
+             "weight_kg": 14.0
+            },
+            "level_scaled": {
+             "level": "intermediate",
+             "from": "elite",
+             "shares": {
+              "load": 0.7,
+              "volume": 0.7,
+              "time": 0.7,
+              "distance": 0.7
+             },
+             "sources": {
+              "load": "commons",
+              "volume": "commons",
+              "time": "commons",
+              "distance": "commons"
+             }
+            }
            },
            "slot_role": "cauldron",
            "slot_type": "sets_reps",
@@ -11142,7 +12457,7 @@
            "gap_reason": null,
            "substituted_for": null,
            "error": null,
-           "load_note": "14 kg (30 lb)",
+           "load_note": "10 kg · Rx 14 kg (30 lb)",
            "notes": "10 each side, 20 in all.",
            "parent_slot_role": null,
            "skip_exercise": false
@@ -11181,8 +12496,27 @@
             ]
            },
            "load": {
-            "sets": 5,
-            "reps": 15
+            "sets": 4,
+            "reps": 15,
+            "rx": {
+             "sets": 5
+            },
+            "level_scaled": {
+             "level": "intermediate",
+             "from": "elite",
+             "shares": {
+              "load": 0.7,
+              "volume": 0.7,
+              "time": 0.7,
+              "distance": 0.7
+             },
+             "sources": {
+              "load": "commons",
+              "volume": "commons",
+              "time": "commons",
+              "distance": "commons"
+             }
+            }
            },
            "slot_role": "ankles_to_bar",
            "slot_type": "sets_reps",
@@ -11232,8 +12566,27 @@
             ]
            },
            "load": {
-            "sets": 5,
-            "reps": 20
+            "sets": 4,
+            "reps": 20,
+            "rx": {
+             "sets": 5
+            },
+            "level_scaled": {
+             "level": "intermediate",
+             "from": "elite",
+             "shares": {
+              "load": 0.7,
+              "volume": 0.7,
+              "time": 0.7,
+              "distance": 0.7
+             },
+             "sources": {
+              "load": "commons",
+              "volume": "commons",
+              "time": "commons",
+              "distance": "commons"
+             }
+            }
            },
            "slot_role": "ghd_sit_up",
            "slot_type": "sets_reps",
@@ -11283,8 +12636,27 @@
             ]
            },
            "load": {
-            "sets": 5,
-            "reps": 20
+            "sets": 4,
+            "reps": 20,
+            "rx": {
+             "sets": 5
+            },
+            "level_scaled": {
+             "level": "intermediate",
+             "from": "elite",
+             "shares": {
+              "load": 0.7,
+              "volume": 0.7,
+              "time": 0.7,
+              "distance": 0.7
+             },
+             "sources": {
+              "load": "commons",
+              "volume": "commons",
+              "time": "commons",
+              "distance": "commons"
+             }
+            }
            },
            "slot_role": "poor_mans_reverse_hyper",
            "slot_type": "sets_reps",
@@ -12504,12 +13876,12 @@
     "volume_summary": [
      {
       "week_number": 1,
-      "strength_sets": 54,
+      "strength_sets": 41,
       "strength_minutes": 43,
       "cond_minutes": 0,
-      "dur_minutes": 26,
+      "dur_minutes": 18,
       "mob_minutes": 67,
-      "total_minutes": 194
+      "total_minutes": 186
      }
     ],
     "phase_summary": [
@@ -12807,7 +14179,38 @@
         "status": null
        }
       ],
-      "lifts": [],
+      "lifts": [
+       {
+        "id": "sb_getup",
+        "name": "Sandbag Get-Up",
+        "first_kg": 25.0,
+        "last_kg": 25.0
+       },
+       {
+        "id": "kb_swing_two_hand",
+        "name": "Kettlebell Swing (Two-Hand)",
+        "first_kg": 16.0,
+        "last_kg": 16.0
+       },
+       {
+        "id": "kb_complex_12min",
+        "name": "Kettlebell 12-Minute Complex (Horsemen Warm-Up)",
+        "first_kg": 12.0,
+        "last_kg": 12.0
+       },
+       {
+        "id": "kb_tgu",
+        "name": "Kettlebell Turkish Get-Up",
+        "first_kg": 12.0,
+        "last_kg": 12.0
+       },
+       {
+        "id": "cauldron",
+        "name": "Cauldron",
+        "first_kg": 10.0,
+        "last_kg": 10.0
+       }
+      ],
       "tests": [],
       "dropped": {
        "archetypes": [],
@@ -13016,7 +14419,38 @@
           "status": null
          }
         ],
-        "lifts": [],
+        "lifts": [
+         {
+          "id": "sb_getup",
+          "name": "Sandbag Get-Up",
+          "first_kg": 25.0,
+          "last_kg": 25.0
+         },
+         {
+          "id": "kb_swing_two_hand",
+          "name": "Kettlebell Swing (Two-Hand)",
+          "first_kg": 16.0,
+          "last_kg": 16.0
+         },
+         {
+          "id": "kb_complex_12min",
+          "name": "Kettlebell 12-Minute Complex (Horsemen Warm-Up)",
+          "first_kg": 12.0,
+          "last_kg": 12.0
+         },
+         {
+          "id": "kb_tgu",
+          "name": "Kettlebell Turkish Get-Up",
+          "first_kg": 12.0,
+          "last_kg": 12.0
+         },
+         {
+          "id": "cauldron",
+          "name": "Cauldron",
+          "first_kg": 10.0,
+          "last_kg": 10.0
+         }
+        ],
         "tests": [],
         "dropped": {
          "archetypes": [],
@@ -13400,9 +14834,9 @@
             "selected_id": "barbell_complex",
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 44,
-             "after_package": 44,
-             "after_equip": 43,
+             "in_pool": 46,
+             "after_package": 46,
+             "after_equip": 45,
              "after_filter": 1,
              "final": 1
             },
@@ -13432,9 +14866,9 @@
             "selected_id": "strict_press",
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 44,
-             "after_package": 44,
-             "after_equip": 43,
+             "in_pool": 46,
+             "after_package": 46,
+             "after_equip": 45,
              "after_filter": 1,
              "final": 1
             },
@@ -13464,9 +14898,9 @@
             "selected_id": "strict_press",
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 44,
-             "after_package": 44,
-             "after_equip": 43,
+             "in_pool": 46,
+             "after_package": 46,
+             "after_equip": 45,
              "after_filter": 1,
              "final": 1
             },
@@ -13496,9 +14930,9 @@
             "selected_id": "db_walking_lunge",
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 45,
-             "after_package": 45,
-             "after_equip": 44,
+             "in_pool": 47,
+             "after_package": 47,
+             "after_equip": 46,
              "after_filter": 1,
              "final": 1
             },
@@ -13528,9 +14962,9 @@
             "selected_id": "curtis_p",
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 45,
-             "after_package": 45,
-             "after_equip": 44,
+             "in_pool": 47,
+             "after_package": 47,
+             "after_equip": 46,
              "after_filter": 1,
              "final": 1
             },
@@ -13560,9 +14994,9 @@
             "selected_id": "rope_climb",
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 45,
-             "after_package": 45,
-             "after_equip": 44,
+             "in_pool": 47,
+             "after_package": 47,
+             "after_equip": 46,
              "after_filter": 2,
              "final": 2
             },
@@ -13606,9 +15040,9 @@
             "selected_id": "jingle_jangles",
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 45,
-             "after_package": 45,
-             "after_equip": 44,
+             "in_pool": 47,
+             "after_package": 47,
+             "after_equip": 46,
              "after_filter": 1,
              "final": 1
             },
@@ -13642,9 +15076,28 @@
             "level": "intermediate",
             "is_deload": false,
             "output": {
-             "sets": 4,
+             "sets": 3,
              "reps": 6,
-             "load_note": "34, 39, 43, 48 kg (75, 85, 95, 105 lb)"
+             "load_note": "34, 39, 43, 48 kg (75, 85, 95, 105 lb)",
+             "rx": {
+              "sets": 4
+             },
+             "level_scaled": {
+              "level": "intermediate",
+              "from": "elite",
+              "shares": {
+               "load": 0.7,
+               "volume": 0.7,
+               "time": 0.7,
+               "distance": 0.7
+              },
+              "sources": {
+               "load": "commons",
+               "volume": "commons",
+               "time": "commons",
+               "distance": "commons"
+              }
+             }
             }
            },
            {
@@ -13674,9 +15127,28 @@
             "level": "intermediate",
             "is_deload": false,
             "output": {
-             "sets": 6,
+             "sets": 4,
              "reps": 3,
-             "load_note": "75-80% of today's 1RM"
+             "load_note": "75-80% of today's 1RM",
+             "rx": {
+              "sets": 6
+             },
+             "level_scaled": {
+              "level": "intermediate",
+              "from": "elite",
+              "shares": {
+               "load": 0.7,
+               "volume": 0.7,
+               "time": 0.7,
+               "distance": 0.7
+              },
+              "sources": {
+               "load": "commons",
+               "volume": "commons",
+               "time": "commons",
+               "distance": "commons"
+              }
+             }
             }
            },
            {
@@ -13691,7 +15163,26 @@
             "is_deload": false,
             "output": {
              "distance_m": 10,
-             "sets": 6
+             "sets": 4,
+             "rx": {
+              "sets": 6
+             },
+             "level_scaled": {
+              "level": "intermediate",
+              "from": "elite",
+              "shares": {
+               "load": 0.7,
+               "volume": 0.7,
+               "time": 0.7,
+               "distance": 0.7
+              },
+              "sources": {
+               "load": "commons",
+               "volume": "commons",
+               "time": "commons",
+               "distance": "commons"
+              }
+             }
             }
            },
            {
@@ -13705,8 +15196,27 @@
             "level": "intermediate",
             "is_deload": false,
             "output": {
-             "sets": 5,
-             "reps": 5
+             "sets": 4,
+             "reps": 5,
+             "rx": {
+              "sets": 5
+             },
+             "level_scaled": {
+              "level": "intermediate",
+              "from": "elite",
+              "shares": {
+               "load": 0.7,
+               "volume": 0.7,
+               "time": 0.7,
+               "distance": 0.7
+              },
+              "sources": {
+               "load": "commons",
+               "volume": "commons",
+               "time": "commons",
+               "distance": "commons"
+              }
+             }
             }
            },
            {
@@ -13720,8 +15230,27 @@
             "level": "intermediate",
             "is_deload": false,
             "output": {
-             "sets": 5,
-             "reps": 1
+             "sets": 4,
+             "reps": 1,
+             "rx": {
+              "sets": 5
+             },
+             "level_scaled": {
+              "level": "intermediate",
+              "from": "elite",
+              "shares": {
+               "load": 0.7,
+               "volume": 0.7,
+               "time": 0.7,
+               "distance": 0.7
+              },
+              "sources": {
+               "load": "commons",
+               "volume": "commons",
+               "time": "commons",
+               "distance": "commons"
+              }
+             }
             }
            },
            {
@@ -13735,9 +15264,28 @@
             "level": "intermediate",
             "is_deload": false,
             "output": {
-             "target_rounds": 5,
+             "target_rounds": 4,
              "work_sec": 30,
-             "rest_sec": 30
+             "rest_sec": 30,
+             "rx": {
+              "target_rounds": 5
+             },
+             "level_scaled": {
+              "level": "intermediate",
+              "from": "elite",
+              "shares": {
+               "load": 0.7,
+               "volume": 0.7,
+               "time": 0.7,
+               "distance": 0.7
+              },
+              "sources": {
+               "load": "commons",
+               "volume": "commons",
+               "time": "commons",
+               "distance": "commons"
+              }
+             }
             }
            }
           ],
@@ -13885,9 +15433,9 @@
             "selected_id": "kb_complex_12min",
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 44,
-             "after_package": 44,
-             "after_equip": 43,
+             "in_pool": 46,
+             "after_package": 46,
+             "after_equip": 45,
              "after_filter": 1,
              "final": 1
             },
@@ -13917,9 +15465,9 @@
             "selected_id": "weighted_step_up",
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 45,
-             "after_package": 45,
-             "after_equip": 44,
+             "in_pool": 47,
+             "after_package": 47,
+             "after_equip": 46,
              "after_filter": 1,
              "final": 1
             },
@@ -13949,9 +15497,9 @@
             "selected_id": "squat_iso_hold",
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 45,
-             "after_package": 45,
-             "after_equip": 44,
+             "in_pool": 47,
+             "after_package": 47,
+             "after_equip": 46,
              "after_filter": 1,
              "final": 1
             },
@@ -13981,9 +15529,9 @@
             "selected_id": "kb_tgu",
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 44,
-             "after_package": 44,
-             "after_equip": 43,
+             "in_pool": 46,
+             "after_package": 46,
+             "after_equip": 45,
              "after_filter": 1,
              "final": 1
             },
@@ -14013,9 +15561,9 @@
             "selected_id": "jingle_jangles",
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 45,
-             "after_package": 45,
-             "after_equip": 44,
+             "in_pool": 47,
+             "after_package": 47,
+             "after_equip": 46,
              "after_filter": 1,
              "final": 1
             },
@@ -14045,9 +15593,9 @@
             "selected_id": "box_jump",
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 45,
-             "after_package": 45,
-             "after_equip": 44,
+             "in_pool": 47,
+             "after_package": 47,
+             "after_equip": 46,
              "after_filter": 1,
              "final": 1
             },
@@ -14077,9 +15625,9 @@
             "selected_id": "depth_jump",
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 45,
-             "after_package": 45,
-             "after_equip": 44,
+             "in_pool": 47,
+             "after_package": 47,
+             "after_equip": 46,
              "after_filter": 1,
              "final": 1
             },
@@ -14113,8 +15661,29 @@
             "level": "intermediate",
             "is_deload": false,
             "output": {
-             "duration_minutes": 12,
-             "load_note": "16 kg (35 lb)"
+             "duration_minutes": 8,
+             "load_note": "12 kg · Rx 16 kg (35 lb)",
+             "weight_kg": 12.0,
+             "rx": {
+              "duration_minutes": 12,
+              "weight_kg": 16.0
+             },
+             "level_scaled": {
+              "level": "intermediate",
+              "from": "elite",
+              "shares": {
+               "load": 0.7,
+               "volume": 0.7,
+               "time": 0.7,
+               "distance": 0.7
+              },
+              "sources": {
+               "load": "commons",
+               "volume": "commons",
+               "time": "commons",
+               "distance": "commons"
+              }
+             }
             }
            },
            {
@@ -14129,7 +15698,26 @@
             "is_deload": false,
             "output": {
              "duration_minutes": 1,
-             "sets": 10
+             "sets": 7,
+             "rx": {
+              "sets": 10
+             },
+             "level_scaled": {
+              "level": "intermediate",
+              "from": "elite",
+              "shares": {
+               "load": 0.7,
+               "volume": 0.7,
+               "time": 0.7,
+               "distance": 0.7
+              },
+              "sources": {
+               "load": "commons",
+               "volume": "commons",
+               "time": "commons",
+               "distance": "commons"
+              }
+             }
             }
            },
            {
@@ -14143,8 +15731,28 @@
             "level": "intermediate",
             "is_deload": false,
             "output": {
-             "sets": 10,
-             "hold_seconds": 30
+             "sets": 7,
+             "hold_seconds": 20,
+             "rx": {
+              "sets": 10,
+              "hold_seconds": 30
+             },
+             "level_scaled": {
+              "level": "intermediate",
+              "from": "elite",
+              "shares": {
+               "load": 0.7,
+               "volume": 0.7,
+               "time": 0.7,
+               "distance": 0.7
+              },
+              "sources": {
+               "load": "commons",
+               "volume": "commons",
+               "time": "commons",
+               "distance": "commons"
+              }
+             }
             }
            },
            {
@@ -14158,8 +15766,29 @@
             "level": "intermediate",
             "is_deload": false,
             "output": {
-             "duration_minutes": 12,
-             "load_note": "16 kg (35 lb)"
+             "duration_minutes": 8,
+             "load_note": "12 kg · Rx 16 kg (35 lb)",
+             "weight_kg": 12.0,
+             "rx": {
+              "duration_minutes": 12,
+              "weight_kg": 16.0
+             },
+             "level_scaled": {
+              "level": "intermediate",
+              "from": "elite",
+              "shares": {
+               "load": 0.7,
+               "volume": 0.7,
+               "time": 0.7,
+               "distance": 0.7
+              },
+              "sources": {
+               "load": "commons",
+               "volume": "commons",
+               "time": "commons",
+               "distance": "commons"
+              }
+             }
             }
            },
            {
@@ -14174,7 +15803,26 @@
             "is_deload": false,
             "output": {
              "duration_minutes": 1,
-             "sets": 10
+             "sets": 7,
+             "rx": {
+              "sets": 10
+             },
+             "level_scaled": {
+              "level": "intermediate",
+              "from": "elite",
+              "shares": {
+               "load": 0.7,
+               "volume": 0.7,
+               "time": 0.7,
+               "distance": 0.7
+              },
+              "sources": {
+               "load": "commons",
+               "volume": "commons",
+               "time": "commons",
+               "distance": "commons"
+              }
+             }
             }
            },
            {
@@ -14188,8 +15836,27 @@
             "level": "intermediate",
             "is_deload": false,
             "output": {
-             "sets": 10,
-             "reps": 5
+             "sets": 7,
+             "reps": 5,
+             "rx": {
+              "sets": 10
+             },
+             "level_scaled": {
+              "level": "intermediate",
+              "from": "elite",
+              "shares": {
+               "load": 0.7,
+               "volume": 0.7,
+               "time": 0.7,
+               "distance": 0.7
+              },
+              "sources": {
+               "load": "commons",
+               "volume": "commons",
+               "time": "commons",
+               "distance": "commons"
+              }
+             }
             }
            },
            {
@@ -14203,8 +15870,27 @@
             "level": "intermediate",
             "is_deload": false,
             "output": {
-             "sets": 10,
-             "reps": 5
+             "sets": 7,
+             "reps": 5,
+             "rx": {
+              "sets": 10
+             },
+             "level_scaled": {
+              "level": "intermediate",
+              "from": "elite",
+              "shares": {
+               "load": 0.7,
+               "volume": 0.7,
+               "time": 0.7,
+               "distance": 0.7
+              },
+              "sources": {
+               "load": "commons",
+               "volume": "commons",
+               "time": "commons",
+               "distance": "commons"
+              }
+             }
             }
            }
           ],
@@ -14373,9 +16059,9 @@
             "selected_id": "sb_getup",
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 44,
-             "after_package": 44,
-             "after_equip": 43,
+             "in_pool": 46,
+             "after_package": 46,
+             "after_equip": 45,
              "after_filter": 1,
              "final": 1
             },
@@ -14405,9 +16091,9 @@
             "selected_id": "kb_swing_two_hand",
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 44,
-             "after_package": 44,
-             "after_equip": 43,
+             "in_pool": 46,
+             "after_package": 46,
+             "after_equip": 45,
              "after_filter": 1,
              "final": 1
             },
@@ -14437,9 +16123,9 @@
             "selected_id": "cauldron",
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 45,
-             "after_package": 45,
-             "after_equip": 44,
+             "in_pool": 47,
+             "after_package": 47,
+             "after_equip": 46,
              "after_filter": 1,
              "final": 1
             },
@@ -14469,9 +16155,9 @@
             "selected_id": "ankles_to_bar",
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 45,
-             "after_package": 45,
-             "after_equip": 44,
+             "in_pool": 47,
+             "after_package": 47,
+             "after_equip": 46,
              "after_filter": 1,
              "final": 1
             },
@@ -14501,9 +16187,9 @@
             "selected_id": "ghd_sit_up",
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 45,
-             "after_package": 45,
-             "after_equip": 44,
+             "in_pool": 47,
+             "after_package": 47,
+             "after_equip": 46,
              "after_filter": 1,
              "final": 1
             },
@@ -14533,9 +16219,9 @@
             "selected_id": "poor_mans_reverse_hyper",
             "injury_blocked": false,
             "filter_counts": {
-             "in_pool": 45,
-             "after_package": 45,
-             "after_equip": 44,
+             "in_pool": 47,
+             "after_package": 47,
+             "after_equip": 46,
              "after_filter": 1,
              "final": 1
             },
@@ -14569,9 +16255,30 @@
             "level": "intermediate",
             "is_deload": false,
             "output": {
-             "sets": 2,
+             "sets": 1,
              "reps": 20,
-             "load_note": "36 kg (80 lb)"
+             "load_note": "25 kg · Rx 36 kg (80 lb)",
+             "weight_kg": 25.0,
+             "rx": {
+              "sets": 2,
+              "weight_kg": 36.0
+             },
+             "level_scaled": {
+              "level": "intermediate",
+              "from": "elite",
+              "shares": {
+               "load": 0.7,
+               "volume": 0.7,
+               "time": 0.7,
+               "distance": 0.7
+              },
+              "sources": {
+               "load": "commons",
+               "volume": "commons",
+               "time": "commons",
+               "distance": "commons"
+              }
+             }
             }
            },
            {
@@ -14586,8 +16293,29 @@
             "is_deload": false,
             "output": {
              "duration_minutes": 1,
-             "sets": 5,
-             "load_note": "24 kg (53 lb)"
+             "sets": 4,
+             "load_note": "16 kg · Rx 24 kg (53 lb)",
+             "weight_kg": 16.0,
+             "rx": {
+              "sets": 5,
+              "weight_kg": 24.0
+             },
+             "level_scaled": {
+              "level": "intermediate",
+              "from": "elite",
+              "shares": {
+               "load": 0.7,
+               "volume": 0.7,
+               "time": 0.7,
+               "distance": 0.7
+              },
+              "sources": {
+               "load": "commons",
+               "volume": "commons",
+               "time": "commons",
+               "distance": "commons"
+              }
+             }
             }
            },
            {
@@ -14601,9 +16329,30 @@
             "level": "intermediate",
             "is_deload": false,
             "output": {
-             "sets": 5,
+             "sets": 4,
              "reps": 20,
-             "load_note": "14 kg (30 lb)"
+             "load_note": "10 kg · Rx 14 kg (30 lb)",
+             "weight_kg": 10.0,
+             "rx": {
+              "sets": 5,
+              "weight_kg": 14.0
+             },
+             "level_scaled": {
+              "level": "intermediate",
+              "from": "elite",
+              "shares": {
+               "load": 0.7,
+               "volume": 0.7,
+               "time": 0.7,
+               "distance": 0.7
+              },
+              "sources": {
+               "load": "commons",
+               "volume": "commons",
+               "time": "commons",
+               "distance": "commons"
+              }
+             }
             }
            },
            {
@@ -14617,8 +16366,27 @@
             "level": "intermediate",
             "is_deload": false,
             "output": {
-             "sets": 5,
-             "reps": 15
+             "sets": 4,
+             "reps": 15,
+             "rx": {
+              "sets": 5
+             },
+             "level_scaled": {
+              "level": "intermediate",
+              "from": "elite",
+              "shares": {
+               "load": 0.7,
+               "volume": 0.7,
+               "time": 0.7,
+               "distance": 0.7
+              },
+              "sources": {
+               "load": "commons",
+               "volume": "commons",
+               "time": "commons",
+               "distance": "commons"
+              }
+             }
             }
            },
            {
@@ -14632,8 +16400,27 @@
             "level": "intermediate",
             "is_deload": false,
             "output": {
-             "sets": 5,
-             "reps": 20
+             "sets": 4,
+             "reps": 20,
+             "rx": {
+              "sets": 5
+             },
+             "level_scaled": {
+              "level": "intermediate",
+              "from": "elite",
+              "shares": {
+               "load": 0.7,
+               "volume": 0.7,
+               "time": 0.7,
+               "distance": 0.7
+              },
+              "sources": {
+               "load": "commons",
+               "volume": "commons",
+               "time": "commons",
+               "distance": "commons"
+              }
+             }
             }
            },
            {
@@ -14647,8 +16434,27 @@
             "level": "intermediate",
             "is_deload": false,
             "output": {
-             "sets": 5,
-             "reps": 20
+             "sets": 4,
+             "reps": 20,
+             "rx": {
+              "sets": 5
+             },
+             "level_scaled": {
+              "level": "intermediate",
+              "from": "elite",
+              "shares": {
+               "load": 0.7,
+               "volume": 0.7,
+               "time": 0.7,
+               "distance": 0.7
+              },
+              "sources": {
+               "load": "commons",
+               "volume": "commons",
+               "time": "commons",
+               "distance": "commons"
+              }
+             }
             }
            }
           ],

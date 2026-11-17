@@ -1,9 +1,12 @@
 {
- "extra:horsemen_mid_track": "df2a6808f223876d2603001725f2d14bba2f403ae0c0df834dab88fdf17a813a",
- "four_month_macro/intermediate/four_60": "3418e8f28cc42735fd4f396c4733c3f6bf8a7fcd66ad82a1d71a1084e9041b9c",
- "four_month_macro/intermediate/six_long": "6793d3cfac193502c7df99bdee1cb7dfb43f4396acdb83eec9c0d14e90fe0c73",
- "four_month_macro/intermediate/three_45": "0edf3e0294f7c13c7aa5775bc8d605dfe0ed1b0e7ab56b0cc6f516c0fcc99e7d",
- "four_month_macro/novice/four_60": "b6a481b8669e90f62526b7db68df5235318e1e2cbc3f729377b79e5beaf5b882",
- "four_month_macro/novice/six_long": "74adf4efd58256aea739c4afe6fbf82009d22b69f98ce8ce8ae67296954bf4da",
- "four_month_macro/novice/three_45": "456225b8b98cd4be5877e9252867137ed37c4e8971f2f658ebe00e9d1c497afc"
+ "extra:horsemen_mid_track": "ecb0b08db7eff61289b823613c9a06f19fc9cb32878c4ddb3866e42d003684ed",
+ "four_month_macro/elite/four_60": "82a8dfc6dbec8cb03c7fce78f0d088a28a15757cda35fc8127548232723f0b59",
+ "four_month_macro/elite/six_long": "3ab52a0924e37099c41d21dc44dbc021be73be1d77f76886ef57f0fe951226dc",
+ "four_month_macro/elite/three_45": "95a454e2495bc78889cba234e5184f642246b110fbd5262989f0794670b8e98c",
+ "four_month_macro/intermediate/four_60": "7cec332a6ed77f7596b38f1eac4d82fe088290b8e5aa735832ab4874a7221ebb",
+ "four_month_macro/intermediate/six_long": "ba02ad0161bda2889554ca093241caf0b91923c03c2ac1edac680c8e82d5309e",
+ "four_month_macro/intermediate/three_45": "78330b93bc79d8a8406d5f636c0d210d0ae893adba076f31783d75f2e7b3d3ae",
+ "four_month_macro/novice/four_60": "f85e9d2b98a5eb44bff4210aa1b88df7797bb2bf335de1b8aac58be68281f440",
+ "four_month_macro/novice/six_long": "d5aa386bc44f2dfba7d3ae360701d69c789ae09e39fa05d2b8262fd1b8e34d39",
+ "four_month_macro/novice/three_45": "5d62f5cfb7e1ab9ad88af5961dcf629d3b4d6aed545f6d78c4105e982adf1725"
 }

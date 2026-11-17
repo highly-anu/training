@@ -2,7 +2,9 @@ id: cf_run_thruster_burpee_chipper
 name: "400 m Runs with Thrusters, Burpees, Hang Squat Cleans"
 modality: mixed_modal_conditioning
 category: conditioning
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written as Rx (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 duration_estimate_minutes: 35
 pool_only: true
 
@@ -24,6 +26,7 @@ slots:
       exercise_ids: [thruster]
       ordered: true
     load: "45 lb (20 kg)"
+    load_kg: 20
 
   - role: chipper_3
     slot_type: amrap_movement
@@ -57,6 +60,7 @@ slots:
       exercise_ids: [hang_squat_clean]
       ordered: true
     load: "45 lb (20 kg)"
+    load_kg: 20
 
   - role: chipper_7
     slot_type: amrap_movement

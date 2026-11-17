@@ -3,9 +3,12 @@ name: Winter in August
 modality: aerobic_base
 category: recovery
 training_levels:
+- novice
 - intermediate
 - advanced
 - elite
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 45
 slots:
@@ -23,6 +26,7 @@ slots:
   sets: 5
   reps: 25-20-15-10-5
   load: 61 kg (135 lb)
+  load_kg: 61
   exercise_filter:
     exercise_ids:
     - bench_press

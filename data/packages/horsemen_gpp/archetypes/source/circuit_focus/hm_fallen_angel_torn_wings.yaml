@@ -2,7 +2,9 @@ id: hm_fallen_angel_torn_wings
 name: "Fallen Angel/Torn Wings"
 modality: mixed_modal_conditioning
 category: conditioning
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 duration_estimate_minutes: 12
 pool_only: true
 

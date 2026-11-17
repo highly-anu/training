@@ -3,9 +3,12 @@ name: Your Mama Called
 modality: mixed_modal_conditioning
 category: conditioning
 training_levels:
+- novice
 - intermediate
 - advanced
 - elite
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 40
 slots:
@@ -18,6 +21,7 @@ slots:
     - hang_squat_clean
     ordered: true
   load: 43 kg (95 lb)
+  load_kg: 43
   notes: >-
     Rungs from 15 down to 1: hang squat cleans, ankles to bar, push-ups. Then the 3 rounds below.
 - role: ankles_to_bar

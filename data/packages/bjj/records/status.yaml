@@ -36,6 +36,12 @@ inventions:
   pull-ups are sets to failure, a 20–30-second pinch is a 30-second hold, the weighted plank carries a
   plate, the farmer''s carry is with dumbbells (or kettlebells); the deload notes add an easier pull-up
   and a lower box.'
+- 'I9: The strength and the competition conditioning are written for the elite (StrengthLog and BJJEE
+  name no level): an advanced athlete does 85 %, an intermediate 70 % and a novice half of each lift''s
+  sets, each hold''s seconds and each timed block''s minutes (the commons'' shares, data/commons/training_levels.yaml);
+  the weights are the athlete''s, as written (I2). The classes are a class at every level.'
+- 'I10: The elite standards are the bench press to bodyweight (estimated from the program''s own bench)
+  and max pull-ups; the sources name none.'
 last_review:
-  output_vs_dossier: '2026-10-22'
+  output_vs_dossier: '2026-11-08'
 next: Exercise media (D3), and a competition camp if the owner wants one.

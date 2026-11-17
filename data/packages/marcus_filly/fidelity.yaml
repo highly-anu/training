@@ -222,19 +222,33 @@ inventions:
     implemented_by:
       - data:training_contract.yaml#tracks.pump_lift.modules.persist_session.variants.day_1.blocks.incline_press.alternatives
   - id: I6
-    text: The tracks are for intermediate lifters and up; novices are refused until Base Camp's sessions can be read.
+    text: "Every level runs the 3x tracks (Base Camp's sessions, the source's own for beginners, are sold, not read): the samples are written for the elite, and an advanced lifter does 85 %, an intermediate 70 % and a novice half of each section's sets and the conditioning's minutes (the commons' shares, data/commons/training_levels.yaml); the warm-up and cooldown, the reps and the loads, chosen by RPE, are as written."
     implemented_by:
+      - data:philosophy.yaml#tracks.functional_bodybuilding.authored_level
+      - data:philosophy.yaml#tracks.pump_lift.authored_level
       - data:training_contract.yaml#tracks.functional_bodybuilding.training_levels
+      - data:training_contract.yaml#tracks.functional_bodybuilding.modules.persist_session.scaling_eligible
+      - test:tests/test_level_scaling.py::test_a_novice_does_half_of_each_section
   - id: I7
     text: At four or five training days the three sessions run on three of them (the 3x tracks; the 4x and 5x weeks are not public).
     implemented_by:
       - data:frameworks/rpe_autoregulation.yaml#cadence_options
+
+  - id: I8
+    text: "The elite standard is the back squat at its ladder's elite rung (back_squat_bw_ratio, estimated from the program's own back squat); the source names none."
+    implemented_by:
+      - data:analytics.yaml#elite_standards
 
 currency:
   functional_bodybuilding: {entry: working_load, rule: R7}
   pump_lift: {entry: working_load, rule: R7}
 
 reviews:
+  - kind: output_vs_dossier
+    date: '2026-11-08'
+    by: Claude (level framework)
+    scope: "Both 3x tracks at novice and elite, 14 weeks, three days, 60 minutes"
+    result: "The elite does the samples as printed. A novice does half of each section's sets (Day 1's tripod row 3 x 10 at RPE 7, written 6; Day 3's stiff-leg deadlift 4, written 8) and of the conditioning's minutes (8, written 15), the warm-up and cooldown as written; the Bridge week keeps the work at RPE 6-7. Verified by the contract's own checks."
   - kind: output_vs_dossier
     date: '2026-10-22'
     by: Claude (package audit)

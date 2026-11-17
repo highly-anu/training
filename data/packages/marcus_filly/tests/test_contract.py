@@ -28,7 +28,9 @@ FBB_GYM = ['barbell', 'rack', 'plates', 'dumbbell', 'pull_up_bar', 'resistance_b
 
 def _filly(track=None, weeks=13, **overrides):
     goal = goals.philosophy_to_goal(PKG, list(loader.load_all_frameworks().values()), track)
-    c = dict(equipment=FBB_GYM, days_per_week=3, session_time_minutes=60, training_level='intermediate')
+    # The samples as printed are the elite's; the levels below do them scaled
+    # (I6, tests/test_level_scaling.py).
+    c = dict(equipment=FBB_GYM, days_per_week=3, session_time_minutes=60, training_level='elite')
     c.update(overrides)
     return generate(None, c, num_weeks=weeks, goal_dict=goal, output_format='dict'), goal, c
 
@@ -61,8 +63,6 @@ def test_filly_runs_the_sample_weeks_in_cycles_and_a_bridge_week():
     tc.verify(no_cable, g['training_contract'], c)
     day_3 = [e['exercise']['id'] for s in no_cable['weeks'][0]['schedule'][5] for e in s['exercises'] if e.get('exercise')]
     assert 'barbell_skull_crusher' in day_3 and 'barbell_bicep_curl' in day_3, day_3
-    novice, _, _ = _filly(weeks=1, training_level='novice')
-    assert not novice['weeks'], 'no novice track (I6)'
 
 if __name__ == '__main__':
     import unittest

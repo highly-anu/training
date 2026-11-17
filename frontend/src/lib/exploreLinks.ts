@@ -36,6 +36,9 @@ export interface ExerciseProgression {
   before: LineageItem[]
   after: LineageItem[]
   easier: LineageItem[]
+  /** The lowest level it suits in each package that has it (src/level_suitability.py);
+   *  `minLevel` null when no level reaches it. */
+  levels: { package: string; label: string; minLevel: string | null }[]
 }
 
 /** Display names by level; a missing id falls back to a prettified one. */
@@ -257,5 +260,9 @@ export function progressionOf(ix: LinkIndex, id: string, scalingDown: string[] |
     after: l.exerciseProgression.filter((e) => e.from === id).map((e) => ex(e.to)),
     easier: (scalingDown ?? []).map((s) => (names.exercises[s] ? ex(s) : { id: s, name: prettify(s) })),
   }
-  return { before: paint(p.before, colors), after: paint(p.after, colors), easier: paint(p.easier, colors) }
+  const levels = Object.entries(ix.doc.exerciseLevels ?? {})
+    .filter(([, byId]) => id in byId)
+    .map(([pkg, byId]) => ({ package: pkg, label: name(names.philosophies, pkg), minLevel: byId[id].minLevel }))
+    .sort((a, b) => a.label.localeCompare(b.label))
+  return { before: paint(p.before, colors), after: paint(p.after, colors), easier: paint(p.easier, colors), levels }
 }

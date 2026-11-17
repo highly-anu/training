@@ -10,7 +10,7 @@
     two S&C sessions on six days. The package keeps the two S&C sessions; its
     four classes, each on a day of its own, are I7 (the owner's decision), so
     the class count is not compared. The weekdays are the author's.
-  profile: {days_per_week: 6, session_time_minutes: 90, training_level: intermediate, equipment: all}
+  profile: {days_per_week: 6, session_time_minutes: 90, training_level: elite, equipment: all}
   weeks:
     - modalities: {max_strength: 2}
 - id: strengthlog_cycle
@@ -23,7 +23,7 @@
     block's for five (weeks 8–12). The article prints one week of each block;
     the weeks within a block repeat it. Which weekday each workout falls on is
     the package's, so only the order of the sessions is compared.
-  profile: {days_per_week: 5, session_time_minutes: 60, training_level: intermediate, equipment: all}
+  profile: {days_per_week: 5, session_time_minutes: 60, training_level: elite, equipment: all}
   num_weeks: 12
   series:
     - {exercise: trap_bar_deadlift, field: sets, values: [4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5]}

@@ -3,9 +3,12 @@ name: D'yer Mak'er
 modality: durability
 category: gpp_durability
 training_levels:
+- novice
 - intermediate
 - advanced
 - elite
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 60
 slots:
@@ -19,6 +22,7 @@ slots:
     - deadlift
     ordered: true
   load: 61 kg (135 lb)
+  load_kg: 61
   notes: >-
     Max rounds in 60 min of: 10 deadlifts, 10 weighted sit-ups, 10 push presses, 10 KB swings, 6 get-ups.
     Count the rounds.
@@ -31,6 +35,7 @@ slots:
     - sit_up_weighted
     ordered: true
   load: 20 kg (45 lb)
+  load_kg: 20
 - role: push_press
   slot_type: amrap_movement
   parent_slot_role: max_rounds
@@ -40,6 +45,7 @@ slots:
     - push_press
     ordered: true
   load: 34 kg (75 lb)
+  load_kg: 34
 - role: kb_swings
   slot_type: amrap_movement
   parent_slot_role: max_rounds
@@ -49,6 +55,7 @@ slots:
     - kb_swing_two_hand
     ordered: true
   load: 24 kg (53 lb)
+  load_kg: 24
 - role: get_ups
   slot_type: amrap_movement
   parent_slot_role: max_rounds
@@ -58,6 +65,7 @@ slots:
     - kb_tgu
     ordered: true
   load: 20 kg (45 lb)
+  load_kg: 20
 required_equipment:
 - barbell
 - rack

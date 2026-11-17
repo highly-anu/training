@@ -1,9 +1,9 @@
 {
- "extra:uphill_specific": "fd1a9bb057fd59111913a3dda812f56c1aae9296e6dc0cc30b049cbf07033607",
- "full_program/advanced/four_60": "5e9c0160ebd16dfbe79c97668feaad29f53f08addf2ae2a33affb4e7de7ecb79",
- "full_program/advanced/six_long": "72b7242756ac9b946e94588b3ebff9da1e84e300db05bc66b693952834b9db20",
- "full_program/advanced/three_45": "e9f0c4cf7b41f698405e587712a7056d4cddcd94c395c844026e0aefecdd552b",
- "full_program/intermediate/four_60": "a0d7974e3207d657f69a3eb3afaebfef840f5611be1370d31be9cffd010452bb",
- "full_program/intermediate/six_long": "64f4973bc3b19e90b0860015ceef49c3974e636594d0d735faeacfbbb591f8a6",
- "full_program/intermediate/three_45": "c7464df39df1ec367f444d32ac99a875c19938f8bc0cc993a96dac34eda5dbd6"
+ "extra:uphill_specific": "b3191992225e5f4d8359a53d606c9cc774ce9672a98915ba9f52ce54ce6909d9",
+ "full_program/intermediate/four_60": "089e806490c4e45e7dd3d9a571878e75575b3a8a956fe5778bd0cb1d737565f5",
+ "full_program/intermediate/six_long": "657a55b29014e296985d10acda07f0b94685cc8dfff5aca7e0c17d53bcadbc8c",
+ "full_program/intermediate/three_45": "83464cee201eae46599950d496dd7bd00ef794c8c71067b6e6683aebdd68c013",
+ "full_program/novice/four_60": "c1f6179f1ca346ff1f94bab12c1d78f473f7abd67f1daa9230b2bb5348230d7e",
+ "full_program/novice/six_long": "c86cdfaa569aab8c9449abde49189b4391949c22f9883da8b8b377946091b9db",
+ "full_program/novice/three_45": "92e9cb969e41b13f2d2b69338f841e35010f481a35007530124f8f37f238a7e2"
 }

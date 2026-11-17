@@ -32,7 +32,9 @@ ALL_EQUIPMENT = ['barbell', 'rack', 'plates', 'kettlebell', 'pull_up_bar', 'open
 
 
 def _constraints(**over):
-    c = {'days_per_week': 5, 'session_time_minutes': 75, 'training_level': 'intermediate',
+    # The elite does the Girls as written, each a test of its standard; below
+    # it a benchmark is scaled and measures nothing (tests/test_level_scaling.py).
+    c = {'days_per_week': 5, 'session_time_minutes': 75, 'training_level': 'elite',
          'equipment': ALL_EQUIPMENT, 'injury_flags': [], 'periodization_week': 1, 'fatigue_state': 'normal'}
     c.update(over)
     return c

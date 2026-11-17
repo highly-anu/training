@@ -3,9 +3,12 @@ name: Patron (Silver)
 modality: strength_endurance
 category: gpp_durability
 training_levels:
+- novice
 - intermediate
 - advanced
 - elite
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 20
 slots:
@@ -17,6 +20,7 @@ slots:
     - kb_complex_12min_atw
     ordered: true
   load: 24 kg (53 lb)
+  load_kg: 24
   notes: >-
     1 min each of kettlebell around the world (around the waist), figure 8, snatch and step-ups onto a
     25 cm (10 in) box, 3 times through (12 min). The bell may not be set down during the session.
@@ -29,6 +33,7 @@ slots:
     - fat_bar_deadlift
     ordered: true
   load: 48 kg (105 lb) or more
+  load_kg: 48
 - role: dead_hangs
   slot_type: static_hold
   hold_seconds: 30

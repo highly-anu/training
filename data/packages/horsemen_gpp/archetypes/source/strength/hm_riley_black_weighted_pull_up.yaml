@@ -2,7 +2,9 @@ id: hm_riley_black_weighted_pull_up
 name: Riley Black (Weighted Pull-Up)
 modality: max_strength
 category: strength
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 30
 slots:

@@ -2,7 +2,9 @@ id: hm_im_trying_to_get_that_oil
 name: "I'm Trying to Get That Oil"
 modality: mixed_modal_conditioning
 category: conditioning
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 duration_estimate_minutes: 10
 pool_only: true
 

@@ -6,6 +6,10 @@
 # Aerobic volume reads the endurance and recovery days.
 id: horsemen_gpp
 
+# The operator's mark: the source's goals for four months (R8), at their
+# ladders' elite rung (docs/logic/levels.md).
+elite_standards: [deadlift_bw_ratio, bench_press_bw_ratio, strict_press_bw_ratio, run_3mile_minutes, ssst_reps]
+
 progress:
   - id: strength
     label: Strength

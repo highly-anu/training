@@ -3,9 +3,12 @@ name: Massive Move
 modality: durability
 category: gpp_durability
 training_levels:
+- novice
 - intermediate
 - advanced
 - elite
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 40
 slots:
@@ -65,6 +68,7 @@ slots:
     - kb_farmer_carry_double
     ordered: true
   load: 2 x 20 kg (2 x 44 lb)
+  load_kg: 20
 - role: kb_bear_crawl
   slot_type: distance
   distance_m: 50
@@ -75,6 +79,7 @@ slots:
     - db_crawl
     ordered: true
   load: 2 x 20 kg (2 x 44 lb)
+  load_kg: 20
   notes: Bear crawl holding two kettlebells (or dumbbells).
 required_equipment:
 - kettlebell

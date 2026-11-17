@@ -2,7 +2,9 @@ id: hm_till_u_collapse
 name: Till U Collapse
 modality: mixed_modal_conditioning
 category: conditioning
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 50
 slots:
@@ -16,6 +18,7 @@ slots:
     exercise_ids: [power_clean]
     ordered: true
   load: 43 kg (95 lb)
+  load_kg: 43
   notes: 'For time, in order: 50 power cleans, 50 sit-ups, 25 pull-ups, 50 kettlebell swings, 25 push-ups, 50 ball
     slams, 25 calories on the rower or air bike, 50 bench presses, 50 box jumps on a tire, 25 back extensions, 50
     wall balls, 25 GHD sit-ups, 250 m row.'
@@ -41,6 +44,7 @@ slots:
     exercise_ids: [kb_swing_two_hand]
     ordered: true
   load: 24 kg (53 lb)
+  load_kg: 24
 - role: push_up
   slot_type: amrap_movement
   parent_slot_role: till_u_collapse
@@ -56,6 +60,7 @@ slots:
     exercise_ids: [ball_slam]
     ordered: true
   load: 11 kg (25 lb)
+  load_kg: 11
 - role: calories
   slot_type: amrap_movement
   parent_slot_role: till_u_collapse
@@ -72,6 +77,7 @@ slots:
     exercise_ids: [bench_press]
     ordered: true
   load: 43 kg (95 lb)
+  load_kg: 43
 - role: box_jump_on_tire
   slot_type: amrap_movement
   parent_slot_role: till_u_collapse

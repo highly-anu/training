@@ -67,6 +67,11 @@ def _track_ranges(track: dict, fw_by_id: dict) -> tuple[int, int, int, str]:
     ideal = min(max(exp.get('ideal_days_per_week') or lo, lo), hi)
     level = 'intermediate' if 'intermediate' in levels else \
         next((lv for lv in LEVEL_ORDER if lv in levels), 'intermediate')
+    if track.get('authored_level') in levels:
+        # A track scaled from its authored level (src/level_scaling.py) is read
+        # as written by the athlete it is written for; the levels below are
+        # the scorecard's level profiles.
+        level = track['authored_level']
     return ideal, lo, hi, level
 
 

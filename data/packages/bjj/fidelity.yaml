@@ -155,10 +155,26 @@ inventions:
     implemented_by:
       - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.variants
 
+  - id: I9
+    text: "The strength and the competition conditioning are written for the elite (StrengthLog and BJJEE name no level): an advanced athlete does 85 %, an intermediate 70 % and a novice half of each lift's sets, each hold's seconds and each timed block's minutes (the commons' shares, data/commons/training_levels.yaml); the weights are the athlete's, as written (I2). The classes are a class at every level."
+    implemented_by:
+      - data:philosophy.yaml#tracks.mat_support.authored_level
+      - data:training_contract.yaml#tracks.mat_support.modules.grappling_strength.scaling_eligible
+      - test:tests/test_level_scaling.py::test_a_novice_does_half_the_strength_and_a_whole_class
+  - id: I10
+    text: "The elite standards are the bench press to bodyweight (estimated from the program's own bench) and max pull-ups; the sources name none."
+    implemented_by:
+      - data:analytics.yaml#elite_standards
+
 currency:
   mat_support: {entry: mat_time, rule: R1}
 
 reviews:
+  - kind: output_vs_dossier
+    date: '2026-11-08'
+    by: Claude (level framework)
+    scope: "BJJ Performance at novice and elite, 12 weeks, five days, 60 minutes"
+    result: "The elite does StrengthLog as written. A novice does half of each lift's sets (Workout 1's trap-bar deadlift 2 x 5, written 4; the carry 2 x 20 m, written 3), the weights the athlete's; the classes are 60 minutes at every level, drilling 20. Verified by the contract's own checks; the source weeks read at the elite."
   - kind: output_vs_dossier
     date: '2026-10-22'
     by: Claude (package audit)

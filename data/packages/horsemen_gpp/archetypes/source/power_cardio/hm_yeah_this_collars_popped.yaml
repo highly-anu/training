@@ -3,9 +3,12 @@ name: Yeah, This Collar's Popped
 modality: mixed_modal_conditioning
 category: conditioning
 training_levels:
+- novice
 - intermediate
 - advanced
 - elite
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 10
 slots:
@@ -18,6 +21,7 @@ slots:
     - kb_squat_goblet
     ordered: true
   load: 32 kg (71 lb)
+  load_kg: 32
   notes: '3 rounds: 10 goblet squats, then a 100 m sprint; rest as needed between rounds.'
 - role: sprint_100m
   slot_type: distance
