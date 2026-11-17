@@ -16,6 +16,8 @@ export const queryKeys = {
   exploreLinks: ['explore', 'links'] as const,
   philosophyDescription: (id: string) => ['explore', 'philosophy', id] as const,
   philosophyGlances: ['explore', 'glances'] as const,
+  philosophyCompare: (ids: string[]) => ['explore', 'compare', ...ids] as const,
+  philosophyForMe: (id: string, trackId: string) => ['explore', 'for-me', id, trackId] as const,
   standards: {
     all: ['standards'] as const,
     results: ['standards', 'results'] as const,

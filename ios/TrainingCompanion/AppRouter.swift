@@ -174,4 +174,12 @@ final class AppRouter: ObservableObject {
     func clearPendingWorkoutComplete() {
         pendingWorkoutComplete = nil
     }
+
+    /// Philosophies to set side by side (`compare?ids=…`); `ContentView`
+    /// presents the comparison over whatever tab is showing.
+    @Published var pendingCompare: [String]? = nil
+
+    func openCompare(_ ids: [String]) {
+        pendingCompare = ids
+    }
 }

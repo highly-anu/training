@@ -53,6 +53,18 @@ struct ContentView: View {
                 .onChange(of: router.pendingWorkoutComplete) { _, _ in
                     if !appState.importedWorkouts.isEmpty { presentRequestedWorkoutComplete() }
                 }
+                .sheet(isPresented: Binding(
+                    get: { router.pendingCompare != nil },
+                    set: { if !$0 { router.pendingCompare = nil } }
+                )) {
+                    NavigationStack {
+                        PhilosophyCompareView(ids: router.pendingCompare ?? [])
+                            .toolbar {
+                                ToolbarItem(placement: .topBarTrailing) { Button("Done") { router.pendingCompare = nil } }
+                            }
+                    }
+                    .environmentObject(appState)
+                }
                 // The "Workout complete" moment (§6.30): a workout stored since
                 // the phone last looked, from any source.
                 .sheet(item: Binding(

@@ -75,7 +75,10 @@ Differences kept on purpose:
 
 - **Explore is web-only.** It is reference material to browse at a desk; on the
   phone the exercise sheet and the methodology sheet cover lookup in context
-  (*Later* in the roadmap).
+  (*Later* in the roadmap). Comparing philosophies is the exception: it helps
+  choose one, so the phone has it where it chooses — the builder's methodology
+  step and the methodology sheet (design-system §6.42) — on the same server
+  document as the web's Explore ▸ Compare.
 - **Notifications are phone-only.** Local session reminders; the web has nothing
   to remind with.
 - **Settings is a tab row on the web and a grouped list on the phone**, in the

@@ -14,6 +14,7 @@ struct BuilderStep1PhilosophyView: View {
     @EnvironmentObject var appState: AppState
     @State private var detail: PhilosophyCard? = nil
     @State private var loadFailed = false
+    @State private var comparing = false
     /// The describe form or a build, pushed over this step.
     @State private var methodRoute: MethodRoute? = nil
     @State private var deleting: PhilosophyCard? = nil
@@ -52,6 +53,17 @@ struct BuilderStep1PhilosophyView: View {
                             .padding(.horizontal)
                     }
                 } else {
+                    // Two or three picked: set them side by side before choosing (§6.42).
+                    if (2...3).contains(builder.lanes.count) {
+                        Button {
+                            comparing = true
+                        } label: {
+                            Label("Compare these \(builder.lanes.count)", systemImage: "rectangle.split.3x1")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .appButton(.secondary)
+                        .padding(.horizontal)
+                    }
                     if showsMethods {
                         yourMethods
                         SectionLabel("Methodologies", inset: false).padding(.horizontal)
@@ -68,7 +80,14 @@ struct BuilderStep1PhilosophyView: View {
         }
         .task { await load() }
         .sheet(item: $detail) { philosophy in
-            PhilosophyDetailSheet(philosophy: philosophy)
+            PhilosophyDetailSheet(philosophy: philosophy, compareWith: appState.philosophies)
+        }
+        .sheet(isPresented: $comparing) {
+            NavigationStack {
+                PhilosophyCompareView(ids: builder.lanes.map(\.philosophyId))
+                    .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { comparing = false } } }
+            }
+            .environmentObject(appState)
         }
         .navigationDestination(item: $methodRoute) { destination in
             switch destination {
