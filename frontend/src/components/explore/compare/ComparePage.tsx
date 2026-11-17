@@ -43,10 +43,10 @@ function SplitCell<T>({ split, id, names, render, keyOf }: {
   if (!own.length && !some.length) return <span className="text-[11px] text-muted-foreground/50">—</span>
   return (
     <div className="flex flex-wrap gap-1">
-      {own.map((x) => <span key={keyOf(x)}>{render(x)}</span>)}
+      {own.map((x) => <span key={keyOf(x)} className="max-w-full">{render(x)}</span>)}
       {some.map((s) => (
         <span key={keyOf(s.item)} title={`Also ${s.ids.filter((x) => x !== id).map((x) => names[x]).join(', ')}`}
-          className="opacity-80">{render(s.item)}</span>
+          className="max-w-full opacity-80">{render(s.item)}</span>
       ))}
     </div>
   )

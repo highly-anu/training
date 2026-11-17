@@ -279,10 +279,15 @@ struct PhilosophyCompareView: View {
                 }
                 forMeRow("Your kit", cols, onlyFeasible: false) { r in
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(r.missingEquipment.isEmpty ? "Has all it asks for"
-                             : "Lacks \(r.missingEquipment.map(\.name).joined(separator: ", "))")
-                        if let skipped = r.skippedForEquipment, skipped > 0 {
-                            Text("Passes over \(skipped)\(r.sessionCount.map { " of \($0)" } ?? "") sessions for it")
+                        let skipped = r.skippedForEquipment ?? 0
+                        if !r.missingEquipment.isEmpty {
+                            Text("Lacks \(r.missingEquipment.map(\.name).joined(separator: ", "))")
+                        } else if skipped == 0 {
+                            Text("Has all it asks for")
+                        }
+                        if skipped > 0 {
+                            Text("Passes over \(skipped)\(r.sessionCount.map { " of \($0)" } ?? "") sessions "
+                                 + (r.missingEquipment.isEmpty ? "whose equipment you lack" : "for it"))
                                 .font(.caption2).foregroundStyle(.secondary)
                         }
                     }

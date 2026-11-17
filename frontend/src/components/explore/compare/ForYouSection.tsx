@@ -142,10 +142,11 @@ export function ForYouSection({ cols, trackOf }: { cols: CompareGlance[]; trackO
               <div className="space-y-0.5">
                 {r.missingEquipment.length > 0
                   ? <p className="text-muted-foreground">Lacks {r.missingEquipment.map((e) => e.name).join(', ')}</p>
-                  : <p className="text-muted-foreground">Has all it asks for</p>}
+                  : (r.skippedForEquipment ?? 0) === 0 && <p className="text-muted-foreground">Has all it asks for</p>}
                 {(r.skippedForEquipment ?? 0) > 0 && (
                   <p className="text-muted-foreground/80">
-                    Passes over {r.skippedForEquipment}{r.sessionCount ? ` of ${r.sessionCount}` : ''} sessions for it
+                    Passes over {r.skippedForEquipment}{r.sessionCount ? ` of ${r.sessionCount}` : ''} sessions
+                    {r.missingEquipment.length > 0 ? ' for it' : ' whose equipment you lack'}
                   </p>
                 )}
               </div>
