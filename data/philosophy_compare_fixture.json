@@ -15,6 +15,7 @@
      "strength_endurance"
     ],
     "levels": [
+     "novice",
      "intermediate",
      "advanced",
      "elite"
@@ -117,7 +118,7 @@
      "tracks": 1,
      "rules": 20,
      "sources": 14,
-     "inventions": 11,
+     "inventions": 12,
      "open": 6,
      "sessions": 6
     },
@@ -128,6 +129,7 @@
       "primary": true,
       "forLevels": [],
       "levels": [
+       "novice",
        "intermediate",
        "advanced",
        "elite"
@@ -135,7 +137,7 @@
       "builtBy": "contract",
       "weeks": 29,
       "repeatable": false,
-      "kettlebellPair": false,
+      "implement": null,
       "requires": [],
       "daysPerWeek": {
        "min": 6,
@@ -461,7 +463,7 @@
      "tracks": 2,
      "rules": 12,
      "sources": 7,
-     "inventions": 6,
+     "inventions": 7,
      "open": 4,
      "sessions": 48
     },
@@ -483,7 +485,7 @@
       "builtBy": "template",
       "weeks": 4,
       "repeatable": true,
-      "kettlebellPair": false,
+      "implement": null,
       "requires": [],
       "daysPerWeek": {
        "min": 6.0,
@@ -604,7 +606,7 @@
       "builtBy": "template",
       "weeks": 4,
       "repeatable": true,
-      "kettlebellPair": false,
+      "implement": null,
       "requires": [],
       "daysPerWeek": {
        "min": 6.0,
@@ -698,6 +700,7 @@
      "mixed_modal_conditioning"
     ],
     "levels": [
+     "novice",
      "intermediate",
      "advanced",
      "elite"
@@ -903,7 +906,7 @@
      "tracks": 1,
      "rules": 9,
      "sources": 1,
-     "inventions": 1,
+     "inventions": 2,
      "open": 3,
      "sessions": 196
     },
@@ -914,6 +917,7 @@
       "primary": true,
       "forLevels": [],
       "levels": [
+       "novice",
        "intermediate",
        "advanced",
        "elite"
@@ -921,7 +925,7 @@
       "builtBy": "template",
       "weeks": 16,
       "repeatable": false,
-      "kettlebellPair": false,
+      "implement": null,
       "requires": [],
       "daysPerWeek": {
        "min": 6.0,
@@ -1293,7 +1297,7 @@
    "weeks": false,
    "daysPerWeek": true,
    "sessionMinutes": false,
-   "levels": false,
+   "levels": true,
    "tracks": false,
    "mix": false,
    "intensity": false,
@@ -1706,13 +1710,13 @@
    "perWeek": {
     "days": 4.0,
     "sessions": 4.0,
-    "minutes": 198
+    "minutes": 186
    },
    "intensity": {
-    "zone1_2_pct": 0.02,
-    "zone3_pct": 0.699,
+    "zone1_2_pct": 0.016,
+    "zone3_pct": 0.691,
     "zone4_5_pct": 0.0,
-    "max_effort_pct": 0.281
+    "max_effort_pct": 0.293
    },
    "mix": [
     {
@@ -1768,7 +1772,7 @@
      "kind": "base",
      "weeks": 4,
      "sessions": 4.0,
-     "minutes": 184
+     "minutes": 176
     },
     {
      "id": "power_endurance",
@@ -1776,7 +1780,7 @@
      "kind": "build",
      "weeks": 4,
      "sessions": 4.0,
-     "minutes": 198
+     "minutes": 190
     },
     {
      "id": "job_specific",
@@ -1784,7 +1788,7 @@
      "kind": "specific",
      "weeks": 4,
      "sessions": 4.0,
-     "minutes": 225
+     "minutes": 213
     },
     {
      "id": "maintenance",
@@ -1792,7 +1796,7 @@
      "kind": "maintenance",
      "weeks": 4,
      "sessions": 3.9,
-     "minutes": 185
+     "minutes": 165
     }
    ]
   }

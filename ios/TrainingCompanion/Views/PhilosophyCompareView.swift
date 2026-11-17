@@ -240,7 +240,7 @@ struct PhilosophyCompareView: View {
                     } label: {
                         Label("See what each gives you", systemImage: "sparkles")
                     }
-                    .buttonStyle(.borderedProminent)
+                    .appButton(.primary)
                     Text("Builds each track on your profile — days, minutes, equipment, injuries. Nothing is saved.")
                         .foregroundStyle(.secondary)
                 }
@@ -393,8 +393,8 @@ private struct LevelPipsView: View {
         HStack(spacing: 2) {
             ForEach(Self.all, id: \.0) { level, letter in
                 let on = levels.contains(level)
-                Text(letter).font(.system(size: 9, weight: .semibold))
-                    .frame(width: 14, height: 14)
+                Text(letter).font(AppFont.microStrong)
+                    .frame(width: 16, height: 16)
                     .foregroundStyle(on ? Color(.systemBackground) : Color.secondary.opacity(0.5))
                     .background(on ? Color.primary.opacity(0.8) : .clear)
                     .overlay(RoundedRectangle(cornerRadius: 3).stroke(on ? .clear : Color.secondary.opacity(0.4)))
