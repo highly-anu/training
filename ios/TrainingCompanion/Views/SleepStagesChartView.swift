@@ -9,10 +9,10 @@ struct SleepStagesChartView: View {
     /// One colour per stage, for this chart and Last Night's stage row —
     /// "Awake" was tan here and orange there.
     static let stageColors: [String: Color] = [
-        "Deep":  Color(red: 0.2, green: 0.2, blue: 0.7),
-        "REM":   Color(red: 0.4, green: 0.3, blue: 0.8),
-        "Light": Color(red: 0.45, green: 0.65, blue: 0.9),
-        "Awake": Color(red: 0.8, green: 0.7, blue: 0.4),
+        "Deep":  AppColor.Sleep.deep,
+        "REM":   AppColor.Sleep.rem,
+        "Light": AppColor.Sleep.light,
+        "Awake": AppColor.Sleep.awake,
     ]
 
     private struct SleepPoint: Identifiable {
@@ -40,6 +40,17 @@ struct SleepStagesChartView: View {
         return out
     }
 
+    /// "12 nights, average a night: Deep 62 minutes, REM 95 minutes, …"
+    private static func summary(_ points: [SleepPoint]) -> String? {
+        let nights = Set(points.map(\.date)).count
+        guard nights > 0 else { return nil }
+        let parts = ["Deep", "REM", "Light", "Awake"].compactMap { stage -> String? in
+            let total = points.filter { $0.stage == stage }.reduce(0) { $0 + $1.minutes }
+            return total > 0 ? "\(stage) \(total / nights) minutes" : nil
+        }
+        return "\(nights) night\(nights == 1 ? "" : "s"), average a night: " + parts.joined(separator: ", ")
+    }
+
     var body: some View {
         if points.isEmpty {
             emptyState
@@ -52,6 +63,7 @@ struct SleepStagesChartView: View {
                 .foregroundStyle(by: .value("Stage", pt.stage))
                 .cornerRadius(2)
             }
+            .appChartEntry()
             .chartForegroundStyleScale(domain: ["Deep", "REM", "Light", "Awake"],
                                        range: ["Deep", "REM", "Light", "Awake"].map { Self.stageColors[$0]! })
             .chartXAxis {
@@ -75,6 +87,7 @@ struct SleepStagesChartView: View {
             }
             .chartLegend(position: .bottom, alignment: .center, spacing: 8)
             .frame(height: 160)
+            .appChartSummary("Sleep stages by night", Self.summary(points))
         }
     }
 

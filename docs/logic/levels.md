@@ -7,7 +7,7 @@ elite: `data/commons/training_levels.yaml`) in three layers, each data, none
 naming a package (`tools/check_code_neutral.py`).
 
 Since 2026-11-07 (CrossFit first); every package by 2026-11-08 (`docs/roadmap.md`,
-item 18). How each one serves the levels is the table at the end.
+item 23). How each one serves the levels is the table at the end.
 
 ## 1. Which movements: suitability
 

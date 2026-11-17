@@ -14,8 +14,6 @@ offers `to_client` for the legacy shape, so the endpoint can delegate here.
 from __future__ import annotations
 
 import os
-from functools import lru_cache
-
 from src import loader
 
 _DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data')
@@ -40,15 +38,14 @@ PACKAGE_FILE = 'standards.yaml'
 
 
 def _package_documents() -> list[tuple[str, dict]]:
-    import glob
     out = []
-    for path in sorted(glob.glob(os.path.join(loader._PACKAGES_DIR, '*', PACKAGE_FILE))):
+    for pkg, path in loader.package_files(PACKAGE_FILE):
         doc = _load_yaml(path) or {}
-        out.append((os.path.basename(os.path.dirname(path)), doc if isinstance(doc, dict) else {}))
+        out.append((pkg, doc if isinstance(doc, dict) else {}))
     return out
 
 
-@lru_cache(maxsize=1)
+@loader.scoped_cache
 def categories() -> tuple:
     """((id, name), …) in listing order: the commons', then each package's new ones."""
     doc = _load_yaml(os.path.join(_DATA_DIR, 'benchmarks', _CATEGORIES_FILE)) or {}
@@ -167,7 +164,7 @@ def _entry(item: dict, package: str | None = None) -> dict | None:
     }
 
 
-@lru_cache(maxsize=1)
+@loader.scoped_cache
 def load_benchmarks() -> tuple:
     """Every standard: the commons' (data/benchmarks), The Cell's, then each
     package's own, listed by category and, within one, as authored. An id

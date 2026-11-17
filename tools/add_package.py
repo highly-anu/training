@@ -65,17 +65,9 @@ def _run(label: str, *argv: str) -> bool:
     return done.returncode == 0
 
 
-def _problems(pkg: str, report: dict) -> list[str]:
-    row = next((p for p in report['packages'] if p['id'] == pkg), None)
-    out = [f"{f['path']} is missing" for f in row['files'] if f['required'] and not f['present']]
-    for c in report['collisions']:
-        if pkg in c['packages']:
-            others = ', '.join(p for p in c['packages'] if p != pkg)
-            out.append(f"{c['kind']} '{c['id']}' is also declared by {others} (the loader keeps {c['kept']})")
-    for v in row['vocabulary']:
-        for u in v['unknown']:
-            out.append(f"{v['kind']}: '{u}' is not in the commons")
-    return out
+# What stops a folder being brought in; the gate for one package asks the same
+# (src/package_gate.py).
+_problems = portability.problems
 
 
 def main() -> int:

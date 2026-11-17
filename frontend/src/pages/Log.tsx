@@ -1,9 +1,14 @@
+import { Tip } from '@/components/shared/Tip'
+import { TabPanels } from '@/components/motion/TabPanels'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { SubTabs } from '@/components/layout/SubTabs'
+import { toast } from '@/lib/toast'
+import { Spinner } from '@/components/ui/spinner'
 import { useState, useCallback, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { Page } from '@/components/layout/Page'
 import { format } from 'date-fns'
 import { Upload, CheckCircle2, AlertCircle, Link2, ClipboardList, ArrowDownToLine } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet'
 import { MatchConfirmDialog } from '@/components/bio/MatchConfirmDialog'
@@ -40,33 +45,7 @@ type ParseStatus = 'idle' | 'parsing' | 'done' | 'error'
 
 const LARGE_XML_BYTES = 50 * 1024 * 1024
 
-// ── Tab selector ───────────────────────────────────────────────────────────────
-
-function TabSelector({ active, onChange, tabs }: {
-  active: LogTab
-  onChange: (t: LogTab) => void
-  tabs: { id: LogTab; label: string }[]
-}) {
-  return (
-    <div className="flex items-center gap-1">
-      {tabs.map((tab) => (
-        <button
-          key={tab.id}
-          type="button"
-          onClick={() => onChange(tab.id)}
-          className={cn(
-            'px-3 py-1 text-xs rounded border transition-colors whitespace-nowrap',
-            tab.id === active
-              ? 'bg-primary/15 border-primary/40 text-primary'
-              : 'border-border text-muted-foreground hover:bg-muted'
-          )}
-        >
-          {tab.label}
-        </button>
-      ))}
-    </div>
-  )
-}
+const LOG_TABS: readonly LogTab[] = ['activity', 'linking']
 
 // ── Import panel (inside the sheet) ────────────────────────────────────────────
 
@@ -123,13 +102,13 @@ function ImportPanel({
       {status === 'parsing' && (
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <div className="size-4 animate-spin rounded-full border-2 border-primary border-t-transparent shrink-0" />
+            <Spinner className="text-primary" />
             <span>{parseProgress?.stage ?? 'Parsing file…'}</span>
           </div>
           {parseProgress && parseProgress.progress > 0 && (
             <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
               <div
-                className="h-full rounded-full bg-primary transition-all duration-500"
+                className="h-full rounded-full bg-primary transition-[width] duration-(--motion-slow)"
                 style={{ width: `${Math.round(parseProgress.progress * 100)}%` }}
               />
             </div>
@@ -137,7 +116,7 @@ function ImportPanel({
         </div>
       )}
       {status === 'done' && (
-        <div className="flex flex-wrap items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300">
+        <div className="flex flex-wrap items-center gap-2 text-sm text-done">
           <CheckCircle2 className="size-4" />
           {novel === 0 ? (
             <span className="text-muted-foreground">
@@ -154,7 +133,7 @@ function ImportPanel({
         </div>
       )}
       {status === 'error' && (
-        <div className="flex items-center gap-2 text-sm text-red-700 dark:text-red-300">
+        <div className="flex items-center gap-2 text-sm text-bad">
           <AlertCircle className="size-4" />
           {errorMsg}
         </div>
@@ -162,8 +141,8 @@ function ImportPanel({
 
       {/* Linked success */}
       {linkedSuccess && (
-        <div className="flex items-center justify-between gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-4 py-3">
-          <div className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300">
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-done/30 bg-done/5 px-4 py-3">
+          <div className="flex items-center gap-2 text-sm text-done">
             <CheckCircle2 className="size-4" />
             Workout linked to {sessionLabel(linkedSuccess)}
           </div>
@@ -173,8 +152,8 @@ function ImportPanel({
 
       {/* Decisions waiting */}
       {pendingMatches.length > 0 && (
-        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3">
-          <p className="text-sm font-medium text-amber-700 dark:text-amber-300 mb-2">
+        <div className="rounded-lg border border-warn/30 bg-warn/5 px-4 py-3">
+          <p className="text-sm font-medium text-warn mb-2">
             {pendingMatches.length} workout{pendingMatches.length !== 1 ? 's need' : ' needs'} a match decision
           </p>
           <div className="flex flex-wrap gap-2">
@@ -184,7 +163,7 @@ function ImportPanel({
                 size="sm"
                 variant="outline"
                 onClick={() => onReview(p)}
-                className="text-xs border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10"
+                className="text-xs border-warn/40 text-warn hover:bg-warn/10"
               >
                 <Link2 className="size-3 mr-1" />
                 {p.importedWorkout.date} — {formatActivityType(p.importedWorkout.activityType)}
@@ -224,7 +203,18 @@ export function Log() {
   const addImportedWorkouts = useBioStore((s) => s.addImportedWorkouts)
   const addAutoMatch = useBioStore((s) => s.addAutoMatch)
   const setPendingMatches = useBioStore((s) => s.setPendingMatches)
-  const removeImportedWorkout = useBioStore((s) => s.removeImportedWorkout)
+  const hideImportedWorkout = useBioStore((s) => s.hideImportedWorkout)
+  const restoreImportedWorkout = useBioStore((s) => s.restoreImportedWorkout)
+  const commitWorkoutRemoval = useBioStore((s) => s.commitWorkoutRemoval)
+  // The row leaves at once; the server is told when the Undo window closes.
+  const removeWorkout = (w: ImportedWorkout) => {
+    const hidden = hideImportedWorkout(w.id)
+    if (!hidden) return
+    toast.undo('Workout removed', {
+      undo: () => restoreImportedWorkout(hidden),
+      commit: () => commitWorkoutRemoval(w.id),
+    })
+  }
   const importedWorkouts = useBioStore((s) => s.importedWorkouts)
   const workoutMatches = useBioStore((s) => s.workoutMatches)
   const pendingMatches = useBioStore((s) => s.pendingMatches)
@@ -409,37 +399,29 @@ export function Log() {
   ]
 
   return (
-    <motion.div
+    <Page
       key="log"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-      exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
       className="flex h-full flex-col overflow-hidden"
     >
-      {/* Header */}
-      <div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
-        <ClipboardList className="size-5 text-primary" />
-        <h1 className="text-lg font-semibold">Log</h1>
-        <div className="ml-4 flex items-center gap-2">
-          <div className="w-px h-4 bg-border/60 shrink-0" />
-          <TabSelector active={activeTab} onChange={setActiveTab} tabs={tabs} />
-        </div>
-        <div className="ml-auto flex items-center gap-1">
-          <Button
+      <PageHeader
+        icon={ClipboardList}
+        title="Log"
+        tabs={<SubTabs id="log-tabs" label="Log sections" tabs={tabs} active={activeTab} onChange={setActiveTab} />}
+        actions={
+          <Tip label="Import workouts"><Button
             variant="ghost"
             size="icon"
             className="size-8"
             onClick={() => setImportOpen(true)}
             aria-label="Import workouts"
-            title="Import workouts"
           >
             <ArrowDownToLine className="size-4" />
-          </Button>
-        </div>
-      </div>
+          </Button></Tip>
+        }
+      />
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <TabPanels active={activeTab} order={LOG_TABS} tabsId="log-tabs" className="flex-1 overflow-y-auto">
         {activeTab === 'activity' && (
           <ActivityTab
             workouts={allImported}
@@ -451,7 +433,7 @@ export function Log() {
             sessionLabelFor={sessionLabelFor}
             onOpen={(w) => navigate(`/log/${encodeURIComponent(w.id)}`, { state: { workout: w } })}
             onMatch={(w) => setActivePending(pendingMatches.find((p) => p.importedWorkout.id === w.id) ?? null)}
-            onRemove={(w) => removeImportedWorkout(w.id)}
+            onRemove={removeWorkout}
             onImport={() => setImportOpen(true)}
           />
         )}
@@ -463,7 +445,7 @@ export function Log() {
             onImport={() => setImportOpen(true)}
           />
         )}
-      </div>
+      </TabPanels>
 
       {/* Import — an action, not a place */}
       <Sheet open={importOpen} onOpenChange={(open) => (open ? setImportOpen(true) : closeImport())}>
@@ -492,6 +474,6 @@ export function Log() {
       </Sheet>
 
       <MatchConfirmDialog match={activePending} onClose={() => setActivePending(null)} />
-    </motion.div>
+    </Page>
   )
 }

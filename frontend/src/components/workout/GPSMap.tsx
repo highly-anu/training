@@ -1,3 +1,4 @@
+import { ROUTE } from '@/lib/dataColors'
 import { useMemo } from 'react'
 import { MapContainer, TileLayer, Polyline, Marker, useMap } from 'react-leaflet'
 import L from 'leaflet'
@@ -99,8 +100,8 @@ export function GPSMap({ track, maxHR = 190, zoneBoundaries = DEFAULT_ZONE_BOUND
             pathOptions={{ color: seg.color, weight: 3, opacity: 0.9 }}
           />
         ))}
-        <Marker position={[start.lat, start.lng]} icon={dotIcon('#22c55e')} />
-        <Marker position={[end.lat, end.lng]} icon={dotIcon('#ef4444')} />
+        <Marker position={[start.lat, start.lng]} icon={dotIcon(ROUTE.start)} />
+        <Marker position={[end.lat, end.lng]} icon={dotIcon(ROUTE.end)} />
       </MapContainer>
     </div>
   )

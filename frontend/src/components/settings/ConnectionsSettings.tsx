@@ -6,11 +6,14 @@
  * worker reads them: a preference the browser kept to itself would do nothing
  * about activities Garmin is already pushing.
  */
-import { useEffect } from 'react'
+import { ScrollPanel } from '@/components/layout/ScrollPanel'
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
+import { LoadingState } from '@/components/shared/states'
+import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { format, parseISO } from 'date-fns'
-import { AlertCircle, Check, Loader2, LogOut, Watch } from 'lucide-react'
+import { AlertCircle, Check, LogOut, Watch } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
@@ -44,6 +47,7 @@ function GarminConnect() {
   const authorize = useGarminAuthorize()
   const disconnect = useGarminDisconnect()
   const backfill = useGarminBackfill()
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false)
 
   // The OAuth callback redirects back here with ?garmin=connected|error.
   const garminParam = searchParams.get('garmin')
@@ -66,11 +70,7 @@ function GarminConnect() {
   }, [garminParam, queryClient, setSearchParams])
 
   if (isLoading) {
-    return (
-      <div className="rounded-lg border border-border bg-card p-4">
-        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-      </div>
-    )
+    return <LoadingState shape="lines" label="Loading Garmin" className="rounded-lg border border-border bg-card p-4" />
   }
 
   // No server credentials — the whole integration is inert, so say so plainly
@@ -112,9 +112,9 @@ function GarminConnect() {
         <Button
           size="sm"
           onClick={() => authorize.mutate()}
-          disabled={authorize.isPending}
+          loading={authorize.isPending}
         >
-          {authorize.isPending ? 'Redirecting…' : 'Connect Garmin'}
+          Connect Garmin
         </Button>
       </div>
     )
@@ -138,13 +138,22 @@ function GarminConnect() {
         <Button
           size="sm"
           variant="ghost"
-          onClick={() => disconnect.mutate()}
-          disabled={disconnect.isPending}
+          onClick={() => setConfirmDisconnect(true)}
+          loading={disconnect.isPending}
           className="text-muted-foreground"
         >
           <LogOut className="h-3.5 w-3.5 mr-1" />
           Disconnect
         </Button>
+        <ConfirmDialog
+          open={confirmDisconnect}
+          onOpenChange={setConfirmDisconnect}
+          title="Disconnect Garmin Connect?"
+          description="New activities stop arriving from Garmin. The workouts already imported stay in your log, with their links to sessions."
+          confirmLabel="Disconnect"
+          destructive
+          onConfirm={() => disconnect.mutate()}
+        />
       </div>
 
       {/* No "sync now": Garmin pushes. The only useful manual action is asking
@@ -154,9 +163,9 @@ function GarminConnect() {
           size="sm"
           variant="outline"
           onClick={() => backfill.mutate({ days: 90 })}
-          disabled={backfill.isPending}
+          loading={backfill.isPending}
         >
-          {backfill.isPending ? 'Requesting…' : 'Import last 90 days'}
+          Import last 90 days
         </Button>
         {backfill.isSuccess && (
           <p className="text-xs text-muted-foreground">
@@ -188,7 +197,7 @@ export function ConnectionsSettings() {
   }
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="max-w-2xl mx-auto px-8 py-12 space-y-10">
 
         <div className="space-y-3">
@@ -281,6 +290,6 @@ export function ConnectionsSettings() {
           <DevicesCard />
         </div>
       </div>
-    </div>
+    </ScrollPanel>
   )
 }

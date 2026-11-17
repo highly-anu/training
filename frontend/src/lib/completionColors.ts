@@ -1,11 +1,12 @@
 /**
- * Completion state — one colour owns "done" across the whole app: emerald.
+ * Completion state — one colour owns "done" across the whole app: the `--done`
+ * token (emerald, tuned per theme in styles/globals.css).
  *
- * Previously written inline at ~20 call sites with no shared module, which is
- * how the light-mode contrast bug went unnoticed: the bare `text-emerald-500`
- * measures 2.33:1 on a /10 emerald tint over white, against a WCAG AA floor of
- * 4.5:1. Text shades are a PAIR pulling away from their own background — -700
- * for light, -300 for dark. See docs/frontend-design.md §8.3.
+ * Previously written inline at ~130 call sites as raw emerald classes, which is
+ * how the light-mode contrast bug went unnoticed and how emerald came to mean
+ * six other things. A component writes `text-done` / `bg-done/10` or takes a
+ * constant from here; a raw emerald or green class fails the design test
+ * (docs/frontend-design.md §8.3, §8.12).
  *
  * Do not use these for "good / positive / on track" verdicts — that is a
  * separate axis with its own module (lib/statusColors.ts). Completion means the
@@ -13,15 +14,15 @@
  */
 export const COMPLETION = {
   /** Card/panel surface for a completed item. */
-  border: 'border-emerald-500/30',
-  bg: 'bg-emerald-500/5',
+  border: 'border-done/30',
+  bg: 'bg-done/5',
   /** Stronger fill for interactive completed elements (buttons, toggles). */
-  bgStrong: 'bg-emerald-500/10',
-  hover: 'hover:bg-emerald-500/20',
-  /** Text + icon colour. Always use this rather than a bare emerald class. */
-  text: 'text-emerald-700 dark:text-emerald-300',
+  bgStrong: 'bg-done/10',
+  hover: 'hover:bg-done/20',
+  /** Text + icon colour. */
+  text: 'text-done',
   /** Chart/SVG fills and inline styles, where a Tailwind class won't do. */
-  hex: '#10b981',
+  css: 'var(--done)',
 } as const
 
 /** Complete-state surface for a card: border + subtle fill + text. */

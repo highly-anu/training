@@ -65,6 +65,17 @@ def run():
     check(body['status'] == 'ok', f"status {body.get('status')}")
     done = [s['completed'] for s in body['sessions']]
     check(done == [True, False], f"completed flags {done} (a rejected match is not done)")
+    check(all('sessionUid' not in s for s in body['sessions']), 'no plan in history, no uid')
+    # With a plan in history each session names its uid: the phone's player
+    # uploads by it.
+    saved_vid = api._active_version_or_none
+    api._active_version_or_none = lambda uid: 'v9'
+    try:
+        uids = [s.get('sessionUid') for s in
+                client.get('/api/user/today-session?date=2026-10-09').get_json()['sessions']]
+    finally:
+        api._active_version_or_none = saved_vid
+    check(uids == ['v9:w0-Friday-0', 'v9:w0-Friday-1'], f'session uids {uids}')
     t = body['tomorrow']
     check(t and t['sessionCount'] == 1 and t['archetypeName'] == 'Ruck'
           and t['estimatedMinutes'] == 90, f"tomorrow {t}")

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { format } from 'date-fns'
 import { motion } from 'framer-motion'
+import { riseIn } from '@/lib/motion'
 import { ArrowRight, Clock, Dumbbell, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { WorkoutIcon } from '@/components/icons/WorkoutIcon'
@@ -74,8 +75,7 @@ export function TodaySession({ program, weekIndex }: TodaySessionProps) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0, transition: { duration: 0.3 } }}
+      {...riseIn()}
       className="h-full rounded-xl border bg-card p-5 shadow-sm flex flex-col gap-3"
     >
       {/* The name gets the card's full width: beside the badge a long one

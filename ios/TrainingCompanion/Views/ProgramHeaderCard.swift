@@ -42,7 +42,7 @@ struct ProgramHeaderCard<Footer: View>: View {
     @State private var sheet: PhilosophyCard?
 
     var body: some View {
-        AnalyticsCard(header: "Program") {
+        AppCard(header: "Program") {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(name).font(.subheadline).fontWeight(.semibold)
@@ -55,14 +55,14 @@ struct ProgramHeaderCard<Footer: View>: View {
                         ForEach(tags) { tag in
                             Label(tag.text, systemImage: tag.icon)
                                 .font(.caption).foregroundStyle(.secondary)
-                                .lineLimit(1)
+                                .lineLimit(2)
                         }
                     }
                 }
                 footer()
             }
         }
-        .sheet(item: $sheet) { PhilosophyDetailSheet(philosophy: $0) }
+        .sheet(item: $sheet) { PhilosophyDetailSheet(philosophy: $0).appSheet(.flexible) }
     }
 
     private func phaseRow(_ phase: Phase) -> some View {
@@ -73,7 +73,7 @@ struct ProgramHeaderCard<Footer: View>: View {
                 .accessibilityLabel("Week \(phase.week) of \(phase.totalWeeks)")
             if phase.isDeload {
                 Image(systemName: "arrow.down.circle.fill")
-                    .font(.caption).foregroundStyle(.blue)
+                    .font(.caption).foregroundStyle(AppColor.accent)
                     .accessibilityLabel("Deload")
             }
         }

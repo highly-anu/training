@@ -1,8 +1,23 @@
+import { Tip } from '@/components/shared/Tip'
+import { LoadingState, FailedState } from '@/components/shared/states'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  BookOpen, CalendarDays, CalendarRange, ChevronLeft, CircleHelp, ExternalLink, FlaskConical, GitBranch, Info,
-  Library, Loader2, Package, Sparkles, Target, Timer, Wand2,
+  BookOpen,
+  CalendarDays,
+  CalendarRange,
+  ChevronLeft,
+  CircleHelp,
+  ExternalLink,
+  FlaskConical,
+  GitBranch,
+  Info,
+  Library,
+  Package,
+  Sparkles,
+  Target,
+  Timer,
+  Wand2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { usePhilosophies } from '@/api/philosophies'
@@ -14,7 +29,6 @@ import { PhilosophyMeasuresCard } from '@/components/explore/PhilosophyMeasuresC
 import { LineageSection } from '@/components/explore/LineageSection'
 import { useLinkIndex } from '@/components/explore/useLineage'
 import { SimilarItems } from '@/components/shared/SimilarItems'
-import { ErrorBanner } from '@/components/shared/ErrorBanner'
 import { lineageOf } from '@/lib/exploreLinks'
 import { modalityHex } from '@/lib/modalityColors'
 import { equipmentHex } from '@/lib/equipment'
@@ -52,7 +66,7 @@ function Chip({ children, hex, onClick, title }: {
   const cls = 'inline-flex max-w-full items-center gap-1 rounded-full border border-border/50 bg-card/60 px-2 py-0.5 text-[11px] text-muted-foreground'
   const style = hex ? { borderLeftColor: hex, borderLeftWidth: 2 } : undefined
   return onClick
-    ? <button type="button" onClick={onClick} title={title} className={`${cls} hover:border-primary/40 hover:text-foreground`} style={style}>{children}</button>
+    ? <Tip label={title}><button type="button" onClick={onClick} className={`${cls} hover:border-primary/40 hover:text-foreground`} style={style}>{children}</button></Tip>
     : <span title={title} className={cls} style={style}>{children}</span>
 }
 
@@ -145,7 +159,7 @@ function Requirements({ doc }: { doc: PhilosophyDescription }) {
 export function PhilosophyPage({ id, onSelect, onBack }: {
   id: string; onSelect: (id: string) => void; onBack?: () => void
 }) {
-  const { data: doc, isLoading, error } = usePhilosophyDescription(id)
+  const { data: doc, isLoading, error, refetch } = usePhilosophyDescription(id)
   const { data: philosophies = [] } = usePhilosophies()
   const { data: frameworks = [] } = useFrameworks()
   const { data: specs } = useAnalyticsSpecs()
@@ -168,14 +182,19 @@ export function PhilosophyPage({ id, onSelect, onBack }: {
   )
 
   if (isLoading) {
-    return (
-      <div className="flex h-64 items-center justify-center gap-2 text-sm text-muted-foreground">
-        <Loader2 className="size-4 animate-spin" /> Reading the package…
-      </div>
-    )
+    return <LoadingState shape="cards" count={3} label="Reading the package" className="p-4" />
   }
   if (error || !doc) {
-    return <div className="space-y-3 p-4">{back}<ErrorBanner error={(error as Error) ?? new Error('Not found')} /></div>
+    return (
+      <div className="space-y-3 p-4">
+        {back}
+        <FailedState
+          title="Could not load this philosophy"
+          error={error ?? new Error('Not found')}
+          onRetry={() => { void refetch() }}
+        />
+      </div>
+    )
   }
 
   const g = doc.glance

@@ -1,7 +1,12 @@
+import { useScrollRestore } from '@/lib/useScrollRestore'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { FailedState, LoadingState } from '@/components/shared/states'
 import { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { House, Wand2, ChevronRight, CheckCircle2, Flag, CloudOff } from 'lucide-react'
+import { nudgeIn, panelMotion } from '@/lib/motion'
+import { Page } from '@/components/layout/Page'
+import { House, Wand2, ChevronRight, CheckCircle2, Flag } from 'lucide-react'
 import { differenceInCalendarDays, differenceInWeeks, parseISO, format } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { useCurrentProgram } from '@/api/programs'
@@ -12,7 +17,6 @@ import { WeekOverview } from '@/components/dashboard/WeekOverview'
 import { DayWorkoutPanel } from '@/components/dashboard/DayWorkoutPanel'
 import { ProgramSettingsSheet } from '@/components/dashboard/ProgramSettingsSheet'
 import { EmptyState } from '@/components/shared/EmptyState'
-import { DumbbellLoader } from '@/components/shared/DumbbellLoader'
 import { WeekSelector } from '@/components/program/WeekSelector'
 import { ReadinessWidget } from '@/components/bio/ReadinessWidget'
 import { AdherenceWidget } from '@/components/dashboard/AdherenceWidget'
@@ -63,11 +67,11 @@ function WeekTab({
       {/* Date + goal name */}
       <div>
         <p className="text-xs text-muted-foreground">{format(new Date(), 'EEEE, MMMM d, yyyy')}</p>
-        <h1 className="text-2xl font-bold tracking-tight mt-0.5">{program.goal?.name ?? 'Training Program'}</h1>
+        <h2 className="text-2xl font-bold tracking-tight mt-0.5">{program.goal?.name ?? 'Training Program'}</h2>
         {daysToEvent !== null && daysToEvent >= 0 && (
           <div className="flex items-center gap-1.5 mt-1">
-            <Flag className="size-3 text-amber-700 dark:text-amber-300" />
-            <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
+            <Flag className="size-3 text-warn" />
+            <p className="text-xs font-medium text-warn">
               {weeksToEvent}w {daysToEvent % 7}d until event
               {eventDate && (
                 <span className="text-muted-foreground font-normal ml-1">
@@ -101,8 +105,7 @@ function WeekTab({
           {canAdvance && (
             <motion.button
               type="button"
-              initial={{ opacity: 0, x: 8 }}
-              animate={{ opacity: 1, x: 0 }}
+              {...nudgeIn}
               onClick={() => handleWeekChange(1)}
               aria-label={`Week ${weekIndex + 1} done — go to week ${weekIndex + 2}`}
               className={cn('ml-auto flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-opacity hover:opacity-80',
@@ -176,7 +179,7 @@ function WeekTab({
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
             Next Up — Week {weekIndex + 2}
             {program.weeks[weekIndex + 1].is_deload && (
-              <span className="ml-2 text-amber-700 dark:text-amber-300 normal-case font-medium">deload</span>
+              <span className="ml-2 text-warn normal-case font-medium">deload</span>
             )}
           </h2>
           <div className="rounded-xl border bg-card/60 p-4 opacity-80">
@@ -197,6 +200,7 @@ function WeekTab({
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 export function Dashboard() {
+  const scroller = useScrollRestore()
   const navigate = useNavigate()
   const program = useCurrentProgram()
   const programLoadState = useProgramStore((s) => s.programLoadState)
@@ -236,11 +240,10 @@ export function Dashboard() {
   if (programLoadState === 'error' && !program) {
     return (
       <div className="flex h-full items-center justify-center p-6">
-        <EmptyState
-          title="Couldn't load your program"
-          description="We couldn't reach the server. Your program is safe — try again in a moment."
-          action={{ label: 'Retry', onClick: () => void loadProgram() }}
-          icon={<CloudOff className="size-10" />}
+        <FailedState
+          title="Could not load your program"
+          error="The server could not be reached. Your program is safe — try again in a moment."
+          onRetry={() => { void loadProgram() }}
           className="max-w-md"
         />
       </div>
@@ -251,25 +254,20 @@ export function Dashboard() {
   // refetch keeps the current program on screen instead of blanking it.
   if (programLoadState !== 'loaded' && !program) {
     return (
-      <motion.div
+      <Page
+        enter="fade"
         key="dashboard-loading"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1, transition: { duration: 0.2 } }}
-        exit={{ opacity: 0 }}
-        className="flex h-full items-center justify-center p-6"
+        className="h-full p-6"
       >
-        <DumbbellLoader label="Retrieving your program..." />
-      </motion.div>
+        <LoadingState shape="cards" count={3} label="Loading your program" className="mx-auto max-w-3xl" />
+      </Page>
     )
   }
 
   if (!program) {
     return (
-      <motion.div
+      <Page
         key="dashboard-empty"
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-        exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
         className="flex h-full items-center justify-center p-6"
       >
         <EmptyState
@@ -279,7 +277,7 @@ export function Dashboard() {
           icon={<Wand2 className="size-10" />}
           className="max-w-md"
         />
-      </motion.div>
+      </Page>
     )
   }
 
@@ -293,27 +291,17 @@ export function Dashboard() {
   const panelOpen = !!(selectedDay && currentWeek && (currentWeek.schedule[selectedDay] ?? []).length > 0)
 
   return (
-    <motion.div
+    <Page
       key="dashboard"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-      exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
       className="flex h-full flex-col overflow-hidden"
     >
-      {/* Header */}
-      <div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
-        <House className="size-5 text-primary" />
-        <h1 className="text-lg font-semibold">Today</h1>
-        <div className="ml-auto">
-          <ProgramSettingsSheet program={program} />
-        </div>
-      </div>
+      <PageHeader icon={House} title="Today" actions={<ProgramSettingsSheet program={program} />} />
 
       {/* Content + optional right panel */}
       <div className="flex flex-1 overflow-hidden">
 
         {/* Scrollable main column */}
-        <div className="flex-1 min-w-0 overflow-y-auto">
+        <div ref={scroller} className="flex-1 min-w-0 overflow-y-auto">
           <WeekTab
             program={program}
             weekIndex={weekIndex}
@@ -332,10 +320,7 @@ export function Dashboard() {
           {panelOpen && currentWeek && selectedDay && (
             <motion.div
               key={`${currentWeek.week_number}-${selectedDay}`}
-              initial={{ width: 0 }}
-              animate={{ width: 420 }}
-              exit={{ width: 0 }}
-              transition={{ duration: 0.25, ease: 'easeInOut' }}
+              {...panelMotion(420)}
               className="shrink-0 overflow-hidden border-l border-border bg-card"
             >
               <div className="w-[420px] h-full overflow-y-auto">
@@ -351,6 +336,6 @@ export function Dashboard() {
         </AnimatePresence>
 
       </div>
-    </motion.div>
+    </Page>
   )
 }

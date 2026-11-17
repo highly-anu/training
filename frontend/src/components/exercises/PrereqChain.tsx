@@ -1,3 +1,4 @@
+import { Skeleton } from '@/components/ui/skeleton'
 import { ArrowDown } from 'lucide-react'
 import { LineagePill } from '@/components/explore/LineageSection'
 import type { ExerciseProgression } from '@/lib/exploreLinks'
@@ -10,7 +11,7 @@ interface PrereqChainProps {
 }
 
 export function PrereqChain({ name, progression }: PrereqChainProps) {
-  if (!progression) return <div className="h-10 rounded-md bg-muted/20 animate-pulse" />
+  if (!progression) return <Skeleton className="h-10" />
   const { before, after, easier, levels } = progression
   // The lowest level it suits, per package that has it (src/level_suitability.py).
   const suits = levels.length > 0 && (

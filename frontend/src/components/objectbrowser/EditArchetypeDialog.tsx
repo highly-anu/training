@@ -270,8 +270,8 @@ export function EditArchetypeDialog({ archetype, open, onClose }: Props) {
 
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={onClose}>Cancel</Button>
-          <Button size="sm" onClick={handleSubmit} disabled={!canSubmit}>
-            {updateMutation.isPending ? 'Saving…' : 'Save Changes'}
+          <Button size="sm" onClick={handleSubmit} disabled={!canSubmit} loading={updateMutation.isPending}>
+            Save changes
           </Button>
         </DialogFooter>
       </DialogContent>

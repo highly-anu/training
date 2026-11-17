@@ -84,6 +84,7 @@ struct RecoveryTrendChartView: View {
                         .interpolationMethod(.catmullRom)
                 }
             }
+            .appChartEntry()
             .chartXAxis {
                 AxisMarks(values: .stride(by: .day, count: 7)) { value in
                     AxisValueLabel {

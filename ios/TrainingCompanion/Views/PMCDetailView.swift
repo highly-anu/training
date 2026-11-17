@@ -88,10 +88,11 @@ struct PMCChart: View {
                                 .font(.caption).monospacedDigit()
                         }
                         .padding(6)
-                        .background(.background.secondary, in: RoundedRectangle(cornerRadius: 6))
+                        .background(.background.secondary, in: RoundedRectangle(cornerRadius: AppMetrics.radiusChip))
                     }
             }
         }
+        .appChartEntry()
         .chartXSelection(value: compact ? .constant(nil) : $selected)
         .chartXAxis {
             if !compact {
@@ -122,6 +123,9 @@ struct PMCChart: View {
         }
         .frame(height: compact ? 56 : 220)
         .accessibilityLabel("Fitness, fatigue and form over \(entries.count) days")
+        .accessibilityValue(entries.last.map {
+            "Latest fitness \(ChartSummary.whole($0.ctl)), fatigue \(ChartSummary.whole($0.atl)), form \(ChartSummary.whole($0.tsb))"
+        } ?? "")
     }
 }
 

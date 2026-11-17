@@ -26,10 +26,21 @@ struct LogActivityTab: View {
     var body: some View {
         let entries = filter.entries(workouts: appState.importedWorkouts, sessions: sessionRows)
         VStack(spacing: 0) {
-            if appState.isLoadingWorkouts && appState.importedWorkouts.isEmpty && filter.show != .sessions {
-                Spacer()
-                ProgressView().scaleEffect(1.2)
-                Spacer()
+            // Workouts are fetched after the launch load and the Health sync:
+            // until one fetch has landed or failed, an empty list is not yet
+            // "nothing recorded" (§6.3).
+            let waiting = appState.isLoadingWorkouts
+                || (!appState.workoutsLoaded && appState.workoutsError == nil)
+            let phase = AppLoadPhase.resolve(hasContent: !entries.isEmpty,
+                                             isLoading: waiting && filter.show != .sessions,
+                                             error: sessionRows.isEmpty ? appState.workoutsError : nil)
+            if phase == .loading {
+                AppLoadingState(shape: .list, label: "Loading workouts")
+            } else if case .failed(let error) = phase, appState.importedWorkouts.isEmpty {
+                AppFailedState(message: error) {
+                    await appState.loadWorkouts()
+                    await appState.loadRecentSessionLogs()
+                }
             } else if entries.isEmpty {
                 WorkoutFilterScopeLine(filter: $filter, entries: entries)
                 emptyState
@@ -43,8 +54,10 @@ struct LogActivityTab: View {
                         switch entry {
                         case .workout(let workout):
                             WorkoutRow(workout: workout, trimp: trimpCache[workout.id])
+                                .appZoomSource(workout.id)
                                 .contentShape(Rectangle())
                                 .onTapGesture { selectedWorkout = workout }
+                                .accessibilityAddTraits(.isButton)
                         case .session(let row):
                             sessionRow(row)
                                 .deleteDisabled(true)
@@ -102,8 +115,9 @@ struct LogActivityTab: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Image(systemName: row.isComplete ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(row.isComplete ? Color.green : Color.secondary)
+                        .foregroundStyle(row.isComplete ? AppColor.complete : Color.secondary)
                         .font(.caption)
+                        .accessibilityLabel(row.isComplete ? "Done" : "Not done")
                     Text(row.title).font(.subheadline).fontWeight(.medium)
                     Spacer()
                     if row.isLocatable {
@@ -127,27 +141,16 @@ struct LogActivityTab: View {
 
     private var emptyState: some View {
         let nothingAtAll = appState.importedWorkouts.isEmpty && sessionRows.isEmpty
-        return VStack(spacing: 16) {
-            Spacer()
-            Image(systemName: filter.show == .sessions ? "square.and.pencil" : "figure.run.circle")
-                .font(.system(size: 48)).foregroundStyle(.secondary)
-            Text(filter.activity.map { "No \($0) workouts" }
-                 ?? (filter.show == .sessions ? "No sessions logged" : "Nothing recorded"))
-                .font(.headline)
-            Text(nothingAtAll
-                 ? "Import a .fit file or complete a Watch session. Open a session and swipe right on an exercise to log what you did."
-                 : "Try a longer period or remove a filter.")
-                .font(.subheadline).foregroundStyle(.secondary)
-                .multilineTextAlignment(.center).padding(.horizontal)
-            if !filter.isDefault {
-                Button("Reset Filters") {
-                    AppHaptics.light()
-                    withAnimation { filter = WorkoutListFilter() }
-                }
-                .buttonStyle(.bordered)
-            }
-            Spacer()
+        return AppEmptyState(
+            icon: filter.show == .sessions ? "square.and.pencil" : "figure.run.circle",
+            title: filter.activity.map { "No \($0) workouts" }
+                ?? (filter.show == .sessions ? "No sessions logged" : "Nothing recorded"),
+            message: nothingAtAll
+                ? "Import a .fit file or complete a Watch session. Open a session and swipe right on an exercise to log what you did."
+                : "Try a longer period or remove a filter.",
+            actionLabel: filter.isDefault ? nil : "Reset filters"
+        ) {
+            withAnimation(AppAnimation.springStandard) { filter = WorkoutListFilter() }
         }
-        .frame(maxWidth: .infinity)
     }
 }

@@ -1297,10 +1297,12 @@ def test_cache_key_sees_set_values_and_specs() -> None:
     logs3['1-Monday-0']['exercises']['back_squat']['clean'] = True
     c = api._program_analytics_hash(AnalyticsInputs(fixture_program(), START, TODAY, logs3), {}, 'r1')
     check('ticking Clean changes the key', a != c)
-    real = api._SPECS_DIGEST
-    api._SPECS_DIGEST = 'something-else'
+    # The digest is kept per view of the packages (loader.scoped_cache).
+    real = api._analytics_specs_digest()
+    kept = api.loader.view_store('api._analytics_specs_digest')
+    kept[()] = 'something-else'
     check('a changed spec digest changes the key', api._program_analytics_hash(inp, {}, 'r1') != a)
-    api._SPECS_DIGEST = real
+    kept[()] = real
 
 
 def test_notes_route_and_fatigue() -> None:

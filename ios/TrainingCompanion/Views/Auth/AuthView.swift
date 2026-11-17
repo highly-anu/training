@@ -35,7 +35,7 @@ struct AuthView: View {
                 if let error {
                     Label(error, systemImage: "exclamationmark.triangle.fill")
                         .font(.footnote)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(AppColor.destructive)
                         .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .transition(.opacity)
@@ -51,8 +51,8 @@ struct AuthView: View {
         .scrollDismissesKeyboard(.interactively)
         .disabled(busy)
         .overlay { if busy { ProgressView().controlSize(.large) } }
-        .animation(.easeOut(duration: 0.2), value: showPassword)
-        .animation(.easeOut(duration: 0.2), value: error)
+        .animation(AppAnimation.crossfade, value: showPassword)
+        .animation(AppAnimation.crossfade, value: error)
     }
 
     // MARK: - Pieces
@@ -60,7 +60,7 @@ struct AuthView: View {
     private var header: some View {
         VStack(spacing: 8) {
             Image(systemName: "figure.run.circle.fill")
-                .font(.system(size: 56))
+                .font(AppFont.symbol(56))
                 .foregroundStyle(Color.accentColor)
                 .accessibilityHidden(true)
             Text("Training Companion")
@@ -145,7 +145,7 @@ struct AuthView: View {
                 .font(.body.weight(.semibold))
                 .frame(maxWidth: .infinity)
         }
-        .buttonStyle(.borderedProminent)
+        .appButton(.primary)
         .controlSize(.large)
         .disabled(!enabled)
     }
@@ -181,7 +181,7 @@ private extension View {
         padding(.horizontal, 16)
             .padding(.vertical, 14)
             .background(.quaternary.opacity(0.6))
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusControl))
     }
 }
 

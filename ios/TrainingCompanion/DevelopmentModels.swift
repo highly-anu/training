@@ -320,13 +320,7 @@ struct DevelopmentAnalytics: Decodable {
 
     /// Five hues, cycled in block order; a block keeps its colour on every
     /// chart. The same palette as the web's `lib/developmentShaping.ts`.
-    static let palette: [Color] = [
-        Color(red: 0.39, green: 0.40, blue: 0.95),   // indigo
-        Color(red: 0.06, green: 0.73, blue: 0.51),   // emerald
-        Color(red: 0.96, green: 0.62, blue: 0.04),   // amber
-        Color(red: 0.93, green: 0.28, blue: 0.60),   // pink
-        Color(red: 0.05, green: 0.65, blue: 0.91),   // sky
-    ]
+    static let palette: [Color] = AppColor.blocks
 
     /// The palette index of a block, nil for an unknown or missing id.
     func paletteIndex(of blockId: Int?) -> Int? {

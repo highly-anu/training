@@ -33,9 +33,10 @@ def config() -> dict:
 def pattern_weights(patterns) -> dict[str, float]:
     """An exercise's weight on each region: the largest of its patterns'."""
     table = config()['patterns']
+    own = loader.load_vocabulary()['patterns']   # a package's own patterns (vocabulary.yaml); a commons id wins
     out: dict[str, float] = {}
     for p in patterns or []:
-        for region, w in (table.get(p) or {}).items():
+        for region, w in (table.get(p) or (own.get(p) or {}).get('regions') or {}).items():
             out[region] = max(out.get(region, 0), w)
     return out
 

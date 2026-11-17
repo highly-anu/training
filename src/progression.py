@@ -51,7 +51,13 @@ def _round_kg(kg: float, step: float = 2.5) -> float:
 def _linear_load(exercise: dict, slot: dict, week: int,
                  level: str, is_deload: bool, deload_keep: float | None = None) -> dict:
     start = (exercise.get('starting_load_kg') or {}).get(level)
-    increment = exercise.get('weekly_increment_kg') or _DEFAULT_INCREMENT_KG
+    # An increment of 0 is a load that stays put (one bell, one stone): only a
+    # missing one takes the default. `or` read 0 as missing, so an athlete with a
+    # single 16 kg kettlebell was prescribed 15, 22.5, 30 kg week by week.
+    increment = exercise.get('weekly_increment_kg')
+    if increment is None:
+        increment = _DEFAULT_INCREMENT_KG
+    fixed = increment == 0
     sessions_pw = exercise.get('sessions_per_week') or _DEFAULT_SESSIONS_PER_WEEK
 
     sets = slot.get('sets', 3)
@@ -72,16 +78,20 @@ def _linear_load(exercise: dict, slot: dict, week: int,
         deload_sc = slot.get('scaling', {}) if isinstance(slot.get('scaling'), dict) else {}
         intensity_pct = deload_sc.get('intensity_pct', 0.9)
         vol_mult = deload_sc.get('volume_multiplier', deload_keep if deload_keep is not None else 0.6)
-        weight = _round_kg(weight * intensity_pct)
+        if not fixed:
+            weight = _round_kg(weight * intensity_pct)
         sets = max(1, round(sets * vol_mult))
-        load_note = 'Deload — reduced intensity'
+        load_note = 'Deload — fewer sets' if fixed else 'Deload — reduced intensity'
+    elif fixed:
+        load_note = 'The same load every week'
     elif week == 1:
         load_note = 'Establish baseline load'
     else:
         inc_str = f'{increment:g}kg'
         load_note = f'+{inc_str} from last session'
 
-    return {'sets': sets, 'reps': reps, 'weight_kg': _round_kg(weight), 'load_note': load_note}
+    # A load that never moves is the implement's own weight, shown as written (16 kg, not 15).
+    return {'sets': sets, 'reps': reps, 'weight_kg': weight if fixed else _round_kg(weight), 'load_note': load_note}
 
 
 def _rpe_autoregulation(exercise: dict, slot: dict, level: str, is_deload: bool,

@@ -25,6 +25,11 @@ apiClient.interceptors.response.use(
       (err.response?.data as { detail?: string } | undefined)?.detail ?? err.message
     // The status rides along, so a caller can retry a 429 (the server's
     // heavy routes answer it while another run is in flight).
-    return Promise.reject(Object.assign(new Error(message), { status: err.response?.status as number | undefined }))
+    // …and the body, where a refusal says more than its sentence (`error`, the
+    // build already running).
+    return Promise.reject(Object.assign(new Error(message), {
+      status: err.response?.status as number | undefined,
+      body: err.response?.data as Record<string, unknown> | undefined,
+    }))
   }
 )

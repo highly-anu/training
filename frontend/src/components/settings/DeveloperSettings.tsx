@@ -1,3 +1,4 @@
+import { ScrollPanel } from '@/components/layout/ScrollPanel'
 import { Link } from 'react-router-dom'
 import { Terminal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -12,7 +13,7 @@ export function DeveloperSettings() {
   const mockMode = !apiBase
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="max-w-2xl mx-auto px-8 py-12 space-y-10">
         <div className="space-y-3">
           <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium">
@@ -48,6 +49,6 @@ export function DeveloperSettings() {
           </div>
         </div>
       </div>
-    </div>
+    </ScrollPanel>
   )
 }

@@ -43,6 +43,8 @@ export function SuggestionRow({ suggestion: s, compact = false, showName = true 
         {showName && <span className="font-medium text-foreground">{s.shortName ?? s.name}</span>}
         {editing ? (
           <input
+            // Correct was just pressed: the field it opens is where the typing goes.
+            // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -63,6 +65,11 @@ export function SuggestionRow({ suggestion: s, compact = false, showName = true 
           {[s.inputText, compact ? null : from].filter(Boolean).join(' · ')}
         </p>
       )}
+      {editing && decide.isError && decide.variables?.text && (
+        <p role="alert" className="mt-1 text-[11px] text-bad">
+          {decide.error.message || 'Could not save that as a result.'}
+        </p>
+      )}
       <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
         <button type="button" onClick={save} disabled={decide.isPending}
                 className="inline-flex items-center gap-1 rounded bg-primary px-2 py-0.5 text-[11px] font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
@@ -78,11 +85,6 @@ export function SuggestionRow({ suggestion: s, compact = false, showName = true 
                 className="inline-flex items-center gap-1 rounded border border-border px-2 py-0.5 text-[11px] text-muted-foreground hover:bg-muted disabled:opacity-60">
           <X className="size-3" aria-hidden="true" /> Not a test
         </button>
-        {decide.isError && (
-          <span role="alert" className="text-[11px] text-red-700 dark:text-red-300">
-            {decide.error?.message || 'Could not save — try again'}
-          </span>
-        )}
       </div>
     </div>
   )

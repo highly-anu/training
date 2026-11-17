@@ -26,7 +26,7 @@ export function ArchetypeTable({ rows }: { rows: AnalyticsArchetypeRow[] }) {
                   <div className="flex items-center gap-2"><span className="font-medium">{r.name}</span><ModalityBadge modality={r.modality} size="sm" /></div>
                 </td>
                 <td className="py-1.5 pr-2 tabular-nums">{r.completed}/{r.scheduled}</td>
-                <td className={cn('py-1.5 pr-2 tabular-nums', r.meanDurationDeltaPct != null && Math.abs(r.meanDurationDeltaPct) > 25 && 'text-amber-800 dark:text-amber-300')}>
+                <td className={cn('py-1.5 pr-2 tabular-nums', r.meanDurationDeltaPct != null && Math.abs(r.meanDurationDeltaPct) > 25 && 'text-warn')}>
                   {r.meanDurationDeltaPct != null ? `${r.meanDurationDeltaPct > 0 ? '+' : ''}${r.meanDurationDeltaPct}%` : '—'}
                 </td>
                 <td className="py-1.5 pr-2 tabular-nums text-muted-foreground">{r.hr ? `${r.hr.avg} / ${r.hr.max}` : '—'}</td>

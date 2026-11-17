@@ -15,11 +15,12 @@ struct SessionDetailView: View {
     /// slider used to run 1–10 and the server folded it, so "7" showed as "4/5".
     @State private var fatigueRating: Double = 3
     @State private var showFatigue = false
-    @State private var isSaving = false
+    /// "After the session" open: by itself once the session is begun or done.
+    @State private var afterOpen = false
     @State private var saveTask: Task<Void, Never>? = nil
     @State private var exerciseSheet: ExerciseRowItem? = nil
     @State private var swapTarget: SwapTarget? = nil
-    @State private var logTarget: ExerciseRowItem? = nil
+    @State private var logTarget: LogTarget? = nil
 
     /// A row's identity is its position plus the exercise: the same movement
     /// can appear twice in a session, and a swap must animate only its row.
@@ -28,6 +29,12 @@ struct SessionDetailView: View {
         let index: Int
         let assignment: ProgramExerciseAssignment
         var id: String { "\(index)-\(assignment.exercise?.id ?? "slot")" }
+    }
+
+    /// The session's log form, opened at one exercise or at the top.
+    private struct LogTarget: Identifiable {
+        var exerciseId: String? = nil
+        var id: String { exerciseId ?? "session" }
     }
 
     private struct SwapTarget: Identifiable {
@@ -41,6 +48,12 @@ struct SessionDetailView: View {
     @State private var confirmFailed = false
     @State private var changingVerdict = false
     @State private var liftAnswers: [String: LiftConfirmation.Answer] = [:]
+    /// The workout player, full screen (design-system §6.44).
+    @State private var player: WorkoutPlayerModel.Target? = nil
+    @StateObject private var briefing = SessionBriefingLoader()
+    @EnvironmentObject private var router: AppRouter
+    /// The player grows out of Start workout.
+    @Namespace private var zoom
 
     private var isDone: Bool { appState.isSessionComplete(sessionKey) }
 
@@ -56,14 +69,24 @@ struct SessionDetailView: View {
     var body: some View {
         NavigationStack {
             List {
+                // A log saved here that the server does not have yet (§6.16).
+                if appState.sessionLogNotice(sessionKey: sessionKey) != nil {
+                    Section {
+                        SessionLogNoticeBanner(sessionKey: sessionKey)
+                            .listRowInsets(EdgeInsets())
+                            .listRowBackground(Color.clear)
+                    }
+                }
                 headerSection
+                briefingSection
                 if let workout = linkedWorkout { linkedWorkoutSection(workout) }
                 exercisesSection
-                if !progressingExercises.isEmpty && (isDone || linkedWorkout != nil) {
-                    if loadLifts.isEmpty { progressSection } else { liftProgressSection }
-                }
-                if isDone { notesSection }
+                afterSection
             }
+            .onChange(of: hasBegun) { _, begun in
+                if begun { withAnimation(AppAnimation.layoutChange) { afterOpen = true } }
+            }
+            .onAppear { afterOpen = hasBegun }
             .navigationTitle(currentSession.archetype?.name ?? ModalityStyle.label(for: currentSession.modality))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -71,32 +94,44 @@ struct SessionDetailView: View {
                     Button("Done") { dismiss() }
                 }
             }
-            .safeAreaInset(edge: .bottom) {
+            .appActionBar {
+                if !isDone { startButton }
                 completionButton
-                    .padding()
-                    .background(.background)
+            }
+            .fullScreenCover(item: $player) { target in
+                WorkoutPlayerView(player: .resumingIfKept(target), fallback: currentSession) {
+                    player = nil
+                }
+                .appZoom(from: "player", in: zoom)
+                .environmentObject(appState)
+            }
+            .onAppear {
+                // Debug builds: TC_PLAYER opens this session's player (WorkoutPlayerDebug).
+                if player == nil, WorkoutPlayerDebug.take(sessionKey) { openPlayer() }
+                // …and TC_LOG its log form (SessionLogDebug).
+                if SessionLogDebug.take(sessionKey) { logTarget = LogTarget() }
             }
             // The exercise reference (§6.14): what the movement is and how to
-            // do it, without leaving the session.
-            .sheet(item: $exerciseSheet) { item in
+            // do it, without leaving the session — pushed, as the swap is
+            // (§6.48); both were sheets on this sheet until 1.37.
+            .appPush(item: $exerciseSheet) { item in
                 if let ex = item.assignment.exercise {
-                    ExerciseDetailSheet(exerciseId: ex.id, name: ex.name, assignment: item.assignment)
-                        .environmentObject(appState)
+                    ExerciseDetailSheet(exerciseId: ex.id, name: ex.name, assignment: item.assignment,
+                                        pushed: true)
                 }
             }
-            .sheet(item: $swapTarget) { target in
+            .appPush(item: $swapTarget) { target in
                 if let wi = weekIndex, let dn = dayName, let si = sessionIndex {
                     SwapExerciseSheet(weekIndex: wi, dayName: dn, sessionIndex: si,
-                                      exerciseIndex: target.exerciseIndex)
-                        .environmentObject(appState)
+                                      exerciseIndex: target.exerciseIndex, pushed: true)
                 }
             }
-            // What was done (§6.16): sets for a sets × reps slot, the slot's
-            // currency for the rest — the inputs the web's loggers offer.
-            .sheet(item: $logTarget) { item in
-                ExerciseLogSheet(sessionKey: sessionKey, assignment: item.assignment)
-                    .environmentObject(appState)
+            // What was done (§6.16): every exercise on one form, saved once —
+            // sets for a sets × reps slot, the slot's currency for the rest.
+            .appPush(item: $logTarget) { target in
+                SessionLogForm(sessionKey: sessionKey, session: currentSession, openAt: target.exerciseId)
             }
+            .task { await loadBriefing() }
             .task {
                 // A test names its standards: their names and the athlete's
                 // results come from the catalog and the results.
@@ -147,7 +182,7 @@ struct SessionDetailView: View {
                             }
                             if currentSession.isDeload {
                                 Label("Deload", systemImage: "arrow.down.circle")
-                                    .foregroundStyle(.orange)
+                                    .foregroundStyle(AppColor.warning)
                             }
                             if currentSession.testInfo != nil { TestBadge() }
                         }
@@ -162,8 +197,8 @@ struct SessionDetailView: View {
             // against, before the session starts.
             if let test = currentSession.testInfo {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(test.insteadOf.map { "A test, in place of \($0). Log each result on its exercise; it comes back here to save." }
-                         ?? "A test of this phase's standards. Log each result on its exercise; it comes back here to save.")
+                    Text(test.insteadOf.map { "A test, in place of \($0). Log each result with the session; it comes back here to save." }
+                         ?? "A test of this phase's standards. Log each result with the session; it comes back here to save.")
                         .font(.caption).foregroundStyle(.secondary)
                     ForEach(test.standards, id: \.self) { id in
                         StandardTargetRow(standardId: id)
@@ -175,11 +210,11 @@ struct SessionDetailView: View {
 
             if let log = appState.sessionLogs[sessionKey], let completedAt = log.completedAt {
                 Label("Completed · \(shortDateTime(completedAt))", systemImage: "checkmark.circle.fill")
-                    .foregroundStyle(.green)
+                    .foregroundStyle(AppColor.complete)
                     .font(.footnote)
                 if let avgHR = log.avgHR {
                     Label("Avg HR: \(avgHR) bpm", systemImage: "heart.fill")
-                        .foregroundStyle(.red)
+                        .foregroundStyle(AppColor.destructive)
                         .font(.footnote)
                 }
             }
@@ -223,39 +258,38 @@ struct SessionDetailView: View {
                 Text("No exercises").foregroundStyle(.secondary)
             } else {
                 ForEach(rows) { item in
-                    Button {
-                        AppHaptics.selection()
-                        exerciseSheet = item
-                    } label: {
-                        exerciseRow(item.assignment)
-                    }
-                    .buttonStyle(.plain)
-                    .contextMenu {
+                    // Three visible controls (§6.51): the circle opens the log at it, the row
+                    // opens the exercise, "…" holds the rest. The swipes and
+                    // the long press are the same actions, faster.
+                    HStack(alignment: .top, spacing: AppMetrics.gapSmall) {
+                        logControl(item)
                         Button {
-                            logTarget = item
-                        } label: {
-                            Label(logLabel(item.assignment), systemImage: "square.and.pencil")
-                        }
-                        Button {
+                            AppHaptics.selection()
                             exerciseSheet = item
                         } label: {
-                            Label("About this exercise", systemImage: "info.circle")
+                            exerciseRow(item.assignment)
                         }
-                        if canSwap(item.assignment) {
-                            Button {
-                                swapTarget = SwapTarget(exerciseIndex: item.index)
-                            } label: {
-                                Label("Swap for an alternative", systemImage: "arrow.left.arrow.right")
-                            }
+                        .buttonStyle(.plain)
+                        Menu {
+                            exerciseActions(item)
+                        } label: {
+                            Image(systemName: "ellipsis")
+                                .font(.body.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                                .frame(width: 44, height: 44)
+                                .contentShape(Rectangle())
                         }
+                        .buttonStyle(.borderless)
+                        .accessibilityLabel("\(item.assignment.exercise?.name ?? "Exercise") actions")
                     }
+                    .contextMenu { exerciseActions(item) }
                     .swipeActions(edge: .leading, allowsFullSwipe: true) {
                         Button {
-                            logTarget = item
+                            logTarget = LogTarget(exerciseId: item.assignment.exercise?.id)
                         } label: {
                             Label("Log", systemImage: "square.and.pencil")
                         }
-                        .tint(.green)
+                        .tint(AppColor.complete)
                     }
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         if canSwap(item.assignment) {
@@ -264,29 +298,61 @@ struct SessionDetailView: View {
                             } label: {
                                 Label("Swap", systemImage: "arrow.left.arrow.right")
                             }
-                            .tint(.blue)
+                            .tint(AppColor.info)
                         }
                     }
                 }
                 .animation(AppAnimation.layoutChange, value: rows.map(\.id))
+                // The whole session on one form, one save.
+                Button {
+                    AppHaptics.selection()
+                    logTarget = LogTarget()
+                } label: {
+                    Label("Log session", systemImage: "square.and.pencil")
+                }
             }
         } header: {
             Text("Exercises")
-        } footer: {
-            if !rows.isEmpty {
-                // Gesture hints as symbols: tap for cues, swipe right to log,
-                // left to swap.
-                HStack(spacing: 14) {
-                    Label("Cues", systemImage: "hand.tap")
-                    Label("Log", systemImage: "arrow.right")
-                    if canEditProgram && rows.contains(where: { canSwap($0.assignment) }) {
-                        Label("Swap", systemImage: "arrow.left")
-                    }
-                }
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(canEditProgram && rows.contains(where: { canSwap($0.assignment) })
-                    ? "Tap an exercise for cues. Swipe right to log it, left to swap it."
-                    : "Tap an exercise for cues. Swipe right to log it.")
+        }
+    }
+
+    /// The row's leading circle: empty until the exercise is logged, then a
+    /// tick; either way it opens the logger.
+    private func logControl(_ item: ExerciseRowItem) -> some View {
+        let logged = loggedSummary(item.assignment) != nil
+        return Button {
+            AppHaptics.light()
+            logTarget = LogTarget(exerciseId: item.assignment.exercise?.id)
+        } label: {
+            Image(systemName: logged ? "checkmark.circle.fill" : "circle")
+                .font(.title3)
+                .appSymbolReplace(value: logged)
+                .foregroundStyle(logged ? AnyShapeStyle(AppColor.complete) : AnyShapeStyle(.tertiary))
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.borderless)
+        .accessibilityLabel("\(logLabel(item.assignment)): \(item.assignment.exercise?.name ?? "exercise")")
+        .accessibilityValue(logged ? "Logged" : "Not logged")
+    }
+
+    @ViewBuilder
+    private func exerciseActions(_ item: ExerciseRowItem) -> some View {
+        Button {
+            logTarget = LogTarget(exerciseId: item.assignment.exercise?.id)
+        } label: {
+            Label(logLabel(item.assignment), systemImage: "square.and.pencil")
+        }
+        Button {
+            exerciseSheet = item
+        } label: {
+            Label("About this exercise", systemImage: "info.circle")
+        }
+        if canSwap(item.assignment) {
+            Button {
+                swapTarget = SwapTarget(exerciseIndex: item.index)
+            } label: {
+                Label("Swap for an alternative", systemImage: "arrow.left.arrow.right")
             }
         }
     }
@@ -324,9 +390,6 @@ struct SessionDetailView: View {
                         .background(.quaternary)
                         .clipShape(Capsule())
                 }
-                Image(systemName: "info.circle")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
             }
             Text(LoadFormat.describe(ea))
                 .font(.subheadline)
@@ -344,9 +407,9 @@ struct SessionDetailView: View {
                     .font(.caption).foregroundStyle(Color.accentColor)
             }
             if let logged = loggedSummary(ea) {
-                Label(logged, systemImage: "checkmark.circle.fill")
+                Text(logged)
                     .font(.caption)
-                    .foregroundStyle(.green)
+                    .foregroundStyle(AppColor.complete)
                     .monospacedDigit()
             }
             if let note = ea.notes ?? ex.notes {
@@ -357,6 +420,7 @@ struct SessionDetailView: View {
             }
         }
         .padding(.vertical, 2)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
     }
 
@@ -379,14 +443,14 @@ struct SessionDetailView: View {
         return (clean, perf.rpe)
     }
 
-    private var progressSection: some View {
-        Section {
+    private var progressRows: some View {
+        Group {
             if let verdict = moduleVerdict, !changingVerdict {
                 HStack {
                     Label(verdict.clean ? "Clean, as written\(verdict.rpe.map { " · RPE \($0)" } ?? "")"
                                         : "Not clean — the cycle holds here",
                           systemImage: verdict.clean ? "checkmark.seal.fill" : "minus.circle")
-                        .foregroundStyle(verdict.clean ? Color.green : Color.secondary)
+                        .foregroundStyle(verdict.clean ? AppColor.complete : Color.secondary)
                     Spacer()
                     Button("Change") { changingVerdict = true }
                         .font(.caption)
@@ -400,19 +464,17 @@ struct SessionDetailView: View {
                     Button { confirm(clean: true) } label: {
                         Label("Clean, as written", systemImage: "checkmark.seal")
                     }
-                    .buttonStyle(.borderedProminent)
+                    .appButton(.primary)
                     Button("Not clean") { confirm(clean: false) }
-                        .buttonStyle(.bordered)
+                        .appButton(.secondary)
                 }
                 .disabled(isConfirming)
             }
             if confirmFailed {
                 Text("Not saved — try again when online.")
                     .font(.caption)
-                    .foregroundStyle(.red)
+                    .foregroundStyle(AppColor.destructive)
             }
-        } header: {
-            Text("Progress")
         }
     }
 
@@ -434,8 +496,8 @@ struct SessionDetailView: View {
 
     /// Each lift made or missed, at its prescribed weight or the one worked up
     /// to. A made lift goes up next time; a miss repeats it, two reset it.
-    private var liftProgressSection: some View {
-        Section {
+    private var liftProgressRows: some View {
+        Group {
             if let verdict = LiftConfirmation.verdict(loadLifts, log: appState.sessionLogs[sessionKey]),
                !changingVerdict {
                 ForEach(loadLifts) { lift in
@@ -443,7 +505,7 @@ struct SessionDetailView: View {
                     let kg = appState.sessionLogs[sessionKey]?.exercises[lift.id]?.weightKg
                     HStack {
                         Label(lift.name, systemImage: made ? "checkmark.seal.fill" : "minus.circle")
-                            .foregroundStyle(made ? Color.green : Color.secondary)
+                            .foregroundStyle(made ? AppColor.complete : Color.secondary)
                         Spacer()
                         Text([kg.map { "\(LoadFormat.kilograms($0)) kg" }, made ? nil : "missed, repeats"]
                                 .compactMap { $0 }.joined(separator: " · "))
@@ -487,10 +549,10 @@ struct SessionDetailView: View {
                     Button { confirmLifts(allMade: true) } label: {
                         Label("All made", systemImage: "checkmark.seal")
                     }
-                    .buttonStyle(.borderedProminent)
+                    .appButton(.primary)
                     .disabled(LiftConfirmation.unweighed(loadLifts, answers: liftAnswers, allMade: true))
                     Button("Save") { confirmLifts(allMade: false) }
-                        .buttonStyle(.bordered)
+                        .appButton(.secondary)
                         .disabled(LiftConfirmation.unweighed(loadLifts, answers: liftAnswers, allMade: false))
                 }
                 .disabled(isConfirming)
@@ -503,10 +565,8 @@ struct SessionDetailView: View {
             if confirmFailed {
                 Text("Not saved — try again when online.")
                     .font(.caption)
-                    .foregroundStyle(.red)
+                    .foregroundStyle(AppColor.destructive)
             }
-        } header: {
-            Text("Progress")
         }
     }
 
@@ -523,12 +583,44 @@ struct SessionDetailView: View {
         }
     }
 
-    // MARK: - Notes Section
+    // MARK: - After the session
 
-    private var notesSection: some View {
-        Section("Session Notes") {
-            TextEditor(text: $notes)
-                .frame(minHeight: 80)
+    /// Begun: something is logged for it, a workout is linked, or it is done.
+    private var hasBegun: Bool {
+        isDone || linkedWorkout != nil || appState.sessionLogs[sessionKey] != nil
+    }
+
+    private var asksProgress: Bool {
+        !progressingExercises.isEmpty && (isDone || linkedWorkout != nil)
+    }
+
+    /// What is answered once the work is done — done as written, the notes,
+    /// the fatigue — in one section under the exercises, closed until the
+    /// session is begun (design-system §6.54). Until 1.39 Progress and Session
+    /// Notes were two sections that appeared from nowhere on completion, and
+    /// a note could not be written beforehand.
+    private var afterSection: some View {
+        Section {
+            DisclosureGroup(isExpanded: $afterOpen) {
+                if asksProgress {
+                    if loadLifts.isEmpty { progressRows } else { liftProgressRows }
+                }
+                notesRows
+            } label: {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("After the session")
+                        .font(.subheadline).fontWeight(.semibold)
+                    Text(asksProgress ? "Done as written, notes, fatigue" : "Notes, fatigue")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+
+    private var notesRows: some View {
+        Group {
+            AppLongTextField(prompt: "Notes", text: $notes)
                 .onChange(of: notes) { _, _ in
                     debouncedSaveNotes()
                 }
@@ -549,43 +641,92 @@ struct SessionDetailView: View {
         }
     }
 
+    // MARK: - Start workout
+
+    /// The session run step by step (WorkoutPlayerView), on its own day.
+    private var startButton: some View {
+        Button { openPlayer() } label: {
+            Label("Start workout", systemImage: "play.fill")
+                .fontWeight(.semibold)
+                .frame(maxWidth: .infinity)
+        }
+        .appButton(.primary)
+        .tint(ModalityStyle.color(for: currentSession.modality))
+        .disabled(playerTarget == nil)
+        .matchedTransitionSource(id: "player", in: zoom)
+    }
+
+    // MARK: - Before you start
+
+    /// Today against the earlier times it was done (§6.61), for a session
+    /// still to do; nothing when the server has nothing to add.
+    @ViewBuilder private var briefingSection: some View {
+        if !isDone, briefing.briefing?.saysSomething ?? (briefing.isLoading || briefing.error != nil) {
+            Section("Before you start") {
+                SessionBriefingView(loader: briefing, tint: ModalityStyle.color(for: currentSession.modality),
+                                    onOpenSession: { key in
+                                        // This sheet first: its closing clears the
+                                        // session Today presents, and would take the
+                                        // one being opened with it.
+                                        dismiss()
+                                        Task {
+                                            try? await Task.sleep(for: .milliseconds(450))
+                                            router.openSession(key)
+                                        }
+                                    }) { await loadBriefing(force: true) }
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+            }
+        }
+    }
+
+    private func loadBriefing(force: Bool = false) async {
+        guard !isDone else { return }
+        let date = weekIndex.flatMap { wi in dayName.flatMap { appState.sessionDate(weekIndex: wi, dayName: $0) } }
+        await briefing.load(api: appState.api, sessionKey: sessionKey, date: date, force: force)
+    }
+
+    private var playerTarget: WorkoutPlayerModel.Target? {
+        guard let weekIndex, let dayName,
+              let date = appState.sessionDate(weekIndex: weekIndex, dayName: dayName) else { return nil }
+        return .init(sessionKey: sessionKey, date: date,
+                     title: currentSession.archetype?.name ?? ModalityStyle.label(for: currentSession.modality))
+    }
+
+    private func openPlayer() {
+        AppHaptics.medium()
+        player = playerTarget
+    }
+
     // MARK: - Completion Button
 
+    /// Answers at once: the completion is written on the phone and sent in
+    /// the background (`AppState.saveSessionLog`).
     private var completionButton: some View {
         Button {
-            Task {
-                isSaving = true
-                if isDone {
-                    await appState.undoSessionComplete(sessionKey: sessionKey)
-                } else {
-                    await appState.markSessionComplete(sessionKey: sessionKey)
-                    AppHaptics.success()
-                }
-                isSaving = false
+            if isDone {
+                appState.undoSessionComplete(sessionKey: sessionKey)
+            } else {
+                appState.markSessionComplete(sessionKey: sessionKey)
+                AppHaptics.success()
             }
         } label: {
             HStack {
-                if isSaving {
-                    ProgressView().scaleEffect(0.9)
-                } else {
-                    Image(systemName: isDone ? "xmark.circle" : "checkmark.circle.fill")
-                }
+                Image(systemName: isDone ? "xmark.circle" : "checkmark.circle.fill")
+                    .appSymbolReplace(value: isDone)
                 Text(isDone ? "Mark Incomplete" : "Mark Session Complete")
                     .fontWeight(.semibold)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 4)
         }
-        .buttonStyle(.borderedProminent)
-        .tint(isDone ? .secondary : .green)
-        .disabled(isSaving)
+        .appButton(isDone ? .secondary : .complete)
     }
 
     // MARK: - Helpers
 
     private func shortDateTime(_ iso: String) -> String {
-        let f = ISO8601DateFormatter()
-        guard let date = f.date(from: iso) else { return iso }
+        // The server's own "2026-09-28 18:00:00+02:00" as well as the phone's ISO 8601.
+        guard let date = LogSessions.parseServerDate(iso) else { return iso }
         let out = DateFormatter(); out.dateStyle = .short; out.timeStyle = .short
         return out.string(from: date)
     }

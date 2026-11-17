@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/layout/PageHeader'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Watch } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -23,10 +24,7 @@ export function PairDevice() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
-        <Watch className="size-5 text-primary" />
-        <h1 className="text-lg font-semibold">Pair a watch</h1>
-      </div>
+      <PageHeader icon={Watch} title="Pair a watch" />
 
       <div className="flex flex-1 items-start justify-center p-6">
         <div className="w-full max-w-sm rounded-lg border border-border/30 bg-card/40 p-5 space-y-4">
@@ -51,13 +49,13 @@ export function PairDevice() {
               </p>
               <Button
                 className="w-full h-9 text-sm"
-                disabled={claim.isPending}
+                loading={claim.isPending}
                 onClick={() => claim.mutate(code)}
               >
-                {claim.isPending ? 'Pairing…' : 'Pair this watch'}
+                Pair this watch
               </Button>
               {claim.isError && (
-                <p className="text-[11px] text-red-700 dark:text-red-300">
+                <p className="text-[11px] text-bad">
                   {claim.error.message}. Codes last ten minutes — open the app on the watch for a new one.
                 </p>
               )}
@@ -66,7 +64,7 @@ export function PairDevice() {
 
           {code && claim.isSuccess && (
             <>
-              <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Paired</p>
+              <p className="text-sm font-medium text-done">Paired</p>
               <p className="text-xs text-muted-foreground">
                 The watch picks this up within a few seconds and shows today's session.
               </p>

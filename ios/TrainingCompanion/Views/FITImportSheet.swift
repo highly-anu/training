@@ -101,6 +101,7 @@ struct FITImportSheet: View {
                                 AppHaptics.selection()
                                 selectedSessionKey = selectedSessionKey == item.key ? nil : item.key
                             }
+                            .appTapRow(selected: selectedSessionKey == item.key)
                     }
                 }
 
@@ -115,8 +116,8 @@ struct FITImportSheet: View {
                         }
                         .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.green)
+                    .appButton(.primary)
+                    .tint(AppColor.complete)
                     .disabled(sessions.count > 1 && selectedSessionKey == nil)
 
                     Button {
@@ -163,6 +164,7 @@ struct FITImportSheet: View {
                                 AppHaptics.selection()
                                 selectedSessionKey = item.key
                             }
+                            .appTapRow(selected: selectedSessionKey == item.key)
                     }
                 }
             }
@@ -179,8 +181,8 @@ struct FITImportSheet: View {
                         }
                         .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.green)
+                    .appButton(.primary)
+                    .tint(AppColor.complete)
                 }
                 .listRowBackground(Color.clear)
             }
@@ -204,13 +206,13 @@ struct FITImportSheet: View {
         VStack(spacing: 24) {
             Spacer()
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 64))
-                .foregroundStyle(.green)
+                .font(AppFont.symbol(64))
+                .foregroundStyle(AppColor.complete)
             Text("Session Marked Complete")
                 .font(.title2).fontWeight(.semibold)
             VStack(spacing: 8) {
                 if let avg = workout.heartRate?.avg {
-                    Label("Avg HR: \(avg) bpm", systemImage: "heart.fill").foregroundStyle(.red)
+                    Label("Avg HR: \(avg) bpm", systemImage: "heart.fill").foregroundStyle(AppColor.destructive)
                 }
                 if let dist = workout.distance {
                     Label(String(format: "%.2f %@", dist.value, dist.unit), systemImage: "arrow.forward")
@@ -219,7 +221,7 @@ struct FITImportSheet: View {
             .font(.subheadline).foregroundStyle(.secondary)
             Spacer()
             Button("Done") { dismiss() }
-                .buttonStyle(.borderedProminent)
+                .appButton(.primary)
                 .padding(.horizontal)
         }
         .frame(maxWidth: .infinity)
@@ -231,7 +233,7 @@ struct FITImportSheet: View {
         ScrollView {
             VStack(spacing: 20) {
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.system(size: 48)).foregroundStyle(.orange)
+                    .font(AppFont.symbol(48)).foregroundStyle(AppColor.warning)
                     .padding(.top, 40)
                 Text("Import Failed").font(.headline)
                 Text(message)
@@ -244,8 +246,8 @@ struct FITImportSheet: View {
                     .clipShape(RoundedRectangle(cornerRadius: 8))
                     .padding(.horizontal)
                 HStack(spacing: 16) {
-                    Button("Retry") { Task { await upload() } }.buttonStyle(.bordered)
-                    Button("Dismiss") { dismiss() }.buttonStyle(.borderedProminent)
+                    Button("Retry") { Task { await upload() } }.appButton(.secondary)
+                    Button("Dismiss") { dismiss() }.appButton(.primary)
                 }
                 .padding(.bottom, 40)
             }
@@ -259,7 +261,7 @@ struct FITImportSheet: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(symbol: ActivityIcon.forWorkout(activityType: workout.activityType, modalityId: nil))
-                    .foregroundStyle(.blue).font(.title3)
+                    .foregroundStyle(AppColor.accent).font(.title3)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(ImportedWorkout.activityLabel(workout.activityType))
                         .font(.headline)
@@ -268,7 +270,7 @@ struct FITImportSheet: View {
                 }
                 Spacer()
             }
-            HStack(spacing: 16) {
+            AppAdaptiveStack(spacing: 16) {
                 if let dur = workout.durationMinutes {
                     statChip(value: "\(Int(dur))", unit: "min", icon: "clock")
                 }
@@ -285,8 +287,8 @@ struct FITImportSheet: View {
 
     private func sessionMatchRow(_ item: (session: ProgramSession, key: String), selected: Bool) -> some View {
         HStack(spacing: 12) {
-            Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                .foregroundStyle(selected ? .green : .secondary)
+            Image(systemName: selected ? "checkmark.circle.fill" : "circle").accessibilityHidden(true)
+                .foregroundStyle(selected ? AppColor.complete : .secondary)
                 .font(.title3).frame(width: 28)
             VStack(alignment: .leading, spacing: 3) {
                 Text(item.session.archetype?.name ?? ModalityStyle.label(for: item.session.modality))
@@ -303,8 +305,8 @@ struct FITImportSheet: View {
 
     private func manualSessionRow(_ item: (session: ProgramSession, key: String, dateLabel: String), selected: Bool) -> some View {
         HStack(spacing: 12) {
-            Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                .foregroundStyle(selected ? .green : .secondary)
+            Image(systemName: selected ? "checkmark.circle.fill" : "circle").accessibilityHidden(true)
+                .foregroundStyle(selected ? AppColor.complete : .secondary)
                 .font(.title3).frame(width: 28)
             VStack(alignment: .leading, spacing: 3) {
                 Text(item.session.archetype?.name ?? ModalityStyle.label(for: item.session.modality))
@@ -358,5 +360,6 @@ struct FITImportSheet: View {
             Text(value).font(.callout).fontWeight(.medium)
             Text(unit).font(.caption2).foregroundStyle(.secondary)
         }
+        .appStat("\(value) \(SpokenUnit.text(unit))")
     }
 }

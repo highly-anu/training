@@ -42,7 +42,7 @@ _SESSION_KEYS = ('archetype', 'category', 'modality')
 
 
 def load(pkg: str) -> list[dict]:
-    path = os.path.join(loader._PACKAGES_DIR, pkg, FILE)
+    path = os.path.join(loader.package_dir(pkg), FILE)
     if not os.path.exists(path):
         return []
     with open(path, encoding='utf-8') as fh:

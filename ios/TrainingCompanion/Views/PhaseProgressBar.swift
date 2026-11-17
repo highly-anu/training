@@ -45,7 +45,7 @@ struct PhaseProgressBar: View {
                                     .frame(width: 3)
                                     .offset(x: max(0, doneWidth - 1.5))
                             } else {
-                                Rectangle().fill(color.opacity(0.15))
+                                Rectangle().fill(color.opacity(AppColor.Opacity.fill))
                             }
                         }
                         .frame(width: segWidth, height: 10)

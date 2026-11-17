@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { safeReturnPath } from '@/lib/returnPath'
@@ -148,13 +149,9 @@ export function LoginPage() {
 
             {error && <p className="text-sm text-destructive">{error}</p>}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 disabled:opacity-50 transition-colors"
-            >
-              {loading ? '…' : tab === 'signin' ? 'Sign in' : 'Create account'}
-            </button>
+            <Button type="submit" loading={loading} className="w-full shadow">
+              {tab === 'signin' ? 'Sign in' : 'Create account'}
+            </Button>
           </form>
         )}
       </div>

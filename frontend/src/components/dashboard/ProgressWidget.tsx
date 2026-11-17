@@ -1,3 +1,4 @@
+import { LoadingState } from '@/components/shared/states'
 import { Link } from 'react-router-dom'
 import { ChevronRight, TrendingDown, TrendingUp, Minus } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -19,7 +20,7 @@ import { StatusBadge } from '@/components/analytics/StatusBadge'
  * card; the score stays on the Progress tab.
  */
 export function ProgressWidget() {
-  const { data, isLoading } = useProgramAnalytics()
+  const { data, isLoading, isError } = useProgramAnalytics()
   const method = data?.methodologies?.[0]
   const h = method?.headlineSummary ?? null
   const name = data?.frame?.philosophies.find((p) => p.id === method?.philosophy)?.name
@@ -39,9 +40,14 @@ export function ProgressWidget() {
         <ChevronRight className="size-3.5 text-muted-foreground/60" aria-hidden="true" />
       </div>
 
-      {isLoading && <p className="text-[11px] text-muted-foreground/70 italic">Measuring…</p>}
+      {isLoading && <LoadingState shape="lines" count={3} label="Measuring progress" />}
 
-      {!isLoading && !h && (
+      {/* The card is a link, so it holds no button: Progress itself offers Try again. */}
+      {isError && !h && (
+        <p className="text-[11px] text-muted-foreground">Could not load progress. Open Progress to try again.</p>
+      )}
+
+      {!isLoading && !isError && !h && (
         <p className="text-[11px] text-muted-foreground/70 italic">
           Complete a few sessions and this program's own measure appears here.
         </p>

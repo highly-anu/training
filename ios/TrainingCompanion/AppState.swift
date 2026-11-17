@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import Network
 import WidgetKit
 
 /// Central state object for the iPhone app.
@@ -11,6 +12,7 @@ final class AppState: ObservableObject {
 
     @Published var serverProgram: ServerProgram? = nil
     @Published var isLoadingProgram = false
+    @Published var isLoadingBenchmarks = false
     @Published var programError: String? = nil
     /// Set when a save lost to a newer copy on the server (409). The program
     /// is re-pulled; this is what tells the user their last edit is gone,
@@ -23,6 +25,8 @@ final class AppState: ObservableObject {
     /// (the old `ProgramStore`) only ever held a stale copy.
     @Published var programHistory: [ProgramHistoryEntry] = []
     @Published var isLoadingHistory = false
+    /// Why the last history load failed; the list keeps what it had.
+    @Published var historyError: String? = nil
 
     /// Which archived version the loaded program is, or nil before history knows.
     var programVersionId: String? { serverProgram?.programVersionId }
@@ -31,6 +35,9 @@ final class AppState: ObservableObject {
 
     @Published var profile: UserProfile = .default
     @Published var isLoadingProfile = false
+    /// Why the last profile load failed: the screen is then showing this
+    /// device's copy, or the defaults, and must say so.
+    @Published var profileError: String? = nil
     @Published var lastProfileSyncAt: Date? = nil
 
     private let logger = AppLogger.shared
@@ -42,6 +49,9 @@ final class AppState: ObservableObject {
     /// the active program (`inCurrentProgram`), because a key like "6-Monday-0"
     /// exists in every program the athlete has had.
     @Published var sessionLogs: [String: SessionLogEntry] = [:]
+    /// The session completed on this phone a moment ago, until Today has shown
+    /// it (`isShownComplete`).
+    @Published var justCompleted: String? = nil
     /// Earlier programs' logs, for Log ▸ Activity only.
     @Published var earlierSessionLogs: [SessionLogEntry] = []
 
@@ -53,6 +63,8 @@ final class AppState: ObservableObject {
 
     @Published var importedWorkouts: [ImportedWorkout] = []
     @Published var isLoadingWorkouts = false
+    /// Why the last workouts load failed.
+    @Published var workoutsError: String? = nil
     /// Confirmed `workout_matches` rows, keyed by imported workout id.
     @Published var workoutMatches: [String: WorkoutMatch] = [:]
     /// Log ▸ Linking's day cards; nil until loaded.
@@ -75,6 +87,8 @@ final class AppState: ObservableObject {
     @Published var progressionReview: ProgressionReview? = nil
     /// `GET /analytics/program` — the methodology scorecard and the chart (Analytics ▸ Progress).
     @Published var programAnalytics: ProgramAnalytics? = nil
+    /// Why the last readiness load failed (Analytics ▸ Recovery says so).
+    @Published var readinessError: String? = nil
     @Published var isLoadingProgramAnalytics = false
     @Published var programAnalyticsError: String? = nil
     /// `GET /analytics/development` — every block, not just this one (Analytics ▸ Development).
@@ -93,7 +107,15 @@ final class AppState: ObservableObject {
     /// Results logged sessions suggest, waiting for the athlete (not results yet).
     @Published var standardSuggestions: [StandardSuggestion] = []
     @Published var philosophies: [PhilosophyCard] = []
+    /// Each methodology's comparable facts, by id (the builder's cards).
+    @Published var philosophyGlance: [String: PhilosophyGlance] = [:]
     @Published var injuryFlagDefs: [InjuryFlagDef] = []
+    /// The athlete's own methods and their builds (`GET /methods`); nil until
+    /// read. The program builder's first step shows them.
+    @Published var methods: MethodsAnswer? = nil
+    /// Equipment the athlete's own methods bring (ServedVocabulary), offered
+    /// by the pickers after the commons'.
+    @Published var servedEquipment: [EquipmentItem] = []
     /// Every exercise the API knows, by id — the reference the exercise sheet
     /// and the swap list read names and prerequisites from.
     @Published var exerciseCatalog: [String: AppExercise] = [:]
@@ -115,6 +137,13 @@ final class AppState: ObservableObject {
     // MARK: - Internal
 
     var api: APIClient?
+    private weak var auth: AuthManager?
+    /// Session logs saved here and not yet taken by the server (`SessionLogOutbox`).
+    @Published private(set) var pendingSessionLogs: [PendingSessionLog] = []
+    private var outboxURL: URL?
+    private var isFlushingSessionLogs = false
+    private var sessionLogRetry: Task<Void, Never>?
+    private var connection: NWPathMonitor?
     private let iso = ISO8601DateFormatter()
     /// Gregorian and POSIX: a phone set to the Buddhist or Japanese calendar
     /// would otherwise write "2569-10-13", which the server rejects.
@@ -130,7 +159,10 @@ final class AppState: ObservableObject {
 
     func configure(auth: AuthManager) {
         api = APIClient(auth: auth)
+        self.auth = auth
         isLoadingProgram = true  // show loading immediately, before the first async load starts
+        useSessionLogOutbox(at: SessionLogOutbox.defaultURL)
+        watchConnection()
     }
 
     // MARK: - Initial Load
@@ -151,6 +183,7 @@ final class AppState: ObservableObject {
         }
         await withTaskGroup(of: Void.self) { group in
             group.addTask { await self.loadProgram() }
+            group.addTask { await self.loadVocabulary() }
             // Today's Development card is the program scorecard. It was loaded
             // once and refreshed only after the phone itself completed a
             // session, so matches from the watch, Garmin or the web, and a
@@ -206,6 +239,7 @@ final class AppState: ObservableObject {
     func loadAllExceptWorkouts() async {
         await withTaskGroup(of: Void.self) { group in
             group.addTask { await self.loadProgram() }
+            group.addTask { await self.loadVocabulary() }
             group.addTask { await self.loadProfile() }
             group.addTask { await self.loadStandardResults() }
             group.addTask { await self.loadStandardSuggestions() }
@@ -228,8 +262,10 @@ final class AppState: ObservableObject {
             importedWorkouts = snapshot.workouts
             workoutMatches = APIClient.matchesByWorkout(snapshot.matches)
             workoutsLoaded = true
+            workoutsError = nil
         } catch {
             if (error as? URLError)?.code == .cancelled { return }
+            workoutsError = error.localizedDescription
             print("⚠️ loadWorkouts failed: \(error)")
         }
     }
@@ -523,7 +559,13 @@ final class AppState: ObservableObject {
         guard let api else { return }
         isLoadingHistory = true
         defer { isLoadingHistory = false }
-        programHistory = (try? await api.fetchProgramHistory()) ?? []
+        do {
+            programHistory = try await api.fetchProgramHistory()
+            historyError = nil
+        } catch {
+            if (error as? URLError)?.code == .cancelled { return }
+            historyError = error.localizedDescription
+        }
     }
 
     /// Writes today's sessions to the shared App Group container so iPhone widgets can display them.
@@ -661,7 +703,10 @@ final class AppState: ObservableObject {
             if let dob = p.dateOfBirth {
                 UserDefaults.standard.set(dob, forKey: "dateOfBirth")
             }
+            profileError = nil
         } catch {
+            if (error as? URLError)?.code == .cancelled { return }
+            profileError = error.localizedDescription
             logger.log("profile: ERROR — \(error)")
         }
     }
@@ -749,32 +794,70 @@ final class AppState: ObservableObject {
         do {
             let logs = try await api.fetchRecentSessionLogs()
             let split = SessionLogScope.split(logs)
-            sessionLogs = split.current
+            // What is saved here and not yet sent stays on top of the server's copy.
+            sessionLogs = SessionLogOutbox.overlay(pendingSessionLogs, owner: sessionLogOwner, on: split.current)
             earlierSessionLogs = split.earlier
             rescheduleNotifications()   // a session completed elsewhere cancels its reminder
             writeHomeWidgets()          // and ticks it on the week widget
         } catch {}
     }
 
-    func markSessionComplete(sessionKey: String) async {
-        guard let api else { return }
-        let completedAt = iso.string(from: Date())
-        // Optimistic update
-        sessionLogs[sessionKey] = SessionLogEntry(
-            sessionKey: sessionKey,
-            completedAt: completedAt,
-            source: "manual",
-            notes: nil,
-            fatigueRating: nil,
-            avgHR: nil,
-            peakHR: nil,
-            matchedWorkoutId: nil
-        )
-        try? await api.saveSessionComplete(sessionKey: sessionKey, completedAt: completedAt)
+    /// Done, on the phone first: the server hears of it in the background
+    /// (`saveSessionLog`). What was logged for its exercises stays.
+    func markSessionComplete(sessionKey: String) {
+        saveSessionLog(sessionKey: sessionKey, completedAt: iso.string(from: Date()))
+    }
+
+    /// A workout the phone's player ran (WorkoutPlayerModel): its log — the
+    /// sets, outcomes, results answer, notes and each step's wall-clock
+    /// window — sent by the session's uid where the server named one, then
+    /// the session done here as `markSessionComplete` does it. False when the
+    /// server did not take it (the player keeps the workout to try again).
+    func finishWorkout(sessionKey: String, sessionUid: String?, log: [String: Any]) async -> Bool {
+        guard let api else { return false }
+        do {
+            if let sessionUid {
+                try await api.saveWorkoutLog(sessionUid: sessionUid, log: log)
+            } else {
+                try await api.saveWorkoutLog(sessionKey: sessionKey, log: log)
+            }
+        } catch {
+            AppLogger.logFromBackground("workout player: save failed — \(error.localizedDescription)")
+            return false
+        }
+        let before = sessionLogs[sessionKey]
+        var entry = SessionLogEntry(
+            sessionKey: sessionKey, completedAt: log["completedAt"] as? String ?? iso.string(from: Date()),
+            source: WorkoutPlayerModel.source, notes: log["notes"] as? String, fatigueRating: before?.fatigueRating,
+            avgHR: nil, peakHR: nil, matchedWorkoutId: before?.matchedWorkoutId)
+        // What the player recorded, here at once: the log form that follows
+        // Save (WorkoutPlayerCompleteView) opens on it whether or not the
+        // reload below gets through.
+        entry.exercises = (before?.exercises ?? [:]).merging(WatchUpload.performances(in: log)) { _, new in new }
+        sessionLogs[sessionKey] = entry
+        if before?.completedAt == nil { justCompleted = sessionKey }
         rescheduleNotifications()
         writeHomeWidgets()
-        // Today's completion is the program scorecard's.
+        await loadRecentSessionLogs()
+        await loadStandardSuggestions()
         await loadProgramAnalytics()
+        return true
+    }
+
+    /// The day a session falls on (yyyy-MM-dd) as the server's today-session
+    /// reads a date: the week by its index from the program's start, the
+    /// session's weekday within it.
+    func sessionDate(weekIndex: Int, dayName: String) -> String? {
+        guard let startStr = serverProgram?.programStartDate, let start = dayFormatter.date(from: startStr) else {
+            return nil
+        }
+        let names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+        let cal = Calendar.current
+        for offset in 0..<7 {
+            guard let d = cal.date(byAdding: .day, value: weekIndex * 7 + offset, to: start) else { continue }
+            if names[cal.component(.weekday, from: d) - 1] == dayName { return dayFormatter.string(from: d) }
+        }
+        return nil
     }
 
     /// The athlete's answer for a training-contract session (clean or not,
@@ -793,27 +876,140 @@ final class AppState: ObservableObject {
         }
     }
 
-    /// Store what was done for one exercise of a session — sets, or the
-    /// slot's currency — locally first, then through the API. A session that
-    /// has no log yet gets one without a completion; completing it later
-    /// keeps the sets (the server merges per exercise).
-    func logExercise(sessionKey: String, exerciseId: String, performance: ExercisePerformanceLog) async {
-        var entry = sessionLogs[sessionKey] ?? SessionLogEntry(
-            sessionKey: sessionKey, completedAt: nil, source: "manual", notes: nil,
-            fatigueRating: nil, avgHR: nil, peakHR: nil, matchedWorkoutId: nil)
-        entry.exercises[exerciseId] = performance
-        sessionLogs[sessionKey] = entry
-        guard let api else { return }
-        do {
-            let standards = try await api.saveExerciseLog(sessionKey: sessionKey, exerciseId: exerciseId,
-                                                          performance: performance)
-            // A test slot's outcome comes back as a suggestion to save.
-            if standards != nil { await loadStandardSuggestions() }
-            // A logged set is a new point on the Progress chart.
-            if programAnalytics != nil { await loadProgramAnalytics() }
-        } catch {
-            AppLogger.logFromBackground("session log: save failed — \(error.localizedDescription)")
+    // MARK: - Session log outbox (design-system §6.16)
+
+    /// The account a log is saved under; nil against a local API.
+    var sessionLogOwner: String? { auth?.account?.id }
+
+    /// The notice for logs that did not reach the server (Today, the session).
+    func sessionLogNotice(sessionKey: String? = nil) -> SessionLogOutbox.Notice? {
+        SessionLogOutbox.notice(pendingSessionLogs, owner: sessionLogOwner, sessionKey: sessionKey)
+    }
+
+    /// Where unsent logs are kept, and what is waiting there. `configure`
+    /// names the app's file; an `AppState` nobody configured (a test) keeps
+    /// them in memory only.
+    func useSessionLogOutbox(at url: URL?) {
+        outboxURL = url
+        pendingSessionLogs = SessionLogOutbox.load(from: url)
+        sessionLogs = SessionLogOutbox.overlay(pendingSessionLogs, owner: sessionLogOwner, on: sessionLogs)
+    }
+
+    /// The session log form's Save, "Mark Session Complete" and its undo:
+    /// written to the phone at once — the screen never waits for the server —
+    /// and sent in the background. Exercises merge per id over what the
+    /// session already has; `completedAt` completes it, `clearsCompletion`
+    /// undoes that and keeps what was logged.
+    func saveSessionLog(sessionKey: String, exercises: [String: ExercisePerformanceLog] = [:],
+                        completedAt: String? = nil, clearsCompletion: Bool = false) {
+        guard !exercises.isEmpty || completedAt != nil || clearsCompletion else { return }
+        let wasComplete = isSessionComplete(sessionKey)
+        setPendingSessionLogs(SessionLogOutbox.merging(
+            pendingSessionLogs, sessionKey: sessionKey, owner: sessionLogOwner,
+            exercises: exercises, completedAt: completedAt, clearsCompletion: clearsCompletion))
+        sessionLogs = SessionLogOutbox.overlay(pendingSessionLogs, owner: sessionLogOwner, on: sessionLogs)
+        if completedAt != nil, !wasComplete { justCompleted = sessionKey }
+        if clearsCompletion, justCompleted == sessionKey { justCompleted = nil }
+        rescheduleNotifications()
+        writeHomeWidgets()
+        Task { await flushSessionLogs() }
+    }
+
+    /// Send what is waiting, one session at a time. A log the server took is
+    /// let go; one that did not get through stays, says so (`sessionLogNotice`)
+    /// and is tried again — after a while, when the app comes forward, when
+    /// the connection returns. One the server refused waits for the athlete.
+    func flushSessionLogs() async {
+        guard let api, !isFlushingSessionLogs else { return }
+        isFlushingSessionLogs = true
+        defer { isFlushingSessionLogs = false }
+        let owner = sessionLogOwner
+        var tried = Set<String>()
+        var sent = false
+        var bearsOnStandards = false
+        while let record = pendingSessionLogs.first(where: {
+            $0.owner == owner && !$0.rejected && !tried.contains("\($0.sessionKey)#\($0.revision)")
+        }) {
+            tried.insert("\(record.sessionKey)#\(record.revision)")
+            do {
+                if !record.exercises.isEmpty || record.completedAt != nil {
+                    let standards = try await api.saveSessionLog(
+                        sessionKey: record.sessionKey, exercises: record.exercises, completedAt: record.completedAt)
+                    // A test slot's outcome comes back as a suggestion to save.
+                    if standards != nil { bearsOnStandards = true }
+                }
+                if record.clearsCompletion {
+                    try await api.clearSessionCompletion(sessionKey: record.sessionKey)
+                }
+                setPendingSessionLogs(SessionLogOutbox.removing(pendingSessionLogs, sent: record))
+                sent = true
+            } catch {
+                AppLogger.logFromBackground("session log: send failed — \(error.localizedDescription)")
+                setPendingSessionLogs(SessionLogOutbox.failing(
+                    pendingSessionLogs, sent: record, error: SessionLogOutbox.describe(error),
+                    rejected: SessionLogOutbox.isRejection(error)))
+            }
         }
+        scheduleSessionLogRetry()
+        guard sent else { return }
+        await loadRecentSessionLogs()
+        if bearsOnStandards { await loadStandardSuggestions() }
+        // A logged set is a new point on the Progress chart; a completion is the scorecard's.
+        await loadProgramAnalytics()
+    }
+
+    /// "Try again" on the notice: everything waiting, the refused ones too.
+    func retrySessionLogs() async {
+        let owner = sessionLogOwner
+        setPendingSessionLogs(pendingSessionLogs.map { record in
+            guard record.owner == owner, record.rejected else { return record }
+            var r = record
+            r.rejected = false
+            return r
+        })
+        await flushSessionLogs()
+    }
+
+    /// "Discard" on a refused log: let it go and show what the server has.
+    func discardSessionLogs(keys: [String]) async {
+        let owner = sessionLogOwner
+        setPendingSessionLogs(pendingSessionLogs.filter { !($0.owner == owner && $0.rejected && keys.contains($0.sessionKey)) })
+        for key in keys { sessionLogs.removeValue(forKey: key) }
+        await loadRecentSessionLogs()
+    }
+
+    private func setPendingSessionLogs(_ pending: [PendingSessionLog]) {
+        pendingSessionLogs = pending
+        SessionLogOutbox.store(pending, to: outboxURL)
+    }
+
+    /// The next try by itself, for what is still waiting and not refused.
+    private func scheduleSessionLogRetry() {
+        sessionLogRetry?.cancel()
+        sessionLogRetry = nil
+        let owner = sessionLogOwner
+        let waiting = pendingSessionLogs.filter { $0.owner == owner && !$0.rejected }
+        guard let attempts = waiting.map(\.attempts).min() else { return }
+        let delay = SessionLogOutbox.retryDelay(attempts: attempts)
+        sessionLogRetry = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+            guard !Task.isCancelled, let self else { return }
+            // Forgotten before the send, which must not cancel itself.
+            self.sessionLogRetry = nil
+            await self.flushSessionLogs()
+        }
+    }
+
+    /// A connection coming back sends what is waiting.
+    private func watchConnection() {
+        guard connection == nil else { return }
+        let monitor = NWPathMonitor()
+        monitor.pathUpdateHandler = { [weak self] path in
+            guard path.status == .satisfied else { return }
+            Task { @MainActor [weak self] in await self?.flushSessionLogs() }
+        }
+        monitor.start(queue: .global(qos: .utility))
+        connection = monitor
     }
 
     /// A planned session located by its key ("<week number>-<Day>-<index>"),
@@ -841,13 +1037,10 @@ final class AppState: ObservableObject {
         return nil
     }
 
-    func undoSessionComplete(sessionKey: String) async {
-        sessionLogs.removeValue(forKey: sessionKey)
-        // The server keeps the sets and notes and clears only the completion;
-        // without this call the completion came back on the next sync.
-        try? await api?.clearSessionCompletion(sessionKey: sessionKey)
-        rescheduleNotifications()
-        await loadProgramAnalytics()
+    /// The server keeps the sets and notes and clears only the completion;
+    /// so does the phone.
+    func undoSessionComplete(sessionKey: String) {
+        saveSessionLog(sessionKey: sessionKey, clearsCompletion: true)
     }
 
     // MARK: - Bio Logs
@@ -868,9 +1061,11 @@ final class AppState: ObservableObject {
         do {
             let result = try await api.fetchReadiness()
             readinessResult = result
+            readinessError = nil
             writeHomeWidgets()
         } catch {
             if (error as? URLError)?.code == .cancelled { return }
+            readinessError = error.localizedDescription
             AppLogger.logFromBackground("readiness: fetch failed — \(error.localizedDescription)")
         }
     }
@@ -924,6 +1119,8 @@ final class AppState: ObservableObject {
 
     func loadBenchmarksIfNeeded() async {
         guard let api, benchmarks.isEmpty else { return }
+        isLoadingBenchmarks = true
+        defer { isLoadingBenchmarks = false }
         benchmarks = (try? await api.fetchBenchmarks(sex: profile.sex)) ?? []
     }
 
@@ -937,8 +1134,57 @@ final class AppState: ObservableObject {
     }
 
     func loadPhilosophiesIfNeeded() async {
-        guard let api, philosophies.isEmpty else { return }
-        philosophies = (try? await api.fetchPhilosophies()) ?? []
+        guard philosophies.isEmpty else { return }
+        await reloadPhilosophies()
+    }
+
+    /// The list again: after a method of the athlete's own was built, revised
+    /// or deleted it is not the list that was read. A failed fetch keeps it.
+    func reloadPhilosophies() async {
+        guard let api else { return }
+        if let list = try? await api.fetchPhilosophies(), !list.isEmpty { philosophies = list }
+        if let glance = try? await api.fetchPhilosophyGlance(), !glance.isEmpty {
+            philosophyGlance = Dictionary(glance.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        }
+    }
+
+    /// The athlete's methods and builds; a failed read keeps what there was.
+    /// Answers whether the read succeeded.
+    @discardableResult
+    func loadMethods() async -> Bool {
+        guard let api, let answer = try? await api.fetchMethods() else { return false }
+        methods = answer
+        return true
+    }
+
+    /// A method was built, revised or deleted: the list of methods, the
+    /// methodologies it is one of, and the vocabulary it may bring are no
+    /// longer what was read.
+    func methodsChanged() async {
+        await loadMethods()
+        await reloadPhilosophies()
+        await loadVocabulary()
+    }
+
+    /// What the athlete's own methods add to the vocabulary (roadmap 21.5): the
+    /// display of each modality they bring, kept where the widgets read too,
+    /// and their equipment for the pickers. A failed fetch keeps what there
+    /// was; a server with none clears it.
+    func loadVocabulary() async {
+        guard let api, let served = try? await api.fetchServedVocabulary() else { return }
+        servedEquipment = served.equipment
+        if ClientVocab.remember(served: served.modalities, replacing: true) {
+            // A session drawn in the fallback colour is now drawn in its own.
+            objectWillChange.send()
+            WidgetCenter.shared.reloadAllTimelines()
+        }
+    }
+
+    /// The cards read without it; a failed load leaves them their words.
+    func loadPhilosophyGlanceIfNeeded() async {
+        guard let api, philosophyGlance.isEmpty else { return }
+        let list = (try? await api.fetchPhilosophyGlance()) ?? []
+        philosophyGlance = Dictionary(list.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
     }
 
     func loadInjuryFlagsIfNeeded() async {
@@ -1002,6 +1248,11 @@ final class AppState: ObservableObject {
         return weeks[idx]
     }
 
+    /// The program's first day.
+    var programStart: Date? {
+        serverProgram?.programStartDate.flatMap { dayFormatter.date(from: $0) }
+    }
+
     /// Whether a session may be added to that day: today or later (a past
     /// day would switch the program's version). The day's date follows the
     /// server's rule — start + week index × 7 + the weekday's place from
@@ -1062,6 +1313,13 @@ final class AppState: ObservableObject {
 
     func isSessionComplete(_ key: String) -> Bool {
         sessionLogs[key]?.completedAt != nil
+    }
+
+    /// Done, as Today shows it: a session just completed stays as it was until
+    /// Today is back on screen, so its card turns emerald in front of the
+    /// athlete rather than behind the sheet that completed it (§6.56).
+    func isShownComplete(_ key: String) -> Bool {
+        isSessionComplete(key) && justCompleted != key
     }
 
     // MARK: - Program Mutations
@@ -1485,6 +1743,15 @@ final class AppState: ObservableObject {
 
     /// All weeks for the full program calendar.
     var allWeeks: [ProgramWeek] { serverProgram?.currentProgram?.weeks ?? [] }
+
+    /// "3-Monday-0" → the planned session, from the loaded program.
+    func plannedSession(forKey sessionKey: String) -> ProgramSession? {
+        let parts = sessionKey.split(separator: "-")
+        guard parts.count == 3, let weekNum = Int(parts[0]), let idx = Int(parts[2]) else { return nil }
+        guard let week = allWeeks.first(where: { $0.weekNumber == weekNum }),
+              let sessions = week.schedule[String(parts[1])], idx < sessions.count else { return nil }
+        return sessions[idx]
+    }
 
     // MARK: - FIT Import
 

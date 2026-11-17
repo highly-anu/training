@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { staggerVariants } from '@/lib/motion'
 
 interface ExerciseCuePointsProps {
   cues: string[]
@@ -7,15 +8,7 @@ interface ExerciseCuePointsProps {
   title?: string
 }
 
-const listVariants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.06 } },
-}
-
-const itemVariants = {
-  hidden:  { opacity: 0, x: -8 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.2 } },
-}
+const { list: listVariants, item: itemVariants } = staggerVariants('loose')
 
 export function ExerciseCuePoints({
   cues,
@@ -65,7 +58,7 @@ export function ExerciseCuePoints({
           <ul className="space-y-1.5">
             {errors.map((err, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                <span className="shrink-0 text-amber-700 dark:text-amber-300 mt-0.5">&#x26A0;</span>
+                <span className="shrink-0 text-warn mt-0.5">&#x26A0;</span>
                 <span className="leading-snug">{err}</span>
               </li>
             ))}

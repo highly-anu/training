@@ -14,6 +14,9 @@ struct SettingsView: View {
     @ObservedObject private var logger = AppLogger.shared
     @ObservedObject private var notifications = NotificationManager.shared
     @AppStorage(AppAppearance.storageKey) private var appearanceRaw = AppAppearance.fallback.rawValue
+    @AppStorage(WatchCueSettings.voiceKey) private var cueVoice = false
+    @AppStorage(WatchCueSettings.leadInKey) private var cueLeadIn = true
+    @AppStorage(WatchCueSettings.countdownStartKey) private var cueCountdownStart = true
 
     @State private var showDebugLog = false
     @State private var diagnosis: WorkoutAccessDiagnosis?
@@ -53,18 +56,16 @@ struct SettingsView: View {
         List {
             // The web Settings' order (information-architecture.md §2):
             // Connections (devices included) · Appearance · Account, with the
-            // phone-only Notifications after Connections and the developer
-            // sections last. The debug log stays in release builds: on the
-            // athlete's own phone it is the only way to read a sync failure.
+            // phone-only Workout and Notifications between, and everything a
+            // developer or a failed sync needs behind one row (§6.13).
             connectionsSection
             devicesSection
             pairGarminSection
+            workoutSection
             notificationsSection
             appearanceSection
             accountSection
-            syncCategoriesSection
-            apiTargetSection
-            debugLogSection
+            diagnosticsSection
         }
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
@@ -122,6 +123,21 @@ struct SettingsView: View {
         }
     }
 
+    // MARK: - Workout
+
+    /// The workout player's cues on this phone (the Apple Watch keeps its own).
+    private var workoutSection: some View {
+        Section {
+            Toggle("Count in before work", isOn: $cueLeadIn)
+            Toggle("Count in after Start", isOn: $cueCountdownStart)
+            Toggle("Voice", isOn: $cueVoice)
+        } header: {
+            Text("Workout")
+        } footer: {
+            Text("The player counts \"3, 2, 1\" with tones and taps before a rest ends and before a timed step starts. Voice also says the count and each step aloud, lowering your music.")
+        }
+    }
+
     // MARK: - Appearance
 
     /// Dark is the default (see AppAppearance); "System" hands control back to iOS.
@@ -141,6 +157,30 @@ struct SettingsView: View {
 
     /// Identity, sign out and account deletion (§6.29).
     private var accountSection: some View { AccountSection() }
+
+    // MARK: - Diagnostics
+
+    /// Sync details, the API target and the debug log, one push away: until
+    /// 1.39 they were three sections under Account on the screen itself. The
+    /// log stays in release builds — on the athlete's own phone it is the
+    /// only way to read a sync failure.
+    private var diagnosticsSection: some View {
+        Section {
+            NavigationLink {
+                List {
+                    syncCategoriesSection
+                    apiTargetSection
+                    debugLogSection
+                }
+                .navigationTitle("Diagnostics")
+                .navigationBarTitleDisplayMode(.inline)
+            } label: {
+                Label("Diagnostics", systemImage: "stethoscope")
+            }
+        } footer: {
+            Text("When each sync last ran, where this build sends its requests, and the debug log.")
+        }
+    }
 
     // MARK: - API target (development)
 
@@ -190,13 +230,14 @@ struct SettingsView: View {
                     ProgressView().scaleEffect(0.8)
                 } else if sync.lastError != nil {
                     Label("Error", systemImage: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.orange).font(.footnote)
+                        .foregroundStyle(AppColor.warning).font(.footnote)
                 } else {
                     Text(sync.lastSyncDate != nil ? "Connected" : "Not synced")
-                        .foregroundStyle(sync.lastSyncDate != nil ? .green : .secondary)
+                        .foregroundStyle(sync.lastSyncDate != nil ? AppColor.complete : .secondary)
                         .font(.footnote)
                 }
             }
+            .accessibilityElement(children: .combine)
 
             // Apple Watch. A TestFlight build can update the phone and leave
             // the watch without the app, so say so and where to install it.
@@ -206,12 +247,13 @@ struct SettingsView: View {
                 if !watchPaired {
                     Text("Not paired").foregroundStyle(.secondary).font(.footnote)
                 } else if !watchAppInstalled {
-                    Text("App not installed").foregroundStyle(.orange).font(.footnote)
+                    Text("App not installed").foregroundStyle(AppColor.warning).font(.footnote)
                 } else {
                     Text(watchReachable ? "Reachable" : "Paired")
-                        .foregroundStyle(watchReachable ? .green : .secondary).font(.footnote)
+                        .foregroundStyle(watchReachable ? AppColor.complete : .secondary).font(.footnote)
                 }
             }
+            .accessibilityElement(children: .combine)
             if watchPaired && !watchAppInstalled {
                 Text("Install it from the Watch app ▸ My Watch ▸ Available Apps. Turn on Watch app ▸ General ▸ Automatic App Install so later builds follow.")
                     .font(.caption)
@@ -231,6 +273,7 @@ struct SettingsView: View {
                     Spacer()
                     Text("Not paired").foregroundStyle(.secondary).font(.footnote)
                 }
+                .accessibilityElement(children: .combine)
         } else {
                 ForEach(garminDevices) { d in
                     HStack {
@@ -241,9 +284,10 @@ struct SettingsView: View {
                             Text(String(last.prefix(10)))
                                 .foregroundStyle(.secondary).font(.footnote)
                         } else {
-                            Text("Paired").foregroundStyle(.green).font(.footnote)
+                            Text("Paired").foregroundStyle(AppColor.complete).font(.footnote)
                         }
                     }
+                    .accessibilityElement(children: .combine)
                 }
                 // The web Devices card's "Last wellness reading" line.
                 if let latestWellness {
@@ -259,19 +303,19 @@ struct SettingsView: View {
             } label: {
                 HStack {
                     Image(systemName: "arrow.clockwise")
-                        .symbolEffect(.rotate, options: .repeating, isActive: sync.isSyncing)
+                        .appSymbolSpin(isActive: sync.isSyncing)
                     Text(sync.isSyncing ? "Syncing…" : "Sync Now")
                 }
                 .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
+            .appButton(.primary)
             .disabled(sync.isSyncing)
 
         } header: {
             Text("Devices")
         } footer: {
             if let err = sync.lastError {
-                Text(err).foregroundStyle(.orange)
+                Text(err).foregroundStyle(AppColor.warning)
             } else if let last = sync.lastSyncDate {
                 Text("Last full sync: \(timeFmt.string(from: last))")
             }
@@ -303,12 +347,12 @@ struct SettingsView: View {
             .disabled(!canClaim)
 
             if let claimError {
-                Text(claimError).foregroundStyle(.red).font(.footnote)
+                Text(claimError).foregroundStyle(AppColor.destructive).font(.footnote)
             }
             if justPaired {
                 Label("Paired! Open the Training app on your watch to sync.",
                       systemImage: "checkmark.circle.fill")
-                    .foregroundStyle(.green).font(.footnote)
+                    .foregroundStyle(AppColor.complete).font(.footnote)
             }
         } header: {
             Text("Pair Garmin Watch")
@@ -368,7 +412,7 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(result.summaryLine)
                 .font(.caption)
-                .foregroundStyle(result.total == 0 ? Color.orange : Color.secondary)
+                .foregroundStyle(result.total == 0 ? AppColor.warning : Color.secondary)
 
             ForEach(result.sources, id: \.bundle) { source in
                 HStack(spacing: 6) {
@@ -381,7 +425,7 @@ struct SettingsView: View {
                         .font(.caption2).fontWeight(.semibold)
                     Text(source.disposition)
                         .font(.caption2)
-                        .foregroundStyle(source.disposition.hasPrefix("skip") ? Color.secondary : Color.green)
+                        .foregroundStyle(source.disposition.hasPrefix("skip") ? Color.secondary : AppColor.complete)
                 }
             }
 
@@ -661,11 +705,11 @@ struct SettingsView: View {
     private func logEntryRow(_ entry: AppLogger.Entry) -> some View {
         HStack(alignment: .top, spacing: 6) {
             Text(monFmt.string(from: entry.date))
-                .font(.system(size: 10, design: .monospaced))
+                .font(AppFont.mono)
                 .foregroundStyle(.secondary)
-                .frame(width: 58, alignment: .leading)
+                .frame(minWidth: 58, alignment: .leading)
             Text(entry.message)
-                .font(.system(size: 11, design: .monospaced))
+                .font(AppFont.mono)
                 .foregroundStyle(.primary)
                 .fixedSize(horizontal: false, vertical: true)
         }

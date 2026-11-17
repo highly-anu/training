@@ -54,7 +54,12 @@ deferred is under *Later*.
 | 15 | Program preview on the phone; the regenerate offer that asks the server first (*IA*) | P2 | M | iOS, web |
 | 16 | Garmin's official Connect API, open again since 2026-10-21: verify the integration, then health data and workouts pushed to the watch | P2 | M | API, watch, web, iOS |
 | 17 | Explore: each philosophy's page read from its package — a server document, its week and rules, one colour system | P2 | M | API, web, iOS, content |
-| 18 | Levels: every package from novice to elite — all eleven done 2026-11-08; what is left is listed under Open | P2 | S | engine, content |
+| 18 | Phone design and interaction uplift: the foundation (1.35), states (1.36), iOS 26 chrome (1.37), discoverable actions (1.38), the screen passes (1.39), motion (1.40) and accessibility with the system surfaces (1.41) are in (*IA*) | P2 | L | iOS |
+| 19 | Web design and interaction uplift: the phone's design language on the web, each rule in one module and held by a test — the foundation, states, feedback, motion, actions and keyboard, colour and accessibility, the page passes and the review fixes are in (*IA*) | P2 | L | web |
+| 20 | LLM package builder — the foundation: all twelve steps are in (the gate, the overlay, storage, per-athlete reference routes, package vocabulary, the spec, the trace and the Dev Lab). Left: the phone reading a package's vocabulary, migration 013 on production, the builder itself | P1 | L | engine, API, web, content |
+| 21 | LLM package builder: an athlete describes a method and gets one to build a program from, on the web and the phone — dev role first. The gate (21.1), the durable job (21.2), the model loop (21.3), the web's screens (21.4), the phone's vocabulary (21.5) and its screens (21.6) are in; and the Dev Lab's builds view (21.7) are in; the eval against the real model and the production steps are open | P1 | L | API, web, iOS, watch |
+| 22 | Pre-workout briefing: before a session, today's numbers beside the earlier times the same session was done, its place in the cycle and one suggestion — declared by the package (`briefing.yaml`), built on the server. The server and Wildman's file (22.1) the phone's screen (22.2), the web's block (22.3) and the reading of every package's default (22.4) are in | P2 | M | engine, API, iOS, web, content |
+| 23 | Levels: every package from novice to elite — all eleven done 2026-11-08; what is left is listed under Open | P2 | S | engine, content |
 
 ---
 
@@ -998,7 +1003,8 @@ Left — what a package still cannot bring in its folder, none of it naming a pa
 The list is `tools/portability_gaps.json` (each gap anchored in the code;
 `test_portability.py` fails when an anchor goes, so a closed gap changes its status
 there), shown per package beside the matrix of what each has in and outside its folder
-on Dev Lab ▸ Model Interactions (`GET /api/dev/portability`, `src/portability.py`).
+on Dev Lab ▸ Builder readiness (`GET /api/dev/portability`, `src/portability.py`; on Model
+Interactions until 2026-11-13).
 Today: the code is package-neutral, the repository is not yet drop-in. In order:
 - **9.1 One command to onboard a folder (S).** Done 2026-10-30 (branch `feat/add-package`):
   `tools/add_package.py <id>` checks the folder (schemas, no id another package declares,
@@ -1122,7 +1128,7 @@ the new tracks in both builders and on both watches; close editing paths (moving
 session) that can break module spacing; generalise catalog reachability
 (`check_exercise_coverage.py`) to every package once each is on a contract.
 
-**6. Then the Dev Lab (S–M).** The Impact tab over `POST /api/dev/constraint-impact`
+**6. Then the Dev Lab (S–M).** Done 2026-11-13 as item 20's steps 20.9–20.12. The Impact tab over `POST /api/dev/constraint-impact`
 and the trace's per-candidate reasons — the step-1 report seen per program.
 
 ### 10. Progress tracking: what phases A–E left open — P2 · M
@@ -1569,7 +1575,635 @@ workouts that fit as written), and the session counts only once done. Not yet: a
 the watches themselves, and a Garmin-side resync after a phone add (the Garmin app reads the
 added session at its next sync).
 
-### 18. Levels: every package from novice to elite — P1 · L
+### 18. Phone design and interaction uplift — P2 · L
+
+A review of every phone screen on 2026-11-11 (about 60 screens and sheets) against
+`ios/docs/design-system.md` and the iOS 26 SDK the app already targets. Decided with the
+athlete: the amber accent as designed, with modality, phase, zone and status colours
+unchanged; every hidden action gets a visible twin and keeps its gesture; Liquid Glass on
+chrome and floating controls, content cards solid. The five tabs and their sections stay.
+Seven phases, each one PR ending in the simulator with the design system updated.
+
+**Done — 1. Foundation** (1.35.0, `feat/ios-design-foundation`). The system exists in code:
+`AppColor`, `AppFont` (`AppTheme.swift`), the `AppMetrics` scale, three `AppAnimation`
+springs that crossfade under Reduce Motion, one card (`AppCard` / `.appCard()`, radius 16),
+one `SectionLabel`, one button family (`.appButton`). `AccentColor` is amber in all four
+targets (it was empty: the app shipped system blue). `DesignTokenTests` fails on a fixed
+font size, a colour literal, a bare `withAnimation`, a curve or a button style outside
+their owners. Design-system §2, §4, §5, §6.4, §6.6, §7 rewritten to what ships.
+
+**Done — 2. States** (1.36.0, `feat/ios-states`). `Views/AppStates.swift`: one reading of
+a load (`AppLoadPhase`), `AppLoadingState` (the screen's shape, redacted), `AppEmptyState`,
+`AppFailedState`, `AppErrorBanner`. A failed program load says so on Today, Program and
+Overview with Try again (it read "No Program"); History, Log ▸ Activity, a history
+version, Profile and Recovery got the error state they lacked; eight hand-built empty
+states and every full-screen spinner are gone. Design-system §6.3, §7.3.
+
+**Done — 3. Navigation and chrome** (1.37.0, `feat/ios-chrome`). The `Tab` API, the bar
+shrinking on a scroll; the kept workout as the tab bar's accessory on every tab (it was a
+card on Today); `.appActionBar` and `AppFloatingControls` — the four bottom bars and the
+player's controls in glass, cards solid; `AppNavigation.swift`: sheet heights by content,
+exercise reference and swap pushed inside a sheet, zoom from a session card, an Analytics
+card, a workout row, Start workout and the accessory. The sub-tab picker stays an inset
+(`safeAreaBar` still blurs the title on 26.2). Design-system §6.45, §6.47, §6.48.
+
+**Done — 4. Discoverable actions** (1.38.0, `feat/ios-actions`). Every swipe and long
+press has a visible twin: "…" on session cards and Calendar rows and "+ Add session" on a
+rest day; Today's days and the Calendar's weeks as `AppPager` with chevrons, a title that
+returns to today, and Today's `WeekStrip`; a log circle and "…" on exercise rows; "…" in
+Log ▸ Linking, on a standard's results; remove buttons on logger sets and custom injuries
+(per row, not an `EditButton`: those toolbars are taken); schedule chips as menus;
+`MeasureRow` one push target with a chart button; the Progress chart's readout shown
+before the first touch; two TipKit tips. Design-system §6.43, §6.49–§6.52.
+
+**Done — 5. Screen passes** (1.39.0, `feat/ios-screens`). Today is `Views/Today/`: the
+day's session as the hero card with Start workout on it, the inbox, Readiness / Adherence
+/ Progress as three tiles; the pager is as tall as its page and titled with the date. The
+builder is `Views/ProgramBuilder/`, a file a step: a step indicator, the glance facts on
+each methodology card (the phone now reads `/philosophies/glance`), Next / Preview program
+in the action bar. Session detail folds done-as-written, notes and fatigue into "After the
+session". A workout's charts share one scrubber with a readout line. Profile's selection
+cards and zone bar, Settings' Diagnostics row, `.searchable` in Replace, activity names
+capitalised in Linking. Design-system §6.10, §6.13, §6.49, §6.53–§6.55.
+
+**Done — 6. Motion** (1.40.0, `feat/ios-motion`). `AppMotion.swift` owns the small
+motions, each one modifier and still under Reduce Motion: numbers roll (Today's tiles,
+readiness, Load's totals, done of scheduled), symbols answer a state (the log circle, mark
+complete, linked pairs, the week strip's marks, pause / play), the card stacks of Today and
+Analytics ease in at the scroll's edge, and all 17 charts draw themselves once. Finishing a
+session is shown when Today is next seen (`AppState.justCompleted`): the card's stripe
+turns emerald, its check scales in, the week strip's dot fills. `DesignTokenTests` keeps
+`.contentTransition(`, `.symbolEffect(` and `.scrollTransition(` to that file.
+Design-system §7.5, §6.56.
+
+7. *Accessibility and system surfaces* (1.41.0). `AppAccessibility.swift`: 44 pt targets,
+   several texts read as one fact, every chart's numbers as its value (`ChartSummary`), a
+   symbol beside a colour-only status under Differentiate Without Colour, and rows that
+   stack at the accessibility sizes — every tab was laid out at the largest. The widgets
+   draw in the tinted and clear modes, Today comes to the Lock Screen and Week Count is
+   new there; the Live Activity has Pause / Resume and Skip, run in the app by
+   `WorkoutRemote`. Design-system §6.57, §6.58, §6.44. Not seen in the simulator: the
+   widgets on a Home or Lock Screen, the Live Activity's buttons (only the island's
+   compact form), and Differentiate Without Colour, which `simctl` cannot switch on —
+   check them on a phone.
+
+Not in it: the `@Observable` migration (118 `@Published`, no visible change), Control
+Centre controls, App Shortcuts.
+
+### 19. Web design and interaction uplift — P2 · L
+
+The phone's uplift (item 18) left the two clients apart: the phone has a design language,
+one helper per rule and a test that fails on a breach; the web had a long design document
+whose rules lived in prose and copied class strings. Measured on 2026-11-11: ten durations
+typed inline in 31 files and a page transition pasted about twenty times whose exit never
+ran; six loading looks, three retries in the whole app, no error boundary; no toast, no
+optimistic write, three pending styles, four destructive actions with neither a
+confirmation nor an undo; a session card that is mouse-only with its complete toggle behind
+hover; six hand-copied tab selectors; emerald meaning done and six other things; 14 of 17
+chart files with no text alternative.
+
+Decided with the athlete: an action answers **in place**, and a toast appears only where
+the result leaves the screen (the undo of a removal, a background save that failed); the
+four themes stay, and "do this" and "done" become tokens each theme keeps apart; mobile web
+fixes what is broken (a drawer that starts closed, slides, traps focus and closes on
+Escape; 44 px targets; nothing behind hover) and gets no bottom tab bar. Seven phases, one
+PR each, each updating `docs/frontend-design.md`, adding its row to that document's rules
+table (§1.8) and its line to `frontend/test/designRules.test.ts`.
+
+**Done — 1. Foundation** (`feat/web-foundation`). `lib/motion.ts` is the only file that
+writes a duration, an easing or a spring — the phone's presets by name (`springStandard`,
+`springSnappy`, `layoutChange`, `crossfade`, `chartEntry`) and the props built on them
+(`riseIn`, `pressMotion`, `collapseMotion`, `stepVariants`…); `globals.css` carries their
+CSS twins (`--motion-fast|base|slow`, `ease-standard`, `ease-exit`) and one
+`prefers-reduced-motion` block for everything outside Framer (sheets, dialogs, popovers,
+CSS transitions). `components/layout/Page.tsx` is every routed page's root and
+`RootLayout` keys the outlet by path, so the page leaving runs its exit — un-keyed, it
+never had. Sheets open in 250 ms and close in 150 (they took 500 and 300 beside pages at
+250 and 150). `--action` and `--done` exist in every theme; Military's olive and Zen's
+sage primaries sat 33° and 10° of hue from emerald, so a primary button read as a finished
+one — Military's is khaki and Zen's clay now, and `semanticContrast.test.ts` holds 55° of
+hue between the two and AA for the text on each. `--destructive-foreground` is defined (the
+button's text colour resolved to nothing). `test/designRules.test.ts` reads the sources
+and fails on a transition, duration or easing outside `lib/motion.ts`, a `duration-200`
+or `ease-in-out` class, and a page that writes its own transition. Frontend-design §1.7
+(the design language), §1.8 (every rule in one table) and §9 rewritten to what ships.
+
+**Done — 2. States** (`feat/web-states`). `components/shared/states/`: `loadPhase` (content
+is never replaced by a reload or its failure), `LoadingState` (skeletons in the shape of
+what is coming — the one loading look, where there were six), `FailedState` ("Could not
+load", the message, Try again), `QueryState` around a query; `ErrorBanner` takes `onRetry`
+for a reload that failed over content; `RouteErrorBoundary` keeps the sidebar when a page
+throws. Every page and tab reads through them, and the ones that had no state got one:
+Analytics ▸ Load drew zeros until its summary answered, Program said "No program generated
+yet" while loading and when the load had failed, a workout that could not be fetched read
+"Workout not found", Today's Readiness card read "Ready" before any score, Explore's
+archetypes and exercises, Profile's injuries and standards, the builder's philosophies and
+Today's widgets had no failed state. Retries went from three to every failed state. The
+only spinners left are `Spinner` in a working button and `Working` beside the words of a
+running action (`ui/spinner.tsx`); `LoadingCard` and `DumbbellLoader` are gone. The dashed
+border stays where it means absent or optional and the test lists those files. Design test:
+*three states before content*. Frontend-design §11.2–11.3.
+
+**Done — 3. Feedback** (`feat/web-feedback`). `Button` takes `loading` (the spinner in the
+icon's place, the label unchanged; there were three pending styles and labels that turned
+to "Saving…"), and every pending button uses it. `lib/toast.ts` over sonner with two uses
+only — `toast.undo` and `toast.failed` — and `Toaster` in the theme's surface colours.
+Removing an imported workout no longer happens without a way back: the row leaves, the
+server is told when the six-second Undo closes; removing an added session can be undone
+the same way. Disconnecting Garmin or Strava asks first (`ConfirmDialog`, saying what stops
+and what stays). Deleting a result and confirming or dismissing a suggestion show at once
+and roll back with a toast when the write fails. Completing a session scales its check in
+(`DoneMark`) and is said to a screen reader (`announce`, `LiveRegion`). Design test: *every
+action answers*. Frontend-design §11.5–11.8. Left for 4: a new link's row settling in
+Log ▸ Linking, and Today's first card arriving after Start, which need the list motion.
+
+**Done — 4. Motion** (`feat/web-motion`). `components/motion/`: `RollingNumber` (Load's
+totals under a period switch, Today's adherence and readiness), `TabPanels` (Log,
+Analytics, Profile, Settings), `Collapse`, `PresenceList`, `Stagger`. `SubTabs` replaces
+the six tab selectors — a tablist with arrow keys, a pill that slides to the selection,
+44 px on touch — and `PageHeader` the eleven hand-written headers; Profile's section moved
+into `?tab=`. Every chart series draws through `useChartEntry` (one timing, off under
+Reduce Motion; there were three regimes and eight series switched off). The navigation
+under `md` is a drawer on `ui/sheet` that starts closed, where a persisted flag used to
+open an overlay over every page on a phone. Design test: *what changed, and where it came
+from*. Frontend-design §11.9, §12.1, §13.1, §17.2–17.5. Not done, and left to the page
+passes (7): the session card growing into its side panel by a shared `layoutId`, a new
+link's row settling in Log ▸ Linking and Today's first card arriving after Start —
+`PresenceList` and `Stagger` exist and have no caller yet.
+
+**Done — 5. Actions** (`feat/web-actions`). Today's week grid: each session card is one
+stretched button with a "…" menu (Open · Mark complete · Move to a day) and an
+always-visible complete toggle, where the card was a `div` with `onClick` and the toggle
+appeared on hover; the drag has a keyboard (Space, arrows, Space) with announcements, and
+un-completing from the grid now reaches the server (it only ever cleared the local tick).
+`WorkoutRow` the same shape. Focus ring, press and the 44 px touch target are three
+blocks in `globals.css`; `Tip` replaces `title` on buttons and shows shortcuts; `g` +
+letter, `[` `]` and `?` come from `lib/shortcuts.ts`; scrollers keep their place per
+history entry (`lib/useScrollRestore.ts`). Design test: *nothing behind hover*.
+Frontend-design §11.10. Left to the page passes: scroll restoration for Explore's and
+Profile's inner panels, Workout detail and Preview; a keyboard drag in Log ▸ Linking
+(select-then-pick is its twin today).
+
+**Done — 6. Colour** (`feat/web-colour`). Done is the `--done` token and a verdict
+`--good` / `--warn` / `--bad`, each theme's own and AA as text on the page, a card and its
+own tint (the contrast test computes it from the CSS; the light `--done` was darkened to
+pass). The 136 raw emerald and green classes are gone, and every hex literal left the
+components for a named constant (`lib/dataColors.ts` beside the modality, phase, zone and
+movement modules). All 17 chart files draw inside `ChartFrame`, one image whose name is
+what it draws and its numbers in the phone's words (`lib/chartSummary.ts`). A skip link,
+one `h1` a page (Today had two), form labels tied to their controls, and
+`eslint-plugin-jsx-a11y` in the lint. Design test: *hue is data, emerald is done*.
+Frontend-design §8.3, §8.8, §8.12, §12.11. Left: about 150 amber, red and orange classes
+that are notices rather than verdicts keep their `-700 dark:-300` pairs; focus returning
+to a sheet's trigger is Radix's own and was not re-tested per sheet.
+
+**Done — 7. Page passes** (`feat/web-pages`). Every page read at 390 px: no page scrolls
+sideways and each has one `h1`; Today's week, seven columns squeezed into a phone, now
+scrolls in its own strip and opens on today. The amber, red and orange notice classes
+phase 6 left are the `warn` and `bad` tokens (32 files), a recorded workout's metric icons
+are named data (`METRIC_ICON`), and the design test fails on a raw warm hue outside the
+colour modules. Explore's topics, Profile ▸ Standards and the Settings tabs keep their
+scroll per history entry (`ScrollPanel`), as do WorkoutDetail and the preview.
+Frontend-design §16 is now the reading order for a page, each line a row of §1.8; CLAUDE.md
+lists the web's helpers. Not done, and not planned as phases: the session card growing into
+its side panel (shared `layoutId`), `PresenceList` and `Stagger`, which exist and no page
+uses yet, a keyboard drag in Linking (select-then-pick stands in), `PageHeader` on
+ProgramHistoryDetail and WorkoutDetail's own header bars. Not checked on a device: the
+44 px touch targets under `pointer: coarse`, OS Reduce Motion, and the Light, Military and
+Zen themes page by page (their contrast is computed, their look was not reviewed).
+
+**Done — review fixes** (`feat/web-review`, after six reviews of the stack). On touch the
+week card's "…" and complete toggle shared one 44 px target (a tap on the menu completed
+the session): they take opposite corners. A replace keeps a panel's scroll. Analytics ▸
+Load keeps the last period's answer while another loads or fails; a failed workout
+request is an error, not "not found"; a failed session-log load is not "nothing recorded";
+a failed disconnect says so. Program saves are serialised and an undone removal returns to
+its index. The leaving page keeps its location; the drawer closes when the window passes
+`md`; a refused correction is answered in its row; shortcuts wait for an open select;
+`RollingNumber` reads "1,234" and "4:58"; Light's `--warn` moved off the red's hue. Left: a
+workout removed inside the undo window is not deleted when the tab is closed at once (the
+request needs the token, read asynchronously — a `keepalive` send with a cached token);
+shortcuts during a keyboard drag; `QueryState` has no caller.
+
+**2. States.** `components/shared/states/`: one reading of a load (`loadPhase` — content is
+never replaced by a reload or its failure), `LoadingState` (the one loading look, in the
+content's shape), `FailedState` with Try again, `ErrorBanner` with a retry, `QueryState`
+around a query; a route error boundary that keeps the sidebar. Every page and tab that
+lacks a loading or failed state gets one; the hand-made spinners, "Loading…" lines and
+dashed empty blocks go.
+
+**3. Feedback.** `Button`'s `loading` prop in place of the three pending styles; the one
+toast (undo, failed background save); a confirmation that names what stops for a
+disconnect, an undo for a removal; the completion moment (stripe, check and week dot in
+one spring); optimistic standards results with rollback; pending and saved announced.
+
+**4. Motion.** `components/motion/` — a number that rolls when it changes, lists whose
+rows arrive and leave, a collapse, tab panels that crossfade by direction; one `SubTabs`
+(a tablist with arrow keys and a pill that slides) for the six copies and one `PageHeader`
+for the eleven; charts drawn once through `lib/chartMotion.ts` and still under Reduce
+Motion; the mobile drawer; a detail that grows from the card that opened it.
+
+**5. Actions, keyboard and touch.** A visible twin for every hover-only control and a "…"
+menu holding Move · Replace · Remove as on the phone; every clickable `div` a button with
+a focus ring, a press state and a 44 px touch target; tooltips with names for icon
+buttons; drag and drop from the keyboard; scroll restored per route; a few shortcuts.
+
+**7. The page passes.** Each page against the rules table, in sidebar order, at desktop
+and 390 px in two themes; §16's checklist rewritten to point at §1.8.
+
+Not doing: a bottom tab bar on mobile web; new modality or phase colours; in-app motion or
+density settings; a number computed on the client.
+
+### 20. LLM package builder: the foundation — P1 · L
+
+The next feature is a builder: an athlete describes a method, a model writes a whole
+package, and the running app picks it up. Item 9 made the *code* package-neutral and a
+folder droppable into a checkout; this item is what stands between that and a package
+written while the app runs. Analysed on 2026-11-13 — what holds: no code names a package,
+generation re-reads the packages on every call, `mcp_server.py` writes and validates a
+whole folder (a local developer process), standards live in the package. What does not is
+the list in `tools/portability_gaps.json`, each gap anchored in the code and citing its
+step here, shown on **Dev Lab ▸ Builder readiness** (`GET /api/dev/portability`).
+
+Decided with the athlete: a built package is **for any user and private to its owner**,
+stored in Postgres and laid over the shipped packages for that athlete only; a package
+**may bring its own vocabulary** (modalities, movement patterns, equipment) in its folder,
+as it already brings its standards; the Dev Lab is refreshed to the engines that run and
+says where the foundation stands. The builder itself (the model, its prompt, its screen)
+is planned once this is in.
+
+Stays the engine's, by design: slot types, progression and contract models, phase kinds,
+levels, intensities, watch templates and icons (compiled into the watches).
+
+Readiness, in order:
+
+- **20.1 The gaps recorded and shown (S).** Done 2026-11-13: twenty open gaps in
+  `tools/portability_gaps.json` (a gap now closes as `done` with the day and the test
+  that holds it), the Builder readiness tab (`components/devlab/ReadinessPanel.tsx`) —
+  the steps with their gaps, then the per-package table that was on Model Interactions.
+- **20.2 Callable gates (M).** Done 2026-11-13: `src/package_gate.check_package(folder)`
+  → `{ok, problems: [{stage, code, file, message}], warnings, ran, skipped, tracks}`, the
+  stages in order and each only when the ones before found nothing — files (a
+  philosophy whose id is the folder's), schema (`validate_entities`), ids (the files a
+  package needs, collisions, the commons: `portability.problems`, add_package's checks
+  moved there), smoke (every track and phase validates and generates on its framework and
+  places its tests: `src/package_smoke.py`, check_styles' loop, which now calls it),
+  provenance (`audit_program`, check_provenance's, on the smoke run's programs). About a
+  second a package. `mcp_server.validate_package` answers from it. A folder outside the
+  loader's packages directory is checked as far as its schema and the rest is `skipped`,
+  never passed — the overlay (20.3) lifts that. `test_package_gate.py`.
+- **20.3 Roots, overlay, quarantine, caches (L).** Done 2026-11-13. The loader reads the
+  shipped root and, for the caller in context, an overlay of its own (`loader.overlay`,
+  a context variable set for a request or a job and always reset — a reused server thread
+  sees nothing of the caller before it, a thread started inside a view inherits none);
+  every module reaches a package through `package_dirs` / `package_dir` /
+  `package_files`. The overlay only adds: a folder named as a shipped package is set
+  aside, a shipped framework, archetype, philosophy or media id keeps the shipped copy,
+  and the gate takes `owner_prefix` — every id an athlete's package declares for itself
+  carries it (an exercise may instead be one a shipped package declares). An overlay
+  package that does not load is set aside whole (`loader.quarantined`); the shipped root
+  stays fail-fast. What a module keeps from the packages is kept per view
+  (`loader.view_store`, `scoped_cache`; the four most recent overlays) and
+  `api.invalidate_package_data()` forgets all of it. An overlay directory is immutable: a
+  changed set is a new directory. Without an overlay the loader returns exactly what it
+  did (the one-track golden programs unchanged). Nothing names an overlay for a request
+  yet — storage does (20.5). `test_package_overlay.py`.
+- **20.4 Reference routes per athlete (M).** Done 2026-11-13. `api.static_json` reads the
+  bearer token when there is one (`auth.optional_user_id`, never an error) and asks the
+  store for that athlete's overlay. None — nobody signed in, no package — is the shared
+  answer, from the build, exactly as before. With one, the route is built in their view
+  (one build at a time, as the shared ones) and kept in `_USER_STATIC`: at most 96
+  answers and 12 MB, least recently used first out, keyed by the overlay directory, whose
+  name is the athlete's packages' revisions — an install or a removal is a new key, so
+  nothing is cleared and the build is never abandoned. Sent `Cache-Control: private,
+  no-cache` and `Vary: Authorization`; a route their packages do not change keeps the
+  shared bytes. The store reads on the thread's read connection (a new one per athlete a
+  minute would have used up the pooler). `test_static_cache.py`.
+- **20.5 Storage and install (M).** Done 2026-11-13 (migration 013 **not yet run on
+  production** — `scripts/backup_prod.sh` first; until then `src/package_store.py` makes
+  the table lazily, row security on and no policy). `user_packages`: one row per athlete
+  and package, a capped file map of YAML text (200 files, 512 KB, only the paths a
+  package holds; 20 packages an athlete). The store lays an athlete's set out as folders
+  under `TRAINING_USER_PACKAGES_DIR` (the temp directory without it) in a directory named
+  from every (package, revision) — built beside the old one and renamed in, the same from
+  any process — and `require_auth` names it as the request's overlay (`auth._as_user`:
+  asked only when a loader runs, at most one query a minute per athlete and process,
+  always reset; the Garmin worker names it for its own thread). `POST /api/packages`
+  `{files}` runs every gate with the owner's prefix (`u<8 hex>_`) and the athlete's other
+  packages beside it, stores it when it passes and answers 422 with the gate's problems
+  when not (`dry_run` checks only; one at a time, 429 `busy`); `GET /api/packages` (with
+  the prefix and the limits) and `/<id>` (its files); `DELETE` removes — the row is kept
+  and marked — and answers 409 `in_use` while the athlete's program is built from it.
+  All behind the authoring gate until the builder ships. Account deletion empties the
+  table like every public table with a `user_id`. Found on the way: the validator's
+  cross-file checks raised on a sibling file that does not parse; they report now.
+  `test_private_packages.py`.
+- **20.6 Vocabulary: movement patterns and modalities (M).** Done 2026-11-13. A package's
+  optional `vocabulary.yaml` (`docs/schemas/vocabulary.schema.json`,
+  `loader.load_vocabulary`, kept per view): `modalities` — each a modality (recovery
+  cost, session position, progression model, `display`) with the analytics `family` it
+  rolls up into — and `movement_patterns` — each with the body `regions` it loads and the
+  injury flags that rule it out (`excluded_by`, required: `[]` is an answer). The loader
+  adds the modalities after the commons' (tagged `_package`), regional recovery reads the
+  patterns, `families.family_of` the family, and a pattern joins its flags' excluded
+  patterns. Known to a package = the commons ∪ its own ∪ what it borrows from
+  (`portability._known_for`; movement patterns are now checked like modalities); an id
+  the commons define is refused by the validator and collides in the report; an
+  athlete's own must carry the owner's prefix. A modality's `display` is required
+  (`modality.schema.json`), so `POST /api/modalities` cannot write one the clients'
+  generator dies on. The web draws a modality no build knows from `GET /api/modalities`
+  (`lib/modalityColors.registerModalities`; its tint must be a colour family the commons
+  use, and an unknown id answers a neutral style instead of `undefined` — 26 lookups
+  would have thrown). The phone keeps its neutral fallback (gap `client_vocab_compiled`).
+  Three schema texts no longer invite an undeclared modality or pattern.
+  `test_package_vocabulary.py`.
+- **20.7 Vocabulary: equipment (M).** Server and web done 2026-11-13; **the phone is
+  left**. `vocabulary.yaml` `equipment` (id, label). The four schemas' equipment enums
+  stay generated from the commons; the validator widens them, for a package's files, by
+  what that package and the ones it borrows from add (`_with_package_equipment`).
+  `equipment.items()` and `GET /api/equipment` list them after the commons' with their
+  `package`; Explore's equipment vocabulary and the gate's "everything" athlete include
+  them; an id or alias the commons list is refused. Web: the pickers (builder, Explore ▸
+  Equipment) and Profile ▸ Equipment file them under "From your packages"
+  (`lib/useEquipmentVocabulary.ts`), `equipmentLabel` says the package's word, and the
+  equipment request goes through the API client so it is the athlete's. Left (gap
+  `client_vocab_compiled`): the phone and the watches read only their generated tables —
+  a package modality draws neutral there, and the phone's picker cannot offer a package
+  implement — until the Apple targets read `/api/modalities` and `/api/equipment`.
+- **20.8 One package spec; a package from nothing (M).** Done 2026-11-13.
+  `docs/schemas/PACKAGE_SPEC.md` — what a package is, the files, how a week is built
+  (which shape to start with), what goes in each file, every valid value, the gate, an
+  athlete's own package, common mistakes, a worked example — in the one part of `docs/`
+  the image carries. Its lists (files, values, gate stages, limits) and its example are
+  written by `tools/gen_package_spec.py` from the commons, the schemas, `portability.FILES`,
+  the gate and the store; `--check` is a push gate. Served by `GET /api/dev/package-spec`
+  (whole and by section, with the asker's prefix and the limits) and the MCP server's
+  `get_package_spec`. The MCP skeleton's comments print their value lists from the schemas
+  when asked (the typed copy lacked `as_written`); `list_valid_values` answers the sets
+  the checks use. `test_packages/scratch_minimal` is the example: written from nothing,
+  its own exercises, modality, movement pattern and implement. It goes through
+  `test_package_gate.py`, the drop-in test's end-to-end checks, and an install for one
+  athlete in a running process (`test_private_packages.py`). `test_package_spec.py`.
+
+The Dev Lab, independent of 20.2–20.8:
+
+- **20.9 The trace says what each engine decided (M).** Done 2026-11-13
+  (`generate?trace=1`). Every week says its `engine` (`scheduler`, `week_templates`,
+  `training_contract`, `composition`) and its `tests` (placed, skipped with why). A
+  contract's week: `scheduler.contract_week` — each module's minutes, period week, step,
+  model and deload, the placement chosen and the next best with their scores (days stacked
+  or shared with another track, same-modality days back to back, regions loaded close, the
+  spread), optional work left short, the test — and each session's `module_steps` (step,
+  variant, light day, rounds, lifts). A template's week: `scheduler.template` — the days
+  kept and dropped, and per day every pool asked, where its rotation stood, what was
+  passed over (done in the last week, or does not fit as written) and what was taken. A
+  templated session's reason is `week_template` with its `category` (the category used to
+  stand as the reason); a test session carries `test` (what it measures, what it stands in
+  for). A composition: each track's own decisions (`lane_weeks`) and the kept days. The
+  program is the same with or without the trace (`test_devlab_trace.py` holds it, with a
+  composition scenario). Left: why a passed-over workout does not fit (level, equipment,
+  injury or minutes).
+- **20.10 Pipeline Trace per engine (M).** Done 2026-11-13. The Schedule step's card and
+  the pipeline flow draw what built the week from one module (`components/devlab/
+  EngineWeek.tsx`, `engine.ts`): a contract's modules (minutes, step, model, deload), its
+  placement and why it beat the next best; a template's days kept and dropped, each
+  pool's rotation, what was passed over; a composition's tracks, each with its own. The
+  scheduler's allocation shows only where the scheduler ran. The form takes a second
+  track (a composition), lists the vocabulary's equipment (it typed thirty ids) and can
+  be linked to (`/dev?philosophy=…&track=…&second=…&days=…&equipment=all&step=schedule&
+  run=1`). A session says its test, its modules' steps, its track, what it stands in
+  for and its `preferred` score; days are in the week's order (they were alphabetical);
+  the Output step lists compromises, the coverage counts and what the constraints held
+  back. Step texts no longer say validation always runs first or that the scheduler
+  places blends. Left: a contract track's `options` are not asked in the form.
+- **20.11 Model Interactions from data (M).** Done 2026-11-13. `tools/model_map.json`:
+  the parts and eleven interactions — a track and its phases, a contract's week, a
+  template's week, the scheduler's allocation and its archetype score, slots and
+  exercises, loads, compositions, tests, the athlete's constraints, which packages a
+  caller sees and what a package may add — each with what it reads from either side, what
+  the engine decides, the constants in code, a judgement of how much is code, and
+  `anchors` (`path::text`) that `test_model_map.py` holds to the code. The five edges the
+  component carried moved there whole; the contract, template, composition, tests,
+  constraints and package-view ones are new. `GET /api/dev/model-map`
+  (`src/model_map.py`) adds which engine each track the asker sees runs on. The panel
+  reads the map one engine at a time (the last program's, else the busiest: twelve tracks
+  on contracts, ten on templates, none on the scheduler) and its authoring table from the
+  same file, now with the whole-package route. The dead `archetype_trace.selected` read
+  is gone.
+- **20.12 The Impact tab (S).** Done 2026-11-13 (item 9, step 6). Dev Lab ▸ Impact
+  (`components/devlab/ImpactPanel.tsx`) sends the Pipeline Trace form's request to `POST
+  /api/dev/constraint-impact` and shows: sessions changed (and how many directly), per
+  constraint what lifting it means with its sessions, slots and knock-on, the equipment
+  that would restore the most, every change with its causes and reasons — filtered by
+  cause — and, for a refused request, what alone would let it generate. Two real answers
+  are recorded for its test (`test_constraint_impact.py --write`).
+
+What is left of item 20 after these twelve steps: the phone and the watches reading a
+package's modalities and equipment from the API (gap `client_vocab_compiled`); migration
+013 on production; and the builder itself.
+
+---
+
+### 21. LLM package builder — P1 · L
+
+An athlete describes a training method in words and gets a method they can build a
+program from. Item 20 is what it stands on: storage, one gate, the private overlay, a
+package's own vocabulary, the spec. Decided with the athlete on 2026-11-13:
+
+- **Who**: accounts with the Supabase `dev` role first, read from the verified token on
+  the server, with a daily build limit; opening it to everyone is `PACKAGE_BUILDER=all`.
+- **How**: describe (with days, session length, level, equipment) → a background build →
+  the result; then revise with a note, which builds a new revision of the same method.
+- **From what**: the athlete's words, pasted text, and web search to ground a named method.
+  A method named after a published program is the athlete's version of it, never the
+  author's.
+- **Where**: inside the program builder's first step on both clients — a "Your methods"
+  group and a "Create your own" card. No new Profile or Explore section.
+- The athlete reads *method*; the code keeps *package* and *philosophy*.
+
+What the model may write in the first version: the modality scheduler and week templates.
+Training contracts are refused. Not planned: push notifications, sharing a method.
+
+- **21.1 Who may use it (S).** Done 2026-11-13. `require_auth` keeps the verified claims
+  (`g.claims`) and `auth.has_role('dev')` reads `app_metadata.roles` — the claim the web
+  reads to show the Dev Lab, now read on the server too. `PACKAGE_BUILDER` = `off | dev |
+  all` (default `dev`; local dev is allowed unless off): `api.require_builder` gates the
+  `/api/packages` routes (they were behind the developer authoring gate) and `DELETE
+  /api/methods/<id>`. `GET /api/methods` always answers 200 — `available`, a `reason`
+  (`not_enabled` for the account, `no_model_key` on the server), the athlete's methods
+  (name, revision, status, `inUse`) and the limits (`PACKAGE_BUILDER_DAILY_LIMIT`, five a
+  day; twenty kept) — so a client shows nothing, or the methods without the way to make
+  another. `test_builder_access.py`.
+- **21.2 The build as a durable job (M).** Done 2026-11-13 (migration 014 **not yet run
+  on production**; `src/build_store.py` makes the table on the first build, row security
+  on and no policy — a read never makes it). `package_builds`: a row per build with its
+  request, the draft files, the transcript, the progress the clients poll, a result or an
+  error, usage, attempts and a heartbeat. `src/build_worker.py`: one thread per process
+  claims the oldest (`FOR UPDATE SKIP LOCKED`), gives the builder a `Session` (save,
+  check, stop if cancelled), installs what it returns and writes the result; a running
+  row with no heartbeat for three minutes is claimed again, twice, then failed as
+  `interrupted`; the worker is kicked when a build is queued and on a process's first
+  request when one was left open, so a deploy mid-build resumes from the last saved turn
+  (Garmin's queue, which it is modelled on, does neither). It holds the process's one
+  heavy slot (`src/heavy.py`, shared with `api._heavy_run`) only around each gate check —
+  previews keep answering — and `package_store.install(checked=)` takes the passing check
+  it was just given instead of running the gates twice. Routes, all behind the builder's
+  gate: `POST /api/methods/builds` (`{description, answers, pastedText?, webSearch?}` or
+  `{revise: {packageId, note}}`, whose draft starts from the installed files; 202; 422;
+  409 `build_running` / `too_many_methods`; 429 `daily_limit`; 503 without a model key),
+  `GET …/<id>` (never the draft or the transcript), `POST …/<id>/cancel` (at once when
+  waiting, at the next turn when running). `GET /api/methods` lists the builds and what
+  is left of the day. The builder itself is `build_worker.BUILDER` — the model loop
+  (21.3); the tests script one. `test_package_builds.py`.
+- **21.3 The model loop (L).** Done 2026-11-13 (**the real-model eval not yet run** — it
+  costs money and waits for a go-ahead; the effort and budgets below are first guesses
+  until it has). `src/package_builder.py` is the worker's builder: Claude Opus 5.5 through
+  the Anthropic SDK (`anthropic` in requirements; imported with the first build, never at
+  startup — it adds some 40 MB to the worker), a loop of our own because every completed
+  turn is saved to the build's row and a restart resumes from it. The system prompt is the
+  instructions, `PACKAGE_SPEC.md` and the four core schemas — the same bytes for every
+  build, cached; the athlete's words, answers and id prefix are the first message. Tools:
+  `write_file` (YAML that does not parse is refused at once), `read_file`, `delete_file`,
+  `list_files`, `get_schema`, `check_package`, `finish`, `decline`; Anthropic's web search
+  and fetch only when the request allows them. `check_package` is the real gate
+  (`package_store.check`) and, when it passes, the whole program of each track generated
+  **as the athlete who asked** (their days, minutes, level, equipment — `for_this_athlete`:
+  `program`, every week in lines with each slot's prescription, and `check_these`, what the
+  engine did that authors rarely mean; the gate's own run is one week per phase with every
+  implement). A package the builder writes is held to more than the gate asks:
+  the gate now reports a session no archetype serves, one replaced by another modality
+  and a slot no exercise fills as **warnings** (`package_gate._coverage_warnings`; no
+  shipped package has one), and the builder treats them as problems — `exercises: []`
+  passed every gate before. Budgets, enforced by the loop: 40 turns, 10 checks, 200 000
+  output tokens, 25 minutes; `PACKAGE_BUILDER_EFFORT` (default `high`) and
+  `PACKAGE_BUILDER_MODEL` override. A refusal, a turn cut off at the output limit (never
+  run, never kept), a paused web search (sent back as it came), a turn of words alone
+  (a reminder, three times a failure) and a model that cannot be reached each end or
+  continue the build in plain words. Training contracts are refused; a revision keeps its
+  package id. `test_package_builder.py` scripts the model (`package_builder.MODEL_TURN`,
+  the one place a request leaves the process); `tools/eval_package_builder.py --run`
+  runs eight real descriptions against the real model and reports outcome, turns, checks,
+  tokens and cost.
+- **21.4 Web: the builder in the program builder (M).** Done 2026-11-13. **The priorities
+  bug first**: the builder seeded `priority_overrides` from the modality list compiled
+  into the build and the server replaces the goal's priorities with an override, so a
+  method made of its own modalities was sent as all zeros and generated nothing. The
+  vector now covers every modality the source's framework schedules
+  (`lib/philosophyPriorities`), and no override is sent that only repeats the source
+  (`buildPostBody`, `samePriorities`). Then the screens: in the first step's philosophy
+  list a **Your methods** group (`components/methods/YourMethods.tsx`) — each method
+  picked like a philosophy, with Revise and Delete (refused in words while the program
+  runs on it), the build that is running, and a "Describe your own method" card; absent
+  for an account the builder is not on for. `/program/new/method`
+  (`pages/MethodBuilder.tsx`, `DescribeMethod`): the athlete's words, days, session
+  length and level (from the builder and the profile), the profile's equipment, pasted
+  notes, a web-search switch; `?revise=<id>` asks for the change instead.
+  `/program/new/method/<build>` (`MethodBuildProgress`) asks the build again every two
+  seconds — leaving does not stop it — then shows the method with Build a program, Read
+  the method and Revise, or why it was not built with what the checks still found. A
+  finished build and a delete have every list of packages read again
+  (`refreshAfterMethodChange`). The words are `lib/methodBuild.ts`; the mock answers
+  (`mocks/fixtures/methods.json`) are recorded by `test_package_builder.py --write`,
+  which fails when the routes' shape parts from them.
+- **21.5 Phone: a package's vocabulary (M).** Done 2026-11-14. The phone reads
+  `/api/modalities` and `/api/equipment` on every load (`AppState.loadVocabulary`,
+  `ServedVocabulary.swift`) for what the compiled tables lack: a package's modality is
+  kept in the app group (`ClientVocab.remember`, generated into all four targets) and
+  every reader — the phone, its widgets, the watch and its complication — looks a modality
+  up through `ClientVocab.modality(_:)`, compiled first, then served, then neutral. A
+  package's implements are a "From your methods" group in Profile ▸ Equipment and the
+  builder's and the preview's pickers. `today-session` gives a session of a package
+  modality `modalityDisplay` (label, short, colour, icon), which the phone relays with
+  the day and the Apple Watch remembers; the Garmin draws an unknown modality in its
+  neutral colour with the session's name (docs/watch.md). The philosophies are read
+  again on every load, so a method built elsewhere appears. `ServedVocabularyTests`,
+  `test_package_vocabulary.py`.
+- **21.6 Phone: the builder (M).** Done 2026-11-14 (1.43.0 — 1.42.0 had shipped). The
+  program builder's first step leads with **Your methods** when the account may build or
+  has methods: the build in progress, each method as a card with its "…" (About, Revise,
+  Delete, asked before), and **Create your own**. Describe (`MethodDescribeView`: the
+  words, days, session length and level from the builder, the equipment said, pasted notes,
+  the web switch) and the build (`MethodBuildView`: the four steps, asked again every two
+  seconds while the screen is in front; free to leave, offered again on the first step;
+  then the method with its tracks and **Build a program with it**, or why there is none)
+  are pushed inside the builder. A finished build reads the methods, the methodologies
+  and the vocabulary again (`AppState.methodsChanged`). The words are `MethodBuildWords`,
+  the web's `lib/methodBuild.ts` in Swift; `MethodBuilderTests` decodes the answers the
+  server's test records for the web. `AppLongTextField` is the one multi-line field (the
+  session's notes and the workout's now use it). Debug builds open any of the screens with
+  `SIMCTL_CHILD_TC_METHOD_BUILDER=describe | revise:<method id> | build:<build id>`.
+  No notification when a build ends: the phone has no push.
+- **21.7 Dev Lab: the builds (S).** Done 2026-11-14. Dev Lab ▸ **Builds**
+  (`components/devlab/BuildsPanel.tsx`, `?tab=builds&build=<id>`): the account's own last
+  builds with what each spent and their totals, and one build in full — the request, what
+  it spent against `package_builder.LIMITS`, the problems counted by kind, each check with
+  its problems and **the program the model was shown**, each turn's calls, answers and own
+  tokens (`usage.per_turn`, recorded by the loop from now on), replies thrown away at the
+  output limit, and the draft's files. `GET /api/dev/builds` and `/api/dev/builds/<id>`
+  (`src/build_report.py`, pure over a row; the builder's gate; the list never reads a
+  transcript — `build_store.history`). Own builds only: a transcript holds what its athlete
+  wrote and pasted, so an owner's view across accounts is a later decision. The cost is
+  tokens at `package_builder.PRICE` (the builder model's list price, which the eval uses
+  too); web searches are billed apart. `test_package_builder.py` records
+  `mocks/fixtures/builds.json` (`--write`).
+- **21.8 Production (S).** For the owner, each with a go-ahead: the real-model eval
+  (21.3); `scripts/backup_prod.sh`, migrations 013 and 014; **the machine to 512 MB**
+  (`fly scale memory 512`, and `fly.toml`) — measured in the image at 0.25 CPU the worker
+  stands at 66 MB, 104 MB once the SDK is loaded and 126 MB after a build, and it was
+  killed at 140 MB on 2026-10-27; `fly secrets set ANTHROPIC_API_KEY`; the `dev` role on
+  the accounts that try it.
+- **21.9 What the simulated eval found (M).** 2026-11-14: the eight eval cases run by
+  stand-in models that saw only the system prompt, the request and the builder's tools
+  (the real tool code and gates; no API call, so no tokens or cost measured). All eight
+  ended as expected, seven on one or two checks — and three of the built methods
+  prescribed what the athlete had not asked for, which no check could see. Fixed with it:
+  `weekly_increment_kg: 0` was read as missing (one 16 kg kettlebell was prescribed 15,
+  22.5, 30 kg; now a load that stays put, shown as written); a `cadence_options` key
+  written `"4"` passed the schema and was ignored; the check showed one week of counts
+  (now the program); the spec says what the engine does with the files (section 3) and
+  lists the colour families; the instructions cover revisions and what a package cannot
+  express. **Open, each an engine change of its own:** a computed load starts again at
+  every phase (week-in-phase) — carry it across phases; nothing pins a session to a
+  weekday on the scheduler; no load is computed as a percentage of a max (5/3/1 is text),
+  nothing goes up only after a session went well outside a training contract, an
+  as-many-reps set is not recorded as one, a computed `distance` slot drops its `sets`
+  and its load (6 × 800 m, a carry's weight), the equipment list has no bench, and
+  `MINIMAL_DAYS` warns of dropped modalities on a week template that fits its days. The real-model eval (21.8) still decides the
+  effort and the budgets.
+
+---
+
+### 22. Pre-workout briefing — P2 · M
+
+Before a session the athlete saw the prescription and one "Last time" line per exercise,
+matched by exercise id alone. On a method whose sessions recur with a step each time —
+Wildman's swing climbs two reps a clean session through 32 steps — nothing showed the run,
+where today stands in it, or what today assumes.
+
+- **22.1 The server and the first package — done.** `data/packages/<id>/briefing.yaml`
+  (optional, `docs/schemas/briefing.schema.json`): entries, first match wins, each saying
+  what an earlier occurrence is (`same_as`: module, archetype, exercise), which numbers lead,
+  how much history, whether the cycle position is said and which suggestions apply. The
+  default entries follow a package's own (`src/briefing_spec.py`), so every package has a
+  briefing. `src/briefing.py` builds the document, pure; `GET /api/sessions/briefing?key=`
+  gathers this program's sessions and logs and earlier programs' logged sessions through the
+  version each was written against. Wildman declares its density cycle. `test_briefing.py`.
+- **22.2 The phone — done.** One `SessionBriefingView` (design-system §6.61) in the player's
+  "Before the start" and in the session detail of an undone session: today's numbers, the
+  suggestion, the earlier occurrences with their status and a small bar series of the item's metric, the standard to beat, a banner for a session to confirm first.
+- **22.3 The web — done.** The same block in `SessionPanel`, between the header and the exercises.
+- **22.4 Other packages — done.** Every track's briefing read beside its program
+  (`tools/print_briefings.py`). No package needed its own file; the defaults did: a contract
+  session with nothing to earn is read as written, exercise by exercise, and asks for no
+  confirmation (`default_as_written`); only a workout with one result has a number to
+  beat; a made lift says its next weight before the program is rebuilt; reps written in
+  words keep them.
+- **Later.** A wrist summary (a `today-session` key and both watches, per `docs/watch.md`);
+  a missed session said as such (today it is left out of the history).
+
+---
+
+### 23. Levels: every package from novice to elite — P1 · L
 
 **Why.** Before 2026-11-07 a level chose a track, archetypes and unlocked exercises, but
 changed almost no number: templated packages prescribe `as_written`, contracts never
@@ -1951,7 +2585,10 @@ program's span. Peak is 93 MB on the same data. `test_workout_metrics.py`.
   revision-checked PUT. `GenerateProgramRequest` now speaks blends
   (`philosophy_ids` + weights) and `periodization_week`. Until now the web
   offered this for injuries only and the phone only a full regenerate.
-- *Phone session logging*: `ExerciseLogSheet` on every session row (leading
+- *Phone session logging* (one form for the whole session with one Save, saved on
+  the phone first and sent in the background, since 2026-11-12: `SessionLogForm`,
+  `SessionLogOutbox`, `AppState.saveSessionLog`, design-system §6.16; what follows
+  is how it first shipped): `ExerciseLogSheet` on every session row (leading
   swipe or context menu) — sets for sets × reps and hold slots, the slot's
   currency for the rest, through `SessionLogging` (the web's outcome-field
   table) and `AppState.logExercise` → `PUT /health/sessions/<key>` with

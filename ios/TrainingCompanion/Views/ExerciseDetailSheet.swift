@@ -11,6 +11,9 @@ struct ExerciseDetailSheet: View {
     let name: String
     /// The prescription this sheet was opened from, when there is one.
     var assignment: ProgramExerciseAssignment? = nil
+    /// Inside a sheet that owns a `NavigationStack` it is pushed (§6.48): the
+    /// stack and its Back button are the caller's.
+    var pushed = false
 
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
@@ -21,7 +24,18 @@ struct ExerciseDetailSheet: View {
     private var catalogEntry: AppExercise? { appState.exerciseCatalog[exerciseId] }
 
     var body: some View {
-        NavigationStack {
+        if pushed {
+            reference
+        } else {
+            NavigationStack {
+                reference.toolbar {
+                    ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+                }
+            }
+        }
+    }
+
+    private var reference: some View {
             List {
                 headerSection
                 if let assignment { prescriptionSection(assignment) }
@@ -36,7 +50,7 @@ struct ExerciseDetailSheet: View {
                 }
                 bulletSection("Cues", items: media?.cuePoints ?? [], icon: "checkmark.circle")
                 bulletSection("Common errors", items: media?.commonErrors ?? [], icon: "xmark.circle",
-                              tint: .orange)
+                              tint: AppColor.warning)
                 requirementsSection
                 if isLoading && media == nil && catalogEntry == nil {
                     Section { ProgressView().frame(maxWidth: .infinity) }
@@ -44,11 +58,7 @@ struct ExerciseDetailSheet: View {
             }
             .navigationTitle(name)
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) { Button("Done") { dismiss() } }
-            }
             .task { await load() }
-        }
     }
 
     // MARK: - Sections
@@ -115,7 +125,7 @@ struct ExerciseDetailSheet: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusControl))
             // Opens in Safari — the sheet stays a reference, not a browser.
             Link(destination: url) {
                 Label(media?.animation?.gifSource.map { "Source: \($0.replacingOccurrences(of: "_", with: " "))" }
@@ -129,7 +139,7 @@ struct ExerciseDetailSheet: View {
 
     @ViewBuilder
     private func bulletSection(_ title: String, items: [String], icon: String,
-                               tint: Color = .green) -> some View {
+                               tint: Color = AppColor.complete) -> some View {
         if !items.isEmpty {
             Section(title) {
                 ForEach(items, id: \.self) { item in

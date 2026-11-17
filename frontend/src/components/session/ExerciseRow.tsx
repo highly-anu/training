@@ -1,6 +1,9 @@
+import { Tip } from '@/components/shared/Tip'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { riseIn } from '@/lib/motion'
 import { Play, ExternalLink, ArrowLeftRight } from 'lucide-react'
 import { PerformanceLogger } from './PerformanceLogger'
 import { OutcomeLogger } from './OutcomeLogger'
@@ -37,15 +40,14 @@ function ExercisePreviewPopover({ exerciseId, exerciseName, category }: { exerci
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
+      <Tip label="Preview exercise"><PopoverTrigger asChild>
         <button
           className="shrink-0 flex size-6 items-center justify-center rounded-full bg-muted hover:bg-muted/80 transition-colors mt-0.5"
           aria-label={`Preview ${exerciseName}`}
-          title="Preview exercise"
         >
           <Play className="size-3 text-muted-foreground" />
         </button>
-      </PopoverTrigger>
+      </PopoverTrigger></Tip>
       <PopoverContent className="w-72 p-2" align="start" side="top">
         <p className="text-xs font-semibold mb-1.5 text-foreground">{exerciseName}</p>
         {media ? (
@@ -60,7 +62,7 @@ function ExercisePreviewPopover({ exerciseId, exerciseName, category }: { exerci
             <p className="text-[11px] text-muted-foreground italic">No animation available yet.</p>
           )
         ) : (
-          <div className="aspect-video w-full rounded bg-muted animate-pulse" />
+          <Skeleton className="aspect-video w-full rounded" />
         )}
         {media?.description && (
           <p className="mt-2 text-[11px] text-muted-foreground leading-relaxed line-clamp-3">{media.description}</p>
@@ -112,8 +114,7 @@ export function ExerciseRow({ assignment, index, sessionKey, sessionIdx, onSwap 
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0, transition: { delay: index * 0.05, duration: 0.2 } }}
+      {...riseIn(index)}
       className="flex items-start gap-4 rounded-lg border border-border bg-card p-4 hover:border-primary/30 transition-colors"
     >
       {/* Index + preview */}
@@ -135,15 +136,14 @@ export function ExerciseRow({ assignment, index, sessionKey, sessionIdx, onSwap 
             <div className="flex items-center gap-1.5">
               <h4 className="text-sm font-semibold text-foreground">{assignment.exercise.name}</h4>
               {onSwap && !assignment.load.module_id && (
-                <button
+                <Tip label="Swap for an alternative"><button
                   type="button"
                   onClick={onSwap}
                   className="rounded p-0.5 text-muted-foreground/60 hover:text-primary transition-colors"
                   aria-label={`Swap ${assignment.exercise.name}`}
-                  title="Swap for an alternative"
                 >
                   <ArrowLeftRight className="size-3" />
-                </button>
+                </button></Tip>
               )}
             </div>
             {loadStr && (
@@ -223,20 +223,19 @@ export function ExerciseRow({ assignment, index, sessionKey, sessionIdx, onSwap 
 function CleanToggle({ sessionKey, exerciseId, clean }: { sessionKey: string; exerciseId: string; clean: boolean }) {
   const setExerciseClean = useBioStore((s) => s.setExerciseClean)
   return (
-    <button
+    <Tip label="Every rep owned"><button
       type="button"
       onClick={() => setExerciseClean(sessionKey, exerciseId, !clean)}
       aria-pressed={clean}
       aria-label={`Clean: ${exerciseId}`}
-      title="Every rep owned"
       className={cn(
         'rounded border px-2 py-0.5 text-[10px] font-medium transition-colors',
-        clean ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+        clean ? 'border-done/50 bg-done/10 text-done'
               : 'border-border text-muted-foreground hover:bg-muted',
       )}
     >
       {clean ? 'Clean ✓' : 'Clean?'}
-    </button>
+    </button></Tip>
   )
 }
 

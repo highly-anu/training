@@ -1,3 +1,6 @@
+import { DoneMark } from '@/components/shared/DoneMark'
+import { announce } from '@/lib/announce'
+import { toast } from '@/lib/toast'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CheckCircle2, Circle, RefreshCw, Activity, Trash2 } from 'lucide-react'
@@ -11,6 +14,7 @@ import { ExerciseRow } from '@/components/session/ExerciseRow'
 import { SessionNotes } from '@/components/session/SessionNotes'
 import { WorkoutSummaryCard } from '@/components/session/WorkoutSummaryCard'
 import { ModuleProgress } from '@/components/session/ModuleProgress'
+import { SessionBriefing } from '@/components/session/SessionBriefing'
 import { useProfileStore } from '@/store/profileStore'
 import { useBioStore } from '@/store/bioStore'
 import { useProgramStore } from '@/store/programStore'
@@ -38,6 +42,7 @@ interface SessionPanelProps {
  */
 export function SessionPanel({ program, weekData, weekIndex, day, compact = false }: SessionPanelProps) {
   const removeSession = useProgramStore((s) => s.removeSession)
+  const addSession = useProgramStore((s) => s.addSession)
   const sessions = weekData.schedule[day] ?? []
   const sessionKey = `${weekData.week_number}-${day}`
 
@@ -70,6 +75,7 @@ export function SessionPanel({ program, weekData, weekIndex, day, compact = fals
     const next = [...current]
     next[si] = !isComplete(si)
     setSessionLog(sessionKey, next)
+    announce(next[si] ? `${sessions[si]?.archetype?.name ?? 'Session'} marked complete.` : 'Session marked not done.')
     const perSessionKey = `${sessionKey}-${si}`
     if (next[si]) {
       upsertSessionPerformance({
@@ -140,7 +146,11 @@ export function SessionPanel({ program, weekData, weekIndex, day, compact = fals
                   )}
                   {session.added && !complete && (
                     // Only an extra the athlete added can go; the plan's sessions stay.
-                    <Button variant="ghost" size="sm" onClick={() => removeSession(weekIndex, day, si)}
+                    <Button variant="ghost" size="sm"
+                      onClick={() => {
+                        removeSession(weekIndex, day, si)
+                        toast.undo('Session removed', { undo: () => addSession(weekIndex, day, session, si) })
+                      }}
                       aria-label="Remove this added session">
                       <Trash2 className="size-3.5 mr-1.5" />
                       Remove
@@ -152,6 +162,10 @@ export function SessionPanel({ program, weekData, weekIndex, day, compact = fals
                   </Button>
                 </div>
               </div>
+
+              {!complete && (
+                <SessionBriefing sessionKey={`${sessionKey}-${si}`} modality={session.modality} />
+              )}
 
               <div className="space-y-2">
                 {session.exercises.map((assignment, i) => (
@@ -200,6 +214,7 @@ export function SessionPanel({ program, weekData, weekIndex, day, compact = fals
               <button
                 type="button"
                 onClick={() => toggleComplete(si)}
+                aria-pressed={complete}
                 className={cn(
                   'w-full flex items-center justify-center gap-2 h-10 rounded-lg text-sm font-medium transition-colors',
                   complete
@@ -207,10 +222,8 @@ export function SessionPanel({ program, weekData, weekIndex, day, compact = fals
                     : 'bg-primary text-primary-foreground hover:bg-primary/90'
                 )}
               >
-                {complete
-                  ? <><CheckCircle2 className="size-4" /> Completed — tap to undo</>
-                  : <><Circle className="size-4" /> Mark Session Complete</>
-                }
+                <DoneMark done={complete} doneIcon={<CheckCircle2 className="size-4" />} openIcon={<Circle className="size-4" />} />
+                {complete ? 'Completed — tap to undo' : 'Mark Session Complete'}
               </button>
             </div>
           )

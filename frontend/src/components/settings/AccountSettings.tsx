@@ -1,3 +1,4 @@
+import { ScrollPanel } from '@/components/layout/ScrollPanel'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LogOut } from 'lucide-react'
@@ -16,7 +17,7 @@ export function AccountSettings() {
   const [switching, setSwitching] = useState(false)
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="max-w-2xl mx-auto px-8 py-12 space-y-10">
         <div className="space-y-3">
           <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium">
@@ -71,6 +72,6 @@ export function AccountSettings() {
           )}
         </div>
       </div>
-    </div>
+    </ScrollPanel>
   )
 }

@@ -1,6 +1,7 @@
+import { Working } from '@/components/ui/spinner'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { differenceInCalendarDays, format, parseISO } from 'date-fns'
-import { Check, Loader2, ScanEye } from 'lucide-react'
+import { Check, ScanEye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useProgramStore } from '@/store/programStore'
 import { useProfileStore } from '@/store/profileStore'
@@ -132,9 +133,7 @@ export function RegenerateFromWeekBanner() {
   const result = check.data
   if (!check.isError && (!result || check.isFetching)) {
     return (
-      <p className="mx-6 mt-4 inline-flex items-center gap-1.5 text-xs text-muted-foreground" aria-live="polite">
-        <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> Checking whether this changes your program…
-      </p>
+      <Working className="mx-6 mt-4 text-xs">Checking whether this changes your program…</Working>
     )
   }
   if (result && !result.affected) {
@@ -183,11 +182,9 @@ export function RegenerateFromWeekBanner() {
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button size="sm" onClick={preview} disabled={regenerate.isPending}>
-            {regenerate.isPending
-              ? <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
-              : <ScanEye className="size-3.5" aria-hidden="true" />}
-            {regenerate.isPending ? 'Building a preview…' : refused ? 'See why' : 'Preview changes'}
+          <Button size="sm" onClick={preview} loading={regenerate.isPending}>
+            <ScanEye className="size-3.5" aria-hidden="true" />
+            {refused ? 'See why' : 'Preview changes'}
           </Button>
         </div>
       </div>
@@ -198,7 +195,7 @@ export function RegenerateFromWeekBanner() {
         {' '}The current plan stays in Program ▸ History.
       </p>
       {regenerate.error && (
-        <p className="text-xs text-red-700 dark:text-red-300">
+        <p className="text-xs text-bad">
           {regenerate.error.message || 'Could not regenerate'}
         </p>
       )}

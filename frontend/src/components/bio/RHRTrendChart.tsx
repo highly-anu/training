@@ -1,7 +1,10 @@
+import { ChartFrame } from '@/components/shared/ChartFrame'
+import * as say from '@/lib/chartSummary'
+import { STATUS_CSS } from '@/lib/statusColors'
+import { SERIES } from '@/lib/dataColors'
 import { useMemo } from 'react'
 import {
-  ResponsiveContainer,
-  ComposedChart,
+    ComposedChart,
   Line,
   XAxis,
   YAxis,
@@ -11,6 +14,7 @@ import {
 import { subDays, parseISO, isAfter, format } from 'date-fns'
 import type { DailyBioLog } from '@/api/types'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { useChartEntry } from '@/lib/chartMotion'
 
 interface Props {
   bioLogs: Record<string, DailyBioLog>
@@ -56,6 +60,7 @@ function rollingMean(values: (number | null)[], windowSize: number, index: numbe
 }
 
 export function RHRTrendChart({ bioLogs, days = 30 }: Props) {
+  const drawIn = useChartEntry()
   const { data, trend, baseline } = useMemo(() => {
     const cutoff = subDays(new Date(), days)
     const sorted = Object.values(bioLogs)
@@ -101,22 +106,23 @@ export function RHRTrendChart({ bioLogs, days = 30 }: Props) {
   }
 
   const bandColor =
-    trend === 'falling' ? '#10b981' : trend === 'rising' ? '#ef4444' : '#f59e0b'
+    trend === 'falling' ? STATUS_CSS.green : trend === 'rising' ? STATUS_CSS.red : STATUS_CSS.yellow
   const hasRolling = data.some((d) => d.rolling != null)
 
   return (
     <div className="space-y-1">
       <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
         <span className={`font-medium ${
-          trend === 'falling' ? 'text-emerald-700 dark:text-emerald-300' :
-          trend === 'rising'  ? 'text-red-700 dark:text-red-300'     : 'text-amber-700 dark:text-amber-300'
+          trend === 'falling' ? 'text-good' :
+          trend === 'rising'  ? 'text-bad'     : 'text-warn'
         }`}>
           {trend === 'falling' ? 'Trending down' :
            trend === 'rising'  ? 'Trending up'   : 'Stable'}
         </span>
         <span>· 7-day rolling average</span>
       </div>
-      <ResponsiveContainer width="100%" height={160}>
+      <ChartFrame label="Resting heart rate by day" height={160}
+        summary={say.series(data.map((d) => d.rhr), 'bpm')}>
         <ComposedChart data={data} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
           <XAxis
             dataKey="date"
@@ -141,29 +147,29 @@ export function RHRTrendChart({ bioLogs, days = 30 }: Props) {
               strokeOpacity={0}
             />
           )}
-          <Line
+          <Line {...drawIn}
             type="monotone"
             dataKey="rhr"
             name="Resting HR"
-            stroke="#ef4444"
+            stroke={SERIES.restingHr}
             strokeWidth={1}
-            dot={{ r: 2, fill: '#ef4444', strokeWidth: 0 }}
+            dot={{ r: 2, fill: SERIES.restingHr, strokeWidth: 0 }}
             connectNulls
             opacity={0.5}
           />
           {hasRolling && (
-            <Line
+            <Line {...drawIn}
               type="monotone"
               dataKey="rolling"
               name="7-day avg"
-              stroke="#ef4444"
+              stroke={SERIES.restingHr}
               strokeWidth={2}
               dot={false}
               connectNulls
             />
           )}
         </ComposedChart>
-      </ResponsiveContainer>
+      </ChartFrame>
     </div>
   )
 }

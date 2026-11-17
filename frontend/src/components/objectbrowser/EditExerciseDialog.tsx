@@ -263,8 +263,8 @@ export function EditExerciseDialog({ exercise, open, onClose }: Props) {
 
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={onClose}>Cancel</Button>
-          <Button size="sm" onClick={handleSubmit} disabled={!category || updateMutation.isPending}>
-            {updateMutation.isPending ? 'Saving…' : 'Save Changes'}
+          <Button size="sm" onClick={handleSubmit} disabled={!category} loading={updateMutation.isPending}>
+            Save changes
           </Button>
         </DialogFooter>
       </DialogContent>

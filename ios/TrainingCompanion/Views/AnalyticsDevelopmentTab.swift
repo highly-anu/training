@@ -22,15 +22,11 @@ struct AnalyticsDevelopmentTab: View {
             if let doc = appState.developmentAnalytics, doc.hasHistory {
                 content(doc)
             } else if appState.isLoadingDevelopment && appState.developmentAnalytics == nil {
-                ProgressView("Reading the history…")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                AppLoadingState(label: "Reading the history")
             } else if let error = appState.developmentError, appState.developmentAnalytics == nil {
-                emptyState(icon: "exclamationmark.triangle", title: "Could not load",
-                           message: error, actionLabel: "Try again") {
-                    Task { await appState.loadDevelopmentAnalytics() }
-                }
+                AppFailedState(message: error) { await appState.loadDevelopmentAnalytics() }
             } else {
-                emptyState(icon: "clock.arrow.circlepath", title: "No program history yet",
+                AppEmptyState(icon: "clock.arrow.circlepath", title: "No program history yet",
                            message: "Blocks appear here as programs are saved.",
                            actionLabel: "Go to Program") { router.showProgram(.calendar) }
             }
@@ -62,27 +58,19 @@ struct AnalyticsDevelopmentTab: View {
     private func content(_ doc: DevelopmentAnalytics) -> some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 16) {
-                BlocksCard(doc: doc)
-                SeriesCard(doc: doc, selected: $selectedSeries)
-                if !doc.weeklyLoad.isEmpty { LoadByBlockCard(doc: doc) }
-                if !doc.benchmarks.isEmpty { StandardsCard(doc: doc) }
-                Spacer(minLength: 24)
+                AppScrollFade {
+                    BlocksCard(doc: doc)
+                    SeriesCard(doc: doc, selected: $selectedSeries)
+                    if !doc.weeklyLoad.isEmpty { LoadByBlockCard(doc: doc) }
+                    if !doc.benchmarks.isEmpty { StandardsCard(doc: doc) }
+                    Spacer(minLength: 24)
+                }
             }
             .padding(.horizontal)
             .padding(.vertical, 12)
         }
     }
 
-    private func emptyState(icon: String, title: String, message: String,
-                            actionLabel: String, action: @escaping () -> Void) -> some View {
-        ContentUnavailableView {
-            Label(title, systemImage: icon)
-        } description: {
-            Text(message)
-        } actions: {
-            Button(actionLabel, action: action).buttonStyle(.bordered)
-        }
-    }
 }
 
 // MARK: - Blocks
@@ -91,7 +79,7 @@ private struct BlocksCard: View {
     let doc: DevelopmentAnalytics
 
     var body: some View {
-        AnalyticsCard(header: "Blocks") {
+        AppCard(header: "Blocks") {
             VStack(alignment: .leading, spacing: 10) {
                 // The strip: each block's share of the span, in its colour.
                 GeometryReader { geo in
@@ -233,7 +221,7 @@ private struct SeriesCard: View {
     /// A row of chips picked the series and every block's row sat under the
     /// chart until 2026-10-17.
     var body: some View {
-        AnalyticsCard(header: "Lifts across blocks") {
+        AppCard(header: "Lifts across blocks") {
             if let option = current {
                 VStack(alignment: .leading, spacing: 10) {
                     if options.count > 1 {
@@ -302,7 +290,7 @@ private struct SeriesCard: View {
             }
             ForEach(points) { p in
                 LineMark(x: .value("Date", p.date), y: .value(option.unit, p.value))
-                    .foregroundStyle(Color.green)
+                    .foregroundStyle(AppColor.complete)
                     .lineStyle(StrokeStyle(lineWidth: 2))
                     .interpolationMethod(.monotone)
                 // A deload point is hollow, as on Progress: a fill in the
@@ -327,10 +315,11 @@ private struct SeriesCard: View {
                                 .font(.caption).monospacedDigit()
                         }
                         .padding(6)
-                        .background(.background.secondary, in: RoundedRectangle(cornerRadius: 6))
+                        .background(.background.secondary, in: RoundedRectangle(cornerRadius: AppMetrics.radiusChip))
                     }
             }
         }
+        .appChartEntry()
         .chartXSelection(value: $touched)
         .chartYScale(domain: .automatic(includesZero: false))
         .chartXAxis {
@@ -380,7 +369,7 @@ private struct SeriesBlocksView: View {
                     Spacer(minLength: 4)
                     Text(DevelopmentAnalytics.formatDelta(row.delta))
                         .font(.subheadline).fontWeight(.semibold).monospacedDigit()
-                        .foregroundStyle(row.delta > 0 ? Color.green : row.delta < 0 ? Color.yellow : Color.secondary)
+                        .foregroundStyle(row.delta > 0 ? AppColor.complete : row.delta < 0 ? AppColor.caution : Color.secondary)
                 }
                 HStack(spacing: 14) {
                     Text("\(number(row.first)) → \(number(row.last)) \(unit)")
@@ -472,6 +461,7 @@ struct BlockLoadChart: View {
                     .foregroundStyle(doc.color(of: bar.blockId).opacity(bar.blockId == nil ? 0.4 : 0.85))
                     .cornerRadius(3)
             }
+            .appChartEntry()
             .chartXAxis { WeeklyAxis.months }
             .chartYAxis {
                 AxisMarks(position: .leading) { value in
@@ -484,6 +474,7 @@ struct BlockLoadChart: View {
             }
             .frame(height: height)
             .accessibilityLabel("TRIMP in each of \(bars.count) weeks, by block")
+            .accessibilityValue(ChartSummary.series(bars.map { Double($0.trimp) }) ?? "")
             LegendFlow(spacing: 12, lineSpacing: 4) {
                 ForEach(doc.blocks) { block in
                     HStack(spacing: 4) {
@@ -592,7 +583,7 @@ private struct StandardsCard: View {
     private var shown: [DevelopmentAnalytics.Benchmark] { own.isEmpty || showMore ? own + other : own }
 
     var body: some View {
-        AnalyticsCard(header: "Standards over time") {
+        AppCard(header: "Standards over time") {
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(shown) { benchmark in
                     if benchmark.id != shown.first?.id { Divider() }

@@ -47,7 +47,7 @@
     },
     "modality": {
       "type": "array",
-      "description": "Which modalities this exercise develops. Use existing modality IDs or introduce new ones defined in your package's philosophy scope.",
+      "description": "Which modalities this exercise develops. Modalities the commons define (data/commons/modalities) or ones this package adds in its vocabulary.yaml.",
       "items": {
         "type": "string",
         "pattern": "^[a-z0-9_]+$"
@@ -117,7 +117,7 @@
     },
     "movement_patterns": {
       "type": "array",
-      "description": "Movement patterns this exercise belongs to. Used for injury exclusion matching and archetype slot filtering. Use existing patterns or define new ones appropriate to your package's discipline (e.g. 'pedaling', 'contact_strength', 'spinal_flexion').",
+      "description": "Movement patterns this exercise belongs to. Used for injury exclusion matching and archetype slot filtering. A pattern the commons define (data/commons/recovery_regions.yaml `patterns` and `unloaded`) or one this package adds in its vocabulary.yaml, where it says which body regions it loads and which injury flags rule it out.",
       "items": {
         "type": "string",
         "pattern": "^[a-z0-9_]+$"

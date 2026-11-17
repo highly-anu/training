@@ -23,11 +23,11 @@ function SignalPill({
   const isOk = signal.severity === 'info' && signal.code.endsWith('_OK')
 
   const colors = isOk
-    ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20'
+    ? 'bg-good/10 text-good border-good/20'
     : signal.severity === 'error'
       ? 'bg-destructive/10 text-destructive border-destructive/20'
       : signal.severity === 'warning'
-        ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20'
+        ? 'bg-warn/10 text-warn border-warn/20'
         : 'bg-muted text-muted-foreground border-border'
 
   const Icon = isOk
@@ -101,11 +101,11 @@ function SignalRow({
         : Info
 
   const iconColor = isOk
-    ? 'text-emerald-700 dark:text-emerald-300'
+    ? 'text-good'
     : signal.severity === 'error'
       ? 'text-destructive'
       : signal.severity === 'warning'
-        ? 'text-amber-700 dark:text-amber-300'
+        ? 'text-warn'
         : 'text-muted-foreground'
 
   if (isOk) return null  // don't show OK rows in full mode — only surface issues

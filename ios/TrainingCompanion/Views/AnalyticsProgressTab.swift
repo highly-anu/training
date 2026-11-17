@@ -26,15 +26,11 @@ struct AnalyticsProgressTab: View {
             if let doc = appState.programAnalytics, doc.hasProgram {
                 content(doc)
             } else if appState.isLoadingProgramAnalytics && appState.programAnalytics == nil {
-                ProgressView("Measuring the program…")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                AppLoadingState(label: "Measuring the program")
             } else if let error = appState.programAnalyticsError, appState.programAnalytics == nil {
-                emptyState(icon: "exclamationmark.triangle", title: "Could not load",
-                           message: error, actionLabel: "Try again") {
-                    Task { await appState.loadProgramAnalytics() }
-                }
+                AppFailedState(message: error) { await appState.loadProgramAnalytics() }
             } else {
-                emptyState(icon: "chart.bar.doc.horizontal", title: "No active program",
+                AppEmptyState(icon: "chart.bar.doc.horizontal", title: "No active program",
                            message: "Generate a program to measure it here.",
                            actionLabel: "Go to Program") { router.showProgram(.calendar) }
             }
@@ -126,35 +122,37 @@ struct AnalyticsProgressTab: View {
         return ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 16) {
-                    if let frame = doc.frame { frameCard(frame) }
-                    if let review { overviewCard(review: review) }
-                    ProgressChartView(doc: doc, selection: $chartSelection, finding: finding)
-                        .id("chart")
-                    ForEach(doc.methodologies) { method in
-                        MethodologySectionView(method: method, doc: doc, chartable: chartable,
-                                               selectedId: chartSelection.flatMap {
-                                                   if case .measure(let key) = $0 { return key }; return nil
-                                               }) { key in
-                            AppHaptics.light()
-                            withAnimation(AppAnimation.springStandard) { chartSelection = .measure(id: key) }
-                            withAnimation { proxy.scrollTo("chart", anchor: .center) }
+                    AppScrollFade {
+                        if let frame = doc.frame { frameCard(frame) }
+                        if let review { overviewCard(review: review) }
+                        ProgressChartView(doc: doc, selection: $chartSelection, finding: finding)
+                            .id("chart")
+                        ForEach(doc.methodologies) { method in
+                            MethodologySectionView(method: method, doc: doc, chartable: chartable,
+                                                   selectedId: chartSelection.flatMap {
+                                                       if case .measure(let key) = $0 { return key }; return nil
+                                                   }) { key in
+                                AppHaptics.light()
+                                withAnimation(AppAnimation.springStandard) { chartSelection = .measure(id: key) }
+                                withAnimation(AppAnimation.springStandard) { proxy.scrollTo("chart", anchor: .center) }
+                            }
                         }
+                        if let scorecard = doc.scorecard { ScorecardCard(scorecard: scorecard) }
+                        if let intensity = doc.intensity { IntensityCard(intensity: intensity) }
+                        if let benchmarks = doc.benchmarks, benchmarks.rows.contains(where: \.primary) {
+                            ProgramStandardsCard(benchmarks: benchmarks)
+                        }
+                        if let shapes = doc.archetypes, !shapes.isEmpty { SessionShapesCard(rows: shapes) }
+                        if let load = doc.load { LoadCard(load: load) }
+                        if let review { adviceCards(review) }
+                        if !doc.sectionErrors.isEmpty { sectionErrorsCard(doc.sectionErrors) }
+                        Spacer(minLength: 24)
                     }
-                    if let scorecard = doc.scorecard { ScorecardCard(scorecard: scorecard) }
-                    if let intensity = doc.intensity { IntensityCard(intensity: intensity) }
-                    if let benchmarks = doc.benchmarks, benchmarks.rows.contains(where: \.primary) {
-                        ProgramStandardsCard(benchmarks: benchmarks)
-                    }
-                    if let shapes = doc.archetypes, !shapes.isEmpty { SessionShapesCard(rows: shapes) }
-                    if let load = doc.load { LoadCard(load: load) }
-                    if let review { adviceCards(review) }
-                    if !doc.sectionErrors.isEmpty { sectionErrorsCard(doc.sectionErrors) }
-                    Spacer(minLength: 24)
                 }
                 .padding(.horizontal)
                 .padding(.vertical, 12)
             }
-            .onChange(of: chartScrollRequest) { withAnimation { proxy.scrollTo("chart", anchor: .center) } }
+            .onChange(of: chartScrollRequest) { withAnimation(AppAnimation.springStandard) { proxy.scrollTo("chart", anchor: .center) } }
         }
         .task(id: doc.generatedAt) {
             if chartSelection.map({ ProgressChartModel.series($0, in: doc) == nil }) ?? true {
@@ -211,7 +209,7 @@ struct AnalyticsProgressTab: View {
         }
         if review.scoreBreakdown.map({ $0.basis != "not_started" }) ?? (review.overallScore != nil),
            review.recommendations.isEmpty, review.adjustments.isEmpty {
-            AnalyticsCard(header: "Recommendations") {
+            AppCard(header: "Recommendations") {
                 Label("Nothing to change — keep going.", systemImage: "checkmark.circle")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -220,14 +218,14 @@ struct AnalyticsProgressTab: View {
     }
 
     private func recommendationsSection(recommendations: [String]) -> some View {
-        AnalyticsCard(header: "Recommendations") {
+        AppCard(header: "Recommendations") {
             VStack(alignment: .leading, spacing: 8) {
                 // The text is the identity; a review never repeats a line.
                 ForEach(Array(NSOrderedSet(array: recommendations)) as! [String], id: \.self) { rec in
                     HStack(alignment: .top, spacing: 8) {
                         Image(systemName: "lightbulb")
                             .font(.subheadline)
-                            .foregroundStyle(.yellow)
+                            .foregroundStyle(AppColor.caution)
                             .frame(width: iconWidth)
                         Text(rec)
                             .font(.subheadline)
@@ -242,7 +240,7 @@ struct AnalyticsProgressTab: View {
     /// server can apply edit the stored program from the current week on, under
     /// the revision check, and this copy is replaced with what was saved.
     private func adjustmentsSection(adjustments: [ProgressionAdjustment]) -> some View {
-        AnalyticsCard(header: "Suggested adjustments") {
+        AppCard(header: "Suggested adjustments") {
             VStack(alignment: .leading, spacing: 10) {
                 ForEach(adjustments) { adj in
                     AdjustmentRow(adjustment: adj)
@@ -252,7 +250,7 @@ struct AnalyticsProgressTab: View {
             if let conflict = appState.programSaveConflict {
                 Label(conflict, systemImage: "exclamationmark.triangle")
                     .font(.caption)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(AppColor.warning)
             }
         }
     }
@@ -261,17 +259,6 @@ struct AnalyticsProgressTab: View {
     /// change line (`progression_findings`), so the two lines agree.
     static func withUnit(_ value: String, _ unit: String) -> String {
         ["", "kg", "%", "s", "km", "m"].contains(unit) ? value + unit : "\(value) \(unit)"
-    }
-
-    private func emptyState(icon: String, title: String, message: String,
-                            actionLabel: String, action: @escaping () -> Void) -> some View {
-        ContentUnavailableView {
-            Label(title, systemImage: icon)
-        } description: {
-            Text(message)
-        } actions: {
-            Button(actionLabel, action: action).buttonStyle(.bordered)
-        }
     }
 
     // MARK: - Frame
@@ -302,12 +289,14 @@ struct AnalyticsProgressTab: View {
     /// One fidelity field: its symbol, actual / ideal, and a mark.
     private func fidelityCell(_ row: ProgramAnalytics.Frame.Fidelity) -> some View {
         let meets = row.status == "meets_ideal"
-        let color: Color = meets ? .green : row.status == "below_minimum" ? .red : .yellow
+        let color: Color = meets ? AppColor.complete : row.status == "below_minimum" ? AppColor.destructive : AppColor.caution
+        // The mark's colour, said: VoiceOver hears neither it nor the symbol.
+        let verdict = meets ? "meets the ideal" : row.status == "below_minimum" ? "below the minimum" : "below the ideal"
         return ProgramHeaderStat(
             icon: Self.fidelityIcon(row.field),
             value: "\(Self.number(row.actual))/\(Self.number(row.ideal))",
             unit: row.unit,
-            accessibility: "\(Self.fidelityLabel(row.field)): \(Self.number(row.actual)) \(row.unit), ideal \(Self.number(row.ideal))"
+            accessibility: "\(Self.fidelityLabel(row.field)): \(Self.number(row.actual)) \(row.unit), ideal \(Self.number(row.ideal)), \(verdict)"
         ) {
             Image(systemName: meets ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
                 .foregroundStyle(color)
@@ -358,7 +347,7 @@ struct AnalyticsProgressTab: View {
     // MARK: - Section errors
 
     private func sectionErrorsCard(_ errors: [String: String]) -> some View {
-        AnalyticsCard(header: "Not computed") {
+        AppCard(header: "Not computed") {
             VStack(alignment: .leading, spacing: 6) {
                 // The section's name and a mark; the engine's own message
                 // (an exception's text, at worst) is for VoiceOver (§1.4).
@@ -444,7 +433,7 @@ struct ScorecardRowView: View {
             .font(.subheadline)
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    Capsule().fill(Color.secondary.opacity(0.15))
+                    Capsule().fill(Color.secondary.opacity(AppColor.Opacity.fill))
                     Capsule().fill(colour).frame(width: geo.size.width * pct / 100)
                 }
             }
@@ -478,9 +467,9 @@ struct ScorecardRowView: View {
 
     private var doseIcon: (icon: String, color: Color)? {
         switch row.doseStatus {
-        case "under": return ("arrow.down.circle.fill", .yellow)
-        case "on": return ("checkmark.circle.fill", .green)
-        case "over": return ("arrow.up.circle.fill", .red)
+        case "under": return ("arrow.down.circle.fill", AppColor.caution)
+        case "on": return ("checkmark.circle.fill", AppColor.complete)
+        case "over": return ("arrow.up.circle.fill", AppColor.destructive)
         default: return nil
         }
     }
@@ -555,6 +544,7 @@ struct IntensityWeeksChart: View {
             BarMark(x: .value("Week", String(slice.position)), y: .value("Minutes", slice.minutes))
                 .foregroundStyle(by: .value("Zone", slice.zone))
         }
+        .appChartEntry()
         .chartXAxis {
             AxisMarks { value in
                 AxisValueLabel {
@@ -565,7 +555,7 @@ struct IntensityWeeksChart: View {
             }
         }
         .chartForegroundStyleScale(["Z1–2": Color.green, "Z3": Color.yellow,
-                                    "Z4–5": Color.orange, "Max effort": Color.red])
+                                    "Z4–5": AppColor.warning, "Max effort": AppColor.destructive])
         .chartYAxis {
             AxisMarks(position: .leading) { value in
                 AxisValueLabel {
@@ -579,15 +569,21 @@ struct IntensityWeeksChart: View {
         .chartLegend(position: .bottom, spacing: 6)
         .frame(height: height)
         .accessibilityLabel("Minutes per zone in each of \(weeks.count) weeks")
+        .accessibilityValue(weeks.last.map {
+            "Latest week: zones 1 and 2 \(ChartSummary.whole($0.zone12Pct)) minutes, zone 3 \(ChartSummary.whole($0.zone3Pct)), "
+                + "zones 4 and 5 \(ChartSummary.whole($0.zone45Pct)), max effort \(ChartSummary.whole($0.maxEffortPct))"
+        } ?? "")
     }
 }
 
 // MARK: - Progress entry
 
 /// One progress measure as a row (§6.37): where it stands in its own
-/// currency, its status and trend. Tapping it draws it on the Progress chart
-/// when the chart can (`chartable`); the chevron pushes `MeasureDetailView`
-/// with the evidence, the movements or standards and what the measure is.
+/// currency, its status and trend. The row is one target: it pushes
+/// `MeasureDetailView` with the evidence, the movements or standards and what
+/// the measure is. A measure the chart can draw (`chartable`) leads with a
+/// chart button that draws it there. Until 1.38 the row drew and a 32 pt
+/// chevron pushed, and nothing said which was which.
 /// It was a card with a sparkline until 2026-10-23, when the one chart took
 /// over every line.
 struct MeasureRow: View {
@@ -604,12 +600,30 @@ struct MeasureRow: View {
     private var unit: String { lead?.unit ?? entry.unit }
 
     var body: some View {
-        HStack(spacing: 8) {
-            Button(action: { if chartable { onChart() } }) {
+        HStack(spacing: AppMetrics.gapTight) {
+            if chartable {
+                Button {
+                    AppHaptics.selection()
+                    onChart()
+                } label: {
+                    Image(systemName: selected ? "chart.line.uptrend.xyaxis.circle.fill" : "chart.line.uptrend.xyaxis.circle")
+                        .font(.title3)
+                        .foregroundStyle(selected ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.secondary))
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Show \(entry.label) on the chart")
+                .accessibilityAddTraits(selected ? .isSelected : [])
+            }
+            NavigationLink {
+                MeasureDetailView(entry: entry)
+            } label: {
                 HStack(spacing: 10) {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(spacing: 6) {
                             Text(entry.label).font(.subheadline).fontWeight(.semibold).lineLimit(2)
+                                .multilineTextAlignment(.leading)
                             if entry.headline {
                                 Image(systemName: "star.fill").font(.caption2).foregroundStyle(Color.accentColor)
                                     .accessibilityLabel("Headline")
@@ -625,28 +639,18 @@ struct MeasureRow: View {
                             CoverageNoticeView(coverage: coverage)
                         }
                     }
+                    Image(systemName: "chevron.right")
+                        .font(.caption).fontWeight(.semibold).foregroundStyle(.tertiary)
                 }
+                .frame(minHeight: 44)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .disabled(!chartable)
-            .accessibilityHint(chartable ? "Draws it on the chart" : "")
-            .accessibilityAddTraits(selected ? .isSelected : [])
-            NavigationLink {
-                MeasureDetailView(entry: entry)
-            } label: {
-                Image(systemName: "chevron.right")
-                    .font(.caption).fontWeight(.semibold).foregroundStyle(.tertiary)
-                    .frame(minWidth: 32, minHeight: 44)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Open \(entry.label)")
         }
-        .padding(.leading, AppMetrics.cardPadding)
-        .padding(.trailing, 8)
+        .padding(.leading, chartable ? AppMetrics.gapSmall : AppMetrics.cardPadding)
+        .padding(.trailing, AppMetrics.cardPadding)
         .padding(.vertical, 10)
-        .background(selected ? Color.accentColor.opacity(0.12) : Color.clear)
+        .background(selected ? Color.accentColor.opacity(AppColor.Opacity.fill) : Color.clear)
         .overlay(alignment: .leading) {
             if selected { Rectangle().fill(Color.accentColor).frame(width: 3) }
         }
@@ -761,7 +765,7 @@ private struct MovementCard: View {
         AnalyticsDetailCard(header: "Movement", hint: "Opens movement") {
             if !outside.isEmpty {
                 TintCapsule(text: "\(outside.count) out of range", symbol: "exclamationmark.triangle.fill",
-                            color: outside.contains { $0.level == "warning" } ? .red : .yellow)
+                            color: outside.contains { $0.level == "warning" } ? AppColor.destructive : AppColor.caution)
             }
         } destination: {
             MovementDetailView(movement: movement)
@@ -901,13 +905,13 @@ private struct BalanceRow: View {
             if pair.outside {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.caption)
-                    .foregroundStyle(pair.level == "warning" ? Color.red : Color.yellow)
+                    .foregroundStyle(pair.level == "warning" ? AppColor.destructive : AppColor.caution)
                     .accessibilityLabel("out of range")
             }
             Text(pair.ratio.map { "\(AnalyticsProgressTab.number($0)) (\(AnalyticsProgressTab.number(pair.min))–\(AnalyticsProgressTab.number(pair.max)))" }
                  ?? "—")
                 .monospacedDigit()
-                .foregroundStyle(pair.outside ? (pair.level == "warning" ? Color.red : Color.yellow) : Color.secondary)
+                .foregroundStyle(pair.outside ? (pair.level == "warning" ? AppColor.destructive : AppColor.caution) : Color.secondary)
         }
         .font(.subheadline)
     }
@@ -920,7 +924,7 @@ private struct LoadCard: View {
 
     var body: some View {
         // The reading beside the header; the phase is the program card's pill.
-        AnalyticsCard(header: "Load") {
+        AppCard(header: "Load") {
             if let reading = load.reading { AnalyticsStatusBadge(status: reading) }
         } content: {
             VStack(alignment: .leading, spacing: 8) {
@@ -956,7 +960,7 @@ private struct AdjustmentRow: View {
             HStack(alignment: .top, spacing: 8) {
                 Image(systemName: adjustment.isAppliable ? "slider.horizontal.3" : "lightbulb")
                     .font(.subheadline)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(AppColor.warning)
                     .frame(width: iconWidth)
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 6) {
@@ -987,9 +991,9 @@ private struct AdjustmentRow: View {
                                 .fontWeight(.semibold)
                         }
                     }
-                    .buttonStyle(.bordered)
+                    .appButton(.secondary)
                     .controlSize(.regular)
-                    .tint(applied ? .green : .orange)
+                    .tint(applied ? AppColor.complete : AppColor.warning)
                     .disabled(isApplying || applied)
                 } else {
                     TintCapsule(text: "advice", color: .secondary)
@@ -998,7 +1002,7 @@ private struct AdjustmentRow: View {
             if let outcome {
                 Text(outcome)
                     .font(.caption)
-                    .foregroundStyle(applied ? Color.green : Color.orange)
+                    .foregroundStyle(applied ? AppColor.complete : AppColor.warning)
             }
         }
     }

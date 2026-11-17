@@ -108,7 +108,7 @@ describe('while the program is still loading', () => {
     })
     wrap(<Dashboard />)
     expect(screen.queryByText(/no program yet/i)).not.toBeInTheDocument()
-    expect(screen.queryByText(/retrieving your program/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('status', { name: /loading your program/i })).not.toBeInTheDocument()
   })
 })
 
@@ -129,8 +129,8 @@ describe('when the program could not be loaded', () => {
 
   it('says the load failed and offers a retry', () => {
     wrap(<Dashboard />)
-    expect(screen.getByText(/couldn't load your program/i)).toBeInTheDocument()
-    expect(screen.getByText(/retry/i)).toBeInTheDocument()
+    expect(screen.getByText(/could not load your program/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument()
   })
 })
 

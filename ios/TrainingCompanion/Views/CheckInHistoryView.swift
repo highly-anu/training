@@ -16,7 +16,7 @@ struct CheckInRow: View {
                 .frame(width: dayWidth, alignment: .leading)
             Spacer()
             cell(log.hrv.map { "\(Int($0))" }, unit: "ms", color: .cyan)
-            cell(log.restingHR.map { "\(Int($0))" }, unit: "bpm", color: .red)
+            cell(log.restingHR.map { "\(Int($0))" }, unit: "bpm", color: AppColor.destructive)
             cell(log.sleepDurationMin.flatMap { $0 > 0 ? SleepFormat.duration($0) : nil }, unit: "", color: .indigo)
         }
         .padding(.vertical, 8)

@@ -1,3 +1,5 @@
+import { ErrorBanner } from '@/components/shared/ErrorBanner'
+import { LoadingState } from '@/components/shared/states'
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowDownToLine, CheckCircle2, Circle, ChevronRight } from 'lucide-react'
@@ -37,7 +39,7 @@ export function ActivityTab({
   onImport: () => void
 }) {
   const navigate = useNavigate()
-  const { data: logs, isLoading, isError } = useRecentSessionLogs()
+  const { data: logs, isLoading, isError, error, refetch } = useRecentSessionLogs()
   const { data: exercises } = useExercises()
   const program = useCurrentProgram()
   const programStartDate = useProgramStore((s) => s.programStartDate)
@@ -59,7 +61,8 @@ export function ActivityTab({
     : workouts
   const entries = mergeLogEntries(narrowed, rows, show)
 
-  if (workouts.length === 0 && rows.length === 0 && !isLoading) {
+  // Not when the logs failed to load: "nothing recorded" would be a guess.
+  if (workouts.length === 0 && rows.length === 0 && !isLoading && !isError) {
     return (
       <div className="max-w-2xl mx-auto px-8 py-12">
         <EmptyState
@@ -101,12 +104,13 @@ export function ActivityTab({
       </div>
 
       {isError && show !== 'workouts' && (
-        <p className="text-xs text-muted-foreground">Could not load the session logs.</p>
+        <ErrorBanner error={error} title="Could not load the session logs" onRetry={() => { void refetch() }} />
       )}
-      {entries.length === 0 ? (
+      {entries.length === 0 && isLoading && show === 'sessions' ? (
+        <LoadingState shape="list" count={4} label="Loading sessions" />
+      ) : entries.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          {isLoading && show === 'sessions' ? 'Loading sessions…'
-            : show === 'sessions' ? 'Nothing logged against a session yet.'
+          {show === 'sessions' ? 'Nothing logged against a session yet.'
             : show === 'workouts' && match !== 'all' ? `No ${match} workouts.`
             : 'No workouts yet.'}
         </p>
@@ -165,7 +169,7 @@ function SessionLogRow({ row, onOpen }: { row: LogSessionRow; onOpen?: () => voi
       )}
     >
       {row.isComplete
-        ? <CheckCircle2 className="size-4 mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+        ? <CheckCircle2 className="size-4 mt-0.5 shrink-0 text-done" />
         : <Circle className="size-4 mt-0.5 shrink-0 text-muted-foreground" />}
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{row.title}</p>

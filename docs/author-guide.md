@@ -3,12 +3,18 @@
 **Audience:** AI agents or humans adding a training methodology to the system as a
 package: a folder under `data/packages/` that the app picks up without a code change.
 
+**Start with `docs/schemas/PACKAGE_SPEC.md`** — the one document that says what a package is,
+what goes in each file, every valid value (generated, so current), how a package is checked,
+and a worked example written from nothing. This guide is what a package that *ships in the
+repository* needs beyond it: the record, the gates' baselines, the fidelity method.
+
 **Read with:** `docs/package-fidelity/README.md` — how a package is built from its
 sources, recorded (`fidelity.yaml`, the dossier) and graded, and the gates it must pass.
 The JSON schemas in `docs/schemas/` are the field reference, and this guide points at them
 rather than copying them. An agent can do all of it through the MCP server
-(`docs/mcp/README.md`). What a package still cannot bring in its own folder is on Dev Lab ▸
-Model Interactions and in `docs/roadmap.md` item 9.
+(`docs/mcp/README.md`). What a package still cannot bring in its own folder, and what stands between a
+folder in a checkout and a package written while the app runs, is on Dev Lab ▸ Builder
+readiness and in `docs/roadmap.md` items 9 and 20.
 
 **Validation:** After writing YAML files, run:
 ```
@@ -37,7 +43,7 @@ Philosophy
 
 **Framework** — A weekly session structure: how many sessions of each modality, how hard, which days, how it deloads. A week is built one of three ways, decided by the data: a **training contract** (`training_contract.yaml`, per track) places its own modules; a phase's **week templates** write the source's week day by day from the framework's `categories`; otherwise the **modality scheduler** allocates `sessions_per_week`.
 
-**Modality** — A physical quality domain, shared by every package (`data/commons/modalities/`). Map a methodology onto the existing ones; a new modality is a shared edit and, today, client code.
+**Modality** — A physical quality domain, shared by every package (`data/commons/modalities/`). Map a methodology onto the existing ones first; a modality the method really lacks is declared in the package's `vocabulary.yaml` (with its family, recovery cost and display), as are a movement pattern and an implement.
 
 **Archetype** — A reusable session template. An archetype belongs to one modality and defines the session's slots (slot type, sets/reps/duration, intensity, `exercise_filter`).
 
@@ -51,7 +57,7 @@ Philosophy
 
 1. **Read the sources and keep a record** — `fidelity.yaml` and `dossier.md` in the package (the README says what each holds).
 2. **Write the folder** — philosophy with its tracks, frameworks, archetypes, exercises; the optional files below as the method needs them.
-3. **Use the commons** — modalities, phase kinds, movement patterns, equipment, injury flags, standards and watch templates are shared vocabulary; reference them, do not redefine them.
+3. **Use the commons** — modalities, phase kinds, movement patterns, equipment, injury flags, standards and watch templates are shared vocabulary; reference them, do not redefine them. What the method lacks among modalities, movement patterns and equipment goes in `vocabulary.yaml`, standards in `standards.yaml`; the rest is the engine's.
 4. **Bring it in** — `tools/add_package.py <id> --check`, then without `--check`: the folder's schemas, no id another package declares, every id in the commons, then its dossier stubbed and its baselines and golden hashes recorded. Then the gates the package-fidelity README lists (`tools/run_checks.py`; the pre-push hook runs them). A test of the package's own goes in its `tests/` (`test_*.py`, the package taken from the folder): the checks find it there, and a rule cites it as `test:tests/<file>::<fn>`.
 
 ---
@@ -76,24 +82,26 @@ data/
       fidelity.yaml              ← its sources, rules, inventions (docs/package-fidelity/README.md)
       source_weeks.yaml          ← optional: the source's own weeks, compared with generation
       standards.yaml             ← optional: standards the method tests that the commons lack
+      vocabulary.yaml            ← optional: modalities, movement patterns, equipment it adds
   commons/                       ← shared by every package: modalities, phase kinds,
                                  #   movement patterns, constraints, watch vocabulary, icons
   benchmarks/                    ← the shared standards and their groups (categories.yaml)
 ```
 
-**Ids are package-scoped by convention, not by the loader.** Prefix archetype and framework ids with something your package owns: when two packages declare one id the loader keeps one copy silently (Dev Lab ▸ Model Interactions lists any). Exercise ids may be shared on purpose — each package keeps its own prescription.
+**Ids are package-scoped by convention, not by the loader.** Prefix archetype and framework ids with something your package owns: when two shipped packages declare one id the loader keeps one copy (the gates refuse it; Dev Lab ▸ Builder readiness lists any). Exercise ids may be shared on purpose — each package keeps its own prescription.
 
 ---
 
 ## 4. Valid Values — Where They Live
 
 The allowed values are not copied here: a copy drifts (this guide's did — framework and
-philosophy lists a year out of date, 22 equipment ids where there are 30). Read them from the
-source, or ask the MCP server (`list_valid_values(field)`, `docs/mcp/README.md`):
+philosophy lists a year out of date, 22 equipment ids where there are 30). `PACKAGE_SPEC.md`
+§5 prints them all, generated; or read them from the source, or ask the MCP server
+(`list_valid_values(field)`, `docs/mcp/README.md`):
 
 | Values | The one source |
 |---|---|
-| Modalities | `data/commons/modalities/<id>.yaml` — shared; a new one is a commons edit and `tools/gen_client_vocab.py` |
+| Modalities | `data/commons/modalities/<id>.yaml` — shared; a package's own in its `vocabulary.yaml` |
 | Phase kinds (a phase's `kind`, an archetype's `applicable_phases`) | `data/commons/phase_kinds.yaml` |
 | Equipment | `data/commons/constraints/equipment.yaml` (the four schemas' enums are generated from it) |
 | Movement patterns and slot aliases | `data/commons/movement_patterns.yaml`, `data/commons/recovery_regions.yaml` |
@@ -176,7 +184,9 @@ schemas:
 ## 8. Worked Examples
 
 The shipped packages are the examples, one per engine shape: Wildman (a training contract),
-Horsemen (week templates) and `test_packages/block_fixture` (the modality scheduler).
-`test_package_dropin.py` copies the three under new ids and runs them end to end — the shortest
+Horsemen (week templates) and `test_packages/block_fixture` (the modality scheduler); and
+`test_packages/scratch_minimal`, written from nothing with a vocabulary of its own, which
+`PACKAGE_SPEC.md` §9 prints file for file.
+`test_package_dropin.py` copies the four under new ids and runs them end to end — the shortest
 proof of what a folder needs. To start a new one, `get_package_template(name)` on the MCP
 server writes a valid skeleton.

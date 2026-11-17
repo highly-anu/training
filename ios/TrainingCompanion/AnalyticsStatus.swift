@@ -9,11 +9,11 @@ enum AnalyticsStatusStyle {
     static func color(_ status: String) -> Color {
         switch status {
         case "ahead", "on_track", "met", "on_target", "stable_by_design", "on_plan", "loading_as_expected", "fresh":
-            return .green
+            return AppColor.complete
         case "behind", "partial", "off_target", "no_target", "very_fatigued", "still_fatigued_in_recovery":
-            return .yellow
+            return AppColor.caution
         case "stalled", "below", "off_plan", "error":
-            return .red
+            return AppColor.destructive
         default:
             return .secondary
         }
@@ -43,6 +43,17 @@ enum AnalyticsStatusStyle {
         case "fresh": return "Fresh"
         case "still_fatigued_in_recovery": return "Still fatigued in a recovery week"
         default: return status.replacingOccurrences(of: "_", with: " ")
+        }
+    }
+
+    /// The tone a status's colour carries, as a shape, for an athlete who
+    /// differentiates without colour: good, caution, bad; none for neutral.
+    static func toneSymbol(_ status: String) -> String? {
+        switch color(status) {
+        case AppColor.complete: return "checkmark"
+        case AppColor.caution: return "exclamationmark.triangle"
+        case AppColor.destructive: return "xmark.octagon"
+        default: return nil
         }
     }
 
@@ -84,8 +95,11 @@ enum AnalyticsStatusStyle {
 /// A small coloured capsule naming a status.
 struct AnalyticsStatusBadge: View {
     let status: String
+    @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiate
 
     var body: some View {
-        TintCapsule(text: AnalyticsStatusStyle.label(status), color: AnalyticsStatusStyle.color(status))
+        TintCapsule(text: AnalyticsStatusStyle.label(status),
+                    symbol: differentiate ? AnalyticsStatusStyle.toneSymbol(status) : nil,
+                    color: AnalyticsStatusStyle.color(status))
     }
 }

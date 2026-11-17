@@ -1,14 +1,16 @@
+import { FALLBACK_HEX } from '@/lib/dataColors'
+import { Tip } from '@/components/shared/Tip'
+import { LoadingState, FailedState } from '@/components/shared/states'
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { ArrowUpRight } from 'lucide-react'
-import { LoadingCard } from '@/components/shared/LoadingCard'
-import { ErrorBanner } from '@/components/shared/ErrorBanner'
 import { Section } from '@/components/explore/ExploreSection'
 import { TOPIC_ICONS, useExploreNavigate } from '@/components/explore/topics'
 import { useLinkIndex } from '@/components/explore/useLineage'
 import { useExploreLinks } from '@/api/exploreLinks'
 import { useEquipmentProfiles } from '@/api/constraints'
-import { EQUIPMENT_GROUPS, equipmentLabel } from '@/lib/equipment'
+import { equipmentLabel } from '@/lib/equipment'
+import { useEquipmentGroups } from '@/lib/useEquipmentVocabulary'
 import {
   FACETS, explore, indexEquipment, unlocks, type Facet, type FacetItem, type Picked, type Unlock,
 } from '@/lib/equipmentExplorer'
@@ -93,23 +95,23 @@ function EquipmentChips({ selected, used, unlock, bodyweight, onToggle, onBodywe
   onToggle: (id: string) => void
   onBodyweight: () => void
 }) {
+  const groups = useEquipmentGroups()
   return (
     <div className="space-y-3">
       <div className="space-y-1.5">
         <p className="text-[10px] text-muted-foreground/60">No equipment</p>
-        <button
+        <Tip label={bodyweight ? 'Counted: turn off to see only what your equipment adds' : 'Left out: only what needs your equipment'}><button
           type="button"
           aria-pressed={bodyweight}
           onClick={onBodyweight}
-          title={bodyweight ? 'Counted: turn off to see only what your equipment adds' : 'Left out: only what needs your equipment'}
           className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono transition-all"
           style={toggleStyle(bodyweight)}
         >
           <div className="size-1.5 rounded-full" style={{ backgroundColor: bodyweight ? PRIMARY : 'var(--muted-foreground)' }} />
           Bodyweight / open space
-        </button>
+        </button></Tip>
       </div>
-      {EQUIPMENT_GROUPS.map((g) => (
+      {groups.map((g) => (
         <div key={g.name} className="space-y-1.5">
           <p className="text-[10px] text-muted-foreground/60">{g.name}</p>
           <div className="flex flex-wrap gap-2">
@@ -118,12 +120,10 @@ function EquipmentChips({ selected, used, unlock, bodyweight, onToggle, onBodywe
               const usable = used.has(id)
               const u = unlock[id]
               return (
-                <button
-                  key={id}
+                <Tip key={id} label={usable ? (on ? 'Selected' : unlockTitle(u)) : 'Nothing in the library needs it'}><button
                   type="button"
-                  disabled={!usable}
-                  onClick={() => onToggle(id)}
-                  title={usable ? (on ? 'Selected' : unlockTitle(u)) : 'Nothing in the library needs it'}
+                  aria-disabled={!usable}
+                  onClick={() => usable && onToggle(id)}
                   className={cn('flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono transition-all',
                     !usable && 'cursor-not-allowed')}
                   aria-pressed={usable ? on : undefined}
@@ -132,7 +132,7 @@ function EquipmentChips({ selected, used, unlock, bodyweight, onToggle, onBodywe
                   <div className="size-1.5 rounded-full" style={{ backgroundColor: on ? PRIMARY : 'var(--muted-foreground)' }} />
                   {label}
                   {!on && usable && u && u.total > 0 && <span className="opacity-70">+{u.total}</span>}
-                </button>
+                </button></Tip>
               )
             })}
           </div>
@@ -144,7 +144,7 @@ function EquipmentChips({ selected, used, unlock, bodyweight, onToggle, onBodywe
 
 function ResultChip({ item, facet, onPick }: { item: FacetItem; facet: Facet; onPick: () => void }) {
   const open = useExploreNavigate()
-  const color = item.color ?? '#6366f1'
+  const color = item.color ?? FALLBACK_HEX
   const dim = item.partial || item.unmatched || item.unavailable
   const why = item.unavailable ? 'not enabled' : item.unmatched ? 'no match' : item.note
   return (
@@ -208,7 +208,7 @@ function FacetList({ facet, items, onPick, onClear }: {
 }
 
 export function EquipmentPanel() {
-  const { data: links, isLoading, error } = useExploreLinks()
+  const { data: links, isLoading, error, refetch } = useExploreLinks()
   const { data: profiles = [] } = useEquipmentProfiles()
   const { names, colors } = useLinkIndex()
   const { equipment, bodyweight, show, picked, write } = useExplorerState()
@@ -219,8 +219,14 @@ export function EquipmentPanel() {
     [ix, eqSet, picked, names, colors, bodyweight])
   const unlock = useMemo(() => (ix ? unlocks(ix, eqSet, picked, { bodyweight }) : {}), [ix, eqSet, picked, bodyweight])
 
-  if (isLoading) return <div className="p-6"><LoadingCard /></div>
-  if (error) return <div className="p-6"><ErrorBanner error={error as Error} /></div>
+  if (isLoading) return <LoadingState className="p-6" />
+  if (error && !links) {
+    return (
+      <div className="p-6">
+        <FailedState title="Could not load the equipment" error={error} onRetry={() => { void refetch() }} />
+      </div>
+    )
+  }
   if (!ix || !lists) return null
 
   // Every piece of equipment the engine knows; an unknown id from a profile is dropped.

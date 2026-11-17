@@ -1,3 +1,4 @@
+import { Tip } from '@/components/shared/Tip'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AlertTriangle, Check, Info, Layers } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -275,16 +276,16 @@ export function ProgramTuner() {
                     </span>
                   )}
 
-                  <button
+                  <Tip label={blocker?.message}><button
                     onClick={() => {
+                      if (!selectable && !isSelected) return
                       setTrack(track.id)
                       // Let effectiveNumWeeks fall back to the track's length; the
                       // tight-event effect owns numWeeks when an event date is set.
                       if (!eventDate) setNumWeeks(null)
                     }}
-                    disabled={!selectable && !isSelected}
-                    title={blocker?.message}
-                    className="flex items-start gap-2 pr-6 text-left disabled:cursor-not-allowed"
+                    aria-disabled={!selectable && !isSelected}
+                    className="flex items-start gap-2 pr-6 text-left aria-disabled:cursor-not-allowed"
                   >
                     <Layers className="size-3.5 mt-0.5 shrink-0 text-muted-foreground" />
                     <div className="min-w-0">
@@ -313,7 +314,7 @@ export function ProgramTuner() {
                         </p>
                       )}
                     </div>
-                  </button>
+                  </button></Tip>
 
                   <PhaseSpine phases={track.phases} />
 
@@ -326,7 +327,7 @@ export function ProgramTuner() {
                             'flex items-start gap-1.5 text-[10px] leading-relaxed',
                             issue.severity === 'error'
                               ? 'text-destructive'
-                              : 'text-amber-600 dark:text-amber-500'
+                              : 'text-warn'
                           )}
                         >
                           <AlertTriangle className="size-3 mt-px shrink-0" />
@@ -428,7 +429,7 @@ export function ProgramTuner() {
                 <div className="flex items-center gap-2">
                   <div className="flex-1 h-1.5 rounded-full bg-border overflow-hidden">
                     <div
-                      className="h-full rounded-full transition-all duration-150"
+                      className="h-full rounded-full transition-[width]"
                       style={{ width: `${pct}%`, backgroundColor: c.hex }}
                     />
                   </div>
@@ -514,7 +515,7 @@ export function ProgramTuner() {
 
         {eventDate && eventIsTight ? (
           <>
-            <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-xs text-amber-700 dark:text-amber-300">
+            <div className="rounded-xl border border-warn/30 bg-warn/5 px-4 py-3 text-xs text-warn">
               Your event is in <span className="font-semibold">{weeksUntilEvent}w</span>, but a full program is{' '}
               <span className="font-semibold">{defaultNumWeeks}w</span>. Choose how to handle this:
             </div>

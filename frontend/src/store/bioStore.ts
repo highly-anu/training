@@ -12,6 +12,9 @@ import type {
   MatchConfidence,
 } from '@/api/types'
 import * as healthApi from '@/api/health'
+
+/** A workout taken off the screen, with where it stood and its links, so an Undo can put it back. */
+export interface HiddenWorkout { workout: ImportedWorkout; index: number; matches: WorkoutMatch[] }
 import type { HealthSnapshot } from '@/api/health'
 import { useProfileStore } from '@/store/profileStore'
 import { findSessionMatch } from '@/lib/sessionMatching'
@@ -31,6 +34,11 @@ interface BioStore {
   // Import
   addImportedWorkouts: (workouts: ImportedWorkout[]) => void
   removeImportedWorkout: (id: string) => void
+  /** Takes a workout and its links off the screen without telling the server; returns what to hand `restoreImportedWorkout`. */
+  hideImportedWorkout: (id: string) => HiddenWorkout | null
+  restoreImportedWorkout: (hidden: HiddenWorkout) => void
+  /** The server's half of a removal already made on screen. */
+  commitWorkoutRemoval: (id: string) => void
 
   // Matching
   setPendingMatches: (pending: PendingMatch[]) => void
@@ -165,6 +173,37 @@ export const useBioStore = create<BioStore>()((set, get) => ({
       workoutMatches:   s.workoutMatches.filter((m) => m.importedWorkoutId !== id),
     }))
   },
+
+  hideImportedWorkout: (id) => {
+    const s = get()
+    const index = s.importedWorkouts.findIndex((w) => w.id === id)
+    if (index < 0) return null
+    const hidden: HiddenWorkout = {
+      workout: s.importedWorkouts[index],
+      index,
+      matches: s.workoutMatches.filter((m) => m.importedWorkoutId === id),
+    }
+    set({
+      importedWorkouts: s.importedWorkouts.filter((w) => w.id !== id),
+      workoutMatches:   s.workoutMatches.filter((m) => m.importedWorkoutId !== id),
+    })
+    return hidden
+  },
+
+  restoreImportedWorkout: ({ workout, index, matches }) => {
+    set((s) => {
+      if (s.importedWorkouts.some((w) => w.id === workout.id)) return s
+      const workouts = [...s.importedWorkouts]
+      workouts.splice(Math.min(index, workouts.length), 0, workout)
+      const linked = new Set(s.workoutMatches.map((m) => m.importedWorkoutId))
+      return {
+        importedWorkouts: workouts,
+        workoutMatches: linked.has(workout.id) ? s.workoutMatches : [...s.workoutMatches, ...matches],
+      }
+    })
+  },
+
+  commitWorkoutRemoval: (id) => { healthApi.removeWorkout(id) },
 
   setPendingMatches: (pending) => set({ pendingMatches: pending }),
 

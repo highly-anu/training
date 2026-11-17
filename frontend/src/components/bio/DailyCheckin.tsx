@@ -53,8 +53,9 @@ export function DailyCheckin() {
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">Resting HR (bpm)</label>
+          <label htmlFor="checkin-rhr" className="text-xs text-muted-foreground">Resting HR (bpm)</label>
           <input
+            id="checkin-rhr"
             type="number"
             min={30}
             max={120}
@@ -66,8 +67,9 @@ export function DailyCheckin() {
           />
         </div>
         <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">HRV — RMSSD (ms)</label>
+          <label htmlFor="checkin-hrv" className="text-xs text-muted-foreground">HRV — RMSSD (ms)</label>
           <input
+            id="checkin-hrv"
             type="number"
             min={0}
             max={300}
@@ -93,8 +95,9 @@ export function DailyCheckin() {
         {showSleep && (
           <div className="flex gap-2 mt-2">
             <div className="space-y-1 flex-1">
-              <label className="text-xs text-muted-foreground">Hours</label>
+              <label htmlFor="checkin-sleep-hours" className="text-xs text-muted-foreground">Hours</label>
               <input
+                id="checkin-sleep-hours"
                 type="number"
                 min={0}
                 max={16}
@@ -106,8 +109,9 @@ export function DailyCheckin() {
               />
             </div>
             <div className="space-y-1 flex-1">
-              <label className="text-xs text-muted-foreground">Minutes</label>
+              <label htmlFor="checkin-sleep-minutes" className="text-xs text-muted-foreground">Minutes</label>
               <input
+                id="checkin-sleep-minutes"
                 type="number"
                 min={0}
                 max={59}

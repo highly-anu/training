@@ -1,5 +1,7 @@
+import { FailedState } from '@/components/shared/states'
+import { Working } from '@/components/ui/spinner'
 import { useMemo, useState } from 'react'
-import { CalendarDays, ChevronDown, ChevronRight, CircleSlash, Dumbbell, GraduationCap, Loader2, Plus, ShieldAlert } from 'lucide-react'
+import { CalendarDays, ChevronDown, ChevronRight, CircleSlash, Dumbbell, GraduationCap, Plus, ShieldAlert } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { impactParams, useProgramImpact, type GenerateParams } from '@/api/programs'
@@ -105,18 +107,20 @@ export function HeldBackPanel({ params, draft, actions, busy }: HeldBackPanelPro
 
       {impact.isPending && (
         <section className="rounded-xl border bg-card p-4 space-y-3" aria-busy="true">
-          <p className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+          <Working>
             Checking what your constraints change — this builds the program several ways (about 10 s).
-          </p>
+          </Working>
           <Skeleton className="h-4 w-2/3" />
           <Skeleton className="h-4 w-1/2" />
         </section>
       )}
       {impact.isError && (
-        <p className="text-sm text-muted-foreground">
-          Could not compare against the unconstrained program: {(impact.error as Error).message}
-        </p>
+        <FailedState
+          size="compact"
+          title="Could not compare against the unconstrained program"
+          error={impact.error}
+          onRetry={() => { void impact.refetch() }}
+        />
       )}
       {impact.data && <ImpactSections impact={impact.data} actions={actions} busy={busy}
                                       weeksCompared={draft.weeks.length > 12 ? 12 : undefined} />}
@@ -236,9 +240,7 @@ function ImpactSections({ impact, actions, busy, weeksCompared }: {
 export function RefusedPanel({ params, actions }: { params: GenerateParams; actions: HeldBackActions }) {
   const impact = useProgramImpact(impactParams(params, null))
   if (impact.isPending) {
-    return <p className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-      <Loader2 className="size-4 animate-spin" aria-hidden="true" /> Finding what would let it build…
-    </p>
+    return <Working>Finding what would let it build…</Working>
   }
   const unblocked = impact.data?.unblocked_by ?? []
   if (unblocked.length === 0) return null

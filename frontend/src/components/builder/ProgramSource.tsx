@@ -1,5 +1,8 @@
+import { FALLBACK_HEX, SOURCE_MODE_HEX } from '@/lib/dataColors'
+import { FailedState, LoadingState } from '@/components/shared/states'
 import { useState, useMemo } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { swapMotion } from '@/lib/motion'
 import { BookOpen, GitMerge, Sliders, ChevronRight } from 'lucide-react'
 import { usePhilosophies } from '@/api/philosophies'
 import { useFrameworks } from '@/api/frameworks'
@@ -7,10 +10,13 @@ import { useBuilderStore } from '@/store/builderStore'
 import { cn } from '@/lib/utils'
 import { MODALITY_COLORS, modalityHex, modalityLabel } from '@/lib/modalityColors'
 import {
-  MODALITY_ORDER, DEFAULT_PRIORITIES, derivePhilosophyPriorities,
+  MODALITY_ORDER, DEFAULT_PRIORITIES, deriveBlendedPriorities, derivePhilosophyPriorities,
 } from '@/lib/philosophyPriorities'
-import type { Framework, ModalityId, Philosophy } from '@/api/types'
+import type { ModalityId, Philosophy } from '@/api/types'
 import type { SourceMode } from '@/store/builderStore'
+import { YourMethods } from '@/components/methods/YourMethods'
+import { useMethods } from '@/api/methods'
+import { Badge } from '@/components/ui/badge'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -19,53 +25,24 @@ const MODES: { id: SourceMode; label: string; sub: string; color: string; Icon: 
     id: 'philosophy',
     label: 'From a Philosophy',
     sub: 'One source methodology drives the program',
-    color: '#8b5cf6',
+    color: SOURCE_MODE_HEX.philosophy,
     Icon: BookOpen,
   },
   {
     id: 'blend',
     label: 'Blend Philosophies',
     sub: 'Mix 2–4 systems with custom weights',
-    color: '#6366f1',
+    color: SOURCE_MODE_HEX.blend,
     Icon: GitMerge,
   },
   {
     id: 'custom',
     label: 'Custom Priorities',
     sub: 'Set modality emphasis directly from scratch',
-    color: '#10b981',
+    color: SOURCE_MODE_HEX.custom,
     Icon: Sliders,
   },
 ]
-
-// ─── Priority derivation ──────────────────────────────────────────────────────
-
-/**
- * Weighted average of priorities across multiple philosophies.
- */
-function deriveBlendedPriorities(
-  philIds: string[],
-  philWeights: Record<string, number>,
-  philosophies: Philosophy[],
-  frameworks: Framework[]
-): Record<ModalityId, number> {
-  const totalW = philIds.reduce((s, id) => s + (philWeights[id] ?? 50), 0)
-  const blended = Object.fromEntries(MODALITY_ORDER.map((id) => [id, 0])) as Record<ModalityId, number>
-
-  for (const philId of philIds) {
-    const phil = philosophies.find((p) => p.id === philId)
-    if (!phil) continue
-    const w = (philWeights[philId] ?? 50) / totalW
-    const priorities = derivePhilosophyPriorities(phil, frameworks)
-    for (const id of MODALITY_ORDER) {
-      blended[id] += priorities[id] * w
-    }
-  }
-
-  const sum = Object.values(blended).reduce((s, v) => s + v, 0)
-  if (sum === 0) return DEFAULT_PRIORITIES
-  return Object.fromEntries(MODALITY_ORDER.map((id) => [id, blended[id] / sum])) as Record<ModalityId, number>
-}
 
 function normalizePriorities(raw: Record<ModalityId, number>): Record<ModalityId, number> {
   const total = Object.values(raw).reduce((s, v) => s + v, 0)
@@ -80,13 +57,16 @@ function PhilCard({
   isSelected,
   isDisabled,
   onClick,
+  yours = false,
 }: {
   phil: Philosophy
   isSelected: boolean
   isDisabled: boolean
   onClick: () => void
+  /** One of the athlete's own methods (shown among the others in a blend). */
+  yours?: boolean
 }) {
-  const hex = MODALITY_COLORS[phil.bias?.[0] as ModalityId]?.hex ?? '#6366f1'
+  const hex = MODALITY_COLORS[phil.bias?.[0] as ModalityId]?.hex ?? FALLBACK_HEX
 
   return (
     <button
@@ -106,11 +86,14 @@ function PhilCard({
       }
     >
       <div className="min-w-0 flex-1">
-        <p className={cn(
-          'text-xs font-medium leading-snug truncate transition-colors',
-          isSelected ? 'text-foreground' : 'group-hover:text-primary',
-        )}>
-          {phil.name}
+        <p className="flex items-center gap-1.5">
+          <span className={cn(
+            'text-xs font-medium leading-snug truncate transition-colors',
+            isSelected ? 'text-foreground' : 'group-hover:text-primary',
+          )}>
+            {phil.name}
+          </span>
+          {yours && <Badge variant="outline" className="shrink-0 px-1.5 py-0 text-[9px]">Yours</Badge>}
         </p>
         <p className="text-[10px] text-muted-foreground/60 mt-0.5">
           {phil.bias?.length ?? 0} modalities · {phil.core_principles?.length ?? 0} principles
@@ -140,7 +123,7 @@ function PhilWeightBar({
       <div className="flex rounded overflow-hidden h-2 gap-px">
         {selectedIds.map((id) => {
           const phil = philosophies.find((p) => p.id === id)
-          const hex = MODALITY_COLORS[(phil?.bias?.[0] ?? '') as ModalityId]?.hex ?? '#6366f1'
+          const hex = MODALITY_COLORS[(phil?.bias?.[0] ?? '') as ModalityId]?.hex ?? FALLBACK_HEX
           const pct = ((weights[id] ?? 50) / total) * 100
           return (
             <div
@@ -155,7 +138,7 @@ function PhilWeightBar({
       <div className="space-y-2.5">
         {selectedIds.map((id) => {
           const phil = philosophies.find((p) => p.id === id)
-          const hex = MODALITY_COLORS[(phil?.bias?.[0] ?? '') as ModalityId]?.hex ?? '#6366f1'
+          const hex = MODALITY_COLORS[(phil?.bias?.[0] ?? '') as ModalityId]?.hex ?? FALLBACK_HEX
           const pct = Math.round(((weights[id] ?? 50) / total) * 100)
           return (
             <div key={id} className="space-y-1">
@@ -285,8 +268,22 @@ export function ProgramSource() {
   const [philWeights, setPhilWeights] = useState<Record<string, number>>(() => useBuilderStore.getState().philosophyWeights)
   const [customPriorities, setCustomPriorities] = useState<Record<ModalityId, number>>(DEFAULT_PRIORITIES)
 
-  const { data: philosophies = [], isLoading: philLoading } = usePhilosophies()
+  const { data: philosophies = [], isLoading: philLoading, error: philError, refetch: philRetry } = usePhilosophies()
+  // Without the list there is nothing to pick, and "nothing" must not look like an empty catalogue.
+  const philFailed = philError && philosophies.length === 0 ? (
+    <FailedState
+      size="compact"
+      title="Could not load the philosophies"
+      error={philError}
+      onRetry={() => { void philRetry() }}
+    />
+  ) : null
   const { data: frameworks = [] } = useFrameworks()
+  // The athlete's own methods are philosophies too; in the single-source list
+  // they have a group of their own above the shipped ones.
+  const { data: methods } = useMethods()
+  const mine = useMemo(() => new Set((methods?.methods ?? []).map((m) => m.id)), [methods])
+  const shipped = useMemo(() => philosophies.filter((p) => !mine.has(p.id)), [philosophies, mine])
 
   const {
     setSourceMode, setGoalIds, setGoalWeightsBulk, setPriorityOverrides,
@@ -481,9 +478,7 @@ export function ProgramSource() {
         {activeMode && (
           <motion.div
             key={activeMode}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0, transition: { duration: 0.22, ease: [0.25, 0.1, 0.25, 1] } }}
-            exit={{ opacity: 0, y: -4, transition: { duration: 0.15 } }}
+            {...swapMotion}
             className="rounded-xl border border-border/50 bg-card/30 p-5 space-y-4"
           >
             {/* ── Mode 1: single philosophy ── */}
@@ -493,23 +488,30 @@ export function ProgramSource() {
                   Select a philosophy
                 </p>
                 {isLoading ? (
-                  <div className="grid grid-cols-2 gap-2">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <div key={i} className="h-12 rounded-lg bg-muted/20 animate-pulse" />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-2">
-                    {philosophies.map((phil) => (
-                      <PhilCard
-                        key={phil.id}
-                        phil={phil}
-                        isSelected={selectedPhilIds[0] === phil.id}
-                        isDisabled={false}
-                        onClick={() => handleSelectPhilosophy(phil)}
-                      />
-                    ))}
-                  </div>
+                  <LoadingState shape="tiles" label="Loading the philosophies" />
+                ) : philFailed ?? (
+                  <>
+                    <YourMethods
+                      philosophies={philosophies}
+                      selectedId={selectedPhilIds[0] ?? null}
+                      onSelect={handleSelectPhilosophy}
+                      onDeleted={(id) => {
+                        const phil = philosophies.find((p) => p.id === id)
+                        if (phil && selectedPhilIds[0] === id) handleSelectPhilosophy(phil)   // lets go of it
+                      }}
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      {shipped.map((phil) => (
+                        <PhilCard
+                          key={phil.id}
+                          phil={phil}
+                          isSelected={selectedPhilIds[0] === phil.id}
+                          isDisabled={false}
+                          onClick={() => handleSelectPhilosophy(phil)}
+                        />
+                      ))}
+                    </div>
+                  </>
                 )}
 
                 {mode1Preview && (
@@ -544,12 +546,8 @@ export function ProgramSource() {
                   Select up to 4 philosophies
                 </p>
                 {isLoading ? (
-                  <div className="grid grid-cols-2 gap-2">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <div key={i} className="h-12 rounded-lg bg-muted/20 animate-pulse" />
-                    ))}
-                  </div>
-                ) : (
+                  <LoadingState shape="tiles" label="Loading the philosophies" />
+                ) : philFailed ?? (
                   <div className="grid grid-cols-2 gap-2">
                     {philosophies.map((phil) => (
                       <PhilCard
@@ -558,6 +556,7 @@ export function ProgramSource() {
                         isSelected={selectedPhilIds.includes(phil.id)}
                         isDisabled={!selectedPhilIds.includes(phil.id) && selectedPhilIds.length >= 4}
                         onClick={() => handleTogglePhilosophy(phil)}
+                        yours={mine.has(phil.id)}
                       />
                     ))}
                   </div>

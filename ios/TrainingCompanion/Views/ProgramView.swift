@@ -21,11 +21,8 @@ struct ProgramView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var router: AppRouter
 
+    /// The week Calendar's pager shows (§6.49).
     @State private var weekIndex: Int = 0
-
-    // Swipe state
-    @State private var dragOffset: CGFloat = 0
-    @State private var lockedAdjacentIndex: Int? = nil
 
     @State private var showBuilder = false
     @State private var showSettings = false
@@ -37,18 +34,16 @@ struct ProgramView: View {
 
     @ViewBuilder
     private var currentProgramSection: some View {
-        if appState.allWeeks.isEmpty && !appState.isLoadingProgram {
-            noProgramView
-        } else if appState.isLoadingProgram && appState.allWeeks.isEmpty {
-            loadingView
-        } else {
-            programContent
+        switch programPhase {
+        case .content: programContent
+        case .loading: AppLoadingState(label: "Loading program")
+        case .failed(let message):
+            AppFailedState(title: "Could not load your program", message: message) { await appState.loadProgram() }
+        case .empty: noProgramView
         }
     }
 
     private let dayOrder = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
-    private var cardWidth: CGFloat { AppMetrics.screenWidth - 32 }
-    private var peekIndex: Int { lockedAdjacentIndex ?? weekIndex + (dragOffset <= 0 ? 1 : -1) }
 
     // MARK: - Body
 
@@ -73,8 +68,10 @@ struct ProgramView: View {
                     if section != .history {
                         if appState.allWeeks.isEmpty {
                             Button { AppHaptics.light(); showBuilder = true } label: { Image(systemName: "plus") }
+                                .accessibilityLabel("New program")
                         } else {
                             Button { AppHaptics.light(); showSettings = true } label: { Image(systemName: "gearshape") }
+                                .accessibilityLabel("Program settings")
                         }
                     }
                 }
@@ -91,6 +88,7 @@ struct ProgramView: View {
             .sheet(item: $selectedDay) { sel in
                 DaySessionsSheet(weekIndex: sel.weekIndex, dayName: sel.dayName)
                     .environmentObject(appState)
+                    .appSheet(.flexible)
             }
             .task {
                 if appState.allWeeks.isEmpty { await appState.loadProgram() }
@@ -127,8 +125,7 @@ struct ProgramView: View {
 
                 Divider().padding(.bottom, 12)
 
-                swipeableSection
-                    .padding(.horizontal)
+                weekPager
 
                 Spacer(minLength: 40)
             }
@@ -146,7 +143,7 @@ struct ProgramView: View {
     private func conflictBanner(_ message: String) -> some View {
         HStack(alignment: .top, spacing: 8) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundStyle(.orange)
+                .foregroundStyle(AppColor.warning)
             Text(message)
                 .font(.footnote)
                 .fixedSize(horizontal: false, vertical: true)
@@ -155,78 +152,70 @@ struct ProgramView: View {
                 AppHaptics.light()
                 appState.programSaveConflict = nil
             } label: {
-                Image(systemName: "xmark").font(.caption)
+                Image(systemName: "xmark").font(.caption).appTapTarget()
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Dismiss")
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.orange.opacity(0.12))
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.orange.opacity(0.25), lineWidth: 1))
+        .background(AppColor.warning.opacity(AppColor.Opacity.fill))
+        .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusControl))
+        .overlay(RoundedRectangle(cornerRadius: AppMetrics.radiusControl).stroke(AppColor.warning.opacity(0.25), lineWidth: 1))
     }
 
-    // MARK: - Swipeable Section
+    // MARK: - Week Pager
 
-    private var swipeableSection: some View {
-        let gap: CGFloat = 14
-        let exitDistance = cardWidth + gap
-        let showPeek = dragOffset != 0
-        let peekSign: CGFloat = peekIndex > weekIndex ? 1 : -1
-
-        return ZStack(alignment: .topLeading) {
-            if showPeek {
-                weekCard(weekIdx: peekIndex)
-                    .offset(x: dragOffset + peekSign * exitDistance)
-                    .allowsHitTesting(false)
+    /// One week a page: the header's chevrons are the control, a swipe the
+    /// shortcut; the title goes back to the current week.
+    private var weekPager: some View {
+        let weeks = appState.allWeeks
+        let pages = 0...max(weeks.count - 1, 0)
+        let current = appState.currentWeekIndex
+        return VStack(alignment: .leading, spacing: AppMetrics.gapMedium) {
+            AppPagerHeader(pages: pages, selection: $weekIndex, unit: "week",
+                           onTitle: current == nil || current == weekIndex ? nil : { weekIndex = current ?? 0 }) {
+                weekTitle(weekIndex, current: current)
             }
-            weekCard(weekIdx: weekIndex)
-                .offset(x: dragOffset)
+            .padding(.horizontal)
+            AppPager(pages: pages, selection: $weekIndex) { index in
+                weekCard(weekIdx: index)
+            }
         }
-        .clipped()
-        .contentShape(Rectangle())
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 10)
-                .onChanged { value in
-                    let h = value.translation.width
-                    guard abs(h) > abs(value.translation.height) else { return }
-                    if lockedAdjacentIndex == nil {
-                        lockedAdjacentIndex = weekIndex + (h < 0 ? 1 : -1)
-                    }
-                    dragOffset = h
-                }
-                .onEnded { value in
-                    let h = value.translation.width
-                    guard abs(h) > abs(value.translation.height),
-                          abs(value.predictedEndTranslation.width) > AppMetrics.swipeThreshold
-                          || abs(value.velocity.width) > AppMetrics.swipeVelocityThreshold else {
-                        cancelSwipe(); return
-                    }
-                    let goNext = h < 0
-                    let next = weekIndex + (goNext ? 1 : -1)
-                    guard next >= 0 && next < appState.allWeeks.count else {
-                        cancelSwipe(); return
-                    }
-                    commitSwipe(goNext: goNext, exitDistance: exitDistance)
-                }
-        )
     }
 
-    private func cancelSwipe() {
-        lockedAdjacentIndex = nil
-        withAnimation(AppAnimation.springStandard) { dragOffset = 0 }
-    }
-
-    private func commitSwipe(goNext: Bool, exitDistance: CGFloat) {
-        AppHaptics.soft()
-        withAnimation(AppAnimation.springSnappy) {
-            dragOffset = goNext ? -exitDistance : exitDistance
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-            weekIndex += goNext ? 1 : -1
-            dragOffset = 0
-            lockedAdjacentIndex = nil
+    private func weekTitle(_ index: Int, current: Int?) -> some View {
+        let weeks = appState.allWeeks
+        return VStack(alignment: .leading, spacing: 2) {
+            AppAdaptiveStack(spacing: AppMetrics.gapSmall) {
+                // Position in the program, not week.weekNumber.
+                // A program whose weeks are numbered 16...31 (the tail of
+                // an earlier plan) but whose programStartDate is this week
+                // showed "Week 16" on day one. programStartDate anchors
+                // weeks[0] as week 1, so position is the truth.
+                Text("Week \(index + 1) of \(weeks.count)").font(.headline)
+                if index == current {
+                    Text("Current")
+                        .font(.caption2).fontWeight(.semibold)
+                        .lineLimit(1).fixedSize()
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 7).padding(.vertical, 3)
+                        .background(AppColor.accent.gradient)
+                        .clipShape(Capsule())
+                } else if current != nil {
+                    Label("Current", systemImage: index > (current ?? 0) ? "arrow.uturn.backward" : "arrow.uturn.forward")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(AppColor.accent)
+                }
+            }
+            if let week = weeks[safe: index] {
+                HStack(spacing: 6) {
+                    Text(week.phaseLabel)
+                    if week.isDeload { Text("· Deload").foregroundStyle(AppColor.warning) }
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
         }
     }
 
@@ -237,36 +226,8 @@ struct ProgramView: View {
         let weeks = appState.allWeeks
         if weekIdx >= 0 && weekIdx < weeks.count {
             let week = weeks[weekIdx]
-            let isCurrent = weekIdx == (appState.currentWeekIndex ?? -1)
 
             VStack(alignment: .leading, spacing: 0) {
-                HStack(alignment: .firstTextBaseline) {
-                    HStack(spacing: 8) {
-                        // Position in the program, not week.weekNumber.
-                        // A program whose weeks are numbered 16...31 (the tail of
-                        // an earlier plan) but whose programStartDate is this week
-                        // showed "Week 16" on day one. programStartDate anchors
-                        // weeks[0] as week 1, so position is the truth.
-                        Text("Week \(weekIdx + 1) of \(weeks.count)").font(.headline)
-                        if isCurrent {
-                            Text("Current")
-                                .font(.caption2).fontWeight(.semibold)
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 7).padding(.vertical, 3)
-                                .background(Color.blue.gradient)
-                                .clipShape(Capsule())
-                        }
-                    }
-                    Spacer()
-                    HStack(spacing: 6) {
-                        Text(week.phaseLabel)
-                        if week.isDeload { Text("· Deload").foregroundStyle(.orange) }
-                    }
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                }
-                .padding(.bottom, 10)
-
                 VStack(spacing: 0) {
                     ForEach(dayOrder.indices, id: \.self) { i in
                         dayRow(day: dayOrder[i], week: week, weekIdx: weekIdx)
@@ -276,14 +237,14 @@ struct ProgramView: View {
                     }
                 }
                 .background(.background.secondary)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusCard, style: .continuous))
             }
         } else {
             Text(weekIdx < 0 ? "Before program start" : "End of program")
                 .font(.caption).foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, minHeight: 80)
                 .background(.background.secondary)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusCard, style: .continuous))
         }
     }
 
@@ -291,21 +252,26 @@ struct ProgramView: View {
         let sessions = week.schedule[day] ?? []
         let isToday = day == appState.todayDayName && weekIdx == (appState.currentWeekIndex ?? -1)
 
-        return Button {
+        // The row opens the day; its trailing control is the day's actions,
+        // visible (§6.43): "…" beside sessions, Add on a rest day ahead.
+        return HStack(spacing: 0) {
+          Button {
             guard !sessions.isEmpty else { return }
             AppHaptics.light()
             selectedDay = DaySelection(weekIndex: weekIdx, dayName: day)
-        } label: {
-            HStack(spacing: 12) {
+          } label: {
+            // The day beside its sessions; above them at the accessibility
+            // sizes, where a name would break word by word (§6.57).
+            AppAdaptiveStack(spacing: 12) {
                 Text(day.prefix(3))
                     .font(.subheadline)
                     .fontWeight(isToday ? .bold : .regular)
-                    .foregroundStyle(isToday ? .blue : .primary)
-                    .frame(width: 36, alignment: .leading)
+                    .foregroundStyle(isToday ? AppColor.accent : .primary)
+                    .frame(minWidth: 36, alignment: .leading)
 
                 if sessions.isEmpty {
                     HStack(spacing: 5) {
-                        Image(systemName: "battery.100.bolt").foregroundStyle(.green)
+                        Image(systemName: "battery.100.bolt").foregroundStyle(AppColor.complete)
                         Text("Rest").foregroundStyle(.secondary)
                     }
                     .font(.subheadline)
@@ -319,7 +285,7 @@ struct ProgramView: View {
                             HStack(spacing: 6) {
                                 Image(symbol: done ? "checkmark.circle.fill"
                                                    : SessionIcon.symbol(icon: session.icon, modality: session.modality))
-                                    .foregroundStyle(done ? .green
+                                    .foregroundStyle(done ? AppColor.complete
                                                           : ModalityStyle.color(for: session.modality))
                                     .font(.caption)
                                 Text(session.archetype?.name
@@ -334,47 +300,60 @@ struct ProgramView: View {
                         }
                     }
                 }
-
-                Spacer()
-                if !sessions.isEmpty {
-                    Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
-                }
             }
-            .padding(.horizontal, 14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.leading, 14)
             .padding(.vertical, 10)
-            .background(isToday ? Color.blue.opacity(0.06) : Color.clear)
+            .frame(minHeight: 44)
             .contentShape(Rectangle())
+          }
+          .buttonStyle(.plain)
+          .accessibilityLabel(dayLabel(day: day, week: week, isToday: isToday))
+          if sessions.isEmpty {
+              SessionAddButton(weekIndex: weekIdx, dayName: day, title: "Add")
+                  .padding(.trailing, 14)
+          } else {
+              SessionActionsMenu(weekIndex: weekIdx, dayName: day)
+                  .padding(.trailing, 6)
+          }
         }
-        .buttonStyle(.plain)
-        // Long press: each session's Move, Replace, Remove (an added one); Add
-        // Session on today or a later day (design-system §6.43).
+        .background(isToday ? AppColor.accent.opacity(0.06) : Color.clear)
+        // The same as a long press: each session's Move, Replace, Remove (an
+        // added one); Add Session on today or a later day.
         .sessionActions(weekIndex: weekIdx, dayName: day)
+    }
+
+    /// A day's row for VoiceOver: the day, then each session with what the
+    /// icons and badges say ("Wednesday, today: Swing Day, done").
+    private func dayLabel(day: String, week: ProgramWeek, isToday: Bool) -> String {
+        let sessions = week.schedule[day] ?? []
+        let head = day + (isToday ? ", today" : "")
+        guard !sessions.isEmpty else { return head + ": rest" }
+        let parts = sessions.indices.map { i -> String in
+            let session = sessions[i]
+            let key = appState.makeSessionKey(weekNumber: week.weekNumber, dayName: day, index: i)
+            var text = session.archetype?.name ?? ModalityStyle.label(for: session.modality)
+            if session.testInfo != nil { text += ", test" }
+            if session.isAdded { text += ", added" }
+            if appState.isSessionComplete(key) { text += ", done" }
+            return text
+        }
+        return head + ": " + parts.joined(separator: "; ")
     }
 
     // MARK: - Empty States
 
-    private var loadingView: some View {
-        VStack(spacing: 16) {
-            ProgressView()
-            Text("Loading program…").foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    private var noProgramView: some View {
+        AppEmptyState(icon: "calendar.badge.plus", title: "No program",
+                      message: "Create a training program to get started.",
+                      actionLabel: "Create program", prominent: true) { showBuilder = true }
     }
 
-    private var noProgramView: some View {
-        VStack(spacing: 24) {
-            Image(systemName: "calendar.badge.plus")
-                .font(.system(size: 64))
-                .foregroundStyle(.blue.gradient)
-            Text("No Program").font(.title2).fontWeight(.medium)
-            Text("Create a training program to get started.")
-                .font(.subheadline).foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-            Button("Create Program") { showBuilder = true }
-                .buttonStyle(.borderedProminent)
-        }
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    /// One reading of the program's load for Calendar and Overview.
+    private var programPhase: AppLoadPhase {
+        AppLoadPhase.resolve(hasContent: !appState.allWeeks.isEmpty,
+                             isLoading: appState.isLoadingProgram,
+                             error: appState.serverProgram == nil ? appState.programError : nil)
     }
 }
 
@@ -424,8 +403,10 @@ private struct DaySessionsSheet: View {
         let done = appState.isSessionComplete(key)
         return HStack(spacing: 12) {
             Image(symbol: done ? "checkmark.circle.fill" : SessionIcon.symbol(icon: session.icon, modality: session.modality))
-                .foregroundStyle(done ? .green : ModalityStyle.color(for: session.modality))
+                .foregroundStyle(done ? AppColor.complete : ModalityStyle.color(for: session.modality))
                 .font(.title3)
+                .accessibilityLabel("Done")
+                .accessibilityHidden(!done)
             VStack(alignment: .leading, spacing: 3) {
                 Text(session.archetype?.name ?? ModalityStyle.label(for: session.modality))
                     .fontWeight(.medium)

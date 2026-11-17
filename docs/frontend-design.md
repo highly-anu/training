@@ -12,7 +12,7 @@ Where this document and the code disagree, the divergence is marked inline at th
 
 > **Code diverges — doc is correct.** The rule below is the target. The code has drifted and should be brought back. Tracked in `docs/frontend-fix-plan.md`.
 
-Anything not marked is believed to match the code as of 2026-07-30.
+Anything not marked is believed to match the code as of 2026-07-30; §1.7, §1.8, §9.0–§9.1, §9.9–§9.10, §11.2–§11.9, §12.1, §13.1 and §17.2–§17.5 as of 2026-11-11 (roadmap item 19, which brings the rest up to date phase by phase).
 
 ---
 
@@ -103,6 +103,72 @@ Radix UI primitives handle ARIA roles, keyboard navigation, and focus management
 - Every color-carried meaning is duplicated in text or icon
 - Every text/background pair clears 4.5:1 **in all four themes**, not just the one being developed in
 - Focus is visible on every focusable element (Radix gives this; do not remove it with `outline-none` unless a `focus-visible:ring` replaces it)
+
+### 1.7 The Design Language
+
+The phone states its language in seven short rules (`ios/docs/design-system.md` §1); these
+are the same ones in the web's idiom. A screen that follows them reads as the same product
+on either client. §1.8 says where each lives in code and what holds it.
+
+1. **Content is solid; chrome is quiet.** Cards, rows and charts sit on `bg-card`, opaque.
+   Blur and translucency belong to what floats over content — the sheet's scrim, the
+   drawer, a sticky bar — never to the content itself.
+2. **One colour says "do this", another says "done".** The theme's `--action` (its primary:
+   amber in Light and Dark, khaki in Military, clay in Zen) is the one filled button of a
+   view and the selected state. `--done` (emerald) is completion and nothing else. A theme
+   may choose both; it may not let them meet (§8.10 holds 55° of hue between them). Every
+   other hue is data: a modality, a phase, a zone, a status.
+3. **Nothing is behind hover or a gesture alone.** A pointer may reveal a shortcut; the
+   action itself is on screen, focusable, and reachable by touch. A drag has a menu twin.
+4. **Three states before content.** Every screen that loads answers loading (the shape of
+   what is coming), failed (what went wrong, Try again) and empty (why, and the way
+   forward). Content on screen is never replaced by a reload or by its failure.
+5. **Every action answers, in place.** The control that was pressed shows pending, then
+   the result where the athlete is looking. A toast is for a result that left the screen:
+   the undo of a removal, a save that failed in the background.
+6. **Motion has three jobs** (§1.5): it orients, it answers, it shows what changed.
+   Anything else is still. One set of presets (`lib/motion.ts`), named as on the phone.
+7. **Accessibility lives in the component.** The focus ring, the 44 px touch target, the
+   accessible name, the chart's sentence and the reduced-motion answer are in the shared
+   piece, so a screen gets them by using it — not by remembering them.
+
+### 1.8 Every Rule in One Table
+
+A rule is real when one module carries it and a check fails without it. Rules whose row
+says *planned* are roadmap item 19's later phases; they are listed so the table is the
+whole contract, and each gets its module and its check in the phase that lands it.
+
+| Rule | Carried by | Held by |
+|---|---|---|
+| Durations, easings and springs are written once | `lib/motion.ts`; `--motion-*`, `ease-standard`, `ease-exit` (`styles/globals.css`) | `test/designRules.test.ts` — no transition, duration or easing literal, no `duration-200` / `ease-in-out` class, anywhere else |
+| A page arrives and leaves the same way | `components/layout/Page.tsx`; `RootLayout` keys the outlet by path | `designRules` — no page writes its own transition |
+| Reduce Motion stops movement, keeps fades | `<MotionConfig reducedMotion="user">` (`App.tsx`); the `prefers-reduced-motion` block in `globals.css` | by construction: both are global (§9.10) |
+| "Do this" and "done" are two colours in every theme | `--action`, `--done` and their foregrounds, per theme | `test/semanticContrast.test.ts` — ≥ 55° of hue apart, AA for the text on each fill |
+| Semantic text clears AA in all four themes | `lib/modalityColors`, `phaseColors`, `completionColors`, `statusColors`, `movementColors` | `semanticContrast` (§8.10) |
+| Modality and phase colours, labels and icons are generated | `lib/gen/clientVocab.ts` (`tools/gen_client_vocab.py`) | `test_client_vocab.py` |
+| Three states before content | `components/shared/states/` (`loadPhase`, `LoadingState`, `FailedState`, `QueryState`), `ErrorBanner` `onRetry`, `ui/spinner.tsx`, `RouteErrorBoundary` (§11.2) | `loadPhase.test.ts`; no `animate-spin`, `animate-pulse`, "Loading…", bare `error.message` or new `border-dashed` outside the owners |
+| Every action answers in place | `Button` `loading` (`ui/button.tsx`), `DoneMark`, `lib/announce.ts` + `LiveRegion` (§11.5, §11.7, §11.8) | `button.test.tsx`; `designRules` — no label that changes while pending |
+| A toast only where the answer has left the screen | `lib/toast.ts` (`toast.undo`, `toast.failed`), `components/shared/Toaster.tsx`; `ConfirmDialog` for what cannot be undone (§11.6) | `toast.test.ts`; `designRules` — sonner imported nowhere else, no `window.confirm` |
+| One tab selector, one page header | `components/layout/SubTabs.tsx`, `PageHeader.tsx` (§17) | `SubTabs.test.tsx` (arrow keys, roving tab stop); `designRules` — no hand-written header row, `role="tablist"` or `TabSelector` |
+| What changed is shown, not swapped | `components/motion/` — `RollingNumber`, `TabPanels`, `Collapse`, `PresenceList`, `Stagger` (§11.9) | `RollingNumber.test.tsx`; `designRules` — no `initial` / `animate` / `exit` / `whileTap` literal outside `components/motion`, `components/layout` and `lib/motion.ts` |
+| Charts draw once, and not at all under Reduce Motion | `lib/chartMotion.ts` (`useChartEntry`, §12.1) | `chartMotion.test.ts`; `designRules` — every series starts `{...drawIn}`, no Recharts animation prop elsewhere |
+| The navigation drawer starts closed | `RootLayout` over `ui/sheet`; `uiStore.mobileNavOpen`, never persisted (§13.1) | `designRules` |
+| What can be clicked is a button or a link | `<button>` / `<Link>`; a card with controls inside takes one stretched button under its content (`WeekOverview`'s `SessionCard`, `WorkoutRow`) (§11.10) | `designRules` — no `onClick` or `role="button"` on a `div`, `span`, `li`, row, cell or `Card` |
+| No control waits for a hover | the row's "…" menu (`ui/dropdown-menu`); `.reveal` inside `.reveal-host` (`globals.css`) for a pointer's shortcut, shown on focus and on touch | `designRules` — no `opacity-0` / `invisible` with `group-hover` |
+| Focus, press and the touch target are written once | `globals.css`: the `:focus-visible` ring, the press on a button, the 44 px hit area under `pointer: coarse` | `designRules` — the three blocks exist; no `outline-none` without a focus style on the same element |
+| A button explains itself | `components/shared/Tip.tsx` (`Tip`, `Keys`, `TipProvider` in `App.tsx`) | `designRules` — no `title` on a button, no second `TooltipProvider` |
+| A drag has a keyboard and a menu | `lib/dndKeyboard.ts`, dnd-kit `KeyboardSensor` and announcements, *Move to* in the card's menu (`WeekOverview`); Linking's select-then-pick | `dndKeyboard.test.ts`; `designRules` |
+| One list of keyboard shortcuts | `lib/shortcuts.ts`, `components/layout/Shortcuts.tsx` (`?` lists them) | `shortcuts.test.ts`; `designRules` — no other `keydown` listener on the window |
+| Back returns to where you were | `lib/useScrollRestore.ts` (per history entry); `TabPanels` carries it; `components/layout/ScrollPanel.tsx` for a tab's or topic's body that scrolls by itself | `useScrollRestore.test.ts` |
+| Done is `--done`; a verdict is `--good` / `--warn` / `--bad` | the tokens per theme (`globals.css`); `lib/completionColors.ts`, `lib/statusColors.ts` (§8.3, §8.8, §8.12) | `semanticContrast` — each token AA as text on the page, a card and its own tint in every theme; `designRules` — no raw `emerald-` / `green-` class, and no raw `amber-` / `orange-` / `yellow-` / `red-` / `rose-` outside the colour modules |
+| Hue is data, and it has a name | `lib/dataColors.ts` beside the modality, phase, zone and movement modules (§8.12) | `designRules` — no hex literal in a component |
+| A chart reads its numbers | `components/shared/ChartFrame.tsx`, `lib/chartSummary.ts` (§12.11) | `chartSummary.test.ts`; `designRules` — no Recharts container outside `ChartFrame`, no frame without a label |
+| The page can be skipped to and has one name | the skip link and `main#main` in `RootLayout`; `PageHeader`'s `h1` | `designRules`; `eslint-plugin-jsx-a11y` (recommended) in `npm run lint` |
+
+**Adding a rule.** Put it in one module, convert every call site in the same change, add
+the row here and the line to `designRules.test.ts`. No baseline is kept: a ban lands with
+its conversions, so the test is green the day it is written and red the day someone types
+the thing by hand again.
 
 ---
 
@@ -244,14 +310,17 @@ Military and Zen go beyond token swaps. They are the only places in the app wher
 
 | | Military | Zen |
 |---|---|---|
-| `--primary` | olive `oklch(0.58 0.13 130)` | sage `oklch(0.55 0.1 155)` |
+| `--primary` | khaki `oklch(0.72 0.11 95)` | clay `oklch(0.56 0.11 45)` |
+| `--done` | emerald-400 | emerald-600 |
 | `--radius` | `0.25rem` (hard corners) | `0.75rem` (soft) |
 | Font | `"IBM Plex Mono"` — sans *and* mono slots | `"Lora", Georgia, serif` |
-| Body texture | 20px radial dot-grid in primary @ 14% | two soft radial gradient washes (sage NW, stone SE) |
+| Body texture | 20px radial dot-grid in olive @ 14% | two soft radial gradient washes (sage NW, stone SE) |
 | Letter-spacing | `-0.01em` (tightened) | `0.012em` + `line-height: 1.65` |
 | Scrollbar | 4px, square thumb | 6px, pill thumb |
 
-**Rule for new themes:** override tokens in a class block, and only reach for `body` background-image / letter-spacing if the theme is a *character* theme. Light and dark must stay texture-free.
+**The primary is never green.** Until 2026-11-11 Military's primary was olive and Zen's sage — 33° and 10° of hue from the emerald that means done, so every primary button looked finished. The olive and the sage stay where they are texture (the dot grid, the washes, the scrollbar); the action colour moved, and §8.10's guard fails a theme that brings them back together.
+
+**Rule for new themes:** override tokens in a class block, define `--done` and keep it 55° of hue from `--primary`, and only reach for `body` background-image / letter-spacing if the theme is a *character* theme. Light and dark must stay texture-free.
 
 **Web fonts:** `IBM Plex Mono` and `Lora` are loaded from Google Fonts in `index.html:9-11` (`preconnect` ×2 + one stylesheet `<link>`, `display=swap`). This is the only external font dependency in the app. Note it loads **unconditionally**, so light and dark users pay for two fonts they never render — see `docs/frontend-fix-plan.md` for the deferred-load option.
 
@@ -813,42 +882,42 @@ const PHASE_COLORS = {
 
 ### 8.3 Completion State (Emerald)
 
-One color owns the "done" state throughout the entire application: `emerald-500`.
-
-```typescript
-// Complete: all three properties use the same hue, different opacity
-const completeStyles = {
-  border: 'border-emerald-500/30',
-  bg:     'bg-emerald-500/10',
-  text:   'text-emerald-500',
-  hover:  'hover:bg-emerald-500/20',
-  icon:   CheckCircle2,
-}
-```
-
-Applied to: session cards, day headers, completion buttons, "all done" state of TodaySession, week-complete banners.
-
-> **Resolved 2026-07-30 (was FIX-1).** Completion styles were previously written inline at every call site with no `dark:` variant, so `text-emerald-500` measured **2.33:1** in light mode. Now extracted to `lib/completionColors.ts`.
+One colour owns "done" throughout the application: the `--done` token, emerald in every
+theme, and no other meaning may use it (§8.12).
 
 **The module** (`lib/completionColors.ts`):
 
 ```typescript
 export const COMPLETION = {
-  border:   'border-emerald-500/30',
-  bg:       'bg-emerald-500/5',          // card/panel surface
-  bgStrong: 'bg-emerald-500/10',         // interactive controls
-  hover:    'hover:bg-emerald-500/20',
-  text:     'text-emerald-700 dark:text-emerald-300',
-  hex:      '#10b981',                   // charts, SVG, inline style
+  border:   'border-done/30',
+  bg:       'bg-done/5',          // card/panel surface
+  bgStrong: 'bg-done/10',         // interactive controls
+  hover:    'hover:bg-done/20',
+  text:     'text-done',
+  css:      'var(--done)',        // charts, SVG, inline style
 } as const
 
 export const COMPLETION_SURFACE     = `${COMPLETION.border} ${COMPLETION.bg} ${COMPLETION.text}`
 export const COMPLETION_INTERACTIVE = `${COMPLETION.border} ${COMPLETION.bgStrong} ${COMPLETION.text} ${COMPLETION.hover}`
 ```
 
-Two fill strengths, because the original inline copies had silently diverged: cards used `/5`, interactive controls `/10`. Both are correct for their context, so the module names them rather than flattening them.
+Applied to: session cards, day headers, completion buttons, the "all done" state of Today,
+week-complete banners, the done series of a chart. A component may write `text-done` or
+`bg-done/10` directly; it may not write `emerald-` (the design test fails on it).
 
-**Completion is not "good".** Do not reach for `COMPLETION` to mean positive, on-track, or passing — that is §8.8's axis, and it has its own module. Completion means the work is finished, regardless of how it went. A session completed badly is still complete.
+Two fill strengths, because the original inline copies had silently diverged: cards used
+`/5`, interactive controls `/10`. Both are correct for their context, so the module names
+them rather than flattening them.
+
+**Completion is not "good".** Do not reach for `COMPLETION` to mean positive, on-track, or
+passing — that is §8.8's axis, with its own token. Completion means the work is finished,
+regardless of how it went. A session completed badly is still complete.
+
+> **History.** Until 2026-07-30 the styles were inline at every call site with no `dark:`
+> variant (`text-emerald-500` measured 2.33:1 in light mode); the module then carried
+> `text-emerald-700 dark:text-emerald-300`. Since 2026-11-11 it is the token, because 136
+> raw emerald classes had grown beside seven users of the module and emerald had come to
+> mean done, going well, a trend up, a connected account and three data categories.
 
 ### 8.4 Fatigue Gradient
 
@@ -936,11 +1005,14 @@ export const ZONE_BG:     readonly string[] = ZONES.map((z) => z.bg)
 
 ```typescript
 export const STATUS_STYLES: Record<StatusLevel, StatusStyle> = {
-  green:  { ring: 'ring-emerald-500/30', score: 'text-emerald-700 dark:text-emerald-300', badge: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30' },
-  yellow: { ring: 'ring-amber-500/30',   score: 'text-amber-700 dark:text-amber-300',     badge: 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30'         },
-  red:    { ring: 'ring-red-500/30',     score: 'text-red-700 dark:text-red-300',         badge: 'bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/30'                 },
+  green:  { ring: 'ring-good/30', score: 'text-good', badge: 'bg-good/10 text-good border-good/30' },
+  yellow: { ring: 'ring-warn/30', score: 'text-warn', badge: 'bg-warn/10 text-warn border-warn/30' },
+  red:    { ring: 'ring-bad/30',  score: 'text-bad',  badge: 'bg-bad/10 text-bad border-bad/30'   },
 }
 ```
+
+`STATUS_TEXT`, `STATUS_FILL` (a bar or dot) and `STATUS_CSS` (`var(--good)` for a chart or
+SVG) are the same three tokens for the other places a verdict is drawn (§8.12).
 
 > **Resolved 2026-07-30 (was FIX-1).** This triplet was duplicated **verbatim** in `ReadinessWidget`, `DevelopmentWidget` and `ProgressionReviewCard` — identical `ring`/`score`/`badge` values in all three, differing only in `label`. Found while fixing the contrast bug; extracted at the same time.
 
@@ -951,7 +1023,6 @@ Two things worth copying from this component:
 1. **The score renders `text-4xl font-bold tabular-nums`.** `tabular-nums` is mandatory on any number that updates in place — without it the score jitters horizontally as digits change.
 2. **The status is never color-only.** A text badge sits beside the number, and `ReadinessFlag` values (`elevated_rhr_3d`, `suppressed_hrv_3d`, `insufficient_sleep`, …) surface as written reasons. This is §1.6 done properly.
 
-> **Code diverges — doc is correct.** The `-500` family used here is *better* than the `-400` of §8.1 but still does not clear WCAG AA on a `/10` tint over white. Measured: `text-amber-500` **2.00:1**, `text-emerald-500` **2.33:1**, `text-red-500` **3.29:1** — floor is 4.5:1. Rolled into FIX-1.
 
 **The corrected rule.** The pairing shape is always:
 
@@ -999,12 +1070,14 @@ sections, the four schemas' enums) and what each slot type logs
 
 ### 8.10 The Contrast Guard
 
-`test/semanticContrast.test.ts` is the only thing keeping §8 honest. Run by `npm test` and by CI on every frontend PR.
+`test/semanticContrast.test.ts` is what keeps §8 honest. Run by `npm test` and by the pre-push hook's frontend area (GitHub runs no checks since 2026-10-26).
 
-**What it checks.** Every entry of `MODALITY_COLORS`, `PHASE_COLORS`, `MOVEMENT_GROUP_COLORS` (§8.11), `COMPLETION`, `STATUS_STYLES` and `STATUS_TEXT`, against all four themes:
+**What it checks.** Every entry of `MODALITY_COLORS`, `PHASE_COLORS`, `MOVEMENT_GROUP_COLORS` (§8.11), against all four themes — and the `--done`, `--good`, `--warn` and `--bad` tokens as text on the page, a card and their own tints (§8.12):
 
 1. **Contrast ≥ 4.5:1** — composites the `/N` tint over that theme's `--background`, picks the light or dark half of the pair depending on the theme, and measures.
 2. **Both halves declared** — a bare `text-*` and a `dark:text-*`. This is the structural half of the rule: a single mid-shade cannot serve both themes, so an entry missing one half is wrong even if it happens to pass numerically today.
+
+3. **Action and done stay apart** — in each theme `--action` and `--done` are at least 55° of hue apart, the text on each fill (and on `--destructive`) clears 4.5:1, and `--done` reads at 3:1 on the page. Light's amber is 2.2:1 on white, which is why an action is a filled button with dark text and never amber text on the page.
 
 **Why it reads from source rather than a table.** The palette comes from `node_modules/tailwindcss/theme.css` and the backgrounds from `src/styles/globals.css`. A hardcoded hex table would drift the moment Tailwind updated a shade or a theme changed its background — and drift silently, since the test would keep passing against stale values. Two self-checks assert the parsers actually matched something, so a regex that silently matches nothing fails loudly instead of passing everything.
 
@@ -1049,39 +1122,127 @@ framework in its philosophy's, a modality in its own (§8.1), an archetype and a
 exercise by category (`ARCH_CAT_COLORS`, `EX_CATEGORY_COLORS`, with the landings'
 fallbacks), a movement by group.
 
+### 8.12 Done, Verdicts and Data Hues
+
+Emerald used to mean seven things. Each colour now has one job and one home:
+
+| It says | Written as | Home |
+|---|---|---|
+| Do this | `primary` / `--action` | the theme |
+| Finished | `text-done`, `bg-done/10`, `COMPLETION` | `--done`; `lib/completionColors.ts` (§8.3) |
+| Going well · watch it · off | `text-good`, `text-warn`, `text-bad`, `STATUS_*` | `--good`, `--warn`, `--bad`; `lib/statusColors.ts` (§8.8) |
+| Remove this, it failed | `destructive` | the theme |
+| Which one it is — a modality, phase, zone, movement group | the module's lookup | `modalityColors`, `phaseColors`, `hrZones`, `movementColors` (§8.1, §8.2, §8.7, §8.11) |
+| Any other data — a series, a scale step, a category, a brand | a named constant | `lib/dataColors.ts` |
+
+**The tokens** (`styles/globals.css`, exposed to Tailwind as `--color-done`, `--color-good`,
+`--color-warn`, `--color-bad`). Light and Zen share one dark set; Dark and Military one
+light set. Each is text, so each clears 4.5:1 on the page, on a card and on its own `/5`,
+`/10` and `/15` tint in all four themes — `semanticContrast.test.ts` computes it from the
+CSS, so a retuned theme fails there. A component therefore never writes a `dark:` pair for
+them.
+
+- `--warn` is not the action amber. In Dark the primary is amber; a warning is a paler
+  yellow (hue 92 against the primary's 70) and never fills a button.
+- `--bad` is a verdict, `destructive` an action. A missed week is `text-bad`; Delete is
+  `variant="destructive"`.
+- `--good` is green, `--done` emerald: neighbours on purpose (both read "nothing to do"),
+  never on the same mark.
+
+**`lib/dataColors.ts`** holds what the specific modules do not: `SERIES` (a chart's named
+lines), `LOAD_STEPS`, `EFFORT_HEX`, `RECOVERY_COST_HEX`, `TIER_HEX`, `VOLUME_HEX`, `ROUTE`,
+`SOURCE_MODE_HEX`, `BRAND` (Strava's orange is Strava's), the neutral and fallback greys,
+and the class maps `EXERCISE_CATEGORY_TEXT`, `FATIGUE_STEP`, `SCALE_BADGE`, `KPI_TEXT`. A
+green that is a scale's low end lives here under the scale's name; the design test allows
+`emerald-` and `green-` in this file and `movementColors.ts` only.
+
+**A component writes no hex.** A theme colour in a chart or SVG is `var(--border)`,
+`var(--muted-foreground)`, `COMPLETION.css`, `STATUS_CSS.green`; a data colour is imported
+by name. `designRules.test.ts` fails on a hex literal outside the colour modules,
+`lib/hrZones.ts`, `lib/themes.ts`, `lib/developmentShaping.ts`, `lib/gen/` and the Dev Lab.
+
+**Never alone.** A verdict's colour sits beside its word or number: the band dot beside
+"On track", the adherence bar beside "86%", the badge with its label (§1.6).
+
+**Not converted.** About 150 `amber-` / `red-` / `orange-` / `yellow-` classes remain in
+components where the colour is a notice, an injury or a heat step rather than one of the
+three verdicts. Only emerald and green are banned; each of those sites clears AA by its own
+`-700 dark:-300` pair. Moving them to tokens is page-pass work, a site at a time.
+
+**A notice is a verdict too.** "Needs attention" — a stale program, a lapsed connection, a
+constraint that held something back — is `text-warn` on `border-warn/30 bg-warn/5`; a failure
+is `text-bad` on `border-bad/30 bg-bad/5`. No component writes `amber-700 dark:amber-300`:
+the token is already each theme's own. A warm hue that is *data* has a name in
+`lib/dataColors.ts` — `METRIC_ICON` gives a recorded workout's figures (heart rate, effort,
+calories, distance, descent) one hue an icon, the quantity and never a judgement of it.
+
 ---
 
 ## 9. Motion & Animation
 
+### 9.0 One File Writes Motion
+
+`frontend/src/lib/motion.ts` is the only file that writes a duration, an easing or a
+spring; `test/designRules.test.ts` fails on one anywhere else. A component picks a preset
+by what the motion is *for*. The names and the feel are the phone's (`AppAnimation`,
+`ios/docs/design-system.md` §7), so a card settles the same way on both clients.
+
+| Preset | For | Value |
+|---|---|---|
+| `springStandard` | most state changes: a card settling, a detail opening | spring, 0.45 s, bounce 0.18 |
+| `springSnappy` | small answers: a press, a toggle, a check | spring, 0.35 s, bounce 0.14 |
+| `layoutChange` | size and position: a row expanding, a panel opening, a reorder | spring, 0.5 s, bounce 0.12 |
+| `crossfade` | content swapping in place; what a spring becomes under Reduce Motion | 0.2 s, ease-in-out |
+| `chartEntry` | a chart or bar drawing once — data never overshoots | spring, 0.7 s, no bounce |
+| `pageEnter` / `pageExit` | a page, a block, a list item arriving / leaving | 250 ms standard / 150 ms exit |
+
+Built on them, spread onto a motion element: `pageMotion` and `fadeMotion` (through
+`<Page>`), `riseIn(index, density)`, `swapMotion`, `nudgeIn`, `floatMotion`, `fadeIn`,
+`collapseMotion`, `panelMotion(width)`, `pressMotion`, `tickMotion`; as variants,
+`staggerVariants(density)` and `stepVariants(direction)`. If none fits, add one there,
+named for its job — not a number at the call site.
+
+CSS has the same vocabulary (`styles/globals.css`): `--motion-fast` 150 ms, `--motion-base`
+250 ms, `--motion-slow` 400 ms, written `duration-(--motion-base)`; `ease-standard`
+(decelerate into place) and `ease-exit` (accelerate away). A bare `transition-colors`
+already takes `--motion-fast` and the standard curve, so most classes need no duration at
+all. Sheets open in `--motion-base` and close in `--motion-fast`, as pages do.
+
+The code samples in §9.2–§9.7 show the shape of each motion; the numbers in them are the
+presets' and are not typed at a call site.
+
 ### 9.1 Page Transitions (Universal)
 
-Every page uses the same transition. This creates the sense of a single coherent application rather than separate pages.
+Every routed page's root is `<Page>` (`components/layout/Page.tsx`), which carries the
+transition — rise 16 px and fade in over 250 ms, leave upward 8 px in 150 ms. A screen that
+is only waiting takes `<Page enter="fade">`. A page never writes `initial` / `animate` /
+`exit` on its root.
 
 ```tsx
-// Applied to the outermost element of every page component
-<motion.div
-  key="unique-page-key"
-  initial={{ opacity: 0, y: 16 }}
-  animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-  exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
-  className="flex h-full flex-col"
->
+export function Explore() {
+  return (
+    <Page className="flex h-full flex-col">
+      …
+    </Page>
+  )
+}
 ```
 
-**Rules:**
-- `key` must be unique per route — without it AnimatePresence can't distinguish pages
-- Exit is always faster than enter (0.15 vs 0.25s) — leaving is quicker than arriving
-- `y: 16` enter, `y: -8` exit — content slightly rises as it exits (sense of upward motion)
-- Wrap in `AnimatePresence mode="wait"` in the router to sequence enter/exit
+`RootLayout` keys the outlet by path, which is what makes the exit run:
 
-**Router setup:**
 ```tsx
+const { pathname } = useLocation()
+const outlet = useOutlet()
+
 <AnimatePresence mode="wait">
-  <Routes location={location} key={location.pathname}>
-    ...
-  </Routes>
+  <div key={pathname} className="contents">{outlet}</div>
 </AnimatePresence>
 ```
+
+Until 2026-11-11 `AnimatePresence` wrapped a bare `<Outlet />`: with no key it never saw a
+child leave, so the exit every page declared never played and the next page appeared over
+a hard cut. The query is not part of the key — `?tab=` changes a page, it does not replace
+it.
 
 ### 9.2 Staggered List Entry
 
@@ -1250,6 +1411,20 @@ Skeleton widths (2/3, full, 1/2) simulate text line lengths. Multiple lines at d
 
 **When to reach for it:** one per view, on waits over ~400ms, where the user has nothing else to look at. Everywhere else use skeletons — a skeleton communicates *what is coming*, a loader only communicates *that something is coming*. Do not add a second branded loader; if a new one seems necessary, the wait is probably a skeleton case.
 
+### 9.9 Timing Reference
+
+| Use case | Preset or token | Value |
+|---|---|---|
+| Page, block or list item entering | `pageEnter` | 250 ms, standard curve |
+| Page, block or list item leaving | `pageExit` | 150 ms, exit curve |
+| Sheet / dialog open · close | `--motion-base` · `--motion-fast` | 250 ms · 150 ms |
+| Hover and colour changes | the default transition | 150 ms, standard curve |
+| Collapse / expand, side panel, reorder | `layoutChange` | spring 0.5 s |
+| Press, tick, toggle | `springSnappy` | spring 0.35 s |
+| Step wizard | `stepVariants` | `pageEnter` / `pageExit`, ±60 px |
+| Stagger | `stagger(index, density)` | 30 / 40 / 60 ms an item, the first eight |
+| Chart entry | `chartEntry` | spring 0.7 s, no bounce (Recharts: phase 4) |
+
 ### 9.10 Reduced Motion
 
 > **Resolved 2026-07-30 (was FIX-2).** The app previously had no reduced-motion handling at all — every animation in §9 played at full amplitude for users who had asked their OS to stop them. `MotionConfig` now wraps the tree in `src/App.tsx`, and `DumbbellLoader` gates its loop explicitly.
@@ -1266,32 +1441,19 @@ import { MotionConfig } from 'framer-motion'
 
 `reducedMotion="user"` reads `prefers-reduced-motion` and disables *transform and layout* animations — `x`, `y`, `scale`, `rotate`, `height` — while letting `opacity` and `backgroundColor` through. That is the correct split for this design system: §9.1 page transitions degrade to clean cross-fades, §9.7's set-completion still flashes its color confirmation, and §9.6's expand/collapse snaps instead of sliding. Orientation and feedback survive; only the movement stops.
 
-**What the provider does not cover** — handle these individually:
+**CSS is covered by one block** (`styles/globals.css`, since 2026-11-11): under `prefers-reduced-motion: reduce` the tw-animate enter and exit travel (`--tw-enter-*`, `--tw-exit-*`) is zeroed, so sheets, dialogs and popovers fade where they slid or zoomed; CSS transitions keep colour, opacity and shadow and drop size and position; `animate-pulse` stops. A new sheet or popover is covered without doing anything.
+
+**What neither covers** — handle these individually:
 
 | Not covered | Why | Handling |
 |---|---|---|
-| `animate-pulse` skeletons | Tailwind CSS keyframes, not Framer | acceptable to leave — low-amplitude opacity only |
 | `animate-spin` spinners | Tailwind CSS keyframes | acceptable — conveys liveness, no translation |
 | `DumbbellLoader` | `pathOffset` is an SVG *attribute* animation, not a transform | ✅ done — gated on `useReducedMotion()`, falls back to the static glyph at `opacity 0.6` |
-| Recharts entry animations | library-internal | still open — set `isAnimationActive={false}` when reduced |
+| Recharts entry animations | library-internal | still open — roadmap 19 phase 4 (`lib/chartMotion.ts`) |
 
 The `DumbbellLoader` case is the general lesson: **`reducedMotion="user"` only suppresses transform and layout values.** Anything animating an SVG attribute, a gradient stop, or a CSS keyframe needs its own `useReducedMotion()` gate.
 
 **Rule for new motion:** if an animation moves an element more than a few pixels, it must have a reduced-motion answer. "It's subtle" is not an exemption — vestibular triggers are not proportional to how subtle the author thinks the motion is.
-
-### 9.9 Timing Reference
-
-| Use case | Duration | Easing |
-|---|---|---|
-| Page exit | 150ms | ease |
-| Set button color | 150ms | ease |
-| Collapse/expand | 180ms | ease |
-| Page enter | 250ms | ease |
-| Panel slide | 250ms | easeInOut |
-| Modal content | 250ms, 100ms delay | ease |
-| Step wizard | 280ms enter, 180ms exit | cubic-bezier(0.25,0.1,0.25,1) |
-| Pie chart | 500–800ms | Recharts default |
-| Spring (goal cards) | physics | stiffness: 300, damping: 20 |
 
 ---
 
@@ -1416,65 +1578,47 @@ For larger lists (> 50), debounce with 250ms.
 4. **Disabled** — `disabled:opacity-50 disabled:pointer-events-none`
 5. **Complete/Success** — emerald palette (for completion-tracking components)
 
-### 11.2 Empty State Pattern
+### 11.2 Three States Before Content
 
-```tsx
-function EmptyState({ title, description, action, icon, className }) {
-  return (
-    <div className={cn(
-      'flex flex-col items-center justify-center rounded-lg border border-dashed bg-card/50 p-12 text-center',
-      className
-    )}>
-      {icon && (
-        <div className="mb-4 text-muted-foreground/40">{icon}</div>
-      )}
-      <h3 className="text-base font-semibold text-foreground">{title}</h3>
-      {description && (
-        <p className="mt-1 text-sm text-muted-foreground max-w-sm">{description}</p>
-      )}
-      {action && (
-        <Button onClick={action.onClick} className="mt-4">{action.label}</Button>
-      )}
-    </div>
-  )
-}
-```
+A screen that reads from the server is in one of four states, and `loadPhase(hasContent,
+isLoading, error)` (`components/shared/states/loadPhase.ts`) says which — the phone's
+`AppLoadPhase.resolve`:
 
-Always provide a `action` CTA that resolves the empty state (e.g., "Build a Program"). The dashed border (`border-dashed`) visually distinguishes empty slots from loaded content.
+| State | When | Component |
+|---|---|---|
+| Loading | nothing on screen yet, the request is out | `<LoadingState shape="cards \| grid \| list \| chart \| lines \| block \| tiles">` — skeletons in the shape of what is coming, `role="status"`, a spoken `label` |
+| Failed | nothing on screen, the request failed | `<FailedState title error onRetry>` — "Could not load …", the message, **Try again** |
+| Empty | the request answered with nothing | `<EmptyState>` — always with the way forward (`action`) |
+| Content | anything to show | the content. A reload never replaces it; a reload that failed is `<ErrorBanner title="Could not refresh …" onRetry>` above it |
 
-> **Code diverges — doc is correct.** `components/shared/EmptyState.tsx` is imported by **6** files, while **25** hand-rolled `border-dashed` empty states exist across the app. The *pattern* was adopted; the *component* was not. The cost is not visual — most copies look right — it is that the `action` CTA is optional in a hand-rolled block and consistently gets dropped, so a good share of the app's zero-data states are dead ends with no path forward. That is a direct §1.4 violation. Tracked as FIX-5.
+**Content wins.** Once something is on screen neither a refetch nor its failure takes it
+away. Failed is not Empty: Program and Today used to offer "Build a program" when the load
+had failed, and a workout that could not be fetched read "Workout not found".
 
-**Rule:** a zero-data view uses `<EmptyState>`. If it needs something the component cannot express, extend the component — do not fork it inline. The one legitimate exception is a *slot-sized* empty cell (an unscheduled day in the week grid), which is too small for a title/description/CTA and correctly uses a bare dashed cell.
+`<QueryState query={…}>` (`states/QueryState.tsx`) lays the four out around a TanStack
+query (`refetch` is the retry). A page with several queries calls the pieces itself.
+`components/layout/RouteErrorBoundary.tsx` wraps the outlet: a page that throws shows
+`FailedState` with Reload, and the sidebar stays.
 
-### 11.3 Loading Card Pattern
+**Running actions** are not a loading screen. A button that is working holds `<Spinner>`
+(`ui/spinner.tsx`); a sentence that says what is running is `<Working>` ("Checking whether
+this changes your program…"). These are the only spinners.
 
-```tsx
-function LoadingCard() {
-  return (
-    <div className="rounded-lg border bg-card p-4 space-y-3 animate-pulse">
-      <div className="h-4 rounded-md bg-muted w-2/3" />
-      <div className="h-3 rounded-md bg-muted w-full" />
-      <div className="h-3 rounded-md bg-muted w-1/2" />
-    </div>
-  )
-}
-```
+**The dashed border** means *absent or optional*, never "this list is empty": a rest day,
+an unfilled slot, a drop target, an integration that is not configured. The files that
+draw one are listed in the design test; a new one fails it. A zero-data view is
+`<EmptyState>`; if it needs something the component cannot express, extend the component.
 
-Match the skeleton's visual weight to the content it represents. A card with a title and two lines of metadata gets a taller block + two narrower blocks.
+Held by `test/designRules.test.ts` (*three states before content*): `animate-spin` only in
+`ui/spinner.tsx`, `animate-pulse` only in `ui/skeleton.tsx`, no "Loading…" text, no bare
+`error.message` in a page, `border-dashed` only in the listed files; `loadPhase.test.ts`.
 
-### 11.4 Error State
+### 11.3 A Failed Action
 
-```tsx
-<Alert variant="destructive" className="mt-4">
-  <AlertCircle className="size-4" />
-  <AlertTitle>Generation failed</AlertTitle>
-  <AlertDescription>
-    Could not connect to the API. Check that the server is running.
-  </AlertDescription>
-</Alert>
-```
+An action that fails (generate, save, sync) says so where it was taken, with
+`<ErrorBanner error title>`; the button that was pressed is the retry.
 
-### 11.5 Selected vs. Complete
+### 11.4 Selected vs. Complete
 
 These are intentionally distinct:
 
@@ -1484,6 +1628,134 @@ These are intentionally distinct:
 | Complete/done | `emerald` | Work finished, not necessarily viewing |
 | Today | `primary` bg | Calendar: today's date |
 | Today + complete | `emerald` | Calendar: today's session done |
+
+### 11.5 Every Action Answers
+
+Pressing something is answered **where it was pressed**, within the frame:
+
+- **Pending.** `<Button loading={mutation.isPending}>`: the spinner takes the icon's place,
+  the button is disabled and `aria-busy`, and **the label does not change** — "Save" stays
+  "Save", so the button keeps its width and the eye its place. No "Saving…".
+- **Done.** The thing itself changes: the row leaves, the value updates, the mark turns to
+  done (§11.8). A line of `role="status"` text ("Applied") where nothing else would show it.
+  Never a toast.
+- **Failed.** §11.3: an `ErrorBanner` beside the button; the button is the retry.
+- **At once, when the answer is known.** Deleting a result and deciding a suggestion change
+  the cache in `onMutate` and put it back in `onError` (`api/standards.ts`); the program
+  store has always worked this way. A write whose answer the server computes (a logged
+  result's level) waits for it, with the button loading.
+
+### 11.6 Undo, Confirm and the Toast
+
+A removal that can be put back **does not ask**: it happens, and `toast.undo("Workout
+removed", { undo, commit })` offers the way back for six seconds. With `commit` the server
+is told only when the window closes (or the page is left); without it the write is already
+made and `undo` reverses it (an added session: removed, then added again at its own
+index). The program's saves go one at a time (`programStore.persistProgram`), each on the
+revision the one before left, so an Undo pressed at once is not refused as stale.
+
+An action that cannot be undone from here — disconnecting an account, replacing a program —
+asks through `<ConfirmDialog>`: the title is the question, the description says what stops
+and what stays, the confirm button carries the verb.
+
+The toast (`lib/toast.ts`, the only importer of sonner) has **two uses** and no others:
+
+| Use | When |
+|---|---|
+| `toast.undo` | The row that was removed is gone, so it cannot carry its own Undo |
+| `toast.failed` | A write made in the background failed — an optimistic change rolled back, a removal already off screen |
+
+Not for success ("Saved!"), not for a failure whose button is still on screen, not for
+information. A change the server may refuse for what was typed is not optimistic: a
+corrected suggestion waits, and a refusal is said in its row with the typed value kept. `window.confirm` and `alert` are not used.
+
+### 11.7 Said Once
+
+A change the eye catches is silent to a screen reader. `announce("…")` (`lib/announce.ts`)
+puts one sentence in the page's polite live region (`LiveRegion`, mounted once in `App`):
+a session marked complete, a removal and its undo. Not for what already speaks — a
+`role="status"` line, an `ErrorBanner` (`role="alert"`), a toast.
+
+### 11.8 The Completion Moment
+
+Completing a session is the one action the app celebrates, and it does so quietly:
+`<DoneMark done>` scales the check in with `springStandard` where the athlete pressed, the
+card's border and fill move to done in the same beat, and the day's header gains its check.
+It plays only for a change — what was already done when the screen opened is simply done —
+and undoing it is the same button, without ceremony.
+
+### 11.9 What Changed
+
+Motion's third job (§1.7) is to show what changed and where it came from. Five components
+carry it (`components/motion/`); a screen uses them and writes no `initial` / `animate` /
+`exit` of its own.
+
+| Component | When | What it does |
+|---|---|---|
+| `RollingNumber` | A number that changes while it is looked at: done of due, readiness, a total under a period switch | The old value rolls out and the new one in — up when it grew, down when it fell (`order` decides for text like "3 of 5"). Not on first paint. A number that is simply there is plain text |
+| `TabPanels` | The body under a page's `SubTabs`, when the body is only the panels | The leaving panel fades, the arriving one comes from the side the pill moved to. `role="tabpanel"`, labelled by its tab |
+| `Collapse` | A block that opens under its trigger | Height and opacity; the rows below move with it. The trigger carries `aria-expanded` |
+| `PresenceList` | Rows that arrive or leave while the list is on screen | The arriving row opens, the leaving one closes, the rest slide to their places (`layout`) |
+| `Stagger` | A list or grid arriving with its page | Children rise in order (`riseIn`), capped so a long list does not make the last row wait |
+
+Under Reduce Motion each keeps its fade and drops its movement (§9.10) — none needs a
+branch of its own. Program and Preview keep a plain body under their tabs: the calendar
+scrolls to its week as it mounts, which a waiting exit would delay.
+
+### 11.10 Nothing Behind Hover
+
+A phone has no hover and a keyboard has no pointer. Whatever a screen can do is visible
+on it and reachable by Tab.
+
+**A control is a button or a link.** A `div` with `onClick` cannot be focused, does not
+answer Space or Enter and is not announced. A card that opens something *and* holds
+controls takes one stretched button under its content — `absolute inset-0`, an
+`aria-label` saying what opens — with the content `pointer-events-none` above it and each
+inner control `relative`. No `stopPropagation`: the controls are siblings, not children,
+of the button (`WeekOverview`'s `SessionCard`, `WorkoutRow`).
+
+**Nothing waits for a hover.** The week grid's complete toggle is always there (on
+touch it keeps the card's right corner and the menu takes the left, so their 44 px
+targets never share a tap; the drag handle is left to the menu's *Move to*). What a
+row can do beyond its first action is in its "…" menu (`ui/dropdown-menu`): Open · Mark
+complete · Move to a day. Only a pointer's shortcut for something the menu also does may
+wait — the drag handle — and it takes the class `reveal` inside a `reveal-host`, which
+shows it on hover, on focus within the row, and always where there is no hover.
+
+**Focus, press and target, once** (`styles/globals.css`). `:focus-visible` draws a 2 px
+ring in `--ring`, offset 2 px, on anything focusable; a component replaces it only with a
+`focus-visible:` style of its own on the same element, never with a bare `outline-none`.
+A button dims as it is pressed. Under `pointer: coarse` every button has a 44 px
+hit area, by a centred `::after` when the drawn control is smaller.
+
+**A button explains itself through `<Tip>`** (`components/shared/Tip.tsx`), not `title`: it
+opens after 400 ms, at once when moving from one to the next, on focus as on hover, and
+shows the shortcut (`keys="g p"`). An icon-only button keeps its `aria-label`; the tip is
+for the eyes. A control that is unavailable stays focusable with `aria-disabled` so its
+tip can say why.
+
+**A drag has a keyboard and a menu.** The week grid's handle takes Space to pick up, the
+arrow keys to move a day (`lib/dndKeyboard.ts`), Space to drop and Escape to cancel, each
+step announced; the same move is *Move to* in the card's menu, which is what touch uses.
+Log ▸ Linking's twin is select-then-pick: choose a workout, then the session; the banner
+is a `role="status"` and the link is announced.
+
+**Shortcuts** (`lib/shortcuts.ts`, one table). `g` then `t` `p` `a` `l` `e` `u` `s` goes to
+a section, `[` and `]` change the week, `?` lists them all. They never fire while typing
+or while a dialog, sheet, menu or a select's list is open (`OWNS_KEYBOARD`). A new shortcut is a row in that table — the
+list, the sidebar's tooltips and the handler read it.
+
+**Back returns to where you were** (`lib/useScrollRestore.ts`). A page's scroller keeps
+its place per history entry: Back lands on the row that was left, a fresh visit starts at
+the top. `TabPanels` carries it for every tabbed page; Today, Program, Session detail and
+the builder take the hook themselves; `ScrollPanel` is the hook for a tab's or topic's
+own body. A replace is the same place under a new history key, so `ScrollPanel` carries
+the position across it (a sheet writing `?standard=`), and an in-page back button that
+replaces names the entry it returns to (`state.scrollFrom`, Explore).
+
+**The page leaving keeps its own address.** `RootLayout`'s `HeldLocation` gives a page on
+its way out the location it was shown at, so it does not read the next page's path and
+query while it fades.
 
 ---
 
@@ -1501,6 +1773,20 @@ All charts use Recharts with minimal configuration. Custom components handle wra
   </BarChart>
 </ResponsiveContainer>
 ```
+
+**Entry.** Every chart draws once, in `chartEntry`'s time (700 ms), decelerating with no
+bounce — data never overshoots — and not at all under Reduce Motion, which Recharts does not
+read by itself. One hook says it (`lib/chartMotion.ts`); a series spreads it first and writes
+no `isAnimationActive`, `animationDuration` or `animationBegin` of its own:
+
+```tsx
+const drawIn = useChartEntry()
+…
+<Line {...drawIn} dataKey="value" … />
+```
+
+Before 2026-11-11 there were three regimes: the library's 1500 ms default, two donuts with
+their own delay and duration, and eight series switched off outright.
 
 ### 12.1.1 Chart Inventory
 
@@ -1526,7 +1812,6 @@ Visualization is now the largest single surface in the app — **18 files** rend
 | `workout/ElevationChart` | gradient area (§12.8) | teal `#14b8a6` |
 | `workout/GPSMap` | Leaflet polyline (§12.9) | zone ramp |
 | `workout/Swiss3DMap` | CesiumJS terrain (§12.9) | — |
-| `devlab/PhilosophyExplorerPanel` | bar | modality hex |
 | `pages/WorkoutAnalytics` | multiple, inline | mixed |
 
 **Program ▸ Overview's phase changes** (`program/PhaseChanges.tsx`) lay out the
@@ -1789,6 +2074,37 @@ Two non-Recharts geospatial views:
 
 **Before adding a new chart:** find its row here first. If nothing fits, the new form needs a subsection in this section, not a one-off in a page component.
 
+
+### 12.11 A Chart Reads Its Numbers
+
+A chart is a picture to a screen reader, and Recharts' marks say nothing useful one by one.
+Every chart sits in `components/shared/ChartFrame.tsx` — the only file that imports
+`ResponsiveContainer` — which makes it one image named by what it draws and what its
+numbers are:
+
+```tsx
+<ChartFrame label="Resting heart rate by day" height={160}
+  summary={say.series(data.map((d) => d.rhr), 'bpm')}>
+  <LineChart data={data}>…</LineChart>
+</ChartFrame>
+// role="img" aria-label="Resting heart rate by day. Latest 48 bpm, average 50, from 46 to 55"
+```
+
+`lib/chartSummary.ts` (`import * as say`) words the numbers as the phone does
+(`ChartSummary`, design-system §6.57), so the two clients say a chart the same way:
+
+| Function | For | Says |
+|---|---|---|
+| `say.series(values, unit, format?)` | a value over time | "Latest 48 bpm, average 50, from 46 to 55" |
+| `say.range(values, unit, format?)` | a recording, where no point is "the latest" | "Average 142 bpm, from 98 to 171" |
+| `say.shares([{ name, value }])` | parts of a whole | "Zone 2 62 percent, Zone 3 20 percent" — largest first, zeros left out |
+| `say.named(name, summary)` / `say.join(...)` | several series in one chart | "Fitness: latest 45, … . Fatigue: latest 52, …" |
+
+Each returns `null` with nothing to say, and the frame then reads its label alone. The
+`label` is required (the design test fails on a frame without one) and says what is drawn,
+not the card's title again when the title is vaguer. `say.oneDecimal` is the format for
+loads and hours; the default rounds.
+
 ---
 
 ## 13. Page & Layout Patterns
@@ -1798,35 +2114,37 @@ Two non-Recharts geospatial views:
 ```tsx
 <div className="flex h-screen overflow-hidden bg-background">
 
-  {/* Desktop sidebar */}
-  <aside className="hidden md:flex flex-col w-56 border-r bg-card/50 transition-all duration-200">
+  {/* Desktop: always there */}
+  <div className="hidden w-56 flex-col md:flex">
     <Sidebar />
-  </aside>
+  </div>
 
-  {/* Mobile overlay */}
-  <AnimatePresence>
-    {sidebarOpen && (
-      <div className="fixed inset-0 z-40 md:hidden">
-        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={close} />
-        <aside className="relative z-50 w-56 h-full bg-card border-r">
-          <Sidebar />
-        </aside>
-      </div>
-    )}
-  </AnimatePresence>
+  {/* Under md: the same sidebar as a drawer */}
+  <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+    <SheetContent side="left" className="w-56 p-0 md:hidden">
+      <Sidebar onNavigate={() => setMobileNavOpen(false)} />
+    </SheetContent>
+  </Sheet>
 
   {/* Main area */}
   <div className="flex flex-1 flex-col overflow-hidden">
-    <TopBar />
+    <TopBar />   {/* the menu button, under md */}
     <main className="flex-1 overflow-hidden flex flex-col">
       <AnimatePresence mode="wait">
-        <Outlet />
+        <div key={pathname} className="contents">{outlet}</div>   {/* §9.1 */}
       </AnimatePresence>
     </main>
   </div>
 
 </div>
 ```
+
+**The drawer** (`uiStore.mobileNavOpen`) starts closed and is never persisted. It slides in
+from the menu button (44 px), holds focus, and closes on Escape, the scrim and a followed
+link — all of it `ui/sheet`'s. Until 2026-11-11 one persisted `sidebarOpen`, true by
+default, drove both the desktop column and an unanimated overlay, so a phone opened every
+page behind the navigation. Nothing on desktop ever toggled the column; it is now simply
+there. Links in the drawer are 44 px tall on a coarse pointer.
 
 ### 13.2 Sidebar Navigation
 
@@ -1865,7 +2183,7 @@ phone keeps the same split with Settings pushed from Profile's gear.
 
 | Group | Items | Why it is a group |
 |---|---|---|
-| Train | Home `/` · Program `/program` · Analytics `/analytics` · Log `/log` | Where the athlete lives day to day: today, the plan, how it is going, the record — the phone's tab order (Analytics before Log since 2026-10-16, which folded the Insight group in) |
+| Train | Today `/` · Program `/program` · Analytics `/analytics` · Log `/log` | Where the athlete lives day to day: today, the plan, how it is going, the record — the phone's tab order (Analytics before Log since 2026-10-16, which folded the Insight group in) |
 | Library | Explore `/explore` | Reference and inspiration; its CTAs start the builder |
 | You | Profile `/profile` | Configuration — visited to change something |
 | Dev | Dev Lab `/dev` | Developer tooling; dev builds, and in production users whose Supabase `app_metadata.roles` has `dev` (`src/lib/featureFlags.ts`) |
@@ -2057,14 +2375,17 @@ far as it must.
    tracks · phases; the fingerprint (`ModalityMix`, the main track's sessions a
    week by modality, weighted by phase weeks) with its `MixLegend` (modality
    icon + ×/wk) and the easy → hard `IntensityBar`.
-2. **Tracks & phases** (`PhilosophyTracks`) — every track as one row with the
-   same columns (name, `LevelPips`, length, `PhaseBar` on a scale shared by all
-   tracks, days · minutes, mix), then the chosen track's phases as cards: the
-   kind's colour, weeks, the `WeekGlyph` (a template's seven days split by
-   modality, rest dashed; else one dot per weekly session), the intensity bar,
-   days, minutes and tests as icons. A card opens the phase under the cards:
-   the full week (`PhaseWeek`), description, what it builds, how hard, tests;
-   *About this track* opens the track's words under its header.
+2. **Tracks & phases** (`PhilosophyTracks`) — one card a track, flipped through
+   (a scroll-snap strip: the track's name chip, the arrows or a swipe; the next
+   card shows at the edge; it opens on the main track). A card is the whole
+   track, nothing behind a button: name, who it is for, `LevelPips`, weeks,
+   days, minutes, tests, mix, the `PhaseBar` on a scale shared by all tracks,
+   the track's own words (description, what it needs, notes), then its phases
+   as cards: the kind's colour, weeks, the `WeekGlyph` (a template's seven days
+   split by modality, rest dashed; else one dot per weekly session), the
+   intensity bar, days, minutes and tests as icons. A phase card opens the
+   phase under them, inside the track's card: the full week (`PhaseWeek`),
+   description, what it builds, how hard, tests.
 3. **Goals** — what the main track builds (chips) and *progress is …* with the
    standards it is measured by (chips in their modality's colour, a flask on
    the ones a phase tests); a standard, or *How progress is measured*, opens the
@@ -2166,6 +2487,36 @@ by picking results (`components/explore/EquipmentPanel.tsx`, logic in
 - With nothing selected the lists show what bodyweight and open space alone
   enable, or nothing with bodyweight off.
 
+### 13.10 Session Briefing
+
+Before a session: today's numbers beside the earlier times the same session was done.
+`components/session/SessionBriefing.tsx` lays out the server's document
+(`GET /sessions/briefing`, `api/briefing.ts`; the package's `briefing.yaml` decides what
+an item is) between a session's header and its exercises, while the session is still to
+do. It formats nothing: every sentence arrives as text.
+
+- **A session to confirm first** leads, on the warn tint, with a Confirm link to that
+  session's page.
+- **Exercise by exercise.** An item of several exercises shows each exercise's name with
+  today's line beside it and that exercise's own earlier rows under it — never joined in
+  one row, and no chart. Only the earliest session to confirm is shown, with how many wait.
+- **One card per item**: its name with the cycle position trailing, today's prescription
+  large (several exercises with different numbers: a row each), the one suggestion with
+  its icon (warn-coloured only for `confirm_pending`), the cycle as a thin bar in the
+  modality colour, the series, the earlier occurrences newest first, the standard's best
+  and target, the package's note.
+- **The series is bars**, one a session, in `--done`, today's as the plan in the modality
+  colour, each with its value; one image to a screen reader, named by its metric and
+  `chartSummary.series`. Fewer than three points, or a run that never changes, is no
+  chart (`lib/briefing.briefingSeries`).
+- **An occurrence's status is an icon and a word** (the word for screen readers): clean and
+  made `--done`, missed `--bad`, not confirmed `--warn`, logged muted.
+- **States**: nothing while it loads (the session is already on screen), `ErrorBanner`
+  with Try again when it fails, and nothing at all when the briefing adds nothing to the
+  prescription (`saysSomething`). Mock mode answers an empty briefing.
+
+The phone's is design-system §6.61. `SessionBriefing.test.tsx`.
+
 ## 14. Responsive Design
 
 ### 14.1 Breakpoint Usage
@@ -2190,7 +2541,9 @@ by picking results (`components/explore/EquipmentPanel.tsx`, logic in
 className="w-full sm:max-w-md"
 ```
 
-**Grid fallback:** 7-column week grid gets `overflow-x-auto` + `min-w-[700px]` to scroll rather than collapse.
+**Grid fallback:** a seven-column week does not fit a phone. Under `sm` Today's week
+(`WeekOverview`) is `min-w-[40rem]` inside an `overflow-x-auto` strip that opens with today's
+column in the middle; from `sm` up it is the plain grid. The page itself never scrolls sideways.
 
 **Sidebar:** Hidden on mobile, replaced by topbar hamburger + overlay.
 
@@ -2273,69 +2626,51 @@ own row above the name.
 
 ## 16. Implementation Checklist
 
-Use this to set up the design system in a new project.
+The rules are §1.8's table: each row names the module that carries the rule and the test that
+holds it. This list is the order to read a new or changed page in; every line is a row there.
 
-### Foundation
+### Before the content
 
-- [ ] Install: `tailwindcss`, `@radix-ui/*`, `class-variance-authority`, `clsx`, `tailwind-merge`, `framer-motion`, `lucide-react`
-- [ ] Create `lib/utils.ts` with `cn()` utility
-- [ ] Set up CSS custom properties for all color tokens (dark theme first)
-- [ ] Add `.light`, `.military`, `.zen` theme classes for optional variants
-- [ ] Set `--radius: 0.5rem` as base radius token
+- [ ] The page root is `Page`, its header `PageHeader` (the one `h1`), its sections `SubTabs`
+      writing `?tab=` (§17).
+- [ ] Loading, failed and empty each have their look before the content has one: `QueryState`
+      or `loadPhase` with `LoadingState`, `FailedState` (Try again) and `EmptyState` (the way
+      forward). A reload or its failure never replaces content on screen (§11).
+- [ ] The scroller keeps its place: `useScrollRestore` on a page's own scroller, `ScrollPanel`
+      for a tab's body (§11.10).
 
-### Colors
+### What is on it
 
-- [ ] Create `lib/categoryColors.ts` (or equivalent) mapping your domain categories to color token sets (`hex`, `bg`, `text`, `border`)
-- [ ] Create `lib/statusColors.ts` for any multi-value status fields (phases, states, severity)
-- [ ] Reserve `emerald` for completion/success states only — keep it consistent
-- [ ] Use amber as primary — it works in both light and dark themes
-- [ ] Establish the `/15` bg, `/30` border, full-opacity text pattern for semantic badges
+- [ ] Colour: "do this" is `primary`, done is `--done`, a verdict or notice is `good` / `warn` /
+      `bad`, anything else is data with a name in a colour module (§8.12). No hex, no raw
+      emerald, green, amber or red.
+- [ ] No meaning by colour alone — a word or an icon beside it.
+- [ ] A chart sits in `ChartFrame` with a summary from `lib/chartSummary.ts` and takes its
+      entry from `useChartEntry()` (§12.1, §12.11).
+- [ ] Numbers come from the server; the page lays them out.
 
-### Components
+### What can be done on it
 
-- [ ] Set up shadcn/ui base components (button, card, badge, tabs, sheet, dialog, input, select, slider, separator, scroll-area, skeleton, tooltip, popover)
-- [ ] Build shared: `EmptyState`, `LoadingCard`, semantic badge components
-- [ ] Ensure every component forwards `className` as a final override
+- [ ] What is clicked is a `<button>` or a `<Link>`; nothing waits for a hover — a row's
+      actions are in its "…" menu, `.reveal` only adds a pointer's shortcut (§11.10).
+- [ ] An icon button has an `aria-label` and a `Tip`; never a `title`.
+- [ ] Every action answers in place: `Button loading`, `DoneMark`, `announce()`. A toast only
+      for an undo or a failed background save; `ConfirmDialog` for what cannot be undone
+      (§11.5–§11.8).
+- [ ] A drag has a keyboard path and a menu entry.
 
-### Motion
+### How it moves
 
-- [ ] Wrap the app in `<MotionConfig reducedMotion="user">` — **do this before writing any animation**, not after (§9.10)
-- [ ] Set up `AnimatePresence mode="wait"` in the router
-- [ ] Apply the standard page transition to every page component
-- [ ] Add staggered entry to any list/grid with > 3 items
-- [ ] Use `whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}` on interactive cards
-- [ ] Use the expand/collapse pattern for any collapsible section
-- [ ] Gate any continuous/looping animation behind `useReducedMotion()`
+- [ ] No duration, easing or spring of its own: `lib/motion.ts`, `components/motion/`
+      (`RollingNumber`, `TabPanels`, `Collapse`, `PresenceList`, `Stagger`) (§9, §11.9).
+- [ ] Nothing loops; Reduce Motion is honoured by construction, not per component.
 
-### Accessibility
+### Before it ships
 
-- [ ] `aria-label` on every icon-only button (§17.7 headers are the usual offenders)
-- [ ] Verify every semantic color pair clears 4.5:1 in **all** themes, not just the default one
-- [ ] Confirm no meaning is carried by color alone — text or icon accompanies it
-- [ ] Test one full flow with reduced motion enabled at the OS level
-- [ ] Test one full flow by keyboard only
-
-### Data Visualization
-
-- [ ] Semantic marks read hex from a named system (§8); chrome reads `var(--color-*)` tokens
-- [ ] Tooltip surface uses tokens so it inverts with the theme
-- [ ] Check every chart in the non-default themes before shipping it
-
-### Patterns
-
-- [ ] Empty state for every zero-data view with a CTA that resolves it
-- [ ] Loading skeleton that matches the shape of the loaded content
-- [ ] Toggle buttons that show current state + "undo" affordance
-- [ ] Search inputs with `autoFocus` when opened in a modal/sheet
-- [ ] Truncate all text that may overflow (`truncate` + `min-w-0` on flex parents)
-
-### Layout
-
-- [ ] `h-screen overflow-hidden` on app root
-- [ ] Sidebar: `w-56` desktop, overlay on mobile
-- [ ] Page content: `flex-1 overflow-y-auto p-6`
-- [ ] Sheets: `flex flex-col p-0` with manual padding on children sections
-- [ ] Use `shrink-0` on headers/footers within flex columns
+- [ ] `npm run lint && npm run build && npx vitest run` — `test/designRules.test.ts` and
+      `test/semanticContrast.test.ts` read the sources and the CSS.
+- [ ] Looked at in the four themes, at desktop width and at 390 px (no sideways page scroll,
+      a wide table or week scrolls in its own strip — §14.2), and once by keyboard alone.
 
 ---
 
@@ -2414,88 +2749,69 @@ This pattern applies to every **primary tab** (top-level page reachable from the
 - Detail views that navigate back to a parent (Session Detail, Workout Detail) — these use the back-nav pattern (§13)
 - The Dashboard — see §17.9 for the Program View Header exception
 
-### 17.2 Container & Spacing
+### 17.2 One Component
+
+A page does not write its header. `components/layout/PageHeader.tsx` is the row:
 
 ```tsx
-<div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
-  {/* content */}
-</div>
+<PageHeader
+  icon={BarChart3}
+  title="Analytics"
+  tabs={<SubTabs id="analytics-tabs" label="Analytics sections" tabs={SUB_TABS} active={tab} onChange={setTab} />}
+  actions={<Button …/>}
+>
+  {/* optional second row: the program's phase bar */}
+</PageHeader>
 ```
 
-| Property | Value | Reason |
-|---|---|---|
-| `flex items-center` | All children vertically centered | Consistent alignment across icon sizes |
-| `gap-2` | 8px between icon and title | Tight identity pairing |
-| `border-b` | Separator from content | Always present on primary headers |
-| `px-6 py-4` | Standard header padding | Matches page content horizontal padding |
-| `shrink-0` | Prevents flex compression | Required in `flex-col` page layouts |
-
-**Always one horizontal row.** Do not stack the header into two rows for primary tabs — if content won't fit, it means there's too much content, not that the layout needs a second row.
+It is a `<header>` with `border-b px-6 py-4 shrink-0`, and renders the page's only `h1`.
+The first row wraps rather than overflows: a long program title, the tabs, the actions and
+the week selector do not fit one row of a narrow window. `onBack` puts a flow's way back
+before the icon (Preview).
 
 ### 17.3 Identity Block (Icon + Title)
 
-```tsx
-<Icon className="size-5 text-primary" />
-<h1 className="text-lg font-semibold">{PageName}</h1>
-```
+- **Icon:** `size-5 text-primary`, Lucide, the page's sidebar icon. Decorative
+  (`aria-hidden`).
+- **Title:** `text-lg font-semibold`. The larger scales are for content titles (program
+  names, workout names), not page chrome.
+- **Title is the page's name** — "Log", "Profile", "Dev Lab". Program is the exception: its
+  title is the program's.
 
-- **Icon:** `size-5 text-primary` — always amber, always Lucide React. Every primary tab gets an icon; no exceptions.
-- **Title:** `text-lg font-semibold` — not `text-xl` or `text-2xl`. The larger scales are for content titles (program names, workout names), not page chrome.
-- **Title is the canonical page name** — not a dynamic value, not a description. "Bio Log", "Exercises", "Profile", "Dev Lab". Short and stable.
+### 17.4 Subtitle
 
-### 17.4 Subtitle Rules
+`subtitle` is one short line under the title: a builder step's hint, the previewed
+program's name. Most pages have none; a sentence that restates the icon and title is left
+out.
 
-Subtitles go on the same row, inline, after a muted dot separator:
+### 17.5 Sub-tabs
 
-```tsx
-<span className="text-muted-foreground/50 text-xs select-none">·</span>
-<span className="text-xs text-muted-foreground">{subtitle}</span>
-```
-
-**When to include a subtitle:**
-- The subtitle must be ≤ 6 words and genuinely informative at a glance (e.g., "Readiness · Sleep · HRV", "198 exercises")
-- Dynamic counts ("198 exercises") are ideal — they carry live information
-- Facet summaries ("Readiness · Sleep · HRV") are ideal — they orient the user to what's inside
-
-**When to omit:**
-- Descriptive sentences ("The source methodologies that shape how programs are generated") → drop entirely or move to an empty state
-- Anything that restates what the icon + title already communicate
-- Long phrases that force the header to wrap
-
-**Default: no subtitle** unless one of the above applies. Most tabs are self-explanatory.
-
-### 17.5 Sub-tab Style
-
-Sub-tabs in the header row use **pill button style** — not Radix `TabsList`. This is a deliberate distinction:
-
-- **Header-level sub-tabs** (views of the same page): pill buttons
-- **Content-level tabs** (tab groups within a section of the page): Radix `TabsList` with the standard `bg-muted` track
+`components/layout/SubTabs.tsx` is the only tab selector — there were six copies, one of
+them with ARIA.
 
 ```tsx
-<div className="ml-4 flex gap-1">
-  {TABS.map(tab => (
-    <button
-      key={tab.id}
-      onClick={() => setTab(tab.id)}
-      className={cn(
-        'px-3 py-1 rounded text-xs border transition-colors',
-        activeTab === tab.id
-          ? 'bg-primary/15 border-primary/40 text-primary'
-          : 'border-border text-muted-foreground hover:bg-muted'
-      )}
-    >
-      {tab.label}
-    </button>
-  ))}
-</div>
+<SubTabs id="log-tabs" label="Log sections" tabs={[{ id, label, Icon?, badge? }]} active={tab} onChange={setTab} />
 ```
 
-- `ml-4` creates a visual separation from the identity block (not `gap-2` — the gap between identity and nav should be wider than the internal `gap-2`)
-- Active: `bg-primary/15 border-primary/40 text-primary`
-- Inactive: `border-border text-muted-foreground hover:bg-muted`
-- Size: `px-3 py-1 text-xs` — compact, never taller than the title
+- **Looks:** pills, `px-3 py-1 text-xs`; the selected one `text-primary` over a pill
+  (`border-primary/40 bg-primary/15`) that **slides** to it (`layoutId`, `pillMotion`), so
+  the eye follows the selection instead of finding it again.
+- **Keyboard:** a `role="tablist"` with one tab stop; Left and Right move and wrap, Home
+  and End jump (`nextTab`, tested). Selection follows focus.
+- **Touch:** 44 px tall on a coarse pointer; the row scrolls sideways before it wraps.
+- **The URL holds the tab** (`?tab=`), Profile included since 2026-11-11, so a link lands
+  on a section and Back returns to it. The page's default tab leaves the parameter out.
+- **The body** is `<TabPanels active order tabsId>` when it is only the panels (§11.9).
+- A second selector may follow a hairline (Explore: views, then topics). The same component
+  is the small switch inside a card (Program ▸ Overview's Sessions · Exercises).
+- A *filter* chip (All · Workouts · Sessions) is not a tab: it narrows one list and keeps
+  the chip look without the tablist.
 
 ### 17.6 Step Indicators (Wizard Flows)
+
+Back and Next sit together at the right of the step's own column (`max-w-3xl`),
+sticky at its foot inside the scroller — never in a full-width bar with one at
+each far edge. The first step has no Back; the last step's action is its own.
 
 For multi-step flows (Program Builder), replace sub-tabs with a step indicator pushed to the right:
 
@@ -2571,8 +2887,9 @@ Status as of 2026-10-01, after the information-architecture restructure
 | **Profile** | `User` | "Profile" | None | Athlete (incl. heart rate) · Equipment · Injuries · Schedule · Standards | None | ✅ |
 | **Settings** | `Settings` | "Settings" | None | Connections · Account · Appearance (· Developer, dev builds) (`?tab=`) | None | ✅ — the OAuth callbacks land on `?tab=connections` |
 | **Program Builder** | `Wand2` | Dynamic step title | None | None | "Step N of 4" (right) | ✅ wizard variant, at `/program/new` |
+| **Method Builder** | `Sparkles` | "Describe your own method" · "Revise your method" · "Your method" | "A training method written for you, to build programs from" | None | None | ✅ at `/program/new/method` and `/program/new/method/:buildId`; a back link to the program builder opens the column |
 | **Program Preview** | Back-nav + `ScanEye` | "Preview" / "Preview changes" | Methodology name | Overview · Calendar · Held back (`?tab=`) | Adjust · Start this program / Apply from week N | ✅ two-row like Program (the `PhaseBar` strip); `/program/preview`, the builder's last step and the profile's regenerate offer (`?mode=regenerate`) |
-| **Dev Lab** | `Terminal` | "Dev Lab" | None | Pipeline Trace · Object Browser · Ontology · Model Interactions | None | ✅ — dev builds and `dev` users |
+| **Dev Lab** | `Terminal` | "Dev Lab" | None | Pipeline Trace · Impact · Object Browser · Ontology · Model Interactions · Builder readiness · Builds | None | ✅ — dev builds and `dev` users |
 | **Login** | — | "Training" | — | — | — | Exempt — pre-auth, centered card, outside app shell; returns to the page that sent it there (`lib/returnPath.ts`) |
 | **Pair a watch** | `Watch` | "Pair a watch" | None | None | None | ✅ — `/pair?code=…`, the watch QR's target; not in the sidebar |
 | **Session Detail** | Back-nav | Day/session context | — | — | — | Back-nav pattern, not tab header |
@@ -2625,7 +2942,7 @@ takes `exercise` | `measure` and `metric` too, the chart's selection — the
 `/bio` redirect on `?tab=recovery`, the builder's Rebuild dialog on
 `/program?tab=history`). A sub-tab nobody deep-links to may stay in local state.
 
-**On Dev Lab.** It remains the reference implementation for the header pattern, and carries the standard §9.1 page transition — so it is a valid whole-page reference. It exists only in dev builds.
+**On Dev Lab.** It remains the reference implementation for the header pattern, and carries the standard §9.1 page transition — so it is a valid whole-page reference. It exists in dev builds and for `dev` users.
 
 **Login is exempt.** It renders pre-auth, outside `RootLayout` and outside the router's `AnimatePresence`, so it has no sibling to transition against. It uses a centered card rather than a tab header. Intentional, not a gap.
 

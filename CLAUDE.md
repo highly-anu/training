@@ -29,12 +29,28 @@ A training logic system that algorithmically generates periodized training progr
   falls back to MSW mock data otherwise. With `VITE_SUPABASE_URL` empty it skips login and
   runs as the same `local-dev-user`.
 - **Production serves on four threads in one process** (Dockerfile: gunicorn
-  `gthread --threads 4`, 256 MB machine). `src/db.get_conn()` is per thread;
+  `gthread --threads 4`, 512 MB machine since 2026-11-15, for the method builder's worker thread; 256 MB before). `src/db.get_conn()` is per thread;
   `api._bound_send` fails a send that makes no progress for 30 s and `api._gzip`
   compresses large JSON (never for a `ciqdev_` watch request). With the old single
   sync worker, a phone that stopped reading mid-download of `/user/program` held
   it until the 120 s kill, again and again overnight on 2026-10-12, and the
   watch's morning sync queued behind it (`test_worker_stalls.py`).
+- **Production runs on one machine.** fly.toml cannot pin the count, so the deploy
+  passes `--ha=false` and then fails unless `fly machines list` shows exactly one.
+  Each thread holds its connections (`get_conn`, `read_conn`) for the life of the
+  process, and Supabase's session pooler (`DATABASE_URL`, port 5432) allows 15
+  clients: one machine fits, three do not. On 2026-10-31 racing deploys left no
+  machine for a moment, the next run launched one plus flyctl's default spare,
+  and production ran on three. By 11-05 the pool was full (`EMAXCONNSESSION` in
+  `fly logs`), so any thread without a connection failed. `record_version`, which
+  opens its own, gave up silently: a moved session never reached
+  `planned_sessions`, and its confirm answered 404. The `/programs/impact` gate
+  and the in-process caches assume one process too. When the logs show
+  `EMAXCONNSESSION` or "No database connection available", run
+  `fly machines list -a training-api` and `fly scale count 1 -a training-api`;
+  the next `GET /user/program` archives what was missed. Before running two
+  machines (for deploys without downtime), move to the transaction pooler (6543)
+  or close idle connections, and make those gates shared.
 - **Reference routes are built into the image** (since 2026-10-27, `api.static_json`). The
   package-data routes (`/philosophies`, `/frameworks`, `/archetypes`, `/exercises`, the
   Explore documents, `/analytics/specs`, `/similarity`…) are pure functions of the YAML: the
@@ -108,6 +124,7 @@ training/
 │   │       ├── archetypes/          # session shapes, one subdir per modality
 │   │       ├── exercises.yaml       # the movements it owns
 │   │       ├── exercise_media.yaml  # demo links
+│       ├── vocabulary.yaml      # optional; modalities and movement patterns it adds
 │   │       └── level_seeds.yaml     # optional; per-level assumed knowledge
 │   ├── commons/              # shared, owned by no philosophy
 │   │   ├── phase_kinds.yaml         # the phase kinds the engine keys on
@@ -152,9 +169,11 @@ All prefixed `/api/`:
 | GET | `/constraints/equipment-profiles` | `EquipmentProfile[]` |
 | GET | `/constraints/injury-flags` | `InjuryFlag[]` |
 | POST | `/programs/generate` | `GeneratedProgram` (`week_in_program` numbers a partial regenerate's tail from the kept head's length + 1) |
+| GET | `/sessions/briefing?key=&date=` | Before a session: per item (a contract module, a named workout, an exercise — the package's `briefing.yaml` says which, `src/briefing_spec.py`) today's numbers, the earlier occurrences with their status (clean, made, missed, logged, unconfirmed), the cycle position and one suggestion; `pending` — sessions to confirm first (`src/briefing.py`); 404 when the key names no session of the program |
 | POST | `/sessions/generate` | `Session` (single session regeneration). `add: true`: a session the athlete adds on the fly to today or a later day — any package (a borrowed one carries `provenance`), named workouts included, the ones that fit as written within the session's time, one at random (`current_archetype_id` asks for another); never refused by a training contract or a template day; the answer is marked `added` |
-| POST | `/dev/constraint-impact` | For the Dev Lab (no screen calls it yet): generate's body run against a reference with nothing in the way (the packages' equipment, no injuries, the framework's level, a training contract's mastery and bell pair for that level) and once per constraint lifted alone (equipment, injury, level, proficiency); every changed session or slot with what was planned, its `causes`, why, `knock_on` when an earlier direct change moved the rotation, and the equipment that would restore the most changes (`src/constraint_impact.py`). A refused request (200, no weeks) answers `feasible: false` and `unblocked_by`: the one constraint, or the framework's ideal days and minutes, that alone lets it generate, else `combined`; a reference that cannot generate answers `reference_generates: false`. At most 12 weeks and seven generations; local dev or `AUTHORING_ENABLED` only |
-| GET | `/dev/portability` | For Dev Lab ▸ Model Interactions: per package its engine shape per track, the files it carries, the records it still needs outside its folder (scorecard, coverage, status, golden hashes, dossier; `done: null` and listed in `unchecked` where the deployment lacks the file — the API image has no `docs/`), any id the commons do not define, and ids two packages declare (which copy the loader keeps); with `tools/portability_gaps.json`, what no package can bring in its folder yet, each gap anchored in the code (`src/portability.py`, `test_portability.py`). Local dev or `AUTHORING_ENABLED` only |
+| POST | `/dev/constraint-impact` | For Dev Lab ▸ Impact (`components/devlab/ImpactPanel.tsx`): generate's body run against a reference with nothing in the way (the packages' equipment, no injuries, the framework's level, a training contract's mastery and bell pair for that level) and once per constraint lifted alone (equipment, injury, level, proficiency); every changed session or slot with what was planned, its `causes`, why, `knock_on` when an earlier direct change moved the rotation, and the equipment that would restore the most changes (`src/constraint_impact.py`). A refused request (200, no weeks) answers `feasible: false` and `unblocked_by`: the one constraint, or the framework's ideal days and minutes, that alone lets it generate, else `combined`; a reference that cannot generate answers `reference_generates: false`. At most 12 weeks and seven generations; local dev or `AUTHORING_ENABLED` only |
+| GET | `/dev/portability` | For Dev Lab ▸ Builder readiness (`components/devlab/ReadinessPanel.tsx`): the steps of the LLM package builder's foundation (roadmap item 20) with every gap, open or done; per package its engine shape per track, the files it carries, the records it still needs outside its folder (scorecard, coverage, status, golden hashes, dossier; `done: null` and listed in `unchecked` where the deployment lacks the file — the API image has no `docs/`), any id the commons do not define, and ids two packages declare (which copy the loader keeps); with `tools/portability_gaps.json`, what no package can bring in its folder yet, each gap anchored in the code (`src/portability.py`, `test_portability.py`). Local dev or `AUTHORING_ENABLED` only |
+| GET | `/dev/builds`, `/dev/builds/<id>` | For Dev Lab ▸ Builds (`components/devlab/BuildsPanel.tsx`): the signed-in account's own last builds of a method with what each spent (turns, checks, tokens, seconds, the tokens' cost at `package_builder.PRICE`) and their totals; one build in full — the request, each turn's calls, answers and tokens, each check's problems and the program the model was shown, replies thrown away at the output limit, the draft's files (`src/build_report.py`, pure over a `package_builds` row; the list reads no transcript). The builder's gate (`require_builder`), never another account's build (404) |
 | POST | `/exercises/substitute` | `{alternatives: [{assignment, score, reasons}]}` — ranked swaps for one slot, selector-scored, loads for the week; 422 when nothing fits |
 | POST | `/programs/impact` | The preview's Held back: `/dev/constraint-impact`'s answer for any signed-in athlete (`api._constraint_impact`, shared); ≤ 7 generations, 12 weeks; one run in the process at a time and one per athlete — a taken gate answers 429 `busy` at once, never waiting (the clients retry); small answers cached ten minutes per body and day. Clients send the draft's own first phase and length (`impactParams`, `impactRequest(for:)`), never its event date |
 | POST | `/programs/constraint-change` | Does a profile change change the program? The regenerate body (`constraints` = the profile's) + `baseline_constraints` (the program's): both generated, diffed by `constraint_impact.diff_programs` (exercises *and* each slot's numbers, so a level change that moves only loads is affected) → `{affected, sessions, first_week_number, changes, program?}` (`program`, the new tail, only when affected); same gate as impact, never cached on the server |
@@ -186,8 +205,9 @@ revision-checked PUT — nothing is persisted by the endpoint.
 
 **Added sessions are extras.** An athlete may add a session on the fly to today or a later
 day (web: Today's rest card and the calendar's rest days, `ReplaceSessionSheet` in add mode;
-iOS: the long-press menu on Today's cards and the calendar's day rows, `Views/SessionActions.swift`
-— which also holds Move, Replace and Remove, so no card or detail screen shows them —
+iOS: the "…" on Today's cards and the calendar's day rows, "+ Add session" on a rest day and
+the long press as a shortcut, `Views/SessionActions.swift` — which also holds Move, Replace and
+Remove; the detail screen shows none of them —
 `ReplaceWorkoutSheet` in add mode; → `programStore.addSession` / `AppState.addSession` →
 the revision-checked PUT). It is marked `added`, appended after the day's others (indices
 already on the day keep their place), and only an added session can be removed. It counts
@@ -424,7 +444,7 @@ group's name.
 ## Key Engine Behaviors
 
 - **Levels: written for one, done by all** (`docs/logic/levels.md`, since 2026-11-07;
-  roadmap 18). A track opts in with `authored_level`; below it a `scaling_eligible`
+  roadmap 23). A track opts in with `authored_level`; below it a `scaling_eligible`
   archetype's session is done at a share of what is written (`src/level_scaling.py`, called
   by `calculate_load`): the track's own `level_scaling` where its source says, else the
   commons' shares (`training_levels.yaml` `scaling`), recorded as an invention
@@ -459,9 +479,9 @@ group's name.
   ranks it after the spacing terms. Fidelity reads a region loaded heavily on consecutive
   days as `region_back_to_back` (info, never gated). A source's own week is never
   rearranged for it. **Where scoring runs at all:** every shipped package places its
-  sessions by its own `week_templates` or a training contract, so the archetype picker
-  (and the scheduler) run only for blends a contract philosophy leads, for packages
-  without either, and for a single-session regenerate.
+  sessions by its own `week_templates` or a training contract — and a blend is a composition,
+  each track on its own engine — so the archetype picker (and the scheduler) run only for
+  packages without either and for a single-session regenerate.
 - **Exercise scoring**: prefers exercises with defined movement_patterns (+0.5) and forward-unlocking exercises (+0.5); penalizes recently used (-2 per recent use). AMRAP/for_time slots exclude `mobility` and `rehab` category exercises.
 - **Deload**: every `deload_protocol.frequency_weeks` (a framework without a protocol never
   deloads on schedule) or when `fatigue_state: overreached`; `volume_reduction_pct` is the
@@ -634,7 +654,8 @@ group's name.
   - **Regenerates** send the target week's `track_id`, `start_phase` and
     `periodization_week` (web `lib/programSource.tailResume`, iOS
     `ProgramConstraintsDiff.merged`), so a tail resumes in its own track and phase.
-  - **iOS** decodes `PhilosophyCard.tracks`, reads `phase_id` / `phase_name` /
+  - **iOS** decodes `PhilosophyCard.tracks` (and `/philosophies/glance` for the
+    builder's cards, `PhilosophyGlance`), reads `phase_id` / `phase_name` /
     `track_id` off each week's round-tripped extras (`ProgramWeek.phaseLabel`), colours
     by kind through `PhaseStyle`, and picks tracks and start phases with
     `TrackPhaseList` / `StartPhasePicker` (design-system §3.2, §6.22;
@@ -655,7 +676,12 @@ group's name.
 Before building or changing UI, read the design system for that platform — it
 is the source of the patterns, not the neighbouring screen:
 
-- **iOS / watchOS**: `ios/docs/design-system.md`. Colour, typography, spacing,
+- **iOS / watchOS**: `ios/docs/design-system.md`. §1 is the design language — content
+  is solid and chrome floats (glass), amber is "tap me" and emerald "done", nothing is
+  hidden behind a gesture, every screen answers loading / failed / empty, motion and
+  accessibility live in the components — and §1.8 is every rule in one table with the
+  helper that carries it and the test that holds it; the contents index §6's components
+  by job. Then colour, typography, spacing,
   motion, and the component patterns in §6. §1.7 covers the governing rule:
   when two screens need the same component, extract it and convert both in the
   same change, then document it in §6. Profile and Analytics each grew their
@@ -672,7 +698,9 @@ is the source of the patterns, not the neighbouring screen:
   `WorkoutIcon` (glyphs generated by `tools/icons/gen_workout_icons.py`), iOS
   `SessionIcon` + `Image(symbol:)`, Garmin `Icons.forSession`; design-system §6.40,
   frontend-design §15.4, `test_session_icon.py`.
-- **Web**: `docs/frontend-design.md` (§13.2 the grouped sidebar, §17.8 every page's header).
+- **Web**: `docs/frontend-design.md`. §1.7 is the design language in web idiom and §1.8
+  every rule in one table — the module that carries it and the test that holds it; §16 is
+  the order to read a page in (§13.2 the grouped sidebar, §17.8 every page's header).
 - **iOS tabs**: Today · Program · Analytics · Log · Profile (`AppRouter.Tab`); Settings
   (connections, devices & sync, notifications, appearance, account) is pushed from
   Profile's gear, never a tab — design-system §6.13. The exercise reference on the phone
@@ -686,11 +714,41 @@ block, `data/commons/constraints/equipment.yaml` and `data/commons/outcome_field
 `tools/gen_client_vocab.py` → `frontend/src/lib/gen/clientVocab.ts`, `ClientVocab.swift` in
 each Apple target folder and the four schemas' equipment enums (frontend-design §8.9). A
 stored equipment alias (`assault_bike`) is read as its id by `src/equipment.canonical`.
-Never edit a generated file.
+Never edit a generated file. What a package adds for itself (an athlete's own method) is
+served, not compiled: the web draws it from `/api/modalities` and `/api/equipment`, and so does
+the phone (`AppState.loadVocabulary`, `ServedVocabulary.swift`) — every Apple target looks a
+modality up through the generated `ClientVocab.modality(_:)` (compiled, then the served display
+kept in the app group, then neutral), `today-session` carries `modalityDisplay` for such a
+session, and a package's implements are the pickers' "From your methods" group.
 
-Shared iOS style primitives live in `AppAnimationSettings.swift`
-(`AppAnimation`, `AppHaptics`, `AppMetrics`, `appTabStyle()`) and
-`AppSubTabs.swift`. Tab selection lives in `AppRouter.swift`, so one screen can
+Shared web primitives live in `frontend/src`: `lib/motion.ts` (the only file that writes a
+duration, easing or spring) and `components/motion/` (`RollingNumber`, `TabPanels`,
+`Collapse`, `PresenceList`, `Stagger`), `lib/chartMotion.ts`; `components/layout/` — `Page`,
+`PageHeader` (the one `h1`), `SubTabs`, `ScrollPanel` + `lib/useScrollRestore.ts`;
+`components/shared/states/` (`loadPhase`, `LoadingState`, `FailedState`, `QueryState`);
+`Button`'s `loading`, `lib/toast.ts` (undo, failed save — nothing else), `ConfirmDialog`,
+`lib/announce.ts`; `components/shared/Tip.tsx`, `lib/shortcuts.ts`; colour as tokens
+(`--done`, `--good` / `--warn` / `--bad` in `styles/globals.css`) and named data
+(`lib/dataColors.ts` beside the modality, phase, zone, movement, completion and status
+modules); `components/shared/ChartFrame.tsx` + `lib/chartSummary.ts`. A component writes no
+transition, hex, raw emerald or amber, `title=` on a button, clickable `div` or bare Recharts
+container: `frontend/test/designRules.test.ts` and `semanticContrast.test.ts` read the sources
+and fail on one (roadmap item 19).
+
+Shared iOS style primitives live in `AppTheme.swift` (`AppColor`, `AppFont`),
+`AppAnimationSettings.swift` (`AppAnimation`, `AppHaptics`, `AppMetrics`,
+`appTabStyle()`), `AppCard.swift` (`AppCard` / `.appCard()`, `SectionLabel`,
+`.appButton(_:)`), `AppSubTabs.swift` and `AppMotion.swift` (rolling numbers, symbol
+effects, the scroll fade, chart entry — the only file that may write `.contentTransition(`,
+`.symbolEffect(` or `.scrollTransition(`; design-system §7.5, §6.56) and
+`AppAccessibility.swift` (44 pt targets, one fact as one element, chart summaries, the
+colour twin, rows that stack at the accessibility sizes — §6.57: a row or chart that
+changes is checked at the largest Dynamic Type size too). The tint is amber (`AccentColor`, the
+same asset in all four targets; it was empty, so the app shipped system blue,
+until 1.35) and done is emerald (`AppColor.complete`). A view writes no colour
+literal, fixed font size, animation curve or `.bordered` button style of its
+own: `DesignTokenTests` reads the sources and fails on one (design-system §2,
+§4, §6.6, §7). The rest of the uplift is `docs/roadmap.md` item 18. Tab selection lives in `AppRouter.swift`, so one screen can
 send the user to a section of another (§6.9) — route through its methods, never
 by assigning tab state at the call site. Put shared behaviour inside the
 component rather than in instructions at the call site.
@@ -726,7 +784,9 @@ training data; only sign-in goes to Supabase.
   `fit_file > garmin > apple_watch_live > apple_health > strava > manual`.
 - **Matching** — `src/workout_matcher.py` (server) and
   `frontend/src/lib/workoutMatcher.ts` (browser) share `data/matching_rules.json` and
-  the golden fixtures in `data/matcher_fixtures.json`. Change scoring in the JSON, not
+  the golden fixtures in `data/matcher_fixtures.json`. Ahead of that scoring, server-only,
+  `match_by_time` links a workout to the session a log says ran beside it (the phone's
+  player sends each step's absolute `startAt` / `endAt`; see *Workout Player*). Change scoring in the JSON, not
   in either implementation, and run both suites. Weak matches go to
   `workout_match_suggestions`, never to `workout_matches` with a 'pending' confidence —
   a dozen readers treat "row that isn't 'rejected'" as "is matched".
@@ -960,8 +1020,13 @@ writes.
   `OutcomeLogger`); `ExerciseRow.test.tsx` pins it, because the logger was once
   written and never mounted, which left every rounds/duration/distance
   primitive at zero coverage. The phone logs from the session detail
-  (`ExerciseLogSheet`, design-system §6.16) with the same dispatch
-  (`SessionLogging`) and the same payload; `GET /health/sessions/recent`
+  (`SessionLogForm`, design-system §6.16: every exercise of the session in one
+  form, one Save, since 2026-11-12) with the same dispatch (`SessionLogging`) and
+  the same payload. Save never waits: `AppState.saveSessionLog` writes the log to
+  the phone's outbox (`SessionLogOutbox`, Application Support), shows it at once
+  and sends it in the background, again until it is through; a log not sent yet
+  says so on Today and on its session (`SessionLogNoticeBanner`) and blocks
+  nothing (`SessionLogOutboxTests`); `GET /health/sessions/recent`
   carries `exercises` so it can read back. A skill-practice row on both
   clients has a **Clean** toggle (`exercises[id].clean`: every rep owned); an
   `unlocks` entry with `require_clean: true` (Ido) earns a movement
@@ -1123,6 +1188,121 @@ way they own their analytics. Layout and the add-a-philosophy walk-through:
   cached day only if it is today's — yesterday's rest day used to stand in for
   a failed morning sync.
 
+## Workout Player (phone)
+
+**Start workout runs any session on the phone, step by step** (since 2026-11-11), for an
+athlete who records with a band (a Garmin Cirqa) and reads the steps on the phone.
+Start workout — on Today's card for the session to do next (`Views/Today/TodaySessionCard.swift`,
+design-system §6.53) and in `SessionDetailView` — opens `Views/WorkoutPlayerView.swift` (design-system
+§6.44–6.45), which reads that day's `today-session?spec=1&date=` (`fetchWatchDay`) and
+picks the session by `sessionId`, else builds the steps from the stored program
+(`PlayerFallback`, no `last`). It runs on **the Apple Watch's engine**
+(`WorkoutSessionState` + `+Page` + `+Clock`, compiled into both apps; `docs/watch.md`
+makes the phone the contract's third reader): cues through `WorkoutCueOutput`
+(`PhoneCueOutput`: taps, system tones, speech with Voice on), the wall clock (`tick`,
+`catchUp(to:)` on return from the background), `forecast` for what the clock will do
+next. No heart rate on the phone: a heart-rate rest runs its cap.
+
+- **The clock leads.** On a step the clock runs, the phone draws the clock large and the
+  round count beside it (`WatchSpecText.playerFields`; the watches keep A and B at one
+  size). An interval's time sits in a ring that empties with the round; a rest-less
+  interval (an EMOM) counts its last three seconds in place and a band says "ROUND n" as
+  the minute turns, and the Apple Watch shows the lead-in word and "Round n" there
+  (`leadInLeft` covers a rest-less interval's work; design-system §6.44, §9.6).
+- **Pause holds the whole workout** (`pauseWorkout` / `resumeWorkout`, `pausedAt` in the
+  snapshot): no tick, no forecast, the wall-clock starts moved on by the time away at
+  Resume; the Live Activity's Pause is the same one. The clock counts whole seconds from
+  the last whole second (`catchUp` keeps the fraction; the player looks four times a
+  second) — set to the moment asked for, a timer a few milliseconds late skipped a tick
+  and lost a second (`testALateTimerLosesNoSecond`).
+- **Away from the app**: the screen stays awake while the player is open; in the
+  background each forecast moment is a notification (`WorkoutLockScreen`, prefix
+  `workout-cue-`, at most 40) and the Live Activity shows the step and its countdown
+  (`TrainingWidgets/WorkoutLiveActivity.swift`; `WorkoutActivityAttributes.swift` is in the
+  widget extension through an exception set), with Pause / Resume and Skip
+  (`WorkoutActivityIntents.swift`, in both targets; the intent runs in the app, where
+  `WorkoutRemote` moves the open player's engine, else the kept workout's). The state is saved on every move
+  (`ActiveWorkoutStore`, Application Support); the tab bar's accessory offers it again from any tab (`KeptWorkout`).
+- **Saving**: one `PUT /health/sessions/by-uid/<sessionUid>` (`today-session` carries
+  `sessionUid`), `source: phone`, each step's window with absolute `startAt` / `endAt`, the
+  tests' `standardResults` — then `AppState.finishWorkout` refreshes Today, and the session's
+  log form (`SessionLogForm` with `onFinish`, design-system §6.16) opens on what the player
+  recorded, for the numbers it could not see; Save there or Not now closes the player. The band's
+  recording links to it **by time**: `workout_matcher.match_by_time`, a pre-pass in
+  `match_and_store`, takes the one completed log of the workout's day whose timeline
+  overlaps the recording by half the shorter span (a minute at least), and
+  `hr_plan` then splits its heart rate by step.
+- Settings ▸ Workout: Count in before work, Count in after Start, Voice
+  (`WatchCueSettings`, the same keys the Apple Watch keeps on its own).
+- `WorkoutEngineTests` (every template on a simulated clock), `WorkoutLockScreenTests`.
+
+## Pre-workout Briefing
+
+**Before a session, the server says what it is against what was done** (since 2026-11-15,
+roadmap 22). `GET /api/sessions/briefing?key=<week>-<Day>-<i>` answers, per item of the
+session, today's numbers, the earlier occurrences of the same thing, where it stands in its
+cycle and one suggestion. The phone lays it out (`Views/SessionBriefingView.swift`,
+design-system §6.61: the player's pre-start screen and an undone session's detail; debug
+builds rest there with `TC_PLAYER_OVERVIEW=1`) and so does the web
+(`components/session/SessionBriefing.tsx` in `SessionPanel`, frontend-design §13.10). Every
+sentence is the server's.
+
+- **The package says what "the same session" is.** `data/packages/<id>/briefing.yaml`
+  (optional; `docs/schemas/briefing.schema.json`): entries tried in order, each with a
+  `scope` (progression models, modules, archetypes, exercises, slot types, slot roles,
+  `named_workout`, `scored`, `contract`, `earns`), `same_as` (`module` — a contract module and its variant;
+  `archetype` — a templated day's named workout; `exercise`), `show` (the numbers that word
+  a prescription), `chart`, `history`, `cycle` and `suggest`. The default entries
+  (`briefing_spec.DEFAULT_ENTRIES`) follow a package's own, so a package without the file —
+  and whatever a file leaves out — is read by how its loads were written: a density, timed
+  or skill module by module, a `load_per_exposure` lift by exercise, a named workout by
+  archetype, anything else by exercise. Wildman declares its density cycle. Nothing in
+  `src/` names a package; the schema's enums are the vocabulary.
+- **Exercise by exercise.** Each item carries `exercises`: per exercise today's line and
+  that exercise's own earlier rows (the occurrence's `_parts`); the item's own `history`
+  row is the lead exercise's line, never the exercises joined. An earlier row leaves the
+  interval out, and a logged interval reads as a clean one does ("5 × 5 · 20 kg · RPE 8":
+  the log has the rounds, the plan the reps). `next_step` says a change in one direction
+  as a difference ("2 more a round than Thursday") and one number up with another down as
+  a new stage ("A new stage: 10 × 1. Wednesday was 5 × 5.") — the first real program read
+  "5 more rounds and 4 fewer a round".
+- **The defaults were read on every package** (22.4, `tools/print_briefings.py`), and none
+  needed a file of its own; the defaults did. A contract session with nothing to earn (a
+  BJJ class, StrengthLog's and Persist's workouts, Uphill's general strength:
+  `default_as_written`, scope `contract` + `earns: false`) is the same workout before,
+  exercise by exercise, with nothing to confirm — it used to read "not confirmed as clean"
+  every time. `beat_last` speaks only for a workout with one result (a for-time or AMRAP
+  slot, a scored slot, a single movement), never for the first of ten exercises. A made
+  lift whose next weight the stored program does not carry yet is said with the step that
+  session's load carried, for the same sets and reps only. Reps the source writes in
+  words keep them ("3 × max", "3 × 12-15"); equal sets are said once ("4 × 5 · 100 kg").
+- **A contract module's preparation and recovery blocks make no item** — only the exercises
+  its record lists (`modules[].exercise_ids`) do; a templated day's warm-up makes none.
+- **History is joined through the version a log was written against.** Session logs carry
+  no module id. This program's sessions are walked with their logs and matches; earlier
+  programs' logged sessions come from `get_session_logs_by_uid` →
+  `program_history.session_lookup` (180 days, the newest 80). Only a done session (logged
+  complete or matched) is an occurrence; a missed one is left out.
+- **Statuses have one reading each.** `clean` is `training_contract.clean_outcomes` — the
+  predicate `confirmed_state` advances on, extracted so the two cannot part; `made` /
+  `missed` is `_lift_outcome`; `logged` has an outcome that earns nothing; `unconfirmed` is
+  done with no outcome (a watch-recorded or linked workout).
+- **Suggestions are advice** (`confirm_pending`, `next_step`, `cycle_end`, `next_load`,
+  `beat_last`, `standard_target`, `repeat_last`; the first of the entry's list with
+  something to say). None changes the program. `confirm_pending` — an earlier session of
+  the module in this program is done but not clean while today's load is `conditional` —
+  also fills `pending`, the sessions to confirm first.
+- A new package file is wired in nine places, all of which `briefing.yaml` is in:
+  `loader` (its loader and `_probe`), `validate_entities._detect_schema`, a
+  `check_provenance` step, `portability.FILES` and `_read`, `package_store._TOP_LEVEL`,
+  `package_builder.MORE_SCHEMAS`, `mcp_server`'s two maps, `gen_package_spec` (then run it:
+  `PACKAGE_SPEC.md` is generated) and `docs/schemas/README.md`.
+
+```bash
+SUPABASE_URL='' .venv/bin/python test_briefing.py   # the spec, history by module, statuses, suggestions, the route (no DB)
+SUPABASE_URL='' .venv/bin/python tools/print_briefings.py [package id …]   # each package's briefing beside its programs, for reading
+```
+
 ## Program History
 
 `user_programs` holds **one row per athlete** and `save_user_program` upserts it,
@@ -1272,10 +1452,28 @@ still alias Load, Blocks and Progress; `&measure=<entry id>` or `&exercise=<id>`
 in the launch environment (`SIMCTL_CHILD_TC_ROUTE`), because `simctl openurl` makes
 iOS ask "Open in Training Companion?" and nothing can tap that. Screens behind a tap
 (the swap sheet, the exercise sheet) are still out of reach; test their models.
+The workout player opens from the launch too, in debug builds (`WorkoutPlayerDebug`):
+`SIMCTL_CHILD_TC_ROUTE='trainingcompanion://session?key=<key>'` with
+`SIMCTL_CHILD_TC_PLAYER=<key>` starts that session's player afresh (a kept workout is let
+go); `TC_PLAYER_STEP=<n>`, `TC_PLAYER_RUN=1` (Start), `TC_PLAYER_LAPS=<k>` (the primary
+button k times; a set is logged as prescribed), `TC_PLAYER_PAUSE=<seconds>` (Pause that long after the start), `TC_PLAYER_END=1` (the end screen),
+`TC_PLAYER_SAVE=1` (and Save workout pressed, so the log form follows). The session log form opens the same way (`SessionLogDebug`):
+`SIMCTL_CHILD_TC_LOG=<key>` with the session's route, and `TC_LOG_SAVE=<seconds>` ticks every
+exercise and saves after that long (stop the API in between to see an unsent log). Launching another app (`simctl launch … com.apple.Preferences`)
+puts the Live Activity in the Dynamic Island.
 A simulator that has never answered the Health sheet shows it on every launch, over
 whatever route was asked for; `SIMCTL_CHILD_TC_SKIP_HEALTH=1` skips the request in
-debug builds (`HealthKitManager.skipsAuthorizationRequest`).
-Settings ▸ API target shows the current target and, in debug builds, the switch.
+debug builds (`HealthKitManager.skipsAuthorizationRequest`). `SIMCTL_CHILD_TC_TIPS=hide`
+(or `show`) keeps the two TipKit tips out of (or in) a screenshot.
+Settings ▸ Diagnostics shows the current API target and, in debug builds, the switch.
+The program builder (`Views/ProgramBuilder/`, a file a step) opens on launch in debug
+builds with `SIMCTL_CHILD_TC_BUILDER=<step>[:<philosophy id>]` (`BuilderDebugLaunch`).
+Its first step leads with the athlete's own methods and the way to describe one (roadmap
+21.6, design-system §6.61): `MethodBuilderViews.swift` over `MethodModels.swift`, whose
+`MethodBuildWords` are the web's `lib/methodBuild.ts` — change the words in both.
+`SIMCTL_CHILD_TC_METHOD_BUILDER=describe | revise:<method id> | build:<build id>` opens the
+describe form or a build; a local API with `ANTHROPIC_API_KEY` set to anything and
+`build_worker.BUILDER` replaced by a scripted builder shows every state without a model.
 Never generate, adjust or swap from a simulator pointed at production.
 
 **Releases.** `ios/VERSION` is the version testers see (MAJOR.MINOR.PATCH:
@@ -1419,7 +1617,74 @@ never enforced (Wildman's repeat after a week off). `test_package_dropin.py` cop
 packages (contract, templates, scheduler) under new ids into `TRAINING_PACKAGES_DIR`
 (`loader._PACKAGES_DIR`; every module finds packages through it) and runs them through
 validation, generation, the API, the watch payload, analytics and the scorecard with the
-repository unchanged. `tools/print_package.py <id>` prints a package's programs beside its
+repository unchanged. **Two roots** (since 2026-11-13, roadmap 20.3): the shipped packages (`loader._PACKAGES_DIR`,
+fail-fast) and, for the caller in context, an overlay of its own packages (`loader.overlay(dir)`,
+a context variable — always reset; a new thread starts without one). A module never joins a
+path onto the packages directory: `loader.package_dirs()`, `package_dir(id)`,
+`package_files(...)`. The overlay only adds (a shipped id keeps the shipped copy) and a package
+in it that does not load is set aside alone (`loader.quarantined()`). **Anything kept from the
+packages is kept per view** — `loader.view_store(name)` or `@loader.scoped_cache`, never a module
+global or `lru_cache` — and `api.invalidate_package_data()` is the one call that forgets it.
+**An athlete's own packages** (since 2026-11-13, roadmap 20.5; behind the builder's gate, below): rows in `user_packages` (`migrations/013_user_packages.sql`, a capped file map),
+laid out per athlete by `src/package_store.py` and named as the request's overlay by `require_auth`
+(`auth._as_user`; a thread that serves no request names it itself, as the Garmin worker does).
+`POST /api/packages {files, dry_run?}` installs through every gate with the owner's id prefix
+(422 with the problems), `GET /api/packages[/<id>]`, `DELETE` (409 `in_use`). The `@static_json`
+reference routes need no sign-in, and with one add the athlete's own packages: a variant built in
+their view, kept bounded beside the shared answers (`api._USER_STATIC`, keyed by their overlay
+directory), sent `private`; the shared answers and the image's build are never touched (20.4).
+**A package may add vocabulary** (since 2026-11-13, roadmap 20.6): `vocabulary.yaml` — `modalities`
+(a modality with its `family` and `display`), `movement_patterns` (`regions`, `excluded_by`: the
+injury flags that rule it out) and `equipment` (id, label; roadmap 20.7: the web's pickers list it
+under "From your packages", the phone's cannot yet) — for itself and whoever borrows from it (`loader.load_vocabulary`).
+Never a commons id. The web draws a served modality it does not know (`registerModalities`); slot
+types, progression and contract models, phase kinds, levels, intensities, watch templates and
+icons stay the engine's.
+**How to write a package is one document**: `docs/schemas/PACKAGE_SPEC.md` (ships in the image;
+`GET /api/dev/package-spec`, the MCP server's `get_package_spec`). Its lists and its worked example
+(`test_packages/scratch_minimal`, written from nothing) are generated — after a change to the
+commons' vocabulary, a schema enum, the gate's stages or that package, run
+`.venv/bin/python tools/gen_package_spec.py` (`--check` is a push gate).
+**The package builder** (roadmap item 21; production steps open, 21.8): an athlete describes a method and a model
+writes the package. The athlete reads *method*; the code keeps *package*. `PACKAGE_BUILDER` = `off |
+dev | all` (default `dev`: the `dev` role in the verified token's `app_metadata.roles`,
+`auth.has_role`; local dev is allowed) gates `/api/packages` and `DELETE /api/methods/<id>`
+(`api.require_builder`); `GET /api/methods` always answers 200 with `available`, a `reason`, the
+athlete's methods, their builds and the limits (`test_builder_access.py`). **A build is a row a
+worker thread runs** (`package_builds`, `migrations/014`; `src/build_store.py`,
+`src/build_worker.py`): `POST /api/methods/builds` queues it, `GET …/<id>` is what clients poll,
+`POST …/<id>/cancel` stops it. The worker saves the draft and transcript after every turn, beats a
+heart, and a build whose worker died is claimed again — never keep a build's state in memory. It
+holds the one heavy slot (`src/heavy.py`) only around a gate check (`test_package_builds.py`).
+**The model loop is `src/package_builder.py`** (the worker's `BUILDER`): Claude Opus 5.5 through the
+Anthropic SDK, which is imported with the first build and never at startup (it adds ~40 MB to the
+worker — keep it out of module scope). The system prompt (instructions + `PACKAGE_SPEC.md` + the
+four core schemas) is the same bytes for every build and cached; what differs goes in the first
+user message. The model works through eight tools on a draft kept in the row; `check_package` is
+the real gate plus the whole program generated as the athlete who asked (`athlete_program`: every
+week in lines, and `check_these` — a written load the prescription drops, a load that starts again
+at a new phase; the gates cannot tell a program that passes from one that is right), and a package the
+builder writes may leave no session unserved and no slot empty — the gate reports those as
+**warnings** (`package_gate._coverage_warnings`), the builder as problems. History is append-only
+and each completed turn is saved, so a restart resumes; budgets are `package_builder.LIMITS`. Tests
+script the model at `package_builder.MODEL_TURN` (`test_package_builder.py`); the real model is
+called only by `tools/eval_package_builder.py --run`, **which costs money — ask first**.
+**On the web the builder is part of the program builder** (`/program/new`): a Your methods group in
+the first step's philosophy list (`components/methods/YourMethods.tsx`), `/program/new/method`
+(describe, or `?revise=<id>`) and `/program/new/method/<build>` (progress, then the method) —
+`pages/MethodBuilder.tsx`, words in `lib/methodBuild.ts`, hooks in `api/methods.ts`. A finished
+build or a delete calls `refreshAfterMethodChange`: every query that lists packages was read before
+the method existed. The builder sends **no `priority_overrides` that only repeat the source**
+(`buildPostBody`): the override replaces the goal's priorities, and the web's vector once knew only
+the compiled modalities, which zeroed a package's own. After a change to the methods or builds
+routes' answers, `test_package_builder.py --write` re-records `mocks/fixtures/methods.json` and
+`builds.json`. **What a build did is Dev Lab ▸ Builds** (`/dev?tab=builds`, `src/build_report.py`): read it
+after any change to the prompt, the spec or the budgets — the checks' problems by kind say what the
+model keeps getting wrong, the per-turn tokens (`usage.per_turn`) where the output goes.
+`src/package_gate.check_package(folder)` is every gate for one folder, in process and as data
+(files, schema, ids, a smoke generate of every track and phase, provenance — `src/package_smoke.py`
+is check_styles' loop and check_provenance's audit, which both tools call; roadmap 20.2).
+`tools/print_package.py <id>` prints a package's programs beside its
 rules for the output review, recorded in the record's `reviews` (S6, hygiene).
 A phase's `checks:` may now state its defining claims — `max_substituted_share`,
 `modality_outnumbers`, `max_archetype_share`, `min_distinct_archetypes`
@@ -1469,11 +1734,35 @@ SUPABASE_URL='' .venv/bin/python test_selection.py       # what the generator pi
 SUPABASE_URL='' .venv/bin/python test_phase_summary.py   # Program ▸ Overview's phase_summary, served and never stored
 SUPABASE_URL='' .venv/bin/python test_devlab_trace.py    # the Dev Lab's recorded trace has the server's shape; --record after a trace change
 SUPABASE_URL='' .venv/bin/python test_constraint_impact.py  # what each constraint changes against the reference, and which (Dev Lab ▸ Impact)
-SUPABASE_URL='' .venv/bin/python test_portability.py     # Dev Lab ▸ Model Interactions' report; every open gap still anchored in the code; --write re-records the web's copy
+SUPABASE_URL='' .venv/bin/python test_model_map.py       # Dev Lab ▸ Model Interactions' map (tools/model_map.json): each interaction anchored in the code; --write re-records the web's copy
+SUPABASE_URL='' .venv/bin/python test_portability.py     # Dev Lab ▸ Builder readiness' report; every open gap still anchored in the code, every closed one held by a test; --write re-records the web's copy
+.venv/bin/python test_package_gate.py                    # src/package_gate.check_package: one folder through the gates' checks, as data
+SUPABASE_URL='' .venv/bin/python test_package_builds.py   # a build as a durable job, scripted builder; SQL half on its own database
+SUPABASE_URL='' .venv/bin/python test_builder_access.py   # who may use the package builder: flag, dev role, GET /api/methods
+SUPABASE_URL='' .venv/bin/python test_private_packages.py  # an athlete's own packages: store, install through the gate, routes; SQL half on its own database
+SUPABASE_URL='' .venv/bin/python test_package_vocabulary.py  # a package's vocabulary.yaml: modalities and patterns of its own
+.venv/bin/python tools/gen_package_spec.py [--check]     # the package spec's generated lists and worked example
+SUPABASE_URL='' .venv/bin/python test_package_spec.py     # the spec: what it says, where it ships, how it is served
+.venv/bin/python test_package_overlay.py                 # the loader's overlay: adds for its caller, never replaces, quarantines; caches per view
 .venv/bin/python test_add_package.py                     # one package's baselines recorded, every other's kept; add_package's refusals
 SUPABASE_URL='' .venv/bin/python test_explore_links.py     # Explore's lineage: slot links by the selector's rule, progression, movements
 SUPABASE_URL='' .venv/bin/python test_explore_philosophy.py  # Explore's philosophy page: weeks from contracts and templates, mixes, rules, sessions
 ```
+
+**The trace says what each engine decided** (roadmap 20.9): every week its `engine` and `tests`;
+a contract's `scheduler.contract_week` (modules, minutes, steps, the placement chosen and the next
+best, scored) and each session's `module_steps`; a template's `scheduler.template` (days kept and
+dropped, each pool's rotation, what was passed over and why); a composition's `lane_weeks`. Asking
+for it never changes the program (`test_devlab_trace.py`).
+
+**How the model's parts act on each other is data** (`tools/model_map.json`, served by `GET
+/api/dev/model-map` with which engine each track runs on; Dev Lab ▸ Model Interactions only lays it
+out). An interaction that changes — a function renamed, a rule moved — is a change to that file:
+its `anchors` are checked on every push.
+
+Pipeline Trace draws the engine that built each week (`components/devlab/EngineWeek.tsx`), takes a
+second track for a composition, and can be linked to: `/dev?philosophy=<id>&track=<id>&second=<id>
+&days=4&equipment=all&step=schedule&run=1` generates on arrival.
 
 The Dev Lab's panels render a recorded `generate?trace=1` answer
 (`frontend/src/mocks/fixtures/traced-programs.json`) in

@@ -14,9 +14,9 @@ enum ProgressionScore {
 
     static func color(_ bandId: String?) -> Color {
         switch bandId {
-        case "on_track":  return .green
-        case "mixed":     return .yellow
-        case "off_track": return .red
+        case "on_track":  return AppColor.complete
+        case "mixed":     return AppColor.caution
+        case "off_track": return AppColor.destructive
         default:          return .secondary
         }
     }

@@ -51,7 +51,7 @@ interface ProgramStore {
   /** Replace a single session at the given position with a new one. */
   replaceSession: (weekIndex: number, day: string, sessionIndex: number, newSession: Session) => void
   /** A session the athlete adds on the fly (today or later), then saved. */
-  addSession: (weekIndex: number, day: string, newSession: Session) => void
+  addSession: (weekIndex: number, day: string, newSession: Session, at?: number) => void
   /** Removes a session the athlete added, then saved. */
   removeSession: (weekIndex: number, day: string, sessionIndex: number) => void
   /** Replace one exercise inside a session (the swap flow). */
@@ -75,10 +75,29 @@ interface ProgramStore {
  * showing a program the server never received, with no signal, until a reload
  * silently lost it.
  */
-async function persistProgram(
+function persistProgram(
   set: (partial: Partial<ProgramStore>) => void,
   payload: Parameters<typeof saveUserProgram>[0],
 ) {
+  const run = saving.then(() => sendProgram(set, payload))
+  saving = run.catch(() => undefined)
+  return run
+}
+
+/**
+ * One save at a time. Two edits in quick succession (Remove, then its Undo)
+ * each carried the revision on screen when they were made, so the second
+ * reached the server on a revision the first had already replaced and was
+ * refused as stale.
+ */
+let saving: Promise<unknown> = Promise.resolve()
+
+async function sendProgram(
+  set: (partial: Partial<ProgramStore>) => void,
+  payload: Parameters<typeof saveUserProgram>[0],
+) {
+  // The save before this one may have moved the revision on.
+  payload.revision = useProgramStore.getState().revision
   const ok = await saveUserProgram(payload)
   set({
     programSaveError: ok ? null : (lastProgramSaveError ?? 'save_failed'),
@@ -209,9 +228,9 @@ export const useProgramStore = create<ProgramStore>()((set, get) => ({
     }
   },
 
-  addSession: (weekIndex, day, newSession) => {
+  addSession: (weekIndex, day, newSession, at) => {
     set((state) => state.currentProgram
-      ? { currentProgram: withSessionAdded(state.currentProgram, weekIndex, day, newSession) }
+      ? { currentProgram: withSessionAdded(state.currentProgram, weekIndex, day, newSession, at) }
       : {})
     const s = get()
     if (s.currentProgram) {

@@ -93,14 +93,56 @@ export const PALETTE: Record<string, Rgb> = (() => {
 export const THEME_BG: Record<string, Rgb> = (() => {
   const css = readFileSync(resolve(HERE, '../src/styles/globals.css'), 'utf8')
   const grab = (selector: string) => {
-    const block = css.match(new RegExp(`${selector}\\s*\\{([\\s\\S]*?)\\n\\}`))
-    if (!block) throw new Error(`No block for ${selector}`)
-    const bg = block[1].match(/--background:\s*(oklch\([^)]+\))/)
+    // Every block of the selector: `:root` holds the motion tokens in one and the palette in another.
+    const blocks = [...css.matchAll(new RegExp(`\\n${selector}\\s*\\{([\\s\\S]*?)\\n\\}`, 'g'))]
+    if (!blocks.length) throw new Error(`No block for ${selector}`)
+    const bg = blocks.map((b) => b[1]).join('\n').match(/--background:\s*(oklch\([^)]+\))/)
     if (!bg) throw new Error(`No --background in ${selector}`)
     return parseOklch(bg[1])
   }
   return { light: grab(':root'), dark: grab('\\.dark'), military: grab('\\.military'), zen: grab('\\.zen') }
 })()
+
+const THEME_SELECTORS: Record<string, string> = {
+  light: ':root', dark: '\\.dark', military: '\\.military', zen: '\\.zen',
+}
+
+export interface Oklch { l: number; c: number; h: number }
+
+/**
+ * One theme token as the browser resolves it: the theme's own declaration,
+ * else `:root`'s (a theme class sits on `<html>`, so it inherits what it does
+ * not redefine), following `var(--other)` once per hop.
+ */
+export function themeToken(theme: string, name: string): Oklch {
+  const css = readFileSync(resolve(HERE, '../src/styles/globals.css'), 'utf8')
+  const block = (selector: string) => {
+    const all = [...css.matchAll(new RegExp(`\\n${selector}\\s*\\{([\\s\\S]*?)\\n\\}`, 'g'))]
+    if (!all.length) throw new Error(`No block for ${selector}`)
+    return all.map((b) => b[1]).join('\n')
+  }
+  const own = block(THEME_SELECTORS[theme])
+  const root = block(':root')
+  const read = (token: string, hops = 0): string => {
+    if (hops > 4) throw new Error(`--${token} does not resolve in ${theme}`)
+    const decl = new RegExp(`--${token}:\\s*([^;]+);`)
+    const value = (own.match(decl) ?? root.match(decl))?.[1].trim()
+    if (!value) throw new Error(`No --${token} in ${theme}`)
+    const ref = value.match(/^var\(--([a-z-]+)\)$/)
+    return ref ? read(ref[1], hops + 1) : value
+  }
+  const m = read(name).match(/oklch\(\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)/)
+  if (!m) throw new Error(`--${name} in ${theme} is not oklch`)
+  return { l: parseFloat(m[1]), c: parseFloat(m[2]), h: parseFloat(m[3]) }
+}
+
+export const toRgb = ({ l, c, h }: Oklch): Rgb => parseOklch(`oklch(${l} ${c} ${h})`)
+
+/** Degrees between two hues, the short way round. */
+export function hueDistance(a: Oklch, b: Oklch): number {
+  const d = Math.abs(a.h - b.h) % 360
+  return d > 180 ? 360 - d : d
+}
 
 /** Themes whose surface is dark, so the `dark:` half of a pair applies. */
 export const DARK_THEMES = new Set(['dark', 'military'])

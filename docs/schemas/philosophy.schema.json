@@ -40,7 +40,7 @@
     },
     "scope": {
       "type": "array",
-      "description": "Which modalities this philosophy claims authority over. Use existing modality IDs or introduce new ones specific to this package (e.g. 'swimming', 'cycling', 'contact_strength').",
+      "description": "Which modalities this philosophy claims authority over. Modalities the commons define (data/commons/modalities) or ones this package adds in its vocabulary.yaml (docs/schemas/vocabulary.schema.json) — a new one needs its recovery cost, family and display written there.",
       "items": {
         "type": "string",
         "pattern": "^[a-z0-9_]+$"

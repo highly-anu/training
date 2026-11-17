@@ -1,14 +1,19 @@
+import { ChartFrame } from '@/components/shared/ChartFrame'
+import * as say from '@/lib/chartSummary'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { AlertTriangle } from 'lucide-react'
-import { ResponsiveContainer, LineChart, Line, Tooltip } from 'recharts'
+import { LineChart, Line, Tooltip } from 'recharts'
 import { subDays, parseISO, isAfter, format } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { readinessSourceNote, type ReadinessFlag } from '@/lib/readiness'
 import { fetchReadiness } from '@/api/health'
 import { useBioStore } from '@/store/bioStore'
-import { STATUS_STYLES } from '@/lib/statusColors'
+import { STATUS_STYLES, STATUS_CSS } from '@/lib/statusColors'
+import { useChartEntry } from '@/lib/chartMotion'
+import { RollingNumber } from '@/components/motion/RollingNumber'
 
 const FLAG_LABELS: Record<ReadinessFlag, string> = {
   elevated_rhr_3d: 'Elevated resting HR (3+ days)',
@@ -25,9 +30,10 @@ const FLAG_LABELS: Record<ReadinessFlag, string> = {
 const STATUS_LABEL = { green: 'Ready', yellow: 'Moderate', red: 'Low' } as const
 
 export function ReadinessWidget() {
+  const drawIn = useChartEntry()
   const dailyBioLogs = useBioStore((s) => s.dailyBioLogs)
 
-  const { data: result } = useQuery({
+  const { data: result, isLoading, isError } = useQuery({
     queryKey: ['readiness'],
     queryFn: fetchReadiness,
     staleTime: 5 * 60 * 1000,
@@ -61,25 +67,31 @@ export function ReadinessWidget() {
 
       {/* Score + status */}
       <div className="flex items-end gap-3">
-        <span className={cn('text-4xl font-bold tabular-nums', styles.score)}>
-          {result?.score ?? '—'}
-        </span>
+        <RollingNumber value={result?.score ?? '—'} className={cn('text-4xl font-bold', styles.score)} />
         <div className="mb-0.5 space-y-0.5">
-          <span
-            className={cn(
-              'inline-block rounded-full border px-2 py-0.5 text-[10px] font-semibold',
-              styles.badge
-            )}
-          >
-            {STATUS_LABEL[status]}
-          </span>
+          {/* No score yet is not "Ready": the badge waits for the answer. */}
+          {result ? (
+            <span
+              className={cn(
+                'inline-block rounded-full border px-2 py-0.5 text-[10px] font-semibold',
+                styles.badge
+              )}
+            >
+              {STATUS_LABEL[status]}
+            </span>
+          ) : isLoading ? (
+            <Skeleton role="status" aria-label="Loading readiness" className="h-4 w-14 rounded-full" />
+          ) : isError ? (
+            <span className="text-[10px] text-muted-foreground">Could not load</span>
+          ) : null}
           <p className="text-[10px] text-muted-foreground">out of 100</p>
         </div>
 
         {/* Sparkline */}
         {sparkData.length > 1 && (
           <div className="flex-1 ml-2">
-            <ResponsiveContainer width="100%" height={40}>
+            <ChartFrame label="Resting heart rate, last seven days" height={40}
+              summary={say.series(sparkData.map((d) => d.rhr), 'bpm')}>
               <LineChart data={sparkData}>
                 <Tooltip
                   content={({ active, payload }) =>
@@ -90,16 +102,16 @@ export function ReadinessWidget() {
                     ) : null
                   }
                 />
-                <Line
+                <Line {...drawIn}
                   type="monotone"
                   dataKey="rhr"
-                  stroke={status === 'green' ? '#10b981' : status === 'yellow' ? '#f59e0b' : '#ef4444'}
+                  stroke={STATUS_CSS[status]}
                   strokeWidth={1.5}
                   dot={false}
                   connectNulls
                 />
               </LineChart>
-            </ResponsiveContainer>
+            </ChartFrame>
           </div>
         )}
       </div>
@@ -120,7 +132,7 @@ export function ReadinessWidget() {
       {actionableFlags.length > 0 && (
         <div className="space-y-1">
           {actionableFlags.map((f) => (
-            <div key={f} className="flex items-start gap-1.5 text-[11px] text-orange-700 dark:text-orange-300">
+            <div key={f} className="flex items-start gap-1.5 text-[11px] text-warn">
               <AlertTriangle className="size-3 mt-0.5 shrink-0" />
               {FLAG_LABELS[f as ReadinessFlag] ?? f}
             </div>

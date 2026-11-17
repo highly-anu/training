@@ -1,3 +1,4 @@
+import { FATIGUE_STEP } from '@/lib/dataColors'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { useBioStore } from '@/store/bioStore'
@@ -15,13 +16,7 @@ const FATIGUE_LABELS: Record<FatigueRating, string> = {
   5: 'Cooked',
 }
 
-const FATIGUE_COLORS: Record<FatigueRating, string> = {
-  1: 'border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
-  2: 'border-green-500 bg-green-500/10 text-green-700 dark:text-green-300',
-  3: 'border-amber-500 bg-amber-500/10 text-amber-700 dark:text-amber-300',
-  4: 'border-orange-500 bg-orange-500/10 text-orange-700 dark:text-orange-300',
-  5: 'border-red-500 bg-red-500/10 text-red-700 dark:text-red-300',
-}
+const FATIGUE_COLORS: Record<FatigueRating, string> = FATIGUE_STEP
 
 export function SessionNotes({ sessionKey }: SessionNotesProps) {
   const stored = useBioStore((s) => s.sessionPerformanceLogs[sessionKey])

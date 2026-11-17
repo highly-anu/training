@@ -1,7 +1,11 @@
+import { ChartFrame } from '@/components/shared/ChartFrame'
+import * as say from '@/lib/chartSummary'
+import { STATUS_CSS } from '@/lib/statusColors'
+import { SERIES } from '@/lib/dataColors'
+import { LoadingState, FailedState } from '@/components/shared/states'
 import { useQuery } from '@tanstack/react-query'
 import {
-  ResponsiveContainer,
-  ComposedChart,
+    ComposedChart,
   Line,
   Bar,
   Cell,
@@ -15,6 +19,7 @@ import { fetchPMC } from '@/api/userdata'
 import type { PMCEntry } from '@/api/types'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { useNavigate } from 'react-router-dom'
+import { useChartEntry } from '@/lib/chartMotion'
 
 interface TooltipProps {
   active?: boolean
@@ -45,12 +50,26 @@ function formatXAxis(dateStr: string): string {
 }
 
 export function PMCChart() {
+  const drawIn = useChartEntry()
   const navigate = useNavigate()
-  const { data: raw = [] } = useQuery({
+  const { data: raw = [], isLoading, error, refetch } = useQuery({
     queryKey: ['pmc'],
     queryFn: fetchPMC,
     staleTime: 10 * 60 * 1000,
   })
+
+  if (isLoading) return <LoadingState shape="block" label="Loading fitness and fatigue" className="h-48" />
+  if (error && raw.length === 0) {
+    return (
+      <FailedState
+        size="compact"
+        className="h-48 border-0 bg-transparent"
+        title="Could not load fitness and fatigue"
+        error={error}
+        onRetry={() => { void refetch() }}
+      />
+    )
+  }
 
   if (raw.length === 0) {
     return (
@@ -71,20 +90,25 @@ export function PMCChart() {
     <div className="space-y-2">
       <div className="grid grid-cols-3 gap-3 text-[11px]">
         <div className="flex items-center gap-1.5 text-muted-foreground">
-          <span className="inline-block h-0.5 w-4 rounded-full bg-blue-500" />
+          <span className="inline-block h-0.5 w-4 rounded-full" style={{ backgroundColor: SERIES.fitness }} />
           <span>CTL — Fitness (42d)</span>
         </div>
         <div className="flex items-center gap-1.5 text-muted-foreground">
-          <span className="inline-block h-0.5 w-4 rounded-full bg-orange-500" />
+          <span className="inline-block h-0.5 w-4 rounded-full" style={{ backgroundColor: SERIES.fatigue }} />
           <span>ATL — Fatigue (7d)</span>
         </div>
         <div className="flex items-center gap-1.5 text-muted-foreground">
-          <span className="inline-block size-2 rounded-sm bg-emerald-500" />
+          <span className="inline-block size-2 rounded-sm bg-good" />
           <span>TSB — Form</span>
         </div>
       </div>
 
-      <ResponsiveContainer width="100%" height={200}>
+      <ChartFrame label="Fitness, fatigue and form by day" height={200}
+        summary={say.join(
+          say.named('Fitness', say.series(raw.map((d) => d.ctl))),
+          say.named('Fatigue', say.series(raw.map((d) => d.atl))),
+          say.named('Form', say.series(raw.map((d) => d.tsb))),
+        )}>
         <ComposedChart data={raw} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
           <XAxis
             dataKey="date"
@@ -101,29 +125,29 @@ export function PMCChart() {
           />
           <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--color-muted-foreground)', fillOpacity: 0.08 }} />
           <ReferenceLine y={0} stroke="var(--color-border)" strokeOpacity={0.6} />
-          <Bar dataKey="tsb" name="TSB" barSize={4} radius={[1, 1, 0, 0]}>
+          <Bar {...drawIn} dataKey="tsb" name="TSB" barSize={4} radius={[1, 1, 0, 0]}>
             {raw.map((entry: PMCEntry, i: number) => (
-              <Cell key={i} fill={entry.tsb >= 0 ? '#10b981' : '#ef4444'} fillOpacity={0.7} />
+              <Cell key={i} fill={entry.tsb >= 0 ? STATUS_CSS.green : STATUS_CSS.red} fillOpacity={0.7} />
             ))}
           </Bar>
-          <Line
+          <Line {...drawIn}
             type="monotone"
             dataKey="atl"
             name="ATL"
-            stroke="#f97316"
+            stroke={SERIES.fatigue}
             strokeWidth={1.5}
             dot={false}
           />
-          <Line
+          <Line {...drawIn}
             type="monotone"
             dataKey="ctl"
             name="CTL"
-            stroke="#3b82f6"
+            stroke={SERIES.fitness}
             strokeWidth={2}
             dot={false}
           />
         </ComposedChart>
-      </ResponsiveContainer>
+      </ChartFrame>
 
       <p className="text-[10px] text-muted-foreground">
         Positive TSB (green) = fresh · Negative (red) = building fatigue · TSB &lt; −20 = overreached

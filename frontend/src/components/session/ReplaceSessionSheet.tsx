@@ -1,5 +1,6 @@
+import { Spinner } from '@/components/ui/spinner'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ChevronDown, ChevronUp, Clock, Loader2, Plus, RefreshCw, Search } from 'lucide-react'
+import { ChevronDown, ChevronUp, Clock, Plus, RefreshCw, Search } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
@@ -224,20 +225,14 @@ export function ReplaceSessionSheet({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
-                <div
-                  className="flex items-center gap-2 cursor-pointer"
-                  onClick={() => setSameModalityOnly((v) => !v)}
-                >
+                <Label htmlFor="same-modality" className="flex items-center gap-2 text-xs font-normal cursor-pointer">
                   <Checkbox
                     id="same-modality"
                     checked={sameModalityOnly}
                     onCheckedChange={(v) => setSameModalityOnly(Boolean(v))}
-                    className="pointer-events-none"
                   />
-                  <Label htmlFor="same-modality" className="text-xs cursor-pointer">
-                    Same modality only
-                  </Label>
-                </div>
+                  Same modality only
+                </Label>
               </div>
 
               <ScrollArea className="flex-1 mt-3 -mx-1 px-1">
@@ -274,7 +269,7 @@ export function ReplaceSessionSheet({
                             </div>
                             <div className="shrink-0 flex items-center gap-1.5 text-[10px] text-muted-foreground mt-0.5">
                               {isLoading ? (
-                                <Loader2 className="size-3.5 animate-spin text-primary" />
+                                <Spinner className="size-3.5 text-primary" />
                               ) : (
                                 <>
                                   <Clock className="size-3" />
@@ -386,15 +381,11 @@ export function ReplaceSessionSheet({
                 <Button
                   className="w-full"
                   onClick={handleGenerate}
-                  disabled={generateSession.isPending}
+                  loading={generateSession.isPending}
                 >
                   {/* A fitting session from the library — found, not invented;
                       its full preview comes next, before anything is saved. */}
-                  {generateSession.isPending ? (
-                    <><Loader2 className="size-4 mr-2 animate-spin" /> Searching…</>
-                  ) : (
-                    <><Search className="size-4 mr-2" /> Search</>
-                  )}
+                  <Search className="size-4" /> Search
                 </Button>
               </div>
             </TabsContent>

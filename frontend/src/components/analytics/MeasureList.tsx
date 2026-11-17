@@ -137,7 +137,7 @@ function MeasureRow({ entry, selected, chartable, onChart }: {
           {entry.primitive === 'unlocks' && <Unlocks entry={entry} />}
           {entry.primitive === 'benchmark_level' && <Benchmarks entry={entry} />}
           {lead?.stalled && (
-            <p className="text-xs text-red-700 dark:text-red-300">
+            <p className="text-xs text-bad">
               Stalled: {lead.name} has not moved for the last sessions this methodology allows.
             </p>
           )}

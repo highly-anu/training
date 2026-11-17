@@ -7,12 +7,12 @@ struct ModalityStyle {
     // its implement.
     static func color(for modalityId: String) -> Color {
         if modalityId == "kettlebell" { return color(for: "mixed_modal_conditioning") }
-        return ClientVocab.modalities[modalityId].map { ClientVocab.color($0.hex) } ?? .secondary
+        return ClientVocab.modality(modalityId).map { ClientVocab.color($0.hex) } ?? .secondary
     }
 
     static func icon(for modalityId: String) -> String {
         if modalityId == "kettlebell" { return "dumbbell" }
-        return ClientVocab.modalities[modalityId]?.watchIcon ?? "figure.strengthtraining.traditional"
+        return ClientVocab.modality(modalityId)?.watchIcon ?? "figure.strengthtraining.traditional"
     }
 
     static func slotTypeIcon(for slotType: String) -> String {

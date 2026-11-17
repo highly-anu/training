@@ -108,21 +108,23 @@ private struct DayColumn: View {
     var body: some View {
         VStack(spacing: 4) {
             Text(String(day.dayName.prefix(3)).uppercased())
-                .font(.system(size: 10, weight: isToday ? .bold : .semibold))
-                .foregroundStyle(isToday ? Color.orange : .secondary)
+                .font(.caption2.weight(isToday ? .bold : .semibold))
+                .lineLimit(1).minimumScaleFactor(0.7)
+                .foregroundStyle(isToday ? Color.accentColor : .secondary)
+                .widgetAccentable(isToday)
             if day.sessions.isEmpty {
                 Spacer(minLength: 0)
                 Image(systemName: "battery.100.bolt")
-                    .font(.system(size: 12))
+                    .font(.caption)
                     .foregroundStyle(.tertiary)
-                Text("rest").font(.system(size: 9)).foregroundStyle(.tertiary)
+                Text("rest").font(.caption2).lineLimit(1).minimumScaleFactor(0.7).foregroundStyle(.tertiary)
                 Spacer(minLength: 0)
             } else {
                 ForEach(Array(day.sessions.prefix(2).enumerated()), id: \.offset) { _, s in
                     SessionChip(session: s, missed: isPast && !s.done)
                 }
                 if day.sessions.count > 2 {
-                    Text("+\(day.sessions.count - 2)").font(.system(size: 9)).foregroundStyle(.secondary)
+                    Text("+\(day.sessions.count - 2)").font(.caption2).foregroundStyle(.secondary)
                 }
                 Spacer(minLength: 0)
             }
@@ -131,30 +133,47 @@ private struct DayColumn: View {
         .padding(.vertical, 5)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(isToday ? Color.orange.opacity(0.12) : Color.secondary.opacity(0.08))
+                .fill(isToday ? Color.accentColor.opacity(0.12) : Color.secondary.opacity(0.08))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 8)
-                .strokeBorder(isToday ? Color.orange.opacity(0.6) : .clear, lineWidth: 1)
+                .strokeBorder(isToday ? Color.accentColor.opacity(0.6) : .clear, lineWidth: 1)
+                .widgetAccentable()
         )
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(day.dayName + (isToday ? ", today" : "") + (day.sessions.isEmpty ? ", rest" : ""))
     }
 }
 
 private struct SessionChip: View {
     let session: WidgetWeekData.Session
     let missed: Bool
+    /// Tinted and clear widgets draw in one colour: a done session is then a
+    /// filled disc with the checkmark cut out of it, not white on a hue.
+    @Environment(\.widgetRenderingMode) private var renderingMode
 
     var body: some View {
         let color = WidgetModalityStyle.color(for: session.modalityId)
+        let fullColor = renderingMode == .fullColor
         VStack(spacing: 2) {
-            ZStack {
-                Circle().fill(color.opacity(session.done ? 1 : 0.22)).frame(width: 22, height: 22)
-                Image(systemName: session.done ? "checkmark" : WidgetModalityStyle.icon(for: session.modalityId))
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(session.done ? Color.white : color)
+            if session.done, !fullColor {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.title3)
+                    .frame(width: 22, height: 22)
+                    .widgetAccentable()
+            } else {
+                ZStack {
+                    Circle().fill(color.opacity(session.done ? 1 : 0.22)).frame(width: 22, height: 22)
+                    Image(systemName: session.done ? "checkmark" : WidgetModalityStyle.icon(for: session.modalityId))
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(session.done ? Color.white : color)
+                        .widgetAccentable(!session.done)
+                }
             }
-            Text("\(session.minutes)′")
-                .font(.system(size: 9)).monospacedDigit()
+            // A missed session says so in its shape too, not in red alone.
+            Text(missed ? "\(session.minutes)′ ✕" : "\(session.minutes)′")
+                .font(.caption2).monospacedDigit()
+                .lineLimit(1).minimumScaleFactor(0.7)
                 .foregroundStyle(missed ? Color.red.opacity(0.8) : .secondary)
         }
         .accessibilityElement(children: .ignore)
@@ -253,8 +272,10 @@ struct StatusRowView: View {
             StatusCell(title: "READINESS", tint: readinessIsFresh(s) ? Self.readinessColor(s.readiness?.status) : .secondary) {
                 if let r = s.readiness, readinessIsFresh(s) {
                     Text("\(r.score)")
-                        .font(.system(size: 26, weight: .bold, design: .rounded))
+                        .font(.system(.title, design: .rounded).weight(.bold))
+                        .lineLimit(1).minimumScaleFactor(0.6)
                         .foregroundStyle(Self.readinessColor(r.status))
+                        .widgetAccentable()
                     Text(Self.readinessWord(r.status)).font(.caption2).foregroundStyle(.secondary)
                 } else {
                     Text("—").font(.title3).foregroundStyle(.secondary)
@@ -268,9 +289,10 @@ struct StatusRowView: View {
             StatusCell(title: "ADHERENCE", tint: Self.verdictColor(s.adherence?.verdict)) {
                 if let a = s.adherence {
                     Text("\(a.pct)%")
-                        .font(.system(size: 22, weight: .bold, design: .rounded)).monospacedDigit()
+                        .font(.system(.title2, design: .rounded).weight(.bold)).monospacedDigit()
                         .foregroundStyle(Self.verdictColor(a.verdict))
-                        .minimumScaleFactor(0.7)
+                        .lineLimit(1).minimumScaleFactor(0.6)
+                        .widgetAccentable()
                     Text(a.verdict == "off_plan" ? "Off plan" : a.verdict == "on_plan" ? "On plan" : "Not started")
                         .font(.caption2).fontWeight(.semibold).foregroundStyle(Self.verdictColor(a.verdict))
                     if let done = a.weekDone, let due = a.weekDue {
@@ -327,9 +349,9 @@ private struct StatusCell<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
             Text(title)
-                .font(.system(size: 9, weight: .semibold))
+                .font(.caption2.weight(.semibold))
                 .foregroundStyle(.secondary)
-                .lineLimit(1).minimumScaleFactor(0.8)
+                .lineLimit(1).minimumScaleFactor(0.6)
             content()
             Spacer(minLength: 0)
         }
@@ -342,7 +364,9 @@ private struct StatusCell<Content: View>: View {
         .background(RoundedRectangle(cornerRadius: 10).fill(Color.secondary.opacity(0.08)))
         .overlay(alignment: .top) {
             RoundedRectangle(cornerRadius: 1).fill(tint.opacity(0.7)).frame(height: 2).padding(.horizontal, 8)
+                .widgetAccentable()
         }
+        .accessibilityElement(children: .combine)
     }
 }
 

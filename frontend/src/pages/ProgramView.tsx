@@ -1,6 +1,11 @@
+import { useScrollRestore } from '@/lib/useScrollRestore'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { SubTabs, tabDomId } from '@/components/layout/SubTabs'
+import { Button } from '@/components/ui/button'
+import { LoadingState, FailedState } from '@/components/shared/states'
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { Page } from '@/components/layout/Page'
 import { differenceInCalendarDays, format, parseISO } from 'date-fns'
 import { CalendarDays, Wand2, ShieldAlert, Plus } from 'lucide-react'
 import { useCurrentProgram } from '@/api/programs'
@@ -29,8 +34,14 @@ import { ReplaceSessionSheet } from '@/components/session/ReplaceSessionSheet'
 type ProgramTab = 'overview' | 'calendar' | 'history'
 // Overview leads since 2026-10-17, the same order as the phone's (information-architecture.md §2).
 const PROGRAM_TABS: ProgramTab[] = ['overview', 'calendar', 'history']
+const PROGRAM_TAB_ITEMS = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'calendar', label: 'Calendar' },
+  { id: 'history', label: 'History' },
+] as const satisfies readonly { id: ProgramTab; label: string }[]
 
 export function ProgramView() {
+  const scroller = useScrollRestore()
   const navigate = useNavigate()
   const program = useCurrentProgram()
   const [weekIndex, setWeekIndex] = useState(0)
@@ -61,6 +72,8 @@ export function ProgramView() {
   } = useProfileStore()
 
   const programStartDate = useProgramStore((s) => s.programStartDate)
+  const programLoadState = useProgramStore((s) => s.programLoadState)
+  const loadProgram = useProgramStore((s) => s.loadFromServer)
   const sourceGoalIds = useProgramStore((s) => s.sourceGoalIds)
   const { data: philosophies } = usePhilosophies()
 
@@ -138,13 +151,32 @@ export function ProgramView() {
     )
   }
 
+  // No program on screen yet is one of three things, and only the last is
+  // "build one": still loading, could not be loaded (it may well exist), none.
+  if (!program && programLoadState === 'error') {
+    return (
+      <Page key="program-failed" className="flex h-full items-center justify-center p-6">
+        <FailedState
+          title="Could not load your program"
+          error="The server could not be reached. Your program is safe — try again in a moment."
+          onRetry={() => { void loadProgram() }}
+          className="max-w-md"
+        />
+      </Page>
+    )
+  }
+  if (!program && programLoadState !== 'loaded') {
+    return (
+      <Page enter="fade" key="program-loading" className="h-full p-6">
+        <LoadingState shape="cards" count={3} label="Loading your program" className="mx-auto max-w-3xl" />
+      </Page>
+    )
+  }
+
   if (!program) {
     return (
-      <motion.div
+      <Page
         key="program-empty"
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-        exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
         className="flex h-full items-center justify-center p-6"
       >
         <EmptyState
@@ -153,45 +185,21 @@ export function ProgramView() {
           action={{ label: 'Build a Program', onClick: () => navigate('/program/new') }}
           icon={<Wand2 className="size-10" />}
         />
-      </motion.div>
+      </Page>
     )
   }
 
   return (
-    <motion.div
+    <Page
       key="program"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-      exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
       className="flex h-full flex-col"
     >
-      {/* Header */}
-      <div className="border-b px-6 py-4 space-y-3 shrink-0">
-        {/* Wraps rather than overflows: a long title, the tabs, the actions and
-            the week selector do not fit one row of a narrow window. */}
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-3">
-          <CalendarDays className="size-5 text-primary shrink-0" />
-          <h1 className="text-lg font-semibold shrink-0 max-w-full">{programTitle}</h1>
-          <div className="ml-4 flex items-center gap-2">
-            <div className="w-px h-4 bg-border/60 shrink-0" />
-            <div className="flex items-center gap-1">
-              {PROGRAM_TABS.map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={cn(
-                    'px-3 py-1 rounded text-xs border transition-colors capitalize',
-                    activeTab === tab
-                      ? 'bg-primary/15 border-primary/40 text-primary'
-                      : 'border-border text-muted-foreground hover:bg-muted'
-                  )}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+      <PageHeader
+        icon={CalendarDays}
+        title={programTitle}
+        tabs={<SubTabs id="program-tabs" label="Program sections" tabs={PROGRAM_TAB_ITEMS} active={activeTab} onChange={setActiveTab} />}
+        actions={
+          <>
             <button
               type="button"
               onClick={() => navigate('/program/new')}
@@ -224,16 +232,16 @@ export function ProgramView() {
                 onNext={() => setWeekIndex((i) => Math.min(program.weeks.length - 1, i + 1))}
               />
             )}
-          </div>
-        </div>
-
+          </>
+        }
+      >
         {activeTab !== 'history' && (
           <PhaseBar segments={segments} totalWeeks={totalWeeks} currentWeek={weekIndex + 1} />
         )}
-      </div>
+      </PageHeader>
 
-      {/* Body */}
-      <div className="flex-1 overflow-y-auto">
+      {/* Body. Not <TabPanels>: the calendar scrolls to its week as it mounts. */}
+      <div ref={scroller} className="flex-1 overflow-y-auto" role="tabpanel" aria-labelledby={tabDomId('program-tabs', activeTab)}>
         {activeTab === 'calendar' ? (
           <div className="max-w-5xl mx-auto px-6 py-6 space-y-8">
             {program.weeks.map((weekData, idx) => (
@@ -241,7 +249,7 @@ export function ProgramView() {
                 key={weekData.week_number}
                 ref={(el) => { weekRefs.current[idx] = el }}
                 className={cn(
-                  'space-y-3 rounded-xl p-3 -mx-3 transition-colors duration-300',
+                  'space-y-3 rounded-xl p-3 -mx-3 transition-colors duration-(--motion-slow)',
                   idx === weekIndex ? 'bg-primary/5 ring-1 ring-primary/20' : ''
                 )}
               >
@@ -297,18 +305,11 @@ export function ProgramView() {
 
             <Separator />
 
-            <button
-              type="button"
-              onClick={handleRegenerate}
-              disabled={regenerate.isPending}
-              className="w-full h-9 rounded-md bg-primary text-sm font-medium text-primary-foreground disabled:opacity-50 transition-opacity"
-            >
-              {regenerate.isPending
-                ? 'Building a preview…'
-                : `Preview from Week ${weekIndex + 1}`}
-            </button>
+            <Button className="h-9 w-full" onClick={handleRegenerate} loading={regenerate.isPending}>
+              Preview from week {weekIndex + 1}
+            </Button>
             {regenerate.error && (
-              <p className="text-xs text-red-700 dark:text-red-300">
+              <p className="text-xs text-bad">
                 {regenerate.error.message || 'Could not regenerate'}
               </p>
             )}
@@ -320,6 +321,6 @@ export function ProgramView() {
           weekIndex={addTarget.weekIndex} weekData={program.weeks[addTarget.weekIndex]}
           day={addTarget.day} program={program} />
       )}
-    </motion.div>
+    </Page>
   )
 }

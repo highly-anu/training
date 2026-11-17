@@ -45,12 +45,12 @@ def icon_ids() -> set[str]:
     return {i['id'] for i in vocabulary().get('icons', [])}
 
 
-@lru_cache(maxsize=1)
+@loader.scoped_cache
 def _archetypes() -> dict:
     return {a.get('id'): a for a in loader.load_all_archetypes()}
 
 
-@lru_cache(maxsize=1)
+@loader.scoped_cache
 def _exercises() -> dict:
     """exercise id → (icon, category); the library's structural copy, with
     any package's `icon` for that id (sorted order)."""

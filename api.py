@@ -8,6 +8,7 @@ import re
 import sys
 import tempfile
 import threading
+from collections import OrderedDict
 from datetime import date as _date, datetime as _datetime, timedelta as _timedelta, timezone as _timezone
 
 import yaml
@@ -67,6 +68,65 @@ def _authoring_enabled() -> bool:
 
 
 _SCHEMA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'docs', 'schemas')
+
+
+# ── The package builder: who may use it ──────────────────────────────────────
+# An athlete describes a method and a model writes the package (docs/roadmap.md
+# item 21). PACKAGE_BUILDER says who: `off`; `dev` (the default) — accounts
+# whose verified token carries the `dev` role; `all` — every signed-in athlete.
+# Local dev (no SUPABASE_URL, every request `local-dev-user`) is allowed unless
+# it is off. The model's key is a second condition for building, not for
+# listing or removing what was built.
+_BUILDER_MODES = ('off', 'dev', 'all')
+from src import package_builder as _package_builder  # noqa: E402,F401  the worker's builder; the SDK loads with the first build
+
+
+def _builder_mode() -> str:
+    mode = os.environ.get('PACKAGE_BUILDER', '').strip().lower() or 'dev'
+    return mode if mode in _BUILDER_MODES else 'dev'
+
+
+def _builder_allowed() -> bool:
+    """Whether the signed-in athlete may use the builder and keep methods of
+    their own (call inside a require_auth view)."""
+    mode = _builder_mode()
+    if mode == 'off':
+        return False
+    if mode == 'all' or not os.environ.get('SUPABASE_URL'):
+        return True
+    from src import auth as _auth
+    return _auth.has_role('dev')
+
+
+def _builder_daily_limit() -> int:
+    try:
+        return max(0, int(os.environ.get('PACKAGE_BUILDER_DAILY_LIMIT', '5')))
+    except ValueError:
+        return 5
+
+
+def _builder_availability() -> tuple[bool, str | None]:
+    """(can a build start now, why not): `not_enabled` for this athlete, or
+    `no_model_key` when the server has no key for the model."""
+    if not _builder_allowed():
+        return False, 'not_enabled'
+    if not os.environ.get('ANTHROPIC_API_KEY'):
+        return False, 'no_model_key'
+    return True, None
+
+
+def require_builder(f):
+    """Gate for an athlete's own packages and the builder. Stack it under
+    require_auth: 403 `not_enabled` for an athlete it is not on for."""
+    from functools import wraps
+
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if not _builder_allowed():
+            return jsonify({'error': 'not_enabled', 'detail': 'Building your own methods is not available '
+                            'for this account.'}), 403
+        return f(*args, **kwargs)
+    return wrapper
 
 
 def _schema_errors(kind: str, obj: dict) -> list[str]:
@@ -211,11 +271,22 @@ def _gzip(response):
 #   ask, every answer after an authoring write) is built once per process,
 #   one build at a time (`_BUILD_LOCK`), so a burst cannot multiply memory;
 # - a client that has the answer gets a 304.
+#
+# That is the shipped packages' answer, the same for everyone. An athlete with
+# packages of their own (src/package_store.py) gets a variant built in their
+# view, kept beside it in a small bounded store keyed by their overlay
+# directory — which is named from their packages' revisions, so an install or
+# a removal is a new key and nothing needs clearing — and marked private. The
+# shared answers and the build are never touched by it; a route their
+# packages do not change keeps the shared bytes.
 _STATIC_LOCK = threading.Lock()
 _BUILD_LOCK = threading.Lock()
 _STATIC: dict[str, tuple[bytes, bytes, str]] = {}   # full path → (json, gzip, etag)
 _STATIC_BUILD_DIR = os.environ.get('STATIC_BUILD_DIR') or None
 _BUILT: dict | None = None   # the build's manifest: full path → {json, gz, etag}; {} once data changed
+_USER_STATIC: 'OrderedDict[tuple[str, str], tuple[bytes, bytes, str]]' = OrderedDict()   # (overlay, full path) → answer
+_USER_STATIC_MAX = 96
+_USER_STATIC_MAX_BYTES = 12 * 1024 * 1024
 
 
 def _built(key: str) -> tuple[bytes, bytes, str] | None:
@@ -252,20 +323,51 @@ def static_json(view):
     successful answer."""
     from functools import wraps
 
-    @wraps(view)
-    def wrapper(*args, **kwargs):
-        key = request.full_path
+    def shared(key, *args, **kwargs):
         hit = _STATIC.get(key)
         if hit is None:
             with _BUILD_LOCK:
                 hit = _STATIC.get(key) or _built(key)
                 if hit is None:
-                    response = app.make_response(view(*args, **kwargs))
+                    with loader.overlay(None):
+                        response = app.make_response(view(*args, **kwargs))
                     if response.status_code != 200 or response.mimetype != 'application/json':
-                        return response
+                        return None, response
                     hit = _pack(response.get_data())
                 with _STATIC_LOCK:
                     _STATIC[key] = hit
+        return hit, None
+
+    def own(overlay, key, *args, **kwargs):
+        with _STATIC_LOCK:
+            hit = _USER_STATIC.get((overlay, key))
+            if hit is not None:
+                _USER_STATIC.move_to_end((overlay, key))
+                return hit, None
+        with _BUILD_LOCK:
+            with loader.overlay(overlay):
+                response = app.make_response(view(*args, **kwargs))
+        if response.status_code != 200 or response.mimetype != 'application/json':
+            return None, response
+        hit = _pack(response.get_data())
+        common = _STATIC.get(key) or _built(key)
+        if common is not None and common[2] == hit[2]:
+            hit = common   # their packages do not change this route: the shared bytes, kept once
+        with _STATIC_LOCK:
+            _USER_STATIC[(overlay, key)] = hit
+            total = sum(len(b) + len(z) for b, z, _ in _USER_STATIC.values())
+            while len(_USER_STATIC) > _USER_STATIC_MAX or (total > _USER_STATIC_MAX_BYTES and len(_USER_STATIC) > 1):
+                _, (b, z, _e) = _USER_STATIC.popitem(last=False)
+                total -= len(b) + len(z)
+        return hit, None
+
+    @wraps(view)
+    def wrapper(*args, **kwargs):
+        key = request.full_path
+        overlay = _own_overlay()
+        hit, refused = own(overlay, key, *args, **kwargs) if overlay else shared(key, *args, **kwargs)
+        if refused is not None:
+            return refused
         body, gz, etag = hit
         if etag in request.if_none_match:
             response = app.response_class(status=304)
@@ -278,9 +380,20 @@ def static_json(view):
             response = app.response_class(body, mimetype='application/json')
         response.set_etag(etag)
         # Revalidate every time (the ETag makes that a 304): data changes with a deploy.
-        response.headers['Cache-Control'] = 'no-cache'
+        response.headers['Cache-Control'] = 'private, no-cache' if overlay else 'no-cache'
+        if overlay:
+            response.vary.add('Authorization')
         return response
     return wrapper
+
+
+def _own_overlay() -> str | None:
+    """The asker's overlay when they have packages of their own, else None
+    (nobody signed in, no package, or the store cannot be read)."""
+    from src import auth as _auth
+    from src import package_store
+    user_id = _auth.optional_user_id()
+    return package_store.overlay_for(user_id) if user_id else None
 
 
 _AUTHORING_PREFIXES = ('/api/exercises', '/api/archetypes', '/api/modalities', '/api/frameworks')
@@ -299,14 +412,21 @@ def _package_data_changed(response):
 def clear_static_cache() -> None:
     """Forget every reference answer — the build's too, which no longer
     matches the files."""
-    global _explore_links_cache, _BUILT
-    from src import explore_philosophy
+    global _BUILT
     with _STATIC_LOCK:
         _STATIC.clear()
+        _USER_STATIC.clear()
         _BUILT = {}
-    _explore_links_cache = None
-    explore_philosophy.clear_cache()
-    _watch_spec.clear_cache()
+    invalidate_package_data()
+
+
+def invalidate_package_data() -> None:
+    """The packages changed (an authoring write, a package installed or
+    removed): forget every answer any module computed from them, in every
+    view — the one call. The modules keep such answers per view
+    (loader.view_store, loader.scoped_cache), never in a global of their own."""
+    loader.invalidate_package_data()
+    _watch_spec.vocabulary.cache_clear()
 
 
 def _static_paths() -> list[str]:
@@ -393,22 +513,21 @@ def _equipment_profiles() -> list[dict]:
 
 # Similarity cache — computed once at first request (lazy, not blocking startup),
 # by one thread: the four serving threads would otherwise each build it.
-_similarity_cache: dict | None = None
 _similarity_lock = threading.Lock()
 
 def _get_similarity() -> dict:
-    global _similarity_cache
     with _similarity_lock:
-        if _similarity_cache is None:
+        store = loader.view_store('api.similarity')
+        if 'matrix' not in store:
             philosophies = loader.load_philosophies()
             frameworks   = loader.load_all_frameworks()
             modalities   = loader.load_all_modalities()
             archetypes   = loader.load_all_archetypes()
             exercises, _ = loader.load_all_exercises()
-            _similarity_cache = compute_all_similarities(
+            store['matrix'] = compute_all_similarities(
                 philosophies, frameworks, modalities, archetypes, exercises
             )
-    return _similarity_cache
+        return store['matrix']
 
 
 def _injury_flags() -> list[dict]:
@@ -907,9 +1026,6 @@ def get_ontology():
     })
 
 
-_explore_links_cache: dict | None = None
-
-
 @app.get('/api/explore/links')
 @static_json
 def get_explore_links():
@@ -917,11 +1033,11 @@ def get_explore_links():
     "Follows from it": the movements, and every link between neighbouring
     levels with the selector's own slot rule (src/explore_links.py). Static
     data, built once like the similarity scores."""
-    global _explore_links_cache
-    if _explore_links_cache is None:
+    store = loader.view_store('api.explore_links')
+    if 'links' not in store:
         from src import explore_links
-        _explore_links_cache = explore_links.build_from_loader()
-    return jsonify(_explore_links_cache)
+        store['links'] = explore_links.build_from_loader()
+    return jsonify(store['links'])
 
 
 @app.get('/api/similarity')
@@ -1784,6 +1900,335 @@ def dev_constraint_impact():
     return jsonify(out), status
 
 
+# ── An athlete's own packages ────────────────────────────────────────────────
+# Written at runtime, kept in Postgres, private to their owner
+# (src/package_store.py; docs/roadmap.md items 20 and 21). Behind the builder's
+# gate (require_builder). Every write goes through the gates
+# (src/package_gate.py) and one runs at a time, as generation does.
+
+def _package_store_error(e):
+    app.logger.warning('user_packages: %s', e)
+    return jsonify({'error': 'store_unavailable', 'detail': 'Your packages could not be saved. Try again.'}), 503
+
+
+@app.get('/api/packages')
+@require_auth
+@require_builder
+def list_user_packages():
+    """The athlete's own packages, the prefix every id they declare must
+    carry, and any that no longer loads (set aside, with why)."""
+    from src import package_store
+    try:
+        rows = package_store.list_packages(g.user_id)
+    except package_store.StoreError as e:
+        return _package_store_error(e)
+    set_aside = {q['package']: q['problem'] for q in loader.quarantined()}
+    for row in rows:
+        if row['id'] in set_aside:
+            row['status'], row['problems'] = 'quarantined', [{'stage': 'load', 'code': 'not_loadable', 'file': None,
+                                                             'message': set_aside[row['id']]}]
+    return jsonify({'prefix': package_store.owner_prefix(g.user_id), 'packages': rows,
+                    'limits': {'files': package_store.MAX_FILES, 'bytes': package_store.MAX_BYTES,
+                               'packages': package_store.MAX_PACKAGES}})
+
+
+@app.get('/api/packages/<package_id>')
+@require_auth
+@require_builder
+def get_user_package(package_id):
+    from src import package_store
+    try:
+        row = package_store.get_package(g.user_id, package_id)
+    except package_store.StoreError as e:
+        return _package_store_error(e)
+    return (jsonify(row), 200) if row else (jsonify({'error': 'not_found'}), 404)
+
+
+@app.post('/api/packages')
+@require_auth
+@require_builder
+def install_user_package():
+    """Install (or replace) one package: `{files: {path: yaml text}}`, its id
+    the philosophy's. `dry_run: true` checks only. 200 with `installed`; 422
+    with the gate's `problems` when it does not pass; 429 while another check
+    runs; 503 when the write fails."""
+    from src import package_store
+    body = request.get_json(silent=True) or {}
+    user_id = g.user_id
+
+    def run(b):
+        try:
+            if b.get('dry_run'):
+                result = {**package_store.check(user_id, b.get('files')), 'installed': False}
+            else:
+                result = package_store.install(user_id, b.get('files'))
+        except package_store.StoreError as e:
+            app.logger.warning('user_packages: %s', e)
+            return {'error': 'store_unavailable', 'detail': 'Your package could not be saved. Try again.'}, 503
+        return result, (200 if result['ok'] else 422)
+
+    out, status = _heavy_run('package', body, run)
+    return jsonify(out), status
+
+
+@app.delete('/api/packages/<package_id>')
+@require_auth
+@require_builder
+def delete_user_package(package_id):
+    """Remove one of the athlete's packages. 409 while their program is built
+    from it (the program would lose its method); 404 when they have none by
+    that id."""
+    return _remove_user_package(package_id)
+
+
+def _program_uses(program, package_id: str) -> bool:
+    """Whether a stored program is built from a package: its id is named
+    somewhere in it (the goal's sources, a session's archetype)."""
+    return bool(program) and f'"{package_id}"' in json.dumps(program, default=str)
+
+
+def _remove_user_package(package_id: str):
+    from src import package_store
+    try:
+        if package_store.get_package(g.user_id, package_id) is None:
+            return jsonify({'error': 'not_found'}), 404
+        from src import db as _db
+        if _program_uses(_db.get_user_program(g.user_id), package_id):
+            return jsonify({'error': 'in_use', 'detail': 'Your program is built from this method. '
+                            'Start another program first.'}), 409
+        package_store.remove(g.user_id, package_id)
+    except package_store.StoreError as e:
+        return _package_store_error(e)
+    return jsonify({'removed': True})
+
+
+# ── Methods: the athlete's reading of their own packages ─────────────────────
+# What both clients' program builders show under "Your methods" (item 21). The
+# athlete says *method*; the stored thing is a package.
+
+@app.get('/api/methods')
+@require_auth
+def list_methods():
+    """Whether the athlete can build methods of their own, and the ones they
+    have. Always 200: `available: false` with a `reason` (`not_enabled` for
+    this account, `no_model_key` on this server) tells a client to show
+    nothing, or the methods without the way to make another."""
+    from src import package_store
+    available, reason = _builder_availability()
+    daily = _builder_daily_limit()
+    body = {'available': available, 'reason': reason, 'methods': [], 'builds': [],
+            'limits': {'daily': daily, 'remaining': daily, 'kept': package_store.MAX_PACKAGES}}
+    if reason == 'not_enabled':
+        return jsonify(body)
+    from src import build_store
+    try:
+        rows = package_store.list_packages(g.user_id)
+        body['builds'] = [build_store.public(b) for b in build_store.recent(g.user_id)]
+        body['limits']['remaining'] = max(0, daily - build_store.started_since(g.user_id))
+    except (package_store.StoreError, build_store.StoreError) as e:
+        return _package_store_error(e)
+    from src import db as _db
+    program = _db.get_user_program(g.user_id) if rows else None
+    set_aside = {q['package'] for q in loader.quarantined()}
+    body['methods'] = [{'id': r['id'], 'name': r.get('name') or r['id'], 'revision': r['revision'],
+                        'status': 'quarantined' if r['id'] in set_aside else r.get('status') or 'installed',
+                        'updatedAt': r.get('updatedAt'), 'inUse': _program_uses(program, r['id'])}
+                       for r in rows]
+    return jsonify(body)
+
+
+# A build is a row a worker thread runs (src/build_store.py, src/build_worker.py):
+# minutes of work a request cannot hold and a deploy must not lose. These
+# routes queue one, say how it stands and cancel it.
+_BUILD_DESCRIPTION = (20, 8000)     # characters: enough to say something, short of a book
+_BUILD_PASTED_MAX = 60000
+_BUILD_NOTE = (5, 2000)
+
+
+def _build_request(body: dict) -> tuple[dict | None, str | None]:
+    """The request a build keeps, or why the body is not one."""
+    answers = body.get('answers') if isinstance(body.get('answers'), dict) else {}
+    pasted = body.get('pastedText') or ''
+    if not isinstance(pasted, str) or len(pasted) > _BUILD_PASTED_MAX:
+        return None, f'pastedText is text of at most {_BUILD_PASTED_MAX} characters'
+    revise = body.get('revise')
+    out = {'answers': {k: answers[k] for k in ('days', 'minutes', 'level', 'equipment') if k in answers},
+           'pastedText': pasted, 'webSearch': bool(body.get('webSearch'))}
+    if revise is not None:
+        note = (revise.get('note') or '').strip() if isinstance(revise, dict) else ''
+        if not isinstance(revise, dict) or not isinstance(revise.get('packageId'), str):
+            return None, 'revise names the method (packageId) and says what to change (note)'
+        if not _BUILD_NOTE[0] <= len(note) <= _BUILD_NOTE[1]:
+            return None, f'the note is {_BUILD_NOTE[0]} to {_BUILD_NOTE[1]} characters'
+        return {**out, 'description': note, 'revise': {'packageId': revise['packageId'], 'note': note}}, None
+    description = (body.get('description') or '').strip() if isinstance(body.get('description'), str) else ''
+    if not _BUILD_DESCRIPTION[0] <= len(description) <= _BUILD_DESCRIPTION[1]:
+        return None, f'the description is {_BUILD_DESCRIPTION[0]} to {_BUILD_DESCRIPTION[1]} characters'
+    return {**out, 'description': description}, None
+
+
+@app.post('/api/methods/builds')
+@require_auth
+@require_builder
+def start_method_build():
+    """Queue a build: `{description, answers{days, minutes, level, equipment},
+    pastedText?, webSearch?}`, or `{revise: {packageId, note}}` for a new
+    revision of one of the athlete's methods. 202 with the build; 422 a body
+    that is not a request; 404 a method to revise that is not theirs; 409
+    `build_running` (with it) or `too_many_methods`; 429 `daily_limit`; 503
+    `builder_unavailable` without a model key, `store_unavailable` when the
+    write fails."""
+    from src import build_store, build_worker, package_store
+    available, reason = _builder_availability()
+    if not available:
+        return jsonify({'error': 'builder_unavailable', 'reason': reason,
+                        'detail': 'Methods cannot be built right now.'}), 503
+    request_body, problem = _build_request(request.get_json(silent=True) or {})
+    if problem:
+        return jsonify({'error': 'invalid', 'detail': problem}), 422
+    try:
+        running = build_store.active(g.user_id)
+        if running:
+            return jsonify({'error': 'build_running', 'detail': 'A method is already being built.',
+                            'build': build_store.public(running)}), 409
+        if build_store.started_since(g.user_id) >= _builder_daily_limit():
+            return jsonify({'error': 'daily_limit', 'detail': "You have used today's builds. Try again tomorrow."}), 429
+        draft = {}
+        if request_body.get('revise'):
+            current = package_store.get_package(g.user_id, request_body['revise']['packageId'])
+            if current is None:
+                return jsonify({'error': 'not_found'}), 404
+            draft = current['files']
+        elif len(package_store.list_packages(g.user_id)) >= package_store.MAX_PACKAGES:
+            return jsonify({'error': 'too_many_methods', 'detail':
+                            f'You keep at most {package_store.MAX_PACKAGES} methods. Remove one first.'}), 409
+        row = build_store.create(g.user_id, request_body, draft)
+    except (package_store.StoreError, build_store.StoreError) as e:
+        return _package_store_error(e)
+    build_worker.kick()
+    return jsonify({'build': build_store.public(row)}), 202
+
+
+@app.get('/api/methods/builds/<build_id>')
+@require_auth
+@require_builder
+def get_method_build(build_id):
+    """How one of the athlete's builds stands — what a client polls. 404 when
+    it is not theirs."""
+    from src import build_store
+    try:
+        row = build_store.get(g.user_id, build_id)
+    except build_store.StoreError as e:
+        return _package_store_error(e)
+    return (jsonify({'build': build_store.public(row)}), 200) if row else (jsonify({'error': 'not_found'}), 404)
+
+
+@app.post('/api/methods/builds/<build_id>/cancel')
+@require_auth
+@require_builder
+def cancel_method_build(build_id):
+    """Stop a build: at once when it is waiting, at its next turn when it is
+    running; one already ended is answered as it ended. 404 when not theirs."""
+    from src import build_store
+    try:
+        row = build_store.request_cancel(g.user_id, build_id)
+    except build_store.StoreError as e:
+        return _package_store_error(e)
+    return (jsonify({'build': build_store.public(row)}), 200) if row else (jsonify({'error': 'not_found'}), 404)
+
+
+# Dev Lab ▸ Builds (src/build_report.py): what a build did — its turns, checks,
+# problems and tokens. The athlete's own builds only: a transcript holds what
+# they wrote and pasted.
+@app.get('/api/dev/builds')
+@require_auth
+@require_builder
+def dev_builds():
+    """The signed-in athlete's last builds (`limit`, 30 by default, 100 at
+    most) with what each spent, and their totals."""
+    from src import build_report, build_store
+    try:
+        limit = min(max(int(request.args.get('limit', 30)), 1), 100)
+    except ValueError:
+        limit = 30
+    try:
+        rows = build_store.history(g.user_id, limit)
+    except build_store.StoreError as e:
+        return _package_store_error(e)
+    builds = [build_report.summary(r) for r in rows]
+    return jsonify({'builds': builds, 'totals': build_report.totals(builds)})
+
+
+@app.get('/api/dev/builds/<build_id>')
+@require_auth
+@require_builder
+def dev_build(build_id):
+    """One of the athlete's builds in full: the request, each turn's tool
+    calls, each check's problems and the program the model was shown, the
+    draft's files. 404 when it is not theirs."""
+    from src import build_report, build_store
+    try:
+        row = build_store.get(g.user_id, build_id)
+    except build_store.StoreError as e:
+        return _package_store_error(e)
+    return (jsonify({'build': build_report.detail(row)}), 200) if row else (jsonify({'error': 'not_found'}), 404)
+
+
+_BUILDS_RESUMED = False
+
+
+@app.before_request
+def _resume_builds():
+    """Once a process: a build left open when the last one stopped (a deploy,
+    a crash) is taken up again. Its row kept the draft and the transcript."""
+    global _BUILDS_RESUMED
+    if _BUILDS_RESUMED:
+        return None
+    _BUILDS_RESUMED = True
+    from src import build_store, build_worker
+    try:
+        if build_store.has_open():
+            build_worker.kick()
+    except build_store.StoreError as e:
+        app.logger.warning('builds not resumed: %s', e)
+    return None
+
+
+@app.delete('/api/methods/<package_id>')
+@require_auth
+@require_builder
+def delete_method(package_id):
+    """Remove one of the athlete's methods: 409 `in_use` while their program
+    is built from it, 404 when they have none by that id."""
+    return _remove_user_package(package_id)
+
+
+@app.get('/api/dev/model-map')
+@require_auth
+@require_authoring
+def dev_model_map():
+    """How the model's parts act on each other — each interaction with what
+    it reads, what the engine decides and the code that carries it — and
+    which engine each track the asker sees runs on (for Dev Lab ▸ Model
+    Interactions; tools/model_map.json, src/model_map.py)."""
+    from src import model_map
+    return jsonify(model_map.report())
+
+
+@app.get('/api/dev/package-spec')
+@require_auth
+@require_authoring
+def dev_package_spec():
+    """How to write a package — docs/schemas/PACKAGE_SPEC.md, whole and by
+    section — with what the asking athlete needs to write one of their own:
+    their id prefix and the limits (for the package builder and the Dev Lab)."""
+    from src import package_spec, package_store
+    return jsonify({'spec': package_spec.text(), 'sections': package_spec.sections(),
+                    'prefix': package_store.owner_prefix(g.user_id),
+                    'limits': {'files': package_store.MAX_FILES, 'bytes': package_store.MAX_BYTES,
+                               'packages': package_store.MAX_PACKAGES}})
+
+
 @app.get('/api/dev/portability')
 @require_auth
 @require_authoring
@@ -1806,7 +2251,8 @@ def dev_portability():
 # generated program (~1 MB, several as dicts), and the clients already keep
 # theirs per program revision. The generator reads state the body does not
 # carry (a contract's confirmed sessions), so nothing is kept long.
-_HEAVY_GATE = threading.BoundedSemaphore(1)
+from src import heavy as _heavy
+_HEAVY_GATE = _heavy.GATE   # shared with the package builder's worker (src/heavy.py)
 _HEAVY_USERS: set = set()
 _HEAVY_LOCK = threading.Lock()   # guards _HEAVY_USERS and _HEAVY_CACHE
 _HEAVY_CACHE: 'dict[str, tuple[float, tuple[dict, int]]]' = {}
@@ -4136,18 +4582,13 @@ def _humanize_role(role: str) -> str:
     return (role or 'Block').replace('_', ' ').title()
 
 
-_EXERCISE_BELLS: dict | None = None
-
-
+@loader.scoped_cache
 def _exercise_bells() -> dict:
     """{exercise id: bells} for the double-bell exercises (exercises.yaml
-    `bells`), read once. A program stored before the field keeps its own copy
-    of each exercise, so the watch reads the library's."""
-    global _EXERCISE_BELLS
-    if _EXERCISE_BELLS is None:
-        index, _ = loader.load_all_exercises()
-        _EXERCISE_BELLS = {i: e['bells'] for i, e in index.items() if e.get('bells')}
-    return _EXERCISE_BELLS
+    `bells`), read once per view of the packages. A program stored before the
+    field keeps its own copy of each exercise, so the watch reads the library's."""
+    index, _ = loader.load_all_exercises()
+    return {i: e['bells'] for i, e in index.items() if e.get('bells')}
 
 
 def _rest_until_hr(load: dict, max_hr: int | None) -> int | None:
@@ -4315,6 +4756,13 @@ def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
     icon = _session_icon.session_icon(s)
     if icon:
         out['icon'] = icon
+    # A modality one of the athlete's own packages brings (vocabulary.yaml) is
+    # in no client's compiled table: its display rides with the session, so the
+    # watch draws its colour and label. Never for a commons modality.
+    own = loader.load_vocabulary()['modalities'].get(modality)
+    if own and isinstance(own.get('display'), dict):
+        out['modalityDisplay'] = {k: own['display'][k] for k in ('label', 'short', 'color', 'icon')
+                                  if k in own['display']}
     if spec_level >= 1:
         package_id = _watch_spec.session_package(s)
         table, keys = _watch_spec.session_screens(
@@ -4540,6 +4988,12 @@ def get_today_session():
                 last=last if level >= 1 else None, results=std_results, sex=std_sex,
                 max_hr=max_hr,
             ))
+            # The session's stable identity in the plan (program_history):
+            # the phone's player uploads by it, so a day with two sessions,
+            # or one from a plan since replaced, lands on its own row.
+            uid = _program_history_uid(vid, w_index, d_name, i)
+            if uid:
+                out[-1]['sessionUid'] = uid
         return out
 
     out_sessions = encode_day(week_index, day_name, spec_level)
@@ -4922,6 +5376,128 @@ def health_confirm_session(session_key: str):
     return _save_session_log(log, {'confirmed': session_key, 'clean': clean, 'rpe': rpe, 'lifts': lifts,
                                    'exercises': log['exercises'],
                                    'completedAt': log.get('completedAt') or existing.get('completedAt')})
+
+
+_BRIEFING_DAYS = 180     # how far back an earlier program's logs are read
+_BRIEFING_SESSIONS = 80  # and how many of them, newest first
+
+
+def _briefing_target(weeks: list, start: _date, key: str, on: str | None, today: _date):
+    """(week index, day name, session index, date) of the session a
+    program-relative key names. A spliced program can carry one week number
+    at two indices: `on` (a date) decides, else the first not behind today."""
+    from src.workout_matcher import session_calendar_date
+    hits = []
+    for wi, w in enumerate(weeks):
+        for day, sessions in (w.get('schedule') or {}).items():
+            for i in range(len(sessions or [])):
+                if key in (f"{_pick(w, 'week_number', 'weekNumber')}-{day}-{i}",
+                           f"{_pick(w, 'week_number', 'weekNumber')}-{day}" if len(sessions) == 1 else None):
+                    hits.append((wi, day, i, session_calendar_date(str(start), wi, day)))
+    if on:
+        hits = [h for h in hits if h[3] == on[:10]]
+    ahead = [h for h in hits if h[3] >= str(today)]
+    return (ahead or hits[-1:] or [None])[0]
+
+
+def _briefing_history(user_id: str, weeks: list, start: _date, before: str) -> list[dict]:
+    """Every planned session before a day with its log: this program's, then
+    the logged sessions of earlier programs through the version each was
+    written against (`program_history.session_lookup`), bounded."""
+    from src.workout_matcher import session_calendar_date
+    logs = _health.get_session_logs(user_id) or {}
+    try:
+        matched_uids, matched_keys = _today_match_sets(_health.get_matches(user_id))
+    except Exception as e:  # noqa: BLE001
+        app.logger.warning('briefing: matches failed: %s', e)
+        matched_uids, matched_keys = set(), set()
+    vid = _active_version_or_none(user_id)
+    out, mine = [], set()
+    for wi, w in enumerate(weeks):
+        for day, sessions in (w.get('schedule') or {}).items():
+            on = session_calendar_date(str(start), wi, day)
+            if not on or on >= before:
+                continue
+            for i, s in enumerate(sessions or []):
+                key = f"{_pick(w, 'week_number', 'weekNumber')}-{day}-{i}"
+                uid = _program_history_uid(vid, wi, day, i)
+                mine.add(uid)
+                log = logs.get(key) or (logs.get(key.rsplit('-', 1)[0]) if len(sessions) == 1 else None)
+                out.append({'date': on, 'key': key, 'uid': uid, 'session': s, 'log': log, 'current': True,
+                            'matched': (uid in matched_uids) if uid else (key in matched_keys)})
+    try:
+        from src import program_history
+        floor = (_date.fromisoformat(before) - _timedelta(days=_BRIEFING_DAYS)).isoformat()
+        by_uid = {u: l for u, l in (_health.get_session_logs_by_uid(user_id) or {}).items()
+                  if u not in mine and str(l.get('completedAt') or '')[:10] >= floor}
+        newest = sorted(by_uid, key=lambda u: str(by_uid[u].get('completedAt')), reverse=True)[:_BRIEFING_SESSIONS]
+        for row in program_history.session_lookup(user_id, newest):
+            if str(row['date']) < before:
+                out.append({'date': str(row['date']), 'key': None, 'uid': row['session_uid'],
+                            'session': row['session'], 'log': by_uid.get(row['session_uid']),
+                            'current': False, 'matched': False})
+    except Exception as e:  # noqa: BLE001 — no history (local dev without a database) is this program alone
+        app.logger.warning('briefing: earlier programs not read: %s', e)
+    return out
+
+
+@app.get('/api/sessions/briefing')
+@require_auth
+def session_briefing():
+    """Before a session: today's numbers beside the earlier times the same
+    session was done, where it stands in its cycle and one suggestion — as the
+    session's package says (its briefing.yaml, else the default entries;
+    src/briefing_spec.py), built by src/briefing.py. `?key=` is the
+    program-relative key ('3-Monday-0'), `date=` the day when a week number
+    repeats. 404 when the key names no session of the athlete's program."""
+    from src import briefing as _briefing, briefing_spec as _briefing_spec, training_contract as _tc
+    from src.db import get_user_program
+    key = (request.args.get('key') or '').strip()
+    program = get_user_program(g.user_id)
+    program = _normalize_program_keys(program) if isinstance(program, dict) else {}
+    weeks = (program.get('currentProgram') or {}).get('weeks') or []
+    try:
+        start = _date.fromisoformat(str(program.get('programStartDate'))[:10])
+    except (ValueError, TypeError):
+        start = None
+    tz = None
+    try:
+        tz = (_db.get_user_profile(g.user_id) or {}).get('timezone')
+    except Exception:  # noqa: BLE001
+        pass
+    hit = _briefing_target(weeks, start, key, request.args.get('date'), _today_for(tz)) if key and start else None
+    if not hit:
+        return jsonify({'detail': f'{key!r} is no session of the current program'}), 404
+    wi, day, i, on = hit
+    week = weeks[wi]
+    session = week['schedule'][day][i]
+    package = _watch_spec.session_package(session)
+
+    history = _briefing_history(g.user_id, weeks, start, on)
+    lane_track = str(session.get('lane_key') or '').partition('/')[2] or None
+    by_id = _tc.modules_for(package, [m.get('id') for m in session.get('modules') or []],
+                            lane_track or week.get('track_id'))
+    modules = {mid: {'name': m.get('name'), 'progression': m.get('progression')} for mid, m in by_id.items()}
+
+    standards = {}
+    wanted = {(ea['standard'].get('id') if isinstance(ea['standard'], dict) else ea['standard'])
+              for ea in session.get('exercises') or [] if ea.get('standard')}
+    if wanted:
+        try:
+            sex, std_tz = _standards_context(g.user_id)
+            results = _standards_mod.summarise(
+                _bd.load_benchmarks(), _health.get_performance_logs(g.user_id), sex, std_tz)['standards']
+            known = _bd.by_id()
+            standards = {sid: _standards_mod.watch_standard(known[sid], results.get(sid), sex)
+                         for sid in wanted if sid in known}
+        except Exception as e:  # noqa: BLE001
+            app.logger.warning('briefing: standards failed: %s', e)
+
+    vid = _active_version_or_none(g.user_id)
+    return jsonify(_briefing.build(
+        session, date=on, key=f"{_pick(week, 'week_number', 'weekNumber')}-{day}-{i}",
+        uid=_program_history_uid(vid, wi, day, i), spec=_briefing_spec.spec_for(package),
+        history=history, modules=modules, standards=standards))
 
 
 @app.put('/api/health/sessions/<path:session_key>')
@@ -5951,19 +6527,15 @@ def _program_analytics_hash(inputs, stored: dict, revision) -> str:
     return _h.sha256('|'.join(parts).encode()).hexdigest()
 
 
-_SPECS_DIGEST: str | None = None
-
-
+@loader.scoped_cache
 def _analytics_specs_digest() -> str:
-    """A digest of every package's analytics.yaml, once per process: the
-    files change only with a deploy, and a deploy starts a new process."""
-    global _SPECS_DIGEST
-    if _SPECS_DIGEST is None:
-        import hashlib as _h
-        import json as _j
-        _SPECS_DIGEST = _h.sha256(_j.dumps(loader.load_analytics_specs(), sort_keys=True,
-                                           default=str).encode()).hexdigest()[:16]
-    return _SPECS_DIGEST
+    """A digest of every package's analytics.yaml the caller sees, once per
+    view: the shipped files change only with a deploy, an athlete's own with
+    an install (invalidate_package_data)."""
+    import hashlib as _h
+    import json as _j
+    return _h.sha256(_j.dumps(loader.load_analytics_specs(), sort_keys=True,
+                              default=str).encode()).hexdigest()[:16]
 
 
 @app.get('/api/analytics/specs')

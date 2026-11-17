@@ -462,7 +462,7 @@ def _sessions(phil: dict, track_docs: list, framework_ids: list, frameworks: dic
 # ─── The record ──────────────────────────────────────────────────────────────
 
 def _record(phil_id: str) -> dict | None:
-    path = os.path.join(loader._PACKAGES_DIR, phil_id, 'fidelity.yaml')
+    path = os.path.join(loader.package_dir(phil_id), 'fidelity.yaml')
     return loader._load_yaml(path) if os.path.exists(path) else None
 
 
@@ -594,17 +594,12 @@ def build(phil: dict, *, philosophies: list, frameworks: dict, modalities: dict,
                         exercises, {p['id']: p for p in philosophies})}
 
 
-_CACHE: dict = {}
-_GLANCES: list | None = None
-_DATA: dict | None = None
+_STORE = 'explore_philosophy'   # per view (loader.view_store): {'data', 'glances', 'docs': {id: document}}
 
 
 def clear_cache() -> None:
     """An authoring write changed the packages (api.clear_static_cache)."""
-    global _GLANCES, _DATA
-    _CACHE.clear()
-    _GLANCES = None
-    _DATA = None
+    loader.invalidate_package_data()
 
 
 def _specs() -> dict:
@@ -618,13 +613,13 @@ def _specs() -> dict:
 def _loaded() -> dict:
     """The package data, read once: every describe and the glances read the
     same lists, which they never change."""
-    global _DATA
-    if _DATA is None:
+    store = loader.view_store(_STORE)
+    if store.get('data') is None:
         exercises, _ = loader.load_all_exercises()
-        _DATA = {'philosophies': loader.load_philosophies(), 'frameworks': loader.load_all_frameworks(),
-                 'modalities': loader.load_all_modalities(), 'archetypes': loader.load_all_archetypes(),
-                 'exercises': exercises, 'standards': benchmarks_data.by_id(), 'specs': None}
-    return _DATA
+        store['data'] = {'philosophies': loader.load_philosophies(), 'frameworks': loader.load_all_frameworks(),
+                         'modalities': loader.load_all_modalities(), 'archetypes': loader.load_all_archetypes(),
+                         'exercises': exercises, 'standards': benchmarks_data.by_id(), 'specs': None}
+    return store['data']
 
 
 def _contracts(phil: dict) -> dict:
@@ -639,8 +634,9 @@ def _contracts(phil: dict) -> dict:
 def describe(phil_id: str) -> dict | None:
     """The document for one philosophy, built once per process (package data
     changes only with a deploy); None for an unknown id."""
-    if phil_id in _CACHE:
-        return _CACHE[phil_id]
+    docs = loader.view_store(_STORE).setdefault('docs', {})
+    if phil_id in docs:
+        return docs[phil_id]
     data = _loaded()
     phil = next((p for p in data['philosophies'] if p['id'] == phil_id), None)
     if phil is None:
@@ -649,18 +645,18 @@ def describe(phil_id: str) -> dict | None:
                 modalities=data['modalities'], archetypes=data['archetypes'], exercises=data['exercises'],
                 standards=data['standards'], contracts=_contracts(phil), record=_record(phil_id),
                 measures=measures_of(_specs().get(phil_id)))
-    _CACHE[phil_id] = doc
+    docs[phil_id] = doc
     return doc
 
 
 def glance_all() -> list[dict]:
     """Every philosophy's glance, in the loader's order; built once."""
-    global _GLANCES
-    if _GLANCES is None:
+    store = loader.view_store(_STORE)
+    if store.get('glances') is None:
         data, specs = _loaded(), _specs()
-        _GLANCES = [glance(_core(phil, frameworks=data['frameworks'], archetypes=data['archetypes'],
+        store['glances'] = [glance(_core(phil, frameworks=data['frameworks'], archetypes=data['archetypes'],
                                  exercises=data['exercises'], contracts=_contracts(phil),
                                  record=_record(phil['id']), standards=data['standards']),
                            measures_of(specs.get(phil['id'])))
                     for phil in data['philosophies']]
-    return _GLANCES
+    return store['glances']

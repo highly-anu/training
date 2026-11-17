@@ -1,6 +1,7 @@
+import { ChartFrame } from '@/components/shared/ChartFrame'
+import * as say from '@/lib/chartSummary'
 import {
-  ResponsiveContainer,
-  BarChart,
+    BarChart,
   Bar,
   XAxis,
   YAxis,
@@ -9,6 +10,7 @@ import {
 } from 'recharts'
 import type { HRZoneDistribution } from '@/api/types'
 import { ZONES } from '@/lib/hrZones'
+import { useChartEntry } from '@/lib/chartMotion'
 
 interface HRZoneChartProps {
   zones: HRZoneDistribution
@@ -37,6 +39,7 @@ function CustomTooltip({ label, payload }: TooltipPayload) {
 }
 
 export function HRZoneChart({ zones, showEstimateLabel = true }: HRZoneChartProps) {
+  const drawIn = useChartEntry()
   const data = ZONE_META.map((z) => ({
     label: z.label,
     description: z.description,
@@ -46,7 +49,8 @@ export function HRZoneChart({ zones, showEstimateLabel = true }: HRZoneChartProp
 
   return (
     <div className="space-y-1">
-      <ResponsiveContainer width="100%" height={100}>
+      <ChartFrame label="Time in heart-rate zones" height={100}
+        summary={say.shares(data.map((d) => ({ name: `${d.label} ${d.description}`, value: d.value })))}>
         <BarChart data={data} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
           <XAxis
             dataKey="label"
@@ -61,13 +65,13 @@ export function HRZoneChart({ zones, showEstimateLabel = true }: HRZoneChartProp
             domain={[0, 100]}
           />
           <Tooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
-          <Bar dataKey="value" radius={[3, 3, 0, 0]}>
+          <Bar {...drawIn} dataKey="value" radius={[3, 3, 0, 0]}>
             {data.map((entry, i) => (
               <Cell key={i} fill={entry.color} />
             ))}
           </Bar>
         </BarChart>
-      </ResponsiveContainer>
+      </ChartFrame>
       {showEstimateLabel && zones.method === 'summary_estimate' && (
         <p className="text-[10px] text-muted-foreground/60 text-center italic">
           Estimated — no sample-level HR data available

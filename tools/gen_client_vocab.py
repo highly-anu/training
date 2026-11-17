@@ -195,6 +195,60 @@ def _hex(color: str) -> str:
     return '0x' + color.lstrip('#').lower()
 
 
+# What no table above can hold: a modality one of the athlete's own packages
+# brings (vocabulary.yaml). It is served, never compiled in, and kept where
+# every target of a device can read it (the app group's defaults).
+SERVED_SWIFT = """\
+    // ── A package's own modalities ──────────────────────────────────────────
+    // The table above is the commons'. A method the athlete had written may
+    // bring a modality of its own (its vocabulary.yaml): the server sends its
+    // display (GET /api/modalities; `modalityDisplay` on a watch session), the
+    // app keeps it in the app group's defaults, and every target of the device
+    // — app, widgets, complication — reads it from there.
+
+    private static let servedSuite = "group.haerdsoft.TrainingCompanion"
+    private static let servedKey = "served_modalities"
+
+    /// A modality by id: the commons', else one a package of the athlete's
+    /// own brings. Read through this, never through `modalities` directly.
+    static func modality(_ id: String) -> Modality? {
+        if let known = modalities[id] { return known }
+        guard let stored = UserDefaults(suiteName: servedSuite)?.dictionary(forKey: servedKey)?[id] as? [String: Any]
+        else { return nil }
+        return served(from: stored, id: id)
+    }
+
+    /// A served display — `{label, short, color: "#rrggbb", icon: {ios, watch}}`,
+    /// the modality file's `display` block — as a Modality; nil without a colour.
+    static func served(from display: [String: Any], id: String) -> Modality? {
+        guard let text = display["color"] as? String,
+              let hex = UInt32(text.trimmingCharacters(in: CharacterSet(charactersIn: "#")), radix: 16) else { return nil }
+        let words = id.replacingOccurrences(of: "_", with: " ").capitalized
+        let label = (display["label"] as? String) ?? words
+        let icon = display["icon"] as? [String: Any]
+        let ios = (icon?["ios"] as? String) ?? "figure.strengthtraining.traditional"
+        return Modality(label: label, short: (display["short"] as? String) ?? label, hex: hex,
+                        icon: ios, watchIcon: (icon?["watch"] as? String) ?? ios)
+    }
+
+    /// Keep the displays of modalities the commons do not have (id → display).
+    /// `replacing`: these are all of them (the phone's read of the whole list);
+    /// otherwise they are added to what is kept (a watch session's own).
+    /// → whether anything changed, so the caller redraws widgets only then.
+    @discardableResult
+    static func remember(served displays: [String: [String: Any]], replacing: Bool) -> Bool {
+        guard let defaults = UserDefaults(suiteName: servedSuite) else { return false }
+        let before = defaults.dictionary(forKey: servedKey) ?? [:]
+        var after: [String: Any] = replacing ? [:] : before
+        for (id, display) in displays where modalities[id] == nil && served(from: display, id: id) != nil {
+            after[id] = display
+        }
+        guard !NSDictionary(dictionary: after).isEqual(to: before) else { return false }
+        defaults.set(after, forKey: servedKey)
+        return true
+    }"""
+
+
 def render_swift(modalities, phases, equipment, outcomes) -> str:
     q = json.dumps
     lines = [f'// {HEADER[0]}', f'// {HEADER[1]}', 'import SwiftUI', '',
@@ -260,6 +314,8 @@ def render_swift(modalities, phases, equipment, outcomes) -> str:
               '              green: Double((hex >> 8) & 0xff) / 255,',
               '              blue: Double(hex & 0xff) / 255)',
               '    }',
+              '',
+              *SERVED_SWIFT.split('\n'),
               '}', '']
     return '\n'.join(lines)
 

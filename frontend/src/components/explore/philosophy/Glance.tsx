@@ -1,3 +1,5 @@
+import { NEUTRAL_HEX } from '@/lib/dataColors'
+import { Tip } from '@/components/shared/Tip'
 import { createElement, useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -50,9 +52,9 @@ export function StatTile({ icon: Icon, value, label, title, children, onClick, a
   )
   const cls = 'flex items-center gap-2 rounded-md border border-border/50 bg-card/60 px-2.5 py-2 text-left'
   return onClick
-    ? <button type="button" onClick={onClick} title={title} aria-expanded={active}
+    ? <Tip label={title}><button type="button" onClick={onClick} aria-expanded={active}
         className={cn(cls, 'hover:border-primary/40 hover:bg-muted/30 transition-colors',
-          active && 'border-primary/50 bg-primary/10')}>{body}</button>
+          active && 'border-primary/50 bg-primary/10')}>{body}</button></Tip>
     : <div title={title} className={cls}>{body}</div>
 }
 
@@ -117,11 +119,10 @@ export function PhaseBar({ phases, scaleWeeks, selected, onSelect, height = 'h-2
   return (
     <div className="flex w-full gap-px">
       {phases.map((p) => {
-        const style = { width: `${(p.weeks / (scaleWeeks || 1)) * 100}%`, backgroundColor: PHASE_COLORS[p.kind]?.hex ?? '#94a3b8' }
+        const style = { width: `${(p.weeks / (scaleWeeks || 1)) * 100}%`, backgroundColor: PHASE_COLORS[p.kind]?.hex ?? NEUTRAL_HEX }
         const cls = cn(height, 'rounded-[2px] transition-opacity', selected && selected !== p.id && 'opacity-35')
         return onSelect
-          ? <button key={p.id} type="button" onClick={() => onSelect(p.id)} className={cls} style={style}
-              title={`${p.name} · ${p.weeks} wk`} aria-label={`${p.name}, ${p.weeks} weeks`} />
+          ? <Tip key={p.id} label={`${p.name} · ${p.weeks} wk`}><button type="button" onClick={() => onSelect(p.id)} className={cls} style={style} aria-label={`${p.name}, ${p.weeks} weeks`} /></Tip>
           : <div key={p.id} className={cls} style={style} title={`${p.name} · ${p.weeks} wk`} />
       })}
     </div>
@@ -154,7 +155,7 @@ export function InlinePanel({ title, subtitle, accent, onClose, children }: {
   }, [])
   return (
     <div ref={ref} role="region" aria-label={typeof title === 'string' ? title : undefined}
-      className="overflow-hidden rounded-lg border border-border/60 bg-card/70 animate-in fade-in-0 slide-in-from-top-1 duration-200">
+      className="overflow-hidden rounded-lg border border-border/60 bg-card/70 animate-in fade-in-0 slide-in-from-top-1 duration-(--motion-base)">
       {accent && <div className="h-0.5" style={{ backgroundColor: accent }} />}
       <div className="flex items-start justify-between gap-3 px-4 pt-3">
         <div className="min-w-0">

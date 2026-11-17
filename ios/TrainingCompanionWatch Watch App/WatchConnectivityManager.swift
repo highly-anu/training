@@ -268,6 +268,10 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
         weekDone = Self.weekDone(from: day.progress)
         weekAhead = day.days ?? []
         startsOn = day.startsOn
+        // A modality one of the athlete's own methods brings comes with its
+        // display; kept where the complication reads it too.
+        ClientVocab.remember(served: ((day.sessions ?? []) + (day.days ?? []).flatMap(\.sessions)).servedModalities,
+                             replacing: false)
         switch day.status {
         case "ok":
             todaySessions = day.sessions ?? []

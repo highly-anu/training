@@ -17,9 +17,19 @@ def document() -> dict:
     return loader._load_yaml(loader._data_path('commons', 'constraints', 'equipment.yaml')) or {}
 
 
-def items() -> list[dict]:
-    """[{id, label, aliases?}, …] in the list's order."""
+def commons_items() -> list[dict]:
+    """The commons' list alone, in its order."""
     return list(document().get('equipment') or [])
+
+
+def items() -> list[dict]:
+    """[{id, label, aliases?, package?}, …]: the commons' list in its order,
+    then what the packages the caller sees add (their vocabulary.yaml
+    `equipment`, each with its `package`); a commons id or alias is never
+    replaced."""
+    out = commons_items()
+    taken = {e['id'] for e in out} | set(_alias_map())
+    return out + [e for e in loader.load_vocabulary()['equipment'].values() if e['id'] not in taken]
 
 
 def ids() -> list[str]:
@@ -28,7 +38,7 @@ def ids() -> list[str]:
 
 @lru_cache(maxsize=1)
 def _alias_map() -> dict[str, str]:
-    return {a: e['id'] for e in items() for a in e.get('aliases') or []}
+    return {a: e['id'] for e in commons_items() for a in e.get('aliases') or []}
 
 
 def canonical(equipment) -> list:

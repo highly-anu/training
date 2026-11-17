@@ -60,8 +60,10 @@ struct RestTimerView: View {
         )
     }
 
+    /// The rest left of the rest as it started (+30 s included); it used to
+    /// assume 60 s when the step named no rest.
     private func progressFraction(remaining: Int, exercise: WatchExercise?) -> Double {
-        let total = Double(exercise?.restSeconds ?? 60)
+        let total = Double(max(sessionState.restTotalSec, remaining))
         guard total > 0 else { return 1 }
         return min(1.0, Double(remaining) / total)
     }

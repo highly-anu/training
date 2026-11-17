@@ -9,3 +9,4 @@ cryptography>=42.0
 psycopg2-binary>=2.9
 gunicorn>=21.0
 jsonschema
+anthropic>=2.8,<3
