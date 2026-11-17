@@ -34,6 +34,9 @@ module Native {
     const CURSOR     = 0x2E9BE6;   // the blue bar beside the focused step
     const GOOD       = 0x2ECC40;
     const WARN       = 0xF5B400;
+    const NEXT_PAGE  = 0x9DB8FF;   // the light blue of the next page's name, a summary page's foot
+    const BAND       = 0x5A5FE0;   // the rules around Training Effect's benefit word
+    const AREA       = 0x22304A;   // the fill under the heart-rate line
 
     // Bitmaps for the button hints, loaded once.
     var _hintStart = null;
@@ -113,6 +116,54 @@ module Native {
         } else {
             field(dc, g.cx, yLabel, yValue, (a != null) ? a : b, (g.w * 70) / 100);
         }
+    }
+
+    // ── summary pages (photographed on the athlete's fenix 9 Pro, 2026-10-29) ──
+
+    // A page's title as the watch's own: capitals, a short dash either side of
+    // its first line, onto two lines at the space when it is wide
+    // ("TRAINING / EFFECT"). Returns the y of its last line.
+    function pageTitle(dc, g, str) {
+        var f = Text.small();
+        var lines = titleLines(dc, g, str, f);
+        var step = (g.h * 72) / 1000;
+        var y0 = (lines.size() == 1) ? (g.h * 15) / 100 : (g.h * 13) / 100;
+        for (var i = 0; i < lines.size(); i += 1) {
+            text(dc, g.cx, y0 + (i * step), f, lines[i], Gfx.COLOR_WHITE);
+        }
+        var half = dc.getTextWidthInPixels(lines[0], f) / 2;
+        var gap = (g.w * 3) / 100;
+        var dash = (g.w * 35) / 1000;
+        dc.setColor(Gfx.COLOR_WHITE, Gfx.COLOR_TRANSPARENT);
+        dc.setPenWidth((g.h >= 400) ? 2 : 1);
+        dc.drawLine(g.cx - half - gap - dash, y0, g.cx - half - gap, y0);
+        dc.drawLine(g.cx + half + gap, y0, g.cx + half + gap + dash, y0);
+        return y0 + ((lines.size() - 1) * step);
+    }
+
+    // The next page's name at the foot, light blue, wrapped as the title is.
+    function nextPage(dc, g, str) {
+        var f = Text.small();
+        var lines = titleLines(dc, g, str, f);
+        var step = (g.h * 72) / 1000;
+        var y0 = (lines.size() == 1) ? (g.h * 875) / 1000 : (g.h * 84) / 100;
+        for (var i = 0; i < lines.size(); i += 1) {
+            text(dc, g.cx, y0 + (i * step), f, lines[i], NEXT_PAGE);
+        }
+    }
+
+    // One line, or two split at the first space when wider than 45 % of the face.
+    function titleLines(dc, g, str, f) {
+        var at = str.find(" ");
+        if (at == null || dc.getTextWidthInPixels(str, f) <= (g.w * 45) / 100) { return [str]; }
+        return [str.substring(0, at), str.substring(at + 1, str.length())];
+    }
+
+    // The upright rule between two fields.
+    function vrule(dc, g, x, y0, y1) {
+        dc.setColor(RULE, Gfx.COLOR_TRANSPARENT);
+        dc.setPenWidth((g.h >= 400) ? 2 : 1);
+        dc.drawLine(x, y0, x, y1);
     }
 
     // The hairline rule across the face at y, inset from the bezel.

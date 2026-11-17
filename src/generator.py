@@ -1,29 +1,18 @@
 """Main program generator — orchestrates all modules."""
 from __future__ import annotations
 
-from . import blockers, loader, phases, provenance, recovery_regions, standard_tests, week_template
+from . import blockers, level_scaling, loader, phases, provenance, recovery_regions, standard_tests, week_template
 from .scheduler import schedule_week, select_framework
 from .selector import populate_session, select_archetype
-from .progression import calculate_load
+from .progression import calculate_load, ramps_for
 from .validator import validate
 from .output import format_program
 from typing import NamedTuple
 
 
-# Movement patterns → recovery/mobility patterns that address them
-_COMPLEMENTARY_PATTERNS: dict[str, list[str]] = {
-    'squat':            ['hip_flexion', 'knee_extension'],
-    'hip_hinge':        ['hip_flexion', 'hip_hinge'],
-    'horizontal_push':  ['horizontal_pull', 'rotation'],
-    'vertical_push':    ['horizontal_pull', 'rotation'],
-    'horizontal_pull':  ['horizontal_push', 'rotation'],
-    'vertical_pull':    ['vertical_push', 'rotation'],
-    'loaded_carry':     ['rotation', 'hip_flexion'],
-    'locomotion':       ['hip_flexion', 'knee_extension'],
-    'ballistic':        ['hip_flexion', 'knee_extension'],
-    'olympic_lift':     ['hip_flexion', 'rotation'],
-    'isometric':        ['rotation', 'hip_flexion'],
-}
+# Movement patterns → the patterns that recover them (data/commons/movement_patterns.yaml).
+_COMPLEMENTS: dict[str, list[str]] = loader._load_yaml(
+    loader._data_path('commons', 'movement_patterns.yaml')).get('complements') or {}
 
 
 def _select_complementary(
@@ -44,7 +33,7 @@ def _select_complementary(
     # Map to recovery-relevant patterns
     recovery_targets: set[str] = set()
     for p in used_patterns:
-        recovery_targets.update(_COMPLEMENTARY_PATTERNS.get(p, []))
+        recovery_targets.update(_COMPLEMENTS.get(p, []))
 
     if not recovery_targets:
         return []
@@ -131,8 +120,20 @@ def _build_phase_entries(
     return entries
 
 
+def fallback_order(framework: dict | None, modalities: dict) -> tuple:
+    """The modalities that stand in for a session no archetype serves, in
+    order: the framework's `fallback_modalities`, else every modality with a
+    `fallback_rank`, by rank (data/commons/modalities: aerobic base, durability,
+    mobility)."""
+    own = (framework or {}).get('fallback_modalities')
+    if own:
+        return tuple(own)
+    ranked = [(m.get('fallback_rank'), mid) for mid, m in modalities.items() if m.get('fallback_rank')]
+    return tuple(mid for _, mid in sorted(ranked))
+
+
 def _resolve_session(sessions: list, archetypes: list, fallback_archetypes: list,
-                     constraints: dict, phase: str) -> list:
+                     constraints: dict, phase: str, fallbacks: tuple = ()) -> list:
     """
     Replace sessions whose modality has no archetype for the current phase
     with the best available substitute.
@@ -143,14 +144,14 @@ def _resolve_session(sessions: list, archetypes: list, fallback_archetypes: list
               bodyweight/equipment-limited alternative. Marks '_commons_fallback'.
               NOTE: data/commons/ holds no archetypes, so this is NOT a commons pool:
               it is the policy-allowed packages when strict, else the whole library.
-      Pass 3: cross-modality substitution from primary-sources archetypes only.
-              Fallback order: aerobic_base → durability → mobility. Marks
+      Pass 3: cross-modality substitution from primary-sources archetypes only,
+              in `fallbacks`' order (fallback_order: the framework's, else the
+              modalities' fallback_rank — aerobic_base → durability → mobility). Marks
               '_substituted_for' with the modality it replaced, so the session,
               the compromises and the coverage report can say so — it used to
               change the modality and leave no trace.
     If no pass resolves, the session is passed through (produces null archetype output).
     """
-    _FALLBACKS = ('aerobic_base', 'durability', 'mobility')
     resolved = []
     for session in sessions:
         modality = session['modality']
@@ -171,7 +172,7 @@ def _resolve_session(sessions: list, archetypes: list, fallback_archetypes: list
 
         # Pass 3: cross-modality substitution (primary-sources only)
         substituted = False
-        for fallback in _FALLBACKS:
+        for fallback in fallbacks:
             if fallback == modality:
                 continue
             if _has_archetype(fallback, archetypes, constraints, phase):
@@ -181,6 +182,33 @@ def _resolve_session(sessions: list, archetypes: list, fallback_archetypes: list
         if not substituted:
             resolved.append(session)  # pass through; archetype will be None
     return resolved
+
+
+def _slot_level_policy(populated: dict, ea: dict, level_policy: dict | None) -> dict | None:
+    """The track's level policy for one slot, when its archetype lets it
+    scale (`scaling_eligible`: the archetype is the authored level's, and the
+    levels below reach it by scaling); a composed day's slots carry the flag
+    from their own piece (week_template._prefixed)."""
+    if not level_policy:
+        return None
+    if (ea.get('slot') or {}).get('scaling_eligible') or (populated.get('archetype') or {}).get('scaling_eligible'):
+        return level_policy
+    return None
+
+
+def _unscored(populated: dict, ea: dict, level_policy: dict | None, level: str) -> None:
+    """A named workout that carries a standard (a selectable test: Fran) done
+    scaled is not that standard's result: below the authored level its scored
+    slot is prescribed like any other and measures nothing (`scaled_standard`
+    names what it would have). A test a phase places is the protocol, as
+    written, at every level it is offered to."""
+    policy = _slot_level_policy(populated, ea, level_policy)
+    if not policy or not ea.get('standard') or standard_tests.is_test_only(populated.get('archetype')):
+        return
+    if level_scaling.factors(level, policy) is None:
+        return
+    ea['slot'] = {k: v for k, v in (ea.get('slot') or {}).items() if k != 'standard'}
+    ea['scaled_standard'] = ea.pop('standard')['id']
 
 
 def _fits_as_written(arch: dict, constraints: dict, phase: str, populate) -> bool:
@@ -551,6 +579,7 @@ def start(goal: dict, constraints: dict, data: dict, lib: dict, policy, injury_f
     arch_regions = {a['id']: recovery_regions.heavy(recovery_regions.archetype_load(a, lib['all_exercises'], modalities))
                     for a in fallback_archetypes}
     track_id = (goal.get('track') or {}).get('id')
+    level_policy = (goal.get('track') or {}).get('level_policy')
     program = {'weeks': []}
     # A templated phase's rotation through each category's workouts, and
     # whether each workout fits the athlete as written (per phase).
@@ -644,6 +673,7 @@ def start(goal: dict, constraints: dict, data: dict, lib: dict, policy, injury_f
         is_deload     = sched_result['is_deload']
         framework     = sched_result['framework']
         deload_keep   = (framework.get('deload_protocol') or {}).get('volume_reduction_pct')
+        ramps         = ramps_for(framework)
 
         # Collect compromises from this week (only unique ones)
         week_compromises = sched_result.get('compromises', [])
@@ -651,9 +681,10 @@ def start(goal: dict, constraints: dict, data: dict, lib: dict, policy, injury_f
         if entry.get('week_template') and framework.get('categories'):
             # The source's own week, day by day: each day the next named
             # workout of its category the athlete can do as written.
+            template_trace = {} if include_trace else None
             week_schedule, week_compromises = week_template.plan_week(
                 entry, framework, plan_constraints or constraints, archetypes_by_id, template_rotation,
-                _template_fits(entry), template_recent, template_left_out)
+                _template_fits(entry), template_recent, template_left_out, template_trace)
         for compromise in week_compromises:
             if compromise not in all_compromises:
                 all_compromises.append(compromise)
@@ -667,23 +698,32 @@ def start(goal: dict, constraints: dict, data: dict, lib: dict, policy, injury_f
                 'week_in_phase': week_in_phase,
                 'phase': phase,
                 'is_deload': is_deload,
+                # What built the week: the modality scheduler, or the source's
+                # own week (a training contract's weeks say `training_contract`).
+                'engine': 'scheduler',
                 'scheduler': sched_result.get('scheduler_trace', {}),
                 'sessions': {},
             }
             if entry.get('week_template') and framework.get('categories'):
                 # The source's week decided the days, not the modality schedule.
+                week_trace['engine'] = 'week_templates'
                 week_trace['scheduler'] = {
                     'week_template': entry['week_template'], 'is_deload': is_deload,
                     'framework_selection': {'selected_id': framework['id'],
-                                            'selection_reason': 'week_template'}}
+                                            'selection_reason': 'week_template'},
+                    # What the week decided: the days kept and dropped, and for
+                    # each day the pools asked, where each rotation stood, what
+                    # was passed over and why (week_template.plan_week).
+                    'template': template_trace}
 
         # 2. Populate each session with archetype + exercises + loads
         populated_schedule: dict[int, list] = {}
 
         # Resolve every day first (pure), so the week's tests can be put in
         # place of the sessions they replace before anything is populated.
+        fallbacks = fallback_order(framework, modalities)
         resolved_by_day = {day: _resolve_session(week_schedule[day], archetypes, fallback_archetypes,
-                                                 constraints, phase)
+                                                 constraints, phase, fallbacks)
                            for day in sorted(week_schedule.keys())}
 
         def _populate_test(test_session: dict, arch: dict) -> dict:
@@ -816,11 +856,22 @@ def start(goal: dict, constraints: dict, data: dict, lib: dict, policy, injury_f
                                 ea['exercise'], ea['slot'], prog, week_in_phase, phase,
                                 constraints.get('training_level', 'intermediate'), is_deload,
                                 session_time_minutes=constraints.get('session_time_minutes', 75),
-                                deload_keep=deload_keep)
+                                deload_keep=deload_keep, ramps=ramps,
+                                level_policy=_slot_level_policy(rotation_source, ea, level_policy),
+                                sex=constraints.get('sex'))
                     populated['test']['instead_of'] = _stand_in(rotation_source)
 
                 for ea in populated.get('exercises', []):
+                    _unscored(populated, ea, level_policy, constraints.get('training_level', 'intermediate'))
                     if ea.get('exercise') is None:
+                        # A structural round (a class's drilling minutes) is
+                        # prescribed by the selector; it scales the same way.
+                        _meta_policy = _slot_level_policy(populated, ea, level_policy) if ea.get('meta') else None
+                        if _meta_policy:
+                            ea['load'] = level_scaling.scale_prescription(
+                                ea.get('load') or {}, ea.get('slot') or {},
+                                constraints.get('training_level', 'intermediate'), _meta_policy,
+                                constraints.get('sex'))
                         continue
                     load = calculate_load(
                         ea['exercise'],
@@ -832,6 +883,9 @@ def start(goal: dict, constraints: dict, data: dict, lib: dict, policy, injury_f
                         is_deload,
                         session_time_minutes=constraints.get('session_time_minutes', 75),
                         deload_keep=deload_keep,
+                        ramps=ramps,
+                        level_policy=_slot_level_policy(populated, ea, level_policy),
+                        sex=constraints.get('sex'),
                     )
                     ea['load'] = load
 
@@ -924,6 +978,18 @@ def start(goal: dict, constraints: dict, data: dict, lib: dict, policy, injury_f
 
                 populated_sessions.append(populated)
                 if include_trace and session_trace is not None:
+                    # A test, said as one: what it measures and the session it
+                    # stands in for (the archetype's own reason says only how
+                    # the day was placed).
+                    if populated.get('test'):
+                        session_trace['test'] = {
+                            'archetype': populated['test'].get('archetype'),
+                            'standards': [s.get('id') if isinstance(s, dict) else s
+                                          for s in populated['test'].get('standards') or []],
+                            'instead_of': (populated['test'].get('instead_of') or {}).get('archetype')}
+                    for key in ('category', 'substituted_for', 'substitution_cause'):
+                        if populated.get(key):
+                            session_trace[key] = populated[key]
                     day_session_traces.append(session_trace)
 
             populated_schedule[day] = populated_sessions
@@ -950,6 +1016,10 @@ def start(goal: dict, constraints: dict, data: dict, lib: dict, policy, injury_f
             week_out['tests_skipped'] = skipped_tests
         program['weeks'].append(week_out)
         if include_trace and generation_trace is not None and week_trace is not None:
+            week_trace['tests'] = {
+                'placed': [{'day': _GEN_DAY_NAMES[d - 1], 'archetype': (s.get('test') or {}).get('archetype')}
+                           for d, ss in sorted(populated_schedule.items()) for s in ss if s.get('test')],
+                'skipped': [{'archetypes': t.get('archetypes'), 'reason': t.get('reason')} for t in skipped_tests]}
             generation_trace['weeks'].append(week_trace)
         return week_out
 

@@ -4,6 +4,7 @@ import { queryKeys } from './queryKeys'
 import { useProgramStore } from '@/store/programStore'
 import { useUiStore } from '@/store/uiStore'
 import { spliceRegenerated, tailResume } from '@/lib/programSource'
+import { samePriorities } from '@/lib/philosophyPriorities'
 import type { AthleteConstraints, ConstraintChangeResult, ConstraintImpact, CustomInjuryFlag, FatigueState, GeneratedProgram, ModalityId, Session, TrainingLevel, TrainingPhase, TracedProgram, ExerciseAlternative, AdjustResult, ProgressionAdjustment } from './types'
 
 function getMondayOf(date: Date): string {
@@ -53,6 +54,12 @@ export interface GenerateParams {
   frameworkId?: string | null
   priorityOverrides?: Partial<Record<ModalityId, number>> | null
   /**
+   * What the source itself implies (the builder's reset baseline). An override
+   * equal to it is not sent: the server's goal already has those priorities,
+   * and an override replaces them outright.
+   */
+  sourcePriorities?: Partial<Record<ModalityId, number>> | null
+  /**
    * A regenerate only: sessions dated before this (YYYY-MM-DD, the athlete's
    * day) keep what they had, so the days already behind them in the week the
    * tail starts at are not rewritten (`spliceRegenerated`).
@@ -97,7 +104,8 @@ export function buildPostBody(params: GenerateParams) {
     ...(params.trackId ? { track_id: params.trackId } : {}),
     ...(params.startPhaseId ? { start_phase: params.startPhaseId } : {}),
     ...(params.frameworkId ? { framework_id: params.frameworkId } : {}),
-    ...(params.priorityOverrides ? { priority_overrides: params.priorityOverrides } : {}),
+    ...(params.priorityOverrides && !(!multiPhil && samePriorities(params.priorityOverrides, params.sourcePriorities))
+      ? { priority_overrides: params.priorityOverrides } : {}),
     custom_injury_flags: params.customInjuryFlags ?? [],
   }
 }
@@ -341,6 +349,11 @@ export interface GenerateSessionParams {
   }
   customInjuryFlags?: CustomInjuryFlag[]
   archetypeId?: string
+  /** An extra the athlete adds (a rest day's mobility): any package, never
+   *  refused by a contract or a template day; the answer comes back `added`. */
+  add?: boolean
+  /** Try Again in add mode: another than this one. */
+  currentArchetypeId?: string
   /** The week's phase and framework, so the server applies the phase's
    *  exclude_exercises and the framework's deload share. */
   phaseId?: string
@@ -364,6 +377,8 @@ export function useGenerateSession() {
         ...(p.phaseId ? { phase_id: p.phaseId } : {}),
         ...(p.frameworkId ? { framework_id: p.frameworkId } : {}),
         ...(p.laneKey ? { lane_key: p.laneKey } : {}),
+        ...(p.add ? { add: true } : {}),
+        ...(p.currentArchetypeId ? { current_archetype_id: p.currentArchetypeId } : {}),
       }) as unknown as Promise<Session>,
   })
 }

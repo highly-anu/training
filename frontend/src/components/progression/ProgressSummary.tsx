@@ -5,7 +5,7 @@ import { STATUS_STYLES } from '@/lib/statusColors'
 import { bandRange, scoreBand } from '@/lib/progressionScore'
 import type { ProgressionReview } from '@/api/types'
 
-const BAND_DOT = { on_track: 'bg-emerald-500', mixed: 'bg-amber-500', off_track: 'bg-red-500' } as const
+const BAND_DOT = { on_track: 'bg-good', mixed: 'bg-warn', off_track: 'bg-bad' } as const
 
 /**
  * The top of Analytics ▸ Progress: what the section is for, the score with

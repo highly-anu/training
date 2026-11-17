@@ -118,6 +118,14 @@ enum WatchUpload {
         return log
     }
 
+    /// A session log's exercises as the phone's log reads them — what
+    /// `sessionLog` wrote, decoded as the server's answer would be.
+    static func performances(in log: [String: Any]) -> [String: ExercisePerformanceLog] {
+        guard let exercises = log["exercises"], JSONSerialization.isValidJSONObject(exercises),
+              let data = try? JSONSerialization.data(withJSONObject: exercises) else { return [:] }
+        return (try? JSONDecoder().decode([String: ExercisePerformanceLog].self, from: data)) ?? [:]
+    }
+
     /// `POST /api/health/matches` body: a manual match, which the server also
     /// treats as the answer to any suggestion it held for this workout.
     static func matchPayload(workoutId: String, sessionKey: String, matchedAt: Date = Date()) -> [String: Any] {

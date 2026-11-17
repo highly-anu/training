@@ -1,0 +1,47 @@
+id: scratch_minimal
+# A package written from nothing the repository ships: its own modality,
+# movement pattern, implement and exercises (docs/schemas/PACKAGE_SPEC.md
+# prints it as the worked example, and tools/gen_package_spec.py fails when
+# they part). Small on purpose — one track, two phases, one framework on the
+# modality scheduler — and held to every gate by test_package_gate.py and
+# test_package_dropin.py. Never shipped, never graded.
+name: "Odd-object strength (from scratch)"
+core_principles:
+  - lift_awkward_things_from_the_ground
+  - easy_walking_between_hard_days
+  - one_progression_at_a_time
+scope:
+  - scratch_odd_object_strength
+  - aerobic_base
+bias:
+  - scratch_odd_object_strength
+required_equipment:
+  - scratch_stone
+# Only this package's sessions and exercises may reach its programs.
+self_contained: true
+intensity_model: hard_easy_alternation
+progression_philosophy: load_based
+
+primary_track_id: standard
+tracks:
+  - id: standard
+    name: "Stone work"
+    description: "Two stone days and two easy walks a week; eight weeks, heavier in the second four."
+    phases:
+      - id: scratch_foundation
+        name: "Foundation"
+        kind: base
+        weeks: 4
+        framework_id: scratch_minimal_week
+        focus: "Learn the lift"
+        description: "Light stones, the same lift every session, until shouldering is unremarkable."
+      - id: scratch_loading
+        name: "Loading"
+        kind: build
+        weeks: 4
+        framework_id: scratch_minimal_week
+        focus: "Heavier stones"
+        description: "The same week, a heavier stone each week."
+
+sources:
+  - "Written for the repository's tests; no published source."

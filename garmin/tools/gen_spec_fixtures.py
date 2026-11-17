@@ -62,6 +62,10 @@ class SpecFixtureCtl {
     function holdTarget()           { var h = ex.holdSeconds(); return (h != null) ? h : 30; }
     function intervalWorking()      { return v("intervalWorking", true); }
     function emomRound()            { return v("intervalRound", 1); }
+    function roundName(e) {
+        var alt = e.alternateName();
+        return (alt != null && e.isTemplate("interval") && WorkoutController.alternatesAt(emomRound())) ? alt : e.name();
+    }
     function emomTotal()            { return v("intervalTotal", 0); }
     function intervalLeft()         { return v("intervalLeftSec", 0); }
     function intervalRestSec()      { return v("intervalRestSec", 0); }

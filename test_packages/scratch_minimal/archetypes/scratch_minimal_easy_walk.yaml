@@ -1,0 +1,18 @@
+id: scratch_minimal_easy_walk
+name: "Easy walk"
+modality: aerobic_base
+category: conditioning
+duration_estimate_minutes: 40
+applicable_phases: [base, build]
+training_levels: [novice, intermediate, advanced, elite]
+
+slots:
+  - role: walk
+    slot_type: time_domain
+    duration_minutes: 40
+    intensity: zone2
+    exercise_filter:
+      exercise_ids: [scratch_minimal_walk]
+
+sources:
+  - "Written for the repository's tests."

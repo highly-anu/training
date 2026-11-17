@@ -44,6 +44,8 @@ enum WidgetDataStore {
             }
             defaults.set(weekBlob, forKey: weekKey + "_cmp")
             WidgetCenter.shared.reloadTimelines(ofKind: "WeekOverviewWidget")
+            // The Lock Screen's week count reads the same week.
+            WidgetCenter.shared.reloadTimelines(ofKind: "WeekProgressWidget")
         }
         var cmp = status
         cmp = WidgetStatusData(updatedAt: .distantPast, today: cmp.today, readiness: cmp.readiness,

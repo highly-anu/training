@@ -129,7 +129,7 @@ struct PhilosophyCompareView: View {
                 }
                 row("You already own", cols) { g in
                     let t = g.tracks.first { $0.id == track(of: g) }
-                    let asks = (t?.requires ?? []) + (t?.kettlebellPair == true ? ["a pair of bells"] : [])
+                    let asks = (t?.requires ?? []) + (t?.implement.map { [$0] } ?? [])
                     Text(asks.isEmpty ? "—" : asks.joined(separator: ", ")).foregroundStyle(.secondary)
                 }
             }

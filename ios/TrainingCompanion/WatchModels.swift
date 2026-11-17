@@ -191,6 +191,10 @@ struct ProgramSession: Codable {
     /// by the server on every read and never stored, so it rides in `extra`.
     var icon: String? { extra["icon"]?.stringValue }
 
+    /// Added by the athlete on the fly (`POST /sessions/generate` `add`): an
+    /// extra that counts only once done, and the only kind that can be removed.
+    var isAdded: Bool { if case .bool(true)? = extra["added"] { return true }; return false }
+
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         modality = try c.decode(String.self, forKey: .modality)
@@ -589,6 +593,11 @@ struct GenerateSessionRequest: Encodable {
     var frameworkId: String? = nil
     /// A composed program's session's track (`SubstituteRequest.laneKey`).
     var laneKey: String? = nil
+    /// An extra the athlete adds (a rest day's mobility): any package, never
+    /// refused by a contract or a template day; the answer comes back `added`.
+    var add: Bool? = nil
+    /// Try Again when adding: another session than this one.
+    var currentArchetypeId: String? = nil
     enum CodingKeys: String, CodingKey {
         case primarySources = "primary_sources"
         case modality, phase
@@ -599,6 +608,8 @@ struct GenerateSessionRequest: Encodable {
         case phaseId        = "phase_id"
         case frameworkId    = "framework_id"
         case laneKey        = "lane_key"
+        case add
+        case currentArchetypeId = "current_archetype_id"
     }
 }
 
@@ -674,10 +685,52 @@ struct WatchSession: Codable, Identifiable, Hashable {
     /// Its workout icon (src/session_icon.py), tinted with the modality colour;
     /// nil → the modality icon.
     var icon: String? = nil
+    /// Its stable identity in the plan (program_history), where the plan is in
+    /// history: the phone's player uploads by it.
+    var sessionUid: String? = nil
+    /// How to draw a modality one of the athlete's own methods brings: its
+    /// colour, label and icons. Nil for a commons modality, which every build
+    /// has compiled in (ClientVocab).
+    var modalityDisplay: ModalityDisplay? = nil
 
     enum CodingKeys: String, CodingKey {
         case sessionId, modalityId, archetypeName, estimatedMinutes, isDeload, exercises, completed
-        case packageId, screens, watch, icon
+        case packageId, screens, watch, icon, sessionUid, modalityDisplay
+    }
+}
+
+/// A modality file's `display` block as the server sends it with a session.
+struct ModalityDisplay: Codable, Hashable {
+    struct Icon: Codable, Hashable {
+        var ios: String? = nil
+        var watch: String? = nil
+    }
+    var label: String? = nil
+    var short: String? = nil
+    /// "#rrggbb".
+    var color: String? = nil
+    var icon: Icon? = nil
+
+    /// The shape `ClientVocab.remember(served:)` keeps.
+    var stored: [String: Any] {
+        var out: [String: Any] = [:]
+        if let label { out["label"] = label }
+        if let short { out["short"] = short }
+        if let color { out["color"] = color }
+        var icons: [String: Any] = [:]
+        if let ios = icon?.ios { icons["ios"] = ios }
+        if let watch = icon?.watch { icons["watch"] = watch }
+        if !icons.isEmpty { out["icon"] = icons }
+        return out
+    }
+}
+
+extension Sequence where Element == WatchSession {
+    /// id → display for the sessions whose modality a method brought.
+    var servedModalities: [String: [String: Any]] {
+        reduce(into: [:]) { out, session in
+            if let display = session.modalityDisplay { out[session.modalityId] = display.stored }
+        }
     }
 }
 
@@ -697,6 +750,8 @@ extension WatchSession {
         screens = try? c.decodeIfPresent([String: WatchScreenSpec].self, forKey: .screens)
         watch = try? c.decodeIfPresent(WatchIdentity.self, forKey: .watch)
         icon = try? c.decodeIfPresent(String.self, forKey: .icon)
+        sessionUid = try? c.decodeIfPresent(String.self, forKey: .sessionUid)
+        modalityDisplay = try? c.decodeIfPresent(ModalityDisplay.self, forKey: .modalityDisplay)
     }
 
     /// The screen an exercise is drawn with (`WatchScreen.forExercise`).
@@ -789,6 +844,17 @@ struct WatchExercise: Codable, Hashable {
     var restUntilHr: Int? = nil
     /// The key of its screen in the session's `screens`.
     var screen: String? = nil
+    /// What the step's screen does not record and the athlete is asked at
+    /// the end (["reps"] for a timed kettlebell set: its cadence), the
+    /// server's outcome fields (src/outcome_fields.py); nil on most steps.
+    var logs: [String]? = nil
+
+    /// An interval whose even rounds are another movement (Option C: two-hand,
+    /// then hand-to-hand swings): that movement's name; nil on every other step.
+    var alternateName: String? = nil
+
+    /// Its reps are counted by the athlete and entered at the end.
+    var asksReps: Bool { standard == nil && (logs ?? []).contains("reps") }
 
     enum CodingKeys: String, CodingKey {
         case exerciseId, name, slotType, slotRole, isMeta, loadDescription, loadNote, coachingCue
@@ -797,6 +863,7 @@ struct WatchExercise: Codable, Hashable {
         case lastTime = "last", standard
         case category, movementPattern, bilateral, targetRpm, workSec, intervalRestSec, distanceM
         case repsPerRound, repScheme, packLoadKg, focus, parentSlotRole, bells, switchAtSec, restUntilHr, screen
+        case logs, alternateName
     }
 }
 
@@ -848,6 +915,8 @@ extension WatchExercise {
         switchAtSec = c.lenientInt(.switchAtSec)
         restUntilHr = c.lenientInt(.restUntilHr)
         screen = try? c.decodeIfPresent(String.self, forKey: .screen)
+        logs = try? c.decodeIfPresent([String].self, forKey: .logs)
+        alternateName = try? c.decodeIfPresent(String.self, forKey: .alternateName)
     }
 }
 
@@ -929,6 +998,11 @@ nonisolated struct ExerciseTimelineEntry: Codable {
     let startOffset: Int    // seconds from startedAt — when the first set of this exercise began
     let endOffset: Int      // seconds from startedAt — when the exercise was marked complete
     let avgHRDuring: Int?   // mean bpm during [startOffset, endOffset] from hrSamples
+    /// The same window by the wall clock (ISO 8601): what lines a step up
+    /// with a recording another device made — the phone's steps with a
+    /// Garmin band's heart rate (src/analytics/hr_plan.py reads it first).
+    var startAt: String? = nil
+    var endAt: String? = nil
 }
 
 nonisolated struct WatchWorkoutSummary: Codable {

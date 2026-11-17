@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { AlertTriangle, Loader2, Sparkles } from 'lucide-react'
+import { AlertTriangle, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Spinner } from '@/components/ui/spinner'
 import { usePhilosophyForMe } from '@/api/philosophyCompare'
 import { useAuthStore } from '@/store/authStore'
 import { cn } from '@/lib/utils'
@@ -15,7 +16,7 @@ const num = (n: number) => (Number.isInteger(n) ? `${n}` : n.toFixed(1))
 function Pending({ waiting }: { waiting: boolean }) {
   return (
     <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
-      {waiting ? 'Waiting…' : <><Loader2 className="size-3 animate-spin" /> Generating…</>}
+      {waiting ? 'Waiting…' : <><Spinner className="size-3" /> Generating…</>}
     </span>
   )
 }
@@ -83,7 +84,7 @@ export function ForYouSection({ cols, trackOf }: { cols: CompareGlance[]; trackO
                 </span>
               : (
                 <div className="space-y-1">
-                  <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 dark:text-amber-300">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-medium text-warn">
                     <AlertTriangle className="size-3" /> Not as you are
                   </span>
                   <ul className="space-y-0.5">

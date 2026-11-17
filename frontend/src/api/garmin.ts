@@ -8,6 +8,7 @@
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from './client'
+import { toast } from '@/lib/toast'
 import type { GarminStatus } from './types'
 
 export interface GarminBackfillResult {
@@ -46,6 +47,8 @@ export function useGarminDisconnect() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: GARMIN_STATUS_KEY })
     },
+    // The dialog that asked is closed by now.
+    onError: () => toast.failed('Could not disconnect Garmin Connect. It is still connected.'),
   })
 }
 

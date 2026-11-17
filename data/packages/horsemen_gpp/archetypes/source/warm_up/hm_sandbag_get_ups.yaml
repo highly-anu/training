@@ -3,9 +3,12 @@ name: Sandbag Get-ups
 modality: mixed_modal_conditioning
 category: conditioning
 training_levels:
+- novice
 - intermediate
 - advanced
 - elite
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 10
 slots:
@@ -14,6 +17,7 @@ slots:
   sets: 2
   reps: 20
   load: 36 kg (80 lb)
+  load_kg: 36
   exercise_filter:
     exercise_ids:
     - sb_getup

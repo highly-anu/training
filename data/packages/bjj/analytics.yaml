@@ -3,6 +3,11 @@
 # lifts and how long the grip and trunk hold.
 id: bjj
 
+# The elite grappler's strength marks: the bench press to bodyweight, estimated
+# from the program's own bench, and max pull-ups, its "max reps" sets, at their
+# ladders' elite rung (I10; docs/logic/levels.md).
+elite_standards: [bench_press_bw_ratio, pull_up_reps]
+
 progress:
   - id: mat_time
     label: Mat time

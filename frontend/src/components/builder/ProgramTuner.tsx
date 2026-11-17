@@ -1,3 +1,4 @@
+import { Tip } from '@/components/shared/Tip'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AlertTriangle, Check, Info, Layers } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -14,6 +15,7 @@ import { builderTrack, findTrack, mainFramework, primaryTrack, trackWeeks, track
 import { FrameworkDetailModal } from './FrameworkDetailModal'
 import { PhaseSpine } from '@/components/shared/PhaseSpine'
 import { LanePicker } from './LanePicker'
+import { scaledFor } from '@/lib/levelScaling'
 import type { Framework, ModalityId } from '@/api/types'
 
 const SECTION_LABEL = 'text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium'
@@ -274,16 +276,16 @@ export function ProgramTuner() {
                     </span>
                   )}
 
-                  <button
+                  <Tip label={blocker?.message}><button
                     onClick={() => {
+                      if (!selectable && !isSelected) return
                       setTrack(track.id)
                       // Let effectiveNumWeeks fall back to the track's length; the
                       // tight-event effect owns numWeeks when an event date is set.
                       if (!eventDate) setNumWeeks(null)
                     }}
-                    disabled={!selectable && !isSelected}
-                    title={blocker?.message}
-                    className="flex items-start gap-2 pr-6 text-left disabled:cursor-not-allowed"
+                    aria-disabled={!selectable && !isSelected}
+                    className="flex items-start gap-2 pr-6 text-left aria-disabled:cursor-not-allowed"
                   >
                     <Layers className="size-3.5 mt-0.5 shrink-0 text-muted-foreground" />
                     <div className="min-w-0">
@@ -295,6 +297,16 @@ export function ProgramTuner() {
                         {isPrimary && (
                           <span className="text-[9px] text-primary font-medium">Primary for this methodology</span>
                         )}
+                        {track.invention && (
+                          <span className="text-[9px] text-muted-foreground font-medium" title={track.invention.text}>
+                            The app's own track, not {philosophy.name}'s
+                          </span>
+                        )}
+                        {scaledFor(track, constraints.training_level) && (
+                          <span className="text-[9px] text-muted-foreground font-medium">
+                            {scaledFor(track, constraints.training_level)}
+                          </span>
+                        )}
                       </div>
                       {track.description && (
                         <p className="text-[10px] text-muted-foreground leading-relaxed mt-1 line-clamp-3">
@@ -302,7 +314,7 @@ export function ProgramTuner() {
                         </p>
                       )}
                     </div>
-                  </button>
+                  </button></Tip>
 
                   <PhaseSpine phases={track.phases} />
 
@@ -315,7 +327,7 @@ export function ProgramTuner() {
                             'flex items-start gap-1.5 text-[10px] leading-relaxed',
                             issue.severity === 'error'
                               ? 'text-destructive'
-                              : 'text-amber-600 dark:text-amber-500'
+                              : 'text-warn'
                           )}
                         >
                           <AlertTriangle className="size-3 mt-px shrink-0" />
@@ -417,7 +429,7 @@ export function ProgramTuner() {
                 <div className="flex items-center gap-2">
                   <div className="flex-1 h-1.5 rounded-full bg-border overflow-hidden">
                     <div
-                      className="h-full rounded-full transition-all duration-150"
+                      className="h-full rounded-full transition-[width]"
                       style={{ width: `${pct}%`, backgroundColor: c.hex }}
                     />
                   </div>
@@ -503,7 +515,7 @@ export function ProgramTuner() {
 
         {eventDate && eventIsTight ? (
           <>
-            <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-xs text-amber-700 dark:text-amber-300">
+            <div className="rounded-xl border border-warn/30 bg-warn/5 px-4 py-3 text-xs text-warn">
               Your event is in <span className="font-semibold">{weeksUntilEvent}w</span>, but a full program is{' '}
               <span className="font-semibold">{defaultNumWeeks}w</span>. Choose how to handle this:
             </div>

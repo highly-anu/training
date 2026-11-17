@@ -2,7 +2,9 @@ id: hm_ex_wives_and_flat_tires
 name: "Ex Wives & Flat Tires"
 modality: mixed_modal_conditioning
 category: conditioning
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 duration_estimate_minutes: 40
 pool_only: true
 
@@ -41,6 +43,7 @@ slots:
     sets: 8
     reps: 12
     load: "84 kg (185 lb)"
+    load_kg: 84
     exercise_filter:
       exercise_ids: [deadlift]
       ordered: true

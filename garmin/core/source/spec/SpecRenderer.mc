@@ -30,7 +30,7 @@ class SpecRenderer extends Renderer {
     }
 
     hidden function titlePart(ctl, ex, id) {
-        if (id.equals("name")) { return ex.name(); }
+        if (id.equals("name")) { return ctl.roundName(ex); }
         if (id.equals("load")) {
             // Sets show the working weight (Edit Set changes it); the rest the plan's.
             var w = ex.isTemplate("sets") ? ctl.editWeight() : ex.weightKg();

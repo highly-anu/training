@@ -60,6 +60,13 @@ enum WatchSteps {
         screen.template == .sets || screen.template == .hold
     }
 
+    /// The rounds of an interval step done when it was left: the current
+    /// round, less one when its work was still running — the Garmin's
+    /// `WorkoutController.intervalRoundsDone`. Its last second counts as done.
+    static func intervalRoundsDone(round: Int, inWork: Bool, remaining: Int) -> Int {
+        max(0, inWork && remaining > 1 ? round - 1 : round)
+    }
+
     /// The rest after a set (the server's, which carries the modality's
     /// default); none for a step that is not set by set.
     static func restSec(_ ex: WatchExercise, _ screen: WatchScreen) -> Int {

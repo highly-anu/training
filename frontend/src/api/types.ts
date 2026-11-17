@@ -1,37 +1,14 @@
 // ─── Enumerations ─────────────────────────────────────────────────────────────
 
-export type ModalityId =
-  | 'max_strength'
-  | 'strength_endurance'
-  | 'relative_strength'
-  | 'aerobic_base'
-  | 'anaerobic_intervals'
-  | 'mixed_modal_conditioning'
-  | 'power'
-  | 'mobility'
-  | 'movement_skill'
-  | 'durability'
-  | 'combat_sport'
-  | 'rehab'
-
 /**
- * Shared phase kinds (data/commons/phase_kinds.yaml). A philosophy names and
- * describes its own phases; each declares one of these kinds, which is what the
- * engine and the colour palette key on. Never shown as a phase's description.
+ * The modality ids and the shared phase kinds (data/commons/modalities,
+ * data/commons/phase_kinds.yaml), generated from the commons by
+ * tools/gen_client_vocab.py. A philosophy names and describes its own phases;
+ * each declares one of these kinds, which is what the engine and the colour
+ * palette key on. Never shown as a phase's description.
  */
-export type PhaseKind =
-  | 'transition'
-  | 'base'
-  | 'build'
-  | 'specific'
-  | 'peak'
-  | 'taper'
-  | 'maintenance'
-  | 'deload'
-  | 'recovery'
-  | 'rehab'
-  | 'post_op'
-  | 'active'
+export type { ModalityId, PhaseKind } from '@/lib/gen/clientVocab'
+import type { EquipmentId, ModalityId, PhaseKind } from '@/lib/gen/clientVocab'
 
 /** @deprecated the phase kind; use PhaseKind. */
 export type TrainingPhase = PhaseKind
@@ -40,37 +17,8 @@ export type TrainingLevel = 'novice' | 'intermediate' | 'advanced' | 'elite'
 
 export type FatigueState = 'fresh' | 'normal' | 'accumulated' | 'overreached'
 
-export type EquipmentId =
-  | 'barbell'
-  | 'rack'
-  | 'plates'
-  | 'kettlebell'
-  | 'dumbbell'
-  | 'pull_up_bar'
-  | 'rings'
-  | 'parallettes'
-  | 'rower'
-  | 'bike'
-  | 'ski_erg'
-  | 'ruck_pack'
-  | 'sandbag'
-  | 'sled'
-  | 'tire'
-  | 'medicine_ball'
-  | 'resistance_band'
-  | 'rope'
-  | 'box'
-  | 'ghd'
-  | 'jump_rope'
-  | 'open_space'
-  | 'pool'
-  | 'dip_belt'
-  | 'hangboard'
-  | 'sledgehammer'
-  | 'cable_machine'
-  | 'hurdles'
-  | 'agility_ladder'
-  | 'training_partner'
+/** The equipment ids (data/commons/constraints/equipment.yaml), generated. */
+export type { EquipmentId } from '@/lib/gen/clientVocab'
 
 export type InjuryFlagId =
   | 'knee_meniscus_post_op'
@@ -195,6 +143,9 @@ export interface AthleteConstraints {
   kettlebell_count?: number
   /** A training contract's lift → the weight last made on it (Starting Strength). */
   starting_loads_kg?: Record<string, number>
+  /** A track option's id → the athlete's choice (`entry_requirements.options`);
+   *  an option left out takes its default. */
+  contract_options?: Record<string, string>
   module_progression_state?: Record<string, { completed?: number; weight_kg?: number }>
   equipment: EquipmentId[]
   equipment_profile?: EquipmentProfileId | 'custom'
@@ -223,6 +174,9 @@ export interface AthleteConstraints {
 
 export interface Equipment {
   id: EquipmentId
+  label?: string
+  /** The package that brings it (its vocabulary.yaml); absent for the commons'. */
+  package?: string
 }
 
 export interface EquipmentProfile {
@@ -369,6 +323,9 @@ export interface ExploreLinks {
     /** `requires` entries that are no exercise — what the athlete brings. */
     exerciseConcepts: { exercise: string; concept: string }[]
   }
+  /** Each package's exercises by the lowest level they suit and what each
+   *  scales to (src/level_suitability.py). Absent from an older server. */
+  exerciseLevels?: Record<string, Record<string, { minLevel: string | null; scalesTo: string[] }>>
 }
 
 export interface Archetype {
@@ -434,6 +391,16 @@ export interface ExerciseLoad {
   increment_kg?: number
   work_up?: boolean
   stalled?: boolean
+  /** Done at a share of what is written (src/level_scaling.py): each scaled
+   *  field's written value (the Rx), and from which level and how much. */
+  rx?: Partial<Pick<ExerciseLoad, 'sets' | 'reps' | 'rep_scheme' | 'reps_per_round' | 'target_rounds' | 'time_minutes'
+    | 'duration_minutes' | 'hold_seconds' | 'work_sec' | 'distance_m' | 'distance_km' | 'weight_kg'>>
+  level_scaled?: {
+    level: string
+    from: string
+    shares: Record<'load' | 'volume' | 'time' | 'distance', number>
+    sources: Record<'load' | 'volume' | 'time' | 'distance', 'track' | 'commons'>
+  }
   load_note?: string
 }
 
@@ -469,6 +436,13 @@ export interface ExerciseAssignment {
   skip_exercise?: boolean
   /** The standard this slot measures, when it is a test's scored slot. */
   standard?: { id: string; result: string | null }
+  /** The written movement this one scales (src/level_scaling.py): out of reach
+   *  at the athlete's level (`level`), or for their equipment or an injury. */
+  scaled_from?: string
+  scaled_from_name?: string
+  scale_cause?: 'level' | 'constraint'
+  /** The standard a benchmark done scaled no longer measures. */
+  scaled_standard?: string
 }
 
 export interface ComplementaryExercise {
@@ -505,6 +479,9 @@ export interface Session {
   provenance?: SessionProvenance | null
   /** A test of the phase's standards, put in place of a session (src/generator._plan_week_tests). */
   test?: SessionTest
+  /** Added by the athlete on the fly (POST /sessions/generate `add`): an extra that
+   *  counts only once done, and the only kind of session that can be removed. */
+  added?: boolean
   /** The modality this session was scheduled in place of (no archetype for it). */
   substituted_for?: string
   /** Why: no archetype of that modality for the athlete's level, or for this phase. */
@@ -869,13 +846,108 @@ export interface ProgressionEntry {
   output: Record<string, number | string>
 }
 
+/** What one contract module ran in a session (training_contract._trace). */
+export interface ModuleStepTrace {
+  id: string
+  /** The exposure it stood at; a deload holds it. */
+  step: number | null
+  deload: boolean
+  variant?: string | null
+  light_day?: unknown
+  rounds?: number | null
+  max_rpe?: number | null
+  lifts?: Record<string, { lift?: string; kg?: number | null; sets?: number | null; reps?: number | string | null }> | null
+}
+
+/** A session that tests a standard: what it measures and what it stands in for. */
+export interface TestTrace {
+  archetype?: string | null
+  standards: string[]
+  instead_of?: string | null
+}
+
 export interface SessionTrace {
   modality: string
   /** The contract modules the session carries. */
   modules?: string[]
+  module_steps?: ModuleStepTrace[]
+  /** A templated day's category. */
+  category?: string
+  test?: TestTrace
+  /** In a composition, the track the session belongs to. */
+  lane_key?: string
+  substituted_for?: string
+  substitution_cause?: string
   archetype: ArchetypeTrace
   slots: SlotTrace[]
   progression: ProgressionEntry[]
+}
+
+/** How a contract's placement scored (training_contract._spacing; counts, lower is better but `spread`). */
+export interface PlacementTrace {
+  days: Record<string, string[]>
+  score: {
+    closes_with_test: boolean
+    days_shared_with_other_tracks: number
+    days_stacked: number
+    optional_sessions: number
+    same_modality_back_to_back: number
+    same_modality_neighbours: number
+    regions_loaded_close: number
+    spread: number
+  }
+}
+
+/** What a training contract decided for one week. */
+export interface ContractWeekTrace {
+  week: number
+  phase_id?: string | null
+  day_pool: number[]
+  session_minutes: number
+  deload: { week: boolean; forced: boolean; frequency_weeks: number | null; modules: Record<string, boolean> }
+  modules: Array<{
+    id: string
+    name: string
+    optional: boolean
+    exposures_per_week: number
+    minutes: number
+    period_week: number
+    step: number
+    model: string
+    deload: boolean
+    /** Why an optional module is out this week. */
+    blocked: string | null
+  }>
+  placement: { considered: number; chosen: PlacementTrace; runner_up: PlacementTrace | null }
+  test: { archetypes?: string[]; day?: string | null } | null
+  optional_short: Array<{ id: string; name: string; placed: number; of: number; reason: string }>
+}
+
+/** One pool a templated day asked for a workout. */
+export interface TemplatePoolTrace {
+  category: string
+  pool: number
+  /** Where the pool's rotation stood. */
+  rotation_at: number
+  minutes: number
+  picked: string | null
+  passed_over: Array<{ id: string; why: string }>
+}
+
+/** What a week the source writes day by day decided (week_template.plan_week). */
+export interface TemplateWeekTrace {
+  training_days: number
+  source_days: number
+  dropped: string[]
+  placed: Record<string, string[]>
+  days: Record<string, { categories: string[]; minutes: number; asked: TemplatePoolTrace[]; left_out: boolean }>
+}
+
+export type TraceEngine = 'scheduler' | 'week_templates' | 'training_contract' | 'composition'
+
+export interface WeekTestsTrace {
+  placed: Array<{ day: string; archetype?: string | null }>
+  skipped: Array<{ archetypes?: string[]; reason?: string }>
 }
 
 /**
@@ -905,7 +977,11 @@ export interface FrameworkSelectionTrace {
 export interface SchedulerTrace {
   framework_selection: FrameworkSelectionTrace
   contract?: string
+  /** What the contract decided this week (roadmap 20.9). */
+  contract_week?: ContractWeekTrace | null
   week_template?: unknown[]
+  /** What the templated week decided. */
+  template?: TemplateWeekTrace | null
   allocation?: {
     phase_priorities: Record<string, number>
     raw: Record<string, number>
@@ -925,14 +1001,24 @@ export interface WeekTrace {
   week_in_phase: number
   phase: string
   is_deload: boolean
+  /** What built the week. Absent in a trace recorded before 20.9. */
+  engine?: TraceEngine
   scheduler: SchedulerTrace
+  tests?: WeekTestsTrace
   sessions: Record<string, SessionTrace[]>
+  /** A composition: each track's phase and framework this week… */
+  lanes?: Array<Record<string, unknown>>
+  /** …and what each track's own engine decided. */
+  lane_weeks?: Record<string, { engine?: TraceEngine | null; scheduler?: SchedulerTrace | null; tests?: WeekTestsTrace | null }>
 }
 
 export interface GenerationTrace {
   weeks: WeekTrace[]
   primary_sources?: string[]  // Philosophy package IDs (e.g. ['starting_strength'])
-  philosophy_mode?: 'synthetic_goal' | 'explicit_goal' | 'training_contract'
+  philosophy_mode?: 'explicit_goal' | 'training_contract' | 'composition'
+  /** A composition: the days the week keeps, and each track's share, days and cuts. */
+  composition?: { days?: number[] }
+  lanes?: Array<Record<string, unknown>>
 }
 
 export interface TracedProgram extends GeneratedProgram {
@@ -951,7 +1037,8 @@ export type Sex = 'male' | 'female'
 export interface BenchmarkStandard {
   id: string
   name: string
-  category: 'strength' | 'conditioning' | 'kettlebell' | 'tactical' | 'benchmark_wod' | 'skill' | 'cell'
+  /** data/benchmarks/categories.yaml's ids, or one a package adds (its standards.yaml). */
+  category: string
   /** The group's name and place, the same on every screen and both clients. */
   categoryName?: string
   categoryOrder?: number
@@ -1103,6 +1190,10 @@ export interface Modality {
   intensity_zones?: Array<{ label: string; description?: string; hr_pct_range?: [number, number] }>
   sources?: string[]
   notes?: string
+  /** How the clients draw it (the modality's file, or a package's vocabulary.yaml). */
+  display?: { label: string; short?: string; order?: number; color: string; tint: string; text_shade?: number }
+  /** The package that brings it; absent for the commons'. */
+  _package?: string
 }
 
 // ─── Philosophy ───────────────────────────────────────────────────────────────
@@ -1132,16 +1223,48 @@ export interface Track {
   name: string
   description?: string
   phases: Phase[]
+  /** A track the app made up rather than the source (its fidelity record's
+   *  invention): the builders label it as the app's own. */
+  invention?: { id: string; text: string }
+  /** The level its sessions are written for; a level below does them scaled
+   *  (src/level_scaling.py). Absent for a track done as written at every level. */
+  authored_level?: string
+  /** What its source says a level below does, as shares of what is written. */
+  level_scaling?: Record<string, Partial<Record<'load' | 'volume' | 'time' | 'distance', number>>>
   entry_requirements?: {
     training_levels: string[]
     mastered_exercises: string[]
     mastered_exercises_by_level?: Record<string, string[]>
     /** Each required movement's name, by exercise id. */
     exercise_names?: Record<string, string>
+    /** What the track's loaded blocks need more than one of, matching: the
+     *  athlete confirms `countKey` (`kettlebell_count`: a pair of bells). */
+    implements?: TrackImplement[]
+    /** The kettlebell's count from `implements`, for builds that predate it. */
     kettlebell_count: number
     /** Lifts that may start from the weight last made (optional; else a work-up). */
     starting_loads?: { id: string; name: string }[]
+    /** Choices the athlete makes for the track (Wildman's swing minutes), each
+     *  with its default; sent as `contract_options`. */
+    options?: TrackOption[]
   }
+}
+
+export interface TrackOption {
+  id: string
+  label: string
+  default: string
+  choices: { id: string; label: string; description?: string }[]
+}
+
+export interface TrackImplement {
+  equipment: string
+  count: number
+  /** The constraint that says how many the athlete has: `<equipment>_count`. */
+  countKey: string
+  /** "two", "kettlebells": the builders' "I have two matching kettlebells". */
+  number: string
+  plural: string
 }
 
 export interface Philosophy {
@@ -2302,7 +2425,9 @@ export interface DescribedModule {
   periods: Array<{ name: string; weeks: number; deload: boolean }>
   variants: Array<{ id: string; name: string; archetype: string | null; items: DescribedItem[] }>
   items: DescribedItem[]
+  /** One text, or null when the source says it per level (then `adviceByLevel`). */
   advice: string | null
+  adviceByLevel: Array<{ level: TrainingLevel; text: string }> | null
 }
 
 export type DescribedWeek =
@@ -2340,7 +2465,8 @@ export interface DescribedTrack {
   weeks: number
   repeatable: boolean
   notes: string | null
-  kettlebellPair: boolean
+  /** What the track needs beyond its equipment, in words ("a pair of bells"). */
+  implement: string | null
   mix: DescribedMix[]
   phases: DescribedPhase[]
 }
@@ -2375,7 +2501,9 @@ export interface DescribedSessionGroup {
   id: string
   name: string | null
   modality: string | null
+  /** One text, or null when the source says it per level (then `adviceByLevel`). */
   advice: string | null
+  adviceByLevel: Array<{ level: TrainingLevel; text: string }> | null
   warmUp: boolean
   sessions: string[]
 }
@@ -2435,7 +2563,8 @@ export interface GlanceTrack {
   builtBy: 'contract' | 'template' | 'framework'
   weeks: number
   repeatable: boolean
-  kettlebellPair: boolean
+  /** What the track needs beyond its equipment, in words ("a pair of bells"). */
+  implement: string | null
   requires: string[]
   daysPerWeek: { min: number; max: number } | null
   minutes: { min: number; max: number } | null
@@ -2539,4 +2668,95 @@ export interface PhilosophyForMe {
   tests?: { placed: number; skipped: Array<{ week: number; why: string }> }
   warnings?: Array<{ code: string; message: string }>
   phases?: Array<{ id: string; name: string; kind: PhaseKind; weeks: number; sessions: number; minutes: number | null }>
+}
+
+// ─── Dev Lab: package portability (GET /api/dev/portability, src/portability.py) ──
+
+export type PortabilityShape = 'contract' | 'templates' | 'scheduler'
+
+export interface PortabilityPackage {
+  id: string
+  name: string
+  tracks: Array<{ track: string; name: string | null; shape: PortabilityShape }>
+  /** present is null for a file the API image leaves out, when this is the image. */
+  files: Array<{ id: string; path: string; required: boolean; present: boolean | null }>
+  /** done is null where the record's file is not in this deployment (the API image has no docs/). */
+  /** The records the gates keep in the package's folder (records/, dossier.md). */
+  records: Array<{ id: string; label: string; file: string; done: boolean | null; how: string }>
+  vocabulary: Array<{ kind: string; count: number; unknown: string[] }>
+  collisions: number
+  ready: boolean
+}
+
+/** One interaction of the model map (tools/model_map.json). */
+export interface ModelEdge {
+  id: string
+  from: string
+  to: string
+  title: string
+  /** The engine it belongs to; null for one every program takes. */
+  engine: TraceEngine | null
+  function: string
+  files: string
+  /** How much of it is code rather than package data (0 pure data, 100 pure code). */
+  baked_pct: number
+  reads_from_source: string[]
+  reads_from_target: string[]
+  engine_decides: string[]
+  constants: string[]
+  /** `path::text`, still in the code (test_model_map.py). */
+  anchors: string[]
+}
+
+export interface ModelMap {
+  checked: string
+  engines: Record<string, string>
+  nodes: Array<{ id: string; label: string; kind: string; count_of: string | null }>
+  edges: ModelEdge[]
+  authoring: Array<{
+    type: string
+    create: 'yes' | 'partial' | 'no' | 'n/a'
+    edit: 'yes' | 'partial' | 'no' | 'n/a'
+    remove: 'yes' | 'partial' | 'no' | 'n/a'
+    writes: string
+    notes: string[]
+  }>
+  /** Which engine each track the asker sees runs on. */
+  usage: Record<string, { tracks: number; packages: string[] }>
+}
+
+export interface PortabilityGap {
+  id: string
+  title: string
+  kind: 'runtime' | 'gate' | 'tooling' | 'commons' | 'code' | 'client' | 'watch' | 'docs' | 'devlab'
+  impact: 'blocks' | 'degrades' | 'cosmetic'
+  detail?: string
+  /** `path::text`, still in the code while the gap is open. */
+  anchors: string[]
+  /** The roadmap step that closes it (9.x, 20.x). */
+  roadmap: string | null
+  status: 'open' | 'done' | 'by_design'
+  /** A closed gap: the day, and the tests that hold it. */
+  closed?: string
+  evidence?: string[]
+}
+
+/** A step of the builder's foundation (docs/roadmap.md item 20), in order. */
+export interface PortabilityStep {
+  id: string
+  title: string
+  /** The day a step with no gap of its own was done. */
+  done: string | null
+}
+
+export interface PortabilityReport {
+  packagesDir: string
+  /** Records and files this deployment cannot read; `ready` says nothing about them. */
+  unchecked: string[]
+  verdict: string
+  packages: PortabilityPackage[]
+  collisions: Array<{ kind: string; id: string; packages: string[]; kept: string }>
+  sharedExercises: number
+  steps?: PortabilityStep[]
+  gaps: PortabilityGap[]
 }

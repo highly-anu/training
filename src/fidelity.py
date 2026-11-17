@@ -23,6 +23,7 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 
+from src import intensities
 from src import phases as phases_mod
 from src.analytics.families import is_strength
 from src.scheduler import consecutive_allowances, recovery_window, window_reach_days
@@ -31,15 +32,7 @@ from src.selector import _equipment_ok, _injury_exclusions, _matches_slot_filter
 BUCKETS = ('zone1_2_pct', 'zone3_pct', 'zone4_5_pct', 'max_effort_pct')
 
 # Slot intensity words to a bucket, for slots whose load carries no zone band.
-_INTENSITY_BUCKET = {
-    'zone1': 'zone1_2_pct', 'zone2': 'zone1_2_pct', 'low': 'zone1_2_pct',
-    'light': 'zone1_2_pct', 'bodyweight': 'zone1_2_pct',
-    'zone3': 'zone3_pct', 'moderate': 'zone3_pct', 'medium': 'zone3_pct',
-    'submaximal': 'zone3_pct', 'progressing': 'zone3_pct',
-    'zone4': 'zone4_5_pct', 'zone4_5': 'zone4_5_pct', 'zone5': 'zone4_5_pct',
-    'high': 'zone4_5_pct',
-    'heavy': 'max_effort_pct', 'max': 'max_effort_pct', 'max_effort': 'max_effort_pct',
-}
+_INTENSITY_BUCKET = intensities.fidelity_buckets()   # data/commons/intensities.yaml
 _BUCKET_RANK = {b: i for i, b in enumerate(BUCKETS)}
 
 

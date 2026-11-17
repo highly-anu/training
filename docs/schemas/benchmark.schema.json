@@ -18,8 +18,8 @@
     },
     "category": {
       "type": "string",
-      "enum": ["strength", "conditioning", "kettlebell", "tactical", "benchmark_wod", "skill"],
-      "description": "How the standard is grouped for the athlete. Optional; derived from the domain when absent (strength modalities → strength, everything else → conditioning)."
+      "pattern": "^[a-z0-9_]+$",
+      "description": "How the standard is grouped for the athlete: a category of data/benchmarks/categories.yaml, or one the standard's package declares in its standards.yaml (tools/validate_entities.py checks it). Optional; derived from the domain when absent (strength modalities → strength, everything else → conditioning)."
     },
     "unit": {
       "type": "string",

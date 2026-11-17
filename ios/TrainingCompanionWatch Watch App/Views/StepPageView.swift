@@ -68,6 +68,8 @@ struct StepControlsView: View {
 
     @EnvironmentObject var sessionState: WorkoutSessionState
     @State private var showLogger = false
+    /// The round that has just begun, said where the lead-in counts.
+    @State private var turnWord: String?
 
     private var screen: WatchScreen { session.screen(for: exercise) }
 
@@ -85,6 +87,13 @@ struct StepControlsView: View {
                     .foregroundStyle(tint)
                     .frame(maxWidth: .infinity)
                     .contentTransition(.numericText(countsDown: true))
+            } else if let turnWord {
+                // An interval's new round, as its minute begins.
+                Text(turnWord)
+                    .font(.system(.title3, design: .rounded).weight(.semibold))
+                    .foregroundStyle(tint)
+                    .lineLimit(1).minimumScaleFactor(0.6)
+                    .frame(maxWidth: .infinity)
             }
             if !running {
                 if sessionState.countIn?.index != index {
@@ -116,6 +125,18 @@ struct StepControlsView: View {
                         .buttonStyle(.plain)
                         .foregroundStyle(.secondary)
                 }
+            }
+        }
+        .onChange(of: sessionState.isWorkingInterval(index) || sessionState.isRestingInterval(index)
+                  ? st.intervalRound : 0) { old, new in
+            // The same step, one round on: the minute turned.
+            guard old > 0, new > old else { return }
+            let word = exercise.alternateName == nil ? "Round \(new)"
+                : "\(new) · \(WatchSpecText.roundName(exercise, screen, st))"
+            turnWord = word
+            Task {
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                if turnWord == word { turnWord = nil }
             }
         }
         .sheet(isPresented: $showLogger) {

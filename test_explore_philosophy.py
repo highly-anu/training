@@ -352,5 +352,36 @@ class RouteTests(unittest.TestCase):
         self.assertIn(pid, {g['id'] for g in glances})
 
 
+class Advice(unittest.TestCase):
+    """A category's `advice` may be per level (framework schema; Ido's
+    versions). Sent raw it reached the web as an object, and React refused to
+    render it: Explore ▸ Ido Portal ▸ Sessions ▸ Floreio routine crashed."""
+
+    def test_one_text_or_each_levels(self):
+        self.assertEqual(ep.advice_fields('Repeat after a week away.'),
+                         {'advice': 'Repeat after a week away.', 'adviceByLevel': None})
+        self.assertEqual(ep.advice_fields({'intermediate': 'Then advanced.', 'novice': 'Then intermediate.'}),
+                         {'advice': None, 'adviceByLevel': [{'level': 'novice', 'text': 'Then intermediate.'},
+                                                            {'level': 'intermediate', 'text': 'Then advanced.'}]})
+        self.assertEqual(ep.advice_fields(None), {'advice': None, 'adviceByLevel': None})
+
+    def test_no_shipped_page_sends_an_object_as_text(self):
+        ids = [p['id'] for p in loader.load_philosophies()]
+        seen_by_level = False
+        for pid in ids:
+            doc = ep.describe(pid)
+            blocks = list(doc['groups'])
+            for t in doc['tracks']:
+                for ph in t['phases']:
+                    if ph['week']['kind'] == 'contract':
+                        blocks += ph['week']['modules']
+            for b in blocks:
+                self.assertTrue(b['advice'] is None or isinstance(b['advice'], str), (pid, b.get('id')))
+                for row in b.get('adviceByLevel') or []:
+                    self.assertIsInstance(row['text'], str, (pid, b.get('id')))
+                    seen_by_level = True
+        self.assertTrue(seen_by_level, "Ido's Floreio routines say their advice per level")
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=1)

@@ -64,3 +64,34 @@ function stepWindowsGoUpAsTheTimeline(logger as Test.Logger) as Lang.Boolean {
     }
     return true;
 }
+
+// An interval step's rounds go up beside its seconds, and a timed kettlebell
+// set's reps the athlete counted at the end as its one set beside its seconds:
+// Wildman's EMOM rounds and cadence (reps over seconds), which the watch kept
+// only as the step's window before.
+(:test)
+function intervalRoundsAndCountedRepsGoUp(logger as Test.Logger) as Lang.Boolean {
+    var swing = new WorkoutExercise({ "exerciseId" => "kb_swing", "name" => "Swing", "slotType" => "emom" }, {}, null);
+    var snatch = new WorkoutExercise({ "exerciseId" => "kb_snatch", "name" => "Snatch", "slotType" => "time_domain",
+                                       "logs" => ["minutes", "reps"] }, {}, null);
+    Test.assertMessage(snatch.asksReps() && !swing.asksReps(), "a step asks for reps only when its logs say so");
+    var outcomes = { "Swing" => { "rounds" => 10, "durationSec" => 600 }, "Snatch" => { "durationSec" => 360 } };
+    var logs = { "Snatch" => [ { "reps" => 84, "weightKg" => 16, "rpe" => null } ] };
+    var out = Wire.exercises(logs, outcomes, [swing, snatch]);
+    Test.assertEqualMessage(out["kb_swing"]["rounds"], 10, "an interval's rounds");
+    Test.assertEqualMessage(out["kb_swing"]["durationSec"], 600, "and its seconds");
+    Test.assertEqualMessage(out["kb_snatch"]["sets"][0]["repsActual"], 84, "the counted reps as its set");
+    Test.assertEqualMessage(out["kb_snatch"]["durationSec"], 360, "beside the block's seconds");
+    return true;
+}
+
+// The rounds of an interval left mid-work do not count the round in progress;
+// left in a rest, or as the last work ran out, they do.
+(:test)
+function intervalRoundsCountOnlyFinishedWork(logger as Test.Logger) as Lang.Boolean {
+    Test.assertEqualMessage(WorkoutController.intervalRoundsDone(4, true, 23), 3, "skipped mid-work");
+    Test.assertEqualMessage(WorkoutController.intervalRoundsDone(4, false, 10), 4, "skipped in a rest");
+    Test.assertEqualMessage(WorkoutController.intervalRoundsDone(10, true, 0), 10, "the last work ran out");
+    Test.assertEqualMessage(WorkoutController.intervalRoundsDone(1, true, 40), 0, "never below zero");
+    return true;
+}

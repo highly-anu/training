@@ -1,7 +1,7 @@
+import { ErrorBanner } from '@/components/shared/ErrorBanner'
 import { useMemo } from 'react'
-import { Loader2, Wand2 } from 'lucide-react'
+import { Wand2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { ValidationAlert } from '@/components/shared/ValidationAlert'
@@ -16,7 +16,7 @@ import { useFrameworks } from '@/api/frameworks'
 import { usePreviewStore } from '@/store/previewStore'
 import { builderGenerateParams } from '@/lib/builderParams'
 import { scheduleToConstraints, type ScheduleConstraints } from '@/lib/scheduleToConstraints'
-import { builderTrack, findTrack, mainFramework, mergedEntryRequirements, primaryTrack } from '@/lib/tracks'
+import { builderTrack, findTrack, implementCount, mainFramework, mergedEntryRequirements, primaryTrack, trackImplements } from '@/lib/tracks'
 
 export function ReviewGenerate() {
   const navigate = useNavigate()
@@ -102,7 +102,7 @@ export function ReviewGenerate() {
   const entryReady = !requirements || (
     requirements.training_levels.includes(constraints.training_level ?? 'intermediate') &&
     requiredSkills.every((id) => constraints.mastered_exercises?.includes(id)) &&
-    (requirements.kettlebell_count < 2 || (constraints.kettlebell_count ?? 0) >= 2)
+    trackImplements(requirements).every((imp) => implementCount(constraints, imp.countKey) >= imp.count)
   )
   const trackLabel = activeTrack?.name ?? 'Auto-select'
   const startPhaseName = activeTrack?.phases.find((p) => p.id === startPhaseId)?.name
@@ -313,20 +313,18 @@ export function ReviewGenerate() {
 
       {/* Post-generation validation feedback */}
       {data?.validation && <ValidationAlert validation={data.validation} />}
-      {error && (
-        <p className="text-sm text-destructive">{(error as Error).message}</p>
-      )}
+      {error && <ErrorBanner error={error} title="Could not build the preview" />}
 
       {/* Schedule adjustments/compromises */}
       {data?.compromises && data.compromises.length > 0 && (
-        <div className="rounded-lg border border-warning/40 bg-warning/10 p-4 space-y-2">
-          <h4 className="text-sm font-semibold text-warning-foreground">Schedule Adjustments</h4>
+        <div className="rounded-lg border border-warn/30 bg-warn/5 p-4 space-y-2">
+          <h4 className="text-sm font-semibold text-warn">Schedule Adjustments</h4>
           <ul className="text-xs text-muted-foreground space-y-1">
             {data.compromises.map((msg, i) => (
               <li key={i}>• {msg}</li>
             ))}
           </ul>
-          <p className="text-xs text-muted-foreground/80 pt-1 border-t border-warning/20">
+          <p className="text-xs text-muted-foreground/80 pt-1 border-t border-warn/20">
             Your program has been adapted to fit your availability. Consider adding more training days for the full program experience.
           </p>
         </div>
@@ -346,11 +344,33 @@ export function ReviewGenerate() {
               I can perform {requirements.exercise_names?.[id] ?? id.replaceAll('_', ' ')} with controlled technique.
             </label>
           ))}
-          {requirements.kettlebell_count >= 2 && <label className="flex items-center gap-2">
-            <input type="checkbox" checked={(constraints.kettlebell_count ?? 0) >= 2}
-              onChange={(event) => useBuilderStore.getState().updateConstraints({ kettlebell_count: event.target.checked ? 2 : 1 })} />
-            I have two matching kettlebells appropriate for these exercises.
-          </label>}
+          {trackImplements(requirements).map((imp) => (
+            <label key={imp.countKey} className="flex items-center gap-2">
+              <input type="checkbox" checked={implementCount(constraints, imp.countKey) >= imp.count}
+                onChange={(event) => useBuilderStore.getState().updateConstraints(
+                  { [imp.countKey]: event.target.checked ? imp.count : 1 } as Partial<typeof constraints>)} />
+              I have {imp.number} matching {imp.plural} appropriate for these exercises.
+            </label>
+          ))}
+          {(requirements.options ?? []).map((opt) => {
+            const chosen = constraints.contract_options?.[opt.id] ?? opt.default
+            return (
+              <fieldset key={opt.id} className="space-y-1 pt-1">
+                <legend className="text-muted-foreground">{opt.label}</legend>
+                {opt.choices.map((c) => (
+                  <label key={c.id} className="flex items-start gap-2">
+                    <input type="radio" name={`option-${opt.id}`} className="mt-1" checked={chosen === c.id}
+                      onChange={() => useBuilderStore.getState().updateConstraints({
+                        contract_options: { ...(constraints.contract_options ?? {}), [opt.id]: c.id } })} />
+                    <span>
+                      {c.label}{c.id === opt.default && <span className="text-muted-foreground"> (default)</span>}
+                      {c.description && <span className="block text-xs text-muted-foreground">{c.description}</span>}
+                    </span>
+                  </label>
+                ))}
+              </fieldset>
+            )
+          })}
           {(requirements.starting_loads?.length ?? 0) > 0 && (
             <div className="space-y-1.5 pt-1">
               <p className="text-muted-foreground">
@@ -382,29 +402,18 @@ export function ReviewGenerate() {
           )}
         </div>
       )}
-      <motion.div
-        animate={{ scale: isPending ? 0.98 : 1 }}
-        transition={{ duration: 0.2 }}
-      >
+      <div>
         <Button
           size="lg"
           className="w-full gap-2"
           onClick={handleGenerate}
-          disabled={isPending || !canGenerate || !entryReady || hasErrors === true || hasFeasibilityErrors}
+          loading={isPending}
+          disabled={!canGenerate || !entryReady || hasErrors === true || hasFeasibilityErrors}
         >
-          {isPending ? (
-            <>
-              <Loader2 className="size-4 animate-spin" />
-              Generating…
-            </>
-          ) : (
-            <>
-              <Wand2 className="size-4" />
-              Preview program
-            </>
-          )}
+          <Wand2 className="size-4" />
+          Preview program
         </Button>
-      </motion.div>
+      </div>
     </div>
   )
 }

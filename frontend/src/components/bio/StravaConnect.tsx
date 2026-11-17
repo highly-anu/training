@@ -1,4 +1,7 @@
-import { useEffect } from 'react'
+import { BRAND } from '@/lib/dataColors'
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
+import { Skeleton } from '@/components/ui/skeleton'
+import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { RefreshCw, LogOut, Zap } from 'lucide-react'
@@ -17,7 +20,7 @@ import { useCurrentProgram } from '@/api/programs'
 import { autoMatchWorkouts } from '@/lib/workoutMatcher'
 
 // Strava brand colour
-const STRAVA_ORANGE = '#FC4C02'
+const STRAVA_ORANGE = BRAND.strava
 
 export function StravaConnect() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -27,6 +30,7 @@ export function StravaConnect() {
   const authorize = useStravaAuthorize()
   const sync = useStravaSyncMutation()
   const disconnect = useStravaDisconnect()
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false)
 
   const addImportedWorkouts = useBioStore((s) => s.addImportedWorkouts)
   const addAutoMatch = useBioStore((s) => s.addAutoMatch)
@@ -103,21 +107,17 @@ export function StravaConnect() {
           <Button
             size="sm"
             onClick={() => authorize.mutate()}
-            disabled={authorize.isPending}
-            style={{ backgroundColor: STRAVA_ORANGE, color: '#fff' }}
+            loading={authorize.isPending}
+            style={{ backgroundColor: STRAVA_ORANGE, color: BRAND.onStrava }}
             className="shrink-0 hover:opacity-90 transition-opacity"
           >
-            {authorize.isPending ? (
-              <RefreshCw className="size-3.5 animate-spin mr-1.5" />
-            ) : (
-              <Zap className="size-3.5 mr-1.5" />
-            )}
+            <Zap className="size-3.5" />
             Connect
           </Button>
         </div>
 
         {stravaParam === 'error' && (
-          <p className="mt-2 text-xs text-red-700 dark:text-red-300">
+          <p className="mt-2 text-xs text-bad">
             Authorization failed: {searchParams.get('reason') ?? 'unknown error'}
           </p>
         )}
@@ -141,7 +141,7 @@ export function StravaConnect() {
                 <p className="text-sm font-medium">{status.athlete?.name ?? 'Strava'}</p>
                 <Badge
                   variant="outline"
-                  className="text-[10px] border-emerald-500/40 text-emerald-700 dark:text-emerald-300"
+                  className="text-[10px] border-done/40 text-done"
                 >
                   Connected
                 </Badge>
@@ -162,38 +162,43 @@ export function StravaConnect() {
 
         {/* Sync result feedback */}
         {sync.isSuccess && (
-          <p className="text-xs text-emerald-700 dark:text-emerald-300">
+          <p className="text-xs text-done">
             Synced {sync.data.count} activit{sync.data.count === 1 ? 'y' : 'ies'}.
           </p>
         )}
         {sync.isError && (
-          <p className="text-xs text-red-700 dark:text-red-300">{sync.error.message}</p>
+          <p className="text-xs text-bad">{sync.error.message}</p>
         )}
 
         <div className="flex gap-2">
           <Button
             size="sm"
             onClick={handleSync}
-            disabled={sync.isPending}
+            loading={sync.isPending}
             className="flex-1"
           >
-            {sync.isPending ? (
-              <RefreshCw className="size-3.5 animate-spin mr-1.5" />
-            ) : (
-              <RefreshCw className="size-3.5 mr-1.5" />
-            )}
-            {sync.isPending ? 'Syncing…' : 'Sync Now'}
+            <RefreshCw className="size-3.5" />
+            Sync now
           </Button>
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => disconnect.mutate()}
-            disabled={disconnect.isPending}
+            onClick={() => setConfirmDisconnect(true)}
+            loading={disconnect.isPending}
             className="text-muted-foreground hover:text-foreground"
           >
             <LogOut className="size-3.5 mr-1.5" />
             Disconnect
           </Button>
+          <ConfirmDialog
+            open={confirmDisconnect}
+            onOpenChange={setConfirmDisconnect}
+            title="Disconnect Strava?"
+            description="Sync stops and new activities no longer arrive from Strava. The workouts already imported stay in your log, with their links to sessions."
+            confirmLabel="Disconnect"
+            destructive
+            onConfirm={() => disconnect.mutate()}
+          />
         </div>
       </div>
     )
@@ -201,12 +206,13 @@ export function StravaConnect() {
 
   // Loading skeleton
   return (
-    <div className="rounded-xl border border-border bg-card p-4 animate-pulse">
+    <div role="status" aria-busy="true" className="rounded-xl border border-border bg-card p-4">
+      <span className="sr-only">Loading Strava</span>
       <div className="flex items-center gap-3">
-        <div className="size-8 rounded-full bg-muted" />
+        <Skeleton className="size-8 rounded-full" />
         <div className="space-y-1.5">
-          <div className="h-3 w-24 rounded bg-muted" />
-          <div className="h-2 w-40 rounded bg-muted" />
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="h-2 w-40" />
         </div>
       </div>
     </div>

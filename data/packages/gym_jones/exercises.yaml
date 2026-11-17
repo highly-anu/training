@@ -284,6 +284,7 @@ exercises:
     advanced: 80
     elite: 110
   weekly_increment_kg: 2.5
+  sessions_per_week: 2
 - id: deadlift
   name: Deadlift
   category: barbell
@@ -330,6 +331,7 @@ exercises:
     advanced: 150
     elite: 190
   weekly_increment_kg: 5.0
+  sessions_per_week: 1
 - id: romanian_deadlift
   name: Romanian Deadlift
   category: barbell
@@ -371,6 +373,7 @@ exercises:
     elite: 140
   weekly_increment_kg: 2.5
 - id: bench_press
+  sessions_per_week: 2
   name: Bench Press
   category: barbell
   modality:
@@ -486,6 +489,7 @@ exercises:
     advanced: 85
     elite: 110
   weekly_increment_kg: 2.5
+  sessions_per_week: 2
 - id: barbell_complex
   name: Barbell Complex (Six-Way)
   category: barbell

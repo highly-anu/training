@@ -17,11 +17,19 @@ struct AnalyticsRecoveryTab: View {
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 16) {
-                readinessCard
-                sleepCard
-                trendCard(.hrv, header: "HRV")
-                trendCard(.restingHR, header: "Resting Heart Rate")
-                checkInHistoryCard
+                AppScrollFade {
+                    if let error = appState.readinessError {
+                        AppErrorBanner(message: "Readiness could not be read: \(error)") {
+                            await appState.loadRecentBioLogs()
+                            await appState.loadReadiness()
+                        }
+                    }
+                    readinessCard
+                    sleepCard
+                    trendCard(.hrv, header: "HRV")
+                    trendCard(.restingHR, header: "Resting Heart Rate")
+                    checkInHistoryCard
+                }
             }
             .padding(.horizontal)
             .padding(.vertical, 12)
@@ -78,10 +86,11 @@ struct AnalyticsRecoveryTab: View {
                 ReadinessDetailView(result: result, latest: logs.first)
             } content: {
                 VStack(alignment: .leading, spacing: 10) {
-                    HStack(alignment: .center, spacing: 16) {
+                    AppAdaptiveStack(alignment: .center, spacing: 16) {
                         Text("\(result.score)")
                             .font(.largeTitle).fontWeight(.bold).fontDesign(.rounded).monospacedDigit()
                             .foregroundStyle(result.statusColor)
+                            .appNumeric(value: result.score)
                             .accessibilityLabel("Readiness \(result.score), \(result.statusLabel)")
                         if let latest = logs.first {
                             VStack(alignment: .leading, spacing: 6) {
@@ -96,8 +105,8 @@ struct AnalyticsRecoveryTab: View {
                                 }
                             }
                         }
-                        Spacer(minLength: 0)
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     ReadinessFlagChips(flags: result.flags)
                 }
             }
@@ -146,10 +155,10 @@ struct AnalyticsRecoveryTab: View {
                             Label(String(format: "%.1fh", debt.hours), systemImage: "moon.zzz")
                                 .font(.subheadline).fontWeight(.semibold).monospacedDigit()
                                 .foregroundStyle(debt.color)
-                            Text("\(debt.nights) nights").font(.caption).foregroundStyle(.secondary)
+                            Text("\(debt.nights) nights · \(debt.word)").font(.caption).foregroundStyle(.secondary)
                         }
                         .accessibilityElement(children: .ignore)
-                        .accessibilityLabel(String(format: "%.1f hours of sleep debt over %d nights", debt.hours, debt.nights))
+                        .accessibilityLabel(String(format: "%.1f hours of sleep debt over %d nights, %@", debt.hours, debt.nights, debt.word))
                     }
                 }
             }
@@ -194,7 +203,7 @@ struct AnalyticsRecoveryTab: View {
     // MARK: - Check-ins
 
     private var checkInHistoryCard: some View {
-        AnalyticsCard(header: "Check-in History") {
+        AppCard(header: "Check-in History") {
             VStack(spacing: 0) {
                 if logs.isEmpty {
                     VStack(spacing: 12) {

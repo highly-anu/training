@@ -10,6 +10,9 @@ struct SessionCompleteView: View {
     @EnvironmentObject var workoutManager: WorkoutManager
 
     @State private var entering: EntryTarget? = nil
+    @State private var counting: EntryTarget? = nil
+    /// The count steps whose reps were entered here.
+    @State private var counted: Set<String> = []
 
     private struct EntryTarget: Identifiable {
         let exercise: WatchExercise
@@ -18,6 +21,14 @@ struct SessionCompleteView: View {
 
     /// The session's scored test steps; empty on any other day.
     private var testSteps: [WatchExercise] { session.exercises.filter { $0.standard != nil } }
+
+    /// The steps whose reps the athlete counts (a step's `logs`: a timed
+    /// kettlebell set's cadence), asked here as the Garmin's Results menu asks.
+    private var countSteps: [WatchExercise] { session.exercises.filter(\.asksReps) }
+
+    private func count(_ ex: WatchExercise) -> Int? {
+        counted.contains(ex.exerciseId) ? sessionState.setLogs[ex.exerciseId]?.first?.repsActual : nil
+    }
 
     private func value(_ ex: WatchExercise) -> Double? {
         WatchResults.value(ex, sets: sessionState.setLogs[ex.exerciseId] ?? [],
@@ -46,6 +57,7 @@ struct SessionCompleteView: View {
                 }
 
                 if !testSteps.isEmpty { resultsSection }
+                if !countSteps.isEmpty { countsSection }
 
                 if testSteps.isEmpty {
                     Button("Save Workout") { save(decision: nil) }
@@ -73,6 +85,12 @@ struct SessionCompleteView: View {
                 sessionState.setResult(target.exercise, value: v)
             }
         }
+        .sheet(item: $counting) { target in
+            ResultEntryView(exercise: target.exercise, initial: Double(count(target.exercise) ?? 0)) { v in
+                sessionState.setCount(target.exercise, reps: Int(v.rounded()))
+                counted.insert(target.exercise.exerciseId)
+            }
+        }
     }
 
     /// The answer goes into the summary `onSave` builds and sends, once.
@@ -94,6 +112,25 @@ struct SessionCompleteView: View {
                         Text(value(ex).map { WatchResults.text(ex, value: $0) } ?? "Enter")
                             .font(.caption.monospacedDigit().bold())
                             .foregroundStyle(value(ex) == nil ? .yellow : .primary)
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    /// Each step whose reps the athlete counted; tap one to enter them.
+    private var countsSection: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Reps").font(.caption2).foregroundStyle(.secondary)
+            ForEach(countSteps, id: \.exerciseId) { ex in
+                Button { counting = EntryTarget(exercise: ex) } label: {
+                    HStack {
+                        Text(ex.name).font(.caption).lineLimit(1)
+                        Spacer()
+                        Text(count(ex).map { "\($0) rep\($0 == 1 ? "" : "s")" } ?? "Enter")
+                            .font(.caption.monospacedDigit().bold())
+                            .foregroundStyle(count(ex) == nil ? .yellow : .primary)
                     }
                 }
                 .buttonStyle(.plain)

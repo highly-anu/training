@@ -7,6 +7,7 @@ import type { HeatmapGraphData, LayerKind, ExerciseInGroup } from './useHeatmapD
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import type { ModalityId } from '@/api/types'
 import { motion } from 'framer-motion'
+import { crossfade } from '@/lib/motion'
 
 // ─── Layout constants ────────────────────────────────────────────────────────
 
@@ -357,7 +358,7 @@ export function HeatmapGraph({
               stroke={color}
               initial={false}
               animate={{ strokeOpacity: opacity, strokeWidth: 0.5 + item.heat * 1.5 }}
-              transition={{ duration: 0.2 }}
+              transition={crossfade}
             />
           )
         })}

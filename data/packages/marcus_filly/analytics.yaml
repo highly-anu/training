@@ -3,6 +3,10 @@
 # more), and the load at the target RPE where the day writes one.
 id: marcus_filly
 
+# The elite's mark: the back squat to bodyweight, estimated from the program's
+# own back squat, at its ladder's elite rung (I8; docs/logic/levels.md).
+elite_standards: [back_squat_bw_ratio]
+
 progress:
   - id: working_load
     label: Working load

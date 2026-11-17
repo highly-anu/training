@@ -1,8 +1,13 @@
+import { useScrollRestore } from '@/lib/useScrollRestore'
+import { ROUTE } from '@/lib/dataColors'
+import { EmptyState } from '@/components/shared/EmptyState'
+import { LoadingState, FailedState } from '@/components/shared/states'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useMemo, useState, lazy, Suspense } from 'react'
 import { parseSessionKey } from '@/lib/sessionKeys'
 import { formatActivityType } from '@/lib/activityType'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { Page } from '@/components/layout/Page'
 import {
   ChevronLeft,
   Clock,
@@ -49,15 +54,15 @@ const Swiss3DMap = lazy(() =>
 )
 
 const SEVERITY_STYLES = {
-  positive: { icon: CheckCircle2, color: 'text-emerald-700 dark:text-emerald-300' },
+  positive: { icon: CheckCircle2, color: 'text-good' },
   neutral: { icon: Info, color: 'text-muted-foreground' },
-  warning: { icon: AlertTriangle, color: 'text-amber-700 dark:text-amber-300' },
+  warning: { icon: AlertTriangle, color: 'text-warn' },
 } as const
 
 const SCORE_RING = {
-  green: 'ring-emerald-500/40 text-emerald-700 dark:text-emerald-300',
-  yellow: 'ring-amber-500/40 text-amber-700 dark:text-amber-300',
-  red: 'ring-red-500/40 text-red-700 dark:text-red-300',
+  green: 'ring-good/40 text-good',
+  yellow: 'ring-warn/40 text-warn',
+  red: 'ring-bad/40 text-bad',
 } as const
 
 function InsightRow({ item }: { item: InsightItem }) {
@@ -74,13 +79,13 @@ function InsightRow({ item }: { item: InsightItem }) {
           <div className="mt-1.5 space-y-1">
             <div className="flex items-center justify-between text-[10px] text-muted-foreground">
               <span>Target: {item.metric!.prescribed}</span>
-              <span className={item.severity === 'positive' ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'}>
+              <span className={item.severity === 'positive' ? 'text-good' : 'text-warn'}>
                 {item.metric!.actual} achieved
               </span>
             </div>
             <div className="h-1.5 rounded-full bg-muted overflow-hidden">
               <div
-                className={`h-full rounded-full transition-all ${item.severity === 'positive' ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                className={`h-full rounded-full transition-all ${item.severity === 'positive' ? 'bg-good' : 'bg-warn'}`}
                 style={{ width: `${zoneActualPct}%` }}
               />
             </div>
@@ -148,6 +153,7 @@ function formatPace(dist: { value: number; unit: 'km' | 'm' }, durationMinutes: 
 }
 
 export function WorkoutDetail() {
+  const scroller = useScrollRestore()
   const { workoutId: rawWorkoutId } = useParams<{ workoutId: string }>()
   const workoutId = rawWorkoutId ? decodeURIComponent(rawWorkoutId) : undefined
   const navigate = useNavigate()
@@ -163,7 +169,7 @@ export function WorkoutDetail() {
   // Always fetch full workout from API — snapshot workouts omit gpsTrack and hr_samples
   // to keep the snapshot response small. State workout (from navigation) may also lack
   // these fields if it came from the list. Fetch unconditionally when workoutId is known.
-  const { data: fetchedWorkout, isLoading: fetchLoading } = useWorkoutDetail(workoutId)
+  const { data: fetchedWorkout, isLoading: fetchLoading, error: fetchError, refetch } = useWorkoutDetail(workoutId)
 
   // fetchedWorkout takes priority so GPS/HR samples are always present
   const workout = fetchedWorkout ?? stateWorkout ?? localWorkout ?? undefined
@@ -259,11 +265,8 @@ export function WorkoutDetail() {
 
   if (!workout) {
     return (
-      <motion.div
+      <Page
         key="workout-not-found"
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-        exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
         className="flex h-full flex-col"
       >
         <div className="border-b bg-card/50 px-6 py-3">
@@ -274,16 +277,20 @@ export function WorkoutDetail() {
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-2xl mx-auto w-full px-6 py-6">
             {fetchLoading ? (
-              <div className="flex items-center gap-2">
-                <div className="size-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                <p className="text-sm text-muted-foreground">Loading workout…</p>
-              </div>
+              <LoadingState shape="cards" label="Loading the workout" />
+            ) : fetchError ? (
+              // Not the same as a workout that is not there: this one may be, and can be asked for again.
+              <FailedState title="Could not load this workout" error={fetchError} onRetry={() => { void refetch() }} />
             ) : (
-              <p className="text-sm text-muted-foreground">Workout not found.</p>
+              <EmptyState
+                title="Workout not found"
+                description="It may have been removed, or merged into another recording of the same activity."
+                action={{ label: 'Back to Log', onClick: () => navigate('/log') }}
+              />
             )}
           </div>
         </div>
-      </motion.div>
+      </Page>
     )
   }
 
@@ -322,11 +329,8 @@ export function WorkoutDetail() {
   )
 
   return (
-    <motion.div
+    <Page
       key="workout-detail"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-      exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
       className="flex h-full flex-col"
     >
       {/* Sticky nav bar */}
@@ -337,7 +341,7 @@ export function WorkoutDetail() {
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto">
+      <div ref={scroller} className="flex-1 overflow-y-auto">
         <div className="max-w-2xl mx-auto w-full px-6 py-6 space-y-6">
 
       {/* Header */}
@@ -358,7 +362,7 @@ export function WorkoutDetail() {
           {match && match.matchConfidence !== 'rejected' && (
             <Badge
               variant="outline"
-              className="text-xs border-emerald-500/40 text-emerald-700 dark:text-emerald-300"
+              className="text-xs border-done/40 text-done"
             >
               matched &rarr; {match.sessionKey}
             </Badge>
@@ -403,11 +407,7 @@ export function WorkoutDetail() {
             )}
           </div>
           <Suspense
-            fallback={
-              <div className="flex items-center justify-center h-[360px] rounded-lg border border-border bg-muted/20">
-                <div className="size-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-              </div>
-            }
+            fallback={<Skeleton className="h-[360px] w-full rounded-lg" />}
           >
             {isSwiss && mapMode === '3d' ? (
               <Swiss3DMap track={workout.gpsTrack!} />
@@ -416,8 +416,8 @@ export function WorkoutDetail() {
             )}
           </Suspense>
           <div className="flex gap-4 text-[10px] text-muted-foreground">
-            <span><span className="inline-block w-3 h-0.5 rounded bg-[#22c55e] align-middle mr-1" />Start</span>
-            <span><span className="inline-block w-3 h-0.5 rounded bg-[#ef4444] align-middle mr-1" />End</span>
+            <span><span className="inline-block w-3 h-0.5 rounded align-middle mr-1" style={{ backgroundColor: ROUTE.start }} />Start</span>
+            <span><span className="inline-block w-3 h-0.5 rounded align-middle mr-1" style={{ backgroundColor: ROUTE.end }} />End</span>
             <span className="ml-auto">
               {isSwiss && mapMode === '3d' ? '3D terrain · © OpenStreetMap' : 'Track colored by HR zone'}
             </span>
@@ -619,15 +619,15 @@ export function WorkoutDetail() {
             </h2>
             <div className="flex items-center gap-3">
               <span className={`text-sm font-semibold ${
-                decoupling.color === 'green' ? 'text-emerald-700 dark:text-emerald-300' :
-                decoupling.color === 'amber' ? 'text-amber-700 dark:text-amber-300' : 'text-red-700 dark:text-red-300'
+                decoupling.color === 'green' ? 'text-good' :
+                decoupling.color === 'amber' ? 'text-warn' : 'text-bad'
               }`}>
                 {decoupling.pct.toFixed(1)}% Pa:HR drift
               </span>
               <Badge variant="outline" className={`text-xs ${
-                decoupling.color === 'green' ? 'border-emerald-500/40 text-emerald-700 dark:text-emerald-300' :
-                decoupling.color === 'amber' ? 'border-amber-500/40 text-amber-700 dark:text-amber-300' :
-                'border-red-500/40 text-red-700 dark:text-red-300'
+                decoupling.color === 'green' ? 'border-good/40 text-good' :
+                decoupling.color === 'amber' ? 'border-warn/40 text-warn' :
+                'border-bad/40 text-bad'
               }`}>
                 {decoupling.label === 'efficient' ? 'Efficient' :
                  decoupling.label === 'moderate' ? 'Moderate Drift' : 'High Drift'}
@@ -677,6 +677,6 @@ export function WorkoutDetail() {
 
         </div>{/* max-w-2xl */}
       </div>{/* overflow-y-auto */}
-    </motion.div>
+    </Page>
   )
 }

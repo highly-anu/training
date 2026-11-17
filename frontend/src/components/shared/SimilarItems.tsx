@@ -1,5 +1,8 @@
+import { FALLBACK_HEX } from '@/lib/dataColors'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useSimilarity, getTopSimilar } from '@/api/similarity'
 import { Columns3 } from 'lucide-react'
+import { Tip } from '@/components/shared/Tip'
 import { cn } from '@/lib/utils'
 
 interface SimilarItemsProps {
@@ -15,7 +18,7 @@ interface SimilarItemsProps {
 function ScoreBar({ value, hex }: { value: number; hex?: string }) {
   return (
     <div className="relative h-1 w-12 rounded-full bg-muted/30 overflow-hidden shrink-0">
-      <div className="absolute h-full rounded-full" style={{ width: `${value * 100}%`, backgroundColor: hex ?? '#6366f1', opacity: 0.7 }} />
+      <div className="absolute h-full rounded-full" style={{ width: `${value * 100}%`, backgroundColor: hex ?? FALLBACK_HEX, opacity: 0.7 }} />
     </div>
   )
 }
@@ -27,7 +30,7 @@ export function SimilarItems({ category, id, getLabel, onSelect, onCompare, coun
     <div className="space-y-1.5">
       <p className="text-[9px] uppercase tracking-wider text-muted-foreground/40 font-medium">Similar</p>
       {[...Array(3)].map((_, i) => (
-        <div key={i} className="h-7 rounded bg-muted/20 animate-pulse" />
+        <Skeleton key={i} className="h-7 rounded" />
       ))}
     </div>
   )
@@ -63,11 +66,13 @@ export function SimilarItems({ category, id, getLabel, onSelect, onCompare, coun
           <p className="text-[9px] text-muted-foreground/40 mt-0.5 truncate">{item.primary.detail}</p>
         </button>
         {onCompare && (
-          <button type="button" onClick={() => onCompare(item.id)} title={`Compare with ${getLabel(item.id)}`}
-            aria-label={`Compare with ${getLabel(item.id)}`}
-            className="shrink-0 rounded-md border border-border/30 bg-card/30 px-2 text-muted-foreground transition-colors hover:border-primary/30 hover:bg-muted/20 hover:text-foreground">
-            <Columns3 className="size-3.5" />
-          </button>
+          <Tip label={`Compare with ${getLabel(item.id)}`}>
+            <button type="button" onClick={() => onCompare(item.id)}
+              aria-label={`Compare with ${getLabel(item.id)}`}
+              className="shrink-0 rounded-md border border-border/30 bg-card/30 px-2 text-muted-foreground transition-colors hover:border-primary/30 hover:bg-muted/20 hover:text-foreground">
+              <Columns3 className="size-3.5" />
+            </button>
+          </Tip>
         )}
         </div>
       ))}

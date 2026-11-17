@@ -53,6 +53,10 @@ tracks:
       five, four at six, five at seven — and StrengthLog's strength program
       beside them: one of its two workouts a week up to four days, both from
       five, never more than the mat (training_contract.yaml).
+    # The S&C is written for the elite: the levels below do the commons'
+    # shares of its sets, holds and minutes; the classes are a class at every
+    # level (I9).
+    authored_level: elite
     phases:
       - id: mat_support
         name: "Mat-Time Support"

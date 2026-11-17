@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from './client'
+import { toast } from '@/lib/toast'
 import type { ImportedWorkout } from './types'
 
 export interface StravaAthlete {
@@ -59,5 +60,7 @@ export function useStravaDisconnect() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['oauth', 'strava', 'status'] })
     },
+    // The dialog that asked is closed by now.
+    onError: () => toast.failed('Could not disconnect Strava. It is still connected.'),
   })
 }

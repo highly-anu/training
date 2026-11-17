@@ -584,7 +584,10 @@ def _select_cadence(framework_id: str, days: int, phase: str, week_in_phase: int
     the same patterns in its own file.
     """
     del framework_id  # kept for call-site compatibility; the framework dict is the source
-    options = ((framework or {}).get('cadence_options') or {}).get(days)
+    # YAML reads `4:` as an integer and `"4":` as text; both are the four-day week.
+    # Only the integer was looked up, so a quoted key passed the schema and was ignored.
+    by_days = (framework or {}).get('cadence_options') or {}
+    options = by_days.get(days) or by_days.get(str(days))
     if not options:
         return _DEFAULT_SPREAD.get(days, list(range(1, days + 1)))
     if phases.kind_flag(phase, 'spread_cadence'):

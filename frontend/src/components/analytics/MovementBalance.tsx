@@ -37,7 +37,7 @@ export function MovementBalance({ movement }: { movement: AnalyticsMovement }) {
       {movement.balance.length > 0 && (
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
           {movement.balance.map((b) => (
-            <span key={`${b.a}:${b.b}`} className={cn('text-muted-foreground', b.level === 'warning' && 'text-amber-800 dark:text-amber-300 font-medium')}>
+            <span key={`${b.a}:${b.b}`} className={cn('text-muted-foreground', b.level === 'warning' && 'text-warn font-medium')}>
               {b.a}:{b.b} {b.ratio ?? '—'}{b.level === 'warning' ? ` (outside ${b.min}–${b.max})` : ''}
             </span>
           ))}

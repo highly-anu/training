@@ -3,9 +3,12 @@ name: Triples
 modality: mixed_modal_conditioning
 category: conditioning
 training_levels:
+- novice
 - intermediate
 - advanced
 - elite
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 35
 slots:
@@ -31,6 +34,7 @@ slots:
     - weighted_pull_up
     ordered: true
   load: 14 kg (30 lb) med ball between the legs
+  load_kg: 14
 - role: rope_pull_ups
   slot_type: sets_reps
   sets: 3
@@ -40,6 +44,7 @@ slots:
     - rope_pull_up
     ordered: true
   load: 7 kg (15 lb) med ball between the legs
+  load_kg: 7
 - role: cable_crawl
   slot_type: sets_reps
   sets: 3
@@ -78,6 +83,7 @@ slots:
     - squat_jump
     ordered: true
   load: 11 kg (25 lb)
+  load_kg: 11
 - role: one_leg_squats
   slot_type: sets_reps
   sets: 3
@@ -95,6 +101,7 @@ slots:
     - hack_squat
     ordered: true
   load: 41 kg (90 lb)
+  load_kg: 41
   notes: One leg.
 - role: lateral_hops
   slot_type: sets_reps
@@ -113,6 +120,7 @@ slots:
     - deadlift
     ordered: true
   load: 84 kg (185 lb)
+  load_kg: 84
   notes: >-
     3 rounds, in order: 5 deadlifts, 5 hang cleans, 5 push presses, 5 front squats, 5 bent-over rows —
     not for time.
@@ -125,6 +133,7 @@ slots:
     - hang_power_clean
     ordered: true
   load: 84 kg (185 lb)
+  load_kg: 84
 - role: push_press
   slot_type: sets_reps
   sets: 3
@@ -134,6 +143,7 @@ slots:
     - push_press
     ordered: true
   load: 70 kg (155 lb)
+  load_kg: 70
 - role: front_squats
   slot_type: sets_reps
   sets: 3
@@ -143,6 +153,7 @@ slots:
     - front_squat
     ordered: true
   load: 84 kg (185 lb)
+  load_kg: 84
 - role: bent_over_rows
   slot_type: sets_reps
   sets: 3
@@ -152,6 +163,7 @@ slots:
     - barbell_row
     ordered: true
   load: 70 kg (155 lb)
+  load_kg: 70
 required_equipment:
 - barbell
 - rack

@@ -2,7 +2,9 @@ id: hm_death_to_infidels
 name: "Death to Infidels"
 modality: mixed_modal_conditioning
 category: conditioning
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 duration_estimate_minutes: 40
 pool_only: true
 
@@ -33,6 +35,7 @@ slots:
     sets: 5
     reps: 15
     load: "52 kg (115 lb)"
+    load_kg: 52
     exercise_filter:
       exercise_ids: [power_clean]
       ordered: true

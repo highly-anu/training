@@ -1,5 +1,6 @@
+import { useScrollRestore } from '@/lib/useScrollRestore'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { Page } from '@/components/layout/Page'
 import { ChevronLeft, Wand2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SessionPanel } from '@/components/session/SessionPanel'
@@ -7,6 +8,7 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { useCurrentProgram } from '@/api/programs'
 
 export function SessionDetail() {
+  const scroller = useScrollRestore()
   const { week, day } = useParams<{ week: string; day: string }>()
   const navigate = useNavigate()
   const program = useCurrentProgram()
@@ -20,11 +22,8 @@ export function SessionDetail() {
 
   if (!program) {
     return (
-      <motion.div
+      <Page
         key="session-empty"
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-        exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
         className="p-6"
       >
         <EmptyState
@@ -33,7 +32,7 @@ export function SessionDetail() {
           action={{ label: 'Build a Program', onClick: () => navigate('/program/new') }}
           icon={<Wand2 className="size-10" />}
         />
-      </motion.div>
+      </Page>
     )
   }
 
@@ -44,11 +43,8 @@ export function SessionDetail() {
 
   if (!weekData || sessions.length === 0) {
     return (
-      <motion.div
+      <Page
         key="session-not-found"
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-        exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
         className="p-6"
       >
         <Button variant="ghost" size="sm" asChild className="mb-4 -ml-2">
@@ -58,16 +54,13 @@ export function SessionDetail() {
           title="Rest day"
           description={`Week ${weekNumber} — ${day} is a rest day.`}
         />
-      </motion.div>
+      </Page>
     )
   }
 
   return (
-    <motion.div
+    <Page
       key={`session-${week}-${day}`}
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-      exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
       className="flex h-full flex-col"
     >
       {/* Back nav */}
@@ -77,9 +70,9 @@ export function SessionDetail() {
         </Button>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div ref={scroller} className="flex-1 overflow-y-auto">
         <SessionPanel program={program} weekData={weekData} weekIndex={weekIdx} day={day ?? ''} />
       </div>
-    </motion.div>
+    </Page>
   )
 }

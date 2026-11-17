@@ -3,6 +3,8 @@ import { useOntology } from '@/api/ontology'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
 import type { TracedProgram, WeekTrace, SessionTrace, ModalityId } from '@/api/types'
+import { ContractWeek, TemplateWeek, WeekTests } from './EngineWeek'
+import { ENGINE_LABEL, engineOf, placedBy, words } from './engine'
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -14,6 +16,7 @@ interface Props {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
@@ -119,8 +122,8 @@ export function PipelineFlowPanel({ program, weeks }: Props) {
   const weekTrace = weeks[weekIdx]
   if (!weekTrace) return <Placeholder text="No week trace available." />
 
-  // Collect days that have sessions
-  const assignedDays = Object.keys(weekTrace.sessions).sort()
+  // The days that have sessions, in the week's order (they were sorted by name: Friday first).
+  const assignedDays = Object.keys(weekTrace.sessions).sort((a, b) => WEEKDAYS.indexOf(a) - WEEKDAYS.indexOf(b))
 
   // Auto-select first day if none selected
   const activeDay = selectedDay && assignedDays.includes(selectedDay)
@@ -135,10 +138,20 @@ export function PipelineFlowPanel({ program, weeks }: Props) {
     .filter(([, v]) => v > 0)
     .sort(([, a], [, b]) => b - a)
 
-  const fw = weekTrace.scheduler.framework_selection
-  const allocation = weekTrace.scheduler.allocation
-  const dayAssignment = weekTrace.scheduler.day_assignment
+  // What built the week decides what the flow shows between the framework
+  // and the session: the scheduler's allocation and day assignment, or what a
+  // contract or a week template decided. In a composition the session's own
+  // track (its `lane_key`) is the one read.
+  const engine = engineOf(weekTrace)
+  const laneWeek = engine === 'composition' && session?.lane_key ? weekTrace.lane_weeks?.[session.lane_key] : undefined
+  const sessionEngine = engine === 'composition' ? (laneWeek?.engine ?? 'scheduler') : engine
+  const scheduler = engine === 'composition' ? (laneWeek?.scheduler ?? weekTrace.scheduler) : weekTrace.scheduler
+  const weekTests = engine === 'composition' ? laneWeek?.tests : weekTrace.tests
+  const fw = scheduler.framework_selection
+  const allocation = scheduler.allocation
+  const dayAssignment = scheduler.day_assignment
   const frameworkDef = ontology?.frameworks.find(f => f.id === fw.selected_id)
+  const track = (goal as { track?: { id?: string; name?: string } }).track
 
   return (
     <div className="space-y-1 max-w-2xl">
@@ -205,11 +218,23 @@ export function PipelineFlowPanel({ program, weeks }: Props) {
       {/* ① Philosophy / Goal */}
       <Block
         color="border-l-violet-500"
-        label="① PHILOSOPHY → GOAL"
-        reads={['philosophy selection', 'athlete constraints']}
-        outputs={['priority weights', 'phase sequence', 'primary_sources (package filter)']}
+        label="① PHILOSOPHY → TRACK → GOAL"
+        reads={['philosophy and track', 'athlete constraints']}
+        outputs={['phase sequence', 'priority weights (the scheduler reads them)', 'primary_sources (package filter)']}
       >
         <div className="font-mono text-[10px] font-medium text-foreground/80">{goal.name}</div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="px-1.5 py-0.5 rounded bg-primary/10 text-[10px] font-mono text-primary/80">{ENGINE_LABEL[engine]}</span>
+          {track?.name && <span className="text-[10px] text-muted-foreground">track: {track.name}</span>}
+          <span className="text-[10px] text-muted-foreground">phase: {weekTrace.phase}, week {weekTrace.week_in_phase}</span>
+          {session?.lane_key && <span className="text-[10px] font-mono text-muted-foreground">{session.lane_key}</span>}
+        </div>
+        {engine !== 'scheduler' && (
+          <p className="text-[10px] text-muted-foreground leading-relaxed">
+            The priorities below come from the framework's sessions a week. Only the modality scheduler places by
+            them: this week was {engine === 'composition' ? 'composed of several tracks' : 'placed'} another way.
+          </p>
+        )}
         {goal.description && (
           <p className="text-[10px] text-muted-foreground leading-relaxed">
             {goal.description.slice(0, 120)}{goal.description.length > 120 ? '…' : ''}
@@ -236,14 +261,14 @@ export function PipelineFlowPanel({ program, weeks }: Props) {
         )}
       </Block>
 
-      <Connector label="priority weights → framework selection" />
+      <Connector label="the week's phase names its framework" />
 
       {/* ② Framework */}
       <Block
         color="border-l-blue-500"
-        label="② FRAMEWORK SELECTION"
-        reads={['goal.framework_selection', 'days_per_week constraint']}
-        outputs={['sessions_per_week template']}
+        label="② THE PHASE'S FRAMEWORK"
+        reads={['the track\'s phase (framework_id)']}
+        outputs={['how this week is built']}
       >
         {fw ? (
           <div className="space-y-1.5">
@@ -260,7 +285,7 @@ export function PipelineFlowPanel({ program, weeks }: Props) {
                 <Mono>{frameworkDef.source_philosophy}</Mono>
               </div>
             )}
-            {frameworkDef?.sessions_per_week && (
+            {sessionEngine === 'scheduler' && frameworkDef?.sessions_per_week && (
               <div className="flex flex-wrap gap-1 mt-0.5">
                 <Label>sessions/wk:</Label>
                 {Object.entries(frameworkDef.sessions_per_week).map(([mod, cnt]) => {
@@ -291,144 +316,192 @@ export function PipelineFlowPanel({ program, weeks }: Props) {
         )}
       </Block>
 
-      <Connector label="sessions_per_week → allocation math" />
+      {sessionEngine === 'scheduler' ? (
+        <>
+        <Connector label="sessions_per_week → allocation math" />
 
-      {/* ③ Allocation */}
-      <Block
-        color="border-l-indigo-500"
-        label="③ ALLOCATION"
-        reads={['phase priorities', 'framework.sessions_per_week']}
-        outputs={['session counts per modality']}
-      >
-        {allocation ? (
-          <div className="space-y-1.5">
-            <div className="flex gap-2 items-center">
-              <Label>phase:</Label>
-              <Mono>{weekTrace.phase}</Mono>
-              {weekTrace.is_deload && (
-                <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-[10px] text-amber-700 dark:text-amber-300">deload</span>
-              )}
-            </div>
-            <div className="overflow-x-auto">
-              <table className="text-[10px] font-mono w-full">
-                <thead>
-                  <tr className="text-muted-foreground/60">
-                    <th className="text-left pr-4 font-normal">modality</th>
-                    <th className="text-right pr-4 font-normal">priority</th>
-                    <th className="text-right pr-4 font-normal">raw</th>
-                    <th className="text-right font-normal">final</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.entries(allocation.final)
-                    .filter(([, v]) => v > 0)
-                    .sort(([, a], [, b]) => b - a)
-                    .map(([mod, final]) => {
-                      const col = MODALITY_COLORS[mod as ModalityId]
-                      return (
-                        <tr key={mod}>
-                          <td className={`pr-4 ${col?.text ?? 'text-foreground'}`}>{mod.replace(/_/g, ' ')}</td>
-                          <td className="text-right pr-4 text-muted-foreground">
-                            {((allocation.phase_priorities[mod] ?? 0) * 100).toFixed(0)}%
-                          </td>
-                          <td className="text-right pr-4 text-muted-foreground">
-                            {(allocation.raw[mod] ?? 0).toFixed(2)}
-                          </td>
-                          <td className="text-right text-foreground/80">{final}</td>
-                        </tr>
-                      )
-                    })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        ) : (
-          <Placeholder text="No allocation trace." />
-        )}
-      </Block>
-
-      <Connector label="session counts → day assignment" />
-
-      {/* ④ Day Assignment */}
-      <Block
-        color="border-l-teal-500"
-        label="④ DAY ASSIGNMENT"
-        reads={['modality.recovery_cost', 'modality.incompatible_in_session_with', 'cadence pattern']}
-        outputs={['modality → day mapping']}
-      >
-        {dayAssignment ? (
-          <div className="space-y-2">
-            {/* Mini 7-day grid */}
-            <div className="grid grid-cols-7 gap-1">
-              {DAY_NAMES.map(name => {
-                // The trace keys assignments 'Mon'..'Sun' and sessions by the full day name.
-                const dayMods = dayAssignment.assignments[name] ?? []
-                const isActive = !!activeDay && activeDay.startsWith(name)
-                return (
-                  <div
-                    key={name}
-                    className={`rounded border text-center p-1 ${isActive ? 'border-primary/60 bg-primary/10' : 'border-border/40 bg-muted/20'}`}
-                  >
-                    <div className="text-[9px] text-muted-foreground mb-0.5">{name}</div>
-                    {dayMods.length === 0 ? (
-                      <div className="text-[9px] text-muted-foreground/30">—</div>
-                    ) : (
-                      dayMods.map(mod => {
+        {/* ③ Allocation */}
+        <Block
+          color="border-l-indigo-500"
+          label="③ ALLOCATION"
+          reads={['phase priorities', 'framework.sessions_per_week']}
+          outputs={['session counts per modality']}
+        >
+          {allocation ? (
+            <div className="space-y-1.5">
+              <div className="flex gap-2 items-center">
+                <Label>phase:</Label>
+                <Mono>{weekTrace.phase}</Mono>
+                {weekTrace.is_deload && (
+                  <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-[10px] text-amber-700 dark:text-amber-300">deload</span>
+                )}
+              </div>
+              <div className="overflow-x-auto">
+                <table className="text-[10px] font-mono w-full">
+                  <thead>
+                    <tr className="text-muted-foreground/60">
+                      <th className="text-left pr-4 font-normal">modality</th>
+                      <th className="text-right pr-4 font-normal">priority</th>
+                      <th className="text-right pr-4 font-normal">raw</th>
+                      <th className="text-right font-normal">final</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(allocation.final)
+                      .filter(([, v]) => v > 0)
+                      .sort(([, a], [, b]) => b - a)
+                      .map(([mod, final]) => {
                         const col = MODALITY_COLORS[mod as ModalityId]
                         return (
-                          <div
-                            key={mod}
-                            className={`text-[8px] font-mono rounded px-0.5 mb-0.5 truncate ${col?.bg ?? 'bg-muted'} ${col?.text ?? 'text-foreground'}`}
-                            title={mod}
-                          >
-                            {mod.replace(/_/g, '_').slice(0, 8)}
-                          </div>
+                          <tr key={mod}>
+                            <td className={`pr-4 ${col?.text ?? 'text-foreground'}`}>{mod.replace(/_/g, ' ')}</td>
+                            <td className="text-right pr-4 text-muted-foreground">
+                              {((allocation.phase_priorities[mod] ?? 0) * 100).toFixed(0)}%
+                            </td>
+                            <td className="text-right pr-4 text-muted-foreground">
+                              {(allocation.raw[mod] ?? 0).toFixed(2)}
+                            </td>
+                            <td className="text-right text-foreground/80">{final}</td>
+                          </tr>
                         )
-                      })
-                    )}
-                  </div>
-                )
-              })}
+                      })}
+                  </tbody>
+                </table>
+              </div>
             </div>
-            {/* Modality order + recovery cost */}
-            {dayAssignment.modality_order.length > 0 && (
-              <div className="space-y-0.5">
-                <Label>placement order (by recovery cost):</Label>
-                {dayAssignment.modality_order.map(mod => {
-                  const modalityDef = ontology?.modalities.find(m => m.id === mod)
-                  const col = MODALITY_COLORS[mod as ModalityId]
+          ) : (
+            <Placeholder text="No allocation trace." />
+          )}
+        </Block>
+
+        <Connector label="session counts → day assignment" />
+
+        {/* ④ Day Assignment */}
+        <Block
+          color="border-l-teal-500"
+          label="④ DAY ASSIGNMENT"
+          reads={['modality.recovery_cost', 'modality.incompatible_in_session_with', 'cadence pattern']}
+          outputs={['modality → day mapping']}
+        >
+          {dayAssignment ? (
+            <div className="space-y-2">
+              {/* Mini 7-day grid */}
+              <div className="grid grid-cols-7 gap-1">
+                {DAY_NAMES.map(name => {
+                  // The trace keys assignments 'Mon'..'Sun' and sessions by the full day name.
+                  const dayMods = dayAssignment.assignments[name] ?? []
+                  const isActive = !!activeDay && activeDay.startsWith(name)
                   return (
-                    <div key={mod} className="flex items-center gap-2 pl-1">
-                      <span className={`text-[10px] font-mono ${col?.text ?? 'text-foreground'}`}>
-                        {mod.replace(/_/g, ' ')}
-                      </span>
-                      {modalityDef && (
-                        <span className={`px-1.5 py-0.5 rounded text-[9px] ${
-                          modalityDef.recovery_cost === 'high' ? 'bg-red-500/15 text-red-700 dark:text-red-300' :
-                          modalityDef.recovery_cost === 'medium' ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300' :
-                          'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-                        }`}>
-                          {modalityDef.recovery_cost}
-                        </span>
+                    <div
+                      key={name}
+                      className={`rounded border text-center p-1 ${isActive ? 'border-primary/60 bg-primary/10' : 'border-border/40 bg-muted/20'}`}
+                    >
+                      <div className="text-[9px] text-muted-foreground mb-0.5">{name}</div>
+                      {dayMods.length === 0 ? (
+                        <div className="text-[9px] text-muted-foreground/30">—</div>
+                      ) : (
+                        dayMods.map(mod => {
+                          const col = MODALITY_COLORS[mod as ModalityId]
+                          return (
+                            <div
+                              key={mod}
+                              className={`text-[8px] font-mono rounded px-0.5 mb-0.5 truncate ${col?.bg ?? 'bg-muted'} ${col?.text ?? 'text-foreground'}`}
+                              title={mod}
+                            >
+                              {mod.replace(/_/g, '_').slice(0, 8)}
+                            </div>
+                          )
+                        })
                       )}
                     </div>
                   )
                 })}
               </div>
-            )}
-          </div>
-        ) : (
-          <Placeholder text="No day assignment trace." />
-        )}
-      </Block>
+              {/* Modality order + recovery cost */}
+              {dayAssignment.modality_order.length > 0 && (
+                <div className="space-y-0.5">
+                  <Label>placement order (by recovery cost):</Label>
+                  {dayAssignment.modality_order.map(mod => {
+                    const modalityDef = ontology?.modalities.find(m => m.id === mod)
+                    const col = MODALITY_COLORS[mod as ModalityId]
+                    return (
+                      <div key={mod} className="flex items-center gap-2 pl-1">
+                        <span className={`text-[10px] font-mono ${col?.text ?? 'text-foreground'}`}>
+                          {mod.replace(/_/g, ' ')}
+                        </span>
+                        {modalityDef && (
+                          <span className={`px-1.5 py-0.5 rounded text-[9px] ${
+                            modalityDef.recovery_cost === 'high' ? 'bg-red-500/15 text-red-700 dark:text-red-300' :
+                            modalityDef.recovery_cost === 'medium' ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300' :
+                            'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                          }`}>
+                            {modalityDef.recovery_cost}
+                          </span>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          ) : (
+            <Placeholder text="No day assignment trace." />
+          )}
+        </Block>
+        </>
+      ) : sessionEngine === 'training_contract' ? (
+        <>
+          <Connector label="the track's contract → its modules this week" />
+          <Block
+            color="border-l-indigo-500"
+            label="③ ④ CONTRACT — MODULES AND PLACEMENT"
+            reads={['training_contract.yaml (the track)', 'confirmed module state', 'days and minutes']}
+            outputs={['each module\'s step, minutes and days']}
+          >
+            <p className="text-[10px] text-muted-foreground leading-relaxed">{placedBy('training_contract')}</p>
+            {scheduler.contract_week
+              ? <ContractWeek decided={scheduler.contract_week} />
+              : <Placeholder text="This trace was recorded before the contract said what it decided." />}
+            <WeekTests tests={weekTests} />
+          </Block>
+        </>
+      ) : (
+        <>
+          <Connector label="the phase's week template → the day's category" />
+          <Block
+            color="border-l-indigo-500"
+            label="③ ④ WEEK TEMPLATE — THE DAY AND ITS POOLS"
+            reads={['the phase\'s week_templates', 'the framework\'s categories', 'days and minutes']}
+            outputs={['the day\'s named workout']}
+          >
+            <p className="text-[10px] text-muted-foreground leading-relaxed">{placedBy('week_templates')}</p>
+            {scheduler.template
+              ? (
+                <>
+                  <p className="text-[10px] text-muted-foreground">
+                    The source trains {scheduler.template.source_days} days; the athlete {scheduler.template.training_days}.
+                    {scheduler.template.dropped.length > 0 && ` Left out: ${scheduler.template.dropped.join(', ')}.`}
+                  </p>
+                  <TemplateWeek decided={scheduler.template} onlyDay={activeDay} />
+                </>
+              )
+              : <Placeholder text="This trace was recorded before the template said what it decided." />}
+            <WeekTests tests={weekTests} />
+          </Block>
+        </>
+      )}
 
-      <Connector label={`modality → archetype selection${session ? ` (${session.modality})` : ''}`} />
+      <Connector label={sessionEngine === 'scheduler'
+        ? `modality → archetype selection${session ? ` (${session.modality})` : ''}`
+        : 'the session as placed'} />
 
-      {/* ⑤ Archetype Selection */}
+      {/* ⑤ Archetype */}
       <Block
         color="border-l-amber-500"
-        label="⑤ ARCHETYPE SELECTION"
-        reads={['assigned modality', 'phase', 'equipment', 'training_level']}
+        label={sessionEngine === 'scheduler' ? '⑤ ARCHETYPE SELECTION' : '⑤ THE SESSION'}
+        reads={sessionEngine === 'scheduler'
+          ? ['assigned modality', 'phase', 'equipment', 'training_level']
+          : sessionEngine === 'training_contract' ? ['the day\'s modules'] : ['the day\'s category pool']}
         outputs={['archetype (session template with N slots)']}
       >
         {session ? (
@@ -441,6 +514,32 @@ export function PipelineFlowPanel({ program, weeks }: Props) {
                 <span className="text-[10px] text-muted-foreground/50 italic">no archetype selected</span>
               )}
             </div>
+            {session.test && (
+              <p className="text-[10px]">
+                <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary/80 mr-1.5">test</span>
+                measures <Mono>{session.test.standards.join(', ') || '—'}</Mono>
+                {session.test.instead_of && <span className="text-muted-foreground"> in place of {session.test.instead_of}</span>}
+              </p>
+            )}
+            {sessionEngine === 'week_templates' && (
+              <p className="text-[10px] text-muted-foreground">
+                Named by the source's week{session.category ? `: the next ${words(session.category)} workout that fits` : ''} — nothing was scored.
+              </p>
+            )}
+            {sessionEngine === 'training_contract' && (session.module_steps ?? []).map((m) => (
+              <p key={m.id} className="text-[10px]">
+                <Mono>{m.id}</Mono>{' '}
+                <span className="text-muted-foreground">
+                  step {m.step ?? '—'}{m.variant ? ` · variant ${m.variant}` : ''}{m.rounds ? ` · ${m.rounds} rounds` : ''}
+                  {m.max_rpe ? ` · RPE ≤ ${m.max_rpe}` : ''}{m.deload ? ' · deload' : ''}{m.light_day ? ' · light day' : ''}
+                </span>
+              </p>
+            ))}
+            {session.substituted_for && (
+              <p className="text-[10px] text-amber-700 dark:text-amber-300">
+                stands in for {words(session.substituted_for)}{session.substitution_cause ? ` (${words(session.substitution_cause)})` : ''}
+              </p>
+            )}
             {session.archetype.candidates.length > 0 && (
               <div className="space-y-0.5">
                 <Label>top candidates:</Label>
@@ -503,6 +602,7 @@ export function PipelineFlowPanel({ program, weeks }: Props) {
                 {!slot.injury_blocked && slot.candidates.length > 0 && (
                   <span className="text-muted-foreground/40 shrink-0">({slot.candidates.length})</span>
                 )}
+                {slot.module_id && <span className="text-muted-foreground/60 shrink-0">module {slot.module_id}</span>}
               </div>
             ))}
           </div>

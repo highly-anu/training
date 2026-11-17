@@ -3,9 +3,12 @@ name: Wicked Hangover
 modality: mixed_modal_conditioning
 category: conditioning
 training_levels:
+- novice
 - intermediate
 - advanced
 - elite
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 30
 slots:
@@ -19,6 +22,7 @@ slots:
     - bench_press
     ordered: true
   load: 61 kg (135 lb)
+  load_kg: 61
   notes: Bench press max rep test at 135 lb.
 - role: row_intervals
   slot_type: emom
@@ -40,6 +44,7 @@ slots:
     - curtis_p
     ordered: true
   load: 25 kg (55 lb)
+  load_kg: 25
   notes: 5 x 1 min of Curtis P's, 30 s rest after each; 1 min break before the next exercise.
 - role: box_jump_intervals
   slot_type: emom

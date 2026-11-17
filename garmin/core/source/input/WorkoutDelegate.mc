@@ -139,7 +139,11 @@ class WorkoutDelegate extends Ui.BehaviorDelegate {
 // START while recording: pause, then Garmin's stop menu.
 function openStopMenu(ctl, view) {
     ctl.pause();
-    var m = new Ui.Menu2({ :title => "Paused" });
+    // Red, as the watch's own stop menu: the timer is stopped (API 4.1.8;
+    // older products keep their default theme).
+    var opts = { :title => "Paused" };
+    if (Ui has :MENU_THEME_RED) { opts[:theme] = Ui.MENU_THEME_RED; }
+    var m = new Ui.Menu2(opts);
     m.addItem(new Ui.IconMenuItem("Resume", null, :resume, Native.icon(Rez.Drawables.GmResume), {}));
     m.addItem(new Ui.IconMenuItem("Save", null, :save, Native.icon(Rez.Drawables.GmSave), {}));
     m.addItem(new Ui.IconMenuItem("Discard", null, :discard, Native.icon(Rez.Drawables.GmDiscard), {}));

@@ -47,7 +47,7 @@
     },
     "modality": {
       "type": "array",
-      "description": "Which modalities this exercise develops. Use existing modality IDs or introduce new ones defined in your package's philosophy scope.",
+      "description": "Which modalities this exercise develops. Modalities the commons define (data/commons/modalities) or ones this package adds in its vocabulary.yaml.",
       "items": {
         "type": "string",
         "pattern": "^[a-z0-9_]+$"
@@ -68,29 +68,29 @@
           "pull_up_bar",
           "rings",
           "parallettes",
+          "hangboard",
+          "rope",
+          "box",
+          "dip_belt",
           "rower",
           "bike",
           "ski_erg",
+          "pool",
           "ruck_pack",
           "sandbag",
+          "jump_rope",
+          "resistance_band",
+          "ghd",
+          "medicine_ball",
           "sled",
           "tire",
-          "medicine_ball",
-          "resistance_band",
-          "rope",
-          "box",
-          "ghd",
-          "jump_rope",
-          "open_space",
-          "pool",
-          "dip_belt",
-          "none",
-          "hangboard",
           "sledgehammer",
           "cable_machine",
           "hurdles",
           "agility_ladder",
-          "training_partner"
+          "training_partner",
+          "open_space",
+          "none"
         ]
       }
     },
@@ -117,12 +117,27 @@
     },
     "movement_patterns": {
       "type": "array",
-      "description": "Movement patterns this exercise belongs to. Used for injury exclusion matching and archetype slot filtering. Use existing patterns or define new ones appropriate to your package's discipline (e.g. 'pedaling', 'contact_strength', 'spinal_flexion').",
+      "description": "Movement patterns this exercise belongs to. Used for injury exclusion matching and archetype slot filtering. A pattern the commons define (data/commons/recovery_regions.yaml `patterns` and `unloaded`) or one this package adds in its vocabulary.yaml, where it says which body regions it loads and which injury flags rule it out.",
       "items": {
         "type": "string",
         "pattern": "^[a-z0-9_]+$"
       },
       "default": []
+    },
+    "min_level": {
+      "description": "The lowest training level this exercise suits where no `requires` chain says it (a heavy snatch): below it the exercise is locked (selector._get_unlocked).",
+      "enum": ["novice", "intermediate", "advanced", "elite"]
+    },
+    "starting_load_kg": {
+      "type": "object",
+      "description": "A linear or RPE-prescribed lift's starting working weight by training level (progression._linear_load).",
+      "propertyNames": {"pattern": "^[a-z_]+$"},
+      "additionalProperties": {"type": "number", "minimum": 0}
+    },
+    "weekly_increment_kg": {
+      "type": "number",
+      "minimum": 0,
+      "description": "What a linear load adds each session (progression._linear_load)."
     },
     "requires": {
       "type": "array",
@@ -218,6 +233,11 @@
     },
     "notes": {
       "type": "string"
+    },
+    "sessions_per_week": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "How often the package trains this lift a week: a linear load adds weekly_increment_kg this many times a week (src/progression.py; 2 without one)."
     },
     "competition_pace": {
       "type": "object",

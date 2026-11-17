@@ -7,50 +7,13 @@ import { GuidedScheduler } from './GuidedScheduler'
 import { useBuilderStore } from '@/store/builderStore'
 import { useProfileStore } from '@/store/profileStore'
 import { useInjuryFlags } from '@/api/constraints'
-import { MODALITY_COLORS } from '@/lib/modalityColors'
+import { equipmentLabel } from '@/lib/equipment'
+import { useEquipmentCategories } from '@/lib/useEquipmentVocabulary'
 import { usePhilosophies } from '@/api/philosophies'
 import { builderTrack, findTrack, primaryTrack } from '@/lib/tracks'
-import type { EquipmentId, InjuryFlagId, TrainingLevel, FatigueState } from '@/api/types'
+import type { InjuryFlagId, TrainingLevel, FatigueState } from '@/api/types'
 
 const SECTION_LABEL = 'text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium'
-
-const EQUIPMENT_CATEGORIES = [
-  {
-    name: 'Strength',
-    color: MODALITY_COLORS.max_strength.hex,
-    items: ['barbell', 'rack', 'plates'] as EquipmentId[],
-  },
-  {
-    name: 'Power & Kettlebell',
-    color: MODALITY_COLORS.power.hex,
-    items: ['kettlebell', 'dumbbell'] as EquipmentId[],
-  },
-  {
-    name: 'Bodyweight & Gymnastics',
-    color: MODALITY_COLORS.relative_strength.hex,
-    items: ['pull_up_bar', 'rings', 'parallettes', 'dip_bar', 'hangboard'] as EquipmentId[],
-  },
-  {
-    name: 'Aerobic & Conditioning',
-    color: MODALITY_COLORS.aerobic_base.hex,
-    items: ['rower', 'assault_bike', 'ski_erg', 'jump_rope', 'pool'] as EquipmentId[],
-  },
-  {
-    name: 'GPP & Durability',
-    color: MODALITY_COLORS.durability.hex,
-    items: ['ruck_pack', 'sandbag', 'sled', 'tire', 'sledgehammer', 'medicine_ball', 'box'] as EquipmentId[],
-  },
-  {
-    name: 'Mobility & Prehab',
-    color: MODALITY_COLORS.rehab.hex,
-    items: ['resistance_band', 'foam_roller', 'ghd'] as EquipmentId[],
-  },
-  {
-    name: 'General',
-    color: '#6366f1',
-    items: ['rope', 'open_space', 'training_partner', 'cable_machine', 'hurdles', 'agility_ladder'] as EquipmentId[],
-  },
-]
 
 type Tab = 'schedule' | 'equipment' | 'profile'
 
@@ -62,6 +25,7 @@ const TABS: { id: Tab; label: string }[] = [
 
 export function ConstraintsForm() {
   const [activeTab, setActiveTab] = useState<Tab>('schedule')
+  const equipmentCategories = useEquipmentCategories()
 
   const constraints = useBuilderStore((s) => s.constraints)
   const update = useBuilderStore((s) => s.updateConstraints)
@@ -186,7 +150,7 @@ export function ConstraintsForm() {
             Select equipment you have access to. Pre-filled from your profile — adjust as needed for this program.
           </p>
 
-          {EQUIPMENT_CATEGORIES.map((category) => {
+          {equipmentCategories.map((category) => {
             const selectedSet = new Set(constraints.equipment ?? [])
 
             return (
@@ -219,7 +183,7 @@ export function ConstraintsForm() {
                       >
                         <div className="min-w-0 flex-1">
                           <p className="text-xs font-medium leading-snug truncate">
-                            {eq.replace(/_/g, ' ')}
+                            {equipmentLabel(eq)}
                           </p>
                           <p className="text-[10px] text-muted-foreground/60 mt-0.5">
                             {isSelected ? 'Available' : 'Not selected'}
@@ -364,7 +328,7 @@ export function ConstraintsForm() {
                         : 'border-border/30 bg-card/40 hover:border-primary/40 hover:shadow-md hover:-translate-y-px hover:bg-muted/20'
                     )}
                     style={{
-                      borderLeftColor: isSelected ? '#ef4444' : undefined,
+                      borderLeftColor: isSelected ? 'var(--destructive)' : undefined,
                       borderLeftWidth: isSelected ? 2 : 1
                     }}
                   >

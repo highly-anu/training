@@ -25,7 +25,7 @@ from __future__ import annotations
 import json
 import os
 
-from src import loader, provenance
+from src import level_suitability, loader, provenance
 from src.blockers import NOT_EQUIPMENT
 from src.analytics.movement import ROLLUPS
 from src.selector import _PATTERN_ALIASES, _matches_slot_filter
@@ -177,7 +177,10 @@ def equipment_vocabulary() -> list[str]:
     """The equipment an athlete can declare: the constraints schema's enum,
     which the API validates against (loader.load_equipment's list is short)."""
     with open(_CONSTRAINTS_SCHEMA, encoding='utf-8') as f:
-        return list(json.load(f)['properties']['equipment']['items']['enum'])
+        commons = list(json.load(f)['properties']['equipment']['items']['enum'])
+    # And what the packages the caller sees add (their vocabulary.yaml).
+    from . import loader
+    return commons + [e for e in loader.load_vocabulary()['equipment'] if e not in commons]
 
 
 def _equipment(archetypes: list, exercises: dict, vocabulary: list) -> dict:
@@ -213,6 +216,9 @@ def build(philosophies: list, frameworks: dict, modalities: dict,
             'exerciseProgression': progression,
             'exerciseConcepts': concepts,
         },
+        # Each package's exercises by the lowest level they suit and what
+        # each scales to (src/level_suitability.py).
+        'exerciseLevels': level_suitability.table(),
     }
 
 

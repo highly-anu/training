@@ -1,53 +1,34 @@
-import AVFoundation
 import SwiftUI
 import WatchKit
 
-/// The watch's cue settings, the Garmin's (Cues.mc) with what only the Apple
-/// Watch can do: speak. Kept on the watch, set on its Settings page.
-enum WatchCueSettings {
-    static let voiceKey = "cueVoice"
-    static let leadInKey = "leadIn"
-    static let countdownStartKey = "countdownStart"
-
-    /// Say the lead-in ("Work in 3", "2", "1", "Go") as well as tapping it.
-    static var voice: Bool { flag(voiceKey, default: false) }
-    /// "Work in 3, 2, 1, go" before work that starts on a clock: a rest's end.
-    static var leadIn: Bool { flag(leadInKey, default: true) }
-    /// The same count after Start, before a step's clock starts.
-    static var countdownStart: Bool { flag(countdownStartKey, default: true) }
-
-    private static func flag(_ key: String, default value: Bool) -> Bool {
-        UserDefaults.standard.object(forKey: key) as? Bool ?? value
-    }
-}
-
-/// Plays the lead-in (WatchCues.leadIn): a click on each count and the start
-/// haptic on the go — a haptic sounds as well unless the watch is silenced —
-/// and, with Voice on, the vocabulary's words through the speaker, ducking
-/// whatever else is playing.
+/// The watch's cues (WorkoutCueOutput): the wrist's haptics, and the lead-in
+/// (WatchCues.leadIn) as a click on each count and the start haptic on the
+/// go — a haptic sounds as well unless the watch is silenced — with the
+/// vocabulary's words spoken when Voice is on (CueSpeaker).
 @MainActor
-final class WatchCuePlayer {
-    static let shared = WatchCuePlayer()
+final class WatchCueOutput: WorkoutCueOutput {
+    static let shared = WatchCueOutput()
 
-    private let speech = AVSpeechSynthesizer()
-
-    func play(_ cue: WatchCues.LeadIn, secondsLeft: Int) {
-        WKInterfaceDevice.current().play(cue == .go ? .start : .click)
-        guard WatchCueSettings.voice, let word = WatchCues.leadInWord(secondsLeft: secondsLeft) else { return }
-        speak(word)
+    func haptic(_ cue: CueHaptic) {
+        WKInterfaceDevice.current().play(Self.type(cue))
     }
 
-    /// The go, where a clock rolls into work.
-    func go() { play(.go, secondsLeft: 0) }
+    func leadIn(_ cue: WatchCues.LeadIn, secondsLeft: Int) {
+        WKInterfaceDevice.current().play(cue == .go ? .start : .click)
+        CueSpeaker.shared.leadInWord(secondsLeft)
+    }
 
-    private func speak(_ text: String) {
-        let session = AVAudioSession.sharedInstance()
-        try? session.setCategory(.playback, mode: .voicePrompt, options: [.duckOthers])
-        try? session.setActive(true)
-        if speech.isSpeaking { speech.stopSpeaking(at: .immediate) }
-        let u = AVSpeechUtterance(string: text)
-        u.rate = AVSpeechUtteranceDefaultSpeechRate * 1.1
-        speech.speak(u)
+    static func type(_ cue: CueHaptic) -> WKHapticType {
+        switch cue {
+        case .start: return .start
+        case .stop: return .stop
+        case .click: return .click
+        case .notification: return .notification
+        case .success: return .success
+        case .directionUp: return .directionUp
+        case .turnLeft: return .navigationLeftTurn
+        case .turnRight: return .navigationRightTurn
+        }
     }
 }
 
@@ -81,7 +62,7 @@ struct WatchSettingsView: View {
             let delay = Double(WatchVocab.leadInSeconds - left)
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
                 if let cue = WatchCues.leadIn(secondsLeft: left) {
-                    WatchCuePlayer.shared.play(cue, secondsLeft: left)
+                    WatchCueOutput.shared.leadIn(cue, secondsLeft: left)
                 }
             }
         }

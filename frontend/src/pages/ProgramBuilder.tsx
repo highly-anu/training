@@ -1,4 +1,8 @@
-import { AnimatePresence, motion, type Variants } from 'framer-motion'
+import { useScrollRestore } from '@/lib/useScrollRestore'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { AnimatePresence, motion } from 'framer-motion'
+import { stepVariants } from '@/lib/motion'
+import { Page } from '@/components/layout/Page'
 import { ChevronLeft, ChevronRight, Wand2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { StepIndicator } from '@/components/builder/StepIndicator'
@@ -15,18 +19,11 @@ const STEP_TITLES = {
   4: { title: 'Review & Preview', sub: 'Verify configuration and preview your program' },
 }
 
-function getStepVariants(direction: 'forward' | 'backward'): Variants {
-  return {
-    enter: { x: direction === 'forward' ? 60 : -60, opacity: 0 },
-    center: { x: 0, opacity: 1, transition: { duration: 0.28, ease: [0.25, 0.1, 0.25, 1] } },
-    exit: { x: direction === 'forward' ? -60 : 60, opacity: 0, transition: { duration: 0.18 } },
-  }
-}
-
 export function ProgramBuilder() {
+  const scroller = useScrollRestore()
   const { step, direction, selectedGoalIds, sourceMode, setStep } = useBuilderStore()
   const stepInfo = STEP_TITLES[step]
-  const variants = getStepVariants(direction)
+  const variants = stepVariants(direction)
 
   function goNext() {
     if (step < 4) setStep((step + 1) as 2 | 3 | 4, 'forward')
@@ -36,25 +33,14 @@ export function ProgramBuilder() {
   }
 
   return (
-    <motion.div
+    <Page
       key="builder"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-      exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
       className="flex h-full flex-col"
     >
-      {/* Header */}
-      <div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
-        <Wand2 className="size-5 text-primary" />
-        <div className="flex-1 min-w-0">
-          <h1 className="text-lg font-semibold">{stepInfo.title}</h1>
-          <p className="text-xs text-muted-foreground">{stepInfo.sub}</p>
-        </div>
-        <StepIndicator current={step} />
-      </div>
+      <PageHeader icon={Wand2} title={stepInfo.title} subtitle={stepInfo.sub} actions={<StepIndicator current={step} />} />
 
       {/* Step content */}
-      <div className="flex-1 overflow-y-auto">
+      <div ref={scroller} className="flex-1 overflow-y-auto">
         <AnimatePresence mode="wait" custom={direction}>
           {step === 1 && (
             <motion.div
@@ -111,24 +97,29 @@ export function ProgramBuilder() {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
 
-      {/* Footer nav — always visible */}
-      <div className="border-t bg-card/50 px-6 py-3 flex items-center justify-between">
-        <Button variant="ghost" size="sm" onClick={goBack} disabled={step === 1} className="gap-1">
-          <ChevronLeft className="size-4" /> Back
-        </Button>
-        {step < 4 && (
-          <Button
-            size="sm"
-            onClick={goNext}
-            disabled={step === 1 && (sourceMode === null || selectedGoalIds.length === 0)}
-            className="gap-1"
-          >
-            Next <ChevronRight className="size-4" />
-          </Button>
-        )}
+        {/* Back and Next close the step's own column, where the eye already is,
+            and stay at its foot while a long step scrolls. */}
+        <div className="sticky bottom-0 z-10 bg-background/95 backdrop-blur-sm">
+          <div className="mx-auto flex max-w-3xl items-center justify-end gap-2 px-8 py-3">
+            {step > 1 && (
+              <Button variant="outline" size="sm" onClick={goBack} className="gap-1">
+                <ChevronLeft className="size-4" /> Back
+              </Button>
+            )}
+            {step < 4 && (
+              <Button
+                size="sm"
+                onClick={goNext}
+                disabled={step === 1 && (sourceMode === null || selectedGoalIds.length === 0)}
+                className="gap-1"
+              >
+                Next <ChevronRight className="size-4" />
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
-    </motion.div>
+    </Page>
   )
 }

@@ -14,7 +14,7 @@ partial or fail (src/package_eval.py; docs/package-fidelity/README.md has
 the table), and `audited` is derived: every criterion that is not hygiene
 passes on every track the package does not exclude. The Source criteria
 read each package's record (data/packages/<id>/fidelity.yaml,
-src/package_fidelity.py), and docs/package-fidelity/status.yaml is written
+src/package_fidelity.py), and each package's records/status.yaml is written
 from the records and the grades (--update-baseline), never by hand.
 
 Usage:
@@ -22,17 +22,21 @@ Usage:
   .venv/bin/python tools/evaluate_packages.py --package bjj
   .venv/bin/python tools/evaluate_packages.py --report docs/package-fidelity/scorecard.md
   .venv/bin/python tools/evaluate_packages.py --update-baseline
+  .venv/bin/python tools/evaluate_packages.py --update-baseline --package bjj    # that package's rows only
+  .venv/bin/python tools/evaluate_packages.py --update-baseline --dry-run        # what it would record
   .venv/bin/python tools/evaluate_packages.py --update-baseline --accept-worse   # a stricter grader
 
-Exits 1 when a grade is worse than tools/scorecard_baseline.json records, a
+Every record is the package's own, in data/packages/<id>/records/
+(src/package_records.py). Exits 1 when a grade is worse than its
+records/scorecard.json says, a
 package x track x criterion is new, a fidelity finding is not in
-tools/fidelity_baseline.json (tools/check_fidelity.gate, run here), an
+records/fidelity.json (tools/check_fidelity.gate, run here), an
 exercise is newly orphaned (tools/check_exercise_coverage, run here; D2 reads
-it), status.yaml is not what the records and the grades write — or a
+it), a records/status.yaml is not what the record and the grades write — or a
 baseline is stale: a better grade, a finding that stopped firing or an
 exercise no longer orphaned is recorded in the change that earns it, or the
 next change may lose it unnoticed. --update-baseline records better grades
-(and writes status.yaml) and refuses worse ones; --accept-worse records them
+(and writes each status) and refuses worse ones; --accept-worse records them
 too, for a grader made stricter.
 """
 from __future__ import annotations
@@ -51,14 +55,12 @@ os.environ.setdefault('SUPABASE_URL', '')
 
 import yaml  # noqa: E402
 
-from src import constraint_impact, loader, package_eval as pe, package_fidelity as pf, source_weeks  # noqa: E402
+from src import constraint_impact, loader, package_eval as pe, package_fidelity as pf, package_records as pr, source_weeks  # noqa: E402
 from src.analytics import spec as spec_mod, vocabulary  # noqa: E402
 from src.generator import generate  # noqa: E402
 from src.validator import validate  # noqa: E402
 from tools import check_code_neutral as neutral, check_exercise_coverage as coverage, check_fidelity as cf  # noqa: E402
 
-BASELINE = os.path.join(ROOT, 'tools', 'scorecard_baseline.json')
-STATUS = os.path.join(ROOT, 'docs', 'package-fidelity', 'status.yaml')
 EVAL_WEEKS = 8
 PROBE_WEEKS = 2
 # The fidelity profiles that constrain the athlete, and the scorecard's own.
@@ -140,15 +142,15 @@ def _lead(rec: dict) -> tuple[str | None, str | None]:
 
 
 def _standards_known() -> tuple[set, dict]:
-    """Every commons standard id, and each one's derived_from lifts."""
+    """Every standard id but The Cell's — the commons' and each package's own
+    (benchmarks_data, the one reader) — and each one's derived_from lifts."""
+    from src.analytics import benchmarks_data
     known, derived = set(), {}
-    for name in sorted(os.listdir(os.path.join(ROOT, 'data', 'benchmarks'))):
-        if not name.endswith('.yaml') or name == 'cell_standards.yaml':
+    for b in benchmarks_data.load_benchmarks():
+        if b['category'] == 'cell':
             continue
-        with open(os.path.join(ROOT, 'data', 'benchmarks', name)) as fh:
-            for item in yaml.safe_load(fh) or []:
-                known.add(item['id'])
-                derived[item['id']] = set((item.get('derived_from') or {}).get('exercises') or [])
+        known.add(b['id'])
+        derived[b['id']] = set((b.get('derived_from') or {}).get('exercises') or [])
     return known, derived
 
 
@@ -243,6 +245,7 @@ def grade_track(pkg: str, track: dict, recs: dict, fid_rows: list, record: dict 
     grades['M3'] = pe.grade_m3(declared, tested, estimated, manual)
     grades['M4'] = pe.grade_m4(set(declared) | tested, known)
     grades['X2'] = pe.grade_x2(*_watch_screens(ideal['program']))
+    grades['X3'] = pe.grade_x3(prim, vocabulary.PRIMITIVES, *_wrist_capture(ideal, lead))
     return {c: list(g) for c, g in grades.items()}
 
 
@@ -264,6 +267,42 @@ def _watch_screens(program: dict | None) -> tuple[list[str], list[str]]:
             if slot_type not in known and not any(f.startswith(f'{slot_type} ') for f in fallbacks):
                 fallbacks.append(f"{slot_type} ({aid}:{step.get('slotRole')})")
     return errors, fallbacks
+
+
+def _wrist_capture(rec: dict, lead: str | None) -> tuple[set, list[tuple[str, set]]]:
+    """(what every watch session records, [(step, what its screen records)] for
+    each step the lead entry reads) — the steps as the watches' encoder sends
+    them (api.encode_watch_session, ?spec=1), each read through its screen's
+    template (data/commons/watch_vocabulary.json `capture`, `records`) and what
+    the watch asks at its end (`logs`, src/outcome_fields.py). A test step also
+    takes its standard's result at the end (`prs`)."""
+    import api
+    from src import outcome_fields, watch_spec
+    vocab = watch_spec.vocabulary()
+    session = set((vocab.get('capture') or {}).get('session') or [])
+    entry = next((e for s in spec_mod.compose(rec['goal']) for e in s.entries if e.id == lead), None) if lead else None
+    if entry is None or pe.refused(rec['program'], rec['validation']):
+        return session, []
+    steps = []
+    for w in (rec['program'] or {}).get('weeks') or []:
+        for _, s in pe.fidelity._sessions(w):
+            if not spec_mod.session_in_scope(entry, w, s):
+                continue
+            wanted = {((ea.get('exercise') or {}).get('id'), ea.get('slot_role'))
+                      for ea in spec_mod.assignments_in_scope(entry, s)}
+            payload = api.encode_watch_session(s, 'scorecard', spec_level=1)
+            for step in payload['exercises']:
+                if (step.get('exerciseId'), step.get('slotRole')) not in wanted:
+                    continue
+                template = (payload['screens'].get(step.get('screen')) or {}).get('template')
+                got = set(((vocab['templates'].get(template) or {}).get('records')) or [])
+                # What the watch asks at the end of the step (its `logs`: a
+                # timed set's reps), as the analytics needs they feed.
+                got |= outcome_fields.needs(step.get('logs') or [])
+                if step.get('standard'):
+                    got.add('prs')
+                steps.append((f"{payload.get('archetypeId')}:{step.get('slotRole')} ({template})", got))
+    return session, steps
 
 
 def evaluate_package(pkg: str) -> dict:
@@ -371,10 +410,9 @@ def derive(pkg: str, tracks: dict) -> str:
                              set((record or {}).get('excluded_tracks') or {}), has_dossier)
 
 
-def status_text(scorecard: dict) -> str:
-    """docs/package-fidelity/status.yaml as this run's grades write it."""
-    return pf.status_document({pkg: pf.status_entry(pkg, pf.load(pkg), derive(pkg, scorecard[pkg]))
-                               for pkg in scorecard})
+def status_entries(scorecard: dict) -> dict:
+    """package -> its status entry as this run's grades write it."""
+    return {pkg: pf.status_entry(pkg, pf.load(pkg), derive(pkg, scorecard[pkg])) for pkg in scorecard}
 
 
 def write_report(scorecard: dict, path: str) -> None:
@@ -419,6 +457,18 @@ def write_report(scorecard: dict, path: str) -> None:
         fh.write('\n'.join(lines))
 
 
+def record_packages(packages: list[str], scorecard: dict, current: dict, gated: list, orphans: dict) -> None:
+    """--update-baseline: each package's records take this run's rows — its
+    grades, its fidelity findings, its orphans and its status — in its own
+    folder (src/package_records.py); every other package's are its own."""
+    for pkg in packages:
+        prefix = f'{pkg}/'
+        pr.write_grades(pkg, {k[len(prefix):]: v for k, v in current.items() if k.startswith(prefix)})
+        pr.write_findings(pkg, [k[len(prefix):] for k in gated if k.startswith(prefix)])
+        pr.write_orphans(pkg, orphans.get(pkg, []))
+        pr.write_status(pkg, pf.status_entry(pkg, pf.load(pkg), derive(pkg, scorecard[pkg])))
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument('--package', action='append')
@@ -426,6 +476,8 @@ def main() -> int:
     ap.add_argument('--update-baseline', action='store_true')
     ap.add_argument('--accept-worse', action='store_true',
                     help='with --update-baseline: record worse grades too (a stricter grader, never a worse package)')
+    ap.add_argument('--dry-run', action='store_true',
+                    help='with --update-baseline: refuse or accept as it would, write nothing')
     ap.add_argument('--json', help='write the scorecard as JSON to this path')
     args = ap.parse_args()
 
@@ -441,12 +493,7 @@ def main() -> int:
 
     current = {f"{pkg}/{tid}|{c}": g[0] for pkg, tracks in scorecard.items()
                for tid, crit in tracks.items() for c, g in crit.items()}
-    baseline = {}
-    if os.path.exists(BASELINE):
-        with open(BASELINE) as fh:
-            baseline = json.load(fh)
-    if args.package:
-        baseline = {k: v for k, v in baseline.items() if k.split('/')[0] in packages}
+    baseline = pr.all_grades(packages)
     worse = sorted(k for k, g in current.items() if k in baseline and pe.RANK[g] > pe.RANK[baseline[k]])
     new = sorted(k for k in current if k not in baseline)
     better = sorted(k for k, g in current.items() if k in baseline and pe.RANK[g] < pe.RANK[baseline[k]])
@@ -454,17 +501,13 @@ def main() -> int:
 
     gated, new_fid, fixed_fid = cf.gate(fid_rows, packages if args.package else None)
 
-    with open(coverage.BASELINE) as fh:
-        known_orphans = json.load(fh)
+    known_orphans = pr.all_orphans(packages)
     new_orphans = {p: sorted(set(o) - set(known_orphans.get(p, []))) for p, o in orphans.items()}
     reached_orphans = {p: sorted(set(known_orphans.get(p, [])) - set(o)) for p, o in orphans.items()}
     new_orphans = {p: o for p, o in new_orphans.items() if o}
     reached_orphans = {p: o for p, o in reached_orphans.items() if o}
 
     if args.update_baseline:
-        if args.package:
-            print('--update-baseline needs the whole run (no --package)')
-            return 2
         if (worse and not args.accept_worse) or new_fid or new_orphans:
             print('Refusing to record a worse scorecard, a new fidelity finding or a new orphan:')
             for k in worse:
@@ -478,24 +521,22 @@ def main() -> int:
             return 1
         for k in worse:
             print(f'  accepted worse: {k}: {baseline[k]} -> {current[k]}')
-        with open(BASELINE, 'w') as fh:
-            json.dump(dict(sorted(current.items())), fh, indent=1)
-            fh.write('\n')
-        cf.write_baseline(gated)
-        coverage.BASELINE.write_text(json.dumps(dict(sorted(orphans.items())), indent=2, sort_keys=True) + '\n')
-        with open(STATUS, 'w', encoding='utf-8') as fh:
-            fh.write(status_text(scorecard))
-        print(f'baselines written: {len(current)} grades, {len(gated)} fidelity findings, '
-              f'{sum(len(o) for o in orphans.values())} orphans; {os.path.relpath(STATUS, ROOT)}')
+        if args.dry_run:
+            print(f'would record {len(current)} grades ({len(new)} new), {len(gated)} fidelity findings, '
+                  f'{sum(len(o) for o in orphans.values())} orphans; nothing written')
+            return 0
+        record_packages(packages, scorecard, current, gated, orphans)
+        print(f'records written: {len(current)} grades, {len(gated)} fidelity findings, '
+              f'{sum(len(o) for o in orphans.values())} orphans and a status, '
+              f"in each package's records/ ({', '.join(packages)})")
         return 0
 
     failed = False
-    if not args.package:
-        with open(STATUS, encoding='utf-8') as fh:
-            if fh.read() != status_text(scorecard):
-                print(f'{os.path.relpath(STATUS, ROOT)} is not what the records and these grades write '
-                      '(run --update-baseline)')
-                failed = True
+    for pkg, entry in status_entries(scorecard).items():
+        if not pr.status_current(pkg, entry):
+            print(f'{pkg}: records/status.yaml is not what its record and these grades write '
+                  '(run --update-baseline)')
+            failed = True
     counts = defaultdict(int)
     for g in current.values():
         counts[g] += 1

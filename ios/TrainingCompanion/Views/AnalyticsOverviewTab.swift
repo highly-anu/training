@@ -76,12 +76,14 @@ struct AnalyticsOverviewTab: View {
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 16) {
-                AnalyticsPeriodPicker(period: $period)
-                kpiGrid
-                if loadFocus.total > 0 { loadFocusCard }
-                if !modalities.isEmpty || !activities.isEmpty { mixCard }
-                weeklyCard
-                if !pmcEntries.isEmpty || isLoadingPMC { pmcCard }
+                AppScrollFade {
+                    AnalyticsPeriodPicker(period: $period)
+                    kpiGrid
+                    if loadFocus.total > 0 { loadFocusCard }
+                    if !modalities.isEmpty || !activities.isEmpty { mixCard }
+                    weeklyCard
+                    if !pmcEntries.isEmpty || isLoadingPMC { pmcCard }
+                }
             }
             .padding(.horizontal)
             .padding(.vertical, 12)
@@ -110,10 +112,10 @@ struct AnalyticsOverviewTab: View {
 
     private var kpiGrid: some View {
         // "On device" beside the header when the server could not answer.
-        AnalyticsCard(header: "Totals") {
+        AppCard(header: "Totals") {
             if summary == nil && appState.loadSummaryFailed.contains(period) { onDeviceMark }
         } content: {
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+            AppAdaptiveGrid(columns: 3, spacing: 12) {
                 kpiCell(
                     label: "Sessions",
                     value: "\(Int(stats.sessions))",
@@ -167,18 +169,25 @@ struct AnalyticsOverviewTab: View {
     private func kpiCell(label: String, value: String, unit: String,
                           prev: Double?, curr: Double?, higherIsBetter: Bool) -> some View {
         VStack(alignment: .leading, spacing: 3) {
-            HStack(alignment: .top, spacing: 2) {
-                Text(value).font(.title3).fontWeight(.semibold).monospacedDigit()
-                if !unit.isEmpty {
-                    Text(unit).font(.caption).foregroundStyle(.secondary).padding(.top, 4)
+            AppAdaptiveStack(alignment: .top, spacing: 2) {
+                HStack(alignment: .top, spacing: 2) {
+                    Text(value).font(.title3).fontWeight(.semibold).monospacedDigit()
+                        .lineLimit(1).minimumScaleFactor(0.6)
+                        .appNumeric(value: value)
+                    if !unit.isEmpty {
+                        Text(unit).font(.caption).foregroundStyle(.secondary).padding(.top, 4)
+                            .lineLimit(1)
+                    }
                 }
-                Spacer(minLength: 0)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 if let p = prev, let c = curr, p > 0, period != .all {
                     trendArrow(prev: p, curr: c, higherIsBetter: higherIsBetter)
                 }
             }
             Text(label).font(.caption).foregroundStyle(.secondary)
+                .lineLimit(1).minimumScaleFactor(0.7)
         }
+        .accessibilityElement(children: .combine)
     }
 
     private func trendArrow(prev: Double, curr: Double, higherIsBetter: Bool) -> some View {
@@ -194,7 +203,7 @@ struct AnalyticsOverviewTab: View {
                     Text(String(format: "%.0f%%", pct)).monospacedDigit()
                 }
                 .font(.caption)
-                .foregroundStyle(isGood ? .green : .red)
+                .foregroundStyle(isGood ? AppColor.complete : AppColor.destructive)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(String(format: "%.0f percent %@ than the previous period", pct, isPositive ? "more" : "less"))
             }
@@ -282,7 +291,7 @@ struct AnalyticsOverviewTab: View {
     @ViewBuilder
     private var pmcCard: some View {
         if isLoadingPMC {
-            AnalyticsCard(header: "Performance Management") {
+            AppCard(header: "Performance Management") {
                 ProgressView().frame(maxWidth: .infinity, minHeight: 80)
             }
         } else {

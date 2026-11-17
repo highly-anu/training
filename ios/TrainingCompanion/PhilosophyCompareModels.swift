@@ -118,7 +118,7 @@ struct CompareGlance: Decodable, Identifiable {
         let weeks: Int
         let repeatable: Bool?
         let requires: [String]?
-        let kettlebellPair: Bool?
+        let implement: String?
         let phases: [Phase]
     }
 

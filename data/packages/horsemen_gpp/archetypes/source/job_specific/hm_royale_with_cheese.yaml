@@ -3,9 +3,12 @@ name: Royale with Cheese
 modality: durability
 category: gpp_durability
 training_levels:
+- novice
 - intermediate
 - advanced
 - elite
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 55
 slots:
@@ -52,6 +55,7 @@ slots:
     - towel_kb_halo
     ordered: true
   load: 16 kg (35 lb)
+  load_kg: 16
   notes: Towel KB halo, 30 s on / 15 s rest, 5 times. Then 3 min rest.
 - role: fast_rope_drag
   slot_type: emom
@@ -63,6 +67,7 @@ slots:
     - fast_rope_drag
     ordered: true
   load: 2 x 25 kg (2 x 55 lb)
+  load_kg: 25
   notes: >-
     2 fast-rope drags of two kettlebells every minute for 5 minutes. Then 3 min rest.
 - role: heavy_object_throw
@@ -86,6 +91,7 @@ slots:
     - kb_squat_goblet
     ordered: true
   load: 32 kg (71 lb)
+  load_kg: 32
   notes: 15-20 goblet squats every minute for 5 minutes.
 required_equipment:
 - kettlebell

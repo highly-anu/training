@@ -123,7 +123,8 @@ def _current_week(ctx: Context, week_planned: dict, week_completed: dict) -> dic
     if wi is None:
         return None
     week = ctx.weeks[wi]
-    total = sum(len(sessions or []) for sessions in (week.get('schedule') or {}).values())
+    # The week's sessions as ctx.sessions counts them: an undone extra is none.
+    total = sum(1 for h in ctx.sessions(elapsed_only=False) if h['week_index'] == wi)
     return {'weekIndex': wi, 'weekNumber': int(week.get('week_number', wi + 1)),
             'due': week_planned.get(wi, 0), 'completed': week_completed.get(wi, 0), 'total': total,
             'isDeload': ctx.is_deload_week(week)}

@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { TrackBadge } from '@/components/shared/TrackBadge'
 import { motion } from 'framer-motion'
+import { pressMotion } from '@/lib/motion'
 import { Clock, CheckCircle2, Activity, CircleSlash } from 'lucide-react'
 import { WorkoutIcon } from '@/components/icons/WorkoutIcon'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
@@ -48,13 +49,12 @@ export function SessionCard({ session, weekNumber, day, sessionIndex, className,
 
   return (
     <motion.button
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+      {...pressMotion}
       onClick={() => (onOpen ? onOpen() : navigate(`/program/${weekNumber}/${day}`))}
       className={cn(
         'w-full rounded-lg border bg-card p-3 text-left transition-shadow hover:shadow-sm',
         isComplete
-          ? cn(COMPLETION.border, COMPLETION.bg, 'hover:border-emerald-500/50')
+          ? cn(COMPLETION.border, COMPLETION.bg, 'hover:border-done/50')
           : 'hover:border-primary/50',
         highlight && 'border-primary/60 ring-1 ring-primary/30',
         className
@@ -70,6 +70,13 @@ export function SessionCard({ session, weekNumber, day, sessionIndex, className,
             <ModalityBadge modality={session.modality} size="sm" />
             {session.test && <TestBadge test={session.test} />}
             <TrackBadge session={session} />
+            {session.added && (
+              // An extra the athlete added: it counts once done.
+              <span title="Added by you — counts once done"
+                className="rounded-full border border-dashed border-border px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground">
+                Added
+              </span>
+            )}
             {session.provenance?.borrowed && (
               // This session came from a package the philosophy declares it
               // borrows from — say so rather than passing it off as its own.
@@ -100,13 +107,13 @@ export function SessionCard({ session, weekNumber, day, sessionIndex, className,
         {session.exercises.length} exercise{session.exercises.length !== 1 ? 's' : ''}
         {heldBack > 0 && (
           // Icon and words, never colour alone (design system §1.6).
-          <span className="ml-1 inline-flex items-center gap-0.5 text-amber-700 dark:text-amber-300">
+          <span className="ml-1 inline-flex items-center gap-0.5 text-warn">
             · <CircleSlash className="size-2.5" aria-hidden="true" /> {heldBack} held back
           </span>
         )}
       </p>
       {notes.map((n) => (
-        <p key={n} className="mt-1 text-[10px] leading-snug text-amber-700 dark:text-amber-300">{n}</p>
+        <p key={n} className="mt-1 text-[10px] leading-snug text-warn">{n}</p>
       ))}
       {highlight && <p className="mt-1 text-[10px] font-medium text-primary">Changes</p>}
     </motion.button>

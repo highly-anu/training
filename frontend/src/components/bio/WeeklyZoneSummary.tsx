@@ -1,11 +1,13 @@
+import { ChartFrame } from '@/components/shared/ChartFrame'
+import * as say from '@/lib/chartSummary'
 import { useMemo } from 'react'
-import { ResponsiveContainer, BarChart, Bar, XAxis, Tooltip, Cell } from 'recharts'
+import { BarChart, Bar, XAxis, Tooltip, Cell } from 'recharts'
 import { useBioStore } from '@/store/bioStore'
 import { useProfileStore } from '@/store/profileStore'
-import { computeHRZones, getEffectiveMaxHR, DEFAULT_ZONE_BOUNDARIES } from '@/lib/hrZones'
+import { computeHRZones, getEffectiveMaxHR, DEFAULT_ZONE_BOUNDARIES, ZONE_COLORS } from '@/lib/hrZones'
 import { subDays, parseISO, isAfter } from 'date-fns'
+import { useChartEntry } from '@/lib/chartMotion'
 
-const ZONE_COLORS = ['#94a3b8', '#38bdf8', '#fbbf24', '#f97316', '#ef4444']
 const ZONE_NAMES  = ['Z1 Recovery', 'Z2 Aerobic', 'Z3 Tempo', 'Z4 Threshold', 'Z5 Max']
 
 function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<{ value: number; name: string; payload: { zone: string } }> }) {
@@ -20,6 +22,7 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<
 }
 
 export function WeeklyZoneSummary() {
+  const drawIn = useChartEntry()
   const importedWorkouts = useBioStore((s) => s.importedWorkouts)
   const dob = useProfileStore((s) => s.dateOfBirth ?? null)
   const hrConfig = useProfileStore((s) => s.hrConfig)
@@ -65,7 +68,7 @@ export function WeeklyZoneSummary() {
         <p className="text-xs text-muted-foreground">Rolling 7-day zone distribution</p>
         <span className="text-xs font-medium">
           <span
-            className={aerobicPct >= 80 ? 'text-emerald-700 dark:text-emerald-300' : aerobicPct >= 60 ? 'text-amber-700 dark:text-amber-300' : 'text-red-700 dark:text-red-300'}
+            className={aerobicPct >= 80 ? 'text-good' : aerobicPct >= 60 ? 'text-warn' : 'text-bad'}
           >
             {aerobicPct}% aerobic
           </span>
@@ -73,17 +76,18 @@ export function WeeklyZoneSummary() {
         </span>
       </div>
 
-      <ResponsiveContainer width="100%" height={80}>
+      <ChartFrame label="Minutes in each heart-rate zone this week" height={80}
+        summary={say.shares(chartData.map((d) => ({ name: d.zone, value: d.minutes })))}>
         <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
           <XAxis type="number" hide />
           <Tooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
-          <Bar dataKey="minutes" radius={[0, 3, 3, 0]} isAnimationActive={false}>
+          <Bar {...drawIn} dataKey="minutes" radius={[0, 3, 3, 0]}>
             {chartData.map((_, i) => (
               <Cell key={i} fill={ZONE_COLORS[i]} fillOpacity={zoneMinutes[i] === 0 ? 0.2 : 0.85} />
             ))}
           </Bar>
         </BarChart>
-      </ResponsiveContainer>
+      </ChartFrame>
 
       {/* Zone legend row */}
       <div className="flex gap-3 flex-wrap">

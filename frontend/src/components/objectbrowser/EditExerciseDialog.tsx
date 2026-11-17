@@ -8,10 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils'
 import { useUpdateExercise } from '@/api/exercises'
 import type { Exercise, ModalityId, EquipmentId, EffortLevel } from '@/api/types'
+import { MODALITY_IDS } from '@/lib/gen/clientVocab'
 
 const CATEGORIES = ['barbell', 'kettlebell', 'bodyweight', 'aerobic', 'carries', 'sandbag', 'mobility', 'skill', 'rehab']
 const EFFORTS = ['low', 'medium', 'high', 'max']
-const MODALITIES: ModalityId[] = ['max_strength', 'relative_strength', 'strength_endurance', 'power', 'aerobic_base', 'anaerobic_intervals', 'mixed_modal_conditioning', 'durability', 'mobility', 'movement_skill', 'combat_sport', 'rehab']
+// Every modality the commons define (tools/gen_client_vocab.py).
+const MODALITIES: readonly ModalityId[] = MODALITY_IDS
 const EQUIPMENT_OPTIONS: EquipmentId[] = ['barbell', 'rack', 'plates', 'kettlebell', 'dumbbell', 'pull_up_bar', 'ruck_pack', 'open_space', 'rings', 'sandbag', 'bike', 'rower', 'ghd', 'box', 'resistance_band', 'medicine_ball']
 
 interface Props {
@@ -261,8 +263,8 @@ export function EditExerciseDialog({ exercise, open, onClose }: Props) {
 
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={onClose}>Cancel</Button>
-          <Button size="sm" onClick={handleSubmit} disabled={!category || updateMutation.isPending}>
-            {updateMutation.isPending ? 'Saving…' : 'Save Changes'}
+          <Button size="sm" onClick={handleSubmit} disabled={!category} loading={updateMutation.isPending}>
+            Save changes
           </Button>
         </DialogFooter>
       </DialogContent>

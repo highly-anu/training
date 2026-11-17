@@ -1,27 +1,32 @@
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
+import { ChartFrame } from '@/components/shared/ChartFrame'
+import * as say from '@/lib/chartSummary'
+import { PieChart, Pie, Cell, Tooltip } from 'recharts'
 import { sortPriorities } from '@/lib/prioritySort'
-import { MODALITY_COLORS } from '@/lib/modalityColors'
+import { modalityHex, modalityLabel } from '@/lib/modalityColors'
 import type { GoalPriorities } from '@/api/types'
+import { useChartEntry } from '@/lib/chartMotion'
 
 interface ModalityDonutProps {
   priorities: GoalPriorities
 }
 
 export function ModalityDonut({ priorities }: ModalityDonutProps) {
+  const drawIn = useChartEntry()
   const sorted = sortPriorities(priorities)
   const data = sorted.map(({ modality, weight }) => ({
-    name: MODALITY_COLORS[modality].label,
+    name: modalityLabel(modality),
     value: Math.round(weight * 100),
-    hex: MODALITY_COLORS[modality].hex,
+    hex: modalityHex(modality),
   }))
 
   const dominant = sorted[0]
 
   return (
     <div className="relative flex flex-col items-center">
-      <ResponsiveContainer width="100%" height={180}>
+      <ChartFrame label="The program's modality mix" height={180}
+        summary={say.shares(data)}>
         <PieChart>
-          <Pie
+          <Pie {...drawIn}
             data={data}
             cx="50%"
             cy="50%"
@@ -29,8 +34,6 @@ export function ModalityDonut({ priorities }: ModalityDonutProps) {
             outerRadius={80}
             paddingAngle={2}
             dataKey="value"
-            animationBegin={200}
-            animationDuration={800}
           >
             {data.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.hex} stroke="transparent" />
@@ -47,7 +50,7 @@ export function ModalityDonut({ priorities }: ModalityDonutProps) {
             formatter={(v, name) => [`${String(v)}%`, String(name)]}
           />
         </PieChart>
-      </ResponsiveContainer>
+      </ChartFrame>
 
       {/* Center label */}
       {dominant && (
@@ -56,7 +59,7 @@ export function ModalityDonut({ priorities }: ModalityDonutProps) {
             {Math.round(dominant.weight * 100)}%
           </span>
           <span className="text-[10px] text-muted-foreground text-center max-w-[60px] leading-tight">
-            {MODALITY_COLORS[dominant.modality].label}
+            {modalityLabel(dominant.modality)}
           </span>
         </div>
       )}

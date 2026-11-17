@@ -65,6 +65,17 @@ def run():
     check(body['status'] == 'ok', f"status {body.get('status')}")
     done = [s['completed'] for s in body['sessions']]
     check(done == [True, False], f"completed flags {done} (a rejected match is not done)")
+    check(all('sessionUid' not in s for s in body['sessions']), 'no plan in history, no uid')
+    # With a plan in history each session names its uid: the phone's player
+    # uploads by it.
+    saved_vid = api._active_version_or_none
+    api._active_version_or_none = lambda uid: 'v9'
+    try:
+        uids = [s.get('sessionUid') for s in
+                client.get('/api/user/today-session?date=2026-10-09').get_json()['sessions']]
+    finally:
+        api._active_version_or_none = saved_vid
+    check(uids == ['v9:w0-Friday-0', 'v9:w0-Friday-1'], f'session uids {uids}')
     t = body['tomorrow']
     check(t and t['sessionCount'] == 1 and t['archetypeName'] == 'Ruck'
           and t['estimatedMinutes'] == 90, f"tomorrow {t}")
@@ -211,6 +222,14 @@ FIXTURE_PROGRAM = {
                      _ex('rower', 'Rowing', 'for_time', {'distance_m': 2000},
                          slot_role='test', standard={'id': 'row_2km_minutes', 'result': 'duration'}),
                  ]},
+                # A timed kettlebell set: the athlete counts its reps and
+                # enters them at the end (`logs`: its cadence).
+                {'modality': 'kettlebell', 'archetype': {'id': 'kb_snatch_set', 'name': 'Snatch Set',
+                                                         'duration_estimate_minutes': 15},
+                 'exercises': [
+                     {'exercise': {'id': 'kb_snatch', 'name': 'Kettlebell Snatch', 'category': 'kettlebell'},
+                      'slot_type': 'time_domain', 'slot_role': 'snatch', 'load': {'duration_minutes': 10}},
+                 ]},
             ],
             'Wednesday': [
                 {'modality': 'aerobic_base', 'archetype': {'id': 'easy_run', 'name': 'Easy Run',
@@ -279,6 +298,10 @@ def fixture_check(client, write=False):
         problems.append('fixture lost its meta block (no exerciseId)')
     if not any(e.get('standard') for e in exercises):
         problems.append("fixture lost its test step's standard")
+    if not any(e.get('logs') == ['reps'] for e in exercises):
+        problems.append("fixture lost its timed kettlebell set's logs (reps asked at the end)")
+    if any(e.get('logs') for e in exercises if e.get('standard')):
+        problems.append('a test step asks for its result, never for logs')
     if len(body.get('days') or []) != 7:
         problems.append('fixture lost its week ahead')
     if body.get('maxHR') != 186 or not (body.get('readiness') or {}).get('score'):

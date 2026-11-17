@@ -3,9 +3,12 @@ name: Political Correctness
 modality: durability
 category: gpp_durability
 training_levels:
+- novice
 - intermediate
 - advanced
 - elite
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 55
 slots:
@@ -35,6 +38,7 @@ slots:
     - weighted_run
     ordered: true
   load: 11 kg (25 lb)
+  load_kg: 11
   notes: Weighted 1-mile run.
 - role: weighted_squats
   slot_type: sets_reps
@@ -72,6 +76,7 @@ slots:
     - weighted_run
     ordered: true
   load: 11 kg (25 lb)
+  load_kg: 11
   notes: Weighted 1-mile run to finish.
 required_equipment:
 - barbell

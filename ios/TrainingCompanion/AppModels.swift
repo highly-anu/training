@@ -179,6 +179,24 @@ struct AppBenchmark: Codable, Identifiable {
 
 // MARK: - Philosophies
 
+/// A methodology's comparable facts (`GET /philosophies/glance`): the same
+/// keys for every one, so the builder's cards can be read against each other.
+struct PhilosophyGlance: Decodable, Identifiable {
+    struct Span: Decodable { let min: Int?; let ideal: Int? }
+    let id: String
+    let levels: [String]?
+    let weeks: Span?
+    let daysPerWeek: Span?
+    let sessionMinutes: Span?
+
+    /// "12 wk · 3 days/wk · 30 min": the ideal of each, what it has of them.
+    var facts: [String] {
+        [weeks?.ideal.map { "\($0) wk" },
+         daysPerWeek?.ideal.map { "\($0) \($0 == 1 ? "day" : "days")/wk" },
+         sessionMinutes?.ideal.map { "\($0) min" }].compactMap { $0 }
+    }
+}
+
 struct PhilosophyCard: Codable, Identifiable {
     let id: String
     let name: String
@@ -235,6 +253,28 @@ struct PhilosophyTrack: Codable, Identifiable, Hashable {
     let description: String?
     let phases: [PhilosophyPhase]
     var entryRequirements: TrackEntryRequirements? = nil
+    /// A track the app made up rather than the source (the fidelity record's
+    /// invention): the builders label it as the app's own.
+    var invention: TrackInvention? = nil
+    /// The level its sessions are written for; a level below does them
+    /// scaled (src/level_scaling.py). Nil for a track done as written.
+    var authoredLevel: String? = nil
+
+    /// "Written for Elite · scaled for Novice" below the authored level, the
+    /// web's `scaledFor`; nil at or above it, or for a track not scaled.
+    func scaledFor(level: String?) -> String? {
+        let order = ClientVocab.trainingLevels
+        guard let authored = authoredLevel, let level,
+              let at = order.firstIndex(of: level), let top = order.firstIndex(of: authored), at < top
+        else { return nil }
+        func label(_ id: String) -> String { id.prefix(1).uppercased() + id.dropFirst() }
+        return "Written for \(label(authored)) · scaled for \(label(level))"
+    }
+
+    struct TrackInvention: Codable, Hashable {
+        let id: String
+        let text: String
+    }
 
     /// Every phase's default length, summed — the track run end to end.
     var totalWeeks: Int { phases.reduce(0) { $0 + $1.weeks } }
@@ -243,8 +283,9 @@ struct PhilosophyTrack: Codable, Identifiable, Hashable {
     // plain JSONDecoder: without these the requirements never decoded and a
     // contract track could not be confirmed from the phone.
     enum CodingKeys: String, CodingKey {
-        case id, name, description, phases
+        case id, name, description, phases, invention
         case entryRequirements = "entry_requirements"
+        case authoredLevel = "authored_level"
     }
 }
 
@@ -258,6 +299,45 @@ struct TrackEntryRequirements: Codable, Hashable {
     /// Lifts that may start from the weight last made (optional; else the
     /// first session works up to one).
     var startingLoads: [StartingLoad]? = nil
+    /// What the track's loaded blocks need more than one of, matching (a pair
+    /// of bells); the athlete confirms each `countKey`.
+    var implements: [TrackImplement]? = nil
+    /// Choices the athlete makes for the track (Wildman's swing minutes),
+    /// each with its default; sent as `contract_options`.
+    var options: [TrackOption]? = nil
+
+    struct TrackOption: Codable, Hashable, Identifiable {
+        let id: String
+        let label: String
+        let `default`: String
+        let choices: [Choice]
+
+        struct Choice: Codable, Hashable, Identifiable {
+            let id: String
+            let label: String
+            var description: String? = nil
+        }
+    }
+
+    /// What the track asks the athlete to confirm they have; a server that
+    /// predates `implements` said only `kettlebell_count`.
+    var neededImplements: [TrackImplement] {
+        if let implements { return implements }
+        return kettlebellCount >= 2
+            ? [TrackImplement(equipment: "kettlebell", count: kettlebellCount, countKey: "kettlebell_count",
+                              number: "two", plural: "kettlebells")]
+            : []
+    }
+
+    struct TrackImplement: Codable, Hashable {
+        let equipment: String
+        let count: Int
+        /// The constraint that says how many the athlete has: `<equipment>_count`.
+        let countKey: String
+        /// "two", "kettlebells": "I have two appropriate matching kettlebells".
+        let number: String
+        let plural: String
+    }
 
     struct StartingLoad: Codable, Hashable, Identifiable {
         let id: String
@@ -271,6 +351,7 @@ struct TrackEntryRequirements: Codable, Hashable {
         case exerciseNames = "exercise_names"
         case kettlebellCount = "kettlebell_count"
         case startingLoads = "starting_loads"
+        case implements, options
     }
 }
 
@@ -1027,6 +1108,22 @@ struct GenerateConstraints: Encodable {
     /// Week within the phase a partial regenerate continues from.
     var periodizationWeek: Int? = nil
     var preferredDays: [String]? = nil
+    /// How many matching ones the athlete has of an implement a track needs
+    /// more than one of, other than the kettlebell (`kettlebellCount`), by its
+    /// constraint key: `dumbbell_count` (src/implements.py).
+    var implementCounts: [String: Int] = [:]
+    /// A track option's id → the athlete's choice (`TrackEntryRequirements.options`);
+    /// an option left out takes its default.
+    var contractOptions: [String: String] = [:]
+
+    /// How many of the implement `key` names the athlete has said they have.
+    func count(for key: String) -> Int {
+        key == CodingKeys.kettlebellCount.rawValue ? (kettlebellCount ?? 0) : (implementCounts[key] ?? 0)
+    }
+
+    mutating func setCount(_ n: Int, for key: String) {
+        if key == CodingKeys.kettlebellCount.rawValue { kettlebellCount = n } else { implementCounts[key] = n }
+    }
 
     enum CodingKeys: String, CodingKey {
         case trainingLevel = "training_level"
@@ -1043,6 +1140,39 @@ struct GenerateConstraints: Encodable {
         case startPhase = "start_phase"
         case periodizationWeek = "periodization_week"
         case preferredDays = "preferred_days"
+        case contractOptions = "contract_options"
+    }
+
+    private struct ImplementKey: CodingKey {
+        var stringValue: String
+        var intValue: Int? { nil }
+        init(stringValue: String) { self.stringValue = stringValue }
+        init?(intValue: Int) { nil }
+    }
+
+    /// The keys the synthesized encoder wrote (a nil optional left out), then
+    /// each implement's count under its own key.
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(trainingLevel, forKey: .trainingLevel)
+        try c.encode(daysPerWeek, forKey: .daysPerWeek)
+        try c.encode(sessionTimeMinutes, forKey: .sessionTimeMinutes)
+        try c.encode(equipment, forKey: .equipment)
+        try c.encode(injuryFlags, forKey: .injuryFlags)
+        try c.encode(masteredExercises, forKey: .masteredExercises)
+        try c.encodeIfPresent(kettlebellCount, forKey: .kettlebellCount)
+        try c.encodeIfPresent(startingLoadsKg, forKey: .startingLoadsKg)
+        try c.encodeIfPresent(phase, forKey: .phase)
+        try c.encodeIfPresent(trainingPhase, forKey: .trainingPhase)
+        try c.encodeIfPresent(trackId, forKey: .trackId)
+        try c.encodeIfPresent(startPhase, forKey: .startPhase)
+        try c.encodeIfPresent(periodizationWeek, forKey: .periodizationWeek)
+        try c.encodeIfPresent(preferredDays, forKey: .preferredDays)
+        if !contractOptions.isEmpty { try c.encode(contractOptions, forKey: .contractOptions) }
+        var extra = encoder.container(keyedBy: ImplementKey.self)
+        for (key, n) in implementCounts where CodingKeys(rawValue: key) == nil {
+            try extra.encode(n, forKey: ImplementKey(stringValue: key))
+        }
     }
 }
 
@@ -1055,47 +1185,17 @@ struct EquipmentItem: Identifiable {
 }
 
 extension EquipmentItem {
-    // IDs and group names must exactly match ConstraintsForm.tsx (frontend/src/components/builder/ConstraintsForm.tsx)
-    static let all: [EquipmentItem] = [
-        // Strength
-        EquipmentItem(id: "barbell", label: "Barbell", group: "Strength"),
-        EquipmentItem(id: "rack",    label: "Rack",    group: "Strength"),
-        EquipmentItem(id: "plates",  label: "Plates",  group: "Strength"),
-        // Power & Kettlebell
-        EquipmentItem(id: "kettlebell", label: "Kettlebell", group: "Power & Kettlebell"),
-        EquipmentItem(id: "dumbbell",   label: "Dumbbell",   group: "Power & Kettlebell"),
-        // Bodyweight & Gymnastics
-        EquipmentItem(id: "pull_up_bar", label: "Pull-up Bar", group: "Bodyweight & Gymnastics"),
-        EquipmentItem(id: "rings",       label: "Rings",       group: "Bodyweight & Gymnastics"),
-        EquipmentItem(id: "parallettes", label: "Parallettes", group: "Bodyweight & Gymnastics"),
-        EquipmentItem(id: "dip_bar",     label: "Dip Bar",     group: "Bodyweight & Gymnastics"),
-        EquipmentItem(id: "hangboard",   label: "Hangboard",   group: "Bodyweight & Gymnastics"),
-        // Aerobic & Conditioning
-        EquipmentItem(id: "rower",        label: "Rower",        group: "Aerobic & Conditioning"),
-        EquipmentItem(id: "assault_bike", label: "Assault Bike", group: "Aerobic & Conditioning"),
-        EquipmentItem(id: "ski_erg",      label: "Ski Erg",      group: "Aerobic & Conditioning"),
-        EquipmentItem(id: "jump_rope",    label: "Jump Rope",    group: "Aerobic & Conditioning"),
-        EquipmentItem(id: "pool",         label: "Pool",         group: "Aerobic & Conditioning"),
-        // GPP & Durability
-        EquipmentItem(id: "ruck_pack",     label: "Ruck Pack",     group: "GPP & Durability"),
-        EquipmentItem(id: "sandbag",       label: "Sandbag",       group: "GPP & Durability"),
-        EquipmentItem(id: "sled",          label: "Sled",          group: "GPP & Durability"),
-        EquipmentItem(id: "tire",          label: "Tire",          group: "GPP & Durability"),
-        EquipmentItem(id: "sledgehammer",  label: "Sledgehammer",  group: "GPP & Durability"),
-        EquipmentItem(id: "medicine_ball", label: "Medicine Ball", group: "GPP & Durability"),
-        EquipmentItem(id: "box",           label: "Box",           group: "GPP & Durability"),
-        // Mobility & Prehab
-        EquipmentItem(id: "resistance_band", label: "Resistance Band", group: "Mobility & Prehab"),
-        EquipmentItem(id: "foam_roller",     label: "Foam Roller",     group: "Mobility & Prehab"),
-        EquipmentItem(id: "ghd",             label: "GHD",             group: "Mobility & Prehab"),
-        // General
-        EquipmentItem(id: "rope",       label: "Rope",       group: "General"),
-        EquipmentItem(id: "open_space", label: "Open Space", group: "General"),
-        EquipmentItem(id: "training_partner", label: "Training Partner", group: "General"),
-        EquipmentItem(id: "cable_machine",    label: "Cable Machine",    group: "General"),
-        EquipmentItem(id: "hurdles",          label: "Hurdles",          group: "General"),
-        EquipmentItem(id: "agility_ladder",   label: "Agility Ladder",   group: "General"),
-    ]
+    /// Every item, filed under its Profile section: the one list
+    /// (data/commons/constraints/equipment.yaml, through ClientVocab.swift — the
+    /// web's sections are the same data). It used to be a copy here, and offered
+    /// `dip_bar`, `assault_bike` and `foam_roller`, which no archetype names.
+    static let all: [EquipmentItem] = ClientVocab.equipmentSections.flatMap { section in
+        section.items.compactMap { id in
+            ClientVocab.equipment.first { $0.id == id }.map {
+                EquipmentItem(id: $0.id, label: $0.label, group: section.name)
+            }
+        }
+    }
 }
 
 

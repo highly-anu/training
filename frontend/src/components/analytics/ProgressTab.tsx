@@ -1,3 +1,6 @@
+import { Check } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { LoadingState, FailedState } from '@/components/shared/states'
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
@@ -8,7 +11,6 @@ import { useApplyAdjustment } from '@/api/programs'
 import { useProgramStore } from '@/store/programStore'
 import type { ExerciseFinding, ProgressionAdjustment } from '@/api/types'
 import { EmptyState } from '@/components/shared/EmptyState'
-import { LoadingCard } from '@/components/shared/LoadingCard'
 import { ErrorBanner } from '@/components/shared/ErrorBanner'
 import { ProgressSummary } from '@/components/progression/ProgressSummary'
 import { chartableMeasures, resolveSelection, type ChartSelection } from '@/lib/progressChart'
@@ -32,7 +34,7 @@ import { StatusBadge } from './StatusBadge'
  * builds it).
  */
 export function ProgressTab() {
-  const { data, isLoading, isError, error } = useProgramAnalytics()
+  const { data, isLoading, isError, error, refetch } = useProgramAnalytics()
   const [params, setParams] = useSearchParams()
 
   // The review's period changes nothing it computes — compliance covers the
@@ -69,8 +71,14 @@ export function ProgressTab() {
     }, { replace: true })
   }
 
-  if (isLoading) return <div className="p-6 space-y-3"><LoadingCard lines={4} /><LoadingCard lines={6} /></div>
-  if (isError) return <div className="p-6"><ErrorBanner error={error as Error} title="Could not load program analytics" /></div>
+  if (isLoading) return <LoadingState shape="cards" className="p-6" />
+  if (isError && !data) {
+    return (
+      <div className="p-6">
+        <FailedState title="Could not load program analytics" error={error} onRetry={() => { void refetch() }} />
+      </div>
+    )
+  }
   if (!doc) {
     return (
       <div className="p-6">
@@ -207,14 +215,23 @@ function AdjustmentList({ adjustments }: { adjustments: ProgressionAdjustment[] 
             <p className="text-[11px] text-muted-foreground">{adj.reason}</p>
           </div>
           {APPLIABLE.has(adj.type) ? (
-            <button
-              type="button"
-              disabled={apply.isPending || appliedType === adj.type}
-              onClick={() => run(adj)}
-              className="shrink-0 rounded-md border border-primary/40 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary/20 disabled:opacity-50 transition-colors"
-            >
-              {appliedType === adj.type ? 'Applied' : apply.isPending ? 'Applying…' : `Apply from week ${(fromWeekIndex ?? 0) + 1}`}
-            </button>
+            appliedType === adj.type ? (
+              // The answer stays where the button was: what it did, not a button any more.
+              <span role="status" className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-done">
+                <Check className="size-3.5" aria-hidden="true" /> Applied
+              </span>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 shrink-0 border-primary/40 bg-primary/10 px-2.5 text-xs text-primary hover:bg-primary/20 hover:text-primary"
+                loading={apply.isPending && apply.variables?.adjustment.type === adj.type}
+                disabled={apply.isPending}
+                onClick={() => run(adj)}
+              >
+                Apply from week {(fromWeekIndex ?? 0) + 1}
+              </Button>
+            )
           ) : (
             <span className="shrink-0 text-[11px] text-muted-foreground/70">advice</span>
           )}

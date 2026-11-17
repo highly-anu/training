@@ -27,21 +27,22 @@ struct ProgramOverviewTab: View {
 
     var body: some View {
         Group {
-            if appState.allWeeks.isEmpty {
-                ContentUnavailableView(
-                    "No program",
-                    systemImage: "calendar",
-                    description: Text("Generate a program on Calendar to see its phases and priorities.")
-                )
-            } else {
+            switch AppLoadPhase.resolve(hasContent: !appState.allWeeks.isEmpty,
+                                        isLoading: appState.isLoadingProgram,
+                                        error: appState.serverProgram == nil ? appState.programError : nil) {
+            case .loading: AppLoadingState(label: "Loading program")
+            case .failed(let message):
+                AppFailedState(title: "Could not load your program", message: message) { await appState.loadProgram() }
+            case .empty:
+                AppEmptyState(icon: "calendar", title: "No program",
+                              message: "Generate a program on Calendar to see its phases and priorities.")
+            case .content:
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
                         headerCard
                         if let program = appState.serverProgram?.currentProgram, program.compositionLanes.count > 1 {
                             CompositionTracks(program: program)
-                                .padding()
-                                .background(Color(.secondarySystemBackground))
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                .appCard()
                         }
                         phasesCard
                         Spacer(minLength: 40)
@@ -124,7 +125,7 @@ struct ProgramOverviewTab: View {
                 }
             }
             if days != nil || minutes != nil || event != nil {
-                HStack(alignment: .top, spacing: 32) {
+                AppAdaptiveStack(alignment: .top, spacing: 32) {
                     if let days {
                         ProgramHeaderStat(icon: "repeat", value: "\(days)", unit: "days/wk",
                                           accessibility: "\(days) days a week")
@@ -178,7 +179,7 @@ struct ProgramOverviewTab: View {
         let segments = PhaseSegment.segments(of: weeks)
         let current = appState.currentWeekIndex ?? -1
         let summaries = self.summaries
-        return AnalyticsCard(header: "Phases") {
+        return AppCard(header: "Phases") {
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(Array(segments.enumerated()), id: \.element.id) { index, seg in
                     if index > 0 { Divider() }

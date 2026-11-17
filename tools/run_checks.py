@@ -11,6 +11,10 @@ of the commit, made for the run outside the repository and removed after it:
 - nothing a suite writes (an output file, a throwaway package) lands in a
   working tree.
 
+A package's own tests (data/packages/<id>/tests/test_*.py) are found, not
+listed: a package that brings a test needs no line in the shared registry. They
+run beside the suites, with the checkout on PYTHONPATH.
+
 The three suites that drop tables each get a database of their own, created and
 dropped here; without a local Postgres they are skipped, never run on their
 default. The gitignored data/*.fit fixtures are copied in from the main
@@ -19,6 +23,7 @@ checkout.
     .venv/bin/python tools/run_checks.py                 # every suite, on HEAD
     .venv/bin/python tools/run_checks.py --rev <sha>     # on that commit
     .venv/bin/python tools/run_checks.py --only test_selection.py tools/check_styles.py
+    .venv/bin/python tools/run_checks.py --only data/packages/bjj/tests/test_contract.py
     .venv/bin/python tools/run_checks.py --garmin        # also the Garmin release build
     .venv/bin/python tools/run_checks.py --list          # the registry, checked
 
@@ -58,6 +63,11 @@ def registry(path: str = REGISTRY) -> dict:
 def commands(reg: dict) -> list[str]:
     """Every command the registry runs, in its order."""
     return reg['suites'] + reg['exclusive'] + reg['scratch_db']
+
+
+def package_tests(root: str = ROOT) -> list[str]:
+    """Each package's own tests, as commands relative to the checkout."""
+    return sorted(os.path.relpath(p, root) for p in glob.glob(os.path.join(root, 'data', 'packages', '*', 'tests', 'test_*.py')))
 
 
 def registry_problems(reg: dict, root: str = ROOT) -> list[str]:
@@ -135,6 +145,7 @@ def main() -> int:
         for section in ('suites', 'exclusive', 'scratch_db'):
             print(f'{section}:'); [print(f'  {c}') for c in reg[section]]
         print('never:'); [print(f'  {k}: {v}') for k, v in reg['never'].items()]
+        print('package tests (found):'); [print(f'  {c}') for c in package_tests()]
         problems = registry_problems(reg)
         for p in problems:
             print(f'{RED}registry:{OFF} {p}')
@@ -154,10 +165,11 @@ def main() -> int:
         problems = registry_problems(reg, checkout)
         for p in problems:
             print(f'{RED}registry:{OFF} {p}')
-        wanted = set(args.only or commands(reg))
-        unknown = wanted - set(commands(reg))
+        packaged = package_tests(checkout)
+        wanted = set(args.only or commands(reg) + packaged)
+        unknown = wanted - set(commands(reg)) - set(packaged)
         if unknown:
-            print(f'{RED}not in the registry:{OFF} {", ".join(sorted(unknown))}')
+            print(f'{RED}not in the registry or a package:{OFF} {", ".join(sorted(unknown))}')
         if problems or unknown:
             return 1
         main = _main_checkout()
@@ -178,7 +190,9 @@ def main() -> int:
                     if result[1] != 0:
                         failed.append(result[0])
 
-        run_all([c for c in reg['suites'] if c in wanted], args.jobs)
+        package_env = {**env, 'PYTHONPATH': checkout}
+        run_all([c for c in reg['suites'] + packaged if c in wanted], args.jobs,
+                lambda c: package_env if c in packaged else env)
 
         scratch = [c for c in reg['scratch_db'] if c in wanted]
         if scratch:

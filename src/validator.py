@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import List
 
-from . import loader, phases
+from . import levels as _levels, loader, phases
 from .goals import FrameworkResolutionError
 from .scheduler import select_framework
 
@@ -90,8 +90,7 @@ def check_level_coverage(substituted: dict, constraints, archetypes, policy, res
         if level in levels:
             continue
         name = modality.replace('_', ' ')
-        order = ['novice', 'intermediate', 'advanced', 'elite']
-        written_for = ', '.join(sorted(levels, key=lambda lv: order.index(lv) if lv in order else 9))
+        written_for = ', '.join(sorted(levels, key=_levels.rank))
         result.add_warning(
             'LEVEL_COVERAGE_GAP',
             f"No {name} session in {where} is written for a {level} athlete "

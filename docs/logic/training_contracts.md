@@ -177,7 +177,20 @@ An API regeneration automatically recovers that state from the current program
 and its logs when the contract identity/version matches. An explicit
 `constraints.module_progression_state` starts or resumes a chosen cycle. A new bell
 requires explicitly starting a new cycle; no fractional or level-derived bell is
-invented. `kettlebell_weights_kg` optionally restricts choices to actual inventory.
+invented.
+
+**The implement is data** (`src/implements.py`, since 2026-10-30). A contract declares what
+its loaded blocks chosen by weight are done with — `implement: {equipment, count}` at the
+document, which a track may override (Wildman: `{equipment: kettlebell}`, and `{count: 2}`
+on the double-bell track) — and a contract with such blocks and no implement is refused at
+load. The athlete's side keeps the wire names, read for any implement:
+`<equipment>_count` (a track needing more than one refuses below it: "This track requires
+two matching kettlebells; confirm kettlebell_count of at least 2") and
+`<equipment>_weights_kg` (optionally restricts choices to actual inventory). Notes and
+refusals name it in its own words (`noun` in `data/commons/constraints/equipment.yaml`: a
+kettlebell is a "bell"). The builders read `entry_requirements.implements` (`countKey`,
+`number`, `plural`) and confirm that key; `kettlebell_count` stays for installed builds.
+`test_contract_implements.py` runs a copy of Wildman on a pair of dumbbells.
 Pentathlon requires `mastered_exercises` listing all five event movements.
 
 Web and phone expose clean completion, actual bell weight and RPE for module

@@ -4,6 +4,8 @@ import os as _os
 from typing import Optional
 from src.progression import zone_band as _zone_band
 from . import blockers, phases, provenance, recovery_regions, standard_tests
+from . import intensities as _intensities
+from . import levels as _levels
 from . import loader as _loader
 
 # ---------------------------------------------------------------------------
@@ -32,18 +34,21 @@ _LEVEL_CONCEPTS: dict[str, set] = {
 }
 
 
-_LEVEL_ORDER = ['novice', 'intermediate', 'advanced', 'elite']
-
 
 def _level_known(training_level: str, level_seeds: dict | None = None) -> set:
     """The concepts and exercise ids assumed known at a level: the built-in
     concepts plus every package seed at that level or below."""
-    known = set(_LEVEL_CONCEPTS.get(training_level, set()))
+    # The commons' concepts cascade upward as a package's seeds do: an
+    # advanced athlete knows what an intermediate does (the lists were copied
+    # by hand, and the advanced one had lost shoulder stability and the
+    # carries — a ring dip unlocked at intermediate and locked at advanced).
+    known = set()
+    for level in _levels.up_to(training_level):
+        known |= _LEVEL_CONCEPTS.get(level, set())
     if level_seeds:
         # Seeds cascade upward: what a novice knows, an advanced athlete knows.
-        cutoff = _LEVEL_ORDER.index(training_level) if training_level in _LEVEL_ORDER else 0
         for seeds in level_seeds.values():
-            for level in _LEVEL_ORDER[:cutoff + 1]:
+            for level in _levels.up_to(training_level):
                 known |= set(seeds.get(level, ()))
     return known
 
@@ -62,10 +67,14 @@ def _get_unlocked(training_level: str, exercises: dict, level_seeds: dict | None
     analytics' "movements earned" passes what has been practised, to ask what
     that practice opens.
     """
-    if training_level == 'elite':
+    if _levels.unlocks_all(training_level):     # elite (data/commons/training_levels.yaml)
         return set(exercises.keys())
 
     known = _level_known(training_level, level_seeds) | set(also_known or ())
+    # An exercise may name the lowest level it suits (`min_level`) where no
+    # prerequisite chain says it: below it the exercise stays locked whatever
+    # is known.
+    rank = _levels.rank(training_level)
 
     # Resolve prerequisite chains to a fixed point. A requirement is satisfied
     # when it is a known concept OR an exercise that is itself unlocked, so a
@@ -73,7 +82,8 @@ def _get_unlocked(training_level: str, exercises: dict, level_seeds: dict | None
     # on its own. Previously only one hop was checked, which is why _LEVEL_CONCEPTS had
     # to seed carries "directly to avoid multi-hop prerequisite chain limitation".
     unlocked: set = set()
-    pending = dict(exercises)
+    pending = {ex_id: ex for ex_id, ex in exercises.items()
+               if not ex.get('min_level') or _levels.rank(ex['min_level']) <= rank}
     while True:
         newly = {
             ex_id for ex_id, ex in pending.items()
@@ -161,28 +171,25 @@ def _injury_exclusions(constraints: dict, injury_flags_data: dict) -> tuple[set,
     return excl_patterns, excl_ids
 
 
+# Category → the equipment that serves it (data/commons/constraints/category_equipment.yaml).
+_CATEGORY_EQUIPMENT: dict[str, set] = {
+    cat: set(ids or ())
+    for cat, ids in ((_loader._load_yaml(_loader._data_path('commons', 'constraints', 'category_equipment.yaml'))
+                      or {}).get('blocked_without') or {}).items()
+}
+
+
 def _blocked_categories_for_equipment(available_equip: set) -> set:
     """Return exercise categories that are unlikely to have any matches given available equipment.
 
     This is a fast proxy — used for archetype scoring, not for hard filtering.
     """
-    blocked: set[str] = set()
-    if not available_equip.intersection({'barbell', 'rack', 'plates'}):
-        blocked.add('barbell')
-    if 'kettlebell' not in available_equip:
-        blocked.add('kettlebell')
-    if 'sandbag' not in available_equip:
-        blocked.add('sandbag')
-    if 'dumbbells' not in available_equip:
-        blocked.add('dumbbells')
-    if not available_equip.intersection({'ruck_pack', 'weight_vest'}):
-        blocked.add('carries')
-    return blocked
+    return {cat for cat, serves in _CATEGORY_EQUIPMENT.items() if not available_equip & serves}
 
 
 # Slot intensities that mark a loaded main lift, as opposed to a warm-up, an
 # accessory or a carry. A slot that names a %1RM is one too.
-MAIN_LIFT_INTENSITIES = frozenset({'heavy', 'max', 'max_effort'})
+MAIN_LIFT_INTENSITIES = _intensities.main_lift()   # data/commons/intensities.yaml
 
 
 def is_main_lift_slot(slot: dict) -> bool:
@@ -626,6 +633,30 @@ def select_exercise(
 # ---------------------------------------------------------------------------
 
 
+def _scaled_slot(slot: dict, exercises: dict) -> tuple[dict | None, dict]:
+    """A slot that names its movements, narrowed to their scaled versions
+    (each exercise's `scaling_down`, breadth first: the nearest scale of the
+    first written movement before a further one), and which written movement
+    each scales. (None, {}) when the slot names none or none has a scale."""
+    written = list((slot.get('exercise_filter') or {}).get('exercise_ids') or [])
+    order: list[str] = []
+    written_of: dict[str, str] = {}
+    queue = [(eid, eid) for eid in written]
+    while queue:
+        eid, origin = queue.pop(0)
+        for sub in (exercises.get(eid) or {}).get('scaling_down') or []:
+            if sub in written or sub in written_of:
+                continue
+            order.append(sub)
+            written_of[sub] = origin
+            queue.append((sub, origin))
+    if not order:
+        return None, {}
+    # Only the names: a scale is another movement (a ring row for a pull-up),
+    # which the written slot's category or pattern need not admit.
+    return {**slot, 'exercise_filter': {'exercise_ids': order, 'ordered': True}}, written_of
+
+
 def _slot_unfillable_in_policy(slot: dict, exercises: dict, policy, modality: str | None) -> bool:
     """True when no exercise in the policy's packages could ever match this slot.
 
@@ -798,8 +829,12 @@ def populate_session(
         arch = forced_archetype
         # Placed, not chosen (a test, a week template's named workout): the
         # trace keeps the shape the Dev Lab reads, with nothing to compare.
+        # `week_template` with the day's category when the source's week
+        # named it (the category used to stand as the reason itself, which no
+        # reader could tell from a reason); `forced` for a test placed there.
         arch_trace: dict = {'selected_id': arch.get('id'), 'filter_counts': {}, 'candidates': [],
-                            'selection_reason': session.get('category') or 'forced'}
+                            'selection_reason': 'week_template' if session.get('category') else 'forced',
+                            **({'category': session['category']} if session.get('category') else {})}
     elif collect_trace:
         arch_result = select_archetype(
             modality, constraints, phase, is_deload,
@@ -952,6 +987,27 @@ def populate_session(
                 modality=modality,
             )
 
+        scaled_from = None
+        if ex is None and (slot.get('scaling_eligible') or arch.get('scaling_eligible')):
+            # The written movement is out of reach (locked at this level, or no
+            # equipment for it): its scaled versions, the exercise's own
+            # `scaling_down`, nearest first (src/level_scaling.py).
+            scaled_slot, written_of = _scaled_slot(slot, exercises)
+            if scaled_slot is not None:
+                ex = select_exercise(
+                    scaled_slot, constraints, exercises, unlocked,
+                    excl_patterns, excl_ids, used_ex_ids, phase,
+                    session_used_ids=fresh_used,
+                    primary_sources=primary_sources,
+                    policy=policy,
+                    modality=modality,
+                )
+                if ex is not None:
+                    scaled_from = written_of[ex['id']]
+                    if collect_trace:
+                        ex_trace = {'selected_id': ex['id'], 'injury_blocked': False,
+                                    'scaled_from': scaled_from, 'filter_counts': {}, 'candidates': []}
+
         substituted_for = None
         reason = None
         blocked_by = None
@@ -1029,6 +1085,12 @@ def populate_session(
             ref = standard_tests.standard_ref(slot)
             if ref:
                 assignment['standard'] = ref
+            if scaled_from:
+                # Which written movement this scales, and why: the level, or
+                # (unlocked but not doable) the equipment or an injury.
+                assignment['scaled_from'] = scaled_from
+                assignment['scaled_from_name'] = (exercises.get(scaled_from) or {}).get('name', scaled_from)
+                assignment['scale_cause'] = 'level' if scaled_from not in unlocked else 'constraint'
             if substituted_for:
                 assignment['substituted_for'] = substituted_for
                 if blocked_by and blocked_by.get('via'):

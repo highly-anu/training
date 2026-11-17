@@ -46,10 +46,9 @@ struct LinkWorkout: Decodable, Equatable, Identifiable {
     var title: String {
         if let name, !name.isEmpty { return name }
         if let activityType, !activityType.isEmpty {
-            // Raw HealthKit / Garmin identifiers ("cross_country_skiing") read as words.
-            guard activityType.contains("_") else { return activityType }
-            let words = activityType.replacingOccurrences(of: "_", with: " ")
-            return words.prefix(1).uppercased() + words.dropFirst()
+            // As every other list names it ("Running", "Cross Country Skiing");
+            // until 1.39 this screen alone read "running".
+            return ImportedWorkout.activityLabel(activityType)
         }
         return ModalityStyle.label(for: inferredModalityId ?? "")
     }

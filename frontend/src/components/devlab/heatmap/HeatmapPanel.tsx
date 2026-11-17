@@ -1,6 +1,8 @@
+import { LoadingState } from '@/components/shared/states'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Loader2, ChevronLeft } from 'lucide-react'
+import { floatMotion, chartEntry } from '@/lib/motion'
+import { X, ChevronLeft } from 'lucide-react'
 import { HeatmapGraph } from './HeatmapGraph'
 import { getConnectedNodeIds, prunePhilosophyScope } from './heatmapGraphSelectors'
 import type { HeatmapSortMode } from './HeatmapGraph'
@@ -100,10 +102,7 @@ function NodeInfoPanel({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 6 }}
-      transition={{ duration: 0.2 }}
+      {...floatMotion}
       className="rounded-lg border border-border bg-card p-4 space-y-3"
     >
       {/* Header */}
@@ -141,7 +140,7 @@ function NodeInfoPanel({
             style={{ backgroundColor: color }}
             initial={{ width: 0 }}
             animate={{ width: `${heatPct}%` }}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
+            transition={chartEntry}
           />
         </div>
       </div>
@@ -442,12 +441,7 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
   }, [selectedNodes])
 
   if (ontologyLoading) {
-    return (
-      <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">
-        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-        Loading ontology...
-      </div>
-    )
+    return <LoadingState shape="chart" label="Loading the ontology" className="p-4" />
   }
 
   if (!graphData) return null
@@ -599,13 +593,10 @@ export function HeatmapPanel({ program, constraints, initialLockedNode, onBack }
                     size="sm"
                     className="h-8 text-xs"
                     onClick={handleGenerateComparison}
-                    disabled={!compareGoalId || generateMutation.isPending}
+                    disabled={!compareGoalId}
+                    loading={generateMutation.isPending}
                   >
-                    {generateMutation.isPending ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      'Generate'
-                    )}
+                    Generate
                   </Button>
                 </div>
               </div>

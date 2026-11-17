@@ -2,7 +2,9 @@ id: hm_russian_aggression
 name: Russian Aggression
 modality: max_strength
 category: strength
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 60
 slots:
@@ -34,6 +36,7 @@ slots:
     exercise_ids: [deadlift]
     ordered: true
   load: 84 kg (185 lb)
+  load_kg: 84
   notes: '5 rounds, alternating: 8 deadlifts, 30 m sled push, 5 one-arm weighted sit-ups each arm — not for time.'
 - role: sled_push
   slot_type: distance
@@ -85,6 +88,7 @@ slots:
     exercise_ids: [kb_swing_two_hand]
     ordered: true
   load: 24 kg (53 lb)
+  load_kg: 24
   notes: 3 rounds of 1 min kettlebell swings, 30 s rest.
 required_equipment: [barbell, rack, plates, dumbbell, box, pull_up_bar, kettlebell, open_space]
 sources: [Horsemen]

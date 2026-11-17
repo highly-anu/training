@@ -120,7 +120,7 @@ struct ProgramPreviewView: View {
                 AppSubTabPicker(selection: $tab).background(.bar)
             }
         }
-        .safeAreaInset(edge: .bottom, spacing: 0) { commitBar }
+        .appActionBar { commitBar }
         .navigationTitle(mode == .new ? "Preview" : "Preview changes")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -179,7 +179,7 @@ struct ProgramPreviewView: View {
                 }
                 if let error {
                     Label(error, systemImage: "exclamationmark.triangle")
-                        .font(.caption).foregroundStyle(.orange)
+                        .font(.caption).foregroundStyle(AppColor.warning)
                 }
             }
             .padding(.vertical, 4)
@@ -222,7 +222,7 @@ struct ProgramPreviewView: View {
         } label: {
             HStack(alignment: .top, spacing: 10) {
                 Text(day.prefix(3)).font(.subheadline).foregroundStyle(.secondary)
-                    .frame(width: 34, alignment: .leading)
+                    .frame(minWidth: 34, alignment: .leading)
                 Image(symbol: SessionIcon.symbol(icon: session.icon, modality: session.modality))
                     .foregroundStyle(ModalityStyle.color(for: session.modality))
                     .font(.caption)
@@ -238,10 +238,10 @@ struct ProgramPreviewView: View {
                         // Symbol and words, never colour alone (§1.6).
                         Label("\(held) held back", systemImage: "circle.slash")
                             .labelStyle(.inline)
-                            .font(.caption).foregroundStyle(.orange)
+                            .font(.caption).foregroundStyle(AppColor.warning)
                     }
                     ForEach(notes, id: \.self) { n in
-                        Text(n).font(.caption).foregroundStyle(.orange)
+                        Text(n).font(.caption).foregroundStyle(AppColor.warning)
                     }
                     if isChanged {
                         Label("Changes", systemImage: "arrow.triangle.2.circlepath")
@@ -255,7 +255,7 @@ struct ProgramPreviewView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .listRowBackground(isChanged ? Color.accentColor.opacity(0.08) : nil)
+        .listRowBackground(isChanged ? Color.accentColor.opacity(AppColor.Opacity.tint) : nil)
     }
 
     @ViewBuilder
@@ -406,19 +406,19 @@ struct ProgramPreviewView: View {
                 Button("Add \(missing.map(HeldBack.label).joined(separator: ", ")) and preview") {
                     Task { await addEquipment(missing) }
                 }
-                .buttonStyle(.bordered).disabled(isWorking)
+                .appButton(.secondary).disabled(isWorking)
             }
         case "injury":
             Button("Preview without the injury flags") { Task { await repreviewPatch { $0.injuryFlags = [] } } }
-                .buttonStyle(.bordered).disabled(isWorking)
+                .appButton(.secondary).disabled(isWorking)
         case "level":
             if let level = result.reference?.trainingLevel {
                 Button("Preview at \(level)") { Task { await repreviewPatch { $0.trainingLevel = level } } }
-                    .buttonStyle(.bordered).disabled(isWorking)
+                    .appButton(.secondary).disabled(isWorking)
             }
         case "schedule":
             if let onEditSchedule {
-                Button("Change schedule", action: onEditSchedule).buttonStyle(.bordered)
+                Button("Change schedule", action: onEditSchedule).appButton(.secondary)
             }
         default:
             EmptyView()
@@ -427,27 +427,25 @@ struct ProgramPreviewView: View {
 
     // MARK: - Commit
 
-    private var commitBar: some View {
-        VStack(spacing: 8) {
-            if !extraEquipment.isEmpty && !draft.isInfeasible {
-                Toggle("Also add \(extraEquipment.map(HeldBack.label).joined(separator: ", ")) to my profile",
-                       isOn: $addToProfile)
-                    .font(.footnote)
-            }
-            Button {
-                confirming = true
-            } label: {
-                Text(mode == .new ? "Start this program" : "Apply from week \(startWeek)")
-                    .fontWeight(.semibold)
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .disabled(draft.isInfeasible || isWorking)
+    @ViewBuilder private var commitBar: some View {
+        if !extraEquipment.isEmpty && !draft.isInfeasible {
+            // A setting, not a button: it keeps a surface of its own in the bar.
+            Toggle("Also add \(extraEquipment.map(HeldBack.label).joined(separator: ", ")) to my profile",
+                   isOn: $addToProfile)
+                .font(.footnote)
+                .padding(.horizontal, AppMetrics.gapMedium)
+                .padding(.vertical, AppMetrics.gapSmall)
+                .glassEffect(.regular, in: .rect(cornerRadius: AppMetrics.radiusCard))
         }
-        .padding(.horizontal)
-        .padding(.vertical, 10)
-        .background(.bar)
+        Button {
+            confirming = true
+        } label: {
+            Text(mode == .new ? "Start this program" : "Apply from week \(startWeek)")
+                .fontWeight(.semibold)
+                .frame(maxWidth: .infinity)
+        }
+        .appButton(.primary)
+        .disabled(draft.isInfeasible || isWorking)
     }
 
     private var hasActive: Bool { appState.serverProgram?.currentProgram != nil }
@@ -586,7 +584,7 @@ private struct PreviewSessionSheet: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
             }
-            .sheet(item: $swapIndex) { s in
+            .appPush(item: $swapIndex) { s in
                 SwapExerciseSheet(weekIndex: target.weekIndex, dayName: target.day,
                                   sessionIndex: target.sessionIndex, exerciseIndex: s.value,
                                   draft: .init(program: program, philosophyIds: request.sourceIds,
@@ -595,8 +593,8 @@ private struct PreviewSessionSheet: View {
                                           in: program, weekIndex: target.weekIndex, day: target.day,
                                           sessionIndex: target.sessionIndex, exerciseIndex: s.value,
                                           with: assignment))
-                                  })
-                .environmentObject(appState)
+                                  },
+                                  pushed: true)
             }
         }
     }
@@ -611,6 +609,9 @@ private struct PreviewSessionSheet: View {
                 if ea.exercise != nil {
                     Text(LoadFormat.describe(ea)).font(.subheadline.monospaced()).foregroundStyle(.secondary)
                 }
+                ForEach([LoadFormat.scaledFromText(ea), LoadFormat.scaledText(ea)].compactMap { $0 }, id: \.self) { line in
+                    Text(line).font(.caption).foregroundStyle(.secondary)
+                }
                 if let was = ea.substitutedForExercise {
                     let flag = ea.substitutedByFlag.map { " (\(names.flag($0) ?? HeldBack.label($0)))" } ?? ""
                     Text("In place of \(names.exercise(was) ?? HeldBack.label(was))\(flag)")
@@ -619,7 +620,7 @@ private struct PreviewSessionSheet: View {
                 if let empty {
                     Label(empty, systemImage: "circle.slash")
                         .labelStyle(.inline)
-                        .font(.caption).foregroundStyle(.orange)
+                        .font(.caption).foregroundStyle(AppColor.warning)
                 }
             }
             Spacer(minLength: 8)
@@ -629,7 +630,7 @@ private struct PreviewSessionSheet: View {
                 } label: {
                     Label("Swap", systemImage: "arrow.left.arrow.right").labelStyle(.inline).font(.caption)
                 }
-                .buttonStyle(.bordered)
+                .appButton(.secondary)
             }
         }
         .padding(.vertical, 2)
@@ -658,7 +659,7 @@ private struct PreviewAdjustSheet: View {
             Form {
                 Section {
                     Picker("Level", selection: $constraints.trainingLevel) {
-                        ForEach(["novice", "intermediate", "advanced", "elite"], id: \.self) {
+                        ForEach(ClientVocab.trainingLevels, id: \.self) {
                             Text($0.capitalized).tag($0)
                         }
                     }
@@ -681,7 +682,7 @@ private struct PreviewAdjustSheet: View {
                     Section {
                         Label("Previewing again replaces your \(edits) swap\(edits == 1 ? "" : "s") on this draft.",
                               systemImage: "exclamationmark.triangle")
-                            .font(.footnote).foregroundStyle(.orange)
+                            .font(.footnote).foregroundStyle(AppColor.warning)
                     }
                 }
             }
@@ -702,6 +703,9 @@ private struct PreviewAdjustSheet: View {
 /// 8) opens Program ▸ Preview on launch with a draft built from the profile's
 /// level, equipment, injuries and schedule — the builder's last step without
 /// the taps the simulator cannot script (`ROUTE='trainingcompanion://program'`).
+/// `TC_PREVIEW_LEVEL`, `TC_PREVIEW_DAYS` and `TC_PREVIEW_EQUIPMENT` (comma
+/// separated) override the profile's level, days and equipment (a scaled
+/// level, a method that needs more days or kit than the profile has).
 enum ProgramPreviewDebugLaunch {
     @MainActor
     static func draft(appState: AppState,
@@ -710,10 +714,11 @@ enum ProgramPreviewDebugLaunch {
         await appState.loadProfile()   // the launch may not have read it yet
         let p = appState.profile
         var c = GenerateConstraints()
-        c.trainingLevel = p.trainingLevel
-        c.equipment = p.equipment
+        c.trainingLevel = environment["TC_PREVIEW_LEVEL"] ?? p.trainingLevel
+        c.equipment = environment["TC_PREVIEW_EQUIPMENT"].map { $0.split(separator: ",").map(String.init) } ?? p.equipment
         c.injuryFlags = p.injuryFlags
-        c.daysPerWeek = ProgramConstraintsDiff.daysPerWeek(p.weeklySchedule) ?? 3
+        c.daysPerWeek = Int(environment["TC_PREVIEW_DAYS"] ?? "")
+            ?? ProgramConstraintsDiff.daysPerWeek(p.weeklySchedule) ?? 3
         c.sessionTimeMinutes = 75
         let request = GenerateProgramRequest(philosophyId: id, constraints: c,
                                              numWeeks: Int(environment["TC_PREVIEW_WEEKS"] ?? "") ?? 8,

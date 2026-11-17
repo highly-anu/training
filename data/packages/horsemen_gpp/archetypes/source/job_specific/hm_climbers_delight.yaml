@@ -3,9 +3,12 @@ name: Climber's Delight
 modality: durability
 category: gpp_durability
 training_levels:
+- novice
 - intermediate
 - advanced
 - elite
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 40
 slots:

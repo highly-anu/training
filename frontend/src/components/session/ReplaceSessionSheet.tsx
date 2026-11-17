@@ -1,5 +1,6 @@
+import { Spinner } from '@/components/ui/spinner'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { CheckCircle2, ChevronDown, ChevronUp, Clock, Loader2, RefreshCw } from 'lucide-react'
+import { ChevronDown, ChevronUp, Clock, Plus, RefreshCw, Search } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
@@ -12,27 +13,35 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
+import { SessionPreviewPanel } from '@/components/session/SessionPreviewPanel'
 import { EquipmentPicker } from '@/components/builder/EquipmentPicker'
 import { InjuryPicker } from '@/components/builder/InjuryPicker'
 import { useArchetypes } from '@/api/archetypes'
 import { useGenerateSession } from '@/api/programs'
 import { useProgramStore } from '@/store/programStore'
 import { cn } from '@/lib/utils'
-import type { Archetype, EquipmentId, FatigueState, GeneratedProgram, InjuryFlagId, Session, WeekData } from '@/api/types'
-import { COMPLETION } from '@/lib/completionColors'
+import { MODALITY_COLORS } from '@/lib/modalityColors'
+import type { Archetype, EquipmentId, FatigueState, GeneratedProgram, InjuryFlagId, ModalityId, Session, WeekData } from '@/api/types'
 
 interface ReplaceSessionSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  session: Session
+  /** The session replaced; none when adding. */
+  session?: Session
   weekIndex: number
   weekData: WeekData
   day: string
-  sessionIndex: number
+  sessionIndex?: number
   program: GeneratedProgram
   /** A draft program (the preview): the new session goes here instead of the active program. */
   onReplace?: (session: Session) => void
+  /** `add`: a session the athlete adds on the fly to `day` (a rest day's
+   *  mobility) — any package, any kind, an extra that counts once done. */
+  mode?: 'replace' | 'add'
 }
+
+/** The kinds offered first when adding: what a rest day usually takes. */
+const ADD_KINDS: ModalityId[] = ['mobility', 'movement_skill', 'aerobic_base', 'durability', 'rehab']
 
 export function ReplaceSessionSheet({
   open,
@@ -44,8 +53,14 @@ export function ReplaceSessionSheet({
   sessionIndex,
   program,
   onReplace,
+  mode = 'replace',
 }: ReplaceSessionSheetProps) {
+  const adding = mode === 'add'
   const storeReplaceSession = useProgramStore((s) => s.replaceSession)
+  const addSession = useProgramStore((s) => s.addSession)
+  const [kind, setKind] = useState<ModalityId>(session?.modality ?? 'mobility')
+  const [tab, setTab] = useState(adding ? 'generate' : 'browse')
+  const modality = adding ? kind : (session?.modality ?? kind)
   const replaceSession = (w: number, d: string, i: number, s: Session) =>
     onReplace ? onReplace(s) : storeReplaceSession(w, d, i, s)
   const generateSession = useGenerateSession()
@@ -84,14 +99,14 @@ export function ReplaceSessionSheet({
   const filtered = useMemo(() => {
     const q = searchQuery.toLowerCase()
     return (archetypes ?? [])
-      .filter((a) => !sameModalityOnly || a.modality === session.modality)
+      .filter((a) => !sameModalityOnly || a.modality === modality)
       .filter((a) => !q || a.name.toLowerCase().includes(q) || a.category.toLowerCase().includes(q))
       .sort((a, b) => {
-        const aMatch = a.modality === session.modality ? 0 : 1
-        const bMatch = b.modality === session.modality ? 0 : 1
+        const aMatch = a.modality === modality ? 0 : 1
+        const bMatch = b.modality === modality ? 0 : 1
         return aMatch - bMatch || a.name.localeCompare(b.name)
       })
-  }, [archetypes, searchQuery, sameModalityOnly, session.modality])
+  }, [archetypes, searchQuery, sameModalityOnly, modality])
 
   const effectiveConstraints = {
     session_time_minutes: timeOverride ?? program.constraints?.session_time_minutes ?? 60,
@@ -107,15 +122,16 @@ export function ReplaceSessionSheet({
 
   const baseParams = {
     goalId: program.goal?.id,
-    modality: session.modality,
+    modality,
     // A composed program's session runs its own track's phase and framework.
-    phase: session.phase ?? weekData.phase,
-    weekInPhase: session.week_in_phase ?? weekData.week_in_phase,
-    isDeload: session.lane_key ? !!session.is_deload : weekData.is_deload,
-    phaseId: session.phase_id ?? weekData.phase_id,
-    frameworkId: session.framework ?? weekData.framework,
-    laneKey: session.lane_key,
+    phase: session?.phase ?? weekData.phase,
+    weekInPhase: session?.week_in_phase ?? weekData.week_in_phase,
+    isDeload: session?.lane_key ? !!session.is_deload : weekData.is_deload,
+    phaseId: session?.phase_id ?? weekData.phase_id,
+    frameworkId: session?.framework ?? weekData.framework,
+    laneKey: adding ? undefined : session?.lane_key,
     constraints: effectiveConstraints,
+    ...(adding ? { add: true } : {}),
   }
 
   function handleArchetypeClick(arch: Archetype) {
@@ -136,37 +152,68 @@ export function ReplaceSessionSheet({
 
   function handleConfirm() {
     if (!pendingSession) return
-    replaceSession(weekIndex, day, sessionIndex, pendingSession)
+    if (adding) addSession(weekIndex, day, pendingSession)
+    else replaceSession(weekIndex, day, sessionIndex ?? 0, pendingSession)
     onOpenChange(false)
   }
 
-  function handleTryAgain() {
+  /** Back to the list or the search, nothing saved. */
+  function handleBack() {
     setPendingSession(null)
     setSelectedArchId(null)
     generateSession.reset()
   }
+
+  /** Another session of the kind than the one shown. */
+  function handleSearchAgain() {
+    const current = pendingSession?.archetype?.id
+    generateSession.mutate({ ...baseParams, ...(current ? { currentArchetypeId: current } : {}) },
+                           { onSuccess: (data) => setPendingSession(data) })
+  }
+
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="sm:max-w-md flex flex-col p-0">
         <SheetHeader className="px-5 py-4 border-b shrink-0">
           <SheetTitle className="flex items-center gap-2">
-            <RefreshCw className="size-4" />
-            Replace Session
+            {adding ? <Plus className="size-4" /> : <RefreshCw className="size-4" />}
+            {adding ? 'Add a session' : 'Replace Session'}
           </SheetTitle>
-          <div className="flex items-center gap-2 mt-1">
-            <ModalityBadge modality={session.modality} size="sm" />
-            <span className="text-xs text-muted-foreground truncate">
-              {session.archetype?.name}
-            </span>
-          </div>
+          {adding ? (
+            <div className="space-y-2 mt-1">
+              <p className="text-xs text-muted-foreground">
+                {day} — an extra: it counts once you do it, and you can remove it.
+              </p>
+              <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Kind of session">
+                {ADD_KINDS.map((k) => (
+                  <button key={k} type="button" role="radio" aria-checked={kind === k}
+                    onClick={() => { setKind(k); setPendingSession(null); setSelectedArchId(null); generateSession.reset() }}
+                    className={cn('rounded-full border px-2.5 py-1 text-xs transition-colors',
+                      kind === k ? 'border-primary/60 bg-primary/10 text-foreground'
+                                 : 'border-border text-muted-foreground hover:border-primary/40')}
+                    style={kind === k ? { borderLeftColor: MODALITY_COLORS[k].hex, borderLeftWidth: 3 } : undefined}>
+                    {MODALITY_COLORS[k].label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : session && (
+            <div className="flex items-center gap-2 mt-1">
+              <ModalityBadge modality={session.modality} size="sm" />
+              <span className="text-xs text-muted-foreground truncate">
+                {session.archetype?.name}
+              </span>
+            </div>
+          )}
         </SheetHeader>
 
         <div className="flex-1 flex flex-col overflow-hidden">
-          <Tabs defaultValue="browse" className="flex-1 flex flex-col overflow-hidden">
+          {!pendingSession && (<>
+          <Tabs value={tab} onValueChange={setTab} className="flex-1 flex flex-col overflow-hidden">
             <TabsList className="mx-5 mt-4 shrink-0">
               <TabsTrigger value="browse" className="flex-1">Browse</TabsTrigger>
-              <TabsTrigger value="generate" className="flex-1">Generate</TabsTrigger>
+              <TabsTrigger value="generate" className="flex-1">Search</TabsTrigger>
             </TabsList>
 
             {/* Browse Tab */}
@@ -178,20 +225,14 @@ export function ReplaceSessionSheet({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
-                <div
-                  className="flex items-center gap-2 cursor-pointer"
-                  onClick={() => setSameModalityOnly((v) => !v)}
-                >
+                <Label htmlFor="same-modality" className="flex items-center gap-2 text-xs font-normal cursor-pointer">
                   <Checkbox
                     id="same-modality"
                     checked={sameModalityOnly}
                     onCheckedChange={(v) => setSameModalityOnly(Boolean(v))}
-                    className="pointer-events-none"
                   />
-                  <Label htmlFor="same-modality" className="text-xs cursor-pointer">
-                    Same modality only
-                  </Label>
-                </div>
+                  Same modality only
+                </Label>
               </div>
 
               <ScrollArea className="flex-1 mt-3 -mx-1 px-1">
@@ -228,7 +269,7 @@ export function ReplaceSessionSheet({
                             </div>
                             <div className="shrink-0 flex items-center gap-1.5 text-[10px] text-muted-foreground mt-0.5">
                               {isLoading ? (
-                                <Loader2 className="size-3.5 animate-spin text-primary" />
+                                <Spinner className="size-3.5 text-primary" />
                               ) : (
                                 <>
                                   <Clock className="size-3" />
@@ -340,13 +381,11 @@ export function ReplaceSessionSheet({
                 <Button
                   className="w-full"
                   onClick={handleGenerate}
-                  disabled={generateSession.isPending}
+                  loading={generateSession.isPending}
                 >
-                  {generateSession.isPending ? (
-                    <><Loader2 className="size-4 mr-2 animate-spin" /> Generating…</>
-                  ) : (
-                    <><RefreshCw className="size-4 mr-2" /> Generate Session</>
-                  )}
+                  {/* A fitting session from the library — found, not invented;
+                      its full preview comes next, before anything is saved. */}
+                  <Search className="size-4" /> Search
                 </Button>
               </div>
             </TabsContent>
@@ -355,53 +394,25 @@ export function ReplaceSessionSheet({
           {/* Error state */}
           {generateSession.isError && !pendingSession && (
             <div className="mx-5 mb-4 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2.5 text-xs text-destructive">
-              Failed to generate session. Check API connection and try again.
+              {adding && generateSession.error instanceof Error && generateSession.error.message
+                ? generateSession.error.message
+                : 'Failed to generate session. Check API connection and try again.'}
             </div>
           )}
 
-          {/* Pending session preview */}
-          {pendingSession && (
-            <div className="border-t shrink-0">
-              <div className="px-5 py-4 space-y-3">
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className={cn('size-4 mt-0.5 shrink-0', COMPLETION.text)} />
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold truncate">
-                      {pendingSession.archetype?.name}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      <ModalityBadge modality={pendingSession.modality} size="sm" />
-                      {pendingSession.archetype?.duration_estimate_minutes && (
-                        <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                          <Clock className="size-3" />
-                          ~{pendingSession.archetype.duration_estimate_minutes} min
-                        </span>
-                      )}
-                      <span className="text-[10px] text-muted-foreground">
-                        {pendingSession.exercises.filter((e) => e.exercise).length || 'Coach-led'} {pendingSession.exercises.filter((e) => e.exercise).length ? 'exercises' : ''}
-                      </span>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mt-1 truncate">
-                      {pendingSession.exercises
-                        .filter((e) => e.exercise)
-                        .slice(0, 4)
-                        .map((e) => e.exercise?.name)
-                        .join(', ')}
-                      {pendingSession.exercises.filter((e) => e.exercise).length > 4 && '…'}
-                    </p>
-                  </div>
-                </div>
+          </>)}
 
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1" onClick={handleTryAgain}>
-                    Try Again
-                  </Button>
-                  <Button size="sm" className="flex-1" onClick={handleConfirm}>
-                    Confirm Replace
-                  </Button>
-                </div>
-              </div>
-            </div>
+          {/* The found (or picked) session in full, before anything is saved */}
+          {pendingSession && (
+            <SessionPreviewPanel
+              session={pendingSession}
+              confirmLabel={adding ? 'Add session' : 'Replace session'}
+              onConfirm={handleConfirm}
+              onBack={handleBack}
+              onSearchAgain={selectedArchId ? undefined : handleSearchAgain}
+              searching={generateSession.isPending}
+              error={generateSession.isError && generateSession.error instanceof Error ? generateSession.error.message : null}
+            />
           )}
         </div>
       </SheetContent>

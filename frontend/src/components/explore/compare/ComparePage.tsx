@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, FlaskConical, Loader2, Plus, Wand2, X } from 'lucide-react'
+import { ChevronLeft, FlaskConical, Plus, Wand2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { usePhilosophies } from '@/api/philosophies'
@@ -9,6 +9,7 @@ import { useSimilarity } from '@/api/similarity'
 import { usePhilosophyCompare } from '@/api/philosophyCompare'
 import { useBuilderStore } from '@/store/builderStore'
 import { ErrorBanner } from '@/components/shared/ErrorBanner'
+import { LoadingState } from '@/components/shared/states/LoadingState'
 import { modalityHex, modalityLabel } from '@/lib/modalityColors'
 import { philosophyHex } from '@/lib/exploreColors'
 import { cn } from '@/lib/utils'
@@ -144,9 +145,7 @@ export function ComparePage({ ids, onChange, onOpen, onBack }: {
   )
   if (isLoading) {
     return (
-      <div className="flex h-64 items-center justify-center gap-2 text-sm text-muted-foreground">
-        <Loader2 className="size-4 animate-spin" /> Setting them side by side…
-      </div>
+      <LoadingState shape="grid" count={3} label="Setting them side by side" className="mx-auto max-w-6xl px-4 py-4" />
     )
   }
   if (error || !doc) {
@@ -176,10 +175,10 @@ export function ComparePage({ ids, onChange, onOpen, onBack }: {
             <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground/50">Compare</p>
             <h2 className="text-lg font-semibold leading-tight">{cols.map((g) => g.name.replace(/ \(.*\)$/, '')).join(' · ')}</h2>
           </div>
-          <label className="flex items-center gap-2 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
             <Switch checked={onlyDiff} onCheckedChange={setOnlyDiff} aria-label="Only differences" />
-            Only differences
-          </label>
+            <span aria-hidden="true">Only differences</span>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -302,7 +301,7 @@ export function ComparePage({ ids, onChange, onOpen, onBack }: {
             <Row label="You already own">
               {cols.map((g) => {
                 const t = g.tracks.find((x) => x.id === trackOf(g))
-                const asks = [...(t?.requires ?? []), ...(t?.kettlebellPair ? ['a pair of bells'] : [])]
+                const asks = [...(t?.requires ?? []), ...(t?.implement ? [t.implement] : [])]
                 return <Cell key={g.id} className="text-[11px] text-muted-foreground">{asks.length ? asks.join(', ') : '—'}</Cell>
               })}
             </Row>

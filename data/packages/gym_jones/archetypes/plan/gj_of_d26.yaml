@@ -3,6 +3,8 @@ name: "Operator Fitness — Day 26: Strength"
 modality: max_strength
 category: conditioning
 training_levels: [intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 duration_estimate_minutes: 60
 pool_only: true
 
@@ -31,6 +33,7 @@ slots:
       exercise_ids: [kb_squat_goblet]
       ordered: true
     load: "25 lb (11 kg)"
+    load_kg: 11
 
   - role: sl_squat
     slot_type: sets_reps

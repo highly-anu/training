@@ -79,8 +79,9 @@ class StopMenuDelegate extends Ui.Menu2InputDelegate {
             Ui.pushView(cv, new DiscardConfirmDelegate(_ctl), Ui.SLIDE_IMMEDIATE);
             return;
         }
-        // A test day: the results first (they ride in the upload), then save.
-        if (id == :save && _ctl.testSteps().size() > 0) {
+        // A test day, or one with reps to count: the results first (they ride
+        // in the upload), then save.
+        if (id == :save && (_ctl.testSteps().size() > 0 || _ctl.countSteps().size() > 0)) {
             try { _ctl.closeStep(); $.openResultsMenu(_ctl, _view); return; } catch (e) { _view.fail("results", e); }
         }
         try {

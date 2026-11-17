@@ -91,6 +91,7 @@ exercises:
     advanced: 100
     elite: 130
   weekly_increment_kg: 2.5
+  sessions_per_week: 3
 - id: front_squat
   name: Front Squat
   category: barbell
@@ -143,6 +144,7 @@ exercises:
     advanced: 80
     elite: 110
   weekly_increment_kg: 2.5
+  sessions_per_week: 2
 - id: overhead_squat
   name: Overhead Squat
   category: barbell
@@ -236,6 +238,7 @@ exercises:
     advanced: 130
     elite: 170
   weekly_increment_kg: 5.0
+  sessions_per_week: 1
 - id: bench_press
   name: Bench Press
   category: barbell
@@ -281,6 +284,7 @@ exercises:
     advanced: 90
     elite: 120
   weekly_increment_kg: 2.5
+  sessions_per_week: 2
 - id: strict_press
   name: Strict Press (Overhead)
   category: barbell
@@ -328,6 +332,7 @@ exercises:
     advanced: 60
     elite: 80
   weekly_increment_kg: 1.25
+  sessions_per_week: 2
 - id: push_press
   name: Push Press
   category: barbell
@@ -510,6 +515,7 @@ exercises:
     advanced: 75
     elite: 100
   weekly_increment_kg: 2.5
+  sessions_per_week: 2
 - id: hang_power_clean
   name: Hang Power Clean
   category: barbell
@@ -558,6 +564,7 @@ exercises:
   weekly_increment_kg: 2.5
 - id: squat_clean
   name: Squat Clean
+  min_level: intermediate
   category: barbell
   modality:
   - power
@@ -645,6 +652,7 @@ exercises:
     '
 - id: power_snatch
   name: Power Snatch
+  min_level: intermediate
   category: barbell
   modality:
   - power
@@ -691,6 +699,7 @@ exercises:
     80–90%. Prerequisite to full snatch; builds the hip-to-overhead pathway.
 - id: snatch
   name: Snatch
+  min_level: intermediate
   category: barbell
   modality:
   - power
@@ -1321,7 +1330,7 @@ exercises:
   - isometric
   - locomotion
   requires:
-  - kb_farmer_carry
+  - farmer_carry_kb
   unlocks: []
   contraindicated_with:
   - hip_flexor_strain
@@ -1330,7 +1339,7 @@ exercises:
     load: increase_bell_weight
     volume: increase_distance_m
   scaling_down:
-  - kb_farmer_carry
+  - farmer_carry_kb
   typical_volume:
     sets: 4
     distance_m: 40
@@ -1358,7 +1367,7 @@ exercises:
   - isometric
   - locomotion
   requires:
-  - kb_farmer_carry
+  - farmer_carry_kb
   unlocks: []
   contraindicated_with:
   - lumbar_disc
@@ -1367,7 +1376,7 @@ exercises:
     load: increase_bell_weight
     volume: increase_distance_m
   scaling_down:
-  - kb_farmer_carry
+  - farmer_carry_kb
   typical_volume:
     sets: 4
     distance_m: 40
@@ -3071,6 +3080,9 @@ exercises:
     a hang squat clean and a mutant maker at 95 lb.
 - id: clean_and_jerk
   named_only: true
+  min_level: intermediate
+  scaling_down:
+  - power_clean
   name: Clean and Jerk
   category: barbell
   modality:
@@ -4616,6 +4628,9 @@ exercises:
     A dip on rings: 21-15-9 in Elizabeth, 50 in George Washington, 15-10-5 in Bloody Nose.
 - id: handstand_push_up
   named_only: true
+  min_level: intermediate
+  scaling_down:
+  - push_up
   name: Handstand Push-Up
   category: bodyweight
   modality:
@@ -4900,6 +4915,9 @@ exercises:
     Your Freedom.
 - id: rope_climb
   named_only: true
+  min_level: intermediate
+  scaling_down:
+  - pull_up
   name: Rope Climb
   category: bodyweight
   modality:

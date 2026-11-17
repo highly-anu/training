@@ -18,7 +18,7 @@ from typing import NamedTuple
 import math
 import os
 
-from . import provenance, recovery_regions
+from . import levels as _levels, provenance, recovery_regions
 from .selector import _equipment_ok, _injury_exclusions
 
 
@@ -62,7 +62,7 @@ def _document(path: str) -> dict:
 def load_contract(package: str, track: str) -> dict | None:
     from . import loader
     import os
-    path = os.path.join(loader._PACKAGES_DIR, package, 'training_contract.yaml')
+    path = os.path.join(loader.package_dir(package), 'training_contract.yaml')
     if not os.path.exists(path):
         return None
     document = _document(path)
@@ -107,7 +107,58 @@ def load_contract(package: str, track: str) -> dict | None:
             raise ContractError('Timed cycles must start at or below their duration ceiling.')
         if any(b['slot_type'] == 'emom' for b in module['blocks']) and p['model'] != 'density_cycle':
             raise ContractError('EMOM contract blocks require a density_cycle prescription.')
-    return {**deepcopy(contract), 'version': document['version'], 'package': package, 'track_id': track}
+    from . import equipment, implements
+    implement = implements.merged(document, contract)
+    if implement and implement.get('equipment') not in equipment.ids():
+        raise ContractError(f"{package}/{track}: its implement {implement.get('equipment')!r} is not in the equipment list.")
+    if not implement and any(b.get('loaded') for m in contract['modules'] if m['progression']['model'] != 'load_per_exposure'
+                             for b in m['blocks']):
+        raise ContractError(f'{package}/{track}: a loaded block chosen by weight needs the implement it uses '
+                            '(`implement: {equipment, count}`).')
+    options = {o['id']: o for o in contract.get('options') or []}
+    for o in options.values():
+        if o['default'] not in {c['id'] for c in o['choices']}:
+            raise ContractError(f"{package}/{track}: option {o['id']}'s default {o['default']!r} is not one of its choices.")
+    for module in contract['modules']:
+        for b in module['blocks']:
+            for opt, choice in ((b.get('alternate') or {}).get('when') or {}).items():
+                if opt not in options or choice not in {c['id'] for c in options[opt]['choices']}:
+                    raise ContractError(f"{module['id']}: its alternate asks for {opt} = {choice!r}, "
+                                        'which the track\'s options do not offer.')
+            if b.get('alternate') and b['slot_type'] != 'emom':
+                raise ContractError(f"{module['id']}: only an EMOM block's rounds alternate.")
+    out = {**deepcopy(contract), 'version': document['version'], 'package': package, 'track_id': track,
+           **({'implement': implement} if implement else {})}
+    # An alternation reads the athlete's options where the block is built:
+    # each option it asks about, with its choices and default.
+    for module in out['modules']:
+        for b in module['blocks']:
+            if b.get('alternate'):
+                b['alternate']['options'] = {k: {'default': options[k]['default'],
+                                                 'choices': [c['id'] for c in options[k]['choices']]}
+                                             for k in (b['alternate'].get('when') or {})}
+    return out
+
+
+def _alternate(block: dict, exercises: dict, constraints: dict, blocked: tuple | None) -> str | None:
+    """The movement an EMOM block's even rounds take (Wildman's Option C: odd
+    minutes two-hand, even minutes hand-to-hand), when the athlete's options
+    (`contract_options`, else each option's default) say so and their
+    equipment and injuries allow it; else None — one movement."""
+    alt = block.get('alternate')
+    if not alt:
+        return None
+    chosen = constraints.get('contract_options') or {}
+    for opt, want in (alt.get('when') or {}).items():
+        spec = (alt.get('options') or {}).get(opt) or {}
+        value = chosen.get(opt) if chosen.get(opt) in (spec.get('choices') or []) else spec.get('default')
+        if value != want:
+            return None
+    ex = exercises.get(alt['exercise_id'])
+    if ex is None or _ruled_out(ex, constraints, blocked) \
+            or not _equipment_ok(ex, set(constraints.get('equipment') or [])):
+        return None
+    return alt['exercise_id']
 
 
 def period_of(module: dict, week_number: int | None) -> dict | None:
@@ -264,6 +315,56 @@ def with_volume(module: dict, level: str, week: int, deload: bool, longest: floa
         blocks.append(b)
     return {**module, 'blocks': blocks, 'written_deload': deload,
             'volume_capped': minutes if minutes > room else None}
+
+
+def with_level(module: dict, policy: dict | None, level: str | None) -> dict:
+    """The module at the athlete's level (src/level_scaling.py): below the
+    track's authored level a `scaling_eligible` module's blocks are a share of
+    what is written — the sets where there are several (each block's minutes
+    with them), else the reps; a hold's seconds and a timed block's minutes.
+    Never touched: the week's volume (`start_minutes` is the source's by
+    level), a lift's weight (`load_per_exposure`, a bell), a progressing
+    block's cycle, an interval, a test, practice (`skill_practice`). Each
+    scaled block keeps what was written under `rx`; generation and `verify`
+    resolve a module through the same chain, so they agree."""
+    from . import level_scaling
+    if not policy or not module.get('scaling_eligible'):
+        return module
+    found = level_scaling.factors(level, policy)
+    if found is None:
+        return module
+    shares, sources = found
+    blocks = []
+    for b in module['blocks']:
+        if (b.get('volume') or b.get('standard') or _progresses(b)
+                or b['slot_type'] not in ('sets_reps', 'static_hold', 'time_domain')):
+            blocks.append(b)
+            continue
+        load = {k: b[k] for k in ('sets', 'reps') if k in b}
+        if b['slot_type'] == 'static_hold':
+            load['hold_seconds'] = b['hold_sec']
+        if b['slot_type'] == 'time_domain' and b.get('duration_sec'):
+            load['duration_minutes'] = math.ceil(b['duration_sec'] / 60)
+        scaled = level_scaling.scale_prescription(load, {}, level, policy)
+        rx = scaled.get('rx')
+        if not rx:
+            blocks.append(b)
+            continue
+        b = {**b, 'rx': rx, 'level_scaled': scaled['level_scaled']}
+        if 'sets' in rx:
+            b['sets'] = scaled['sets']
+            if 'duration_sec' in b:
+                b['duration_sec'] = math.ceil(b['duration_sec'] * scaled['sets'] / rx['sets'])
+        if 'reps' in rx:
+            b['reps'] = scaled['reps']
+        if 'hold_seconds' in rx:
+            b['hold_sec'] = scaled['hold_seconds']
+            if 'duration_sec' in b:
+                b['duration_sec'] = math.ceil(b['duration_sec'] * scaled['hold_seconds'] / rx['hold_seconds'])
+        if 'duration_minutes' in rx:
+            b['duration_sec'] = scaled['duration_minutes'] * 60
+        blocks.append(b)
+    return {**module, 'blocks': blocks}
 
 
 # ── Load per confirmed exposure (Starting Strength) ──────────────────────────
@@ -424,6 +525,75 @@ def seed_lifts(current: dict, logs: dict, module: dict) -> dict:
     return out
 
 
+def modules_for(package: str | None, module_ids, track: str | None = None) -> dict:
+    """{module id: module} of the package's contract track that has these
+    modules — the named track first, else the first that holds them all; {}
+    for a package without a contract. For readers of a stored session (the
+    briefing), which carries module ids and no track."""
+    from . import loader
+    import os
+    wanted = {m for m in module_ids or [] if m}
+    if not package or not wanted:
+        return {}
+    path = os.path.join(loader.package_dir(package), 'training_contract.yaml')
+    if not os.path.exists(path):
+        return {}
+    try:
+        tracks = list((_document(path).get('tracks') or {}))
+    except Exception:  # noqa: BLE001 — an unreadable contract names nothing
+        return {}
+    for name in ([track] if track in tracks else []) + [t for t in tracks if t != track]:
+        try:
+            contract = load_contract(package, name)
+        except ContractError:
+            continue
+        by_id = {m['id']: m for m in (contract or {}).get('modules') or []}
+        if wanted <= by_id.keys():
+            return by_id
+    return {}
+
+
+def clean_outcomes(module: dict, exercises: dict | None) -> list | None:
+    """A session's logged outcomes for one module record when they earn it —
+    every progressing exercise clean, at or below the module's RPE, its rounds
+    or seconds done, any bell weight a real number — else None. The one
+    reading of "clean" (`confirmed_state` advances on it; the briefing says
+    which earlier sessions were)."""
+    exercises = exercises if isinstance(exercises, dict) else {}
+    outcomes = [exercises.get(eid, {}) for eid in module['exercise_ids']]
+    if not outcomes or not all(isinstance(o, dict) and o.get('clean') is True and not isinstance(o.get('rpe'), bool) and isinstance(o.get('rpe'), (int, float))
+                               and 0 < o['rpe'] <= module['max_rpe'] for o in outcomes):
+        return None
+    if any(o.get(k) is not None and (isinstance(o[k], bool) or not isinstance(o[k], (int, float)) or not math.isfinite(o[k]))
+           for o in outcomes for k in ('durationSec', 'rounds')):
+        return None
+    requirements = module.get('requirements') or {eid: {
+        'duration_sec': module.get('duration_sec', 0), 'rounds': module['rounds']}
+        for eid in module['exercise_ids']}
+    if not all((o.get('durationSec') or 0) >= requirements[eid].get('duration_sec', 0)
+               if requirements[eid].get('duration_sec') else
+               (o.get('rounds') or len(o.get('sets') or [])) >= requirements[eid]['rounds']
+               for eid, o in zip(module['exercise_ids'], outcomes)):
+        return None
+    if any(isinstance(o.get('weightKg'), bool) or not isinstance(o.get('weightKg'), (int, float))
+           or not math.isfinite(o['weightKg']) or o['weightKg'] <= 0
+           for o in outcomes if o.get('weightKg') is not None):
+        return None
+    return outcomes
+
+
+def cycle_position(progression: dict | None, step: int) -> dict | None:
+    """Where a step stands in a density cycle: {step, of, stage, stages}, all
+    counted from 1; None for a model without a cycle of steps."""
+    spec = progression or {}
+    if spec.get('model') != 'density_cycle':
+        return None
+    reps = len(range(spec['reps_start'], spec['reps_max'] + 1, spec['reps_step']))
+    stages = len(spec['rounds'])
+    index = min(max(int(step), 0), reps * stages - 1)
+    return {'step': index + 1, 'of': reps * stages, 'stage': index // reps + 1, 'stages': stages}
+
+
 def confirmed_state(current: dict, logs: dict, contract: dict) -> dict:
     """Consume successful exposures once, in prescription order, never by date alone.
 
@@ -476,24 +646,10 @@ def confirmed_state(current: dict, logs: dict, contract: dict) -> dict:
                         # attending moves the rotation on.
                         record['completed'] += 1
                         continue
-                    outcomes = [log.get('exercises', {}).get(eid, {}) for eid in module['exercise_ids']]
-                    if not outcomes or not all(isinstance(o, dict) and o.get('clean') is True and not isinstance(o.get('rpe'), bool) and isinstance(o.get('rpe'), (int, float))
-                                               and 0 < o['rpe'] <= module['max_rpe'] for o in outcomes):
-                        continue
-                    if any(o.get(k) is not None and (isinstance(o[k], bool) or not isinstance(o[k], (int, float)) or not math.isfinite(o[k]))
-                           for o in outcomes for k in ('durationSec', 'rounds')):
-                        continue
-                    requirements = module.get('requirements') or {eid: {
-                        'duration_sec': module.get('duration_sec', 0), 'rounds': module['rounds']}
-                        for eid in module['exercise_ids']}
-                    if not all((o.get('durationSec') or 0) >= requirements[eid].get('duration_sec', 0)
-                               if requirements[eid].get('duration_sec') else
-                               (o.get('rounds') or len(o.get('sets') or [])) >= requirements[eid]['rounds']
-                               for eid, o in zip(module['exercise_ids'], outcomes)):
+                    outcomes = clean_outcomes(module, log.get('exercises'))
+                    if outcomes is None:
                         continue
                     logged_weights = [o.get('weightKg') for o in outcomes if o.get('weightKg') is not None]
-                    if any(isinstance(w, bool) or not isinstance(w, (int, float)) or not math.isfinite(w) or w <= 0 for w in logged_weights):
-                        continue
                     weights = set(logged_weights)
                     if weights:
                         if len(weights) != 1 or any(isinstance(w, bool) or not isinstance(w, (int, float)) or not math.isfinite(w) or w <= 0 for w in weights):
@@ -595,19 +751,32 @@ def _interval_budget(module: dict, constraints: dict) -> float:
     return constraints.get('session_time_minutes', 60) * 60 - other
 
 
+def _inventory(module: dict, constraints: dict) -> list | None:
+    """The weights the athlete owns of the module's implement
+    (`<equipment>_weights_kg`), or None when they did not say."""
+    from . import implements
+    eq = (module.get('implement') or {}).get('equipment')
+    return constraints.get(implements.weights_key(eq)) if eq else None
+
+
 def _bell(module: dict, constraints: dict, state: dict) -> float | None:
-    inventory = constraints.get('kettlebell_weights_kg')
+    """The module's weight of its implement (a bell, for Wildman), checked
+    against what the athlete owns."""
+    from . import implements
+    eq = (module.get('implement') or {}).get('equipment')
+    one = implements.noun(eq)[0] if eq else 'implement'
+    inventory = _inventory(module, constraints)
     if inventory is not None and (not isinstance(inventory, list) or not inventory or any(isinstance(w, bool) or not isinstance(w, (int, float))
                                                      or not math.isfinite(w) or w <= 0 for w in inventory)):
-        raise ContractError('kettlebell_weights_kg must contain positive bell weights.')
+        raise ContractError(f'{implements.weights_key(eq)} must contain positive {one} weights.')
     weight = state.get('weight_kg')
     if weight is not None and (isinstance(weight, bool) or not isinstance(weight, (int, float))
                                or not math.isfinite(weight) or weight <= 0):
         raise ContractError('A module weight must be a positive number.')
     if weight is not None and inventory is not None and weight not in inventory:
-        raise ContractError(f"{module['id']}: the selected bell is not in the available inventory.")
-    # A category such as 'kettlebell' says nothing about owned sizes. Never invent
-    # a fractional bell or infer a safe working load from an athlete's level.
+        raise ContractError(f"{module['id']}: the selected {one} is not in the available inventory.")
+    # An equipment item says nothing about owned sizes. Never invent a
+    # fractional weight or infer a safe working load from an athlete's level.
     return weight
 
 
@@ -724,6 +893,12 @@ def _assignment(block: dict, module: dict, exercises: dict, constraints: dict,
                 'duration_minutes': seconds // 60}
         if cue:
             load['focus'] = cue
+        alt = _alternate(block, exercises, constraints, blocked)
+        if alt:
+            # Odd rounds the block's movement, even rounds this one; the
+            # watches name each round's (`alternateName`).
+            name = exercises[alt].get('name', alt)
+            load['alternate'] = {'exercise_id': alt, 'name': name}
     else:
         seconds = block['duration_sec']
         if _progresses(block) and not block.get('standard') and module['progression']['model'] == 'timed_cycle':
@@ -739,6 +914,10 @@ def _assignment(block: dict, module: dict, exercises: dict, constraints: dict,
             load['target_rpm'] = block['target_rpm']
         if block['slot_type'] == 'skill_practice':
             load['focus'] = 'Controlled technique; stop before movement quality deteriorates.'
+    if block.get('rx'):
+        # Done at the athlete's level (with_level): what was written, for the clients.
+        load['rx'] = dict(block['rx'])
+        load['level_scaled'] = block['level_scaled']
     if block.get('intensity'):
         # A prescribed zone, as the selector writes one, so heart rate counts
         # for this block in the analytics (src/analytics/hr_plan.py).
@@ -762,14 +941,23 @@ def _assignment(block: dict, module: dict, exercises: dict, constraints: dict,
     elif block.get('loaded'):
         if weight is not None:
             load['weight_kg'] = weight
-        load['load_note'] = (('Use two matching bells; selected weight is per bell. Finish repetitions cleanly, then rest.'
-                              if module.get('bell_count') == 2 else
-                              'Use the selected single bell; finish repetitions with clean mechanics, then rest.')
+        from . import implements
+        implement = module.get('implement') or {}
+        one, many = implements.noun(implement['equipment']) if implement.get('equipment') else ('implement', 'implements')
+        count = implement.get('count', 1)
+        load['load_note'] = ((f'Use {implements.number(count)} matching {many}; selected weight is per {one}. '
+                              'Finish repetitions cleanly, then rest.'
+                              if count > 1 else
+                              f'Use the selected single {one}; finish repetitions with clean mechanics, then rest.')
                              if weight is not None else
-                             'Choose a bell you can control throughout. Record its weight before increasing load.')
+                             f'Choose a {one} you can control throughout. Record its weight before increasing load.')
     if block['slot_type'] == 'emom' and load.get('focus'):
         # The stage's cue leads the note both clients show (start/stop).
         load['load_note'] = f"{load['focus']} {load.get('load_note') or ''}".strip()
+    if load.get('alternate'):
+        # Option C leads the note: which movement each minute is.
+        load['load_note'] = (f"Alternate minutes: {ex.get('name', eid)}, then {load['alternate']['name']}. "
+                             f"{load.get('load_note') or ''}").strip()
     load.update(prescription_version=1, progression_model=module['progression']['model'],
                 module_id=module['id'], forecast_step=step,
                 advances_module=_advancing(block) if by_load else _progresses(block),
@@ -986,8 +1174,10 @@ def _optional_blocker(module: dict, exercises: dict, constraints: dict, state: d
 def active_modules(contract: dict, constraints: dict) -> list[dict]:
     """The modules this athlete runs: those written for their level, each with
     its weekly exposures for the days they train (`exposures_by_days` — BJJ's
-    mat sessions grow with the week; 0 leaves a module out), and the bell pair
-    a track asks for. The compiler and the verifier read the same list."""
+    mat sessions grow with the week; 0 leaves a module out), and the
+    implement the track's loaded blocks use (`implement`: a pair of bells for
+    Wildman's double-bell track). The compiler and the verifier read the same
+    list."""
     level = constraints.get('training_level', 'intermediate')
     days = constraints.get('days_per_week', 4)
     learned = set(constraints.get('mastered_exercises') or []) | set((contract.get('level_seeds') or {}).get(level, []))
@@ -1006,8 +1196,8 @@ def active_modules(contract: dict, constraints: dict) -> list[dict]:
             if not n:
                 continue
             m = {**m, 'exposures_per_week': n}
-        if contract.get('requires_kettlebell_pair'):
-            m = {**m, 'bell_count': 2}
+        if contract.get('implement'):
+            m = {**m, 'implement': contract['implement']}
         out.append(m)
     return out
 
@@ -1020,14 +1210,14 @@ def _level_refusal(contract: dict, level: str) -> str:
     phil = loader.load_philosophy(contract['package'])
     names = {t['id']: t.get('name', t['id']) for t in phil.get('tracks') or []}
     this = names.get(contract['track_id'], contract['track_id'])
-    document = _document(os.path.join(loader._PACKAGES_DIR, contract['package'], 'training_contract.yaml'))
+    document = _document(os.path.join(loader.package_dir(contract['package']), 'training_contract.yaml'))
     fits = [tid for tid, t in (document.get('tracks') or {}).items() if level in (t.get('training_levels') or [])]
     levels = contract['training_levels']
     who = levels[0] if len(levels) == 1 else f"{', '.join(levels[:-1])} and {levels[-1]}"
     if fits:
         return f"{this} is written for {who} athletes; at {level}, {names.get(fits[0], fits[0])} is the track for you."
     written = sorted({lv for t in (document.get('tracks') or {}).values() for lv in t.get('training_levels') or []},
-                     key=['novice', 'intermediate', 'advanced', 'elite'].index)
+                     key=_levels.rank)
     return (f"{this} is written for {who} athletes, and no track of this "
             f"program is written for {level} (they cover {', '.join(written)}).")
 
@@ -1044,10 +1234,14 @@ def start(contract: dict, entries: list, constraints: dict, data: dict, policy,
     level = constraints.get('training_level', 'intermediate')
     if level not in contract['training_levels']:
         raise ContractError(_level_refusal(contract, level))
-    if contract.get('requires_kettlebell_pair'):
-        count = constraints.get('kettlebell_count', 0)
-        if isinstance(count, bool) or not isinstance(count, int) or count < 2:
-            raise ContractError('This track requires two matching kettlebells; confirm kettlebell_count of at least 2.')
+    implement = contract.get('implement') or {}
+    if implement.get('count', 1) > 1:
+        from . import implements
+        need, key = implement['count'], implements.count_key(implement['equipment'])
+        count = constraints.get(key, 0)
+        if isinstance(count, bool) or not isinstance(count, int) or count < need:
+            raise ContractError(f'This track requires {implements.number(need)} matching '
+                                f"{implements.plural_label(implement['equipment'])}; confirm {key} of at least {need}.")
     modules = active_modules(contract, constraints)
     if not modules:
         raise ContractError('No training modules are defined for this level.')
@@ -1131,6 +1325,9 @@ def start(contract: dict, entries: list, constraints: dict, data: dict, policy,
     program['training_contract']['longest_minutes'] = longest
     capped_said: set = set()
     held: dict = {}
+    # What each week decided, for the Dev Lab's trace (finish(include_trace));
+    # nothing reads it to build the program.
+    decisions: list[dict] = []
 
     def week(entry: dict, day_room: dict | None = None, others: dict | None = None,
              essential_days=None, search: int = 500) -> dict:
@@ -1160,10 +1357,11 @@ def start(contract: dict, entries: list, constraints: dict, data: dict, policy,
 
         def resolve(m, step, offset=0, position=1, seen=()):
             """The module as it runs at this exposure of this week."""
-            return with_volume(with_stall(at_step(m, step, weeks_of[m['id']], offset), state[m['id']], step,
-                                          position, seen),
-                               level, entry['week_in_program'], deloads[m['id']], longest, modules,
-                               entry.get('phase_id'), entry['week_in_phase'], held)
+            return with_level(with_volume(with_stall(at_step(m, step, weeks_of[m['id']], offset), state[m['id']],
+                                                     step, position, seen),
+                                          level, entry['week_in_program'], deloads[m['id']], longest, modules,
+                                          entry.get('phase_id'), entry['week_in_phase'], held),
+                              contract.get('level_policy'), level)
 
         # The week's longest exposure: a cycle's last step, or the longer of
         # alternating variants (Workout A runs longer than B).
@@ -1241,6 +1439,8 @@ def start(contract: dict, entries: list, constraints: dict, data: dict, policy,
         # optional work, then alternates and spaces the work best; the search
         # is small (a week, a few modules).
         best = None
+        runner_up = None
+        considered = 0
         essential_caps = day_caps if essential_days is None else \
             {d: (day_caps[d] if d in essential_days else 0) for d in pool}
         for i, candidate in enumerate(_placements(essential, estimates, pool, cap, essential_caps)):
@@ -1254,8 +1454,11 @@ def start(contract: dict, entries: list, constraints: dict, data: dict, policy,
             shared = sum(1 for d in candidate if d in (others or {}))
             key = (closes, -shared, -stacked, sum(len(v) for v in fit.values()),
                    *_spacing(candidate, module_regions, others))
+            considered += 1
             if best is None or key > best[0]:
-                best = (key, candidate, fit)
+                best, runner_up = (key, candidate, fit), best
+            elif runner_up is None or key > runner_up[0]:
+                runner_up = (key, candidate, fit)
             if i >= search:
                 break
         if best is None:
@@ -1267,7 +1470,32 @@ def start(contract: dict, entries: list, constraints: dict, data: dict, policy,
             error.volume_minutes = sum(estimates[m['id']] * m['exposures_per_week'] for m in essential
                                        if m['progression']['model'] == 'weekly_volume')
             raise error
-        _, placed, fit = best
+        chosen_key, placed, fit = best
+
+        def _placement(found) -> dict:
+            key, candidate, _fit = found
+            names = ('closes_with_test', 'days_shared_with_other_tracks', 'days_stacked', 'optional_sessions',
+                     'same_modality_back_to_back', 'same_modality_neighbours', 'regions_loaded_close', 'spread')
+            # The key ranks higher-is-better with counts negated: said here as the counts.
+            score = {n: (bool(v) if n == 'closes_with_test' else abs(v)) for n, v in zip(names, key)}
+            return {'days': {d: [m['id'] for m in ms] for d, ms in sorted(candidate.items())}, 'score': score}
+
+        decisions.append({
+            'week': entry['week_in_program'], 'phase_id': entry.get('phase_id'), 'day_pool': list(pool),
+            'session_minutes': cap,
+            'deload': {'week': bool(deload), 'forced': bool(forced), 'frequency_weeks': frequency,
+                       'modules': {mid: bool(v) for mid, v in deloads.items()}},
+            'modules': [{'id': m['id'], 'name': m['name'], 'optional': bool(m.get('optional')),
+                         'exposures_per_week': m['exposures_per_week'], 'minutes': round(estimates[m['id']], 1),
+                         'period_week': weeks_of[m['id']], 'step': cursor[m['id']],
+                         'model': m['progression']['model'], 'deload': bool(deloads[m['id']]),
+                         'blocked': optional_out.get(m['id']) or None} for m in modules],
+            'placement': {'considered': considered, 'chosen': _placement(best),
+                          'runner_up': _placement(runner_up) if runner_up else None},
+            'test': ({'archetypes': pending_test.get('archetypes'), 'day': pending_test.get('day')}
+                     if pending_test else None),
+            'optional_short': [],
+        })
         previous = {}
         skipped = []
         for m in modules:
@@ -1404,6 +1632,7 @@ def start(contract: dict, entries: list, constraints: dict, data: dict, policy,
                                  'framework': fw['id'], 'schedule': schedule,
                                  'is_deload': deload or bool(deloads and all(deloads.values())),
                                  **({'modules_skipped': skipped} if skipped else {})})
+        decisions[-1]['optional_short'] = [dict(item) for item in skipped]
         for item in skipped:
             shortfalls.setdefault((item['name'], item['placed'], item['of'], item['reason']), []).append(
                 entry['week_in_program'])
@@ -1421,10 +1650,10 @@ def start(contract: dict, entries: list, constraints: dict, data: dict, policy,
             program['compromises'].append(f"{name}: {placed} of {of} weekly sessions{when} — {reason}.")
         verify(program, contract, constraints)
         if include_trace:
-            program['generation_trace'] = _trace(program, contract, constraints)
+            program['generation_trace'] = _trace(program, contract, constraints, decisions)
         return program
 
-    return ContractRun(week=week, finish=finish, program=program, state=state, pool=pool)
+    return ContractRun(week=week, finish=finish, program=program, state=state, pool=pool, decisions=decisions)
 
 
 class ContractRun(NamedTuple):
@@ -1433,6 +1662,7 @@ class ContractRun(NamedTuple):
     program: dict
     state: dict
     pool: list
+    decisions: list
 
 
 def generate(contract: dict, entries: list, constraints: dict, data: dict, policy,
@@ -1444,11 +1674,16 @@ def generate(contract: dict, entries: list, constraints: dict, data: dict, polic
     return run.finish(include_trace)
 
 
-def _trace(program: dict, contract: dict, constraints: dict) -> dict:
+def _trace(program: dict, contract: dict, constraints: dict, decisions: list | None = None) -> dict:
     """The generation trace in the shape the selector's has (the Dev Lab reads
     one shape; test_devlab_trace.py keeps it): the framework is the phase's,
     nothing was chosen among candidates, and every slot and progression entry
-    names the module that placed it."""
+    names the module that placed it. What the contract itself decided rides
+    beside it: each week's `scheduler.contract_week` (the modules with their
+    minutes, period week, step and deload; the placement chosen and the next
+    best, scored; optional work left short; the test) and each session's
+    `module_steps` (the step, variant, light day and rounds each module ran)."""
+    by_week = {d['week']: d for d in decisions or []}
     names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     contract_id = program['training_contract']['id']
     level = constraints.get('training_level', 'intermediate')
@@ -1460,6 +1695,13 @@ def _trace(program: dict, contract: dict, constraints: dict) -> dict:
             'archetype': {'selected_id': s['archetype']['id'], 'filter_counts': {}, 'candidates': [],
                           'selection_reason': 'training_contract'},
             'modules': [m['id'] for m in s.get('modules') or []],
+            'module_steps': [{'id': m['id'], 'step': m.get('forecast_step'), 'deload': bool(m.get('deload')),
+                              'variant': m.get('variant'), 'light_day': m.get('light_day'),
+                              'rounds': m.get('rounds'), 'max_rpe': m.get('max_rpe'),
+                              'lifts': m.get('lifts')} for m in s.get('modules') or []],
+            **({'test': {'archetype': s['test'].get('archetype'),
+                         'standards': [x.get('id') if isinstance(x, dict) else x for x in s['test'].get('standards') or []],
+                         'instead_of': (s['test'].get('instead_of') or {}).get('archetype')}} if s.get('test') else {}),
             'slots': [{'slot_index': i, 'slot_role': ea['slot_role'], 'slot_type': ea.get('slot_type'),
                        'meta': bool(ea.get('meta')), 'movement_pattern': None,
                        'selected_id': (ea.get('exercise') or {}).get('id'),
@@ -1477,10 +1719,15 @@ def _trace(program: dict, contract: dict, constraints: dict) -> dict:
 
     return {'primary_sources': [contract['package']], 'philosophy_mode': 'training_contract',
             'weeks': [{'week_number': w['week_number'], 'week_in_phase': w['week_in_phase'],
-                       'phase': w['phase'], 'is_deload': w['is_deload'],
+                       'phase': w['phase'], 'is_deload': w['is_deload'], 'engine': 'training_contract',
                        'scheduler': {'contract': contract_id, 'is_deload': w['is_deload'],
                                      'framework_selection': {'selected_id': w['framework'],
-                                                             'selection_reason': 'training_contract'}},
+                                                             'selection_reason': 'training_contract'},
+                                     'contract_week': by_week.get(w['week_number'])},
+                       'tests': {'placed': [{'day': names[d - 1], 'archetype': s['test'].get('archetype')}
+                                            for d, ss in sorted(w['schedule'].items()) for s in ss if s.get('test')],
+                                 'skipped': [{'archetypes': t.get('archetypes'), 'reason': t.get('reason')}
+                                             for t in w.get('tests_skipped') or []]},
                        'sessions': {names[d - 1]: [session(s, w) for s in ss]
                                     for d, ss in w['schedule'].items()}}
                       for w in program['weeks']]}
@@ -1505,7 +1752,6 @@ def verify(program: dict, contract: dict, constraints: dict) -> None:
     if longest > constraints['session_time_minutes']:
         raise ContractError('A volume session is budgeted past the session limit.')
     last_day = {}
-    inventory = constraints.get('kettlebell_weights_kg')
     cursors = {mid: (program.get('module_state', {}).get(mid) or {}).get('completed', 0) for mid in every}
     light_seen: dict[str, set] = {mid: set() for mid in every}
     held: dict = {}
@@ -1541,11 +1787,13 @@ def verify(program: dict, contract: dict, constraints: dict) -> None:
                     last_day[mid] = absolute
                     actual = [e['exercise']['id'] for e in session['exercises'] if e['load']['module_id'] == mid and e.get('exercise')]
                     lift_state = (program.get('module_state') or {}).get(mid) or {}
-                    module_now = with_volume(with_stall(at_step(expected[mid], record['forecast_step'], mweek,
-                                                                counts[mid] - 1 if deload else 0),
-                                                        lift_state, record['forecast_step'], counts[mid], light_seen[mid]),
-                                             level, week['week_number'], deload, longest, week_list,
-                                             week.get('phase_id'), week.get('week_in_phase', 1), held)
+                    module_now = with_level(with_volume(with_stall(at_step(expected[mid], record['forecast_step'], mweek,
+                                                                           counts[mid] - 1 if deload else 0),
+                                                                   lift_state, record['forecast_step'], counts[mid],
+                                                                   light_seen[mid]),
+                                                        level, week['week_number'], deload, longest, week_list,
+                                                        week.get('phase_id'), week.get('week_in_phase', 1), held),
+                                            contract.get('level_policy'), level)
                     dropping = _cuts(module_now, deload) and not session.get('test')
                     if module_now.get('variant') != record.get('variant'):
                         raise ContractError('A module ran a variant out of its rotation.')
@@ -1591,8 +1839,12 @@ def verify(program: dict, contract: dict, constraints: dict) -> None:
                             continue
                         if load['forecast_step'] != record['forecast_step']:
                             raise ContractError('An assignment lost its module progression position.')
+                        inventory = _inventory(expected[mid], constraints)
                         if load.get('weight_kg') is not None and inventory is not None and load['weight_kg'] not in inventory:
-                            raise ContractError('A prescription uses a bell outside the available inventory.')
+                            from . import implements
+                            eq = (expected[mid].get('implement') or {}).get('equipment')
+                            one = implements.noun(eq)[0] if eq else 'implement'
+                            raise ContractError(f'A prescription uses a {one} outside the available inventory.')
                         if load['progression_model'] != spec['model']:
                             raise ContractError('A prescription lost its resolved progression policy.')
                         if spec['model'] == 'weekly_volume' and ea.get('exercise'):

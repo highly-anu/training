@@ -10,6 +10,7 @@ import { ReplaceSessionSheet } from '@/components/session/ReplaceSessionSheet'
 import { useHeldBackNames } from '@/hooks/useHeldBackNames'
 import { emptySlotText, idLabel, sessionNotes } from '@/lib/heldBack'
 import { formatLoad } from '@/lib/formatLoad'
+import { scaledFromText, scaledLoadText } from '@/lib/levelScaling'
 import { usePreviewStore } from '@/store/previewStore'
 import type { GeneratedProgram } from '@/api/types'
 
@@ -65,7 +66,7 @@ export function PreviewSessionSheet({ program, target, onClose, philosophyIds }:
           </SheetHeader>
 
           {notes.length > 0 && (
-            <ul className="mt-4 space-y-1 rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-xs">
+            <ul className="mt-4 space-y-1 rounded-md border border-warn/30 bg-warn/5 p-3 text-xs">
               {notes.map((n) => <li key={n}>{n}</li>)}
             </ul>
           )}
@@ -83,6 +84,9 @@ export function PreviewSessionSheet({ program, target, onClose, philosophyIds }:
                         {ea.exercise?.name ?? <span className="text-muted-foreground">{idLabel(ea.slot_role ?? 'slot')}</span>}
                       </p>
                       {load && <p className="mt-0.5 text-xs font-mono text-primary">{load}</p>}
+                      {[scaledFromText(ea), scaledLoadText(ea)].filter(Boolean).map((line) => (
+                        <p key={line} className="mt-0.5 text-[11px] text-muted-foreground">{line}</p>
+                      ))}
                       {ea.substituted_for && (
                         <p className="mt-0.5 text-[11px] text-muted-foreground">
                           In place of {names.exercise?.(ea.substituted_for) ?? idLabel(ea.substituted_for)}
@@ -90,7 +94,7 @@ export function PreviewSessionSheet({ program, target, onClose, philosophyIds }:
                         </p>
                       )}
                       {empty && (
-                        <p className="mt-0.5 inline-flex items-start gap-1 text-[11px] text-amber-700 dark:text-amber-300">
+                        <p className="mt-0.5 inline-flex items-start gap-1 text-[11px] text-warn">
                           <CircleSlash className="mt-0.5 size-3 shrink-0" aria-hidden="true" />
                           {empty}
                         </p>

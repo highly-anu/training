@@ -4,6 +4,10 @@
 # gating, docs/package-fidelity/kelly_starrett.md).
 id: kelly_starrett
 
+# Built to Move's ten vital signs are its tests, but their bands (the book's
+# pp. 33-34) are not read, so none is a standard yet.
+no_elite_standard: "Built to Move's ten vital signs are tested and retested, but the book's bands (pp. 33-34) were not read; with them each could become a standard."
+
 progress:
   - id: plan_completion
     label: Days done as written

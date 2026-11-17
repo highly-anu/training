@@ -81,7 +81,7 @@ struct PhaseMatrixView: View {
                                 .font(.footnote).monospacedDigit().fontWeight(.medium)
                                 .padding(.horizontal, 8).padding(.vertical, 3)
                                 .background(ModalityStyle.color(for: row.modality).opacity(0.25))
-                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                                .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusChip))
                         } else {
                             Text("·").font(.footnote).foregroundStyle(.quaternary)
                                 .accessibilityLabel("not in this phase")

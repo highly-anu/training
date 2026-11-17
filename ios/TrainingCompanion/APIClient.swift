@@ -73,6 +73,17 @@ final class APIClient {
         try await get("/user/today-session?date=\(date)&spec=1&week=1")
     }
 
+    /// Before a session: today's numbers beside the earlier times it was
+    /// done, as its package says (src/briefing.py).
+    func fetchBriefing(sessionKey: String, date: String?) async throws -> SessionBriefing {
+        var items = [URLQueryItem(name: "key", value: sessionKey)]
+        if let date { items.append(URLQueryItem(name: "date", value: date)) }
+        var query = URLComponents()
+        query.queryItems = items
+        let data = try await get("/sessions/briefing?\(query.percentEncodedQuery ?? "")")
+        return try JSONDecoder().decode(SessionBriefing.self, from: data)
+    }
+
     func fetchTodaySessionStatus() async throws -> String {
         let data = try await get("/user/today-session")
         let json = (try? JSONSerialization.jsonObject(with: data) as? [String: Any]) ?? [:]
@@ -116,6 +127,14 @@ final class APIClient {
     func saveWorkoutLog(sessionKey: String, log: [String: Any]) async throws {
         guard let body = try? JSONSerialization.data(withJSONObject: log) else { return }
         _ = try await putRaw("/health/sessions/\(sessionKey)", body: body)
+    }
+
+    /// The same log, addressed by the session's uid (the workout player's):
+    /// a day with two sessions, or a plan since replaced, lands on its row.
+    func saveWorkoutLog(sessionUid: String, log: [String: Any]) async throws {
+        guard let body = try? JSONSerialization.data(withJSONObject: log) else { return }
+        let escaped = sessionUid.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? sessionUid
+        _ = try await putRaw("/health/sessions/by-uid/\(escaped)", body: body)
     }
 
     /// Store workouts the watch recorded (`WatchUpload.workoutPayload`). No
@@ -283,9 +302,64 @@ final class APIClient {
         return (try JSONDecoder().decode(Body.self, from: data).terms ?? [:]).compactMapValues(\.value)
     }
 
+    /// What the athlete's own methods add to the vocabulary: each such
+    /// modality's display and the equipment they bring (ServedVocabulary).
+    func fetchServedVocabulary() async throws -> (modalities: [String: [String: Any]], equipment: [EquipmentItem]) {
+        async let modalities = get("/modalities")
+        async let equipment = get("/equipment")
+        return (ServedVocabulary.modalityDisplays(from: try await modalities),
+                ServedVocabulary.equipment(from: try await equipment))
+    }
+
+    // MARK: - Methods of the athlete's own (roadmap 21)
+
+    func fetchMethods() async throws -> MethodsAnswer {
+        try JSONDecoder().decode(MethodsAnswer.self, from: try await get("/methods"))
+    }
+
+    /// Queues a build. A refusal is an answer, not an error: only a request
+    /// that never reached the server throws.
+    func startMethodBuild(_ request: MethodBuildRequest) async throws -> MethodBuildStart {
+        let (data, status) = try await postForStatus("/methods/builds", body: try JSONEncoder().encode(request))
+        return MethodBuildWords.start(status: status, body: data)
+    }
+
+    /// How one build stands; nil when it is not the athlete's.
+    func fetchMethodBuild(_ id: String) async throws -> MethodBuild? {
+        let (data, status) = try await sendForStatus("GET", "/methods/builds/\(Self.segment(id))")
+        if status == 404 { return nil }
+        guard (200..<300).contains(status) else { throw APIError.serverError(status) }
+        return try Self.build(in: data)
+    }
+
+    func cancelMethodBuild(_ id: String) async throws -> MethodBuild {
+        try Self.build(in: try await postRaw("/methods/builds/\(Self.segment(id))/cancel", body: Data("{}".utf8)))
+    }
+
+    /// Deletes a method; answers why not when it is refused, nil when done.
+    func deleteMethod(_ id: String) async throws -> String? {
+        let (data, status) = try await sendForStatus("DELETE", "/methods/\(Self.segment(id))")
+        return MethodBuildWords.deleteRefusal(status: status, body: data)
+    }
+
+    private static func build(in data: Data) throws -> MethodBuild {
+        struct Envelope: Decodable { let build: MethodBuild }
+        guard let build = try? JSONDecoder().decode(Envelope.self, from: data).build else { throw APIError.decodingError }
+        return build
+    }
+
+    private static func segment(_ id: String) -> String {
+        id.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed.subtracting(CharacterSet(charactersIn: "/"))) ?? id
+    }
+
     func fetchPhilosophies() async throws -> [PhilosophyCard] {
         let data = try await get("/philosophies")
         return (try? JSONDecoder().decode([PhilosophyCard].self, from: data)) ?? []
+    }
+
+    func fetchPhilosophyGlance() async throws -> [PhilosophyGlance] {
+        let data = try await get("/philosophies/glance")
+        return try JSONDecoder().decode([Lossy<PhilosophyGlance>].self, from: data).compactMap(\.value)
     }
 
     func fetchInjuryFlags() async throws -> [InjuryFlagDef] {
@@ -319,23 +393,26 @@ final class APIClient {
         )
     }
 
-    /// Log what was done for one exercise. The server merges `exercises` per
-    /// key and keeps the completion, notes and fatigue it already has, so a
-    /// log before "Mark Session Complete" is fine and so is one after.
+    /// A session's log in one request: what was done per exercise and, with
+    /// `completedAt`, the completion. The server merges `exercises` per key
+    /// and keeps the completion, notes and fatigue it already has, so a log
+    /// before "Mark Session Complete" is fine and so is one after.
     /// What the save says about the standards: a test slot's outcome comes
     /// back as a suggestion (`standards.pending`), nil when the log bears on
     /// no standard.
     @discardableResult
-    func saveExerciseLog(sessionKey: String, exerciseId: String,
-                         performance: ExercisePerformanceLog) async throws -> SessionLogStandards? {
+    func saveSessionLog(sessionKey: String, exercises: [String: ExercisePerformanceLog],
+                        completedAt: String? = nil) async throws -> SessionLogStandards? {
         struct Body: Encodable {
-            let exercises: [String: ExercisePerformanceLog]
+            let exercises: [String: ExercisePerformanceLog]?
+            let completedAt: String?
             let source: String
         }
         struct Saved: Decodable { let standards: SessionLogStandards? }
         let escaped = sessionKey.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? sessionKey
         let data = try await put("/health/sessions/\(escaped)",
-                                 body: Body(exercises: [exerciseId: performance], source: "manual"))
+                                 body: Body(exercises: exercises.isEmpty ? nil : exercises,
+                                            completedAt: completedAt, source: "manual"))
         return (try? JSONDecoder().decode(Saved.self, from: data))?.standards
     }
 
@@ -756,17 +833,31 @@ final class APIClient {
         _ = try await putRaw("/health/sessions/\(sessionKey)", body: body)
     }
 
+    /// One session for a slot, or an added one (`request.add`). A refusal
+    /// carries the server's sentence ("No mobility session fits your level…").
     func generateSession(_ request: GenerateSessionRequest) async throws -> ProgramSession {
-        return try await post("/sessions/generate", body: request)
+        let (data, status) = try await postForStatus("/sessions/generate", body: try JSONEncoder().encode(request))
+        guard (200..<300).contains(status) else {
+            throw APIError.serverErrorDetail(status, Self.detail(from: data) ?? "Could not generate a session")
+        }
+        return try JSONDecoder().decode(ProgramSession.self, from: data)
     }
 
     /// Thrown when the server rejects a program write as based on a stale read.
     struct StaleProgramRevision: Error {}
 
-    /// Returns the server's `phaseSummary` of the weeks just saved (nil from an
-    /// older server), so the Overview shows what this edit changed.
+    /// What the PUT answers beside `saved`: the stored copy's new revision and
+    /// version, which the next save is checked against, and the server's
+    /// `phaseSummary` of the weeks just saved (nil from an older server), so
+    /// the Overview shows what this edit changed.
+    struct SavedProgram: Decodable {
+        let revision: String?
+        let programVersionId: String?
+        let phaseSummary: JSONValue?
+    }
+
     @discardableResult
-    func saveProgram(_ payload: UserProgramSavePayload) async throws -> JSONValue? {
+    func saveProgram(_ payload: UserProgramSavePayload) async throws -> SavedProgram? {
         let url = URL(string: APIClient.baseURL + "/user/program")!
         var request = URLRequest(url: url)
         request.httpMethod = "PUT"
@@ -782,8 +873,7 @@ final class APIClient {
             throw StaleProgramRevision()
         }
         try validateStatus(response)
-        struct Saved: Decodable { let phaseSummary: JSONValue? }
-        return (try? JSONDecoder().decode(Saved.self, from: data))?.phaseSummary
+        return try? JSONDecoder().decode(SavedProgram.self, from: data)
     }
 
     // MARK: - Watch device pairing (Garmin / future companions)
@@ -881,6 +971,15 @@ final class APIClient {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         try await addAuth(to: &request)
         request.httpBody = body
+        let (data, response) = try await URLSession.shared.data(for: request)
+        return (data, (response as? HTTPURLResponse)?.statusCode ?? 0)
+    }
+
+    /// A request whose status is the caller's to read (404 not theirs, 409 in use).
+    private func sendForStatus(_ method: String, _ path: String) async throws -> (Data, Int) {
+        var request = URLRequest(url: URL(string: APIClient.baseURL + path)!)
+        request.httpMethod = method
+        try await addAuth(to: &request)
         let (data, response) = try await URLSession.shared.data(for: request)
         return (data, (response as? HTTPURLResponse)?.statusCode ?? 0)
     }

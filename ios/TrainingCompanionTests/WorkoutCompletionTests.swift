@@ -70,14 +70,14 @@ final class WorkoutCompletionTests: XCTestCase {
 
     func testLinkedBeatsSuggestion() {
         let m = WorkoutCompletion.match(matchedKey: "3-Friday-0", suggestionKey: "3-Friday-1",
-                                        sameDay: [], isComplete: { _ in false }, session: { _ in nil })
+                                        sameDay: [], isLinked: { _ in false }, session: { _ in nil })
         XCTAssertEqual(m, .linked(key: "3-Friday-0", session: nil))
     }
 
     func testRejectedMatchIsNotALink() {
         // An unlink leaves `sessionKey: ""` behind.
         let m = WorkoutCompletion.match(matchedKey: "", suggestionKey: nil, sameDay: [],
-                                        isComplete: { _ in false }, session: { _ in nil })
+                                        isLinked: { _ in false }, session: { _ in nil })
         XCTAssertEqual(m, .unplanned)
     }
 
@@ -86,7 +86,7 @@ final class WorkoutCompletionTests: XCTestCase {
                    WorkoutCompletion.Candidate(key: "3-Friday-1", session: session("mobility")),
                    WorkoutCompletion.Candidate(key: "3-Friday-2", session: session("power"))]
         let m = WorkoutCompletion.match(matchedKey: nil, suggestionKey: "3-Friday-0", sameDay: day,
-                                        isComplete: { $0 == "3-Friday-2" }, session: { _ in nil })
+                                        isLinked: { $0 == "3-Friday-2" }, session: { _ in nil })
         XCTAssertEqual(m, .suggested(key: "3-Friday-0", session: nil,
                                      others: [WorkoutCompletion.Candidate(key: "3-Friday-1",
                                                                           session: session("mobility"))]))
@@ -95,11 +95,37 @@ final class WorkoutCompletionTests: XCTestCase {
     func testOpenSessionsWithoutSuggestion() {
         let day = [WorkoutCompletion.Candidate(key: "3-Friday-0", session: session())]
         XCTAssertEqual(WorkoutCompletion.match(matchedKey: nil, suggestionKey: nil, sameDay: day,
-                                               isComplete: { _ in false }, session: { _ in nil }),
+                                               isLinked: { _ in false }, session: { _ in nil }),
                        .candidates(day))
         XCTAssertEqual(WorkoutCompletion.match(matchedKey: nil, suggestionKey: nil, sameDay: day,
-                                               isComplete: { _ in true }, session: { _ in nil }),
+                                               isLinked: { _ in true }, session: { _ in nil }),
                        .unplanned)
+    }
+
+    func testSessionLoggedOnTheWatchIsStillTheOneToLink() async {
+        // The watch logs the session it ran (done, no workout); its recording
+        // arrives later through Garmin Connect. On 2026-11-02 the sheet
+        // dropped the done session and read "Nothing planned that day".
+        let state = AppState()
+        state.serverProgram = ServerProgram(
+            currentProgram: GeneratedProgram(weeks: [
+                ProgramWeek(weekNumber: 1, weekInPhase: 1, isDeload: false, phase: "base",
+                            schedule: ["Monday": [session("power")]]),
+            ]),
+            programStartDate: "2026-11-02", eventDate: nil, sourceGoalIds: [])
+        state.sessionLogs["1-Monday-0"] = SessionLogEntry(
+            sessionKey: "1-Monday-0", completedAt: "2026-11-02T05:58:00Z", source: "garmin",
+            notes: nil, fatigueRating: nil, avgHR: nil, peakHR: nil, matchedWorkoutId: nil)
+        let recording = workout("rec", end: "2026-11-02T05:58:00Z", date: "2026-11-02")
+        state.importedWorkouts = [recording]
+        XCTAssertEqual(state.completionMatch(for: recording),
+                       .candidates([WorkoutCompletion.Candidate(key: "1-Monday-0", session: session("power"))]))
+
+        // Once a recording is linked to it, the session is taken.
+        state.workoutMatches = ["other": WorkoutMatch(workoutId: "other", sessionKey: "1-Monday-0",
+                                                      confidence: "manual")]
+        state.importedWorkouts.append(workout("other", end: "2026-11-02T06:30:00Z", date: "2026-11-02"))
+        XCTAssertEqual(state.completionMatch(for: recording), .unplanned)
     }
 
     // MARK: - The cheer

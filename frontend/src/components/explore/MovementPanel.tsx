@@ -1,6 +1,6 @@
+import { LoadingState } from '@/components/shared/states'
 import { useMemo } from 'react'
 import { ArrowLeft } from 'lucide-react'
-import { LoadingCard } from '@/components/shared/LoadingCard'
 import { SimilarItems } from '@/components/shared/SimilarItems'
 import { StatCell } from '@/components/explore/ExploreSection'
 import { LineageSection } from '@/components/explore/LineageSection'
@@ -33,7 +33,7 @@ export function MovementLanding({ movements, isLoading, onSelect }: {
     }))
   }, [movements])
 
-  if (isLoading) return <div className="p-6"><LoadingCard /></div>
+  if (isLoading) return <LoadingState className="p-6" />
 
   return (
     <div className="h-full overflow-y-auto">

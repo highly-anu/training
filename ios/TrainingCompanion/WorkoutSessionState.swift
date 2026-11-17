@@ -1,0 +1,611 @@
+import Combine
+import Foundation
+
+@MainActor
+final class WorkoutSessionState: ObservableObject {
+
+    // MARK: - Phase
+
+    enum Phase: Equatable, Codable {
+        case idle
+        case active(exerciseIndex: Int, setIndex: Int)
+        case timedWork(exerciseIndex: Int, secondsElapsed: Int)
+        case emomInterval(exerciseIndex: Int, round: Int, isWork: Bool, remaining: Int)
+        case amrapRunning(exerciseIndex: Int, secondsRemaining: Int)
+        case resting(exerciseIndex: Int, completedSet: Int, secondsRemaining: Int)
+        case sessionComplete
+
+        /// The exercise the phase is on; nil before the first and after the last.
+        var exerciseIndex: Int? {
+            switch self {
+            case let .active(ei, _), let .timedWork(ei, _), let .emomInterval(ei, _, _, _),
+                 let .amrapRunning(ei, _), let .resting(ei, _, _):
+                return ei
+            case .idle, .sessionComplete:
+                return nil
+            }
+        }
+    }
+
+    @Published var phase: Phase = .idle {
+        didSet {
+            if let left = Self.stepLeft(oldValue, for: phase, windowSec: windowSeconds(oldValue.exerciseIndex)),
+               let exercises = session?.exercises, exercises.indices.contains(left.index) {
+                recordOutcome(exercises[left.index].exerciseId, rounds: left.rounds, durationSec: left.durationSec)
+            }
+            noteStep(phase.exerciseIndex)
+        }
+    }
+
+    /// What a timed or interval step produced, read as the athlete leaves it
+    /// (its time ran out, Next, Skip, the session's end): a timed block's
+    /// seconds — its cadence is its reps over them — and an interval's
+    /// seconds and the rounds whose work was done, the one in progress when
+    /// it was left mid-work not counted. nil while the step runs on.
+    static func stepLeft(_ old: Phase, for new: Phase, windowSec: Int?)
+        -> (index: Int, rounds: Int?, durationSec: Int)? {
+        guard let index = old.exerciseIndex, new.exerciseIndex != index else { return nil }
+        switch old {
+        case let .timedWork(_, elapsed):
+            return (index, nil, elapsed)
+        case let .emomInterval(_, round, isWork, remaining):
+            return (index, WatchSteps.intervalRoundsDone(round: round, inWork: isWork, remaining: remaining),
+                    windowSec ?? 0)
+        default:
+            return nil
+        }
+    }
+
+    private func windowSeconds(_ index: Int?) -> Int? {
+        guard let index, let start = stepWindows[index]?.start else { return nil }
+        return max(0, Int(now.timeIntervalSince(start)))
+    }
+
+    /// Exercise index → when it became current and when the athlete moved
+    /// on, by the wall clock the heart-rate samples are stamped with. The
+    /// session log sends it as `exerciseTimeline`, which the server cuts the
+    /// heart rate by: only an exercise that prescribes zones counts in them
+    /// (src/analytics/hr_plan.py). Sets alone timed only set-logged steps, so
+    /// a warm-up or a timed piece had no window.
+    var stepWindows: [Int: (start: Date, end: Date?)] = [:]
+    var currentStep: Int? = nil
+
+    private func noteStep(_ index: Int?) {
+        guard index != currentStep else { return }
+        if let cur = currentStep, let w = stepWindows[cur] { stepWindows[cur] = (w.start, now) }
+        if let index {
+            // Back to a step already done: it runs on from its first start.
+            let start = stepWindows[index]?.start ?? now
+            stepWindows[index] = (start, nil)
+        }
+        currentStep = index
+    }
+
+    /// The engine's clock: the wall clock, or the second a catch-up or a
+    /// forecast is replaying (WorkoutSessionState+Clock).
+    var now: Date { simulatedNow ?? pausedAt ?? Date() }
+
+    /// When the whole workout was paused (the phone's Pause): every clock
+    /// stands still from then — the session's time, a rest, an interval, a
+    /// hold, a for-time clock — until Resume, which moves the clocks that
+    /// started on the wall clock on by the time away.
+    @Published var pausedAt: Date? = nil
+    var isPaused: Bool { pausedAt != nil }
+
+    func pauseWorkout() {
+        guard pausedAt == nil, phase != .idle, phase != .sessionComplete else { return }
+        pausedAt = simulatedNow ?? Date()
+        play(.stop)
+    }
+
+    func resumeWorkout() {
+        guard let paused = pausedAt else { return }
+        let real = simulatedNow ?? Date()
+        let away = max(0, real.timeIntervalSince(paused))
+        pausedAt = nil
+        holdStartedAt = holdStartedAt?.addingTimeInterval(away)
+        clockStarts = clockStarts.mapValues { $0.addingTimeInterval(away) }
+        lastTickAt = real
+        play(.start)
+    }
+    var simulatedNow: Date? = nil
+    /// No haptics, no voice: a catch-up replaying missed seconds, a forecast.
+    var muted = false
+    /// The second the clock last ticked (a catch-up replays from it), and the
+    /// timed step that already rolled on at its time.
+    var lastTickAt: Date? = nil
+    var lastAutoAdvancedIndex = -1
+    /// The device's cues (the watch's wrist, the phone's speaker); silent
+    /// until the device sets its own.
+    var cues: WorkoutCueOutput = SilentCues()
+
+    func play(_ cue: CueHaptic) {
+        guard !muted else { return }
+        cues.haptic(cue)
+    }
+
+    func leadInCue(_ cue: WatchCues.LeadIn, secondsLeft: Int) {
+        guard !muted else { return }
+        cues.leadIn(cue, secondsLeft: secondsLeft)
+    }
+
+    // Timer control
+    @Published var isTimerPaused: Bool = false
+
+    // Shown when a long timed exercise hits its prescribed duration —
+    // user can dismiss to keep going or tap Finish to end the session.
+    @Published var showOvertimePrompt: Bool = false
+
+    // HR
+    @Published var currentHR: Int = 0
+    @Published var peakHR: Int = 0
+    @Published var hrOutOfZoneSeconds: Int = 0
+    @Published var isHRAlertActive: Bool = false
+
+    // Movement metrics (populated for outdoor/distance sessions)
+    @Published var distanceMeters: Double = 0
+    @Published var currentCadence: Double = 0
+    @Published var currentSpeedMps: Double = 0
+    @Published var floorsAscended: Double = 0
+
+    // Session data
+    @Published var completedExerciseIds: Set<String> = []
+    @Published var setLogs: [String: [WatchSetLog]] = [:]
+    /// exerciseId → what a step produced that is not a set: a for-time
+    /// clock, an AMRAP's rounds, a distance. The views kept these in their
+    /// own state and dropped them when the step ended.
+    @Published var outcomes: [String: WatchOutcome] = [:]
+    /// The Results answer for a test session: "save" or "dismiss"; nil = left
+    /// for the phone and the web to decide.
+    @Published var resultDecision: String? = nil
+    @Published var elapsedSeconds: Int = 0
+    @Published var calories: Int = 0
+
+    /// Set when transitioning into `.active` phase — marks the start of the next set
+    /// so it can be stamped onto WatchSetLog.startOffset.
+    var currentSetStartOffset: Int? = nil
+
+    /// The session being run: what the page reads its steps, specs and
+    /// "Next:" line from (WatchSteps), and how the engine moves on past the
+    /// movements folded into an AMRAP.
+    var session: WatchSession? = nil
+
+    /// The side being worked on a side-tracked step (the side_tracked
+    /// behaviour or a unilateral movement): it switches after each set.
+    @Published var sideIsLeft = true
+    /// A hold that is running, and since when.
+    @Published var holdStartedAt: Date? = nil
+    /// When a clocked step (for time, a distance) was started with its
+    /// Start; the timed, interval and AMRAP steps run on their phases.
+    @Published var clockStarts: [Int: Date] = [:]
+    /// The rest running now follows a step's last set: when it ends, the
+    /// next step comes up (the Garmin's advanceAfterRest).
+    var restAdvances = false
+    /// The rest running now, whole: its ring's full circle (+30 s grows it).
+    @Published var restTotalSec = 0
+    /// The coming sets' reps, weight and RPE, as Set Next or Edit Set left
+    /// them (exercise id → set); the next log starts from them.
+    @Published var workingSets: [String: WorkingSet] = [:]
+    /// The metronome on a paced step; the commands page switches it.
+    @Published var metronomeOn = true
+    /// An interval rest that ends on heart rate: seconds under its target so far.
+    var restGate = WatchCues.RestGate()
+    /// Countdown Start: the step whose clock starts after "Work in 3, 2, 1",
+    /// and the seconds left.
+    @Published var countIn: CountIn? = nil
+    var countInTask: Task<Void, Never>? = nil
+
+    struct CountIn: Equatable {
+        let index: Int
+        var left: Int
+    }
+
+    struct WorkingSet: Equatable, Codable {
+        var reps: Int
+        var weightKg: Double?
+        var rpe: Int?
+    }
+
+    private(set) var avgHRSamples: [Int] = []
+    private var hrOutOfZoneCounter = 0
+    private var hrAlertCooldown = 0
+
+    var avgHR: Int {
+        avgHRSamples.isEmpty ? 0 : avgHRSamples.reduce(0, +) / avgHRSamples.count
+    }
+
+    var isResting: Bool {
+        if case .resting = phase { return true }
+        return false
+    }
+
+    // MARK: - Session lifecycle
+
+    func startSession(_ session: WatchSession) {
+        reset()
+        self.session = session
+        currentSetStartOffset = 0
+        phase = .active(exerciseIndex: 0, setIndex: 0)
+        play(.start)
+    }
+
+    func completeSession() {
+        phase = .sessionComplete
+        play(.success)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
+            self?.play(.success)
+        }
+    }
+
+    func pauseTimer()  { isTimerPaused = true;  play(.stop) }
+    func resumeTimer() { isTimerPaused = false; play(.start) }
+
+    func reset() {
+        phase = .idle
+        lastAutoAdvancedIndex = -1; lastTickAt = nil
+        isTimerPaused = false; pausedAt = nil
+        currentHR = 0; peakHR = 0
+        avgHRSamples = []
+        hrOutOfZoneSeconds = 0; isHRAlertActive = false
+        completedExerciseIds = []; setLogs = [:]
+        outcomes = [:]; resultDecision = nil
+        elapsedSeconds = 0; calories = 0
+        hrOutOfZoneCounter = 0; hrAlertCooldown = 0
+        distanceMeters = 0; currentCadence = 0; currentSpeedMps = 0; floorsAscended = 0
+        currentSetStartOffset = nil
+        showOvertimePrompt = false
+        stepWindows = [:]; currentStep = nil
+        sideIsLeft = true; holdStartedAt = nil; clockStarts = [:]; restAdvances = false
+        workingSets = [:]; metronomeOn = true
+        countInTask?.cancel(); countInTask = nil; countIn = nil
+    }
+
+    /// The step after `index`, past the movements folded into an AMRAP.
+    func indexAfter(_ index: Int) -> Int {
+        session.map { WatchSteps.indexAfter($0, index) } ?? index + 1
+    }
+
+    // MARK: - Sets / reps
+
+    func completeSet(_ log: WatchSetLog, for exerciseId: String) {
+        var logs = setLogs[exerciseId] ?? []
+        logs.append(log)
+        setLogs[exerciseId] = logs
+        currentSetStartOffset = nil
+        play(.success)
+    }
+
+    func startRest(exerciseIndex: Int, completedSet: Int, seconds: Int) {
+        guard seconds > 0 else {
+            currentSetStartOffset = elapsedSeconds
+            phase = .active(exerciseIndex: exerciseIndex, setIndex: completedSet + 1)
+            return
+        }
+        restTotalSec = seconds
+        phase = .resting(exerciseIndex: exerciseIndex, completedSet: completedSet,
+                         secondsRemaining: seconds)
+    }
+
+    /// Call once per second from a timer while resting.
+    func tickRest() {
+        guard case let .resting(ei, cs, remaining) = phase else { return }
+        switch remaining {
+        case 31: play(.notification)
+        case 11: play(.directionUp)
+        default: break
+        }
+        leadInTick(secondsLeft: remaining - 1)
+        if remaining <= 1 {
+            endRest(exerciseIndex: ei, completedSet: cs)
+        } else {
+            phase = .resting(exerciseIndex: ei, completedSet: cs, secondsRemaining: remaining - 1)
+        }
+    }
+
+    func skipRest(exerciseIndex: Int, completedSet: Int) {
+        endRest(exerciseIndex: exerciseIndex, completedSet: completedSet)
+    }
+
+    /// The next set — or, after a step's last set, the next step.
+    private func endRest(exerciseIndex: Int, completedSet: Int) {
+        if restAdvances {
+            restAdvances = false
+            advance(to: indexAfter(exerciseIndex))
+        } else {
+            currentSetStartOffset = elapsedSeconds
+            phase = .active(exerciseIndex: exerciseIndex, setIndex: completedSet + 1)
+        }
+        goCue()
+    }
+
+    // MARK: - Lead-in
+
+    /// A tick of the lead-in into work, when `secondsLeft` is one of its counts.
+    private func leadInTick(secondsLeft: Int) {
+        guard WatchCueSettings.leadIn, secondsLeft > 0,
+              WatchCues.leadIn(secondsLeft: secondsLeft) == .tick else { return }
+        leadInCue(.tick, secondsLeft: secondsLeft)
+    }
+
+    /// The moment a clock rolls into work: the lead-in's go, else the start haptic.
+    private func goCue() {
+        if WatchCueSettings.leadIn { leadInCue(.go, secondsLeft: 0) }
+        else { play(.start) }
+    }
+
+    /// The seconds left of a lead-in into work on `index` (3, 2, 1), else nil:
+    /// the page says "Work in 3" while the ticks play.
+    func leadInLeft(_ index: Int) -> Int? {
+        if let c = countIn, c.index == index { return c.left }
+        guard WatchCueSettings.leadIn else { return nil }
+        switch phase {
+        case let .resting(ei, _, left) where ei == index && left - 1 > 0 && left - 1 <= WatchVocab.leadInSeconds:
+            return left - 1
+        case let .emomInterval(ei, _, false, left) where ei == index && left - 1 > 0 && left - 1 <= WatchVocab.leadInSeconds:
+            return left - 1
+        case let .emomInterval(ei, round, true, left) where ei == index && left <= WatchVocab.leadInSeconds:
+            // A rest-less interval's minute: its work's last seconds lead
+            // into the next round's, counted as the ticks say them.
+            guard let exercises = session?.exercises, exercises.indices.contains(ei), left > 0 else { return nil }
+            let plan = exercises[ei].emomPlan
+            return plan.restSec == 0 && round < plan.rounds ? left : nil
+        default:
+            return nil
+        }
+    }
+
+    /// Whether `index` is an interval in its work (or its rest).
+    func isWorkingInterval(_ index: Int) -> Bool {
+        if case let .emomInterval(ei, _, true, _) = phase { return ei == index }
+        return false
+    }
+    func isRestingInterval(_ index: Int) -> Bool {
+        if case let .emomInterval(ei, _, false, _) = phase { return ei == index }
+        return false
+    }
+
+    /// Start a step's clock — after "Work in 3, 2, 1" when Countdown Start is
+    /// on, a second apart from the press; the clock's own start haptic is the go.
+    func startAfterCountIn(_ index: Int, then run: @escaping @MainActor () -> Void) {
+        guard countIn == nil else { return }
+        guard WatchCueSettings.countdownStart else { run(); return }
+        let n = WatchVocab.leadInSeconds
+        countIn = CountIn(index: index, left: n)
+        leadInCue(.tick, secondsLeft: n)
+        countInTask = Task { @MainActor [weak self] in
+            for left in stride(from: n - 1, through: 0, by: -1) {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                guard let self, !Task.isCancelled else { return }
+                if left > 0 {
+                    self.countIn = CountIn(index: index, left: left)
+                    leadInCue(.tick, secondsLeft: left)
+                } else {
+                    self.countIn = nil
+                    self.countInTask = nil
+                    run()
+                    if WatchCueSettings.voice { leadInCue(.go, secondsLeft: 0) }
+                }
+            }
+        }
+    }
+
+    func extendRest(exerciseIndex: Int, completedSet: Int, current remaining: Int) {
+        restTotalSec = max(restTotalSec, remaining) + 30
+        phase = .resting(exerciseIndex: exerciseIndex, completedSet: completedSet,
+                         secondsRemaining: remaining + 30)
+    }
+
+    /// Keep what a step produced (only the values given are changed).
+    func recordOutcome(_ exerciseId: String, rounds: Int? = nil, durationSec: Int? = nil,
+                       distanceKm: Double? = nil) {
+        var o = outcomes[exerciseId] ?? WatchOutcome()
+        if let rounds { o.rounds = rounds }
+        if let durationSec { o.durationSec = durationSec }
+        if let distanceKm { o.distanceKm = distanceKm }
+        outcomes[exerciseId] = o
+    }
+
+    /// A test step's result entered or corrected on the Results screen: a
+    /// count goes in as the step's one set (where the server and the
+    /// analytics read reps and holds), a clock or rounds as its outcome.
+    func setResult(_ ex: WatchExercise, value: Double) {
+        switch ex.standard?.result {
+        case "duration": recordOutcome(ex.exerciseId, durationSec: Int(value.rounded()))
+        case "rounds":   recordOutcome(ex.exerciseId, rounds: Int(value.rounded()))
+        case "distance": recordOutcome(ex.exerciseId, distanceKm: value)
+        case "hold":
+            setLogs[ex.exerciseId] = [WatchSetLog(setIndex: 0, repsActual: nil, weightKg: ex.weightKg, rpe: nil,
+                                                  completed: true, durationSeconds: Int(value.rounded()),
+                                                  startOffset: nil, endOffset: nil)]
+        default:
+            setLogs[ex.exerciseId] = [WatchSetLog(setIndex: 0, repsActual: Int(value.rounded()), weightKg: ex.weightKg,
+                                                  rpe: nil, completed: true, durationSeconds: nil,
+                                                  startOffset: nil, endOffset: nil)]
+        }
+    }
+
+    /// A count step's reps entered at the end: the step's one set, as a
+    /// timed test's reps are (the rate reads them over the step's seconds).
+    func setCount(_ ex: WatchExercise, reps: Int) {
+        setLogs[ex.exerciseId] = [WatchSetLog(setIndex: 0, repsActual: reps, weightKg: ex.weightKg, rpe: nil,
+                                              completed: true, durationSeconds: nil,
+                                              startOffset: nil, endOffset: nil)]
+    }
+
+    func markExerciseComplete(id: String) {
+        completedExerciseIds.insert(id)
+    }
+
+    /// Move on to an exercise's first set and start its set clock now. The
+    /// views used to set the phase directly, so the next exercise's first set
+    /// also counted the time spent on the previous screen (its
+    /// `durationSeconds` is start → logger open).
+    func advance(to exerciseIndex: Int) {
+        currentSetStartOffset = elapsedSeconds
+        sideIsLeft = true
+        holdStartedAt = nil
+        phase = .active(exerciseIndex: exerciseIndex, setIndex: 0)
+    }
+
+    // MARK: - Timed work
+
+    func startTimedWork(exerciseIndex: Int) {
+        phase = .timedWork(exerciseIndex: exerciseIndex, secondsElapsed: 0)
+        play(.start)
+    }
+
+    func tickTimedWork(exercise: WatchExercise? = nil) {
+        guard case let .timedWork(ei, elapsed) = phase else { return }
+        phase = .timedWork(exerciseIndex: ei, secondsElapsed: elapsed + 1)
+        if let ex = exercise, WatchCues.switchDue(ex, workSecond: elapsed + 1) { switchHands() }
+    }
+
+    func completeTimedWork(exerciseIndex: Int, exerciseId: String) {
+        markExerciseComplete(id: exerciseId)
+        advance(to: indexAfter(exerciseIndex))
+        play(.success)
+    }
+
+    /// Called by the master ticker when the next exercise is also timed — skips the
+    /// intermediate .active state so the next timer starts immediately.
+    func autoAdvanceToNextTimedWork(currentExerciseId: String, nextIndex: Int) {
+        markExerciseComplete(id: currentExerciseId)
+        isTimerPaused = false
+        phase = .timedWork(exerciseIndex: nextIndex, secondsElapsed: 0)
+        play(.start)
+    }
+
+    // MARK: - EMOM
+
+    func startEMOM(exerciseIndex: Int, workSeconds: Int) {
+        phase = .emomInterval(exerciseIndex: exerciseIndex, round: 1,
+                              isWork: true, remaining: workSeconds)
+        play(.start)
+    }
+
+    func tickEMOM(workSec: Int, restSec: Int, totalRounds: Int,
+                  exerciseIndex: Int, exerciseId: String, exercise: WatchExercise? = nil) {
+        guard case let .emomInterval(ei, round, isWork, remaining) = phase else { return }
+        // A rest that ends on heart rate is over once HR has stayed under its
+        // target for five seconds; its time is then only the cap.
+        // With the lead-in on, the rest is cut to its last three seconds instead.
+        if !isWork, let target = exercise?.restUntilHr,
+           restGate.tick(heartRate: currentHR, target: target) {
+            let lead = WatchCueSettings.leadIn && round < totalRounds ? WatchVocab.leadInSeconds : 0
+            if lead == 0 {
+                advanceEMOMRound(ei: ei, round: round, workSec: workSec,
+                                 totalRounds: totalRounds, exerciseId: exerciseId)
+                return
+            }
+            if remaining - 1 > lead {
+                phase = .emomInterval(exerciseIndex: ei, round: round, isWork: false, remaining: lead + 1)
+                leadInTick(secondsLeft: lead)
+                return
+            }
+        }
+        if remaining <= 1 {
+            if isWork {
+                if restSec > 0 {
+                    phase = .emomInterval(exerciseIndex: ei, round: round,
+                                         isWork: false, remaining: restSec)
+                    restGate = WatchCues.RestGate()
+                    play(.stop)
+                } else {
+                    advanceEMOMRound(ei: ei, round: round, workSec: workSec,
+                                     totalRounds: totalRounds, exerciseId: exerciseId)
+                }
+            } else {
+                advanceEMOMRound(ei: ei, round: round, workSec: workSec,
+                                 totalRounds: totalRounds, exerciseId: exerciseId)
+            }
+        } else {
+            phase = .emomInterval(exerciseIndex: ei, round: round,
+                                  isWork: isWork, remaining: remaining - 1)
+            if isWork, let ex = exercise, WatchCues.switchDue(ex, workSecond: workSec - remaining + 1) {
+                switchHands()
+            }
+            // The lead-in into the next round's work: a rest's end, or a
+            // rest-less interval's minute.
+            if round < totalRounds && (!isWork || restSec == 0) {
+                leadInTick(secondsLeft: remaining - 1)
+            }
+        }
+    }
+
+    /// The hand switch of a one-arm block (`switchAtSec`): the other side,
+    /// with the turn haptic for that hand.
+    func switchHands() {
+        sideIsLeft.toggle()
+        play(sideIsLeft ? .turnLeft : .turnRight)
+    }
+
+    private func advanceEMOMRound(ei: Int, round: Int, workSec: Int,
+                                   totalRounds: Int, exerciseId: String) {
+        let next = round + 1
+        if next > totalRounds {
+            markExerciseComplete(id: exerciseId)
+            advance(to: indexAfter(ei))
+            play(.success)
+        } else {
+            phase = .emomInterval(exerciseIndex: ei, round: next,
+                                  isWork: true, remaining: workSec)
+            goCue()
+        }
+    }
+
+    // MARK: - AMRAP
+
+    func startAMRAP(exerciseIndex: Int, minutes: Int) {
+        phase = .amrapRunning(exerciseIndex: exerciseIndex,
+                              secondsRemaining: minutes * 60)
+        play(.start)
+    }
+
+    func tickAMRAP(exerciseIndex: Int, exerciseId: String) {
+        guard case let .amrapRunning(ei, remaining) = phase else { return }
+        if remaining == 31 { play(.notification) }
+        if remaining <= 1 {
+            markExerciseComplete(id: exerciseId)
+            advance(to: indexAfter(ei))
+            play(.success)
+        } else {
+            phase = .amrapRunning(exerciseIndex: ei, secondsRemaining: remaining - 1)
+        }
+    }
+
+    // MARK: - HR tracking
+
+    func updateHR(_ bpm: Int, maxHR: Int, prescribedLower: Int?, prescribedUpper: Int?) {
+        guard bpm > 0 else { return }
+        currentHR = bpm
+        if bpm > peakHR { peakHR = bpm }
+        avgHRSamples.append(bpm)
+
+        if let lower = prescribedLower, let upper = prescribedUpper, maxHR > 0 {
+            let zone = HRZoneCalculator.zone(for: bpm, maxHR: maxHR)
+            if zone >= lower && zone <= upper {
+                hrOutOfZoneCounter = 0
+            } else {
+                hrOutOfZoneCounter += 1
+                hrOutOfZoneSeconds += 1
+            }
+            if hrOutOfZoneCounter >= 30 && hrAlertCooldown == 0 {
+                isHRAlertActive = true
+                for _ in 0..<3 { play(.notification) }
+                hrAlertCooldown = 60
+                hrOutOfZoneCounter = 0
+            }
+        }
+        if hrAlertCooldown > 0 {
+            hrAlertCooldown -= 1
+            if hrAlertCooldown == 0 { isHRAlertActive = false }
+        }
+    }
+
+    func updateCalories(_ cal: Int) { calories = cal }
+    func updateDistance(_ meters: Double) { distanceMeters = meters }
+    func updateCadence(_ spm: Double) { currentCadence = spm }
+    func updateSpeed(_ mps: Double) { currentSpeedMps = mps }
+    func updateFloors(_ floors: Double) { floorsAscended = floors }
+    func tickElapsed() { elapsedSeconds += 1 }
+}

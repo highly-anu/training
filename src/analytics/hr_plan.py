@@ -5,7 +5,7 @@ An exercise's prescription is its slot's `intensity`, or, for a slot that
 names none, the zone its load carries (`zone_lower`/`zone_upper`, which
 progression writes for a timed slot). A zone token (`zone2`, `zone3_4`) or a
 word that names a band (`low`, `moderate`, `high` —
-progression._INTENSITY_ZONES) prescribes heart-rate zones; `heavy`,
+data/commons/intensities.yaml) prescribes heart-rate zones; `heavy`,
 `max_effort`, `bodyweight`, `progressing` prescribe load or effort.
 
 **Heart rate counts only where an exercise prescribes zones** (`plan` →
@@ -38,7 +38,7 @@ from __future__ import annotations
 
 import re
 
-from src import progression
+from src import intensities, progression
 from src.analytics import zones
 from src.analytics.families import is_strength
 
@@ -46,7 +46,7 @@ ZONES = 5
 
 # Words progression maps to a band for the HR window it shows, but that
 # prescribe load: Starting Strength's `progressing` is the bar going up.
-_LOAD_WORDS = {'progressing'}
+_LOAD_WORDS = intensities.hr_load()   # data/commons/intensities.yaml
 
 
 def slot_zones(intensity) -> list[int]:

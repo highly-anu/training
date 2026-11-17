@@ -128,6 +128,13 @@ def owned_ids() -> dict[str, dict[str, str]]:
             owned[pkg][(_yaml(path) or {}).get('id') or ''] = 'framework'
         for path in glob.glob(os.path.join(pkg_dir, 'archetypes', '**', '*.yaml'), recursive=True):
             owned[pkg][(_yaml(path) or {}).get('id') or ''] = 'archetype'
+        std_path = os.path.join(pkg_dir, 'standards.yaml')
+        if os.path.exists(std_path):
+            doc = _yaml(std_path) or {}
+            for b in doc.get('standards') or []:
+                owned[pkg][b.get('id') or ''] = 'standard'
+            for c in doc.get('categories') or []:
+                owned[pkg][c.get('id') or ''] = 'standard category'
         ex_path = os.path.join(pkg_dir, 'exercises.yaml')
         if os.path.exists(ex_path):
             doc = _yaml(ex_path) or {}

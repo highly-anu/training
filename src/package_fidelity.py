@@ -1,6 +1,6 @@
 """A package's fidelity record: data/packages/<id>/fidelity.yaml.
 
-The machine half of the source dossier (docs/package-fidelity/<id>.md): the
+The machine half of the source dossier (data/packages/<id>/dossier.md): the
 sources and how much of each was read, every rule they state with the data,
 claim, source week or test that enforces it, what they leave open, and what
 the app adds (docs/schemas/fidelity.schema.json). The scorecard's Source
@@ -10,8 +10,9 @@ grade — a phase claim, a contract, a week template, a hand-entered standard,
 the lead measure, an excluded track — counts only when a rule cites it.
 
 It lives in the package folder, so adding a package touches nothing outside
-it; docs/package-fidelity/status.yaml is generated from these files and the
-scorecard (`status_document`). Nothing at runtime reads it.
+it; the package's status (records/status.yaml, src/package_records.py) is
+generated from it and the recorded scorecard (`status_entry`). Nothing at
+runtime reads it but Explore's philosophy page.
 """
 from __future__ import annotations
 
@@ -24,10 +25,10 @@ from src import loader
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PACKAGES = loader._PACKAGES_DIR
-DOSSIERS = os.path.join(ROOT, 'docs', 'package-fidelity')
 CHECKS = os.path.join(ROOT, 'checks', 'python_suites.yaml')
 FILE = 'fidelity.yaml'
 SOURCE_WEEKS = 'source_weeks.yaml'
+TESTS = 'tests'
 READ = ('full', 'partial')
 
 
@@ -36,7 +37,8 @@ def record_path(pkg: str) -> str:
 
 
 def dossier_path(pkg: str) -> str:
-    return os.path.join(DOSSIERS, f'{pkg}.md')
+    from src import package_records
+    return package_records.dossier_path(pkg)
 
 
 def load(pkg: str) -> dict | None:
@@ -65,8 +67,9 @@ def _yaml(pkg: str, name: str):
 
 def _workflow() -> str:
     """The commands the pre-push checks run (checks/python_suites.yaml), one
-    `python <command>` a line: a package's cited test counts as enforced only
-    when it runs there. (Until 2026-10-26 the GitHub workflow was the list.)"""
+    `python <command>` a line: a cited test at the root counts as enforced only
+    when it runs there; the package's own (tests/) always runs. (Until
+    2026-10-26 the GitHub workflow was the list.)"""
     with open(CHECKS, encoding='utf-8') as fh:
         doc = yaml.safe_load(fh) or {}
     run = (doc.get('suites') or []) + (doc.get('exclusive') or []) + (doc.get('scratch_db') or [])
@@ -74,6 +77,13 @@ def _workflow() -> str:
 
 
 # ── References ───────────────────────────────────────────────────────────────
+
+def _package_test(file: str) -> bool:
+    """`tests/test_<x>.py` names a test in the package's own folder — one the
+    checks find (tools/run_checks.py) — rather than one at the repository root."""
+    head, base = os.path.split(file)
+    return head == TESTS and base.startswith('test_') and base.endswith('.py')
+
 
 def _walk(node, path: str):
     """Follow a dotted key path; a list step matches an item's id (a slot's
@@ -113,13 +123,16 @@ def ref_error(pkg: str, ref: str, workflow: str | None = None) -> str | None:
         return f'{ref}: no {missing!r} in philosophy.yaml' if missing else None
     if kind == 'test':
         file, _, name = rest.partition('::')
-        path = os.path.join(ROOT, file)
+        own = _package_test(file)
+        path = os.path.join(PACKAGES, pkg, file) if own else os.path.join(ROOT, file)
         if not os.path.exists(path):
-            return f'{ref}: no file {file}'
+            return f'{ref}: no file {file}' + (' in the package' if own else '')
         with open(path, encoding='utf-8') as fh:
             if f'def {name}(' not in fh.read():
                 return f'{ref}: {file} has no {name}'
-        if f'python {file}' not in (workflow if workflow is not None else _workflow()):
+        # The package's own tests are found by the checks (tools/run_checks.py);
+        # a test at the root runs only once the registry lists it.
+        if not own and f'python {file}' not in (workflow if workflow is not None else _workflow()):
             return f'{ref}: the checks do not run {file} (checks/python_suites.yaml)'
         return None
     if kind == 'week':
@@ -145,7 +158,33 @@ def refs(rec: dict | None) -> set:
 
 def ref_errors(pkg: str, rec: dict | None) -> list[str]:
     workflow = _workflow()
-    return [f"{owner}: {err}" for owner, r in _cited(rec) if (err := ref_error(pkg, r, workflow))]
+    return [f"{owner}: {err}" for owner, r in _cited(rec) if (err := ref_error(pkg, r, workflow))] + \
+        unrecorded_scaling(pkg, rec)
+
+
+def unrecorded_scaling(pkg: str, rec: dict | None) -> list[str]:
+    """A level a track scales to that the record does not account for
+    (docs/logic/levels.md): a track's own `level_scaling.<level>` is what its
+    source says, so a rule cites it; a dimension it leaves to the commons'
+    shares is the app's, so a rule or an invention names the track's
+    `authored_level`."""
+    from src import level_scaling, levels
+    cited = refs(rec)
+    errors = []
+    for track in (_yaml(pkg, 'philosophy.yaml') or {}).get('tracks') or []:
+        authored = track.get('authored_level')
+        if not authored:
+            continue
+        own = track.get('level_scaling') or {}
+        at = f"data:philosophy.yaml#tracks.{track['id']}"
+        if any(set(level_scaling.DIMENSIONS) - set(own.get(lv) or {}) for lv in levels.up_to(authored)[:-1]) \
+                and f'{at}.authored_level' not in cited:
+            errors.append(f"{track['id']}: levels below {authored} take the commons' shares, "
+                          f"and no rule or invention names {at}.authored_level")
+        for lv in own:
+            if f'{at}.level_scaling.{lv}' not in cited:
+                errors.append(f"{track['id']}: no rule cites {at}.level_scaling.{lv}")
+    return errors
 
 
 # ── What the record says ─────────────────────────────────────────────────────
@@ -262,27 +301,10 @@ def currency(rec: dict | None, track: str) -> tuple[str | None, str | None]:
     return cur.get('entry'), None
 
 
-# ── status.yaml ──────────────────────────────────────────────────────────────
-
-STATUS_HEADER = """\
-# GENERATED by tools/evaluate_packages.py --update-baseline from each package's
-# data/packages/<id>/fidelity.yaml and the recorded scorecard — do not edit;
-# edit the package's fidelity.yaml (docs/package-fidelity/README.md).
-#
-#   status:  audited | partial | not_started — earned, never chosen:
-#            audited: every criterion but hygiene passes on every track not excluded;
-#            partial: a record and a dossier exist; not_started: not both
-#   shape:   contract | templates | scheduler   (the engine shape the method needs)
-#   sources_kind: primary | consensus | secondary   (from the record's sources)
-#   debt:    rules nothing enforces (S3)
-#   currency: track -> the analytics entry the method counts progress in (M1)
-#   excluded_tracks: track -> the invention it is
-#   source_tests: the tests a rule names as what enforces it
-#   inventions: what the app adds that the sources do not contain
-#   last_review: kind -> the date of the latest recorded review (S6)
-
-"""
-
+# ── Status ───────────────────────────────────────────────────────────────────
+# A package's records/status.yaml (src/package_records.py), generated by
+# tools/evaluate_packages.py --update-baseline — the legend is
+# docs/package-fidelity/README.md's ("The status").
 
 def status_entry(pkg: str, rec: dict | None, earned: str) -> dict:
     rec = rec or {}
@@ -291,7 +313,7 @@ def status_entry(pkg: str, rec: dict | None, earned: str) -> dict:
     if rec.get('shape'):
         entry['shape'] = rec['shape']
     if dossier(pkg) is not None:
-        entry['dossier'] = os.path.relpath(dossier_path(pkg), ROOT)
+        entry['dossier'] = os.path.basename(dossier_path(pkg))   # in the package's folder
     if rec.get('sources'):
         entry['sources_kind'] = sources_kind(rec)
         entry['debt'] = [f"{rid}: {rules[rid]}" for rid in debt(rec)]
@@ -310,12 +332,3 @@ def status_entry(pkg: str, rec: dict | None, earned: str) -> dict:
     if rec.get('next'):
         entry['next'] = rec['next']
     return entry
-
-
-def status_document(entries: dict) -> str:
-    """entries: package -> status_entry. Packages ordered by status, then id."""
-    order = {'audited': 0, 'partial': 1, 'not_started': 2}
-    pkgs = sorted(entries, key=lambda p: (order.get(entries[p]['status'], 3), p))
-    body = yaml.safe_dump({'packages': {p: entries[p] for p in pkgs}}, sort_keys=False,
-                          allow_unicode=True, width=100)
-    return STATUS_HEADER + body

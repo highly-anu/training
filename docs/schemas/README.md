@@ -10,36 +10,28 @@ JSON Schema (Draft-07) definitions for every data layer in the training system. 
 |------|-----------------|-----------------|
 | `philosophy.schema.json` | One entry per training source (SS, UA, Gym Jones, etc.) | `data/packages/{name}/philosophy.yaml` |
 | `framework.schema.json` | One entry per methodological framework | `data/packages/{name}/frameworks/{id}.yaml` |
-| `modality.schema.json` | One entry per training domain | `data/modalities/{id}.yaml` (shared, rarely edited) |
+| `modality.schema.json` | One entry per training domain | `data/commons/modalities/{id}.yaml` (shared, rarely edited) |
 | `archetype.schema.json` | One entry per workout shape | `data/packages/{name}/archetypes/{category}/{id}.yaml` |
 | `exercise.schema.json` | One entry per exercise | `data/packages/{name}/exercises.yaml` (list under `exercises:` key) |
 | `goal_profile.schema.json` | One entry per goal type | `data/goals/{id}.yaml` |
 | `constraints.schema.json` | Runtime athlete input (not a library) | Input to generator |
-| `benchmark.schema.json` | One entry per measurable standard | `data/benchmarks/*.yaml` |
+| `benchmark.schema.json` | One entry per measurable standard | `data/benchmarks/*.yaml`, and each entry of a package's `standards.yaml` |
+| `standards.schema.json` | A package's own standards and the groups it adds | `data/packages/{id}/standards.yaml` (optional) |
+| `standard_categories.schema.json` | The groups standards are listed in, in order | `data/benchmarks/categories.yaml` |
 | `analytics.schema.json` | What progress means for one methodology (optional) | `data/packages/{name}/analytics.yaml` |
+| `briefing.schema.json` | What the athlete sees before a session of the methodology (optional): what an earlier occurrence is, the numbers that lead, the suggestions | `data/packages/{name}/briefing.yaml` |
 | `watch.schema.json` | How the methodology's sessions look on the watch (optional); ids from `data/commons/watch_vocabulary.json` | `data/packages/{name}/watch.yaml` |
 
 ### Package structure
 
-Each training methodology lives in its own self-contained package directory:
+Each training methodology is one self-contained folder, `data/packages/{name}/`. What it
+may hold, what each file is, every valid value and how a package is checked are in
+**[`PACKAGE_SPEC.md`](PACKAGE_SPEC.md)**, beside these schemas — its lists are generated
+from the commons, the schemas and the gate (`tools/gen_package_spec.py`), so they do not
+drift as a copy here did (it listed six files of fourteen).
 
-```
-data/packages/{name}/
-  philosophy.yaml          ← the package's philosophy (exactly one)
-  frameworks/
-    {id}.yaml              ← one file per framework (usually one)
-  archetypes/
-    strength/              ← barbell/free weight strength sessions
-    conditioning/          ← aerobic, intervals, AMRAPs, circuits
-    kettlebell/            ← KB-specific sessions
-    gpp_durability/        ← carries, sandbag, rucking
-    movement_skill/        ← mobility, joint prep, skill practice
-  exercises.yaml           ← all exercises for this package (list under exercises: key)
-  analytics.yaml           ← optional: what progress means for it
-  watch.yaml               ← optional: its watch screens, per archetype and slot role
-```
-
-Modalities are shared infrastructure (`data/modalities/`) — they are not owned by any package and almost never change.
+Modalities, movement patterns and equipment are shared vocabulary (`data/commons/`); a
+package adds its own in `vocabulary.yaml` (`vocabulary.schema.json`).
 
 ---
 

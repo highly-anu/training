@@ -3,9 +3,12 @@ name: Deadlift and Kettlebell Clean and Press
 modality: mixed_modal_conditioning
 category: conditioning
 training_levels:
+- novice
 - intermediate
 - advanced
 - elite
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 10
 slots:
@@ -14,6 +17,7 @@ slots:
   sets: 5
   reps: 10
   load: 61 kg (135 lb)
+  load_kg: 61
   exercise_filter:
     exercise_ids:
     - deadlift
@@ -25,6 +29,7 @@ slots:
   sets: 5
   reps: 5
   load: 20 kg (44 lb)
+  load_kg: 20
   exercise_filter:
     exercise_ids:
     - kb_clean_and_press_single

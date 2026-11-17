@@ -8,14 +8,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils'
 import { useCreateArchetype } from '@/api/archetypes'
 import type { Archetype, ModalityId, EquipmentId, TrainingPhase, TrainingLevel } from '@/api/types'
+import { MODALITY_IDS, PHASE_KINDS, TRAINING_LEVELS, INTENSITIES } from '@/lib/gen/clientVocab'
 
-const MODALITIES: ModalityId[] = ['max_strength', 'relative_strength', 'strength_endurance', 'power', 'aerobic_base', 'anaerobic_intervals', 'mixed_modal_conditioning', 'durability', 'mobility', 'movement_skill', 'combat_sport', 'rehab']
+// Every modality the commons define (tools/gen_client_vocab.py).
+const MODALITIES: readonly ModalityId[] = MODALITY_IDS
 const CATEGORIES = ['strength', 'conditioning', 'kettlebell', 'gpp_durability', 'movement_skill']
 const EQUIPMENT_OPTIONS: EquipmentId[] = ['barbell', 'rack', 'plates', 'kettlebell', 'dumbbell', 'pull_up_bar', 'ruck_pack', 'open_space', 'rings', 'sandbag', 'bike', 'rower', 'ghd', 'box', 'resistance_band', 'medicine_ball']
-const PHASES: TrainingPhase[] = ['base', 'build', 'peak', 'taper', 'deload', 'maintenance', 'rehab', 'post_op']
-const LEVELS: TrainingLevel[] = ['novice', 'intermediate', 'advanced', 'elite']
+const PHASES: readonly TrainingPhase[] = PHASE_KINDS
+const LEVELS: readonly TrainingLevel[] = TRAINING_LEVELS
 const SLOT_TYPES = ['sets_reps', 'time_domain', 'amrap', 'emom', 'rounds_for_time']
-const INTENSITIES = ['zone1', 'zone2', 'zone3', 'zone4', 'zone4_5', 'submaximal', 'moderate', 'heavy', 'progressing', 'max', 'max_effort']
 
 interface SlotDraft {
   role: string
@@ -292,9 +293,9 @@ export function AddArchetypeDialog({ open, onClose }: Props) {
 
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={() => { reset(); onClose() }}>Cancel</Button>
-          <Button size="sm" onClick={handleSubmit} disabled={!canSubmit}>
-            <Plus className="size-3 mr-1" />
-            {createMutation.isPending ? 'Adding…' : 'Add Archetype'}
+          <Button size="sm" onClick={handleSubmit} disabled={!canSubmit} loading={createMutation.isPending}>
+            <Plus className="size-3" />
+            Add Archetype
           </Button>
         </DialogFooter>
       </DialogContent>

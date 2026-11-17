@@ -1,0 +1,19 @@
+# The groups standards are listed in, in this order, on every screen that
+# lists them (web Profile and Explore, the phone). A standard's `category` is
+# one of these, or one its package declares in its own standards.yaml (listed
+# after these, by package). src/analytics/benchmarks_data.py reads it.
+categories:
+  - id: strength
+    name: Strength
+  - id: conditioning
+    name: Conditioning
+  - id: kettlebell
+    name: Kettlebell pentathlon
+  - id: tactical
+    name: Ruck & PT tests
+  - id: benchmark_wod
+    name: Benchmark workouts
+  - id: skill
+    name: Movement & skill
+  - id: cell
+    name: The Cell

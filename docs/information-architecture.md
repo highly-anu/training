@@ -108,12 +108,17 @@ with a new **Overview** (methodology, phases, priority mix) beside it.
 | Library | **Explore** | `/explore` | Philosophies · Frameworks · Modalities · Archetypes · Exercises · Movements · Equipment · Standards | — |
 | You | **Profile** | `/profile` | Athlete (incl. heart-rate zones) · Equipment · Injuries · Schedule · Standards | — |
 | You | **Settings** | `/settings` | Connections · Appearance · Account (· Developer in dev builds and for `dev` users) | — |
-| Dev (build flag) | Dev Lab | `/dev` | Pipeline Trace · Object Browser · Ontology · Model Interactions | — |
+| Dev (build flag, or the `dev` role) | Dev Lab | `/dev` | Pipeline Trace · Impact · Object Browser · Ontology · Model Interactions · Builder readiness · Builds | — |
 
 Flows and details, not nav items: `/program/new` (the builder, launched from the Home
 and Program empty states, the Program header, the settings sheet's Rebuild/New, and
 Explore CTAs; its header gains a back link to `/program`), `/program/:week/:day`,
 `/program/history/:versionId`, `/log/:workoutId`, `/login`, and a catch-all 404.
+Inside the builder's flow: `/program/new/method` (describe a method of your own, or with
+`?revise=<id>` say what to change in one) and `/program/new/method/<build>` (its build, then the
+method) — reached from the Your methods group in the builder's first step, never from the nav.
+The phone has the same two screens, pushed inside its builder from the same group
+(`MethodDescribeView`, `MethodBuildView`; design-system §6.60).
 
 Redirects, query and `location.state` preserved: `/builder` → `/program/new`,
 `/import` → `/log`, `/import/:id` → `/log/:id`, `/bio` → `/analytics?tab=recovery`,
@@ -186,8 +191,8 @@ Standards), sex (a new profile key; unblocks the female standards' tables), body
 |---|---|---|---|
 | **Today** | `TodayView` | — | Renamed from "Dashboard". Empty state gets a "Generate a program" button (design system §6.3); adds a Suggestions card and a Progress card that routes to Analytics ▸ Progress. |
 | **Program** | `ProgramView` | Overview · Calendar · History | Builder picks a methodology from `/api/philosophies`; Settings sheet has its title and Cancel; Overview holds "About this methodology", the phases and the priority mix. |
-| **Log** | `LogView` | Activity · Linking | Added 2026-10-01 once the phone could log: the recorded-workout list (with the `.fit` importer) moved here from Analytics, the suggestions inbox with accept/review/dismiss, and what was logged against planned sessions across the program — earlier programs' logs included, named by the server from `planned_sessions`. |
 | **Analytics** | `AnalyticsView` | Progress · Blocks · Load · Recovery | Progress = the program document and the review in one (`AnalyticsProgressTab`; Program until 2026-10-23); Blocks = every program (design system §6.20); Load = the old Overview. |
+| **Log** | `LogView` | Activity · Linking | Added 2026-10-01 once the phone could log: the recorded-workout list (with the `.fit` importer) moved here from Analytics, the suggestions inbox with accept/review/dismiss, and what was logged against planned sessions across the program — earlier programs' logs included, named by the server from `planned_sessions`. |
 | **Profile** | `ProfileView` | Athlete · Equipment · Schedule · Standards | Athlete = level, DOB, bodyweight, editable HR zones (a zone-coloured bar, §3.5), injuries. Toolbar gear pushes **Settings**: Connections (integration toggles), Devices & Sync (pair Garmin, Sync Now, last sync, sync details, debug log), Account (sign out), Appearance. |
 
 The **Sync** tab is removed. `resetProgramStartToToday()` — a program mutation hiding on
@@ -224,7 +229,7 @@ Cross-tab moves go through `AppRouter` methods (design system §6.9): `showAnaly
 | Session exercise | A ranked alternative for the same slot | "Swap" (`POST /api/exercises/substitute`) | ✓ swap icon on every exercise row / ✓ context menu or swipe on a session row |
 | Analytics ▸ Progress methodology | Explore philosophy | link | ✓ / n.a. |
 | Profile change with an active program | Regenerate from this week | inline offer | ✓ `RegenerateFromWeekBanner` on Profile / ✓ `RegenerateOfferCard` on Profile and in the settings sheet |
-| Session with a rounds / minutes / km currency | Outcome logger | inputs beside the prescription | ✓ / ✓ (`ExerciseLogSheet`, design-system §6.16) |
+| Session with a rounds / minutes / km currency | Outcome logger | inputs beside the prescription | ✓ / ✓ (`SessionLogForm`: the whole session, one Save — design-system §6.16) |
 
 ## 5. Decisions and why
 

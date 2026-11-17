@@ -1,0 +1,807 @@
+{
+  "list": {
+    "builds": [
+      {
+        "id": "build-failed",
+        "status": "failed",
+        "progress": {
+          "stage": "fixing",
+          "detail": "3 things to fix",
+          "turns": 4,
+          "checks": 1,
+          "files": 7,
+          "problems": 3
+        },
+        "result": null,
+        "error": {
+          "code": "budget",
+          "message": "This method took more tries than a build allows. Describe it more simply, or in fewer parts, and try again.",
+          "spent": "turns",
+          "problems": [
+            {
+              "stage": "smoke",
+              "code": "unfilled_slot",
+              "file": null,
+              "message": "ub544b040_stones/standard/scratch_foundation: slot 'stone_to_shoulder' of archetype 'ub544b040_scratch_minimal_stone_day' is empty (NO_EXERCISE_IN_ALLOWED_PACKAGES)"
+            },
+            {
+              "stage": "smoke",
+              "code": "unfilled_slot",
+              "file": null,
+              "message": "ub544b040_stones/standard/scratch_foundation: slot 'stone_carry' of archetype 'ub544b040_scratch_minimal_stone_day' is empty (NO_EXERCISE_IN_ALLOWED_PACKAGES)"
+            },
+            {
+              "stage": "smoke",
+              "code": "unfilled_slot",
+              "file": null,
+              "message": "ub544b040_stones/standard/scratch_foundation: slot 'walk' of archetype 'ub544b040_scratch_minimal_easy_walk' is empty (NO_EXERCISE_IN_ALLOWED_PACKAGES)"
+            }
+          ]
+        },
+        "description": "Lift an atlas stone to the shoulder twice a week and walk easily twice a week, eight weeks.",
+        "revise": null,
+        "createdAt": "2026-11-13 10:00:00+00:00",
+        "updatedAt": "2026-11-13 10:00:00+00:00",
+        "attempts": 1,
+        "usage": {
+          "turns": 4,
+          "checks": 1,
+          "inputTokens": 40,
+          "outputTokens": 32300,
+          "cacheReadTokens": 4000,
+          "cacheWriteTokens": 0,
+          "webSearches": 0,
+          "webFetches": 0,
+          "seconds": 42.0,
+          "model": "scripted"
+        },
+        "costUsd": 0.647,
+        "webSearch": true,
+        "pastedChars": 21
+      },
+      {
+        "id": "build-1",
+        "status": "done",
+        "progress": {
+          "stage": "done",
+          "detail": "The checks pass",
+          "turns": 5,
+          "checks": 2,
+          "files": 7,
+          "problems": 0
+        },
+        "result": {
+          "packageId": "ub544b040_stones",
+          "revision": 1,
+          "name": "Odd-object strength (from scratch)",
+          "summary": "Two stone days and two easy walks a week."
+        },
+        "error": null,
+        "description": "Lift an atlas stone to the shoulder twice a week and walk easily twice a week, eight weeks.",
+        "revise": null,
+        "createdAt": "2026-11-13 10:00:00+00:00",
+        "updatedAt": "2026-11-13 10:00:00+00:00",
+        "attempts": 1,
+        "usage": {
+          "turns": 5,
+          "checks": 2,
+          "inputTokens": 9040,
+          "outputTokens": 5970,
+          "cacheReadTokens": 4000,
+          "cacheWriteTokens": 30000,
+          "webSearches": 0,
+          "webFetches": 0,
+          "seconds": 42.0,
+          "model": "scripted"
+        },
+        "costUsd": 0.3064,
+        "webSearch": false,
+        "pastedChars": 0
+      }
+    ],
+    "totals": {
+      "builds": 2,
+      "byStatus": {
+        "failed": 1,
+        "done": 1
+      },
+      "doneShare": 0.5,
+      "inputTokens": 9080,
+      "outputTokens": 38270,
+      "cacheReadTokens": 8000,
+      "cacheWriteTokens": 30000,
+      "seconds": 42.0,
+      "costUsd": 0.95
+    }
+  },
+  "done": {
+    "build": {
+      "id": "build-1",
+      "status": "done",
+      "progress": {
+        "stage": "done",
+        "detail": "The checks pass",
+        "turns": 5,
+        "checks": 2,
+        "files": 7,
+        "problems": 0
+      },
+      "result": {
+        "packageId": "ub544b040_stones",
+        "revision": 1,
+        "name": "Odd-object strength (from scratch)",
+        "summary": "Two stone days and two easy walks a week."
+      },
+      "error": null,
+      "description": "Lift an atlas stone to the shoulder twice a week and walk easily twice a week, eight weeks.",
+      "revise": null,
+      "createdAt": "2026-11-13 10:00:00+00:00",
+      "updatedAt": "2026-11-13 10:00:00+00:00",
+      "attempts": 1,
+      "usage": {
+        "turns": 5,
+        "checks": 2,
+        "inputTokens": 9040,
+        "outputTokens": 5970,
+        "cacheReadTokens": 4000,
+        "cacheWriteTokens": 30000,
+        "webSearches": 0,
+        "webFetches": 0,
+        "seconds": 42.0,
+        "model": "scripted"
+      },
+      "costUsd": 0.3064,
+      "webSearch": false,
+      "pastedChars": 0,
+      "request": {
+        "description": "Lift an atlas stone to the shoulder twice a week and walk easily twice a week, eight weeks.",
+        "answers": {
+          "days": 4,
+          "minutes": 45,
+          "level": "intermediate"
+        },
+        "pastedText": "",
+        "webSearch": false,
+        "revise": null
+      },
+      "turns": [
+        {
+          "n": 1,
+          "said": "I will write the four files first.",
+          "thought": false,
+          "calls": [
+            {
+              "tool": "write_file",
+              "path": "analytics.yaml",
+              "kind": null,
+              "bytes": 358,
+              "query": null,
+              "error": false,
+              "result": "written: analytics.yaml (358 bytes; 1 files)",
+              "check": null
+            },
+            {
+              "tool": "write_file",
+              "path": "archetypes/scratch_minimal_easy_walk.yaml",
+              "kind": null,
+              "bytes": 446,
+              "query": null,
+              "error": false,
+              "result": "written: archetypes/scratch_minimal_easy_walk.yaml (446 bytes; 2 files)",
+              "check": null
+            },
+            {
+              "tool": "write_file",
+              "path": "archetypes/scratch_minimal_stone_day.yaml",
+              "kind": null,
+              "bytes": 784,
+              "query": null,
+              "error": false,
+              "result": "written: archetypes/scratch_minimal_stone_day.yaml (784 bytes; 3 files)",
+              "check": null
+            },
+            {
+              "tool": "write_file",
+              "path": "exercises.yaml",
+              "kind": null,
+              "bytes": 14,
+              "query": null,
+              "error": false,
+              "result": "written: exercises.yaml (14 bytes; 4 files)",
+              "check": null
+            },
+            {
+              "tool": "write_file",
+              "path": "frameworks/ub544b040_scratch_minimal_week.yaml",
+              "kind": null,
+              "bytes": 863,
+              "query": null,
+              "error": false,
+              "result": "written: frameworks/ub544b040_scratch_minimal_week.yaml (863 bytes; 5 files)",
+              "check": null
+            },
+            {
+              "tool": "write_file",
+              "path": "philosophy.yaml",
+              "kind": null,
+              "bytes": 1727,
+              "query": null,
+              "error": false,
+              "result": "written: philosophy.yaml (1727 bytes; 6 files)",
+              "check": null
+            },
+            {
+              "tool": "write_file",
+              "path": "vocabulary.yaml",
+              "kind": null,
+              "bytes": 1095,
+              "query": null,
+              "error": false,
+              "result": "written: vocabulary.yaml (1095 bytes; 7 files)",
+              "check": null
+            }
+          ],
+          "note": null,
+          "tokens": {
+            "input": 9000,
+            "output": 4000,
+            "cacheRead": 0,
+            "cacheWrite": 30000
+          }
+        },
+        {
+          "n": 2,
+          "said": null,
+          "thought": false,
+          "calls": [
+            {
+              "tool": "check_package",
+              "path": null,
+              "kind": null,
+              "bytes": null,
+              "query": null,
+              "error": false,
+              "result": "3 to fix",
+              "check": 0
+            }
+          ],
+          "note": null,
+          "tokens": {
+            "input": 10,
+            "output": 200,
+            "cacheRead": 1000,
+            "cacheWrite": 0
+          }
+        },
+        {
+          "n": 3,
+          "said": "The stone slots are empty: the exercises are missing.",
+          "thought": true,
+          "calls": [
+            {
+              "tool": "write_file",
+              "path": "exercises.yaml",
+              "kind": null,
+              "bytes": 1260,
+              "query": null,
+              "error": false,
+              "result": "written: exercises.yaml (1260 bytes; 7 files)",
+              "check": null
+            }
+          ],
+          "note": null,
+          "tokens": {
+            "input": 10,
+            "output": 1500,
+            "cacheRead": 1000,
+            "cacheWrite": 0
+          }
+        },
+        {
+          "n": 4,
+          "said": null,
+          "thought": false,
+          "calls": [
+            {
+              "tool": "check_package",
+              "path": null,
+              "kind": null,
+              "bytes": null,
+              "query": null,
+              "error": false,
+              "result": "passes",
+              "check": 1
+            }
+          ],
+          "note": null,
+          "tokens": {
+            "input": 10,
+            "output": 150,
+            "cacheRead": 1000,
+            "cacheWrite": 0
+          }
+        },
+        {
+          "n": 5,
+          "said": null,
+          "thought": false,
+          "calls": [
+            {
+              "tool": "finish",
+              "path": null,
+              "kind": null,
+              "bytes": null,
+              "query": null,
+              "error": false,
+              "result": "Two stone days and two easy walks a week.",
+              "check": null
+            }
+          ],
+          "note": null,
+          "tokens": {
+            "input": 10,
+            "output": 120,
+            "cacheRead": 1000,
+            "cacheWrite": 0
+          }
+        }
+      ],
+      "droppedTurns": [],
+      "checks": [
+        {
+          "turn": 2,
+          "tool": "check_package",
+          "ok": false,
+          "problems": [
+            {
+              "stage": "smoke",
+              "code": "unfilled_slot",
+              "file": null,
+              "message": "ub544b040_stones/standard/scratch_foundation: slot 'stone_to_shoulder' of archetype 'ub544b040_scratch_minimal_stone_day' is empty (NO_EXERCISE_IN_ALLOWED_PACKAGES)"
+            },
+            {
+              "stage": "smoke",
+              "code": "unfilled_slot",
+              "file": null,
+              "message": "ub544b040_stones/standard/scratch_foundation: slot 'stone_carry' of archetype 'ub544b040_scratch_minimal_stone_day' is empty (NO_EXERCISE_IN_ALLOWED_PACKAGES)"
+            },
+            {
+              "stage": "smoke",
+              "code": "unfilled_slot",
+              "file": null,
+              "message": "ub544b040_stones/standard/scratch_foundation: slot 'walk' of archetype 'ub544b040_scratch_minimal_easy_walk' is empty (NO_EXERCISE_IN_ALLOWED_PACKAGES)"
+            }
+          ],
+          "moreProblems": 0,
+          "warnings": [],
+          "skipped": [],
+          "checksLeft": 9,
+          "athlete": {
+            "as": {
+              "days_per_week": 4,
+              "session_time_minutes": 45,
+              "training_level": "intermediate",
+              "equipment": "everything",
+              "note": "the athlete listed no equipment, so this was generated with every implement to hand: it does not show what they get without one"
+            },
+            "feasible": true,
+            "error": null,
+            "errors": [],
+            "weeks": {
+              "shown": 8,
+              "of": 8
+            },
+            "checkThese": [
+              "Nothing changes from week to week in weeks 1–3, weeks 5–7: the same sessions with the same numbers. If the method progresses there, see what each slot is prescribed from (spec section 3); if it does not, say so in the words the athlete reads."
+            ],
+            "program": "Week 1 · Foundation (base)\n  Mon  Stone day: [stone_to_shoulder: EMPTY]; [stone_carry: EMPTY]\n  Wed  as Mon\n  Fri  Easy walk: [walk: EMPTY]\n  Sun  as Fri\nWeek 2 · Foundation (base) — the same as week 1\nWeek 3 · Foundation (base) — the same as week 1\nWeek 4 · Foundation (base) · deload — the same as week 1\nWeek 5 · Loading (build) — the same as week 1\nWeek 6 · Loading (build) — the same as week 1\nWeek 7 · Loading (build) — the same as week 1\nWeek 8 · Loading (build) · deload — the same as week 1",
+            "moreTracks": 0
+          }
+        },
+        {
+          "turn": 4,
+          "tool": "check_package",
+          "ok": true,
+          "problems": [],
+          "moreProblems": 0,
+          "warnings": [],
+          "skipped": [],
+          "checksLeft": 8,
+          "athlete": {
+            "as": {
+              "days_per_week": 4,
+              "session_time_minutes": 45,
+              "training_level": "intermediate",
+              "equipment": "everything",
+              "note": "the athlete listed no equipment, so this was generated with every implement to hand: it does not show what they get without one"
+            },
+            "feasible": true,
+            "error": null,
+            "errors": [],
+            "weeks": {
+              "shown": 8,
+              "of": 8
+            },
+            "checkThese": [
+              "Loads start again at a new phase (Stone to shoulder 50 kg in week 3, 40 kg in week 5; Stone carry 50 kg in week 3, 40 kg in week 5): a computed load counts the weeks of its phase. A method whose loads climb through the whole program is one phase."
+            ],
+            "program": "Week 1 · Foundation (base)\n  Mon  Stone day: Stone to shoulder 5 × 3 @ 40 kg; Stone carry 3 × 1 @ 40 kg\n  Wed  as Mon\n  Fri  Easy walk: Easy walk 40 min — Zone 1-2 (conversational pace)\n  Sun  as Fri\nWeek 2 · Foundation (base)\n  Mon  Stone day: Stone to shoulder 5 × 3 @ 45 kg; Stone carry 3 × 1 @ 45 kg\n  Wed  as Mon\n  Fri  Easy walk: Easy walk 40 min — Zone 1-2 (conversational pace)\n  Sun  as Fri\nWeek 3 · Foundation (base)\n  Mon  Stone day: Stone to shoulder 5 × 3 @ 50 kg; Stone carry 3 × 1 @ 50 kg\n  Wed  as Mon\n  Fri  Easy walk: Easy walk 40 min — Zone 1-2 (conversational pace)\n  Sun  as Fri\nWeek 4 · Foundation (base) · deload\n  Mon  Stone day: Stone to shoulder 3 × 3 @ 50 kg; Stone carry 2 × 1 @ 50 kg\n  Wed  as Mon\n  Fri  Easy walk: Easy walk 24 min — Zone 1-2 (conversational pace)\n  Sun  as Fri\nWeek 5 · Loading (build)\n  Mon  Stone day: Stone to shoulder 5 × 3 @ 40 kg; Stone carry 3 × 1 @ 40 kg\n  Wed  as Mon\n  Fri  Easy walk: Easy walk 40 min — Zone 1-2 (conversational pace)\n  Sun  as Fri\nWeek 6 · Loading (build)\n  Mon  Stone day: Stone to shoulder 5 × 3 @ 45 kg; Stone carry 3 × 1 @ 45 kg\n  Wed  as Mon\n  Fri  Easy walk: Easy walk 44 min — Zone 1-2 (conversational pace)\n  Sun  as Fri\nWeek 7 · Loading (build)\n  Mon  Stone day: Stone to shoulder 5 × 3 @ 50 kg; Stone carry 3 × 1 @ 50 kg\n  Wed  as Mon\n  Fri  Easy walk: Easy walk 45 min — Zone 1-2 (conversational pace)\n  Sun  as Fri\nWeek 8 · Loading (build) · deload\n  Mon  Stone day: Stone to shoulder 3 × 3 @ 50 kg; Stone carry 2 × 1 @ 50 kg\n  Wed  as Mon\n  Fri  Easy walk: Easy walk 30 min — Zone 1-2 (conversational pace)\n  Sun  as Fri",
+            "moreTracks": 0
+          }
+        }
+      ],
+      "problemCounts": [
+        {
+          "stage": "smoke",
+          "code": "unfilled_slot",
+          "count": 3
+        }
+      ],
+      "files": [
+        {
+          "path": "analytics.yaml",
+          "bytes": 358,
+          "content": "# What progress means for the method: the stone getting heavier, the days done.\nid: ub544b040_stones\n\nprogress:\n  - id: stone_load\n    label: Stone to shoulder\n    primitive: set_load\n    headline: true\n    scope: {exercises: [ub544b040_scratch_minimal_stone_to_shoulder]}\n\n  - id: days_done\n    label: Days done as written\n    primitive: session_completion\n"
+        },
+        {
+          "path": "archetypes/scratch_minimal_easy_walk.yaml",
+          "bytes": 446,
+          "content": "id: ub544b040_scratch_minimal_easy_walk\nname: \"Easy walk\"\nmodality: aerobic_base\ncategory: conditioning\nduration_estimate_minutes: 40\napplicable_phases: [base, build]\ntraining_levels: [novice, intermediate, advanced, elite]\n\nslots:\n  - role: walk\n    slot_type: time_domain\n    duration_minutes: 40\n    intensity: zone2\n    exercise_filter:\n      exercise_ids: [ub544b040_scratch_minimal_walk]\n\nsources:\n  - \"Written for the repository's tests.\"\n"
+        },
+        {
+          "path": "archetypes/scratch_minimal_stone_day.yaml",
+          "bytes": 784,
+          "content": "id: ub544b040_scratch_minimal_stone_day\nname: \"Stone day\"\nmodality: ub544b040_scratch_odd_object_strength\ncategory: strength\nduration_estimate_minutes: 40\nrequired_equipment:\n  - ub544b040_scratch_stone\napplicable_phases: [base, build]\ntraining_levels: [novice, intermediate, advanced, elite]\n\nslots:\n  - role: stone_to_shoulder\n    slot_type: sets_reps\n    sets: 5\n    reps: 3\n    intensity: heavy\n    rest_sec: 120\n    exercise_filter:\n      movement_pattern: ub544b040_scratch_shouldering   # this package's own pattern, named directly\n  - role: stone_carry\n    slot_type: sets_reps\n    sets: 3\n    reps: 1\n    intensity: moderate\n    rest_sec: 90\n    exercise_filter:\n      exercise_ids: [ub544b040_scratch_minimal_stone_carry]\n\nsources:\n  - \"Written for the repository's tests.\"\n"
+        },
+        {
+          "path": "exercises.yaml",
+          "bytes": 1260,
+          "content": "exercises:\n  - id: ub544b040_scratch_minimal_stone_to_shoulder\n    name: Stone to shoulder\n    category: accessory\n    modality: [ub544b040_scratch_odd_object_strength]\n    equipment: [ub544b040_scratch_stone]\n    effort: high\n    bilateral: false\n    movement_patterns: [ub544b040_scratch_shouldering]\n    typical_volume: {sets: 5, reps: 3}\n    starting_load_kg: {novice: 20, intermediate: 40, advanced: 60, elite: 80}\n    weekly_increment_kg: 2.5\n    sessions_per_week: 2\n\n  - id: ub544b040_scratch_minimal_stone_carry\n    name: Stone carry\n    category: accessory\n    modality: [ub544b040_scratch_odd_object_strength]\n    equipment: [ub544b040_scratch_stone]\n    effort: medium\n    movement_patterns: [loaded_carry]\n    # What a pattern does not say: the flags that rule this exercise out.\n    contraindicated_with: [lumbar_disc]\n    typical_volume: {sets: 3, reps: 1}\n    starting_load_kg: {novice: 20, intermediate: 40, advanced: 60, elite: 80}\n    weekly_increment_kg: 2.5\n    sessions_per_week: 2\n\n  - id: ub544b040_scratch_minimal_walk\n    name: Easy walk\n    category: aerobic\n    modality: [aerobic_base]\n    equipment: [open_space]\n    effort: low\n    movement_patterns: [locomotion, aerobic_monostructural]\n    typical_volume: {duration_sec: 2400}\n"
+        },
+        {
+          "path": "frameworks/ub544b040_scratch_minimal_week.yaml",
+          "bytes": 863,
+          "content": "id: ub544b040_scratch_minimal_week\nname: \"Stone week\"\nsource_philosophy: ub544b040_stones\n\ngoals_served:\n  - ub544b040_scratch_odd_object_strength\n\n# The modality scheduler builds the week from these.\nsessions_per_week:\n  ub544b040_scratch_odd_object_strength: 2\n  aerobic_base: 2\n\nintensity_distribution:\n  zone1_2_pct: 0.5\n  zone3_pct: 0.0\n  zone4_5_pct: 0.0\n  max_effort_pct: 0.5\n\nprogression_model: linear_load\n\napplicable_when:\n  training_level: [novice, intermediate, advanced, elite]\n  days_per_week_min: 3\n  days_per_week_max: 6\n\ndeload_protocol:\n  frequency_weeks: 4\n  volume_reduction_pct: 0.6\n  intensity_change: maintain\n\nexpectations:\n  min_weeks: 4\n  ideal_weeks: 8\n  min_days_per_week: 3\n  ideal_days_per_week: 4\n  min_session_minutes: 30\n  ideal_session_minutes: 45\n  supports_split_days: false\n\nsources:\n  - \"Written for the repository's tests.\"\n"
+        },
+        {
+          "path": "philosophy.yaml",
+          "bytes": 1727,
+          "content": "id: ub544b040_stones\n# A package written from nothing the repository ships: its own modality,\n# movement pattern, implement and exercises (docs/schemas/PACKAGE_SPEC.md\n# prints it as the worked example, and tools/gen_package_spec.py fails when\n# they part). Small on purpose — one track, two phases, one framework on the\n# modality scheduler — and held to every gate by test_package_gate.py and\n# test_package_dropin.py. Never shipped, never graded.\nname: \"Odd-object strength (from scratch)\"\ncore_principles:\n  - lift_awkward_things_from_the_ground\n  - easy_walking_between_hard_days\n  - one_progression_at_a_time\nscope:\n  - ub544b040_scratch_odd_object_strength\n  - aerobic_base\nbias:\n  - ub544b040_scratch_odd_object_strength\nrequired_equipment:\n  - ub544b040_scratch_stone\n# Only this package's sessions and exercises may reach its programs.\nself_contained: true\nintensity_model: hard_easy_alternation\nprogression_philosophy: load_based\n\nprimary_track_id: standard\ntracks:\n  - id: standard\n    name: \"Stone work\"\n    description: \"Two stone days and two easy walks a week; eight weeks, heavier in the second four.\"\n    phases:\n      - id: scratch_foundation\n        name: \"Foundation\"\n        kind: base\n        weeks: 4\n        framework_id: ub544b040_scratch_minimal_week\n        focus: \"Learn the lift\"\n        description: \"Light stones, the same lift every session, until shouldering is unremarkable.\"\n      - id: scratch_loading\n        name: \"Loading\"\n        kind: build\n        weeks: 4\n        framework_id: ub544b040_scratch_minimal_week\n        focus: \"Heavier stones\"\n        description: \"The same week, a heavier stone each week.\"\n\nsources:\n  - \"Written for the repository's tests; no published source.\"\n"
+        },
+        {
+          "path": "vocabulary.yaml",
+          "bytes": 1095,
+          "content": "# What this package adds to the commons' vocabulary, for itself\n# (docs/schemas/vocabulary.schema.json). Never an id the commons define.\nmodalities:\n  - id: ub544b040_scratch_odd_object_strength\n    name: Odd-object strength\n    description: Lifting, shouldering and carrying stones and other awkward loads.\n    recovery_cost: high\n    recovery_hours_min: 48\n    session_position: first\n    priority_tier: 1\n    typical_duration_minutes: 45\n    progression_model: linear_load\n    family: strength\n    compatible_in_session_with: [mobility]\n    display:\n      label: Odd object\n      short: Stone\n      order: 20\n      color: '#ef4444'\n      tint: red\n      text_shade: 700\n      icon: {web: Weight, ios: figure.strengthtraining.traditional, watch: figure.strengthtraining.traditional}\n\nmovement_patterns:\n  - id: ub544b040_scratch_shouldering\n    name: Ground to shoulder\n    regions: {lower: 1, trunk: 1, upper_pull: 0.5}\n    # The injury flags that rule it out. Required: [] would say none does.\n    excluded_by: [lumbar_disc]\n\nequipment:\n  - {id: ub544b040_scratch_stone, label: Atlas stone}\n"
+        }
+      ],
+      "limits": {
+        "turns": 40,
+        "checks": 10,
+        "outputTokens": 200000,
+        "seconds": 1500
+      },
+      "effort": "high",
+      "priceModel": "claude-opus-5-5"
+    }
+  },
+  "failed": {
+    "build": {
+      "id": "build-failed",
+      "status": "failed",
+      "progress": {
+        "stage": "fixing",
+        "detail": "3 things to fix",
+        "turns": 4,
+        "checks": 1,
+        "files": 7,
+        "problems": 3
+      },
+      "result": null,
+      "error": {
+        "code": "budget",
+        "message": "This method took more tries than a build allows. Describe it more simply, or in fewer parts, and try again.",
+        "spent": "turns",
+        "problems": [
+          {
+            "stage": "smoke",
+            "code": "unfilled_slot",
+            "file": null,
+            "message": "ub544b040_stones/standard/scratch_foundation: slot 'stone_to_shoulder' of archetype 'ub544b040_scratch_minimal_stone_day' is empty (NO_EXERCISE_IN_ALLOWED_PACKAGES)"
+          },
+          {
+            "stage": "smoke",
+            "code": "unfilled_slot",
+            "file": null,
+            "message": "ub544b040_stones/standard/scratch_foundation: slot 'stone_carry' of archetype 'ub544b040_scratch_minimal_stone_day' is empty (NO_EXERCISE_IN_ALLOWED_PACKAGES)"
+          },
+          {
+            "stage": "smoke",
+            "code": "unfilled_slot",
+            "file": null,
+            "message": "ub544b040_stones/standard/scratch_foundation: slot 'walk' of archetype 'ub544b040_scratch_minimal_easy_walk' is empty (NO_EXERCISE_IN_ALLOWED_PACKAGES)"
+          }
+        ]
+      },
+      "description": "Lift an atlas stone to the shoulder twice a week and walk easily twice a week, eight weeks.",
+      "revise": null,
+      "createdAt": "2026-11-13 10:00:00+00:00",
+      "updatedAt": "2026-11-13 10:00:00+00:00",
+      "attempts": 1,
+      "usage": {
+        "turns": 4,
+        "checks": 1,
+        "inputTokens": 40,
+        "outputTokens": 32300,
+        "cacheReadTokens": 4000,
+        "cacheWriteTokens": 0,
+        "webSearches": 0,
+        "webFetches": 0,
+        "seconds": 42.0,
+        "model": "scripted"
+      },
+      "costUsd": 0.647,
+      "webSearch": true,
+      "pastedChars": 21,
+      "request": {
+        "description": "Lift an atlas stone to the shoulder twice a week and walk easily twice a week, eight weeks.",
+        "answers": {
+          "days": 4,
+          "minutes": 45,
+          "level": "intermediate"
+        },
+        "pastedText": "Stones, twice a week.",
+        "webSearch": true,
+        "revise": null
+      },
+      "turns": [
+        {
+          "n": 1,
+          "said": null,
+          "thought": false,
+          "calls": [
+            {
+              "tool": "write_file",
+              "path": "analytics.yaml",
+              "kind": null,
+              "bytes": 358,
+              "query": null,
+              "error": false,
+              "result": "written: analytics.yaml (358 bytes; 1 files)",
+              "check": null
+            },
+            {
+              "tool": "write_file",
+              "path": "archetypes/scratch_minimal_easy_walk.yaml",
+              "kind": null,
+              "bytes": 446,
+              "query": null,
+              "error": false,
+              "result": "written: archetypes/scratch_minimal_easy_walk.yaml (446 bytes; 2 files)",
+              "check": null
+            },
+            {
+              "tool": "write_file",
+              "path": "archetypes/scratch_minimal_stone_day.yaml",
+              "kind": null,
+              "bytes": 784,
+              "query": null,
+              "error": false,
+              "result": "written: archetypes/scratch_minimal_stone_day.yaml (784 bytes; 3 files)",
+              "check": null
+            },
+            {
+              "tool": "write_file",
+              "path": "exercises.yaml",
+              "kind": null,
+              "bytes": 14,
+              "query": null,
+              "error": false,
+              "result": "written: exercises.yaml (14 bytes; 4 files)",
+              "check": null
+            },
+            {
+              "tool": "write_file",
+              "path": "frameworks/ub544b040_scratch_minimal_week.yaml",
+              "kind": null,
+              "bytes": 863,
+              "query": null,
+              "error": false,
+              "result": "written: frameworks/ub544b040_scratch_minimal_week.yaml (863 bytes; 5 files)",
+              "check": null
+            },
+            {
+              "tool": "write_file",
+              "path": "philosophy.yaml",
+              "kind": null,
+              "bytes": 1727,
+              "query": null,
+              "error": false,
+              "result": "written: philosophy.yaml (1727 bytes; 6 files)",
+              "check": null
+            },
+            {
+              "tool": "write_file",
+              "path": "vocabulary.yaml",
+              "kind": null,
+              "bytes": 1095,
+              "query": null,
+              "error": false,
+              "result": "written: vocabulary.yaml (1095 bytes; 7 files)",
+              "check": null
+            }
+          ],
+          "note": "Your last reply was cut off before it was complete and nothing of it was kept. Continue with smaller steps: one file per write_file call.",
+          "tokens": {
+            "input": 10,
+            "output": 100,
+            "cacheRead": 1000,
+            "cacheWrite": 0
+          }
+        },
+        {
+          "n": 2,
+          "said": null,
+          "thought": false,
+          "calls": [
+            {
+              "tool": "check_package",
+              "path": null,
+              "kind": null,
+              "bytes": null,
+              "query": null,
+              "error": false,
+              "result": "3 to fix",
+              "check": 0
+            }
+          ],
+          "note": null,
+          "tokens": {
+            "input": 10,
+            "output": 100,
+            "cacheRead": 1000,
+            "cacheWrite": 0
+          }
+        },
+        {
+          "n": 3,
+          "said": null,
+          "thought": false,
+          "calls": [
+            {
+              "tool": "list_files",
+              "path": null,
+              "kind": null,
+              "bytes": null,
+              "query": null,
+              "error": false,
+              "result": "[{\"path\": \"analytics.yaml\", \"bytes\": 358}, {\"path\": \"archetypes/scratch_minimal_easy_walk.yaml\", \"bytes\": 446}, {\"path\": \"archetypes/scratch_minimal_stone_day.yaml\", \"bytes\": 784}, {\"path\": \"exercises.yaml\", \"bytes\": 14}, {\"path\": \"frameworks/ub544b040_scratch_minimal_week.yaml\", \"bytes\": 863}, {\"path\": \"philosophy.yaml\", \"bytes\": 1727}, {\"path\": \"vocabulary.yaml\", \"bytes\": 1095}]",
+              "check": null
+            }
+          ],
+          "note": null,
+          "tokens": {
+            "input": 10,
+            "output": 100,
+            "cacheRead": 1000,
+            "cacheWrite": 0
+          }
+        }
+      ],
+      "droppedTurns": [
+        {
+          "stop": "max_tokens",
+          "tokens": {
+            "input": 10,
+            "output": 32000,
+            "cacheRead": 1000,
+            "cacheWrite": 0
+          }
+        }
+      ],
+      "checks": [
+        {
+          "turn": 2,
+          "tool": "check_package",
+          "ok": false,
+          "problems": [
+            {
+              "stage": "smoke",
+              "code": "unfilled_slot",
+              "file": null,
+              "message": "ub544b040_stones/standard/scratch_foundation: slot 'stone_to_shoulder' of archetype 'ub544b040_scratch_minimal_stone_day' is empty (NO_EXERCISE_IN_ALLOWED_PACKAGES)"
+            },
+            {
+              "stage": "smoke",
+              "code": "unfilled_slot",
+              "file": null,
+              "message": "ub544b040_stones/standard/scratch_foundation: slot 'stone_carry' of archetype 'ub544b040_scratch_minimal_stone_day' is empty (NO_EXERCISE_IN_ALLOWED_PACKAGES)"
+            },
+            {
+              "stage": "smoke",
+              "code": "unfilled_slot",
+              "file": null,
+              "message": "ub544b040_stones/standard/scratch_foundation: slot 'walk' of archetype 'ub544b040_scratch_minimal_easy_walk' is empty (NO_EXERCISE_IN_ALLOWED_PACKAGES)"
+            }
+          ],
+          "moreProblems": 0,
+          "warnings": [],
+          "skipped": [],
+          "checksLeft": 9,
+          "athlete": {
+            "as": {
+              "days_per_week": 4,
+              "session_time_minutes": 45,
+              "training_level": "intermediate",
+              "equipment": "everything",
+              "note": "the athlete listed no equipment, so this was generated with every implement to hand: it does not show what they get without one"
+            },
+            "feasible": true,
+            "error": null,
+            "errors": [],
+            "weeks": {
+              "shown": 8,
+              "of": 8
+            },
+            "checkThese": [
+              "Nothing changes from week to week in weeks 1–3, weeks 5–7: the same sessions with the same numbers. If the method progresses there, see what each slot is prescribed from (spec section 3); if it does not, say so in the words the athlete reads."
+            ],
+            "program": "Week 1 · Foundation (base)\n  Mon  Stone day: [stone_to_shoulder: EMPTY]; [stone_carry: EMPTY]\n  Wed  as Mon\n  Fri  Easy walk: [walk: EMPTY]\n  Sun  as Fri\nWeek 2 · Foundation (base) — the same as week 1\nWeek 3 · Foundation (base) — the same as week 1\nWeek 4 · Foundation (base) · deload — the same as week 1\nWeek 5 · Loading (build) — the same as week 1\nWeek 6 · Loading (build) — the same as week 1\nWeek 7 · Loading (build) — the same as week 1\nWeek 8 · Loading (build) · deload — the same as week 1",
+            "moreTracks": 0
+          }
+        }
+      ],
+      "problemCounts": [
+        {
+          "stage": "smoke",
+          "code": "unfilled_slot",
+          "count": 3
+        }
+      ],
+      "files": [
+        {
+          "path": "analytics.yaml",
+          "bytes": 358,
+          "content": "# What progress means for the method: the stone getting heavier, the days done.\nid: ub544b040_stones\n\nprogress:\n  - id: stone_load\n    label: Stone to shoulder\n    primitive: set_load\n    headline: true\n    scope: {exercises: [ub544b040_scratch_minimal_stone_to_shoulder]}\n\n  - id: days_done\n    label: Days done as written\n    primitive: session_completion\n"
+        },
+        {
+          "path": "archetypes/scratch_minimal_easy_walk.yaml",
+          "bytes": 446,
+          "content": "id: ub544b040_scratch_minimal_easy_walk\nname: \"Easy walk\"\nmodality: aerobic_base\ncategory: conditioning\nduration_estimate_minutes: 40\napplicable_phases: [base, build]\ntraining_levels: [novice, intermediate, advanced, elite]\n\nslots:\n  - role: walk\n    slot_type: time_domain\n    duration_minutes: 40\n    intensity: zone2\n    exercise_filter:\n      exercise_ids: [ub544b040_scratch_minimal_walk]\n\nsources:\n  - \"Written for the repository's tests.\"\n"
+        },
+        {
+          "path": "archetypes/scratch_minimal_stone_day.yaml",
+          "bytes": 784,
+          "content": "id: ub544b040_scratch_minimal_stone_day\nname: \"Stone day\"\nmodality: ub544b040_scratch_odd_object_strength\ncategory: strength\nduration_estimate_minutes: 40\nrequired_equipment:\n  - ub544b040_scratch_stone\napplicable_phases: [base, build]\ntraining_levels: [novice, intermediate, advanced, elite]\n\nslots:\n  - role: stone_to_shoulder\n    slot_type: sets_reps\n    sets: 5\n    reps: 3\n    intensity: heavy\n    rest_sec: 120\n    exercise_filter:\n      movement_pattern: ub544b040_scratch_shouldering   # this package's own pattern, named directly\n  - role: stone_carry\n    slot_type: sets_reps\n    sets: 3\n    reps: 1\n    intensity: moderate\n    rest_sec: 90\n    exercise_filter:\n      exercise_ids: [ub544b040_scratch_minimal_stone_carry]\n\nsources:\n  - \"Written for the repository's tests.\"\n"
+        },
+        {
+          "path": "exercises.yaml",
+          "bytes": 14,
+          "content": "exercises: []\n"
+        },
+        {
+          "path": "frameworks/ub544b040_scratch_minimal_week.yaml",
+          "bytes": 863,
+          "content": "id: ub544b040_scratch_minimal_week\nname: \"Stone week\"\nsource_philosophy: ub544b040_stones\n\ngoals_served:\n  - ub544b040_scratch_odd_object_strength\n\n# The modality scheduler builds the week from these.\nsessions_per_week:\n  ub544b040_scratch_odd_object_strength: 2\n  aerobic_base: 2\n\nintensity_distribution:\n  zone1_2_pct: 0.5\n  zone3_pct: 0.0\n  zone4_5_pct: 0.0\n  max_effort_pct: 0.5\n\nprogression_model: linear_load\n\napplicable_when:\n  training_level: [novice, intermediate, advanced, elite]\n  days_per_week_min: 3\n  days_per_week_max: 6\n\ndeload_protocol:\n  frequency_weeks: 4\n  volume_reduction_pct: 0.6\n  intensity_change: maintain\n\nexpectations:\n  min_weeks: 4\n  ideal_weeks: 8\n  min_days_per_week: 3\n  ideal_days_per_week: 4\n  min_session_minutes: 30\n  ideal_session_minutes: 45\n  supports_split_days: false\n\nsources:\n  - \"Written for the repository's tests.\"\n"
+        },
+        {
+          "path": "philosophy.yaml",
+          "bytes": 1727,
+          "content": "id: ub544b040_stones\n# A package written from nothing the repository ships: its own modality,\n# movement pattern, implement and exercises (docs/schemas/PACKAGE_SPEC.md\n# prints it as the worked example, and tools/gen_package_spec.py fails when\n# they part). Small on purpose — one track, two phases, one framework on the\n# modality scheduler — and held to every gate by test_package_gate.py and\n# test_package_dropin.py. Never shipped, never graded.\nname: \"Odd-object strength (from scratch)\"\ncore_principles:\n  - lift_awkward_things_from_the_ground\n  - easy_walking_between_hard_days\n  - one_progression_at_a_time\nscope:\n  - ub544b040_scratch_odd_object_strength\n  - aerobic_base\nbias:\n  - ub544b040_scratch_odd_object_strength\nrequired_equipment:\n  - ub544b040_scratch_stone\n# Only this package's sessions and exercises may reach its programs.\nself_contained: true\nintensity_model: hard_easy_alternation\nprogression_philosophy: load_based\n\nprimary_track_id: standard\ntracks:\n  - id: standard\n    name: \"Stone work\"\n    description: \"Two stone days and two easy walks a week; eight weeks, heavier in the second four.\"\n    phases:\n      - id: scratch_foundation\n        name: \"Foundation\"\n        kind: base\n        weeks: 4\n        framework_id: ub544b040_scratch_minimal_week\n        focus: \"Learn the lift\"\n        description: \"Light stones, the same lift every session, until shouldering is unremarkable.\"\n      - id: scratch_loading\n        name: \"Loading\"\n        kind: build\n        weeks: 4\n        framework_id: ub544b040_scratch_minimal_week\n        focus: \"Heavier stones\"\n        description: \"The same week, a heavier stone each week.\"\n\nsources:\n  - \"Written for the repository's tests; no published source.\"\n"
+        },
+        {
+          "path": "vocabulary.yaml",
+          "bytes": 1095,
+          "content": "# What this package adds to the commons' vocabulary, for itself\n# (docs/schemas/vocabulary.schema.json). Never an id the commons define.\nmodalities:\n  - id: ub544b040_scratch_odd_object_strength\n    name: Odd-object strength\n    description: Lifting, shouldering and carrying stones and other awkward loads.\n    recovery_cost: high\n    recovery_hours_min: 48\n    session_position: first\n    priority_tier: 1\n    typical_duration_minutes: 45\n    progression_model: linear_load\n    family: strength\n    compatible_in_session_with: [mobility]\n    display:\n      label: Odd object\n      short: Stone\n      order: 20\n      color: '#ef4444'\n      tint: red\n      text_shade: 700\n      icon: {web: Weight, ios: figure.strengthtraining.traditional, watch: figure.strengthtraining.traditional}\n\nmovement_patterns:\n  - id: ub544b040_scratch_shouldering\n    name: Ground to shoulder\n    regions: {lower: 1, trunk: 1, upper_pull: 0.5}\n    # The injury flags that rule it out. Required: [] would say none does.\n    excluded_by: [lumbar_disc]\n\nequipment:\n  - {id: ub544b040_scratch_stone, label: Atlas stone}\n"
+        }
+      ],
+      "limits": {
+        "turns": 40,
+        "checks": 10,
+        "outputTokens": 200000,
+        "seconds": 1500
+      },
+      "effort": "high",
+      "priceModel": "claude-opus-5-5"
+    }
+  }
+}

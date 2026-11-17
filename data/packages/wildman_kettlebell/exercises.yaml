@@ -128,6 +128,39 @@ exercises:
       advanced: 32
       elite: 40
 
+  - id: wk_kb_swing_hand_to_hand
+    name: "Kettlebell Swing (Hand-to-Hand)"
+    category: kettlebell
+    modality:
+      - power
+      - strength_endurance
+    equipment:
+      - kettlebell
+    effort: medium
+    bilateral: false
+    movement_patterns:
+      - hip_hinge
+      - ballistic
+    requires:
+      - hip_hinge
+      - bracing_mechanics
+    contraindicated_with:
+      - lumbar_disc
+      - hip_flexor_strain
+    named_only: true
+    sources:
+      - Wildman
+    notes: >
+      One-arm swings, the bell passed to the other hand at the top of each rep, where
+      it floats. Wildman's swing program alternates minutes of two-hand and
+      hand-to-hand swings (the PDF's Option C, its most common); the swing stays
+      hip-driven, and the pass needs a clean one-arm swing first.
+    starting_load_kg:
+      novice: 16
+      intermediate: 24
+      advanced: 32
+      elite: 40
+
   - id: wk_deck_squat
     name: "Deck Squat"
     category: kettlebell

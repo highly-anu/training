@@ -3,9 +3,12 @@ name: Big 5-55
 modality: mixed_modal_conditioning
 category: conditioning
 training_levels:
+- novice
 - intermediate
 - advanced
 - elite
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 50
 slots:
@@ -19,6 +22,7 @@ slots:
     - sb_getup
     ordered: true
   load: 7 kg (15 lb) sandbag
+  load_kg: 7
   notes: >-
     Rungs from 10 down to 1. Each rung: Turkish or shoulder get-ups with the sandbag (the rung on each
     shoulder), double kettlebell swings, jumping lunges (each leg), push-ups (twice the rung), sit-ups
@@ -32,6 +36,7 @@ slots:
     - kb_swing_double
     ordered: true
   load: 2 x 16 kg (2 x 35 lb)
+  load_kg: 16
 - role: jumping_lunges
   slot_type: sets_reps
   sets: 10

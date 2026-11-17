@@ -3,6 +3,8 @@ name: "Operator Fitness — Day 3: Progression"
 modality: mixed_modal_conditioning
 category: conditioning
 training_levels: [intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 duration_estimate_minutes: 80
 pool_only: true
 
@@ -31,6 +33,7 @@ slots:
       exercise_ids: [kb_squat_goblet]
       ordered: true
     load: "25 lb (11 kg)"
+    load_kg: 11
 
   - role: clean_triplets
     slot_type: time_domain
@@ -58,6 +61,7 @@ slots:
       exercise_ids: [kb_swing_two_hand]
       ordered: true
     load: "53 lb (24 kg)"
+    load_kg: 24
 
   - role: tbs_box_jumps
     slot_type: amrap_movement
@@ -107,6 +111,7 @@ slots:
       exercise_ids: [db_push_press]
       ordered: true
     load: "2 x 25 lb (11 kg) dumbbells"
+    load_kg: 11
     notes: "4 x (30 s work / 30 s rest), the rest held overhead; aim for 25 reps a round."
 
   - role: straight_leg_deadlift

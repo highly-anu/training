@@ -60,16 +60,27 @@ def _detect_schema(path: str) -> tuple[str | None, bool]:
         return 'analytics.schema.json', False
     if basename == 'watch.yaml':
         return 'watch.schema.json', False
+    if basename == 'briefing.yaml':
+        return 'briefing.schema.json', False
     if basename == 'fidelity.yaml':
         return 'fidelity.schema.json', False
     if basename == 'source_weeks.yaml':
         return 'source_weeks.schema.json', False
     if basename == 'recovery_regions.yaml':
         return 'recovery_regions.schema.json', False
-    # The standards' list files (benchmarks_data.BENCHMARK_FILES); The Cell's
-    # file keeps its own nested format and stays unvalidated.
+    if basename in ('intensities.yaml', 'training_levels.yaml', 'progression.yaml') and '/commons/' in norm:
+        return basename.replace('.yaml', '.schema.json'), False
+    # The standards' list files (benchmarks_data.commons_files); the order of
+    # their categories; The Cell's file keeps its own nested format and stays
+    # unvalidated. A package's own standards: standards.yaml in its folder.
+    if '/data/benchmarks/' in norm and basename == 'categories.yaml':
+        return 'standard_categories.schema.json', False
     if '/data/benchmarks/' in norm and basename.endswith('.yaml') and basename != 'cell_standards.yaml':
         return 'benchmark.schema.json', True
+    if basename == 'standards.yaml' and os.path.exists(os.path.join(os.path.dirname(path), 'philosophy.yaml')):
+        return 'standards.schema.json', False
+    if basename == 'vocabulary.yaml' and os.path.exists(os.path.join(os.path.dirname(path), 'philosophy.yaml')):
+        return 'vocabulary.schema.json', False
     for part in norm.split('/'):
         if part in _PATH_TO_SCHEMA:
             return _PATH_TO_SCHEMA[part], part in _LIST_SCHEMAS
@@ -174,6 +185,7 @@ def _extra_checks(data: dict, schema_filename: str, path: str | None = None) -> 
             if b is None:
                 errors.append(f"slot '{slot.get('role')}': unknown standard '{ref['id']}'")
                 continue
+            errors.extend(f"slot '{slot.get('role')}': {e}" for e in _standard_reference_errors(path, ref['id'], b))
             kind = ref.get('result')
             spec = standard_tests.RESULTS.get(kind or '')
             if spec is None:
@@ -235,10 +247,220 @@ def _extra_checks(data: dict, schema_filename: str, path: str | None = None) -> 
     return errors
 
 
+def _category_errors(item: dict, own: set) -> list[str]:
+    """A standard's category is one of data/benchmarks/categories.yaml, or one
+    its own package's standards.yaml declares (`own`)."""
+    if not item.get('category'):
+        return []
+    with open(os.path.join(_ROOT, 'data', 'benchmarks', 'categories.yaml'), encoding='utf-8') as f:
+        commons = {c['id'] for c in (yaml.safe_load(f) or {}).get('categories') or []}
+    if item['category'] in commons | own:
+        return []
+    return [f"category '{item['category']}' is in neither data/benchmarks/categories.yaml nor this "
+            "package's own categories"]
+
+
+def _package_of(path: str) -> str | None:
+    """The package folder a file is in (the nearest one up with a philosophy.yaml)."""
+    folder = os.path.dirname(os.path.abspath(path))
+    for _ in range(6):
+        if os.path.exists(os.path.join(folder, 'philosophy.yaml')):
+            return folder
+        folder = os.path.dirname(folder)
+    return None
+
+
+def _vocabulary_equipment(pkg_dir: str) -> set:
+    """The implements a package may name beyond the commons': its own
+    vocabulary.yaml's and those of the packages it borrows from."""
+    def read(folder, name):
+        try:
+            with open(os.path.join(folder, name), encoding='utf-8') as fh:
+                doc = yaml.safe_load(fh)
+            return doc if isinstance(doc, dict) else {}
+        except (OSError, yaml.YAMLError):
+            return {}
+    folders = [pkg_dir]
+    borrows = read(pkg_dir, 'philosophy.yaml').get('borrows_from') or []
+    if borrows:
+        if _ROOT not in sys.path:
+            sys.path.insert(0, _ROOT)
+        from src import loader
+        folders += [loader.package_dir(b) for b in borrows if isinstance(b, str)]
+    return {e.get('id') for f in folders for e in read(f, 'vocabulary.yaml').get('equipment') or []
+            if isinstance(e, dict) and e.get('id')}
+
+
+def _with_package_equipment(schema: dict, path: str) -> dict:
+    """The schema with its equipment enums — generated from the commons' list —
+    widened by what the file's package adds in its vocabulary.yaml."""
+    pkg_dir = _package_of(path) if path else None
+    extra = sorted(_vocabulary_equipment(pkg_dir)) if pkg_dir else []
+    if not extra:
+        return schema
+
+    def widen(node):
+        if isinstance(node, dict):
+            out = {}
+            for key, value in node.items():
+                enum = value.get('items', {}).get('enum') if isinstance(value, dict) \
+                    and isinstance(value.get('items'), dict) else None
+                if key in ('equipment', 'required_equipment') and isinstance(enum, list):
+                    out[key] = {**value, 'items': {**value['items'], 'enum': enum + [e for e in extra if e not in enum]}}
+                else:
+                    out[key] = widen(value)
+            return out
+        return [widen(v) for v in node] if isinstance(node, list) else node
+    return widen(schema)
+
+
+def _commons_vocabulary() -> dict:
+    """What the commons define that a package's vocabulary.yaml is checked
+    against: modality ids and the tints they use, movement patterns, body
+    regions, families, injury flags, progression models."""
+    commons = os.path.join(_ROOT, 'data', 'commons')
+    modalities, tints = set(), set()
+    for f in glob.glob(os.path.join(commons, 'modalities', '*.yaml')):
+        with open(f, encoding='utf-8') as fh:
+            mod = yaml.safe_load(fh) or {}
+        modalities.add(mod.get('id'))
+        tints.add((mod.get('display') or {}).get('tint'))
+    with open(os.path.join(commons, 'recovery_regions.yaml'), encoding='utf-8') as fh:
+        regions = yaml.safe_load(fh) or {}
+    with open(os.path.join(commons, 'modality_families.json'), encoding='utf-8') as fh:
+        families = set((json.load(fh).get('families') or {}))
+    with open(os.path.join(commons, 'constraints', 'injury_flags.yaml'), encoding='utf-8') as fh:
+        flags = {f.get('id') for f in (yaml.safe_load(fh) or {}).get('injury_flags') or []}
+    models = set(_load_schema('framework.schema.json')['properties']['progression_model'].get('enum') or [])
+    with open(os.path.join(commons, 'constraints', 'equipment.yaml'), encoding='utf-8') as fh:
+        listed = (yaml.safe_load(fh) or {}).get('equipment') or []
+    equipment = {e.get('id') for e in listed} | {a for e in listed for a in e.get('aliases') or []} | {'none'}
+    return {'equipment': equipment,'modalities': modalities, 'tints': tints - {None}, 'families': families, 'flags': flags,
+            'models': models, 'regions': set(regions.get('regions') or {}),
+            'patterns': set(regions.get('patterns') or {}) | set(regions.get('unloaded') or [])}
+
+
+def _package_vocabulary_errors(data: dict, schema: dict) -> list[str]:
+    """A package's vocabulary.yaml: its shape; each modality a modality
+    (modality.schema.json) with a family, a progression model and a tint the
+    commons know; each pattern's regions and injury flags the commons'; every
+    id new. (An id another package declares fails the --all collision gate.)"""
+    try:
+        jsonschema.validate(instance=data, schema=schema)
+    except jsonschema.ValidationError as e:
+        return [e.message]
+    errors, commons = [], _commons_vocabulary()
+    modality_schema = _load_schema('modality.schema.json')
+    own = {m.get('id') for m in data.get('modalities') or []}
+    for i, mod in enumerate(data.get('modalities') or []):
+        where = f"modalities[{i}] ({mod.get('id', '?')})"
+        try:   # a modality, less the key only a package's carries
+            jsonschema.validate(instance={k: v for k, v in mod.items() if k != 'family'}, schema=modality_schema)
+        except jsonschema.ValidationError as e:
+            errors.append(f'{where}: {e.message}')
+            continue
+        if mod['id'] in commons['modalities']:
+            errors.append(f"{where}: the commons already define '{mod['id']}' (data/commons/modalities); "
+                          'a package modality needs an id of its own')
+        if mod['family'] not in commons['families']:
+            errors.append(f"{where}: family '{mod['family']}' is not one of {sorted(commons['families'])} "
+                          '(data/commons/modality_families.json)')
+        if mod['progression_model'] not in commons['models']:
+            errors.append(f"{where}: progression_model '{mod['progression_model']}' is not one of the engine's "
+                          f"({sorted(commons['models'])})")
+        if mod['display']['tint'] not in commons['tints']:
+            errors.append(f"{where}: display.tint '{mod['display']['tint']}' is not a colour family the clients "
+                          f"carry ({sorted(commons['tints'])})")
+        for key in ('compatible_in_session_with', 'incompatible_in_session_with'):
+            for other in mod.get(key) or []:
+                if other not in commons['modalities'] and other not in own:
+                    errors.append(f"{where}: {key} names '{other}', which is neither a commons modality nor this "
+                                  "package's")
+    for i, item in enumerate(data.get('equipment') or []):
+        if item['id'] in commons['equipment']:
+            errors.append(f"equipment[{i}] ({item['id']}): the commons already list '{item['id']}' "
+                          '(data/commons/constraints/equipment.yaml, an id or an alias); a package implement needs '
+                          'an id of its own')
+    seen = set()
+    for i, pat in enumerate(data.get('movement_patterns') or []):
+        where = f"movement_patterns[{i}] ({pat.get('id', '?')})"
+        if pat['id'] in commons['patterns']:
+            errors.append(f"{where}: the commons already define '{pat['id']}' (data/commons/recovery_regions.yaml); "
+                          'a package pattern needs an id of its own')
+        if pat['id'] in seen:
+            errors.append(f'{where}: declared twice')
+        seen.add(pat['id'])
+        for region in pat['regions']:
+            if region not in commons['regions']:
+                errors.append(f"{where}: region '{region}' is not one of {sorted(commons['regions'])}")
+        for flag in pat['excluded_by']:
+            if flag not in commons['flags']:
+                errors.append(f"{where}: excluded_by names '{flag}', which is not an injury flag "
+                              '(data/commons/constraints/injury_flags.yaml)')
+    return errors
+
+
+def _package_standards_errors(data: dict, schema: dict, path: str) -> list[str]:
+    """A package's standards.yaml: the file's shape, each entry against
+    benchmark.schema.json, each category known, each id new. (An id another
+    package declares fails the --all collision gate.)"""
+    errors = []
+    try:
+        jsonschema.validate(instance=data, schema=schema)
+    except jsonschema.ValidationError as e:
+        return [e.message]
+    entry_schema = _load_schema('benchmark.schema.json')
+    own = {c['id'] for c in data.get('categories') or []}
+    with_commons = set()
+    for fname in sorted(glob.glob(os.path.join(_ROOT, 'data', 'benchmarks', '*.yaml'))):
+        if os.path.basename(fname) in ('categories.yaml', 'cell_standards.yaml'):
+            continue
+        with open(fname, encoding='utf-8') as f:
+            with_commons |= {e.get('id') for e in (yaml.safe_load(f) or [])}
+    for i, item in enumerate(data.get('standards') or []):
+        where = f"[{i}] ({item.get('id', '?')})"
+        try:
+            jsonschema.validate(instance=item, schema=entry_schema)
+        except jsonschema.ValidationError as e:
+            errors.append(f"{where}: {e.message}")
+            continue
+        errors.extend(f'{where}: {e}' for e in _category_errors(item, own))
+        if item['id'] in with_commons or item['id'].startswith('cell_'):
+            errors.append(f"{where}: the commons already define '{item['id']}' (data/benchmarks/); "
+                          'a package standard needs an id of its own')
+    return errors
+
+
+def _standard_reference_errors(path: str | None, sid: str, b: dict) -> list[str]:
+    """A package's standard may be referenced by that package and by a
+    philosophy that borrows from it, as its exercises may."""
+    owner = b.get('package')
+    if not owner or not path:
+        return []
+    parts = os.path.abspath(path).replace('\\', '/').split('/')
+    if 'archetypes' not in parts:
+        return []
+    pkg_dir = '/'.join(parts[:parts.index('archetypes')])
+    pkg = os.path.basename(pkg_dir)
+    if pkg == owner:
+        return []
+    try:
+        with open(os.path.join(pkg_dir, 'philosophy.yaml'), encoding='utf-8') as f:
+            borrows = (yaml.safe_load(f) or {}).get('borrows_from') or []
+    except OSError:
+        borrows = []
+    if owner in borrows:
+        return []
+    return [f"standard '{sid}' is {owner}'s, and {pkg} does not borrow from {owner}"]
+
+
 def _package_catalogs() -> dict[str, set]:
     """Each package's exercise ids, with those of the packages it borrows from."""
     own, borrows = {}, {}
-    for pkg_dir in sorted(glob.glob(os.path.join(_ROOT, 'data', 'packages', '*'))):
+    if _ROOT not in sys.path:
+        sys.path.insert(0, _ROOT)
+    from src import loader   # the folder the loader reads (TRAINING_PACKAGES_DIR in a test)
+    for pkg_dir in sorted(glob.glob(os.path.join(loader._PACKAGES_DIR, '*'))):
         pkg = os.path.basename(pkg_dir)
         ex_path = os.path.join(pkg_dir, 'exercises.yaml')
         if not os.path.exists(ex_path):
@@ -298,7 +520,7 @@ def validate_file(path: str, verbose: bool = True) -> list[str]:
             print(f"  SKIP  {path} (no schema detected for this path)")
         return []
 
-    schema = _load_schema(schema_filename)
+    schema = _with_package_equipment(_load_schema(schema_filename), path)
 
     # For exercise files: validate each item in the list individually
     if is_list_file:
@@ -313,12 +535,28 @@ def validate_file(path: str, verbose: bool = True) -> list[str]:
                 errors.append(f"[{i}] ({item.get('id', '?')}): {e.message}")
             extra = _extra_checks(item, schema_filename)
             errors.extend(f"[{i}] ({item.get('id', '?')}): {e}" for e in extra)
+            if schema_filename == 'benchmark.schema.json':
+                errors.extend(f"[{i}] ({item.get('id', '?')}): {e}" for e in _category_errors(item, set()))
+    elif schema_filename == 'standards.schema.json':
+        errors.extend(_package_standards_errors(data, schema, path))
+    elif schema_filename == 'vocabulary.schema.json':
+        errors.extend(_package_vocabulary_errors(data, schema))
     else:
         try:
             jsonschema.validate(instance=data, schema=schema)
         except jsonschema.ValidationError as e:
             errors.append(e.message)
-        extra = _extra_checks(data, schema_filename, path)
+        # The checks beside the schema read the package's other files (a
+        # philosophy its frameworks and archetypes, a slot its standards). One
+        # of those that does not parse or is not the shape expected is that
+        # file's own finding; here it must be an error, never a raise — the
+        # gate for one package (src/package_gate.py) runs this on files nobody
+        # has read.
+        try:
+            extra = _extra_checks(data, schema_filename, path)
+        except Exception as e:  # noqa: BLE001
+            extra = [f"could not be checked against the package's other files ({type(e).__name__}: "
+                     f"{str(e).splitlines()[0] if str(e) else 'no detail'}); fix the file that does not load first"]
         errors.extend(extra)
 
     return errors
@@ -374,7 +612,10 @@ def main():
         # Everything lives under data/packages/ since the vertical migration; the
         # old top-level data/<type>/ directories are gone, so --all used to find
         # nothing and report "0/0 files valid".
-        packages_dir = os.path.join(_ROOT, 'data', 'packages')
+        if _ROOT not in sys.path:
+            sys.path.insert(0, _ROOT)
+        from src import loader
+        packages_dir = loader._PACKAGES_DIR   # the folder the loader reads
         if os.path.isdir(packages_dir):
             targets.append(packages_dir)
         commons_dir = os.path.join(_ROOT, 'data', 'commons')
@@ -414,12 +655,26 @@ def main():
         elif not args.quiet:
             _safe_print(f"  OK    {rel}")
 
+    # Ids two packages declare: the loader keeps one copy without a word
+    # (the first archetype, the last framework in the library, the last media
+    # entry), so a dropped-in package could reshape another's sessions.
+    # Exercise ids are shared by design; each package keeps its prescription.
+    collided = []
+    if args.all:
+        sys.path.insert(0, _ROOT)
+        from src import portability
+        collided = portability.id_collisions()
+        for c in collided:
+            _safe_print(f"  FAIL  {c['kind']} '{c['id']}' is declared by {', '.join(c['packages'])} "
+                        f"(the loader keeps {c['kept']}); give each package its own id")
+
     print()
     ok_files = total_files - error_files
     print(f"Results: {ok_files}/{total_files} files valid"
-          + (f", {skip_files} skipped" if skip_files else ""))
+          + (f", {skip_files} skipped" if skip_files else "")
+          + (f"; {len(collided)} id(s) two packages declare" if collided else ""))
 
-    if error_files:
+    if error_files or collided:
         sys.exit(1)
 
 

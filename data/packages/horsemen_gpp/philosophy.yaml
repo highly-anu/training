@@ -87,6 +87,11 @@ tracks:
       Every week is six training days and a rest day. The strength and
       conditioning numbers the source names are what it aims to reach in
       four months.
+    # Written for the operator: the elite does every workout as written; the
+    # levels below do the commons' shares of it, the full Olympic lifts, the
+    # rope and the handstand push-up scaled until intermediate
+    # (src/level_scaling.py; I3). The source has no novice path.
+    authored_level: elite
     phases:
       - id: strength
         name: "Strength"

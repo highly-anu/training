@@ -21,15 +21,15 @@ final class WatchDayTests: XCTestCase {
         XCTAssertEqual(day.date, "2026-10-12")
         XCTAssertEqual(day.maxHR, 186)
         XCTAssertEqual(day.readiness, WatchReadiness(score: 72, status: "green"))
-        XCTAssertEqual(day.progress?.week.sessions, 4)
+        XCTAssertEqual(day.progress?.week.sessions, 5)
         XCTAssertEqual(day.progress?.headline?.label, "Load on the bar")
         XCTAssertEqual(day.days?.count, 7)
-        XCTAssertEqual(day.days?.first?.title, "Strength A +2")
+        XCTAssertEqual(day.days?.first?.title, "Strength A +3")
 
         let sessions = try XCTUnwrap(day.sessions)
-        XCTAssertEqual(sessions.map(\.archetypeName), ["Strength A", "BJJ Class", "2 km Row Test"])
-        XCTAssertEqual(sessions.map(\.completed), [true, false, false], "done on any device, from the server")
-        XCTAssertEqual(sessions.map(\.sessionId), ["3-Monday-0", "3-Monday-1", "3-Monday-2"])
+        XCTAssertEqual(sessions.map(\.archetypeName), ["Strength A", "BJJ Class", "2 km Row Test", "Snatch Set"])
+        XCTAssertEqual(sessions.map(\.completed), [true, false, false, false], "done on any device, from the server")
+        XCTAssertEqual(sessions.map(\.sessionId), ["3-Monday-0", "3-Monday-1", "3-Monday-2", "3-Monday-3"])
 
         // The injury-skipped accessory never arrives; the squat keeps its
         // server wording, its last time, and an RPE of 7.5 read as 8.
@@ -55,6 +55,12 @@ final class WatchDayTests: XCTestCase {
         let row = try XCTUnwrap(sessions[2].exercises.first?.standard)
         XCTAssertEqual(row, WatchStandard(id: "row_2km_minutes", name: "2km Row", result: "duration",
                                           best: "7:48", target: "7:00 for advanced"))
+        XCTAssertFalse(try XCTUnwrap(sessions[2].exercises.first).asksReps, "a test asks for its result")
+
+        // A timed kettlebell set: its reps are asked at the end (`logs`).
+        let snatch = try XCTUnwrap(sessions[3].exercises.first)
+        XCTAssertEqual(snatch.logs, ["reps"])
+        XCTAssertTrue(snatch.asksReps)
     }
 
     /// Compressed under one key, the day is a property list (the JSON's
@@ -67,7 +73,7 @@ final class WatchDayTests: XCTestCase {
         XCTAssertLessThan((message["day"] as? Data)?.count ?? .max, 20_000)
         let received = try XCTUnwrap(WatchDayMessage.day(from: message))
         XCTAssertEqual(received.json, json)
-        XCTAssertEqual(received.day.sessions?.count, 3)
+        XCTAssertEqual(received.day.sessions?.count, 4)
         XCTAssertNil(WatchDayMessage.day(from: ["type": "no_program"]), "not a day")
     }
 
@@ -89,7 +95,7 @@ final class WatchDayTests: XCTestCase {
         let day = try JSONDecoder().decode(WatchDay.self, from: JSONSerialization.data(withJSONObject: raw))
         XCTAssertNil(day.progress)
         XCTAssertNil(day.readiness)
-        XCTAssertEqual(day.sessions?.count, 3)
+        XCTAssertEqual(day.sessions?.count, 4)
     }
 
     /// The Garmin's demo programmes are the server's session shape too

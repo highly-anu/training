@@ -2,7 +2,9 @@ id: hm_well_done_is_better_than_well_said
 name: Well Done Is Better Than Well Said
 modality: max_strength
 category: strength
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 45
 slots:
@@ -34,6 +36,7 @@ slots:
     exercise_ids: [kb_swing_two_hand]
     ordered: true
   load: 24 kg (53 lb)
+  load_kg: 24
   notes: '5 rounds, alternating: 15 swings, 3 Turkish get-ups each shoulder, 30 m tire drag (15 m forward, 15 m
     back), 10 weighted sit-ups — not for time.'
 - role: turkish_get_up
@@ -44,6 +47,7 @@ slots:
     exercise_ids: [kb_tgu]
     ordered: true
   load: 16 kg (35 lb)
+  load_kg: 16
   notes: Each shoulder.
 - role: tire_drag_forward
   slot_type: distance
@@ -67,6 +71,7 @@ slots:
     exercise_ids: [sit_up_weighted]
     ordered: true
   load: 20 kg (45 lb)
+  load_kg: 20
 required_equipment: [barbell, rack, plates, kettlebell, tire, open_space]
 sources: [Horsemen]
 notes: Three deadlifts at 75% of 1RM every 50 seconds for 10 rounds, the same with the bench press, then 5 rounds

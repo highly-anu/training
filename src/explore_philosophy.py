@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import os
 
-from src import goals, loader, phases, training_contract
+from src import goals, implements, levels as _levels, loader, phases, training_contract
 from src.analytics import benchmarks_data
 from src.explore_links import policy_for, slot_exercises
 
@@ -198,7 +198,7 @@ def _contract_week(phase: dict, contract: dict, exercises: dict, archetypes: dic
                          'deload': bool(p.get('deload'))} for p in m.get('periods') or [] if p.get('weeks')],
             'variants': variants,
             'items': [] if variants else _contract_items(m.get('blocks') or [], exercises),
-            'advice': m.get('advice'),
+            **advice_fields(m.get('advice')),
         })
     return {'kind': 'contract', 'modules': modules}
 
@@ -207,6 +207,22 @@ def _framework_week(framework: dict) -> dict:
     per = framework.get('sessions_per_week') or {}
     return {'kind': 'framework',
             'sessions': [{'modality': m, 'perWeek': n} for m, n in per.items() if n]}
+
+
+_LEVELS = _levels.order()   # data/commons/training_levels.yaml
+
+
+def advice_fields(value) -> dict:
+    """A category's or module's `advice` for a page that knows no athlete:
+    `advice` is the one text, or null when it differs per level, and
+    `adviceByLevel` each level's (the framework schema allows either: Ido's
+    versions say a sentence per level). The generator picks the athlete's
+    (week_template.advice_for); the page shows them all. Sent raw, a per-level
+    `advice` reached the web as an object and took Explore down (React #31)."""
+    if isinstance(value, dict):
+        rows = [{'level': lvl, 'text': value[lvl]} for lvl in _LEVELS if value.get(lvl)]
+        return {'advice': None, 'adviceByLevel': rows or None}
+    return {'advice': value or None, 'adviceByLevel': None}
 
 
 def week_mix(week: dict) -> dict[str, float]:
@@ -352,7 +368,9 @@ def _track(phil: dict, track: dict, contract: dict | None, frameworks: dict, arc
         'weeks': weeks,
         'repeatable': len(phase_docs) == 1 and phase_docs[0]['repeatable'],
         'notes': ((contract or {}).get('notes') or '').strip() or None,
-        'kettlebellPair': bool(contract and contract.get('requires_kettlebell_pair')),
+        # What the track needs beyond the equipment, in words ("a pair of
+        # bells"; src/implements.py), so any implement reads right.
+        'implement': implements.words(contract),
         'mix': _mix_list(mix),
         'intensity': {k: round(v, 3) for k, v in intensity.items() if v},
         'daysPerWeek': _span(p['daysPerWeek'] for p in phase_docs),
@@ -410,7 +428,7 @@ def _sessions(phil: dict, track_docs: list, framework_ids: list, frameworks: dic
                 continue
             placed.update(ids)
             groups.append({'kind': 'category', 'id': cid, 'name': cat.get('name') or words(cid),
-                           'modality': cat.get('modality'), 'advice': cat.get('advice'),
+                           'modality': cat.get('modality'), **advice_fields(cat.get('advice')),
                            'warmUp': cid == fw.get('warm_up_category'), 'sessions': ids})
     for t in track_docs:
         for p in t['phases']:
@@ -422,7 +440,8 @@ def _sessions(phil: dict, track_docs: list, framework_ids: list, frameworks: dic
                 if ids:
                     placed.update(ids)
                     groups.append({'kind': 'module', 'id': m['id'], 'name': m['name'],
-                                   'modality': m['modality'], 'advice': m['advice'], 'warmUp': False,
+                                   'modality': m['modality'], 'advice': m['advice'],
+                                   'adviceByLevel': m['adviceByLevel'], 'warmUp': False,
                                    'sessions': ids})
     tests = [a['id'] for a in package_archetypes if a.get('test') and a['id'] not in placed]
     placed.update(tests)
@@ -432,10 +451,10 @@ def _sessions(phil: dict, track_docs: list, framework_ids: list, frameworks: dic
             by_modality.setdefault(a.get('modality'), []).append(a['id'])
     for mod, ids in sorted(by_modality.items(), key=lambda kv: -len(kv[1])):
         groups.append({'kind': 'modality', 'id': mod, 'name': None, 'modality': mod, 'advice': None,
-                       'warmUp': False, 'sessions': ids})
+                       'adviceByLevel': None, 'warmUp': False, 'sessions': ids})
     if tests:
         groups.append({'kind': 'tests', 'id': 'tests', 'name': 'Tests', 'modality': None, 'advice': None,
-                       'warmUp': False, 'sessions': tests})
+                       'adviceByLevel': None, 'warmUp': False, 'sessions': tests})
     return {'groups': groups,
             'sessions': {a['id']: _session(a, exercises, policy) for a in package_archetypes}}
 
@@ -443,7 +462,7 @@ def _sessions(phil: dict, track_docs: list, framework_ids: list, frameworks: dic
 # ─── The record ──────────────────────────────────────────────────────────────
 
 def _record(phil_id: str) -> dict | None:
-    path = os.path.join(loader._PACKAGES_DIR, phil_id, 'fidelity.yaml')
+    path = os.path.join(loader.package_dir(phil_id), 'fidelity.yaml')
     return loader._load_yaml(path) if os.path.exists(path) else None
 
 
@@ -484,7 +503,6 @@ def _core(phil: dict, *, frameworks: dict, archetypes: list, exercises: dict, co
     levels = []
     for t in track_docs:
         levels += [lvl for lvl in t['levels'] if lvl not in levels]
-    order = ('novice', 'intermediate', 'advanced', 'elite')
     return {
         'id': phil['id'],
         'name': phil.get('name') or words(phil['id']),
@@ -496,7 +514,7 @@ def _core(phil: dict, *, frameworks: dict, archetypes: list, exercises: dict, co
         'principles': [words(p) for p in phil.get('core_principles') or []],
         'models': {'intensity': words(phil.get('intensity_model')) or None,
                    'progression': words(phil.get('progression_philosophy')) or None},
-        'levels': sorted(levels, key=lambda lvl: order.index(lvl) if lvl in order else len(order)),
+        'levels': sorted(levels, key=_levels.rank),
         'equipment': [{'id': e, 'name': words(e)} for e in phil.get('required_equipment') or []
                       if e != 'open_space'],
         'expectations': expectations,
@@ -556,7 +574,7 @@ def glance(core: dict, measures: dict | None = None) -> dict:
                    'inventions': len(core['inventions']), 'open': len(core['open']),
                    'sessions': core['sessionCount']},
         'tracks': [{**{k: t[k] for k in ('id', 'name', 'primary', 'forLevels', 'levels', 'builtBy', 'weeks',
-                                        'repeatable', 'kettlebellPair', 'requires', 'daysPerWeek', 'minutes',
+                                        'repeatable', 'implement', 'requires', 'daysPerWeek', 'minutes',
                                         'mix', 'intensity', 'tests', 'goals')},
                     'phases': [{k: p[k] for k in phase_keys} | {'tests': len(p['tests'])} for p in t['phases']]}
                    for t in core['tracks']],
@@ -576,17 +594,12 @@ def build(phil: dict, *, philosophies: list, frameworks: dict, modalities: dict,
                         exercises, {p['id']: p for p in philosophies})}
 
 
-_CACHE: dict = {}
-_GLANCES: list | None = None
-_DATA: dict | None = None
+_STORE = 'explore_philosophy'   # per view (loader.view_store): {'data', 'glances', 'docs': {id: document}}
 
 
 def clear_cache() -> None:
     """An authoring write changed the packages (api.clear_static_cache)."""
-    global _GLANCES, _DATA
-    _CACHE.clear()
-    _GLANCES = None
-    _DATA = None
+    loader.invalidate_package_data()
 
 
 def _specs() -> dict:
@@ -600,13 +613,13 @@ def _specs() -> dict:
 def _loaded() -> dict:
     """The package data, read once: every describe and the glances read the
     same lists, which they never change."""
-    global _DATA
-    if _DATA is None:
+    store = loader.view_store(_STORE)
+    if store.get('data') is None:
         exercises, _ = loader.load_all_exercises()
-        _DATA = {'philosophies': loader.load_philosophies(), 'frameworks': loader.load_all_frameworks(),
-                 'modalities': loader.load_all_modalities(), 'archetypes': loader.load_all_archetypes(),
-                 'exercises': exercises, 'standards': benchmarks_data.by_id(), 'specs': None}
-    return _DATA
+        store['data'] = {'philosophies': loader.load_philosophies(), 'frameworks': loader.load_all_frameworks(),
+                         'modalities': loader.load_all_modalities(), 'archetypes': loader.load_all_archetypes(),
+                         'exercises': exercises, 'standards': benchmarks_data.by_id(), 'specs': None}
+    return store['data']
 
 
 def _contracts(phil: dict) -> dict:
@@ -621,8 +634,9 @@ def _contracts(phil: dict) -> dict:
 def describe(phil_id: str) -> dict | None:
     """The document for one philosophy, built once per process (package data
     changes only with a deploy); None for an unknown id."""
-    if phil_id in _CACHE:
-        return _CACHE[phil_id]
+    docs = loader.view_store(_STORE).setdefault('docs', {})
+    if phil_id in docs:
+        return docs[phil_id]
     data = _loaded()
     phil = next((p for p in data['philosophies'] if p['id'] == phil_id), None)
     if phil is None:
@@ -631,18 +645,18 @@ def describe(phil_id: str) -> dict | None:
                 modalities=data['modalities'], archetypes=data['archetypes'], exercises=data['exercises'],
                 standards=data['standards'], contracts=_contracts(phil), record=_record(phil_id),
                 measures=measures_of(_specs().get(phil_id)))
-    _CACHE[phil_id] = doc
+    docs[phil_id] = doc
     return doc
 
 
 def glance_all() -> list[dict]:
     """Every philosophy's glance, in the loader's order; built once."""
-    global _GLANCES
-    if _GLANCES is None:
+    store = loader.view_store(_STORE)
+    if store.get('glances') is None:
         data, specs = _loaded(), _specs()
-        _GLANCES = [glance(_core(phil, frameworks=data['frameworks'], archetypes=data['archetypes'],
+        store['glances'] = [glance(_core(phil, frameworks=data['frameworks'], archetypes=data['archetypes'],
                                  exercises=data['exercises'], contracts=_contracts(phil),
                                  record=_record(phil['id']), standards=data['standards']),
                            measures_of(specs.get(phil['id'])))
                     for phil in data['philosophies']]
-    return _GLANCES
+    return store['glances']

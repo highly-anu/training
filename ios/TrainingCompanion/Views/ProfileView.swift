@@ -17,26 +17,25 @@ enum ProfileTab: Int, AppSubTab {
     }
 }
 
-// MARK: - Equipment categories (mirrors web EQUIPMENT_CATEGORIES)
+// MARK: - Equipment categories (Profile's sections, the same data as the web's)
 
 private struct EquipmentCategory {
     let name: String       // matches EquipmentItem.group exactly
-    let modalityId: String // for accent color only
+    let color: Color       // the colour of the training the section serves
 }
 
-// Group names and order match ConstraintsForm.tsx exactly.
-private let equipmentCategories: [EquipmentCategory] = [
-    EquipmentCategory(name: "Strength",               modalityId: "max_strength"),
-    EquipmentCategory(name: "Power & Kettlebell",     modalityId: "power"),
-    EquipmentCategory(name: "Bodyweight & Gymnastics",modalityId: "relative_strength"),
-    EquipmentCategory(name: "Aerobic & Conditioning", modalityId: "aerobic_base"),
-    EquipmentCategory(name: "GPP & Durability",       modalityId: "durability"),
-    EquipmentCategory(name: "Mobility & Prehab",      modalityId: "rehab"),
-    EquipmentCategory(name: "General",                modalityId: "movement_skill"),
-]
+/// Profile's sections, in order, from data/commons/constraints/equipment.yaml
+/// (ClientVocab.equipmentSections).
+private let equipmentCategories: [EquipmentCategory] = ClientVocab.equipmentSections.map {
+    EquipmentCategory(name: $0.name, color: ClientVocab.color($0.hex))
+}
 
 // MARK: - Shared selection card
 
+/// One thing the athlete has or has not (a piece of equipment, an injury):
+/// the app's card (§6.15), ringed and washed in its colour with a tick when
+/// selected. Until 1.39 it drew its own surface at the control radius and
+/// said "selected" by colour alone.
 private struct SelectionCard: View {
     let title: String
     let subtitle: String
@@ -46,31 +45,27 @@ private struct SelectionCard: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 0) {
-                Rectangle()
-                    .fill(isSelected ? accentColor : Color.clear)
-                    .frame(width: 2)
+            HStack(alignment: .top, spacing: AppMetrics.gapSmall) {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(title)
                         .font(.subheadline)
                         .fontWeight(.medium)
-                        .lineLimit(1)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
                     Text(subtitle)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 10)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                Spacer(minLength: 0)
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(isSelected ? AnyShapeStyle(accentColor) : AnyShapeStyle(.tertiary))
+                    .accessibilityHidden(true)
             }
-            .background(isSelected ? accentColor.opacity(0.10) : Color(.secondarySystemGroupedBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 10))
-            .overlay(
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(isSelected ? accentColor.opacity(0.4) : Color(.separator).opacity(0.3))
-            )
+            .frame(maxHeight: .infinity, alignment: .top)
+            .appCard(compact: true, border: isSelected ? accentColor : nil, tint: isSelected ? accentColor : nil)
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 
@@ -100,27 +95,13 @@ private struct EquipmentTab: View {
             ForEach(equipmentCategories, id: \.name) { category in
                 let items = EquipmentItem.all.filter { $0.group == category.name }
                 if !items.isEmpty {
-                    Section(category.name) {
-                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                            ForEach(items) { item in
-                                let isSelected = appState.profile.equipment.contains(item.id)
-                                SelectionCard(
-                                    title: item.label,
-                                    subtitle: isSelected ? "Available" : "Not selected",
-                                    isSelected: isSelected,
-                                    accentColor: ModalityStyle.color(for: category.modalityId)
-                                ) {
-                                    if isSelected {
-                                        appState.profile.equipment.removeAll { $0 == item.id }
-                                    } else {
-                                        appState.profile.equipment.append(item.id)
-                                    }
-                                    Task { await appState.saveProfile() }
-                                }
-                            }
-                        }
-                        .padding(.vertical, 4)
-                    }
+                    Section(category.name) { equipmentGrid(items, color: category.color) }
+                }
+            }
+            // What the athlete's own methods bring (their vocabulary.yaml).
+            if !appState.servedEquipment.isEmpty {
+                Section(ServedVocabulary.equipmentGroup) {
+                    equipmentGrid(appState.servedEquipment, color: AppColor.accent)
                 }
             }
 
@@ -155,7 +136,7 @@ private struct InjuriesSection: View {
                             title: flag.name,
                             subtitle: isSelected ? "\(patternCount) patterns excluded" : "Not active",
                             isSelected: isSelected,
-                            accentColor: .red
+                            accentColor: AppColor.destructive
                         ) {
                             if isSelected {
                                 appState.profile.injuryFlags.removeAll { $0 == flag.id }
@@ -171,11 +152,25 @@ private struct InjuriesSection: View {
 
             ForEach(appState.profile.customInjuryFlags) { custom in
                 HStack {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(AppColor.warning)
+                        .font(.caption)
                     Text(custom.description)
                     Spacer()
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.orange)
-                        .font(.caption)
+                    // Visible; the swipe removes it too (§6.51).
+                    Button {
+                        AppHaptics.light()
+                        appState.profile.customInjuryFlags.removeAll { $0.id == custom.id }
+                        Task { await appState.saveProfile() }
+                    } label: {
+                        Image(systemName: "minus.circle.fill")
+                            .font(.title3)
+                            .foregroundStyle(AppColor.destructive)
+                            .frame(width: 44, height: 44)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.borderless)
+                    .accessibilityLabel("Remove \(custom.description)")
                 }
                 .swipeActions {
                     Button(role: .destructive) {
@@ -250,7 +245,9 @@ private struct StandardsTab: View {
         List {
             Section {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("\(appState.benchmarks.count) standards.")
+                    Text(appState.benchmarks.isEmpty
+                         ? (appState.isLoadingBenchmarks ? "Loading the standards…" : "The standards could not be loaded.")
+                         : "\(appState.benchmarks.count) standards.")
                         .font(.headline)
                     Text("Log a result whenever you test one. Every result is kept with its date, so you can see where you stand now and how far you have come across programs.")
                         .font(.caption)
@@ -258,7 +255,7 @@ private struct StandardsTab: View {
                     Text(appState.profile.sex.map { "Showing the \($0) standards." }
                          ?? "Showing the male standards until you set your sex under Athlete.")
                         .font(.caption2)
-                        .foregroundStyle(appState.profile.sex == nil ? Color.orange : Color.secondary)
+                        .foregroundStyle(appState.profile.sex == nil ? AppColor.warning : Color.secondary)
                     if let bw = appState.standardResults?.bodyweight {
                         Text("Bodyweight \(bw.valueText) — used for the ×BW standards.")
                             .font(.caption2).foregroundStyle(.secondary)
@@ -336,6 +333,7 @@ extension StandardsTab {
         StandardRow(standard: standard, result: appState.standardResults?.standards[standard.id])
             .contentShape(Rectangle())
             .onTapGesture { open = standard }
+            .appTapRow()
     }
 
     /// Open the sheet a deep link asked for, once the standards are loaded.
@@ -398,7 +396,7 @@ private struct AthleteTab: View {
     @State private var bodyweightInput: String = ""
     @State private var maxHRInput: String = ""
 
-    private let trainingLevels = ["novice", "intermediate", "advanced", "elite"]
+    private let trainingLevels = ClientVocab.trainingLevels
     private let zoneNames = ["Zone 1 ends", "Zone 2 ends", "Zone 3 ends", "Zone 4 ends"]
 
     private var boundaries: [Double] {
@@ -477,7 +475,7 @@ private struct AthleteTab: View {
                         .disabled(bodyweightInput.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
                 if let bodyweightError {
-                    Text(bodyweightError).font(.caption).foregroundStyle(.red)
+                    Text(bodyweightError).font(.caption).foregroundStyle(AppColor.destructive)
                 }
                 if bodyweight != nil {
                     Button("Bodyweight history") { showBodyweightHistory = true }
@@ -640,7 +638,16 @@ private struct HRZoneBar: View {
     var body: some View {
         let e = edges
         let span = e[5] - e[0]
-        GeometryReader { geo in
+        // As tall as a zone's name over its range at the athlete's type size
+        // (a fixed 40 pt clipped the ranges at the larger ones until 1.39).
+        VStack(spacing: 3) {
+            Text("Z1").font(.caption2).fontWeight(.bold).frame(minHeight: 20)
+            Text("000").font(.caption2)
+        }
+        .hidden()
+        .accessibilityHidden(true)
+        .frame(maxWidth: .infinity)
+        .overlay { GeometryReader { geo in
             let spacing: CGFloat = 2
             let usable = geo.size.width - spacing * 4
             // A floor so a 3 %-wide zone still fits its name, then scaled back
@@ -667,8 +674,7 @@ private struct HRZoneBar: View {
                     .accessibilityLabel("Zone \(zone), \(range(zone)) beats per minute")
                 }
             }
-        }
-        .frame(height: 40)
+        } }
     }
 }
 
@@ -686,51 +692,67 @@ private let defaultWeeklySchedule: WeeklySchedule = [
     "Sunday":    DaySchedule(session1: .rest,  session2: .rest,     session3: .rest, session4: .rest),
 ]
 
-private func nextSessionType(_ t: SessionType) -> SessionType {
-    switch t {
-    case .rest:     return .short
-    case .short:    return .long
-    case .long:     return .mobility
-    case .mobility: return .rest
+private let sessionTypeChoices: [SessionType] = [.rest, .short, .long, .mobility]
+
+private func sessionTypeText(_ type: SessionType) -> String {
+    switch type {
+    case .rest:     return "Rest"
+    case .short:    return "Short"
+    case .long:     return "Long"
+    case .mobility: return "Mobility"
     }
 }
 
+/// One session slot of a day: a menu of the four types, the current one
+/// ticked (§6.51). Until 1.38 a tap cycled to the next type, so reaching
+/// Rest from Short took three taps and nothing said what came next.
 private struct SessionChip: View {
+    let label: String
     let type: SessionType
-    let action: () -> Void
-
-    private var chipText: String {
-        switch type {
-        case .rest:     return "Rest"
-        case .short:    return "Short"
-        case .long:     return "Long"
-        case .mobility: return "Mobility"
-        }
-    }
+    let onPick: (SessionType) -> Void
 
     private var chipColor: Color {
         switch type {
-        case .rest:     return Color(.systemGray3)
-        case .short:    return .yellow
-        case .long:     return Color(red: 0.36, green: 0.77, blue: 0.96)
-        case .mobility: return Color(red: 0.67, green: 0.44, blue: 0.96)
+        case .rest:     return AppColor.Schedule.rest
+        case .short:    return AppColor.Schedule.short
+        case .long:     return AppColor.Schedule.long
+        case .mobility: return AppColor.Schedule.mobility
         }
     }
 
     var body: some View {
-        Button(action: action) {
-            Text(chipText)
-                .font(.system(size: 10, weight: .semibold))
-                .textCase(.uppercase)
-                .tracking(0.5)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(chipColor.opacity(0.15))
-                .foregroundStyle(chipColor)
-                .clipShape(RoundedRectangle(cornerRadius: 5))
-                .overlay(RoundedRectangle(cornerRadius: 5).stroke(chipColor.opacity(0.4)))
+        Menu {
+            Picker(label, selection: Binding(get: { type }, set: { picked in
+                AppHaptics.selection()
+                onPick(picked)
+            })) {
+                ForEach(sessionTypeChoices, id: \.self) { choice in
+                    Text(sessionTypeText(choice)).tag(choice)
+                }
+            }
+        } label: {
+            HStack(spacing: 3) {
+                Text(sessionTypeText(type))
+                    .font(AppFont.microStrong)
+                    .textCase(.uppercase)
+                    .tracking(0.5)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(AppFont.micro)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(chipColor.opacity(AppColor.Opacity.fill))
+            .foregroundStyle(chipColor)
+            .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusChip))
+            .overlay(RoundedRectangle(cornerRadius: AppMetrics.radiusChip).stroke(chipColor.opacity(0.4)))
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(label)
+        .accessibilityValue(sessionTypeText(type))
     }
 }
 
@@ -751,30 +773,31 @@ private struct DayRow: View {
             Circle()
                 .fill(hasAny ? Color.accentColor : Color(.systemGray4))
                 .frame(width: 7, height: 7)
+                .accessibilityHidden(true)
             Text(day)
                 .font(.subheadline)
                 .fontWeight(.medium)
-                .frame(width: 86, alignment: .leading)
+                .frame(minWidth: 86, alignment: .leading)
             HStack(spacing: 6) {
-                slotView(label: "1", type: daySchedule.session1) {
-                    daySchedule.session1 = nextSessionType(daySchedule.session1)
+                SessionChip(label: "\(day), session 1", type: daySchedule.session1) {
+                    daySchedule.session1 = $0
                     onChanged()
                 }
                 if showS2 {
-                    slotView(label: "2", type: daySchedule.session2) {
-                        daySchedule.session2 = nextSessionType(daySchedule.session2)
+                    SessionChip(label: "\(day), session 2", type: daySchedule.session2) {
+                        daySchedule.session2 = $0
                         onChanged()
                     }
                 }
                 if showS3 {
-                    slotView(label: "3", type: daySchedule.session3) {
-                        daySchedule.session3 = nextSessionType(daySchedule.session3)
+                    SessionChip(label: "\(day), session 3", type: daySchedule.session3) {
+                        daySchedule.session3 = $0
                         onChanged()
                     }
                 }
                 if showS4 {
-                    slotView(label: "4", type: daySchedule.session4) {
-                        daySchedule.session4 = nextSessionType(daySchedule.session4)
+                    SessionChip(label: "\(day), session 4", type: daySchedule.session4) {
+                        daySchedule.session4 = $0
                         onChanged()
                     }
                 }
@@ -794,19 +817,10 @@ private struct DayRow: View {
 
     private var accentLeftColor: Color {
         switch daySchedule.session1 {
-        case .long:     return Color(red: 0.36, green: 0.77, blue: 0.96)
-        case .short:    return .yellow
-        case .mobility: return Color(red: 0.67, green: 0.44, blue: 0.96)
+        case .long:     return AppColor.Schedule.long
+        case .short:    return AppColor.Schedule.short
+        case .mobility: return AppColor.Schedule.mobility
         case .rest:     return Color.accentColor
-        }
-    }
-
-    private func slotView(label: String, type: SessionType, action: @escaping () -> Void) -> some View {
-        HStack(spacing: 3) {
-            Text("\(label):")
-                .font(.system(size: 9))
-                .foregroundStyle(.tertiary)
-            SessionChip(type: type, action: action)
         }
     }
 }
@@ -829,7 +843,7 @@ private struct ScheduleTab: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Weekly availability.")
                         .font(.headline)
-                    Text("Configure your weekly schedule. Short = 30–45 min, Long = 60+ min, Mobility = 15–20 min. Tap each session to cycle through types.")
+                    Text("Configure your weekly schedule. Short = 30–45 min, Long = 60+ min, Mobility = 15–20 min. Tap a session to choose its type; a day's next session appears once the one before it is set.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -881,11 +895,25 @@ struct ProfileView: View {
     var body: some View {
         NavigationStack {
             AppSubTabScreen(selection: $selectedTab) { tab in
-                switch tab {
-                case .athlete:    AthleteTab()
-                case .equipment:  EquipmentTab()
-                case .standards:  StandardsTab()
-                case .schedule:   ScheduleTab()
+                Group {
+                    switch tab {
+                    case .athlete:    AthleteTab()
+                    case .equipment:  EquipmentTab()
+                    case .standards:  StandardsTab()
+                    case .schedule:   ScheduleTab()
+                    }
+                }
+                // What is shown is then this device's copy (§6.3). An inset,
+                // not a stack: the bar collapses its title by the section's
+                // own scroll view.
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    if let error = appState.profileError {
+                        AppErrorBanner(message: "Your profile could not be read: \(error)") {
+                            await appState.loadProfile()
+                        }
+                        .padding(.horizontal)
+                        .padding(.vertical, AppMetrics.gapSmall)
+                    }
                 }
             }
             .task { applyRequestedSection() }
@@ -924,5 +952,30 @@ extension ProfileView {
             withAnimation(AppAnimation.springStandard) { selectedTab = requested }
         }
         router.clearProfileSection()
+    }
+}
+
+private extension EquipmentTab {
+    /// A section's tiles: tap to say you have it, saved at once.
+    func equipmentGrid(_ items: [EquipmentItem], color: Color) -> some View {
+        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+            ForEach(items) { item in
+                let isSelected = appState.profile.equipment.contains(item.id)
+                SelectionCard(
+                    title: item.label,
+                    subtitle: isSelected ? "Available" : "Not selected",
+                    isSelected: isSelected,
+                    accentColor: color
+                ) {
+                    if isSelected {
+                        appState.profile.equipment.removeAll { $0 == item.id }
+                    } else {
+                        appState.profile.equipment.append(item.id)
+                    }
+                    Task { await appState.saveProfile() }
+                }
+            }
+        }
+        .padding(.vertical, 4)
     }
 }

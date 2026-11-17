@@ -1,6 +1,12 @@
+import { ScrollPanel } from '@/components/layout/ScrollPanel'
+import { Tip } from '@/components/shared/Tip'
+import { TabPanels } from '@/components/motion/TabPanels'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { SubTabs } from '@/components/layout/SubTabs'
+import { LoadingState, FailedState } from '@/components/shared/states'
 import { useState, useEffect } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { Page } from '@/components/layout/Page'
 import { User, Dumbbell, AlertTriangle, Trophy, Calendar, RotateCcw, Settings as SettingsIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -13,10 +19,10 @@ import { useProfileStore } from '@/store/profileStore'
 import { useBioStore } from '@/store/bioStore'
 import { useLogResult, useStandardResults, useStandardSuggestions, useStandards } from '@/api/standards'
 import { useInjuryFlags } from '@/api/constraints'
-import { LoadingCard } from '@/components/shared/LoadingCard'
 import { RegenerateFromWeekBanner } from '@/components/program/RegenerateFromWeekBanner'
 import { MODALITY_COLORS } from '@/lib/modalityColors'
-import { getEffectiveMaxHR, maxHRFromDOB, zoneBoundariesToBpm, DEFAULT_ZONE_BOUNDARIES } from '@/lib/hrZones'
+import { useEquipmentCategories } from '@/lib/useEquipmentVocabulary'
+import { getEffectiveMaxHR, maxHRFromDOB, zoneBoundariesToBpm, DEFAULT_ZONE_BOUNDARIES, ZONE_COLORS } from '@/lib/hrZones'
 import type { BenchmarkStandard, Day, DaySchedule, EquipmentId, InjuryFlagId, SessionType, StandardResult, TrainingLevel, Sex } from '@/api/types'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -39,49 +45,10 @@ const SUB_TABS: SubTabItem[] = [
 
 const SUB_TAB_IDS = SUB_TABS.map((t) => t.id)
 
-// ── Equipment by category ──────────────────────────────────────────────────────
-
-const EQUIPMENT_CATEGORIES = [
-  {
-    name: 'Strength',
-    color: MODALITY_COLORS.max_strength.hex,
-    items: ['barbell', 'rack', 'plates'] as EquipmentId[],
-  },
-  {
-    name: 'Power & Kettlebell',
-    color: MODALITY_COLORS.power.hex,
-    items: ['kettlebell', 'dumbbell'] as EquipmentId[],
-  },
-  {
-    name: 'Bodyweight & Gymnastics',
-    color: MODALITY_COLORS.relative_strength.hex,
-    items: ['pull_up_bar', 'rings', 'parallettes', 'dip_bar', 'hangboard'] as EquipmentId[],
-  },
-  {
-    name: 'Aerobic & Conditioning',
-    color: MODALITY_COLORS.aerobic_base.hex,
-    items: ['rower', 'assault_bike', 'ski_erg', 'jump_rope', 'pool'] as EquipmentId[],
-  },
-  {
-    name: 'GPP & Durability',
-    color: MODALITY_COLORS.durability.hex,
-    items: ['ruck_pack', 'sandbag', 'sled', 'tire', 'sledgehammer', 'medicine_ball', 'box'] as EquipmentId[],
-  },
-  {
-    name: 'Mobility & Prehab',
-    color: MODALITY_COLORS.rehab.hex,
-    items: ['resistance_band', 'foam_roller', 'ghd'] as EquipmentId[],
-  },
-  {
-    name: 'General',
-    color: '#6366f1',
-    items: ['rope', 'open_space', 'training_partner', 'cable_machine', 'hurdles', 'agility_ladder'] as EquipmentId[],
-  },
-]
-
 // ── Equipment Overview ─────────────────────────────────────────────────────────
 
 function EquipmentOverview() {
+  const equipmentCategories = useEquipmentCategories()
   const equipment = useProfileStore((s) => s.equipment)
   const setEquipment = useProfileStore((s) => s.setEquipment)
 
@@ -95,7 +62,7 @@ function EquipmentOverview() {
   }
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="max-w-3xl mx-auto px-8 py-12 space-y-10">
 
         <div className="space-y-3">
@@ -110,7 +77,7 @@ function EquipmentOverview() {
           </p>
         </div>
 
-        {EQUIPMENT_CATEGORIES.map((category) => (
+        {equipmentCategories.map((category) => (
           <div key={category.name} className="space-y-3">
             <h3 className="text-xs uppercase tracking-wider text-muted-foreground/50 font-medium">
               {category.name}
@@ -153,23 +120,30 @@ function EquipmentOverview() {
         </p>
 
       </div>
-    </div>
+    </ScrollPanel>
   )
 }
 
 // ── Injuries Overview ──────────────────────────────────────────────────────────
 
 function InjuriesOverview() {
-  const { data: flags = [], isLoading } = useInjuryFlags()
+  const { data: flags = [], isLoading, error, refetch } = useInjuryFlags()
   const injuryFlags = useProfileStore((s) => s.injuryFlags)
   const toggleInjuryFlag = useProfileStore((s) => s.toggleInjuryFlag)
 
   const selectedSet = new Set(injuryFlags)
 
-  if (isLoading) return <LoadingCard />
+  if (isLoading) return <LoadingState shape="grid" className="max-w-2xl mx-auto px-8 py-12" />
+  if (error && flags.length === 0) {
+    return (
+      <div className="max-w-2xl mx-auto px-8 py-12">
+        <FailedState title="Could not load the injury list" error={error} onRetry={() => { void refetch() }} />
+      </div>
+    )
+  }
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="max-w-2xl mx-auto px-8 py-12 space-y-10">
 
         <div className="space-y-3">
@@ -199,7 +173,7 @@ function InjuriesOverview() {
                       : 'border-border/30 bg-card/40 hover:border-primary/40 hover:shadow-md hover:-translate-y-px hover:bg-muted/20'
                   )}
                   style={{
-                    borderLeftColor: isSelected ? '#ef4444' : undefined,
+                    borderLeftColor: isSelected ? 'var(--destructive)' : undefined,
                     borderLeftWidth: isSelected ? 2 : 1
                   }}
                 >
@@ -222,7 +196,7 @@ function InjuriesOverview() {
         </p>
 
       </div>
-    </div>
+    </ScrollPanel>
   )
 }
 
@@ -258,10 +232,10 @@ function ResultInput({ benchId, hint, label }: { benchId: string; hint: string; 
         disabled={log.isPending}
         className={cn(
           'w-20 h-7 rounded border bg-card/40 text-right text-xs text-foreground placeholder:text-muted-foreground/40 hover:border-input focus:border-primary focus:bg-card focus:outline-none px-2 transition-colors',
-          log.isError ? 'border-red-500/60' : 'border-border/30',
+          log.isError ? 'border-bad/60' : 'border-border/30',
         )}
       />
-      {log.isError && <span className="text-[10px] text-red-700 dark:text-red-300 max-w-48 text-right">{log.error.message}</span>}
+      {log.isError && <span className="text-[10px] text-bad max-w-48 text-right">{log.error.message}</span>}
     </div>
   )
 }
@@ -326,7 +300,7 @@ function StandardCard({ s, result, onOpen }: {
 }
 
 function StandardsOverview({ onOpenAthlete }: { onOpenAthlete: () => void }) {
-  const { data: standards = [], isLoading } = useStandards()
+  const { data: standards = [], isLoading, error, refetch } = useStandards()
   const { data: results } = useStandardResults()
   const { data: suggestions = [] } = useStandardSuggestions()
   const sex = useProfileStore((s) => s.sex)
@@ -334,7 +308,14 @@ function StandardsOverview({ onOpenAthlete }: { onOpenAthlete: () => void }) {
   const [showAll, setShowAll] = useState(false)
   const openStandard = standards.find((s) => s.id === openId)
 
-  if (isLoading) return <LoadingCard />
+  if (isLoading) return <LoadingState shape="cards" count={3} className="max-w-2xl mx-auto px-8 py-12" />
+  if (error && standards.length === 0) {
+    return (
+      <div className="max-w-2xl mx-auto px-8 py-12">
+        <FailedState title="Could not load the standards" error={error} onRetry={() => { void refetch() }} />
+      </div>
+    )
+  }
 
   const byId = new Map(standards.map((s) => [s.id, s]))
   // This program's own (declared by its package or tested), in the server's
@@ -366,7 +347,7 @@ function StandardsOverview({ onOpenAthlete }: { onOpenAthlete: () => void }) {
   )
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="max-w-3xl mx-auto px-8 py-12 space-y-10">
 
         <div className="space-y-3">
@@ -383,7 +364,7 @@ function StandardsOverview({ onOpenAthlete }: { onOpenAthlete: () => void }) {
           {sex ? (
             <p className="text-[11px] text-muted-foreground/70">Showing the {sex} standards.</p>
           ) : (
-            <p className="text-[11px] text-amber-700 dark:text-amber-300">
+            <p className="text-[11px] text-warn">
               Showing the male standards until you set your sex under{' '}
               <button type="button" onClick={onOpenAthlete} className="underline underline-offset-2 hover:text-foreground">Athlete</button>.
             </p>
@@ -445,7 +426,7 @@ function StandardsOverview({ onOpenAthlete }: { onOpenAthlete: () => void }) {
                              onOpenChange={(o) => { if (!o) setOpenId(null) }}
                              standard={openId === 'bodyweight_kg' ? undefined : openStandard} />
       </div>
-    </div>
+    </ScrollPanel>
   )
 }
 
@@ -456,7 +437,7 @@ const DAYS: Day[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Sa
 function SessionButton({ type, onClick, label }: { type: SessionType; onClick: () => void; label: string }) {
   const config = {
     rest: { text: 'Rest', color: 'bg-muted/40 text-muted-foreground/50 border-muted-foreground/20' },
-    short: { text: 'Short', color: 'bg-yellow-500/15 text-yellow-700 dark:text-yellow-300 border-yellow-500/30' },
+    short: { text: 'Short', color: 'bg-warn/15 text-warn border-warn/30' },
     long: { text: 'Long', color: 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30' },
     mobility: { text: 'Mobility', color: 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30' },
   }
@@ -464,17 +445,16 @@ function SessionButton({ type, onClick, label }: { type: SessionType; onClick: (
   const { text, color } = config[type]
 
   return (
-    <button
+    <Tip label={`${label}: ${text} (click to cycle)`}><button
       onClick={onClick}
       className={cn(
         'px-2 py-1 rounded text-[10px] font-medium uppercase tracking-wider transition-all border',
         color,
         'hover:opacity-80'
       )}
-      title={`${label}: ${text} (click to cycle)`}
     >
       {text}
-    </button>
+    </button></Tip>
   )
 }
 
@@ -545,7 +525,7 @@ function ScheduleOverview() {
   )
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="max-w-2xl mx-auto px-8 py-12 space-y-10">
 
         <div className="space-y-3">
@@ -653,13 +633,12 @@ function ScheduleOverview() {
         </p>
 
       </div>
-    </div>
+    </ScrollPanel>
   )
 }
 
 // ── Heart rate (a section of Athlete) ─────────────────────────────────────────
 
-const ZONE_COLORS = ['#94a3b8', '#38bdf8', '#fbbf24', '#f97316', '#ef4444']
 const ZONE_LABELS = ['Recovery', 'Aerobic', 'Tempo', 'Threshold', 'Max']
 
 /**
@@ -759,11 +738,11 @@ function HeartRateSection() {
                 {observedMax && (
                   <p className="text-xs text-muted-foreground">
                     Observed max from workouts:&nbsp;
-                    <span className={cn('font-medium', observedMax > effectiveMax ? 'text-amber-700 dark:text-amber-300' : 'text-foreground')}>
+                    <span className={cn('font-medium', observedMax > effectiveMax ? 'text-warn' : 'text-foreground')}>
                       {observedMax} bpm
                     </span>
                     {observedMax > effectiveMax && (
-                      <span className="ml-1 text-amber-700/70 dark:text-amber-300/70">— consider updating</span>
+                      <span className="ml-1 text-warn/70">— consider updating</span>
                     )}
                   </p>
                 )}
@@ -891,7 +870,7 @@ function AthleteOverview() {
   })()
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="max-w-2xl mx-auto px-8 py-12 space-y-10">
 
         <div className="space-y-3">
@@ -999,58 +978,34 @@ function AthleteOverview() {
         </div>
 
       </div>
-    </div>
-  )
-}
-
-// ── Tab Selector (like Explore) ───────────────────────────────────────────────
-
-function TabSelector({
-  active,
-  onChange,
-}: {
-  active: SubTab
-  onChange: (t: SubTab) => void
-}) {
-  return (
-    <div className="flex items-center gap-1">
-      {SUB_TABS.map((tab) => {
-        const isActive = tab.id === active
-        const Icon = tab.Icon
-        return (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => onChange(tab.id)}
-            className={cn(
-              'flex items-center gap-1.5 px-3 py-1 text-xs rounded border transition-colors',
-              isActive
-                ? 'bg-primary/15 border-primary/40 text-primary'
-                : 'border-border text-muted-foreground hover:bg-muted'
-            )}
-          >
-            <Icon className="size-3.5" />
-            {tab.label}
-          </button>
-        )
-      })}
-    </div>
+    </ScrollPanel>
   )
 }
 
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 export function ProfileBenchmarks() {
-  // Seeded from ?tab= so the Garmin and Strava OAuth callbacks can land
-  // straight on Connections — they redirect to /profile?tab=connections.
-  const [searchParams] = useSearchParams()
+  // The section lives in ?tab=, as on every page: a link can land on it and
+  // Back returns to it (it was local state seeded from the URL until 2026-11-11).
+  const [searchParams, setSearchParams] = useSearchParams()
   // Heart Rate folded into Athlete on 2026-10-13, and Benchmarks was renamed
   // Standards on 2026-10-17; old links land on the new names.
   const tabParam = searchParams.get('tab')
   const requestedTab = (tabParam === 'heartrate' ? 'athlete' : tabParam === 'benchmarks' ? 'standards' : tabParam) as SubTab | null
-  const [activeTab, setActiveTab] = useState<SubTab>(
-    requestedTab && SUB_TAB_IDS.includes(requestedTab) ? requestedTab : 'athlete'
-  )
+  const activeTab: SubTab = requestedTab && SUB_TAB_IDS.includes(requestedTab) ? requestedTab : 'athlete'
+  function setActiveTab(tab: SubTab) {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        // A standard's sheet belongs to Standards.
+        next.delete('standard')
+        if (tab === 'athlete') next.delete('tab')
+        else next.set('tab', tab)
+        return next
+      },
+      { replace: true },
+    )
+  }
   // Connections moved to Settings on 2026-10-01. Old links and any OAuth
   // callback still pointing here land on the new home with their query intact.
   if (searchParams.get('tab') === 'connections') {
@@ -1058,39 +1013,29 @@ export function ProfileBenchmarks() {
     return <Navigate to={{ pathname: '/settings', search: qs ? `?${qs}` : '' }} replace />
   }
   return (
-    <motion.div
+    <Page
       key="profile"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-      exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
       className="flex h-full flex-col"
     >
-      {/* Header */}
-      <div className="flex items-center gap-2 border-b px-6 py-4 shrink-0">
-        <User className="size-5 text-primary" />
-        <h1 className="text-lg font-semibold">Profile</h1>
-
-        {/* Sub-tab selector (like Explore) */}
-        <div className="ml-4 flex items-center gap-2">
-          <div className="w-px h-4 bg-border/60 shrink-0" />
-          <TabSelector active={activeTab} onChange={setActiveTab} />
-        </div>
-
-      </div>
+      <PageHeader
+        icon={User}
+        title="Profile"
+        tabs={<SubTabs id="profile-tabs" label="Profile sections" tabs={SUB_TABS} active={activeTab} onChange={setActiveTab} />}
+      />
 
       {/* Content */}
       <div className="flex-1 overflow-hidden flex flex-col">
         {/* A change here that the active program was not built for offers a
             regenerate from the current week — every tab that feeds constraints. */}
         {(['athlete', 'equipment', 'injuries', 'schedule'] as SubTab[]).includes(activeTab) && <RegenerateFromWeekBanner />}
-        <div className="flex-1 overflow-hidden">
+        <TabPanels active={activeTab} order={SUB_TAB_IDS} tabsId="profile-tabs" className="flex-1 overflow-hidden">
           {activeTab === 'athlete'    && <AthleteOverview />}
           {activeTab === 'equipment'  && <EquipmentOverview />}
           {activeTab === 'injuries'   && <InjuriesOverview />}
           {activeTab === 'standards'  && <StandardsOverview onOpenAthlete={() => setActiveTab('athlete')} />}
           {activeTab === 'schedule'   && <ScheduleOverview />}
-        </div>
+        </TabPanels>
       </div>
-    </motion.div>
+    </Page>
   )
 }

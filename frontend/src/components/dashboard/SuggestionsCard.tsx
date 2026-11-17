@@ -24,11 +24,11 @@ export function SuggestionsCard() {
   return (
     <section
       aria-label="Workout match suggestions"
-      className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4"
+      className="rounded-xl border border-warn/30 bg-warn/5 p-4"
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Link2 className="size-4 text-amber-700 dark:text-amber-300" />
+          <Link2 className="size-4 text-warn" />
           <p className="text-sm font-medium">
             {n} workout{n === 1 ? ' looks' : 's look'} like {n === 1 ? 'a planned session' : 'planned sessions'}
           </p>

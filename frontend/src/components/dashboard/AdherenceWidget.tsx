@@ -1,3 +1,4 @@
+import { LoadingState, FailedState } from '@/components/shared/states'
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
@@ -8,6 +9,7 @@ import { queryKeys } from '@/api/queryKeys'
 import { useBioStore } from '@/store/bioStore'
 import { STATUS_STYLES } from '@/lib/statusColors'
 import { statusLabel, statusLevel } from '@/components/analytics/status'
+import { RollingNumber } from '@/components/motion/RollingNumber'
 
 /** Per-week bar colour: the phone's thresholds (TodayView), 70 % and 45 %. */
 function statusFor(pct: number): 'green' | 'yellow' | 'red' {
@@ -28,7 +30,7 @@ function statusFor(pct: number): 'green' | 'yellow' | 'red' {
  * which could read "On Track" while the Program tab said off plan.
  */
 export function AdherenceWidget() {
-  const { data, isLoading } = useProgramAnalytics()
+  const { data, isLoading, isError, error, refetch } = useProgramAnalytics()
   const sc = data?.scorecard
 
   // A completion, an undo or a match changes the scorecard: refetch rather
@@ -43,8 +45,24 @@ export function AdherenceWidget() {
 
   if (isLoading) {
     return (
-      <div className="h-full rounded-xl border bg-card p-4 ring-1 ring-border">
+      <div className="h-full rounded-xl border bg-card p-4 space-y-3 ring-1 ring-border">
         <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Adherence</h2>
+        <LoadingState shape="lines" count={3} label="Loading adherence" />
+      </div>
+    )
+  }
+
+  if (isError && !sc) {
+    return (
+      <div className="h-full rounded-xl border bg-card p-4 space-y-3 ring-1 ring-border">
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Adherence</h2>
+        <FailedState
+          size="compact"
+          className="border-0 bg-transparent p-0"
+          title="Could not load adherence"
+          error={error}
+          onRetry={() => { void refetch() }}
+        />
       </div>
     )
   }
@@ -83,7 +101,7 @@ export function AdherenceWidget() {
 
       <div className="space-y-1.5">
         <div className="flex items-baseline gap-1 whitespace-nowrap">
-          <span className={cn('text-4xl font-bold tabular-nums', styles.score)}>{overall}</span>
+          <RollingNumber value={overall} className={cn('text-4xl font-bold', styles.score)} />
           <span className="text-xs text-muted-foreground">% done</span>
         </div>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
@@ -94,8 +112,8 @@ export function AdherenceWidget() {
           {trend != null && (
             <span className="flex items-center gap-1 whitespace-nowrap">
               {trend >= 0
-                ? <TrendingUp className="size-3 text-emerald-600 dark:text-emerald-400" />
-                : <TrendingDown className="size-3 text-amber-600 dark:text-amber-400" />}
+                ? <TrendingUp className="size-3 text-good" />
+                : <TrendingDown className="size-3 text-warn" />}
               vs last week
             </span>
           )}
@@ -104,7 +122,7 @@ export function AdherenceWidget() {
 
       {cw && (
         <p className="text-[11px] text-muted-foreground tabular-nums">
-          This week: <span className="font-semibold text-foreground">{cw.completed} of {cw.due}</span> due so far
+          This week: <RollingNumber value={`${cw.completed} of ${cw.due}`} order={cw.completed} className="font-semibold text-foreground" /> due so far
           {' · '}{cw.total} in the week{cw.isDeload ? ' · deload' : ''}
         </p>
       )}
@@ -117,7 +135,7 @@ export function AdherenceWidget() {
               <span className="w-10 text-[10px] text-muted-foreground tabular-nums">Wk {w.weekNumber}</span>
               <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
                 <div
-                  className={cn('h-full rounded-full', statusFor(w.pct) === 'green' ? 'bg-emerald-500' : statusFor(w.pct) === 'yellow' ? 'bg-amber-500' : 'bg-red-500')}
+                  className={cn('h-full rounded-full', statusFor(w.pct) === 'green' ? 'bg-good' : statusFor(w.pct) === 'yellow' ? 'bg-warn' : 'bg-bad')}
                   style={{ width: `${Math.min(100, w.pct)}%` }}
                 />
               </div>

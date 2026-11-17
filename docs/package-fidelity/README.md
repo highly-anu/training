@@ -5,7 +5,8 @@ the package's own contents, built into weeks as the method prescribes them,
 under the athlete's days, minutes, equipment, injuries and level. This is the
 method for getting a package there and keeping it there. It came out of
 rebuilding Wildman, BJJ, Horsemen and Starting Strength (October 2026);
-`status.yaml` says where every package stands.
+each package's `records/status.yaml` says where it stands, and
+[scorecard.md](scorecard.md) shows them all.
 
 ## What went wrong before
 
@@ -31,7 +32,7 @@ back to a primary source. The engine's part was that it could only express
      is `enforced_by`; `open`; each invention (`I1` …) with where it is
      `implemented_by`; the track's `currency`; the shape. It lives in the
      package folder, so a new package touches nothing outside it;
-   - the **dossier**, `docs/package-fidelity/<package>.md`: the same in
+   - the **dossier**, `data/packages/<package>/dossier.md`: the same in
      prose, naming every rule and invention by its id.
 2. **Choose the engine shape the method has.** The unit of prescription decides:
    - fixed modules progressed by cycles (Wildman, BJJ's strength work) →
@@ -64,7 +65,12 @@ back to a primary source. The engine's part was that it could only express
    text), a fidelity `checks:` claim tools/check_fidelity.py tests, a source
    week the scorecard reproduces, or a test the checks run — its `enforced_by`:
    `data:<file>#<key path>`, `checks:<track>/<phase>.<key>`, `week:<id>`,
-   `test:<file>::<function>`, every one resolved by the scorecard. A rule
+   `test:<file>::<function>`, every one resolved by the scorecard. A test of
+   the package's own is `test:tests/<file>::<function>`: it lives in the
+   package's folder (`tests/test_*.py`), takes the package from that folder
+   (`PKG = Path(__file__).resolve().parents[1].name`) so it follows a copy or a
+   rename, and the checks find it without a line in the registry. A test at the
+   root that reaches several packages counts once the registry lists it. A rule
    with none is debt; the scorecard counts it, nobody declares it.
    A claim, a contract, a week template, a hand-entered standard
    (`data:analytics.yaml#benchmarks.<id>`) or the lead measure counts only
@@ -77,7 +83,7 @@ back to a primary source. The engine's part was that it could only express
    Horsemen: which days go first) and the program says what changed.
 6. **Inventions are a ledger, not a habit.** Anything the app adds that the
    source does not contain is an invention in the record (and so in the
-   generated `status.yaml`), decided by the owner case by case — Pentathlon
+   generated status), decided by the owner case by case — Pentathlon
    Prep is built from kettlebell-sport practice because Wildman publishes
    none. A track that is itself an invention awaiting a decision is named in
    `excluded_tracks` by its invention id.
@@ -93,10 +99,24 @@ How far a package is from its method, graded per package × track
 grades in [scorecard.md](scorecard.md)). Six dimensions, each criterion pass
 (✓), partial (◐) or fail (✗) — never a blended number, because a weighted sum
 hides the one failure that matters. A dimension reads its worst criterion that
-is not hygiene; the grades ratchet in `tools/scorecard_baseline.json` (a worse
-grade fails the checks, and so does a better one left unrecorded), and
-`status.yaml` is written from the records and the grades
+is not hygiene; the grades ratchet in each package's `records/scorecard.json` (a
+worse grade fails the checks, and so does a better one left unrecorded), and its
+`records/status.yaml` is written from the record and the grades
 (`--update-baseline`) — a status is earned, never typed.
+
+**A package's records are its own** (`src/package_records.py`): `records/` holds
+its scorecard grades, the fidelity findings it is allowed, its orphaned
+exercises, its golden program hashes and its status, keyed without the package's
+id, and `dossier.md` sits beside the record. A new package touches nothing
+outside its folder; `tools/add_package.py <id>` writes its records. The API image
+leaves them out (`.dockerignore`): nothing at runtime reads them.
+
+**The status** (`records/status.yaml`, generated): `status` audited · partial ·
+not_started — audited when every criterion but hygiene passes on every track not
+excluded, partial once a record and a dossier exist; `shape` contract · templates
+· scheduler; `sources_kind` primary · consensus · secondary; `debt` (rules nothing
+enforces, S3); `currency` (track → the analytics entry progress is counted in,
+M1); `excluded_tracks`; `source_tests`; `inventions`; `last_review` (S6).
 
 | Dim | | Criterion | ✓ | ◐ | ✗ |
 |---|---|---|---|---|---|
@@ -123,6 +143,7 @@ grade fails the checks, and so does a better one left unrecorded), and
 | | M4 | Referenced standards exist | yes | — | no |
 | Portability | X1 | String literals in `src/`, `api.py`, the web, the iOS and Apple Watch apps and the Garmin core that name the package (`tools/check_code_neutral.py`) | none | — | any |
 | | X2 | Every step of the ideal program resolved to a watch screen, as the watches' payload resolves it (`src/watch_spec.py`) | the package's own | the generic screen for an unclaimed slot type | one the vocabulary cannot draw |
+| | X3 *hygiene* | The lead measure's needs recorded on the wrist: each step of the lead entry's scope, through its screen's template, records them (`watch_vocabulary.json` `capture`, `records`) | every step | some steps | none |
 
 The execution criteria are the audit's findings made executable: E2 sees a
 novice Gym Jones program that is half substitutes, E4 CrossFit's one AMRAP
@@ -132,7 +153,9 @@ awaiting the owner) is graded but does not count toward the status.
 
 Portability is the second goal of every package: one the owner adds by
 writing a folder, with no change to the server, the clients or the watches.
-X1 and X2 grade it per package; `test_package_dropin.py` proves it end to end
+X1 and X2 grade it per package, and X3 (hygiene: it grades the watches as much
+as the package) whether the method's own currency is recorded on the wrist or
+must be logged on the phone; `test_package_dropin.py` proves it end to end
 — three packages copied under ids no code has seen, into a packages folder of
 their own (`TRAINING_PACKAGES_DIR`), validated, generated, served by the API,
 encoded for the watches with their screens, read by the analytics and the
@@ -143,19 +166,20 @@ scorecard, with nothing in the repository changed.
 Run before every push that changes the engine, the data, the schemas, the tools,
 the tests or the watch code: the pre-push hook (`checks.sh`, `../code-checks`) runs
 every command of `checks/python_suites.yaml` in a clean checkout of the pushed
-commit (`tools/run_checks.py`). Every command in the first column is in that list;
+commit (`tools/run_checks.py`), and each package's own tests
+(`data/packages/<id>/tests/test_*.py`, found, not listed). Every command in the first column is in that list;
 `tools/check_package_status.py` fails when the table and the list part. (Until
 2026-10-26 they ran in GitHub's `training-contract.yml` workflow.)
 
 | Gate | What it holds |
 |---|---|
-| `tools/validate_entities.py --all` | every file against its schema; template, pool and test wiring; injury-flag ids resolve, each substitution pair inside one package |
+| `tools/validate_entities.py --all` | every file against its schema; template, pool and test wiring; injury-flag ids resolve, each substitution pair inside one package; no archetype, framework or media id two packages declare |
 | `tools/check_provenance.py` | no package draws on another it does not declare |
 | `tools/check_provenance.py --coverage` | coverage gaps and authoring problems, watch specs included |
-| `tools/check_styles.py` | every philosophy × track × phase generates on its own framework |
+| `tools/check_styles.py` | every philosophy × track × phase generates on its own framework; every contract and templated track composes, paired round-robin with others on constraints from both tracks' data (`blend_pairs`) |
 | `tools/evaluate_packages.py` | the scorecard may not get worse, `status` is the one it earns, every fidelity finding is in the baseline (`check_fidelity.gate`, in the same pass) and every catalog exercise reaches a program (`check_exercise_coverage`, in the same pass); a baseline that a change has made stale fails until it is updated in that change |
 | `tools/check_analytics.py` | every declared measure applies somewhere |
-| `tools/check_package_status.py` | each record names its own tracks; `status.yaml` is what the records and the recorded scorecard write; this table matches `checks/python_suites.yaml` |
+| `tools/check_package_status.py` | each record names its own tracks; each `records/status.yaml` is what the record and the recorded scorecard write; this table matches `checks/python_suites.yaml` |
 | `test_watch_spec.py` | a package's `watch.yaml` resolves; the watches' generated tables are current; `garmin/core` names no package |
 | `test_program_analytics.py` | a package's analytics, including one written to disk as a throwaway package, need no engine change |
 | `test_source_weeks.py` | a source week against hand-built programs: what is structure, what is a number, what is never compared |
@@ -185,5 +209,8 @@ commit (`tools/run_checks.py`). Every command in the first column is in that lis
    scope, what it found and where each finding went; S6).
 6. `tools/evaluate_packages.py --update-baseline --report
    docs/package-fidelity/scorecard.md`: the grades, the orphans, the fidelity
-   findings and `status.yaml` are written together, from what the package
-   earns.
+   findings and each status are written together, in each package's
+   `records/`, from what the package earns. A **new** package is brought in with `tools/add_package.py <id>`
+   (`--check` first): its schemas, no id another package declares, every id in
+   the commons, then its dossier stubbed and its records written — in its own
+   folder, refused on a fidelity finding or an orphan.

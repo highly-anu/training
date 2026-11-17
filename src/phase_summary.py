@@ -235,9 +235,23 @@ def _diff(cur: dict, prev: dict | None) -> None:
     cur['changes'] = changes
 
 
+def without_added(weeks: list) -> list:
+    """The weeks without the sessions the athlete added on the fly (`added`):
+    an extra is not the plan's shape."""
+    out = []
+    for w in weeks or []:
+        sched = w.get('schedule') or {}
+        if any((s or {}).get('added') for ss in sched.values() for s in ss or []):
+            w = {**w, 'schedule': {d: [s for s in ss or [] if not (s or {}).get('added')]
+                                   for d, ss in sched.items()}}
+        out.append(w)
+    return out
+
+
 def build(weeks: list, goal: dict | None = None) -> list[dict]:
     """One entry per phase, in program order. A phase that recurs later (a
     repeatable block run again) gets its own entry for each run."""
+    weeks = without_added(weeks)
     out: list[dict] = []
     for phase_id, pweeks in _group(weeks or []):
         cur = _summarise(phase_id, pweeks, goal)

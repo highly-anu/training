@@ -70,13 +70,13 @@ enum LoadFormat {
             return ([amrap] + [roundCount(load)].compactMap { $0 }).joined(separator: " · ")
         case "for_time":
             // A scheme says its rounds (21-15-9 is three); a count is each round's.
-            if let scheme = repScheme(load) { return "\(scheme) reps for time" }
+            if let scheme = repScheme(load) { return "\(scheme) reps for time\(atWeight(load))" }
             guard let rounds = load.targetRounds else { return "For time" }
             let each = roundCount(load).map { " × \($0)" } ?? ""
             return "\(rounds) round\(rounds == 1 ? "" : "s")\(each) for time"
         case "amrap_movement":
             // A movement of an AMRAP's or a for-time piece's round.
-            return roundCount(load) ?? ""
+            return (roundCount(load) ?? "") + atWeight(load)
         case "distance":
             return load.distanceKm.map { "\(kilograms($0)) km" } ?? "Distance"
         case "static_hold":
@@ -108,6 +108,55 @@ enum LoadFormat {
         }
         if case .int(let m)? = load.extra["distance_m"] { return "\(m) m" }
         return nil
+    }
+
+    /// " @ 22.5 kg" where a round's movement carries a fixed weight (a scaled
+    /// Rx load, src/level_scaling.py); "" otherwise.
+    nonisolated static func atWeight(_ load: ProgramLoad) -> String {
+        load.weightKg.map { " @ \(kilograms($0)) kg" } ?? ""
+    }
+
+    /// "Scaled for Novice · Rx 21-15-9 reps · 30 kg": a prescription done at
+    /// the athlete's share of what is written (src/level_scaling.py), read from
+    /// the load's `rx` (the written values) and `level_scaled`; nil when it is
+    /// done as written. The web's lib/levelScaling.ts says the same.
+    nonisolated static func scaledText(_ ea: ProgramExerciseAssignment) -> String? {
+        guard case .object(let rx)? = ea.load.extra["rx"],
+              case .object(let how)? = ea.load.extra["level_scaled"],
+              case .string(let level)? = how["level"] else { return nil }
+        func number(_ key: String) -> Double? {
+            switch rx[key] {
+            case .int(let n)?: return Double(n)
+            case .double(let d)?: return d
+            default: return nil
+            }
+        }
+        var parts: [String] = []
+        if case .array(let items)? = rx["rep_scheme"] {
+            let counts = items.compactMap { item -> Int? in if case .int(let n) = item { return n }; return nil }
+            if !counts.isEmpty { parts.append(counts.map(String.init).joined(separator: "-") + " reps") }
+        }
+        if let n = number("reps_per_round") { parts.append("\(Int(n)) reps") }
+        if let sets = number("sets") { parts.append("\(Int(sets)) sets") }
+        if let reps = number("reps") { parts.append("\(Int(reps)) reps") }
+        if case .string(let ladder)? = rx["reps"] { parts.append("\(ladder) reps") }
+        if let rounds = number("target_rounds") { parts.append("\(Int(rounds)) rounds") }
+        if let min = number("time_minutes") ?? number("duration_minutes") { parts.append("\(Int(min)) min") }
+        if let secs = number("hold_seconds") ?? number("work_sec") { parts.append("\(Int(secs)) s") }
+        if let km = number("distance_km") { parts.append("\(kilograms(km)) km") }
+        if let m = number("distance_m") { parts.append("\(Int(m)) m") }
+        if let kg = number("weight_kg") { parts.append("\(kilograms(kg)) kg") }
+        let label = level.prefix(1).uppercased() + level.dropFirst()
+        return (["Scaled for \(label)"] + (parts.isEmpty ? [] : ["Rx " + parts.joined(separator: " · ")]))
+            .joined(separator: " · ")
+    }
+
+    /// "In place of Pull-Up (Overhand)": the written movement a scale stands
+    /// for (the server's `scaled_from_name`); nil for the written movement.
+    nonisolated static func scaledFromText(_ ea: ProgramExerciseAssignment) -> String? {
+        guard case .string(let id)? = ea.extra["scaled_from"] else { return nil }
+        if case .string(let name)? = ea.extra["scaled_from_name"] { return "In place of \(name)" }
+        return "In place of \(id)"
     }
 
     /// 80 → "80", 82.5 → "82.5": a whole number never shows a ".0".

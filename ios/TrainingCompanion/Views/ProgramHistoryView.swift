@@ -15,32 +15,20 @@ struct ProgramHistoryView: View {
 
     var body: some View {
         Group {
-            if appState.programHistory.isEmpty && appState.isLoadingHistory {
-                ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if appState.programHistory.isEmpty {
-                emptyState
-            } else {
-                list
+            switch AppLoadPhase.resolve(hasContent: !appState.programHistory.isEmpty,
+                                        isLoading: appState.isLoadingHistory,
+                                        error: appState.historyError) {
+            case .content: list
+            case .loading: AppLoadingState(shape: .list, label: "Loading history")
+            case .failed(let message):
+                AppFailedState(message: message) { await appState.loadProgramHistory() }
+            case .empty:
+                AppEmptyState(icon: "clock.arrow.circlepath", title: "No history yet",
+                              message: "Your programs are recorded from the moment you first open or save one.")
             }
         }
         .task { await appState.loadIfStale("programHistory") { await appState.loadProgramHistory() } }
         .refreshable { await AppRefresh.perform { await appState.loadProgramHistory() } }
-    }
-
-    private var emptyState: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "clock.arrow.circlepath")
-                .font(.largeTitle)
-                .foregroundStyle(.secondary)
-            Text("No history yet")
-                .font(.headline)
-            Text("Your programs are recorded from the moment you first open or save one.")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .padding(32)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var list: some View {
@@ -70,7 +58,7 @@ private struct ProgramHistoryRow: View {
                     Text("Active")
                         .font(.caption2).fontWeight(.semibold)
                         .padding(.horizontal, 6).padding(.vertical, 2)
-                        .background(Color.accentColor.opacity(0.2))
+                        .background(Color.accentColor.opacity(AppColor.Opacity.fillStrong))
                         .foregroundStyle(Color.accentColor)
                         .clipShape(Capsule())
                 }
@@ -88,7 +76,7 @@ private struct ProgramHistoryRow: View {
                 }
                 if entry.loggedCount > 0 {
                     Label("\(entry.loggedCount)", systemImage: "checkmark.circle")
-                        .foregroundStyle(.green)
+                        .foregroundStyle(AppColor.complete)
                 }
             }
             .font(.caption2)
@@ -113,21 +101,25 @@ struct ProgramVersionDetailView: View {
     var body: some View {
         Group {
             if isLoading {
-                ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
+                AppLoadingState(shape: .list, label: "Loading program")
             } else if let detail {
                 weekList(detail)
             } else {
-                Text("Could not load this program.")
-                    .font(.footnote).foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                AppFailedState(title: "Could not load this program",
+                               message: "It is still in your history; try again in a moment.") { await load() }
             }
         }
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
         .task {
-            detail = try? await appState.api?.fetchProgramVersion(versionId)
-            isLoading = false
+            await load()
         }
+    }
+
+    private func load() async {
+        isLoading = true
+        detail = try? await appState.api?.fetchProgramVersion(versionId)
+        isLoading = false
     }
 
     private func weekList(_ detail: ProgramHistoryDetail) -> some View {
@@ -194,7 +186,7 @@ private struct PlannedSessionRow: View {
                     .font(.caption2).foregroundStyle(.secondary)
                 HStack(spacing: 4) {
                     if session.completedAt != nil {
-                        Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                        Image(systemName: "checkmark.circle.fill").foregroundStyle(AppColor.complete)
                     }
                     if session.matchedWorkoutId != nil {
                         Image(systemName: "link").foregroundStyle(.secondary)

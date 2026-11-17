@@ -15,7 +15,7 @@ must exercise exactly the same construction the HTTP layer uses.
 """
 from __future__ import annotations
 
-from . import loader, phases
+from . import level_scaling, loader, phases
 
 
 class FrameworkResolutionError(Exception):
@@ -134,6 +134,9 @@ def philosophy_to_goal(phil_id: str, all_frameworks: list,
 
     from .training_contract import load_contract
     contract = load_contract(phil_id, track['id'])
+    if contract and track.get('authored_level'):
+        # A contract track scaled from its authored level (training_contract.with_level).
+        contract = {**contract, 'level_policy': level_scaling.policy_for(track)}
     return {
         'id': f'_phil_{phil_id}',
         'name': phil.get('name', phil_id),
@@ -143,6 +146,9 @@ def philosophy_to_goal(phil_id: str, all_frameworks: list,
             'name': track.get('name'),
             'description': track.get('description'),
             'philosophy_id': phil_id,
+            # A track written for one level and scaled to the others
+            # (src/level_scaling.py); absent for a track that has not opted in.
+            **({'level_policy': level_scaling.policy_for(track)} if track.get('authored_level') else {}),
         },
         'phase_sequence': phases.phase_sequence_for(track),
         'framework_selection': framework_selection,

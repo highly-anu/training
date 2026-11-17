@@ -1,0 +1,417 @@
+"""What each package brings in its own folder, and what the gates record there.
+
+The Dev Lab's Builder readiness tab asks of every package the question
+test_package_dropin.py answers for three copies: is it a folder that works end
+to end when dropped in? The code half is held elsewhere (no code names a
+package: tools/check_code_neutral.py). This reads the other half, per package:
+
+- its engine shape per track (a training contract, week templates, or the
+  modality scheduler), decided as generation decides it;
+- which of the files a package may carry it has, its own tests among them
+  (tests/, found by tools/run_checks.py);
+- the records the push gates keep, in its folder (records/ and dossier.md,
+  src/package_records.py) — without them the gates fail for a new package,
+  and tools/add_package.py writes them;
+- the commons vocabulary it references, and any id it names that the commons
+  do not define;
+- ids another package also declares, and which copy the loader keeps.
+
+The known gaps — what no package can bring in its folder yet — are
+tools/portability_gaps.json, served beside it; test_portability.py fails when
+a gap's code anchor is gone, so closing one means updating the list. Pure over
+the files; nothing here generates a program.
+"""
+from __future__ import annotations
+
+import glob
+import json
+import os
+from collections import defaultdict
+
+from . import loader, phases
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+GAPS = os.path.join(ROOT, 'tools', 'portability_gaps.json')
+
+# What a package folder may carry, in the order an author meets them.
+FILES = (
+    ('philosophy', 'philosophy.yaml', True),
+    ('frameworks', 'frameworks', True),
+    ('archetypes', 'archetypes', True),
+    ('exercises', 'exercises.yaml', True),
+    ('media', 'exercise_media.yaml', False),
+    ('level_seeds', 'level_seeds.yaml', False),
+    ('analytics', 'analytics.yaml', False),
+    ('watch', 'watch.yaml', False),
+    ('briefing', 'briefing.yaml', False),
+    ('contract', 'training_contract.yaml', False),
+    ('standards', 'standards.yaml', False),
+    ('vocabulary', 'vocabulary.yaml', False),
+    ('fidelity', 'fidelity.yaml', False),
+    ('source_weeks', 'source_weeks.yaml', False),
+    ('tests', 'tests', False),
+)
+
+# The checkout's docs, which the API image leaves out with every package's
+# records (.dockerignore): their presence says this is a checkout.
+_DOCS = os.path.join(ROOT, 'docs', 'package-fidelity')
+# One command records them all, for that package only.
+_ADD = '.venv/bin/python tools/add_package.py {pkg}'
+
+# Which copy wins when two packages declare one id (src/loader.py).
+# Read as "the loader keeps …".
+_KEPT = {
+    'philosophy': 'both in the list, and load_philosophy the first',
+    'framework': 'the last in the library and the first in load_framework',
+    'archetype': 'the first (by folder name)',
+    'media': 'the last (by folder name)',
+    'standard': "data/benchmarks' copy, else the first package's (by folder name)",
+    'modality': "the commons' copy, else the first package's (by folder name)",
+    'movement_pattern': "the commons' copy, else the first package's (by folder name)",
+    'equipment': "the commons' copy, else the first package's (by folder name)",
+}
+# The commons' standards, as an owner beside the packages.
+_COMMONS_STANDARDS = 'data/benchmarks'
+# The commons' vocabulary (modalities, movement patterns), as another.
+_COMMONS = 'data/commons'
+
+
+def _json(path: str):
+    if not os.path.exists(path):
+        return None
+    with open(path, encoding='utf-8') as fh:
+        return json.load(fh)
+
+
+def _yaml(path: str):
+    if not os.path.exists(path):
+        return None
+    try:
+        return loader._load_yaml(path)
+    except Exception:  # noqa: BLE001 — a broken file is validate_entities' finding
+        return None
+
+
+def packages() -> list[str]:
+    """Every package folder the loader would read, by its folder name."""
+    return sorted(pkg for pkg, folder in loader.package_dirs()
+                  if os.path.exists(os.path.join(folder, 'philosophy.yaml')))
+
+
+def _documents(pkg: str, sub: str) -> list[dict]:
+    pattern = os.path.join(loader.package_dir(pkg), sub, '**', '*.yaml')
+    return [d for d in (_yaml(p) for p in sorted(glob.glob(pattern, recursive=True))) if isinstance(d, dict)]
+
+
+def _walk(node, key: str):
+    """Every value under `key`, anywhere in a document."""
+    if isinstance(node, dict):
+        for k, v in node.items():
+            if k == key:
+                yield v
+            yield from _walk(v, key)
+    elif isinstance(node, list):
+        for v in node:
+            yield from _walk(v, key)
+
+
+def _as_list(value) -> list:
+    if value is None:
+        return []
+    return list(value) if isinstance(value, (list, tuple, set)) else [value]
+
+
+def _read(pkg: str) -> dict:
+    base = loader.package_dir(pkg)
+    exercises = (_yaml(os.path.join(base, 'exercises.yaml')) or {}).get('exercises') or []
+    return {
+        'philosophy': _yaml(os.path.join(base, 'philosophy.yaml')) or {},
+        'frameworks': _documents(pkg, 'frameworks'),
+        'archetypes': _documents(pkg, 'archetypes'),
+        'exercises': [e for e in exercises if isinstance(e, dict)],
+        'media': _yaml(os.path.join(base, 'exercise_media.yaml')) or {},
+        'analytics': _yaml(os.path.join(base, 'analytics.yaml')) or {},
+        'watch': _yaml(os.path.join(base, 'watch.yaml')) or {},
+        'briefing': _yaml(os.path.join(base, 'briefing.yaml')) or {},
+        'contract': _yaml(os.path.join(base, 'training_contract.yaml')) or {},
+        'standards': _yaml(os.path.join(base, 'standards.yaml')) or {},
+        'vocabulary': _yaml(os.path.join(base, 'vocabulary.yaml')) or {},
+    }
+
+
+# Package files the API image leaves out (.dockerignore): the gates read
+# them, nothing at runtime does.
+_IMAGE_EXCLUDED = {'source_weeks', 'tests'}
+
+
+def _in_checkout() -> bool:
+    """A checkout, not the API image: the image has no docs/ beyond the schemas."""
+    return os.path.isdir(_DOCS)
+
+
+def _files(pkg: str) -> list[dict]:
+    """`present` is None for a file the API image leaves out, when this is the image."""
+    base = loader.package_dir(pkg)
+    checkout = _in_checkout()
+    return [{'id': fid, 'path': name, 'required': required,
+             'present': (None if fid in _IMAGE_EXCLUDED and not checkout
+                         else os.path.exists(os.path.join(base, name)))}
+            for fid, name, required in FILES]
+
+
+def _shapes(pkg: str, docs: dict) -> list[dict]:
+    """Each track's engine shape, as goals.philosophy_to_goal and the
+    generator decide it: a contract for the track, else week templates on a
+    phase, else the modality scheduler."""
+    contract_tracks = (docs['contract'].get('tracks') or {}) if docs['contract'] else {}
+    out = []
+    for track in phases.tracks_of(docs['philosophy']):
+        if track.get('id') in contract_tracks:
+            shape = 'contract'
+        elif any(p.get('week_templates') for p in track.get('phases') or []):
+            shape = 'templates'
+        else:
+            shape = 'scheduler'
+        out.append({'track': track.get('id'), 'name': track.get('name'), 'shape': shape})
+    return out
+
+
+def _records(pkg: str) -> list[dict]:
+    """The records the push gates keep in the package's folder, and whether
+    this one has them. `done` is None outside a checkout: the API image leaves
+    every package's records/ and dossier.md out (.dockerignore)."""
+    from . import package_records
+    checkout = _in_checkout()
+    add = _ADD.format(pkg=pkg)
+
+    def held(path: str) -> bool | None:
+        return os.path.exists(path) if checkout else None
+
+    rows = [('scorecard', 'Scorecard grades', 'scorecard.json'),
+            ('fidelity', 'Fidelity findings', 'fidelity.json'),
+            ('coverage', 'Exercise coverage', 'coverage.json'),
+            ('golden', 'Golden program hashes', 'golden.json'),
+            ('status', 'Status', 'status.yaml')]
+    out = [{'id': rid, 'label': label, 'file': f'{package_records.RECORDS}/{name}',
+            'done': held(package_records.path(pkg, name)), 'how': add} for rid, label, name in rows]
+    out.append({'id': 'dossier', 'label': 'Source dossier', 'file': package_records.DOSSIER,
+                'done': held(package_records.dossier_path(pkg)),
+                'how': f'{add} stubs it; write it from the sources (docs/package-fidelity/README.md)'})
+    return out
+
+
+def _known() -> dict[str, set]:
+    from .analytics import benchmarks_data
+    schema = _json(os.path.join(ROOT, 'docs', 'schemas', 'constraints.schema.json')) or {}
+    # What an athlete can say they have (constraints.schema.json), and `none`:
+    # an exercise that needs nothing.
+    equipment = set((((schema.get('properties') or {}).get('equipment') or {}).get('items') or {}).get('enum') or [])
+    equipment.add('none')
+    vocab = _json(os.path.join(loader._COMMONS_DIR, 'watch_vocabulary.json')) or {}
+    from . import recovery_regions
+    regions = recovery_regions.config()
+    return {
+        # The commons' own; a package's vocabulary.yaml adds to these for
+        # itself and whoever borrows from it (_known_for).
+        'modalities': {mid for mid, m in loader.load_all_modalities().items() if not m.get('_package')},
+        'movement_patterns': set(regions.get('patterns') or {}) | set(regions.get('unloaded') or []),
+        'phase_kinds': set(loader.load_phase_kinds()),
+        'equipment': equipment,
+        'standards': set(benchmarks_data.known_ids()) | {benchmarks_data.BODYWEIGHT_ID},
+        'watch_templates': set(vocab.get('templates') or {}),
+    }
+
+
+def _own_vocabulary(docs: dict) -> dict[str, set]:
+    vocab = docs.get('vocabulary') if isinstance(docs.get('vocabulary'), dict) else {}
+    return {'modalities': {m['id'] for m in vocab.get('modalities') or [] if isinstance(m, dict) and m.get('id')},
+            'movement_patterns': {p['id'] for p in vocab.get('movement_patterns') or []
+                                  if isinstance(p, dict) and p.get('id')},
+            'equipment': {e['id'] for e in vocab.get('equipment') or [] if isinstance(e, dict) and e.get('id')}}
+
+
+def _known_for(pkg: str, read: dict, known: dict[str, set]) -> dict[str, set]:
+    """What one package may name: the commons, what its own vocabulary.yaml
+    adds, and what the packages it borrows from add."""
+    out = dict(known)
+    sources = [pkg] + [b for b in _as_list((read.get(pkg) or {}).get('philosophy', {}).get('borrows_from'))
+                       if isinstance(b, str)]
+    for source in sources:
+        for kind, ids in _own_vocabulary(read.get(source) or {}).items():
+            out[kind] = out[kind] | ids
+    return out
+
+
+def _references(docs: dict) -> dict[str, set]:
+    phil = docs['philosophy']
+    refs: dict[str, set] = defaultdict(set)
+    refs['modalities'] |= set(_as_list(phil.get('bias'))) | set(_as_list(phil.get('scope')))
+    for fw in docs['frameworks']:
+        spw = fw.get('sessions_per_week')
+        if isinstance(spw, dict):
+            refs['modalities'] |= set(spw)
+    for track in phases.tracks_of(phil):
+        refs['phase_kinds'] |= {p.get('kind') for p in track.get('phases') or [] if p.get('kind')}
+    for arch in docs['archetypes']:
+        if arch.get('modality'):
+            refs['modalities'].add(arch['modality'])
+        refs['phase_kinds'] |= set(_as_list(arch.get('applicable_phases')))
+        refs['equipment'] |= set(_as_list(arch.get('required_equipment')))
+    for ex in docs['exercises']:
+        refs['equipment'] |= set(_as_list(ex.get('equipment')))
+        refs['modalities'] |= {m for m in _as_list(ex.get('modality')) if isinstance(m, str)}
+        refs['movement_patterns'] |= {p for p in _as_list(ex.get('movement_patterns')) if isinstance(p, str)}
+    for doc in (*docs['archetypes'], docs['contract'], docs['philosophy']):
+        for value in _walk(doc, 'standard'):
+            sid = value.get('id') if isinstance(value, dict) else value
+            if isinstance(sid, str):
+                refs['standards'].add(sid)
+    for entry in _as_list(docs['analytics'].get('benchmarks')):
+        sid = entry.get('id') if isinstance(entry, dict) else entry
+        if isinstance(sid, str):
+            refs['standards'].add(sid)
+    refs['watch_templates'] |= {t for t in _walk(docs['watch'], 'template') if isinstance(t, str)}
+    return refs
+
+
+def _vocabulary(refs: dict[str, set], known: dict[str, set]) -> list[dict]:
+    return [{'kind': kind, 'count': len(refs.get(kind, ())),
+             'unknown': sorted(refs.get(kind, set()) - known[kind])}
+            for kind in known]
+
+
+def _owned_ids(docs: dict) -> dict[str, dict[str, object]]:
+    """kind -> {id: what the package says for it}; only media compares the value."""
+    media = docs['media'] if isinstance(docs['media'], dict) else {}
+    return {
+        'philosophy': {docs['philosophy']['id']: None} if docs['philosophy'].get('id') else {},
+        'framework': {f['id']: None for f in docs['frameworks'] if f.get('id')},
+        'archetype': {a['id']: None for a in docs['archetypes'] if a.get('id')},
+        'exercise': {e['id']: None for e in docs['exercises'] if e.get('id')},
+        'media': {k: json.dumps(v, sort_keys=True, default=str) for k, v in media.items()},
+        'standard': {b['id']: None for b in (docs['standards'] or {}).get('standards') or []
+                     if isinstance(b, dict) and b.get('id')},
+        'modality': {m: None for m in _own_vocabulary(docs)['modalities']},
+        'movement_pattern': {p: None for p in _own_vocabulary(docs)['movement_patterns']},
+        'equipment': {e: None for e in _own_vocabulary(docs)['equipment']},
+    }
+
+
+def collisions(owned: dict[str, dict[str, dict]]) -> tuple[list[dict], int]:
+    """(ids two packages declare and the loader resolves silently, how many
+    exercise ids are shared). Exercises are shared by design — every
+    declaring package keeps its own prescription (loader.load_all_exercises)
+    — so they are counted, not flagged; so is one exercise's media where every
+    package that lists it says the same."""
+    holders: dict[tuple[str, str], dict[str, object]] = defaultdict(dict)
+    for pkg, kinds in owned.items():
+        for kind, ids in kinds.items():
+            for i, value in ids.items():
+                holders[(kind, i)][pkg] = value
+    found, shared = [], 0
+    for (kind, i), by_pkg in sorted(holders.items()):
+        if len(by_pkg) < 2:
+            continue
+        if kind == 'exercise':
+            shared += 1
+            continue
+        if kind == 'media' and len(set(by_pkg.values())) == 1:
+            continue
+        found.append({'kind': kind, 'id': i, 'packages': sorted(by_pkg), 'kept': _KEPT[kind]})
+    return found, shared
+
+
+def _commons_standards() -> dict[str, dict]:
+    from .analytics import benchmarks_data
+    return {'standard': {b['id']: None for b in benchmarks_data.load_benchmarks() if not b.get('package')}}
+
+
+def _commons_vocabulary() -> dict[str, dict]:
+    """The commons' modalities and movement patterns, so a package's
+    vocabulary.yaml that takes one of their ids collides."""
+    known = _known()
+    return {'modality': {m: None for m in known['modalities']},
+            'movement_pattern': {p: None for p in known['movement_patterns']},
+            'equipment': {e: None for e in known['equipment'] if e != 'none'}}
+
+
+def _all_owned() -> dict[str, dict]:
+    """Every package's ids, and the commons' standards as one more owner, so a
+    package standard that takes a commons id collides like any other."""
+    return {**{pkg: _owned_ids(_read(pkg)) for pkg in packages()}, _COMMONS_STANDARDS: _commons_standards(),
+            _COMMONS: _commons_vocabulary()}
+
+
+def id_collisions() -> list[dict]:
+    """The ids two packages declare that the loader resolves silently — the
+    gate tools/validate_entities.py --all holds every package to."""
+    return collisions(_all_owned())[0]
+
+
+def problems(pkg: str, report: dict) -> list[str]:
+    """What stops one package of a report being brought in: a required file it
+    lacks, an id another package declares, an id the commons do not define."""
+    row = next((p for p in report['packages'] if p['id'] == pkg), None)
+    if row is None:
+        return [f"'{pkg}' is not a package folder in {report['packagesDir']} (no philosophy.yaml)"]
+    out = [f"{f['path']} is missing" for f in row['files'] if f['required'] and not f['present']]
+    for c in report['collisions']:
+        if pkg in c['packages']:
+            others = ', '.join(p for p in c['packages'] if p != pkg)
+            out.append(f"{c['kind']} '{c['id']}' is also declared by {others} (the loader keeps {c['kept']})")
+    for v in row['vocabulary']:
+        for u in v['unknown']:
+            out.append(f"{v['kind']}: '{u}' is not in the commons"
+                       + (" nor in this package's vocabulary.yaml (or one it borrows from)"
+                          if v['kind'] in ('modalities', 'movement_patterns', 'equipment') else ''))
+    return out
+
+
+def gaps() -> dict:
+    return _json(GAPS) or {'gaps': []}
+
+
+def report() -> dict:
+    known = _known()
+    names = packages()
+    read = {pkg: _read(pkg) for pkg in names}
+    owned = {**{pkg: _owned_ids(docs) for pkg, docs in read.items()}, _COMMONS_STANDARDS: _commons_standards(),
+            _COMMONS: _commons_vocabulary()}
+    found, shared = collisions(owned)
+    colliding = defaultdict(int)
+    for c in found:
+        for pkg in c['packages']:
+            colliding[pkg] += 1
+    rows = []
+    for pkg in names:
+        docs = read[pkg]
+        files = _files(pkg)
+        records = _records(pkg)
+        vocabulary = _vocabulary(_references(docs), _known_for(pkg, read, known))
+        unknown = sum(len(v['unknown']) for v in vocabulary)
+        rows.append({
+            'id': pkg,
+            'name': docs['philosophy'].get('name', pkg),
+            'tracks': _shapes(pkg, docs),
+            'files': files,
+            'records': records,
+            'vocabulary': vocabulary,
+            'collisions': colliding[pkg],
+            # Drops in as it stands: every required file, every record the
+            # gates keep that this deployment can read, no id the commons lack
+            # and none another package owns.
+            'ready': (all(f['present'] for f in files if f['required'])
+                      and all(o['done'] is not False for o in records) and not unknown
+                      and not colliding[pkg]),
+        })
+    return {
+        'packagesDir': os.path.relpath(loader._PACKAGES_DIR, ROOT),
+        # The records and files this deployment cannot read (they are not
+        # in it): `ready` says nothing about them.
+        'unchecked': sorted({o['id'] for row in rows for o in row['records'] if o['done'] is None}
+                            | {f['id'] for row in rows for f in row['files'] if f['present'] is None}),
+        'packages': rows,
+        'collisions': found,
+        'sharedExercises': shared,
+        **gaps(),
+    }

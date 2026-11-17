@@ -27,6 +27,7 @@ progression_model: rpe_autoregulation
 
 applicable_when:
   training_level:
+    - novice
     - intermediate
     - advanced
     - elite

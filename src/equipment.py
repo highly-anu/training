@@ -1,0 +1,56 @@
+"""The equipment an athlete can say they have: data/commons/constraints/equipment.yaml.
+
+The one list. The schemas' enums and the clients' pickers are generated from
+it (tools/gen_client_vocab.py); the server reads it here, for /api/equipment
+and to read an id a client once stored under another name (`aliases`: the
+phone saved "Assault Bike" as `assault_bike`, which no archetype names).
+"""
+from __future__ import annotations
+
+from functools import lru_cache
+
+from . import loader
+
+
+@lru_cache(maxsize=1)
+def document() -> dict:
+    return loader._load_yaml(loader._data_path('commons', 'constraints', 'equipment.yaml')) or {}
+
+
+def commons_items() -> list[dict]:
+    """The commons' list alone, in its order."""
+    return list(document().get('equipment') or [])
+
+
+def items() -> list[dict]:
+    """[{id, label, aliases?, package?}, …]: the commons' list in its order,
+    then what the packages the caller sees add (their vocabulary.yaml
+    `equipment`, each with its `package`); a commons id or alias is never
+    replaced."""
+    out = commons_items()
+    taken = {e['id'] for e in out} | set(_alias_map())
+    return out + [e for e in loader.load_vocabulary()['equipment'].values() if e['id'] not in taken]
+
+
+def ids() -> list[str]:
+    return [e['id'] for e in items()]
+
+
+@lru_cache(maxsize=1)
+def _alias_map() -> dict[str, str]:
+    return {a: e['id'] for e in commons_items() for a in e.get('aliases') or []}
+
+
+def canonical(equipment) -> list:
+    """The athlete's equipment with every alias read as its id, each once, in
+    order; an id the list does not know is kept as it came (it simply serves
+    nothing)."""
+    if not isinstance(equipment, list):
+        return equipment
+    aliases = _alias_map()
+    out: list = []
+    for item in equipment:
+        item = aliases.get(item, item) if isinstance(item, str) else item
+        if item not in out:
+            out.append(item)
+    return out

@@ -1,0 +1,25 @@
+# What the athlete sees before a session (docs/schemas/briefing.schema.json).
+# Entries are tried in order; what none covers falls to the default entries.
+id: wildman_kettlebell
+spec_version: 1
+entries:
+# Nerd Math: every module climbs its own density cycle, one step a clean
+# session. The same session before is the same module, whatever shared its day.
+- id: density
+  scope:
+    progression_models: [density_cycle]
+  same_as: module
+  show: [rounds, reps_per_round, interval, weight]
+  chart: total_reps
+  history: 6
+  cycle: true
+  suggest: [confirm_pending, next_step, cycle_end]
+  notes: One step a clean session at RPE 7 or below. The bell stays the same until the cycle ends.
+# Novice technique practice: minutes of clean positions, nothing to count.
+- id: technique
+  scope:
+    progression_models: [skill_hold]
+  same_as: module
+  show: [time, hold]
+  history: 4
+  suggest: [confirm_pending, next_step]

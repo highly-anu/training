@@ -3,9 +3,12 @@ name: '5 Rounds: Dumbbell Run Carry, Get-ups, Burpees'
 modality: mixed_modal_conditioning
 category: conditioning
 training_levels:
+- novice
 - intermediate
 - advanced
 - elite
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 30
 slots:
@@ -18,6 +21,7 @@ slots:
     - db_carry_run
     ordered: true
   load: 11 kg (25 lb) dumbbell
+  load_kg: 11
   notes: >-
     5 rounds, alternating: a 400 m run carrying one dumbbell, 5 get-ups with the same dumbbell, 10 burpees.
     The source gives no clock.
@@ -30,6 +34,7 @@ slots:
     - kb_tgu
     ordered: true
   load: 11 kg (25 lb), the same dumbbell
+  load_kg: 11
   notes: Turkish get-ups with the dumbbell you ran with; the source does not say each hand.
 - role: burpees
   slot_type: sets_reps

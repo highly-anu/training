@@ -70,7 +70,7 @@ struct DeleteAccountSheet: View {
                         .textInputAutocapitalization(.characters)
                         .autocorrectionDisabled()
                 } footer: {
-                    if let error { Text(error).foregroundStyle(.red) }
+                    if let error { Text(error).foregroundStyle(AppColor.destructive) }
                 }
                 Section {
                     Button(role: .destructive) {

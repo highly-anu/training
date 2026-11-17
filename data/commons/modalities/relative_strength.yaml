@@ -7,6 +7,11 @@ recovery_hours_min: 24
 
 session_position: first
 
+# Kept when days are scarce: 1 first, 4 dropped first (scheduler.allocate_sessions).
+priority_tier: 2
+# The session length it is matched to a long or short day by (scheduler).
+typical_duration_minutes: 50
+
 compatible_in_session_with:
   - mobility
   - movement_skill
@@ -43,3 +48,17 @@ notes: >
   movement skill or short aerobic work in the same session. Incompatible with
   max strength because heavy barbell training impairs the fine motor control and
   relative body tension required for gymnastics quality.
+
+# How the clients draw it: tools/gen_client_vocab.py writes the web's and the
+# Apple apps' tables from this (docs/frontend-design.md §8.1; design-system §3).
+# `tint` is the Tailwind colour family of the web's tint classes, `text_shade`
+# its light-mode text shade (700 or 800: WCAG AA at text-xs on a /15 tint);
+# `short` the word a watch complication has room for; `order` where it is listed.
+display:
+  label: Relative Strength
+  short: Strength
+  order: 2
+  color: '#f43f5e'
+  tint: rose
+  text_shade: 800
+  icon: {web: Dumbbell, ios: figure.strengthtraining.traditional, watch: figure.strengthtraining.traditional}

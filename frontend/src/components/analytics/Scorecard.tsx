@@ -32,8 +32,8 @@ function Row({ row }: { row: AnalyticsScorecardRow }) {
       <div className="flex flex-wrap gap-x-3 text-[10px] text-muted-foreground">
         <span>{row.weeklyActualMinutes} min/wk actual · {row.weeklyPlannedMinutes} planned</span>
         {row.minWeeklyMinutes != null && (
-          <span className={cn(row.doseStatus === 'under' && 'text-amber-800 dark:text-amber-300',
-                              row.doseStatus === 'over' && 'text-red-700 dark:text-red-300')}>
+          <span className={cn(row.doseStatus === 'under' && 'text-warn',
+                              row.doseStatus === 'over' && 'text-bad')}>
             {DOSE_LABEL[row.doseStatus]} ({row.minWeeklyMinutes}–{row.maxWeeklyMinutes} min/wk)
             {row.planDoseStatus === 'under' && ' — the plan itself is under the minimum'}
           </span>
@@ -60,7 +60,7 @@ export function Scorecard({ scorecard }: { scorecard: AnalyticsScorecard }) {
         <StatusBadge status={scorecard.headline} />
       </div>
       {scorecard.headline === 'off_plan' && (
-        <p className="text-xs text-amber-800 dark:text-amber-300">
+        <p className="text-xs text-warn">
           Under 70% of the committed work has been done. Everything else is secondary to that.
         </p>
       )}

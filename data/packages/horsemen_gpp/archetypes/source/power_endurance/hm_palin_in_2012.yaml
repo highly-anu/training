@@ -3,9 +3,12 @@ name: Palin in 2012!
 modality: mixed_modal_conditioning
 category: conditioning
 training_levels:
+- novice
 - intermediate
 - advanced
 - elite
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 35
 slots:
@@ -31,6 +34,7 @@ slots:
     - kb_tgu
     ordered: true
   load: 16 kg (35 lb)
+  load_kg: 16
   notes: >-
     10, 7, 5, then 3 get-ups on each hand, one set a round. The source writes the 35 lb only on the first
     set.

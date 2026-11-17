@@ -24,7 +24,7 @@ from datetime import date, timedelta
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault('SUPABASE_URL', '')
 
-from src import generator, goals, loader, phases  # noqa: E402
+from src import generator, goals, implements, loader, phases  # noqa: E402
 from src.analytics.context import AnalyticsInputs  # noqa: E402
 from src.analytics.document import compute_program_analytics  # noqa: E402
 
@@ -51,6 +51,13 @@ def run(only: str | None = None) -> int:
         headline_anywhere = False
         source = 'declared' if pid in declared else 'default'
         print(f'\n{pid} ({source})')
+        spec = declared.get(pid) or {}
+        if not spec.get('elite_standards') and not spec.get('no_elite_standard'):
+            # Every methodology says what its elite is measured by, or why
+            # nothing measures it (docs/logic/levels.md).
+            problems.append(f'{pid}: analytics.yaml names no elite_standards and says no no_elite_standard')
+        if spec.get('elite_standards') and spec.get('no_elite_standard'):
+            problems.append(f'{pid}: analytics.yaml gives both elite_standards and no_elite_standard')
         for track in phases.tracks_of(phil):
             goal = goals.philosophy_to_goal(pid, frameworks, track_id=track['id'])
             # The track's first framework says what it is built for: a
@@ -66,7 +73,7 @@ def run(only: str | None = None) -> int:
                 levels = goal['training_contract']['training_levels']
                 if cons['training_level'] not in levels:
                     cons['training_level'] = levels[0]
-                cons['kettlebell_count'] = 2
+                cons = implements.confirm(cons, goal['training_contract'])
                 cons['mastered_exercises'] = sorted({eid for m in goal['training_contract']['modules'] for eid in m.get('requires_mastery', [])})
             prog = generator.generate(goal_id=goal['id'], goal_dict=goal, constraints=cons,
                                       # The whole track, at least WEEKS: a measure of a late phase

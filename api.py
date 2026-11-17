@@ -8,6 +8,7 @@ import re
 import sys
 import tempfile
 import threading
+from collections import OrderedDict
 from datetime import date as _date, datetime as _datetime, timedelta as _timedelta, timezone as _timezone
 
 import yaml
@@ -26,6 +27,10 @@ sys.path.insert(0, os.path.dirname(__file__))
 from src import fit_import as _fit_import
 from src import workout_ids as _workout_ids
 from src import watch_spec as _watch_spec
+from src import outcome_fields as _outcome_fields
+from src import package_fidelity as _package_fidelity
+from src import equipment as _equipment
+from src import implements as _implements
 from src import standards as _standards_mod
 from src.analytics import benchmarks_data as _bd
 from src import goals, loader, provenance
@@ -35,8 +40,9 @@ from src import phases
 from src.phases import PhaseResolutionError
 from src.similarity import compute_all_similarities
 from src.generator import generate
+from src import generator as _generator
 from src.phase_calendar import compute_phase_from_date
-from src.progression import calculate_load, rep_scheme_text
+from src.progression import calculate_load, ramps_for, rep_scheme_text
 from src.training_contract import ContractError
 from src.selector import populate_session
 from src.validator import check_level_coverage, validate
@@ -64,6 +70,65 @@ def _authoring_enabled() -> bool:
 _SCHEMA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'docs', 'schemas')
 
 
+# ── The package builder: who may use it ──────────────────────────────────────
+# An athlete describes a method and a model writes the package (docs/roadmap.md
+# item 21). PACKAGE_BUILDER says who: `off`; `dev` (the default) — accounts
+# whose verified token carries the `dev` role; `all` — every signed-in athlete.
+# Local dev (no SUPABASE_URL, every request `local-dev-user`) is allowed unless
+# it is off. The model's key is a second condition for building, not for
+# listing or removing what was built.
+_BUILDER_MODES = ('off', 'dev', 'all')
+from src import package_builder as _package_builder  # noqa: E402,F401  the worker's builder; the SDK loads with the first build
+
+
+def _builder_mode() -> str:
+    mode = os.environ.get('PACKAGE_BUILDER', '').strip().lower() or 'dev'
+    return mode if mode in _BUILDER_MODES else 'dev'
+
+
+def _builder_allowed() -> bool:
+    """Whether the signed-in athlete may use the builder and keep methods of
+    their own (call inside a require_auth view)."""
+    mode = _builder_mode()
+    if mode == 'off':
+        return False
+    if mode == 'all' or not os.environ.get('SUPABASE_URL'):
+        return True
+    from src import auth as _auth
+    return _auth.has_role('dev')
+
+
+def _builder_daily_limit() -> int:
+    try:
+        return max(0, int(os.environ.get('PACKAGE_BUILDER_DAILY_LIMIT', '5')))
+    except ValueError:
+        return 5
+
+
+def _builder_availability() -> tuple[bool, str | None]:
+    """(can a build start now, why not): `not_enabled` for this athlete, or
+    `no_model_key` when the server has no key for the model."""
+    if not _builder_allowed():
+        return False, 'not_enabled'
+    if not os.environ.get('ANTHROPIC_API_KEY'):
+        return False, 'no_model_key'
+    return True, None
+
+
+def require_builder(f):
+    """Gate for an athlete's own packages and the builder. Stack it under
+    require_auth: 403 `not_enabled` for an athlete it is not on for."""
+    from functools import wraps
+
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if not _builder_allowed():
+            return jsonify({'error': 'not_enabled', 'detail': 'Building your own methods is not available '
+                            'for this account.'}), 403
+        return f(*args, **kwargs)
+    return wrapper
+
+
 def _schema_errors(kind: str, obj: dict) -> list[str]:
     """Validate an authored entity against docs/schemas/<kind>.schema.json —
     the contract tools/validate_entities.py enforces on the YAML, applied to
@@ -81,10 +146,22 @@ def _invalid(kind: str, errors: list[str]):
                     'errors': errors}), 422
 
 
+def _packages_dir() -> str:
+    """The packages folder the loader reads (TRAINING_PACKAGES_DIR in a test)."""
+    return loader._PACKAGES_DIR
+
+
 def _is_custom_package_path(path: str) -> bool:
-    """Only the `custom` package is the API's to delete from; authored packages
-    are edited as YAML and validated with the CLI."""
-    return os.path.join('packages', 'custom') in os.path.normpath(path)
+    """Only the `custom` package is the API's to change: it creates there, and
+    edits and deletes only there. An authored package is edited as files in a
+    branch, where the gates, the baselines and its dossier check it
+    (tools/add_package.py, docs/package-fidelity/README.md)."""
+    rel = os.path.relpath(os.path.abspath(path), os.path.abspath(_packages_dir()))
+    return rel.split(os.sep)[0] == 'custom'
+
+
+_NOT_CUSTOM = ('only the custom package is edited through the API; an authored package is '
+               'edited as YAML in a branch, where the gates check it')
 
 
 def require_authoring(f):
@@ -194,11 +271,22 @@ def _gzip(response):
 #   ask, every answer after an authoring write) is built once per process,
 #   one build at a time (`_BUILD_LOCK`), so a burst cannot multiply memory;
 # - a client that has the answer gets a 304.
+#
+# That is the shipped packages' answer, the same for everyone. An athlete with
+# packages of their own (src/package_store.py) gets a variant built in their
+# view, kept beside it in a small bounded store keyed by their overlay
+# directory — which is named from their packages' revisions, so an install or
+# a removal is a new key and nothing needs clearing — and marked private. The
+# shared answers and the build are never touched by it; a route their
+# packages do not change keeps the shared bytes.
 _STATIC_LOCK = threading.Lock()
 _BUILD_LOCK = threading.Lock()
 _STATIC: dict[str, tuple[bytes, bytes, str]] = {}   # full path → (json, gzip, etag)
 _STATIC_BUILD_DIR = os.environ.get('STATIC_BUILD_DIR') or None
 _BUILT: dict | None = None   # the build's manifest: full path → {json, gz, etag}; {} once data changed
+_USER_STATIC: 'OrderedDict[tuple[str, str], tuple[bytes, bytes, str]]' = OrderedDict()   # (overlay, full path) → answer
+_USER_STATIC_MAX = 96
+_USER_STATIC_MAX_BYTES = 12 * 1024 * 1024
 
 
 def _built(key: str) -> tuple[bytes, bytes, str] | None:
@@ -235,20 +323,51 @@ def static_json(view):
     successful answer."""
     from functools import wraps
 
-    @wraps(view)
-    def wrapper(*args, **kwargs):
-        key = request.full_path
+    def shared(key, *args, **kwargs):
         hit = _STATIC.get(key)
         if hit is None:
             with _BUILD_LOCK:
                 hit = _STATIC.get(key) or _built(key)
                 if hit is None:
-                    response = app.make_response(view(*args, **kwargs))
+                    with loader.overlay(None):
+                        response = app.make_response(view(*args, **kwargs))
                     if response.status_code != 200 or response.mimetype != 'application/json':
-                        return response
+                        return None, response
                     hit = _pack(response.get_data())
                 with _STATIC_LOCK:
                     _STATIC[key] = hit
+        return hit, None
+
+    def own(overlay, key, *args, **kwargs):
+        with _STATIC_LOCK:
+            hit = _USER_STATIC.get((overlay, key))
+            if hit is not None:
+                _USER_STATIC.move_to_end((overlay, key))
+                return hit, None
+        with _BUILD_LOCK:
+            with loader.overlay(overlay):
+                response = app.make_response(view(*args, **kwargs))
+        if response.status_code != 200 or response.mimetype != 'application/json':
+            return None, response
+        hit = _pack(response.get_data())
+        common = _STATIC.get(key) or _built(key)
+        if common is not None and common[2] == hit[2]:
+            hit = common   # their packages do not change this route: the shared bytes, kept once
+        with _STATIC_LOCK:
+            _USER_STATIC[(overlay, key)] = hit
+            total = sum(len(b) + len(z) for b, z, _ in _USER_STATIC.values())
+            while len(_USER_STATIC) > _USER_STATIC_MAX or (total > _USER_STATIC_MAX_BYTES and len(_USER_STATIC) > 1):
+                _, (b, z, _e) = _USER_STATIC.popitem(last=False)
+                total -= len(b) + len(z)
+        return hit, None
+
+    @wraps(view)
+    def wrapper(*args, **kwargs):
+        key = request.full_path
+        overlay = _own_overlay()
+        hit, refused = own(overlay, key, *args, **kwargs) if overlay else shared(key, *args, **kwargs)
+        if refused is not None:
+            return refused
         body, gz, etag = hit
         if etag in request.if_none_match:
             response = app.response_class(status=304)
@@ -261,9 +380,20 @@ def static_json(view):
             response = app.response_class(body, mimetype='application/json')
         response.set_etag(etag)
         # Revalidate every time (the ETag makes that a 304): data changes with a deploy.
-        response.headers['Cache-Control'] = 'no-cache'
+        response.headers['Cache-Control'] = 'private, no-cache' if overlay else 'no-cache'
+        if overlay:
+            response.vary.add('Authorization')
         return response
     return wrapper
+
+
+def _own_overlay() -> str | None:
+    """The asker's overlay when they have packages of their own, else None
+    (nobody signed in, no package, or the store cannot be read)."""
+    from src import auth as _auth
+    from src import package_store
+    user_id = _auth.optional_user_id()
+    return package_store.overlay_for(user_id) if user_id else None
 
 
 _AUTHORING_PREFIXES = ('/api/exercises', '/api/archetypes', '/api/modalities', '/api/frameworks')
@@ -282,14 +412,21 @@ def _package_data_changed(response):
 def clear_static_cache() -> None:
     """Forget every reference answer — the build's too, which no longer
     matches the files."""
-    global _explore_links_cache, _BUILT
-    from src import explore_philosophy
+    global _BUILT
     with _STATIC_LOCK:
         _STATIC.clear()
+        _USER_STATIC.clear()
         _BUILT = {}
-    _explore_links_cache = None
-    explore_philosophy.clear_cache()
-    _watch_spec.clear_cache()
+    invalidate_package_data()
+
+
+def invalidate_package_data() -> None:
+    """The packages changed (an authoring write, a package installed or
+    removed): forget every answer any module computed from them, in every
+    view — the one call. The modules keep such answers per view
+    (loader.view_store, loader.scoped_cache), never in a global of their own."""
+    loader.invalidate_package_data()
+    _watch_spec.vocabulary.cache_clear()
 
 
 def _static_paths() -> list[str]:
@@ -376,22 +513,21 @@ def _equipment_profiles() -> list[dict]:
 
 # Similarity cache — computed once at first request (lazy, not blocking startup),
 # by one thread: the four serving threads would otherwise each build it.
-_similarity_cache: dict | None = None
 _similarity_lock = threading.Lock()
 
 def _get_similarity() -> dict:
-    global _similarity_cache
     with _similarity_lock:
-        if _similarity_cache is None:
+        store = loader.view_store('api.similarity')
+        if 'matrix' not in store:
             philosophies = loader.load_philosophies()
             frameworks   = loader.load_all_frameworks()
             modalities   = loader.load_all_modalities()
             archetypes   = loader.load_all_archetypes()
             exercises, _ = loader.load_all_exercises()
-            _similarity_cache = compute_all_similarities(
+            store['matrix'] = compute_all_similarities(
                 philosophies, frameworks, modalities, archetypes, exercises
             )
-    return _similarity_cache
+        return store['matrix']
 
 
 def _injury_flags() -> list[dict]:
@@ -509,6 +645,12 @@ def _clean_exercise_assignment(ea: dict) -> dict:
         # The standard this slot measures ({id, result}), when it is a test's
         # scored slot (src/standard_tests.py); absent otherwise.
         **({'standard': ea['standard']} if ea.get('standard') else {}),
+        # Done scaled to the athlete's level (src/level_scaling.py): the
+        # written movement it stands for and why ('level' or 'constraint'),
+        # and the standard a scaled benchmark no longer measures.
+        **({'scaled_from': ea['scaled_from'], 'scaled_from_name': ea.get('scaled_from_name') or ea['scaled_from'],
+            'scale_cause': ea.get('scale_cause')} if ea.get('scaled_from') else {}),
+        **({'scaled_standard': ea['scaled_standard']} if ea.get('scaled_standard') else {}),
     }
 
 
@@ -742,7 +884,16 @@ def get_philosophies():
                     # perform …" (they once stripped one package's id prefix).
                     'exercise_names': {eid: (exercises.get(eid) or {}).get('name', eid)
                                        for m in contract['modules'] for eid in m.get('requires_mastery', [])},
-                    'kettlebell_count': 2 if contract.get('requires_kettlebell_pair') else 1,
+                    # What the track's loaded blocks are done with and how
+                    # many matching ones it needs (src/implements.py); the
+                    # builders confirm `<equipment>_count`. `kettlebell_count`
+                    # is the same for a kettlebell track, for installed builds.
+                    'implements': [{'equipment': imp['equipment'], 'count': imp['count'],
+                                    'countKey': _implements.count_key(imp['equipment']),
+                                    'number': _implements.number(imp['count']),
+                                    'plural': _implements.plural_label(imp['equipment'])}
+                                   for imp in [contract.get('implement')] if imp and imp['count'] > 1],
+                    'kettlebell_count': _implements.requirement(contract).get('kettlebell_count', 1),
                     # Lifts the athlete may start from a weight they last made
                     # (`starting_loads_kg`); left empty, the first session
                     # works up to one. Optional — never a requirement.
@@ -750,7 +901,24 @@ def get_philosophies():
                                        for m in contract['modules']
                                        if m['progression']['model'] == 'load_per_exposure'
                                        for lift in m['progression'].get('lifts') or {}],
+                    # Choices the athlete makes for the track (Wildman's swing
+                    # minutes), each with its default; the builders ask and send
+                    # the answer as `contract_options` ({option id: choice id}).
+                    'options': [{'id': o['id'], 'label': o['label'], 'default': o['default'],
+                                 'choices': [{'id': c['id'], 'label': c['label'],
+                                              **({'description': c['description']} if c.get('description') else {})}
+                                             for c in o['choices']]}
+                                for o in contract.get('options') or []],
                 }
+        # A track the app made up rather than the source (an invention whose
+        # implemented_by is the track itself: Wildman's Codex tracks): the
+        # builders label it, so nobody takes it for the method's own program.
+        record = _package_fidelity.load(philosophy['id'])
+        inventions = {i['id']: i['text'] for i in (record or {}).get('inventions') or []}
+        for track in philosophy.get('tracks', []):
+            inv = _package_fidelity.invented_track(record, track['id'])
+            if inv:
+                track['invention'] = {'id': inv, 'text': inventions.get(inv, '')}
     return jsonify(philosophies)
 
 
@@ -924,9 +1092,6 @@ def get_ontology():
     })
 
 
-_explore_links_cache: dict | None = None
-
-
 @app.get('/api/explore/links')
 @static_json
 def get_explore_links():
@@ -934,11 +1099,11 @@ def get_explore_links():
     "Follows from it": the movements, and every link between neighbouring
     levels with the selector's own slot rule (src/explore_links.py). Static
     data, built once like the similarity scores."""
-    global _explore_links_cache
-    if _explore_links_cache is None:
+    store = loader.view_store('api.explore_links')
+    if 'links' not in store:
         from src import explore_links
-        _explore_links_cache = explore_links.build_from_loader()
-    return jsonify(_explore_links_cache)
+        store['links'] = explore_links.build_from_loader()
+    return jsonify(store['links'])
 
 
 @app.get('/api/similarity')
@@ -966,7 +1131,7 @@ def create_exercise():
     existing_ids = {ex['id'] for ex in _all_exercises()}
     if body['id'] in existing_ids:
         return jsonify({'detail': f"Exercise id '{body['id']}' already exists"}), 409
-    custom_pkg_dir = os.path.join(_DATA_DIR, 'packages', 'custom')
+    custom_pkg_dir = os.path.join(_packages_dir(), 'custom')
     os.makedirs(custom_pkg_dir, exist_ok=True)
     custom_path = os.path.join(custom_pkg_dir, 'exercises.yaml')
     if os.path.exists(custom_path):
@@ -980,8 +1145,12 @@ def create_exercise():
 
 
 def _find_exercise_file_and_index(ex_id: str):
-    """Return (path, index, data) for an exercise by id, or (None, None, None)."""
-    for path in sorted(glob.glob(os.path.join(_DATA_DIR, 'packages', '*', 'exercises.yaml'))):
+    """Return (path, index, data) for an exercise by id, or (None, None, None):
+    the custom package's copy first — an id may be declared by several
+    packages, and only that copy is the API's to change."""
+    paths = sorted(glob.glob(os.path.join(_packages_dir(), '*', 'exercises.yaml')))
+    paths.sort(key=lambda p: not _is_custom_package_path(p))
+    for path in paths:
         data = _load_yaml(path) or {}
         for i, ex in enumerate(data.get('exercises', [])):
             if ex.get('id') == ex_id:
@@ -997,6 +1166,8 @@ def update_exercise(ex_id: str):
     path, idx, data = _find_exercise_file_and_index(ex_id)
     if path is None:
         return jsonify({'detail': f"Exercise '{ex_id}' not found"}), 404
+    if not _is_custom_package_path(path):
+        return jsonify({'detail': _NOT_CUSTOM}), 403
     merged = {**data['exercises'][idx], **{k: v for k, v in body.items() if k != 'id'}}
     errors = _schema_errors('exercise', merged)
     if errors:
@@ -1016,8 +1187,7 @@ def delete_exercise(ex_id: str):
     if path is None:
         return jsonify({'detail': f"Exercise '{ex_id}' not found"}), 404
     if not _is_custom_package_path(path):
-        return jsonify({'detail': 'only exercises in the custom package can be deleted through the API; '
-                                  'authored packages are edited as YAML'}), 403
+        return jsonify({'detail': _NOT_CUSTOM}), 403
     del data['exercises'][idx]
     with open(path, 'w', encoding='utf-8') as f:
         yaml.dump(data, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
@@ -1027,7 +1197,7 @@ def delete_exercise(ex_id: str):
 def _find_archetype_file(arch_id: str) -> str | None:
     """Return the YAML file path for an archetype by id, or None."""
     for path in glob.glob(
-        os.path.join(_DATA_DIR, 'packages', '*', 'archetypes', '**', '*.yaml'),
+        os.path.join(_packages_dir(), '*', 'archetypes', '**', '*.yaml'),
         recursive=True,
     ):
         try:
@@ -1047,6 +1217,8 @@ def update_archetype(arch_id: str):
     path = _find_archetype_file(arch_id)
     if not path:
         return jsonify({'detail': f"Archetype '{arch_id}' not found"}), 404
+    if not _is_custom_package_path(path):
+        return jsonify({'detail': _NOT_CUSTOM}), 403
     data = _load_yaml(path)
     merged = {**data, **{k: v for k, v in body.items() if v is not None}}
     errors = _schema_errors('archetype', merged)
@@ -1067,8 +1239,7 @@ def delete_archetype(arch_id: str):
     if not path:
         return jsonify({'detail': f"Archetype '{arch_id}' not found"}), 404
     if not _is_custom_package_path(path):
-        return jsonify({'detail': 'only archetypes in the custom package can be deleted through the API; '
-                                  'authored packages are edited as YAML'}), 403
+        return jsonify({'detail': _NOT_CUSTOM}), 403
     os.remove(path)
     _watch_spec.clear_cache()
     return jsonify({'deleted': arch_id}), 200
@@ -1079,10 +1250,12 @@ def delete_archetype(arch_id: str):
 @require_authoring
 def update_framework(fw_id: str):
     body = request.get_json(silent=True) or {}
-    matches = glob.glob(os.path.join(_DATA_DIR, 'packages', '*', 'frameworks', f'{fw_id}.yaml'))
+    matches = glob.glob(os.path.join(_packages_dir(), '*', 'frameworks', f'{fw_id}.yaml'))
     if not matches:
         return jsonify({'detail': f"Framework '{fw_id}' not found"}), 404
     path = matches[0]
+    if not _is_custom_package_path(path):
+        return jsonify({'detail': _NOT_CUSTOM}), 403
     data = _load_yaml(path)
     allowed = {'name', 'source_philosophy', 'sessions_per_week', 'cadence_options',
                'deload_protocol', 'applicable_when', 'notes', 'recovery'}
@@ -1113,7 +1286,7 @@ def create_archetype():
     existing_ids = {a.get('id') for a in loader.load_all_archetypes()}
     if arch_id in existing_ids:
         return jsonify({'detail': f"Archetype id '{arch_id}' already exists"}), 409
-    custom_dir = os.path.join(_DATA_DIR, 'packages', 'custom', 'archetypes')
+    custom_dir = os.path.join(_packages_dir(), 'custom', 'archetypes')
     os.makedirs(custom_dir, exist_ok=True)
     out_path = os.path.join(custom_dir, f"{arch_id}.yaml")
     with open(out_path, 'w', encoding='utf-8') as f:
@@ -1430,11 +1603,14 @@ def _generate_program_inner(body):
 
     # Normalize weekly_schedule into scheduler-compatible constraints (BEFORE defaults)
     constraints = _normalize_schedule_constraints(constraints)
+    if 'equipment' in constraints:
+        constraints['equipment'] = _equipment.canonical(constraints['equipment'])
 
     # Normalise constraints — fill in any missing fields with sensible defaults
     constraints.setdefault('days_per_week', 5)
     constraints.setdefault('session_time_minutes', 75)
     constraints.setdefault('training_level', 'intermediate')
+    _fill_sex(constraints)
     constraints.setdefault('equipment', ['barbell', 'rack', 'plates', 'kettlebell',
                                           'pull_up_bar', 'ruck_pack', 'open_space'])
     constraints.setdefault('injury_flags', [])
@@ -1790,6 +1966,345 @@ def dev_constraint_impact():
     return jsonify(out), status
 
 
+# ── An athlete's own packages ────────────────────────────────────────────────
+# Written at runtime, kept in Postgres, private to their owner
+# (src/package_store.py; docs/roadmap.md items 20 and 21). Behind the builder's
+# gate (require_builder). Every write goes through the gates
+# (src/package_gate.py) and one runs at a time, as generation does.
+
+def _package_store_error(e):
+    app.logger.warning('user_packages: %s', e)
+    return jsonify({'error': 'store_unavailable', 'detail': 'Your packages could not be saved. Try again.'}), 503
+
+
+@app.get('/api/packages')
+@require_auth
+@require_builder
+def list_user_packages():
+    """The athlete's own packages, the prefix every id they declare must
+    carry, and any that no longer loads (set aside, with why)."""
+    from src import package_store
+    try:
+        rows = package_store.list_packages(g.user_id)
+    except package_store.StoreError as e:
+        return _package_store_error(e)
+    set_aside = {q['package']: q['problem'] for q in loader.quarantined()}
+    for row in rows:
+        if row['id'] in set_aside:
+            row['status'], row['problems'] = 'quarantined', [{'stage': 'load', 'code': 'not_loadable', 'file': None,
+                                                             'message': set_aside[row['id']]}]
+    return jsonify({'prefix': package_store.owner_prefix(g.user_id), 'packages': rows,
+                    'limits': {'files': package_store.MAX_FILES, 'bytes': package_store.MAX_BYTES,
+                               'packages': package_store.MAX_PACKAGES}})
+
+
+@app.get('/api/packages/<package_id>')
+@require_auth
+@require_builder
+def get_user_package(package_id):
+    from src import package_store
+    try:
+        row = package_store.get_package(g.user_id, package_id)
+    except package_store.StoreError as e:
+        return _package_store_error(e)
+    return (jsonify(row), 200) if row else (jsonify({'error': 'not_found'}), 404)
+
+
+@app.post('/api/packages')
+@require_auth
+@require_builder
+def install_user_package():
+    """Install (or replace) one package: `{files: {path: yaml text}}`, its id
+    the philosophy's. `dry_run: true` checks only. 200 with `installed`; 422
+    with the gate's `problems` when it does not pass; 429 while another check
+    runs; 503 when the write fails."""
+    from src import package_store
+    body = request.get_json(silent=True) or {}
+    user_id = g.user_id
+
+    def run(b):
+        try:
+            if b.get('dry_run'):
+                result = {**package_store.check(user_id, b.get('files')), 'installed': False}
+            else:
+                result = package_store.install(user_id, b.get('files'))
+        except package_store.StoreError as e:
+            app.logger.warning('user_packages: %s', e)
+            return {'error': 'store_unavailable', 'detail': 'Your package could not be saved. Try again.'}, 503
+        return result, (200 if result['ok'] else 422)
+
+    out, status = _heavy_run('package', body, run)
+    return jsonify(out), status
+
+
+@app.delete('/api/packages/<package_id>')
+@require_auth
+@require_builder
+def delete_user_package(package_id):
+    """Remove one of the athlete's packages. 409 while their program is built
+    from it (the program would lose its method); 404 when they have none by
+    that id."""
+    return _remove_user_package(package_id)
+
+
+def _program_uses(program, package_id: str) -> bool:
+    """Whether a stored program is built from a package: its id is named
+    somewhere in it (the goal's sources, a session's archetype)."""
+    return bool(program) and f'"{package_id}"' in json.dumps(program, default=str)
+
+
+def _remove_user_package(package_id: str):
+    from src import package_store
+    try:
+        if package_store.get_package(g.user_id, package_id) is None:
+            return jsonify({'error': 'not_found'}), 404
+        from src import db as _db
+        if _program_uses(_db.get_user_program(g.user_id), package_id):
+            return jsonify({'error': 'in_use', 'detail': 'Your program is built from this method. '
+                            'Start another program first.'}), 409
+        package_store.remove(g.user_id, package_id)
+    except package_store.StoreError as e:
+        return _package_store_error(e)
+    return jsonify({'removed': True})
+
+
+# ── Methods: the athlete's reading of their own packages ─────────────────────
+# What both clients' program builders show under "Your methods" (item 21). The
+# athlete says *method*; the stored thing is a package.
+
+@app.get('/api/methods')
+@require_auth
+def list_methods():
+    """Whether the athlete can build methods of their own, and the ones they
+    have. Always 200: `available: false` with a `reason` (`not_enabled` for
+    this account, `no_model_key` on this server) tells a client to show
+    nothing, or the methods without the way to make another."""
+    from src import package_store
+    available, reason = _builder_availability()
+    daily = _builder_daily_limit()
+    body = {'available': available, 'reason': reason, 'methods': [], 'builds': [],
+            'limits': {'daily': daily, 'remaining': daily, 'kept': package_store.MAX_PACKAGES}}
+    if reason == 'not_enabled':
+        return jsonify(body)
+    from src import build_store
+    try:
+        rows = package_store.list_packages(g.user_id)
+        body['builds'] = [build_store.public(b) for b in build_store.recent(g.user_id)]
+        body['limits']['remaining'] = max(0, daily - build_store.started_since(g.user_id))
+    except (package_store.StoreError, build_store.StoreError) as e:
+        return _package_store_error(e)
+    from src import db as _db
+    program = _db.get_user_program(g.user_id) if rows else None
+    set_aside = {q['package'] for q in loader.quarantined()}
+    body['methods'] = [{'id': r['id'], 'name': r.get('name') or r['id'], 'revision': r['revision'],
+                        'status': 'quarantined' if r['id'] in set_aside else r.get('status') or 'installed',
+                        'updatedAt': r.get('updatedAt'), 'inUse': _program_uses(program, r['id'])}
+                       for r in rows]
+    return jsonify(body)
+
+
+# A build is a row a worker thread runs (src/build_store.py, src/build_worker.py):
+# minutes of work a request cannot hold and a deploy must not lose. These
+# routes queue one, say how it stands and cancel it.
+_BUILD_DESCRIPTION = (20, 8000)     # characters: enough to say something, short of a book
+_BUILD_PASTED_MAX = 60000
+_BUILD_NOTE = (5, 2000)
+
+
+def _build_request(body: dict) -> tuple[dict | None, str | None]:
+    """The request a build keeps, or why the body is not one."""
+    answers = body.get('answers') if isinstance(body.get('answers'), dict) else {}
+    pasted = body.get('pastedText') or ''
+    if not isinstance(pasted, str) or len(pasted) > _BUILD_PASTED_MAX:
+        return None, f'pastedText is text of at most {_BUILD_PASTED_MAX} characters'
+    revise = body.get('revise')
+    out = {'answers': {k: answers[k] for k in ('days', 'minutes', 'level', 'equipment') if k in answers},
+           'pastedText': pasted, 'webSearch': bool(body.get('webSearch'))}
+    if revise is not None:
+        note = (revise.get('note') or '').strip() if isinstance(revise, dict) else ''
+        if not isinstance(revise, dict) or not isinstance(revise.get('packageId'), str):
+            return None, 'revise names the method (packageId) and says what to change (note)'
+        if not _BUILD_NOTE[0] <= len(note) <= _BUILD_NOTE[1]:
+            return None, f'the note is {_BUILD_NOTE[0]} to {_BUILD_NOTE[1]} characters'
+        return {**out, 'description': note, 'revise': {'packageId': revise['packageId'], 'note': note}}, None
+    description = (body.get('description') or '').strip() if isinstance(body.get('description'), str) else ''
+    if not _BUILD_DESCRIPTION[0] <= len(description) <= _BUILD_DESCRIPTION[1]:
+        return None, f'the description is {_BUILD_DESCRIPTION[0]} to {_BUILD_DESCRIPTION[1]} characters'
+    return {**out, 'description': description}, None
+
+
+@app.post('/api/methods/builds')
+@require_auth
+@require_builder
+def start_method_build():
+    """Queue a build: `{description, answers{days, minutes, level, equipment},
+    pastedText?, webSearch?}`, or `{revise: {packageId, note}}` for a new
+    revision of one of the athlete's methods. 202 with the build; 422 a body
+    that is not a request; 404 a method to revise that is not theirs; 409
+    `build_running` (with it) or `too_many_methods`; 429 `daily_limit`; 503
+    `builder_unavailable` without a model key, `store_unavailable` when the
+    write fails."""
+    from src import build_store, build_worker, package_store
+    available, reason = _builder_availability()
+    if not available:
+        return jsonify({'error': 'builder_unavailable', 'reason': reason,
+                        'detail': 'Methods cannot be built right now.'}), 503
+    request_body, problem = _build_request(request.get_json(silent=True) or {})
+    if problem:
+        return jsonify({'error': 'invalid', 'detail': problem}), 422
+    try:
+        running = build_store.active(g.user_id)
+        if running:
+            return jsonify({'error': 'build_running', 'detail': 'A method is already being built.',
+                            'build': build_store.public(running)}), 409
+        if build_store.started_since(g.user_id) >= _builder_daily_limit():
+            return jsonify({'error': 'daily_limit', 'detail': "You have used today's builds. Try again tomorrow."}), 429
+        draft = {}
+        if request_body.get('revise'):
+            current = package_store.get_package(g.user_id, request_body['revise']['packageId'])
+            if current is None:
+                return jsonify({'error': 'not_found'}), 404
+            draft = current['files']
+        elif len(package_store.list_packages(g.user_id)) >= package_store.MAX_PACKAGES:
+            return jsonify({'error': 'too_many_methods', 'detail':
+                            f'You keep at most {package_store.MAX_PACKAGES} methods. Remove one first.'}), 409
+        row = build_store.create(g.user_id, request_body, draft)
+    except (package_store.StoreError, build_store.StoreError) as e:
+        return _package_store_error(e)
+    build_worker.kick()
+    return jsonify({'build': build_store.public(row)}), 202
+
+
+@app.get('/api/methods/builds/<build_id>')
+@require_auth
+@require_builder
+def get_method_build(build_id):
+    """How one of the athlete's builds stands — what a client polls. 404 when
+    it is not theirs."""
+    from src import build_store
+    try:
+        row = build_store.get(g.user_id, build_id)
+    except build_store.StoreError as e:
+        return _package_store_error(e)
+    return (jsonify({'build': build_store.public(row)}), 200) if row else (jsonify({'error': 'not_found'}), 404)
+
+
+@app.post('/api/methods/builds/<build_id>/cancel')
+@require_auth
+@require_builder
+def cancel_method_build(build_id):
+    """Stop a build: at once when it is waiting, at its next turn when it is
+    running; one already ended is answered as it ended. 404 when not theirs."""
+    from src import build_store
+    try:
+        row = build_store.request_cancel(g.user_id, build_id)
+    except build_store.StoreError as e:
+        return _package_store_error(e)
+    return (jsonify({'build': build_store.public(row)}), 200) if row else (jsonify({'error': 'not_found'}), 404)
+
+
+# Dev Lab ▸ Builds (src/build_report.py): what a build did — its turns, checks,
+# problems and tokens. The athlete's own builds only: a transcript holds what
+# they wrote and pasted.
+@app.get('/api/dev/builds')
+@require_auth
+@require_builder
+def dev_builds():
+    """The signed-in athlete's last builds (`limit`, 30 by default, 100 at
+    most) with what each spent, and their totals."""
+    from src import build_report, build_store
+    try:
+        limit = min(max(int(request.args.get('limit', 30)), 1), 100)
+    except ValueError:
+        limit = 30
+    try:
+        rows = build_store.history(g.user_id, limit)
+    except build_store.StoreError as e:
+        return _package_store_error(e)
+    builds = [build_report.summary(r) for r in rows]
+    return jsonify({'builds': builds, 'totals': build_report.totals(builds)})
+
+
+@app.get('/api/dev/builds/<build_id>')
+@require_auth
+@require_builder
+def dev_build(build_id):
+    """One of the athlete's builds in full: the request, each turn's tool
+    calls, each check's problems and the program the model was shown, the
+    draft's files. 404 when it is not theirs."""
+    from src import build_report, build_store
+    try:
+        row = build_store.get(g.user_id, build_id)
+    except build_store.StoreError as e:
+        return _package_store_error(e)
+    return (jsonify({'build': build_report.detail(row)}), 200) if row else (jsonify({'error': 'not_found'}), 404)
+
+
+_BUILDS_RESUMED = False
+
+
+@app.before_request
+def _resume_builds():
+    """Once a process: a build left open when the last one stopped (a deploy,
+    a crash) is taken up again. Its row kept the draft and the transcript."""
+    global _BUILDS_RESUMED
+    if _BUILDS_RESUMED:
+        return None
+    _BUILDS_RESUMED = True
+    from src import build_store, build_worker
+    try:
+        if build_store.has_open():
+            build_worker.kick()
+    except build_store.StoreError as e:
+        app.logger.warning('builds not resumed: %s', e)
+    return None
+
+
+@app.delete('/api/methods/<package_id>')
+@require_auth
+@require_builder
+def delete_method(package_id):
+    """Remove one of the athlete's methods: 409 `in_use` while their program
+    is built from it, 404 when they have none by that id."""
+    return _remove_user_package(package_id)
+
+
+@app.get('/api/dev/model-map')
+@require_auth
+@require_authoring
+def dev_model_map():
+    """How the model's parts act on each other — each interaction with what
+    it reads, what the engine decides and the code that carries it — and
+    which engine each track the asker sees runs on (for Dev Lab ▸ Model
+    Interactions; tools/model_map.json, src/model_map.py)."""
+    from src import model_map
+    return jsonify(model_map.report())
+
+
+@app.get('/api/dev/package-spec')
+@require_auth
+@require_authoring
+def dev_package_spec():
+    """How to write a package — docs/schemas/PACKAGE_SPEC.md, whole and by
+    section — with what the asking athlete needs to write one of their own:
+    their id prefix and the limits (for the package builder and the Dev Lab)."""
+    from src import package_spec, package_store
+    return jsonify({'spec': package_spec.text(), 'sections': package_spec.sections(),
+                    'prefix': package_store.owner_prefix(g.user_id),
+                    'limits': {'files': package_store.MAX_FILES, 'bytes': package_store.MAX_BYTES,
+                               'packages': package_store.MAX_PACKAGES}})
+
+
+@app.get('/api/dev/portability')
+@require_auth
+@require_authoring
+def dev_portability():
+    """What each package brings in its folder and what it still needs outside
+    it, with the gaps no package can close yet (for the Dev Lab; src/portability.py)."""
+    from src import portability
+    return jsonify(portability.report())
+
+
 # The impact and constraint-change routes run several generations each (up to
 # seven, a few seconds apiece) on a 256 MB machine serving four threads. One
 # runs at a time in the process and one per athlete; a request that finds the
@@ -1802,7 +2317,8 @@ def dev_constraint_impact():
 # generated program (~1 MB, several as dicts), and the clients already keep
 # theirs per program revision. The generator reads state the body does not
 # carry (a contract's confirmed sessions), so nothing is kept long.
-_HEAVY_GATE = threading.BoundedSemaphore(1)
+from src import heavy as _heavy
+_HEAVY_GATE = _heavy.GATE   # shared with the package builder's worker (src/heavy.py)
 _HEAVY_USERS: set = set()
 _HEAVY_LOCK = threading.Lock()   # guards _HEAVY_USERS and _HEAVY_CACHE
 _HEAVY_CACHE: 'dict[str, tuple[float, tuple[dict, int]]]' = {}
@@ -1933,8 +2449,8 @@ def _constraint_impact(body: dict) -> tuple[dict, int]:
     if not programs['reference'].get('weeks'):
         # Nothing to compare against: every session would read as "added".
         return {'feasible': True, 'reference_generates': False, 'lifts': lifts,
-                'reference': {k: reference.get(k) for k in ('equipment', 'training_level',
-                                                             'mastered_exercises', 'kettlebell_count')
+                'reference': {k: reference.get(k) for k in ('equipment', 'training_level', 'mastered_exercises',
+                                                             *(key for _, key in _implements.count_keys(reference)))
                               if k in reference},
                 'detail': 'The reference with nothing in the way does not generate, so there is '
                           'nothing to compare the program with.'}, 200
@@ -2033,8 +2549,8 @@ def _prog_model_for(modality: str, body: dict, data: dict) -> str:
     return resolve_model(fw or {}, modality, data['modalities'])
 
 
-def _week_phase_rules(body: dict, philosophy_ids) -> tuple[frozenset, float | None]:
-    """(exclude_exercises, deload share) for the week a single-session route edits.
+def _week_phase_rules(body: dict, philosophy_ids) -> tuple[frozenset, float | None, dict]:
+    """(exclude_exercises, deload share, weekly ramps) for the week a single-session route edits.
 
     The client sends the week's `phase_id` and `framework_id`; without them
     (an older client) nothing is excluded and the model defaults apply, as
@@ -2047,12 +2563,44 @@ def _week_phase_rules(body: dict, philosophy_ids) -> tuple[frozenset, float | No
     rules = phases.phase_rules(wanted, phase_id, framework_id)
     fw = loader.load_all_frameworks().get(framework_id) if framework_id else None
     keep = ((fw or {}).get('deload_protocol') or {}).get('volume_reduction_pct')
-    return frozenset(rules['exclude_exercises']), keep
+    return frozenset(rules['exclude_exercises']), keep, ramps_for(fw)
+
+
+def _week_level_policy(body: dict, philosophy_ids) -> dict | None:
+    """The level policy of the track whose week a single-session route edits
+    (src/level_scaling.py), found by the week's phase as `_week_phase_rules`
+    finds its rules; None for a track that has not opted in."""
+    phils = loader.load_philosophies()
+    wanted = [p for p in phils if p.get('id') in set(philosophy_ids or [])] or phils
+    return phases.phase_rules(wanted, body.get('phase_id'), body.get('framework_id')).get('level_policy')
+
+
+def _added_provenance(arch: dict) -> dict | None:
+    """The package an added session came from, borrowed when it is not one of
+    the stored program's (the web badges it "via <label>")."""
+    pkg = (arch or {}).get('_package')
+    if not pkg:
+        return None
+    try:
+        from src.db import get_user_program
+        goal = ((get_user_program(g.user_id) or {}).get('currentProgram') or {}).get('goal') or {}
+    except Exception:
+        goal = {}
+    if pkg in (goal.get('primary_sources') or []):
+        return {'package': pkg, 'borrowed': False}
+    name = next((p.get('name') for p in loader.load_philosophies() if p.get('id') == pkg), None)
+    return {'package': pkg, 'borrowed': True, **({'label': name} if name else {})}
 
 
 def _generate_session_inner(body):
+    # `add`: a session the athlete adds on the fly (a rest day's mobility).
+    # It touches no contract module and no template day, so neither refuses
+    # it, and it may come from any package (badged when not the program's).
+    add = bool(body.get('add'))
     primary_sources = body.get('primary_sources', [])  # Philosophy IDs
-    if body.get('lane_key'):
+    if add:
+        primary_sources = []
+    elif body.get('lane_key'):
         # A composed program's session: its own track's package.
         primary_sources = [body['lane_key'].split('/')[0]]
     modality = body.get('modality')
@@ -2066,12 +2614,15 @@ def _generate_session_inner(body):
         return jsonify({'detail': 'phase is required'}), 400
 
     constraints = dict(body.get('constraints', {}))
+    if 'equipment' in constraints:
+        constraints['equipment'] = _equipment.canonical(constraints['equipment'])
     constraints.setdefault('session_time_minutes', 75)
     constraints.setdefault('training_level', 'intermediate')
     constraints.setdefault('equipment', ['barbell', 'rack', 'plates', 'kettlebell',
                                           'pull_up_bar', 'ruck_pack', 'open_space'])
     constraints.setdefault('injury_flags', [])
     constraints.setdefault('fatigue_state', 'normal')
+    _fill_sex(constraints)
 
     # Build minimal goal-like dict for populate_session (only needs primary_sources)
     goal = {'primary_sources': primary_sources}
@@ -2111,12 +2662,42 @@ def _generate_session_inner(body):
         # Use the archetype's own modality — the request modality is the session being replaced
         modality = forced_arch.get('modality', modality)
 
-    if _stored_contract(body.get('lane_key'), (forced_arch or {}).get('_package')):
+    if not add and _stored_contract(body.get('lane_key'), (forced_arch or {}).get('_package')):
         return jsonify({'detail': 'Regenerate this contract program to replace a module while preserving its progression.'}), 422
-    phase_excluded, deload_keep = _week_phase_rules(body, primary_sources)
+    phase_excluded, deload_keep, ramps = _week_phase_rules(body, primary_sources)
     session_stub = {'modality': modality, 'is_deload': is_deload}
     framework = loader.load_all_frameworks().get(body.get('framework_id')) or {}
-    if forced_arch is None and framework.get('categories'):
+    pick_phase = phase
+    if add and forced_arch is None:
+        # Every session of the kind, named workouts included (the library's
+        # mobility is all ATG's and Kelly Starrett's own days, which the
+        # selector never picks by modality): those the athlete can do as
+        # written, in any phase they name, within the session's time (else the
+        # shortest), one at random so Try Again offers another.
+        import random
+        from src import standard_tests
+        from src.generator import _fits_as_written
+        def _probe_add(a, kind):
+            return populate_session({'modality': a.get('modality')}, goal, constraints, lib['exercises'],
+                                    archetypes_filtered, merged_injury_flags, kind, week_in_phase,
+                                    forced_archetype=a, exercises_by_package=lib.get('exercises_by_package'),
+                                    policy=policy, level_seeds=lib.get('level_seeds'),
+                                    exclude_exercise_ids=phase_excluded, pinned_lifts=None, unfilled_cache={})
+        fits = []
+        for a in archetypes_filtered:
+            if a.get('modality') != modality or standard_tests.is_test_only(a):
+                continue
+            kinds = a.get('applicable_phases') or [phase]
+            kind = phase if phase in kinds else kinds[0]
+            if _fits_as_written(a, constraints, kind, lambda x, k=kind: _probe_add(x, k)):
+                fits.append((a, kind))
+        if fits:
+            minutes = constraints.get('session_time_minutes') or 75
+            pool = [f for f in fits if (f[0].get('duration_estimate_minutes') or 0) <= minutes] \
+                or [min(fits, key=lambda f: f[0].get('duration_estimate_minutes') or 0)]
+            pool = [f for f in pool if f[0].get('id') != body.get('current_archetype_id')] or pool
+            forced_arch, pick_phase = random.choice(pool)
+    if not add and forced_arch is None and framework.get('categories'):
         # A templated day (Horsemen's): another named workout of its category,
         # as written, never a generic session of the modality.
         import random
@@ -2142,7 +2723,7 @@ def _generate_session_inner(body):
     populated = populate_session(
         session_stub, goal, constraints,
         lib['exercises'], archetypes_filtered,
-        merged_injury_flags, phase, week_in_phase,
+        merged_injury_flags, pick_phase, week_in_phase,
         forced_archetype=forced_arch,
         exercises_by_package=lib.get('exercises_by_package'),
         policy=policy,
@@ -2152,14 +2733,20 @@ def _generate_session_inner(body):
     )
 
     if populated.get('archetype') is None:
+        if add:
+            return jsonify({'detail': f"No {modality.replace('_', ' ')} session fits your level, "
+                                      f"equipment, injuries and time."}), 422
         return jsonify({'detail': f'No archetype found for {modality!r} in phase {phase!r}'}), 422
 
     # Apply progression loads
     prog_model = _prog_model_for(modality, body, data)
+    if add and (populated.get('archetype') or {}).get('pool_only'):
+        prog_model = 'as_written'   # another package's named workout: its own load text
     if prog_model == 'as_written' and not (populated.get('archetype') or {}).get('pool_only'):
         # As written means the source's own workouts; any other archetype
         # keeps its modality's model (it has no load text to show).
         prog_model = (data['modalities'].get(modality) or {}).get('progression_model', 'linear_load')
+    track_policy = _week_level_policy(body, goal['primary_sources'])
     for ea in populated.get('exercises', []):
         if ea.get('exercise') is None:
             continue
@@ -2173,6 +2760,9 @@ def _generate_session_inner(body):
             is_deload,
             session_time_minutes=constraints.get('session_time_minutes', 75),
             deload_keep=deload_keep,
+            ramps=ramps,
+            level_policy=_generator._slot_level_policy(populated, ea, track_policy),
+            sex=constraints.get('sex'),
         )
 
     arch = populated.get('archetype', {})
@@ -2181,6 +2771,8 @@ def _generate_session_inner(body):
         'modality':  modality,
         'archetype': arch,
         **({'icon': icon} if icon else {}),
+        # An extra: counted only once done (analytics.context.Context.sessions).
+        **({'added': True, 'provenance': _added_provenance(arch)} if add else {}),
         'is_deload': is_deload,
         **{k: populated[k] for k in ('category', 'category_name', 'pieces', 'warm_up') if populated.get(k)},
         'duration_min': arch.get('duration_estimate_minutes') if arch else None,
@@ -2209,6 +2801,8 @@ def substitute_exercise():
         return jsonify({'detail': 'archetype_id and slot_role are required'}), 400
 
     constraints = dict(body.get('constraints') or {})
+    if 'equipment' in constraints:
+        constraints['equipment'] = _equipment.canonical(constraints['equipment'])
     constraints.setdefault('session_time_minutes', 75)
     constraints.setdefault('training_level', 'intermediate')
     constraints.setdefault('equipment', ['barbell', 'rack', 'plates', 'kettlebell',
@@ -2249,7 +2843,7 @@ def substitute_exercise():
     limit = max(1, min(int(body.get('limit') or 8), 10))
 
     excl_patterns, excl_ids = _selector._injury_exclusions(constraints, data['injury_flags'])
-    phase_excluded, deload_keep = _week_phase_rules(body, goal['primary_sources'])
+    phase_excluded, deload_keep, ramps = _week_phase_rules(body, goal['primary_sources'])
     unlocked = (_selector._get_unlocked(level, lib['exercises'], lib.get('level_seeds'))
                 - excl_ids - phase_excluded)
     _selected, trace = _selector.select_exercise(
@@ -2269,7 +2863,11 @@ def substitute_exercise():
             continue
         load = calculate_load(ex, slot, prog_model, week_in_phase, phase, level, is_deload,
                               session_time_minutes=constraints.get('session_time_minutes', 75),
-                              deload_keep=deload_keep)
+                              deload_keep=deload_keep, ramps=ramps,
+                              level_policy=_generator._slot_level_policy(
+                                  {'archetype': arch}, {'slot': slot},
+                                  _week_level_policy(body, goal['primary_sources'])),
+                              sex=constraints.get('sex'))
         ea = {'slot_index': slot_index, 'slot_role': session_role,
               'slot_type': slot.get('slot_type', 'sets_reps'),
               'exercise': ex, 'slot': slot, 'load': load}
@@ -3052,7 +3650,9 @@ def _sanitize_profile(profile: dict) -> dict:
     """Coerce the nullable fields to their empty values — a client may have
     stored null where a list or object is expected."""
     profile['trainingLevel'] = profile.get('trainingLevel') or 'intermediate'
-    profile['equipment'] = profile.get('equipment') or []
+    # An id a client once stored under another name reads as the one the
+    # engine knows (src/equipment.py: the phone saved `assault_bike`).
+    profile['equipment'] = _equipment.canonical(profile.get('equipment') or [])
     profile['injuryFlags'] = profile.get('injuryFlags') or []
     profile['customInjuryFlags'] = profile.get('customInjuryFlags') or []
     profile['hrConfig'] = profile.get('hrConfig') or {}
@@ -4048,18 +4648,13 @@ def _humanize_role(role: str) -> str:
     return (role or 'Block').replace('_', ' ').title()
 
 
-_EXERCISE_BELLS: dict | None = None
-
-
+@loader.scoped_cache
 def _exercise_bells() -> dict:
     """{exercise id: bells} for the double-bell exercises (exercises.yaml
-    `bells`), read once. A program stored before the field keeps its own copy
-    of each exercise, so the watch reads the library's."""
-    global _EXERCISE_BELLS
-    if _EXERCISE_BELLS is None:
-        index, _ = loader.load_all_exercises()
-        _EXERCISE_BELLS = {i: e['bells'] for i, e in index.items() if e.get('bells')}
-    return _EXERCISE_BELLS
+    `bells`), read once per view of the packages. A program stored before the
+    field keeps its own copy of each exercise, so the watch reads the library's."""
+    index, _ = loader.load_all_exercises()
+    return {i: e['bells'] for i, e in index.items() if e.get('bells')}
 
 
 def _rest_until_hr(load: dict, max_hr: int | None) -> int | None:
@@ -4153,6 +4748,9 @@ def _encode_watch_exercise(ea: dict, modality: str, max_hr: int | None = None) -
         # A test's scored slot ({id, result}); encode_watch_session turns it
         # into the compact `standard` with `?spec=1` and drops it otherwise.
         '_standard': ea.get('standard'),
+        # What the slot logs (src/outcome_fields.py); encode_watch_session
+        # turns it into the step's `logs` with `?spec=1`.
+        '_fields': [] if is_meta else _outcome_fields.fields_for(slot_type, ex),
     }
     # Bells held at once (2 for a double; the weight is one bell's), a hand
     # switch so many seconds into the work, and an interval rest that ends
@@ -4169,6 +4767,11 @@ def _encode_watch_exercise(ea: dict, modality: str, max_hr: int | None = None) -
     scheme = _pick(load, 'rep_scheme', 'repScheme')
     if scheme:
         out['repScheme'] = list(scheme)
+    # An interval whose even rounds are another movement (Wildman's Option C:
+    # two-hand, then hand-to-hand): the watches name each round's.
+    alternate = (load.get('alternate') or {}).get('name')
+    if alternate:
+        out['alternateName'] = alternate
     return out
 
 
@@ -4184,6 +4787,10 @@ def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
     exercise names its spec by `screen`. garmin/tools/gen_watch_demo.py encodes
     the demo programmes through this too, so demo and real sessions agree.
 
+    A step whose screen does not record what its slot logs, and that the
+    watches ask for at the end (the vocabulary's `capture.asked`: a timed
+    kettlebell set's reps), carries it as `logs` (src/outcome_fields.py).
+
     A test's scored slot also carries `standard` — its short name, result
     kind, best and the number for the next level (`standards.watch_standard`,
     from `results`, summarise()'s standards; the entry level without one) —
@@ -4196,6 +4803,7 @@ def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
     exercises = [e for e in (_encode_watch_exercise(ea, modality, max_hr)
                              for ea in (s.get('exercises') or [])) if e is not None]
     refs = [e.pop('_standard', None) for e in exercises]
+    fields = [e.pop('_fields', None) or [] for e in exercises]
     out = {
         'sessionId': session_key,
         'completed': completed,
@@ -4214,6 +4822,13 @@ def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
     icon = _session_icon.session_icon(s)
     if icon:
         out['icon'] = icon
+    # A modality one of the athlete's own packages brings (vocabulary.yaml) is
+    # in no client's compiled table: its display rides with the session, so the
+    # watch draws its colour and label. Never for a commons modality.
+    own = loader.load_vocabulary()['modalities'].get(modality)
+    if own and isinstance(own.get('display'), dict):
+        out['modalityDisplay'] = {k: own['display'][k] for k in ('label', 'short', 'color', 'icon')
+                                  if k in own['display']}
     if spec_level >= 1:
         package_id = _watch_spec.session_package(s)
         table, keys = _watch_spec.session_screens(
@@ -4221,8 +4836,18 @@ def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
             [(e['slotRole'] or None, e['slotType']) for e in exercises],
         )
         by_id = _bd.by_id() if any(refs) else {}
-        for e, key, ref in zip(exercises, keys, refs):
+        vocab = _watch_spec.vocabulary()
+        asked = (vocab.get('capture') or {}).get('asked') or []
+        for e, key, ref, logged in zip(exercises, keys, refs, fields):
             e['screen'] = key
+            # What the watch asks at the end because the screen does not
+            # record it (a timed kettlebell set's reps); a test asks for its
+            # result instead.
+            template = (table.get(key) or {}).get('template')
+            ask = [] if ref else _outcome_fields.logs(
+                logged, asked, (vocab['templates'].get(template) or {}).get('records'))
+            if ask:
+                e['logs'] = ask
             # What was done last time ("24kg × 10"), src/last_time.py.
             if last and e.get('exerciseId') in last:
                 e['last'] = last[e['exerciseId']]
@@ -4288,8 +4913,10 @@ def _watch_progress(user_id: str, program: dict, weeks: list, start: _date, toda
             d = start + _timedelta(days=w_index * 7 + offset)
             d_name = _DAY_NAMES[d.weekday()]
             for i, _s in enumerate((w.get('schedule') or {}).get(d_name) or []):
-                total += 1
                 finished = is_done(w_index, d_name, i)
+                if (_s or {}).get('added') and not finished:
+                    continue   # an extra counts once done (analytics.context.Context.sessions)
+                total += 1
                 done += int(finished)
                 if until is None or d <= until or finished:
                     due += 1
@@ -4427,6 +5054,12 @@ def get_today_session():
                 last=last if level >= 1 else None, results=std_results, sex=std_sex,
                 max_hr=max_hr,
             ))
+            # The session's stable identity in the plan (program_history):
+            # the phone's player uploads by it, so a day with two sessions,
+            # or one from a plan since replaced, lands on its own row.
+            uid = _program_history_uid(vid, w_index, d_name, i)
+            if uid:
+                out[-1]['sessionUid'] = uid
         return out
 
     out_sessions = encode_day(week_index, day_name, spec_level)
@@ -4811,6 +5444,128 @@ def health_confirm_session(session_key: str):
                                    'completedAt': log.get('completedAt') or existing.get('completedAt')})
 
 
+_BRIEFING_DAYS = 180     # how far back an earlier program's logs are read
+_BRIEFING_SESSIONS = 80  # and how many of them, newest first
+
+
+def _briefing_target(weeks: list, start: _date, key: str, on: str | None, today: _date):
+    """(week index, day name, session index, date) of the session a
+    program-relative key names. A spliced program can carry one week number
+    at two indices: `on` (a date) decides, else the first not behind today."""
+    from src.workout_matcher import session_calendar_date
+    hits = []
+    for wi, w in enumerate(weeks):
+        for day, sessions in (w.get('schedule') or {}).items():
+            for i in range(len(sessions or [])):
+                if key in (f"{_pick(w, 'week_number', 'weekNumber')}-{day}-{i}",
+                           f"{_pick(w, 'week_number', 'weekNumber')}-{day}" if len(sessions) == 1 else None):
+                    hits.append((wi, day, i, session_calendar_date(str(start), wi, day)))
+    if on:
+        hits = [h for h in hits if h[3] == on[:10]]
+    ahead = [h for h in hits if h[3] >= str(today)]
+    return (ahead or hits[-1:] or [None])[0]
+
+
+def _briefing_history(user_id: str, weeks: list, start: _date, before: str) -> list[dict]:
+    """Every planned session before a day with its log: this program's, then
+    the logged sessions of earlier programs through the version each was
+    written against (`program_history.session_lookup`), bounded."""
+    from src.workout_matcher import session_calendar_date
+    logs = _health.get_session_logs(user_id) or {}
+    try:
+        matched_uids, matched_keys = _today_match_sets(_health.get_matches(user_id))
+    except Exception as e:  # noqa: BLE001
+        app.logger.warning('briefing: matches failed: %s', e)
+        matched_uids, matched_keys = set(), set()
+    vid = _active_version_or_none(user_id)
+    out, mine = [], set()
+    for wi, w in enumerate(weeks):
+        for day, sessions in (w.get('schedule') or {}).items():
+            on = session_calendar_date(str(start), wi, day)
+            if not on or on >= before:
+                continue
+            for i, s in enumerate(sessions or []):
+                key = f"{_pick(w, 'week_number', 'weekNumber')}-{day}-{i}"
+                uid = _program_history_uid(vid, wi, day, i)
+                mine.add(uid)
+                log = logs.get(key) or (logs.get(key.rsplit('-', 1)[0]) if len(sessions) == 1 else None)
+                out.append({'date': on, 'key': key, 'uid': uid, 'session': s, 'log': log, 'current': True,
+                            'matched': (uid in matched_uids) if uid else (key in matched_keys)})
+    try:
+        from src import program_history
+        floor = (_date.fromisoformat(before) - _timedelta(days=_BRIEFING_DAYS)).isoformat()
+        by_uid = {u: l for u, l in (_health.get_session_logs_by_uid(user_id) or {}).items()
+                  if u not in mine and str(l.get('completedAt') or '')[:10] >= floor}
+        newest = sorted(by_uid, key=lambda u: str(by_uid[u].get('completedAt')), reverse=True)[:_BRIEFING_SESSIONS]
+        for row in program_history.session_lookup(user_id, newest):
+            if str(row['date']) < before:
+                out.append({'date': str(row['date']), 'key': None, 'uid': row['session_uid'],
+                            'session': row['session'], 'log': by_uid.get(row['session_uid']),
+                            'current': False, 'matched': False})
+    except Exception as e:  # noqa: BLE001 — no history (local dev without a database) is this program alone
+        app.logger.warning('briefing: earlier programs not read: %s', e)
+    return out
+
+
+@app.get('/api/sessions/briefing')
+@require_auth
+def session_briefing():
+    """Before a session: today's numbers beside the earlier times the same
+    session was done, where it stands in its cycle and one suggestion — as the
+    session's package says (its briefing.yaml, else the default entries;
+    src/briefing_spec.py), built by src/briefing.py. `?key=` is the
+    program-relative key ('3-Monday-0'), `date=` the day when a week number
+    repeats. 404 when the key names no session of the athlete's program."""
+    from src import briefing as _briefing, briefing_spec as _briefing_spec, training_contract as _tc
+    from src.db import get_user_program
+    key = (request.args.get('key') or '').strip()
+    program = get_user_program(g.user_id)
+    program = _normalize_program_keys(program) if isinstance(program, dict) else {}
+    weeks = (program.get('currentProgram') or {}).get('weeks') or []
+    try:
+        start = _date.fromisoformat(str(program.get('programStartDate'))[:10])
+    except (ValueError, TypeError):
+        start = None
+    tz = None
+    try:
+        tz = (_db.get_user_profile(g.user_id) or {}).get('timezone')
+    except Exception:  # noqa: BLE001
+        pass
+    hit = _briefing_target(weeks, start, key, request.args.get('date'), _today_for(tz)) if key and start else None
+    if not hit:
+        return jsonify({'detail': f'{key!r} is no session of the current program'}), 404
+    wi, day, i, on = hit
+    week = weeks[wi]
+    session = week['schedule'][day][i]
+    package = _watch_spec.session_package(session)
+
+    history = _briefing_history(g.user_id, weeks, start, on)
+    lane_track = str(session.get('lane_key') or '').partition('/')[2] or None
+    by_id = _tc.modules_for(package, [m.get('id') for m in session.get('modules') or []],
+                            lane_track or week.get('track_id'))
+    modules = {mid: {'name': m.get('name'), 'progression': m.get('progression')} for mid, m in by_id.items()}
+
+    standards = {}
+    wanted = {(ea['standard'].get('id') if isinstance(ea['standard'], dict) else ea['standard'])
+              for ea in session.get('exercises') or [] if ea.get('standard')}
+    if wanted:
+        try:
+            sex, std_tz = _standards_context(g.user_id)
+            results = _standards_mod.summarise(
+                _bd.load_benchmarks(), _health.get_performance_logs(g.user_id), sex, std_tz)['standards']
+            known = _bd.by_id()
+            standards = {sid: _standards_mod.watch_standard(known[sid], results.get(sid), sex)
+                         for sid in wanted if sid in known}
+        except Exception as e:  # noqa: BLE001
+            app.logger.warning('briefing: standards failed: %s', e)
+
+    vid = _active_version_or_none(g.user_id)
+    return jsonify(_briefing.build(
+        session, date=on, key=f"{_pick(week, 'week_number', 'weekNumber')}-{day}-{i}",
+        uid=_program_history_uid(vid, wi, day, i), spec=_briefing_spec.spec_for(package),
+        history=history, modules=modules, standards=standards))
+
+
 @app.put('/api/health/sessions/<path:session_key>')
 @require_auth
 def health_upsert_session(session_key: str):
@@ -4958,6 +5713,24 @@ def _keep_days_behind_counted(user_id: str, existing: dict | None, envelope: dic
     except Exception as err:  # noqa: BLE001 — keeping the past must never fail the save
         app.logger.warning('program save: could not keep the elapsed days: %s', err)
         return envelope, 0
+
+
+def _fill_sex(constraints: dict) -> None:
+    """The athlete's sex from the profile, when the request does not say:
+    it picks a written fixed load's women's weight (src/level_scaling.rx_kg).
+    Nothing is added when the profile does not say either."""
+    if constraints.get('sex') in ('male', 'female'):
+        return
+    user_id = getattr(g, 'user_id', None)
+    if not user_id:
+        return
+    try:
+        from src.db import get_user_profile
+        sex = ((get_user_profile(user_id) or {}).get('sex') or '').lower()
+    except Exception:  # noqa: BLE001 — no profile: the written (men's) loads
+        return
+    if sex in ('male', 'female'):
+        constraints['sex'] = sex
 
 
 def _standards_context(user_id: str) -> tuple[str, str | None]:
@@ -5820,19 +6593,15 @@ def _program_analytics_hash(inputs, stored: dict, revision) -> str:
     return _h.sha256('|'.join(parts).encode()).hexdigest()
 
 
-_SPECS_DIGEST: str | None = None
-
-
+@loader.scoped_cache
 def _analytics_specs_digest() -> str:
-    """A digest of every package's analytics.yaml, once per process: the
-    files change only with a deploy, and a deploy starts a new process."""
-    global _SPECS_DIGEST
-    if _SPECS_DIGEST is None:
-        import hashlib as _h
-        import json as _j
-        _SPECS_DIGEST = _h.sha256(_j.dumps(loader.load_analytics_specs(), sort_keys=True,
-                                           default=str).encode()).hexdigest()[:16]
-    return _SPECS_DIGEST
+    """A digest of every package's analytics.yaml the caller sees, once per
+    view: the shipped files change only with a deploy, an athlete's own with
+    an install (invalidate_package_data)."""
+    import hashlib as _h
+    import json as _j
+    return _h.sha256(_j.dumps(loader.load_analytics_specs(), sort_keys=True,
+                              default=str).encode()).hexdigest()[:16]
 
 
 @app.get('/api/analytics/specs')

@@ -2,7 +2,9 @@ id: hm_max_out
 name: Max Out!
 modality: max_strength
 category: strength
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 55
 slots:

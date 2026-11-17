@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Slot intensities",
+  "description": "data/commons/intensities.yaml: each slot intensity and what each reader makes of it (src/intensities.py).",
+  "type": "object",
+  "required": ["intensities"],
+  "additionalProperties": false,
+  "properties": {
+    "intensities": {
+      "type": "object",
+      "propertyNames": {"pattern": "^[a-z0-9_]+$"},
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "zone": {"type": "array", "minItems": 3, "maxItems": 3,
+                   "items": [{"type": "integer", "minimum": 1, "maximum": 5},
+                             {"type": "integer", "minimum": 1, "maximum": 5}, {"type": "string"}]},
+          "main_lift": {"type": "boolean"},
+          "fidelity_bucket": {"enum": ["zone1_2_pct", "zone3_pct", "zone4_5_pct", "max_effort_pct"]},
+          "hr_load": {"type": "boolean"},
+          "recovery_weight": {"type": "number", "minimum": 0},
+          "authoring": {"type": "boolean"}
+        }
+      }
+    }
+  }
+}

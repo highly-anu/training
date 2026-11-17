@@ -1,22 +1,18 @@
 #!/usr/bin/env python3
 """MCP server for the training system package authoring workflow.
 
-Lets AI agents create data/packages/ without reading documentation.
-Query valid values → get templates → write files → validate → fix → done.
+Lets AI agents write a package folder (data/packages/<id>/, or
+TRAINING_PACKAGES_DIR) without reading documentation: query valid values → get
+templates → write files → validate → fix → bring it in with
+tools/add_package.py. Every file is checked by the one validator
+(tools/validate_entities.py — the schemas in docs/schemas/ and the checks
+beside them, for every kind a package carries), and a package by add_package's
+checks too (no id another package declares, every id in the commons).
 
-Setup (Claude Desktop):
-  Windows: %APPDATA%\\Claude\\claude_desktop_config.json
-  {
-    "mcpServers": {
-      "training": {
-        "command": "python",
-        "args": ["C:/Users/65469/programming/training/mcp_server.py"]
-      }
-    }
-  }
-
-Setup (Claude Code CLI):
-  claude mcp add --transport stdio training -- python C:/Users/65469/programming/training/mcp_server.py
+Setup (Claude Code CLI), from the checkout:
+  claude mcp add --transport stdio training -- .venv/bin/python mcp_server.py
+It needs the MCP SDK (`pip install mcp`); without it the tools still import,
+which is how test_authoring.py runs them. docs/mcp/README.md lists the tools.
 """
 
 import json
@@ -28,28 +24,53 @@ from typing import Any
 
 # ── Path setup ────────────────────────────────────────────────────────────────
 ROOT = Path(__file__).resolve().parent
-sys.path.insert(0, str(ROOT / 'src'))
-import loader  # noqa: E402
+sys.path.insert(0, str(ROOT))
+from src import loader  # noqa: E402
+from tools import validate_entities as ve  # noqa: E402
 
-from mcp.server.fastmcp import FastMCP  # noqa: E402
+try:
+    from mcp.server.fastmcp import FastMCP  # noqa: E402
+except ImportError:  # the tools stay importable (test_authoring.py) without the SDK
+    class FastMCP:  # type: ignore[no-redef]
+        def __init__(self, name: str):
+            self.name = name
+
+        def tool(self):
+            return lambda f: f
+
+        def run(self):
+            raise SystemExit('The MCP SDK is not installed: pip install mcp')
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 SCHEMAS_DIR  = ROOT / 'docs' / 'schemas'
-PACKAGES_DIR = ROOT / 'data' / 'packages'
+# The folder the loader reads, so a test or a scratch run can point it elsewhere.
+PACKAGES_DIR = Path(loader._PACKAGES_DIR)
 
-VALID_MODALITIES = [
-    'max_strength', 'strength_endurance', 'relative_strength',
-    'aerobic_base', 'anaerobic_intervals', 'mixed_modal_conditioning',
-    'power', 'mobility', 'movement_skill', 'durability',
-    'combat_sport', 'rehab',
-]
+# Every modality the commons define, by its file (data/commons/modalities).
+VALID_MODALITIES = sorted(p.stem for p in (ROOT / 'data' / 'commons' / 'modalities').glob('*.yaml'))
 
 SCHEMA_FILES = {
-    'philosophy':   'philosophy.schema.json',
-    'framework':    'framework.schema.json',
-    'archetype':    'archetype.schema.json',
-    'exercise':     'exercise.schema.json',
-    'goal_profile': 'goal_profile.schema.json',
+    'philosophy':        'philosophy.schema.json',
+    'framework':         'framework.schema.json',
+    'archetype':         'archetype.schema.json',
+    'exercise':          'exercise.schema.json',
+    'analytics':         'analytics.schema.json',
+    'watch':             'watch.schema.json',
+    'briefing':          'briefing.schema.json',
+    'training_contract': 'training_contract.schema.json',
+    'fidelity':          'fidelity.schema.json',
+    'source_weeks':      'source_weeks.schema.json',
+    'standards':         'standards.schema.json',
+    'vocabulary':        'vocabulary.schema.json',
+}
+# Where each kind lives in a package folder: validate_entities finds its schema
+# (and the checks beside it) by the file's place.
+KIND_PATHS = {
+    'philosophy': 'philosophy.yaml', 'framework': 'frameworks/{id}.yaml',
+    'archetype': 'archetypes/{id}.yaml', 'exercise': 'exercises.yaml',
+    'analytics': 'analytics.yaml', 'watch': 'watch.yaml', 'briefing': 'briefing.yaml', 'training_contract': 'training_contract.yaml',
+    'fidelity': 'fidelity.yaml', 'source_weeks': 'source_weeks.yaml', 'standards': 'standards.yaml',
+    'vocabulary': 'vocabulary.yaml',
 }
 
 mcp = FastMCP("training")
@@ -65,15 +86,6 @@ def _load_schema(entity_type: str) -> dict:
         return json.load(f)
 
 
-def _schema_errors(schema: dict, data: dict) -> list[dict]:
-    """Return list of {path, message} dicts for all validation errors."""
-    errors = []
-    for err in jsonschema.Draft7Validator(schema).iter_errors(data):
-        path = ' -> '.join(str(p) for p in err.absolute_path) or '(root)'
-        errors.append({'path': path, 'message': err.message})
-    return errors
-
-
 # ── Query tools ───────────────────────────────────────────────────────────────
 
 @mcp.tool()
@@ -81,7 +93,7 @@ def list_modality_ids() -> list[str]:
     """
     Return all modality IDs in use across installed packages.
 
-    Includes the 12 core modalities plus any package-specific modalities
+    Includes the commons' modalities plus any a package adds (vocabulary.yaml)
     (e.g. 'swimming', 'cycling') introduced by installed packages.
     Use this as a reference — new packages may define additional modalities
     in their philosophy scope without restriction.
@@ -125,22 +137,31 @@ def list_valid_values(field: str) -> list[str]:
     Supported fields:
       intensity, slot_type, training_level, training_phase, equipment,
       exercise_category, intensity_model, progression_philosophy,
-      movement_pattern, progression_model, exercise_effort, archetype_category
+      movement_pattern, slot_filter_alias, progression_model, exercise_effort,
+      archetype_category, modality, injury_flag, body_region, modality_family
+    (get_package_spec(5) prints them all at once.)
     """
-    # movement_pattern and modality are open — read from installed packages dynamically
+    # What the commons define plus what the installed packages add
+    # (vocabulary.yaml): the same sets the checks hold a package to.
     if field == 'movement_pattern':
-        patterns: set[str] = set()
-        # Seed from commons aliases file
+        from src import recovery_regions
+        regions = recovery_regions.config()
+        return sorted(set(regions['patterns']) | set(regions.get('unloaded') or [])
+                      | set(loader.load_vocabulary()['patterns']))
+    if field == 'slot_filter_alias':
         commons_mp = ROOT / 'data' / 'commons' / 'movement_patterns.yaml'
-        if commons_mp.exists():
-            data = yaml.safe_load(commons_mp.read_text(encoding='utf-8'))
-            for alias_data in data.get('aliases', {}).values():
-                patterns.update(alias_data.get('patterns', []))
-        # Collect from all installed exercises
-        ex_global, _ = loader.load_all_exercises()
-        for ex in ex_global.values():
-            patterns.update(ex.get('movement_patterns', []))
-        return sorted(patterns)
+        return sorted((yaml.safe_load(commons_mp.read_text(encoding='utf-8')) or {}).get('aliases') or {})
+    if field == 'equipment':
+        from src import equipment
+        return equipment.ids()
+    if field == 'injury_flag':
+        return sorted(loader.load_injury_flags())
+    if field == 'body_region':
+        from src import recovery_regions
+        return list(recovery_regions.config()['regions'])
+    if field == 'modality_family':
+        from src.analytics import families
+        return list(families.families())
 
     if field == 'modality':
         return list_modality_ids()
@@ -150,7 +171,6 @@ def list_valid_values(field: str) -> list[str]:
         'slot_type':              ('archetype', ['properties', 'slots', 'items', 'properties', 'slot_type', 'enum']),
         'training_level':         ('archetype', ['properties', 'training_levels', 'items', 'enum']),
         'training_phase':         ('archetype', ['properties', 'applicable_phases', 'items', 'enum']),
-        'equipment':              ('philosophy', ['properties', 'required_equipment', 'items', 'enum']),
         'exercise_category':      ('exercise',   ['properties', 'category', 'enum']),
         'intensity_model':        ('philosophy', ['properties', 'intensity_model', 'enum']),
         'progression_philosophy': ('philosophy', ['properties', 'progression_philosophy', 'enum']),
@@ -161,13 +181,38 @@ def list_valid_values(field: str) -> list[str]:
 
     entry = field_map.get(field)
     if not entry:
-        return [f"Unknown field '{field}'. Supported: {sorted(['movement_pattern', 'modality'] + list(field_map.keys()))}"]
+        return [f"Unknown field '{field}'. Supported: {sorted(['movement_pattern', 'slot_filter_alias', 'modality', 'equipment', 'injury_flag', 'body_region', 'modality_family'] + list(field_map.keys()))}"]
 
     schema_type, path = entry
     node = _load_schema(schema_type)
     for key in path:
         node = node[key]
     return node
+
+
+# ── The spec ──────────────────────────────────────────────────────────────────
+
+@mcp.tool()
+def get_package_spec(section: int | None = None) -> str:
+    """
+    How to write a package: what a package is, what goes in each file, every
+    valid value, how it is checked, and a worked example written from nothing
+    (docs/schemas/PACKAGE_SPEC.md). Read it before writing a file.
+
+    section: one numbered section alone (1 what a package is, 2 the files,
+      3 how a week is built, 4 what goes in each file, 5 valid values, 6 how it
+      is checked, 7 an athlete's own package, 8 common mistakes, 9 the worked
+      example); omit for the whole document.
+
+    The lists are generated from the commons and the schemas, so they are
+    current — unlike any value quoted in a comment or remembered.
+    """
+    from src import package_spec
+    if section is None:
+        return package_spec.text()
+    hit = next((s for s in package_spec.sections() if s['number'] == section), None)
+    return f"## {hit['number']}. {hit['title']}\n\n{hit['text']}" if hit else \
+        f'No section {section}; the spec has {len(package_spec.sections())}.'
 
 
 # ── Template tools ────────────────────────────────────────────────────────────
@@ -187,6 +232,20 @@ def get_package_template(package_name: str) -> dict[str, str]:
     slug = package_name.lower().replace(' ', '_').replace('-', '_')
     title = package_name.replace('_', ' ').title()
 
+    def values(field: str, column: int, width: int = 88) -> str:
+        """A field's valid values as comment lines from `column`, read now
+        (list_valid_values) — never a list typed here, which goes stale."""
+        lines, line = [], ''
+        for value in list_valid_values(field):
+            piece = value if not line else f' | {value}'
+            if line and column + 2 + len(line) + len(piece) > width:
+                lines.append(line + ' |')
+                line, piece = '', value
+            line += piece
+        lines.append(line)
+        pad = ' ' * column
+        return ('\n' + pad).join(f'# {ln}' for ln in lines)
+
     philosophy_yaml = f"""\
 id: {slug}
 name: "{title}"
@@ -194,24 +253,18 @@ core_principles:
   - principle_one        # Non-negotiable beliefs as short slugs
   - principle_two
 scope:
-  - mobility             # Modalities this philosophy claims authority over.
-                         # Valid: max_strength | strength_endurance | relative_strength |
-                         #        aerobic_base | anaerobic_intervals | mixed_modal_conditioning |
-                         #        power | mobility | movement_skill | durability | combat_sport | rehab
+  - mobility             # Modalities this philosophy claims authority over: the
+                         # commons' (get_package_spec(5), list_modality_ids) or
+                         # one this package adds in vocabulary.yaml.
 bias:
   - mobility             # Subset of scope — what this philosophy emphasizes most.
 # avoid_with: []         # Modality IDs that conflict at high volume.
-# required_equipment: [] # barbell | rack | plates | kettlebell | dumbbell | pull_up_bar |
-                         # rings | parallettes | rower | bike | ski_erg | ruck_pack | sandbag |
-                         # sled | tire | medicine_ball | resistance_band | rope | box |
-                         # ghd | jump_rope | open_space
+# required_equipment: [] # list_valid_values('equipment'), or an implement this
+                         # package adds in vocabulary.yaml
 intensity_model: skill_based
-                         # linear_progression | polarized_80_20 | block_periodization |
-                         # autoregulation_rpe | constant_variation | skill_based |
-                         # hard_easy_alternation | operator_readiness
+                         {values('intensity_model', 25)}
 progression_philosophy: complexity_based
-                         # load_based | volume_based | complexity_based | time_based |
-                         # density_based | feel_based | rpm_based | range_based
+                         {values('progression_philosophy', 25)}
 
 primary_track_id: default
                          # Default track. Each track is one way to follow this
@@ -225,9 +278,8 @@ tracks:
     phases:
       - id: {slug}_block
         name: "{title} Block"
-        kind: base           # transition | base | build | specific | peak | taper |
-                             # maintenance | deload | recovery | rehab | post_op | active
-                             # (data/commons/phase_kinds.yaml — the engine keys on this)
+        kind: base           # data/commons/phase_kinds.yaml — the engine keys on this:
+                             {values('training_phase', 29)}
         weeks: 8
         framework_id: {slug}_framework
         focus: "One-line focus"
@@ -254,7 +306,7 @@ name: "{title} Framework"
 source_philosophy: {slug}
 
 goals_served:
-  - mobility             # goal profile IDs or modality IDs
+  - mobility             # modality IDs
 
 sessions_per_week:
   mobility: 3            # modality_id: sessions (0–7)
@@ -266,8 +318,7 @@ intensity_distribution:
   max_effort_pct: 0.0
 
 progression_model: complexity
-                         # linear_load | density | volume_block | complexity | time_to_task |
-                         # intensity_split_shift | rpe_autoregulation | pentathlon_rpm | range_progression
+                         {values('progression_model', 25)}
 
 applicable_when:
   training_level:
@@ -301,29 +352,24 @@ sources: []
 id: {slug}_session
 name: "{title} Session"
 modality: mobility
-           # max_strength | strength_endurance | relative_strength | aerobic_base |
-           # anaerobic_intervals | mixed_modal_conditioning | power | mobility |
-           # movement_skill | durability | combat_sport | rehab
+           # list_modality_ids(): the commons', or one this package adds in vocabulary.yaml
 category: movement_skill
-           # strength | conditioning | movement_skill | gpp_durability |
-           # kettlebell | recovery | rehab | combat_sport
+           {values('archetype_category', 11)}
 training_levels:
   - novice
   - intermediate
   - advanced
   - elite
 duration_estimate_minutes: 45
-# applicable_phases: []  # base | build | peak | taper | deload | maintenance | rehab | recovery
+# applicable_phases: []  # the phase kinds it suits (as `kind` in philosophy.yaml); none listed = every kind
 
 slots:
   - role: warmup
     slot_type: time_domain
-               # sets_reps | time_domain | distance | amrap | amrap_movement |
-               # emom | for_time | rounds_for_time | skill_practice | static_hold
+               {values('slot_type', 15)}
     duration_minutes: 10
     intensity: low
-               # max | max_effort | heavy | submaximal | progressing | moderate |
-               # medium | light | low | high | bodyweight | zone1 | zone2 | zone3 | zone4 | zone4_5 | zone5
+               {values('intensity', 15)}
     exercise_filter:
       category: mobility
 
@@ -342,23 +388,17 @@ sources: []
 exercises:
   - id: {slug}_example
     name: "Example Exercise"
-    category: mobility   # barbell | kettlebell | bodyweight | aerobic | loaded_carry |
-                         # carries | sandbag | mobility | skill | rehab | accessory
+    category: mobility   {values('exercise_category', 25)}
     modality:
       - mobility         # one or more valid modality IDs
     equipment:
-      - none             # barbell | rack | plates | kettlebell | dumbbell | pull_up_bar |
-                         # rings | parallettes | rower | bike | ski_erg | ruck_pack |
-                         # sandbag | sled | tire | medicine_ball | resistance_band |
-                         # rope | box | ghd | jump_rope | open_space | pool | none
-    effort: low          # low | medium | high | max
+      - none             # list_valid_values('equipment'), `none`, or an implement
+                         # this package adds in vocabulary.yaml
+    effort: low          {values('exercise_effort', 25)}
     bilateral: true
     movement_patterns:
-      - isometric        # hip_hinge | squat | horizontal_push | horizontal_pull |
-                         # vertical_push | vertical_pull | loaded_carry | rotation |
-                         # hip_flexion | knee_extension | locomotion | ballistic |
-                         # olympic_lift | isometric | aerobic_monostructural |
-                         # farmer_carry | rack_carry | step_up
+      - isometric        # list_valid_values('movement_pattern'), or a pattern this
+                         # package adds in vocabulary.yaml
     # requires: []
     # unlocks: []
     # contraindicated_with: []
@@ -453,170 +493,104 @@ slots:
 # ── Validation tools ──────────────────────────────────────────────────────────
 
 @mcp.tool()
-def validate_yaml(entity_type: str, yaml_content: str) -> dict:
+def validate_yaml(entity_type: str, yaml_content: str, package_name: str | None = None) -> dict:
     """
-    Validate a YAML string against the JSON schema for entity_type.
+    Validate a YAML string as one package file of entity_type, with the same
+    checks the push gates run (tools/validate_entities.py).
 
-    entity_type: philosophy | framework | archetype | exercise | goal_profile
+    entity_type: philosophy | framework | archetype | exercise | analytics |
+      watch | training_contract | fidelity | source_weeks | standards
+    package_name: the package it belongs to, when a check reads its other
+      files (an archetype's standard is checked against what it borrows).
 
-    For exercises, pass the full file content (with top-level 'exercises:' key)
-    and each item will be validated individually.
+    For exercises, pass the full file content (with its top-level 'exercises:' key).
 
     Returns: {"valid": bool, "errors": [{"path": str, "message": str}]}
     """
+    rel = KIND_PATHS.get(entity_type)
+    if not rel:
+        return {'valid': False, 'errors': [{'path': '(setup)', 'message':
+                f"Unknown entity_type '{entity_type}'. Valid: {sorted(KIND_PATHS)}"}]}
+    if not package_name and entity_type == 'philosophy':
+        try:   # a philosophy names its package
+            package_name = (yaml.safe_load(yaml_content) or {}).get('id')
+        except yaml.YAMLError:
+            pass
+    return _validate_text(package_name or '_draft', rel.format(id='draft'), yaml_content)
+
+
+def _validate_text(package_name: str, relative_path: str, content: str) -> dict:
+    """The content checked as the file it would be: written into a scratch copy
+    of its package (whose other files some checks read — a philosophy's
+    frameworks, an archetype's borrows) and run through
+    validate_entities.validate_file."""
+    import shutil
+    import tempfile
     try:
-        data = yaml.safe_load(yaml_content)
+        yaml.safe_load(content)
     except yaml.YAMLError as e:
         return {'valid': False, 'errors': [{'path': '(yaml parse)', 'message': str(e)}]}
-
-    if not isinstance(data, dict):
-        return {'valid': False, 'errors': [{'path': '(root)', 'message': 'YAML must be a mapping, not a list or scalar.'}]}
-
-    try:
-        schema = _load_schema(entity_type)
-    except ValueError as e:
-        return {'valid': False, 'errors': [{'path': '(setup)', 'message': str(e)}]}
-
-    # Exercise files wrap items in {exercises: [...]}
-    if entity_type == 'exercise' and 'exercises' in data:
-        all_errors = []
-        for i, ex in enumerate(data['exercises']):
-            for err in _schema_errors(schema, ex):
-                err['path'] = f'exercises[{i}] -> {err["path"]}'
-                all_errors.append(err)
-        return {'valid': len(all_errors) == 0, 'errors': all_errors}
-
-    errors = _schema_errors(schema, data)
-    return {'valid': len(errors) == 0, 'errors': errors}
+    with tempfile.TemporaryDirectory() as tmp:
+        pkg = Path(tmp) / 'packages' / package_name
+        if (PACKAGES_DIR / package_name).is_dir():
+            shutil.copytree(PACKAGES_DIR / package_name, pkg)
+        target = pkg / relative_path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if not (pkg / 'philosophy.yaml').exists():
+            (pkg / 'philosophy.yaml').write_text(f'id: {package_name}\n', encoding='utf-8')
+        target.write_text(content, encoding='utf-8')
+        errors = ve.validate_file(str(target), verbose=False) or []
+    return {'valid': not errors, 'errors': [{'path': relative_path, 'message': e} for e in errors]}
 
 
 @mcp.tool()
-def validate_package(package_path: str) -> dict:
+def validate_package(package_path: str, smoke: bool = True) -> dict:
     """
-    Validate all files in a package directory.
+    Validate a package folder with the gates' own checks, in order
+    (src/package_gate.check_package — the stages stop at the first that finds
+    a problem):
+
+      files       a philosophy.yaml whose id is the folder's name
+      schema      every file against its schema and the checks beside it
+                  (tools/validate_entities.py: tracks and phases, templates and
+                  pools, tests and standards, contracts, analytics, watch
+                  screens, fidelity)
+      ids         the files a package needs, no id another package declares,
+                  every id in the commons (src/portability.py)
+      smoke       every phase of every track validates and generates on the
+                  framework it names, and places its tests
+      provenance  nothing in those programs from outside the package and what
+                  it borrows
 
     package_path: package name ('yoga') or path ('data/packages/yoga').
+    smoke: False stops before generating.
 
-    Checks:
-      - philosophy.yaml: schema conformance
-      - frameworks/*.yaml: schema conformance, source_philosophy cross-ref
-      - archetypes/**/*.yaml: schema conformance, ID uniqueness across packages
-      - exercises.yaml: schema conformance per item, ID uniqueness across packages
+    A folder outside the packages directory is checked as far as `schema`;
+    the rest is listed in `skipped`. A modality in the philosophy's scope that
+    no archetype serves is a warning.
 
-    Returns: {"valid": bool, "files": {filename: [error strings]}}
+    Then bring it in: .venv/bin/python tools/add_package.py <id> (--check first).
+
+    Returns: {"valid": bool, "files": {filename: [error strings]},
+              "problems": [{stage, code, file, message}], "warnings": [...],
+              "ran": [stage], "skipped": [{stage, why}], "tracks": [...]}
+    `files` groups the same findings by file ('(package)' for one that names
+    none; a warning starts 'Warning:').
     """
+    from src import package_gate
     pkg_dir = PACKAGES_DIR / package_path if '/' not in package_path and '\\' not in package_path \
               else ROOT / package_path
     if not pkg_dir.exists():
         return {'valid': False, 'files': {'(setup)': [f'Directory not found: {pkg_dir}']}}
 
+    result = package_gate.check_package(str(pkg_dir), smoke=smoke)
     file_errors: dict[str, list[str]] = {}
-
-    def add_err(filename: str, msg: str) -> None:
-        file_errors.setdefault(filename, []).append(msg)
-
-    # Collect IDs from all OTHER installed packages (for conflict detection)
-    pkg_name = pkg_dir.name
-    other_arch_ids: set[str] = set()
-    for a in loader.load_all_archetypes():
-        if a.get('_package') != pkg_name:
-            other_arch_ids.add(a['id'])
-
-    ex_global, ex_by_pkg = loader.load_all_exercises()
-    other_exercise_ids: set[str] = {
-        ex_id for pkg_id, pkg_exs in ex_by_pkg.items()
-        if pkg_id != pkg_name
-        for ex_id in pkg_exs
-    }
-
-    existing_phil_ids = {p['id'] for p in loader.load_philosophies()}
-
-    # ── philosophy.yaml ──────────────────────────────────────────────────────
-    phil_file = pkg_dir / 'philosophy.yaml'
-    own_phil_id: str | None = None
-    if not phil_file.exists():
-        add_err('philosophy.yaml', 'File not found — required.')
-    else:
-        try:
-            phil_data = yaml.safe_load(phil_file.read_text(encoding='utf-8'))
-            own_phil_id = phil_data.get('id')
-            for err in _schema_errors(_load_schema('philosophy'), phil_data):
-                add_err('philosophy.yaml', f"{err['path']}: {err['message']}")
-        except Exception as e:
-            add_err('philosophy.yaml', f'Parse error: {e}')
-
-    # ── frameworks/*.yaml ────────────────────────────────────────────────────
-    for fw_path in sorted(pkg_dir.glob('frameworks/*.yaml')):
-        rel = f'frameworks/{fw_path.name}'
-        try:
-            fw_data = yaml.safe_load(fw_path.read_text(encoding='utf-8'))
-            for err in _schema_errors(_load_schema('framework'), fw_data):
-                add_err(rel, f"{err['path']}: {err['message']}")
-            sp = fw_data.get('source_philosophy')
-            if sp and sp not in existing_phil_ids and sp != own_phil_id:
-                add_err(rel, f"source_philosophy '{sp}' does not match any installed philosophy ID.")
-        except Exception as e:
-            add_err(rel, f'Parse error: {e}')
-
-    # ── archetypes/**/*.yaml ─────────────────────────────────────────────────
-    seen_arch_ids: set[str] = set()
-    for arch_path in sorted(pkg_dir.glob('archetypes/**/*.yaml')):
-        rel = arch_path.relative_to(pkg_dir).as_posix()
-        try:
-            arch_data = yaml.safe_load(arch_path.read_text(encoding='utf-8'))
-            for err in _schema_errors(_load_schema('archetype'), arch_data):
-                add_err(rel, f"{err['path']}: {err['message']}")
-            arch_id = arch_data.get('id')
-            if arch_id in other_arch_ids:
-                add_err(rel, f"Archetype ID '{arch_id}' already exists in another package.")
-            if arch_id in seen_arch_ids:
-                add_err(rel, f"Archetype ID '{arch_id}' is duplicated within this package.")
-            seen_arch_ids.add(arch_id)
-        except Exception as e:
-            add_err(rel, f'Parse error: {e}')
-
-    # ── exercises.yaml ───────────────────────────────────────────────────────
-    ex_file = pkg_dir / 'exercises.yaml'
-    if ex_file.exists():
-        try:
-            ex_data = yaml.safe_load(ex_file.read_text(encoding='utf-8'))
-            schema = _load_schema('exercise')
-            seen_ex_ids: set[str] = set()
-            for i, ex in enumerate(ex_data.get('exercises', [])):
-                for err in _schema_errors(schema, ex):
-                    add_err('exercises.yaml', f"exercises[{i}] -> {err['path']}: {err['message']}")
-                ex_id = ex.get('id')
-                if ex_id in other_exercise_ids:
-                    add_err('exercises.yaml', f"Exercise ID '{ex_id}' already exists in another package.")
-                if ex_id in seen_ex_ids:
-                    add_err('exercises.yaml', f"Exercise ID '{ex_id}' is duplicated within this file.")
-                seen_ex_ids.add(ex_id)
-        except Exception as e:
-            add_err('exercises.yaml', f'Parse error: {e}')
-
-    # ── Modality coverage check ──────────────────────────────────────────────
-    # Warn if a modality appears in philosophy scope but has no archetype.
-    if phil_file.exists() and own_phil_id:
-        try:
-            phil_data = yaml.safe_load(phil_file.read_text(encoding='utf-8'))
-            scope_modalities = set(phil_data.get('scope', []))
-            arch_modalities = set()
-            for arch_path in pkg_dir.glob('archetypes/**/*.yaml'):
-                try:
-                    arch_data = yaml.safe_load(arch_path.read_text(encoding='utf-8'))
-                    if arch_data.get('modality'):
-                        arch_modalities.add(arch_data['modality'])
-                except Exception:
-                    pass
-            uncovered = scope_modalities - arch_modalities
-            for mod in sorted(uncovered):
-                add_err('philosophy.yaml',
-                        f"Warning: modality '{mod}' is in scope but has no archetype in this package.")
-        except Exception:
-            pass
-
-    valid = not any(file_errors.values())
-    return {'valid': valid, 'files': file_errors}
+    for p in result['problems']:
+        file_errors.setdefault(p['file'] or '(package)', []).append(p['message'])
+    for w in result['warnings']:
+        file_errors.setdefault(w['file'] or '(package)', []).append(f"Warning: {w['message']}.")
+    return {'valid': not result['problems'], 'files': file_errors,
+            **{k: result[k] for k in ('problems', 'warnings', 'ran', 'skipped', 'tracks')}}
 
 
 @mcp.tool()
@@ -624,7 +598,7 @@ def check_id_available(entity_type: str, proposed_id: str) -> dict:
     """
     Check whether a proposed ID is already in use across all installed packages.
 
-    entity_type: philosophy | framework | archetype | exercise
+    entity_type: philosophy | framework | archetype | exercise | standard
     Returns: {"available": bool, "conflict": str | null}
     """
     if entity_type == 'philosophy':
@@ -636,8 +610,12 @@ def check_id_available(entity_type: str, proposed_id: str) -> dict:
     elif entity_type == 'exercise':
         ex_global, _ = loader.load_all_exercises()
         ids = {k: v.get('name', '') for k, v in ex_global.items()}
+    elif entity_type == 'standard':
+        from src.analytics import benchmarks_data
+        ids = {b['id']: b.get('name', '') for b in benchmarks_data.load_benchmarks()}
     else:
-        return {'available': False, 'conflict': f"Unknown entity_type '{entity_type}'. Valid: philosophy | framework | archetype | exercise"}
+        return {'available': False, 'conflict': f"Unknown entity_type '{entity_type}'. "
+                'Valid: philosophy | framework | archetype | exercise | standard'}
 
     if proposed_id in ids:
         return {'available': False, 'conflict': f"'{proposed_id}' is already used by: {ids[proposed_id]}"}
@@ -758,12 +736,12 @@ def write_package_file(
     pkg_dir = PACKAGES_DIR / package_name
     target = (pkg_dir / relative_path).resolve()
 
-    # Reject any path that escapes data/packages/
+    # Reject any path that escapes the packages folder
     try:
         target.relative_to(PACKAGES_DIR.resolve())
     except ValueError:
         return {'written': False, 'path': str(target),
-                'errors': ['Path escapes data/packages/ — write rejected.']}
+                'errors': ['Path escapes the packages folder — write rejected.']}
 
     # Refuse to overwrite without explicit flag
     if target.exists() and not overwrite:
@@ -776,25 +754,11 @@ def write_package_file(
             ],
         }
 
-    # Infer entity type from path for validation
-    name = target.name
-    rel = relative_path.replace('\\', '/')
-    if name == 'philosophy.yaml':
-        entity_type = 'philosophy'
-    elif 'frameworks/' in rel:
-        entity_type = 'framework'
-    elif 'archetypes/' in rel:
-        entity_type = 'archetype'
-    elif name == 'exercises.yaml':
-        entity_type = 'exercise'
-    else:
-        entity_type = None
-
-    # Validate before writing
-    if entity_type:
-        result = validate_yaml(entity_type, content)
-        if not result['valid']:
-            return {'written': False, 'path': str(target), 'errors': result['errors']}
+    # Validate as the file it will be, every kind a package carries (a file
+    # the validator has no schema for — media, level seeds — is written as is)
+    result = _validate_text(package_name, relative_path.replace('\\', '/'), content)
+    if not result['valid']:
+        return {'written': False, 'path': str(target), 'errors': result['errors']}
 
     # Write
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -805,14 +769,16 @@ def write_package_file(
 @mcp.tool()
 def delete_package(package_name: str) -> dict:
     """
-    Delete an entire package directory from data/packages/.
+    Delete an entire package directory from the packages folder.
 
-    This is irreversible — use only when replacing a package wholesale.
-    The legacy backup at data/legacy/ is unaffected.
+    Irreversible outside version control — use only when replacing a package
+    wholesale; a shipped package is removed in a branch, where git keeps it.
 
     Returns: {"deleted": bool, "path": str, "error": str | null}
     """
     pkg_dir = PACKAGES_DIR / package_name
+    if pkg_dir.resolve().parent != PACKAGES_DIR.resolve():
+        return {'deleted': False, 'path': str(pkg_dir), 'error': 'Not a package folder — delete rejected.'}
     if not pkg_dir.exists():
         return {'deleted': False, 'path': str(pkg_dir),
                 'error': f"Package '{package_name}' not found."}

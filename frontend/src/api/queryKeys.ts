@@ -40,13 +40,24 @@ export const queryKeys = {
   health: {
     recentSessions: ['health', 'recentSessions'] as const,
   },
+  briefing: (sessionKey: string) => ['briefing', sessionKey] as const,
   analytics: {
     program: ['analytics', 'program'] as const,
     development: ['analytics', 'development'] as const,
     specs: ['analytics', 'specs'] as const,
   },
+  dev: {
+    portability: ['dev', 'portability'] as const,
+    modelMap: ['dev', 'model-map'] as const,
+    builds: ['dev', 'builds'] as const,
+    build: (id: string) => ['dev', 'builds', id] as const,
+  },
   philosophies: {
     all: ['philosophies'] as const,
+  },
+  methods: {
+    all: ['methods'] as const,
+    build: (id: string) => ['methods', 'build', id] as const,
   },
   frameworks: {
     all: ['frameworks'] as const,

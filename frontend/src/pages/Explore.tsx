@@ -1,9 +1,12 @@
+import { ScrollPanel } from '@/components/layout/ScrollPanel'
+import { EFFORT_HEX, FALLBACK_HEX, NEUTRAL_HEX, RECOVERY_COST_HEX, SCALE_BADGE, TIER_HEX } from '@/lib/dataColors'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { SubTabs } from '@/components/layout/SubTabs'
+import { LoadingState, FailedState } from '@/components/shared/states'
 import { useState, useMemo } from 'react'
-import { useSearchParams, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { useSearchParams, useNavigate, useLocation } from 'react-router-dom'
+import { Page } from '@/components/layout/Page'
 import { ArrowLeft, Columns3, Compass, Search, X, Wand2 } from 'lucide-react'
-import { LoadingCard } from '@/components/shared/LoadingCard'
-import { ErrorBanner } from '@/components/shared/ErrorBanner'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
 import { PrereqChain } from '@/components/exercises/PrereqChain'
 import { ExerciseAnimationPanel } from '@/components/exercises/ExerciseAnimationPanel'
@@ -71,11 +74,7 @@ function prettify(id: string) {
 }
 
 function RecoveryCostBadge({ cost }: { cost: 'low' | 'medium' | 'high' }) {
-  const styles = {
-    low: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300',
-    medium: 'bg-amber-500/15 text-amber-700 dark:text-amber-300',
-    high: 'bg-red-500/15 text-red-700 dark:text-red-300',
-  }
+  const styles = SCALE_BADGE
   return (
     <span className={cn('inline-block px-1.5 py-0.5 rounded text-[10px] font-medium', styles[cost])}>
       {cost} recovery
@@ -145,38 +144,6 @@ function useLineage(topic: LinkedTopic, id: string) {
   return useMemo(() => (index ? lineageOf(index, topic, id, names, colors) : null), [index, topic, id, names, colors])
 }
 
-function TopicSelector({
-  active,
-  onChange,
-}: {
-  active: Topic
-  onChange: (t: Topic) => void
-}) {
-  return (
-    <div className="flex items-center gap-1">
-      {TOPICS.map((tab) => {
-        const isActive = tab.id === active
-        return (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => onChange(tab.id)}
-            className={cn(
-              'flex items-center gap-1.5 px-3 py-1 text-xs rounded border transition-colors',
-              isActive
-                ? 'bg-primary/15 border-primary/40 text-primary'
-                : 'border-border text-muted-foreground hover:bg-muted',
-            )}
-          >
-            <tab.Icon className="size-3 shrink-0" />
-            {tab.label}
-          </button>
-        )
-      })}
-    </div>
-  )
-}
-
 // ─── Philosophy card ──────────────────────────────────────────────────────────
 
 // ─── Philosophy overview (landing) ───────────────────────────────────────────
@@ -202,7 +169,7 @@ function PhilosophyOverview({ philosophies, onSelect, onCompare }: {
   }, [philosophies, sort, matrix])
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="max-w-3xl mx-auto px-8 py-12 space-y-8">
 
         <div className="space-y-3">
@@ -316,7 +283,7 @@ function PhilosophyOverview({ philosophies, onSelect, onCompare }: {
           </div>
         </div>
       )}
-    </div>
+    </ScrollPanel>
   )
 }
 
@@ -338,7 +305,7 @@ function ModalityOverview({
   }, [modalities, sort, matrix])
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="max-w-2xl mx-auto px-8 py-12 space-y-8">
         <div className="space-y-3">
           <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium">
@@ -357,7 +324,7 @@ function ModalityOverview({
         <div className="grid grid-cols-3 gap-2">
           {sorted.map((mod) => {
             const color = MODALITY_COLORS[mod.id]
-            const hex = color?.hex ?? '#6366f1'
+            const hex = color?.hex ?? FALLBACK_HEX
             return (
               <button
                 key={mod.id}
@@ -383,14 +350,14 @@ function ModalityOverview({
           Select a modality to explore its full structure
         </p>
       </div>
-    </div>
+    </ScrollPanel>
   )
 }
 
 // ─── Modality signature — intensity strip + volume / session range bars ────────
 
 function ModalitySignature({ mod, allArchetypes }: { mod: Modality; allArchetypes: Archetype[] }) {
-  const hex = MODALITY_COLORS[mod.id]?.hex ?? '#6366f1'
+  const hex = MODALITY_COLORS[mod.id]?.hex ?? FALLBACK_HEX
 
   // Which HR zones are active for this modality
   const activeZones = useMemo(() => {
@@ -417,7 +384,7 @@ function ModalitySignature({ mod, allArchetypes }: { mod: Modality; allArchetype
   }, [mod])
 
   const recoveryLevel = { low: 1, medium: 2, high: 3 }[mod.recovery_cost] ?? 1
-  const recoveryColor = { low: '#10b981', medium: '#f59e0b', high: '#ef4444' }[mod.recovery_cost]
+  const recoveryColor = RECOVERY_COST_HEX[mod.recovery_cost]
 
   const VOL_MAX = 600
   const volMinPct = (mod.min_weekly_minutes / VOL_MAX) * 100
@@ -443,7 +410,7 @@ function ModalitySignature({ mod, allArchetypes }: { mod: Modality; allArchetype
               <div key={n} className="size-2.5 rounded-full transition-all"
                 style={{
                   backgroundColor: n <= recoveryLevel ? recoveryColor : 'transparent',
-                  border: `1px solid ${n <= recoveryLevel ? recoveryColor : '#334155'}`,
+                  border: `1px solid ${n <= recoveryLevel ? recoveryColor : 'var(--border)'}`,
                   opacity: n <= recoveryLevel ? (n === recoveryLevel ? 1 : 0.6) : 0.25,
                 }} />
             ))}
@@ -461,10 +428,10 @@ function ModalitySignature({ mod, allArchetypes }: { mod: Modality; allArchetype
               <div key={def.id} className="flex-1 flex items-center justify-center rounded py-1.5 transition-all"
                 style={{
                   backgroundColor: active ? `${hex}cc` : 'transparent',
-                  border: `1px solid ${active ? hex : '#1e293b'}`,
+                  border: `1px solid ${active ? hex : 'var(--border)'}`,
                 }}>
                 <span className="text-[9px] font-mono font-medium"
-                  style={{ color: active ? '#fff' : '#334155' }}>
+                  style={{ color: active ? 'var(--foreground)' : 'var(--muted-foreground)' }}>
                   {def.label}
                 </span>
               </div>
@@ -523,8 +490,8 @@ function ModalitySignature({ mod, allArchetypes }: { mod: Modality; allArchetype
               className="px-1.5 py-0.5 rounded text-[9px] font-mono transition-colors"
               style={{
                 backgroundColor: mod.session_position === pos ? `${hex}20` : 'transparent',
-                color: mod.session_position === pos ? hex : '#334155',
-                border: `1px solid ${mod.session_position === pos ? `${hex}50` : '#1e293b'}`,
+                color: mod.session_position === pos ? hex : 'var(--muted-foreground)',
+                border: `1px solid ${mod.session_position === pos ? `${hex}50` : 'var(--border)'}`,
               }}>
               {pos}
             </span>
@@ -559,7 +526,7 @@ function ModalityDetail({
   onBack: () => void
 }) {
   const color = MODALITY_COLORS[mod.id]
-  const hex = color?.hex ?? '#6366f1'
+  const hex = color?.hex ?? FALLBACK_HEX
 
   const featuredIn = useMemo(
     () => philosophies.filter(p => p.bias.includes(mod.id)),
@@ -573,7 +540,7 @@ function ModalityDetail({
   )
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="px-4 py-4 space-y-4">
         <button
           onClick={onBack}
@@ -654,13 +621,13 @@ function ModalityDetail({
             <div className="grid grid-cols-2 gap-3">
               {mod.compatible_in_session_with.length > 0 && (
                 <div className="space-y-1.5">
-                  <p className="text-[10px] text-emerald-700/70 dark:text-emerald-300/70 font-medium">Pairs well with</p>
+                  <p className="text-[10px] text-good/70 font-medium">Pairs well with</p>
                   <div className="flex flex-wrap gap-1">
                     {mod.compatible_in_session_with.map((id) => {
                       const c = MODALITY_COLORS[id]
                       return (
-                        <span key={id} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
-                          <span className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: c?.hex ?? '#10b981' }} />
+                        <span key={id} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-good/10 text-good border border-good/20">
+                          <span className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: c?.hex ?? NEUTRAL_HEX }} />
                           {c?.label ?? prettify(id)}
                         </span>
                       )
@@ -670,13 +637,13 @@ function ModalityDetail({
               )}
               {mod.incompatible_in_session_with.length > 0 && (
                 <div className="space-y-1.5">
-                  <p className="text-[10px] text-red-700/70 dark:text-red-300/70 font-medium">Avoid combining</p>
+                  <p className="text-[10px] text-bad/70 font-medium">Avoid combining</p>
                   <div className="flex flex-wrap gap-1">
                     {mod.incompatible_in_session_with.map((id) => {
                       const c = MODALITY_COLORS[id]
                       return (
-                        <span key={id} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-red-500/10 text-red-700 dark:text-red-300 border border-red-500/20">
-                          <span className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: c?.hex ?? '#ef4444' }} />
+                        <span key={id} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-bad/10 text-bad border border-bad/20">
+                          <span className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: c?.hex ?? NEUTRAL_HEX }} />
                           {c?.label ?? prettify(id)}
                         </span>
                       )
@@ -756,15 +723,11 @@ function ModalityDetail({
           accentHex={hex}
         />
       </div>
-    </div>
+    </ScrollPanel>
   )
 }
 
 // ─── Exercise components ──────────────────────────────────────────────────────
-
-const EX_EFFORT_COLORS: Record<string, string> = {
-  low: '#10b981', medium: '#f59e0b', high: '#f97316', max: '#ef4444',
-}
 
 function ExerciseLanding({ allExercises, onSelect }: { allExercises: Exercise[]; onSelect: (e: Exercise) => void }) {
   const [search, setSearch] = useState('')
@@ -797,7 +760,7 @@ function ExerciseLanding({ allExercises, onSelect }: { allExercises: Exercise[];
   }
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="max-w-3xl mx-auto px-8 py-12 space-y-8">
 
         <div className="space-y-3">
@@ -817,7 +780,7 @@ function ExerciseLanding({ allExercises, onSelect }: { allExercises: Exercise[];
         <div className="space-y-1.5">
           <div className="flex flex-wrap gap-2">
             {byCat.map(([cat, count]) => {
-              const color = EX_CATEGORY_COLORS[cat] ?? '#6366f1'
+              const color = EX_CATEGORY_COLORS[cat] ?? FALLBACK_HEX
               const active = activeCategories.has(cat)
               return (
                 <button
@@ -872,7 +835,7 @@ function ExerciseLanding({ allExercises, onSelect }: { allExercises: Exercise[];
         {/* Exercise list */}
         <div className="space-y-1">
           {displayed.map((ex) => {
-            const color = EX_CATEGORY_COLORS[ex.category] ?? '#6366f1'
+            const color = EX_CATEGORY_COLORS[ex.category] ?? FALLBACK_HEX
             return (
               <button
                 key={ex.id}
@@ -890,7 +853,7 @@ function ExerciseLanding({ allExercises, onSelect }: { allExercises: Exercise[];
                     {ex.movement_patterns.slice(0, 2).map(p => (
                       <span key={p}>{p.replace(/_/g, ' ')}</span>
                     ))}
-                    <span className={cn(EX_EFFORT_COLORS[ex.effort])}>{ex.effort}</span>
+                    <span style={{ color: EFFORT_HEX[ex.effort] }}>{ex.effort}</span>
                   </div>
                 </div>
               </button>
@@ -902,7 +865,7 @@ function ExerciseLanding({ allExercises, onSelect }: { allExercises: Exercise[];
           Select an exercise to explore its structure
         </p>
       </div>
-    </div>
+    </ScrollPanel>
   )
 }
 
@@ -924,7 +887,7 @@ function ExercisePanel({
     [index, exercise.id, exercise.scaling_down, names, colors],
   )
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="px-6 py-5 space-y-5">
 
         <button
@@ -1051,7 +1014,7 @@ function ExercisePanel({
         />
 
       </div>
-    </div>
+    </ScrollPanel>
   )
 }
 
@@ -1060,7 +1023,7 @@ function ExercisePanel({
 // ─── Archetype landing card ───────────────────────────────────────────────────
 
 function ArchetypeLandingCard({ archetype, onSelect }: { archetype: Archetype; onSelect: () => void }) {
-  const catColor = ARCH_CAT_COLORS[archetype.category] ?? '#94a3b8'
+  const catColor = ARCH_CAT_COLORS[archetype.category] ?? NEUTRAL_HEX
   const modColor = MODALITY_COLORS[archetype.modality as ModalityId]
 
   return (
@@ -1138,7 +1101,7 @@ function ArchetypeLanding({ archetypes, onSelect }: {
   }, [filtered, sort, matrix])
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="max-w-3xl mx-auto px-8 py-12 space-y-8">
 
         <div className="space-y-3">
@@ -1158,7 +1121,7 @@ function ArchetypeLanding({ archetypes, onSelect }: {
         <div className="space-y-1.5">
           <div className="flex flex-wrap gap-2">
             {Object.entries(catCounts).map(([cat, count]) => {
-              const color = ARCH_CAT_COLORS[cat] ?? '#94a3b8'
+              const color = ARCH_CAT_COLORS[cat] ?? NEUTRAL_HEX
               const active = activeCategories.has(cat)
               return (
                 <button
@@ -1199,7 +1162,7 @@ function ArchetypeLanding({ archetypes, onSelect }: {
           Select an archetype to explore its full structure
         </p>
       </div>
-    </div>
+    </ScrollPanel>
   )
 }
 
@@ -1212,7 +1175,7 @@ function ArchetypeDetail({ archetype, allExercises, allArchetypes, onSelect, onB
   onSelect: (id: string) => void
   onBack: () => void
 }) {
-  const catColor = ARCH_CAT_COLORS[archetype.category] ?? '#94a3b8'
+  const catColor = ARCH_CAT_COLORS[archetype.category] ?? NEUTRAL_HEX
   const lineage = useLineage('archetypes', archetype.id)
   const { data: specs } = useAnalyticsSpecs()
   const trackedBy = useMemo(
@@ -1221,7 +1184,7 @@ function ArchetypeDetail({ archetype, allExercises, allArchetypes, onSelect, onB
   )
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="max-w-2xl mx-auto px-8 py-8 space-y-6">
 
         {/* Back link */}
@@ -1285,7 +1248,7 @@ function ArchetypeDetail({ archetype, allExercises, allArchetypes, onSelect, onB
           alwaysOpen
         />
       </div>
-    </div>
+    </ScrollPanel>
   )
 }
 
@@ -1309,7 +1272,7 @@ function FrameworkOverview({
 
   function fwColor(fw: Framework): string {
     const p = fw.source_philosophy ? philMap[fw.source_philosophy] : null
-    return p ? (MODALITY_COLORS[p.bias[0] as ModalityId]?.hex ?? '#6366f1') : '#6366f1'
+    return p ? (MODALITY_COLORS[p.bias[0] as ModalityId]?.hex ?? FALLBACK_HEX) : FALLBACK_HEX
   }
 
   const philsWithFrameworks = useMemo(() => {
@@ -1338,7 +1301,7 @@ function FrameworkOverview({
   }, [filtered, sort, matrix])
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="max-w-3xl mx-auto px-8 py-12 space-y-8">
 
         <div className="space-y-3">
@@ -1357,7 +1320,7 @@ function FrameworkOverview({
         <div className="space-y-1.5">
           <div className="flex flex-wrap gap-2">
             {philsWithFrameworks.map(p => {
-              const color = MODALITY_COLORS[p.bias[0] as ModalityId]?.hex ?? '#6366f1'
+              const color = MODALITY_COLORS[p.bias[0] as ModalityId]?.hex ?? FALLBACK_HEX
               const active = activePhil === p.id
               return (
                 <button
@@ -1437,7 +1400,7 @@ function FrameworkOverview({
           Select a framework to explore its full structure
         </p>
       </div>
-    </div>
+    </ScrollPanel>
   )
 }
 
@@ -1498,8 +1461,8 @@ function FrameworkExplorerDetail({
 
   const sourcePhil = fw.source_philosophy ? philMap[fw.source_philosophy] : null
   const hex = sourcePhil
-    ? (MODALITY_COLORS[sourcePhil.bias[0] as ModalityId]?.hex ?? '#6366f1')
-    : '#6366f1'
+    ? (MODALITY_COLORS[sourcePhil.bias[0] as ModalityId]?.hex ?? FALLBACK_HEX)
+    : FALLBACK_HEX
 
   const intensityEntries = fw.intensity_distribution
     ? Object.entries(fw.intensity_distribution)
@@ -1510,7 +1473,7 @@ function FrameworkExplorerDetail({
   const daysMax = fw.applicable_when?.days_per_week_max
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="px-4 py-4 space-y-4">
 
         <button
@@ -1651,7 +1614,7 @@ function FrameworkExplorerDetail({
               {(['committed', 'core', 'supplementary'] as const).map(tier => {
                 const mods = fw.modality_priority?.[tier] ?? []
                 if (!mods.length) return null
-                const tierColor = tier === 'committed' ? '#ef4444' : tier === 'core' ? '#f97316' : '#64748b'
+                const tierColor = TIER_HEX[tier] ?? TIER_HEX.supplementary
                 return (
                   <div key={tier} className="space-y-1">
                     <p className="text-[9px] uppercase tracking-wider font-medium" style={{ color: tierColor }}>{tier}</p>
@@ -1722,9 +1685,9 @@ function FrameworkExplorerDetail({
                         <span className={cn(
                           'text-[9px] px-1.5 py-0.5 rounded font-mono',
                           item.interference_level === 'high'
-                            ? 'bg-red-500/15 text-red-700 dark:text-red-300'
+                            ? 'bg-bad/15 text-bad'
                             : item.interference_level === 'manageable'
-                            ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300'
+                            ? 'bg-warn/15 text-warn'
                             : 'bg-muted/50 text-muted-foreground'
                         )}>
                           {item.interference_level}
@@ -1782,7 +1745,7 @@ function FrameworkExplorerDetail({
         />
 
       </div>
-    </div>
+    </ScrollPanel>
   )
 }
 
@@ -1790,9 +1753,9 @@ function FrameworkExplorerDetail({
 
 type ExploreSection = 'explorer' | 'ontology'
 
-const EXPLORE_SECTIONS: { key: ExploreSection; label: string }[] = [
-  { key: 'explorer', label: 'Explorer' },
-  { key: 'ontology', label: 'Ontology' },
+const EXPLORE_SECTIONS: { id: ExploreSection; label: string }[] = [
+  { id: 'explorer', label: 'Explorer' },
+  { id: 'ontology', label: 'Ontology' },
 ]
 
 const TOPIC_IDS = new Set<string>(TOPICS.map((t) => t.id))
@@ -1807,12 +1770,12 @@ export function Explore() {
   const selectedId = searchParams.get('id')
   const compareIds = parseCompare(searchParams.get('compare'))
 
-  const { data: philosophies = [], isLoading: philLoading, error: philError } = usePhilosophies()
-  const { data: frameworks = [], isLoading: fwLoading, error: fwError } = useFrameworks()
-  const { data: modalities = [], isLoading: modLoading, error: modError } = useModalities()
-  const { data: allArchetypes = [], isLoading: archLoading } = useArchetypes()
-  const { data: allExercises = [], isLoading: exLoading } = useExercises()
-  const { data: links, isLoading: linksLoading, error: linksError } = useExploreLinks()
+  const { data: philosophies = [], isLoading: philLoading, error: philError, refetch: philRetry } = usePhilosophies()
+  const { data: frameworks = [], isLoading: fwLoading, error: fwError, refetch: fwRetry } = useFrameworks()
+  const { data: modalities = [], isLoading: modLoading, error: modError, refetch: modRetry } = useModalities()
+  const { data: allArchetypes = [], isLoading: archLoading, error: archError, refetch: archRetry } = useArchetypes()
+  const { data: allExercises = [], isLoading: exLoading, error: exError, refetch: exRetry } = useExercises()
+  const { data: links, isLoading: linksLoading, error: linksError, refetch: linksRetry } = useExploreLinks()
   const movements = useMemo(() => links?.movements ?? [], [links])
 
   const pick = <T extends { id: string }>(t: Topic, rows: T[]) =>
@@ -1824,8 +1787,15 @@ export function Explore() {
   const selectedExercise = pick('exercises', allExercises)
   const selectedMovement = pick('movements', movements)
 
+  // A detail remembers the list entry it was opened from, along a trail of
+  // links too, so the back button's replace returns the list where it was left.
+  const location = useLocation()
+  const listEntry = selectedId
+    ? (location.state as { list?: string } | null)?.list
+    : location.key
+
   function open(t: Topic, id: string) {
-    setSearchParams({ topic: t, id })
+    setSearchParams({ topic: t, id }, { state: t === topic && listEntry ? { list: listEntry } : null })
   }
 
   // ?compare=a,b[,c]: philosophies side by side. Pushed like a detail, so
@@ -1835,7 +1805,8 @@ export function Explore() {
   }
 
   function backToList() {
-    setSearchParams(topic === 'philosophies' ? {} : { topic }, { replace: true })
+    setSearchParams(topic === 'philosophies' ? {} : { topic },
+      { replace: true, state: listEntry ? { scrollFrom: listEntry } : null })
   }
 
   function handleTopicChange(t: Topic) {
@@ -1846,52 +1817,52 @@ export function Explore() {
     philosophies: philLoading, frameworks: fwLoading, modalities: modLoading, archetypes: archLoading,
     exercises: exLoading, movements: linksLoading, equipment: linksLoading, standards: false,
   }[topic]
-  const error = topic === 'philosophies' ? philError : topic === 'frameworks' ? fwError
-    : topic === 'modalities' ? modError : topic === 'movements' ? linksError : null
+  // A topic that failed with nothing to show says so, with Try again. Equipment
+  // and Standards read their own queries and answer for themselves.
+  const failed = {
+    philosophies: philosophies.length === 0 ? { error: philError, retry: philRetry } : null,
+    frameworks: frameworks.length === 0 ? { error: fwError, retry: fwRetry } : null,
+    modalities: modalities.length === 0 ? { error: modError, retry: modRetry } : null,
+    archetypes: allArchetypes.length === 0 ? { error: archError, retry: archRetry } : null,
+    exercises: allExercises.length === 0 ? { error: exError, retry: exRetry } : null,
+    movements: !links ? { error: linksError, retry: linksRetry } : null,
+    equipment: null,
+    standards: null,
+  }[topic]
+  const error = failed?.error ?? null
 
   return (
-    <motion.div
+    <Page
       key="explore"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-      exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
       className="flex h-full flex-col"
     >
-      {/* Header */}
-      <div className="flex items-center gap-3 border-b px-6 py-4 shrink-0 flex-wrap">
-        <Compass className="size-5 text-primary shrink-0" />
-        <h1 className="text-lg font-semibold shrink-0">Explore</h1>
-        <div className="flex gap-1 shrink-0">
-          {EXPLORE_SECTIONS.map(({ key, label }) => (
-            <button
-              key={key}
-              onClick={() => setSection(key)}
-              className={cn(
-                'px-3 py-1 rounded text-xs border transition-colors',
-                section === key
-                  ? 'bg-primary/15 border-primary/40 text-primary'
-                  : 'border-border text-muted-foreground hover:bg-muted'
-              )}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        {section === 'explorer' && (
+      <PageHeader
+        icon={Compass}
+        title="Explore"
+        tabs={
           <>
-            <div className="w-px h-4 bg-border/60 shrink-0" />
-            <TopicSelector active={topic} onChange={handleTopicChange} />
+            <SubTabs label="Explore views" tabs={EXPLORE_SECTIONS} active={section} onChange={setSection} className="shrink-0" />
+            {section === 'explorer' && (
+              <>
+                <div className="h-4 w-px shrink-0 bg-border/60" aria-hidden="true" />
+                <SubTabs label="Explore topics" tabs={TOPICS} active={topic} onChange={handleTopicChange} />
+              </>
+            )}
           </>
-        )}
-      </div>
+        }
+      />
 
       {/* ── Explorer: unified landing ↔ detail pattern for all topics ── */}
       {section === 'explorer' && (
         // A deep link waits for its list rather than flashing the landing.
         (isLoading && (selectedId || topic === 'philosophies' || topic === 'modalities' || topic === 'frameworks'))
-          ? <div className="flex-1 p-6"><LoadingCard /></div>
+          ? <LoadingState shape="grid" className="flex-1 p-6" />
           : error
-          ? <div className="flex-1 p-6"><ErrorBanner error={error as Error} /></div>
+          ? (
+            <div className="flex-1 p-6">
+              <FailedState title={`Could not load the ${topic}`} error={error} onRetry={() => { void failed?.retry() }} />
+            </div>
+          )
           : (
             <div className="flex-1 min-h-0 overflow-hidden">
                 {topic === 'philosophies' && (
@@ -1985,6 +1956,6 @@ export function Explore() {
           <HeatmapPanel program={null} />
         </div>
       )}
-    </motion.div>
+    </Page>
   )
 }

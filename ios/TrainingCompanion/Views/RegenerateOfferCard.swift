@@ -48,7 +48,7 @@ struct RegenerateOfferCard: View {
                     Label("Rebuilt \(weeks) week\(weeks == 1 ? "" : "s") with these settings. The previous plan is in Program ▸ History.",
                           systemImage: "checkmark.circle.fill")
                         .labelStyle(.inline)
-                        .font(.footnote).foregroundStyle(.green)
+                        .font(.footnote).foregroundStyle(AppColor.complete)
                 case .adopted:
                     Label("Your program doesn't change with these settings.", systemImage: "checkmark")
                         .labelStyle(.inline)
@@ -100,7 +100,7 @@ struct RegenerateOfferCard: View {
                     .font(.footnote).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                 Button("Try again") { Task { await adopt(constraints) } }
-                    .buttonStyle(.bordered).controlSize(.small)
+                    .appButton(.secondary).controlSize(.small)
             }
             .padding(.vertical, 4)
         }
@@ -154,7 +154,7 @@ struct RegenerateOfferCard: View {
                 .font(.caption2).foregroundStyle(.secondary)
             if let error {
                 Label(error, systemImage: "exclamationmark.triangle")
-                    .font(.caption).foregroundStyle(.orange)
+                    .font(.caption).foregroundStyle(AppColor.warning)
             }
         }
         .padding(.vertical, 4)
@@ -174,7 +174,7 @@ struct RegenerateOfferCard: View {
             }
             .fixedSize()
         }
-        .buttonStyle(.borderedProminent)
+        .appButton(.primary)
         .disabled(isRunning || remaining(from: start) <= 0)
     }
 

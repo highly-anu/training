@@ -1,0 +1,13 @@
+# What progress means for the method: the stone getting heavier, the days done.
+id: scratch_minimal
+
+progress:
+  - id: stone_load
+    label: Stone to shoulder
+    primitive: set_load
+    headline: true
+    scope: {exercises: [scratch_minimal_stone_to_shoulder]}
+
+  - id: days_done
+    label: Days done as written
+    primitive: session_completion

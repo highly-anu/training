@@ -1,11 +1,12 @@
+import { LoadingState, FailedState } from '@/components/shared/states'
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { riseIn } from '@/lib/motion'
 import { differenceInCalendarDays, format, parseISO } from 'date-fns'
 import { History, ChevronRight, Link2, CheckCircle2, CalendarRange } from 'lucide-react'
 import { useProgramHistory } from '@/api/programHistory'
 import { EmptyState } from '@/components/shared/EmptyState'
-import { LoadingCard } from '@/components/shared/LoadingCard'
 import { ErrorBanner } from '@/components/shared/ErrorBanner'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
@@ -56,9 +57,7 @@ function HistoryCard({ entry, index }: { entry: ProgramHistoryEntry; index: numb
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.04, duration: 0.2 }}
+      {...riseIn(index)}
     >
       <Link
         to={`/program/history/${entry.versionId}`}
@@ -102,7 +101,7 @@ function HistoryCard({ entry, index }: { entry: ProgramHistoryEntry; index: numb
               </span>
             )}
             {entry.loggedCount > 0 && (
-              <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-300">
+              <span className="inline-flex items-center gap-1 text-done">
                 <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
                 {entry.loggedCount} logged
               </span>
@@ -120,7 +119,7 @@ function HistoryCard({ entry, index }: { entry: ProgramHistoryEntry; index: numb
 }
 
 export function ProgramHistoryList() {
-  const { data, isLoading, isError, error } = useProgramHistory()
+  const { data, isLoading, isError, error, refetch } = useProgramHistory()
 
   const grouped = useMemo(() => {
     // Revisions of one training block share a lineage. Showing each edit as its
@@ -140,9 +139,11 @@ export function ProgramHistoryList() {
         Every plan you have trained, and when each was in force.
       </p>
 
-      {isLoading && <LoadingCard />}
+      {isLoading && <LoadingState shape="cards" />}
 
-      {isError && <ErrorBanner error={error} title="Could not load program history" />}
+      {isError && (grouped.length > 0
+        ? <ErrorBanner error={error} title="Could not refresh program history" onRetry={() => { void refetch() }} />
+        : <FailedState title="Could not load program history" error={error} onRetry={() => { void refetch() }} />)}
 
       {!isLoading && !isError && grouped.length === 0 && (
         <EmptyState

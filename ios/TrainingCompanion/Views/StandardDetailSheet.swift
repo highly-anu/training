@@ -88,16 +88,34 @@ struct StandardDetailSheet: View {
                 Section {
                     Button { logging = true } label: { Label("Log a result", systemImage: "plus.circle") }
                     if let problem {
-                        Text(problem).font(.caption).foregroundStyle(.red)
+                        Text(problem).font(.caption).foregroundStyle(AppColor.destructive)
                     }
                 }
 
                 if !entries.isEmpty {
                     Section("\(entries.count) result\(entries.count == 1 ? "" : "s")") {
                         ForEach(entries.reversed()) { entry in
-                            EntryRow(entry: entry, domain: subject.benchmark?.domain, showsLevel: subject.benchmark != nil)
-                                .contentShape(Rectangle())
-                                .onTapGesture { editing = entry }
+                            HStack(spacing: AppMetrics.gapSmall) {
+                                EntryRow(entry: entry, domain: subject.benchmark?.domain, showsLevel: subject.benchmark != nil)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture { editing = entry }
+                                    .appTapRow()
+                                    .accessibilityHint("Edits this result")
+                                // Visible; the swipe holds the same two (§6.51).
+                                Menu {
+                                    Button { editing = entry } label: { Label("Edit", systemImage: "pencil") }
+                                    Button(role: .destructive) { deleting = entry } label: { Label("Delete", systemImage: "trash") }
+                                } label: {
+                                    Image(systemName: "ellipsis")
+                                        .font(.body.weight(.semibold))
+                                        .foregroundStyle(.secondary)
+                                        .frame(width: 44, height: 44)
+                                        .contentShape(Rectangle())
+                                }
+                                .buttonStyle(.borderless)
+                                .accessibilityLabel("\(entry.valueText) actions")
+                            }
                                 .swipeActions {
                                     Button(role: .destructive) { deleting = entry } label: { Label("Delete", systemImage: "trash") }
                                     Button { editing = entry } label: { Label("Edit", systemImage: "pencil") }
@@ -110,8 +128,8 @@ struct StandardDetailSheet: View {
             .navigationTitle(subject.name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { dismiss() } } }
-            .sheet(isPresented: $logging) { StandardResultSheet(subject: subject, editing: nil) }
-            .sheet(item: $editing) { entry in StandardResultSheet(subject: subject, editing: entry) }
+            .sheet(isPresented: $logging) { StandardResultSheet(subject: subject, editing: nil).appSheet(.flexible) }
+            .sheet(item: $editing) { entry in StandardResultSheet(subject: subject, editing: entry).appSheet(.flexible) }
             .confirmationDialog("Delete this result?", isPresented: Binding(
                 get: { deleting != nil }, set: { if !$0 { deleting = nil } }
             ), titleVisibility: .visible, presenting: deleting) { entry in
@@ -231,7 +249,7 @@ struct StandardHistoryChart: View {
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
                     .foregroundStyle(Color.secondary.opacity(0.5))
                     .annotation(position: .trailing, alignment: .leading) {
-                        Text("\(l.level) \(l.text)").font(.system(size: 9)).foregroundStyle(.secondary)
+                        Text("\(l.level) \(l.text)").font(AppFont.micro).foregroundStyle(.secondary)
                     }
             }
             ForEach(pts) { p in
@@ -253,10 +271,11 @@ struct StandardHistoryChart: View {
                                 .font(.caption2).foregroundStyle(.secondary)
                         }
                         .padding(6)
-                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 6))
+                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: AppMetrics.radiusChip))
                     }
             }
         }
+        .appChartEntry()
         .chartXScale(domain: xDomain)
         .chartYScale(domain: yDomain)
         .chartYAxis(.hidden)
@@ -367,7 +386,7 @@ struct StandardResultSheet: View {
                     DatePicker("Day", selection: $day, in: ...Date(), displayedComponents: .date)
                     TextField("Note (optional)", text: $note)
                     if let problem {
-                        Text(problem).font(.caption).foregroundStyle(.red)
+                        Text(problem).font(.caption).foregroundStyle(AppColor.destructive)
                     }
                 } header: {
                     Text(subject.name)

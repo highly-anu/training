@@ -186,9 +186,58 @@
           "isDeload": false,
           "modalityId": "aerobic_base",
           "sessionId": "3-Monday-2"
+        },
+        {
+          "archetypeCategory": null,
+          "archetypeId": "kb_snatch_set",
+          "archetypeName": "Snatch Set",
+          "completed": false,
+          "estimatedMinutes": 15,
+          "exercises": [
+            {
+              "bilateral": null,
+              "category": "kettlebell",
+              "coachingCue": null,
+              "distanceKm": null,
+              "distanceM": null,
+              "durationMinutes": 10,
+              "emomFormat": null,
+              "exerciseId": "kb_snatch",
+              "focus": null,
+              "holdSeconds": null,
+              "intervalRestSec": null,
+              "isMeta": false,
+              "loadDescription": "10 min",
+              "loadNote": null,
+              "movementPattern": null,
+              "name": "Kettlebell Snatch",
+              "packLoadKg": null,
+              "parentSlotRole": null,
+              "prescribedZoneLower": null,
+              "prescribedZoneUpper": null,
+              "reps": null,
+              "repsPerRound": null,
+              "restSeconds": null,
+              "rir": null,
+              "sets": null,
+              "slotRole": "snatch",
+              "slotType": "time_domain",
+              "targetRounds": null,
+              "targetRpe": null,
+              "targetRpm": null,
+              "timeMinutes": null,
+              "weightKg": null,
+              "workSec": null,
+              "zoneTarget": null
+            }
+          ],
+          "icon": "kettlebell",
+          "isDeload": false,
+          "modalityId": "kettlebell",
+          "sessionId": "3-Monday-3"
         }
       ],
-      "title": "Strength A +2"
+      "title": "Strength A +3"
     },
     {
       "date": "2026-10-13",
@@ -288,15 +337,15 @@
     },
     "program": {
       "done": 1,
-      "due": 3,
-      "pct": 33
+      "due": 4,
+      "pct": 25
     },
     "week": {
       "done": 1,
-      "due": 3,
+      "due": 4,
       "number": 1,
       "of": 1,
-      "sessions": 4
+      "sessions": 5
     }
   },
   "readiness": {
@@ -600,6 +649,95 @@
         }
       },
       "sessionId": "3-Monday-2",
+      "watch": {
+        "accent": null,
+        "edit": {
+          "weight_step_by_category": {
+            "kettlebell": 4.0
+          },
+          "weight_step_kg": 2.5
+        },
+        "label": null,
+        "summary": {
+          "pages": [
+            "summary",
+            "heart_rate",
+            "hr_zones",
+            "training_effect",
+            "training_status",
+            "exercises"
+          ]
+        }
+      }
+    },
+    {
+      "archetypeCategory": null,
+      "archetypeId": "kb_snatch_set",
+      "archetypeName": "Snatch Set",
+      "completed": false,
+      "estimatedMinutes": 15,
+      "exercises": [
+        {
+          "bilateral": null,
+          "category": "kettlebell",
+          "coachingCue": null,
+          "distanceKm": null,
+          "distanceM": null,
+          "durationMinutes": 10,
+          "emomFormat": null,
+          "exerciseId": "kb_snatch",
+          "focus": null,
+          "holdSeconds": null,
+          "intervalRestSec": null,
+          "isMeta": false,
+          "loadDescription": "10 min",
+          "loadNote": null,
+          "logs": [
+            "reps"
+          ],
+          "movementPattern": null,
+          "name": "Kettlebell Snatch",
+          "packLoadKg": null,
+          "parentSlotRole": null,
+          "prescribedZoneLower": null,
+          "prescribedZoneUpper": null,
+          "reps": null,
+          "repsPerRound": null,
+          "restSeconds": null,
+          "rir": null,
+          "screen": "s0",
+          "sets": null,
+          "slotRole": "snatch",
+          "slotType": "time_domain",
+          "targetRounds": null,
+          "targetRpe": null,
+          "targetRpm": null,
+          "timeMinutes": null,
+          "weightKg": null,
+          "workSec": null,
+          "zoneTarget": null
+        }
+      ],
+      "icon": "kettlebell",
+      "isDeload": false,
+      "modalityId": "kettlebell",
+      "packageId": null,
+      "screens": {
+        "s0": {
+          "a": "time_left",
+          "b": "zone_or_time",
+          "gauge": "time_left",
+          "lap": "skip",
+          "lines": "focus",
+          "template": "timed",
+          "title": [
+            "name",
+            "switch_side",
+            "load"
+          ]
+        }
+      },
+      "sessionId": "3-Monday-3",
       "watch": {
         "accent": null,
         "edit": {

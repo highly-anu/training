@@ -146,15 +146,22 @@ class Context:
     # ── sessions, logs, matches ─────────────────────────────────────────────
 
     def sessions(self, *, elapsed_only: bool = True):
-        """Yield {week, week_index, day, session_index, session, date} in schedule order."""
+        """Yield {week, week_index, day, session_index, session, date} in schedule order.
+
+        A session the athlete added on the fly (`added`) is yielded only once it
+        is done — logged complete or matched to a workout: it was never planned,
+        so a skipped one is no missed session, and a done one counts like any."""
         for week_index, week in enumerate(self.weeks):
             for day in DAY_NAMES:
                 for session_index, session in enumerate((week.get('schedule') or {}).get(day) or []):
                     d = self.session_date(week_index, day)
                     if elapsed_only and (d is None or d > self.today):
                         continue
-                    yield {'week': week, 'week_index': week_index, 'day': day,
+                    hit = {'week': week, 'week_index': week_index, 'day': day,
                            'session_index': session_index, 'session': session, 'date': d}
+                    if (session or {}).get('added') and not (self.completed(hit) or self.workout_for(hit)):
+                        continue
+                    yield hit
 
     def session_keys(self, week: dict, day: str, session_index: int, week_index: int) -> list[str]:
         """Indexed key first, then the day-level key every older writer used."""

@@ -3,9 +3,12 @@ name: PT Test II
 modality: durability
 category: gpp_durability
 training_levels:
+- novice
 - intermediate
 - advanced
 - elite
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 50
 slots:
@@ -36,6 +39,7 @@ slots:
     - weighted_pull_up
     ordered: true
   load: 11 kg (25 lb)
+  load_kg: 11
   notes: 15 pull-ups with 25 lb.
 required_equipment:
 - barbell

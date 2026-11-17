@@ -3,9 +3,12 @@ name: '10-to-1 Grind Ladder: Swings, Push-ups, Sit-ups, Dips, Pull-ups'
 modality: mixed_modal_conditioning
 category: conditioning
 training_levels:
+- novice
 - intermediate
 - advanced
 - elite
+# Written for the operator (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 pool_only: true
 duration_estimate_minutes: 30
 slots:
@@ -18,6 +21,7 @@ slots:
     - kb_swing_two_hand
     ordered: true
   load: 24 kg (53 lb)
+  load_kg: 24
   notes: >-
     Rungs from 10 down to 1, a grind, not for time. Each rung: kettlebell swings (twice the rung: 20,
     18 ...), elevated push-ups, sit-ups (twice the rung), dips, pull-ups.

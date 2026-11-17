@@ -1,0 +1,10 @@
+# An exercise category the athlete's equipment cannot serve: the category is
+# blocked unless the athlete has at least one of these. An archetype loses
+# points for each slot whose category is blocked (src/selector.py
+# select_archetype's equipment_blocked) — a fast proxy for scoring, never a
+# filter. Equipment ids are constraints.schema.json's.
+blocked_without:
+  barbell:    [barbell, rack, plates]
+  kettlebell: [kettlebell]
+  sandbag:    [sandbag]
+  carries:    [ruck_pack]

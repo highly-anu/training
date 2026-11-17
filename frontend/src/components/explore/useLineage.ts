@@ -1,3 +1,4 @@
+import { FALLBACK_HEX, NEUTRAL_HEX } from '@/lib/dataColors'
 import { useMemo } from 'react'
 import { useExploreLinks } from '@/api/exploreLinks'
 import { usePhilosophies } from '@/api/philosophies'
@@ -41,8 +42,8 @@ export function useLinkIndex(): { index: LinkIndex | null; names: LineageNames; 
       frameworks: hexes(frameworks, (f) => (f.source_philosophy ? philosophyHex(bias[f.source_philosophy]) : undefined)),
       modalities: hexes(modalities, (m) => MODALITY_COLORS[m.id as ModalityId]?.hex),
       // With the landings' own fallbacks, so a pill matches its card.
-      archetypes: hexes(archetypes, (a) => ARCH_CAT_COLORS[a.category] ?? '#94a3b8'),
-      exercises: hexes(exercises, (e) => EX_CATEGORY_COLORS[e.category] ?? '#6366f1'),
+      archetypes: hexes(archetypes, (a) => ARCH_CAT_COLORS[a.category] ?? NEUTRAL_HEX),
+      exercises: hexes(exercises, (e) => EX_CATEGORY_COLORS[e.category] ?? FALLBACK_HEX),
       movements: hexes(links?.movements ?? [], (m) => movementColor(m.rollup).hex),
     }
   }, [philosophies, frameworks, modalities, archetypes, exercises, links])

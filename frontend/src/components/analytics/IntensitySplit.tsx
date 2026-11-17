@@ -1,9 +1,12 @@
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts'
+import { ChartFrame } from '@/components/shared/ChartFrame'
+import * as say from '@/lib/chartSummary'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts'
 import type { AnalyticsIntensity } from '@/api/types'
 import { INTENSITY_BUCKETS } from '@/lib/hrZones'
 import { StatusBadge } from './StatusBadge'
 import { CoverageNotice } from './CoverageNotice'
 import { ZonePlanComparison } from '@/components/bio/ZonePlanComparison'
+import { useChartEntry } from '@/lib/chartMotion'
 
 const BUCKETS = INTENSITY_BUCKETS
 
@@ -28,6 +31,7 @@ function WeekTooltip({ active, payload }: TooltipProps) {
 
 /** Planned intensity split against actual, per week. */
 export function IntensitySplit({ intensity }: { intensity: AnalyticsIntensity }) {
+  const drawIn = useChartEntry()
   const data = intensity.weeks.map((w) => ({ ...w, label: `W${w.week}` }))
   const current = intensity.byFramework[intensity.byFramework.length - 1]
   return (
@@ -47,19 +51,20 @@ export function IntensitySplit({ intensity }: { intensity: AnalyticsIntensity })
           zone: z.zone, label: z.label, planned: z.plannedMinutes, recorded: z.actualMinutes }))} />
       )}
       {data.length > 0 && (
-        <ResponsiveContainer width="100%" height={170}>
+        <ChartFrame label="Intensity split, minutes per bucket by week" height={170}
+          summary={say.named('Latest week', say.shares(BUCKETS.map((b) => ({ name: b.label, value: data[data.length - 1].actualPct[b.key] ?? 0 }))))}>
           <BarChart data={data} margin={{ top: 4, right: 8, left: -20, bottom: 0 }} barCategoryGap={4}>
             <XAxis dataKey="label" tick={{ fontSize: 9, fill: 'var(--color-muted-foreground)' }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fontSize: 9, fill: 'var(--color-muted-foreground)' }} axisLine={false} tickLine={false} unit=" min" />
             <Tooltip content={<WeekTooltip />} cursor={{ fill: 'var(--color-muted-foreground)', fillOpacity: 0.08 }} />
             <Legend iconSize={8} wrapperStyle={{ fontSize: 10 }} />
             {BUCKETS.map((b, i) => (
-              <Bar key={b.key} dataKey={b.key} name={b.label} stackId="split" fill={b.color}
+              <Bar {...drawIn} key={b.key} dataKey={b.key} name={b.label} stackId="split" fill={b.color}
                    stroke="var(--color-card)" strokeWidth={1}
                    radius={i === BUCKETS.length - 1 ? [3, 3, 0, 0] : 0} />
             ))}
           </BarChart>
-        </ResponsiveContainer>
+        </ChartFrame>
       )}
       {current?.plannedPct && current.deviationPts && (
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
@@ -67,7 +72,7 @@ export function IntensitySplit({ intensity }: { intensity: AnalyticsIntensity })
             <span key={b.key}>
               <span className="inline-block size-2 rounded-sm align-middle mr-1" style={{ backgroundColor: b.color }} />
               {b.label} {current.actualPct[b.key] ?? 0}% vs {current.plannedPct![b.key]}%
-              <span className={Math.abs(current.deviationPts![b.key]) > 10 ? ' text-amber-800 dark:text-amber-300' : ''}>
+              <span className={Math.abs(current.deviationPts![b.key]) > 10 ? ' text-warn' : ''}>
                 {' '}({current.deviationPts![b.key] > 0 ? '+' : ''}{current.deviationPts![b.key]})
               </span>
             </span>

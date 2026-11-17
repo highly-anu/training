@@ -205,7 +205,7 @@ class RouteTests(unittest.TestCase):
     def test_route(self):
         import api
         body = api.app.test_client().get('/api/explore/links').get_json()
-        self.assertEqual(set(body), {'movements', 'equipment', 'links'})
+        self.assertEqual(set(body), {'movements', 'equipment', 'links', 'exerciseLevels'})
         self.assertIn('squat', {m['id'] for m in body['movements']})
 
 

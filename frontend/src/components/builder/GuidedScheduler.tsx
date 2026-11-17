@@ -1,3 +1,4 @@
+import { Tip } from '@/components/shared/Tip'
 import { useEffect, useMemo, useState } from 'react'
 import { Check, X, GripVertical, RotateCcw } from 'lucide-react'
 import { useBuilderStore } from '@/store/builderStore'
@@ -328,15 +329,14 @@ export function GuidedScheduler() {
             </div>
             <div className="flex gap-2 shrink-0">
               {customRecommendations && (
-                <button
+                <Tip label="Reset to auto-calculated"><button
                   type="button"
                   onClick={resetRecommendations}
                   className="text-xs px-3 py-1.5 rounded-md border border-border hover:border-primary text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
-                  title="Reset to auto-calculated"
                 >
                   <RotateCcw className="size-3" />
                   Reset
-                </button>
+                </button></Tip>
               )}
               <button
                 type="button"
@@ -498,7 +498,7 @@ export function GuidedScheduler() {
           </div>
           <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
             <div
-              className="h-full rounded-full bg-foreground/60 transition-all duration-300"
+              className="h-full rounded-full bg-foreground/60 transition-[width] duration-(--motion-slow)"
               style={{ width: `${Math.min(Math.round((coverage ?? 0) * 100), 100)}%` }}
             />
           </div>

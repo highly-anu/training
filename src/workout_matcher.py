@@ -235,6 +235,66 @@ def auto_match_indexed(workouts: list[dict], date_index: dict[str, list[dict]],
     return {'confirmed': confirmed, 'suggested': suggested}
 
 
+def _instant(value) -> datetime | None:
+    """An ISO time as an aware instant; a naive one (a FIT file's) is UTC."""
+    if not value:
+        return None
+    try:
+        t = datetime.fromisoformat(str(value).replace('Z', '+00:00'))
+    except ValueError:
+        return None
+    return t if t.tzinfo else t.replace(tzinfo=timezone.utc)
+
+
+def log_span(log: dict) -> tuple[datetime, datetime] | None:
+    """When a logged session ran by the wall clock: its timeline's first
+    start to its last end (`startAt` / `endAt`, which the phone's player
+    sends), else None."""
+    starts = [_instant(e.get('startAt')) for e in log.get('exerciseTimeline') or [] if isinstance(e, dict)]
+    ends = [_instant(e.get('endAt')) for e in log.get('exerciseTimeline') or [] if isinstance(e, dict)]
+    starts, ends = [t for t in starts if t], [t for t in ends if t]
+    return (min(starts), max(ends)) if starts and ends else None
+
+
+def match_by_time(workouts: list[dict], logs: list[dict], date_index: dict[str, list[dict]],
+                  existing_ids: set) -> list[dict]:
+    """The sessions a recording ran beside, by the clock: a workout recorded
+    on one device (a Garmin band) while another ran the session's steps (the
+    phone's player, whose log carries when each step ran). A completed log
+    whose span overlaps the workout's by half the shorter of the two — and
+    a minute at least — is that workout's session, when it is the only one
+    and a session planned for the workout's day. Server-only, ahead of the
+    scoring the browser shares: the time says which of two sessions a day
+    held, and a session that ran long still links."""
+    now_iso = datetime.now(timezone.utc).isoformat()
+    spans = [(log, log_span(log)) for log in logs if log.get('completedAt')]
+    spans = [(log, span) for log, span in spans if span]
+    out = []
+    for w in workouts:
+        wid = w.get('id')
+        start = _instant(w.get('startTime'))
+        if not wid or wid in existing_ids or not start:
+            continue
+        end = _instant(w.get('endTime')) or start + timedelta(minutes=float(w.get('durationMinutes') or 0))
+        candidates = date_index.get(w.get('date') or '') or []
+        uids = {c.get('sessionUid') for c in candidates if c.get('sessionUid')}
+        keys = {c.get('sessionKey') for c in candidates}
+        hits = []
+        for log, (ls, le) in spans:
+            planned = log.get('sessionUid') in uids if log.get('sessionUid') else log.get('sessionKey') in keys
+            overlap = (min(end, le) - max(start, ls)).total_seconds()
+            shorter = min((end - start).total_seconds(), (le - ls).total_seconds())
+            if planned and overlap >= max(60.0, shorter / 2):
+                hits.append(log)
+        if len(hits) == 1:
+            match = {'importedWorkoutId': wid, 'sessionKey': hits[0]['sessionKey'],
+                     'matchConfidence': 'auto', 'matchedAt': now_iso}
+            if hits[0].get('sessionUid'):
+                match['sessionUid'] = hits[0]['sessionUid']
+            out.append(match)
+    return out
+
+
 def history_aware_index(user_id: str, dates: list[str]) -> dict[str, list[dict]]:
     """Candidate sessions for these dates, from history where it reaches.
 
@@ -336,7 +396,13 @@ def match_and_store(user_id: str, workouts: list[dict]) -> dict:
             return result
 
         existing = health_store.get_matches(user_id)
-        outcome = auto_match_indexed(workouts, date_index, existing)
+        # The session a recording ran beside, by the clock, first (a band's
+        # workout and the phone's player); the rest by the shared scoring.
+        timed = match_by_time(workouts, list(health_store.get_session_logs_by_uid(user_id).values()),
+                              date_index, {m.get('importedWorkoutId') for m in existing})
+        timed_ids = {m['importedWorkoutId'] for m in timed}
+        outcome = auto_match_indexed([w for w in workouts if w.get('id') not in timed_ids], date_index, existing)
+        outcome['confirmed'] = timed + outcome['confirmed']
 
         for match in outcome['confirmed']:
             health_store.upsert_match(user_id, match)

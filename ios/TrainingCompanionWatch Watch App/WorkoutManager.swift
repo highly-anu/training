@@ -21,7 +21,6 @@ final class WorkoutManager: NSObject, ObservableObject {
     /// The metronome's own beat: the 1 Hz tick is too slow for 70 RPM.
     private var metronomeTimer: Timer?
     private var metronomeInterval: TimeInterval = 0
-    private var lastAutoAdvancedExerciseIndex = -1
 
     // GPS
     private var locationManager: CLLocationManager?
@@ -68,7 +67,7 @@ final class WorkoutManager: NSObject, ObservableObject {
         workoutStartedAt = Date()
         gpsPoints = []
         hrTimestampedSamples = []
-        lastAutoAdvancedExerciseIndex = -1
+        sessionState.cues = WatchCueOutput.shared
         sessionState.startSession(session)
         startElapsedTimer()
         isWorkoutActive = true
@@ -158,8 +157,9 @@ final class WorkoutManager: NSObject, ObservableObject {
             )
         }
 
-        // Per-exercise timeline from set logs
-        let exerciseTimeline: [ExerciseTimelineEntry]? = buildExerciseTimeline()
+        // Per-exercise timeline: each step's window (the shared engine's)
+        let exerciseTimeline = sessionState.exerciseTimeline(startedAt: workoutStartedAt ?? startedAt,
+                                                             hrSamples: hrTimestampedSamples)
 
         // Pace: metres per second → seconds per km
         let dist = sessionState.distanceMeters
@@ -185,60 +185,8 @@ final class WorkoutManager: NSObject, ObservableObject {
             paceSecsPerKm:      paceSecsPerKm,
             exerciseTimeline:   exerciseTimeline,
             outcomes:           sessionState.outcomes.isEmpty ? nil : sessionState.outcomes,
-            standardResults:    standardDecisions(session)
+            standardResults:    sessionState.standardDecisions(session)
         )
-    }
-
-    /// The Results answer, for each test step that produced a value.
-    private func standardDecisions(_ session: WatchSession) -> [String: String]? {
-        guard let decision = sessionState.resultDecision else { return nil }
-        var out: [String: String] = [:]
-        for ex in session.exercises {
-            guard let st = ex.standard,
-                  WatchResults.value(ex, sets: sessionState.setLogs[ex.exerciseId] ?? [],
-                                     outcome: sessionState.outcomes[ex.exerciseId]) != nil else { continue }
-            out[st.id] = decision
-        }
-        return out.isEmpty ? nil : out
-    }
-
-    /// Each step's window — from when it became current to when the athlete
-    /// moved on (`WorkoutSessionState.stepWindows`) — else, for a step with
-    /// none, the span of its sets' offsets.
-    private func buildExerciseTimeline() -> [ExerciseTimelineEntry]? {
-        let logs = sessionState.setLogs
-        var entries: [ExerciseTimelineEntry] = []
-        var timed = Set<String>()
-        if let session = activeSession, let startedAt = workoutStartedAt {
-            let now = Date()
-            for (index, window) in sessionState.stepWindows.sorted(by: { $0.key < $1.key })
-            where index < session.exercises.count {
-                let id = session.exercises[index].exerciseId
-                let start = max(0, Int(window.start.timeIntervalSince(startedAt)))
-                let end = Int((window.end ?? now).timeIntervalSince(startedAt))
-                guard end > start, !timed.contains(id) else { continue }
-                timed.insert(id)
-                let samples = hrTimestampedSamples.filter { $0.t >= start && $0.t <= end }
-                entries.append(ExerciseTimelineEntry(
-                    exerciseId: id, startOffset: start, endOffset: end,
-                    avgHRDuring: samples.isEmpty ? nil : samples.reduce(0) { $0 + $1.b } / samples.count))
-            }
-        }
-        for (exerciseId, sets) in logs where !timed.contains(exerciseId) {
-            let startOffsets = sets.compactMap { $0.startOffset }
-            let endOffsets   = sets.compactMap { $0.endOffset }
-            guard let start = startOffsets.min(), let end = endOffsets.max() else { continue }
-            // Compute avg HR during this window from the timestamped HR samples
-            let samples = hrTimestampedSamples.filter { $0.t >= start && $0.t <= end }
-            let avgHR: Int? = samples.isEmpty ? nil : samples.reduce(0) { $0 + $1.b } / samples.count
-            entries.append(ExerciseTimelineEntry(
-                exerciseId: exerciseId,
-                startOffset: start,
-                endOffset: end,
-                avgHRDuring: avgHR
-            ))
-        }
-        return entries.isEmpty ? nil : entries
     }
 
     // MARK: - Metronome
@@ -301,8 +249,7 @@ final class WorkoutManager: NSObject, ObservableObject {
         let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 guard let self else { return }
-                self.sessionState.tickElapsed()
-                self.tickCurrentPhase()
+                self.sessionState.tick()
                 self.syncMetronome()
             }
         }
@@ -313,66 +260,6 @@ final class WorkoutManager: NSObject, ObservableObject {
     private func stopElapsedTimer() {
         elapsedTimer?.invalidate()
         elapsedTimer = nil
-    }
-
-    @MainActor
-    private func tickCurrentPhase() {
-        switch sessionState.phase {
-        case .resting:
-            sessionState.tickRest()
-
-        case let .timedWork(ei, elapsed):
-            guard !sessionState.isTimerPaused else { return }
-            sessionState.tickTimedWork(exercise: activeSession.flatMap {
-                ei < $0.exercises.count ? $0.exercises[ei] : nil
-            })
-            guard let session = activeSession,
-                  ei < session.exercises.count,
-                  let durationMin = session.exercises[ei].durationMinutes else { return }
-            let target = durationMin * 60
-            guard elapsed + 1 == target, lastAutoAdvancedExerciseIndex != ei else { return }
-            lastAutoAdvancedExerciseIndex = ei
-            WKInterfaceDevice.current().play(.notification)
-            Task {
-                try? await Task.sleep(nanoseconds: 500_000_000)
-                WKInterfaceDevice.current().play(.notification)
-                try? await Task.sleep(nanoseconds: 800_000_000)
-                let nextIndex = self.sessionState.indexAfter(ei)
-                if nextIndex < session.exercises.count {
-                    if session.exercises[nextIndex].durationMinutes != nil {
-                        self.sessionState.autoAdvanceToNextTimedWork(
-                            currentExerciseId: session.exercises[ei].exerciseId,
-                            nextIndex: nextIndex
-                        )
-                    } else {
-                        self.sessionState.completeTimedWork(
-                            exerciseIndex: ei,
-                            exerciseId: session.exercises[ei].exerciseId
-                        )
-                    }
-                } else {
-                    // Last timed exercise — prompt instead of auto-completing so
-                    // the user can keep going past the prescribed duration.
-                    self.sessionState.showOvertimePrompt = true
-                }
-            }
-
-        // The EMOM and AMRAP clocks used to tick in their views' `.task`,
-        // so they stopped whenever their page was not on screen.
-        case let .emomInterval(ei, _, _, _):
-            guard let session = activeSession, ei < session.exercises.count else { return }
-            let ex = session.exercises[ei]
-            let plan = ex.emomPlan
-            sessionState.tickEMOM(workSec: plan.workSec, restSec: plan.restSec, totalRounds: plan.rounds,
-                                  exerciseIndex: ei, exerciseId: ex.exerciseId, exercise: ex)
-
-        case let .amrapRunning(ei, _):
-            guard let session = activeSession, ei < session.exercises.count else { return }
-            sessionState.tickAMRAP(exerciseIndex: ei, exerciseId: session.exercises[ei].exerciseId)
-
-        default:
-            break
-        }
     }
 
     private func hkActivityType(for modalityId: String) -> HKWorkoutActivityType {
@@ -451,10 +338,15 @@ extension WorkoutManager: HKLiveWorkoutBuilderDelegate {
             guard bpm > 0 else { return }
             let tOffset = Int(Date().timeIntervalSince(startedAt))
             hrTimestampedSamples.append((t: tOffset, b: bpm))
+            // A zone is held while the step works — a set, a timed step, an
+            // interval's work — never in a rest (it used to be read only
+            // between sets, so timed and interval work never alerted).
             let (lower, upper): (Int?, Int?)
-            if case let .active(ei, _) = sessionState.phase {
+            switch sessionState.phase {
+            case let .active(ei, _), let .timedWork(ei, _), let .emomInterval(ei, _, true, _),
+                 let .amrapRunning(ei, _):
                 (lower, upper) = zoneBounds(for: ei)
-            } else {
+            default:
                 (lower, upper) = (nil, nil)
             }
             sessionState.updateHR(bpm, maxHR: maxHR,

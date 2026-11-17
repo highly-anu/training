@@ -10,21 +10,19 @@ reaches only part of Horsemen's ~190 workouts, which rotate over a macro run
 two or three times.
 
 An exercise nothing reaches is an orphan: a movement the package describes and
-never prescribes. tools/exercise_coverage_baseline.json records today's per
+never prescribes. Each package's records/coverage.json records today's per
 package; a new one fails, and --update-baseline records a shrunk list. This
 checks reachability, not whether an arbitrary athlete should do every lift. No
 logs, persistence or server; the generator only.
 
     python tools/check_exercise_coverage.py [package ...] [--update-baseline]
 """
-import json
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from src import generator, goals, loader, selector  # noqa: E402
+from src import generator, goals, implements, levels as _levels, loader, selector  # noqa: E402
 
-BASELINE = Path(__file__).with_name('exercise_coverage_baseline.json')
 PROFILES = ((4, 90), (6, 120))
 
 
@@ -58,18 +56,21 @@ def reachable(philosophy: dict, catalog: dict, frameworks: dict, archetypes: dic
     for track in philosophy.get('tracks') or []:
         goal = goals.philosophy_to_goal(philosophy['id'], list(frameworks.values()), track['id'])
         contract = goal.get('training_contract')
-        levels = contract['training_levels'] if contract else ['novice', 'intermediate', 'advanced', 'elite']
+        levels = contract['training_levels'] if contract else list(_levels.order())
         weeks = sum(p['weeks'] for p in goal['phase_sequence'])
         for level in levels:
             for days, minutes in PROFILES:
-                constraints = dict(
-                    equipment=equipment, kettlebell_count=2, training_level=level,
+                constraints = implements.confirm(dict(
+                    equipment=equipment, training_level=level,
                     days_per_week=days, session_time_minutes=minutes,
                     mastered_exercises=sorted({eid for m in (contract or {}).get('modules', [])
-                                               for eid in m.get('requires_mastery', [])}))
+                                               for eid in m.get('requires_mastery', [])})), contract)
                 program = generator.generate(None, constraints, num_weeks=weeks, goal_dict=goal, output_format='dict')
                 sessions = [s for w in program.get('weeks') or [] for day in w['schedule'].values() for s in day]
                 ids = {ea['exercise']['id'] for s in sessions for ea in s['exercises'] if ea.get('exercise')}
+                # An alternating interval's even rounds (Wildman's hand-to-hand swings).
+                ids |= {ea['load']['alternate']['exercise_id'] for s in sessions for ea in s['exercises']
+                        if ((ea.get('load') or {}).get('alternate') or {}).get('exercise_id')}
                 if contract:
                     placed = {m['id'] for s in sessions for m in s.get('modules') or []}
                     ids |= {alt for m in contract['modules'] if m['id'] in placed
@@ -128,7 +129,8 @@ def run(packages: list[str] | None = None, update: bool = False) -> dict:
     _, catalogs = loader.load_all_exercises()
     frameworks = loader.load_all_frameworks()
     archetypes = {a['id']: a for a in loader.load_all_archetypes()}
-    baseline = json.loads(BASELINE.read_text()) if BASELINE.exists() else {}
+    from src import package_records
+    baseline = package_records.all_orphans()
     orphans: dict = {}
     new: dict = {}
     philosophies = loader.load_philosophies()
@@ -156,9 +158,9 @@ def run(packages: list[str] | None = None, update: bool = False) -> dict:
         if '-v' in sys.argv:
             print('\n'.join(lines))
     if update:
-        merged = {**baseline, **orphans}
-        BASELINE.write_text(json.dumps(merged, indent=2, sort_keys=True) + '\n')
-        print(f'baseline written: {sum(len(v) for v in merged.values())} orphan(s)')
+        for pkg, ids in orphans.items():
+            package_records.write_orphans(pkg, ids)
+        print(f'records written: {sum(len(v) for v in orphans.values())} orphan(s)')
         return orphans
     gone = {pkg: sorted(set(baseline.get(pkg, [])) - set(o)) for pkg, o in orphans.items()}
     if any(gone.values()):

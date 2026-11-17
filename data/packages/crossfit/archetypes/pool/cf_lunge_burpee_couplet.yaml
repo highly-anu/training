@@ -2,7 +2,9 @@ id: cf_lunge_burpee_couplet
 name: "Overhead Lunges / Burpees x 5"
 modality: mixed_modal_conditioning
 category: conditioning
-training_levels: [intermediate, advanced, elite]
+training_levels: [novice, intermediate, advanced, elite]
+# Written as Rx (the track's authored level); the levels below do it scaled.
+scaling_eligible: true
 duration_estimate_minutes: 20
 pool_only: true
 
@@ -14,6 +16,7 @@ slots:
       exercise_ids: [lunge_overhead]
       ordered: true
     load: "45 lb (20 kg) bar, 50 ft (15 m)"
+    load_kg: 20
     notes: "5 rounds for time; let the trailing knee kiss the ground. Post time."
 
   - role: couplet_2

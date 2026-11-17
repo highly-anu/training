@@ -1,3 +1,4 @@
+import { ScrollPanel } from '@/components/layout/ScrollPanel'
 import { useTheme } from 'next-themes'
 import { Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -12,7 +13,7 @@ export function AppearanceSettings() {
   const current = THEMES.find((t) => t.id === theme)?.id ?? 'dark'
 
   return (
-    <div className="h-full overflow-y-auto">
+    <ScrollPanel>
       <div className="max-w-2xl mx-auto px-8 py-12 space-y-10">
         <div className="space-y-3">
           <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium">
@@ -57,6 +58,6 @@ export function AppearanceSettings() {
           </div>
         </div>
       </div>
-    </div>
+    </ScrollPanel>
   )
 }

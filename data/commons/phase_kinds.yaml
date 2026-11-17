@@ -16,46 +16,60 @@
 #   excludes_max_effort the selector skips exercises with effort: max
 #   counts_as_deload    analytics read every week of this kind as a deload
 #                       (never a stall, fresh-vs-fatigued reading)
+#   display             how the clients draw the kind (label, colour, the web's
+#                       Tailwind tint and text shade); tools/gen_client_vocab.py
 
 transition:
   definition: "Re-entry after a break or event; low stress, movement preparation."
   volume_multiplier: 1.0
+  display: {label: Transition, color: '#8b5cf6', tint: violet, text_shade: 700}
 base:
   definition: "General preparation; builds capacity at low to moderate intensity."
   volume_multiplier: 1.0
+  display: {label: Base, color: '#0ea5e9', tint: sky, text_shade: 700}
 build:
   definition: "Increasing load or intensity on top of an established base."
   volume_multiplier: 1.25
+  display: {label: Build, color: '#f59e0b', tint: amber, text_shade: 800}
 specific:
   definition: "Work shaped to the target event or sport."
   volume_multiplier: 1.0
+  display: {label: Specific, color: '#f97316', tint: orange, text_shade: 800}
 peak:
   definition: "Highest specific demand before a test or event."
   volume_multiplier: 1.40
+  display: {label: Peak, color: '#ef4444', tint: red, text_shade: 700}
 taper:
   definition: "Reduced volume to arrive fresh for a test or event."
   volume_multiplier: 0.60
   spread_cadence: true
   excludes_max_effort: true
   counts_as_deload: true
+  display: {label: Taper, color: '#22c55e', tint: green, text_shade: 800}
 maintenance:
   definition: "Holds what was built at a sustainable dose."
   volume_multiplier: 1.0
+  display: {label: Maintenance, color: '#a1a1aa', tint: zinc, text_shade: 700}
 deload:
   definition: "Planned unloading to absorb previous training."
   volume_multiplier: 0.60
   spread_cadence: true
   counts_as_deload: true
+  display: {label: Deload, color: '#94a3b8', tint: slate, text_shade: 700}
 recovery:
   definition: "Restorative block between harder blocks."
   volume_multiplier: 1.0
+  display: {label: Recovery, color: '#94a3b8', tint: slate, text_shade: 700}
 rehab:
   definition: "Return from injury; forced by an injury flag."
   volume_multiplier: 1.0
   spread_cadence: true
+  display: {label: Rehab, color: '#84cc16', tint: lime, text_shade: 800}
 post_op:
   definition: "After surgery; forced by an injury flag."
   volume_multiplier: 1.0
+  display: {label: Post-Op, color: '#a855f7', tint: purple, text_shade: 700}
 active:
   definition: "Unstructured general activity."
   volume_multiplier: 1.0
+  display: {label: Active, color: '#94a3b8', tint: slate, text_shade: 700}

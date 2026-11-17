@@ -3,6 +3,11 @@
 # the same heart rate, and the strength sequence.
 id: uphill_athlete
 
+# The mountain athlete's mark: vertical an hour with a fifth of bodyweight on
+# the back, aerobically — the source's check that the base is real — at its
+# ladder's elite rung (docs/logic/levels.md).
+elite_standards: [pack_vertical_ft_per_hour]
+
 progress:
   - id: aerobic_volume
     label: Aerobic volume

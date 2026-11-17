@@ -8,7 +8,13 @@ struct TodayWidgetEntryView: View {
     @Environment(\.widgetFamily) var family
 
     var body: some View {
-        if let data = entry.todayData {
+        if family == .accessoryInline {
+            Label(AccessoryText.today(entry.todayData), systemImage: "figure.run")
+                .widgetURL(URL(string: "trainingcompanion://today"))
+        } else if family == .accessoryRectangular {
+            AccessoryTodayRectangle(data: entry.todayData)
+                .widgetURL(URL(string: "trainingcompanion://today"))
+        } else if let data = entry.todayData {
             switch family {
             case .systemSmall:  SmallTodayView(sessions: data.sessions)
             case .systemMedium: MediumTodayView(sessions: data.sessions)
@@ -59,6 +65,7 @@ struct SmallTodayView: View {
                 HStack {
                     Image(symbol: WidgetModalityStyle.symbol(for: s))
                         .foregroundStyle(WidgetModalityStyle.color(for: s.modalityId))
+                        .widgetAccentable()
                     Spacer()
                     Text(todayShortLabel)
                         .font(.caption2)
@@ -68,7 +75,7 @@ struct SmallTodayView: View {
                 if s.isDeload {
                     Text("Deload")
                         .font(.caption2)
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(Color.accentColor)
                 }
                 Text(s.archetypeName)
                     .font(.headline)
@@ -97,6 +104,7 @@ struct SmallTodayView: View {
                         Circle()
                             .fill(WidgetModalityStyle.color(for: s.modalityId))
                             .frame(width: 7, height: 7)
+                            .widgetAccentable()
                         Text(s.archetypeName)
                             .font(.caption2)
                             .lineLimit(1)
@@ -222,6 +230,7 @@ struct SessionRowView: View {
         HStack(spacing: 10) {
             Image(symbol: WidgetModalityStyle.symbol(for: session))
                 .foregroundStyle(WidgetModalityStyle.color(for: session.modalityId))
+                .widgetAccentable()
                 .frame(width: 22)
             VStack(alignment: .leading, spacing: 1) {
                 Text(session.archetypeName)
@@ -248,6 +257,7 @@ struct LargeSessionRowView: View {
             HStack(spacing: 8) {
                 Image(symbol: WidgetModalityStyle.symbol(for: session))
                     .foregroundStyle(WidgetModalityStyle.color(for: session.modalityId))
+                    .widgetAccentable()
                 Text(session.archetypeName)
                     .font(.subheadline)
                     .fontWeight(.semibold)
@@ -298,41 +308,15 @@ private var todayShortLabel: String {
 // MARK: - Widget Modality Style
 // Mirrors ModalityStyle.swift from the main target (cannot import across extensions)
 
+/// The widgets' copy of the phone's ModalityStyle, from the same generated
+/// table (ClientVocab.swift, tools/gen_client_vocab.py).
 enum WidgetModalityStyle {
     static func color(for id: String) -> Color {
-        switch id {
-        case "max_strength":             return Color(red: 0.937, green: 0.267, blue: 0.267)
-        case "relative_strength":        return Color(red: 0.957, green: 0.247, blue: 0.369)
-        case "strength_endurance":       return Color(red: 0.976, green: 0.451, blue: 0.086)
-        case "power":                    return Color(red: 0.918, green: 0.702, blue: 0.031)
-        case "aerobic_base":             return Color(red: 0.055, green: 0.647, blue: 0.914)
-        case "anaerobic_intervals":      return Color(red: 0.024, green: 0.714, blue: 0.831)
-        case "mixed_modal_conditioning": return Color(red: 0.545, green: 0.361, blue: 0.965)
-        case "movement_skill":           return Color(red: 0.078, green: 0.722, blue: 0.651)
-        case "mobility":                 return Color(red: 0.063, green: 0.725, blue: 0.506)
-        case "durability":               return Color(red: 0.961, green: 0.620, blue: 0.043)
-        case "combat_sport":             return Color(red: 0.925, green: 0.282, blue: 0.600)
-        case "rehab":                    return Color(red: 0.518, green: 0.800, blue: 0.086)
-        default:                         return .secondary
-        }
+        ClientVocab.modality(id).map { ClientVocab.color($0.hex) } ?? .secondary
     }
 
     static func label(for id: String) -> String {
-        switch id {
-        case "max_strength":             return "Max Strength"
-        case "relative_strength":        return "Relative Strength"
-        case "strength_endurance":       return "Strength Endurance"
-        case "power":                    return "Power"
-        case "aerobic_base":             return "Aerobic Base"
-        case "anaerobic_intervals":      return "Anaerobic Intervals"
-        case "mixed_modal_conditioning": return "Mixed Modal"
-        case "movement_skill":           return "Movement Skill"
-        case "mobility":                 return "Mobility"
-        case "durability":               return "Durability"
-        case "combat_sport":             return "Combat Sport"
-        case "rehab":                    return "Rehab"
-        default:                         return id.replacingOccurrences(of: "_", with: " ").capitalized
-        }
+        ClientVocab.modality(id)?.label ?? id.replacingOccurrences(of: "_", with: " ").capitalized
     }
 
     /// A session's workout icon (design-system §6.40), else its modality's.
@@ -342,19 +326,6 @@ enum WidgetModalityStyle {
     }
 
     static func icon(for id: String) -> String {
-        switch id {
-        case "max_strength", "relative_strength": return "figure.strengthtraining.traditional"
-        case "strength_endurance":       return "dumbbell.fill"
-        case "aerobic_base":             return "figure.run"
-        case "anaerobic_intervals":      return "heart.circle.fill"
-        case "mixed_modal_conditioning": return "bolt.heart.fill"
-        case "power":                    return "bolt.fill"
-        case "movement_skill":           return "figure.flexibility"
-        case "mobility":                 return "figure.cooldown"
-        case "durability":               return "backpack.fill"
-        case "combat_sport":             return "figure.boxing"
-        case "rehab":                    return "cross.case.fill"
-        default:                         return "figure.strengthtraining.traditional"
-        }
+        ClientVocab.modality(id)?.icon ?? "figure.strengthtraining.traditional"
     }
 }

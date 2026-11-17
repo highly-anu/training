@@ -18,7 +18,7 @@ from __future__ import annotations
 import os
 from functools import lru_cache
 
-from src import loader
+from src import intensities, loader
 
 _PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                      'data', 'commons', 'recovery_regions.yaml')
@@ -33,9 +33,10 @@ def config() -> dict:
 def pattern_weights(patterns) -> dict[str, float]:
     """An exercise's weight on each region: the largest of its patterns'."""
     table = config()['patterns']
+    own = loader.load_vocabulary()['patterns']   # a package's own patterns (vocabulary.yaml); a commons id wins
     out: dict[str, float] = {}
     for p in patterns or []:
-        for region, w in (table.get(p) or {}).items():
+        for region, w in (table.get(p) or (own.get(p) or {}).get('regions') or {}).items():
             out[region] = max(out.get(region, 0), w)
     return out
 
@@ -72,7 +73,7 @@ def _load(cost: str | None, slots: list[tuple[float, dict]]) -> dict[str, float]
 
 def _intensity(slot: dict, slot_type: str | None = None) -> float:
     cfg = config()
-    return (cfg['intensity_weight'].get(str(slot.get('intensity')), 1)
+    return (intensities.recovery_weights().get(str(slot.get('intensity')), 1)
             * (cfg.get('slot_type_weight') or {}).get(slot_type or slot.get('slot_type'), 1))
 
 
