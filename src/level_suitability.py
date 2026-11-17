@@ -24,7 +24,7 @@ def _package_seeds(pkg: str, file_seeds: dict) -> dict:
     contract track's `level_seeds`, merged per level."""
     seeds = {lv: set(ids) for lv, ids in (file_seeds.get(pkg) or {}).items()}
     from .training_contract import _document
-    path = os.path.join(loader._PACKAGES_DIR, pkg, 'training_contract.yaml')
+    path = os.path.join(loader.package_dir(pkg), 'training_contract.yaml')
     document = _document(path) if os.path.exists(path) else {}
     for track in (document.get('tracks') or {}).values():
         for lv, ids in (track.get('level_seeds') or {}).items():
@@ -64,7 +64,7 @@ def _named_by(pkg: str, archetypes: list | None = None) -> dict[str, set]:
         for slot in a.get('slots') or []:
             note((slot.get('exercise_filter') or {}).get('exercise_ids'), a.get('training_levels'))
     from .training_contract import _document
-    path = os.path.join(loader._PACKAGES_DIR, pkg, 'training_contract.yaml')
+    path = os.path.join(loader.package_dir(pkg), 'training_contract.yaml')
     for track in ((_document(path) if os.path.exists(path) else {}).get('tracks') or {}).values():
         for module in track.get('modules') or []:
             written_for = module.get('training_levels') or track.get('training_levels')

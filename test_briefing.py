@@ -306,7 +306,7 @@ def test_a_workout_with_one_result_has_a_number_to_beat():
 
 
 def test_a_contract_session_with_nothing_to_earn_is_read_as_written():
-    rows = sessions(program('bjj', 'intermediate', days=5))
+    rows = sessions(program('bjj', 'elite', days=5))
     strength = [r for r in rows if any(ea['exercise']['id'] == 'trap_bar_deadlift' for ea in r['session']['exercises'])]
     first, again = strength[0], next(r for r in strength[1:] if r['session']['modules'][0].get('variant')
                                      == strength[0]['session']['modules'][0].get('variant'))
