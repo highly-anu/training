@@ -1234,6 +1234,14 @@ next. No heart rate on the phone: a heart-rate rest runs its cap.
   `match_and_store`, takes the one completed log of the workout's day whose timeline
   overlaps the recording by half the shorter span (a minute at least), and
   `hr_plan` then splits its heart rate by step.
+- **A move is a change of step, set, round or rest, never a second.** The engine's phase
+  carries its seconds, so `WorkoutPlayerModel.phaseChanged` handles a phase only when its
+  `phaseKey` changes: each handled move saves the workout and updates the Live Activity,
+  which forecasts by ticking a copy. Handled per second (until 1.46.0), a return from a
+  long lock queued one per missed second — 74 s of main thread for 40 minutes away on a
+  last timed step, and the system ended the app with its Live Activity still up. The last
+  timed step past its time no longer counts as a clock that moves the workout on
+  (`clockDrivesNext`), so nothing forecasts three hours for it (`WorkoutPlayerTests`).
 - Settings ▸ Workout: Count in before work, Count in after Start, Voice
   (`WatchCueSettings`, the same keys the Apple Watch keeps on its own).
 - `WorkoutEngineTests` (every template on a simulated clock), `WorkoutLockScreenTests`.

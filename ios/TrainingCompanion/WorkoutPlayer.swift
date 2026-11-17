@@ -58,7 +58,10 @@ final class WorkoutPlayerModel: ObservableObject {
         self.target = target
         engine.cues = PhoneCueOutput.shared
         // Every move of the engine re-draws the player, is said aloud with
-        // Voice on, and is saved.
+        // Voice on, and is saved. A move is a change of step, set, round or
+        // rest (`phaseKey`), never a second of its clock: the phase carries
+        // its seconds, and handling each one made a return from a long lock
+        // thousands of saves and forecasts (`phaseChanged`).
         engine.objectWillChange
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &bag)
@@ -181,8 +184,17 @@ final class WorkoutPlayerModel: ObservableObject {
         WorkoutLockScreen.shared.update(self)
     }
 
+    /// How many moves of the engine were handled (the tests count them).
+    private(set) var movesHandled = 0
+    /// The move handled last, so a second of the same step is not one.
+    private var handledKey: String?
+
     private func phaseChanged() {
         guard startedAt != nil else { return }
+        let key = engine.phaseKey
+        guard key != handledKey else { return }
+        handledKey = key
+        movesHandled += 1
         if engine.phase == .sessionComplete {
             finished = true
             stopClock()

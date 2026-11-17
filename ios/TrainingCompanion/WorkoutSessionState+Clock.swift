@@ -109,12 +109,13 @@ extension WorkoutSessionState {
 
     /// Whether a clock is running that will move the workout on by itself: a
     /// rest, a timed step, an interval, a capped AMRAP, a hold. A set waits
-    /// for the athlete.
+    /// for the athlete, and so does the last timed step once it has run its
+    /// time (the clock counts on, but nothing more comes of it).
     var clockDrivesNext: Bool {
         guard !isPaused else { return false }
         switch phase {
         case .resting, .emomInterval, .amrapRunning: return true
-        case .timedWork: return !isTimerPaused
+        case .timedWork: return !isTimerPaused && !showOvertimePrompt
         case .active: return holdStartedAt != nil
         case .idle, .sessionComplete: return false
         }
