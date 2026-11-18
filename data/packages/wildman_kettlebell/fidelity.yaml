@@ -167,6 +167,11 @@ inventions:
     text: "Option C (R14) is the default and two-hand only the athlete's choice (owner, 2026-10-31); the PDF offers the options without a default."
     implemented_by:
       - data:training_contract.yaml#tracks.general_practice.options
+  - id: I7
+    text: "Clean and press works both arms inside every minute — the minute's repetitions on one arm, then the same on the other (owner, 2026-11-18). His pages do not say how the arms share a minute; it keeps the session to its ten minutes a block."
+    implemented_by:
+      - data:training_contract.yaml#tracks.general_practice.modules.clean_press.blocks.clean.notes
+      - data:training_contract.yaml#tracks.general_practice.modules.clean_press.blocks.press.notes
 
 currency:
   general_practice: {entry: interval_rounds, rule: R10}

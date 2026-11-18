@@ -178,14 +178,17 @@ tracks:
         exercise_id: wk_kb_clean_single
         slot_type: emom
         loaded: true
-        notes: 'Alternate hands each minute; perform clean repetitions, then rest for
-          the remainder. Intermediate entry assumes a proficient single-bell clean.'
+        # Both arms inside every minute (owner, 2026-11-18; fidelity I7).
+        notes: 'Each arm, every minute: the repetitions on one arm, then the same on the
+          other, then rest for the remainder. Intermediate entry assumes a proficient
+          single-bell clean.'
       - role: press
         exercise_id: wk_kb_press_single
         slot_type: emom
         loaded: true
-        notes: 'Alternate hands each minute; strict presses, no push press or jerk. Repeat
-          the same bell and movement throughout the cycle.'
+        notes: 'Each arm, every minute: the repetitions on one arm, then the same on the
+          other. Strict presses, no push press or jerk. Repeat the same bell and movement
+          throughout the cycle.'
     # Wildman's other Phase II programs, stacked into the week as the time
     # allows (Tetris of Training): each twice a week on nonconsecutive days,
     # beside the swing and clean-and-press days when the minutes fit.
