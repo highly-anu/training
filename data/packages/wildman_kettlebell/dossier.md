@@ -58,6 +58,10 @@ ids. The status is the scorecard's (records/status.yaml).
   builder — decided by the owner on 2026-10-31; the PDF offers the options without a
   default. The same day the owner kept I2 and I3, labelled in both builders as the
   app's own tracks (as is I1's Pentathlon Prep).
+- I7: clean and press works both arms inside every minute — the minute's repetitions on
+  one arm, then the same on the other — decided by the owner on 2026-11-18. His public
+  pages do not say how the arms share a minute (the numbers are in the paid program);
+  alternating minutes would need twice the minutes for the same work on each arm.
 
 ## Measurement
 
