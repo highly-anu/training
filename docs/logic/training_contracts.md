@@ -147,7 +147,11 @@ https://www.wildmanathletica.com/programming and the public swing-program FAQ.
 ## Confirmed state versus forecast
 
 `module_state` records confirmed completed exposures and an optional selected
-`weight_kg`, keyed by module id. `load` records the resolved model, module id,
+`weight_kg`, keyed by module id. A module whose exercises are done with different
+bells (a 20 kg clean beside a 16 kg press) keeps one per exercise in `weights_kg`
+(`keep_bells`, since 2026-11-19): each exercise's bell stays through the cycle, and a
+session on another bell for any of them is a new cycle, not an earned step. Such a
+session used to count for nothing, so the cycle started again at every regenerate. `load` records the resolved model, module id,
 forecast step, conditional status, elapsed seconds and prescription version.
 Future exposures are conditional forecasts. Only chronologically ordered,
 completed sessions with all required outcomes, clean mechanics and RPE at or below

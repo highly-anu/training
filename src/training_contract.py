@@ -649,17 +649,36 @@ def confirmed_state(current: dict, logs: dict, contract: dict) -> dict:
                     outcomes = clean_outcomes(module, log.get('exercises'))
                     if outcomes is None:
                         continue
-                    logged_weights = [o.get('weightKg') for o in outcomes if o.get('weightKg') is not None]
-                    weights = set(logged_weights)
-                    if weights:
-                        if len(weights) != 1 or any(isinstance(w, bool) or not isinstance(w, (int, float)) or not math.isfinite(w) or w <= 0 for w in weights):
-                            continue
-                        weight = next(iter(weights))
-                        if record.get('weight_kg') is not None and record['weight_kg'] != weight:
-                            continue  # a different bell is a new cycle, not earned continuation
-                        record['weight_kg'] = weight
+                    logged = {eid: o['weightKg'] for eid, o in zip(module['exercise_ids'], outcomes)
+                              if o.get('weightKg') is not None}
+                    if any(bell_of(record, eid) not in (None, kg) for eid, kg in logged.items()):
+                        continue  # a different bell is a new cycle, not earned continuation
+                    keep_bells(record, logged)
                     record['completed'] += 1
     return state
+
+
+def bell_of(record: dict, exercise_id: str) -> float | None:
+    """The bell a module's record holds for one of its exercises: the
+    exercise's own (`weights_kg`), else the module's (`weight_kg`)."""
+    own = (record.get('weights_kg') or {}).get(exercise_id)
+    return own if own is not None else record.get('weight_kg')
+
+
+def keep_bells(record: dict, logged: dict) -> None:
+    """Record the bells a clean session was done with. One bell for the
+    whole module is `weight_kg`, as it always was; exercises done with
+    different bells (a 20 kg clean beside a 16 kg press) each keep their own
+    in `weights_kg`. Each exercise's bell then stays through the cycle: until
+    2026-11-19 a session logged with two bells never counted, so such an
+    athlete's cycle started again at every regenerate."""
+    if not logged:
+        return
+    if not record.get('weights_kg') and len(set(logged.values())) == 1 \
+            and record.get('weight_kg') in (None, next(iter(logged.values()))):
+        record['weight_kg'] = next(iter(logged.values()))
+        return
+    record.setdefault('weights_kg', {}).update(logged)
 
 
 def confirmation_outcomes(session: dict, clean: bool, rpe: int | None,
@@ -774,6 +793,14 @@ def _bell(module: dict, constraints: dict, state: dict) -> float | None:
                                or not math.isfinite(weight) or weight <= 0):
         raise ContractError('A module weight must be a positive number.')
     if weight is not None and inventory is not None and weight not in inventory:
+        raise ContractError(f"{module['id']}: the selected {one} is not in the available inventory.")
+    # Exercises done with bells of their own (`keep_bells`).
+    own = state.get('weights_kg')
+    if own is not None and (not isinstance(own, dict) or any(
+            isinstance(w, bool) or not isinstance(w, (int, float)) or not math.isfinite(w) or w <= 0
+            for w in own.values())):
+        raise ContractError('A module weight must be a positive number.')
+    if own and inventory is not None and any(w not in inventory for w in own.values()):
         raise ContractError(f"{module['id']}: the selected {one} is not in the available inventory.")
     # An equipment item says nothing about owned sizes. Never invent a
     # fractional weight or infer a safe working load from an athlete's level.
@@ -936,6 +963,8 @@ def _assignment(block: dict, module: dict, exercises: dict, constraints: dict,
         load.update(protocol_load(ex, slot))
     by_load = module['progression']['model'] == 'load_per_exposure'
     weight = None if by_load else _bell(module, constraints, state)
+    if not by_load:
+        weight = bell_of({**state, 'weight_kg': weight}, ex['id'])
     if by_load and block.get('loaded'):
         load.update(_lift_load(block, module, exercises, state, step))
     elif block.get('loaded'):

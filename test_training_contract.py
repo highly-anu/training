@@ -228,6 +228,58 @@ def test_api_regeneration_recovers_clean_work_from_saved_program():
     save.assert_not_called()
 
 
+def _clean_press_keys(program):
+    """(log key, step) of each clean and press session, in the program's order."""
+    names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    out = []
+    for week in program['weeks']:
+        for day in sorted(week['schedule']):
+            for si, s in enumerate(week['schedule'][day]):
+                for m in s.get('modules') or []:
+                    if m['id'] == 'clean_press':
+                        out.append((f"{week['week_number']}-{names[day - 1]}-{si}", m['forecast_step']))
+    return out
+
+
+def test_a_module_done_with_two_bells_earns_its_progress():
+    # A 20 kg clean beside a 16 kg press: each exercise keeps its own bell.
+    # Until 2026-11-19 such a session never counted, and the cycle started
+    # again at every regenerate.
+    p, g, c = plan(weeks=2, kettlebell_weights_kg=[12, 16, 20])
+    keys = _clean_press_keys(p)
+    assert [step for _, step in keys[:3]] == [0, 1, 2], keys
+
+    def log(clean_kg, press_kg):
+        return {'completedAt': '2026-10-20', 'exercises': {
+            'wk_kb_clean_single': {'rounds': 5, 'rpe': 7, 'clean': True, 'weightKg': clean_kg},
+            'wk_kb_press_single': {'rounds': 5, 'rpe': 6, 'clean': True, 'weightKg': press_kg}}}
+
+    contract = g['training_contract']
+    state = tc.confirmed_state(p, {keys[0][0]: log(20, 16), keys[1][0]: log(20, 16)}, contract)['clean_press']
+    assert state == {'completed': 2, 'weights_kg': {'wk_kb_clean_single': 20, 'wk_kb_press_single': 16}}, state
+    # One exercise on another bell is a new cycle for the module: no step earned.
+    state = tc.confirmed_state(p, {keys[0][0]: log(20, 16), keys[1][0]: log(20, 12)}, contract)['clean_press']
+    assert state['completed'] == 1 and state['weights_kg']['wk_kb_press_single'] == 16, state
+    # One bell for both stays the module's single weight, as before.
+    state = tc.confirmed_state(p, {keys[0][0]: log(16, 16), keys[1][0]: log(16, 16)}, contract)['clean_press']
+    assert state == {'completed': 2, 'weight_kg': 16}, state
+    # ...and a later session that splits the bells is a different bell for one of them.
+    state = tc.confirmed_state(p, {keys[0][0]: log(16, 16), keys[1][0]: log(20, 16)}, contract)['clean_press']
+    assert state == {'completed': 1, 'weight_kg': 16}, state
+
+    # The regenerated program prescribes each exercise its own bell and
+    # carries on from the step earned.
+    earned = {'clean_press': {'completed': 2, 'weights_kg': {'wk_kb_clean_single': 20, 'wk_kb_press_single': 16}}}
+    nxt, _, _ = plan(weeks=1, kettlebell_weights_kg=[12, 16, 20], module_progression_state=earned)
+    loads = {e['exercise']['id']: e['load'] for s in sessions(nxt) for e in s['exercises']
+             if e['load']['module_id'] == 'clean_press' and e['load'].get('advances_module')
+             and e['load']['forecast_step'] == 2}
+    assert {k: v['weight_kg'] for k, v in loads.items()} == {'wk_kb_clean_single': 20, 'wk_kb_press_single': 16}, loads
+    # A bell the athlete does not own is refused, as the module's one bell is.
+    bad, _, _ = plan(weeks=1, kettlebell_weights_kg=[12, 16], module_progression_state=earned)
+    assert not bad['weeks'] and any('inventory' in str(e) for e in bad['validation_errors']), bad.get('validation_errors')
+
+
 def test_builder_requirements_are_scoped_to_the_selected_level():
     import api
     response = api.app.test_client().get('/api/philosophies')
