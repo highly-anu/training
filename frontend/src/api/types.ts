@@ -146,7 +146,7 @@ export interface AthleteConstraints {
   /** A track option's id → the athlete's choice (`entry_requirements.options`);
    *  an option left out takes its default. */
   contract_options?: Record<string, string>
-  module_progression_state?: Record<string, { completed?: number; weight_kg?: number }>
+  module_progression_state?: Record<string, { completed?: number; weight_kg?: number; weights_kg?: Record<string, number> }>
   equipment: EquipmentId[]
   equipment_profile?: EquipmentProfileId | 'custom'
   days_per_week: number
@@ -703,7 +703,7 @@ export interface ProgramComposition {
     reserved_days: number[]
     cuts: { optional: boolean; volume: number; exposures: Record<string, number> }
     training_contract?: { id: string; version: number; status: string }
-    module_state?: Record<string, { completed: number; weight_kg?: number }>
+    module_state?: Record<string, { completed: number; weight_kg?: number; weights_kg?: Record<string, number> }>
   }[]
 }
 
@@ -781,7 +781,7 @@ export interface PhaseSummary {
 
 export interface GeneratedProgram {
   training_contract?: { id: string; version: number; status: string; forecast?: string }
-  module_state?: Record<string, { completed: number; weight_kg?: number }>
+  module_state?: Record<string, { completed: number; weight_kg?: number; weights_kg?: Record<string, number> }>
   goal: GoalProfile
   constraints: AthleteConstraints
   validation: ValidationResult

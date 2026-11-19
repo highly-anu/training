@@ -42,6 +42,14 @@
           "weight_kg": {
             "type": "number",
             "exclusiveMinimum": 0
+          },
+          "weights_kg": {
+            "description": "A bell per exercise, for a module whose exercises are done with different ones.",
+            "type": "object",
+            "additionalProperties": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
           }
         }
       }
