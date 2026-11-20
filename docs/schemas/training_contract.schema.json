@@ -152,6 +152,7 @@
                           "description": "An EMOM block's rounds alternate with this movement (odd rounds the block's exercise, even rounds this), when the athlete's track options say `when` (Wildman's Option C); the alternate's equipment and injuries are checked like the block's, and a block whose alternate is ruled out runs one movement.",
                           "properties": {"exercise_id": {"type": "string"},
                                          "when": {"type": "object", "additionalProperties": {"type": "string"}}}},
+            "each_side": {"type": "boolean", "description": "An EMOM block's repetitions are done on each side inside every interval (five on one arm, then five on the other): the load carries `each_side` and every client says so beside the count."},
             "sets": {"type": "integer", "minimum": 1},
             "reps": {"oneOf": [{"type": "integer", "minimum": 1}, {"type": "string", "minLength": 1}],
                      "description": "Reps per set, or as the source writes them: a range (\"6-8\"), a distance (\"20 m\"), per side (\"8/side\")."},

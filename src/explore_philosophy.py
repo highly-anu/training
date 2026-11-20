@@ -76,7 +76,8 @@ def prescription(item: dict) -> str:
     if scheme:
         parts.append('-'.join(_num(r) for r in scheme))
     elif rounds and item.get('reps_per_round'):
-        parts.append(f"{_num(rounds)} rounds × {_num(item['reps_per_round'])}")
+        parts.append(f"{_num(rounds)} rounds × {_num(item['reps_per_round'])}"
+                     + (' each side' if item.get('each_side') else ''))
     elif rounds and rounds != 1:
         parts.append(f'{_num(rounds)} rounds')
     elif item.get('reps_per_round'):

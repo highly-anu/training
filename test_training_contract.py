@@ -241,6 +241,21 @@ def _clean_press_keys(program):
     return out
 
 
+def test_a_block_done_on_each_side_says_so_in_its_load():
+    # Clean and press works each arm inside every minute (fidelity I7): the
+    # load carries it, so every client words the count as one side's. The
+    # swing is one movement a minute and carries nothing.
+    p, _, _ = plan(weeks=1, kettlebell_weights_kg=[16])
+    flagged = {}
+    for day in p['weeks'][0]['schedule'].values():
+        for s in day:
+            for ea in s['exercises']:
+                if ea['slot_type'] == 'emom':
+                    flagged[ea['exercise']['id']] = ea['load'].get('each_side')
+    assert flagged['wk_kb_clean_single'] is True and flagged['wk_kb_press_single'] is True, flagged
+    assert any(v is None for k, v in flagged.items() if 'swing' in k), flagged
+
+
 def test_a_module_done_with_two_bells_earns_its_progress():
     # A 20 kg clean beside a 16 kg press: each exercise keeps its own bell.
     # Until 2026-11-19 such a session never counted, and the cycle started

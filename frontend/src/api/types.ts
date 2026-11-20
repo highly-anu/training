@@ -379,6 +379,8 @@ export interface ExerciseLoad {
   intensity?: string
   /** Structured interval timing — e.g. Tabata's 20s work / 10s rest. */
   work_sec?: number
+  /** The count is one side's: both sides are done inside every interval (a contract block's `each_side`). */
+  each_side?: boolean
   rest_sec?: number
   /** Resolved HR zone bounds (1–5) for the slot's intensity token. */
   zone_lower?: number

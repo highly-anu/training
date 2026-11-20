@@ -63,6 +63,14 @@ final class TrainingContractTests: XCTestCase {
         let assignment = try JSONDecoder().decode(ProgramExerciseAssignment.self, from: data)
         XCTAssertTrue(LoadFormat.describe(assignment).contains("6 reps/round"))
         XCTAssertTrue(LoadFormat.describe(assignment).contains("16 kg"))
+        // A count done on each side inside every round says so (the load's `each_side`).
+        let sided = try JSONDecoder().decode(ProgramExerciseAssignment.self, from: Data(#"""
+        {"exercise":{"id":"press","name":"Press","category":"kettlebell"},
+         "slot_role":"press","slot_type":"emom","meta":false,"injury_skip":false,
+         "load":{"time_minutes":10,"target_rounds":10,"reps_per_round":5,"work_sec":60,
+                 "weight_kg":16,"each_side":true}}
+        """#.utf8))
+        XCTAssertTrue(LoadFormat.describe(sided).contains("5 each side/round"))
         let recovered = try JSONDecoder().decode(ProgramExerciseAssignment.self,
                                                 from: JSONEncoder().encode(assignment))
         XCTAssertEqual(recovered.load.extra["module_id"], .string("swing"))

@@ -130,8 +130,14 @@ def _values(ea: dict, session: dict) -> dict:
         'sets': pv.get('sets'), 'reps': None if per_round is not None else pv.get('reps'),
         'rounds': rounds, 'reps_per_round': per_round, 'weight': pv.get('weight'), 'interval': interval,
         'time': pv.get('time'), 'hold': pv.get('hold'), 'distance': pv.get('distance'), 'rpe': None,
-        'total_reps': total,
+        'total_reps': total, '_each_side': bool(load.get('each_side')) and per_round is not None,
     }
+
+
+def _numbers(values: dict) -> dict:
+    """The values an answer carries: numbers only (the phone decodes them as
+    such), never a `_`-keyed word for the text."""
+    return {k: v for k, v in values.items() if v is not None and not k.startswith('_')}
 
 
 def _interval_words(sec: float) -> str:
@@ -144,15 +150,17 @@ def _show_text(values: dict, show: list[str]) -> str:
     def has(k):
         return k in show and values.get(k) is not None
     parts, used = [], set()
+    # A count done on each side inside every round says so (a contract block's `each_side`).
+    side = ' each side' if values.get('_each_side') else ''
     if has('rounds') and has('reps_per_round'):
-        parts.append(f"{_n(values['rounds'])} × {_n(values['reps_per_round'])}")
+        parts.append(f"{_n(values['rounds'])} × {_n(values['reps_per_round'])}{side}")
         used |= {'rounds', 'reps_per_round'}
     elif has('sets') and has('reps'):
         parts.append(f"{_n(values['sets'])} × {_n(values['reps'])}")
         used |= {'sets', 'reps'}
     words = {
         'sets': lambda v: _plural(v, 'set'), 'reps': lambda v: _plural(v, 'rep'),
-        'rounds': lambda v: _plural(v, 'round'), 'reps_per_round': lambda v: f'{_n(v)} a round',
+        'rounds': lambda v: _plural(v, 'round'), 'reps_per_round': lambda v: f'{_n(v)}{side} a round',
         'weight': lambda v: f'{_n(v)} kg', 'interval': _interval_words, 'time': lambda v: f'{_n(v)} min',
         'hold': lambda v: f'{_n(v)} s hold', 'distance': lambda v: f'{_n(v)} km', 'rpe': lambda v: f'RPE {_n(v)}',
     }
@@ -293,7 +301,7 @@ def _occurrence(kind: str, ident, occ: dict, eas: list[dict], show: list[str], t
         if result is None and entry and status != 'unconfirmed' and (
                 ea.get('slot_type') in _RESULT_SLOTS or _standard_id(ea) or len(eas) == 1):
             result = text
-        parts.setdefault(_eid(ea), {'text': text, 'values': {k: v for k, v in values.items() if v is not None}})
+        parts.setdefault(_eid(ea), {'text': text, 'values': _numbers(values)})
         lead_values = lead_values or values
     record = _records(session).get((eas[0].get('load') or {}).get('module_id')) or {}
     name, _ = _day(str(occ.get('date')), today)
@@ -301,7 +309,7 @@ def _occurrence(kind: str, ident, occ: dict, eas: list[dict], show: list[str], t
         # The lead exercise's line; each exercise's own is in `_parts`.
         'date': str(occ.get('date'))[:10], 'dayText': name, 'text': named[0][1] if named else '',
         '_parts': parts, '_result': result,
-        'values': {k: v for k, v in (lead_values or {}).items() if v is not None},
+        'values': _numbers((lead_values or {})),
         'status': status, 'isDeload': bool(record.get('deload', session.get('is_deload'))),
         'sessionKey': occ.get('key') if occ.get('current') else None,
         '_step': record.get('forecast_step'), '_current': bool(occ.get('current')),
@@ -524,7 +532,7 @@ def build(session: dict, *, date: str, spec: dict | None = None, history: list[d
             values = _values(ea, session)
             exercises.append({
                 'exerciseId': ln['exerciseId'], 'name': ln['name'],
-                'today': {'text': ln['text'], 'values': {k: v for k, v in values.items() if v is not None}},
+                'today': {'text': ln['text'], 'values': _numbers(values)},
                 'history': [{'date': h['date'], 'dayText': h['dayText'], 'status': h['status'],
                              'isDeload': h['isDeload'], 'sessionKey': h['sessionKey'],
                              **h['_parts'][ln['exerciseId']]}
@@ -535,7 +543,7 @@ def build(session: dict, *, date: str, spec: dict | None = None, history: list[d
             'exercises': exercises,
             'exerciseIds': [_eid(ea) for ea in eas],
             'today': {'text': _joined([(ln['name'], ln['text']) for ln in lines]),
-                      'values': {k: v for k, v in today_values.items() if v is not None},
+                      'values': _numbers(today_values),
                       'lines': lines, 'conditional': bool((lead.get('load') or {}).get('conditional'))},
             'history': [_public(h) for h in history_rows],
             'last': _public(all_history[-1]) if all_history else None,
