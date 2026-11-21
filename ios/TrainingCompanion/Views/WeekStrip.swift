@@ -1,8 +1,10 @@
 import SwiftUI
 
-/// Monday to Sunday of the week on show, one dot a day: done, planned (in its
-/// session's modality colour) or rest. A tap selects the day, so the strip is
-/// the day pager's second control (design-system §6.50).
+/// Monday to Sunday of the week on show, one mark a day: done, planned (in its
+/// session's modality colour) or rest, over a bar with one segment per session
+/// in that session's colour, so a done day still says what it was. A tap
+/// selects the day, so the strip is the day pager's second control
+/// (design-system §6.50).
 struct WeekStrip: View {
     enum Status: Equatable { case done, planned, rest }
 
@@ -10,13 +12,23 @@ struct WeekStrip: View {
         let offset: Int
         let date: Date
         let status: Status
-        /// The first session's modality colour, for a planned day.
-        let color: Color?
+        /// The day's sessions in order: each one's modality colour and name.
+        let sessions: [Session]
         let isToday: Bool
         /// Whether the pager reaches this day.
         let isEnabled: Bool
         var id: Int { offset }
     }
+
+    struct Session: Equatable {
+        let color: Color
+        let label: String
+    }
+
+    /// The bar under a day's mark: its height, its whole width, the gap between segments.
+    private static let barHeight: CGFloat = 3
+    private static let barWidth: CGFloat = 20
+    private static let barGap: CGFloat = 2
 
     let days: [Day]
     @Binding var selection: Int
@@ -39,7 +51,7 @@ struct WeekStrip: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(!day.isEnabled)
-                .accessibilityLabel(label(day))
+                .accessibilityLabel(Self.label(day))
                 .accessibilityAddTraits(day.offset == selection ? .isSelected : [])
             }
         }
@@ -53,7 +65,9 @@ struct WeekStrip: View {
                 .foregroundStyle(day.isToday ? AnyShapeStyle(AppColor.accent) : AnyShapeStyle(.secondary))
             mark(day)
                 .frame(height: 16)
+            bar(day)
         }
+        .padding(.vertical, AppMetrics.gapTight)
         .frame(maxWidth: .infinity, minHeight: 44)
         .background(selected ? AnyShapeStyle(.fill.tertiary) : AnyShapeStyle(.clear),
                     in: RoundedRectangle(cornerRadius: AppMetrics.radiusControl))
@@ -69,7 +83,7 @@ struct WeekStrip: View {
         case .done:
             (symbol, font, style) = ("checkmark.circle.fill", .footnote, AnyShapeStyle(AppColor.complete))
         case .planned:
-            (symbol, font, style) = ("circle.fill", .caption2, AnyShapeStyle(day.color ?? AppColor.accent))
+            (symbol, font, style) = ("circle.fill", .caption2, AnyShapeStyle(day.sessions.first?.color ?? AppColor.accent))
         case .rest:
             (symbol, font, style) = ("minus", .caption2.weight(.semibold), AnyShapeStyle(.tertiary))
         }
@@ -79,13 +93,29 @@ struct WeekStrip: View {
             .appSymbolReplace(value: day.status)
     }
 
-    private func label(_ day: Day) -> String {
+    /// One segment a session, in its colour; a rest day keeps the space so the
+    /// marks stay on one line.
+    private func bar(_ day: Day) -> some View {
+        HStack(spacing: Self.barGap) {
+            ForEach(Array(day.sessions.enumerated()), id: \.offset) { _, session in
+                Capsule().fill(session.color)
+            }
+        }
+        .frame(width: Self.barWidth, height: Self.barHeight)
+        .accessibilityHidden(true)
+    }
+
+    /// "Friday 20 November, Power, done" — the bar's colours in words.
+    static func label(_ day: Day) -> String {
         let what: String
         switch day.status {
         case .done: what = "done"
         case .planned: what = "planned"
         case .rest: what = "rest"
         }
-        return "\(Self.spoken.string(from: day.date)), \(what)\(day.isToday ? ", today" : "")"
+        var names: [String] = []
+        for session in day.sessions where !names.contains(session.label) { names.append(session.label) }
+        let kinds = names.isEmpty ? "" : ", " + names.joined(separator: " and ")
+        return "\(Self.spoken.string(from: day.date))\(kinds), \(what)\(day.isToday ? ", today" : "")"
     }
 }

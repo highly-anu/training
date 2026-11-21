@@ -2291,7 +2291,10 @@ with no control until 1.38: nothing said another day was there.
 `Views/WeekStrip.swift`, under Today's pager header: Monday to Sunday of the week on show,
 one mark a day under its letter — done (an emerald checkmark), planned (a dot in the
 session's modality colour), rest (a dash) — today's letter amber, the selected day on a
-filled ground. A tap selects the day, so the
+filled ground. Under the mark a short bar has one segment per session of the day, each in
+its session's modality colour, planned or done: before, a done day lost its colour to
+the checkmark and a finished week read as five identical days. A rest day has no bar.
+VoiceOver says the session types ("Friday 20 November, Power, done"). A tap selects the day, so the
 strip is the day pager's second control. Days outside the pager's range are dimmed and do
 nothing. A day is done once every session on it is.
 
