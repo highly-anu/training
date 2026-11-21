@@ -259,7 +259,10 @@ struct TodayView: View {
         let status: WeekStrip.Status = sessions.isEmpty ? .rest
             : (done == sessions.count ? .done : .planned)
         return WeekStrip.Day(offset: offset, date: date, status: status,
-                             color: sessions.first.map { ModalityStyle.color(for: $0.session.modality) },
+                             sessions: sessions.map {
+                                 WeekStrip.Session(color: ModalityStyle.color(for: $0.session.modality),
+                                                   label: ModalityStyle.label(for: $0.session.modality))
+                             },
                              isToday: offset == 0, isEnabled: dayPages.contains(offset))
     }
 
