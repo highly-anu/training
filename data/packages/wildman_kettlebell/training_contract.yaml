@@ -178,6 +178,7 @@ tracks:
         exercise_id: wk_kb_clean_single
         slot_type: emom
         loaded: true
+        each_side: true
         # Both arms inside every minute (owner, 2026-11-18; fidelity I7).
         notes: 'Each arm, every minute: the repetitions on one arm, then the same on the
           other, then rest for the remainder. Intermediate entry assumes a proficient
@@ -186,6 +187,7 @@ tracks:
         exercise_id: wk_kb_press_single
         slot_type: emom
         loaded: true
+        each_side: true
         notes: 'Each arm, every minute: the repetitions on one arm, then the same on the
           other. Strict presses, no push press or jerk. Repeat the same bell and movement
           throughout the cycle.'

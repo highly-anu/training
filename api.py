@@ -4606,7 +4606,8 @@ def _fmt_watch_load(slot_type: str, load: dict, rest_until_hr: int | None = None
             span = f'{work}s/{rest}s' if rest else f'{work}s'
             reps = _pick(load, 'reps_per_round', 'repsPerRound')
             bell = _pick(load, 'weight_kg', 'weightKg')
-            return (f'{rounds} x {span}' + (f' · {reps} reps/round' if reps is not None else '')
+            per = 'each side/round' if _pick(load, 'each_side', 'eachSide') else 'reps/round'
+            return (f'{rounds} x {span}' + (f' · {reps} {per}' if reps is not None else '')
                     + (f' @ {bell:g} kg' if bell is not None else '') + switch)
         if mins is not None and rounds is not None:
             return f'{mins} min / {rounds} rounds'

@@ -213,9 +213,11 @@ def test_a_module_of_two_exercises_is_read_exercise_by_exercise():
     it = item(doc, 'module:clean_press')
     assert [e['exerciseId'] for e in it['exercises']] == ['wk_kb_clean_single', 'wk_kb_press_single']
     clean, press = it['exercises']
-    assert clean['today']['text'] == '5 × 3 · on the minute', clean['today']
-    assert [h['text'] for h in clean['history']] == ['5 × 1 · 20 kg · RPE 6', '5 × 2 · RPE 6'], clean['history']
-    assert [h['text'] for h in press['history']] == ['5 × 1 · 16 kg · RPE 6', '5 × 2 · RPE 6'], press['history']
+    # Each arm inside every minute (the block's `each_side`): the count is one side's.
+    assert clean['today']['text'] == '5 × 3 each side · on the minute', clean['today']
+    assert clean['today']['values'] == {'rounds': 5, 'reps_per_round': 3, 'interval': 60, 'total_reps': 15}, clean['today']
+    assert [h['text'] for h in clean['history']] == ['5 × 1 each side · 20 kg · RPE 6', '5 × 2 each side · RPE 6'], clean['history']
+    assert [h['text'] for h in press['history']] == ['5 × 1 each side · 16 kg · RPE 6', '5 × 2 each side · RPE 6'], press['history']
     assert all(h['status'] == 'clean' for h in clean['history'] + press['history'])
     # The item's own row is one exercise's line, never the two joined.
     assert ';' not in it['history'][0]['text'] and 'Kettlebell' not in it['history'][0]['text']
@@ -234,7 +236,8 @@ def test_a_new_stage_is_said_as_one_not_as_a_sum_of_differences():
             m['requirements'] = {e: {'rounds': rounds, 'duration_sec': 0} for e in m['exercise_ids']}
     doc = briefing.build(target['session'], date=target['date'], history=[confirm(last)], modules=wildman_modules())
     text = item(doc, 'module:clean_press')['suggestion']['text']
-    assert text.startswith('A new stage: 10 × 1. ') and text.endswith(' was 5 × 5.'), text
+    # Each side is said once, with today's numbers.
+    assert text.startswith('A new stage: 10 × 1 each side. ') and text.endswith(' was 5 × 5.'), text
     assert 'fewer' not in text and 'more' not in text
 
 

@@ -61,7 +61,8 @@ ids. The status is the scorecard's (records/status.yaml).
 - I7: clean and press works both arms inside every minute — the minute's repetitions on
   one arm, then the same on the other — decided by the owner on 2026-11-18. His public
   pages do not say how the arms share a minute (the numbers are in the paid program);
-  alternating minutes would need twice the minutes for the same work on each arm.
+  alternating minutes would need twice the minutes for the same work on each arm. The blocks say
+  `each_side`, so the count reads "10 × 5 each side" wherever it is shown.
 
 ## Measurement
 

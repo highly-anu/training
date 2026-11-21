@@ -172,6 +172,8 @@ inventions:
     implemented_by:
       - data:training_contract.yaml#tracks.general_practice.modules.clean_press.blocks.clean.notes
       - data:training_contract.yaml#tracks.general_practice.modules.clean_press.blocks.press.notes
+      - data:training_contract.yaml#tracks.general_practice.modules.clean_press.blocks.clean.each_side
+      - data:training_contract.yaml#tracks.general_practice.modules.clean_press.blocks.press.each_side
 
 currency:
   general_practice: {entry: interval_rounds, rule: R10}

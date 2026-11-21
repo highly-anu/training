@@ -12,6 +12,13 @@ describe('formatLoad rounds', () => {
       .toBe('5 rounds × 5 reps · FOR TIME')
   })
 
+  it('says a count done on each side inside every interval (each_side)', () => {
+    expect(formatLoad({ target_rounds: 10, reps_per_round: 5, work_sec: 60, each_side: true, weight_kg: 20 } as ExerciseLoad))
+      .toBe('5 each side / round · 10 × 60s · 20kg')
+    expect(formatLoad({ target_rounds: 10, reps_per_round: 5, work_sec: 60, weight_kg: 20 } as ExerciseLoad))
+      .toBe('5 reps / round · 10 × 60s · 20kg')
+  })
+
   it('writes a rep scheme as the source does (Fran)', () => {
     expect(formatLoad({ target_rounds: 3, rep_scheme: [21, 15, 9], format: 'FOR TIME' } as ExerciseLoad))
       .toBe('21-15-9 reps · FOR TIME')

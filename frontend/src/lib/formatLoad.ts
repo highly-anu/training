@@ -45,7 +45,7 @@ export function formatLoad(load: ExerciseLoad): string {
 
   // Rounds / AMRAP / structured intervals
   if (load.target_rounds && load.work_sec) {
-    if (load.reps_per_round) parts.push(`${load.reps_per_round} reps / round`)
+    if (load.reps_per_round) parts.push(`${load.reps_per_round} ${load.each_side ? 'each side' : 'reps'} / round`)
     // e.g. "8 × 20s/10s" (Tabata) or "10 × 60s" (EMOM strength)
     const span = load.rest_sec ? `${load.work_sec}s/${load.rest_sec}s` : `${load.work_sec}s`
     parts.push(`${load.target_rounds} × ${span}`)

@@ -920,6 +920,9 @@ def _assignment(block: dict, module: dict, exercises: dict, constraints: dict,
                 'duration_minutes': seconds // 60}
         if cue:
             load['focus'] = cue
+        if block.get('each_side'):
+            # The count is one side's; both are done inside every interval.
+            load['each_side'] = True
         alt = _alternate(block, exercises, constraints, blocked)
         if alt:
             # Odd rounds the block's movement, even rounds this one; the

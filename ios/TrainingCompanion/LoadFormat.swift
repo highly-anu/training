@@ -59,7 +59,12 @@ enum LoadFormat {
             if let min = load.timeMinutes, let rounds = load.targetRounds {
                 let reps: String
                 if case .int(let count)? = load.extra["reps_per_round"] {
-                    reps = " · \(count) reps/round"
+                    // A count done on each side inside every round (a contract block's `each_side`).
+                    if case .bool(true)? = load.extra["each_side"] {
+                        reps = " · \(count) each side/round"
+                    } else {
+                        reps = " · \(count) reps/round"
+                    }
                 } else { reps = "" }
                 let bell = load.weightKg.map { " · \(kilograms($0)) kg" } ?? ""
                 return "\(min) min · \(rounds) rounds\(reps)\(bell)"

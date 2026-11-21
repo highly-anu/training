@@ -221,3 +221,12 @@ practice tracks. Their prescriptions are explicit app adaptations. See
 counts and limits. `tools/check_exercise_coverage.py` enforces package-wide
 generated reachability rather than demanding variety inside each track. Web and
 phone builders expose the proficiency and matching-bell entry confirmations.
+
+## A count done on each side
+
+An EMOM block may say `each_side: true`: its repetitions are done on one side and
+then the other inside every interval (Wildman's clean and press, each arm every
+minute). The load carries `each_side`, and the count stays one side's — the cycle,
+the confirmed state and the analytics read the same numbers as before. Only the
+words change: the briefing says "10 × 5 each side · on the minute", the watches'
+and the phone's step lists "5 each side/round", the web "5 each side / round".
