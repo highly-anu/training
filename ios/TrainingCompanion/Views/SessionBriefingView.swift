@@ -1,29 +1,35 @@
 import SwiftUI
-import Charts
 
-/// Before a session: per item of it, today's numbers, the suggestion, the
-/// earlier times the same session was done and where it stands in its cycle
-/// (design-system §6.61). The document is the server's (`SessionBriefing`);
-/// this only lays it out. Used before the start in the workout player and
-/// in the detail of a session that is not done — never after one, which is
-/// §6.54's.
+/// Before a session: one row an exercise — its name, today's numbers and a
+/// strip with one mark for every earlier time it was done — under it the one
+/// suggestion (design-system §6.61). The dated lines, the chart, the standard
+/// and the package's note are the row's sheet (`BriefingHistorySheet`). The
+/// document is the server's (`SessionBriefing`); this only lays it out. Used
+/// before the start in the workout player and in the detail of a session
+/// that is not done — never after one, which is §6.54's.
 struct SessionBriefingView: View {
     @ObservedObject var loader: SessionBriefingLoader
     var tint: Color = AppColor.accent
-    /// Opens an earlier session to confirm it; without it the line is said, not tappable.
+    /// Opens an earlier session to confirm it, from a row's sheet; without it
+    /// the session is named there, not tappable.
     var onOpenSession: ((String) -> Void)? = nil
     let retry: () async -> Void
+
+    @State private var shown: SessionBriefing.Row?
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppMetrics.gapMedium) {
             if let briefing = loader.briefing {
-                // The earliest session to confirm, and how many wait behind it:
-                // four banners pushed the briefing itself off the screen.
-                if let pending = briefing.pending.first {
-                    PendingRow(pending: pending, more: briefing.pending.count - 1, open: onOpenSession)
+                let rows = briefing.rows
+                VStack(alignment: .leading, spacing: AppMetrics.gapMedium) {
+                    ForEach(Array(rows.enumerated()), id: \.element.id) { index, row in
+                        if index > 0 { Divider() }
+                        RowView(row: row, tint: tint) { shown = row }
+                    }
                 }
-                ForEach(briefing.items) { item in
-                    ItemCard(item: item, tint: tint)
+                .appCard()
+                .task(id: rows.map(\.id)) {
+                    if let index = WorkoutPlayerDebug.briefingSheet, rows.indices.contains(index) { shown = rows[index] }
                 }
             } else if loader.isLoading {
                 HStack(spacing: AppMetrics.gapSmall) {
@@ -37,192 +43,132 @@ struct SessionBriefingView: View {
                 AppErrorBanner(message: error, retry: retry)
             }
         }
-    }
-
-    // MARK: - A session to confirm first
-
-    private struct PendingRow: View {
-        let pending: SessionBriefing.Pending
-        var more = 0
-        let open: ((String) -> Void)?
-
-        var body: some View {
-            let row = HStack(alignment: .firstTextBaseline, spacing: AppMetrics.gapSmall) {
-                Image(systemName: "questionmark.circle.fill").foregroundStyle(AppColor.warning)
-                Text(more > 0 ? "\(pending.text) And \(more) more after it." : pending.text).font(.footnote)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                if open != nil {
-                    Text("Confirm").font(.footnote.weight(.semibold)).foregroundStyle(AppColor.accent)
-                }
-            }
-            .appCard(compact: true, tint: AppColor.warning)
-            if let open {
-                Button { open(pending.sessionKey) } label: { row }
-                    .buttonStyle(.plain)
-                    .accessibilityHint("Opens that session")
-            } else {
-                row.accessibilityElement(children: .combine)
-            }
+        .sheet(item: $shown) { row in
+            BriefingHistorySheet(row: row, tint: tint,
+                                 pending: Set(loader.briefing?.pending.map(\.sessionKey) ?? []),
+                                 onOpenSession: onOpenSession.map { open in
+                                     { key in shown = nil; open(key) }
+                                 })
         }
     }
 
-    // MARK: - One item
+    // MARK: - One exercise
 
-    private struct ItemCard: View {
-        let item: SessionBriefing.Item
+    private struct RowView: View {
+        let row: SessionBriefing.Row
         let tint: Color
+        let open: () -> Void
 
         var body: some View {
-            AppCard(header: item.title) {
-                if let cycle = item.cycleText {
-                    Text(cycle).font(.caption).monospacedDigit().foregroundStyle(.secondary)
-                }
-            } content: {
-                if item.exercises.count <= 1 { today }
-                if let suggestion = item.suggestion {
-                    Label(suggestion.text, systemImage: Self.symbol(suggestion.kind))
-                        .font(.subheadline)
-                        .foregroundStyle(suggestion.kind == "confirm_pending" ? AppColor.warning : .primary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                if let step = item.cycleStep, let of = item.cycleOf, of > 1 {
-                    ProgressView(value: Double(step), total: Double(of))
-                        .tint(tint)
-                        .accessibilityLabel(item.cycleText ?? "Step \(step) of \(of)")
-                }
-                if !item.series.isEmpty {
-                    SeriesChart(item: item, tint: tint)
-                }
-                if item.exercises.count > 1 {
-                    // Exercise by exercise: today's line, then that exercise's own earlier ones.
-                    ForEach(item.exercises) { exercise in
-                        VStack(alignment: .leading, spacing: AppMetrics.gapTight) {
-                            AppAdaptiveStack(alignment: .firstTextBaseline, spacing: AppMetrics.gapSmall) {
-                                Text(exercise.name).font(.subheadline.weight(.semibold))
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                Text(exercise.todayText).font(.headline).monospacedDigit()
-                                    .accessibilityLabel("Today: \(exercise.todayText)")
-                            }
-                            ForEach(exercise.history.reversed()) { occurrence in
-                                OccurrenceRow(occurrence: occurrence)
-                            }
+            VStack(alignment: .leading, spacing: AppMetrics.gapSmall) {
+                if let header = row.header {
+                    AppAdaptiveStack(alignment: .firstTextBaseline, spacing: AppMetrics.gapSmall) {
+                        Text(header).font(.caption.weight(.semibold)).textCase(.uppercase)
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        if let detail = row.headerDetail {
+                            Text(detail).font(.caption).monospacedDigit().foregroundStyle(.secondary)
                         }
                     }
-                    if item.times == 0 {
-                        Text("The first time on record.").font(.footnote).foregroundStyle(.secondary)
-                    }
-                } else if !item.history.isEmpty {
+                    .accessibilityElement(children: .combine)
+                    .accessibilityAddTraits(.isHeader)
+                }
+                Button(action: open) {
                     VStack(alignment: .leading, spacing: AppMetrics.gapTight) {
-                        ForEach(item.history.reversed()) { occurrence in
-                            OccurrenceRow(occurrence: occurrence)
-                        }
-                    }
-                } else if item.times == 0 {
-                    Text("The first time on record.").font(.footnote).foregroundStyle(.secondary)
-                }
-                if let standard = item.standard, standard.best != nil || standard.target != nil {
-                    Label([standard.best.map { "Best \($0)" }, standard.target].compactMap { $0 }.joined(separator: " · "),
-                          systemImage: "trophy")
-                        .font(.footnote).foregroundStyle(.secondary)
-                }
-                if let notes = item.notes {
-                    Text(notes).font(.caption).foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-        }
-
-        @ViewBuilder private var today: some View {
-            if item.lines.count > 1, Set(item.lines.map(\.text)).count > 1 {
-                VStack(alignment: .leading, spacing: AppMetrics.gapTight) {
-                    ForEach(item.lines, id: \.exerciseId) { line in
                         AppAdaptiveStack(alignment: .firstTextBaseline, spacing: AppMetrics.gapSmall) {
-                            Text(line.name).font(.subheadline)
+                            Text(row.name).font(.subheadline.weight(.semibold))
+                                .multilineTextAlignment(.leading)
+                                .fixedSize(horizontal: false, vertical: true)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                            Text(line.text).font(.subheadline.weight(.semibold)).monospacedDigit()
+                            Text(row.todayText).font(.headline).monospacedDigit()
+                                .multilineTextAlignment(.trailing)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        HStack(alignment: .center, spacing: AppMetrics.gapSmall) {
+                            BriefingStrip(row: row, tint: tint)
+                            Text(row.caption).font(.caption).monospacedDigit().foregroundStyle(.secondary)
+                                .fixedSize()
+                            Image(systemName: "chevron.right").font(.caption.weight(.semibold))
+                                .foregroundStyle(.tertiary)
+                        }
+                        if let suggestion = row.suggestion {
+                            Text(suggestion.text).font(.footnote)
+                                .foregroundStyle(suggestion.kind == "confirm_pending" ? AppColor.warning : .secondary)
+                                .multilineTextAlignment(.leading)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
                     }
+                    .contentShape(Rectangle())
                 }
-            } else {
-                Text(item.lines.first?.text ?? item.todayText)
-                    .font(AppFont.metricCompact)
-                    .minimumScaleFactor(0.7)
-                    .lineLimit(2)
-                    .accessibilityLabel("Today: \(item.lines.first?.text ?? item.todayText)")
-            }
-        }
-
-        static func symbol(_ kind: String) -> String {
-            switch kind {
-            case "confirm_pending": return "questionmark.circle"
-            case "next_step", "next_load": return "arrow.up.right"
-            case "cycle_end": return "flag.checkered"
-            case "beat_last", "standard_target": return "trophy"
-            default: return "clock.arrow.circlepath"
+                .buttonStyle(.plain)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(row.accessibilityLabel)
+                .accessibilityHint("Shows every earlier session")
             }
         }
     }
+}
 
-    private struct OccurrenceRow: View {
-        let occurrence: SessionBriefing.Occurrence
+// MARK: - The strip
 
-        var body: some View {
-            AppAdaptiveStack(alignment: .firstTextBaseline, spacing: AppMetrics.gapSmall) {
-                HStack(alignment: .firstTextBaseline, spacing: AppMetrics.gapTight) {
-                    Image(systemName: occurrence.status.symbol)
-                        .font(.caption)
-                        .foregroundStyle(Self.color(occurrence.status))
-                        .accessibilityHidden(true)
-                    Text(occurrence.dayText.prefix(1).uppercased() + occurrence.dayText.dropFirst())
-                        .font(.footnote)
-                    if occurrence.isDeload {
-                        Text("Deload").font(.caption2).foregroundStyle(.secondary)
-                    }
+/// Every earlier time as one mark, oldest first, then today's as the plan in
+/// the modality colour: height is the row's number, colour how it went.
+/// Missed and unconfirmed are outlined — the shape differs with the colour —
+/// and a deload is ghosted. A run longer than the strip shows its newest;
+/// the caption beside it says how many there are.
+struct BriefingStrip: View {
+    let row: SessionBriefing.Row
+    let tint: Color
+
+    static let height: CGFloat = 24
+    private static let gap: CGFloat = 2
+    private static let todayGap: CGFloat = 6
+    private static let markWidth: ClosedRange<CGFloat> = 3...10
+
+    var body: some View {
+        GeometryReader { geo in
+            let room = geo.size.width - Self.markWidth.lowerBound - Self.todayGap
+            let places = max(0, Int((room + Self.gap) / (Self.markWidth.lowerBound + Self.gap)))
+            let marks = row.marks(fitting: places)
+            let values = marks.compactMap(\.value) + (row.todayValue.map { [$0] } ?? [])
+            let width = min(Self.markWidth.upperBound, max(Self.markWidth.lowerBound,
+                (room - Self.gap * CGFloat(max(0, marks.count - 1))) / CGFloat(max(1, marks.count))))
+            HStack(alignment: .bottom, spacing: Self.gap) {
+                ForEach(Array(marks.enumerated()), id: \.offset) { _, mark in
+                    MarkShape(outlined: mark.status == .missed || mark.status == .unconfirmed,
+                              color: mark.status.color.opacity(mark.isDeload ? AppColor.Opacity.ghost : 1))
+                        .frame(width: width, height: Self.height * SessionBriefing.markHeight(mark.value, in: values))
                 }
-                .fixedSize()
-                Text(occurrence.text)
-                    .font(.footnote).monospacedDigit().foregroundStyle(.secondary)
-                    .multilineTextAlignment(.trailing)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+                MarkShape(outlined: false, color: tint)
+                    .frame(width: width, height: Self.height * SessionBriefing.markHeight(row.todayValue, in: values))
+                    .padding(.leading, Self.todayGap - Self.gap)
             }
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel("\(occurrence.dayText): \(occurrence.text). \(occurrence.status.label).")
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
         }
-
-        static func color(_ status: SessionBriefing.Status) -> Color {
-            switch status {
-            case .clean, .made: return AppColor.complete
-            case .missed: return AppColor.destructive
-            case .unconfirmed: return AppColor.warning
-            case .logged: return .secondary
-            }
-        }
+        .frame(height: Self.height)
+        .accessibilityHidden(true)
     }
 
-    /// The item's metric across its occurrences, today's as the plan: bars,
-    /// because each is one session, not a reading on a continuous scale.
-    private struct SeriesChart: View {
-        let item: SessionBriefing.Item
-        let tint: Color
+    private struct MarkShape: View {
+        let outlined: Bool
+        let color: Color
 
         var body: some View {
-            let points = Array(item.series.enumerated())
-            Chart {
-                ForEach(points, id: \.offset) { index, point in
-                    BarMark(x: .value("Session", String(index)), y: .value(item.metric?.label ?? "", point.value), width: .ratio(0.6))
-                        .foregroundStyle(point.planned ? tint : AppColor.complete.opacity(point.isDeload ? AppColor.Opacity.ghost : 1))
-                        .annotation(position: .top, spacing: 2) {
-                            Text(point.value == point.value.rounded() ? String(Int(point.value)) : String(format: "%.1f", point.value))
-                                .font(AppFont.micro).monospacedDigit()
-                                .foregroundStyle(point.planned ? .primary : .secondary)
-                        }
-                }
-            }
-            .chartXAxis(.hidden)
-            .chartYAxis(.hidden)
-            .frame(height: 84)
-            .appChartEntry()
-            .appChartSummary(item.metric?.label ?? "Earlier sessions", SessionBriefing.seriesSummary(item))
+            let shape = RoundedRectangle(cornerRadius: 1.5, style: .continuous)
+            if outlined { shape.strokeBorder(color, lineWidth: 1) } else { shape.fill(color) }
+        }
+    }
+}
+
+extension SessionBriefing.Status {
+    /// Clean and made are done; missed, unconfirmed and merely logged each
+    /// have their own (the symbol and the strip's outline are the twin).
+    var color: Color {
+        switch self {
+        case .clean, .made: return AppColor.complete
+        case .missed: return AppColor.destructive
+        case .unconfirmed: return AppColor.warning
+        case .logged: return .secondary
         }
     }
 }

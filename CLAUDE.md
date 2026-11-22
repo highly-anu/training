@@ -1268,6 +1268,15 @@ sentence is the server's.
   or skill module by module, a `load_per_exposure` lift by exercise, a named workout by
   archetype, anything else by exercise. Wildman declares its density cycle. Nothing in
   `src/` names a package; the schema's enums are the vocabulary.
+- **One row an exercise, one mark a session** (since 2026-11-22, roadmap 22.5). Both clients
+  draw a row per exercise — name, today's numbers, a strip with one mark for **every** earlier
+  time, the item's suggestion — and keep the dated lines, the chart, the standard and the
+  session to confirm in the row's sheet (phone `SessionBriefing.rows`, `BriefingStrip`,
+  `BriefingHistorySheet`; web `lib/briefing.briefingRows`, the same names; change both). Each
+  exercise carries `run` (every occurrence, not `history`'s last few: day, status, text and
+  one `value`), `metric` (`briefing._run_metric`: the entry's `chart` when the exercise has
+  it, else what moves first — weight, reps in all, … a count of sets last), `today.value`,
+  `times` and `timesText`. Debug builds open the nth row's sheet with `TC_BRIEFING_SHEET=<n>`.
 - **Exercise by exercise.** Each item carries `exercises`: per exercise today's line and
   that exercise's own earlier rows (the occurrence's `_parts`); the item's own `history`
   row is the lead exercise's line, never the exercises joined. An earlier row leaves the

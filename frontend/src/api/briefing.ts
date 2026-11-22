@@ -17,14 +17,24 @@ export interface BriefingOccurrence {
   status: BriefingStatus
   isDeload: boolean
   sessionKey?: string | null
-  values: Record<string, number>
+  values?: Record<string, number>
+  /** A run's point: this time's number in the run's metric. */
+  value?: number
 }
+
+export interface BriefingMetric { id: string; label: string; unit: string }
 
 export interface BriefingExercise {
   exerciseId: string
   name: string
-  today: { text: string; values?: Record<string, number> }
+  today: { text: string; values?: Record<string, number>; value?: number }
   history: BriefingOccurrence[]
+  /** Every earlier time, oldest first, each with its `value` in `metric`. */
+  run?: BriefingOccurrence[]
+  times?: number
+  /** "6 sessions", "First time". */
+  timesText?: string
+  metric?: BriefingMetric
 }
 
 export interface BriefingItem {
@@ -40,7 +50,7 @@ export interface BriefingItem {
   }
   history: BriefingOccurrence[]
   times: number
-  metric?: { id: string; label: string; unit: string }
+  metric?: BriefingMetric
   cycle?: { step: number; of: number; text: string }
   suggestion?: { kind: string; text: string }
   standard?: { id?: string; name?: string; best?: string; target?: string }
