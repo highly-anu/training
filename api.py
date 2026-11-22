@@ -4762,6 +4762,10 @@ def _encode_watch_exercise(ea: dict, modality: str, max_hr: int | None = None) -
     sw = _pick(load, 'switch_at_sec', 'switchAtSec')
     if sw:
         out['switchAtSec'] = sw
+    # The count a round is one side's (a contract block's `each_side`): the
+    # watches say "5 each side", not "5 reps".
+    if _pick(load, 'each_side', 'eachSide') and out.get('repsPerRound') is not None:
+        out['eachSide'] = True
     if gate:
         out['restUntilHr'] = gate
     # Reps round by round (Fran's [21, 15, 9]), in place of repsPerRound.

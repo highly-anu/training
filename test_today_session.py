@@ -170,6 +170,14 @@ def run():
     wk = client.get('/api/user/today-session?date=2026-10-05&week=1').get_json()
     check(len(wk.get('days') or []) == 7, f"Monday's week {len(wk.get('days') or [])} days")
 
+    # A count done on each side inside every round is said so on the watches'
+    # work line ("5 each side"): `eachSide`, only where it applies.
+    emom = {'target_rounds': 10, 'reps_per_round': 5, 'work_sec': 60, 'rest_sec': 0}
+    one = api._encode_watch_exercise(_ex('kb_clean', 'Clean', 'emom', {**emom, 'each_side': True}), 'kettlebell')
+    check(one.get('repsPerRound') == 5 and one.get('eachSide') is True, f"each side {one.get('eachSide')}")
+    check('eachSide' not in api._encode_watch_exercise(_ex('kb_swing', 'Swing', 'emom', emom), 'kettlebell'),
+          'eachSide sent for a plain count')
+
     failures += fixture_check(client, write='--write' in sys.argv)
 
     for f in failures:

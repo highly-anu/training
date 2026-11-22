@@ -246,6 +246,33 @@
                  "lines": ["Next: Rest", "1:00"], "lap": "complete_set", "outcome": "complete_set"}
     },
     {
+      "name": "an EMOM with a count: the coming work says its reps a round",
+      "exercise": {"exerciseId": "kb_swing", "name": "Swing", "slotType": "emom", "category": "kettlebell", "weightKg": 24,
+                   "targetRounds": 10, "workSec": 60, "intervalRestSec": 0, "repsPerRound": 5},
+      "state": {"intervalWorking": true, "intervalRound": 1, "intervalTotal": 10, "intervalLeftSec": 60,
+                "intervalWorkSec": 60, "intervalRestSec": 0},
+      "expect": {"title": "Swing  24 kg", "a": ["ROUND", "1/10"], "b": ["TIME LEFT", "1:00"], "gauge": ["ROUND", "1/10"],
+                 "lines": ["Next: Work", "1:00  5 reps"], "lap": "skip", "outcome": "next"}
+    },
+    {
+      "name": "one rep a round is a rep",
+      "exercise": {"exerciseId": "kb_tgu", "name": "Get-Up", "slotType": "emom", "category": "kettlebell",
+                   "targetRounds": 10, "workSec": 60, "intervalRestSec": 0, "repsPerRound": 1},
+      "state": {"intervalWorking": true, "intervalRound": 2, "intervalTotal": 10, "intervalLeftSec": 40,
+                "intervalWorkSec": 60, "intervalRestSec": 0},
+      "expect": {"title": "Get-Up", "a": ["ROUND", "2/10"], "b": ["TIME LEFT", ":40"], "gauge": ["ROUND", "2/10"],
+                 "lines": ["Next: Work", "1:00  1 rep"], "lap": "skip", "outcome": "next"}
+    },
+    {
+      "name": "an EMOM counted on each side says so",
+      "exercise": {"exerciseId": "kb_clean", "name": "Clean", "slotType": "emom", "category": "kettlebell",
+                   "targetRounds": 10, "workSec": 60, "intervalRestSec": 0, "repsPerRound": 3, "eachSide": true},
+      "state": {"intervalWorking": true, "intervalRound": 4, "intervalTotal": 10, "intervalLeftSec": 22,
+                "intervalWorkSec": 60, "intervalRestSec": 0},
+      "expect": {"title": "Clean", "a": ["ROUND", "4/10"], "b": ["TIME LEFT", ":22"], "gauge": ["ROUND", "4/10"],
+                 "lines": ["Next: Work", "1:00  3 each side"], "lap": "skip", "outcome": "next"}
+    },
+    {
       "name": "an unknown template draws the slot type's screen",
       "exercise": {"exerciseId": "wall_sit", "name": "Wall Sit", "slotType": "static_hold", "sets": 2, "holdSeconds": 60},
       "screen": {"template": "warp", "a": "reps"},

@@ -534,7 +534,15 @@ enum WatchSpecText {
             let hi = ex.prescribedZoneUpper
             return "\(t)  Zone \(z)" + ((hi != nil && hi != z) ? "-\(hi!)" : "")
         }
+        // The count a round, when the work has one (an EMOM's 5 reps).
+        if let count = roundCount(ex) { return "\(t)  \(count)" }
         return t
+    }
+
+    /// An interval's count a round, in words: "5 reps", "1 rep", "5 each side".
+    static func roundCount(_ ex: WatchExercise) -> String? {
+        guard let n = ex.repsPerRound else { return nil }
+        return "\(n) " + (ex.eachSide == true ? "each side" : (n == 1 ? "rep" : "reps"))
     }
 
     private static func restValue(_ ex: WatchExercise, _ st: WatchStepState) -> String {

@@ -418,6 +418,7 @@ enum PlayerFallback {
                                 ("reps_per_round", "repsPerRound"), ("switch_at_sec", "switchAtSec")] {
                 if case .int(let n)? = l.extra[key] { e[wire] = n }
             }
+            if case .bool(true)? = l.extra["each_side"] { e["eachSide"] = true }
             if case .array(let items)? = l.extra["rep_scheme"] {
                 e["repScheme"] = items.compactMap { item -> Int? in if case .int(let n) = item { return n }; return nil }
             }

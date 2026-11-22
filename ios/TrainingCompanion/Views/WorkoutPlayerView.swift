@@ -271,9 +271,18 @@ struct PlayerStepView: View {
         let running = engine.isWorkingInterval(index) || engine.isRestingInterval(index)
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text(WatchSpecText.title(exercise, screen, st))
-                    .font(.title.bold())
-                    .fixedSize(horizontal: false, vertical: true)
+                VStack(alignment: .leading, spacing: AppMetrics.gapTight) {
+                    Text(WatchSpecText.title(exercise, screen, st))
+                        .font(.title.bold())
+                        .fixedSize(horizontal: false, vertical: true)
+                    // What each round asks for, under the name: the line below the
+                    // gauge says it too, but a long name pushes that off the screen.
+                    if screen.template == .interval, let count = WatchSpecText.roundCount(exercise) {
+                        Text("\(count) a round")
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                    }
+                }
                 if screen.template == .interval, let lead {
                     intervalClock(lead, st)
                 } else if let lead {
