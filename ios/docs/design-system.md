@@ -2528,40 +2528,51 @@ step**, never in a tab or a sheet of its own (`BuilderMethodologyStep`,
 
 ### 6.61 Session Briefing
 
-Before a session: today's numbers beside the earlier times the same session was done.
+Before a session: one row an exercise, one mark for every time it was done.
 `SessionBriefingView` lays out the server's document (`GET /api/sessions/briefing`,
 `SessionBriefing`; the package's `briefing.yaml` decides what an item is) and formats
-nothing: every sentence and number arrives as text.
+nothing: every sentence and number arrives as text. Until 2026-11-22 it was a card an item —
+today's numbers, a sentence, a progress bar, a bar chart with a number over every bar and up
+to five dated lines an exercise — and still stopped at five sessions.
 
-- **A session to confirm first** leads, on the warning tint: "Thursday: done as written?".
-  With `onOpenSession` it is a button that opens that session; in the player it is said only.
-- **Exercise by exercise.** An item of several exercises (a clean and a press in one
-  module) shows each exercise's name with today's line beside it and that exercise's own
-  earlier rows under it — never the exercises joined in one row, and no chart. Only the
-  earliest session to confirm is shown, with how many wait behind it.
-- **One card per item** — a contract module, a named workout, an exercise. Header: the
-  item's name, its cycle position trailing ("Step 7 of 32 · stage 1 of 4"). Then today's
-  prescription in `AppFont.metricCompact` (several exercises with different numbers: one
-  row each), the one suggestion with its symbol (warning-coloured only for
-  `confirm_pending`), the cycle as a thin progress bar in the modality colour, the series,
-  the earlier occurrences newest first, the standard's best and target, the package's note.
-- **The series is bars**, one a session — the item's metric (`metric.id`) across the
-  occurrences in emerald (a deload ghosted), today's as the plan in the modality colour,
-  each with its value above; no axes. Fewer than three points is no chart. It carries a
-  chart summary (§6.57).
-- **An occurrence row**: status symbol, day, the server's text. Clean and made are
-  emerald check marks, missed a destructive cross, not confirmed a warning question mark,
-  logged a secondary dot — the symbol's shape differs with the colour, and VoiceOver reads
-  the status in words.
+- **One card, a row an exercise** (`SessionBriefing.rows`, pure), rows divided by
+  hairlines. A row: the name with today's numbers trailing; the strip with its caption and
+  a chevron; the item's one suggestion under its last row (warning-coloured only for
+  `confirm_pending`, and that sentence is said by the first item only — one session to
+  confirm holds up every module of the day). An item of one exercise is named by the item
+  and its caption is the short cycle position ("Step 19 of 32"), else the server's count
+  ("27 sessions", "First time"); an item of several exercises is headed once by its name,
+  the cycle text trailing.
+- **The strip** (`BriefingStrip`): every earlier time (`exercises[].run`) as one mark,
+  oldest first, then today's as the plan in the modality colour after a small gap. Height is
+  the time's number in the exercise's own metric (`SessionBriefing.markHeight`: the run's
+  lowest a third of the strip, its highest the whole, so a 2.5 kg step shows; no number, or
+  a run that never moves, 0.6). Colour is how it went — emerald clean or made, secondary
+  logged — and missed (destructive) and not confirmed (warning) are **outlined**, the
+  colour's twin; a deload is ghosted. No numbers, no axes, 24 pt high. A run longer than the
+  strip draws its newest (`marks(fitting:)`); the caption still counts them all.
+- **The row is a button** (the chevron says so) and one element to VoiceOver: name, today,
+  the caption, the last time with its status in words, the suggestion.
+- **Its sheet** (`BriefingHistorySheet`, `.appSheet(.flexible)`): today's numbers large,
+  the cycle text over its progress bar, the suggestion with its symbol, the standard's best
+  and target, the run as bars (emerald, today's in the modality colour, each with its value;
+  fewer than three points or a run that never changes is no chart; a long run scrolls,
+  resting on its newest; chart summary §6.57), then **every** earlier time newest first —
+  status symbol, day, the server's text — and the package's note. A session the briefing
+  asks to confirm first (`pending`) opens from its line where the caller passes
+  `onOpenSession`; the banner that used to lead the screen is gone.
 - **States (§6.3)**: `SessionBriefingLoader` publishes loading, the failure and the
   document. Loading is one quiet row, a failure `AppErrorBanner` with Try again. A document
   that adds nothing to the prescription (`saysSomething` false) shows no section at all.
+- A server that sends no `run` is read from `history` (the last few), no `exercises` from
+  the item itself.
 
 Where: the workout player before the start (§6.44), above the steps — whose own "Last
 time" lines show only when the briefing has nothing or could not be read — and the session
 detail of a session not yet done, as "Before you start". **Not** after a session: what was
 done and the confirm are §6.54's. Debug builds rest on the player's pre-start screen with
-`SIMCTL_CHILD_TC_PLAYER=<key>` + `TC_PLAYER_OVERVIEW=1`. `BriefingModelTests`.
+`SIMCTL_CHILD_TC_PLAYER=<key>` + `TC_PLAYER_OVERVIEW=1`; `TC_BRIEFING_SHEET=<n>` opens the
+nth row's sheet there or in the session detail. `BriefingModelTests`.
 
 ## 7. Motion & Animation
 

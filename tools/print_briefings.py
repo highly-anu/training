@@ -76,5 +76,5 @@ for phil in loader.load_philosophies():
             print(f"  -- {row['key']} {(s.get('archetype') or {}).get('name')} [{len(s.get('exercises') or [])} ex → {len(doc['items'])} items]")
             for it in doc['items'][:7]:
                 last = it['last']['text'][:60] if it['last'] else '-'
-                print(f"     {it['entry'][8:] if it['entry'].startswith('default_') else it['entry']:9} {it['title'][:34]:34} | {it['today']['text'][:44]:44} | n={it['times']} last={last} | {(it.get('cycle') or {}).get('text','')} | {(it.get('suggestion') or {}).get('text','-')[:90]}")
+                print(f"     {it['entry'][8:] if it['entry'].startswith('default_') else it['entry']:9} {it['title'][:34]:34} | {it['today']['text'][:44]:44} | n={it['times']} run={'/'.join(str(len(e['run'])) + ((e.get('metric') or {}).get('id', '-')[:6]) for e in it['exercises'])} last={last} | {(it.get('cycle') or {}).get('text','')} | {(it.get('suggestion') or {}).get('text','-')[:90]}")
             if len(doc['items']) > 7: print(f"     … {len(doc['items'])-7} more items")

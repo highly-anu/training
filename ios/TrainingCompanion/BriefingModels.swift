@@ -58,20 +58,6 @@ struct SessionBriefing: Decodable, Equatable {
             standard = try? c.decodeIfPresent(Standard.self, forKey: .standard)
             notes = try? c.decodeIfPresent(String.self, forKey: .notes)
         }
-
-        /// The series a chart draws: each earlier occurrence's value of the
-        /// item's metric, then today's as planned. Fewer than three points
-        /// is a list, not a chart, and so is a run that never changes.
-        var series: [SeriesPoint] {
-            // Several exercises have several runs: their rows say it, one
-            // chart of the first would not.
-            guard let key = metric?.id, exercises.count <= 1 else { return [] }
-            var out = history.compactMap { h in
-                h.values[key].map { SeriesPoint(label: h.dayText, value: $0, planned: false, isDeload: h.isDeload) }
-            }
-            if let v = todayValues[key] { out.append(SeriesPoint(label: "Today", value: v, planned: true, isDeload: false)) }
-            return out.count >= 3 && Set(out.map(\.value)).count > 1 ? out : []
-        }
     }
 
     struct Exercise: Decodable, Equatable, Identifiable {
@@ -79,10 +65,18 @@ struct SessionBriefing: Decodable, Equatable {
         var exerciseId: String
         var name: String
         var todayText: String
+        /// Today's number in `metric`, when the plan has one.
+        var todayValue: Double?
         var history: [Occurrence]
+        /// Every earlier time, oldest first, each with its `value` in
+        /// `metric`. Nil from a server that sends only `history`.
+        var run: [Occurrence]?
+        var times: Int?
+        var timesText: String?
+        var metric: Metric?
 
-        private enum Keys: String, CodingKey { case exerciseId, name, today, history }
-        private enum TodayKeys: String, CodingKey { case text }
+        private enum Keys: String, CodingKey { case exerciseId, name, today, history, run, times, timesText, metric }
+        private enum TodayKeys: String, CodingKey { case text, value }
 
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: Keys.self)
@@ -90,7 +84,12 @@ struct SessionBriefing: Decodable, Equatable {
             name = (try? c.decodeIfPresent(String.self, forKey: .name)) ?? exerciseId
             let today = try? c.nestedContainer(keyedBy: TodayKeys.self, forKey: .today)
             todayText = (try? today?.decodeIfPresent(String.self, forKey: .text)) ?? ""
+            todayValue = try? today?.decodeIfPresent(Double.self, forKey: .value)
             history = ((try? c.decodeIfPresent([Lossy<Occurrence>].self, forKey: .history)) ?? []).compactMap(\.value)
+            run = (try? c.decodeIfPresent([Lossy<Occurrence>].self, forKey: .run))?.compactMap(\.value)
+            times = try? c.decodeIfPresent(Int.self, forKey: .times)
+            timesText = try? c.decodeIfPresent(String.self, forKey: .timesText)
+            metric = try? c.decodeIfPresent(Metric.self, forKey: .metric)
         }
     }
 
@@ -109,8 +108,10 @@ struct SessionBriefing: Decodable, Equatable {
         var isDeload: Bool
         var sessionKey: String?
         var values: [String: Double]
+        /// A run's point: this time's number in the run's metric.
+        var value: Double?
 
-        private enum Keys: String, CodingKey { case date, dayText, text, status, isDeload, sessionKey, values }
+        private enum Keys: String, CodingKey { case date, dayText, text, status, isDeload, sessionKey, values, value }
 
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: Keys.self)
@@ -121,6 +122,7 @@ struct SessionBriefing: Decodable, Equatable {
             isDeload = (try? c.decodeIfPresent(Bool.self, forKey: .isDeload)) ?? false
             sessionKey = try? c.decodeIfPresent(String.self, forKey: .sessionKey)
             values = (try? c.decodeIfPresent([String: Double].self, forKey: .values)) ?? [:]
+            value = try? c.decodeIfPresent(Double.self, forKey: .value)
         }
     }
 
@@ -199,12 +201,130 @@ struct SessionBriefing: Decodable, Equatable {
         }
     }
 
-    /// One sentence for VoiceOver over an item's chart.
-    static func seriesSummary(_ item: Item) -> String? {
-        let s = item.series
-        guard let first = s.first, let last = s.last, let m = item.metric else { return nil }
-        func n(_ v: Double) -> String { v == v.rounded() ? String(Int(v)) : String(format: "%.1f", v) }
-        return "\(s.count - 1) earlier sessions, from \(n(first.value)) to \(n(s[s.count - 2].value)) \(m.unit); today \(n(last.value))."
+    // MARK: - Rows
+
+    /// One mark of a row's strip: an earlier time.
+    struct Mark: Equatable {
+        var value: Double?
+        var status: Status
+        var isDeload: Bool
+    }
+
+    /// The screen's unit (§6.61): one exercise — its name, today's numbers
+    /// and every earlier time as one mark each. The dated lines, the chart,
+    /// the standard and the note are the row's sheet.
+    struct Row: Equatable, Identifiable {
+        var id: String
+        /// The item's name over its first row, when the item has several
+        /// exercises; `headerDetail` is its cycle position.
+        var header: String?
+        var headerDetail: String?
+        var name: String
+        var todayText: String
+        var todayValue: Double?
+        /// Every earlier time, oldest first.
+        var run: [Occurrence]
+        var metric: Metric?
+        /// "6 sessions", "First time"; an item of one exercise in a cycle,
+        /// "Step 7 of 32".
+        var caption: String
+        /// The item's one suggestion, under its last row.
+        var suggestion: Suggestion?
+        var item: Item
+
+        var marks: [Mark] { run.map { Mark(value: $0.value, status: $0.status, isDeload: $0.isDeload) } }
+
+        /// The marks a strip of `count` places draws: the newest.
+        func marks(fitting count: Int) -> [Mark] { Array(marks.suffix(max(0, count))) }
+
+        /// The sheet's chart: every earlier time's number, then today's as
+        /// planned. Fewer than three points is a list, not a chart, and so
+        /// is a run that never changes.
+        var series: [SeriesPoint] {
+            var out = run.compactMap { o in
+                o.value.map { SeriesPoint(label: o.date, value: $0, planned: false, isDeload: o.isDeload) }
+            }
+            if let todayValue { out.append(SeriesPoint(label: "Today", value: todayValue, planned: true, isDeload: false)) }
+            return out.count >= 3 && Set(out.map(\.value)).count > 1 ? out : []
+        }
+
+        /// One sentence for VoiceOver over the sheet's chart.
+        var seriesSummary: String? {
+            let s = series
+            guard let first = s.first, let last = s.last, let metric else { return nil }
+            let earlier = last.planned ? Array(s.dropLast()) : s
+            guard let latest = earlier.last else { return nil }
+            var text = "\(earlier.count) earlier sessions, from \(Self.number(first.value)) to \(Self.number(latest.value)) \(metric.unit)"
+            if last.planned { text += "; today \(Self.number(last.value))" }
+            return text + "."
+        }
+
+        /// The row read aloud as one element.
+        var accessibilityLabel: String {
+            var parts = ["\(name). Today: \(todayText)", caption]
+            if !run.isEmpty, !caption.contains("session") {
+                parts.append(run.count == 1 ? "1 earlier session" : "\(run.count) earlier sessions")
+            }
+            if let last = run.last {
+                parts.append("Last, \(last.dayText): \(last.text), \(last.status.label.lowercased())")
+            }
+            if let suggestion { parts.append(suggestion.text) }
+            return parts.joined(separator: ". ")
+        }
+
+        static func number(_ v: Double) -> String { v == v.rounded() ? String(Int(v)) : String(format: "%.1f", v) }
+    }
+
+    /// How tall a strip's mark is, as a share of the strip: the run's lowest
+    /// number a third, its highest the whole, so a small step still shows;
+    /// a mark without a number, or a run that never moves, sits in between.
+    static func markHeight(_ value: Double?, in values: [Double]) -> Double {
+        guard let value, let lo = values.min(), let hi = values.max(), hi > lo else { return 0.6 }
+        return 1.0 / 3 + (2.0 / 3) * (value - lo) / (hi - lo)
+    }
+
+    /// The rows of the screen, in the session's order. An item of one
+    /// exercise is one row under the item's name, its cycle position the
+    /// short caption ("Step 7 of 32" — the stages are the sheet's); an item of
+    /// several is headed once. A session to confirm holds up every module
+    /// of the day: that sentence is said by the first and not again.
+    var rows: [Row] {
+        var said = Set<String>()
+        return items.flatMap { item -> [Row] in
+            let several = item.exercises.count > 1
+            let suggestion = item.suggestion.flatMap { $0.kind != "confirm_pending" || said.insert($0.text).inserted ? $0 : nil }
+            let cycle: String? = item.cycleStep.flatMap { step in item.cycleOf.map { "Step \(step) of \($0)" } } ?? item.cycleText
+            func caption(_ times: Int, _ text: String?) -> String {
+                text ?? (times == 0 ? "First time" : times == 1 ? "1 session" : "\(times) sessions")
+            }
+            guard !item.exercises.isEmpty else {
+                // A server that sends no exercises: the item is its own row.
+                let key = item.metric?.id
+                let run = item.history.map { o -> Occurrence in
+                    var o = o; o.value = key.flatMap { o.values[$0] }; return o
+                }
+                return [Row(id: item.id, header: nil, headerDetail: nil, name: item.title,
+                            todayText: item.lines.first?.text ?? item.todayText,
+                            todayValue: key.flatMap { item.todayValues[$0] }, run: run, metric: item.metric,
+                            caption: cycle ?? caption(item.times, nil), suggestion: suggestion, item: item)]
+            }
+            return item.exercises.enumerated().map { index, exercise in
+                let key = exercise.metric?.id ?? (several ? nil : item.metric?.id)
+                let run = exercise.run ?? exercise.history.map { o -> Occurrence in
+                    var o = o; o.value = key.flatMap { o.values[$0] }; return o
+                }
+                return Row(id: "\(item.id)/\(exercise.exerciseId)",
+                           header: several && index == 0 ? item.title : nil,
+                           headerDetail: several && index == 0 ? item.cycleText : nil,
+                           name: several ? exercise.name : item.title,
+                           todayText: exercise.todayText.isEmpty ? item.todayText : exercise.todayText,
+                           todayValue: exercise.todayValue ?? (exercise.run == nil ? key.flatMap { item.todayValues[$0] } : nil),
+                           run: run, metric: exercise.metric ?? (several ? nil : item.metric),
+                           caption: (several ? nil : cycle)
+                               ?? caption(exercise.times ?? (several ? run.count : item.times), exercise.timesText),
+                           suggestion: index == item.exercises.count - 1 ? suggestion : nil, item: item)
+            }
+        }
     }
 }
 

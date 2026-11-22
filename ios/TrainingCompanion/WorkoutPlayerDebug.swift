@@ -7,6 +7,7 @@ import Foundation
 ///
 /// - `TC_PLAYER=<sessionKey>` — open that session's player and start it
 ///   (`TC_PLAYER_OVERVIEW=1`: leave it before the start, on the briefing).
+///   `TC_BRIEFING_SHEET=<n>`: and open the briefing's nth row's history.
 /// - `TC_PLAYER_STEP=<n>` — go to step n; `TC_PLAYER_RUN=1` — press its
 ///   Start; `TC_PLAYER_LAPS=<k>` — press its primary button k times (a set
 ///   is logged as prescribed; the last set's rest is left running).
@@ -29,6 +30,9 @@ enum WorkoutPlayerDebug {
     static var save: Bool { env["TC_PLAYER_SAVE"] == "1" }
     /// `TC_PLAYER_OVERVIEW=1` — open the player and leave it before the start.
     static var overview: Bool { env["TC_PLAYER_OVERVIEW"] == "1" }
+    /// `TC_BRIEFING_SHEET=<n>` — open the briefing's nth row's sheet (0 the
+    /// first), in the player before the start or in a session's detail.
+    static var briefingSheet: Int? { env["TC_BRIEFING_SHEET"].flatMap(Int.init) }
 
     private static var taken = false
     private static var saveTaken = false

@@ -444,6 +444,37 @@ def _suggestion(kind: str, entry: dict, lead: dict, today_values: dict, history:
     return None
 
 
+# ── The whole run ─────────────────────────────────────────────────────────────
+
+# What moves first: a run is drawn in the number that says progress, and a
+# count of sets — the same every time — only when there is nothing else.
+_RUN_ORDER = ('weight', 'total_reps', 'reps_per_round', 'rounds', 'time', 'hold', 'distance', 'reps', 'sets')
+
+
+def _run_metric(declared: str | None, show: list[str], today_values: dict, earlier: list[dict]) -> str | None:
+    """The one number an exercise's run is drawn in: the entry's `chart` when
+    these values have it, else the first of the shown numbers, in the order
+    above, that today or an earlier time has."""
+    def known(k):
+        return today_values.get(k) is not None or any(v.get(k) is not None for v in earlier)
+    if declared and known(declared):
+        return declared
+    shown = set(show) | ({'total_reps'} if {'rounds', 'reps_per_round'} <= set(show) else set())
+    return next((k for k in _RUN_ORDER if k in shown and known(k)), None)
+
+
+def _metric(key: str) -> dict:
+    return {'id': key, 'label': _METRICS[key][0], 'unit': _METRICS[key][1]}
+
+
+def _run_point(row: dict, text: str, values: dict, metric: str | None) -> dict:
+    point = {'date': row['date'], 'dayText': row['dayText'], 'status': row['status'],
+             'isDeload': row['isDeload'], 'sessionKey': row['sessionKey'], 'text': text}
+    if metric and values.get(metric) is not None:
+        point['value'] = values[metric]
+    return point
+
+
 # ── The document ──────────────────────────────────────────────────────────────
 
 def build(session: dict, *, date: str, spec: dict | None = None, history: list[dict] | None = None,
@@ -526,18 +557,31 @@ def build(session: dict, *, date: str, spec: dict | None = None, history: list[d
 
         chart = entry['chart'] or next((k for k in show if k in _METRICS and (
             today_values.get(k) is not None or any(h['values'].get(k) is not None for h in all_history))), None)
-        # Exercise by exercise: today's line and that exercise's own earlier ones.
+        # Exercise by exercise: today's line, that exercise's own earlier ones
+        # (`history`, the entry's count) and its whole run (`run`: every time,
+        # one number each — what a client draws as one mark a session).
         exercises = []
         for ea, ln in zip(eas, lines):
+            eid = ln['exerciseId']
             values = _values(ea, session)
-            exercises.append({
-                'exerciseId': ln['exerciseId'], 'name': ln['name'],
-                'today': {'text': ln['text'], 'values': _numbers(values)},
+            theirs = [h for h in all_history if eid in h['_parts']]
+            metric = _run_metric(entry['chart'], show, values, [h['_parts'][eid]['values'] for h in theirs])
+            today_line = {'text': ln['text'], 'values': _numbers(values)}
+            if metric and values.get(metric) is not None:
+                today_line['value'] = values[metric]
+            exercise = {
+                'exerciseId': eid, 'name': ln['name'], 'today': today_line,
                 'history': [{'date': h['date'], 'dayText': h['dayText'], 'status': h['status'],
                              'isDeload': h['isDeload'], 'sessionKey': h['sessionKey'],
-                             **h['_parts'][ln['exerciseId']]}
-                            for h in history_rows if ln['exerciseId'] in h['_parts']],
-            })
+                             **h['_parts'][eid]}
+                            for h in history_rows if eid in h['_parts']],
+                'run': [_run_point(h, h['_parts'][eid]['text'], h['_parts'][eid]['values'], metric) for h in theirs],
+                'times': len(theirs),
+                'timesText': _plural(len(theirs), 'session') if theirs else 'First time',
+            }
+            if metric:
+                exercise['metric'] = _metric(metric)
+            exercises.append(exercise)
         item = {
             'id': f"{kind}:{ident}", 'entry': entry['id'], 'kind': kind, 'title': group['title'],
             'exercises': exercises,
@@ -550,7 +594,7 @@ def build(session: dict, *, date: str, spec: dict | None = None, history: list[d
             'times': len(all_history),
         }
         if chart:
-            item['metric'] = {'id': chart, 'label': _METRICS[chart][0], 'unit': _METRICS[chart][1]}
+            item['metric'] = _metric(chart)
         if cycle:
             item['cycle'] = cycle
         if suggestion:

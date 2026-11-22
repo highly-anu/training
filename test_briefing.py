@@ -177,6 +177,61 @@ def test_history_crosses_programs_by_module_and_keeps_to_the_entry_s_count():
     assert [h['date'] for h in swing['history']] == sorted(h['date'] for h in swing['history'])
 
 
+def test_the_run_is_every_time_and_the_history_the_entry_s_count():
+    earlier = sessions(program('wildman_kettlebell', 'intermediate'))
+    old = []
+    for n, row in enumerate(with_module(earlier, 'swing')[:7]):
+        on = str(START - timedelta(days=70 - n * 3))
+        old.append(dict(confirm(dict(row, date=on)), current=False, key=None))
+    doc, _, _ = swing_briefing(lambda swings, rows: old, at=0)
+    swing = item(doc, 'module:swing')
+    (own,) = swing['exercises']
+    assert len(swing['history']) == 6 == len(own['history']) and len(own['run']) == 7 == own['times'] == swing['times']
+    assert [p['date'] for p in own['run']] == sorted(o['date'] for o in old)
+    # One number a time: the file's chart, reps in all.
+    assert own['metric'] == swing['metric'] and own['metric']['id'] == 'total_reps'
+    assert all(p['value'] == h['values']['total_reps'] for p, h in zip(own['run'][1:], swing['history']))
+    assert set(own['run'][0]) == {'date', 'dayText', 'status', 'isDeload', 'sessionKey', 'text', 'value'}
+    assert own['run'][-1]['text'] == swing['history'][-1]['text']
+    assert own['today']['value'] == swing['today']['values']['total_reps']
+    assert own['timesText'] == '7 sessions'
+    first, _, _ = swing_briefing(lambda swings, rows: [], at=0)
+    assert item(first, 'module:swing')['exercises'][0]['timesText'] == 'First time'
+
+
+def test_each_exercise_of_a_module_has_its_own_run_in_its_own_number():
+    rows = sessions(program('bjj', 'elite', days=5))
+    strength = [r for r in rows if any(ea['exercise']['id'] == 'trap_bar_deadlift' for ea in r['session']['exercises'])]
+    first, again = strength[0], next(r for r in strength[1:] if r['session']['modules'][0].get('variant')
+                                     == strength[0]['session']['modules'][0].get('variant'))
+    done = dict(first, log={'completedAt': first['date'] + 'T07:00:00Z', 'exercises': {
+        'trap_bar_deadlift': {'sets': [{'setIndex': k, 'repsActual': 5, 'weightKg': 100, 'completed': True}
+                                       for k in range(4)]}}})
+    doc = briefing.build(again['session'], date=again['date'], history=[done])
+    it = next(i for i in doc['items'] if 'trap_bar_deadlift' in i['exerciseIds'])
+    lift = next(e for e in it['exercises'] if e['exerciseId'] == 'trap_bar_deadlift')
+    assert [p['text'] for p in lift['run']] == ['4 × 5 · 100 kg'] and lift['times'] == 1
+    # What moves leads: the weight that was logged, not the count of sets.
+    assert lift['metric']['id'] == 'weight' and lift['run'][0]['value'] == 100, lift
+    assert 'value' not in lift['today']                              # today's weight is the athlete's own
+    # Reps written in words leave the sets to count.
+    pull = next(e for e in it['exercises'] if e['exerciseId'] == 'pull_up')
+    assert pull['metric']['id'] == 'sets' and pull['times'] == 1 and pull['run'][0]['text'] == '3 × max'
+    split = next(e for e in it['exercises'] if e['exerciseId'] != 'trap_bar_deadlift' and e['today']['values'].get('reps'))
+    assert split['metric']['id'] == 'reps', split
+
+
+def test_a_lift_s_run_is_drawn_in_its_weight():
+    _, squats = _lift_rows()
+    first, second = squats[0], squats[1]
+    made = dict(first, log={'completedAt': first['date'] + 'T07:00:00Z', 'exercises': {
+        'back_squat': {'made': True, 'weightKg': 60}}})
+    squat = item(briefing.build(second['session'], date=second['date'], history=[made]), 'exercise:back_squat')
+    (own,) = squat['exercises']
+    assert own['metric']['id'] == 'weight' and [p['value'] for p in own['run']] == [60]
+    assert own['run'][0]['status'] == 'made' and 'run' not in squat
+
+
 def test_the_last_step_of_a_cycle_says_so():
     rows = sessions(program('wildman_kettlebell', 'intermediate'))
     target = copy.deepcopy(with_module(rows, 'swing')[0])

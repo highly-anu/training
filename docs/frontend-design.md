@@ -2489,33 +2489,38 @@ by picking results (`components/explore/EquipmentPanel.tsx`, logic in
 
 ### 13.10 Session Briefing
 
-Before a session: today's numbers beside the earlier times the same session was done.
+Before a session: one row an exercise, one mark for every time it was done.
 `components/session/SessionBriefing.tsx` lays out the server's document
 (`GET /sessions/briefing`, `api/briefing.ts`; the package's `briefing.yaml` decides what
 an item is) between a session's header and its exercises, while the session is still to
-do. It formats nothing: every sentence arrives as text.
+do. It formats nothing: every sentence arrives as text. The phone's is design-system §6.61,
+and `lib/briefing.ts` reads the document as its `SessionBriefing.rows` does.
 
-- **A session to confirm first** leads, on the warn tint, with a Confirm link to that
-  session's page.
-- **Exercise by exercise.** An item of several exercises shows each exercise's name with
-  today's line beside it and that exercise's own earlier rows under it — never joined in
-  one row, and no chart. Only the earliest session to confirm is shown, with how many wait.
-- **One card per item**: its name with the cycle position trailing, today's prescription
-  large (several exercises with different numbers: a row each), the one suggestion with
-  its icon (warn-coloured only for `confirm_pending`), the cycle as a thin bar in the
-  modality colour, the series, the earlier occurrences newest first, the standard's best
-  and target, the package's note.
-- **The series is bars**, one a session, in `--done`, today's as the plan in the modality
-  colour, each with its value; one image to a screen reader, named by its metric and
-  `chartSummary.series`. Fewer than three points, or a run that never changes, is no
-  chart (`lib/briefing.briefingSeries`).
-- **An occurrence's status is an icon and a word** (the word for screen readers): clean and
-  made `--done`, missed `--bad`, not confirmed `--warn`, logged muted.
+- **One card, a row an exercise** (`briefingRows`): the name with today's numbers trailing,
+  the strip with its caption and a chevron, the item's one suggestion under its last row
+  (`--warn` only for `confirm_pending`, said by the first item only). An item of one
+  exercise is named by the item, its caption the short cycle position ("Step 19 of 32"),
+  else the server's count ("27 sessions", "First time"); an item of several exercises is
+  headed once.
+- **The strip**: every earlier time (`exercises[].run`) as one mark, oldest first, then
+  today's as the plan in the modality colour. Height is the time's number (`markHeight`:
+  the run's lowest a third, its highest the whole); `--done` clean or made, muted logged,
+  and missed (`--bad`) and not confirmed (`--warn`) **outlined**. The newest
+  `STRIP_MAX` of a longer run; the caption counts them all. Hidden from a screen reader:
+  the row is one `<button>` whose label says name, today, caption, the last time with its
+  status in words and the suggestion (`rowLabel`).
+- **Its sheet** (`BriefingHistorySheet`, on `ui/sheet`): today's numbers large, the cycle
+  text over a thin bar in the modality colour, the suggestion with its icon, the standard,
+  the run as bars — one image named by its metric and `chartSummary.series`; fewer than
+  three points or a run that never changes is no chart (`rowSeries`); a long run scrolls
+  from its newest — then **every** earlier time newest first, its status an icon and a
+  word, and the package's note. A session the briefing asks to confirm first has a Confirm
+  link on its line; the banner that used to lead the block is gone.
 - **States**: nothing while it loads (the session is already on screen), `ErrorBanner`
   with Try again when it fails, and nothing at all when the briefing adds nothing to the
   prescription (`saysSomething`). Mock mode answers an empty briefing.
 
-The phone's is design-system §6.61. `SessionBriefing.test.tsx`.
+`SessionBriefing.test.tsx`.
 ### 13.11 Explorer: Comparing Philosophies
 
 **Use case:** Explore ▸ Philosophies ▸ Compare

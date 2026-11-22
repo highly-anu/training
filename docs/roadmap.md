@@ -2211,6 +2211,13 @@ where today stands in it, or what today assumes.
   confirmation (`default_as_written`); only a workout with one result has a number to
   beat; a made lift says its next weight before the program is rebuilt; reps written in
   words keep them.
+- **22.5 One row and one strip — done.** The block was a card an item with today's numbers,
+  a sentence, a progress bar, a chart and five dated lines an exercise: too many numbers, and
+  still not every session. Each exercise now carries `run` — every earlier time with one
+  `value` in its own `metric` (what moves first: weight, then reps, a count of sets last) —
+  and both clients draw one row an exercise: name, today, a strip with a mark for every time
+  (height the number, colour how it went), the suggestion. The dated lines, the chart, the
+  standard and the session to confirm are the row's sheet.
 - **Later.** A wrist summary (a `today-session` key and both watches, per `docs/watch.md`);
   a missed session said as such (today it is left out of the history).
 

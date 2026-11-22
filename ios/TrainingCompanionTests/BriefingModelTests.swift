@@ -53,27 +53,114 @@ final class BriefingModelTests: XCTestCase {
         XCTAssertTrue(b.saysSomething)
     }
 
-    func testTheSeriesIsTheMetricAcrossOccurrencesThenToday() throws {
-        let swing = try decoded().items[0]
-        XCTAssertEqual(swing.series.map(\.value), [120, 140, 160, 180])
-        XCTAssertEqual(swing.series.map(\.planned), [false, false, false, true])
-        XCTAssertEqual(SessionBriefing.seriesSummary(swing), "3 earlier sessions, from 120 to 160 reps; today 180.")
+    // MARK: - Rows (§6.61): one exercise, one strip
+
+    private let run = """
+    {"items": [
+      {"id": "module:swing", "title": "Nerd Math Two-Hand Swing", "times": 4,
+       "today": {"text": "10 × 18 · on the minute", "values": {"total_reps": 180}},
+       "metric": {"id": "total_reps", "label": "Total reps", "unit": "reps"},
+       "cycle": {"step": 7, "of": 32, "text": "Step 7 of 32"},
+       "suggestion": {"kind": "next_step", "text": "2 more a round than Thursday."},
+       "history": [{"date": "2026-11-12", "dayText": "Thursday", "text": "10 × 16", "status": "clean", "values": {"total_reps": 160}}],
+       "exercises": [{"exerciseId": "swing", "name": "Kettlebell Swing", "times": 4, "timesText": "4 sessions",
+         "today": {"text": "10 × 18 · on the minute", "value": 180},
+         "metric": {"id": "total_reps", "label": "Total reps", "unit": "reps"},
+         "history": [{"date": "2026-11-12", "dayText": "Thursday", "text": "10 × 16", "status": "clean"}],
+         "run": [
+          {"date": "2026-11-02", "dayText": "2 Nov", "text": "10 × 10", "status": "clean", "value": 100},
+          {"date": "2026-11-05", "dayText": "5 Nov", "text": "10 × 12", "status": "missed", "value": 120, "isDeload": true},
+          {"date": "2026-11-09", "dayText": "9 Nov", "text": "10 × 14", "status": "unconfirmed", "sessionKey": "3-Monday-0"},
+          {"date": "2026-11-12", "dayText": "Thursday", "text": "10 × 16", "status": "clean", "value": 160}]}]},
+      {"id": "module:clean_press", "title": "Clean and Press", "times": 1,
+       "today": {"text": "5 × 3"}, "suggestion": {"kind": "next_step", "text": "1 more a round than Saturday."},
+       "exercises": [
+        {"exerciseId": "clean", "name": "Clean", "today": {"text": "5 × 3 each side"}, "times": 1, "timesText": "1 session",
+         "run": [{"date": "2026-11-07", "dayText": "7 Nov", "text": "5 × 2 each side", "status": "clean", "value": 10}]},
+        {"exerciseId": "press", "name": "Press", "today": {"text": "5 × 3 each side"}, "times": 0, "timesText": "First time", "run": []}]},
+      {"id": "exercise:row", "title": "Row", "today": {"text": "2 km"}, "times": 0,
+       "exercises": [{"exerciseId": "row", "name": "Rowing", "today": {"text": "2 km"}, "run": [], "times": 0, "timesText": "First time"}]}]}
+    """
+
+    private func rows() throws -> [SessionBriefing.Row] {
+        try JSONDecoder().decode(SessionBriefing.self, from: Data(run.utf8)).rows
     }
 
-    func testFewerThanThreePointsIsNoSeries() throws {
-        let row = try decoded().items[1]
-        XCTAssertTrue(row.series.isEmpty)
-        XCTAssertNil(SessionBriefing.seriesSummary(row))
+    func testARowIsOneExerciseWithItsWholeRun() throws {
+        let rows = try rows()
+        XCTAssertEqual(rows.map(\.name), ["Nerd Math Two-Hand Swing", "Clean", "Press", "Row"])
+        let swing = rows[0]
+        // The run is every time, not the listed history's one.
+        XCTAssertEqual(swing.run.count, 4)
+        XCTAssertEqual(swing.marks.map(\.value), [100, 120, nil, 160])
+        XCTAssertEqual(swing.marks.map(\.status), [.clean, .missed, .unconfirmed, .clean])
+        XCTAssertEqual(swing.marks.map(\.isDeload), [false, true, false, false])
+        XCTAssertEqual(swing.todayValue, 180)
+        XCTAssertEqual(swing.caption, "Step 7 of 32")           // the short cycle label; the count is the strip
+        XCTAssertEqual(swing.accessibilityLabel,
+                       "Nerd Math Two-Hand Swing. Today: 10 × 18 · on the minute. Step 7 of 32. 4 earlier sessions. Last, Thursday: 10 × 16, clean. 2 more a round than Thursday.")
     }
 
-    func testAnItemOfSeveralExercisesIsReadExerciseByExercise() throws {
+    func testAnItemOfSeveralExercisesIsHeadedOnce() throws {
+        let rows = try rows()
+        XCTAssertEqual(rows.map(\.header), [nil, "Clean and Press", nil, nil])
+        // The item's one suggestion closes its last row.
+        XCTAssertEqual(rows.map { $0.suggestion?.text },
+                       ["2 more a round than Thursday.", nil, "1 more a round than Saturday.", nil])
+        XCTAssertEqual(rows.map(\.caption), ["Step 7 of 32", "1 session", "First time", "First time"])
+        XCTAssertEqual(Set(rows.map(\.id)).count, 4)
+    }
+
+    func testASessionToConfirmIsSaidOnce() throws {
         let b = try JSONDecoder().decode(SessionBriefing.self, from: Data("""
-        {"items": [{"id": "module:clean_press", "title": "Clean and Press",
-          "today": {"text": "10 × 1", "values": {"total_reps": 10}},
-          "metric": {"id": "total_reps", "label": "Total reps", "unit": "reps"}, "times": 3,
-          "history": [{"date": "2026-11-01", "status": "clean", "values": {"total_reps": 15}},
-                      {"date": "2026-11-04", "status": "clean", "values": {"total_reps": 20}},
-                      {"date": "2026-11-08", "status": "clean", "values": {"total_reps": 25}}],
+        {"items": [
+          {"id": "module:a", "title": "A", "today": {"text": "1"}, "suggestion": {"kind": "confirm_pending", "text": "Confirm Thursday first."}},
+          {"id": "module:b", "title": "B", "today": {"text": "2"}, "suggestion": {"kind": "confirm_pending", "text": "Confirm Thursday first."}},
+          {"id": "module:c", "title": "C", "today": {"text": "3"}, "suggestion": {"kind": "next_step", "text": "1 more."}},
+          {"id": "module:d", "title": "D", "today": {"text": "4"}, "suggestion": {"kind": "next_step", "text": "1 more."}}]}
+        """.utf8))
+        // Only the session to confirm: two lifts with the same step each say theirs.
+        XCTAssertEqual(b.rows.map { $0.suggestion?.text }, ["Confirm Thursday first.", nil, "1 more.", "1 more."])
+    }
+
+    func testAStripShowsTheNewestThatFit() throws {
+        let swing = try rows()[0]
+        XCTAssertEqual(swing.marks(fitting: 2).map(\.value), [nil, 160])
+        XCTAssertEqual(swing.marks(fitting: 40).count, 4)
+        XCTAssertTrue(swing.marks(fitting: 0).isEmpty)
+    }
+
+    func testAMarksHeightIsItsPlaceInTheRun() {
+        let values: [Double] = [100, 120, 160, 180]
+        XCTAssertEqual(SessionBriefing.markHeight(100, in: values), 1.0 / 3, accuracy: 0.001)
+        XCTAssertEqual(SessionBriefing.markHeight(180, in: values), 1, accuracy: 0.001)
+        XCTAssertEqual(SessionBriefing.markHeight(140, in: values), 2.0 / 3, accuracy: 0.001)
+        // No number, or a run that never moves: every mark the same.
+        XCTAssertEqual(SessionBriefing.markHeight(nil, in: values), 0.6)
+        XCTAssertEqual(SessionBriefing.markHeight(10, in: [10, 10]), 0.6)
+        XCTAssertEqual(SessionBriefing.markHeight(nil, in: []), 0.6)
+    }
+
+    func testTheSheetsChartIsTheRunThenToday() throws {
+        let rows = try rows()
+        XCTAssertEqual(rows[0].series.map(\.value), [100, 120, 160, 180])
+        XCTAssertEqual(rows[0].series.map(\.planned), [false, false, false, true])
+        XCTAssertEqual(rows[0].seriesSummary, "3 earlier sessions, from 100 to 160 reps; today 180.")
+        // Fewer than three points is a list, not a chart.
+        XCTAssertTrue(rows[1].series.isEmpty)
+        XCTAssertNil(rows[1].seriesSummary)
+    }
+
+    func testAnOlderServersHistoryStandsInForTheRun() throws {
+        // No `exercises` at all: the item is its own row, its history the run.
+        let swing = try decoded().rows[0]
+        XCTAssertEqual(swing.name, "Nerd Math Two-Hand Swing")
+        XCTAssertEqual(swing.marks.map(\.value), [120, 140, 160, nil])
+        XCTAssertEqual(swing.todayValue, 180)
+        XCTAssertEqual(swing.caption, "Step 7 of 32")
+        // `exercises` without `run`: each exercise's history.
+        let b = try JSONDecoder().decode(SessionBriefing.self, from: Data("""
+        {"items": [{"id": "module:clean_press", "title": "Clean and Press", "today": {"text": "10 × 1"}, "times": 3,
           "exercises": [
             {"exerciseId": "clean", "name": "Clean", "today": {"text": "10 × 1 · on the minute"},
              "history": [{"date": "2026-11-08", "dayText": "8 Nov", "text": "5 × 5 · 20 kg · RPE 6", "status": "clean"}]},
@@ -81,21 +168,9 @@ final class BriefingModelTests: XCTestCase {
              "history": [{"date": "2026-11-08", "dayText": "8 Nov", "text": "5 × 5 · 16 kg · RPE 6", "status": "clean"}]},
             {"name": "an exercise without an id is left out"}]}]}
         """.utf8))
-        let item = b.items[0]
-        XCTAssertEqual(item.exercises.map(\.name), ["Clean", "Press"])
-        XCTAssertEqual(item.exercises[1].history.first?.text, "5 × 5 · 16 kg · RPE 6")
-        XCTAssertEqual(item.exercises[0].todayText, "10 × 1 · on the minute")
-        XCTAssertTrue(item.series.isEmpty)   // two runs are not one chart
-    }
-
-    func testARunThatNeverChangesIsNoSeries() throws {
-        let b = try JSONDecoder().decode(SessionBriefing.self, from: Data("""
-        {"items": [{"id": "module:getup", "title": "Get-up", "today": {"text": "10 × 1", "values": {"total_reps": 10}},
-          "metric": {"id": "total_reps", "label": "Total reps", "unit": "reps"}, "times": 2,
-          "history": [{"date": "2026-11-09", "status": "clean", "values": {"total_reps": 10}},
-                      {"date": "2026-11-12", "status": "clean", "values": {"total_reps": 10}}]}]}
-        """.utf8))
-        XCTAssertTrue(b.items[0].series.isEmpty)
+        XCTAssertEqual(b.rows.map(\.name), ["Clean", "Press"])
+        XCTAssertEqual(b.rows[1].run.first?.text, "5 × 5 · 16 kg · RPE 6")
+        XCTAssertEqual(b.rows.map(\.caption), ["1 session", "1 session"])
     }
 
     func testAPrescriptionAloneSaysNothing() throws {
