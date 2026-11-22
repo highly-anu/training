@@ -2521,6 +2521,13 @@ and `lib/briefing.ts` reads the document as its `SessionBriefing.rows` does.
   prescription (`saysSomething`). Mock mode answers an empty briefing.
 
 `SessionBriefing.test.tsx`.
+
+**An answered session is never one to confirm.** `pending` lists only sessions still to answer;
+one logged clean above the module's RPE gets no Confirm and the suggestion says why it did not
+count. `ModuleProgress` words its verdict through `lib/moduleVerdict.ts` (the phone's
+`ModuleVerdict.swift`; change both), the ceiling from `session.modules[].max_rpe`.
+
+
 ### 13.11 Explorer: Comparing Philosophies
 
 **Use case:** Explore ▸ Philosophies ▸ Compare

@@ -118,6 +118,21 @@ def test_unearned_calendar_time_and_deload_never_advance_confirmed_state():
                 {'clean': True, 'rpe': 6, 'rounds': 9}):
         log['exercises']['wk_kb_swing_two_hand'] = bad
         assert tc.confirmed_state(p, {'1-Monday-0': log}, g['training_contract'])['swing']['completed'] == 0
+    # Why not, in one reading: the module's RPE is 7, and 7 earns it.
+    module = {'exercise_ids': ['wk_kb_swing_two_hand'], 'max_rpe': 7, 'rounds': 10}
+    for outcome, why in (({'clean': True, 'rpe': 7, 'rounds': 10}, None),
+                         ({'clean': True, 'rpe': 8, 'rounds': 10}, 'over_rpe'),
+                         ({'clean': False, 'rpe': 6, 'rounds': 10}, 'not_clean'),
+                         ({'clean': True, 'rounds': 10}, 'no_rpe'),
+                         ({'clean': True, 'rpe': 0, 'rounds': 10}, 'no_rpe'),
+                         ({'clean': True, 'rpe': True, 'rounds': 10}, 'invalid'),
+                         ({'clean': True, 'rpe': 6, 'rounds': 9}, 'short'),
+                         ({'clean': True, 'rpe': 6, 'rounds': 10, 'weightKg': 0}, 'invalid'),
+                         ({'rounds': 10, 'rpe': 6}, 'unanswered'), ({}, 'unanswered')):
+        exercises = {'wk_kb_swing_two_hand': outcome}
+        assert tc.clean_shortfall(module, exercises) == why, (outcome, why)
+        assert (tc.clean_outcomes(module, exercises) is None) == (why is not None), outcome
+    assert tc.clean_shortfall(module, None) == 'unanswered'
 
 
 def test_actual_bells_and_mastery_are_not_guessed():

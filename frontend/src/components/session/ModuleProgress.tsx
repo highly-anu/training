@@ -3,6 +3,7 @@ import { BadgeCheck, MinusCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { confirmSession } from '@/api/health'
 import { useBioStore } from '@/store/bioStore'
+import { belowWords, moduleCeiling, readVerdict, verdictWords } from '@/lib/moduleVerdict'
 import type { Session } from '@/api/types'
 
 interface Props {
@@ -33,7 +34,10 @@ function CleanProgress({ session, logKey, serverKey }: Props) {
     .map((ea) => ea.exercise!.id)
   const log = useBioStore((s) => s.sessionPerformanceLogs[logKey])
   const applyConfirmation = useBioStore((s) => s.applyConfirmation)
-  const [rpe, setRpe] = useState(7)
+  const ceiling = progressing.length ? moduleCeiling(session, progressing[0]) : null
+  // The RPE the athlete set; until then the module's own ceiling.
+  const [chosenRpe, setRpe] = useState<number | null>(null)
+  const rpe = chosenRpe ?? ceiling ?? 7
   const [busy, setBusy] = useState(false)
   const [failed, setFailed] = useState(false)
   const [changing, setChanging] = useState(false)
@@ -61,15 +65,15 @@ function CleanProgress({ session, logKey, serverKey }: Props) {
       <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Progress</h4>
       {answered ? (
         <div className="flex items-center justify-between gap-2 text-sm">
-          {verdict!.clean ? (
+          {readVerdict(verdict!.clean === true, verdict!.rpe, ceiling) === 'clean' ? (
             <span className="flex items-center gap-1.5 text-done">
               <BadgeCheck className="size-4" />
-              Clean, as written{verdict!.rpe != null ? ` · RPE ${verdict!.rpe}` : ''}
+              {verdictWords(true, verdict!.rpe, ceiling)}
             </span>
           ) : (
             <span className="flex items-center gap-1.5 text-muted-foreground">
               <MinusCircle className="size-4" />
-              Not clean — the cycle holds here
+              {verdictWords(verdict!.clean === true, verdict!.rpe, ceiling)}
             </span>
           )}
           <button type="button" className="text-xs text-muted-foreground hover:underline" onClick={() => setChanging(true)}>
@@ -79,7 +83,7 @@ function CleanProgress({ session, logKey, serverKey }: Props) {
       ) : (
         <>
           <p className="text-xs text-muted-foreground">
-            Done as written? A clean session at RPE 7 or below moves each module on when the program is next rebuilt.
+            Done as written? A clean session at {belowWords(ceiling)} moves each module on when the program is next rebuilt.
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <label className="flex items-center gap-1.5 text-sm">

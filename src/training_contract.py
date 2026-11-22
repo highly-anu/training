@@ -553,20 +553,29 @@ def modules_for(package: str | None, module_ids, track: str | None = None) -> di
     return {}
 
 
-def clean_outcomes(module: dict, exercises: dict | None) -> list | None:
-    """A session's logged outcomes for one module record when they earn it —
-    every progressing exercise clean, at or below the module's RPE, its rounds
-    or seconds done, any bell weight a real number — else None. The one
-    reading of "clean" (`confirmed_state` advances on it; the briefing says
-    which earlier sessions were)."""
+def clean_shortfall(module: dict, exercises: dict | None) -> str | None:
+    """Why a session's logged outcomes do not earn one module record, else
+    None: `unanswered` (a progressing exercise has no clean answer),
+    `not_clean`, `no_rpe`, `over_rpe` (above the module's RPE), `short` (its
+    rounds or seconds not done), `invalid` (a number that is none). The one
+    reading of "clean": `clean_outcomes` is its None."""
     exercises = exercises if isinstance(exercises, dict) else {}
     outcomes = [exercises.get(eid, {}) for eid in module['exercise_ids']]
-    if not outcomes or not all(isinstance(o, dict) and o.get('clean') is True and not isinstance(o.get('rpe'), bool) and isinstance(o.get('rpe'), (int, float))
-                               and 0 < o['rpe'] <= module['max_rpe'] for o in outcomes):
-        return None
+    if not outcomes or any(not isinstance(o, dict) or o.get('clean') is None for o in outcomes):
+        return 'unanswered'
+    if any(o['clean'] is not True for o in outcomes):
+        return 'not_clean'
+    if any(o.get('rpe') is None for o in outcomes):
+        return 'no_rpe'
+    if any(isinstance(o['rpe'], bool) or not isinstance(o['rpe'], (int, float)) for o in outcomes):
+        return 'invalid'
+    if any(not o['rpe'] > 0 for o in outcomes):
+        return 'no_rpe'
+    if any(not o['rpe'] <= module['max_rpe'] for o in outcomes):
+        return 'over_rpe'
     if any(o.get(k) is not None and (isinstance(o[k], bool) or not isinstance(o[k], (int, float)) or not math.isfinite(o[k]))
            for o in outcomes for k in ('durationSec', 'rounds')):
-        return None
+        return 'invalid'
     requirements = module.get('requirements') or {eid: {
         'duration_sec': module.get('duration_sec', 0), 'rounds': module['rounds']}
         for eid in module['exercise_ids']}
@@ -574,12 +583,24 @@ def clean_outcomes(module: dict, exercises: dict | None) -> list | None:
                if requirements[eid].get('duration_sec') else
                (o.get('rounds') or len(o.get('sets') or [])) >= requirements[eid]['rounds']
                for eid, o in zip(module['exercise_ids'], outcomes)):
-        return None
+        return 'short'
     if any(isinstance(o.get('weightKg'), bool) or not isinstance(o.get('weightKg'), (int, float))
            or not math.isfinite(o['weightKg']) or o['weightKg'] <= 0
            for o in outcomes if o.get('weightKg') is not None):
+        return 'invalid'
+    return None
+
+
+def clean_outcomes(module: dict, exercises: dict | None) -> list | None:
+    """A session's logged outcomes for one module record when they earn it —
+    every progressing exercise clean, at or below the module's RPE, its rounds
+    or seconds done, any bell weight a real number — else None
+    (`clean_shortfall` says why; `confirmed_state` advances on it; the
+    briefing says which earlier sessions were)."""
+    if clean_shortfall(module, exercises) is not None:
         return None
-    return outcomes
+    exercises = exercises if isinstance(exercises, dict) else {}
+    return [exercises.get(eid, {}) for eid in module['exercise_ids']]
 
 
 def cycle_position(progression: dict | None, step: int) -> dict | None:

@@ -266,6 +266,42 @@ def _status(kind: str, ident, occ: dict, eas: list[dict]) -> str:
     return 'logged' if has_log else 'unconfirmed'
 
 
+# A done session that did not earn its module and is still to be answered; any
+# other reason is the athlete's own answer, and nothing to confirm.
+_TO_ANSWER = (None, 'unanswered', 'no_rpe', 'invalid')
+
+
+def _shortfall(kind: str, status: str, occ: dict, eas: list[dict]) -> dict:
+    """Why a done session of a module did not earn it, in
+    `training_contract.clean_shortfall`'s words, with the RPE logged and the
+    module's own; nothing for a lift, a clean session or another kind."""
+    if kind != 'module' or status not in ('logged', 'unconfirmed'):
+        return {}
+    logged = (occ.get('log') or {}).get('exercises') or {}
+    record = _records(occ.get('session') or {}).get((eas[0].get('load') or {}).get('module_id')) or {}
+    if not record.get('exercise_ids') or (record.get('lifts') or {}).get(_eid(eas[0])) is not None:
+        return {}
+    try:
+        reason = training_contract.clean_shortfall(record, logged)
+    except (KeyError, TypeError):
+        return {}
+    if not reason:
+        return {}
+    out = {'reason': reason}
+    rpes = [_num((logged.get(eid) or {}).get('rpe')) for eid in record['exercise_ids']
+            if isinstance(logged.get(eid), dict)]
+    if reason == 'over_rpe' and any(r is not None for r in rpes):
+        out['rpe'] = max(r for r in rpes if r is not None)
+    if _num(record.get('max_rpe')) is not None:
+        out['maxRpe'] = _num(record['max_rpe'])
+    return out
+
+
+def _open(h: dict) -> bool:
+    """Done in this program, not a deload, and not earned."""
+    return h['_current'] and not h['isDeload'] and h['status'] in ('unconfirmed', 'logged')
+
+
 def _occurrence(kind: str, ident, occ: dict, eas: list[dict], show: list[str], today: str) -> dict:
     session, logged = occ.get('session') or {}, (occ.get('log') or {}).get('exercises') or {}
     status = _status(kind, ident, occ, eas)
@@ -310,7 +346,8 @@ def _occurrence(kind: str, ident, occ: dict, eas: list[dict], show: list[str], t
         'date': str(occ.get('date'))[:10], 'dayText': name, 'text': named[0][1] if named else '',
         '_parts': parts, '_result': result,
         'values': _numbers((lead_values or {})),
-        'status': status, 'isDeload': bool(record.get('deload', session.get('is_deload'))),
+        'status': status, **_shortfall(kind, status, occ, eas),
+        'isDeload': bool(record.get('deload', session.get('is_deload'))),
         'sessionKey': occ.get('key') if occ.get('current') else None,
         '_step': record.get('forecast_step'), '_current': bool(occ.get('current')),
         '_increment': _num((eas[0].get('load') or {}).get('increment_kg')),
@@ -406,12 +443,26 @@ def _suggestion(kind: str, entry: dict, lead: dict, today_values: dict, history:
     if kind == 'confirm_pending':
         if not (lead.get('load') or {}).get('conditional') or not (lead.get('load') or {}).get('advances_module'):
             return None
-        open_ = [h for h in all_history if h['_current'] and not h['isDeload']
-                 and h['status'] in ('unconfirmed', 'logged')]
+        open_ = [h for h in all_history if _open(h)]
         if not open_:
             return None
-        _, poss = _day(open_[0]['date'], today)
-        return (f"{poss[0].upper()}{poss[1:]} session is not confirmed as clean, and today's numbers assume it "
+        first = open_[0]
+        _, poss = _day(first['date'], today)
+        whose = f'{poss[0].upper()}{poss[1:]} session'
+        reason, ceiling = first.get('reason'), first.get('maxRpe')
+        below = f'RPE {_n(ceiling)} or below' if ceiling is not None else 'its RPE or below'
+        held = 'A rebuilt program repeats that stage.'
+        if reason == 'over_rpe' and first.get('rpe') is not None and ceiling is not None:
+            return (f"{whose} was clean at RPE {_n(first['rpe'])}, over the RPE {_n(ceiling)} that moves this "
+                    f"on, and today's numbers assume it counted. {held}")
+        if reason == 'not_clean':
+            return f"{whose} was logged as not clean, and today's numbers assume it was. {held}"
+        if reason == 'short':
+            return f"{whose} was logged short of what was written, and today's numbers assume it counted. {held}"
+        if reason == 'no_rpe':
+            return (f"{whose} has no RPE, and today's numbers assume it counted. Add it first: a clean session "
+                    f'at {below} moves this on.')
+        return (f"{whose} is not confirmed as clean, and today's numbers assume it "
                 f'was. Confirm it first: a rebuilt program picks up from the last clean session.')
     if kind == 'next_step':
         return _next_step(today_values, entry['show'], history, today)
@@ -470,6 +521,8 @@ def _metric(key: str) -> dict:
 def _run_point(row: dict, text: str, values: dict, metric: str | None) -> dict:
     point = {'date': row['date'], 'dayText': row['dayText'], 'status': row['status'],
              'isDeload': row['isDeload'], 'sessionKey': row['sessionKey'], 'text': text}
+    if row.get('reason'):
+        point['reason'] = row['reason']
     if metric and values.get(metric) is not None:
         point['value'] = values[metric]
     return point
@@ -550,7 +603,7 @@ def build(session: dict, *, date: str, spec: dict | None = None, history: list[d
         if kind == 'module' and 'confirm_pending' in entry['suggest'] and (lead.get('load') or {}).get('conditional') \
                 and (lead.get('load') or {}).get('advances_module'):
             for h in all_history:
-                if h['_current'] and h['sessionKey'] and not h['isDeload'] and h['status'] in ('unconfirmed', 'logged'):
+                if h['sessionKey'] and _open(h) and h.get('reason') in _TO_ANSWER:
                     pending.setdefault(h['sessionKey'], {
                         'sessionKey': h['sessionKey'], 'date': h['date'],
                         'text': f"{h['dayText'][0].upper()}{h['dayText'][1:]}: done as written?"})
@@ -572,6 +625,7 @@ def build(session: dict, *, date: str, spec: dict | None = None, history: list[d
             exercise = {
                 'exerciseId': eid, 'name': ln['name'], 'today': today_line,
                 'history': [{'date': h['date'], 'dayText': h['dayText'], 'status': h['status'],
+                             **({'reason': h['reason']} if h.get('reason') else {}),
                              'isDeload': h['isDeload'], 'sessionKey': h['sessionKey'],
                              **h['_parts'][eid]}
                             for h in history_rows if eid in h['_parts']],

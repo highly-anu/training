@@ -135,6 +135,8 @@ struct SessionLogForm: View {
                 Text("Enter the time as m:ss, like 7:32.").foregroundStyle(AppColor.destructive)
             } else if draft.isTest {
                 Text("A test: what you log comes back as a result to save on the standard.")
+            } else if draft.asksClean, let ceiling = draft.moduleCeiling {
+                Text("Clean: every rep owned. Clean at \(ModuleVerdict.below(ceiling)) moves this on.")
             } else if draft.asksClean {
                 Text("Clean: every rep owned.")
             }
@@ -274,7 +276,9 @@ struct SessionLogForm: View {
                 Group {
                     switch field {
                     case .minutes:
-                        TextField("0", value: value(index, \.minutes), format: .number).keyboardType(.decimalPad)
+                        // A recorded 121 s reads "2", and is saved as 121 unless changed.
+                        TextField("0", value: value(index, \.minutes),
+                                  format: .number.precision(.fractionLength(0...1))).keyboardType(.decimalPad)
                     case .time:
                         TextField(draft.timePlaceholder, text: value(index, \.clock))
                             .keyboardType(.numbersAndPunctuation)

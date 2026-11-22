@@ -466,6 +466,8 @@ export interface SessionProvenance {
 }
 
 export interface Session {
+  /** A training contract's module records: what each module's progress rides on (src/training_contract.py). */
+  modules?: Array<{ id: string; max_rpe?: number; exercise_ids?: string[] }>
   modality: ModalityId
   /** null when the philosophy package could not fill this slot (a documented
    *  coverage gap) or an injury excluded every candidate. The type used to
