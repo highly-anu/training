@@ -838,6 +838,8 @@ struct WatchExercise: Codable, Hashable {
     var parentSlotRole: String? = nil
     /// Bells held at once; the server does not send it yet (demo data does).
     var bells: Int? = nil
+    /// The count a round is one side's ("5 each side").
+    var eachSide: Bool? = nil
     /// A hand switch inside a work period; demo data only for now.
     var switchAtSec: Int? = nil
     /// A rest that ends when HR drops below this; demo data only for now.
@@ -862,7 +864,7 @@ struct WatchExercise: Codable, Hashable {
         case emomFormat, holdSeconds, distanceKm, restSeconds, prescribedZoneLower, prescribedZoneUpper
         case lastTime = "last", standard
         case category, movementPattern, bilateral, targetRpm, workSec, intervalRestSec, distanceM
-        case repsPerRound, repScheme, packLoadKg, focus, parentSlotRole, bells, switchAtSec, restUntilHr, screen
+        case repsPerRound, repScheme, packLoadKg, focus, parentSlotRole, bells, eachSide, switchAtSec, restUntilHr, screen
         case logs, alternateName
     }
 }
@@ -912,6 +914,7 @@ extension WatchExercise {
         focus = try? c.decodeIfPresent(String.self, forKey: .focus)
         parentSlotRole = try? c.decodeIfPresent(String.self, forKey: .parentSlotRole)
         bells = c.lenientInt(.bells)
+        eachSide = try? c.decodeIfPresent(Bool.self, forKey: .eachSide)
         switchAtSec = c.lenientInt(.switchAtSec)
         restUntilHr = c.lenientInt(.restUntilHr)
         screen = try? c.decodeIfPresent(String.self, forKey: .screen)

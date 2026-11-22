@@ -110,7 +110,7 @@
     "components": "The movements of one round, each with this round's reps (a rep scheme's entry for the rounds logged); the step's own movement leads when it has a count. Else next_step.",
     "ladder_total": "Reps so far on the ladder, then next_step.",
     "hold_prompt": "Start / end-early prompt for a hold.",
-    "interval_next": "The coming work or rest phase.",
+    "interval_next": "The coming work or rest phase; the work with its reps a round when it has a count (\"1:00  5 reps\", \"5 each side\").",
     "phases": "The spec's phases strip, then next_step.",
     "standard_target": "A test step's standard: the best result and the number for the next level (the exercise's `standard`, the server's words), else next_step. Set by the server on a test's scored slots, never by a package."
   },

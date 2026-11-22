@@ -989,6 +989,9 @@ class WorkoutController {
             var hi = ex.zoneUpper();
             return t + "  Zone " + z.toString() + ((hi != null && hi != z) ? ("-" + hi.toString()) : "");
         }
+        // The count a round, when the work has one (an EMOM's 5 reps).
+        var n = ex.repsPerRound();
+        if (n != null) { return t + "  " + n.toString() + (ex.eachSide() ? " each side" : ((n == 1) ? " rep" : " reps")); }
         return t;
     }
 

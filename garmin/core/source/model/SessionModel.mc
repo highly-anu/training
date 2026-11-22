@@ -80,6 +80,8 @@ class WorkoutExercise {
         var b = g("bells");
         return (b != null) ? b : 1;
     }
+    // The count a round is one side's ("5 each side").
+    function eachSide()        { var e = g("eachSide"); return e != null && e; }
     function targetRpe()       { return g("targetRpe"); }
     function durationMinutes() { return g("durationMinutes"); }
     function zoneTarget()      { return g("zoneTarget"); }
