@@ -44,6 +44,9 @@ struct ExerciseLogDraft: Identifiable, Equatable {
     let fields: [OutcomeField]
     /// A training-contract block: clean, RPE and the bell ride on the log.
     let isModule: Bool
+    /// The RPE at or below which a clean session moves its module on; nil
+    /// for a block no progress rides on.
+    let moduleCeiling: Int?
     /// The cap as a hint, never as a value.
     let timePlaceholder: String
     /// A test's scored slot: what is logged comes back as a result to save.
@@ -64,7 +67,8 @@ struct ExerciseLogDraft: Identifiable, Equatable {
             && SessionLogging.parseClock(values.clock) == nil
     }
 
-    init?(index: Int, assignment: ProgramExerciseAssignment, existing: ExercisePerformanceLog?) {
+    init?(index: Int, assignment: ProgramExerciseAssignment, existing: ExercisePerformanceLog?,
+          moduleCeiling: Int? = nil) {
         guard let exercise = assignment.exercise, !assignment.injurySkip else { return nil }
         let load = assignment.load
         id = "\(index)-\(exercise.id)"
@@ -76,6 +80,7 @@ struct ExerciseLogDraft: Identifiable, Equatable {
                                               patterns: SessionLogging.patterns(of: exercise),
                                               standardResult: assignment.standardResult)
         isModule = load.extra["module_id"] != nil
+        self.moduleCeiling = moduleCeiling
         timePlaceholder = load.timeMinutes.map { "cap \($0):00" } ?? "m:ss"
         isTest = assignment.standardId != nil
         wasLogged = existing != nil
@@ -160,7 +165,9 @@ enum SessionLogDraft {
         return session.exercises.enumerated().compactMap { index, assignment in
             guard let id = assignment.exercise?.id, !seen.contains(id),
                   var draft = ExerciseLogDraft(index: index, assignment: assignment,
-                                               existing: log?.exercises[id]) else { return nil }
+                                               existing: log?.exercises[id],
+                                               moduleCeiling: ModuleVerdict.ceiling(of: session, exercise: id))
+            else { return nil }
             seen.insert(id)
             if id == openAt { draft.included = true }
             return draft

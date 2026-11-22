@@ -43,6 +43,18 @@ describe('ModuleProgress', () => {
     expect(useBioStore.getState().sessionPerformanceLogs['1-Monday'].exercises.wk_kb_swing_two_hand.clean).toBe(true)
   })
 
+  it('says a clean session over the module\'s RPE holds the cycle, in the module\'s own number', () => {
+    const contract = { ...session([swing]), modules: [{ id: 'swing', max_rpe: 7, exercise_ids: ['wk_kb_swing_two_hand'] }] }
+    useBioStore.setState({ sessionPerformanceLogs: { '1-Monday': {
+      exercises: { wk_kb_swing_two_hand: { sets: [], rounds: 10, clean: true, rpe: 8 } } } } } as never)
+    render(<ModuleProgress session={contract as Session} logKey="1-Monday" serverKey="1-Monday-0" />)
+    expect(screen.getByText('Clean · RPE 8 — over RPE 7, the cycle holds here')).toBeTruthy()
+    expect(screen.queryByText(/Clean, as written/)).toBeNull()
+    fireEvent.click(screen.getByText('Change'))
+    expect(screen.getByText(/A clean session at RPE 7 or below/)).toBeTruthy()
+    expect((screen.getByLabelText('RPE') as HTMLSelectElement).value).toBe('7')
+  })
+
   const lift = (id: string, name: string, load: Record<string, unknown>) => ({
     exercise: { id, name },
     load: { advances_module: true, progression_model: 'load_per_exposure', lift: id, sets: 3, reps: 5, ...load },

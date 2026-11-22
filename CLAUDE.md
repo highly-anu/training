@@ -1306,6 +1306,14 @@ sentence is the server's.
   predicate `confirmed_state` advances on, extracted so the two cannot part; `made` /
   `missed` is `_lift_outcome`; `logged` has an outcome that earns nothing; `unconfirmed` is
   done with no outcome (a watch-recorded or linked workout).
+- **A session that did not count says why** (since 2026-11-22). `training_contract.clean_shortfall`
+  is the one reading (`clean_outcomes` is its None): `unanswered`, `not_clean`, `no_rpe`,
+  `over_rpe`, `short`, `invalid`. A `logged` module row carries it as `reason`; `confirm_pending`
+  words it ("was clean at RPE 8, over the RPE 7 that moves this on"), and `pending` lists only
+  sessions still to answer — an answered one gets no Confirm. Both clients word a log's verdict
+  the same way (`ModuleVerdict.swift`, `lib/moduleVerdict.ts`: the ceiling is the session's
+  `modules[].max_rpe`). The briefing used to say "not confirmed" of a session logged clean at
+  RPE 8 while the session said "Clean, as written".
 - **Suggestions are advice** (`confirm_pending`, `next_step`, `cycle_end`, `next_load`,
   `beat_last`, `standard_target`, `repeat_last`; the first of the entry's list with
   something to say). None changes the program. `confirm_pending` — an earlier session of

@@ -148,6 +148,7 @@ def test_an_unconfirmed_session_is_said_first():
     assert swing['suggestion']['kind'] == 'confirm_pending'
     assert 'not confirmed as clean' in swing['suggestion']['text']
     assert [p['sessionKey'] for p in doc['pending']] == [swings[2]['key']]
+    assert swing['history'][2]['reason'] == 'unanswered'
 
 
 def test_a_linked_workout_counts_as_done_but_unconfirmed_and_a_missed_day_as_nothing():
@@ -161,6 +162,47 @@ def test_a_session_that_was_not_clean_is_logged_not_clean():
     swing = item(doc, 'module:swing')
     assert swing['history'][0]['status'] == 'logged'
     assert swing['suggestion']['kind'] == 'confirm_pending'
+    assert swing['history'][0]['reason'] == 'not_clean'
+
+
+def test_a_clean_session_over_the_module_s_rpe_is_answered_and_said_as_such():
+    """Clean at RPE 8 against a ceiling of 7 does not move the module on, and
+    it is not a session to confirm: the athlete answered it."""
+    def history(swings, rows):
+        return [confirm(swings[0], weight=24), confirm(swings[1], rpe=8, weight=24)]
+    doc, swings, _ = swing_briefing(history, at=2)
+    swing = item(doc, 'module:swing')
+    assert [h['status'] for h in swing['history']] == ['clean', 'logged']
+    assert swing['history'][1]['reason'] == 'over_rpe' and 'reason' not in swing['history'][0]
+    run = swing['exercises'][0]['run']
+    assert [r.get('reason') for r in run] == [None, 'over_rpe'], run
+    text = swing['suggestion']['text']
+    assert swing['suggestion']['kind'] == 'confirm_pending'
+    assert 'was clean at RPE 8, over the RPE 7 that moves this on' in text, text
+    assert 'not confirmed' not in text and 'A rebuilt program repeats that stage.' in text
+    assert doc['pending'] == []
+
+
+def test_each_reason_a_session_did_not_count_has_its_own_words():
+    def said(outcome_of):
+        def history(swings, rows):
+            row = confirm(swings[0], weight=24)
+            for o in row['log']['exercises'].values():
+                outcome_of(o)
+            return [row]
+        doc, swings, _ = swing_briefing(history, at=1)
+        return item(doc, 'module:swing'), doc['pending'], swings
+    swing, pending, _ = said(lambda o: o.update(clean=False))
+    assert 'logged as not clean' in swing['suggestion']['text'] and pending == []
+    swing, pending, _ = said(lambda o: o.update(rounds=1))
+    assert 'short of what was written' in swing['suggestion']['text'] and pending == []
+    swing, pending, swings = said(lambda o: o.pop('rpe'))
+    assert 'has no RPE' in swing['suggestion']['text'] and 'RPE 7 or below' in swing['suggestion']['text']
+    assert [p['sessionKey'] for p in pending] == [swings[0]['key']]
+    swing, pending, swings = said(lambda o: o.pop('clean'))
+    assert 'not confirmed as clean' in swing['suggestion']['text']
+    assert swing['history'][0]['status'] == 'logged' and swing['history'][0]['reason'] == 'unanswered'
+    assert [p['sessionKey'] for p in pending] == [swings[0]['key']]
 
 
 def test_history_crosses_programs_by_module_and_keeps_to_the_entry_s_count():

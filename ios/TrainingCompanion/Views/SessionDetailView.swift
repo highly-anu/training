@@ -43,7 +43,9 @@ struct SessionDetailView: View {
     }
 
     @State private var linkedTrimp: Int? = nil
-    @State private var confirmRpe: Int = 7
+    /// The RPE the athlete set; until then the module's own ceiling.
+    @State private var chosenRpe: Int?
+    private var confirmRpe: Int { chosenRpe ?? moduleCeiling ?? 7 }
     @State private var isConfirming = false
     @State private var confirmFailed = false
     @State private var changingVerdict = false
@@ -435,6 +437,11 @@ struct SessionDetailView: View {
         }
     }
 
+    /// The RPE at or below which a clean session moves the module on.
+    private var moduleCeiling: Int? {
+        progressingExercises.first.flatMap { ModuleVerdict.ceiling(of: currentSession, exercise: $0) }
+    }
+
     /// What the log says about it: clean or not, and the RPE; nil until answered.
     private var moduleVerdict: (clean: Bool, rpe: Int?)? {
         guard let first = progressingExercises.first,
@@ -447,19 +454,21 @@ struct SessionDetailView: View {
         Group {
             if let verdict = moduleVerdict, !changingVerdict {
                 HStack {
-                    Label(verdict.clean ? "Clean, as written\(verdict.rpe.map { " · RPE \($0)" } ?? "")"
-                                        : "Not clean — the cycle holds here",
-                          systemImage: verdict.clean ? "checkmark.seal.fill" : "minus.circle")
-                        .foregroundStyle(verdict.clean ? AppColor.complete : Color.secondary)
+                    let earned = ModuleVerdict.read(clean: verdict.clean, rpe: verdict.rpe,
+                                                    ceiling: moduleCeiling) == .clean
+                    Label(ModuleVerdict.words(clean: verdict.clean, rpe: verdict.rpe, ceiling: moduleCeiling),
+                          systemImage: earned ? "checkmark.seal.fill" : "minus.circle")
+                        .foregroundStyle(earned ? AppColor.complete : Color.secondary)
                     Spacer()
                     Button("Change") { changingVerdict = true }
                         .font(.caption)
                 }
             } else {
-                Text("Done as written? A clean session at RPE 7 or below moves each module on when the program is next rebuilt.")
+                Text("Done as written? A clean session at \(ModuleVerdict.below(moduleCeiling)) moves each module on when the program is next rebuilt.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Stepper("RPE \(confirmRpe)", value: $confirmRpe, in: 1...10)
+                Stepper("RPE \(confirmRpe)",
+                        value: Binding(get: { confirmRpe }, set: { chosenRpe = $0 }), in: 1...10)
                 HStack {
                     Button { confirm(clean: true) } label: {
                         Label("Clean, as written", systemImage: "checkmark.seal")

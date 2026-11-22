@@ -2576,6 +2576,14 @@ nth row's sheet there or in the session detail. `BriefingModelTests`.
 
 ## 7. Motion & Animation
 
+**An answered session is never one to confirm.** The server's `pending` lists only sessions
+still to answer (no clean answer, or no RPE); a session logged clean above the module's RPE
+keeps its grey dot, has no Confirm, and the suggestion says why it did not count ("was clean at
+RPE 8, over the RPE 7 that moves this on"). Beside a log the phone says the same through
+`ModuleVerdict` (the session's Progress row, the log form's footer), with the ceiling read from
+the session's module record — never a literal 7.
+
+
 ### 7.1 Rules
 
 - **Springs are the standard**, three of them, in `AppAnimation`
