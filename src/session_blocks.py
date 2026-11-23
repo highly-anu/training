@@ -9,7 +9,7 @@ role says whether a slot warms up or cools down. This module reads that once,
 for an archetype as its package writes it (Explore) and for a session of a
 stored program (Today), so both draw the same blocks:
 
-    {id, stage, shape, title, headline, repeat, rest, cap, load, intensity,
+    {id, stage, stageLabel, shape, title, headline, repeat, rest, again, cap, load, intensity,
      rpe, note, standard, group, roles, movements: [{role, name, count,
      perRound, eachSide, note, exercises, more}]}
 
@@ -344,6 +344,20 @@ def _rest(shape: str, lead: dict, repeat: dict) -> dict | None:
     return {'seconds': seconds, 'between': between, 'text': text}
 
 
+def _again(shape: str, repeat: dict, movements: int) -> str | None:
+    """What happens at the foot of a round, in words: the loop a reader
+    follows back to the top."""
+    rounds = repeat.get('rounds')
+    if shape in ('for_time', 'rounds') and rounds and rounds != 1:
+        return f'{_num(rounds)} rounds in all'
+    if shape == 'amrap':
+        return 'Again, until the time is up'
+    if shape == 'emom' and (movements > 1 or rounds):
+        every = repeat.get('everySec')
+        return 'Start again every minute' if every in (None, 60) else f'Start again every {_span(every)}'
+    return None
+
+
 def _block(items: list[dict], names: dict, pools: dict) -> dict:
     lead = items[0]
     in_piece = len(items) > 1 or lead['type'] in _PIECES
@@ -373,12 +387,14 @@ def _block(items: list[dict], names: dict, pools: dict) -> dict:
     cap = repeat.get('capMin')
     return {
         'id': lead['role'],
-        'stage': stage_of(lead['role'], lead['stage']),
+        'stage': (stage := stage_of(lead['role'], lead['stage'])),
+        'stageLabel': stage_label(stage),
         'shape': pattern or shape,
         'title': _words(_bare(lead['role'])),
         'headline': _headline(shape, lead, repeat),
         'repeat': repeat or None,
         'rest': _rest(shape, lead, repeat),
+        'again': _again(shape, repeat, len(items)),
         'cap': f'{cap} min cap' if cap else None,
         'load': lead['load'] or None,
         'intensity': _words(lead['intensity']).lower() if lead['intensity'] else None,

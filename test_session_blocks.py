@@ -110,6 +110,13 @@ class Words(unittest.TestCase):
         # An interval's rest is in its headline, said once.
         self.assertIsNone(sb.for_archetype(arch(slot('t', 'amrap', sets=8, work_sec=20, rest_sec=10)))[0]['rest'])
 
+    def test_the_loop_in_words(self):
+        self.assertEqual(sb.for_archetype(COMPLEX)[1]['again'], '6 rounds in all')
+        self.assertEqual(sb.for_archetype(CINDY)[0]['again'], 'Again, until the time is up')
+        self.assertEqual(sb.for_archetype(arch(slot('e', 'emom', rounds=20)))[0]['again'], 'Start again every minute')
+        self.assertIsNone(sb.for_archetype(arch(slot('s', sets=3, reps=5)))[0]['again'])
+        self.assertEqual(sb.for_archetype(COMPLEX)[0]['stageLabel'], 'Start')
+
     def test_a_cap(self):
         b = sb.for_archetype(arch(slot('h', 'rounds_for_time', rounds=3, duration_sec=720)))[0]
         self.assertEqual((b['repeat']['capMin'], b['cap']), (12, '12 min cap'))
