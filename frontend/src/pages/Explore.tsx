@@ -36,6 +36,8 @@ import { useExploreLinks } from '@/api/exploreLinks'
 import { lineageOf, progressionOf, type ExploreTopic, type LinkedTopic } from '@/lib/exploreLinks'
 import { useBuilderStore } from '@/store/builderStore'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { ModalityMix } from '@/components/explore/philosophy/ModalityMix'
 import { HeatmapPanel } from '@/components/devlab/heatmap/HeatmapPanel'
 import { SimilarItems } from '@/components/shared/SimilarItems'
 import { useSimilarity, likenessScorer, type SimilarityCategory } from '@/api/similarity'
@@ -167,6 +169,12 @@ function PhilosophyOverview({ philosophies, onSelect, onCompare }: {
     if (sort === 'alpha') return [...philosophies].sort((a, b) => a.name.localeCompare(b.name))
     return sortByLikeness(philosophies, matrix?.['philosophies'])
   }, [philosophies, sort, matrix])
+  // The athlete's own methods lead, under their own label; the count is the shipped ones'.
+  const groups = [
+    { label: 'Your methods', items: sorted.filter((p) => p.own) },
+    { label: null, items: sorted.filter((p) => !p.own) },
+  ].filter((g) => g.items.length > 0)
+  const shipped = philosophies.filter((p) => !p.own).length
 
   return (
     <ScrollPanel>
@@ -177,11 +185,10 @@ function PhilosophyOverview({ philosophies, onSelect, onCompare }: {
             Training ontology
           </p>
           <h2 className="text-2xl font-semibold leading-snug">
-            {philosophies.length} training philosophies.
+            {shipped} training philosophies.
           </h2>
           <p className="text-sm text-muted-foreground leading-relaxed max-w-lg">
-            From barbell minimalism to movement generalism — each philosophy encodes a distinct theory of how to stress, recover, and progress.
-            Select one to see its tracks and phases, what it builds and what it asks of you.
+            Each is a way to stress, recover and progress. Open one for its weeks and sessions.
           </p>
         </div>
 
@@ -205,8 +212,13 @@ function PhilosophyOverview({ philosophies, onSelect, onCompare }: {
           </p>
         )}
 
-        <div className="grid grid-cols-2 gap-2">
-          {sorted.map((p) => {
+        {groups.map((group) => (
+        <section key={group.label ?? 'all'} className="space-y-2" aria-label={group.label ?? 'Philosophies'}>
+        {group.label && (
+          <h3 className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{group.label}</h3>
+        )}
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {group.items.map((p) => {
             const g = byId[p.id]
             const color = philosophyHex(p.bias)
             const primary = g && (g.tracks.find((t) => t.id === g.primaryTrackId) ?? g.tracks[0])
@@ -240,7 +252,11 @@ function PhilosophyOverview({ philosophies, onSelect, onCompare }: {
                   </span>
                 )}
                 <div className="min-w-0 flex-1 space-y-1.5">
-                  <p className="text-xs font-medium leading-snug truncate group-hover:text-primary transition-colors">{p.name}</p>
+                  <p className="flex items-center gap-1.5 text-xs font-medium leading-snug">
+                    <span className="truncate group-hover:text-primary transition-colors">{p.name}</span>
+                    {p.own && <Badge variant="outline" className="shrink-0 px-1.5 py-0 text-[9px]">Yours</Badge>}
+                  </p>
+                  {g && g.mix.length > 0 && <ModalityMix mix={g.mix} legend={false} />}
                   {g && (
                     <p className="text-[10px] text-muted-foreground/60 font-mono">
                       {g.counts.tracks} track{g.counts.tracks === 1 ? '' : 's'} · {phases} phase{phases === 1 ? '' : 's'}
@@ -266,10 +282,9 @@ function PhilosophyOverview({ philosophies, onSelect, onCompare }: {
             )
           })}
         </div>
+        </section>
+        ))}
 
-        <p className="text-[10px] text-muted-foreground/30 text-center pb-4">
-          Select a philosophy to explore its full structure
-        </p>
       </div>
       {picking && (
         <div className="sticky bottom-0 border-t border-border/60 bg-background/95 px-8 py-3 backdrop-blur">
@@ -1231,12 +1246,6 @@ function ArchetypeDetail({ archetype, allExercises, allArchetypes, onSelect, onB
           </Section>
         )}
 
-        <LineageSection
-          lineage={lineage}
-          emptyUp="No philosophy schedules this archetype."
-          emptyDown="Its slots take no exercise."
-        />
-
         {/* Card content — always open, no accordion */}
         <ArchetypeCard
           archetype={archetype}
@@ -1246,6 +1255,12 @@ function ArchetypeDetail({ archetype, allExercises, allArchetypes, onSelect, onB
           onToggle={() => {}}
           onSelectArchetype={onSelect}
           alwaysOpen
+        />
+
+        <LineageSection
+          lineage={lineage}
+          emptyUp="No philosophy schedules this archetype."
+          emptyDown="Its slots take no exercise."
         />
       </div>
     </ScrollPanel>

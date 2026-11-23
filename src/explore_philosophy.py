@@ -512,6 +512,8 @@ def _core(phil: dict, *, frameworks: dict, archetypes: list, exercises: dict, co
     return {
         'id': phil['id'],
         'name': phil.get('name') or words(phil['id']),
+        # The asker's own method (a package of their overlay), never a shipped one.
+        'own': phil['id'] in loader.overlay_packages(),
         'summary': (phil.get('notes') or '').strip() or None,
         'accent': (phil.get('bias') or [None])[0],
         'bias': list(phil.get('bias') or []),
@@ -564,7 +566,7 @@ def glance(core: dict, measures: dict | None = None) -> dict:
     phase_keys = ('id', 'name', 'kind', 'weeks', 'repeatable', 'focus', 'days', 'daysPerWeek', 'minutes',
                   'sessionsPerWeek', 'mix', 'intensitySplit')
     return {
-        'id': core['id'], 'name': core['name'], 'accent': core['accent'], 'bias': core['bias'],
+        'id': core['id'], 'name': core['name'], 'own': core['own'], 'accent': core['accent'], 'bias': core['bias'],
         'levels': core['levels'],
         'weeks': {'min': exp.get('min_weeks'), 'ideal': exp.get('ideal_weeks')} if exp else None,
         'daysPerWeek': {'min': exp.get('min_days_per_week'), 'ideal': exp.get('ideal_days_per_week')} if exp else None,

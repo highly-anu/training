@@ -2381,25 +2381,48 @@ far as it must.
    card shows at the edge; it opens on the main track). A card is the whole
    track, nothing behind a button: name, who it is for, `LevelPips`, weeks,
    days, minutes, tests, mix, the `PhaseBar` on a scale shared by all tracks,
-   the track's own words (description, what it needs, notes), then its phases
+   the track's description in two lines (*About this track* opens the rest:
+   what it needs, its notes), then its phases
    as cards: the kind's colour, weeks, the `WeekGlyph` (a template's seven days
    split by modality, rest dashed; else one dot per weekly session), the
    intensity bar, days, minutes and tests as icons. A phase card opens the
    phase under them, inside the track's card: the full week (`PhaseWeek`),
    description, what it builds, how hard, tests.
-3. **Goals** — what the main track builds (chips) and *progress is …* with the
+3. **Sessions** — straight after the tracks, since they are what the athlete will
+   do: one tile per group (template category, contract module, modality, tests) with
+   the modality icon and a count; a tile opens the group's sessions under the tiles.
+   A session is a card — name, minutes and its `BlockStrip` — that opens to its
+   blocks (§13.12); levels, equipment, *About this session* and *Open as an
+   archetype* close it.
+4. **Goals** — what the main track builds (chips) and *progress is …* with the
    standards it is measured by (chips in their modality's colour, a flask on
    the ones a phase tests); a standard, or *How progress is measured*, opens the
    measures card under Goals and Requirements. **Requirements** — equipment chips
-   (*+N* shows the rest in place), the movements each track expects you to own,
-   borrows.
-4. **The method** — tiles: rules from the source, sources, app decisions, not
+   (*+N* shows the rest in place), a chip a track that expects movements you own
+   (it opens their names), borrows.
+5. **The method** — tiles: rules from the source, sources, app decisions, not
    modelled yet; each opens its list under the tiles.
-5. **Sessions** — one tile per group (template category, contract module,
-   modality, tests) with the modality icon and a count; a tile opens the
-   group's sessions under the tiles, each slot with the exercises the server
-   says it takes.
 6. Lineage (§13.8) and similar philosophies.
+
+An athlete's own method (`own` on the philosophy, the glance and the describe
+document) wears a *Yours* badge beside its name, here and on its landing card; on the
+landing the athlete's methods lead under *Your methods* and the heading counts the
+shipped philosophies alone. A landing card shows the method's modality mix as a strip
+under its name.
+
+**Editing your own method.** For an own method the header adds *Edit*, *Rename* and
+*Revise* (`canEdit`: the builder is on for the account). *Rename* is
+`components/methods/RenameMethodDialog.tsx`, the same dialog the builder's method card
+opens. *Edit* is a switch: while it is on, each piece of the method's text —
+its summary, a track's name and description, a session's name and notes, a movement's
+note — is an `EditableText` (`components/methods/MethodEdit.tsx`) with a pencil that
+opens a field in place; Save writes that one field at once through
+`PATCH /api/methods/<id>` (no build) and the page reads itself again. Numbers and
+structure are never fields: the line under the header says they change with Revise.
+A refusal is the server's sentence, beside the field.
+
+The archetype detail leads with the session's blocks (§13.12); phases, levels,
+equipment, scaling and sources follow, then the lineage.
 
 The landing keeps §13.6's outline and card like every other Explore landing:
 the philosophy's colour as the left border, the name, a metadata line (tracks ·

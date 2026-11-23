@@ -50,7 +50,9 @@ function Chip({ children }: { children: ReactNode }) {
 
 /** One movement: its count a round, its name, and — on demand — its note and
  *  what else may fill the slot. */
-function MovementRow({ movement: m, onExercise }: { movement: BlockMovement; onExercise?: (id: string) => void }) {
+function MovementRow({ movement: m, onExercise, renderNote }: {
+  movement: BlockMovement; onExercise?: (id: string) => void; renderNote?: NoteRenderer
+}) {
   const [open, setOpen] = useState(false)
   const others = m.listed ? m.exercises.slice(1) : m.exercises
   const hasMore = Boolean(m.note) || others.length > 0
@@ -77,7 +79,7 @@ function MovementRow({ movement: m, onExercise }: { movement: BlockMovement; onE
       )}
       <Collapse open={open}>
         <div className="space-y-1.5 pb-1.5 pl-[4.25rem] pr-1">
-          {m.note && <p className="text-[11px] leading-relaxed text-muted-foreground">{m.note}</p>}
+          {m.note && <p className="text-[11px] leading-relaxed text-muted-foreground">{renderNote ? renderNote(m.role, m.note) : m.note}</p>}
           {(first || others.length > 0) && (
             <div className="flex flex-wrap items-center gap-1">
               {!m.listed && <span className="text-[10px] text-muted-foreground/70">Any of</span>}
@@ -118,8 +120,12 @@ function Loop({ block, accent, children }: { block: SessionBlock; accent?: strin
   )
 }
 
+/** Draws a slot's note in the caller's own way (an editable one, on the athlete's own method). */
+type NoteRenderer = (role: string, note: string) => ReactNode
+
 interface BlockProps {
   block: SessionBlock
+  renderNote?: NoteRenderer
   /** The session's modality colour: the rail and the main work's mark. */
   accent?: string
   onExercise?: (id: string) => void
@@ -128,7 +134,7 @@ interface BlockProps {
 }
 
 /** One block: its mark and headline, the movements, the rest; notes on demand. */
-export function BlockCard({ block: b, accent, onExercise, renderMovement }: BlockProps) {
+export function BlockCard({ block: b, accent, onExercise, renderMovement, renderNote }: BlockProps) {
   const [open, setOpen] = useState(false)
   const loop = isLoop(b)
   const single = b.movements.length === 1 ? b.movements[0] : null
@@ -140,7 +146,7 @@ export function BlockCard({ block: b, accent, onExercise, renderMovement }: Bloc
   const name = single && !loop ? single.name : b.title
   const rows = renderMovement
     ? b.movements.map((m) => <li key={m.role}>{renderMovement(m, b)}</li>)
-    : b.movements.map((m) => <MovementRow key={m.role} movement={m} onExercise={onExercise} />)
+    : b.movements.map((m) => <MovementRow key={m.role} movement={m} onExercise={onExercise} renderNote={renderNote} />)
 
   // A caller's own rows say a lone movement's numbers themselves: no header
   // over one row, only over a round.
@@ -180,7 +186,11 @@ export function BlockCard({ block: b, accent, onExercise, renderMovement }: Bloc
       </div>
       <Collapse open={open}>
         <div className="space-y-1 pl-[2.375rem] pt-1.5">
-          {details.map((d, i) => <p key={i} className="text-[11px] leading-relaxed text-muted-foreground">{d}</p>)}
+          {details.map((d, i) => (
+            <p key={i} className="text-[11px] leading-relaxed text-muted-foreground">
+              {renderNote && d === b.note ? renderNote(b.id, d) : d}
+            </p>
+          ))}
         </div>
       </Collapse>
       {loop ? (
@@ -241,11 +251,12 @@ const GROUP_LABEL = { superset: 'Superset', alternate: 'Alternate sets' } as con
 
 /** A session's blocks, in stages: the start, the main work, a finisher, the
  *  cool-down. A stage is labelled only when the session has more than one. */
-export function WorkoutBlocks({ blocks, accent, onExercise, renderMovement, className }: {
+export function WorkoutBlocks({ blocks, accent, onExercise, renderMovement, renderNote, className }: {
   blocks: SessionBlock[]
   accent?: string
   onExercise?: (id: string) => void
   renderMovement?: BlockProps['renderMovement']
+  renderNote?: NoteRenderer
   className?: string
 }) {
   const runs = stageRuns(blocks)
@@ -258,13 +269,13 @@ export function WorkoutBlocks({ blocks, accent, onExercise, renderMovement, clas
             <h4 className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{run.label}</h4>
           )}
           {grouped(run.blocks).map((set) => set.length === 1 ? (
-            <BlockCard key={set[0].id} block={set[0]} accent={accent} onExercise={onExercise} renderMovement={renderMovement} />
+            <BlockCard key={set[0].id} block={set[0]} accent={accent} onExercise={onExercise} renderMovement={renderMovement} renderNote={renderNote} />
           ) : (
             <div key={set[0].id} className="space-y-1.5 rounded-lg border-l-2 border-border pl-2"
               style={accent ? { borderLeftColor: accent } : undefined}>
               <p className="text-[10px] text-muted-foreground">{GROUP_LABEL[set[0].group!.kind]}</p>
               {set.map((b) => (
-                <BlockCard key={b.id} block={b} accent={accent} onExercise={onExercise} renderMovement={renderMovement} />
+                <BlockCard key={b.id} block={b} accent={accent} onExercise={onExercise} renderMovement={renderMovement} renderNote={renderNote} />
               ))}
             </div>
           ))}

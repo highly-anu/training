@@ -342,6 +342,18 @@ final class APIClient {
         return MethodBuildWords.deleteRefusal(status: status, body: data)
     }
 
+    /// Renames a method — no build, the next revision of the same method;
+    /// answers why not when it is refused, nil when done.
+    func renameMethod(_ id: String, to name: String) async throws -> String? {
+        var request = URLRequest(url: URL(string: APIClient.baseURL + "/methods/\(Self.segment(id))")!)
+        request.httpMethod = "PATCH"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        try await addAuth(to: &request)
+        request.httpBody = MethodBuildWords.renameBody(name)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        return MethodBuildWords.renameRefusal(status: (response as? HTTPURLResponse)?.statusCode ?? 0, body: data)
+    }
+
     private static func build(in data: Data) throws -> MethodBuild {
         struct Envelope: Decodable { let build: MethodBuild }
         guard let build = try? JSONDecoder().decode(Envelope.self, from: data).build else { throw APIError.decodingError }

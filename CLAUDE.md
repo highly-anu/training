@@ -1716,7 +1716,16 @@ the method existed. The builder sends **no `priority_overrides` that only repeat
 (`buildPostBody`): the override replaces the goal's priorities, and the web's vector once knew only
 the compiled modalities, which zeroed a package's own. After a change to the methods or builds
 routes' answers, `test_package_builder.py --write` re-records `mocks/fixtures/methods.json` and
-`builds.json`. **What a build did is Dev Lab ▸ Builds** (`/dev?tab=builds`, `src/build_report.py`): read it
+`builds.json`. **A method's words change without a build** (since 2026-11-23, roadmap 21.10):
+`PATCH /api/methods/<id>` `{name?, summary?, tracks?, sessions?}` writes names, summaries and
+notes into the package as its next revision (`src/method_edits.py`, `package_store.edit_text`) —
+no model, no smoke generate, the package's status and engine revision left alone; ids, numbers
+and structure answer 422 (`not_editable`: they change with a revise), and the edit is refused
+only for a schema or id problem it brought. The program built from the method takes the new
+names at once (`method_edits.rename_in_program`, never a version); earlier blocks keep theirs.
+Rename is on the method card in both builders (web `RenameMethodDialog`, iOS the card's menu);
+on the web the method's Explore page has Rename · Revise and an Edit switch that turns its words
+editable in place (`components/methods/MethodEdit.tsx`); `test_method_edits.py`. **What a build did is Dev Lab ▸ Builds** (`/dev?tab=builds`, `src/build_report.py`): read it
 after any change to the prompt, the spec or the budgets — the checks' problems by kind say what the
 model keeps getting wrong, the per-turn tokens (`usage.per_turn`) where the output goes.
 `src/package_gate.check_package(folder)` is every gate for one folder, in process and as data

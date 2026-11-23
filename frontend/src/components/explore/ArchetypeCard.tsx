@@ -455,8 +455,20 @@ export function ArchetypeCard({ archetype, allExercises, allArchetypes, isOpen, 
       {/* Expanded body */}
       {open && (
         <div className="border-t border-border/30 px-3 pb-3 pt-2.5 space-y-3">
+          {/* Section D — the session as blocks; the slots, flat, from an older server */}
+          <div className="space-y-1.5">
+            {blocks.length > 0 ? (
+              <WorkoutBlocks blocks={blocks} accent={modalityHex(archetype.modality)}
+                onExercise={(id) => go('exercises', id)} />
+            ) : (
+              (archetype.slots ?? []).map((slot, i) => (
+                <SlotRow key={i} slot={slot} matching={bySlot[slot.role] ?? []} />
+              ))
+            )}
+          </div>
+
           {/* Section A — metadata */}
-          <div className="space-y-2">
+          <div className="space-y-2 pt-2 border-t border-border/20">
             <div>
               <p className="text-[9px] uppercase tracking-wider text-muted-foreground/50 mb-1">Phases</p>
               <div className="flex flex-wrap gap-1">
@@ -524,18 +536,6 @@ export function ArchetypeCard({ archetype, allExercises, allArchetypes, isOpen, 
               ))}
             </div>
           )}
-
-          {/* Section D — the session as blocks; the slots, flat, from an older server */}
-          <div className="pt-2 border-t border-border/20 space-y-1.5">
-            {blocks.length > 0 ? (
-              <WorkoutBlocks blocks={blocks} accent={modalityHex(archetype.modality)}
-                onExercise={(id) => go('exercises', id)} />
-            ) : (
-              (archetype.slots ?? []).map((slot, i) => (
-                <SlotRow key={i} slot={slot} matching={bySlot[slot.role] ?? []} />
-              ))
-            )}
-          </div>
 
           {/* Archetype notes */}
           {archetype.notes && (

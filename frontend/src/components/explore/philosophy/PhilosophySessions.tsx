@@ -4,6 +4,7 @@ import { InlinePanel, ModalityGlyph } from './Glance'
 import { Advice } from './Advice'
 import { BlockStrip, WorkoutBlocks } from '@/components/blocks/WorkoutBlocks'
 import { Collapse } from '@/components/motion/Collapse'
+import { EditableText, useMethodEditing } from '@/components/methods/MethodEdit'
 import type { DescribedSession, DescribedSessionGroup, PhilosophyDescription } from '@/api/types'
 import { useExploreNavigate } from '@/components/explore/topics'
 import { cn } from '@/lib/utils'
@@ -15,13 +16,21 @@ function Session({ session: s }: { session: DescribedSession }) {
   const go = useExploreNavigate()
   const accent = modalityHex(s.modality)
   const blocks = s.blocks ?? []
+  const editing = useMethodEditing()
   return (
     <li className="rounded-lg border border-border/50 bg-card/40">
+      {editing && (
+        // The name is edited outside the card's own button.
+        <div className="px-3 pt-2 text-xs font-medium">
+          <EditableText value={s.name} label="Session name" edits={(name) => ({ sessions: { [s.id]: { name } } })} />
+        </div>
+      )}
       <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open}
+        aria-label={editing ? `${s.name}, its blocks` : undefined}
         className="flex w-full flex-col gap-1.5 rounded-lg px-3 py-2 text-left hover:bg-muted/20">
         <span className="flex w-full items-center gap-2">
           {s.test && <FlaskConical className="size-3.5 shrink-0 text-muted-foreground" aria-label="test" />}
-          <span className="flex-1 truncate text-xs font-medium">{s.name}</span>
+          <span className="flex-1 truncate text-xs font-medium">{editing ? '' : s.name}</span>
           {s.minutes != null && <span className="font-mono text-[10px] text-muted-foreground">{s.minutes} min</span>}
           <ChevronDown className={cn('size-3.5 shrink-0 text-muted-foreground/60', open && 'rotate-180')} aria-hidden />
         </span>
@@ -30,7 +39,11 @@ function Session({ session: s }: { session: DescribedSession }) {
       <Collapse open={open}>
         <div className="space-y-2.5 border-t border-border/30 px-3 py-2.5">
           {blocks.length > 0 ? (
-            <WorkoutBlocks blocks={blocks} accent={accent} onExercise={(id) => go('exercises', id)} />
+            <WorkoutBlocks blocks={blocks} accent={accent} onExercise={(id) => go('exercises', id)}
+              renderNote={editing ? (role, note) => (
+                <EditableText value={note} label="Note" multiline
+                  edits={(notes) => ({ sessions: { [s.id]: { slots: { [role]: { notes } } } } })} />
+              ) : undefined} />
           ) : (
             // An older server sends no blocks: the slots, one a line.
             <ul className="space-y-1">
@@ -45,7 +58,7 @@ function Session({ session: s }: { session: DescribedSession }) {
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground">
             {s.levels.length > 0 && <span>{s.levels.join(' · ')}</span>}
             {s.equipment.length > 0 && <span>Needs {s.equipment.join(', ').toLowerCase()}</span>}
-            {s.note && (
+            {(s.note || editing) && (
               <button type="button" onClick={() => setNotes((n) => !n)} aria-expanded={notes} className="hover:text-foreground">
                 About this session
               </button>
@@ -55,7 +68,10 @@ function Session({ session: s }: { session: DescribedSession }) {
             </button>
           </div>
           <Collapse open={notes}>
-            <p className="text-[11px] leading-relaxed text-muted-foreground">{s.note}</p>
+            <p className="text-[11px] leading-relaxed text-muted-foreground">
+              <EditableText value={s.note} label="Session notes" multiline placeholder="Add a note for this session"
+                edits={(notes) => ({ sessions: { [s.id]: { notes } } })} />
+            </p>
           </Collapse>
         </div>
       </Collapse>
