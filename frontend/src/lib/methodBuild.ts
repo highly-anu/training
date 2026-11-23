@@ -104,3 +104,22 @@ export function deleteRefusal(error: unknown): string {
   if (e.body?.error === 'in_use') return 'Your program is built from this method. Start another program first.'
   return 'The method could not be deleted. Try again.'
 }
+
+/** A name is 1 to 80 characters, other text at most 2000 (src/method_edits.py). */
+export const NAME_MAX = 80
+export const TEXT_MAX = 2000
+
+/** A method's name as it will be saved — its spaces tidied — or null when it cannot be one. */
+export function cleanName(text: string): string | null {
+  const name = text.split(/\s+/).filter(Boolean).join(' ')
+  return name.length >= 1 && name.length <= NAME_MAX ? name : null
+}
+
+/** Why a rename or an edit of a method's words was refused, in the athlete's words. */
+export function editRefusal(error: unknown): string {
+  const e = (error ?? {}) as { status?: number; body?: { error?: string; problems?: Array<{ message?: string }> } }
+  const said = e.body?.problems?.[0]?.message
+  if (e.status === 422 && said) return said
+  if (e.status === 404) return 'This method is no longer among yours.'
+  return 'The change could not be saved. Try again.'
+}

@@ -229,6 +229,33 @@ enum MethodBuildWords {
         }
     }
 
+    /// A method's name is 1 to 80 characters (src/method_edits.py).
+    static let nameMax = 80
+
+    /// The name as it will be saved — its spaces tidied — or nil when it
+    /// cannot be one.
+    static func cleanName(_ text: String) -> String? {
+        let name = text.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        return (1...nameMax).contains(name.count) ? name : nil
+    }
+
+    /// The body of a rename: PATCH /methods/<id>.
+    static func renameBody(_ name: String) -> Data {
+        (try? JSONEncoder().encode(["name": name])) ?? Data()
+    }
+
+    /// Why a method could not be renamed, or nil when it was.
+    static func renameRefusal(status: Int, body: Data) -> String? {
+        if (200..<300).contains(status) { return nil }
+        struct Problem: Decodable { let message: String? }
+        struct Answer: Decodable { let problems: [Problem]? }
+        if status == 422, let said = (try? JSONDecoder().decode(Answer.self, from: body))?.problems?.first?.message {
+            return said
+        }
+        if status == 404 { return "This method is no longer among yours." }
+        return "The method could not be renamed. Try again."
+    }
+
     /// Why a method could not be deleted, or nil when it was.
     static func deleteRefusal(status: Int, body: Data) -> String? {
         if (200..<300).contains(status) { return nil }

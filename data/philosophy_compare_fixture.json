@@ -9,6 +9,7 @@
    {
     "id": "uphill_athlete",
     "name": "Uphill Athlete — Steve House & Scott Johnston",
+    "own": false,
     "accent": "aerobic_base",
     "bias": [
      "aerobic_base",
@@ -377,6 +378,7 @@
    {
     "id": "gym_jones",
     "name": "Gym Jones / Mark Twight",
+    "own": false,
     "accent": "strength_endurance",
     "bias": [
      "strength_endurance",
@@ -693,6 +695,7 @@
    {
     "id": "horsemen_gpp",
     "name": "Horsemen GPP / SOF-Style Training",
+    "own": false,
     "accent": "durability",
     "bias": [
      "durability",

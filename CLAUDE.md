@@ -707,7 +707,10 @@ is the source of the patterns, not the neighbouring screen:
   save and the content hash, like `icon`). A piece is the slot its movements name
   (`parent_slot_role`); the stage is the slot's `stage`, else its role through
   `data/commons/slot_stages.yaml`, else main; `group` ties a superset. Every word of a block
-  is the server's; a client draws them and formats nothing (`test_session_blocks.py`).
+  is the server's; a client draws them and formats nothing (`test_session_blocks.py`, which
+  also writes the web's fixture, `--write`). The web draws them with
+  `components/blocks/WorkoutBlocks.tsx` in Explore's sessions, the archetype detail and the
+  session panel (frontend-design §13.12); the phone's session detail does not yet.
 - **Web**: `docs/frontend-design.md`. §1.7 is the design language in web idiom and §1.8
   every rule in one table — the module that carries it and the test that holds it; §16 is
   the order to read a page in (§13.2 the grouped sidebar, §17.8 every page's header).
@@ -1713,7 +1716,16 @@ the method existed. The builder sends **no `priority_overrides` that only repeat
 (`buildPostBody`): the override replaces the goal's priorities, and the web's vector once knew only
 the compiled modalities, which zeroed a package's own. After a change to the methods or builds
 routes' answers, `test_package_builder.py --write` re-records `mocks/fixtures/methods.json` and
-`builds.json`. **What a build did is Dev Lab ▸ Builds** (`/dev?tab=builds`, `src/build_report.py`): read it
+`builds.json`. **A method's words change without a build** (since 2026-11-23, roadmap 21.10):
+`PATCH /api/methods/<id>` `{name?, summary?, tracks?, sessions?}` writes names, summaries and
+notes into the package as its next revision (`src/method_edits.py`, `package_store.edit_text`) —
+no model, no smoke generate, the package's status and engine revision left alone; ids, numbers
+and structure answer 422 (`not_editable`: they change with a revise), and the edit is refused
+only for a schema or id problem it brought. The program built from the method takes the new
+names at once (`method_edits.rename_in_program`, never a version); earlier blocks keep theirs.
+Rename is on the method card in both builders (web `RenameMethodDialog`, iOS the card's menu);
+on the web the method's Explore page has Rename · Revise and an Edit switch that turns its words
+editable in place (`components/methods/MethodEdit.tsx`); `test_method_edits.py`. **What a build did is Dev Lab ▸ Builds** (`/dev?tab=builds`, `src/build_report.py`): read it
 after any change to the prompt, the spec or the budgets — the checks' problems by kind say what the
 model keeps getting wrong, the per-turn tokens (`usage.per_turn`) where the output goes.
 `src/package_gate.check_package(folder)` is every gate for one folder, in process and as data

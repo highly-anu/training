@@ -6,8 +6,9 @@ interface MetaSlotProps {
 }
 
 export function MetaSlot({ assignment }: MetaSlotProps) {
-  const role = assignment.slot_role ?? 'info'
-  const label = role === 'warm_up' ? 'Warm-Up' : role === 'cool_down' ? 'Cool-Down' : 'Note'
+  // Whether it opens or closes the session is said by its block's stage
+  // label above it (src/session_blocks.py); the row is a note.
+  const label = 'Note'
 
   return (
     <div className="flex items-center gap-3 rounded-md bg-muted/40 px-3 py-2">

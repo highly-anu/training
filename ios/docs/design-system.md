@@ -2505,8 +2505,9 @@ step**, never in a tab or a sheet of its own (`BuilderMethodologyStep`,
 - **Your methods** leads the step when the account may build or has methods
   (`MethodsAnswer.isShown`); "Methodologies" then heads the shipped ones. In order: the
   build in progress (a row with a spinner and what it is doing, which opens it), each
-  method as the same selection card as any methodology — its "…" holds About, Revise and
-  Delete (§6.51; Delete asks first, and a refusal is said under the group) — and
+  method as the same selection card as any methodology — its "…" holds About, Revise,
+  Rename and Delete (§6.51; Rename is an alert with the name in a field, saved at once
+  with no build; Delete asks first; a refusal of either is said under the group) — and
   **Create your own**, a full-width row with `sparkles`, absent while a build runs.
 - **Describe** and **the build** are pushed in the builder's stack (§6.48: no sheet on a
   sheet), each with its own inline title and no step indicator. Describe is a `Form`:

@@ -164,6 +164,7 @@ whole contract, and each gets its module and its check in the phase that lands i
 | Hue is data, and it has a name | `lib/dataColors.ts` beside the modality, phase, zone and movement modules (§8.12) | `designRules` — no hex literal in a component |
 | A chart reads its numbers | `components/shared/ChartFrame.tsx`, `lib/chartSummary.ts` (§12.11) | `chartSummary.test.ts`; `designRules` — no Recharts container outside `ChartFrame`, no frame without a label |
 | The page can be skipped to and has one name | the skip link and `main#main` in `RootLayout`; `PageHeader`'s `h1` | `designRules`; `eslint-plugin-jsx-a11y` (recommended) in `npm run lint` |
+| A workout is drawn in blocks | `components/blocks/WorkoutBlocks.tsx`, `lib/blocks.ts` (§13.12); the server's `blocks` (`src/session_blocks.py`) | `WorkoutBlocks.test.tsx` on `mocks/fixtures/blocks.json`, which `test_session_blocks.py` writes |
 
 **Adding a rule.** Put it in one module, convert every call site in the same change, add
 the row here and the line to `designRules.test.ts`. No baseline is kept: a ban lands with
@@ -2380,25 +2381,48 @@ far as it must.
    card shows at the edge; it opens on the main track). A card is the whole
    track, nothing behind a button: name, who it is for, `LevelPips`, weeks,
    days, minutes, tests, mix, the `PhaseBar` on a scale shared by all tracks,
-   the track's own words (description, what it needs, notes), then its phases
+   the track's description in two lines (*About this track* opens the rest:
+   what it needs, its notes), then its phases
    as cards: the kind's colour, weeks, the `WeekGlyph` (a template's seven days
    split by modality, rest dashed; else one dot per weekly session), the
    intensity bar, days, minutes and tests as icons. A phase card opens the
    phase under them, inside the track's card: the full week (`PhaseWeek`),
    description, what it builds, how hard, tests.
-3. **Goals** — what the main track builds (chips) and *progress is …* with the
+3. **Sessions** — straight after the tracks, since they are what the athlete will
+   do: one tile per group (template category, contract module, modality, tests) with
+   the modality icon and a count; a tile opens the group's sessions under the tiles.
+   A session is a card — name, minutes and its `BlockStrip` — that opens to its
+   blocks (§13.12); levels, equipment, *About this session* and *Open as an
+   archetype* close it.
+4. **Goals** — what the main track builds (chips) and *progress is …* with the
    standards it is measured by (chips in their modality's colour, a flask on
    the ones a phase tests); a standard, or *How progress is measured*, opens the
    measures card under Goals and Requirements. **Requirements** — equipment chips
-   (*+N* shows the rest in place), the movements each track expects you to own,
-   borrows.
-4. **The method** — tiles: rules from the source, sources, app decisions, not
+   (*+N* shows the rest in place), a chip a track that expects movements you own
+   (it opens their names), borrows.
+5. **The method** — tiles: rules from the source, sources, app decisions, not
    modelled yet; each opens its list under the tiles.
-5. **Sessions** — one tile per group (template category, contract module,
-   modality, tests) with the modality icon and a count; a tile opens the
-   group's sessions under the tiles, each slot with the exercises the server
-   says it takes.
 6. Lineage (§13.8) and similar philosophies.
+
+An athlete's own method (`own` on the philosophy, the glance and the describe
+document) wears a *Yours* badge beside its name, here and on its landing card; on the
+landing the athlete's methods lead under *Your methods* and the heading counts the
+shipped philosophies alone. A landing card shows the method's modality mix as a strip
+under its name.
+
+**Editing your own method.** For an own method the header adds *Edit*, *Rename* and
+*Revise* (`canEdit`: the builder is on for the account). *Rename* is
+`components/methods/RenameMethodDialog.tsx`, the same dialog the builder's method card
+opens. *Edit* is a switch: while it is on, each piece of the method's text —
+its summary, a track's name and description, a session's name and notes, a movement's
+note — is an `EditableText` (`components/methods/MethodEdit.tsx`) with a pencil that
+opens a field in place; Save writes that one field at once through
+`PATCH /api/methods/<id>` (no build) and the page reads itself again. Numbers and
+structure are never fields: the line under the header says they change with Revise.
+A refusal is the server's sentence, beside the field.
+
+The archetype detail leads with the session's blocks (§13.12); phases, levels,
+equipment, scaling and sources follow, then the lineage.
 
 The landing keeps §13.6's outline and card like every other Explore landing:
 the philosophy's colour as the left border, the name, a metadata line (tracks ·
@@ -2557,6 +2581,37 @@ Back returns; adding or removing a column replaces.
 - **Phone width**: the grid scrolls sideways under a sticky label column; section titles
   and the full-width lines stay in view (`WideLine`).
 - **How alike** ends the page: each pair's likeness bar with its two reasons.
+
+### 13.12 Workout Blocks
+
+A session is drawn as **blocks**, never as a flat list of slots: what opens it, what
+repeats in rounds or every minute, the rests, what closes it. The server groups and words
+them (`src/session_blocks.py` → `blocks` on an archetype, on a described session and on a
+program's session); `components/blocks/WorkoutBlocks.tsx` only lays them out, in Explore's
+sessions, the archetype detail and the session panel.
+
+- **Stages.** Consecutive blocks of one stage (Start · Main work · Finisher · Cool-down)
+  sit under a small label — only when the session has more than one stage.
+- **A block** leads with a mark for its shape (a rep scheme draws its own steps: a ladder
+  climbs, a pyramid comes back down) and its headline in mono ("6 rounds", "Every minute ×
+  20", "21-15-9 for time"), then chips: what is lifted, the intensity, a cap, a rest
+  between sets.
+- **A round is a rail.** Movements done one after another and then again sit on a rail in
+  the session's modality colour, each with its own count a round; the rail's foot says the
+  rest between rounds and the way back to the top ("2 min 30 s rest between rounds · 6
+  rounds in all"). A lone movement has no rail. Blocks tied by `group` share a bracket
+  ("Superset", "Alternate sets").
+- **Words on demand.** Notes, a long load text and what else may fill a slot open under
+  the block or the movement; nothing of them shows collapsed.
+- **`BlockStrip`** is the session's shape in one line — a segment a block, the main work in
+  the modality colour — for a collapsed card.
+- **A caller's rows.** The session panel passes `renderMovement`, so each movement is its
+  `ExerciseRow` with its logger and swap; a lone movement then gets no block header (the
+  row says its numbers), a round keeps its header and rail. When the blocks do not account
+  for every exercise (`lib/blocks.blockRows`), the list is drawn flat.
+
+Colour is the modality's, on the rail and the main work's mark only. A component never
+words a prescription: a new wording is a change to `session_blocks.py` and its test.
 
 ## 14. Responsive Design
 
