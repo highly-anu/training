@@ -2282,6 +2282,41 @@ def delete_method(package_id):
     return _remove_user_package(package_id)
 
 
+@app.patch('/api/methods/<package_id>')
+@require_auth
+@require_builder
+def edit_method(package_id):
+    """Rename one of the athlete's methods, or edit its words: `{name?,
+    summary?, tracks?, sessions?}` (src/method_edits.py). No model, no build:
+    names and notes change no program. 404 when they have none by that id,
+    422 with `problems` for an edit of anything but text (numbers and
+    structure change with a revise) or one the schema refuses, 503 when the
+    write fails. The program built from it takes the new names at once
+    (`programRenamed`); earlier blocks keep the name they ran under."""
+    from src import method_edits, package_store
+    body = request.get_json(silent=True)
+    try:
+        result = package_store.edit_text(g.user_id, package_id, body)
+    except package_store.StoreError as e:
+        return _package_store_error(e)
+    if result is None:
+        return jsonify({'error': 'not_found'}), 404
+    if not result['ok']:
+        return jsonify({'error': 'invalid_edit', 'problems': result['problems']}), 422
+    renamed = False
+    if result['changed']:
+        from src import db as _db
+        try:
+            updated = method_edits.rename_in_program(_db.get_user_program(g.user_id) or {}, package_id, result['files'])
+            if updated is not None:
+                _db.save_user_program(g.user_id, updated)
+                renamed = True
+        except Exception as e:  # the method is saved; the program's copy catches up at its next generate
+            app.logger.warning('program names not updated after a method edit: %s', e)
+    return jsonify({'id': package_id, 'name': result['name'], 'revision': result['revision'],
+                    'changed': result['changed'], 'programRenamed': renamed})
+
+
 @app.get('/api/dev/model-map')
 @require_auth
 @require_authoring

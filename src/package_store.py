@@ -456,6 +456,75 @@ def install(user_id: str, files, checked: dict | None = None) -> dict:
     return {**result, 'installed': True, 'revision': revision}
 
 
+def _rewrite(user_id: str, package_id: str, files: dict, name: str | None) -> int:
+    """Store a package's files and name as its next revision, leaving its
+    status and the engine it was checked under as they are: a text edit says
+    nothing about either."""
+    conn = _conn()
+    if conn is None:
+        rows = _file_rows(user_id)
+        row = rows.get(package_id)
+        if not row or row.get('deleted_at'):
+            raise StoreError('no such package')
+        row.update(revision=int(row.get('revision') or 0) + 1, name=name, files=files,
+                   updated_at=time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()))
+        _write_file_rows(user_id, rows)
+        return row['revision']
+    try:
+        _ensure_schema(conn)
+        with conn.cursor() as cur:
+            cur.execute('UPDATE user_packages SET revision = revision + 1, name = %s, files = %s::jsonb, '
+                        'updated_at = NOW() WHERE user_id = %s AND package_id = %s AND deleted_at IS NULL '
+                        'RETURNING revision', (name, json.dumps(files), str(user_id), package_id))
+            row = cur.fetchone()
+            if row is None:
+                raise StoreError('no such package')
+            return int(row[0])
+    except StoreError:
+        raise
+    except Exception as e:
+        raise StoreError(f'user_packages not written: {e}') from e
+    finally:
+        conn.close()
+
+
+def edit_text(user_id: str, package_id: str, edits) -> dict | None:
+    """Write text edits (src/method_edits.py: names, summaries, notes) into
+    one of the athlete's packages, as its next revision. → None when they
+    have none by that id; else {ok, problems, changed, revision, name, files}.
+
+    No model and no smoke generate: words change no program. The schema and
+    id stages still run, and the edit is refused only for a problem it
+    brought — a package an engine change set aside can still be renamed.
+    Raises StoreError when the write fails."""
+    from src import method_edits
+    row = next((r for r in _live_rows(user_id) if r['package_id'] == package_id), None)
+    if row is None:
+        return None
+    files, problems, changed = method_edits.apply(row['files'], edits)
+    if problems:
+        return {'ok': False, 'problems': problems, 'changed': [], 'revision': row['revision'],
+                'name': row.get('name'), 'files': row['files']}
+    if not changed:
+        return {'ok': True, 'problems': [], 'changed': [], 'revision': row['revision'],
+                'name': row.get('name'), 'files': row['files']}
+    if _package_id(files) != package_id:
+        return {'ok': False, 'problems': [{'stage': 'edit', 'code': 'id_changed', 'file': 'philosophy.yaml',
+                                           'message': 'an edit never changes the id'}],
+                'changed': [], 'revision': row['revision'], 'name': row.get('name'), 'files': row['files']}
+
+    def seen(result: dict) -> set:
+        return {(p.get('stage'), p.get('code'), p.get('file'), p.get('message')) for p in result.get('problems') or []}
+    brought = seen(check(user_id, files, smoke=False)) - seen(check(user_id, row['files'], smoke=False))
+    if brought:
+        return {'ok': False, 'changed': [], 'revision': row['revision'], 'name': row.get('name'), 'files': row['files'],
+                'problems': [{'stage': s, 'code': c, 'file': f, 'message': m} for s, c, f, m in sorted(brought, key=str)]}
+    revision = _rewrite(user_id, package_id, files, _name(files))
+    forget(user_id)
+    _sweep(user_id, overlay_for(user_id))
+    return {'ok': True, 'problems': [], 'changed': changed, 'revision': revision, 'name': _name(files), 'files': files}
+
+
 def remove(user_id: str, package_id: str) -> bool:
     """Remove one package (kept as a row, no longer laid out). False when the
     athlete has none by that id. Raises StoreError when the write fails."""

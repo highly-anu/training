@@ -12,7 +12,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import recorded from '@/mocks/fixtures/methods.json'
 import type { Philosophy } from '@/api/types'
 
-const api = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn(), delete: vi.fn(), put: vi.fn() }))
+const api = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn(), delete: vi.fn(), put: vi.fn(), patch: vi.fn() }))
 vi.mock('@/api/client', () => ({ apiClient: api }))
 
 import { YourMethods } from './YourMethods'
@@ -102,6 +102,37 @@ describe('Your methods, in the program builder', () => {
     await waitFor(() => expect(onDeleted).toHaveBeenCalledWith(METHOD.id))
     expect(api.delete).toHaveBeenCalledWith(`/methods/${METHOD.id}`)
     expect(invalidated()).toContain('["philosophies"]')
+  })
+
+  it('renames a method at once, with no build, and reads the lists again', async () => {
+    answer({ '/methods': recorded.methods })
+    api.patch.mockResolvedValue({ id: METHOD.id, name: 'Stone days', revision: 2, changed: ['philosophy.yaml'], programRenamed: false })
+    const { invalidated } = mount(<YourMethods philosophies={[phil]} selectedId={null} onSelect={() => {}} onDeleted={() => {}} />)
+    fireEvent.click(await screen.findByRole('button', { name: `Rename ${METHOD.name}` }))
+    const field = await screen.findByRole('textbox', { name: 'Method name' })
+    expect(field).toHaveValue(METHOD.name)
+    // The same name, or none, is nothing to save.
+    expect(screen.getByRole('button', { name: 'Rename' })).toBeDisabled()
+    fireEvent.change(field, { target: { value: '   ' } })
+    expect(screen.getByRole('button', { name: 'Rename' })).toBeDisabled()
+    fireEvent.change(field, { target: { value: '  Stone   days ' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Rename' }))
+    await waitFor(() => expect(api.patch).toHaveBeenCalledWith(`/methods/${METHOD.id}`, { name: 'Stone days' }))
+    await waitFor(() => expect(screen.queryByRole('textbox', { name: 'Method name' })).not.toBeInTheDocument())
+    expect(api.post).not.toHaveBeenCalled()
+    expect(invalidated()).toEqual(expect.arrayContaining(['["philosophies"]', '["explore"]']))
+  })
+
+  it('says why a rename was refused and keeps the dialog', async () => {
+    answer({ '/methods': recorded.methods })
+    api.patch.mockRejectedValue(Object.assign(new Error('x'), {
+      status: 422, body: { error: 'invalid_edit', problems: [{ message: 'the method: a name is 1 to 80 characters' }] } }))
+    mount(<YourMethods philosophies={[phil]} selectedId={null} onSelect={() => {}} onDeleted={() => {}} />)
+    fireEvent.click(await screen.findByRole('button', { name: `Rename ${METHOD.name}` }))
+    fireEvent.change(await screen.findByRole('textbox', { name: 'Method name' }), { target: { value: 'Another' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Rename' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('the method: a name is 1 to 80 characters')
+    expect(screen.getByRole('textbox', { name: 'Method name' })).toBeInTheDocument()
   })
 
   it('does not offer to delete the method the program runs on', async () => {

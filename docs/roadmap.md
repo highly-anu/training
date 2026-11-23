@@ -2183,6 +2183,18 @@ Training contracts are refused. Not planned: push notifications, sharing a metho
   and its load (6 × 800 m, a carry's weight), the equipment list has no bench, and
   `MINIMAL_DAYS` warns of dropped modalities on a week template that fits its days. The real-model eval (21.8) still decides the
   effort and the budgets.
+- **21.10 Changing a method you have (M).** What an athlete can change in a generated
+  method, and where. *Done 2026-11-23:* **words** — the method's name and summary, a
+  track's and a phase's name and description, a session's name and notes, a movement's
+  note — through `PATCH /api/methods/<id>` (`src/method_edits.py`,
+  `package_store.edit_text`): no model, no build, the next revision of the same method;
+  the program built from it takes the new names, earlier blocks keep theirs. Rename is on
+  the method card in both builders; every word is editable on the method's Explore page
+  (web). *Open:* **numbers** — a slot's rounds, reps, rest and minutes, its movement, a
+  phase's weeks — through the same route and the full gate, with the running program
+  offered a rebuild; the phone's own page for a method. **Structure** (a new session, a
+  track, the progression) stays with a revise build. **Never:** the id, another
+  athlete's method, sharing.
 
 ---
 

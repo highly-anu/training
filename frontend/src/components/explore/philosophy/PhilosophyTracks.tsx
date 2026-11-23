@@ -6,6 +6,7 @@ import { INTENSITY_BUCKETS } from '@/lib/hrZones'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Collapse } from '@/components/motion/Collapse'
+import { EditableText, useMethodEditing } from '@/components/methods/MethodEdit'
 import { InlinePanel, IntensityBar, LevelPips, MixLegend, PhaseBar, WeekGlyph } from './Glance'
 import { PhaseWeek } from './PhaseWeek'
 
@@ -137,6 +138,7 @@ function TrackCard({ track, detail, scale, place, current }: {
 }) {
   const [phaseId, setPhaseId] = useState<string | null>(null)
   const [more, setMore] = useState(false)
+  const editing = useMethodEditing()
   const openPhase = detail.phases.find((p) => p.id === phaseId)
   const who = [track.primary ? 'main track' : null,
     track.forLevels.length > 0 ? `for ${track.forLevels.map((l) => LEVEL_WORDS[l]).join(', ')}` : null]
@@ -149,7 +151,9 @@ function TrackCard({ track, detail, scale, place, current }: {
         current ? 'border-border/70' : 'border-border/40 opacity-60')}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="truncate text-sm font-semibold">{track.name}</h3>
+          <h3 className="truncate text-sm font-semibold">
+            <EditableText value={track.name} label="Track name" edits={(name) => ({ tracks: { [track.id]: { name } } })} />
+          </h3>
           {who && <p className="text-[11px] text-muted-foreground">{who}</p>}
         </div>
         <div className="flex shrink-0 items-center gap-2">
@@ -173,10 +177,15 @@ function TrackCard({ track, detail, scale, place, current }: {
 
       <PhaseBar phases={track.phases} scaleWeeks={scale} />
 
-      {(detail.description || detail.notes || needs) && (
+      {(detail.description || detail.notes || needs || editing) && (
         <div className="max-w-3xl space-y-2 text-xs leading-relaxed text-muted-foreground">
           {/* Two lines at a glance; the rest of the words on demand. */}
-          {detail.description && <p className={cn(!more && 'line-clamp-2')}>{detail.description}</p>}
+          {(detail.description || editing) && (
+            <p className={cn(!more && !editing && 'line-clamp-2')}>
+              <EditableText value={detail.description} label="Track description" multiline placeholder="Describe this track"
+                edits={(description) => ({ tracks: { [track.id]: { description } } })} />
+            </p>
+          )}
           <Collapse open={more}>
             <div className="space-y-2">
               {needs && <p className="text-[11px]">Requires {needs}.</p>}
