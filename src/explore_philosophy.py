@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import os
 
-from src import goals, implements, levels as _levels, loader, phases, session_blocks, training_contract
+from src import goals, implements, levels as _levels, loader, phases, session_blocks, session_icon, training_contract
 from src.analytics import benchmarks_data
 from src.explore_links import policy_for, slot_exercises
 
@@ -411,6 +411,8 @@ def _session(arch: dict, exercises: dict, policy) -> dict:
         'test': bool(arch.get('test')), 'note': (arch.get('notes') or '').strip() or None,
         'equipment': [words(e) for e in _listify(arch.get('required_equipment')) if e != 'open_space'],
         'slots': slots,
+        # What leads the session, for its mark (src/session_icon.py); None draws the modality's.
+        'icon': session_icon.for_archetype_record(arch),
         # The same slots as blocks — what opens the session, what repeats in
         # rounds or every minute, the rests, what closes it (src/session_blocks.py).
         'blocks': session_blocks.for_archetype(arch, pools),

@@ -5,6 +5,7 @@
 """
 from __future__ import annotations
 
+import json
 import os
 import sys
 import unittest
@@ -252,6 +253,14 @@ class SessionTests(unittest.TestCase):
         self.assertEqual(s['t1']['slots'][0]['standard'], 'mile_run')
 
 
+    def test_a_session_carries_its_icon(self):
+        # Its own, else its lead exercise's or its category's (src/session_icon.py);
+        # None where the vocabulary has none, and the page draws the modality's.
+        s = build(archetypes=[*ARCHETYPES, arch('kb', 'power', [], icon='kettlebell')])['sessions']
+        self.assertEqual(s['kb']['icon'], 'kettlebell')
+        self.assertIsNone(s['e1']['icon'])
+
+
 class IdentityTests(unittest.TestCase):
     def test_identity_and_record(self):
         doc = build()
@@ -358,6 +367,39 @@ class BlockTests(unittest.TestCase):
                          [('Thruster', '21-15-9'), ('Pull-Up Progression', '21-15-9')])
 
 
+    def test_a_kettlebell_session_leads_with_the_bell(self):
+        icons = {s['icon'] for p in loader.load_philosophies()
+                 for s in ep.describe(p['id'])['sessions'].values()}
+        self.assertIn('kettlebell', icons)
+        self.assertIn(None, icons)
+
+
+# ─── The web's fixture ───────────────────────────────────────────────────────
+# frontend/src/mocks/fixtures/philosophy-describe.json: the document the web's
+# philosophy page and session browser are tested on — this file's own small
+# package (a templated track and a contract one), so it moves only with the
+# document's shape (`--write` re-records).
+
+FIXTURE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                            'frontend', 'src', 'mocks', 'fixtures', 'philosophy-describe.json')
+
+
+def fixture() -> dict:
+    # With what a browser filters and draws by: minutes, levels, an icon, a note.
+    extra = {'h1': {'duration_estimate_minutes': 45, 'training_levels': ['novice', 'intermediate'],
+                    'notes': 'Five heavy sets.'},
+             'h2': {'duration_estimate_minutes': 30, 'training_levels': ['advanced'],
+                    'required_equipment': ['kettlebell']},
+             'c1': {'duration_estimate_minutes': 20, 'icon': 'kettlebell'}}
+    return json.loads(json.dumps(build(archetypes=[{**a, **extra.get(a['id'], {})} for a in ARCHETYPES])))
+
+
+class WebFixture(unittest.TestCase):
+    def test_the_webs_fixture_is_the_servers(self):
+        with open(FIXTURE_PATH, encoding='utf-8') as f:
+            self.assertEqual(json.load(f), fixture(), 'run test_explore_philosophy.py --write')
+
+
 class RouteTests(unittest.TestCase):
     def test_route(self):
         import api
@@ -403,4 +445,10 @@ class Advice(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    if '--write' in sys.argv:
+        with open(FIXTURE_PATH, 'w', encoding='utf-8') as f:
+            json.dump(fixture(), f, indent=1, ensure_ascii=False)
+            f.write('\n')
+        print(f'wrote {FIXTURE_PATH}')
+        sys.exit(0)
     unittest.main(verbosity=1)

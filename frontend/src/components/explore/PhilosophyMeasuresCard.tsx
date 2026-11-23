@@ -5,6 +5,7 @@ import { useProgramAnalytics } from '@/api/analytics'
 import { Section } from './ExploreSection'
 import { SpecSourceBadge } from './SpecSourceBadge'
 import { ProgressSpecRow } from './ProgressSpecRow'
+import { cn } from '@/lib/utils'
 
 const WHY_LABEL = { declared: 'declared', entry: 'from a signal', source: 'cites this philosophy' } as const
 
@@ -15,7 +16,9 @@ const WHY_LABEL = { declared: 'declared', entry: 'from a signal', source: 'cites
  * measure. The static twin of the Program tab's methodology section.
  */
 export function PhilosophyMeasuresCard({ spec, vocabulary, accentHex }: {
-  spec: PhilosophySpec; vocabulary: AnalyticsSpecs['vocabulary']; accentHex: string
+  spec: PhilosophySpec; vocabulary: AnalyticsSpecs['vocabulary']
+  /** A level's own colour for the marks; without one they take the action colour. */
+  accentHex?: string
 }) {
   const { data: program } = useProgramAnalytics()
   const onActiveProgram = program?.status === 'ok'
@@ -89,7 +92,8 @@ export function PhilosophyMeasuresCard({ spec, vocabulary, accentHex }: {
       )}
 
       {onActiveProgram && (
-        <Link to="/analytics" className="inline-flex items-center gap-1 text-[11px] font-medium hover:underline" style={{ color: accentHex }}>
+        <Link to="/analytics" className={cn('inline-flex items-center gap-1 text-[11px] font-medium hover:underline', !accentHex && 'text-primary')}
+          style={accentHex ? { color: accentHex } : undefined}>
           See it on your program <ArrowRight className="size-3" />
         </Link>
       )}

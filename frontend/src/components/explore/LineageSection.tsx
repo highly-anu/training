@@ -7,8 +7,8 @@ import type { Lineage, LineageGroup, LineageItem } from '@/lib/exploreLinks'
 
 const COLLAPSED = 12
 
-/** An entity as a pill: a button into its detail, or plain text for what has
- *  none (a concept, a slot filter). */
+/** An entity as a pill: its level's icon and its name — a button into its
+ *  detail, or plain text for what has none (a concept, a slot filter). */
 export function LineagePill({ item }: { item: LineageItem }) {
   const open = useExploreNavigate()
   const Icon = item.topic ? TOPIC_ICONS[item.topic] : null
@@ -20,10 +20,8 @@ export function LineagePill({ item }: { item: LineageItem }) {
     </>
   )
   const base = 'inline-flex max-w-full items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px]'
-  // The level's colour as a left border, the landings' colour-coded border (§13.6).
-  const style = item.color ? { borderLeftColor: item.color, borderLeftWidth: 2 } : undefined
   if (!item.topic) {
-    return <span className={cn(base, 'border-dashed border-border/60 text-muted-foreground')} style={style}>{body}</span>
+    return <span className={cn(base, 'border-dashed border-border/60 text-muted-foreground')}>{body}</span>
   }
   const topic = item.topic
   return (
@@ -31,7 +29,6 @@ export function LineagePill({ item }: { item: LineageItem }) {
       type="button"
       onClick={() => open(topic, item.id)}
       className={cn(base, 'border-border bg-muted text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors')}
-      style={style}
     >
       {body}
     </button>
@@ -80,7 +77,7 @@ export function LineageSection({ lineage, emptyUp, emptyDown }: {
     return <Skeleton className="h-16" />
   }
   return (
-    <div className="grid gap-4 md:grid-cols-2 items-start rounded-lg border border-border/40 bg-card/30 p-3">
+    <div className="grid gap-4 md:grid-cols-2 items-start rounded-xl border border-border bg-card p-5">
       <Side label="Leads into it" groups={lineage.up} empty={emptyUp} />
       <Side label="Follows from it" groups={lineage.down} empty={emptyDown} />
     </div>

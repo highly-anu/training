@@ -1,12 +1,12 @@
 import { NEUTRAL_HEX } from '@/lib/dataColors'
 import { Tip } from '@/components/shared/Tip'
-import { createElement, useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { DescribedMix, GlancePhase, TrainingLevel } from '@/api/types'
 import { INTENSITY_BUCKETS } from '@/lib/hrZones'
-import { modalityHex, modalityLabel } from '@/lib/modalityColors'
-import { modalityIcon } from '@/lib/modalityIcons'
+import { modalityLabel } from '@/lib/modalityColors'
+import { ModalityMark } from '@/components/shared/ModalityMark'
 import { PHASE_COLORS } from '@/lib/phaseColors'
 import { cn } from '@/lib/utils'
 import { TRAINING_LEVELS } from '@/lib/gen/clientVocab'
@@ -14,8 +14,10 @@ import { TRAINING_LEVELS } from '@/lib/gen/clientVocab'
 /**
  * The glance vocabulary: the same few marks for every philosophy, so a header,
  * a landing card and (later) a side-by-side comparison read alike. Numbers and
- * symbols; words are on demand. Colour stays on its axis — modality (§8.1),
- * phase kind (§8.2), heart-rate zone (§8.7); levels have none (§8.1).
+ * symbols; words are on demand. A modality is said by its icon in its colour
+ * (ModalityMark, §8.1) and by nothing else — no fill, stripe or border; phase
+ * kind (§8.2) and heart-rate zone (§8.7) keep their bars; levels have no
+ * colour (§8.1).
  */
 
 const LEVELS: readonly TrainingLevel[] = TRAINING_LEVELS
@@ -58,12 +60,9 @@ export function StatTile({ icon: Icon, value, label, title, children, onClick, a
     : <div title={title} className={cls}>{body}</div>
 }
 
-/** A modality's icon in its colour. */
+/** A modality's icon in its colour: the shared mark, at a glance's size. */
 export function ModalityGlyph({ modality, className }: { modality: string | null | undefined; className?: string }) {
-  return createElement(modalityIcon(modality), {
-    className: cn('size-3.5 shrink-0', className), style: { color: modalityHex(modality) },
-    'aria-label': modalityLabel(modality),
-  })
+  return <ModalityMark modality={modality} className={className} />
 }
 
 /** The modality mix as icons with ×/wk — the fingerprint's legend. */
@@ -82,9 +81,10 @@ export function MixLegend({ mix, max = 6 }: { mix: DescribedMix[]; max?: number 
   )
 }
 
-/** A week at a glance: seven cells for the source's own days, each split by
- *  the modalities it holds, rest days empty; without days (a contract, a
- *  framework), one dot per session a week in its modality's colour. */
+/** A week's shape at a glance: seven cells for the source's own days — filled
+ *  for a training day, split when it holds two pieces, outlined for rest;
+ *  without days (a contract, a framework), one dot per session a week. What
+ *  the days hold is said by the mix's icons beside it, not by colour here. */
 export function WeekGlyph({ phase, size = 'md' }: { phase: Pick<GlancePhase, 'days' | 'mix'>; size?: 'sm' | 'md' }) {
   const cell = size === 'sm' ? 'h-2.5 w-2' : 'h-4 w-3'
   if (phase.days) {
@@ -93,7 +93,7 @@ export function WeekGlyph({ phase, size = 'md' }: { phase: Pick<GlancePhase, 'da
         {phase.days.map((d, i) => (
           <div key={i} className={cn(cell, 'flex flex-col overflow-hidden rounded-[2px]', d ? '' : 'border border-dashed border-border/70')}
             title={d ? d.map(modalityLabel).join(' + ') : 'Rest'}>
-            {d?.map((m, j) => <div key={j} className="flex-1" style={{ backgroundColor: modalityHex(m) }} />)}
+            {d?.map((_, j) => <div key={j} className={cn('flex-1 bg-foreground/30', j > 0 && 'border-t border-card')} />)}
           </div>
         ))}
       </div>
@@ -103,8 +103,8 @@ export function WeekGlyph({ phase, size = 'md' }: { phase: Pick<GlancePhase, 'da
   return (
     <div className="flex flex-wrap gap-0.5" role="img" aria-label="Sessions a week">
       {dots.map((m, i) => (
-        <div key={i} className={cn(size === 'sm' ? 'size-2' : 'size-3', 'rounded-full')}
-          style={{ backgroundColor: modalityHex(m) }} title={modalityLabel(m)} />
+        <div key={i} className={cn(size === 'sm' ? 'size-2' : 'size-3', 'rounded-full bg-foreground/30')}
+          title={modalityLabel(m)} />
       ))}
     </div>
   )
@@ -138,6 +138,21 @@ export function IntensityBar({ split, className }: { split: Record<string, numbe
       aria-label={rows.map((b) => `${b.label} ${Math.round(b.pct * 100)}%`).join(', ')}>
       {rows.map((b) => <div key={b.key} style={{ width: `${b.pct * 100}%`, backgroundColor: b.color }}
         title={`${b.label} ${Math.round(b.pct * 100)}%`} />)}
+    </div>
+  )
+}
+
+/** The split in words: a dot a zone, its share. */
+export function IntensityLegend({ split }: { split: Record<string, number> }) {
+  const rows = INTENSITY_BUCKETS.map((b) => ({ ...b, pct: split[b.key] ?? 0 })).filter((b) => b.pct > 0)
+  return (
+    <div className="flex flex-wrap gap-x-3">
+      {rows.map((b) => (
+        <span key={b.key} className="flex items-center gap-1 text-[10px] text-muted-foreground">
+          <span className="size-1.5 rounded-full" style={{ backgroundColor: b.color }} />
+          {b.label} {Math.round(b.pct * 100)}%
+        </span>
+      ))}
     </div>
   )
 }

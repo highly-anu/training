@@ -344,6 +344,18 @@ describe('hue is data, emerald is done (§8.12, §12.11)', () => {
     }), 'A theme colour is a token (`var(--border)`); a data colour has a name in its module (lib/dataColors.ts for a series or scale).').toEqual([])
   })
 
+  it("a philosophy's pages say a modality by its mark, never by a surface", () => {
+    // Explore ▸ Philosophies, Compare and the session browser (§8.1, §13.7):
+    // the modality's colour is on ModalityMark (and the mix's icons), not on a
+    // border, stripe, fill or tag. The one colour passed on is a block's accent.
+    const pages = (file: string) => /^components\/(explore\/(philosophy|compare)|sessions)\//.test(file)
+    expect(findings({
+      pattern: /\b(modalityHex|philosophyHex)\(|\bMODALITY_COLORS\b/,
+      allow: either((file) => !pages(file), TESTS),
+    }).filter((line) => !/accent(=\{| = )modalityHex\(/.test(line)),
+    'Draw `<ModalityMark modality icon />` (components/shared/ModalityMark.tsx) beside the name; a session\'s blocks take `accent={modalityHex(…)}` and nothing else does.').toEqual([])
+  })
+
   it('every chart sits in a ChartFrame', () => {
     expect(findings({
       pattern: /\bResponsiveContainer\b/,

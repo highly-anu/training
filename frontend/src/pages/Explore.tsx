@@ -6,7 +6,7 @@ import { LoadingState, FailedState } from '@/components/shared/states'
 import { useState, useMemo } from 'react'
 import { useSearchParams, useNavigate, useLocation } from 'react-router-dom'
 import { Page } from '@/components/layout/Page'
-import { ArrowLeft, Columns3, Compass, Search, X, Wand2 } from 'lucide-react'
+import { ArrowLeft, Columns3, Compass, Wand2 } from 'lucide-react'
 import { ModalityBadge } from '@/components/shared/ModalityBadge'
 import { PrereqChain } from '@/components/exercises/PrereqChain'
 import { ExerciseAnimationPanel } from '@/components/exercises/ExerciseAnimationPanel'
@@ -37,7 +37,10 @@ import { lineageOf, progressionOf, type ExploreTopic, type LinkedTopic } from '@
 import { useBuilderStore } from '@/store/builderStore'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ModalityMix } from '@/components/explore/philosophy/ModalityMix'
+import { LevelPips, MixLegend } from '@/components/explore/philosophy/Glance'
+import { parseView, type PhilosophyView } from '@/components/explore/philosophy/views'
+import { ModalityMark } from '@/components/shared/ModalityMark'
+import { SearchField } from '@/components/shared/SearchField'
 import { HeatmapPanel } from '@/components/devlab/heatmap/HeatmapPanel'
 import { SimilarItems } from '@/components/shared/SimilarItems'
 import { useSimilarity, likenessScorer, type SimilarityCategory } from '@/api/similarity'
@@ -220,14 +223,17 @@ function PhilosophyOverview({ philosophies, onSelect, onCompare }: {
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {group.items.map((p) => {
             const g = byId[p.id]
-            const color = philosophyHex(p.bias)
             const primary = g && (g.tracks.find((t) => t.id === g.primaryTrackId) ?? g.tracks[0])
             const phases = g ? g.tracks.reduce((n, t) => n + t.phases.length, 0) : 0
             const perWeek = primary ? Math.round(primary.mix.reduce((n, m) => n + m.perWeek, 0) * 10) / 10 : null
             const span = (r: { min: number; ideal: number } | null | undefined) =>
               !r ? null : r.min === r.ideal ? `${r.ideal}` : `${r.min}–${r.ideal}`
-            const levels = g?.levels ?? []
-            const chip = 'text-[9px] px-1.5 py-0.5 rounded font-mono bg-muted/50 text-muted-foreground border border-border/30'
+            const facts = g && [
+              perWeek != null && perWeek > 0 ? `${Number.isInteger(perWeek) ? perWeek : perWeek.toFixed(1)}×/wk` : null,
+              span(g.sessionMinutes) ? `${span(g.sessionMinutes)} min` : null,
+              span(g.weeks) ? `${span(g.weeks)} wk` : null,
+              g.counts.tracks > 1 ? `${g.counts.tracks} tracks` : phases > 1 ? `${phases} phases` : null,
+            ].filter(Boolean).join(' · ')
             return (
               <button
                 key={p.id}
@@ -236,12 +242,11 @@ function PhilosophyOverview({ philosophies, onSelect, onCompare }: {
                 aria-pressed={picking ? picked.includes(p.id) : undefined}
                 disabled={picking && !picked.includes(p.id) && picked.length >= MAX_COMPARE}
                 className={cn(
-                  'flex items-start gap-2.5 rounded-lg border border-border/30 bg-card/40 px-3 py-2.5 text-left',
-                  'transition-all hover:border-primary/40 hover:shadow-md hover:-translate-y-px hover:bg-muted/20 group cursor-pointer',
-                  'disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0 disabled:hover:shadow-none',
+                  'flex items-start gap-3 rounded-xl border border-border bg-card p-4 text-left',
+                  'transition-colors hover:border-primary/40 hover:bg-muted/20 group cursor-pointer',
+                  'disabled:cursor-not-allowed disabled:opacity-40',
                   picking && picked.includes(p.id) && 'border-primary/60 bg-primary/10',
                 )}
-                style={{ borderLeftColor: color, borderLeftWidth: 2 }}
               >
                 {picking && (
                   <span aria-hidden className={cn(
@@ -251,30 +256,18 @@ function PhilosophyOverview({ philosophies, onSelect, onCompare }: {
                     {picked.includes(p.id) ? picked.indexOf(p.id) + 1 : ''}
                   </span>
                 )}
-                <div className="min-w-0 flex-1 space-y-1.5">
-                  <p className="flex items-center gap-1.5 text-xs font-medium leading-snug">
+                {/* What kind of training it leans to: one mark, the card itself neutral. */}
+                <ModalityMark modality={g?.accent ?? p.bias[0]} size="md" tile />
+                <div className="min-w-0 flex-1 space-y-2">
+                  <p className="flex min-w-0 items-center gap-1.5 text-sm font-semibold leading-snug">
                     <span className="truncate group-hover:text-primary transition-colors">{p.name}</span>
                     {p.own && <Badge variant="outline" className="shrink-0 px-1.5 py-0 text-[9px]">Yours</Badge>}
                   </p>
-                  {g && g.mix.length > 0 && <ModalityMix mix={g.mix} legend={false} />}
+                  {facts && <p className="truncate font-mono text-[10px] text-muted-foreground">{facts}</p>}
                   {g && (
-                    <p className="text-[10px] text-muted-foreground/60 font-mono">
-                      {g.counts.tracks} track{g.counts.tracks === 1 ? '' : 's'} · {phases} phase{phases === 1 ? '' : 's'}
-                      {span(g.weeks) && ` · ${span(g.weeks)} weeks`}
-                    </p>
-                  )}
-                  {g && (
-                    <div className="flex flex-wrap gap-1">
-                      {perWeek != null && perWeek > 0 && (
-                        <span className={chip}>{Number.isInteger(perWeek) ? perWeek : perWeek.toFixed(1)}×/wk</span>
-                      )}
-                      {span(g.sessionMinutes) && <span className={chip}>{span(g.sessionMinutes)} min</span>}
-                      {levels.length > 0 && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded font-mono"
-                          style={{ color, backgroundColor: `${color}15`, border: `1px solid ${color}30` }}>
-                          {levels.length === 1 ? levels[0] : `${levels[0]}–${levels[levels.length - 1]}`}
-                        </span>
-                      )}
+                    <div className="flex items-center justify-between gap-2">
+                      <MixLegend mix={g.mix} max={4} />
+                      <LevelPips levels={g.levels} className="shrink-0" />
                     </div>
                   )}
                 </div>
@@ -824,21 +817,7 @@ function ExerciseLanding({ allExercises, onSelect }: { allExercises: Exercise[];
         </div>
 
         {/* Search */}
-        <div className="relative max-w-sm">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3 text-muted-foreground" />
-          <input
-            placeholder="Search exercises…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-md border border-border bg-background pl-7 pr-7 h-8 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
-          />
-          {search && (
-            <button onClick={() => setSearch('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-              <X className="size-3" />
-            </button>
-          )}
-        </div>
+        <SearchField value={search} onChange={setSearch} placeholder="Search exercises…" className="max-w-sm" />
 
         <SortToggle sort={sort} onChange={setSort} />
 
@@ -1784,6 +1763,9 @@ export function Explore() {
   const topic: Topic = topicParam && TOPIC_IDS.has(topicParam) ? topicParam as Topic : 'philosophies'
   const selectedId = searchParams.get('id')
   const compareIds = parseCompare(searchParams.get('compare'))
+  // A philosophy's page: which section, and which session its browser has open.
+  const philSession = searchParams.get('session')
+  const philView = parseView(searchParams.get('view'), philSession)
 
   const { data: philosophies = [], isLoading: philLoading, error: philError, refetch: philRetry } = usePhilosophies()
   const { data: frameworks = [], isLoading: fwLoading, error: fwError, refetch: fwRetry } = useFrameworks()
@@ -1817,6 +1799,17 @@ export function Explore() {
   // Back returns to where it was opened from; editing the set replaces.
   function compare(ids: string[], replace = false) {
     setSearchParams({ topic: 'philosophies', compare: ids.join(',') }, { replace })
+  }
+
+  // Within one philosophy: a section or a session replaces, so Back still
+  // leaves the page for where it was opened from.
+  function showPhilosophy(view: PhilosophyView, session: string | null = null) {
+    if (!selectedId) return
+    setSearchParams({
+      topic: 'philosophies', id: selectedId,
+      ...(view !== 'overview' ? { view } : {}),
+      ...(view === 'sessions' && session ? { session } : {}),
+    }, { replace: true, state: location.state })
   }
 
   function backToList() {
@@ -1890,7 +1883,12 @@ export function Explore() {
                       />
                   : selectedPhil
                     ? <PhilosophyPage
+                        key={selectedPhil.id}
                         id={selectedPhil.id}
+                        view={philView}
+                        onView={(v) => showPhilosophy(v)}
+                        sessionId={philSession}
+                        onSession={(sid) => showPhilosophy('sessions', sid)}
                         onSelect={(id) => open('philosophies', id)}
                         onCompare={(ids) => compare(ids)}
                         onBack={backToList}

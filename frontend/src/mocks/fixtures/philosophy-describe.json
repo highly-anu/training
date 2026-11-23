@@ -1,0 +1,1303 @@
+{
+ "id": "p",
+ "name": "P",
+ "own": false,
+ "summary": "What it is.",
+ "accent": "max_strength",
+ "bias": [
+  "max_strength"
+ ],
+ "scope": [],
+ "avoidWith": [],
+ "principles": [
+  "Lift heavy"
+ ],
+ "models": {
+  "intensity": "Hard easy",
+  "progression": null
+ },
+ "levels": [
+  "novice",
+  "intermediate"
+ ],
+ "equipment": [
+  {
+   "id": "barbell",
+   "name": "Barbell"
+  }
+ ],
+ "expectations": {
+  "min_weeks": 4,
+  "ideal_weeks": 8
+ },
+ "primaryTrackId": "templ",
+ "mix": [
+  {
+   "modality": "aerobic_base",
+   "perWeek": 1.06,
+   "share": 0.531
+  },
+  {
+   "modality": "max_strength",
+   "perWeek": 0.94,
+   "share": 0.469
+  }
+ ],
+ "tracks": [
+  {
+   "id": "templ",
+   "name": "Templated",
+   "description": null,
+   "primary": true,
+   "forLevels": [],
+   "levels": [],
+   "builtBy": "template",
+   "weeks": 8,
+   "repeatable": false,
+   "notes": null,
+   "implement": null,
+   "mix": [
+    {
+     "modality": "aerobic_base",
+     "perWeek": 1.06,
+     "share": 0.531
+    },
+    {
+     "modality": "max_strength",
+     "perWeek": 0.94,
+     "share": 0.469
+    }
+   ],
+   "intensity": {
+    "zone1_2_pct": 0.6,
+    "zone4_5_pct": 0.15
+   },
+   "daysPerWeek": {
+    "min": 2.0,
+    "max": 2.0
+   },
+   "minutes": null,
+   "tests": 1,
+   "goals": [],
+   "requires": [],
+   "phases": [
+    {
+     "id": "a",
+     "name": "A",
+     "kind": "base",
+     "weeks": 6,
+     "repeatable": false,
+     "days": [
+      [
+       "max_strength"
+      ],
+      [
+       "aerobic_base"
+      ],
+      null,
+      [
+       "max_strength",
+       "aerobic_base"
+      ],
+      null,
+      null,
+      null
+     ],
+     "daysPerWeek": 2.0,
+     "minutes": null,
+     "sessionsPerWeek": 2.0,
+     "framework": {
+      "id": "tpl",
+      "name": "Template"
+     },
+     "focus": null,
+     "description": null,
+     "adaptations": [],
+     "intensity": null,
+     "intensitySplit": {
+      "zone1_2_pct": 0.8,
+      "zone4_5_pct": 0.2
+     },
+     "deload": "Every 4 weeks an easier week, keeping 60 % of the volume.",
+     "tests": [
+      {
+       "when": "the last week",
+       "sessions": [
+        "T1"
+       ],
+       "standards": [
+        "Mile run"
+       ],
+       "onDeload": false
+      }
+     ],
+     "notYet": [],
+     "week": {
+      "kind": "template",
+      "weeks": [
+       [
+        {
+         "day": "Monday",
+         "rest": false,
+         "pieces": [
+          {
+           "category": "heavy",
+           "name": "Heavy",
+           "modality": "max_strength"
+          }
+         ],
+         "warmUp": true,
+         "light": false
+        },
+        {
+         "day": "Tuesday",
+         "rest": false,
+         "pieces": [
+          {
+           "category": "easy",
+           "name": "Easy",
+           "modality": "aerobic_base"
+          }
+         ],
+         "warmUp": false,
+         "light": false
+        },
+        {
+         "day": "Wednesday",
+         "rest": true,
+         "pieces": [],
+         "warmUp": false,
+         "light": false
+        },
+        {
+         "day": "Thursday",
+         "rest": false,
+         "pieces": [
+          {
+           "category": "heavy",
+           "name": "Heavy",
+           "modality": "max_strength"
+          },
+          {
+           "category": "easy",
+           "name": "Easy",
+           "modality": "aerobic_base"
+          }
+         ],
+         "warmUp": true,
+         "light": true
+        },
+        {
+         "day": "Friday",
+         "rest": true,
+         "pieces": [],
+         "warmUp": false,
+         "light": false
+        },
+        {
+         "day": "Saturday",
+         "rest": true,
+         "pieces": [],
+         "warmUp": false,
+         "light": false
+        },
+        {
+         "day": "Sunday",
+         "rest": true,
+         "pieces": [],
+         "warmUp": false,
+         "light": false
+        }
+       ],
+       [
+        {
+         "day": "Monday",
+         "rest": false,
+         "pieces": [
+          {
+           "category": "heavy",
+           "name": "Heavy",
+           "modality": "max_strength"
+          }
+         ],
+         "warmUp": true,
+         "light": false
+        },
+        {
+         "day": "Tuesday",
+         "rest": true,
+         "pieces": [],
+         "warmUp": false,
+         "light": false
+        },
+        {
+         "day": "Wednesday",
+         "rest": true,
+         "pieces": [],
+         "warmUp": false,
+         "light": false
+        },
+        {
+         "day": "Thursday",
+         "rest": true,
+         "pieces": [],
+         "warmUp": false,
+         "light": false
+        },
+        {
+         "day": "Friday",
+         "rest": true,
+         "pieces": [],
+         "warmUp": false,
+         "light": false
+        },
+        {
+         "day": "Saturday",
+         "rest": true,
+         "pieces": [],
+         "warmUp": false,
+         "light": false
+        },
+        {
+         "day": "Sunday",
+         "rest": true,
+         "pieces": [],
+         "warmUp": false,
+         "light": false
+        }
+       ]
+      ],
+      "dropOrder": [],
+      "warmUp": "Warm-up"
+     },
+     "mix": [
+      {
+       "modality": "max_strength",
+       "perWeek": 1.25,
+       "share": 0.625
+      },
+      {
+       "modality": "aerobic_base",
+       "perWeek": 0.75,
+       "share": 0.375
+      }
+     ]
+    },
+    {
+     "id": "b",
+     "name": "B",
+     "kind": "build",
+     "weeks": 2,
+     "repeatable": false,
+     "days": null,
+     "daysPerWeek": null,
+     "minutes": null,
+     "sessionsPerWeek": 2,
+     "framework": {
+      "id": "fw",
+      "name": "Plain"
+     },
+     "focus": null,
+     "description": null,
+     "adaptations": [],
+     "intensity": null,
+     "intensitySplit": {},
+     "deload": null,
+     "tests": [],
+     "notYet": [],
+     "week": {
+      "kind": "framework",
+      "sessions": [
+       {
+        "modality": "aerobic_base",
+        "perWeek": 2
+       }
+      ]
+     },
+     "mix": [
+      {
+       "modality": "aerobic_base",
+       "perWeek": 2,
+       "share": 1.0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "contract",
+   "name": "Contract",
+   "description": null,
+   "primary": false,
+   "forLevels": [],
+   "levels": [
+    "novice",
+    "intermediate"
+   ],
+   "builtBy": "contract",
+   "weeks": 4,
+   "repeatable": false,
+   "notes": "Clean reps only.",
+   "implement": null,
+   "mix": [
+    {
+     "modality": "power",
+     "perWeek": 2.0,
+     "share": 1.0
+    }
+   ],
+   "intensity": {},
+   "daysPerWeek": null,
+   "minutes": null,
+   "tests": 0,
+   "goals": [],
+   "requires": [],
+   "phases": [
+    {
+     "id": "c",
+     "name": "C",
+     "kind": "build",
+     "weeks": 4,
+     "repeatable": false,
+     "days": null,
+     "daysPerWeek": null,
+     "minutes": null,
+     "sessionsPerWeek": 2,
+     "framework": {
+      "id": "fw",
+      "name": "Plain"
+     },
+     "focus": null,
+     "description": null,
+     "adaptations": [],
+     "intensity": null,
+     "intensitySplit": {},
+     "deload": null,
+     "tests": [],
+     "notYet": [],
+     "week": {
+      "kind": "contract",
+      "modules": [
+       {
+        "id": "swings",
+        "name": "Swings",
+        "modality": "power",
+        "archetype": "c1",
+        "archetypeName": "C1",
+        "perWeek": 2,
+        "perWeekByDays": null,
+        "levels": [
+         "novice"
+        ],
+        "optional": false,
+        "whenMastered": false,
+        "requires": [],
+        "maxRpe": null,
+        "progression": "more reps in the same minutes, then more rounds, then a heavier bell",
+        "periods": [],
+        "variants": [],
+        "items": [
+         {
+          "exercise": "swing",
+          "name": "Swing",
+          "role": "swing",
+          "prescription": "10 × 10",
+          "note": "On the minute.",
+          "optional": false,
+          "alternatives": []
+         }
+        ],
+        "advice": null,
+        "adviceByLevel": null
+       },
+       {
+        "id": "extra",
+        "name": "Extra",
+        "modality": "aerobic_base",
+        "archetype": null,
+        "archetypeName": null,
+        "perWeek": 1,
+        "perWeekByDays": null,
+        "levels": [
+         "novice"
+        ],
+        "optional": true,
+        "whenMastered": false,
+        "requires": [],
+        "maxRpe": null,
+        "progression": "weekly minutes that build, then recover",
+        "periods": [],
+        "variants": [],
+        "items": [
+         {
+          "exercise": "run",
+          "name": "Run",
+          "role": "run",
+          "prescription": "30 min",
+          "note": null,
+          "optional": false,
+          "alternatives": []
+         }
+        ],
+        "advice": null,
+        "adviceByLevel": null
+       }
+      ]
+     },
+     "mix": [
+      {
+       "modality": "power",
+       "perWeek": 2,
+       "share": 1.0
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "borrows": [],
+ "sources": [
+  {
+   "id": "book",
+   "title": "The Book — A. Author",
+   "where": "https://x",
+   "kind": null,
+   "read": null,
+   "published": null
+  }
+ ],
+ "rules": [
+  {
+   "id": "R1",
+   "text": "Lift heavy twice a week.",
+   "cites": [
+    {
+     "source": "The Book — A. Author",
+     "quote": "\"twice a week\""
+    }
+   ]
+  }
+ ],
+ "inventions": [
+  {
+   "id": "I1",
+   "text": "Six weeks."
+  }
+ ],
+ "open": [
+  "No novice track."
+ ],
+ "sessionCount": 7,
+ "glance": {
+  "id": "p",
+  "name": "P",
+  "own": false,
+  "accent": "max_strength",
+  "bias": [
+   "max_strength"
+  ],
+  "levels": [
+   "novice",
+   "intermediate"
+  ],
+  "weeks": {
+   "min": 4,
+   "ideal": 8
+  },
+  "daysPerWeek": {
+   "min": null,
+   "ideal": null
+  },
+  "sessionMinutes": {
+   "min": null,
+   "ideal": null
+  },
+  "longSessionMinutes": null,
+  "equipment": [
+   {
+    "id": "barbell",
+    "name": "Barbell"
+   }
+  ],
+  "primaryTrackId": "templ",
+  "mix": [
+   {
+    "modality": "aerobic_base",
+    "perWeek": 1.06,
+    "share": 0.531
+   },
+   {
+    "modality": "max_strength",
+    "perWeek": 0.94,
+    "share": 0.469
+   }
+  ],
+  "intensity": {
+   "zone1_2_pct": 0.6,
+   "zone4_5_pct": 0.15
+  },
+  "tested": [
+   "Mile run"
+  ],
+  "measures": {
+   "headline": null,
+   "signals": 0,
+   "standards": []
+  },
+  "counts": {
+   "tracks": 2,
+   "rules": 1,
+   "sources": 1,
+   "inventions": 1,
+   "open": 1,
+   "sessions": 7
+  },
+  "tracks": [
+   {
+    "id": "templ",
+    "name": "Templated",
+    "primary": true,
+    "forLevels": [],
+    "levels": [],
+    "builtBy": "template",
+    "weeks": 8,
+    "repeatable": false,
+    "implement": null,
+    "requires": [],
+    "daysPerWeek": {
+     "min": 2.0,
+     "max": 2.0
+    },
+    "minutes": null,
+    "mix": [
+     {
+      "modality": "aerobic_base",
+      "perWeek": 1.06,
+      "share": 0.531
+     },
+     {
+      "modality": "max_strength",
+      "perWeek": 0.94,
+      "share": 0.469
+     }
+    ],
+    "intensity": {
+     "zone1_2_pct": 0.6,
+     "zone4_5_pct": 0.15
+    },
+    "tests": 1,
+    "goals": [],
+    "phases": [
+     {
+      "id": "a",
+      "name": "A",
+      "kind": "base",
+      "weeks": 6,
+      "repeatable": false,
+      "focus": null,
+      "days": [
+       [
+        "max_strength"
+       ],
+       [
+        "aerobic_base"
+       ],
+       null,
+       [
+        "max_strength",
+        "aerobic_base"
+       ],
+       null,
+       null,
+       null
+      ],
+      "daysPerWeek": 2.0,
+      "minutes": null,
+      "sessionsPerWeek": 2.0,
+      "mix": [
+       {
+        "modality": "max_strength",
+        "perWeek": 1.25,
+        "share": 0.625
+       },
+       {
+        "modality": "aerobic_base",
+        "perWeek": 0.75,
+        "share": 0.375
+       }
+      ],
+      "intensitySplit": {
+       "zone1_2_pct": 0.8,
+       "zone4_5_pct": 0.2
+      },
+      "tests": 1
+     },
+     {
+      "id": "b",
+      "name": "B",
+      "kind": "build",
+      "weeks": 2,
+      "repeatable": false,
+      "focus": null,
+      "days": null,
+      "daysPerWeek": null,
+      "minutes": null,
+      "sessionsPerWeek": 2,
+      "mix": [
+       {
+        "modality": "aerobic_base",
+        "perWeek": 2,
+        "share": 1.0
+       }
+      ],
+      "intensitySplit": {},
+      "tests": 0
+     }
+    ]
+   },
+   {
+    "id": "contract",
+    "name": "Contract",
+    "primary": false,
+    "forLevels": [],
+    "levels": [
+     "novice",
+     "intermediate"
+    ],
+    "builtBy": "contract",
+    "weeks": 4,
+    "repeatable": false,
+    "implement": null,
+    "requires": [],
+    "daysPerWeek": null,
+    "minutes": null,
+    "mix": [
+     {
+      "modality": "power",
+      "perWeek": 2.0,
+      "share": 1.0
+     }
+    ],
+    "intensity": {},
+    "tests": 0,
+    "goals": [],
+    "phases": [
+     {
+      "id": "c",
+      "name": "C",
+      "kind": "build",
+      "weeks": 4,
+      "repeatable": false,
+      "focus": null,
+      "days": null,
+      "daysPerWeek": null,
+      "minutes": null,
+      "sessionsPerWeek": 2,
+      "mix": [
+       {
+        "modality": "power",
+        "perWeek": 2,
+        "share": 1.0
+       }
+      ],
+      "intensitySplit": {},
+      "tests": 0
+     }
+    ]
+   }
+  ]
+ },
+ "groups": [
+  {
+   "kind": "category",
+   "id": "warm",
+   "name": "Warm-up",
+   "modality": "mobility",
+   "advice": null,
+   "adviceByLevel": null,
+   "warmUp": true,
+   "sessions": [
+    "w1"
+   ]
+  },
+  {
+   "kind": "category",
+   "id": "heavy",
+   "name": "Heavy",
+   "modality": "max_strength",
+   "advice": null,
+   "adviceByLevel": null,
+   "warmUp": false,
+   "sessions": [
+    "h1",
+    "h2"
+   ]
+  },
+  {
+   "kind": "category",
+   "id": "easy",
+   "name": "Easy",
+   "modality": "aerobic_base",
+   "advice": null,
+   "adviceByLevel": null,
+   "warmUp": false,
+   "sessions": [
+    "e1"
+   ]
+  },
+  {
+   "kind": "module",
+   "id": "swings",
+   "name": "Swings",
+   "modality": "power",
+   "advice": null,
+   "adviceByLevel": null,
+   "warmUp": false,
+   "sessions": [
+    "c1"
+   ]
+  },
+  {
+   "kind": "modality",
+   "id": "power",
+   "name": null,
+   "modality": "power",
+   "advice": null,
+   "adviceByLevel": null,
+   "warmUp": false,
+   "sessions": [
+    "loose"
+   ]
+  },
+  {
+   "kind": "tests",
+   "id": "tests",
+   "name": "Tests",
+   "modality": null,
+   "advice": null,
+   "adviceByLevel": null,
+   "warmUp": false,
+   "sessions": [
+    "t1"
+   ]
+  }
+ ],
+ "sessions": {
+  "w1": {
+   "id": "w1",
+   "name": "W1",
+   "modality": "mobility",
+   "minutes": null,
+   "levels": [],
+   "test": false,
+   "note": null,
+   "equipment": [],
+   "slots": [
+    {
+     "role": "flow",
+     "name": "Flow",
+     "slotType": "time_domain",
+     "prescription": "5 min",
+     "note": null,
+     "parent": null,
+     "listed": true,
+     "technique": false,
+     "standard": null,
+     "exercises": [
+      {
+       "id": "squat",
+       "name": "Squat"
+      }
+     ]
+    }
+   ],
+   "icon": null,
+   "blocks": [
+    {
+     "id": "flow",
+     "stage": "main",
+     "stageLabel": "Main work",
+     "shape": "timed",
+     "title": "Flow",
+     "headline": "5 min",
+     "repeat": null,
+     "rest": null,
+     "again": null,
+     "cap": null,
+     "load": null,
+     "intensity": null,
+     "rpe": null,
+     "note": null,
+     "standard": null,
+     "group": null,
+     "roles": [
+      "flow"
+     ],
+     "movements": [
+      {
+       "role": "flow",
+       "name": "Squat",
+       "count": null,
+       "perRound": null,
+       "eachSide": false,
+       "note": null,
+       "exercises": [
+        {
+         "id": "squat",
+         "name": "Squat"
+        }
+       ],
+       "listed": true,
+       "more": 0
+      }
+     ]
+    }
+   ]
+  },
+  "h1": {
+   "id": "h1",
+   "name": "H1",
+   "modality": "max_strength",
+   "minutes": 45,
+   "levels": [
+    "novice",
+    "intermediate"
+   ],
+   "test": false,
+   "note": "Five heavy sets.",
+   "equipment": [],
+   "slots": [
+    {
+     "role": "main",
+     "name": "Main",
+     "slotType": "sets_reps",
+     "prescription": "5 × 5",
+     "note": null,
+     "parent": null,
+     "listed": false,
+     "technique": false,
+     "standard": null,
+     "exercises": [
+      {
+       "id": "squat",
+       "name": "Squat"
+      }
+     ]
+    }
+   ],
+   "icon": null,
+   "blocks": [
+    {
+     "id": "main",
+     "stage": "main",
+     "stageLabel": "Main work",
+     "shape": "sets",
+     "title": "Main",
+     "headline": "5 × 5",
+     "repeat": {
+      "sets": 5
+     },
+     "rest": null,
+     "again": null,
+     "cap": null,
+     "load": null,
+     "intensity": null,
+     "rpe": null,
+     "note": null,
+     "standard": null,
+     "group": null,
+     "roles": [
+      "main"
+     ],
+     "movements": [
+      {
+       "role": "main",
+       "name": "Main",
+       "count": null,
+       "perRound": null,
+       "eachSide": false,
+       "note": null,
+       "exercises": [
+        {
+         "id": "squat",
+         "name": "Squat"
+        }
+       ],
+       "listed": false,
+       "more": 0
+      }
+     ]
+    }
+   ]
+  },
+  "h2": {
+   "id": "h2",
+   "name": "H2",
+   "modality": "max_strength",
+   "minutes": 30,
+   "levels": [
+    "advanced"
+   ],
+   "test": false,
+   "note": null,
+   "equipment": [
+    "Kettlebell"
+   ],
+   "slots": [
+    {
+     "role": "main",
+     "name": "Main",
+     "slotType": "sets_reps",
+     "prescription": "21-15-9",
+     "note": null,
+     "parent": null,
+     "listed": true,
+     "technique": false,
+     "standard": null,
+     "exercises": [
+      {
+       "id": "swing",
+       "name": "Swing"
+      }
+     ]
+    }
+   ],
+   "icon": null,
+   "blocks": [
+    {
+     "id": "main",
+     "stage": "main",
+     "stageLabel": "Main work",
+     "shape": "sets",
+     "title": "Main",
+     "headline": "21-15-9",
+     "repeat": {
+      "scheme": [
+       21,
+       15,
+       9
+      ]
+     },
+     "rest": null,
+     "again": null,
+     "cap": null,
+     "load": null,
+     "intensity": null,
+     "rpe": null,
+     "note": null,
+     "standard": null,
+     "group": null,
+     "roles": [
+      "main"
+     ],
+     "movements": [
+      {
+       "role": "main",
+       "name": "Swing",
+       "count": null,
+       "perRound": null,
+       "eachSide": false,
+       "note": null,
+       "exercises": [
+        {
+         "id": "swing",
+         "name": "Swing"
+        }
+       ],
+       "listed": true,
+       "more": 0
+      }
+     ]
+    }
+   ]
+  },
+  "e1": {
+   "id": "e1",
+   "name": "E1",
+   "modality": "aerobic_base",
+   "minutes": null,
+   "levels": [],
+   "test": false,
+   "note": null,
+   "equipment": [],
+   "slots": [
+    {
+     "role": "run",
+     "name": "Run",
+     "slotType": "time_domain",
+     "prescription": "40 min · zone2",
+     "note": null,
+     "parent": null,
+     "listed": true,
+     "technique": false,
+     "standard": null,
+     "exercises": [
+      {
+       "id": "run",
+       "name": "Run"
+      }
+     ]
+    }
+   ],
+   "icon": null,
+   "blocks": [
+    {
+     "id": "run",
+     "stage": "main",
+     "stageLabel": "Main work",
+     "shape": "timed",
+     "title": "Run",
+     "headline": "40 min",
+     "repeat": null,
+     "rest": null,
+     "again": null,
+     "cap": null,
+     "load": null,
+     "intensity": "zone2",
+     "rpe": null,
+     "note": null,
+     "standard": null,
+     "group": null,
+     "roles": [
+      "run"
+     ],
+     "movements": [
+      {
+       "role": "run",
+       "name": "Run",
+       "count": null,
+       "perRound": null,
+       "eachSide": false,
+       "note": null,
+       "exercises": [
+        {
+         "id": "run",
+         "name": "Run"
+        }
+       ],
+       "listed": true,
+       "more": 0
+      }
+     ]
+    }
+   ]
+  },
+  "t1": {
+   "id": "t1",
+   "name": "T1",
+   "modality": "aerobic_base",
+   "minutes": null,
+   "levels": [],
+   "test": true,
+   "note": null,
+   "equipment": [],
+   "slots": [
+    {
+     "role": "mile",
+     "name": "Mile",
+     "slotType": "for_time",
+     "prescription": "for time",
+     "note": null,
+     "parent": null,
+     "listed": true,
+     "technique": false,
+     "standard": "mile_run",
+     "exercises": [
+      {
+       "id": "run",
+       "name": "Run"
+      }
+     ]
+    }
+   ],
+   "icon": null,
+   "blocks": [
+    {
+     "id": "mile",
+     "stage": "main",
+     "stageLabel": "Main work",
+     "shape": "for_time",
+     "title": "Mile",
+     "headline": "For time",
+     "repeat": null,
+     "rest": null,
+     "again": null,
+     "cap": null,
+     "load": null,
+     "intensity": null,
+     "rpe": null,
+     "note": null,
+     "standard": "mile_run",
+     "group": null,
+     "roles": [
+      "mile"
+     ],
+     "movements": [
+      {
+       "role": "mile",
+       "name": "Run",
+       "count": null,
+       "perRound": null,
+       "eachSide": false,
+       "note": null,
+       "exercises": [
+        {
+         "id": "run",
+         "name": "Run"
+        }
+       ],
+       "listed": true,
+       "more": 0
+      }
+     ]
+    }
+   ]
+  },
+  "loose": {
+   "id": "loose",
+   "name": "LOOSE",
+   "modality": "power",
+   "minutes": null,
+   "levels": [],
+   "test": false,
+   "note": null,
+   "equipment": [],
+   "slots": [
+    {
+     "role": "swing",
+     "name": "Swing",
+     "slotType": "sets_reps",
+     "prescription": "10 × 10",
+     "note": null,
+     "parent": null,
+     "listed": false,
+     "technique": false,
+     "standard": null,
+     "exercises": [
+      {
+       "id": "swing",
+       "name": "Swing"
+      }
+     ]
+    }
+   ],
+   "icon": null,
+   "blocks": [
+    {
+     "id": "swing",
+     "stage": "main",
+     "stageLabel": "Main work",
+     "shape": "sets",
+     "title": "Swing",
+     "headline": "10 × 10",
+     "repeat": {
+      "sets": 10
+     },
+     "rest": null,
+     "again": null,
+     "cap": null,
+     "load": null,
+     "intensity": null,
+     "rpe": null,
+     "note": null,
+     "standard": null,
+     "group": null,
+     "roles": [
+      "swing"
+     ],
+     "movements": [
+      {
+       "role": "swing",
+       "name": "Swing",
+       "count": null,
+       "perRound": null,
+       "eachSide": false,
+       "note": null,
+       "exercises": [
+        {
+         "id": "swing",
+         "name": "Swing"
+        }
+       ],
+       "listed": false,
+       "more": 0
+      }
+     ]
+    }
+   ]
+  },
+  "c1": {
+   "id": "c1",
+   "name": "C1",
+   "modality": "power",
+   "minutes": 20,
+   "levels": [],
+   "test": false,
+   "note": null,
+   "equipment": [],
+   "slots": [
+    {
+     "role": "swing",
+     "name": "Swing",
+     "slotType": "emom",
+     "prescription": "",
+     "note": null,
+     "parent": null,
+     "listed": true,
+     "technique": false,
+     "standard": null,
+     "exercises": [
+      {
+       "id": "swing",
+       "name": "Swing"
+      }
+     ]
+    }
+   ],
+   "icon": "kettlebell",
+   "blocks": [
+    {
+     "id": "swing",
+     "stage": "main",
+     "stageLabel": "Main work",
+     "shape": "emom",
+     "title": "Swing",
+     "headline": "Every minute",
+     "repeat": {
+      "everySec": 60
+     },
+     "rest": null,
+     "again": null,
+     "cap": null,
+     "load": null,
+     "intensity": null,
+     "rpe": null,
+     "note": null,
+     "standard": null,
+     "group": null,
+     "roles": [
+      "swing"
+     ],
+     "movements": [
+      {
+       "role": "swing",
+       "name": "Swing",
+       "count": null,
+       "perRound": null,
+       "eachSide": false,
+       "note": null,
+       "exercises": [
+        {
+         "id": "swing",
+         "name": "Swing"
+        }
+       ],
+       "listed": true,
+       "more": 0
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

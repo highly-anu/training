@@ -94,7 +94,11 @@ def for_archetype(archetype_id: str | None) -> str | None:
     What a history row (planned_sessions.archetype_id) resolves with, where
     the session's exercises are not at hand.
     """
-    arch = _archetypes().get(archetype_id) if archetype_id else None
+    return for_archetype_record(_archetypes().get(archetype_id) if archetype_id else None)
+
+
+def for_archetype_record(arch: dict | None) -> str | None:
+    """`for_archetype` for an archetype already at hand (Explore's sessions)."""
     if not arch:
         return None
     if _known(arch.get('icon')):

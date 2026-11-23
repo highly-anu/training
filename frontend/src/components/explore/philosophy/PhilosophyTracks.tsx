@@ -2,12 +2,11 @@ import { useLayoutEffect, useRef, useState } from 'react'
 import { CalendarDays, CalendarRange, ChevronLeft, ChevronRight, FlaskConical, Info, Repeat, Timer } from 'lucide-react'
 import type { DescribedPhase, DescribedTrack, GlancePhase, GlanceTrack, PhilosophyDescription } from '@/api/types'
 import { PHASE_COLORS } from '@/lib/phaseColors'
-import { INTENSITY_BUCKETS } from '@/lib/hrZones'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Collapse } from '@/components/motion/Collapse'
 import { EditableText, useMethodEditing } from '@/components/methods/MethodEdit'
-import { InlinePanel, IntensityBar, LevelPips, MixLegend, PhaseBar, WeekGlyph } from './Glance'
+import { InlinePanel, IntensityBar, IntensityLegend, LevelPips, MixLegend, PhaseBar, WeekGlyph } from './Glance'
 import { PhaseWeek } from './PhaseWeek'
 
 const LEVEL_WORDS: Record<string, string> = {
@@ -17,8 +16,8 @@ const LEVEL_WORDS: Record<string, string> = {
 const span = (r: { min: number; max: number } | null, unit = '') =>
   !r ? '—' : r.min === r.max ? `${r.min}${unit}` : `${r.min}–${r.max}${unit}`
 
-/** One phase as a card: its kind's colour, its weeks, its week as a glyph,
- *  how hard. The words open under the cards. */
+/** One phase as a card: its kind's colour, its weeks, its week's shape and
+ *  what it holds, how hard. The words open under the cards. */
 function PhaseCard({ phase, selected, onOpen }: { phase: GlancePhase; selected: boolean; onOpen: () => void }) {
   const c = PHASE_COLORS[phase.kind]
   return (
@@ -34,6 +33,7 @@ function PhaseCard({ phase, selected, onOpen }: { phase: GlancePhase; selected: 
           </span>
         </div>
         <WeekGlyph phase={phase} />
+        <MixLegend mix={phase.mix} max={4} />
         <IntensityBar split={phase.intensitySplit} />
         <div className="mt-auto flex items-center gap-2.5 text-[10px] text-muted-foreground">
           {phase.daysPerWeek != null && (
@@ -55,20 +55,6 @@ function PhaseCard({ phase, selected, onOpen }: { phase: GlancePhase; selected: 
         </div>
       </div>
     </button>
-  )
-}
-
-function IntensityLegend({ split }: { split: Record<string, number> }) {
-  const rows = INTENSITY_BUCKETS.map((b) => ({ ...b, pct: split[b.key] ?? 0 })).filter((b) => b.pct > 0)
-  return (
-    <div className="flex flex-wrap gap-x-3">
-      {rows.map((b) => (
-        <span key={b.key} className="flex items-center gap-1 text-[10px] text-muted-foreground">
-          <span className="size-1.5 rounded-full" style={{ backgroundColor: b.color }} />
-          {b.label} {Math.round(b.pct * 100)}%
-        </span>
-      ))}
-    </div>
   )
 }
 
@@ -147,7 +133,7 @@ function TrackCard({ track, detail, scale, place, current }: {
 
   return (
     <div role="group" aria-roledescription="slide" aria-label={`${track.name}, ${place}`}
-      className={cn('space-y-4 rounded-lg border bg-card/40 p-4 transition-opacity',
+      className={cn('space-y-4 rounded-xl border bg-card p-5 transition-opacity',
         current ? 'border-border/70' : 'border-border/40 opacity-60')}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
