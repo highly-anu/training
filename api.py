@@ -920,6 +920,12 @@ def get_philosophies():
             inv = _package_fidelity.invented_track(record, track['id'])
             if inv:
                 track['invention'] = {'id': inv, 'text': inventions.get(inv, '')}
+    # The asker's own methods say so (Explore lists them first, marked Yours);
+    # a shipped philosophy carries no key, so the shared answer is unchanged.
+    own = set(loader.overlay_packages())
+    for philosophy in philosophies:
+        if philosophy['id'] in own:
+            philosophy['own'] = True
     return jsonify(philosophies)
 
 
@@ -941,11 +947,14 @@ def compare_philosophies():
     is (src/explore_compare.py). Static data — no user; built per request,
     since it is set work over cached glances."""
     from src import explore_compare
-    try:
-        doc = explore_compare.compare(explore_compare.parse_ids(request.args.get('ids')))
-    except explore_compare.CompareError as err:
-        return jsonify({'detail': str(err)}), err.status
-    return jsonify(doc)
+    # In the asker's view, so their own method compares like any other (it
+    # answered 404 for one: no overlay was named here).
+    with loader.overlay(_own_overlay()):
+        try:
+            doc = explore_compare.compare(explore_compare.parse_ids(request.args.get('ids')))
+        except explore_compare.CompareError as err:
+            return jsonify({'detail': str(err)}), err.status
+        return jsonify(doc)
 
 
 @app.post('/api/philosophies/<philosophy_id>/for-me')

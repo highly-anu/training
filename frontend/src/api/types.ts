@@ -1327,6 +1327,8 @@ export interface TrackImplement {
 export interface Philosophy {
   id: string
   name: string
+  /** The athlete's own method (a package they had built); absent on a shipped one. */
+  own?: boolean
   core_principles: string[]
   scope: string[]
   bias: string[]
@@ -2570,6 +2572,8 @@ export interface DescribedSessionGroup {
 export interface PhilosophyDescription {
   id: string
   name: string
+  /** The asker's own method. Absent from an older server. */
+  own?: boolean
   summary: string | null
   accent: string | null
   bias: string[]
@@ -2637,6 +2641,7 @@ export interface GlanceTrack {
 export interface PhilosophyGlance {
   id: string
   name: string
+  own?: boolean
   accent: string | null
   bias: string[]
   levels: TrainingLevel[]

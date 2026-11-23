@@ -13,6 +13,7 @@ import {
   FlaskConical,
   GitBranch,
   Info,
+  Dumbbell,
   Library,
   Package,
   Sparkles,
@@ -21,6 +22,7 @@ import {
   Wand2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useSimilarity } from '@/api/similarity'
 import { nearestTo } from '@/components/explore/compare/compareIds'
@@ -118,6 +120,7 @@ function Goals({ doc, measuresOpen, onMeasures }: { doc: PhilosophyDescription; 
 function Requirements({ doc }: { doc: PhilosophyDescription }) {
   const g = doc.glance
   const [allEquipment, setAllEquipment] = useState(false)
+  const [owned, setOwned] = useState<string | null>(null)
   const prereq = g.tracks.filter((t) => t.requires.length > 0 || t.implement)
   return (
     <div className="space-y-3 rounded-lg border border-border/50 bg-card/40 p-3">
@@ -136,13 +139,19 @@ function Requirements({ doc }: { doc: PhilosophyDescription }) {
       {prereq.length > 0 && (
         <div className="space-y-1.5">
           <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">You already own</p>
-          <ul className="space-y-1">
+          {/* A chip a track; the movements it expects open under them. */}
+          <div className="flex flex-wrap gap-1">
             {prereq.map((t) => (
-              <li key={t.id} className="text-[11px] text-muted-foreground">
-                <span className="text-foreground/80">{t.name}:</span> {[...t.requires, ...(t.implement ? [t.implement] : [])].join(', ')}
-              </li>
+              <Chip key={t.id} onClick={() => setOwned((cur) => (cur === t.id ? null : t.id))} title={`What ${t.name} expects`}>
+                {t.name} <span className="font-mono text-[10px]">{t.requires.length + (t.implement ? 1 : 0)}</span>
+              </Chip>
             ))}
-          </ul>
+          </div>
+          {prereq.filter((t) => t.id === owned).map((t) => (
+            <p key={t.id} className="text-[11px] leading-relaxed text-muted-foreground">
+              <span className="text-foreground/80">{t.name}:</span> {[...t.requires, ...(t.implement ? [t.implement] : [])].join(', ')}
+            </p>
+          ))}
         </div>
       )}
       {doc.borrows.length > 0 && (
@@ -225,6 +234,7 @@ export function PhilosophyPage({ id, onSelect, onCompare, onBack }: {
                 ))}
               </div>
               <h2 className="text-lg font-semibold leading-tight">{doc.name}</h2>
+              {doc.own && <Badge variant="outline" className="shrink-0">Yours</Badge>}
             </div>
             <div className="flex items-center gap-2">
               <Button size="sm" variant={about ? 'secondary' : 'outline'} aria-expanded={about} onClick={() => setAbout((a) => !a)}>
@@ -305,6 +315,10 @@ export function PhilosophyPage({ id, onSelect, onCompare, onBack }: {
           <PhilosophyTracks doc={doc} />
         </PageSection>
 
+        <PageSection title={`Sessions (${g.counts.sessions})`} icon={Dumbbell}>
+          <PhilosophySessions doc={doc} />
+        </PageSection>
+
         <div className="grid gap-4 md:grid-cols-2">
           <PageSection title="Goals" icon={Target}>
             <Goals doc={doc} measuresOpen={measures} onMeasures={() => setMeasures((m) => !m)} />
@@ -357,10 +371,6 @@ export function PhilosophyPage({ id, onSelect, onCompare, onBack }: {
                 : <PhilosophyRules doc={doc} show={method} />}
             </InlinePanel>
           )}
-        </PageSection>
-
-        <PageSection title={`Sessions (${g.counts.sessions})`} icon={Package}>
-          <PhilosophySessions doc={doc} />
         </PageSection>
 
         <div className="grid gap-6 border-t border-border/40 pt-4 md:grid-cols-[3fr_2fr]">
