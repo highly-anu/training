@@ -280,10 +280,11 @@ def save_user_program(user_id: str, program_data: dict[str, Any]) -> None:
     if isinstance(cp, dict) and any(k in cp for k in derived):
         cp = {k: v for k, v in cp.items() if k not in derived}
         program_data = {**program_data, 'currentProgram': cp}
-    # Each session's `icon` (src/session_icon.py) is derived on read too.
+    # Each session's `icon` (src/session_icon.py) and `blocks`
+    # (src/session_blocks.py) are derived on read too.
     if isinstance(cp, dict):
-        from src import session_icon
-        stripped = session_icon.strip(cp)
+        from src import session_blocks, session_icon
+        stripped = session_blocks.strip(session_icon.strip(cp))
         if stripped is not cp:
             program_data = {**program_data, 'currentProgram': stripped}
     conn = _get_pg_conn()

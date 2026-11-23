@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import os
 
-from src import goals, implements, levels as _levels, loader, phases, training_contract
+from src import goals, implements, levels as _levels, loader, phases, session_blocks, training_contract
 from src.analytics import benchmarks_data
 from src.explore_links import policy_for, slot_exercises
 
@@ -391,17 +391,19 @@ def _span(values) -> dict | None:
 # ─── Sessions ────────────────────────────────────────────────────────────────
 
 def _session(arch: dict, exercises: dict, policy) -> dict:
-    slots = []
+    slots, pools = [], {}
     for slot in arch.get('slots') or []:
         pool, listed = slot_exercises(slot, arch.get('modality'), exercises, policy)
         std = slot.get('standard')
+        named = [{'id': ex['id'], 'name': ex.get('name') or words(ex['id'])} for ex in pool]
+        pools[slot.get('role')] = {'exercises': named, 'listed': listed}
         slots.append({
             'role': slot.get('role'), 'name': words(slot.get('role')),
             'slotType': slot.get('slot_type'), 'prescription': prescription(slot),
             'note': slot.get('notes'), 'parent': slot.get('parent_slot_role'),
             'listed': listed, 'technique': bool(slot.get('skip_exercise')),
             'standard': (std.get('id') if isinstance(std, dict) else std) or None,
-            'exercises': [{'id': ex['id'], 'name': ex.get('name') or words(ex['id'])} for ex in pool],
+            'exercises': named,
         })
     return {
         'id': arch['id'], 'name': arch.get('name') or words(arch['id']), 'modality': arch.get('modality'),
@@ -409,6 +411,9 @@ def _session(arch: dict, exercises: dict, policy) -> dict:
         'test': bool(arch.get('test')), 'note': (arch.get('notes') or '').strip() or None,
         'equipment': [words(e) for e in _listify(arch.get('required_equipment')) if e != 'open_space'],
         'slots': slots,
+        # The same slots as blocks — what opens the session, what repeats in
+        # rounds or every minute, the rests, what closes it (src/session_blocks.py).
+        'blocks': session_blocks.for_archetype(arch, pools),
     }
 
 
@@ -507,6 +512,8 @@ def _core(phil: dict, *, frameworks: dict, archetypes: list, exercises: dict, co
     return {
         'id': phil['id'],
         'name': phil.get('name') or words(phil['id']),
+        # The asker's own method (a package of their overlay), never a shipped one.
+        'own': phil['id'] in loader.overlay_packages(),
         'summary': (phil.get('notes') or '').strip() or None,
         'accent': (phil.get('bias') or [None])[0],
         'bias': list(phil.get('bias') or []),
@@ -559,7 +566,7 @@ def glance(core: dict, measures: dict | None = None) -> dict:
     phase_keys = ('id', 'name', 'kind', 'weeks', 'repeatable', 'focus', 'days', 'daysPerWeek', 'minutes',
                   'sessionsPerWeek', 'mix', 'intensitySplit')
     return {
-        'id': core['id'], 'name': core['name'], 'accent': core['accent'], 'bias': core['bias'],
+        'id': core['id'], 'name': core['name'], 'own': core['own'], 'accent': core['accent'], 'bias': core['bias'],
         'levels': core['levels'],
         'weeks': {'min': exp.get('min_weeks'), 'ideal': exp.get('ideal_weeks')} if exp else None,
         'daysPerWeek': {'min': exp.get('min_days_per_week'), 'ideal': exp.get('ideal_days_per_week')} if exp else None,

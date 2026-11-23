@@ -1,0 +1,552 @@
+{
+ "complex": [
+  {
+   "id": "warm_up",
+   "stage": "prep",
+   "stageLabel": "Start",
+   "shape": "practice",
+   "title": "Warm up",
+   "headline": "5 min",
+   "repeat": null,
+   "rest": null,
+   "again": null,
+   "cap": null,
+   "load": null,
+   "intensity": null,
+   "rpe": null,
+   "note": "Halos, prying goblet squats, light swings.",
+   "standard": null,
+   "group": null,
+   "roles": [
+    "warm_up"
+   ],
+   "movements": [
+    {
+     "role": "warm_up",
+     "name": "Warm up",
+     "count": null,
+     "perRound": null,
+     "eachSide": false,
+     "note": null,
+     "exercises": [
+      {
+       "id": "halo",
+       "name": "Halo"
+      },
+      {
+       "id": "prying_goblet_squat",
+       "name": "Prying goblet squat"
+      }
+     ],
+     "listed": false,
+     "more": 0
+    }
+   ]
+  },
+  {
+   "id": "complex",
+   "stage": "main",
+   "stageLabel": "Main work",
+   "shape": "rounds",
+   "title": "Complex",
+   "headline": "6 rounds",
+   "repeat": {
+    "rounds": 6
+   },
+   "rest": {
+    "seconds": 150,
+    "between": "rounds",
+    "text": "2 min 30 s rest between rounds"
+   },
+   "again": "6 rounds in all",
+   "cap": null,
+   "load": "Moderate-heavy bell, about your 8-rep press bell",
+   "intensity": "heavy",
+   "rpe": null,
+   "note": "One hand, without putting the bell down. Change hands every round.",
+   "standard": null,
+   "group": null,
+   "roles": [
+    "complex",
+    "clean",
+    "swing",
+    "push_up"
+   ],
+   "movements": [
+    {
+     "role": "complex",
+     "name": "Kettlebell bent-over row",
+     "count": "5",
+     "perRound": null,
+     "eachSide": false,
+     "note": null,
+     "exercises": [
+      {
+       "id": "kettlebell_bent-over_row",
+       "name": "Kettlebell bent-over row"
+      }
+     ],
+     "listed": true,
+     "more": 0
+    },
+    {
+     "role": "clean",
+     "name": "Kettlebell clean",
+     "count": "5",
+     "perRound": null,
+     "eachSide": false,
+     "note": null,
+     "exercises": [
+      {
+       "id": "kettlebell_clean",
+       "name": "Kettlebell clean"
+      }
+     ],
+     "listed": true,
+     "more": 0
+    },
+    {
+     "role": "swing",
+     "name": "Kettlebell one-arm swing",
+     "count": "5",
+     "perRound": null,
+     "eachSide": false,
+     "note": null,
+     "exercises": [
+      {
+       "id": "kettlebell_one-arm_swing",
+       "name": "Kettlebell one-arm swing"
+      }
+     ],
+     "listed": true,
+     "more": 0
+    },
+    {
+     "role": "push_up",
+     "name": "Push-up",
+     "count": "5",
+     "perRound": null,
+     "eachSide": false,
+     "note": "Hands on the bell handle or the floor.",
+     "exercises": [
+      {
+       "id": "push-up",
+       "name": "Push-up"
+      },
+      {
+       "id": "knee_push-up",
+       "name": "Knee push-up"
+      }
+     ],
+     "listed": true,
+     "more": 0
+    }
+   ]
+  },
+  {
+   "id": "swing_finisher",
+   "stage": "finisher",
+   "stageLabel": "Finisher",
+   "shape": "sets",
+   "title": "Swing finisher",
+   "headline": "3 × 20",
+   "repeat": {
+    "sets": 3
+   },
+   "rest": {
+    "seconds": 45,
+    "between": "sets",
+    "text": "45 s rest between sets"
+   },
+   "again": null,
+   "cap": null,
+   "load": null,
+   "intensity": "high",
+   "rpe": null,
+   "note": null,
+   "standard": null,
+   "group": null,
+   "roles": [
+    "swing_finisher"
+   ],
+   "movements": [
+    {
+     "role": "swing_finisher",
+     "name": "Kettlebell swing",
+     "count": null,
+     "perRound": null,
+     "eachSide": false,
+     "note": null,
+     "exercises": [
+      {
+       "id": "kettlebell_swing",
+       "name": "Kettlebell swing"
+      }
+     ],
+     "listed": true,
+     "more": 0
+    }
+   ]
+  }
+ ],
+ "ladders": [
+  {
+   "id": "ladders",
+   "stage": "main",
+   "stageLabel": "Main work",
+   "shape": "ladder",
+   "title": "Ladders",
+   "headline": "4 × 1-2-3-4-5 each side",
+   "repeat": {
+    "sets": 4,
+    "scheme": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ]
+   },
+   "rest": {
+    "seconds": 120,
+    "between": "sets",
+    "text": "2 min rest between sets"
+   },
+   "again": null,
+   "cap": null,
+   "load": "Heavy bell",
+   "intensity": "heavy",
+   "rpe": null,
+   "note": null,
+   "standard": null,
+   "group": null,
+   "roles": [
+    "ladders"
+   ],
+   "movements": [
+    {
+     "role": "ladders",
+     "name": "Ladders",
+     "count": null,
+     "perRound": null,
+     "eachSide": true,
+     "note": null,
+     "exercises": [],
+     "listed": false,
+     "more": 0
+    }
+   ]
+  },
+  {
+   "id": "front_squat",
+   "stage": "main",
+   "stageLabel": "Main work",
+   "shape": "sets",
+   "title": "Front squat",
+   "headline": "3 × 6 each side",
+   "repeat": {
+    "sets": 3
+   },
+   "rest": {
+    "seconds": 60,
+    "between": "sets",
+    "text": "1 min rest between sets"
+   },
+   "again": null,
+   "cap": null,
+   "load": null,
+   "intensity": null,
+   "rpe": null,
+   "note": null,
+   "standard": null,
+   "group": {
+    "id": "a",
+    "kind": "alternate"
+   },
+   "roles": [
+    "front_squat"
+   ],
+   "movements": [
+    {
+     "role": "front_squat",
+     "name": "Front squat",
+     "count": null,
+     "perRound": null,
+     "eachSide": true,
+     "note": null,
+     "exercises": [],
+     "listed": false,
+     "more": 0
+    }
+   ]
+  },
+  {
+   "id": "row",
+   "stage": "main",
+   "stageLabel": "Main work",
+   "shape": "sets",
+   "title": "Row",
+   "headline": "3 × 8 each side",
+   "repeat": {
+    "sets": 3
+   },
+   "rest": {
+    "seconds": 60,
+    "between": "sets",
+    "text": "1 min rest between sets"
+   },
+   "again": null,
+   "cap": null,
+   "load": null,
+   "intensity": null,
+   "rpe": null,
+   "note": null,
+   "standard": null,
+   "group": {
+    "id": "a",
+    "kind": "alternate"
+   },
+   "roles": [
+    "row"
+   ],
+   "movements": [
+    {
+     "role": "row",
+     "name": "Row",
+     "count": null,
+     "perRound": null,
+     "eachSide": true,
+     "note": null,
+     "exercises": [],
+     "listed": false,
+     "more": 0
+    }
+   ]
+  }
+ ],
+ "pyramid": [
+  {
+   "id": "pyramid",
+   "stage": "main",
+   "stageLabel": "Main work",
+   "shape": "pyramid",
+   "title": "Pyramid",
+   "headline": "5 rounds",
+   "repeat": {
+    "rounds": 5,
+    "scheme": [
+     3,
+     4,
+     5,
+     4,
+     3
+    ]
+   },
+   "rest": {
+    "seconds": 90,
+    "between": "rounds",
+    "text": "1 min 30 s rest between rounds"
+   },
+   "again": null,
+   "cap": null,
+   "load": null,
+   "intensity": null,
+   "rpe": null,
+   "note": null,
+   "standard": null,
+   "group": null,
+   "roles": [
+    "pyramid",
+    "swing"
+   ],
+   "movements": [
+    {
+     "role": "pyramid",
+     "name": "Pyramid",
+     "count": "3-4-5-4-3",
+     "perRound": [
+      3,
+      4,
+      5,
+      4,
+      3
+     ],
+     "eachSide": false,
+     "note": null,
+     "exercises": [],
+     "listed": false,
+     "more": 0
+    },
+    {
+     "role": "swing",
+     "name": "Swing",
+     "count": "10-15-20-15-10",
+     "perRound": [
+      10,
+      15,
+      20,
+      15,
+      10
+     ],
+     "eachSide": false,
+     "note": null,
+     "exercises": [],
+     "listed": false,
+     "more": 0
+    }
+   ]
+  }
+ ],
+ "emom": [
+  {
+   "id": "emom",
+   "stage": "main",
+   "stageLabel": "Main work",
+   "shape": "emom",
+   "title": "Emom",
+   "headline": "Every minute × 20",
+   "repeat": {
+    "rounds": 20,
+    "everySec": 60
+   },
+   "rest": null,
+   "again": "Start again every minute",
+   "cap": null,
+   "load": null,
+   "intensity": null,
+   "rpe": null,
+   "note": null,
+   "standard": null,
+   "group": null,
+   "roles": [
+    "emom"
+   ],
+   "movements": [
+    {
+     "role": "emom",
+     "name": "Emom",
+     "count": "5",
+     "perRound": null,
+     "eachSide": false,
+     "note": null,
+     "exercises": [],
+     "listed": false,
+     "more": 0
+    }
+   ]
+  },
+  {
+   "id": "row",
+   "stage": "main",
+   "stageLabel": "Main work",
+   "shape": "sets",
+   "title": "Row",
+   "headline": "3 × 10 each side",
+   "repeat": {
+    "sets": 3
+   },
+   "rest": {
+    "seconds": 45,
+    "between": "sets",
+    "text": "45 s rest between sets"
+   },
+   "again": null,
+   "cap": null,
+   "load": null,
+   "intensity": null,
+   "rpe": null,
+   "note": null,
+   "standard": null,
+   "group": null,
+   "roles": [
+    "row"
+   ],
+   "movements": [
+    {
+     "role": "row",
+     "name": "Row",
+     "count": null,
+     "perRound": null,
+     "eachSide": true,
+     "note": null,
+     "exercises": [],
+     "listed": false,
+     "more": 0
+    }
+   ]
+  }
+ ],
+ "fran": [
+  {
+   "id": "fran",
+   "stage": "main",
+   "stageLabel": "Main work",
+   "shape": "for_time",
+   "title": "Fran",
+   "headline": "21-15-9 for time",
+   "repeat": {
+    "rounds": 3,
+    "scheme": [
+     21,
+     15,
+     9
+    ]
+   },
+   "rest": null,
+   "again": null,
+   "cap": null,
+   "load": "43 kg",
+   "intensity": null,
+   "rpe": null,
+   "note": null,
+   "standard": null,
+   "group": null,
+   "roles": [
+    "fran",
+    "fran_2"
+   ],
+   "movements": [
+    {
+     "role": "fran",
+     "name": "Thruster",
+     "count": "21-15-9",
+     "perRound": [
+      21,
+      15,
+      9
+     ],
+     "eachSide": false,
+     "note": null,
+     "exercises": [
+      {
+       "id": "thruster",
+       "name": "Thruster"
+      }
+     ],
+     "listed": true,
+     "more": 0
+    },
+    {
+     "role": "fran_2",
+     "name": "Pull-up",
+     "count": "21-15-9",
+     "perRound": [
+      21,
+      15,
+      9
+     ],
+     "eachSide": false,
+     "note": null,
+     "exercises": [
+      {
+       "id": "pull-up",
+       "name": "Pull-up"
+      }
+     ],
+     "listed": true,
+     "more": 0
+    }
+   ]
+  }
+ ]
+}

@@ -180,9 +180,10 @@ def content_hash(envelope: dict) -> str:
         # a client that echoes one back must not make the snapshot look stale.
         trimmed['currentProgram'] = {k: v for k, v in cp.items() if k not in derived}
     if isinstance(trimmed.get('currentProgram'), dict):
-        # So is each session's `icon` (src/session_icon.py).
-        from src import session_icon
-        trimmed['currentProgram'] = session_icon.strip(trimmed['currentProgram'])
+        # So are each session's `icon` (src/session_icon.py) and `blocks`
+        # (src/session_blocks.py).
+        from src import session_blocks, session_icon
+        trimmed['currentProgram'] = session_blocks.strip(session_icon.strip(trimmed['currentProgram']))
     canonical = json.dumps(trimmed, sort_keys=True, separators=(',', ':'),
                            default=str)
     return hashlib.sha256(canonical.encode()).hexdigest()

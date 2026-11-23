@@ -101,7 +101,14 @@ def _digest(client, body: dict) -> str:
     from src import db  # noqa: F401
     with patch('src.db.get_user_program', return_value=None), patch('src.db.save_user_program'):
         r = client.post('/api/programs/generate', json={**body, 'persist': False, 'start_date': '2026-11-02'})
-    text = _VOLATILE.sub('', json.dumps({'status': r.status_code, 'body': r.get_json()}, sort_keys=True))
+    # Each session's `blocks` are derived from its exercises on every read
+    # (src/session_blocks.py) and never part of the program: the hash is of
+    # what was generated.
+    from src import session_blocks
+    answer = r.get_json()
+    if isinstance(answer, dict):
+        answer = session_blocks.strip(answer)
+    text = _VOLATILE.sub('', json.dumps({'status': r.status_code, 'body': answer}, sort_keys=True))
     return hashlib.sha256(text.encode()).hexdigest()
 
 

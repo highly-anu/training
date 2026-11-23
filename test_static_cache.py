@@ -147,6 +147,18 @@ class OwnPackagesTests(unittest.TestCase):
         # Their own page, which the shared view answers 404.
         self.assertEqual(self.client.get(f'/api/philosophies/{self.pkg}/describe').status_code, 200)
         self.assertIn(self.pkg, {g['id'] for g in self.client.get('/api/philosophies/glance').get_json()})
+        # It says it is theirs, on every document Explore reads; a shipped one never does.
+        listed = {p['id']: p for p in mine.get_json()}
+        self.assertIs(listed[self.pkg].get('own'), True)
+        self.assertFalse(any(p.get('own') for pid, p in listed.items() if pid != self.pkg))
+        self.assertNotIn(b'"own"', shared.get_data())
+        glances = {g['id']: g['own'] for g in self.client.get('/api/philosophies/glance').get_json()}
+        self.assertEqual([pid for pid, own in glances.items() if own], [self.pkg])
+        self.assertIs(self.client.get(f'/api/philosophies/{self.pkg}/describe').get_json()['own'], True)
+        # And it compares like any other (the route named no overlay: 404).
+        other = next(pid for pid in listed if pid != self.pkg)
+        compared = self.client.get(f'/api/philosophies/compare?ids={self.pkg},{other}')
+        self.assertEqual(compared.status_code, 200, compared.get_data()[:200])
         # Revalidation is still a 304.
         again = self.client.get('/api/philosophies', headers={'If-None-Match': mine.headers['ETag']})
         self.assertEqual(again.status_code, 304)

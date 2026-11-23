@@ -36,6 +36,7 @@ from src.analytics import benchmarks_data as _bd
 from src import goals, loader, provenance
 from src import blockers as _blockers
 from src import session_icon as _session_icon
+from src import session_blocks as _session_blocks
 from src import phases
 from src.phases import PhaseResolutionError
 from src.similarity import compute_all_similarities
@@ -764,7 +765,7 @@ def _transform_program(raw: dict, goal: dict, constraints: dict, validation) -> 
         },
         # Each session's workout icon (src/session_icon.py); derived on read,
         # never stored.
-        'weeks':          _session_icon.with_icons(weeks),
+        'weeks':          _session_blocks.with_blocks(_session_icon.with_icons(weeks)),
         'volume_summary': volume_summary,
         'phase_summary':  _phase_summary(weeks, goal),
         **_lane_phase_summary(weeks, goal),
@@ -919,6 +920,12 @@ def get_philosophies():
             inv = _package_fidelity.invented_track(record, track['id'])
             if inv:
                 track['invention'] = {'id': inv, 'text': inventions.get(inv, '')}
+    # The asker's own methods say so (Explore lists them first, marked Yours);
+    # a shipped philosophy carries no key, so the shared answer is unchanged.
+    own = set(loader.overlay_packages())
+    for philosophy in philosophies:
+        if philosophy['id'] in own:
+            philosophy['own'] = True
     return jsonify(philosophies)
 
 
@@ -940,11 +947,14 @@ def compare_philosophies():
     is (src/explore_compare.py). Static data — no user; built per request,
     since it is set work over cached glances."""
     from src import explore_compare
-    try:
-        doc = explore_compare.compare(explore_compare.parse_ids(request.args.get('ids')))
-    except explore_compare.CompareError as err:
-        return jsonify({'detail': str(err)}), err.status
-    return jsonify(doc)
+    # In the asker's view, so their own method compares like any other (it
+    # answered 404 for one: no overlay was named here).
+    with loader.overlay(_own_overlay()):
+        try:
+            doc = explore_compare.compare(explore_compare.parse_ids(request.args.get('ids')))
+        except explore_compare.CompareError as err:
+            return jsonify({'detail': str(err)}), err.status
+        return jsonify(doc)
 
 
 @app.post('/api/philosophies/<philosophy_id>/for-me')
@@ -1017,7 +1027,10 @@ def describe_philosophy(philosophy_id):
 @app.get('/api/archetypes')
 @static_json
 def get_archetypes():
-    return jsonify(sorted(loader.load_all_archetypes(), key=lambda a: a.get('id', '')))
+    # Each with its `blocks` (src/session_blocks.py): the slots grouped into
+    # what opens the session, what repeats and what closes it.
+    return jsonify([{**a, 'blocks': _session_blocks.for_archetype(a)}
+                    for a in sorted(loader.load_all_archetypes(), key=lambda a: a.get('id', ''))])
 
 
 @app.get('/api/ontology')
@@ -2269,6 +2282,41 @@ def delete_method(package_id):
     return _remove_user_package(package_id)
 
 
+@app.patch('/api/methods/<package_id>')
+@require_auth
+@require_builder
+def edit_method(package_id):
+    """Rename one of the athlete's methods, or edit its words: `{name?,
+    summary?, tracks?, sessions?}` (src/method_edits.py). No model, no build:
+    names and notes change no program. 404 when they have none by that id,
+    422 with `problems` for an edit of anything but text (numbers and
+    structure change with a revise) or one the schema refuses, 503 when the
+    write fails. The program built from it takes the new names at once
+    (`programRenamed`); earlier blocks keep the name they ran under."""
+    from src import method_edits, package_store
+    body = request.get_json(silent=True)
+    try:
+        result = package_store.edit_text(g.user_id, package_id, body)
+    except package_store.StoreError as e:
+        return _package_store_error(e)
+    if result is None:
+        return jsonify({'error': 'not_found'}), 404
+    if not result['ok']:
+        return jsonify({'error': 'invalid_edit', 'problems': result['problems']}), 422
+    renamed = False
+    if result['changed']:
+        from src import db as _db
+        try:
+            updated = method_edits.rename_in_program(_db.get_user_program(g.user_id) or {}, package_id, result['files'])
+            if updated is not None:
+                _db.save_user_program(g.user_id, updated)
+                renamed = True
+        except Exception as e:  # the method is saved; the program's copy catches up at its next generate
+            app.logger.warning('program names not updated after a method edit: %s', e)
+    return jsonify({'id': package_id, 'name': result['name'], 'revision': result['revision'],
+                    'changed': result['changed'], 'programRenamed': renamed})
+
+
 @app.get('/api/dev/model-map')
 @require_auth
 @require_authoring
@@ -2767,16 +2815,19 @@ def _generate_session_inner(body):
 
     arch = populated.get('archetype', {})
     icon = _session_icon.session_icon(populated)
+    cleaned = [_clean_exercise_assignment(ea) for ea in populated.get('exercises', [])]
+    blocks = _session_blocks.for_session({'archetype': arch, 'exercises': cleaned})
     return jsonify({
         'modality':  modality,
         'archetype': arch,
         **({'icon': icon} if icon else {}),
+        **({'blocks': blocks} if blocks else {}),
         # An extra: counted only once done (analytics.context.Context.sessions).
         **({'added': True, 'provenance': _added_provenance(arch)} if add else {}),
         'is_deload': is_deload,
         **{k: populated[k] for k in ('category', 'category_name', 'pieces', 'warm_up') if populated.get(k)},
         'duration_min': arch.get('duration_estimate_minutes') if arch else None,
-        'exercises': [_clean_exercise_assignment(ea) for ea in populated.get('exercises', [])],
+        'exercises': cleaned,
     })
 
 
@@ -3849,7 +3900,7 @@ def get_user_program_endpoint():
             current = program.get('currentProgram')
             if isinstance(current, dict) and current.get('weeks'):
                 program['currentProgram'] = {
-                    **current, 'weeks': _session_icon.with_icons(current['weeks']),
+                    **current, 'weeks': _session_blocks.with_blocks(_session_icon.with_icons(current['weeks'])),
                     'phase_summary': _phase_summary(current['weeks'], current.get('goal')),
                     **_lane_phase_summary(current['weeks'], current.get('goal'))}
         return jsonify(program)
@@ -4300,7 +4351,7 @@ def adjust_program():
     revision = get_program_revision(user_id)
     history = _record_program_history(user_id, envelope, 'adjust', revision)
     program = {**envelope, 'revision': revision, 'programVersionId': history.get('versionId'),
-               'currentProgram': {**current, 'weeks': _session_icon.with_icons(weeks),
+               'currentProgram': {**current, 'weeks': _session_blocks.with_blocks(_session_icon.with_icons(weeks)),
                                   'phase_summary': _phase_summary(weeks, current.get('goal')),
                                   **_lane_phase_summary(weeks, current.get('goal'))}}
     return jsonify({'saved': True, 'revision': revision,

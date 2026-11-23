@@ -171,6 +171,24 @@ it:
 The exercise comes from **this package's** `exercises.yaml` only, filtered by the athlete's
 level, equipment and injuries. A slot nothing fits is left empty with the reason.
 
+**Write a session so it can be drawn.** The apps show a session as blocks — what opens it,
+what repeats in rounds or every minute, the rests, what closes it — read from the slots,
+never from the notes:
+
+- Movements done together in rounds are **one piece**: the first movement's slot is the
+  `for_time`, `rounds_for_time`, `amrap` or `emom` slot and carries `rounds`, the minutes
+  and the `rest_sec` between rounds; every other movement is an `amrap_movement` slot
+  directly after it with `parent_slot_role` naming it. Each says its own `reps_per_round`,
+  or a `rep_scheme` when the count changes round by round (a ladder `[1, 2, 3, 4, 5]`, a
+  pyramid `[3, 4, 5, 4, 3]`).
+- Say where a slot sits with `stage`: `prep` (a warm-up), `main`, `finisher`, `cooldown`.
+  Without it the slot's role is read (`warm_up`, `cool_down`, `…_finisher`), else it is
+  main work.
+- Slots done as a superset or with alternating sets share a
+  `group: {id: <any id>, kind: superset | alternate}`.
+- Keep `load` to what is lifted ("heavy bell, about your 5-rep press") and `notes` to how
+  to do the movement. Rounds, rests and "every minute" belong in the fields above.
+
 **`exercises.yaml`** — `exercises:` a list; each requires `id`, `name`, `category`,
 `modality` (a list), `equipment` (a list; `none` or `open_space` for nothing), `effort`.
 Also `movement_patterns` (what slot filters and injury flags match on), `contraindicated_with`

@@ -165,6 +165,20 @@ final class MethodBuilderTests: XCTestCase {
                        "The method could not be deleted. Try again.")
     }
 
+    func testARenameTidiesTheNameAndSaysWhyItWasRefused() throws {
+        XCTAssertEqual(MethodBuildWords.cleanName("  Stone   days \n"), "Stone days")
+        XCTAssertNil(MethodBuildWords.cleanName("   "))
+        XCTAssertNil(MethodBuildWords.cleanName(String(repeating: "x", count: MethodBuildWords.nameMax + 1)))
+        let body = try JSONSerialization.jsonObject(with: MethodBuildWords.renameBody("Stone days")) as? [String: String]
+        XCTAssertEqual(body, ["name": "Stone days"])
+        XCTAssertNil(MethodBuildWords.renameRefusal(status: 200, body: Data("{}".utf8)))
+        XCTAssertEqual(MethodBuildWords.renameRefusal(
+            status: 422, body: Data(#"{"error": "invalid_edit", "problems": [{"message": "the method: a name is 1 to 80 characters"}]}"#.utf8)),
+            "the method: a name is 1 to 80 characters")
+        XCTAssertEqual(MethodBuildWords.renameRefusal(status: 404, body: Data()), "This method is no longer among yours.")
+        XCTAssertEqual(MethodBuildWords.renameRefusal(status: 503, body: Data()), "The method could not be renamed. Try again.")
+    }
+
     func testADebugLaunchNamesItsScreen() {
         XCTAssertEqual(MethodRoute.describe(revises: nil).id, "describe:")
         XCTAssertNotEqual(MethodRoute.describe(revises: "a").id, MethodRoute.build("a").id)
