@@ -2553,6 +2553,8 @@ export interface DescribedSession {
   note: string | null
   equipment: string[]
   slots: DescribedSlot[]
+  /** Its workout icon (src/session_icon.py); null or absent draws the modality's. */
+  icon?: string | null
   /** The slots as blocks. Absent from an older server. */
   blocks?: SessionBlock[]
 }

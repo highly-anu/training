@@ -10,12 +10,11 @@ import { usePhilosophyCompare } from '@/api/philosophyCompare'
 import { useBuilderStore } from '@/store/builderStore'
 import { ErrorBanner } from '@/components/shared/ErrorBanner'
 import { LoadingState } from '@/components/shared/states/LoadingState'
-import { modalityHex, modalityLabel } from '@/lib/modalityColors'
-import { philosophyHex } from '@/lib/exploreColors'
+import { modalityLabel } from '@/lib/modalityColors'
+import { ModalityMark } from '@/components/shared/ModalityMark'
 import { cn } from '@/lib/utils'
 import type { CompareGlance, CompareRow, CompareSplit, CompareStandard, PhilosophyCompare } from '@/api/types'
 import { IntensityBar, LevelPips, MixLegend, ModalityGlyph, PhaseBar } from '../philosophy/Glance'
-import { ModalityMix } from '../philosophy/ModalityMix'
 import { ForYouSection } from './ForYouSection'
 import { Cell, Row, SectionTitle, WideLine } from './CompareGrid'
 import { MAX_COMPARE, gridStyle, nearestTo } from './compareIds'
@@ -23,9 +22,9 @@ import { MAX_COMPARE, gridStyle, nearestTo } from './compareIds'
 const range = (r: { min: number; ideal: number } | null, unit = '') =>
   !r ? '—' : r.min === r.ideal ? `${r.ideal}${unit}` : `${r.min}–${r.ideal}${unit}`
 
-function Chip({ children, hex, title }: { children: React.ReactNode; hex?: string; title?: string }) {
+function Chip({ children, title }: { children: React.ReactNode; title?: string }) {
   return (
-    <span title={title} style={hex ? { borderLeftColor: hex, borderLeftWidth: 2 } : undefined}
+    <span title={title}
       className="inline-flex max-w-full items-center gap-1 rounded-full border border-border/50 bg-card/60 px-2 py-0.5 text-[11px] text-muted-foreground">
       {children}
     </span>
@@ -67,7 +66,7 @@ function SharedLine<T>({ items, render, keyOf, n }: {
 }
 
 const standardChip = (s: CompareStandard) => (
-  <Chip hex={modalityHex(s.domain)} title={s.name}>
+  <Chip title={s.name}>
     <ModalityGlyph modality={s.domain} className="size-3" />
     <span className="truncate">{s.name.replace(/ \(.*\)$/, '')}</span>
     {(s.tested || (s.testedBy?.length ?? 0) > 0) && <FlaskConical className="size-3" aria-label="tested" />}
@@ -80,9 +79,9 @@ function ColumnHead({ g, trackId, onTrack, onRemove, onOpen, onBuild }: {
   onRemove?: () => void; onOpen: () => void; onBuild?: () => void
 }) {
   return (
-    <div className="min-w-0 space-y-1.5 rounded-md border border-border/50 bg-card/60 p-2"
-      style={{ borderTopColor: philosophyHex(g.bias), borderTopWidth: 2 }}>
-      <div className="flex items-start gap-1">
+    <div className="min-w-0 space-y-1.5 rounded-md border border-border/50 bg-card/60 p-2">
+      <div className="flex items-start gap-1.5">
+        <ModalityMark modality={g.accent ?? g.bias[0]} className="mt-0.5" />
         <button type="button" onClick={onOpen} className="min-w-0 flex-1 text-left text-xs font-semibold leading-snug hover:text-primary">
           {g.name}
         </button>
@@ -225,19 +224,16 @@ export function ComparePage({ ids, onChange, onOpen, onBack }: {
             <SectionTitle>Shape</SectionTitle>
             <Row label="Fingerprint" same={doc.same.mix} hidden={hide('mix')}>
               {cols.map((g) => (
-                <Cell key={g.id} className="space-y-1.5">
-                  <ModalityMix mix={g.mix} legend={false} />
-                  <MixLegend mix={g.mix} />
-                </Cell>
+                <Cell key={g.id}><MixLegend mix={g.mix} /></Cell>
               ))}
             </Row>
             {!onlyDiff && <SharedLine n={n} items={doc.bias.shared} keyOf={(m) => m}
-              render={(m) => <Chip hex={modalityHex(m)}><ModalityGlyph modality={m} className="size-3" />{modalityLabel(m)}</Chip>} />}
+              render={(m) => <Chip><ModalityGlyph modality={m} className="size-3" />{modalityLabel(m)}</Chip>} />}
             <Row label="Leans toward">
               {cols.map((g) => (
                 <Cell key={g.id}>
                   <SplitCell split={doc.bias} id={g.id} names={names} keyOf={(m) => m}
-                    render={(m) => <Chip hex={modalityHex(m)}><ModalityGlyph modality={m} className="size-3" />{modalityLabel(m)}</Chip>} />
+                    render={(m) => <Chip><ModalityGlyph modality={m} className="size-3" />{modalityLabel(m)}</Chip>} />
                 </Cell>
               ))}
             </Row>

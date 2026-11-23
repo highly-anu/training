@@ -13,6 +13,8 @@ interface SimilarItemsProps {
   onCompare?: (id: string) => void   // set this item and that one side by side
   count?: number
   accentHex?: string
+  /** Under a heading of its own: leave the "Similar" label out. */
+  bare?: boolean
 }
 
 function ScoreBar({ value, hex }: { value: number; hex?: string }) {
@@ -23,7 +25,7 @@ function ScoreBar({ value, hex }: { value: number; hex?: string }) {
   )
 }
 
-export function SimilarItems({ category, id, getLabel, onSelect, onCompare, count = 5, accentHex }: SimilarItemsProps) {
+export function SimilarItems({ category, id, getLabel, onSelect, onCompare, count = 5, accentHex, bare = false }: SimilarItemsProps) {
   const { data: matrix, isLoading } = useSimilarity()
 
   if (isLoading) return (
@@ -42,7 +44,7 @@ export function SimilarItems({ category, id, getLabel, onSelect, onCompare, coun
 
   return (
     <div className="space-y-1.5">
-      <p className="text-[9px] uppercase tracking-wider text-muted-foreground/40 font-medium">Similar</p>
+      {!bare && <p className="text-[9px] uppercase tracking-wider text-muted-foreground/40 font-medium">Similar</p>}
       {similar.map((item) => (
         <div key={item.id} className="flex items-stretch gap-1">
         <button

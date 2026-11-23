@@ -24,7 +24,7 @@ function Chip({ children, hex }: { children: React.ReactNode; hex?: string }) {
  * scope, expectation, stall rule, standards and notes.
  */
 export function ProgressSpecRow({ entry, vocab, accentHex, defaultOpen = false }: {
-  entry: ProgressSpecEntry; vocab: PrimitiveVocabulary | undefined; accentHex: string; defaultOpen?: boolean
+  entry: ProgressSpecEntry; vocab: PrimitiveVocabulary | undefined; accentHex?: string; defaultOpen?: boolean
 }) {
   const [open, setOpen] = useState(defaultOpen)
   const { scope } = entry
@@ -44,7 +44,10 @@ export function ProgressSpecRow({ entry, vocab, accentHex, defaultOpen = false }
           : <ChevronRight className="size-3.5 mt-0.5 shrink-0 text-muted-foreground/60" />}
         <div className="flex-1 min-w-0 space-y-0.5">
           <div className="flex items-center gap-1.5 flex-wrap">
-            {entry.headline && <Star className="size-3 shrink-0" style={{ color: accentHex }} fill={accentHex} aria-label="headline signal" />}
+            {entry.headline && (
+              <Star className={cn('size-3 shrink-0', !accentHex && 'text-primary')} style={accentHex ? { color: accentHex } : undefined}
+                fill="currentColor" aria-label="headline signal" />
+            )}
             <span className="text-[11px] font-medium text-foreground">{entry.label}</span>
             <Chip hex={accentHex}>{vocab?.label ?? entry.primitive.replace(/_/g, ' ')}</Chip>
             {entry.source === 'default' && <span className="text-[9px] text-muted-foreground/60 font-mono">default</span>}

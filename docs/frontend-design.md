@@ -164,6 +164,8 @@ whole contract, and each gets its module and its check in the phase that lands i
 | Hue is data, and it has a name | `lib/dataColors.ts` beside the modality, phase, zone and movement modules (§8.12) | `designRules` — no hex literal in a component |
 | A chart reads its numbers | `components/shared/ChartFrame.tsx`, `lib/chartSummary.ts` (§12.11) | `chartSummary.test.ts`; `designRules` — no Recharts container outside `ChartFrame`, no frame without a label |
 | The page can be skipped to and has one name | the skip link and `main#main` in `RootLayout`; `PageHeader`'s `h1` | `designRules`; `eslint-plugin-jsx-a11y` (recommended) in `npm run lint` |
+| In Explore a modality is an icon in its colour, never a surface | `components/shared/ModalityMark.tsx` (§8.1, §13.7) | `ModalityMark.test.tsx`; `designRules` — no `modalityHex(` under `explore/philosophy`, `explore/compare` or `sessions` but a block's `accent` |
+| A method's sessions are browsed in one component | `components/sessions/SessionBrowser.tsx`, `lib/sessionBrowser.ts` (§13.13) | `sessionBrowser.test.ts`, `SessionBrowser.test.tsx` on `mocks/fixtures/philosophy-describe.json`, which `test_explore_philosophy.py` holds to the server |
 | A workout is drawn in blocks | `components/blocks/WorkoutBlocks.tsx`, `lib/blocks.ts` (§13.12); the server's `blocks` (`src/session_blocks.py`) | `WorkoutBlocks.test.tsx` on `mocks/fixtures/blocks.json`, which `test_session_blocks.py` writes |
 
 **Adding a rule.** Put it in one module, convert every call site in the same change, add
@@ -779,6 +781,16 @@ There are now **six** of them, each owning one axis of meaning. Two colors may l
 ### 8.1 Modality Colors
 
 Training modalities are color-coded consistently everywhere: badges, session card top bars, chart series, drag ghost indicators.
+
+**In Explore's philosophy pages the colour is on an icon and nowhere else** (since
+2026-11-23). `components/shared/ModalityMark.tsx` draws what kind of training something
+is — a session's own workout icon when it has one (§15.4), else the modality's lucide
+icon, a flask for a test — tinted with the modality's `hex` and named with its label;
+`tile` sets it on a neutral `bg-muted/60` square where it leads a card or a header. The
+philosophy page, its landing cards, Compare and the session browser use it instead of
+left borders, top stripes, tinted tags and fills, which had made every surface of the
+page a modality colour and none of them legible. What stays coloured there is data whose
+colour is the datum: the heart-rate zone bar, the phase-kind bar, a block's rail.
 
 The `hex` field is the source of truth for anything that isn't a Tailwind class — chart fills, SVG strokes, inline `style` color bars — and is mirrored into the iOS and watchOS apps (§8.9).
 
@@ -2338,7 +2350,7 @@ Active state: primary-tinted background + primary text. Inactive: muted text tha
 - **Centered column:** `max-w-2xl mx-auto` keeps content readable, not stretched
 - **Generous top padding:** `py-12` gives breathing room
 - **Hierarchical spacing:** Small gaps within sections (`space-y-3`), larger between sections (`space-y-10`)
-- **Color-coded borders:** `borderLeftColor: item.color, borderLeftWidth: 2` — semantic color shows category/type at a glance
+- **Color-coded borders:** `borderLeftColor: item.color, borderLeftWidth: 2` — semantic color shows category/type at a glance (the philosophies' landing leads each card with a `ModalityMark` tile instead, §13.7)
 - **Hover feedback:** `hover:-translate-y-px hover:shadow-md` — lift on hover confirms interactivity
 - **Metadata line:** `text-[10px] text-muted-foreground/60` — shows count or secondary info without competing with title
 
@@ -2363,59 +2375,50 @@ Active state: primary-tinted background + primary text. Inactive: muted text tha
 keys for every philosophy, numbers and ids rather than prose, so two can be set
 side by side. Nothing is computed in the browser.
 
-**Glance first, words on demand — in place.** What greets the reader is marks,
-not text; every paragraph is one tap away (§1.4), and it opens right under what
-was tapped (`InlinePanel`), never in a drawer at the screen's edge, so the eye
-stays in the centre column. The tapped card or tile stays highlighted, a second
-tap or the panel's × closes it, and the panel scrolls itself into view only as
-far as it must.
+**A hero, then one thing at a time** (since 2026-11-23). The page was one scroll —
+header tiles, mix bars, the track carousel, session tiles, goals, requirements, the
+method, lineage — and everything competed. It is now a hero and four sections behind a
+`SubTabs` row, and the URL says which: `?topic=philosophies&id=<id>&view=overview|program|
+sessions|method&session=<archetype id>` (`philosophy/views.ts` `parseView`; `pages/Explore.tsx`
+writes it with replace, so Back still leaves the page; a `session` alone means Sessions).
+Words stay on demand and open in place (`InlinePanel`, `Collapse`), never in a drawer.
 
-1. **Header** — the bias modalities' icons, the name, *About* (the summary,
-   models and borrows, opening inside the header) and *Build a program*; six
-   `StatTile`s — weeks, days a week, minutes a session, level pips, equipment,
-   tracks · phases; the fingerprint (`ModalityMix`, the main track's sessions a
-   week by modality, weighted by phase weeks) with its `MixLegend` (modality
-   icon + ×/wk) and the easy → hard `IntensityBar`.
-2. **Tracks & phases** (`PhilosophyTracks`) — one card a track, flipped through
-   (a scroll-snap strip: the track's name chip, the arrows or a swipe; the next
-   card shows at the edge; it opens on the main track). A card is the whole
-   track, nothing behind a button: name, who it is for, `LevelPips`, weeks,
-   days, minutes, tests, mix, the `PhaseBar` on a scale shared by all tracks,
-   the track's description in two lines (*About this track* opens the rest:
-   what it needs, its notes), then its phases
-   as cards: the kind's colour, weeks, the `WeekGlyph` (a template's seven days
-   split by modality, rest dashed; else one dot per weekly session), the
-   intensity bar, days, minutes and tests as icons. A phase card opens the
-   phase under them, inside the track's card: the full week (`PhaseWeek`),
-   description, what it builds, how hard, tests.
-3. **Sessions** — straight after the tracks, since they are what the athlete will
-   do: one tile per group (template category, contract module, modality, tests) with
-   the modality icon and a count; a tile opens the group's sessions under the tiles.
-   A session is a card — name, minutes and its `BlockStrip` — that opens to its
-   blocks (§13.12); levels, equipment, *About this session* and *Open as an
-   archetype* close it.
-4. **Goals** — what the main track builds (chips) and *progress is …* with the
-   standards it is measured by (chips in their modality's colour, a flask on
-   the ones a phase tests); a standard, or *How progress is measured*, opens the
-   measures card under Goals and Requirements. **Requirements** — equipment chips
-   (*+N* shows the rest in place), a chip a track that expects movements you own
-   (it opens their names), borrows.
-5. **The method** — tiles: rules from the source, sources, app decisions, not
-   modelled yet; each opens its list under the tiles.
-6. Lineage (§13.8) and similar philosophies.
+- **Hero** (`PhilosophyHero.tsx`) — a `ModalityMark` tile, the name (an `h2`), two lines
+  of the summary (*More about it* opens the rest: models, borrows), and one line of facts
+  with no boxes: weeks · days a week · minutes · tracks and phases · `LevelPips`. Two
+  actions: *Build a program* and *Compare with…*.
+- **Overview** (`OverviewTab.tsx`) — four plain cards (`rounded-xl border bg-card p-5`, a
+  quiet uppercase label): *The week* (the main track's modalities as rows — mark, name,
+  × a week — and the easy → hard bar with its legend), *What it builds* (goals, *progress
+  is …*, the standards with a flask on the tested ones, *How progress is measured* opening
+  the measures card under the row), *What you need* (equipment, what each track expects
+  you to own, borrows), *Most alike*; then the lineage (§13.8).
+- **Program** (`PhilosophyTracks`) — one card a track, flipped through (a scroll-snap
+  strip: the track's name chip, the arrows or a swipe; it opens on the main track). A
+  card is the whole track: name, who it is for, `LevelPips`, weeks, days, minutes, tests,
+  the mix as icons, the `PhaseBar` on a scale all tracks share, its description, then its
+  phases as cards — the kind's colour, weeks, the `WeekGlyph` (the week's shape, neutral:
+  a template's seven days filled or outlined, else a dot a session), the mix as icons,
+  the intensity bar. A phase card opens the phase under them: the full week (`PhaseWeek`,
+  each day's piece and each module led by its mark), description, what it builds, how
+  hard, tests. A contract module whose session the package writes links to it — *See the
+  session* opens it in the browser (`sessionLink.ts`).
+- **Sessions** — the session browser (§13.13) over the document's `groups` and `sessions`.
+- **Method** — tiles: rules from the source, sources, app decisions, not modelled yet;
+  each opens its list under the tiles, the rules open on arrival.
 
 An athlete's own method (`own` on the philosophy, the glance and the describe
 document) wears a *Yours* badge beside its name, here and on its landing card; on the
 landing the athlete's methods lead under *Your methods* and the heading counts the
-shipped philosophies alone. A landing card shows the method's modality mix as a strip
-under its name.
+shipped philosophies alone.
 
-**Editing your own method.** For an own method the header adds *Edit*, *Rename* and
-*Revise* (`canEdit`: the builder is on for the account). *Rename* is
+**Editing your own method.** For an own method the hero adds one "…" menu — *Edit
+words*, *Rename*, *Revise* (`canEdit`: the builder is on for the account) — and, while
+editing, a *Done editing* button in its place. *Rename* is
 `components/methods/RenameMethodDialog.tsx`, the same dialog the builder's method card
 opens. *Edit* is a switch: while it is on, each piece of the method's text —
-its summary, a track's name and description, a session's name and notes, a movement's
-note — is an `EditableText` (`components/methods/MethodEdit.tsx`) with a pencil that
+its summary (in the hero), a track's name and description, and in the session browser's
+open session its name, notes and a movement's note — is an `EditableText` (`components/methods/MethodEdit.tsx`) with a pencil that
 opens a field in place; Save writes that one field at once through
 `PATCH /api/methods/<id>` (no build) and the page reads itself again. Numbers and
 structure are never fields: the line under the header says they change with Revise.
@@ -2424,10 +2427,10 @@ A refusal is the server's sentence, beside the field.
 The archetype detail leads with the session's blocks (§13.12); phases, levels,
 equipment, scaling and sources follow, then the lineage.
 
-The landing keeps §13.6's outline and card like every other Explore landing:
-the philosophy's colour as the left border, the name, a metadata line (tracks ·
-phases · weeks) and the Frameworks cards' chips (sessions a week, minutes, the
-level range in the philosophy's colour), read from the same `glance`.
+The landing keeps §13.6's outline; its card is neutral (`rounded-xl border bg-card`) and
+leads with the philosophy's `ModalityMark` tile, then the name, one mono line (sessions a
+week · minutes · weeks · tracks or phases), the mix as icons (`MixLegend`) and the
+`LevelPips`, read from the same `glance`.
 
 **Key patterns:**
 - **One glance vocabulary** (`Glance.tsx`): `LevelPips`, `StatTile` (with `active`),
@@ -2435,8 +2438,9 @@ level range in the philosophy's colour), read from the same `glance`.
   `ModalityGlyph` (`lib/modalityIcons.ts`, the lucide counterparts of the
   phone's `ModalityStyle.icon`), `MixLegend`, `WeekGlyph`, `PhaseBar`,
   `IntensityBar`. A comparison view reuses them as they are.
-- **Colour only on its axis** — modality (§8.1), phase kind (§8.2), heart-rate
-  zone (§8.7); surfaces neutral; levels uncoloured.
+- **A modality is its mark** — `ModalityMark` (§8.1) beside the name; no border, stripe,
+  fill or tag in its colour. Phase kind (§8.2) and heart-rate zone (§8.7) keep their
+  bars; surfaces neutral; levels uncoloured. `designRules` holds it.
 - **A card is a `<button>` with `items-stretch`**: Chrome's button sets
   `align-items: flex-start`, which shrank the bars and let titles overflow.
 
@@ -2445,7 +2449,8 @@ level range in the philosophy's colour), read from the same `glance`.
 **Use case:** every Explore detail says what leads into it and what follows
 from it, one level each way: Philosophy → Framework → Modality → Archetype →
 Exercise → Movement (`components/explore/LineageSection.tsx`, fed by
-`lib/exploreLinks.lineageOf` over `GET /api/explore/links`).
+`lib/exploreLinks.lineageOf` over `GET /api/explore/links`). A pill is neutral — its
+level's icon and its name; the coloured left border it had is gone (2026-11-23).
 
 ```tsx
 <LineageSection
@@ -2613,6 +2618,37 @@ sessions, the archetype detail and the session panel.
 Colour is the modality's, on the rail and the main work's mark only. A component never
 words a prescription: a new wording is a change to `session_blocks.py` and its test.
 
+### 13.13 Session Browser
+
+**Use case:** every session a method writes, browsed in one place
+(`components/sessions/SessionBrowser.tsx`, model `lib/sessionBrowser.ts`). It lives on
+each philosophy's Sessions tab (§13.7) and knows nothing of Explore, so it can be mounted
+wherever a set of described sessions is at hand (`DescribedSessionGroup[]` +
+`Record<id, DescribedSession>`, the describe document's shapes).
+
+- **List and detail.** From `lg` up, one card split in two that scroll on their own: the
+  list (19 rem) and the session picked. Nothing picked shows the first of the list.
+- **Toolbar.** `SearchField` (`components/shared/SearchField.tsx`, the Exercises list's
+  too) over names, groups, movements and their exercises — every word must be found, the
+  list a beat behind the typing (`useDeferredValue`); level pills, only for levels that
+  tell sessions apart; group pills, only for groups that hold several; the count
+  (`12 of 196`). Nothing found is an `EmptyState` with *Clear*.
+- **The list** keeps the server's order — a template's categories as the source runs
+  them, a contract's modules, the rest by modality, tests last — under sticky group
+  headings with a count (*opens a day* on the warm-up group). A group of one takes no
+  heading: its name sits under the session's where they differ. A row is a `<button>`:
+  `ModalityMark` (the session's `icon`, a flask for a test), name, minutes; the open one
+  is `aria-current` on `bg-muted`. ↑ and ↓ move through the list.
+- **The session** (`SessionDetail`) reads like Today's card: the mark on a tile, the
+  name, one muted line (modality · minutes · levels), what it needs, the group's advice,
+  its `BlockStrip`, then its blocks (§13.12) exactly as everywhere else, its note, and
+  the caller's footer (*Open as an archetype*).
+- **Narrow.** Below `lg` (`lib/useMediaQuery.ts`) the list stands alone and a session
+  opens in a right `Sheet`; closing it lets the selection go.
+- **The caller owns** the selection (`selectedId` / `onSelect` — the philosophy page
+  keeps it in `?session=`), where a movement leads (`onExercise`), the footer, and the
+  fields of a method being edited (`editing`: `name`, `note`, `slotNote` render-props).
+
 ## 14. Responsive Design
 
 ### 14.1 Breakpoint Usage
@@ -2714,7 +2750,10 @@ generated into `workoutIcons.generated.ts` by `tools/icons/gen_workout_icons.py`
 (`--check` fails when it is stale), the same shapes the phone, both watches and
 the widgets draw. Today there is one, `kettlebell`. A session without an icon
 draws none and its `ModalityBadge` carries the rest; the badge stays on every
-card either way, never as the header. In Log ▸ Linking a linked workout shows
+card either way, never as the header. Where there is no badge — Explore's philosophy
+pages and the session browser — `ModalityMark` (§8.1) draws the modality's own icon in
+its place, so every session has a mark; the describe document carries each session's
+`icon` (`session_icon.for_archetype_record`). In Log ▸ Linking a linked workout shows
 its session's icon. In the week overview's narrow columns the icon sits on its
 own row above the name.
 

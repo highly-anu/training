@@ -1,20 +1,13 @@
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import type { DescribedItem, DescribedModule, DescribedTemplateDay, DescribedWeek } from '@/api/types'
 import { SessionsPerWeekRows } from '@/components/explore/SessionsPerWeekRows'
 import { useExploreNavigate } from '@/components/explore/topics'
 import { cn } from '@/lib/utils'
-import { Advice } from './Advice'
-import { modalityHex, modalityLabel } from '@/lib/modalityColors'
-
-/** A stripe in the colours of what the session holds, like a calendar card's. */
-function Stripe({ modalities }: { modalities: (string | null)[] }) {
-  return (
-    <div className="flex h-1 w-full">
-      {modalities.map((m, i) => <div key={i} className="flex-1" style={{ backgroundColor: modalityHex(m) }} />)}
-    </div>
-  )
-}
+import { Advice } from '@/components/shared/Advice'
+import { ModalityMark } from '@/components/shared/ModalityMark'
+import { modalityLabel } from '@/lib/modalityColors'
+import { useSessionLink } from './sessionLink'
 
 function TemplateDay({ day }: { day: DescribedTemplateDay }) {
   if (day.rest) {
@@ -27,11 +20,13 @@ function TemplateDay({ day }: { day: DescribedTemplateDay }) {
   }
   return (
     <div className="rounded-md border border-border/50 bg-card/60 overflow-hidden min-h-16">
-      <Stripe modalities={day.pieces.map((p) => p.modality)} />
       <div className="px-2 py-1.5 space-y-1">
         <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{day.day.slice(0, 3)}</p>
         {day.pieces.map((p) => (
-          <p key={p.category} className="text-[11px] font-medium leading-tight" title={modalityLabel(p.modality)}>{p.name}</p>
+          <p key={p.category} className="flex items-start gap-1 text-[11px] font-medium leading-tight" title={modalityLabel(p.modality)}>
+            <ModalityMark modality={p.modality} className="mt-px size-3" />
+            <span className="min-w-0">{p.name}</span>
+          </p>
         ))}
         <div className="flex flex-wrap gap-1">
           {day.warmUp && <span className="text-[9px] text-muted-foreground">+ warm-up</span>}
@@ -105,18 +100,20 @@ const perWeekText = (m: DescribedModule) => {
 function ModuleCard({ module: m }: { module: DescribedModule }) {
   const [variant, setVariant] = useState(0)
   const v = m.variants[Math.min(variant, m.variants.length - 1)]
+  const sessions = useSessionLink()
+  const sessionId = [v?.archetype, m.archetype].find((id) => id && sessions?.has(id))
   return (
     <div className={cn('rounded-md border bg-card/60 overflow-hidden', m.optional || m.whenMastered ? 'border-dashed border-border/60' : 'border-border/50')}>
-      <Stripe modalities={[m.modality]} />
-      <div className="px-3 py-2 space-y-1.5">
-        <div className="flex items-baseline justify-between gap-2 flex-wrap">
-          <p className="text-xs font-semibold">{m.name}</p>
+      <div className="px-3 py-2.5 space-y-1.5">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <p className="flex min-w-0 items-center gap-1.5 text-xs font-semibold">
+            <ModalityMark modality={m.modality} />
+            <span className="truncate">{m.name}</span>
+          </p>
           <span className="text-[10px] font-mono text-muted-foreground">{perWeekText(m)}</span>
         </div>
         <div className="flex flex-wrap gap-1 text-[9px]">
-          <span className="rounded px-1 py-0.5" style={{ color: modalityHex(m.modality), backgroundColor: `${modalityHex(m.modality)}18` }}>
-            {modalityLabel(m.modality)}
-          </span>
+          <span className="rounded bg-muted px-1 py-0.5 text-muted-foreground">{modalityLabel(m.modality)}</span>
           {m.optional && <span className="rounded bg-muted px-1 py-0.5 text-muted-foreground">optional</span>}
           {m.whenMastered && (
             <span className="rounded bg-muted px-1 py-0.5 text-muted-foreground">once {m.requires.join(', ') || 'mastered'} is confirmed</span>
@@ -147,6 +144,12 @@ function ModuleCard({ module: m }: { module: DescribedModule }) {
         )}
         {m.items.length > 0 && <Items items={m.items} />}
         <Advice advice={m.advice} byLevel={m.adviceByLevel} className="text-[10px]" />
+        {sessions && sessionId && (
+          <button type="button" onClick={() => sessions.open(sessionId)}
+            className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground">
+            See the session <ArrowRight className="size-3" />
+          </button>
+        )}
       </div>
     </div>
   )
