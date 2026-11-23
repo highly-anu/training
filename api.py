@@ -36,6 +36,7 @@ from src.analytics import benchmarks_data as _bd
 from src import goals, loader, provenance
 from src import blockers as _blockers
 from src import session_icon as _session_icon
+from src import session_blocks as _session_blocks
 from src import phases
 from src.phases import PhaseResolutionError
 from src.similarity import compute_all_similarities
@@ -764,7 +765,7 @@ def _transform_program(raw: dict, goal: dict, constraints: dict, validation) -> 
         },
         # Each session's workout icon (src/session_icon.py); derived on read,
         # never stored.
-        'weeks':          _session_icon.with_icons(weeks),
+        'weeks':          _session_blocks.with_blocks(_session_icon.with_icons(weeks)),
         'volume_summary': volume_summary,
         'phase_summary':  _phase_summary(weeks, goal),
         **_lane_phase_summary(weeks, goal),
@@ -1017,7 +1018,10 @@ def describe_philosophy(philosophy_id):
 @app.get('/api/archetypes')
 @static_json
 def get_archetypes():
-    return jsonify(sorted(loader.load_all_archetypes(), key=lambda a: a.get('id', '')))
+    # Each with its `blocks` (src/session_blocks.py): the slots grouped into
+    # what opens the session, what repeats and what closes it.
+    return jsonify([{**a, 'blocks': _session_blocks.for_archetype(a)}
+                    for a in sorted(loader.load_all_archetypes(), key=lambda a: a.get('id', ''))])
 
 
 @app.get('/api/ontology')
@@ -2767,16 +2771,19 @@ def _generate_session_inner(body):
 
     arch = populated.get('archetype', {})
     icon = _session_icon.session_icon(populated)
+    cleaned = [_clean_exercise_assignment(ea) for ea in populated.get('exercises', [])]
+    blocks = _session_blocks.for_session({'archetype': arch, 'exercises': cleaned})
     return jsonify({
         'modality':  modality,
         'archetype': arch,
         **({'icon': icon} if icon else {}),
+        **({'blocks': blocks} if blocks else {}),
         # An extra: counted only once done (analytics.context.Context.sessions).
         **({'added': True, 'provenance': _added_provenance(arch)} if add else {}),
         'is_deload': is_deload,
         **{k: populated[k] for k in ('category', 'category_name', 'pieces', 'warm_up') if populated.get(k)},
         'duration_min': arch.get('duration_estimate_minutes') if arch else None,
-        'exercises': [_clean_exercise_assignment(ea) for ea in populated.get('exercises', [])],
+        'exercises': cleaned,
     })
 
 
@@ -3849,7 +3856,7 @@ def get_user_program_endpoint():
             current = program.get('currentProgram')
             if isinstance(current, dict) and current.get('weeks'):
                 program['currentProgram'] = {
-                    **current, 'weeks': _session_icon.with_icons(current['weeks']),
+                    **current, 'weeks': _session_blocks.with_blocks(_session_icon.with_icons(current['weeks'])),
                     'phase_summary': _phase_summary(current['weeks'], current.get('goal')),
                     **_lane_phase_summary(current['weeks'], current.get('goal'))}
         return jsonify(program)
@@ -4300,7 +4307,7 @@ def adjust_program():
     revision = get_program_revision(user_id)
     history = _record_program_history(user_id, envelope, 'adjust', revision)
     program = {**envelope, 'revision': revision, 'programVersionId': history.get('versionId'),
-               'currentProgram': {**current, 'weeks': _session_icon.with_icons(weeks),
+               'currentProgram': {**current, 'weeks': _session_blocks.with_blocks(_session_icon.with_icons(weeks)),
                                   'phase_summary': _phase_summary(weeks, current.get('goal')),
                                   **_lane_phase_summary(weeks, current.get('goal'))}}
     return jsonify({'saved': True, 'revision': revision,

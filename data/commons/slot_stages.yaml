@@ -1,0 +1,49 @@
+# Where in a session a slot sits (src/session_blocks.py): the start, the main
+# work, a finisher, the cool-down. A slot says so itself with `stage`; one
+# that does not is read by its role, through these patterns (fnmatch, first
+# stage that matches, in the order below), else it is main work.
+#
+# Three lists kept this apart before: the web's MetaSlot (`warm_up`,
+# `cool_down`), its week overview (`warm_up`, `cooldown`, `joint_prep`) and
+# the roles the packages write (`warm_up` 23, `prep` 9, `warmup` 4, `cool_down`
+# 13, `cooldown` 6 …).
+
+stages: [prep, main, finisher, cooldown]
+
+roles:
+  prep:
+    - warm_up
+    - warm_up_*
+    - "*_warm_up"
+    - warmup
+    - warmup_*
+    - "*_warmup"
+    - prep
+    - prep_*
+    - "*_prep"
+    - joint_mobility
+    - mobilizations
+    - activation
+    - "*_activation"
+    - primer
+  cooldown:
+    - cool_down
+    - cool_down_*
+    - "*_cool_down"
+    - cooldown
+    - cooldown_*
+    - "*_cooldown"
+    - recovery
+    - "*_stretch"
+  finisher:
+    - finisher
+    - finisher_*
+    - "*_finisher"
+    - "*_finish"
+
+# Each stage in a reader's words.
+labels:
+  prep: Start
+  main: Main work
+  finisher: Finisher
+  cooldown: Cool-down

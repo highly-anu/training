@@ -339,6 +339,25 @@ class RealDataTests(unittest.TestCase):
             self.assertEqual(len(doc['rules']), len((rec or {}).get('rules') or []), pid)
 
 
+class BlockTests(unittest.TestCase):
+    """Each described session carries its slots as blocks (src/session_blocks.py)."""
+
+    def test_every_session_has_its_slots_in_blocks(self):
+        for phil in loader.load_philosophies():
+            pid = phil['id']
+            doc = ep.describe(pid)
+            for sid, session in doc['sessions'].items():
+                roles = [r for b in session['blocks'] for r in b['roles']]
+                self.assertEqual(roles, [s['role'] for s in session['slots']], (pid, sid))
+
+    def test_a_piece_names_its_movements(self):
+        fran = ep.describe('crossfit')['sessions']['cf_fran']['blocks']
+        self.assertEqual(len(fran), 1)
+        self.assertEqual(fran[0]['headline'], '21-15-9 for time')
+        self.assertEqual([(m['name'], m['count']) for m in fran[0]['movements']],
+                         [('Thruster', '21-15-9'), ('Pull-Up Progression', '21-15-9')])
+
+
 class RouteTests(unittest.TestCase):
     def test_route(self):
         import api

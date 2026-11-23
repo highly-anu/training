@@ -248,6 +248,21 @@
             "type": "string",
             "description": "Links an amrap_movement component to the AMRAP slot it belongs to."
           },
+          "stage": {
+            "type": "string",
+            "enum": ["prep", "main", "finisher", "cooldown"],
+            "description": "Where in the session the slot sits: what opens it (prep), the main work, a finisher, the cool-down. Read by src/session_blocks.py for the clients' block view; a slot without one is read by its role (data/commons/slot_stages.yaml), else it is main work. Never read by the generator."
+          },
+          "group": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "kind"],
+            "properties": {
+              "id": { "type": "string", "description": "Shared by the slots done together." },
+              "kind": { "type": "string", "enum": ["superset", "alternate"], "description": "superset: one straight into the next, then rest. alternate: a set of one, then a set of the other." }
+            },
+            "description": "Ties slots that are done together (a superset, alternating sets) so the clients draw them as one block. Never read by the generator."
+          },
           "time_cap_sec": {
             "type": "integer",
             "description": "Time cap for an amrap/for_time slot. Read by progression._density_slot as the duration fallback."

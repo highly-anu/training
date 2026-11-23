@@ -65,6 +65,7 @@ suites:
   - test_similarity.py
   - test_program_preview.py
   - test_session_icon.py
+  - test_session_blocks.py
   # Analytics
   - test_development_analytics.py
   - test_workout_metrics.py
