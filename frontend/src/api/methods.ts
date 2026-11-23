@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { apiClient } from './client'
 import { queryKeys } from './queryKeys'
+import { useProgramStore } from '@/store/programStore'
 
 /**
  * An athlete's own methods and the builds that write them (docs/roadmap.md
@@ -106,6 +107,33 @@ export function useCancelBuild() {
     onSuccess: (build) => {
       client.setQueryData(queryKeys.methods.build(build.id), build)
       void client.invalidateQueries({ queryKey: queryKeys.methods.all })
+    },
+  })
+}
+
+/** Text edits to one's own method (src/method_edits.py): names, summaries, notes. */
+export interface MethodEdits {
+  name?: string
+  summary?: string
+  tracks?: Record<string, {
+    name?: string; description?: string
+    phases?: Record<string, { name?: string; focus?: string; description?: string }>
+  }>
+  sessions?: Record<string, { name?: string; notes?: string; slots?: Record<string, { notes?: string }> }>
+}
+
+export interface MethodEditAnswer { id: string; name: string; revision: number; changed: string[]; programRenamed: boolean }
+
+/** Renames a method or edits its words: saved at once, no build. The program
+ *  built from it takes the new names, so it is read again when it did. */
+export function useEditMethod() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, edits }: { id: string; edits: MethodEdits }) =>
+      apiClient.patch(`/methods/${encodeURIComponent(id)}`, edits) as unknown as Promise<MethodEditAnswer>,
+    onSuccess: async (answer) => {
+      await refreshAfterMethodChange(client)
+      if (answer.programRenamed) await useProgramStore.getState().loadFromServer()
     },
   })
 }

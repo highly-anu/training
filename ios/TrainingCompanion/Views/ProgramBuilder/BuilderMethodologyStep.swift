@@ -19,6 +19,8 @@ struct BuilderStep1PhilosophyView: View {
     @State private var methodRoute: MethodRoute? = nil
     @State private var deleting: PhilosophyCard? = nil
     @State private var deleteRefusal: String? = nil
+    @State private var renaming: PhilosophyCard? = nil
+    @State private var newName = ""
 
     /// The methodologies that are the athlete's own methods, and the rest.
     private var ownIds: Set<String> { Set(appState.methods?.methods.map(\.id) ?? []) }
@@ -109,6 +111,17 @@ struct BuilderStep1PhilosophyView: View {
         } message: {
             Text("The method is removed from your methods. Programs already built from it stay in Program ▸ History.")
         }
+        .alert("Rename method", isPresented: Binding(
+            get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
+            TextField("Name", text: $newName)
+            Button("Cancel", role: .cancel) { renaming = nil }
+            Button("Rename") {
+                if let method = renaming { Task { await rename(method, to: newName) } }
+            }
+            .disabled(MethodBuildWords.cleanName(newName) == nil)
+        } message: {
+            Text("Your program and its sessions keep running; only the name changes.")
+        }
     }
 
     private func load() async {
@@ -195,6 +208,25 @@ struct BuilderStep1PhilosophyView: View {
         .padding(.horizontal)
     }
 
+    /// A rename is saved at once — no build. The refusal, when there is one,
+    /// shows where a delete's does.
+    private func rename(_ method: PhilosophyCard, to text: String) async {
+        deleteRefusal = nil
+        guard let api = appState.api, let name = MethodBuildWords.cleanName(text), name != method.name else { return }
+        do {
+            if let refusal = try await api.renameMethod(method.id, to: name) {
+                deleteRefusal = refusal
+                return
+            }
+        } catch {
+            deleteRefusal = "The method could not be renamed. Check the connection and try again."
+            return
+        }
+        await appState.methodsChanged()
+        // The program's goal carries the method's name: read it again.
+        await appState.loadProgram()
+    }
+
     private func delete(_ method: PhilosophyCard) async {
         deleteRefusal = nil
         guard let api = appState.api else { return }
@@ -267,6 +299,10 @@ struct BuilderStep1PhilosophyView: View {
                             Label("Revise", systemImage: "pencil")
                         }
                     }
+                    Button {
+                        newName = philosophy.name
+                        renaming = philosophy
+                    } label: { Label("Rename", systemImage: "character.cursor.ibeam") }
                     Button(role: .destructive) { deleting = philosophy } label: {
                         Label("Delete", systemImage: "trash")
                     }

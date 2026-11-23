@@ -1,7 +1,7 @@
 import { Tip } from '@/components/shared/Tip'
 import { LoadingState, FailedState } from '@/components/shared/states'
 import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   BookOpen,
   CalendarDays,
@@ -16,13 +16,18 @@ import {
   Dumbbell,
   Library,
   Package,
+  Pencil,
   Sparkles,
   Target,
+  TextCursorInput,
   Timer,
   Wand2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { useMethods } from '@/api/methods'
+import { EditableText, MethodEditProvider } from '@/components/methods/MethodEdit'
+import { RenameMethodDialog } from '@/components/methods/RenameMethodDialog'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useSimilarity } from '@/api/similarity'
 import { nearestTo } from '@/components/explore/compare/compareIds'
@@ -185,6 +190,10 @@ export function PhilosophyPage({ id, onSelect, onCompare, onBack }: {
   const [about, setAbout] = useState(false)
   const [measures, setMeasures] = useState(false)
   const [method, setMethod] = useState<MethodPanel>(null)
+  // An athlete's own method: its words can be edited here, where they are read.
+  const { data: methods } = useMethods()
+  const [editing, setEditing] = useState(false)
+  const [renaming, setRenaming] = useState(false)
   const phil = philosophies.find((p) => p.id === id)
   const ownFrameworks = useMemo(() => frameworks.filter((f) => f.source_philosophy === id), [frameworks, id])
 
@@ -216,8 +225,11 @@ export function PhilosophyPage({ id, onSelect, onCompare, onBack }: {
   const primary = g.tracks.find((t) => t.id === g.primaryTrackId) ?? g.tracks[0]
   const phaseCount = g.tracks.reduce((n, t) => n + t.phases.length, 0)
   const toggleMethod = (m: Exclude<MethodPanel, null>) => setMethod((cur) => (cur === m ? null : m))
+  // The builder's gate is the server's; an account it is not on for is offered nothing.
+  const canEdit = Boolean(doc.own) && methods != null && methods.reason !== 'not_enabled'
 
   return (
+    <MethodEditProvider id={canEdit && editing ? doc.id : null}>
     <div className="h-full overflow-y-auto">
       <div className="mx-auto max-w-5xl space-y-7 px-4 py-4">
         {back}
@@ -236,7 +248,23 @@ export function PhilosophyPage({ id, onSelect, onCompare, onBack }: {
               <h2 className="text-lg font-semibold leading-tight">{doc.name}</h2>
               {doc.own && <Badge variant="outline" className="shrink-0">Yours</Badge>}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              {canEdit && (
+                <>
+                  <Button size="sm" variant={editing ? 'secondary' : 'outline'} aria-pressed={editing}
+                    onClick={() => { setEditing((e) => !e); if (!editing) setAbout(true) }}>
+                    <Pencil className="mr-1.5 size-3.5" /> {editing ? 'Done editing' : 'Edit'}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setRenaming(true)}>
+                    <TextCursorInput className="mr-1.5 size-3.5" /> Rename
+                  </Button>
+                  <Button size="sm" variant="outline" asChild>
+                    <Link to={`/program/new/method?revise=${encodeURIComponent(doc.id)}`}>
+                      <Sparkles className="mr-1.5 size-3.5" /> Revise
+                    </Link>
+                  </Button>
+                </>
+              )}
               <Button size="sm" variant={about ? 'secondary' : 'outline'} aria-expanded={about} onClick={() => setAbout((a) => !a)}>
                 <Info className="mr-1.5 size-3.5" /> About
               </Button>
@@ -264,10 +292,20 @@ export function PhilosophyPage({ id, onSelect, onCompare, onBack }: {
             </div>
           </div>
 
+          {canEdit && editing && (
+            <p className="text-[11px] text-muted-foreground">
+              Names and notes save as you change them, with no build. Rounds, reps, rests and sessions change with Revise.
+            </p>
+          )}
           {about && (
             <InlinePanel title="About" subtitle={doc.name} onClose={() => setAbout(false)}>
               <div className="max-w-3xl space-y-3">
-                {doc.summary && <p className="text-xs leading-relaxed text-foreground/85">{doc.summary}</p>}
+                {(doc.summary || editing) && (
+                  <p className="text-xs leading-relaxed text-foreground/85">
+                    <EditableText value={doc.summary} label="Summary" multiline placeholder="Say what this method is for"
+                      edits={(summary) => ({ summary })} />
+                  </p>
+                )}
                 {(doc.models.intensity || doc.models.progression) && (
                   <p className="text-[11px] text-muted-foreground">
                     {doc.models.intensity && <>Intensity: {doc.models.intensity.toLowerCase()}. </>}
@@ -382,5 +420,7 @@ export function PhilosophyPage({ id, onSelect, onCompare, onBack }: {
         </div>
       </div>
     </div>
+    <RenameMethodDialog method={renaming ? { id: doc.id, name: doc.name } : null} onClose={() => setRenaming(false)} />
+    </MethodEditProvider>
   )
 }

@@ -2410,6 +2410,17 @@ landing the athlete's methods lead under *Your methods* and the heading counts t
 shipped philosophies alone. A landing card shows the method's modality mix as a strip
 under its name.
 
+**Editing your own method.** For an own method the header adds *Edit*, *Rename* and
+*Revise* (`canEdit`: the builder is on for the account). *Rename* is
+`components/methods/RenameMethodDialog.tsx`, the same dialog the builder's method card
+opens. *Edit* is a switch: while it is on, each piece of the method's text —
+its summary, a track's name and description, a session's name and notes, a movement's
+note — is an `EditableText` (`components/methods/MethodEdit.tsx`) with a pencil that
+opens a field in place; Save writes that one field at once through
+`PATCH /api/methods/<id>` (no build) and the page reads itself again. Numbers and
+structure are never fields: the line under the header says they change with Revise.
+A refusal is the server's sentence, beside the field.
+
 The archetype detail leads with the session's blocks (§13.12); phases, levels,
 equipment, scaling and sources follow, then the lineage.
 

@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Pencil, Sparkles, Trash2 } from 'lucide-react'
+import { Pencil, Sparkles, TextCursorInput, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Spinner } from '@/components/ui/spinner'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { Tip } from '@/components/shared/Tip'
+import { RenameMethodDialog } from './RenameMethodDialog'
 import { isOpen, useDeleteMethod, useMethods, type Method } from '@/api/methods'
 import { buildHeadline, deleteRefusal, unavailableReason } from '@/lib/methodBuild'
 import { toast } from '@/lib/toast'
@@ -35,6 +36,7 @@ export function YourMethods({ philosophies, selectedId, onSelect, onDeleted }: {
   const { data } = useMethods()
   const remove = useDeleteMethod()
   const [deleting, setDeleting] = useState<Method | null>(null)
+  const [renaming, setRenaming] = useState<Method | null>(null)
 
   if (!data || data.reason === 'not_enabled') return null
   const open = data.builds.find(isOpen)
@@ -81,6 +83,12 @@ export function YourMethods({ philosophies, selectedId, onSelect, onDeleted }: {
                 </span>
               </button>
               <div className="flex shrink-0 items-center gap-0.5 py-1.5 pr-1.5">
+                <Tip label="Rename">
+                  <button type="button" aria-label={`Rename ${method.name}`} onClick={() => setRenaming(method)}
+                    className={ICON_BUTTON}>
+                    <TextCursorInput className="size-3.5" />
+                  </button>
+                </Tip>
                 <Tip label="Revise">
                   <Link
                     to={`/program/new/method?revise=${encodeURIComponent(method.id)}`}
@@ -136,6 +144,8 @@ export function YourMethods({ philosophies, selectedId, onSelect, onDeleted }: {
           </Link>
         )}
       </div>
+
+      <RenameMethodDialog method={renaming} onClose={() => setRenaming(null)} />
 
       <ConfirmDialog
         open={deleting !== null}
