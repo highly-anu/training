@@ -339,6 +339,8 @@ export interface Archetype {
   applicable_phases: TrainingPhase[]
   training_levels: TrainingLevel[]
   slots: ArchetypeSlot[]
+  /** The slots as blocks (src/session_blocks.py). Absent from an older server. */
+  blocks?: SessionBlock[]
   sources: string[]
   notes?: string
   scaling?: {
@@ -406,6 +408,55 @@ export interface ExerciseLoad {
   load_note?: string
 }
 
+// ─── Workout blocks ──────────────────────────────────────────────────────────
+
+export type BlockStage = 'prep' | 'main' | 'finisher' | 'cooldown'
+export type BlockShape =
+  | 'sets' | 'rounds' | 'for_time' | 'amrap' | 'emom' | 'interval' | 'ladder' | 'pyramid'
+  | 'timed' | 'distance' | 'hold' | 'practice' | 'note'
+
+export interface BlockMovement {
+  role: string
+  name: string
+  /** What it does each round ("5", "21-15-9", "400 m"); null when the block's headline says it. */
+  count: string | null
+  perRound: number[] | null
+  eachSide: boolean
+  note: string | null
+  /** What may fill the slot (an archetype); empty on a program's session. */
+  exercises: Array<{ id: string; name: string }>
+  listed: boolean
+  more: number
+  technique?: boolean
+}
+
+/** A session's slots grouped into what opens it, what repeats and what closes
+ *  it (src/session_blocks.py). Every word is the server's. */
+export interface SessionBlock {
+  id: string
+  stage: BlockStage
+  stageLabel: string
+  shape: BlockShape
+  title: string
+  headline: string
+  repeat: {
+    rounds?: number; sets?: number; scheme?: number[]
+    everySec?: number; workSec?: number; restSec?: number; minutes?: number; capMin?: number
+  } | null
+  rest: { seconds: number; between: 'rounds' | 'sets' | 'after'; text: string } | null
+  again: string | null
+  cap: string | null
+  load: string | null
+  intensity: string | null
+  rpe: number | null
+  note: string | null
+  standard: string | null
+  group: { id: string; kind: 'superset' | 'alternate' } | null
+  /** The slot roles in the block, in order — a program session's exercises by `slot_role`. */
+  roles: string[]
+  movements: BlockMovement[]
+}
+
 // ─── Session ──────────────────────────────────────────────────────────────────
 
 export interface ExerciseAssignment {
@@ -466,6 +517,8 @@ export interface SessionProvenance {
 }
 
 export interface Session {
+  /** The exercises as blocks, derived on read and never stored (src/session_blocks.py). */
+  blocks?: SessionBlock[]
   /** A training contract's module records: what each module's progress rides on (src/training_contract.py). */
   modules?: Array<{ id: string; max_rpe?: number; exercise_ids?: string[] }>
   modality: ModalityId
@@ -2498,6 +2551,8 @@ export interface DescribedSession {
   note: string | null
   equipment: string[]
   slots: DescribedSlot[]
+  /** The slots as blocks. Absent from an older server. */
+  blocks?: SessionBlock[]
 }
 
 export interface DescribedSessionGroup {

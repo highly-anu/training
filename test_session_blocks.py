@@ -6,6 +6,7 @@ a stored session, derived on read and never stored.
 """
 from __future__ import annotations
 
+import json
 import os
 import sys
 import unittest
@@ -74,7 +75,10 @@ class Words(unittest.TestCase):
         self.assertEqual(sb.for_archetype(FRAN)[0]['headline'], '21-15-9 for time')
         self.assertEqual(sb.for_archetype(CINDY)[0]['headline'], '20 min AMRAP')
         self.assertEqual(sb.for_archetype(COMPLEX)[1]['headline'], '6 rounds')
-        self.assertEqual(self.headline(slot('h', 'for_time', rounds=1, reps_per_round=100)), 'For time')
+        self.assertEqual(self.headline(slot('h', 'for_time', rounds=1, reps_per_round=100)), '100 for time')
+        self.assertEqual(self.headline(slot('h', 'for_time', distance_m=500)), '500 m for time')
+        self.assertEqual(self.headline(slot('h', 'for_time', rounds=1, reps_per_round=100),
+                                       child('c', 'h', reps_per_round=100)), 'For time')
         self.assertEqual(self.headline(slot('h', 'rounds_for_time', rounds=3, duration_sec=720)),
                          '3 rounds for time')
         self.assertEqual(self.headline(slot('e', 'emom', rounds=20, reps_per_round=5)), 'Every minute × 20')
@@ -115,6 +119,8 @@ class Words(unittest.TestCase):
         self.assertEqual(sb.for_archetype(CINDY)[0]['again'], 'Again, until the time is up')
         self.assertEqual(sb.for_archetype(arch(slot('e', 'emom', rounds=20)))[0]['again'], 'Start again every minute')
         self.assertIsNone(sb.for_archetype(arch(slot('s', sets=3, reps=5)))[0]['again'])
+        # A scheme says its rounds already.
+        self.assertIsNone(sb.for_archetype(FRAN)[0]['again'])
         self.assertEqual(sb.for_archetype(COMPLEX)[0]['stageLabel'], 'Start')
 
     def test_a_cap(self):
@@ -266,5 +272,57 @@ class RealData(unittest.TestCase):
                     self.assertEqual(by_role[s['role']]['id'], s['parent_slot_role'], a['id'])
 
 
+# ─── The web's fixture ───────────────────────────────────────────────────────
+# frontend/src/mocks/fixtures/blocks.json: the blocks the web's components are
+# tested on, written here so they are the server's (`--write` re-records).
+
+FIXTURE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                            'frontend', 'src', 'mocks', 'fixtures', 'blocks.json')
+
+
+def _pool(*names, listed=True):
+    return {'exercises': [{'id': n.lower().replace(' ', '_'), 'name': n} for n in names], 'listed': listed}
+
+
+def fixture() -> dict:
+    complex_ = arch(
+        slot('warm_up', 'skill_practice', duration_minutes=5, notes='Halos, prying goblet squats, light swings.'),
+        slot('complex', 'rounds_for_time', rounds=6, reps_per_round=5, rest_sec=150, intensity='heavy',
+             load='Moderate-heavy bell, about your 8-rep press bell',
+             notes='One hand, without putting the bell down. Change hands every round.'),
+        child('clean', 'complex', reps_per_round=5), child('swing', 'complex', reps_per_round=5),
+        child('push_up', 'complex', reps_per_round=5, notes='Hands on the bell handle or the floor.'),
+        slot('swing_finisher', sets=3, reps=20, rest_sec=45, intensity='high'))
+    pools = {'warm_up': _pool('Halo', 'Prying goblet squat', listed=False),
+             'complex': _pool('Kettlebell bent-over row'), 'clean': _pool('Kettlebell clean'),
+             'swing': _pool('Kettlebell one-arm swing'), 'push_up': _pool('Push-up', 'Knee push-up'),
+             'swing_finisher': _pool('Kettlebell swing')}
+    alternate = {'id': 'a', 'kind': 'alternate'}
+    ladders = arch(slot('ladders', sets=4, reps='1-2-3-4-5 each side', rest_sec=120, intensity='heavy', load='Heavy bell'),
+                   slot('front_squat', sets=3, reps='6 each side', rest_sec=60, group=alternate),
+                   slot('row', sets=3, reps='8 each side', rest_sec=60, group=alternate))
+    pyramid = arch(slot('pyramid', 'rounds_for_time', rounds=5, rep_scheme=[3, 4, 5, 4, 3], rest_sec=90),
+                   child('swing', 'pyramid', rep_scheme=[10, 15, 20, 15, 10]))
+    emom = arch(slot('emom', 'emom', rounds=20, reps_per_round=5), slot('row', sets=3, reps='10 each side', rest_sec=45))
+    fran = arch(slot('fran', 'for_time', rep_scheme=[21, 15, 9], rounds=3, load='43 kg'),
+                child('fran_2', 'fran', rep_scheme=[21, 15, 9]))
+    return {'complex': sb.for_archetype(complex_, pools), 'ladders': sb.for_archetype(ladders),
+            'pyramid': sb.for_archetype(pyramid), 'emom': sb.for_archetype(emom),
+            'fran': sb.for_archetype(fran, {'fran': _pool('Thruster'), 'fran_2': _pool('Pull-up')})}
+
+
+class WebFixture(unittest.TestCase):
+
+    def test_the_webs_fixture_is_the_servers(self):
+        with open(FIXTURE_PATH, encoding='utf-8') as f:
+            self.assertEqual(json.load(f), fixture(), 'run test_session_blocks.py --write')
+
+
 if __name__ == '__main__':
+    if '--write' in sys.argv:
+        with open(FIXTURE_PATH, 'w', encoding='utf-8') as f:
+            json.dump(fixture(), f, indent=1, ensure_ascii=False)
+            f.write('\n')
+        print(f'wrote {FIXTURE_PATH}')
+        sys.exit(0)
     unittest.main(verbosity=1)

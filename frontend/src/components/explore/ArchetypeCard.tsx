@@ -4,7 +4,10 @@ import { ChevronDown, ChevronRight } from 'lucide-react'
 import { useExploreLinks } from '@/api/exploreLinks'
 import { SimilarItems } from '@/components/shared/SimilarItems'
 import { cn } from '@/lib/utils'
-import type { Archetype, ArchetypeSlot, Exercise } from '@/api/types'
+import { modalityHex } from '@/lib/modalityColors'
+import { WorkoutBlocks } from '@/components/blocks/WorkoutBlocks'
+import { useExploreNavigate } from '@/components/explore/topics'
+import type { Archetype, ArchetypeSlot, Exercise, SessionBlock } from '@/api/types'
 
 /**
  * One archetype in full — its phases, levels, equipment, scaling, sources and
@@ -394,6 +397,27 @@ export function ArchetypeCard({ archetype, allExercises, allArchetypes, isOpen, 
     return out
   }, [links, allExercises, archetype.id])
 
+  // The server's blocks, each movement with what the selector would give it:
+  // a listed slot's first exercise names it, a filter keeps its role.
+  const go = useExploreNavigate()
+  const blocks = useMemo<SessionBlock[]>(() => (archetype.blocks ?? []).map((b) => ({
+    ...b,
+    movements: b.movements.map((m) => {
+      const pool = bySlot[m.role] ?? []
+      const ids = archetype.slots?.find((sl) => sl.role === m.role)?.exercise_filter?.exercise_ids ?? []
+      const listed = ids.length > 0
+      const ordered = listed
+        ? ids.map((id) => pool.find((e) => e.id === id)).filter((e): e is Exercise => Boolean(e))
+        : pool
+      return {
+        ...m, listed,
+        name: listed && ordered[0] ? ordered[0].name : m.name,
+        exercises: ordered.slice(0, 6).map(({ id, name }) => ({ id, name })),
+        more: Math.max(0, ordered.length - 6),
+      }
+    }),
+  })), [archetype, bySlot])
+
   const levelInitials = (archetype.training_levels ?? []).map(l => LEVEL_LABELS[l] ?? l[0].toUpperCase())
 
   return (
@@ -501,14 +525,16 @@ export function ArchetypeCard({ archetype, allExercises, allArchetypes, isOpen, 
             </div>
           )}
 
-          {/* Section D — Slots */}
-          <div className="pt-1 border-t border-border/20 space-y-0.5">
-            <p className="text-[9px] uppercase tracking-wider text-muted-foreground/50 mb-1.5">
-              Slots ({(archetype.slots ?? []).length})
-            </p>
-            {(archetype.slots ?? []).map((slot, i) => (
-              <SlotRow key={i} slot={slot} matching={bySlot[slot.role] ?? []} />
-            ))}
+          {/* Section D — the session as blocks; the slots, flat, from an older server */}
+          <div className="pt-2 border-t border-border/20 space-y-1.5">
+            {blocks.length > 0 ? (
+              <WorkoutBlocks blocks={blocks} accent={modalityHex(archetype.modality)}
+                onExercise={(id) => go('exercises', id)} />
+            ) : (
+              (archetype.slots ?? []).map((slot, i) => (
+                <SlotRow key={i} slot={slot} matching={bySlot[slot.role] ?? []} />
+              ))
+            )}
           </div>
 
           {/* Archetype notes */}

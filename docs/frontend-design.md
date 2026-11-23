@@ -164,6 +164,7 @@ whole contract, and each gets its module and its check in the phase that lands i
 | Hue is data, and it has a name | `lib/dataColors.ts` beside the modality, phase, zone and movement modules (§8.12) | `designRules` — no hex literal in a component |
 | A chart reads its numbers | `components/shared/ChartFrame.tsx`, `lib/chartSummary.ts` (§12.11) | `chartSummary.test.ts`; `designRules` — no Recharts container outside `ChartFrame`, no frame without a label |
 | The page can be skipped to and has one name | the skip link and `main#main` in `RootLayout`; `PageHeader`'s `h1` | `designRules`; `eslint-plugin-jsx-a11y` (recommended) in `npm run lint` |
+| A workout is drawn in blocks | `components/blocks/WorkoutBlocks.tsx`, `lib/blocks.ts` (§13.12); the server's `blocks` (`src/session_blocks.py`) | `WorkoutBlocks.test.tsx` on `mocks/fixtures/blocks.json`, which `test_session_blocks.py` writes |
 
 **Adding a rule.** Put it in one module, convert every call site in the same change, add
 the row here and the line to `designRules.test.ts`. No baseline is kept: a ban lands with
@@ -2557,6 +2558,37 @@ Back returns; adding or removing a column replaces.
 - **Phone width**: the grid scrolls sideways under a sticky label column; section titles
   and the full-width lines stay in view (`WideLine`).
 - **How alike** ends the page: each pair's likeness bar with its two reasons.
+
+### 13.12 Workout Blocks
+
+A session is drawn as **blocks**, never as a flat list of slots: what opens it, what
+repeats in rounds or every minute, the rests, what closes it. The server groups and words
+them (`src/session_blocks.py` → `blocks` on an archetype, on a described session and on a
+program's session); `components/blocks/WorkoutBlocks.tsx` only lays them out, in Explore's
+sessions, the archetype detail and the session panel.
+
+- **Stages.** Consecutive blocks of one stage (Start · Main work · Finisher · Cool-down)
+  sit under a small label — only when the session has more than one stage.
+- **A block** leads with a mark for its shape (a rep scheme draws its own steps: a ladder
+  climbs, a pyramid comes back down) and its headline in mono ("6 rounds", "Every minute ×
+  20", "21-15-9 for time"), then chips: what is lifted, the intensity, a cap, a rest
+  between sets.
+- **A round is a rail.** Movements done one after another and then again sit on a rail in
+  the session's modality colour, each with its own count a round; the rail's foot says the
+  rest between rounds and the way back to the top ("2 min 30 s rest between rounds · 6
+  rounds in all"). A lone movement has no rail. Blocks tied by `group` share a bracket
+  ("Superset", "Alternate sets").
+- **Words on demand.** Notes, a long load text and what else may fill a slot open under
+  the block or the movement; nothing of them shows collapsed.
+- **`BlockStrip`** is the session's shape in one line — a segment a block, the main work in
+  the modality colour — for a collapsed card.
+- **A caller's rows.** The session panel passes `renderMovement`, so each movement is its
+  `ExerciseRow` with its logger and swap; a lone movement then gets no block header (the
+  row says its numbers), a round keeps its header and rail. When the blocks do not account
+  for every exercise (`lib/blocks.blockRows`), the list is drawn flat.
+
+Colour is the modality's, on the rail and the main work's mark only. A component never
+words a prescription: a new wording is a change to `session_blocks.py` and its test.
 
 ## 14. Responsive Design
 

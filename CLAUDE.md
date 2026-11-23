@@ -707,7 +707,10 @@ is the source of the patterns, not the neighbouring screen:
   save and the content hash, like `icon`). A piece is the slot its movements name
   (`parent_slot_role`); the stage is the slot's `stage`, else its role through
   `data/commons/slot_stages.yaml`, else main; `group` ties a superset. Every word of a block
-  is the server's; a client draws them and formats nothing (`test_session_blocks.py`).
+  is the server's; a client draws them and formats nothing (`test_session_blocks.py`, which
+  also writes the web's fixture, `--write`). The web draws them with
+  `components/blocks/WorkoutBlocks.tsx` in Explore's sessions, the archetype detail and the
+  session panel (frontend-design §13.12); the phone's session detail does not yet.
 - **Web**: `docs/frontend-design.md`. §1.7 is the design language in web idiom and §1.8
   every rule in one table — the module that carries it and the test that holds it; §16 is
   the order to read a page in (§13.2 the grouped sidebar, §17.8 every page's header).

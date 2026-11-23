@@ -11,6 +11,7 @@ import { SessionHeader } from '@/components/session/SessionHeader'
 import { ReplaceSessionSheet } from '@/components/session/ReplaceSessionSheet'
 import { SwapExerciseSheet } from '@/components/session/SwapExerciseSheet'
 import { ExerciseRow } from '@/components/session/ExerciseRow'
+import { SessionExercises } from './SessionExercises'
 import { SessionNotes } from '@/components/session/SessionNotes'
 import { WorkoutSummaryCard } from '@/components/session/WorkoutSummaryCard'
 import { ModuleProgress } from '@/components/session/ModuleProgress'
@@ -167,8 +168,9 @@ export function SessionPanel({ program, weekData, weekIndex, day, compact = fals
                 <SessionBriefing sessionKey={`${sessionKey}-${si}`} modality={session.modality} />
               )}
 
-              <div className="space-y-2">
-                {session.exercises.map((assignment, i) => (
+              <SessionExercises
+                session={session}
+                row={(assignment, i) => (
                   <ExerciseRow
                     key={`${sessionKey}-${si}-${i}`}
                     assignment={assignment}
@@ -177,8 +179,8 @@ export function SessionPanel({ program, weekData, weekIndex, day, compact = fals
                     sessionIdx={si}
                     onSwap={assignment.exercise && session.archetype ? () => setSwapTarget({ si, ei: i }) : undefined}
                   />
-                ))}
-              </div>
+                )}
+              />
 
               {(complete || matchedWorkout) && (
                 <ModuleProgress

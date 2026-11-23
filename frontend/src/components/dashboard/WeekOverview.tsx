@@ -40,9 +40,13 @@ function mainExercises(session: Session) {
   const all = session.exercises.filter(
     ea => !ea.meta && ea.exercise && !(ea as { injury_skip?: boolean }).injury_skip
   )
-  const mains = all.filter(
-    ea => !['warm_up', 'cooldown', 'joint_prep'].includes(ea.slot_role ?? '')
-  )
+  // The server says which slots open and close the session (its blocks'
+  // stage); a program from an older server falls back to the old role names.
+  const side = new Set((session.blocks ?? [])
+    .filter(b => b.stage === 'prep' || b.stage === 'cooldown').flatMap(b => b.roles))
+  const mains = all.filter(ea => session.blocks
+    ? !side.has(ea.slot_role ?? '')
+    : !['warm_up', 'cooldown', 'joint_prep'].includes(ea.slot_role ?? ''))
   return mains.length > 0 ? mains : all
 }
 

@@ -242,13 +242,16 @@ def _shape(lead: dict, has_children: bool) -> str:
     return 'sets'
 
 
-def _headline(shape: str, lead: dict, repeat: dict) -> str:
+def _headline(shape: str, lead: dict, repeat: dict, alone: str | None = None) -> str:
     rounds, scheme = repeat.get('rounds'), repeat.get('scheme')
     minutes = repeat.get('minutes')
     if shape == 'for_time':
         if scheme:
             return f'{_scheme_text(scheme)} for time'
-        return f'{_num(rounds)} rounds for time' if rounds and rounds != 1 else 'For time'
+        if rounds and rounds != 1:
+            return f'{_num(rounds)} rounds for time'
+        # One movement raced once is said whole: "500 m for time".
+        return f'{alone} for time' if alone else 'For time'
     if shape == 'rounds':
         if scheme:
             return f'{len(scheme)} rounds'
@@ -348,7 +351,7 @@ def _again(shape: str, repeat: dict, movements: int) -> str | None:
     """What happens at the foot of a round, in words: the loop a reader
     follows back to the top."""
     rounds = repeat.get('rounds')
-    if shape in ('for_time', 'rounds') and rounds and rounds != 1:
+    if shape in ('for_time', 'rounds') and rounds and rounds != 1 and not repeat.get('scheme'):
         return f'{_num(rounds)} rounds in all'
     if shape == 'amrap':
         return 'Again, until the time is up'
@@ -391,7 +394,8 @@ def _block(items: list[dict], names: dict, pools: dict) -> dict:
         'stageLabel': stage_label(stage),
         'shape': pattern or shape,
         'title': _words(_bare(lead['role'])),
-        'headline': _headline(shape, lead, repeat),
+        'headline': _headline(shape, lead, repeat,
+                              movements[0]['count'] if len(items) == 1 and not movements[0]['perRound'] else None),
         'repeat': repeat or None,
         'rest': _rest(shape, lead, repeat),
         'again': _again(shape, repeat, len(items)),
