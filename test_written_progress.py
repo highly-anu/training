@@ -86,6 +86,40 @@ def test_time_distance_and_rounds():
     assert load(sets, 3)['sets'] == 5
 
 
+def test_a_track_counts_its_weeks_across_phases():
+    from src.phases import week_in_track
+    seq = [{'phase_id': 'one', 'weeks': 4}, {'phase_id': 'two', 'weeks': 4}]
+    assert week_in_track(seq, {'phase_id': 'one', 'week_in_phase': 3}) == 3
+    assert week_in_track(seq, {'phase_id': 'two', 'week_in_phase': 1}) == 5
+    assert week_in_track(seq, {'phase_id': 'two', 'week_in_phase': 6}) == 10     # the last phase carried on
+    assert week_in_track(seq, {'phase_id': 'gone', 'week_in_phase': 2}) == 2
+    slot = {**SQUAT, 'start_kg': 80, 'progress': {'add_kg': 2.5}}
+    in_phase = calculate_load({}, slot, 'as_written', 1, 'build', 'intermediate', False)
+    in_track = calculate_load({}, slot, 'as_written', 1, 'build', 'intermediate', False, written_week=5)
+    assert (in_phase['weight_kg'], in_track['weight_kg']) == (80, 90)
+    # Another model never reads it.
+    other = calculate_load({'starting_load_kg': {'intermediate': 50}}, SQUAT, 'linear_load', 1, 'build',
+                           'intermediate', False, written_week=5)
+    assert other == calculate_load({'starting_load_kg': {'intermediate': 50}}, SQUAT, 'linear_load', 1, 'build',
+                                   'intermediate', False)
+
+
+def test_a_light_day_lifts_a_share_of_the_written_weight():
+    from src import week_template
+    arch = {'id': 'a_day', 'name': 'A', 'modality': 'max_strength', 'duration_estimate_minutes': 30, 'slots': [
+        {**SQUAT, 'start_kg': 80, 'progress': {'add_kg': 2.5}},
+        {'role': 'press', 'slot_type': 'sets_reps', 'sets': 3, 'reps': 5, 'load': '70% of 1RM'},
+        {'role': 'row', 'slot_type': 'time_domain', 'duration_minutes': 10, 'start_kg': 5}]}
+    light = week_template.compose([('c', arch)], None, True, {}, None, 0.8)
+    squat, press, row = light['slots']
+    assert load(squat, 3) == {'sets': 3, 'reps': 5, 'weight_kg': 68, 'load_note': 'Light, work on form'}, load(squat, 3)
+    assert 'weight_kg' not in load(press) and 'written: 70% of 1RM' in load(press)['load_note']
+    assert 'light_share' not in row
+    plain = week_template.compose([('c', arch)], None, False, {}, None, 0.8)
+    assert load(plain['slots'][0], 3)['weight_kg'] == 85
+    assert load(week_template.compose([('c', arch)], None, True, {}, None, 0.5)['slots'][0], 1)['weight_kg'] == 40
+
+
 def test_the_schema_takes_the_keys():
     import jsonschema
     here = os.path.dirname(os.path.abspath(__file__))

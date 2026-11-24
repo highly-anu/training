@@ -22,6 +22,7 @@ os.environ['TRAINING_USER_PACKAGES_DIR'] = tempfile.mkdtemp(prefix='manual-sessi
 ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ROOT)
 FIXTURE = os.path.join(ROOT, 'frontend', 'src', 'mocks', 'fixtures', 'manual-sessions.json')
+TRACK_FIXTURE = os.path.join(ROOT, 'frontend', 'src', 'mocks', 'fixtures', 'manual-tracks.json')
 
 from src import loader, manual_builder as mb, package_store  # noqa: E402
 
@@ -35,6 +36,11 @@ def check(label, ok, detail=None):
 
 
 CAT = mb.catalog()
+
+
+def db_module():
+    from src import db
+    return db
 EX = CAT['exercises']
 ROW = next(i for i, e in sorted(EX.items()) if 'row' in i and 'aerobic_base' in (e.get('modality') or []))
 HOLD = next(i for i, e in sorted(EX.items()) if 'plank' in i)
@@ -160,6 +166,113 @@ def test_package():
               and [b['stage'] for b in d['preview']] == ['prep', 'main', 'main', 'main', 'finisher', 'cooldown'],
               [(b['shape'], b['stage']) for b in d['preview']])
     package_store.remove(user, mb.package_id(prefix))
+    short, _ = mb.to_archetype({'name': 'Ten minutes', 'modality': 'max_strength', 'blocks': [SESSION['blocks'][1]]},
+                               mb.new_session_id(prefix, 'Ten minutes', []), CAT)
+    alone = package_store.install(user, mb.compose([short], prefix, CAT))
+    check('a short session alone is a package too (the validator wants twenty minutes of room)',
+          short['duration_estimate_minutes'] < 20 and alone.get('installed'), alone.get('problems', [])[:2])
+    on_a_track, _ = mb.read_track({'name': 'Short', 'phases': [{'name': 'P', 'kind': 'build', 'weeks': 2,
+                                   'template': [[{'sessions': [short['id']]}] + [REST] * 6]}]}, 'short', [short], CAT)
+    laid = package_store.install(user, mb.compose([short], prefix, CAT, [on_a_track]))
+    check('and so is a program of it', laid.get('installed')
+          and mb.described_track(on_a_track, [short], prefix, CAT)['startWith']['session_time_minutes'] == 20,
+          laid.get('problems', [])[:2])
+    package_store.remove(user, mb.package_id(prefix))
+
+
+REST = {'sessions': []}
+
+
+def week(**days):
+    """A template week: week(mon=[...], wed={...}) → seven days."""
+    names = ('mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun')
+    return [({'sessions': days[n]} if isinstance(days.get(n), list) else days.get(n) or REST) for n in names]
+
+
+def track_of(a: str, b: str) -> dict:
+    """Two phases, a lighter week every fourth, one day of two sessions."""
+    return {'name': 'Strength block', 'deload_every': 4, 'phases': [
+        {'name': 'Build', 'kind': 'build', 'weeks': 4, 'template': [
+            week(mon=[a], wed=[b], fri=[a, b]),
+            week(mon=[a], thu={'sessions': [b], 'light': True})]},
+        {'name': 'Peak', 'kind': 'peak', 'weeks': 2, 'template': [week(tue=[a], sat=[b])]}]}
+
+
+def test_tracks():
+    print('a program laid out by hand is a track of the same package')
+    user = 'user-cat'
+    prefix = package_store.owner_prefix(user)
+    archetypes = []
+    for session in (SESSION, {**SESSION, 'name': 'Second', 'blocks': SESSION['blocks'][1:2]}):
+        aid = mb.new_session_id(prefix, session['name'], [a['id'] for a in archetypes])
+        archetypes.append(mb.to_archetype(session, aid, CAT)[0])
+    a, b = (x['id'] for x in archetypes)
+    track, problems = mb.read_track(track_of(a, b), mb.new_track_id('Strength block', []), archetypes, CAT)
+    check('reads, with ids given', track is not None and track['id'] == 'strength_block'
+          and [p['id'] for p in track['phases']] == ['build', 'peak'], problems)
+    files = mb.compose(archetypes, prefix, CAT, [track])
+    check('the Library track gives way to it', [t['id'] for t in __import__('yaml').safe_load(files['philosophy.yaml'])['tracks']]
+          == ['strength_block'])
+    check('read back from the files as it was sent', mb.stored_tracks(files, prefix) == [track],
+          mb.stored_tracks(files, prefix))
+    check('and composed again to the same files', mb.compose(archetypes, prefix, CAT, mb.stored_tracks(files, prefix)) == files)
+    result = package_store.install(user, files)
+    check('it installs through every gate', result.get('installed'), result.get('problems', [])[:4])
+
+    with loader.overlay(package_store.overlay_for(user)):
+        from src.generator import generate
+        from src.goals import philosophy_to_goal
+        d = mb.described_track(track, archetypes, prefix)
+        goal = philosophy_to_goal(mb.package_id(prefix), list(loader.load_all_frameworks().values()), track_id=track['id'])
+        constraints = {**d['startWith'], 'training_level': 'intermediate', 'injury_flags': [],
+                       'equipment': sorted(CAT['equipment']), 'preferred_days': [2, 4, 6, 7]}
+        raw = generate(goal_id=goal['id'], goal_dict=goal, constraints=constraints, num_weeks=6, output_format='dict')
+    weeks = raw['weeks']
+    days = [sorted(w['schedule']) for w in weeks]
+    check('sessions fall on the days they were laid on, whatever the preferred days',
+          days == [[1, 3, 5], [1, 4], [1, 3, 5], [1, 4], [2, 6], [2, 6]], days)
+    friday = weeks[0]['schedule'][5][0]
+    check('a day of two sessions is one session of both', friday['archetype']['name'] == 'Squat day + Second'
+          and len(friday.get('pieces') or []) == 2, friday['archetype']['name'])
+
+    def squat(w, day):
+        return next(e['load'] for e in weeks[w]['schedule'][day][0]['exercises']
+                    if (e.get('exercise') or {}).get('id') == 'back_squat')
+    kgs = [squat(0, 1)['weight_kg'], squat(1, 1)['weight_kg'], squat(2, 1)['weight_kg'], squat(3, 1)['weight_kg'],
+           squat(4, 2)['weight_kg'], squat(5, 2)['weight_kg']]
+    check('the weight steps on through the phases, and the fourth week is lighter',
+          kgs == [80, 82.5, 85, 68, 90, 92.5], kgs)
+    check('the lighter week is a deload week of light days', weeks[3]['is_deload']
+          and all(s.get('light') for day in weeks[3]['schedule'].values() for s in day)
+          and not weeks[2]['is_deload'])
+    check('the server says the same numbers before anything is generated',
+          [(x['week'], x['text'], x['light']) for x in d['forecast'][0]['weeks']][:5]
+          == [(1, '3 × 5 @ 80 kg', False), (2, '3 × 5 @ 82.5 kg', False), (3, '3 × 5 @ 85 kg', False),
+              (4, '3 × 5 @ 68 kg', True), (5, '3 × 5 @ 90 kg', False)], d['forecast'][0]['weeks'][:5])
+    check('and describes each phase', d['totalWeeks'] == 6 and d['phases'][0]['lighterWeeks'] == [4]
+          and d['phases'][0]['sessionsPerWeek'] == 2.5 and d['phases'][1]['firstWeek'] == 5
+          and d['phases'][0]['weeksDescribed'][0][4]['sessions'][1]['name'] == 'Second'
+          and d['startWith']['session_time_minutes'] == d['phases'][0]['weeksDescribed'][0][4]['minutes'], d['phases'][0])
+
+    print('what stops a program is said at its phase, week and day')
+    base = track_of(a, b)
+    def refused(change, **at):
+        t = json.loads(json.dumps(base))
+        change(t)
+        got, problems = mb.read_track(t, 'x', archetypes, CAT)
+        ok = got is None and any(all(p[k] == v for k, v in at.items()) and p['message'] for p in problems)
+        check(f'refused at {at}', ok, problems)
+    refused(lambda t: t.update(name=''), field='name')
+    refused(lambda t: t.update(deload_every=1), field='deload_every')
+    refused(lambda t: t.update(phases=[]), phase=None)
+    refused(lambda t: t['phases'][0].update(kind='nope'), phase=0, field='kind')
+    refused(lambda t: t['phases'][1].update(weeks=0), phase=1, field='weeks')
+    refused(lambda t: t['phases'][0]['template'].__setitem__(0, week()), phase=0, week=0)
+    refused(lambda t: t['phases'][0]['template'][0].__setitem__(0, {'sessions': ['gone']}), phase=0, week=0, day=0)
+    refused(lambda t: t['phases'][0]['template'][0].__setitem__(4, {'sessions': [a, b, a]}), phase=0, week=0, day=4)
+    check('a session on a day is named by the programs that place it', mb.tracks_placing([track], a) == ['Strength block']
+          and mb.tracks_placing([track], 'other') == [])
+    package_store.remove(user, mb.package_id(prefix))
 
 
 def test_routes(write: bool = False):
@@ -219,7 +332,62 @@ def test_routes(write: bool = False):
              for day in (w.get('schedule') or {}).values() for s in day]
     check('and a program generates from the package', 'Squat day, heavy' in names and 'Everything' in names, names)
 
+    print('the track routes')
+    empty = client.get('/api/manual/tracks').get_json()
+    check('no program yet, and the kinds a phase may take', empty['tracks'] == [] and {'id': 'build', 'label': 'Build',
+          'excludesMaxEffort': False} in empty['kinds'] and empty['limits']['phases'] == mb.MAX_PHASES, empty)
+    plan = track_of(sid, second['id'])
+    seen = client.post('/api/manual/tracks/preview', json={'track': plan}).get_json()
+    check('a draft is described without being stored', seen['ok'] and seen['track']['totalWeeks'] == 6
+          and client.get('/api/manual/tracks').get_json()['tracks'] == [], seen)
+    wrong = client.post('/api/manual/tracks', json={'track': {**plan, 'name': ''}})
+    check('a program that cannot be saved is refused, 422', wrong.status_code == 422 and wrong.get_json()['problems'])
+    made_track = client.post('/api/manual/tracks', json={'track': plan})
+    tid = ((made_track.get_json() or {}).get('track') or {}).get('id')
+    check('saved', made_track.status_code == 200 and tid == 'strength_block', made_track.get_json())
+    renamed = client.put(f'/api/manual/sessions/{sid}', json={'session': {**edited, 'name': 'Squat day, heavy'}})
+    kept_tracks = client.get('/api/manual/tracks').get_json()['tracks']
+    check('saving a session keeps the program', renamed.status_code == 200 and [t['id'] for t in kept_tracks] == [tid]
+          and kept_tracks[0]['phases'][0]['template'] == made_track.get_json()['track']['phases'][0]['template'])
+    held_session = client.delete(f'/api/manual/sessions/{sid}')
+    check('a session a program places cannot be deleted', held_session.status_code == 409
+          and held_session.get_json()['error'] == 'in_track' and held_session.get_json()['tracks'] == ['Strength block'],
+          held_session.get_json())
+    change = client.put(f'/api/manual/tracks/{tid}', json={'track': {**plan, 'name': 'Strength block II', 'deload_every': None}})
+    check('edited in place', change.status_code == 200 and change.get_json()['track']['id'] == tid
+          and change.get_json()['track']['name'] == 'Strength block II'
+          and change.get_json()['track']['phases'][0]['lighterWeeks'] == [], change.get_json())
+    check('an unknown program is 404', client.put('/api/manual/tracks/zz', json={'track': plan}).status_code == 404
+          and client.delete('/api/manual/tracks/zz').status_code == 404)
+    start = change.get_json()['track']
+    built = client.post('/api/programs/generate', json={
+        'philosophy_id': listed['packageId'], 'track_id': tid, 'num_weeks': 6, 'persist': False,
+        'constraints': {**constraints, **start['startWith'], 'preferred_days': [2, 4, 6]}}).get_json()
+    laid = [sorted(w['schedule']) for w in built.get('weeks') or []]
+    check('the program generates on the laid days through the API',
+          laid[:2] == [['Friday', 'Monday', 'Wednesday'], ['Monday', 'Thursday']]
+          and built['weeks'][0].get('framework') == start['frameworkId'], laid)
+    methods = client.get('/api/methods').get_json()['methods']
+    check('the package is marked as composed by hand', [m['composed'] for m in methods if m['name'] == mb.PACKAGE_NAME] == [True])
+    tracks_answer = client.get('/api/manual/tracks').get_json()
+    db_real = db_module().get_user_program
+    db_module().get_user_program = lambda user_id: {'weeks': [{'framework': start['frameworkId']}]}
+    try:
+        running = client.delete(f'/api/manual/tracks/{tid}')
+        check('a program the athlete is running cannot be deleted', running.status_code == 409
+              and running.get_json()['error'] == 'in_use', running.get_json())
+    finally:
+        db_module().get_user_program = db_real
+    check('deleted, and the Library track is back', client.delete(f'/api/manual/tracks/{tid}').status_code == 200
+          and client.get('/api/manual/tracks').get_json()['tracks'] == []
+          and client.post('/api/programs/generate', json={'philosophy_id': listed['packageId'], 'constraints': constraints,
+                                                          'num_weeks': 1, 'persist': False}).get_json().get('weeks'))
+
     if write:
+        with open(TRACK_FIXTURE, 'w', encoding='utf-8') as fh:
+            json.dump({'list': tracks_answer, 'preview': seen}, fh, indent=1, ensure_ascii=False)
+            fh.write('\n')
+        print(f'  wrote {os.path.relpath(TRACK_FIXTURE, ROOT)}')
         with open(FIXTURE, 'w', encoding='utf-8') as fh:
             json.dump({'list': client.get('/api/manual/sessions').get_json(),
                        'preview': client.post('/api/manual/preview', json={'session': SESSION}).get_json(),
@@ -264,6 +432,15 @@ def test_fixture_is_current():
     was = recorded['preview']['session']
     check('the described session has the same keys', set(was) == set(now), sorted(set(was) ^ set(now)))
     check('and its blocks the same', [set(b) for b in was['preview']] == [set(b) for b in now['preview']])
+    if not os.path.exists(TRACK_FIXTURE):
+        check('the tracks recorded (run with --write)', False)
+        return
+    with open(TRACK_FIXTURE, encoding='utf-8') as fh:
+        tracks = json.load(fh)
+    keys = {'id', 'name', 'description', 'deload_every', 'phases', 'totalWeeks', 'frameworkId', 'equipment',
+            'forecast', 'startWith'}
+    check('a described program has the keys the web reads', set(tracks['preview']['track']) == keys
+          and all(set(t) == keys for t in tracks['list']['tracks']), sorted(set(tracks['preview']['track']) ^ keys))
 
 
 if __name__ == '__main__':
@@ -271,6 +448,7 @@ if __name__ == '__main__':
     test_round_trip()
     test_problems()
     test_package()
+    test_tracks()
     test_routes(write)
     test_fixture_is_current()
     print(f"\n{'FAILED: ' + ', '.join(FAILURES) if FAILURES else 'all passed'}")

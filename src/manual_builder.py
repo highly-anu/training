@@ -38,6 +38,17 @@ NOTE_MAX = 2000
 
 STAGES = ('prep', 'main', 'finisher', 'cooldown')
 
+LIBRARY_TRACK = 'library'
+# The validator refuses a program whose sessions have under twenty minutes
+# (validator._check_session_time): a short session is given that much room.
+MIN_SESSION_ROOM = 20
+MAX_TRACKS = 6
+MAX_PHASES = 8
+MAX_TEMPLATE_WEEKS = 8
+MAX_DAY_SESSIONS = 2
+MAX_PHASE_WEEKS = 52
+DAY_NAMES = ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
+
 # kind → (the lead slot's type, whether it is a piece whose other movements
 # are its children, the most movements it takes; None is MAX_MOVEMENTS).
 KINDS: dict[str, tuple[str, bool, int | None]] = {
@@ -75,7 +86,7 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 def catalog() -> dict:
     """The exercises and modalities in view, and the equipment ids an
     archetype may require: what a session is checked against."""
-    from src import loader
+    from src import loader, phases
     exercises = loader.load_all_exercises()
     exercises = exercises[0] if isinstance(exercises, tuple) else exercises
     with open(os.path.join(_HERE, '..', 'docs', 'schemas', 'archetype.schema.json'), encoding='utf-8') as fh:
@@ -83,7 +94,7 @@ def catalog() -> dict:
     return {'exercises': exercises, 'modalities': loader.load_all_modalities(),
             'equipment': set(schema['properties']['required_equipment']['items']['enum']),
             'intensities': set(schema['properties']['slots']['items']['properties']['intensity']['enum']),
-            'schema': schema}
+            'schema': schema, 'kinds': phases.kinds()}
 
 
 def package_id(prefix: str) -> str:
@@ -176,6 +187,9 @@ def _progress(value) -> dict | None:
         return None
     if out.get('every_weeks') == 1:
         del out['every_weeks']
+    if value.get('earned') is True:
+        out['earned'] = True
+        out.pop('every_weeks', None)
     return out
 
 
@@ -530,48 +544,43 @@ def from_archetype(arch: dict) -> dict:
 
 # ─── Every session → one package ─────────────────────────────────────────────
 
-def _dump(doc) -> str:
-    return yaml.safe_dump(doc, sort_keys=False, allow_unicode=True, width=100)
+def _category(archetype_id: str, prefix: str) -> str:
+    return f'c_{archetype_id[len(prefix):]}'
 
 
-def compose(archetypes: list[dict], prefix: str, cat: dict | None = None) -> dict:
-    """The file map of the athlete's "My sessions" package, its sessions in
-    the order given. One track lays them out three a week so the package
-    generates; nothing else is invented."""
-    cat = cat or catalog()
-    pkg = package_id(prefix)
-    framework_id, track_id = f'{pkg}_week', 'library'
-    modalities = list(dict.fromkeys(a['modality'] for a in archetypes))
-    owners = sorted({o for a in archetypes for s in a['slots']
-                     for o in [(cat['exercises'].get(s['exercise_filter']['exercise_ids'][0]) or {}).get('_package')]
-                     if o and o != pkg})
-    category = {a['id']: f'c_{a["id"][len(prefix):]}' for a in archetypes}
+def _session_of(category: str, prefix: str) -> str:
+    return f'{prefix}{category[2:]}'
+
+
+def _categories(archetypes: list[dict], prefix: str) -> dict:
+    """One day category per session — every session, since a session the
+    package holds must be in some framework's pool."""
+    return {_category(a['id'], prefix): {'name': a['name'], 'modality': a['modality'],
+                                         'archetypes': [a['id']], 'warm_up': False} for a in archetypes}
+
+
+def _library(archetypes: list[dict], prefix: str, pkg: str) -> tuple[dict, dict]:
+    """The track a package has before the athlete lays one out: its sessions
+    three a week, in turn, so the package generates."""
+    framework_id = f'{pkg}_week'
     days = (0, 2, 4)
     templates = []
     for at in range(0, len(archetypes), len(days)):
         week = ['rest'] * 7
         for day, arch in zip(days, archetypes[at:at + len(days)]):
-            week[day] = category[arch['id']]
+            week[day] = _category(arch['id'], prefix)
         templates.append(week)
     first_week = archetypes[:len(days)]
+    modalities = list(dict.fromkeys(a['modality'] for a in archetypes))
     per_week = {m: sum(1 for a in first_week if a['modality'] == m) for m in modalities}
     per_week = {m: n for m, n in per_week.items() if n} or {modalities[0]: 1}
-    philosophy = {
-        'id': pkg, 'name': PACKAGE_NAME,
-        'core_principles': ['Sessions composed by hand, done as written.'],
-        'scope': modalities, 'bias': modalities[:3],
-        'self_contained': True,
-        **({'borrows_from': [{'package': o, 'kinds': ['exercises'],
-                              'reason': 'A session of mine uses its movements.'} for o in owners]} if owners else {}),
-        'notes': 'The sessions I built myself.',
-        'tracks': [{
-            'id': track_id, 'name': 'Library',
-            'description': 'Every session I built, in turn.',
-            'phases': [{
-                'id': 'library', 'name': 'Library', 'kind': 'build', 'weeks': 4, 'repeatable': True,
-                'framework_id': framework_id, 'focus': 'As written',
-                'week_templates': templates,
-            }],
+    track = {
+        'id': LIBRARY_TRACK, 'name': 'Library',
+        'description': 'Every session I built, in turn.',
+        'phases': [{
+            'id': 'library', 'name': 'Library', 'kind': 'build', 'weeks': 4, 'repeatable': True,
+            'framework_id': framework_id, 'focus': 'As written',
+            'week_templates': templates,
         }],
     }
     framework = {
@@ -582,21 +591,264 @@ def compose(archetypes: list[dict], prefix: str, cat: dict | None = None) -> dic
         'expectations': {'min_weeks': 1, 'ideal_weeks': 4,
                          'min_days_per_week': 1, 'ideal_days_per_week': min(len(days), len(archetypes)),
                          'min_session_minutes': min(a['duration_estimate_minutes'] for a in archetypes),
-                         'ideal_session_minutes': max(a['duration_estimate_minutes'] for a in archetypes),
+                         'ideal_session_minutes': max(MIN_SESSION_ROOM, *(a['duration_estimate_minutes'] for a in archetypes)),
                          'supports_split_days': False},
-        'categories': {category[a['id']]: {'name': a['name'], 'modality': a['modality'],
-                                           'archetypes': [a['id']], 'warm_up': False} for a in archetypes},
+        'categories': _categories(archetypes, prefix),
     }
-    files = {'philosophy.yaml': _dump(philosophy), f'frameworks/{framework_id}.yaml': _dump(framework),
-             'exercises.yaml': _dump({'exercises': []})}
+    return track, framework
+
+
+# ─── A track laid out by hand ────────────────────────────────────────────────
+#
+# The wire shape: {id?, name, description?, deload_every?, phases: [{id?, name,
+# kind, weeks, template: [[day × 7] …]}]}, a day {sessions: [session id, at
+# most two], light?}. The weeks of a template repeat through the phase; a day
+# with two sessions is one session of both (week_template.compose).
+
+def _track_problem(message: str, phase: int | None = None, week: int | None = None, day: int | None = None,
+                   field: str | None = None) -> dict:
+    return {'phase': phase, 'week': week, 'day': day, 'field': field, 'message': message}
+
+
+def new_track_id(name: str, taken) -> str:
+    base = _slug(name, 24) or 'track'
+    if base == LIBRARY_TRACK:
+        base = 'my_library'
+    taken = set(taken)
+    candidate, n = base, 2
+    while candidate in taken:
+        candidate, n = f'{base}_{n}', n + 1
+    return candidate
+
+
+def _day_of(value) -> dict:
+    """A day as sent: {sessions, light}; anything else is a rest day."""
+    if isinstance(value, dict):
+        sessions = [s for s in value.get('sessions') or [] if isinstance(s, str)]
+        return {'sessions': sessions, 'light': bool(value.get('light')) and bool(sessions)}
+    if isinstance(value, (list, tuple)):
+        return {'sessions': [s for s in value if isinstance(s, str)], 'light': False}
+    return {'sessions': [], 'light': False}
+
+
+def read_track(track, track_id: str, archetypes: list[dict], cat: dict) -> tuple[dict | None, list[dict]]:
+    """A track as sent, made whole (ids given, days normalised), and what
+    stops it: each problem names its phase, template week and day by index."""
+    problems: list[dict] = []
+    if not isinstance(track, dict):
+        return None, [_track_problem('This program could not be read.')]
+    by_id = {a['id']: a for a in archetypes}
+    name = _text(track.get('name'), NAME_MAX)
+    if not name:
+        problems.append(_track_problem('Give the program a name.', field='name'))
+    deload = track.get('deload_every')
+    if deload in (None, '', 0, False):
+        deload = None
+    else:
+        deload = _int(deload, 2, 12)
+        if deload is None:
+            problems.append(_track_problem('A lighter week comes every 2 to 12 weeks.', field='deload_every'))
+    raw_phases = [p for p in track.get('phases') or [] if isinstance(p, dict)]
+    if not raw_phases:
+        problems.append(_track_problem('Add a phase.'))
+    if len(raw_phases) > MAX_PHASES:
+        problems.append(_track_problem(f'A program takes at most {MAX_PHASES} phases.'))
+        raw_phases = raw_phases[:MAX_PHASES]
+    phases, taken = [], set()
+    for i, ph in enumerate(raw_phases):
+        ph_name = _text(ph.get('name'), NAME_MAX)
+        if not ph_name:
+            problems.append(_track_problem('Give the phase a name.', i, field='name'))
+        kind = ph.get('kind')
+        if kind not in cat['kinds']:
+            problems.append(_track_problem('Pick what kind of phase this is.', i, field='kind'))
+        weeks = _int(ph.get('weeks'), 1, MAX_PHASE_WEEKS)
+        if not weeks:
+            problems.append(_track_problem(f'A phase runs 1 to {MAX_PHASE_WEEKS} weeks.', i, field='weeks'))
+        rows = [r for r in ph.get('template') or [] if isinstance(r, (list, tuple))]
+        if not rows:
+            problems.append(_track_problem('Lay out a week for this phase.', i))
+        if len(rows) > MAX_TEMPLATE_WEEKS:
+            problems.append(_track_problem(f'A phase takes at most {MAX_TEMPLATE_WEEKS} different weeks.', i))
+            rows = rows[:MAX_TEMPLATE_WEEKS]
+        template = []
+        for w, row in enumerate(rows):
+            days = [_day_of(d) for d in list(row)[:7]] + [_day_of(None)] * max(0, 7 - len(row))
+            for d, day in enumerate(days):
+                if len(day['sessions']) > MAX_DAY_SESSIONS:
+                    problems.append(_track_problem(f'A day takes at most {MAX_DAY_SESSIONS} sessions.', i, w, d))
+                for sid in day['sessions']:
+                    arch = by_id.get(sid)
+                    if arch is None:
+                        problems.append(_track_problem('This session is no longer among your saved ones.', i, w, d))
+                    elif kind and cat['kinds'].get(kind, {}).get('excludes_max_effort') and any(
+                            (cat['exercises'].get(s['exercise_filter']['exercise_ids'][0]) or {}).get('effort') == 'max'
+                            for s in arch['slots']):
+                        problems.append(_track_problem(
+                            f'{arch["name"]} has a maximal-effort exercise, which a {kind} phase leaves out. '
+                            'Pick another kind of phase or another session.', i, w, d))
+            template.append(days)
+        if template and not any(day['sessions'] for day in template[0]):
+            problems.append(_track_problem('The first week of a phase needs at least one session.', i, 0))
+        ph_id = ph.get('id') if isinstance(ph.get('id'), str) and re.fullmatch(r'[a-z0-9_]{1,40}', ph['id']) \
+            and ph['id'] not in taken else None
+        if ph_id is None:
+            base = _slug(ph_name or '', 24) or f'phase_{i + 1}'
+            ph_id, n = base, 2
+            while ph_id in taken:
+                ph_id, n = f'{base}_{n}', n + 1
+        taken.add(ph_id)
+        phases.append({'id': ph_id, 'name': ph_name, 'kind': kind, 'weeks': weeks, 'template': template})
+    if problems:
+        return None, problems
+    out = {'id': track_id, 'name': name, 'deload_every': deload, 'phases': phases}
+    description = _text(track.get('description'))
+    if description:
+        out['description'] = description
+    return out, []
+
+
+def _day_minutes(day: dict, by_id: dict) -> int:
+    return sum((by_id.get(s) or {}).get('duration_estimate_minutes') or 0 for s in day['sessions'])
+
+
+def track_files(track: dict, archetypes: list[dict], prefix: str, pkg: str) -> tuple[dict, dict]:
+    """A whole track (read_track's) as the philosophy's track and the
+    framework that builds its weeks."""
+    by_id = {a['id']: a for a in archetypes}
+    framework_id = f'{pkg}_t_{track["id"]}'
+
+    def day_out(day: dict):
+        cats = [_category(s, prefix) for s in day['sessions']]
+        if not cats:
+            return 'rest'
+        if day['light']:
+            return {'categories': cats, 'light': True}
+        return cats[0] if len(cats) == 1 else cats
+
+    rows = [row for ph in track['phases'] for row in ph['template']]
+    busiest = max(sum(1 for d in row if d['sessions']) for row in rows)
+    minutes = [m for row in rows for d in row for m in [_day_minutes(d, by_id)] if m]
+    first = track['phases'][0]['template'][0]
+    per_week: dict = {}
+    for day in first:
+        if day['sessions']:
+            modality = by_id[day['sessions'][0]]['modality']
+            per_week[modality] = per_week.get(modality, 0) + 1
+    defaults = {'written_weeks': 'track'}
+    framework = {
+        'id': framework_id, 'name': track['name'], 'source_philosophy': pkg,
+        'sessions_per_week': per_week,
+        'prescription_policy': 'framework', 'progression_model': 'as_written',
+        'fixed_days': True,
+        'applicable_when': {'days_per_week_min': 1, 'days_per_week_max': 7},
+        'expectations': {'min_weeks': 1, 'ideal_weeks': sum(ph['weeks'] for ph in track['phases']),
+                         'min_days_per_week': 1, 'ideal_days_per_week': busiest,
+                         'min_session_minutes': min(minutes), 'ideal_session_minutes': max(MIN_SESSION_ROOM, *minutes),
+                         'supports_split_days': False},
+        'categories': _categories(archetypes, prefix),
+    }
+    if track.get('deload_every'):
+        framework['deload_protocol'] = {'frequency_weeks': track['deload_every'], 'volume_reduction_pct': 1.0,
+                                        'intensity_change': 'reduce_slightly'}
+        defaults['deload_light'] = True
+    framework['progression_defaults'] = defaults
+    doc = {'id': track['id'], 'name': track['name'],
+           **({'description': track['description']} if track.get('description') else {}),
+           'phases': [{'id': ph['id'], 'name': ph['name'], 'kind': ph['kind'], 'weeks': ph['weeks'],
+                       'framework_id': framework_id, 'focus': 'As written',
+                       'week_templates': [[day_out(d) for d in row] for row in ph['template']]}
+                      for ph in track['phases']]}
+    return doc, framework
+
+
+def stored_tracks(files: dict | None, prefix: str) -> list[dict]:
+    """A stored package's hand-laid tracks, as read_track gives them, in the
+    philosophy's order. The Library track is the package's own, never one."""
+    if not files or 'philosophy.yaml' not in files:
+        return []
+    frameworks = {}
+    for path, text in files.items():
+        if path.startswith('frameworks/'):
+            doc = yaml.safe_load(text) or {}
+            frameworks[doc.get('id')] = doc
+
+    def day_in(day) -> dict:
+        if day == 'rest' or not day:
+            return {'sessions': [], 'light': False}
+        if isinstance(day, str):
+            return {'sessions': [_session_of(day, prefix)], 'light': False}
+        if isinstance(day, list):
+            return {'sessions': [_session_of(c, prefix) for c in day], 'light': False}
+        return {'sessions': [_session_of(c, prefix) for c in day.get('categories') or []], 'light': bool(day.get('light'))}
+
+    out = []
+    for doc in (yaml.safe_load(files['philosophy.yaml']) or {}).get('tracks') or []:
+        if doc.get('id') == LIBRARY_TRACK:
+            continue
+        phases_out = doc.get('phases') or []
+        framework = frameworks.get((phases_out[0] if phases_out else {}).get('framework_id')) or {}
+        track = {'id': doc['id'], 'name': doc.get('name'),
+                 'deload_every': (framework.get('deload_protocol') or {}).get('frequency_weeks'),
+                 'phases': [{'id': ph['id'], 'name': ph.get('name'), 'kind': ph.get('kind'), 'weeks': ph.get('weeks'),
+                             'template': [[day_in(d) for d in row] for row in ph.get('week_templates') or []]}
+                            for ph in phases_out]}
+        if doc.get('description'):
+            track['description'] = doc['description']
+        out.append(track)
+    return out
+
+
+def tracks_placing(tracks: list[dict], session_id: str) -> list[str]:
+    """The names of the tracks that have a session on a day."""
+    return [t['name'] for t in tracks
+            if any(session_id in d['sessions'] for ph in t['phases'] for row in ph['template'] for d in row)]
+
+
+def framework_id_of(track_id: str, prefix: str) -> str:
+    return f'{package_id(prefix)}_t_{track_id}'
+
+
+# ─── Every session and track → one package ───────────────────────────────────
+
+def _dump(doc) -> str:
+    return yaml.safe_dump(doc, sort_keys=False, allow_unicode=True, width=100)
+
+
+def compose(archetypes: list[dict], prefix: str, cat: dict | None = None, tracks: list[dict] | None = None) -> dict:
+    """The file map of the athlete's "My sessions" package: its sessions in
+    the order given, and its tracks (read_track's). With no track of the
+    athlete's, one "Library" track lays the sessions out so the package
+    generates; nothing else is invented."""
+    cat = cat or catalog()
+    pkg = package_id(prefix)
+    modalities = list(dict.fromkeys(a['modality'] for a in archetypes))
+    owners = sorted({o for a in archetypes for s in a['slots']
+                     for o in [(cat['exercises'].get(s['exercise_filter']['exercise_ids'][0]) or {}).get('_package')]
+                     if o and o != pkg})
+    built = [track_files(t, archetypes, prefix, pkg) for t in tracks or []] or [_library(archetypes, prefix, pkg)]
+    philosophy = {
+        'id': pkg, 'name': PACKAGE_NAME,
+        'core_principles': ['Sessions composed by hand, done as written.'],
+        'scope': modalities, 'bias': modalities[:3],
+        'self_contained': True,
+        **({'borrows_from': [{'package': o, 'kinds': ['exercises'],
+                              'reason': 'A session of mine uses its movements.'} for o in owners]} if owners else {}),
+        'notes': 'The sessions and programs I built myself.',
+        'primary_track_id': built[0][0]['id'],
+        'tracks': [track for track, _ in built],
+    }
+    files = {'philosophy.yaml': _dump(philosophy), 'exercises.yaml': _dump({'exercises': []})}
+    for _, framework in built:
+        files[f'frameworks/{framework["id"]}.yaml'] = _dump(framework)
     for a in archetypes:
         files[f'archetypes/{a["id"]}.yaml'] = _dump(a)
     return files
 
 
 def stored_archetypes(files: dict | None) -> list[dict]:
-    """A stored package's sessions as archetypes, in the order its framework
-    lists them."""
+    """A stored package's sessions as archetypes, in the order its frameworks
+    list them."""
     if not files:
         return []
     found = {}
@@ -637,3 +889,64 @@ def described(arch: dict, cat: dict | None = None, weeks: int = 4) -> dict:
             'equipment': arch.get('required_equipment') or [],
             'preview': session_blocks.for_archetype(arch, pools=pools),
             'forecast': forecast}
+
+
+def described_track(track: dict, archetypes: list[dict], prefix: str, cat: dict | None = None, weeks: int = 16) -> dict:
+    """A track with what the server derives from it: each phase's weeks with
+    their sessions named and timed, which weeks of the track are lighter, the
+    equipment it needs, each moving exercise's numbers week by week across the
+    phases, and the constraints that generate it as laid (`startWith`)."""
+    from src.analytics.exercise_series import prescribed_text
+    from src.progression import calculate_load
+    cat = cat or catalog()
+    by_id = {a['id']: a for a in archetypes}
+    deload = track.get('deload_every')
+    phases_out, calendar, at = [], [], 0
+    for ph in track['phases']:
+        rows = []
+        for row in ph['template']:
+            rows.append([{'day': DAY_NAMES[d], 'light': day['light'], 'minutes': _day_minutes(day, by_id),
+                          'sessions': [{'id': s, 'name': by_id[s]['name'], 'modality': by_id[s]['modality'],
+                                        'minutes': by_id[s]['duration_estimate_minutes']} for s in day['sessions']]}
+                         for d, day in enumerate(row)])
+        lighter = []
+        for w in range(1, ph['weeks'] + 1):
+            is_deload = bool(deload) and w % deload == 0
+            calendar.append((at + w, w, is_deload, ph['template'][(w - 1) % len(ph['template'])]))
+            if is_deload:
+                lighter.append(at + w)
+        per_week = [sum(1 for d in row if d['sessions']) for row in rows]
+        phases_out.append({**{k: ph[k] for k in ('id', 'name', 'kind', 'weeks')},
+                           'template': ph['template'], 'weeksDescribed': rows,
+                           'firstWeek': at + 1, 'lastWeek': at + ph['weeks'], 'lighterWeeks': lighter,
+                           'sessionsPerWeek': round(sum(per_week) / len(per_week), 1),
+                           'minutesPerWeek': round(sum(d['minutes'] for row in rows for d in row) / len(rows))})
+        at += ph['weeks']
+    used = [by_id[s] for ph in track['phases'] for row in ph['template'] for d in row for s in d['sessions']]
+    forecast, seen = [], set()
+    for arch in used:
+        for slot in arch['slots']:
+            key = (arch['id'], slot['role'])
+            if key in seen or not (slot.get('progress') or slot.get('start_kg') is not None):
+                continue
+            seen.add(key)
+            ex = cat['exercises'].get(slot['exercise_filter']['exercise_ids'][0]) or {}
+            lines = []
+            for week, _, is_deload, row in calendar[:weeks]:
+                day = next((d for d in row if arch['id'] in d['sessions']), None)
+                if day is None:
+                    continue
+                light = day['light'] or is_deload
+                view = {**slot, 'light_share': 0.8} if light and slot.get('start_kg') is not None else slot
+                load = calculate_load(ex, view, 'as_written', 1, 'build', 'intermediate', is_deload, written_week=week)
+                lines.append({'week': week, 'text': prescribed_text(load), 'light': light})
+            if lines:
+                forecast.append({'session': arch['name'], 'exercise': ex.get('name'), 'weeks': lines})
+    minutes = [d['minutes'] for ph in phases_out for row in ph['weeksDescribed'] for d in row if d['minutes']]
+    return {'id': track['id'], 'name': track['name'], 'description': track.get('description'),
+            'deload_every': deload, 'phases': phases_out, 'totalWeeks': at,
+            'frameworkId': framework_id_of(track['id'], prefix),
+            'equipment': sorted({e for a in used for e in a.get('required_equipment') or []}),
+            'forecast': forecast,
+            'startWith': {'days_per_week': max(1, round(max(p['sessionsPerWeek'] for p in phases_out))),
+                          'session_time_minutes': max(MIN_SESSION_ROOM, *minutes) if minutes else 60}}

@@ -1,0 +1,1134 @@
+{
+ "list": {
+  "packageId": "ub544b040_manual",
+  "tracks": [
+   {
+    "id": "strength_block",
+    "name": "Strength block II",
+    "description": null,
+    "deload_every": null,
+    "phases": [
+     {
+      "id": "build",
+      "name": "Build",
+      "kind": "build",
+      "weeks": 4,
+      "template": [
+       [
+        {
+         "sessions": [
+          "ub544b040_ms_squat_day"
+         ],
+         "light": false
+        },
+        {
+         "sessions": [],
+         "light": false
+        },
+        {
+         "sessions": [
+          "ub544b040_ms_everything"
+         ],
+         "light": false
+        },
+        {
+         "sessions": [],
+         "light": false
+        },
+        {
+         "sessions": [
+          "ub544b040_ms_squat_day",
+          "ub544b040_ms_everything"
+         ],
+         "light": false
+        },
+        {
+         "sessions": [],
+         "light": false
+        },
+        {
+         "sessions": [],
+         "light": false
+        }
+       ],
+       [
+        {
+         "sessions": [
+          "ub544b040_ms_squat_day"
+         ],
+         "light": false
+        },
+        {
+         "sessions": [],
+         "light": false
+        },
+        {
+         "sessions": [],
+         "light": false
+        },
+        {
+         "sessions": [
+          "ub544b040_ms_everything"
+         ],
+         "light": true
+        },
+        {
+         "sessions": [],
+         "light": false
+        },
+        {
+         "sessions": [],
+         "light": false
+        },
+        {
+         "sessions": [],
+         "light": false
+        }
+       ]
+      ],
+      "weeksDescribed": [
+       [
+        {
+         "day": "Monday",
+         "light": false,
+         "minutes": 15,
+         "sessions": [
+          {
+           "id": "ub544b040_ms_squat_day",
+           "name": "Squat day, heavy",
+           "modality": "max_strength",
+           "minutes": 15
+          }
+         ]
+        },
+        {
+         "day": "Tuesday",
+         "light": false,
+         "minutes": 0,
+         "sessions": []
+        },
+        {
+         "day": "Wednesday",
+         "light": false,
+         "minutes": 85,
+         "sessions": [
+          {
+           "id": "ub544b040_ms_everything",
+           "name": "Everything",
+           "modality": "mixed_modal_conditioning",
+           "minutes": 85
+          }
+         ]
+        },
+        {
+         "day": "Thursday",
+         "light": false,
+         "minutes": 0,
+         "sessions": []
+        },
+        {
+         "day": "Friday",
+         "light": false,
+         "minutes": 100,
+         "sessions": [
+          {
+           "id": "ub544b040_ms_squat_day",
+           "name": "Squat day, heavy",
+           "modality": "max_strength",
+           "minutes": 15
+          },
+          {
+           "id": "ub544b040_ms_everything",
+           "name": "Everything",
+           "modality": "mixed_modal_conditioning",
+           "minutes": 85
+          }
+         ]
+        },
+        {
+         "day": "Saturday",
+         "light": false,
+         "minutes": 0,
+         "sessions": []
+        },
+        {
+         "day": "Sunday",
+         "light": false,
+         "minutes": 0,
+         "sessions": []
+        }
+       ],
+       [
+        {
+         "day": "Monday",
+         "light": false,
+         "minutes": 15,
+         "sessions": [
+          {
+           "id": "ub544b040_ms_squat_day",
+           "name": "Squat day, heavy",
+           "modality": "max_strength",
+           "minutes": 15
+          }
+         ]
+        },
+        {
+         "day": "Tuesday",
+         "light": false,
+         "minutes": 0,
+         "sessions": []
+        },
+        {
+         "day": "Wednesday",
+         "light": false,
+         "minutes": 0,
+         "sessions": []
+        },
+        {
+         "day": "Thursday",
+         "light": true,
+         "minutes": 85,
+         "sessions": [
+          {
+           "id": "ub544b040_ms_everything",
+           "name": "Everything",
+           "modality": "mixed_modal_conditioning",
+           "minutes": 85
+          }
+         ]
+        },
+        {
+         "day": "Friday",
+         "light": false,
+         "minutes": 0,
+         "sessions": []
+        },
+        {
+         "day": "Saturday",
+         "light": false,
+         "minutes": 0,
+         "sessions": []
+        },
+        {
+         "day": "Sunday",
+         "light": false,
+         "minutes": 0,
+         "sessions": []
+        }
+       ]
+      ],
+      "firstWeek": 1,
+      "lastWeek": 4,
+      "lighterWeeks": [],
+      "sessionsPerWeek": 2.5,
+      "minutesPerWeek": 150
+     },
+     {
+      "id": "peak",
+      "name": "Peak",
+      "kind": "peak",
+      "weeks": 2,
+      "template": [
+       [
+        {
+         "sessions": [],
+         "light": false
+        },
+        {
+         "sessions": [
+          "ub544b040_ms_squat_day"
+         ],
+         "light": false
+        },
+        {
+         "sessions": [],
+         "light": false
+        },
+        {
+         "sessions": [],
+         "light": false
+        },
+        {
+         "sessions": [],
+         "light": false
+        },
+        {
+         "sessions": [
+          "ub544b040_ms_everything"
+         ],
+         "light": false
+        },
+        {
+         "sessions": [],
+         "light": false
+        }
+       ]
+      ],
+      "weeksDescribed": [
+       [
+        {
+         "day": "Monday",
+         "light": false,
+         "minutes": 0,
+         "sessions": []
+        },
+        {
+         "day": "Tuesday",
+         "light": false,
+         "minutes": 15,
+         "sessions": [
+          {
+           "id": "ub544b040_ms_squat_day",
+           "name": "Squat day, heavy",
+           "modality": "max_strength",
+           "minutes": 15
+          }
+         ]
+        },
+        {
+         "day": "Wednesday",
+         "light": false,
+         "minutes": 0,
+         "sessions": []
+        },
+        {
+         "day": "Thursday",
+         "light": false,
+         "minutes": 0,
+         "sessions": []
+        },
+        {
+         "day": "Friday",
+         "light": false,
+         "minutes": 0,
+         "sessions": []
+        },
+        {
+         "day": "Saturday",
+         "light": false,
+         "minutes": 85,
+         "sessions": [
+          {
+           "id": "ub544b040_ms_everything",
+           "name": "Everything",
+           "modality": "mixed_modal_conditioning",
+           "minutes": 85
+          }
+         ]
+        },
+        {
+         "day": "Sunday",
+         "light": false,
+         "minutes": 0,
+         "sessions": []
+        }
+       ]
+      ],
+      "firstWeek": 5,
+      "lastWeek": 6,
+      "lighterWeeks": [],
+      "sessionsPerWeek": 2.0,
+      "minutesPerWeek": 100
+     }
+    ],
+    "totalWeeks": 6,
+    "frameworkId": "ub544b040_manual_t_strength_block",
+    "equipment": [
+     "barbell",
+     "open_space",
+     "plates",
+     "pull_up_bar",
+     "rack",
+     "rower"
+    ],
+    "forecast": [
+     {
+      "session": "Squat day, heavy",
+      "exercise": "Back Squat",
+      "weeks": [
+       {
+        "week": 1,
+        "text": "3 × 5 @ 80 kg",
+        "light": false
+       },
+       {
+        "week": 2,
+        "text": "3 × 5 @ 82.5 kg",
+        "light": false
+       },
+       {
+        "week": 3,
+        "text": "3 × 5 @ 85 kg",
+        "light": false
+       },
+       {
+        "week": 4,
+        "text": "3 × 5 @ 87.5 kg",
+        "light": false
+       },
+       {
+        "week": 5,
+        "text": "3 × 5 @ 90 kg",
+        "light": false
+       },
+       {
+        "week": 6,
+        "text": "3 × 5 @ 92.5 kg",
+        "light": false
+       }
+      ]
+     },
+     {
+      "session": "Everything",
+      "exercise": "Full Push-Up Progression",
+      "weeks": [
+       {
+        "week": 1,
+        "text": "10 reps/round | 3 rounds FOR TIME",
+        "light": false
+       },
+       {
+        "week": 2,
+        "text": "10 reps/round | 4 rounds FOR TIME",
+        "light": true
+       },
+       {
+        "week": 3,
+        "text": "10 reps/round | 5 rounds FOR TIME",
+        "light": false
+       },
+       {
+        "week": 4,
+        "text": "10 reps/round | 6 rounds FOR TIME",
+        "light": true
+       },
+       {
+        "week": 5,
+        "text": "10 reps/round | 7 rounds FOR TIME",
+        "light": false
+       },
+       {
+        "week": 6,
+        "text": "10 reps/round | 8 rounds FOR TIME",
+        "light": false
+       }
+      ]
+     },
+     {
+      "session": "Everything",
+      "exercise": "Air Squat",
+      "weeks": [
+       {
+        "week": 1,
+        "text": "21-15-9 reps | 43 kg | 10 min FOR TIME — target 3 rounds",
+        "light": false
+       },
+       {
+        "week": 2,
+        "text": "21-15-9 reps | 34.5 kg | 10 min FOR TIME — target 3 rounds",
+        "light": true
+       },
+       {
+        "week": 3,
+        "text": "21-15-9 reps | 43 kg | 10 min FOR TIME — target 3 rounds",
+        "light": false
+       },
+       {
+        "week": 4,
+        "text": "21-15-9 reps | 34.5 kg | 10 min FOR TIME — target 3 rounds",
+        "light": true
+       },
+       {
+        "week": 5,
+        "text": "21-15-9 reps | 43 kg | 10 min FOR TIME — target 3 rounds",
+        "light": false
+       },
+       {
+        "week": 6,
+        "text": "21-15-9 reps | 43 kg | 10 min FOR TIME — target 3 rounds",
+        "light": false
+       }
+      ]
+     },
+     {
+      "session": "Everything",
+      "exercise": "Easy Run (Zone 1–2)",
+      "weeks": [
+       {
+        "week": 1,
+        "text": "400m",
+        "light": false
+       },
+       {
+        "week": 2,
+        "text": "500m",
+        "light": true
+       },
+       {
+        "week": 3,
+        "text": "600m",
+        "light": false
+       },
+       {
+        "week": 4,
+        "text": "700m",
+        "light": true
+       },
+       {
+        "week": 5,
+        "text": "800m",
+        "light": false
+       },
+       {
+        "week": 6,
+        "text": "900m",
+        "light": false
+       }
+      ]
+     },
+     {
+      "session": "Everything",
+      "exercise": "Plank Hold",
+      "weeks": [
+       {
+        "week": 1,
+        "text": "3 × 30s hold",
+        "light": false
+       },
+       {
+        "week": 2,
+        "text": "3 × 35s hold",
+        "light": true
+       },
+       {
+        "week": 3,
+        "text": "3 × 40s hold",
+        "light": false
+       },
+       {
+        "week": 4,
+        "text": "3 × 45s hold",
+        "light": true
+       },
+       {
+        "week": 5,
+        "text": "3 × 50s hold",
+        "light": false
+       },
+       {
+        "week": 6,
+        "text": "3 × 55s hold",
+        "light": false
+       }
+      ]
+     }
+    ],
+    "startWith": {
+     "days_per_week": 2,
+     "session_time_minutes": 100
+    }
+   }
+  ],
+  "kinds": [
+   {
+    "id": "transition",
+    "label": "Transition",
+    "excludesMaxEffort": false
+   },
+   {
+    "id": "base",
+    "label": "Base",
+    "excludesMaxEffort": false
+   },
+   {
+    "id": "build",
+    "label": "Build",
+    "excludesMaxEffort": false
+   },
+   {
+    "id": "specific",
+    "label": "Specific",
+    "excludesMaxEffort": false
+   },
+   {
+    "id": "peak",
+    "label": "Peak",
+    "excludesMaxEffort": false
+   },
+   {
+    "id": "taper",
+    "label": "Taper",
+    "excludesMaxEffort": true
+   },
+   {
+    "id": "maintenance",
+    "label": "Maintenance",
+    "excludesMaxEffort": false
+   },
+   {
+    "id": "deload",
+    "label": "Deload",
+    "excludesMaxEffort": false
+   },
+   {
+    "id": "recovery",
+    "label": "Recovery",
+    "excludesMaxEffort": false
+   },
+   {
+    "id": "rehab",
+    "label": "Rehab",
+    "excludesMaxEffort": false
+   },
+   {
+    "id": "post_op",
+    "label": "Post-Op",
+    "excludesMaxEffort": false
+   },
+   {
+    "id": "active",
+    "label": "Active",
+    "excludesMaxEffort": false
+   }
+  ],
+  "limits": {
+   "tracks": 6,
+   "phases": 8,
+   "templateWeeks": 8,
+   "daySessions": 2,
+   "phaseWeeks": 52
+  }
+ },
+ "preview": {
+  "ok": true,
+  "problems": [],
+  "track": {
+   "id": "draft",
+   "name": "Strength block",
+   "description": null,
+   "deload_every": 4,
+   "phases": [
+    {
+     "id": "build",
+     "name": "Build",
+     "kind": "build",
+     "weeks": 4,
+     "template": [
+      [
+       {
+        "sessions": [
+         "ub544b040_ms_squat_day"
+        ],
+        "light": false
+       },
+       {
+        "sessions": [],
+        "light": false
+       },
+       {
+        "sessions": [
+         "ub544b040_ms_everything"
+        ],
+        "light": false
+       },
+       {
+        "sessions": [],
+        "light": false
+       },
+       {
+        "sessions": [
+         "ub544b040_ms_squat_day",
+         "ub544b040_ms_everything"
+        ],
+        "light": false
+       },
+       {
+        "sessions": [],
+        "light": false
+       },
+       {
+        "sessions": [],
+        "light": false
+       }
+      ],
+      [
+       {
+        "sessions": [
+         "ub544b040_ms_squat_day"
+        ],
+        "light": false
+       },
+       {
+        "sessions": [],
+        "light": false
+       },
+       {
+        "sessions": [],
+        "light": false
+       },
+       {
+        "sessions": [
+         "ub544b040_ms_everything"
+        ],
+        "light": true
+       },
+       {
+        "sessions": [],
+        "light": false
+       },
+       {
+        "sessions": [],
+        "light": false
+       },
+       {
+        "sessions": [],
+        "light": false
+       }
+      ]
+     ],
+     "weeksDescribed": [
+      [
+       {
+        "day": "Monday",
+        "light": false,
+        "minutes": 15,
+        "sessions": [
+         {
+          "id": "ub544b040_ms_squat_day",
+          "name": "Squat day, heavy",
+          "modality": "max_strength",
+          "minutes": 15
+         }
+        ]
+       },
+       {
+        "day": "Tuesday",
+        "light": false,
+        "minutes": 0,
+        "sessions": []
+       },
+       {
+        "day": "Wednesday",
+        "light": false,
+        "minutes": 85,
+        "sessions": [
+         {
+          "id": "ub544b040_ms_everything",
+          "name": "Everything",
+          "modality": "mixed_modal_conditioning",
+          "minutes": 85
+         }
+        ]
+       },
+       {
+        "day": "Thursday",
+        "light": false,
+        "minutes": 0,
+        "sessions": []
+       },
+       {
+        "day": "Friday",
+        "light": false,
+        "minutes": 100,
+        "sessions": [
+         {
+          "id": "ub544b040_ms_squat_day",
+          "name": "Squat day, heavy",
+          "modality": "max_strength",
+          "minutes": 15
+         },
+         {
+          "id": "ub544b040_ms_everything",
+          "name": "Everything",
+          "modality": "mixed_modal_conditioning",
+          "minutes": 85
+         }
+        ]
+       },
+       {
+        "day": "Saturday",
+        "light": false,
+        "minutes": 0,
+        "sessions": []
+       },
+       {
+        "day": "Sunday",
+        "light": false,
+        "minutes": 0,
+        "sessions": []
+       }
+      ],
+      [
+       {
+        "day": "Monday",
+        "light": false,
+        "minutes": 15,
+        "sessions": [
+         {
+          "id": "ub544b040_ms_squat_day",
+          "name": "Squat day, heavy",
+          "modality": "max_strength",
+          "minutes": 15
+         }
+        ]
+       },
+       {
+        "day": "Tuesday",
+        "light": false,
+        "minutes": 0,
+        "sessions": []
+       },
+       {
+        "day": "Wednesday",
+        "light": false,
+        "minutes": 0,
+        "sessions": []
+       },
+       {
+        "day": "Thursday",
+        "light": true,
+        "minutes": 85,
+        "sessions": [
+         {
+          "id": "ub544b040_ms_everything",
+          "name": "Everything",
+          "modality": "mixed_modal_conditioning",
+          "minutes": 85
+         }
+        ]
+       },
+       {
+        "day": "Friday",
+        "light": false,
+        "minutes": 0,
+        "sessions": []
+       },
+       {
+        "day": "Saturday",
+        "light": false,
+        "minutes": 0,
+        "sessions": []
+       },
+       {
+        "day": "Sunday",
+        "light": false,
+        "minutes": 0,
+        "sessions": []
+       }
+      ]
+     ],
+     "firstWeek": 1,
+     "lastWeek": 4,
+     "lighterWeeks": [
+      4
+     ],
+     "sessionsPerWeek": 2.5,
+     "minutesPerWeek": 150
+    },
+    {
+     "id": "peak",
+     "name": "Peak",
+     "kind": "peak",
+     "weeks": 2,
+     "template": [
+      [
+       {
+        "sessions": [],
+        "light": false
+       },
+       {
+        "sessions": [
+         "ub544b040_ms_squat_day"
+        ],
+        "light": false
+       },
+       {
+        "sessions": [],
+        "light": false
+       },
+       {
+        "sessions": [],
+        "light": false
+       },
+       {
+        "sessions": [],
+        "light": false
+       },
+       {
+        "sessions": [
+         "ub544b040_ms_everything"
+        ],
+        "light": false
+       },
+       {
+        "sessions": [],
+        "light": false
+       }
+      ]
+     ],
+     "weeksDescribed": [
+      [
+       {
+        "day": "Monday",
+        "light": false,
+        "minutes": 0,
+        "sessions": []
+       },
+       {
+        "day": "Tuesday",
+        "light": false,
+        "minutes": 15,
+        "sessions": [
+         {
+          "id": "ub544b040_ms_squat_day",
+          "name": "Squat day, heavy",
+          "modality": "max_strength",
+          "minutes": 15
+         }
+        ]
+       },
+       {
+        "day": "Wednesday",
+        "light": false,
+        "minutes": 0,
+        "sessions": []
+       },
+       {
+        "day": "Thursday",
+        "light": false,
+        "minutes": 0,
+        "sessions": []
+       },
+       {
+        "day": "Friday",
+        "light": false,
+        "minutes": 0,
+        "sessions": []
+       },
+       {
+        "day": "Saturday",
+        "light": false,
+        "minutes": 85,
+        "sessions": [
+         {
+          "id": "ub544b040_ms_everything",
+          "name": "Everything",
+          "modality": "mixed_modal_conditioning",
+          "minutes": 85
+         }
+        ]
+       },
+       {
+        "day": "Sunday",
+        "light": false,
+        "minutes": 0,
+        "sessions": []
+       }
+      ]
+     ],
+     "firstWeek": 5,
+     "lastWeek": 6,
+     "lighterWeeks": [],
+     "sessionsPerWeek": 2.0,
+     "minutesPerWeek": 100
+    }
+   ],
+   "totalWeeks": 6,
+   "frameworkId": "ub544b040_manual_t_draft",
+   "equipment": [
+    "barbell",
+    "open_space",
+    "plates",
+    "pull_up_bar",
+    "rack",
+    "rower"
+   ],
+   "forecast": [
+    {
+     "session": "Squat day, heavy",
+     "exercise": "Back Squat",
+     "weeks": [
+      {
+       "week": 1,
+       "text": "3 × 5 @ 80 kg",
+       "light": false
+      },
+      {
+       "week": 2,
+       "text": "3 × 5 @ 82.5 kg",
+       "light": false
+      },
+      {
+       "week": 3,
+       "text": "3 × 5 @ 85 kg",
+       "light": false
+      },
+      {
+       "week": 4,
+       "text": "3 × 5 @ 68 kg",
+       "light": true
+      },
+      {
+       "week": 5,
+       "text": "3 × 5 @ 90 kg",
+       "light": false
+      },
+      {
+       "week": 6,
+       "text": "3 × 5 @ 92.5 kg",
+       "light": false
+      }
+     ]
+    },
+    {
+     "session": "Everything",
+     "exercise": "Full Push-Up Progression",
+     "weeks": [
+      {
+       "week": 1,
+       "text": "10 reps/round | 3 rounds FOR TIME",
+       "light": false
+      },
+      {
+       "week": 2,
+       "text": "10 reps/round | 4 rounds FOR TIME",
+       "light": true
+      },
+      {
+       "week": 3,
+       "text": "10 reps/round | 5 rounds FOR TIME",
+       "light": false
+      },
+      {
+       "week": 4,
+       "text": "10 reps/round | 5 rounds FOR TIME",
+       "light": true
+      },
+      {
+       "week": 5,
+       "text": "10 reps/round | 7 rounds FOR TIME",
+       "light": false
+      },
+      {
+       "week": 6,
+       "text": "10 reps/round | 8 rounds FOR TIME",
+       "light": false
+      }
+     ]
+    },
+    {
+     "session": "Everything",
+     "exercise": "Air Squat",
+     "weeks": [
+      {
+       "week": 1,
+       "text": "21-15-9 reps | 43 kg | 10 min FOR TIME — target 3 rounds",
+       "light": false
+      },
+      {
+       "week": 2,
+       "text": "21-15-9 reps | 34.5 kg | 10 min FOR TIME — target 3 rounds",
+       "light": true
+      },
+      {
+       "week": 3,
+       "text": "21-15-9 reps | 43 kg | 10 min FOR TIME — target 3 rounds",
+       "light": false
+      },
+      {
+       "week": 4,
+       "text": "21-15-9 reps | 34.5 kg | 10 min FOR TIME — target 3 rounds",
+       "light": true
+      },
+      {
+       "week": 5,
+       "text": "21-15-9 reps | 43 kg | 10 min FOR TIME — target 3 rounds",
+       "light": false
+      },
+      {
+       "week": 6,
+       "text": "21-15-9 reps | 43 kg | 10 min FOR TIME — target 3 rounds",
+       "light": false
+      }
+     ]
+    },
+    {
+     "session": "Everything",
+     "exercise": "Easy Run (Zone 1–2)",
+     "weeks": [
+      {
+       "week": 1,
+       "text": "400m",
+       "light": false
+      },
+      {
+       "week": 2,
+       "text": "500m",
+       "light": true
+      },
+      {
+       "week": 3,
+       "text": "600m",
+       "light": false
+      },
+      {
+       "week": 4,
+       "text": "600m",
+       "light": true
+      },
+      {
+       "week": 5,
+       "text": "800m",
+       "light": false
+      },
+      {
+       "week": 6,
+       "text": "900m",
+       "light": false
+      }
+     ]
+    },
+    {
+     "session": "Everything",
+     "exercise": "Plank Hold",
+     "weeks": [
+      {
+       "week": 1,
+       "text": "3 × 30s hold",
+       "light": false
+      },
+      {
+       "week": 2,
+       "text": "3 × 35s hold",
+       "light": true
+      },
+      {
+       "week": 3,
+       "text": "3 × 40s hold",
+       "light": false
+      },
+      {
+       "week": 4,
+       "text": "3 × 40s hold",
+       "light": true
+      },
+      {
+       "week": 5,
+       "text": "3 × 50s hold",
+       "light": false
+      },
+      {
+       "week": 6,
+       "text": "3 × 55s hold",
+       "light": false
+      }
+     ]
+    }
+   ],
+   "startWith": {
+    "days_per_week": 2,
+    "session_time_minutes": 100
+   }
+  }
+ }
+}

@@ -98,6 +98,7 @@ def advice_for(category: dict, level: str | None) -> str | None:
 
 
 def _prefixed(arch: dict, prefix: str, note: str = '', light: bool = False, bare: bool = True,
+              light_share: float = 0.8,
               advice: str | None = None) -> list[dict]:
     """The archetype's slots under `prefix`, each note led by `note`; a slot
     with no note of its own takes it alone only when `bare` (the warm-up's
@@ -122,12 +123,16 @@ def _prefixed(arch: dict, prefix: str, note: str = '', light: bool = False, bare
         if light and slot.get('slot_type') not in ('time_domain', 'distance', 'skill_practice'):
             written = slot.get('load')
             slot['load'] = 'Light, work on form' + (f' (written: {written})' if written else '')
+            if slot.get('start_kg') is not None:
+                # A weight the slot writes itself is lifted at a share of it
+                # (progression._as_written); a weight in words stays words.
+                slot['light_share'] = light_share
         slots.append(slot)
     return slots
 
 
 def compose(pieces: list[tuple[str, dict]], warm: dict | None, light: bool, categories: dict,
-            level: str | None = None) -> dict:
+            level: str | None = None, light_share: float = 0.8) -> dict:
     """One session's archetype: the warm-up's slots, then each piece's in the
     day's order, each piece's first movement closing with its category's
     advice for the athlete's level. Its id is the first piece's, so rotation,
@@ -141,7 +146,7 @@ def compose(pieces: list[tuple[str, dict]], warm: dict | None, light: bool, cate
     for k, (cat, arch) in enumerate(pieces):
         slots += _prefixed(arch, '' if k == 0 else f"{arch['id']}__",
                            f"{arch['name']}: " if len(pieces) > 1 else '', light, bare=False,
-                           advice=advice_for(categories.get(cat) or {}, level))
+                           advice=advice_for(categories.get(cat) or {}, level), light_share=light_share)
     minutes = sum(a.get('duration_estimate_minutes') or 0 for _, a in pieces) + \
         ((warm or {}).get('duration_estimate_minutes') or 0)
     composed = {**main, 'name': ' + '.join(a['name'] for _, a in pieces), 'slots': slots,
@@ -170,22 +175,26 @@ def plan_week(entry: dict, framework: dict, constraints: dict, archetypes: dict,
     written), which was taken. The week is the same with or without it."""
     recent = recent if recent is not None else []
     categories = framework.get('categories') or {}
-    days = constraints.get('days_per_week', 6)
+    # A week its author laid on its days (a track built by hand) runs on them:
+    # no day is dropped for a shorter week or moved to a preferred one.
+    fixed = bool(framework.get('fixed_days'))
+    days = 7 if fixed else constraints.get('days_per_week', 6)
     kept, dropped = training_days(entry['week_template'], days, entry.get('drop_order') or [], categories)
     notes = []
     if dropped:
         notes.append(f"With {days} training days the week leaves out: {', '.join(dropped)} "
                      f"(the source trains {len(kept) + len(dropped)} days).")
     total = len([d for d in entry['week_template'] if d != REST])
-    if days > total:
+    if days > total and not fixed:
         notes.append(f"The source trains {total} days a week and rests the others; "
                      f"{days - total} of your days stay rest days.")
     cap = constraints.get('session_time_minutes', 60)
     day_configs = constraints.get('day_configs') or {}
-    day_minutes = {d: min(cap, (day_configs.get(d) or {}).get('minutes', cap)) for d in range(1, 8)}
-    placed = place_days(kept, sorted(constraints.get('preferred_days') or []),
-                        sorted(constraints.get('forced_rest_days') or []), day_minutes,
-                        lambda spec: categories.get(spec['categories'][0], {}).get('long_day', False))
+    day_minutes = {d: cap if fixed else min(cap, (day_configs.get(d) or {}).get('minutes', cap)) for d in range(1, 8)}
+    placed = list(kept) if fixed else place_days(
+        kept, sorted(constraints.get('preferred_days') or []),
+        sorted(constraints.get('forced_rest_days') or []), day_minutes,
+        lambda spec: categories.get(spec['categories'][0], {}).get('long_day', False))
     warm_cat = framework.get('warm_up_category')
     schedule: dict = {}
     asking: list[dict] = []   # every pool asked for the day in hand (the trace)
@@ -239,6 +248,9 @@ def plan_week(entry: dict, framework: dict, constraints: dict, archetypes: dict,
         return None
 
     for day, spec in placed:
+        if entry.get('light_week'):
+            # A deload week of a framework that says its deloads are light days.
+            spec = {**spec, 'light': True}
         limit = day_minutes[day]
         if trace is not None:
             asking = trace['days'].setdefault(day, {'categories': list(spec['categories']), 'minutes': limit,
@@ -293,7 +305,8 @@ def plan_week(entry: dict, framework: dict, constraints: dict, archetypes: dict,
             'pieces': [{'category': c, 'archetype_id': a['id'], 'name': a['name']} for c, a in pieces],
             **({'warm_up': {'archetype_id': warm['id'], 'name': warm['name']}} if warm else {}),
             **({'light': True} if spec['light'] else {}),
-            '_forced_archetype': compose(pieces, warm, spec['light'], categories, constraints.get('training_level')),
+            '_forced_archetype': compose(pieces, warm, spec['light'], categories, constraints.get('training_level'),
+                                         float((framework.get('progression_defaults') or {}).get('light_share', 0.8))),
         }]
     return schedule, list(dict.fromkeys(notes))
 

@@ -136,7 +136,12 @@ None of this fails a check; all of it decides what the athlete is prescribed.
   `start_kg` (the weight, a number) and `progress` — `add_kg`, `add_reps` (with
   `top_reps`: reps climb to the top, then start again with `add_kg` more), `add_sec`,
   `add_m`, `add_rounds`, one step every `every_weeks` (1) of the phase, none in a deload
-  week. A slot without them is the same every week.
+  week. A slot without them is the same every week. The count starts again with each
+  phase unless the framework says `progression_defaults: {written_weeks: track}`; on a
+  template day marked `light` such a weight is lifted at `light_share` of itself (0.8),
+  and `deload_light: true` makes every day of a deload week light.
+  `progress.earned: true` counts the steps by sessions made instead of weeks: a missed
+  session repeats (`src/earned_progress.py`).
 - **Vocabulary of your own.** The schemas' equipment, modality and movement-pattern lists
   are the commons'; an id the package's `vocabulary.yaml` declares is accepted wherever
   they are.

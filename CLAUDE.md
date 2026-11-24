@@ -177,6 +177,7 @@ All prefixed `/api/`:
 | GET | `/dev/portability` | For Dev Lab ▸ Builder readiness (`components/devlab/ReadinessPanel.tsx`): the steps of the LLM package builder's foundation (roadmap item 20) with every gap, open or done; per package its engine shape per track, the files it carries, the records it still needs outside its folder (scorecard, coverage, status, golden hashes, dossier; `done: null` and listed in `unchecked` where the deployment lacks the file — the API image has no `docs/`), any id the commons do not define, and ids two packages declare (which copy the loader keeps); with `tools/portability_gaps.json`, what no package can bring in its folder yet, each gap anchored in the code (`src/portability.py`, `test_portability.py`). Local dev or `AUTHORING_ENABLED` only |
 | GET | `/dev/builds`, `/dev/builds/<id>` | For Dev Lab ▸ Builds (`components/devlab/BuildsPanel.tsx`): the signed-in account's own last builds of a method with what each spent (turns, checks, tokens, seconds, the tokens' cost at `package_builder.PRICE`) and their totals; one build in full — the request, each turn's calls, answers and tokens, each check's problems and the program the model was shown, replies thrown away at the output limit, the draft's files (`src/build_report.py`, pure over a `package_builds` row; the list reads no transcript). The builder's gate (`require_builder`), never another account's build (404) |
 | GET/POST/PUT/DELETE | `/manual/sessions[/<id>]`, POST `/manual/preview` | Sessions composed by hand (roadmap 24, `src/manual_builder.py`): a session is `blocks` (`kind`: sets, superset, alternate, rounds, amrap, emom, for_time, interval, timed, distance, hold, practice; a `stage`; `movements` naming existing exercises with their counts, `start_kg` and `progress`). The server writes it as an archetype (`to_archetype`; `from_archetype` reads it back), composes all of an athlete's into one package of theirs, "My sessions" (`compose`), and installs it through the gates; every answer carries what the server derives (`preview` blocks, minutes, equipment, `forecast`: the first weeks in words). `/preview` stores nothing and runs no gate. 422 `problems` name the block and movement; 409 `in_use` for a session on a day of the program. The builder's gate (`require_builder`); a saved session goes on a day through `/sessions/generate {archetype_id, add: true}` |
+| GET/POST/PUT/DELETE | `/manual/tracks[/<id>]`, POST `/manual/tracks/preview` | Programs laid out by hand (roadmap 24.4, `src/manual_builder.py`): a track is `phases` (`name`, `kind`, `weeks`, `template`: 1–8 weeks of seven days that repeat through the phase, a day `{sessions: [saved session id, at most two], light?}`) and `deload_every`. It is stored as a track of the same "My sessions" package on a framework of its own (`track_files`: `fixed_days`, `written_weeks: track`, `deload_light`), read back from the files (`stored_tracks`) so saving a session keeps it; the generated "Library" track exists only while the athlete has none. Every answer carries what the server derives (`described_track`: each phase's weeks named and timed, `lighterWeeks`, equipment, the numbers week by week, `startWith` — the generate constraints). 422 `problems` name phase, week and day; deleting a session a track places is 409 `in_track`, a track the active program runs 409 `in_use`. `GET /api/methods` marks the package `composed` |
 | POST | `/exercises/substitute` | `{alternatives: [{assignment, score, reasons}]}` — ranked swaps for one slot, selector-scored, loads for the week; 422 when nothing fits |
 | POST | `/programs/impact` | The preview's Held back: `/dev/constraint-impact`'s answer for any signed-in athlete (`api._constraint_impact`, shared); ≤ 7 generations, 12 weeks; one run in the process at a time and one per athlete — a taken gate answers 429 `busy` at once, never waiting (the clients retry); small answers cached ten minutes per body and day. Clients send the draft's own first phase and length (`impactParams`, `impactRequest(for:)`), never its event date |
 | POST | `/programs/constraint-change` | Does a profile change change the program? The regenerate body (`constraints` = the profile's) + `baseline_constraints` (the program's): both generated, diffed by `constraint_impact.diff_programs` (exercises *and* each slot's numbers, so a level change that moves only loads is affected) → `{affected, sessions, first_week_number, changes, program?}` (`program`, the new tail, only when affected); same gate as impact, never cached on the server |
@@ -464,6 +465,20 @@ group's name.
   `every_weeks`), read only under `as_written` (`progression.written_progress`): one step a
   week of the phase, none in a deload week. A slot without them is the same every week. It is
   what a session composed by hand progresses on (`src/manual_builder.py`).
+- **A week laid out by hand runs as laid** (since 2026-11-24, roadmap 24.4). Three framework keys,
+  which no shipped framework says: `fixed_days: true` (`week_template.plan_week` drops no day for a
+  shorter week and moves none onto a preferred day), `progression_defaults.written_weeks: track`
+  (a slot's own steps count the track's weeks, `phases.week_in_track`, so phase 2 carries on from
+  phase 1) and `deload_light: true` (every day of a deload week is a `light` day, on which a slot's
+  own weight is lifted at `light_share`, 0.8). A two-session day is one session of both.
+- **A slot may earn its steps** (since 2026-11-24, roadmap 24.5): `progress.earned: true` — one step for
+  each session of the slot made, none for a miss, by exposure and not by week
+  (`src/earned_progress.replan`, pure: made is `training_contract._lift_outcome`'s reading; an
+  unlogged day behind the athlete earns nothing; a logged weight re-bases the steps; a light day
+  neither earns nor counts). It runs on generate (the forecast, a tail seeded from the stored
+  weeks before it, `api._forecast_earned`) and after every session log (`api._replan_earned`):
+  loads rewritten in the stored program, no version, and the log route answers
+  `programChanged`, on which the web reloads the program. Never raises into the log save.
 - **Session time cap**: `_time_to_task` progression is capped at `session_time_minutes` — Zone 2 duration never exceeds the athlete's session limit even in build phase.
 - **Package provenance**: a program may only use its philosophy's own package, plus any package that philosophy declares in `borrows_from` (`src/provenance.py`). Enforcement is per philosophy via `self_contained: true` — all 11 are on. `api.py` and `generator.py` share one `SourcePolicy`, so validation and generation can never check different libraries. Borrowed sessions carry a `provenance` tag and are badged "via X" in the UI.
 - **Coverage gaps, not substitutions**: when a package cannot fill a slot, the slot is left empty and marked `coverage_gap` (the same way `injury_skip` marks an injury-blocked slot) rather than filled from another philosophy. Programs carry a `coverage_report` listing unfilled sessions, unfilled slots and borrowed sessions; `validate()` warns `PACKAGE_COVERAGE_GAP` per uncovered modality and only errors when every top-2 priority is uncoverable.
@@ -1808,6 +1823,7 @@ SUPABASE_URL='' .venv/bin/python test_portability.py     # Dev Lab ▸ Builder r
 .venv/bin/python test_package_gate.py                    # src/package_gate.check_package: one folder through the gates' checks, as data
 SUPABASE_URL='' .venv/bin/python test_package_builds.py   # a build as a durable job, scripted builder; SQL half on its own database
 SUPABASE_URL='' .venv/bin/python test_builder_access.py   # who may use the package builder: flag, dev role, GET /api/methods
+SUPABASE_URL='' .venv/bin/python test_earned_progress.py   # steps earned from the log: made, missed, re-based, light days, a tail, the routes
 SUPABASE_URL='' .venv/bin/python test_manual_builder.py    # sessions composed by hand: blocks ⇄ archetype, the package, the routes; --write re-records the web's fixture
 .venv/bin/python test_written_progress.py                # a slot's own weight and steps under as_written
 SUPABASE_URL='' .venv/bin/python test_private_packages.py  # an athlete's own packages: store, install through the gate, routes; SQL half on its own database
@@ -1827,6 +1843,15 @@ ranking), the draft lives in `store/sessionBuilderStore.ts`, and the server read
 (`POST /api/manual/preview`) — the builder words no prescription. After a change to the
 `/manual` routes' answers, `test_manual_builder.py --write` re-records
 `mocks/fixtures/manual-sessions.json`.
+
+**Programs are laid out by hand in Dev Lab ▸ Program builder** (`/dev?tab=program`, roadmap 24.4):
+`components/devlab/programbuilder/` draws, `lib/programBuilder.ts` holds every edit as a pure
+function, the draft lives in `store/programBuilderStore.ts`, the server reads it
+(`POST /api/manual/tracks/preview`) and answers the constraints that build it as laid
+(`startWith`). Preview opens the existing `/program/preview` with `?back=<path>`: a draft that
+did not come from the four-step builder returns there on Back and on a reload, and Start
+leaves the four-step builder's own state alone. `test_manual_builder.py --write` re-records
+`mocks/fixtures/manual-tracks.json` too.
 
 **The trace says what each engine decided** (roadmap 20.9): every week its `engine` and `tests`;
 a contract's `scheduler.contract_week` (modules, minutes, steps, the placement chosen and the next
