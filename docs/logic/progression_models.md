@@ -514,6 +514,31 @@ BREAK RESET:
 
 ---
 
+## 10. As Written (`as_written`) and a slot's own progress
+
+Nothing is computed: sets, reps, minutes, metres and the `load` text are the slot's,
+every week, with no level, phase or deload scaling (`progression._as_written`).
+
+A slot may write its own numbers and how they move — a session composed by hand
+(`progression.written_progress`, since 2026-11-24):
+
+- `start_kg`: the weight in week 1 of the phase (`weight_kg` in the load).
+- `progress`: one step every `every_weeks` (default 1) of the phase.
+  - `add_kg`: the weight takes the step.
+  - `add_reps`: reps take the step. With `top_reps` it is a double progression: reps
+    climb to the top, then return to the written reps and the weight takes `add_kg`.
+  - `add_sec` (a hold, a timed piece, an interval's work), `add_m` (a distance),
+    `add_rounds` (a piece's rounds, an interval's sets).
+- A deload week takes no step: it repeats the week before it, and the weeks after it
+  count on from there by the calendar (`written_steps`).
+- The count starts again with each phase, as `linear_load`'s does.
+
+The plan follows the calendar, not the log: a missed session does not hold the next
+week back. Progress earned from what was logged is the training contract's
+`load_per_exposure`.
+
+---
+
 ## Multi-Model Coordination
 
 When a concurrent program runs two models simultaneously (e.g., `linear_load` for strength + `time_to_task` for aerobic base):

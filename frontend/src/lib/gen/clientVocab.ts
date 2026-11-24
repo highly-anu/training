@@ -155,3 +155,7 @@ export const TRAINING_LEVEL_LABELS: Record<string, string> = {
 
 /** The slot intensities an author may write (data/commons/intensities.yaml). */
 export const INTENSITIES = ['max', 'max_effort', 'heavy', 'submaximal', 'progressing', 'moderate', 'medium', 'light', 'low', 'high', 'bodyweight', 'zone1', 'zone2', 'zone3', 'zone4', 'zone4_5', 'zone5'] as const
+
+/** Every slot type an archetype may write (docs/schemas/archetype.schema.json). */
+export const SLOT_TYPES = ['sets_reps', 'time_domain', 'distance', 'amrap', 'amrap_movement', 'emom', 'for_time', 'rounds_for_time', 'skill_practice', 'static_hold'] as const
+export type SlotType = (typeof SLOT_TYPES)[number]

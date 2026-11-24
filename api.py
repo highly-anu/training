@@ -2083,6 +2083,145 @@ def _remove_user_package(package_id: str):
     return jsonify({'removed': True})
 
 
+# ── Sessions composed by hand ────────────────────────────────────────────────
+# The manual session builder (Dev Lab ▸ Session builder; docs/roadmap.md item
+# 24). A session is blocks of existing exercises (src/manual_builder.py); the
+# athlete's sessions are one package of theirs, "My sessions", stored through
+# the same gates as any other. Behind the builder's gate.
+
+def _manual_state(user_id):
+    """(prefix, package id, the stored sessions as archetypes)."""
+    from src import manual_builder, package_store
+    prefix = package_store.owner_prefix(user_id)
+    pkg = manual_builder.package_id(prefix)
+    row = package_store.get_package(user_id, pkg)
+    return prefix, pkg, manual_builder.stored_archetypes((row or {}).get('files'))
+
+
+def _manual_gate_problems(result: dict) -> list:
+    """The gate's problems in the builder's shape (no block to point at)."""
+    return [{'block': None, 'movement': None, 'field': None,
+             'message': p.get('message') or p.get('code') or 'This could not be saved.'}
+            for p in result.get('problems') or []]
+
+
+@app.get('/api/manual/sessions')
+@require_auth
+@require_builder
+def list_manual_sessions():
+    """The athlete's hand-built sessions, each with what the server derives
+    from it (`preview` blocks, minutes, equipment, `forecast`)."""
+    from src import manual_builder, package_store
+    try:
+        _, pkg, archetypes = _manual_state(g.user_id)
+    except package_store.StoreError as e:
+        return _package_store_error(e)
+    cat = manual_builder.catalog()
+    return jsonify({'packageId': pkg, 'sessions': [manual_builder.described(a, cat) for a in archetypes],
+                    'limits': {'sessions': manual_builder.MAX_SESSIONS, 'blocks': manual_builder.MAX_BLOCKS,
+                               'movements': manual_builder.MAX_MOVEMENTS}})
+
+
+@app.post('/api/manual/preview')
+@require_auth
+@require_builder
+def preview_manual_session():
+    """A draft as it would be saved: `{session}` → `{ok, problems, session}`
+    (the described session when it reads). Stores nothing, runs no gate."""
+    from src import manual_builder, package_store
+    body = request.get_json(silent=True) or {}
+    cat = manual_builder.catalog()
+    draft = body.get('session') if isinstance(body.get('session'), dict) else {}
+    arch, problems = manual_builder.to_archetype(
+        draft, draft.get('id') or f'{package_store.owner_prefix(g.user_id)}{manual_builder.SESSION_MARK}draft', cat)
+    if arch is None:
+        return jsonify({'ok': False, 'problems': problems, 'session': None})
+    return jsonify({'ok': True, 'problems': [], 'session': manual_builder.described(arch, cat)})
+
+
+def _save_manual_session(session_id):
+    """Create (no id) or replace one session, and install the package with
+    it. 200 `{session}`; 422 `{problems}`; 404 an id the athlete has not;
+    429 busy; 503 when the write fails."""
+    from src import manual_builder, package_store
+    body = request.get_json(silent=True) or {}
+    user_id = g.user_id
+
+    def run(b):
+        try:
+            prefix, _, archetypes = _manual_state(user_id)
+            ids = [a['id'] for a in archetypes]
+            if session_id is not None and session_id not in ids:
+                return {'error': 'not_found'}, 404
+            if session_id is None and len(ids) >= manual_builder.MAX_SESSIONS:
+                return {'error': 'too_many', 'problems': [{'block': None, 'movement': None, 'field': None,
+                        'message': f'You can keep {manual_builder.MAX_SESSIONS} sessions. Delete one first.'}]}, 422
+            cat = manual_builder.catalog()
+            draft = b.get('session') if isinstance(b.get('session'), dict) else {}
+            new_id = session_id or manual_builder.new_session_id(prefix, draft.get('name'), ids)
+            arch, problems = manual_builder.to_archetype(draft, new_id, cat)
+            if arch is None:
+                return {'error': 'invalid', 'problems': problems}, 422
+            kept = [arch if a['id'] == new_id else a for a in archetypes] if session_id else archetypes + [arch]
+            result = package_store.install(user_id, manual_builder.compose(kept, prefix, cat))
+            if not result.get('installed'):
+                return {'error': 'invalid', 'problems': _manual_gate_problems(result)}, 422
+            return {'session': manual_builder.described(arch, cat), 'revision': result.get('revision')}, 200
+        except package_store.StoreError as e:
+            app.logger.warning('manual sessions: %s', e)
+            return {'error': 'store_unavailable', 'detail': 'Your session could not be saved. Try again.'}, 503
+
+    out, status = _heavy_run('package', body, run)
+    return jsonify(out), status
+
+
+@app.post('/api/manual/sessions')
+@require_auth
+@require_builder
+def create_manual_session():
+    return _save_manual_session(None)
+
+
+@app.put('/api/manual/sessions/<session_id>')
+@require_auth
+@require_builder
+def update_manual_session(session_id):
+    return _save_manual_session(session_id)
+
+
+@app.delete('/api/manual/sessions/<session_id>')
+@require_auth
+@require_builder
+def delete_manual_session(session_id):
+    """Remove one session. 409 `in_use` while the athlete's program has it on
+    a day; the last one takes the package with it."""
+    from src import db as _db, manual_builder, package_store
+    user_id = g.user_id
+
+    def run(_b):
+        try:
+            prefix, pkg, archetypes = _manual_state(user_id)
+            if session_id not in [a['id'] for a in archetypes]:
+                return {'error': 'not_found'}, 404
+            if _program_uses(_db.get_user_program(user_id), session_id):
+                return {'error': 'in_use', 'detail': 'Your program has this session on a day. '
+                        'Remove it there first.'}, 409
+            kept = [a for a in archetypes if a['id'] != session_id]
+            if not kept:
+                package_store.remove(user_id, pkg)
+                return {'removed': True}, 200
+            result = package_store.install(user_id, manual_builder.compose(kept, prefix))
+            if not result.get('installed'):
+                return {'error': 'invalid', 'problems': _manual_gate_problems(result)}, 422
+            return {'removed': True}, 200
+        except package_store.StoreError as e:
+            app.logger.warning('manual sessions: %s', e)
+            return {'error': 'store_unavailable', 'detail': 'Your session could not be removed. Try again.'}, 503
+
+    out, status = _heavy_run('package', {'delete': session_id}, run)
+    return jsonify(out), status
+
+
 # ── Methods: the athlete's reading of their own packages ─────────────────────
 # What both clients' program builders show under "Your methods" (item 21). The
 # athlete says *method*; the stored thing is a package.
@@ -2770,6 +2909,13 @@ def _generate_session_inner(body):
         forced_arch = day.pop('_forced_archetype')
         session_stub.update(day)
         modality = day['modality']
+    if add and forced_arch is not None and forced_arch.get('_package'):
+        # An added session is filled as its own package fills it: with the
+        # movements that package declares it borrows (a hand-built session's
+        # exercises are all another package's).
+        owner = provenance.resolve_source_policy({'primary_sources': [forced_arch['_package']]})
+        policy = provenance.SourcePolicy(owner_packages=policy.owner_packages, borrows=owner.borrows,
+                                         strict=policy.strict)
     populated = populate_session(
         session_stub, goal, constraints,
         lib['exercises'], archetypes_filtered,

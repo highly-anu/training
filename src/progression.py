@@ -320,12 +320,72 @@ def _skill_slot(slot: dict) -> dict:
     return out
 
 
-def _as_written(slot: dict) -> dict:
+def written_steps(slot: dict, week: int = 1, is_deload: bool = False) -> int:
+    """How many steps of its own `progress` a slot has taken by this week of
+    the phase: one every `every_weeks`, none in the first, and a deload week
+    takes none (it repeats the week before it)."""
+    rule = slot.get('progress') or {}
+    behind = max(0, int(week or 1) - 1 - (1 if is_deload else 0))
+    return behind // max(1, int(rule.get('every_weeks') or 1))
+
+
+def written_progress(slot: dict, week: int = 1, is_deload: bool = False) -> tuple[dict, float | None]:
+    """A slot as its author wrote it for this week of the phase, and its weight.
+
+    A slot may carry its own numbers and how they move (a session composed by
+    hand): `start_kg`, and `progress` — `add_kg`, `add_reps` (with `top_reps`:
+    reps climb to the top, then start again with `add_kg` more), `add_sec`
+    (a hold, a timed piece), `add_m`, `add_rounds`. The count is the phase's
+    weeks (`written_steps`); nothing else scales it. A slot with neither key
+    comes back as it is, with no weight."""
+    rule = slot.get('progress') or {}
+    start = slot.get('start_kg')
+    if not rule:
+        return slot, (float(start) if start is not None else None)
+    steps = written_steps(slot, week, is_deload)
+    out = dict(slot)
+    add_kg = float(rule.get('add_kg') or 0)
+    add_reps = int(rule.get('add_reps') or 0)
+    reps = slot.get('reps')
+    kg_steps = steps
+    if add_reps and isinstance(reps, int) and not isinstance(reps, bool):
+        top = rule.get('top_reps')
+        if top and top > reps:
+            cycle = math.ceil((top - reps) / add_reps) + 1
+            kg_steps, at = divmod(steps, cycle)
+            out['reps'] = min(reps + at * add_reps, top)
+        else:
+            out['reps'] = reps + steps * add_reps
+            kg_steps = steps if not top else 0
+    if rule.get('add_sec'):
+        more = steps * int(rule['add_sec'])
+        if slot.get('slot_type') == 'static_hold' or 'hold_seconds' in slot:
+            out['hold_seconds'] = slot.get('hold_seconds', slot.get('duration_sec', 30)) + more
+        elif 'duration_minutes' in slot:
+            out['duration_minutes'] = max(1, round(slot['duration_minutes'] + more / 60))
+        elif slot.get('duration_sec'):
+            out['duration_sec'] = slot['duration_sec'] + more
+        elif slot.get('work_sec'):
+            out['work_sec'] = slot['work_sec'] + more
+    if rule.get('add_m') and slot.get('distance_m'):
+        out['distance_m'] = slot['distance_m'] + steps * int(rule['add_m'])
+    if rule.get('add_rounds'):
+        key = 'rounds' if 'rounds' in slot else 'sets'
+        if slot.get(key):
+            out[key] = slot[key] + steps * int(rule['add_rounds'])
+    weight = None if start is None else round(float(start) + kg_steps * add_kg, 2)
+    return out, weight
+
+
+def _as_written(slot: dict, week: int = 1, is_deload: bool = False) -> dict:
     """The prescription exactly as the source writes it (Horsemen): no weekly
     ramp, no level, phase or deload scaling. The slot's `load` text says what
     to lift — "75% of today's 1RM", "24 kg (53 lb)", "1.25x bodyweight" —
     because the source loads from a max worked up to on the day, fixed
-    weights and multiples of bodyweight, none of which the app can compute."""
+    weights and multiples of bodyweight, none of which the app can compute.
+    A slot that writes its own weight and steps (`start_kg`, `progress`) is
+    read for the week first (`written_progress`)."""
+    slot, weight = written_progress(slot, week, is_deload)
     slot_type = slot.get('slot_type', 'sets_reps')
     minutes = (slot['duration_minutes'] if 'duration_minutes' in slot
                else max(1, round(slot['duration_sec'] / 60)) if slot.get('duration_sec') else None)
@@ -383,6 +443,8 @@ def _as_written(slot: dict) -> dict:
     lo, hi, label = zone_band(slot.get('intensity'))
     if lo is not None and slot_type in ('time_domain', 'distance'):
         out.update(zone_target=label, zone_lower=lo, zone_upper=hi)
+    if weight is not None:
+        out['weight_kg'] = int(weight) if float(weight).is_integer() else weight
     if slot.get('load'):
         out['load_note'] = slot['load']
     if slot.get('pack_load_kg') is not None:
@@ -450,7 +512,7 @@ def calculate_load(
         from src.standard_tests import protocol_load
         return protocol_load(exercise, slot)
     if progression_model == 'as_written':
-        load = _as_written(slot)
+        load = _as_written(slot, week_number, is_deload)
     else:
         load = _calculate_load(exercise, slot, progression_model, week_number, phase,
                                training_level, is_deload, session_time_minutes, deload_keep, ramps)
