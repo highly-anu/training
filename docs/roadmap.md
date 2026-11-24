@@ -2340,17 +2340,52 @@ with the program builder; per-set weights are later; existing exercises only.
   `/analytics/program` (prescribed "3 × 5 @ 80 kg", done "80×5, 80×5, 80×5"), the briefing
   and `today-session?spec=1`. Dragging itself was not exercised in a browser, only its
   drop rules.
-- **24.4 The program builder — open.** Real tracks in the same package: a weeks × days
-  grid of the saved sessions (`week_templates`), phases, a deload rule, then Program ▸
-  Preview. With it: progression earned from the log (`load_per_exposure`'s reading for a
-  templated slot), per-set schemes (load, loggers and both watches), creating exercises,
-  the phone, and the move out of the Dev Lab.
+- **24.4 The program builder — open, to be planned.** Real tracks in the same package,
+  replacing the generated "Library" track: a weeks × days grid the saved sessions are
+  dragged onto (`week_templates`, one category a session), phases with their length and
+  kind, a deload rule (`deload_protocol`), then Program ▸ Preview → Start as any other
+  program. To settle in its plan: several tracks or one, whether a track may mix hand-built
+  sessions with a shipped package's, and how a session edited after a program started
+  reaches that program.
 
-**Open.** "My sessions" is listed among Your methods, where Revise would hand it to the
-model. Tempo, each side and a % of 1RM are words in a note, not fields. The Library track
-lays sessions out three a week only so the package generates. A log is keyed by
-exercise, so one exercise in two blocks of a session (pull-ups in a superset and in the
-AMRAP) shares one logged row.
+**Still to do** — left open on purpose when the session builder was planned (2026-11-24),
+in the order they are worth doing:
+
+1. *Earned progression.* The plan follows the calendar: a missed or failed session does
+   not hold next week back. Next = what was last logged + the step (made → step, missed →
+   repeat, the reading `load_per_exposure` gives a contract) for a templated slot. Decided
+   to come with 24.4.
+2. *Per-set reps and weights* — pyramids, 5/3/1, back-off sets. One slot has one weight
+   today. Needs a per-set scheme on the slot, the stored load, the web's and phone's
+   loggers and both watches (docs/watch.md: one contract, in one change). "5-3-1" as reps
+   in words is what there is until then.
+3. *Out of the Dev Lab.* The builder moves into `/program/new` beside Your methods once
+   24.4 is in; the routes stay behind `require_builder` (the `dev` role) until then. With
+   it: "My sessions" must not offer Revise (it would hand the package to the model), and
+   Explore should show it as the athlete's sessions rather than a philosophy.
+4. *The phone.* Nothing on iOS builds a session. The wire shape is the server's
+   (`/api/manual`), so the phone needs screens only; a saved session already runs on the
+   phone, the player and both watches once it is on a day.
+5. *Creating an exercise.* Existing exercises only (the shipped catalog and the athlete's
+   methods'). A small form — name, category, equipment, movement pattern — into the same
+   package's `exercises.yaml`, which `compose` writes empty today.
+6. *Fields that are words today.* Tempo, each side, a % of 1RM, an RPE target for a slot
+   and a rest after a block go in a note. Each is a slot field the engine would have to
+   read (`intensity_pct_1rm` and `rpe_target` exist in the schema and nothing computes
+   them outside `rpe_autoregulation`). Heart rate is a zone (Z1–Z5), never a bpm or a pace.
+7. *Dragging.* Blocks reorder by dragging onto a gap or through the Move menu; movements
+   inside a block by their up and down buttons only (`@dnd-kit/sortable` was not added).
+   The drop rules are tested (`lib/sessionBuilder.test.ts`); a drag was never performed in
+   a browser — do that by hand before the builder leaves the Dev Lab, pointer and keyboard.
+8. *One exercise twice in a session.* A log is keyed by exercise, so pull-ups in a superset
+   and in the AMRAP share one logged row, and analytics reads the same sets for both. The
+   fix is the log's, not the builder's (key by slot role, as the briefing's rows do).
+9. *Distance repeats and timed sets under a computed model.* "6 × 800 m" keeps its sets
+   only because hand-built sessions are as written; nothing to do unless a hand-built
+   track ever takes a computed model.
+10. *The "Library" track.* It lays the sessions out three a week only so the package
+    passes the gate's smoke generate; it is selectable in the program builder and not
+    meant to be followed. 24.4 replaces it.
 
 ## Later
 
