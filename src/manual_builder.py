@@ -39,6 +39,9 @@ NOTE_MAX = 2000
 STAGES = ('prep', 'main', 'finisher', 'cooldown')
 
 LIBRARY_TRACK = 'library'
+# The validator refuses a program whose sessions have under twenty minutes
+# (validator._check_session_time): a short session is given that much room.
+MIN_SESSION_ROOM = 20
 MAX_TRACKS = 6
 MAX_PHASES = 8
 MAX_TEMPLATE_WEEKS = 8
@@ -184,6 +187,9 @@ def _progress(value) -> dict | None:
         return None
     if out.get('every_weeks') == 1:
         del out['every_weeks']
+    if value.get('earned') is True:
+        out['earned'] = True
+        out.pop('every_weeks', None)
     return out
 
 
@@ -585,7 +591,7 @@ def _library(archetypes: list[dict], prefix: str, pkg: str) -> tuple[dict, dict]
         'expectations': {'min_weeks': 1, 'ideal_weeks': 4,
                          'min_days_per_week': 1, 'ideal_days_per_week': min(len(days), len(archetypes)),
                          'min_session_minutes': min(a['duration_estimate_minutes'] for a in archetypes),
-                         'ideal_session_minutes': max(a['duration_estimate_minutes'] for a in archetypes),
+                         'ideal_session_minutes': max(MIN_SESSION_ROOM, *(a['duration_estimate_minutes'] for a in archetypes)),
                          'supports_split_days': False},
         'categories': _categories(archetypes, prefix),
     }
@@ -738,7 +744,7 @@ def track_files(track: dict, archetypes: list[dict], prefix: str, pkg: str) -> t
         'applicable_when': {'days_per_week_min': 1, 'days_per_week_max': 7},
         'expectations': {'min_weeks': 1, 'ideal_weeks': sum(ph['weeks'] for ph in track['phases']),
                          'min_days_per_week': 1, 'ideal_days_per_week': busiest,
-                         'min_session_minutes': min(minutes), 'ideal_session_minutes': max(minutes),
+                         'min_session_minutes': min(minutes), 'ideal_session_minutes': max(MIN_SESSION_ROOM, *minutes),
                          'supports_split_days': False},
         'categories': _categories(archetypes, prefix),
     }
@@ -943,4 +949,4 @@ def described_track(track: dict, archetypes: list[dict], prefix: str, cat: dict 
             'equipment': sorted({e for a in used for e in a.get('required_equipment') or []}),
             'forecast': forecast,
             'startWith': {'days_per_week': max(1, round(max(p['sessionsPerWeek'] for p in phases_out))),
-                          'session_time_minutes': max(minutes) if minutes else 60}}
+                          'session_time_minutes': max(MIN_SESSION_ROOM, *minutes) if minutes else 60}}

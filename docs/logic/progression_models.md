@@ -541,8 +541,21 @@ A slot may write its own numbers and how they move — a session composed by han
   every day of a deload week that way — a hand-built track's lighter week.
 
 The plan follows the calendar, not the log: a missed session does not hold the next
-week back. Progress earned from what was logged is the training contract's
-`load_per_exposure`.
+week back — unless the slot says `progress.earned: true`. Then the steps are counted by
+exposure through the program (`src/earned_progress.py`):
+
+```
+made    (every prescribed set logged complete at its reps, or `made: true`)  → one step
+missed  (a set short, reps short, logged without the exercise)               → none: repeat
+no log, the day is behind the athlete                                        → none
+no log, the day is ahead                                                     → forecast as made
+a light day (a deload week's, a day marked light)                            → its share; neither earns nor counts
+logged weight ≠ prescribed (a rule without `top_reps`)                       → the steps carry on from it
+```
+
+`every_weeks` is not read for an earned slot. The stored program's loads are rewritten
+when a session is logged; a training contract's `load_per_exposure` is the other,
+older reading of the same idea, with stalls and resets.
 
 ---
 

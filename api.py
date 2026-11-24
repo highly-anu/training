@@ -1834,7 +1834,57 @@ def _generate_program_inner(body):
         result['generation_trace'] = raw['generation_trace']
     if program_start_monday:
         result['program_start_date'] = program_start_monday.isoformat()
+    _forecast_earned(result, start_week_number, program_start_monday)
     return jsonify(result)
+
+
+def _forecast_earned(result: dict, start_week_number: int, start_monday) -> None:
+    """Slots that earn their steps from the log (src/earned_progress.py) are
+    prescribed by exposure, not by week: forecast each as made from where the
+    athlete stands — nowhere for a new program, and for a regenerated tail
+    what the weeks before it earned (the stored program and its logs)."""
+    from src import earned_progress
+    weeks = result.get('weeks') or []
+    if not earned_progress.has_earned(weeks):
+        return
+    state, start, first = None, (start_monday.isoformat() if start_monday else None), 0
+    if start_week_number > 1:
+        from src.db import get_user_program
+        stored = get_user_program(g.user_id) or {}
+        head = ((stored.get('currentProgram') or {}).get('weeks') or [])[:start_week_number - 1]
+        start, first = stored.get('programStartDate') or start, len(head)
+        if head:
+            import copy
+            _, state = earned_progress.replan(copy.deepcopy(head), _health.get_session_logs(g.user_id) or {},
+                                              start, _user_today(g.user_id))
+    logs = (_health.get_session_logs(g.user_id) or {}) if start_week_number > 1 else {}
+    earned_progress.replan(weeks, logs, start, _user_today(g.user_id), state, first)
+
+
+def _replan_earned(user_id: str) -> bool:
+    """After a session log: the stored program's earned slots re-read from the
+    logs (a made session steps the next one on, a miss repeats it). Saved in
+    place when a load changed, as an adjustment is (no version: loads are
+    outside the skeleton). → whether the program changed. Never raises: the
+    log is kept whatever happens here."""
+    try:
+        from src import earned_progress
+        from src.db import get_user_program, save_user_program, get_program_revision
+        envelope = get_user_program(user_id) or {}
+        current = envelope.get('currentProgram') or {}
+        weeks = current.get('weeks') or []
+        if not earned_progress.has_earned(weeks):
+            return False
+        changed, _ = earned_progress.replan(weeks, _health.get_session_logs(user_id) or {},
+                                            envelope.get('programStartDate'), _user_today(user_id))
+        if not changed:
+            return False
+        save_user_program(user_id, envelope)
+        _record_program_history(user_id, envelope, 'earned', get_program_revision(user_id))
+        return True
+    except Exception as e:  # noqa: BLE001
+        app.logger.warning('earned progress: %s', e)
+        return False
 
 
 def _generate_composition(body: dict, constraints: dict):
@@ -5970,6 +6020,9 @@ def _save_session_log(log: dict, answer: dict):
     standards = standard_results.after_session_log(g.user_id, log, row, session_uid=row.get('session_uid'))
     if standards is not None:
         answer['standards'] = standards
+    if _replan_earned(g.user_id):
+        # The weeks ahead were re-planned from this log: the client reads the program again.
+        answer['programChanged'] = True
     return jsonify(answer)
 
 
@@ -6115,6 +6168,11 @@ def _standards_context(user_id: str) -> tuple[str, str | None]:
         profile = {}
     sex = (profile.get('sex') or 'male').lower()
     return (sex if sex in ('male', 'female') else 'male'), profile.get('timezone') or None
+
+
+def _user_today(user_id: str) -> _date:
+    """The athlete's own day (the profile's timezone; UTC without one)."""
+    return _today_for(_standards_context(user_id)[1])
 
 
 def _today_for(tz: str | None) -> _date:

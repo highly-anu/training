@@ -60,23 +60,34 @@ function Choice({ label, value, onChange, children, className }: {
 }
 
 /** The steps a movement (or a piece) takes each week. Empty fields are no step. */
-function ProgressFields({ fields, rule, onChange, about }: {
+function ProgressFields({ fields, rule, onChange, about, earnable = false }: {
   fields: ProgressField[]; rule: ProgressRule | undefined; onChange: (rule: ProgressRule | undefined) => void; about: string
+  /** Its steps may be earned from the log instead of dated (a movement's, never a piece's). */
+  earnable?: boolean
 }) {
+  const id = useId()
   if (!fields.length) return null
   const set = (field: ProgressField, value: number | undefined) => {
     const next = { ...(rule ?? {}), [field]: value }
     if (value === undefined) delete next[field]
     onChange(Object.keys(next).length ? next : undefined)
   }
+  const stepping = fields.some((f) => rule?.[f] !== undefined)
   return (
     <fieldset className="flex flex-wrap items-end gap-2 rounded-md bg-muted/50 px-2 py-1.5">
       <legend className="sr-only">{`Each week: ${about}`}</legend>
-      <span className="pb-2 text-xs font-medium text-muted-foreground" aria-hidden>Each week</span>
+      <span className="pb-2 text-xs font-medium text-muted-foreground" aria-hidden>{rule?.earned ? 'Each session made' : 'Each week'}</span>
       {fields.map((field) => (
         <NumberField key={field} label={FIELD_LABELS[field]} value={rule?.[field]} step={STEP[field] ?? 1}
           min={field === 'add_kg' ? 0.5 : 1} onChange={(v) => set(field, v)} className="w-24" />
       ))}
+      {earnable && stepping && (
+        <label htmlFor={id} className="flex items-center gap-1.5 pb-2 text-xs text-muted-foreground">
+          <input id={id} type="checkbox" checked={!!rule?.earned} className="size-3.5 accent-primary"
+            onChange={(e) => onChange({ ...(rule ?? {}), earned: e.target.checked || undefined })} />
+          Earned from the log: a missed session repeats
+        </label>
+      )}
     </fieldset>
   )
 }
@@ -127,7 +138,7 @@ function MovementRow({ block, movement, index, name, actions, problems }: {
       )}
       <ProgressFields fields={spec.progress.filter((f) => f === 'add_kg' ? movement.start_kg !== undefined
         : f === 'add_reps' || f === 'top_reps' ? typeof movement.reps === 'number' : true)}
-        rule={movement.progress} onChange={(progress) => set({ progress })} about={name} />
+        rule={movement.progress} onChange={(progress) => set({ progress })} about={name} earnable />
       {mine.map((p) => <p key={p.message} role="alert" className="text-xs text-bad">{p.message}</p>)}
     </li>
   )
