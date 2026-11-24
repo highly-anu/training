@@ -2440,12 +2440,12 @@ equipment, scaling and sources follow, then the lineage.
 The landing keeps §13.6's outline; its card is neutral (`rounded-xl border bg-card`) and
 leads with the philosophy's `ModalityMark` tile, then the name, one mono line (sessions a
 week · minutes · weeks · tracks or phases), the mix as icons (`MixLegend`) and the
-compact `LevelScale`, read from the same `glance`.
+`LevelScale`, read from the same `glance`.
 
 **Key patterns:**
-- **One glance vocabulary** (`Glance.tsx`): `LevelScale` (every level always, so it is
-  the same size whatever is served: `full` names the four with a tick or a dash, `compact`
-  is four rising steps for a card or a table cell), `StatTile` (with `active`),
+- **One glance vocabulary** (`Glance.tsx`): `LevelScale` (four ranks, one chevron for novice to
+  four for elite, every one always drawn so it is the same size whatever is served — in
+  full where served, faint where not; each names its level on hover; one form everywhere), `StatTile` (with `active`),
   `InlinePanel`,
   `ModalityGlyph` (`lib/modalityIcons.ts`, the lucide counterparts of the
   phone's `ModalityStyle.icon`), `MixLegend`, `WeekDays`, `PhaseTimeline`, `PhaseBar` (the comparison's

@@ -12,22 +12,24 @@ import { LevelScale, PhaseTimeline, WeekDays } from './Glance'
 afterEach(cleanup)
 
 describe('LevelScale', () => {
-  it('names every level whatever it serves, so it never changes size', () => {
+  const ranks = (el: HTMLElement) => Array.from(el.children) as HTMLElement[]
+
+  it('draws all four ranks whatever it serves, so it never changes size', () => {
     const { rerender } = render(<LevelScale levels={['novice']} />)
     for (const levels of [['novice'], ['novice', 'intermediate', 'advanced', 'elite'], []] as const) {
       rerender(<LevelScale levels={[...levels]} />)
-      for (const name of ['Novice', 'Intermediate', 'Advanced', 'Elite']) expect(screen.getByText(name)).toBeTruthy()
+      const all = ranks(screen.getByRole('img'))
+      expect(all.map((r) => r.dataset.level)).toEqual(['novice', 'intermediate', 'advanced', 'elite'])
+      // One chevron for novice, up to four for elite.
+      expect(all.map((r) => r.querySelectorAll('path').length)).toEqual([1, 2, 3, 4])
+      expect(all.filter((r) => r.dataset.serves === 'true')).toHaveLength(levels.length)
     }
   })
 
   it('says which levels it is written for and which not', () => {
     render(<LevelScale levels={['novice', 'intermediate']} />)
-    expect(screen.getByRole('img', { name: 'Written for Novice, Intermediate; not for Advanced, Elite' })).toBeTruthy()
-  })
-
-  it('keeps four steps in its compact form', () => {
-    render(<LevelScale levels={['elite']} size="compact" />)
-    expect(screen.getByRole('img', { name: /Written for Elite/ }).children).toHaveLength(4)
+    const scale = screen.getByRole('img', { name: 'Written for Novice, Intermediate; not for Advanced, Elite' })
+    expect(ranks(scale)[2].title).toBe('Advanced: not written for it')
   })
 })
 
