@@ -25,6 +25,8 @@ export interface ProgressRule {
   add_m?: number
   add_rounds?: number
   every_weeks?: number
+  /** One step for each session made, none for a miss (src/earned_progress.py). */
+  earned?: boolean
 }
 
 export interface ManualMovement {
@@ -72,7 +74,7 @@ export interface DraftSession extends Omit<ManualSession, 'blocks'> { blocks: Dr
 
 export type BlockField = 'rounds' | 'minutes' | 'cap_min' | 'work_sec' | 'rest_sec' | 'rest_until_hr_pct'
 export type MovementField = 'sets' | 'reps' | 'count' | 'distance_m' | 'hold_sec' | 'start_kg' | 'load_text' | 'rest_sec'
-export type ProgressField = keyof ProgressRule
+export type ProgressField = Exclude<keyof ProgressRule, 'earned'>
 
 interface KindSpec {
   label: string
@@ -264,8 +266,9 @@ function clean<T extends object>(value: T): T {
   for (const [k, v] of Object.entries(out)) {
     if (v === undefined || v === '' || (typeof v === 'number' && Number.isNaN(v))) delete out[k]
     else if (k === 'progress' && v && typeof v === 'object') {
-      const rule = clean(v as object)
-      if (Object.keys(rule).length) out[k] = rule
+      const rule = clean(v as object) as Record<string, unknown>
+      if (rule.earned !== true) delete rule.earned
+      if (Object.keys(rule).some((key) => key !== 'earned' && key !== 'every_weeks')) out[k] = rule
       else delete out[k]
     }
   }

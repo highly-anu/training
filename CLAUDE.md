@@ -471,6 +471,14 @@ group's name.
   (a slot's own steps count the track's weeks, `phases.week_in_track`, so phase 2 carries on from
   phase 1) and `deload_light: true` (every day of a deload week is a `light` day, on which a slot's
   own weight is lifted at `light_share`, 0.8). A two-session day is one session of both.
+- **A slot may earn its steps** (since 2026-11-24, roadmap 24.5): `progress.earned: true` — one step for
+  each session of the slot made, none for a miss, by exposure and not by week
+  (`src/earned_progress.replan`, pure: made is `training_contract._lift_outcome`'s reading; an
+  unlogged day behind the athlete earns nothing; a logged weight re-bases the steps; a light day
+  neither earns nor counts). It runs on generate (the forecast, a tail seeded from the stored
+  weeks before it, `api._forecast_earned`) and after every session log (`api._replan_earned`):
+  loads rewritten in the stored program, no version, and the log route answers
+  `programChanged`, on which the web reloads the program. Never raises into the log save.
 - **Session time cap**: `_time_to_task` progression is capped at `session_time_minutes` — Zone 2 duration never exceeds the athlete's session limit even in build phase.
 - **Package provenance**: a program may only use its philosophy's own package, plus any package that philosophy declares in `borrows_from` (`src/provenance.py`). Enforcement is per philosophy via `self_contained: true` — all 11 are on. `api.py` and `generator.py` share one `SourcePolicy`, so validation and generation can never check different libraries. Borrowed sessions carry a `provenance` tag and are badged "via X" in the UI.
 - **Coverage gaps, not substitutions**: when a package cannot fill a slot, the slot is left empty and marked `coverage_gap` (the same way `injury_skip` marks an injury-blocked slot) rather than filled from another philosophy. Programs carry a `coverage_report` listing unfilled sessions, unfilled slots and borrowed sessions; `validate()` warns `PACKAGE_COVERAGE_GAP` per uncovered modality and only errors when every top-2 priority is uncoverable.
@@ -1815,6 +1823,7 @@ SUPABASE_URL='' .venv/bin/python test_portability.py     # Dev Lab ▸ Builder r
 .venv/bin/python test_package_gate.py                    # src/package_gate.check_package: one folder through the gates' checks, as data
 SUPABASE_URL='' .venv/bin/python test_package_builds.py   # a build as a durable job, scripted builder; SQL half on its own database
 SUPABASE_URL='' .venv/bin/python test_builder_access.py   # who may use the package builder: flag, dev role, GET /api/methods
+SUPABASE_URL='' .venv/bin/python test_earned_progress.py   # steps earned from the log: made, missed, re-based, light days, a tail, the routes
 SUPABASE_URL='' .venv/bin/python test_manual_builder.py    # sessions composed by hand: blocks ⇄ archetype, the package, the routes; --write re-records the web's fixture
 .venv/bin/python test_written_progress.py                # a slot's own weight and steps under as_written
 SUPABASE_URL='' .venv/bin/python test_private_packages.py  # an athlete's own packages: store, install through the gate, routes; SQL half on its own database

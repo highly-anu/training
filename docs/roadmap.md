@@ -60,7 +60,7 @@ deferred is under *Later*.
 | 21 | LLM package builder: an athlete describes a method and gets one to build a program from, on the web and the phone — dev role first. The gate (21.1), the durable job (21.2), the model loop (21.3), the web's screens (21.4), the phone's vocabulary (21.5) and its screens (21.6) are in; and the Dev Lab's builds view (21.7) are in; the eval against the real model and the production steps are open | P1 | L | API, web, iOS, watch |
 | 22 | Pre-workout briefing: before a session, today's numbers beside the earlier times the same session was done, its place in the cycle and one suggestion — declared by the package (`briefing.yaml`), built on the server. The server and Wildman's file (22.1) the phone's screen (22.2), the web's block (22.3) and the reading of every package's default (22.4) are in | P2 | M | engine, API, iOS, web, content |
 | 23 | Levels: every package from novice to elite — all eleven done 2026-11-08; what is left is listed under Open | P2 | S | engine, content |
-| 24 | Manual builder: an athlete composes sessions, then a track, from existing exercises — in the Dev Lab first. A slot's own weight and steps (24.1), the server's session library (24.2) and the web's session builder (24.3) and the program builder (24.4) are in; earned progression (24.5) is open | P1 | L | engine, API, web |
+| 24 | Manual builder: an athlete composes sessions, then a track, from existing exercises — in the Dev Lab first. A slot's own weight and steps (24.1), the server's session library (24.2) and the web's session builder (24.3), the program builder (24.4) and earned progression (24.5) are in; what is left is listed under Still to do | P1 | L | engine, API, web |
 
 ---
 
@@ -2367,14 +2367,30 @@ with the program builder; per-set weights are later; existing exercises only.
     track (4 + 4 weeks, lighter every fourth, one two-session day) saved, generated with
     other preferred days and started — sessions on the laid days, squat 80 → 82.5 → 85 →
     68 (light) → 90 → 92.5 → 95 → 76 (light).
-- **24.5 Earned progression — open.** A movement's `progress` says `earned: true`: one
-  step per session made, none on a miss, the stored program's later weeks re-planned when
-  a session is logged.
+- **24.5 Earned progression — done on the server and the web.** A movement's `progress`
+  may say `earned: true` (the session builder's "Earned from the log"): one step for each
+  session made, none for a miss, counted by exposure through the program
+  (`src/earned_progress.py`, pure). A session is made when every prescribed set is logged
+  complete at its reps (`training_contract._lift_outcome`'s reading; the one-tap `made`
+  wins); a day gone by unlogged earns nothing; a weight logged other than the one
+  prescribed is where the steps carry on from; a light day neither earns nor counts.
+  `replan` runs when a program is generated (the forecast; a regenerated tail carries on
+  from what the weeks before it earned) and after every session log
+  (`api._replan_earned`): the stored weeks' loads are rewritten in place, no version
+  minted, and the log route answers `programChanged` so the web reads the program again.
+  Run end to end on 2026-11-24: 80 made → 82.5 next; re-logged as missed → 80 again; the
+  same log twice changes nothing; the briefing says the true numbers.
+  `test_earned_progress.py`. Also fixed here: a lone session under twenty minutes could
+  not be saved (the validator wants twenty minutes of room; on master since 24.2).
 
 **Still to do** — left open on purpose when the session builder was planned (2026-11-24),
 in the order they are worth doing:
 
-1. *Earned progression* — 24.5 above.
+1. *Earned progression on the phone.* The phone logs a session and does not read the
+   program again when the answer says `programChanged` (`AppState.flushSessionLogs`), so
+   it shows the forecast until the program is next loaded. Both watches read
+   `today-session` from the server and are right at once. The builders' week-by-week
+   forecast (`described`, `described_track`) still counts an earned slot by the week.
 2. *Per-set reps and weights* — pyramids, 5/3/1, back-off sets. One slot has one weight
    today. Needs a per-set scheme on the slot, the stored load, the web's and phone's
    loggers and both watches (docs/watch.md: one contract, in one change). "5-3-1" as reps
@@ -2394,10 +2410,15 @@ in the order they are worth doing:
    and a rest after a block go in a note. Each is a slot field the engine would have to
    read (`intensity_pct_1rm` and `rpe_target` exist in the schema and nothing computes
    them outside `rpe_autoregulation`). Heart rate is a zone (Z1–Z5), never a bpm or a pace.
-7. *Dragging.* Blocks reorder by dragging onto a gap or through the Move menu; movements
-   inside a block by their up and down buttons only (`@dnd-kit/sortable` was not added).
-   The drop rules are tested (`lib/sessionBuilder.test.ts`); a drag was never performed in
-   a browser — do that by hand before the builder leaves the Dev Lab, pointer and keyboard.
+7. *Dragging.* Driven in Chrome on 2026-11-24, both builders, pointer and keyboard: a
+   session onto a day and between days, an exercise into a gap and onto a block, a block
+   by its handle, and the keyboard's pick up · arrows · drop with its announcements. Two
+   fixes came of it: a drop lands on the target under the pointer (`lib/dndCollision.ts`;
+   dnd-kit's default asks which target the dragged card's box overlaps most), and drop
+   targets are measured all through a drag, since the page moves under it. Still open:
+   movements inside a block move by their up and down buttons only (`@dnd-kit/sortable`
+   was not added), and dragging near the top or bottom edge scrolls the page under the
+   pointer.
 8. *One exercise twice in a session.* A log is keyed by exercise, so pull-ups in a superset
    and in the AMRAP share one logged row, and analytics reads the same sets for both. The
    fix is the log's, not the builder's (key by slot role, as the briefing's rows do).

@@ -141,8 +141,13 @@ export async function confirmSession(
 
 export function saveSessionLog(log: SessionPerformanceLog): void {
   void (apiClient.put(`${BASE}/sessions/${encodeURIComponent(log.sessionKey)}`, log) as unknown as
-    Promise<{ standards?: SessionLogStandards }>)
+    Promise<{ standards?: SessionLogStandards; programChanged?: boolean }>)
     .then((res) => {
+      // The log re-planned the weeks ahead (a slot that earns its steps,
+      // src/earned_progress.py): read the program the server now holds.
+      if (res?.programChanged) {
+        void import('@/store/programStore').then((m) => m.useProgramStore.getState().loadFromServer())
+      }
       // A logged test slot (or a single on a derived lift) came back as a
       // suggestion: refresh "To confirm" wherever it is shown.
       if (res?.standards) void queryClient.invalidateQueries({ queryKey: queryKeys.standards.suggestions })

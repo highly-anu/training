@@ -94,7 +94,13 @@ describe('edits', () => {
     d = updateMovement(d, b.uid, b.movements[0].uid, { start_kg: undefined, progress: { add_kg: undefined } })
     expect(d.blocks[0].movements[0]).not.toHaveProperty('start_kg')
     expect(d.blocks[0].movements[0]).not.toHaveProperty('progress')
-    expect(removeMovement(d, b.uid, b.movements[0].uid).blocks[0].movements).toEqual([])
+    d = updateMovement(withBlock(squat), b.uid, b.movements[0].uid, {})
+    const [e] = d.blocks
+    d = updateMovement(d, e.uid, e.movements[0].uid, { progress: { add_kg: 2.5, earned: true } })
+    expect(d.blocks[0].movements[0].progress).toEqual({ add_kg: 2.5, earned: true })
+    d = updateMovement(d, e.uid, e.movements[0].uid, { progress: { earned: true } })      // earned with no step is no rule
+    expect(d.blocks[0].movements[0]).not.toHaveProperty('progress')
+    expect(removeMovement(d, e.uid, e.movements[0].uid).blocks[0].movements).toEqual([])
   })
 })
 

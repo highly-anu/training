@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
-  DndContext, DragOverlay, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent,
+  DndContext, DragOverlay, KeyboardSensor, MeasuringStrategy, PointerSensor, useSensor, useSensors, type DragEndEvent,
 } from '@dnd-kit/core'
 import { differenceInCalendarDays, format, parseISO } from 'date-fns'
 import { ChevronLeft, ChevronRight, Copy, FilePlus2, Pencil, Plus, Trash2 } from 'lucide-react'
@@ -13,6 +13,7 @@ import { useGenerateDraft, type GenerateParams } from '@/api/programs'
 import type { AthleteConstraints, PhaseKind } from '@/api/types'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useRegeneratePreview } from '@/hooks/useRegeneratePreview'
+import { pointerFirst } from '@/lib/dndCollision'
 import { dropTargetCoordinates } from '@/lib/dndKeyboard'
 import { EQUIPMENT_LABELS } from '@/lib/gen/clientVocab'
 import { PHASE_COLORS } from '@/lib/phaseColors'
@@ -240,6 +241,9 @@ export function ProgramBuilderPanel() {
   return (
     <DndContext
       sensors={sensors}
+      collisionDetection={pointerFirst}
+      // Drop targets are measured all through a drag: the page moves under it (gaps open, a problem line appears).
+      measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
       onDragStart={(e) => {
         const data = e.active.data.current as { sessionId: string; title: string }
         setDragging({ sessionId: data.sessionId, title: data.title })

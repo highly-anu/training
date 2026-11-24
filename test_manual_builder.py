@@ -166,6 +166,18 @@ def test_package():
               and [b['stage'] for b in d['preview']] == ['prep', 'main', 'main', 'main', 'finisher', 'cooldown'],
               [(b['shape'], b['stage']) for b in d['preview']])
     package_store.remove(user, mb.package_id(prefix))
+    short, _ = mb.to_archetype({'name': 'Ten minutes', 'modality': 'max_strength', 'blocks': [SESSION['blocks'][1]]},
+                               mb.new_session_id(prefix, 'Ten minutes', []), CAT)
+    alone = package_store.install(user, mb.compose([short], prefix, CAT))
+    check('a short session alone is a package too (the validator wants twenty minutes of room)',
+          short['duration_estimate_minutes'] < 20 and alone.get('installed'), alone.get('problems', [])[:2])
+    on_a_track, _ = mb.read_track({'name': 'Short', 'phases': [{'name': 'P', 'kind': 'build', 'weeks': 2,
+                                   'template': [[{'sessions': [short['id']]}] + [REST] * 6]}]}, 'short', [short], CAT)
+    laid = package_store.install(user, mb.compose([short], prefix, CAT, [on_a_track]))
+    check('and so is a program of it', laid.get('installed')
+          and mb.described_track(on_a_track, [short], prefix, CAT)['startWith']['session_time_minutes'] == 20,
+          laid.get('problems', [])[:2])
+    package_store.remove(user, mb.package_id(prefix))
 
 
 REST = {'sessions': []}
