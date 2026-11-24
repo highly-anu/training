@@ -189,7 +189,8 @@ class GlanceTests(unittest.TestCase):
 
     def test_contract_track_requires_and_ranges(self):
         c = self.g['tracks'][1]
-        self.assertIsNone(c['phases'][0]['days'])
+        self.assertIsNone(c['phases'][0]['days'])   # no example asked for: hand-built data
+        self.assertFalse(c['phases'][0]['daysExample'])
         self.assertEqual(c['requires'], [])
         self.assertEqual(c['builtBy'], 'contract')
 
@@ -346,6 +347,44 @@ class RealDataTests(unittest.TestCase):
         for pid, doc in self.docs.items():
             rec = ep._record(pid)
             self.assertEqual(len(doc['rules']), len((rec or {}).get('rules') or []), pid)
+
+
+class ExampleWeekTests(unittest.TestCase):
+    """A phase the source writes no weekdays for shows the app's own week."""
+
+    def test_the_hook_fills_only_phases_without_days(self):
+        asked = []
+
+        def example(phil, track, phase):
+            asked.append((track['id'], phase['id']))
+            return [['power'], None, None, ['power'], None, None, None]
+
+        g = build(example=example)['glance']
+        templated = g['tracks'][0]['phases'][0]
+        self.assertFalse(templated['daysExample'])            # the source's own days stand
+        self.assertNotIn(('templ', 'a'), asked)
+        contract = g['tracks'][1]['phases'][0]
+        self.assertTrue(contract['daysExample'])
+        self.assertEqual(contract['days'], [['power'], None, None, ['power'], None, None, None])
+
+    def test_no_example_leaves_the_days_out(self):
+        phase = build(example=lambda *a: None)['glance']['tracks'][1]['phases'][0]
+        self.assertIsNone(phase['days'])
+        self.assertFalse(phase['daysExample'])
+
+    def test_every_shipped_phase_has_a_week_of_seven_days(self):
+        for g in ep.glance_all():
+            for t in g['tracks']:
+                for ph in t['phases']:
+                    label = f"{g['id']}/{t['id']}/{ph['id']}"
+                    self.assertEqual(len(ph['days'] or []), 7, label)
+                    self.assertEqual(ph['daysExample'], t['builtBy'] != 'template' , label)
+
+    def test_a_contract_s_example_is_the_week_it_places(self):
+        g = next(g for g in ep.glance_all() if g['id'] == 'wildman_kettlebell')
+        ph = next(t for t in g['tracks'] if t['id'] == 'general_practice')['phases'][0]
+        # Wildman's example week: swings Monday and Thursday, clean and press Wednesday and Saturday.
+        self.assertEqual([bool(d) for d in ph['days']], [True, False, True, True, False, True, False])
 
 
 class BlockTests(unittest.TestCase):

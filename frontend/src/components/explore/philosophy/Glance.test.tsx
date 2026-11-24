@@ -42,7 +42,16 @@ describe('WeekDays', () => {
     expect(week.textContent).toContain('3 training · 4 rest')
   })
 
-  it('shows seven days with no weekday when the athlete places them', () => {
+  it("letters the app's example week and says it is one", () => {
+    const days = [['power'], null, ['movement_skill'], ['power'], null, ['movement_skill'], null]
+    render(<WeekDays phase={{ days, daysExample: true, daysPerWeek: 4, sessionsPerWeek: 6 }} />)
+    const week = screen.getByRole('img', {
+      name: '4 training days, 3 rest: for example Monday, Wednesday, Thursday, Saturday' })
+    expect(week.textContent).toContain('MTWTFSS')
+    expect(week.textContent).toContain('4 training · 3 rest · example week')
+  })
+
+  it('shows seven days with no weekday when there is no week to show', () => {
     render(<WeekDays phase={{ days: null, daysPerWeek: 4, sessionsPerWeek: 6 }} />)
     const week = screen.getByRole('img', { name: '4 training days, 3 rest, on the days you choose' })
     expect(week.textContent).not.toContain('M')

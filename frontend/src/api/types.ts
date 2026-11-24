@@ -2609,8 +2609,12 @@ export interface GlancePhase {
   weeks: number
   repeatable: boolean
   focus: string | null
-  /** The source's first week, day by day (templates only): modalities, null for rest. */
+  /** A week, Monday first: each day's modalities, null for rest. The source's
+   *  first week where it writes one; else the app's own example (`daysExample`);
+   *  null only when no example could be built. */
   days: (string[] | null)[] | null
+  /** True when `days` is the app's layout, not the source's. */
+  daysExample?: boolean
   daysPerWeek: number | null
   minutes: number | null
   sessionsPerWeek: number

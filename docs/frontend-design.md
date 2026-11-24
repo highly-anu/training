@@ -2401,9 +2401,10 @@ Words stay on demand and open in place (`InlinePanel`, `Collapse`), never in a d
   the mix as icons, the `PhaseTimeline` (labelled *Timeline*, with the track's weeks: a
   block a phase, as wide as its share of the weeks, in its kind's colour, its name on it
   and "wk 5–8" under it; a block opens its phase), its description, then its
-  phases as cards — the kind's colour, weeks, `WeekDays` (seven cells: M T W T F S S
-  where the source writes the week, filled for training and dashed for rest; without
-  letters where the athlete places the days; "4 training · 3 rest" under either), the
+  phases as cards — the kind's colour, weeks, `WeekDays` (seven cells, M T W T F S S, filled for training and dashed for rest,
+  with "4 training · 3 rest" under them — the source's own week where it writes one,
+  else the app's example of it, `daysExample`, said as "· example week"; unlettered
+  only when the server could build no example), the
   mix as icons, the intensity bar. A phase card opens the phase under them: the full week (`PhaseWeek`,
   each day's piece and each module led by its mark), description, what it builds, how
   hard, tests. A contract module whose session the package writes links to it — *See the
