@@ -94,6 +94,17 @@ def test_a_light_week_runs_every_day_light():
     assert not all(s.get('light') for day in plain.values() for s in day)
 
 
+def test_fixed_days_stay_where_they_are_written():
+    entry = {'week_template': ['rec', 'rest', 'rec', 'rest', 'rest', 'rec', 'rest'], 'drop_order': []}
+    c = {'days_per_week': 2, 'session_time_minutes': 60, 'preferred_days': [2, 4, 7], 'forced_rest_days': [1],
+         'day_configs': {3: {'minutes': 5}}}
+    moved, _ = wt.plan_week(entry, FW, c, ARCH, {}, _fits([]))
+    assert sorted(moved) != [1, 3, 6]
+    fixed, notes = wt.plan_week(entry, {**FW, 'fixed_days': True}, c, ARCH, {}, _fits([]))
+    assert sorted(fixed) == [1, 3, 6], sorted(fixed)
+    assert not any('training days' in n or 'rest days' in n for n in notes), notes
+
+
 def test_category_advice_said_once_by_level():
     # A category's advice is the method's recommendation, left to the athlete
     # (ATG's ladders, Ido's versions, Built to Move's retests; owner, as

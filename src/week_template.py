@@ -175,22 +175,26 @@ def plan_week(entry: dict, framework: dict, constraints: dict, archetypes: dict,
     written), which was taken. The week is the same with or without it."""
     recent = recent if recent is not None else []
     categories = framework.get('categories') or {}
-    days = constraints.get('days_per_week', 6)
+    # A week its author laid on its days (a track built by hand) runs on them:
+    # no day is dropped for a shorter week or moved to a preferred one.
+    fixed = bool(framework.get('fixed_days'))
+    days = 7 if fixed else constraints.get('days_per_week', 6)
     kept, dropped = training_days(entry['week_template'], days, entry.get('drop_order') or [], categories)
     notes = []
     if dropped:
         notes.append(f"With {days} training days the week leaves out: {', '.join(dropped)} "
                      f"(the source trains {len(kept) + len(dropped)} days).")
     total = len([d for d in entry['week_template'] if d != REST])
-    if days > total:
+    if days > total and not fixed:
         notes.append(f"The source trains {total} days a week and rests the others; "
                      f"{days - total} of your days stay rest days.")
     cap = constraints.get('session_time_minutes', 60)
     day_configs = constraints.get('day_configs') or {}
-    day_minutes = {d: min(cap, (day_configs.get(d) or {}).get('minutes', cap)) for d in range(1, 8)}
-    placed = place_days(kept, sorted(constraints.get('preferred_days') or []),
-                        sorted(constraints.get('forced_rest_days') or []), day_minutes,
-                        lambda spec: categories.get(spec['categories'][0], {}).get('long_day', False))
+    day_minutes = {d: cap if fixed else min(cap, (day_configs.get(d) or {}).get('minutes', cap)) for d in range(1, 8)}
+    placed = list(kept) if fixed else place_days(
+        kept, sorted(constraints.get('preferred_days') or []),
+        sorted(constraints.get('forced_rest_days') or []), day_minutes,
+        lambda spec: categories.get(spec['categories'][0], {}).get('long_day', False))
     warm_cat = framework.get('warm_up_category')
     schedule: dict = {}
     asking: list[dict] = []   # every pool asked for the day in hand (the trace)

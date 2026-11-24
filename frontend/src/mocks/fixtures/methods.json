@@ -154,7 +154,7 @@
         "updatedAt": "2026-11-13 10:00:00+00:00"
       },
       {
-        "id": "f23053fb59a94bfd8d870fedc019ba43",
+        "id": "d0f9e1a31c2247b19808689422081441",
         "status": "cancelled",
         "progress": {
           "stage": "reading",
@@ -171,7 +171,7 @@
         "updatedAt": "2026-11-13 10:00:00+00:00"
       },
       {
-        "id": "b36c288abf1b42fbb612fc3415f7f12d",
+        "id": "324318c945ab4b888fa50219d3e9ec40",
         "status": "done",
         "progress": {
           "stage": "done",
@@ -194,7 +194,7 @@
         "updatedAt": "2026-11-13 10:00:00+00:00"
       },
       {
-        "id": "cc0cb33f1ebb44cea762e39b35f5d230",
+        "id": "1690105d29a6440ea7c435651033d644",
         "status": "failed",
         "progress": {
           "stage": "fixing",
@@ -231,7 +231,8 @@
         "revision": 1,
         "status": "installed",
         "updatedAt": "2026-11-13 10:00:00+00:00",
-        "inUse": false
+        "inUse": false,
+        "composed": false
       }
     ],
     "builds": [
@@ -301,7 +302,7 @@
         "updatedAt": "2026-11-13 10:00:00+00:00"
       },
       {
-        "id": "f23053fb59a94bfd8d870fedc019ba43",
+        "id": "d0f9e1a31c2247b19808689422081441",
         "status": "cancelled",
         "progress": {
           "stage": "reading",
@@ -318,7 +319,7 @@
         "updatedAt": "2026-11-13 10:00:00+00:00"
       },
       {
-        "id": "b36c288abf1b42fbb612fc3415f7f12d",
+        "id": "324318c945ab4b888fa50219d3e9ec40",
         "status": "done",
         "progress": {
           "stage": "done",
@@ -341,7 +342,7 @@
         "updatedAt": "2026-11-13 10:00:00+00:00"
       },
       {
-        "id": "cc0cb33f1ebb44cea762e39b35f5d230",
+        "id": "1690105d29a6440ea7c435651033d644",
         "status": "failed",
         "progress": {
           "stage": "fixing",
@@ -378,7 +379,8 @@
         "revision": 1,
         "status": "installed",
         "updatedAt": "2026-11-13 10:00:00+00:00",
-        "inUse": false
+        "inUse": false,
+        "composed": false
       }
     ],
     "builds": [
@@ -448,7 +450,7 @@
         "updatedAt": "2026-11-13 10:00:00+00:00"
       },
       {
-        "id": "f23053fb59a94bfd8d870fedc019ba43",
+        "id": "d0f9e1a31c2247b19808689422081441",
         "status": "cancelled",
         "progress": {
           "stage": "reading",
@@ -465,7 +467,7 @@
         "updatedAt": "2026-11-13 10:00:00+00:00"
       },
       {
-        "id": "b36c288abf1b42fbb612fc3415f7f12d",
+        "id": "324318c945ab4b888fa50219d3e9ec40",
         "status": "done",
         "progress": {
           "stage": "done",
@@ -488,7 +490,7 @@
         "updatedAt": "2026-11-13 10:00:00+00:00"
       },
       {
-        "id": "cc0cb33f1ebb44cea762e39b35f5d230",
+        "id": "1690105d29a6440ea7c435651033d644",
         "status": "failed",
         "progress": {
           "stage": "fixing",

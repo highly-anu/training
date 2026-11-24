@@ -2091,11 +2091,18 @@ def _remove_user_package(package_id: str):
 
 def _manual_state(user_id):
     """(prefix, package id, the stored sessions as archetypes)."""
+    prefix, pkg, archetypes, _ = _manual_library(user_id)
+    return prefix, pkg, archetypes
+
+
+def _manual_library(user_id):
+    """(prefix, package id, the stored sessions as archetypes, the stored
+    tracks as the builder sends them)."""
     from src import manual_builder, package_store
     prefix = package_store.owner_prefix(user_id)
     pkg = manual_builder.package_id(prefix)
-    row = package_store.get_package(user_id, pkg)
-    return prefix, pkg, manual_builder.stored_archetypes((row or {}).get('files'))
+    files = (package_store.get_package(user_id, pkg) or {}).get('files')
+    return prefix, pkg, manual_builder.stored_archetypes(files), manual_builder.stored_tracks(files, prefix)
 
 
 def _manual_gate_problems(result: dict) -> list:
@@ -2149,7 +2156,7 @@ def _save_manual_session(session_id):
 
     def run(b):
         try:
-            prefix, _, archetypes = _manual_state(user_id)
+            prefix, _, archetypes, tracks = _manual_library(user_id)
             ids = [a['id'] for a in archetypes]
             if session_id is not None and session_id not in ids:
                 return {'error': 'not_found'}, 404
@@ -2163,7 +2170,7 @@ def _save_manual_session(session_id):
             if arch is None:
                 return {'error': 'invalid', 'problems': problems}, 422
             kept = [arch if a['id'] == new_id else a for a in archetypes] if session_id else archetypes + [arch]
-            result = package_store.install(user_id, manual_builder.compose(kept, prefix, cat))
+            result = package_store.install(user_id, manual_builder.compose(kept, prefix, cat, tracks))
             if not result.get('installed'):
                 return {'error': 'invalid', 'problems': _manual_gate_problems(result)}, 422
             return {'session': manual_builder.described(arch, cat), 'revision': result.get('revision')}, 200
@@ -2200,9 +2207,13 @@ def delete_manual_session(session_id):
 
     def run(_b):
         try:
-            prefix, pkg, archetypes = _manual_state(user_id)
+            prefix, pkg, archetypes, tracks = _manual_library(user_id)
             if session_id not in [a['id'] for a in archetypes]:
                 return {'error': 'not_found'}, 404
+            placed = manual_builder.tracks_placing(tracks, session_id)
+            if placed:
+                return {'error': 'in_track', 'tracks': placed,
+                        'detail': f"{' and '.join(placed)} has this session on a day. Take it off there first."}, 409
             if _program_uses(_db.get_user_program(user_id), session_id):
                 return {'error': 'in_use', 'detail': 'Your program has this session on a day. '
                         'Remove it there first.'}, 409
@@ -2210,7 +2221,7 @@ def delete_manual_session(session_id):
             if not kept:
                 package_store.remove(user_id, pkg)
                 return {'removed': True}, 200
-            result = package_store.install(user_id, manual_builder.compose(kept, prefix))
+            result = package_store.install(user_id, manual_builder.compose(kept, prefix, tracks=tracks))
             if not result.get('installed'):
                 return {'error': 'invalid', 'problems': _manual_gate_problems(result)}, 422
             return {'removed': True}, 200
@@ -2219,6 +2230,145 @@ def delete_manual_session(session_id):
             return {'error': 'store_unavailable', 'detail': 'Your session could not be removed. Try again.'}, 503
 
     out, status = _heavy_run('package', {'delete': session_id}, run)
+    return jsonify(out), status
+
+
+# A track laid out by hand: the saved sessions on a weeks × days grid, in
+# phases (roadmap 24.4). Stored as a track of the same package, each on a
+# framework of its own; the grid is the phase's `week_templates`.
+
+def _manual_track_limits():
+    from src import manual_builder
+    return {'tracks': manual_builder.MAX_TRACKS, 'phases': manual_builder.MAX_PHASES,
+            'templateWeeks': manual_builder.MAX_TEMPLATE_WEEKS, 'daySessions': manual_builder.MAX_DAY_SESSIONS,
+            'phaseWeeks': manual_builder.MAX_PHASE_WEEKS}
+
+
+def _manual_track_gate_problems(result: dict) -> list:
+    return [{'phase': None, 'week': None, 'day': None, 'field': None,
+             'message': p.get('message') or p.get('code') or 'This could not be saved.'}
+            for p in result.get('problems') or []]
+
+
+@app.get('/api/manual/tracks')
+@require_auth
+@require_builder
+def list_manual_tracks():
+    """The athlete's hand-laid programs, each with what the server derives
+    (each phase's weeks named and timed, the lighter weeks, equipment, the
+    numbers week by week, `startWith`: the constraints that keep the grid as
+    laid), and the phase kinds a phase may take."""
+    from src import manual_builder, package_store, phases as _phases
+    try:
+        prefix, pkg, archetypes, tracks = _manual_library(g.user_id)
+    except package_store.StoreError as e:
+        return _package_store_error(e)
+    cat = manual_builder.catalog()
+    return jsonify({'packageId': pkg,
+                    'tracks': [manual_builder.described_track(t, archetypes, prefix, cat) for t in tracks],
+                    'kinds': [{'id': k, 'label': (v.get('display') or {}).get('label') or k.replace('_', ' ').title(),
+                               'excludesMaxEffort': bool(v.get('excludes_max_effort'))}
+                              for k, v in _phases.kinds().items()],
+                    'limits': _manual_track_limits()})
+
+
+@app.post('/api/manual/tracks/preview')
+@require_auth
+@require_builder
+def preview_manual_track():
+    """A draft as it would be saved: `{track}` → `{ok, problems, track}`.
+    Stores nothing, runs no gate."""
+    from src import manual_builder, package_store
+    body = request.get_json(silent=True) or {}
+    try:
+        prefix, _, archetypes, _ = _manual_library(g.user_id)
+    except package_store.StoreError as e:
+        return _package_store_error(e)
+    cat = manual_builder.catalog()
+    draft = body.get('track') if isinstance(body.get('track'), dict) else {}
+    track, problems = manual_builder.read_track(draft, draft.get('id') or 'draft', archetypes, cat)
+    if track is None:
+        return jsonify({'ok': False, 'problems': problems, 'track': None})
+    return jsonify({'ok': True, 'problems': [], 'track': manual_builder.described_track(track, archetypes, prefix, cat)})
+
+
+def _save_manual_track(track_id):
+    from src import manual_builder, package_store
+    body = request.get_json(silent=True) or {}
+    user_id = g.user_id
+
+    def run(b):
+        try:
+            prefix, _, archetypes, tracks = _manual_library(user_id)
+            ids = [t['id'] for t in tracks]
+            if track_id is not None and track_id not in ids:
+                return {'error': 'not_found'}, 404
+            if track_id is None and len(ids) >= manual_builder.MAX_TRACKS:
+                return {'error': 'too_many', 'problems': [{'phase': None, 'week': None, 'day': None, 'field': None,
+                        'message': f'You can keep {manual_builder.MAX_TRACKS} programs. Delete one first.'}]}, 422
+            if not archetypes:
+                return {'error': 'invalid', 'problems': [{'phase': None, 'week': None, 'day': None, 'field': None,
+                        'message': 'Save a session first: a program is made of your saved sessions.'}]}, 422
+            cat = manual_builder.catalog()
+            draft = b.get('track') if isinstance(b.get('track'), dict) else {}
+            new_id = track_id or manual_builder.new_track_id(draft.get('name'), ids)
+            track, problems = manual_builder.read_track(draft, new_id, archetypes, cat)
+            if track is None:
+                return {'error': 'invalid', 'problems': problems}, 422
+            kept = [track if t['id'] == new_id else t for t in tracks] if track_id else tracks + [track]
+            result = package_store.install(user_id, manual_builder.compose(archetypes, prefix, cat, kept))
+            if not result.get('installed'):
+                return {'error': 'invalid', 'problems': _manual_track_gate_problems(result)}, 422
+            return {'track': manual_builder.described_track(track, archetypes, prefix, cat),
+                    'revision': result.get('revision')}, 200
+        except package_store.StoreError as e:
+            app.logger.warning('manual tracks: %s', e)
+            return {'error': 'store_unavailable', 'detail': 'Your program could not be saved. Try again.'}, 503
+
+    out, status = _heavy_run('package', body, run)
+    return jsonify(out), status
+
+
+@app.post('/api/manual/tracks')
+@require_auth
+@require_builder
+def create_manual_track():
+    return _save_manual_track(None)
+
+
+@app.put('/api/manual/tracks/<track_id>')
+@require_auth
+@require_builder
+def update_manual_track(track_id):
+    return _save_manual_track(track_id)
+
+
+@app.delete('/api/manual/tracks/<track_id>')
+@require_auth
+@require_builder
+def delete_manual_track(track_id):
+    """Remove one hand-laid program. 409 `in_use` while the athlete's active
+    program runs on it."""
+    from src import db as _db, manual_builder, package_store
+    user_id = g.user_id
+
+    def run(_b):
+        try:
+            prefix, _, archetypes, tracks = _manual_library(user_id)
+            if track_id not in [t['id'] for t in tracks]:
+                return {'error': 'not_found'}, 404
+            if _program_uses(_db.get_user_program(user_id), manual_builder.framework_id_of(track_id, prefix)):
+                return {'error': 'in_use', 'detail': 'Your program runs on this. Start another program first.'}, 409
+            kept = [t for t in tracks if t['id'] != track_id]
+            result = package_store.install(user_id, manual_builder.compose(archetypes, prefix, tracks=kept))
+            if not result.get('installed'):
+                return {'error': 'invalid', 'problems': _manual_track_gate_problems(result)}, 422
+            return {'removed': True}, 200
+        except package_store.StoreError as e:
+            app.logger.warning('manual tracks: %s', e)
+            return {'error': 'store_unavailable', 'detail': 'Your program could not be removed. Try again.'}, 503
+
+    out, status = _heavy_run('package', {'delete_track': track_id}, run)
     return jsonify(out), status
 
 
@@ -2250,9 +2400,13 @@ def list_methods():
     from src import db as _db
     program = _db.get_user_program(g.user_id) if rows else None
     set_aside = {q['package'] for q in loader.quarantined()}
+    from src import manual_builder as _manual
+    composed_id = _manual.package_id(package_store.owner_prefix(g.user_id))
     body['methods'] = [{'id': r['id'], 'name': r.get('name') or r['id'], 'revision': r['revision'],
                         'status': 'quarantined' if r['id'] in set_aside else r.get('status') or 'installed',
-                        'updatedAt': r.get('updatedAt'), 'inUse': _program_uses(program, r['id'])}
+                        'updatedAt': r.get('updatedAt'), 'inUse': _program_uses(program, r['id']),
+                        # Built by hand in the session and program builders: never revised by the model.
+                        'composed': r['id'] == composed_id}
                        for r in rows]
     return jsonify(body)
 
