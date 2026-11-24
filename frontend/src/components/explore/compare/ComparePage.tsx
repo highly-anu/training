@@ -218,7 +218,7 @@ export function ComparePage({ ids, onChange, onOpen, onBack }: {
               ))}
             </Row>
             <Row label="Level" same={doc.same.levels} hidden={hide('levels')}>
-              {cols.map((g) => <Cell key={g.id}><LevelScale levels={g.levels} size="compact" /></Cell>)}
+              {cols.map((g) => <Cell key={g.id}><LevelScale levels={g.levels} /></Cell>)}
             </Row>
 
             <SectionTitle>Shape</SectionTitle>

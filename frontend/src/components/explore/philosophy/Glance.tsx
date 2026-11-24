@@ -1,7 +1,7 @@
 import { NEUTRAL_HEX } from '@/lib/dataColors'
 import { Tip } from '@/components/shared/Tip'
 import { useEffect, useRef } from 'react'
-import { Check, Minus, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { DescribedMix, GlancePhase, TrainingLevel } from '@/api/types'
 import { INTENSITY_BUCKETS } from '@/lib/hrZones'
@@ -22,42 +22,37 @@ import { TRAINING_LEVELS, TRAINING_LEVEL_LABELS } from '@/lib/gen/clientVocab'
 
 const LEVELS: readonly TrainingLevel[] = TRAINING_LEVELS
 const levelLabel = (l: TrainingLevel) => TRAINING_LEVEL_LABELS[l] ?? l
-/** The compact scale's steps, novice → elite. */
-const STEP_HEIGHT = ['h-1.5', 'h-2.5', 'h-3.5', 'h-[1.125rem]']
 
-/** Who a method or a track is written for: every level, always, in the same
- *  place and at the same size — the ones it serves marked, the others left
- *  quiet. `full` names each level (a tick or a dash beside it, so it is never
- *  said by shade alone); `compact`, for a card or a table cell, is four rising
- *  steps, filled where it serves. */
-export function LevelScale({ levels, size = 'full', className }: {
-  levels: TrainingLevel[]; size?: 'full' | 'compact'; className?: string
-}) {
+/** A level as a rank: one chevron for novice, up to four for elite. */
+function Rank({ chevrons, className }: { chevrons: number; className?: string }) {
+  return (
+    <svg viewBox="0 0 12 18" className={cn('h-[1.125rem] w-3', className)} fill="none" stroke="currentColor"
+      strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      {Array.from({ length: chevrons }, (_, k) => (
+        <path key={k} d={`M2 ${16 - k * 4} L6 ${13 - k * 4} L10 ${16 - k * 4}`} />
+      ))}
+    </svg>
+  )
+}
+
+/** Who a method or a track is written for, as four ranks — one chevron for
+ *  novice to four for elite. Every rank is always drawn, in the same place and
+ *  at the same size: the ones it serves in full, the others faint. Each names
+ *  its level on hover; the whole reads as one sentence to a screen reader. */
+export function LevelScale({ levels, className }: { levels: TrainingLevel[]; className?: string }) {
   const on = LEVELS.filter((l) => levels.includes(l))
   const off = LEVELS.filter((l) => !levels.includes(l))
   const label = `Written for ${on.map(levelLabel).join(', ') || 'no level'}`
     + (on.length && off.length ? `; not for ${off.map(levelLabel).join(', ')}` : '')
-  if (size === 'compact') {
-    return (
-      <span className={cn('inline-flex h-[1.125rem] shrink-0 items-end gap-0.5', className)} role="img"
-        aria-label={label} title={label}>
-        {LEVELS.map((l, i) => (
-          <span key={l} className={cn('w-1.5 rounded-[1px]', STEP_HEIGHT[i],
-            levels.includes(l) ? 'bg-foreground/80' : 'border border-border')} />
-        ))}
-      </span>
-    )
-  }
   return (
-    <span className={cn('inline-flex shrink-0 divide-x divide-border/60 overflow-hidden rounded-md border border-border/60 text-[10px] leading-none', className)}
-      role="img" aria-label={label}>
-      {LEVELS.map((l) => {
+    <span className={cn('inline-flex shrink-0 items-end gap-1', className)} role="img" aria-label={label}>
+      {LEVELS.map((l, i) => {
         const serves = levels.includes(l)
-        const Mark = serves ? Check : Minus
         return (
-          <span key={l} className={cn('inline-flex items-center gap-1 px-1.5 py-1',
-            serves ? 'bg-foreground/10 font-medium text-foreground' : 'text-muted-foreground/50')}>
-            <Mark className="size-2.5" aria-hidden />{levelLabel(l)}
+          <span key={l} title={`${levelLabel(l)}: ${serves ? 'written for it' : 'not written for it'}`}
+            data-level={l} data-serves={serves}
+            className={serves ? 'text-foreground' : 'text-muted-foreground/30'}>
+            <Rank chevrons={i + 1} />
           </span>
         )
       })}

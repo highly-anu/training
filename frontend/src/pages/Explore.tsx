@@ -265,7 +265,7 @@ function PhilosophyOverview({ philosophies, onSelect, onCompare }: {
                   {g && (
                     <div className="flex items-center justify-between gap-2">
                       <MixLegend mix={g.mix} max={4} />
-                      <LevelScale levels={g.levels} size="compact" />
+                      <LevelScale levels={g.levels} />
                     </div>
                   )}
                 </div>
