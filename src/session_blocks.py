@@ -146,7 +146,7 @@ def _from_slot(slot: dict) -> dict:
         'cap_sec': slot.get('time_cap_sec'),
         'distance_m': slot.get('distance_m'),
         'hold_sec': slot.get('hold_seconds') or slot.get('hold_sec'),
-        'load': slot.get('load'), 'intensity': slot.get('intensity'), 'rpe': slot.get('rpe_target'),
+        'load': slot.get('load') or _written_kg(slot), 'intensity': slot.get('intensity'), 'rpe': slot.get('rpe_target'),
         'note': (slot.get('notes') or '').strip() or None,
         'stage': slot.get('stage'), 'group': slot.get('group'),
         'standard': _standard_id(slot.get('standard')),
@@ -155,6 +155,14 @@ def _from_slot(slot: dict) -> dict:
 
 def _standard_id(std):
     return (std.get('id') if isinstance(std, dict) else std) or None
+
+
+def _written_kg(slot: dict) -> str | None:
+    """A slot's own starting weight ("80 kg"), where its author wrote one."""
+    kg = slot.get('start_kg')
+    if kg is None:
+        return None
+    return f"{int(kg) if float(kg).is_integer() else kg} kg"
 
 
 def _from_assignment(ea: dict, written: dict | None) -> dict:

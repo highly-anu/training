@@ -187,7 +187,10 @@ def render_ts(modalities, phases, equipment, outcomes) -> str:
               'export const TRAINING_LEVEL_LABELS: Record<string, string> = {']
     lines += [f"  {lv['id']}: {q(lv['label'])}," for lv in load_levels()]
     lines += ['}', '', '/** The slot intensities an author may write (data/commons/intensities.yaml). */',
-              f"export const INTENSITIES = [{', '.join(q(t) for t in load_intensities())}] as const", '']
+              f"export const INTENSITIES = [{', '.join(q(t) for t in load_intensities())}] as const", '',
+              '/** Every slot type an archetype may write (docs/schemas/archetype.schema.json). */',
+              f"export const SLOT_TYPES = [{', '.join(q(t) for t in load_slot_types())}] as const",
+              'export type SlotType = (typeof SLOT_TYPES)[number]', '']
     return '\n'.join(lines)
 
 
@@ -345,6 +348,14 @@ def load_intensities() -> list[str]:
     with open(os.path.join(COMMONS, 'intensities.yaml'), encoding='utf-8') as fh:
         table = yaml.safe_load(fh)['intensities']
     return [t for t, e in table.items() if (e or {}).get('authoring', True)]
+
+
+def load_slot_types() -> list[str]:
+    """The slot types, as the archetype schema lists them."""
+    import json
+    with open(os.path.join(ROOT, 'docs', 'schemas', 'archetype.schema.json'), encoding='utf-8') as fh:
+        schema = json.load(fh)
+    return list(schema['properties']['slots']['items']['properties']['slot_type']['enum'])
 
 
 def load_levels() -> list[dict]:

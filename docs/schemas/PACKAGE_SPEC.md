@@ -132,6 +132,11 @@ None of this fails a check; all of it decides what the athlete is prescribed.
   deload is applied (a `deload_protocol` still marks the week as a deload). Without it
   the modality's own model computes the load and the text is not shown. A slot's `notes`
   are the athlete's to read beside the prescription; they change nothing. The engine computes no percentage of a max: a percentage is text.
+  One thing does move under as written, because its author says so: a slot's own
+  `start_kg` (the weight, a number) and `progress` — `add_kg`, `add_reps` (with
+  `top_reps`: reps climb to the top, then start again with `add_kg` more), `add_sec`,
+  `add_m`, `add_rounds`, one step every `every_weeks` (1) of the phase, none in a deload
+  week. A slot without them is the same every week.
 - **Vocabulary of your own.** The schemas' equipment, modality and movement-pattern lists
   are the commons'; an id the package's `vocabulary.yaml` declares is accepted wherever
   they are.

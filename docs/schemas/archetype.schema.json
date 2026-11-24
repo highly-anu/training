@@ -234,6 +234,26 @@
                               "female": {"type": "number", "exclusiveMinimum": 0}}}
             ]
           },
+          "start_kg": {
+            "type": "number",
+            "minimum": 0,
+            "description": "The weight this slot starts at, written by its author (a session composed by hand). Read by the as_written progression model, which otherwise prescribes no weight; `progress` says how it moves."
+          },
+          "progress": {
+            "type": "object",
+            "additionalProperties": false,
+            "minProperties": 1,
+            "description": "How this slot's own numbers move through the weeks of a phase under as_written (src/progression.written_progress): one step every `every_weeks`, none in a deload week. With `top_reps`, reps climb by `add_reps` to the top, then start again with `add_kg` more.",
+            "properties": {
+              "add_kg": {"type": "number", "exclusiveMinimum": 0},
+              "add_reps": {"type": "integer", "minimum": 1},
+              "top_reps": {"type": "integer", "minimum": 2},
+              "add_sec": {"type": "integer", "minimum": 1},
+              "add_m": {"type": "integer", "minimum": 1},
+              "add_rounds": {"type": "integer", "minimum": 1},
+              "every_weeks": {"type": "integer", "minimum": 1}
+            }
+          },
           "notes": {
             "type": "string"
           },
