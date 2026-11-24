@@ -60,6 +60,7 @@ deferred is under *Later*.
 | 21 | LLM package builder: an athlete describes a method and gets one to build a program from, on the web and the phone — dev role first. The gate (21.1), the durable job (21.2), the model loop (21.3), the web's screens (21.4), the phone's vocabulary (21.5) and its screens (21.6) are in; and the Dev Lab's builds view (21.7) are in; the eval against the real model and the production steps are open | P1 | L | API, web, iOS, watch |
 | 22 | Pre-workout briefing: before a session, today's numbers beside the earlier times the same session was done, its place in the cycle and one suggestion — declared by the package (`briefing.yaml`), built on the server. The server and Wildman's file (22.1) the phone's screen (22.2), the web's block (22.3) and the reading of every package's default (22.4) are in | P2 | M | engine, API, iOS, web, content |
 | 23 | Levels: every package from novice to elite — all eleven done 2026-11-08; what is left is listed under Open | P2 | S | engine, content |
+| 24 | Manual builder: an athlete composes sessions, then a track, from existing exercises — in the Dev Lab first. A slot's own weight and steps (24.1) and the server's session library (24.2) are in; the web's session builder (24.3) and the program builder (24.4) are open | P1 | L | engine, API, web |
 
 ---
 
@@ -2302,6 +2303,41 @@ scaled benchmark measures nothing, so a non-elite CrossFit athlete's Progress
 has no tested standard; a "scaled" result kind on the standards would let it count. The
 benchmarks' own published beginner versions should replace the computed scale where
 crossfit.com prints them. `starting_load_kg` has no elite × share fallback yet.
+
+### 24. Manual builder: sessions and tracks composed by hand — P1 · L
+
+An athlete builds a session from existing exercises — sets × reps, supersets, rounds,
+AMRAPs, EMOMs, pieces for time, intervals, timed and zone work, distances, holds — puts it
+on a day, logs it and sees its numbers move; then lays sessions out as a track. Everything
+the app runs for a shipped package is available by hand. In the Dev Lab while it is tested.
+
+Decided with the owner (2026-11-24): a saved session is an archetype of a private package
+of the athlete's, "My sessions", stored through the gates like a method; progression is
+written (a start and a rule per movement, following the calendar), earned progression comes
+with the program builder; per-set weights are later; existing exercises only.
+
+- **24.1 A slot's own weight and steps — done.** `start_kg` and `progress` on a slot, read
+  under `as_written` by `progression.written_progress` (docs/logic/progression_models.md
+  §10); `SLOT_TYPES` generated for the clients. `test_written_progress.py`.
+- **24.2 The session library on the server — done.** `src/manual_builder.py`: the block
+  wire shape, `to_archetype` / `from_archetype`, `compose` (one package, one "Library"
+  track so it generates), `described` (the blocks, minutes, equipment and the first weeks
+  in words). Routes `GET/POST /api/manual/sessions`, `PUT/DELETE …/<id>`,
+  `POST /api/manual/preview`, behind `require_builder`. An added session is now filled
+  with the movements its own package borrows (`_generate_session_inner`) — a hand-built
+  session's are all borrowed, and an added session of a borrowing package had its
+  borrowed slots empty. `test_manual_builder.py`.
+- **24.3 The web's session builder — open.** Dev Lab ▸ Session builder: search as you
+  type, drag and drop, block editors, the live preview, save, add to a day.
+- **24.4 The program builder — open.** Real tracks in the same package: a weeks × days
+  grid of the saved sessions (`week_templates`), phases, a deload rule, then Program ▸
+  Preview. With it: progression earned from the log (`load_per_exposure`'s reading for a
+  templated slot), per-set schemes (load, loggers and both watches), creating exercises,
+  the phone, and the move out of the Dev Lab.
+
+**Open.** "My sessions" is listed among Your methods, where Revise would hand it to the
+model. Tempo, each side and a % of 1RM are words in a note, not fields. The Library track
+lays sessions out three a week only so the package generates.
 
 ## Later
 

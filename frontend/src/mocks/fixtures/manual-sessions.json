@@ -1,0 +1,1216 @@
+{
+ "list": {
+  "packageId": "ub544b040_manual",
+  "sessions": [
+   {
+    "id": "ub544b040_ms_squat_day",
+    "name": "Squat day, heavy",
+    "modality": "max_strength",
+    "minutes": 15,
+    "blocks": [
+     {
+      "kind": "practice",
+      "stage": "prep",
+      "movements": [
+       {
+        "exercise_id": "squat_air"
+       }
+      ],
+      "minutes": 5
+     },
+     {
+      "kind": "sets",
+      "stage": "main",
+      "movements": [
+       {
+        "exercise_id": "back_squat",
+        "start_kg": 80,
+        "sets": 3,
+        "reps": 5,
+        "rest_sec": 180,
+        "note": "Below parallel.",
+        "progress": {
+         "add_kg": 2.5
+        }
+       }
+      ],
+      "intensity": "heavy"
+     }
+    ],
+    "notes": "Belt on for the top sets.",
+    "archetypeId": "ub544b040_ms_squat_day",
+    "equipment": [
+     "barbell",
+     "plates",
+     "rack"
+    ],
+    "preview": [
+     {
+      "id": "b1",
+      "stage": "prep",
+      "stageLabel": "Start",
+      "shape": "practice",
+      "title": "B1",
+      "headline": "5 min",
+      "repeat": null,
+      "rest": null,
+      "again": null,
+      "cap": null,
+      "load": null,
+      "intensity": null,
+      "rpe": null,
+      "note": null,
+      "standard": null,
+      "group": null,
+      "roles": [
+       "b1"
+      ],
+      "movements": [
+       {
+        "role": "b1",
+        "name": "Air Squat",
+        "count": null,
+        "perRound": null,
+        "eachSide": false,
+        "note": null,
+        "exercises": [
+         {
+          "id": "squat_air",
+          "name": "Air Squat"
+         }
+        ],
+        "listed": true,
+        "more": 0
+       }
+      ]
+     },
+     {
+      "id": "b2",
+      "stage": "main",
+      "stageLabel": "Main work",
+      "shape": "sets",
+      "title": "B2",
+      "headline": "3 × 5",
+      "repeat": {
+       "sets": 3
+      },
+      "rest": {
+       "seconds": 180,
+       "between": "sets",
+       "text": "3 min rest between sets"
+      },
+      "again": null,
+      "cap": null,
+      "load": "80 kg",
+      "intensity": "heavy",
+      "rpe": null,
+      "note": "Below parallel.",
+      "standard": null,
+      "group": null,
+      "roles": [
+       "b2"
+      ],
+      "movements": [
+       {
+        "role": "b2",
+        "name": "Back Squat",
+        "count": null,
+        "perRound": null,
+        "eachSide": false,
+        "note": null,
+        "exercises": [
+         {
+          "id": "back_squat",
+          "name": "Back Squat"
+         }
+        ],
+        "listed": true,
+        "more": 0
+       }
+      ]
+     }
+    ],
+    "forecast": [
+     {
+      "role": "b2",
+      "exercise": "Back Squat",
+      "weeks": [
+       "3 × 5 @ 80 kg",
+       "3 × 5 @ 82.5 kg",
+       "3 × 5 @ 85 kg",
+       "3 × 5 @ 87.5 kg"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "ub544b040_ms_everything",
+    "name": "Everything",
+    "modality": "mixed_modal_conditioning",
+    "minutes": 85,
+    "blocks": [
+     {
+      "kind": "sets",
+      "stage": "main",
+      "movements": [
+       {
+        "exercise_id": "back_squat",
+        "load_text": "work up",
+        "sets": 5,
+        "reps": "5-3-1"
+       }
+      ]
+     },
+     {
+      "kind": "alternate",
+      "stage": "main",
+      "movements": [
+       {
+        "exercise_id": "pull_up",
+        "sets": 4,
+        "reps": 5
+       },
+       {
+        "exercise_id": "push_up",
+        "sets": 4,
+        "reps": 10
+       }
+      ],
+      "rounds": 4
+     },
+     {
+      "kind": "rounds",
+      "stage": "main",
+      "movements": [
+       {
+        "exercise_id": "push_up",
+        "reps": 10
+       },
+       {
+        "exercise_id": "run_easy",
+        "distance_m": 200
+       }
+      ],
+      "rounds": 3,
+      "rest_sec": 60,
+      "note": "Smooth.",
+      "progress": {
+       "add_rounds": 1
+      }
+     },
+     {
+      "kind": "for_time",
+      "stage": "main",
+      "movements": [
+       {
+        "exercise_id": "squat_air",
+        "start_kg": 43,
+        "rep_scheme": [
+         21,
+         15,
+         9
+        ]
+       },
+       {
+        "exercise_id": "pull_up",
+        "rep_scheme": [
+         21,
+         15,
+         9
+        ]
+       }
+      ],
+      "rounds": 3,
+      "cap_min": 10
+     },
+     {
+      "kind": "emom",
+      "stage": "main",
+      "movements": [
+       {
+        "exercise_id": "push_up",
+        "reps": 8
+       }
+      ],
+      "minutes": 10
+     },
+     {
+      "kind": "interval",
+      "stage": "main",
+      "movements": [
+       {
+        "exercise_id": "row_easy"
+       }
+      ],
+      "rounds": 8,
+      "work_sec": 20,
+      "rest_sec": 60,
+      "rest_until_hr_pct": 70,
+      "intensity": "zone4"
+     },
+     {
+      "kind": "distance",
+      "stage": "main",
+      "movements": [
+       {
+        "exercise_id": "run_easy",
+        "distance_m": 400,
+        "sets": 4,
+        "progress": {
+         "add_m": 100
+        }
+       }
+      ],
+      "rest_sec": 90,
+      "intensity": "zone3"
+     },
+     {
+      "kind": "hold",
+      "stage": "finisher",
+      "movements": [
+       {
+        "exercise_id": "bjj_plank_hold",
+        "sets": 3,
+        "hold_sec": 30,
+        "progress": {
+         "add_sec": 5
+        }
+       }
+      ],
+      "rest_sec": 30
+     }
+    ],
+    "archetypeId": "ub544b040_ms_everything",
+    "equipment": [
+     "barbell",
+     "open_space",
+     "plates",
+     "pull_up_bar",
+     "rack",
+     "rower"
+    ],
+    "preview": [
+     {
+      "id": "b1",
+      "stage": "main",
+      "stageLabel": "Main work",
+      "shape": "sets",
+      "title": "B1",
+      "headline": "5 × 5-3-1",
+      "repeat": {
+       "sets": 5,
+       "scheme": [
+        5,
+        3,
+        1
+       ]
+      },
+      "rest": null,
+      "again": null,
+      "cap": null,
+      "load": "work up",
+      "intensity": null,
+      "rpe": null,
+      "note": null,
+      "standard": null,
+      "group": null,
+      "roles": [
+       "b1"
+      ],
+      "movements": [
+       {
+        "role": "b1",
+        "name": "Back Squat",
+        "count": null,
+        "perRound": null,
+        "eachSide": false,
+        "note": null,
+        "exercises": [
+         {
+          "id": "back_squat",
+          "name": "Back Squat"
+         }
+        ],
+        "listed": true,
+        "more": 0
+       }
+      ]
+     },
+     {
+      "id": "b2_1",
+      "stage": "main",
+      "stageLabel": "Main work",
+      "shape": "sets",
+      "title": "B2 1",
+      "headline": "4 × 5",
+      "repeat": {
+       "sets": 4
+      },
+      "rest": null,
+      "again": null,
+      "cap": null,
+      "load": null,
+      "intensity": null,
+      "rpe": null,
+      "note": null,
+      "standard": null,
+      "group": {
+       "id": "b2",
+       "kind": "alternate"
+      },
+      "roles": [
+       "b2_1"
+      ],
+      "movements": [
+       {
+        "role": "b2_1",
+        "name": "Pull-Up Progression",
+        "count": null,
+        "perRound": null,
+        "eachSide": false,
+        "note": null,
+        "exercises": [
+         {
+          "id": "pull_up",
+          "name": "Pull-Up Progression"
+         }
+        ],
+        "listed": true,
+        "more": 0
+       }
+      ]
+     },
+     {
+      "id": "b2_2",
+      "stage": "main",
+      "stageLabel": "Main work",
+      "shape": "sets",
+      "title": "B2 2",
+      "headline": "4 × 10",
+      "repeat": {
+       "sets": 4
+      },
+      "rest": null,
+      "again": null,
+      "cap": null,
+      "load": null,
+      "intensity": null,
+      "rpe": null,
+      "note": null,
+      "standard": null,
+      "group": {
+       "id": "b2",
+       "kind": "alternate"
+      },
+      "roles": [
+       "b2_2"
+      ],
+      "movements": [
+       {
+        "role": "b2_2",
+        "name": "Full Push-Up Progression",
+        "count": null,
+        "perRound": null,
+        "eachSide": false,
+        "note": null,
+        "exercises": [
+         {
+          "id": "push_up",
+          "name": "Full Push-Up Progression"
+         }
+        ],
+        "listed": true,
+        "more": 0
+       }
+      ]
+     },
+     {
+      "id": "b3",
+      "stage": "main",
+      "stageLabel": "Main work",
+      "shape": "rounds",
+      "title": "B3",
+      "headline": "3 rounds",
+      "repeat": {
+       "rounds": 3
+      },
+      "rest": {
+       "seconds": 60,
+       "between": "rounds",
+       "text": "1 min rest between rounds"
+      },
+      "again": "3 rounds in all",
+      "cap": null,
+      "load": null,
+      "intensity": null,
+      "rpe": null,
+      "note": "Smooth.",
+      "standard": null,
+      "group": null,
+      "roles": [
+       "b3",
+       "b3_2"
+      ],
+      "movements": [
+       {
+        "role": "b3",
+        "name": "Full Push-Up Progression",
+        "count": "10",
+        "perRound": null,
+        "eachSide": false,
+        "note": null,
+        "exercises": [
+         {
+          "id": "push_up",
+          "name": "Full Push-Up Progression"
+         }
+        ],
+        "listed": true,
+        "more": 0
+       },
+       {
+        "role": "b3_2",
+        "name": "Easy Run (Zone 1–2)",
+        "count": "200 m",
+        "perRound": null,
+        "eachSide": false,
+        "note": null,
+        "exercises": [
+         {
+          "id": "run_easy",
+          "name": "Easy Run (Zone 1–2)"
+         }
+        ],
+        "listed": true,
+        "more": 0
+       }
+      ]
+     },
+     {
+      "id": "b4",
+      "stage": "main",
+      "stageLabel": "Main work",
+      "shape": "for_time",
+      "title": "B4",
+      "headline": "21-15-9 for time",
+      "repeat": {
+       "rounds": 3,
+       "capMin": 10,
+       "scheme": [
+        21,
+        15,
+        9
+       ]
+      },
+      "rest": null,
+      "again": null,
+      "cap": "10 min cap",
+      "load": "43 kg",
+      "intensity": null,
+      "rpe": null,
+      "note": null,
+      "standard": null,
+      "group": null,
+      "roles": [
+       "b4",
+       "b4_2"
+      ],
+      "movements": [
+       {
+        "role": "b4",
+        "name": "Air Squat",
+        "count": "21-15-9",
+        "perRound": [
+         21,
+         15,
+         9
+        ],
+        "eachSide": false,
+        "note": null,
+        "exercises": [
+         {
+          "id": "squat_air",
+          "name": "Air Squat"
+         }
+        ],
+        "listed": true,
+        "more": 0
+       },
+       {
+        "role": "b4_2",
+        "name": "Pull-Up Progression",
+        "count": "21-15-9",
+        "perRound": [
+         21,
+         15,
+         9
+        ],
+        "eachSide": false,
+        "note": null,
+        "exercises": [
+         {
+          "id": "pull_up",
+          "name": "Pull-Up Progression"
+         }
+        ],
+        "listed": true,
+        "more": 0
+       }
+      ]
+     },
+     {
+      "id": "b5",
+      "stage": "main",
+      "stageLabel": "Main work",
+      "shape": "emom",
+      "title": "B5",
+      "headline": "Every minute × 10",
+      "repeat": {
+       "everySec": 60,
+       "rounds": 10,
+       "minutes": 10
+      },
+      "rest": null,
+      "again": "Start again every minute",
+      "cap": null,
+      "load": null,
+      "intensity": null,
+      "rpe": null,
+      "note": null,
+      "standard": null,
+      "group": null,
+      "roles": [
+       "b5"
+      ],
+      "movements": [
+       {
+        "role": "b5",
+        "name": "Full Push-Up Progression",
+        "count": "8",
+        "perRound": null,
+        "eachSide": false,
+        "note": null,
+        "exercises": [
+         {
+          "id": "push_up",
+          "name": "Full Push-Up Progression"
+         }
+        ],
+        "listed": true,
+        "more": 0
+       }
+      ]
+     },
+     {
+      "id": "b6",
+      "stage": "main",
+      "stageLabel": "Main work",
+      "shape": "emom",
+      "title": "B6",
+      "headline": "Every 1 min 20 s × 8",
+      "repeat": {
+       "rounds": 8,
+       "workSec": 20,
+       "restSec": 60,
+       "everySec": 80
+      },
+      "rest": null,
+      "again": "Start again every 1 min 20 s",
+      "cap": null,
+      "load": null,
+      "intensity": "zone4",
+      "rpe": null,
+      "note": null,
+      "standard": null,
+      "group": null,
+      "roles": [
+       "b6"
+      ],
+      "movements": [
+       {
+        "role": "b6",
+        "name": "Easy Row (Zone 1–2)",
+        "count": null,
+        "perRound": null,
+        "eachSide": false,
+        "note": null,
+        "exercises": [
+         {
+          "id": "row_easy",
+          "name": "Easy Row (Zone 1–2)"
+         }
+        ],
+        "listed": true,
+        "more": 0
+       }
+      ]
+     },
+     {
+      "id": "b7",
+      "stage": "main",
+      "stageLabel": "Main work",
+      "shape": "distance",
+      "title": "B7",
+      "headline": "4 × 400 m",
+      "repeat": {
+       "sets": 4
+      },
+      "rest": {
+       "seconds": 90,
+       "between": "sets",
+       "text": "1 min 30 s rest between sets"
+      },
+      "again": null,
+      "cap": null,
+      "load": null,
+      "intensity": "zone3",
+      "rpe": null,
+      "note": null,
+      "standard": null,
+      "group": null,
+      "roles": [
+       "b7"
+      ],
+      "movements": [
+       {
+        "role": "b7",
+        "name": "Easy Run (Zone 1–2)",
+        "count": null,
+        "perRound": null,
+        "eachSide": false,
+        "note": null,
+        "exercises": [
+         {
+          "id": "run_easy",
+          "name": "Easy Run (Zone 1–2)"
+         }
+        ],
+        "listed": true,
+        "more": 0
+       }
+      ]
+     },
+     {
+      "id": "b8",
+      "stage": "finisher",
+      "stageLabel": "Finisher",
+      "shape": "hold",
+      "title": "B8",
+      "headline": "3 × 30 s hold",
+      "repeat": {
+       "sets": 3
+      },
+      "rest": {
+       "seconds": 30,
+       "between": "sets",
+       "text": "30 s rest between sets"
+      },
+      "again": null,
+      "cap": null,
+      "load": null,
+      "intensity": null,
+      "rpe": null,
+      "note": null,
+      "standard": null,
+      "group": null,
+      "roles": [
+       "b8"
+      ],
+      "movements": [
+       {
+        "role": "b8",
+        "name": "Plank Hold",
+        "count": null,
+        "perRound": null,
+        "eachSide": false,
+        "note": null,
+        "exercises": [
+         {
+          "id": "bjj_plank_hold",
+          "name": "Plank Hold"
+         }
+        ],
+        "listed": true,
+        "more": 0
+       }
+      ]
+     }
+    ],
+    "forecast": [
+     {
+      "role": "b3",
+      "exercise": "Full Push-Up Progression",
+      "weeks": [
+       "10 reps/round | 3 rounds FOR TIME",
+       "10 reps/round | 4 rounds FOR TIME",
+       "10 reps/round | 5 rounds FOR TIME",
+       "10 reps/round | 6 rounds FOR TIME"
+      ]
+     },
+     {
+      "role": "b4",
+      "exercise": "Air Squat",
+      "weeks": [
+       "21-15-9 reps | 43 kg | 10 min FOR TIME — target 3 rounds",
+       "21-15-9 reps | 43 kg | 10 min FOR TIME — target 3 rounds",
+       "21-15-9 reps | 43 kg | 10 min FOR TIME — target 3 rounds",
+       "21-15-9 reps | 43 kg | 10 min FOR TIME — target 3 rounds"
+      ]
+     },
+     {
+      "role": "b7",
+      "exercise": "Easy Run (Zone 1–2)",
+      "weeks": [
+       "400m",
+       "500m",
+       "600m",
+       "700m"
+      ]
+     },
+     {
+      "role": "b8",
+      "exercise": "Plank Hold",
+      "weeks": [
+       "3 × 30s hold",
+       "3 × 35s hold",
+       "3 × 40s hold",
+       "3 × 45s hold"
+      ]
+     }
+    ]
+   }
+  ],
+  "limits": {
+   "sessions": 60,
+   "blocks": 24,
+   "movements": 12
+  }
+ },
+ "preview": {
+  "ok": true,
+  "problems": [],
+  "session": {
+   "id": "ub544b040_ms_draft",
+   "name": "Squat day",
+   "modality": "max_strength",
+   "minutes": 80,
+   "blocks": [
+    {
+     "kind": "practice",
+     "stage": "prep",
+     "movements": [
+      {
+       "exercise_id": "squat_air"
+      }
+     ],
+     "minutes": 5
+    },
+    {
+     "kind": "sets",
+     "stage": "main",
+     "movements": [
+      {
+       "exercise_id": "back_squat",
+       "start_kg": 80,
+       "sets": 3,
+       "reps": 5,
+       "rest_sec": 180,
+       "note": "Below parallel.",
+       "progress": {
+        "add_kg": 2.5
+       }
+      }
+     ],
+     "intensity": "heavy"
+    },
+    {
+     "kind": "superset",
+     "stage": "main",
+     "movements": [
+      {
+       "exercise_id": "pull_up",
+       "sets": 3,
+       "reps": "max"
+      },
+      {
+       "exercise_id": "push_up",
+       "sets": 3,
+       "reps": 12,
+       "progress": {
+        "add_reps": 1,
+        "top_reps": 15
+       }
+      }
+     ],
+     "rounds": 3,
+     "rest_sec": 90
+    },
+    {
+     "kind": "amrap",
+     "stage": "finisher",
+     "movements": [
+      {
+       "exercise_id": "pull_up",
+       "reps": 5
+      },
+      {
+       "exercise_id": "push_up",
+       "reps": 10
+      },
+      {
+       "exercise_id": "squat_air",
+       "reps": 15
+      }
+     ],
+     "minutes": 20
+    },
+    {
+     "kind": "timed",
+     "stage": "cooldown",
+     "movements": [
+      {
+       "exercise_id": "row_easy"
+      }
+     ],
+     "minutes": 30,
+     "intensity": "zone2"
+    }
+   ],
+   "notes": "Belt on for the top sets.",
+   "archetypeId": "ub544b040_ms_draft",
+   "equipment": [
+    "barbell",
+    "plates",
+    "pull_up_bar",
+    "rack",
+    "rower"
+   ],
+   "preview": [
+    {
+     "id": "b1",
+     "stage": "prep",
+     "stageLabel": "Start",
+     "shape": "practice",
+     "title": "B1",
+     "headline": "5 min",
+     "repeat": null,
+     "rest": null,
+     "again": null,
+     "cap": null,
+     "load": null,
+     "intensity": null,
+     "rpe": null,
+     "note": null,
+     "standard": null,
+     "group": null,
+     "roles": [
+      "b1"
+     ],
+     "movements": [
+      {
+       "role": "b1",
+       "name": "Air Squat",
+       "count": null,
+       "perRound": null,
+       "eachSide": false,
+       "note": null,
+       "exercises": [
+        {
+         "id": "squat_air",
+         "name": "Air Squat"
+        }
+       ],
+       "listed": true,
+       "more": 0
+      }
+     ]
+    },
+    {
+     "id": "b2",
+     "stage": "main",
+     "stageLabel": "Main work",
+     "shape": "sets",
+     "title": "B2",
+     "headline": "3 × 5",
+     "repeat": {
+      "sets": 3
+     },
+     "rest": {
+      "seconds": 180,
+      "between": "sets",
+      "text": "3 min rest between sets"
+     },
+     "again": null,
+     "cap": null,
+     "load": "80 kg",
+     "intensity": "heavy",
+     "rpe": null,
+     "note": "Below parallel.",
+     "standard": null,
+     "group": null,
+     "roles": [
+      "b2"
+     ],
+     "movements": [
+      {
+       "role": "b2",
+       "name": "Back Squat",
+       "count": null,
+       "perRound": null,
+       "eachSide": false,
+       "note": null,
+       "exercises": [
+        {
+         "id": "back_squat",
+         "name": "Back Squat"
+        }
+       ],
+       "listed": true,
+       "more": 0
+      }
+     ]
+    },
+    {
+     "id": "b3_1",
+     "stage": "main",
+     "stageLabel": "Main work",
+     "shape": "sets",
+     "title": "B3 1",
+     "headline": "3 × max",
+     "repeat": {
+      "sets": 3
+     },
+     "rest": null,
+     "again": null,
+     "cap": null,
+     "load": null,
+     "intensity": null,
+     "rpe": null,
+     "note": null,
+     "standard": null,
+     "group": {
+      "id": "b3",
+      "kind": "superset"
+     },
+     "roles": [
+      "b3_1"
+     ],
+     "movements": [
+      {
+       "role": "b3_1",
+       "name": "Pull-Up Progression",
+       "count": null,
+       "perRound": null,
+       "eachSide": false,
+       "note": null,
+       "exercises": [
+        {
+         "id": "pull_up",
+         "name": "Pull-Up Progression"
+        }
+       ],
+       "listed": true,
+       "more": 0
+      }
+     ]
+    },
+    {
+     "id": "b3_2",
+     "stage": "main",
+     "stageLabel": "Main work",
+     "shape": "sets",
+     "title": "B3 2",
+     "headline": "3 × 12",
+     "repeat": {
+      "sets": 3
+     },
+     "rest": {
+      "seconds": 90,
+      "between": "sets",
+      "text": "1 min 30 s rest between sets"
+     },
+     "again": null,
+     "cap": null,
+     "load": null,
+     "intensity": null,
+     "rpe": null,
+     "note": null,
+     "standard": null,
+     "group": {
+      "id": "b3",
+      "kind": "superset"
+     },
+     "roles": [
+      "b3_2"
+     ],
+     "movements": [
+      {
+       "role": "b3_2",
+       "name": "Full Push-Up Progression",
+       "count": null,
+       "perRound": null,
+       "eachSide": false,
+       "note": null,
+       "exercises": [
+        {
+         "id": "push_up",
+         "name": "Full Push-Up Progression"
+        }
+       ],
+       "listed": true,
+       "more": 0
+      }
+     ]
+    },
+    {
+     "id": "b4",
+     "stage": "finisher",
+     "stageLabel": "Finisher",
+     "shape": "amrap",
+     "title": "B4",
+     "headline": "20 min AMRAP",
+     "repeat": {
+      "minutes": 20
+     },
+     "rest": null,
+     "again": "Again, until the time is up",
+     "cap": null,
+     "load": null,
+     "intensity": null,
+     "rpe": null,
+     "note": null,
+     "standard": null,
+     "group": null,
+     "roles": [
+      "b4",
+      "b4_2",
+      "b4_3"
+     ],
+     "movements": [
+      {
+       "role": "b4",
+       "name": "Pull-Up Progression",
+       "count": "5",
+       "perRound": null,
+       "eachSide": false,
+       "note": null,
+       "exercises": [
+        {
+         "id": "pull_up",
+         "name": "Pull-Up Progression"
+        }
+       ],
+       "listed": true,
+       "more": 0
+      },
+      {
+       "role": "b4_2",
+       "name": "Full Push-Up Progression",
+       "count": "10",
+       "perRound": null,
+       "eachSide": false,
+       "note": null,
+       "exercises": [
+        {
+         "id": "push_up",
+         "name": "Full Push-Up Progression"
+        }
+       ],
+       "listed": true,
+       "more": 0
+      },
+      {
+       "role": "b4_3",
+       "name": "Air Squat",
+       "count": "15",
+       "perRound": null,
+       "eachSide": false,
+       "note": null,
+       "exercises": [
+        {
+         "id": "squat_air",
+         "name": "Air Squat"
+        }
+       ],
+       "listed": true,
+       "more": 0
+      }
+     ]
+    },
+    {
+     "id": "b5",
+     "stage": "cooldown",
+     "stageLabel": "Cool-down",
+     "shape": "timed",
+     "title": "B5",
+     "headline": "30 min",
+     "repeat": null,
+     "rest": null,
+     "again": null,
+     "cap": null,
+     "load": null,
+     "intensity": "zone2",
+     "rpe": null,
+     "note": null,
+     "standard": null,
+     "group": null,
+     "roles": [
+      "b5"
+     ],
+     "movements": [
+      {
+       "role": "b5",
+       "name": "Easy Row (Zone 1–2)",
+       "count": null,
+       "perRound": null,
+       "eachSide": false,
+       "note": null,
+       "exercises": [
+        {
+         "id": "row_easy",
+         "name": "Easy Row (Zone 1–2)"
+        }
+       ],
+       "listed": true,
+       "more": 0
+      }
+     ]
+    }
+   ],
+   "forecast": [
+    {
+     "role": "b2",
+     "exercise": "Back Squat",
+     "weeks": [
+      "3 × 5 @ 80 kg",
+      "3 × 5 @ 82.5 kg",
+      "3 × 5 @ 85 kg",
+      "3 × 5 @ 87.5 kg"
+     ]
+    },
+    {
+     "role": "b3_2",
+     "exercise": "Full Push-Up Progression",
+     "weeks": [
+      "3 × 12",
+      "3 × 13",
+      "3 × 14",
+      "3 × 15"
+     ]
+    }
+   ]
+  }
+ },
+ "refused": {
+  "ok": false,
+  "problems": [
+   {
+    "block": 0,
+    "movement": 0,
+    "field": "sets",
+    "message": "How many sets?"
+   }
+  ],
+  "session": null
+ }
+}

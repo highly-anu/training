@@ -45,6 +45,7 @@ suites:
   - test_package_builds.py            # a build as a durable job: the store, the worker, the routes, a restart resumed; SQL half on its own database (roadmap 21.2)
   - test_builder_access.py            # who may use the package builder: the flag, the dev role from the verified token, GET /api/methods (roadmap 21.1)
   - test_private_packages.py          # an athlete's own packages: the store, the gate on install, the routes; SQL half on its own database (roadmap 20.5)
+  - test_manual_builder.py            # sessions composed by hand: blocks to an archetype and back, one package through the gates, the routes (roadmap 24)
   - test_method_edits.py              # renaming an athlete's method and editing its words: no model, no build; ids and numbers refused (roadmap 21.10)
   - test_package_vocabulary.py        # a package's own modalities and movement patterns (vocabulary.yaml; roadmap 20.6)
   - tools/gen_package_spec.py --check  # docs/schemas/PACKAGE_SPEC.md's generated blocks are current
