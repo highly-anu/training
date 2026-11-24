@@ -5,6 +5,7 @@ import { LoadingState, FailedState } from '@/components/shared/states'
 import { Working } from '@/components/ui/spinner'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { safeReturnPath } from '@/lib/returnPath'
 import { useQueryClient } from '@tanstack/react-query'
 import { Page } from '@/components/layout/Page'
 import { Play, ScanEye, SlidersHorizontal } from 'lucide-react'
@@ -61,6 +62,10 @@ export function ProgramPreview() {
   const tabParam = searchParams.get('tab') as PreviewTab | null
   const tab: PreviewTab = TABS.some((t) => t.id === tabParam) ? tabParam! : 'overview'
   const urlMode = searchParams.get('mode') === 'regenerate' ? 'regenerate' : 'new'
+  // A draft that did not come from the builder's four steps says where it came
+  // from (`?back=/dev?tab=program`): Back, a reload and the schedule go there.
+  const backParam = searchParams.get('back')
+  const backTo = backParam ? safeReturnPath(backParam) : null
 
   const { mode, params, draft, edits, regenerate, setDraft, open, clear } = usePreviewStore()
   const currentProgram = useProgramStore((s) => s.currentProgram)
@@ -86,6 +91,10 @@ export function ProgramPreview() {
     if (draft || generate.isPending || leaving.current) return
     if (urlMode === 'regenerate') {
       navigate('/profile', { replace: true })
+      return
+    }
+    if (backTo) {
+      navigate(backTo, { replace: true })
       return
     }
     const b = useBuilderStore.getState()
@@ -145,6 +154,8 @@ export function ProgramPreview() {
     editSchedule: () => {
       if (mode === 'regenerate') {
         navigate('/profile?tab=schedule')
+      } else if (backTo) {
+        navigate(backTo)
       } else {
         useBuilderStore.getState().setStep(3, 'backward')
         navigate('/program/new')
@@ -158,7 +169,7 @@ export function ProgramPreview() {
       clear()
       navigate(-1)
     } else {
-      navigate('/program/new')  // the builder keeps its step; the draft stays until replaced
+      navigate(backTo ?? '/program/new')  // the builder keeps its step; the draft stays until replaced
     }
   }
 
@@ -169,11 +180,11 @@ export function ProgramPreview() {
     } else {
       if (!commitProgram(queryClient, draft, params)) return
       const b = useBuilderStore.getState()
-      useProfileStore.getState().setActiveGoalId(b.selectedGoalIds[0] ?? ids[0])
+      useProfileStore.getState().setActiveGoalId(backTo ? ids[0] : b.selectedGoalIds[0] ?? ids[0])
       if (addToProfile && extraEquipment.length > 0) {
         useProfileStore.getState().setEquipment([...profileEquipment, ...extraEquipment] as EquipmentId[])
       }
-      b.reset()
+      if (!backTo) b.reset()   // a draft from elsewhere leaves a half-built program alone
     }
     leaving.current = true
     navigate('/program')
@@ -188,7 +199,7 @@ export function ProgramPreview() {
             <FailedState
               title="Could not build the preview"
               error={generate.error}
-              onRetry={() => navigate('/program/new')}
+              onRetry={() => navigate(backTo ?? '/program/new')}
               retryLabel="Back to the builder"
             />
           )

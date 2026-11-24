@@ -16,6 +16,8 @@ export interface Method {
   updatedAt: string
   /** The active program is built from it: it cannot be deleted. */
   inUse: boolean
+  /** Built by hand in the session and program builders: never revised by the model. */
+  composed?: boolean
 }
 
 export type BuildStatus = 'queued' | 'running' | 'done' | 'failed' | 'cancelled'
