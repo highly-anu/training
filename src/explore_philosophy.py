@@ -310,6 +310,8 @@ def _phase(phase: dict, framework: dict, contract: dict | None, archetypes: dict
         'weeks': phase.get('weeks'), 'repeatable': bool(phase.get('repeatable')),
         # At a glance, the same keys for every phase however it is built.
         'days': days,
+        # True where the days are the app's own example (_track fills them in).
+        'daysExample': False,
         'daysPerWeek': days_per_week,
         'minutes': exp.get('ideal_session_minutes'),
         'sessionsPerWeek': round(sum(mix.values()), 1),
@@ -337,10 +339,43 @@ def _track_levels(phil: dict, track: dict, contract: dict | None, frameworks: di
     return levels
 
 
+def example_days(phil: dict, track: dict, phase: dict) -> list | None:
+    """A phase whose source writes no weekdays, as the app lays its week out:
+    one week generated from the phase's own start for an athlete with nothing
+    in the way (package_smoke.phase_constraints: the framework's ideal days and
+    minutes, every implement) → seven days, each its sessions' modalities or
+    None for rest. None when it does not generate — the page then says only
+    how many days."""
+    from src import package_smoke
+    from src.generator import generate
+    try:
+        frameworks = list(loader.load_all_frameworks().values())
+        fw_by_id = {f['id']: f for f in frameworks}
+        fw = fw_by_id.get(phase.get('framework_id'))
+        if fw is None:
+            return None
+        goal = goals.philosophy_to_goal(phil['id'], frameworks, track_id=track['id'])
+        constraints = package_smoke.phase_constraints(goal, phase, fw, package_smoke.days_for(track, fw_by_id))
+        raw = generate(goal_id=goal['id'], goal_dict=goal, constraints=constraints, num_weeks=1,
+                       output_format='dict')
+        schedule = (raw.get('weeks') or [{}])[0].get('schedule') or {}
+    except Exception:   # an example is never worth a failed page
+        return None
+    days = [[s['modality'] for s in schedule.get(n) or [] if s.get('modality')] or None for n in range(1, 8)]
+    return days if any(days) else None
+
+
 def _track(phil: dict, track: dict, contract: dict | None, frameworks: dict, archetypes: dict,
-           exercises: dict, standards: dict) -> dict:
+           exercises: dict, standards: dict, example=None) -> dict:
     phase_docs = [_phase(ph, frameworks.get(ph['framework_id']) or {}, contract, archetypes, exercises, standards)
                   for ph in track.get('phases') or []]
+    if example:
+        # Every phase shows a week of seven named days: the source's where it
+        # writes one, else the app's own example, marked as such.
+        for ph, doc in zip(track.get('phases') or [], phase_docs):
+            if doc['days'] is None:
+                doc['days'] = example(phil, track, ph)
+                doc['daysExample'] = doc['days'] is not None
     weeks = sum(p['weeks'] or 0 for p in phase_docs)
     mix: dict[str, float] = {}
     intensity: dict[str, float] = {}
@@ -498,11 +533,11 @@ def _rules(record: dict | None) -> dict:
 # ─── The document ────────────────────────────────────────────────────────────
 
 def _core(phil: dict, *, frameworks: dict, archetypes: list, exercises: dict, contracts: dict,
-          record: dict | None, standards: dict) -> dict:
+          record: dict | None, standards: dict, example=None) -> dict:
     """Everything but the session catalogue: cheap enough to build for every
     philosophy at once (the landing, and comparing)."""
     arch_by_id = {a['id']: a for a in archetypes}
-    track_docs = [_track(phil, t, contracts.get(t['id']), frameworks, arch_by_id, exercises, standards)
+    track_docs = [_track(phil, t, contracts.get(t['id']), frameworks, arch_by_id, exercises, standards, example)
                   for t in phases.tracks_of(phil)]
     primary = next((t for t in track_docs if t['primary']), track_docs[0] if track_docs else None)
     main_fw = frameworks.get(goals._main_framework(phases.primary_track(phil)) or '') if track_docs else None
@@ -565,7 +600,7 @@ def glance(core: dict, measures: dict | None = None) -> dict:
         for p in t['phases']:
             for test in p['tests']:
                 standards += [n for n in test['standards'] if n not in standards]
-    phase_keys = ('id', 'name', 'kind', 'weeks', 'repeatable', 'focus', 'days', 'daysPerWeek', 'minutes',
+    phase_keys = ('id', 'name', 'kind', 'weeks', 'repeatable', 'focus', 'days', 'daysExample', 'daysPerWeek', 'minutes',
                   'sessionsPerWeek', 'mix', 'intensitySplit')
     return {
         'id': core['id'], 'name': core['name'], 'own': core['own'], 'accent': core['accent'], 'bias': core['bias'],
@@ -593,11 +628,13 @@ def glance(core: dict, measures: dict | None = None) -> dict:
 
 def build(phil: dict, *, philosophies: list, frameworks: dict, modalities: dict, archetypes: list,
           exercises: dict, contracts: dict, record: dict | None, standards: dict,
-          measures: dict | None = None) -> dict:
+          measures: dict | None = None, example=None) -> dict:
     """`contracts`: track id → the loaded training contract, for the tracks
-    that have one."""
+    that have one. `example`: (philosophy, track, phase) → the seven days of a
+    phase the source writes no weekdays for (example_days; none in a test on
+    hand-built data)."""
     core = _core(phil, frameworks=frameworks, archetypes=archetypes, exercises=exercises, contracts=contracts,
-                 record=record, standards=standards)
+                 record=record, standards=standards, example=example)
     package_archetypes = [a for a in archetypes if a.get('_package') == phil['id']]
     return {**core, 'glance': glance(core, measures),
             **_sessions(phil, core['tracks'], phases.framework_ids_of(phil), frameworks, package_archetypes,
@@ -654,7 +691,7 @@ def describe(phil_id: str) -> dict | None:
     doc = build(phil, philosophies=data['philosophies'], frameworks=data['frameworks'],
                 modalities=data['modalities'], archetypes=data['archetypes'], exercises=data['exercises'],
                 standards=data['standards'], contracts=_contracts(phil), record=_record(phil_id),
-                measures=measures_of(_specs().get(phil_id)))
+                measures=measures_of(_specs().get(phil_id)), example=example_days)
     docs[phil_id] = doc
     return doc
 
@@ -666,7 +703,8 @@ def glance_all() -> list[dict]:
         data, specs = _loaded(), _specs()
         store['glances'] = [glance(_core(phil, frameworks=data['frameworks'], archetypes=data['archetypes'],
                                  exercises=data['exercises'], contracts=_contracts(phil),
-                                 record=_record(phil['id']), standards=data['standards']),
+                                 record=_record(phil['id']), standards=data['standards'],
+                                 example=example_days),
                            measures_of(specs.get(phil['id'])))
                     for phil in data['philosophies']]
     return store['glances']

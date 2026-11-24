@@ -106,13 +106,16 @@ export function MixLegend({ mix, max = 6 }: { mix: DescribedMix[]; max?: number 
 const DAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
-/** A week as its seven days, training against rest, with the count in words
- *  under it. Where the source writes the week day by day each cell is its
- *  weekday — lettered, filled for training, dashed for rest. Where the days
- *  are the athlete's to place (a contract, a framework) the cells carry no
- *  letter: so many of the seven, never which. */
-export function WeekDays({ phase }: { phase: Pick<GlancePhase, 'days' | 'daysPerWeek' | 'sessionsPerWeek'> }) {
+/** A week as its seven days, M to S, training filled and rest dashed, with
+ *  the count in words under it. The days are the source's own where it writes
+ *  the week; where it leaves them to the athlete they are the app's example
+ *  (`daysExample`) and the line says so. Only a phase with no days at all
+ *  falls back to unlettered cells: so many of the seven, never which. */
+export function WeekDays({ phase }: {
+  phase: Pick<GlancePhase, 'days' | 'daysExample' | 'daysPerWeek' | 'sessionsPerWeek'>
+}) {
   const placed = phase.days?.length === 7 ? phase.days : null
+  const example = Boolean(placed && phase.daysExample)
   const training = placed
     ? placed.filter(Boolean).length
     : Math.max(0, Math.min(7, Math.round(phase.daysPerWeek ?? phase.sessionsPerWeek)))
@@ -121,7 +124,7 @@ export function WeekDays({ phase }: { phase: Pick<GlancePhase, 'days' | 'daysPer
   return (
     <div className="space-y-1" role="img"
       aria-label={placed
-        ? `${words}: trains ${DAY_NAMES.filter((_, i) => placed[i]).join(', ') || 'no day'}`
+        ? `${words}: ${example ? 'for example ' : 'trains '}${DAY_NAMES.filter((_, i) => placed[i]).join(', ') || 'no day'}`
         : `${words}, on the days you choose`}>
       <div className="grid grid-cols-7 gap-0.5">
         {DAY_LETTERS.map((letter, i) => {
@@ -138,6 +141,7 @@ export function WeekDays({ phase }: { phase: Pick<GlancePhase, 'days' | 'daysPer
       </div>
       <p className="text-[10px] leading-tight text-muted-foreground" aria-hidden>
         <span className="font-medium text-foreground/90">{training}</span> training · {rest} rest
+        {example && <span className="text-muted-foreground/70"> · example week</span>}
         {!placed && <span className="text-muted-foreground/70"> · your days</span>}
       </p>
     </div>

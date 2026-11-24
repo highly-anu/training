@@ -199,7 +199,28 @@
         "weeks": 8,
         "repeatable": false,
         "focus": "Aerobic re-entry and general strength",
-        "days": null,
+        "days": [
+         null,
+         [
+          "aerobic_base"
+         ],
+         [
+          "relative_strength"
+         ],
+         [
+          "aerobic_base"
+         ],
+         [
+          "aerobic_base"
+         ],
+         [
+          "relative_strength"
+         ],
+         [
+          "aerobic_base"
+         ]
+        ],
+        "daysExample": true,
         "daysPerWeek": 6,
         "minutes": 360,
         "sessionsPerWeek": 6,
@@ -230,7 +251,28 @@
         "weeks": 4,
         "repeatable": false,
         "focus": "Aerobic volume and max strength",
-        "days": null,
+        "days": [
+         null,
+         [
+          "aerobic_base"
+         ],
+         [
+          "max_strength"
+         ],
+         [
+          "aerobic_base"
+         ],
+         [
+          "aerobic_base"
+         ],
+         [
+          "max_strength"
+         ],
+         [
+          "aerobic_base"
+         ]
+        ],
+        "daysExample": true,
         "daysPerWeek": 6,
         "minutes": 360,
         "sessionsPerWeek": 6,
@@ -261,7 +303,28 @@
         "weeks": 8,
         "repeatable": false,
         "focus": "Aerobic volume, a first Zone 3 session",
-        "days": null,
+        "days": [
+         null,
+         [
+          "aerobic_base"
+         ],
+         [
+          "max_strength"
+         ],
+         [
+          "aerobic_base"
+         ],
+         [
+          "anaerobic_intervals"
+         ],
+         [
+          "aerobic_base"
+         ],
+         [
+          "max_strength"
+         ]
+        ],
+        "daysExample": true,
         "daysPerWeek": 6,
         "minutes": 360,
         "sessionsPerWeek": 6,
@@ -297,7 +360,28 @@
         "weeks": 8,
         "repeatable": false,
         "focus": "Muscular endurance and Zone 3",
-        "days": null,
+        "days": [
+         null,
+         [
+          "aerobic_base"
+         ],
+         [
+          "aerobic_base"
+         ],
+         [
+          "anaerobic_intervals"
+         ],
+         [
+          "max_strength"
+         ],
+         [
+          "strength_endurance"
+         ],
+         [
+          "anaerobic_intervals"
+         ]
+        ],
+        "daysExample": true,
         "daysPerWeek": 6,
         "minutes": 360,
         "sessionsPerWeek": 6,
@@ -338,7 +422,26 @@
         "weeks": 1,
         "repeatable": false,
         "focus": "Arrive rested",
-        "days": null,
+        "days": [
+         null,
+         [
+          "aerobic_base"
+         ],
+         [
+          "anaerobic_intervals"
+         ],
+         [
+          "aerobic_base"
+         ],
+         [
+          "max_strength"
+         ],
+         null,
+         [
+          "aerobic_base"
+         ]
+        ],
+        "daysExample": true,
         "daysPerWeek": 6,
         "minutes": 360,
         "sessionsPerWeek": 5,
@@ -559,6 +662,7 @@
          ],
          null
         ],
+        "daysExample": false,
         "daysPerWeek": 6.0,
         "minutes": 120,
         "sessionsPerWeek": 6.0,
@@ -666,6 +770,7 @@
          ],
          null
         ],
+        "daysExample": false,
         "daysPerWeek": 6.0,
         "minutes": 120,
         "sessionsPerWeek": 6.0,
@@ -1011,6 +1116,7 @@
          ],
          null
         ],
+        "daysExample": false,
         "daysPerWeek": 6.0,
         "minutes": 90,
         "sessionsPerWeek": 6.0,
@@ -1077,6 +1183,7 @@
          ],
          null
         ],
+        "daysExample": false,
         "daysPerWeek": 6.0,
         "minutes": 90,
         "sessionsPerWeek": 6.0,
@@ -1143,6 +1250,7 @@
          ],
          null
         ],
+        "daysExample": false,
         "daysPerWeek": 6.0,
         "minutes": 90,
         "sessionsPerWeek": 6.0,
@@ -1204,6 +1312,7 @@
          ],
          null
         ],
+        "daysExample": false,
         "daysPerWeek": 6.0,
         "minutes": 90,
         "sessionsPerWeek": 6.0,
