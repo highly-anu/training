@@ -1,5 +1,6 @@
 import { http, HttpResponse } from 'msw'
 import recorded from '../fixtures/manual-sessions.json'
+import tracks from '../fixtures/manual-tracks.json'
 
 // Recorded by test_manual_builder.py --write, which fails when the routes no
 // longer answer in this shape. With mock data a save answers the first
@@ -10,4 +11,9 @@ export const manualHandlers = [
   http.post('*/manual/sessions', () => HttpResponse.json({ session: recorded.list.sessions[0] })),
   http.put('*/manual/sessions/:id', () => HttpResponse.json({ session: recorded.list.sessions[0] })),
   http.delete('*/manual/sessions/:id', () => HttpResponse.json({ removed: true })),
+  http.get('*/manual/tracks', () => HttpResponse.json(tracks.list)),
+  http.post('*/manual/tracks/preview', () => HttpResponse.json(tracks.preview)),
+  http.post('*/manual/tracks', () => HttpResponse.json({ track: tracks.preview.track })),
+  http.put('*/manual/tracks/:id', () => HttpResponse.json({ track: tracks.preview.track })),
+  http.delete('*/manual/tracks/:id', () => HttpResponse.json({ removed: true })),
 ]

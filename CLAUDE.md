@@ -1835,6 +1835,15 @@ ranking), the draft lives in `store/sessionBuilderStore.ts`, and the server read
 `/manual` routes' answers, `test_manual_builder.py --write` re-records
 `mocks/fixtures/manual-sessions.json`.
 
+**Programs are laid out by hand in Dev Lab ▸ Program builder** (`/dev?tab=program`, roadmap 24.4):
+`components/devlab/programbuilder/` draws, `lib/programBuilder.ts` holds every edit as a pure
+function, the draft lives in `store/programBuilderStore.ts`, the server reads it
+(`POST /api/manual/tracks/preview`) and answers the constraints that build it as laid
+(`startWith`). Preview opens the existing `/program/preview` with `?back=<path>`: a draft that
+did not come from the four-step builder returns there on Back and on a reload, and Start
+leaves the four-step builder's own state alone. `test_manual_builder.py --write` re-records
+`mocks/fixtures/manual-tracks.json` too.
+
 **The trace says what each engine decided** (roadmap 20.9): every week its `engine` and `tests`;
 a contract's `scheduler.contract_week` (modules, minutes, steps, the placement chosen and the next
 best, scored) and each session's `module_steps`; a template's `scheduler.template` (days kept and

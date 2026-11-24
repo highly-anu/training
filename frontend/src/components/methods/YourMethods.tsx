@@ -87,6 +87,8 @@ export function YourMethods({ philosophies, selectedId, onSelect, onDeleted }: {
                     <TextCursorInput className="size-3.5" />
                   </button>
                 </Tip>
+                {/* Built by hand (Dev Lab's builders): a revise would hand it to the model. */}
+                {!method.composed && (
                 <Tip label="Revise">
                   <Link
                     to={`/program/new/method?revise=${encodeURIComponent(method.id)}`}
@@ -96,6 +98,7 @@ export function YourMethods({ philosophies, selectedId, onSelect, onDeleted }: {
                     <Pencil className="size-3.5" />
                   </Link>
                 </Tip>
+                )}
                 <Tip label={method.inUse ? 'Your program runs on it' : 'Delete'}>
                   <button
                     type="button"
