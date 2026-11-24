@@ -1820,6 +1820,14 @@ SUPABASE_URL='' .venv/bin/python test_explore_links.py     # Explore's lineage: 
 SUPABASE_URL='' .venv/bin/python test_explore_philosophy.py  # Explore's philosophy page: weeks from contracts and templates, mixes, rules, sessions; --write re-records the web's fixture
 ```
 
+**Sessions are composed by hand in Dev Lab ▸ Session builder** (`/dev?tab=session`, roadmap 24.3):
+`components/devlab/sessionbuilder/` draws, `lib/sessionBuilder.ts` holds every edit as a pure
+function (block kinds and the fields each takes, what a dropped exercise becomes, the search's
+ranking), the draft lives in `store/sessionBuilderStore.ts`, and the server reads it
+(`POST /api/manual/preview`) — the builder words no prescription. After a change to the
+`/manual` routes' answers, `test_manual_builder.py --write` re-records
+`mocks/fixtures/manual-sessions.json`.
+
 **The trace says what each engine decided** (roadmap 20.9): every week its `engine` and `tests`;
 a contract's `scheduler.contract_week` (modules, minutes, steps, the placement chosen and the next
 best, scored) and each session's `module_steps`; a template's `scheduler.template` (days kept and

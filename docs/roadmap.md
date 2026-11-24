@@ -60,7 +60,7 @@ deferred is under *Later*.
 | 21 | LLM package builder: an athlete describes a method and gets one to build a program from, on the web and the phone — dev role first. The gate (21.1), the durable job (21.2), the model loop (21.3), the web's screens (21.4), the phone's vocabulary (21.5) and its screens (21.6) are in; and the Dev Lab's builds view (21.7) are in; the eval against the real model and the production steps are open | P1 | L | API, web, iOS, watch |
 | 22 | Pre-workout briefing: before a session, today's numbers beside the earlier times the same session was done, its place in the cycle and one suggestion — declared by the package (`briefing.yaml`), built on the server. The server and Wildman's file (22.1) the phone's screen (22.2), the web's block (22.3) and the reading of every package's default (22.4) are in | P2 | M | engine, API, iOS, web, content |
 | 23 | Levels: every package from novice to elite — all eleven done 2026-11-08; what is left is listed under Open | P2 | S | engine, content |
-| 24 | Manual builder: an athlete composes sessions, then a track, from existing exercises — in the Dev Lab first. A slot's own weight and steps (24.1) and the server's session library (24.2) are in; the web's session builder (24.3) and the program builder (24.4) are open | P1 | L | engine, API, web |
+| 24 | Manual builder: an athlete composes sessions, then a track, from existing exercises — in the Dev Lab first. A slot's own weight and steps (24.1), the server's session library (24.2) and the web's session builder (24.3) are in; the program builder (24.4) is open | P1 | L | engine, API, web |
 
 ---
 
@@ -2327,8 +2327,19 @@ with the program builder; per-set weights are later; existing exercises only.
   with the movements its own package borrows (`_generate_session_inner`) — a hand-built
   session's are all borrowed, and an added session of a borrowing package had its
   borrowed slots empty. `test_manual_builder.py`.
-- **24.3 The web's session builder — open.** Dev Lab ▸ Session builder: search as you
-  type, drag and drop, block editors, the live preview, save, add to a day.
+- **24.3 The web's session builder — done.** Dev Lab ▸ Session builder (`/dev?tab=session`,
+  `&edit=<id>` opens a saved session): `components/devlab/sessionbuilder/` over
+  `lib/sessionBuilder.ts` (the draft's edits, what an exercise becomes when dropped, the
+  search's ranking — pure, tested) and `store/sessionBuilderStore.ts` (the draft survives a
+  reload). A library that narrows as it is typed; exercises dragged (pointer or keyboard,
+  `lib/dndKeyboard`) into a stage or onto a block, or taken from each block's own search
+  field; block editors with the fields their kind takes and the weekly steps; the server's
+  reading of the draft beside it (`/manual/preview`: the blocks, minutes, equipment, week by
+  week); save; Edit · Duplicate · Add to a day · Delete on the saved list. Run end to end on
+  a scratch database on 2026-11-24: saved, added to today, logged, read back by
+  `/analytics/program` (prescribed "3 × 5 @ 80 kg", done "80×5, 80×5, 80×5"), the briefing
+  and `today-session?spec=1`. Dragging itself was not exercised in a browser, only its
+  drop rules.
 - **24.4 The program builder — open.** Real tracks in the same package: a weeks × days
   grid of the saved sessions (`week_templates`), phases, a deload rule, then Program ▸
   Preview. With it: progression earned from the log (`load_per_exposure`'s reading for a
@@ -2337,7 +2348,9 @@ with the program builder; per-set weights are later; existing exercises only.
 
 **Open.** "My sessions" is listed among Your methods, where Revise would hand it to the
 model. Tempo, each side and a % of 1RM are words in a note, not fields. The Library track
-lays sessions out three a week only so the package generates.
+lays sessions out three a week only so the package generates. A log is keyed by
+exercise, so one exercise in two blocks of a session (pull-ups in a superset and in the
+AMRAP) shares one logged row.
 
 ## Later
 
