@@ -30,6 +30,7 @@ import { ObjectBrowser } from '@/components/objectbrowser/ObjectBrowser'
 import { HeatmapPanel } from '@/components/devlab/heatmap/HeatmapPanel'
 import { ModelInteractionPanel } from '@/components/devlab/ModelInteractionPanel'
 import { ReadinessPanel } from '@/components/devlab/ReadinessPanel'
+import { ProgramBuilderPanel } from '@/components/devlab/programbuilder/ProgramBuilderPanel'
 import { SessionBuilderPanel } from '@/components/devlab/sessionbuilder/SessionBuilderPanel'
 import { BuildsPanel } from '@/components/devlab/BuildsPanel'
 import { ImpactPanel } from '@/components/devlab/ImpactPanel'
@@ -269,7 +270,7 @@ function ProgramOutputs({ program }: { program: TracedProgram }) {
 
 // ─── DevLab page ──────────────────────────────────────────────────────────────
 
-type DevTab = 'pipeline' | 'impact' | 'browser' | 'heatmap' | 'interactions' | 'readiness' | 'builds' | 'session'
+type DevTab = 'pipeline' | 'impact' | 'browser' | 'heatmap' | 'interactions' | 'readiness' | 'builds' | 'session' | 'program'
 
 const DEV_TABS: { id: DevTab; label: string }[] = [
   { id: 'pipeline', label: 'Pipeline Trace' },
@@ -280,6 +281,7 @@ const DEV_TABS: { id: DevTab; label: string }[] = [
   { id: 'readiness', label: 'Builder readiness' },
   { id: 'builds', label: 'Builds' },
   { id: 'session', label: 'Session builder' },
+  { id: 'program', label: 'Program builder' },
 ]
 
 export function DevLab() {
@@ -500,6 +502,12 @@ export function DevLab() {
       {devTab === 'session' && (
         <div className="flex-1 overflow-y-auto">
           <SessionBuilderPanel />
+        </div>
+      )}
+
+      {devTab === 'program' && (
+        <div className="flex-1 overflow-y-auto">
+          <ProgramBuilderPanel />
         </div>
       )}
 

@@ -140,6 +140,8 @@ None of this fails a check; all of it decides what the athlete is prescribed.
   phase unless the framework says `progression_defaults: {written_weeks: track}`; on a
   template day marked `light` such a weight is lifted at `light_share` of itself (0.8),
   and `deload_light: true` makes every day of a deload week light.
+  `progress.earned: true` counts the steps by sessions made instead of weeks: a missed
+  session repeats (`src/earned_progress.py`).
 - **Vocabulary of your own.** The schemas' equipment, modality and movement-pattern lists
   are the commons'; an id the package's `vocabulary.yaml` declares is accepted wherever
   they are.

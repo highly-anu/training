@@ -329,7 +329,8 @@ def written_steps(slot: dict, week: int = 1, is_deload: bool = False) -> int:
     return behind // max(1, int(rule.get('every_weeks') or 1))
 
 
-def written_progress(slot: dict, week: int = 1, is_deload: bool = False) -> tuple[dict, float | None]:
+def written_progress(slot: dict, week: int = 1, is_deload: bool = False,
+                     steps: int | None = None) -> tuple[dict, float | None]:
     """A slot as its author wrote it for this week of the phase, and its weight.
 
     A slot may carry its own numbers and how they move (a session composed by
@@ -342,7 +343,8 @@ def written_progress(slot: dict, week: int = 1, is_deload: bool = False) -> tupl
     start = slot.get('start_kg')
     if not rule:
         return slot, (float(start) if start is not None else None)
-    steps = written_steps(slot, week, is_deload)
+    # `steps` given: the steps the slot has earned (src/earned_progress.py), not the calendar's.
+    steps = written_steps(slot, week, is_deload) if steps is None else max(0, int(steps))
     out = dict(slot)
     add_kg = float(rule.get('add_kg') or 0)
     add_reps = int(rule.get('add_reps') or 0)
@@ -377,7 +379,7 @@ def written_progress(slot: dict, week: int = 1, is_deload: bool = False) -> tupl
     return out, weight
 
 
-def _as_written(slot: dict, week: int = 1, is_deload: bool = False) -> dict:
+def _as_written(slot: dict, week: int = 1, is_deload: bool = False, steps: int | None = None) -> dict:
     """The prescription exactly as the source writes it (Horsemen): no weekly
     ramp, no level, phase or deload scaling. The slot's `load` text says what
     to lift — "75% of today's 1RM", "24 kg (53 lb)", "1.25x bodyweight" —
@@ -385,7 +387,7 @@ def _as_written(slot: dict, week: int = 1, is_deload: bool = False) -> dict:
     weights and multiples of bodyweight, none of which the app can compute.
     A slot that writes its own weight and steps (`start_kg`, `progress`) is
     read for the week first (`written_progress`)."""
-    slot, weight = written_progress(slot, week, is_deload)
+    slot, weight = written_progress(slot, week, is_deload, steps)
     slot_type = slot.get('slot_type', 'sets_reps')
     minutes = (slot['duration_minutes'] if 'duration_minutes' in slot
                else max(1, round(slot['duration_sec'] / 60)) if slot.get('duration_sec') else None)
@@ -498,6 +500,7 @@ def calculate_load(
     level_policy: dict | None = None,
     sex: str | None = None,
     written_week: int | None = None,
+    earned_steps: int | None = None,
 ) -> dict:
     """Calculate the load prescription for one exercise in one slot.
 
@@ -512,6 +515,8 @@ def calculate_load(
     `written_week` is the week a slot's own `progress` counts from when it
     is not the phase's (a framework whose `progression_defaults.written_weeks`
     is `track`: the week of the track, so a step carries into the next phase).
+    `earned_steps` gives the steps outright, for a slot that earns them from
+    the log (src/earned_progress.py).
     """
     if slot.get('standard'):
         # A test of a standard is a protocol: prescribed exactly as written
@@ -519,7 +524,7 @@ def calculate_load(
         from src.standard_tests import protocol_load
         return protocol_load(exercise, slot)
     if progression_model == 'as_written':
-        load = _as_written(slot, written_week or week_number, is_deload)
+        load = _as_written(slot, written_week or week_number, is_deload, earned_steps)
     else:
         load = _calculate_load(exercise, slot, progression_model, week_number, phase,
                                training_level, is_deload, session_time_minutes, deload_keep, ramps)

@@ -251,7 +251,8 @@
               "add_sec": {"type": "integer", "minimum": 1},
               "add_m": {"type": "integer", "minimum": 1},
               "add_rounds": {"type": "integer", "minimum": 1},
-              "every_weeks": {"type": "integer", "minimum": 1}
+              "every_weeks": {"type": "integer", "minimum": 1},
+              "earned": {"type": "boolean", "description": "The steps are earned, not dated: one for each session of this slot made, none for a miss, counted through the program from its log (src/earned_progress.py). `every_weeks` is then not read."}
             }
           },
           "notes": {

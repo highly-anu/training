@@ -163,6 +163,10 @@
         }
       }
     },
+    "fixed_days": {
+      "type": "boolean",
+      "description": "A week-templated framework whose weeks run on the weekdays they are written on: no day is dropped for an athlete with fewer training days, moved onto a preferred day or off a rest day (src/week_template.plan_week). A track laid out by hand says so; a source's week does not."
+    },
     "warm_up_category": {
       "type": "string",
       "pattern": "^[a-z0-9_]+$",
