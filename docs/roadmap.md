@@ -60,6 +60,7 @@ deferred is under *Later*.
 | 21 | LLM package builder: an athlete describes a method and gets one to build a program from, on the web and the phone — dev role first. The gate (21.1), the durable job (21.2), the model loop (21.3), the web's screens (21.4), the phone's vocabulary (21.5) and its screens (21.6) are in; and the Dev Lab's builds view (21.7) are in; the eval against the real model and the production steps are open | P1 | L | API, web, iOS, watch |
 | 22 | Pre-workout briefing: before a session, today's numbers beside the earlier times the same session was done, its place in the cycle and one suggestion — declared by the package (`briefing.yaml`), built on the server. The server and Wildman's file (22.1) the phone's screen (22.2), the web's block (22.3) and the reading of every package's default (22.4) are in | P2 | M | engine, API, iOS, web, content |
 | 23 | Levels: every package from novice to elite — all eleven done 2026-11-08; what is left is listed under Open | P2 | S | engine, content |
+| 24 | Manual builder: an athlete composes sessions, then a track, from existing exercises — in the Dev Lab first. A slot's own weight and steps (24.1), the server's session library (24.2) and the web's session builder (24.3) are in; the program builder (24.4) is open | P1 | L | engine, API, web |
 
 ---
 
@@ -2302,6 +2303,89 @@ scaled benchmark measures nothing, so a non-elite CrossFit athlete's Progress
 has no tested standard; a "scaled" result kind on the standards would let it count. The
 benchmarks' own published beginner versions should replace the computed scale where
 crossfit.com prints them. `starting_load_kg` has no elite × share fallback yet.
+
+### 24. Manual builder: sessions and tracks composed by hand — P1 · L
+
+An athlete builds a session from existing exercises — sets × reps, supersets, rounds,
+AMRAPs, EMOMs, pieces for time, intervals, timed and zone work, distances, holds — puts it
+on a day, logs it and sees its numbers move; then lays sessions out as a track. Everything
+the app runs for a shipped package is available by hand. In the Dev Lab while it is tested.
+
+Decided with the owner (2026-11-24): a saved session is an archetype of a private package
+of the athlete's, "My sessions", stored through the gates like a method; progression is
+written (a start and a rule per movement, following the calendar), earned progression comes
+with the program builder; per-set weights are later; existing exercises only.
+
+- **24.1 A slot's own weight and steps — done.** `start_kg` and `progress` on a slot, read
+  under `as_written` by `progression.written_progress` (docs/logic/progression_models.md
+  §10); `SLOT_TYPES` generated for the clients. `test_written_progress.py`.
+- **24.2 The session library on the server — done.** `src/manual_builder.py`: the block
+  wire shape, `to_archetype` / `from_archetype`, `compose` (one package, one "Library"
+  track so it generates), `described` (the blocks, minutes, equipment and the first weeks
+  in words). Routes `GET/POST /api/manual/sessions`, `PUT/DELETE …/<id>`,
+  `POST /api/manual/preview`, behind `require_builder`. An added session is now filled
+  with the movements its own package borrows (`_generate_session_inner`) — a hand-built
+  session's are all borrowed, and an added session of a borrowing package had its
+  borrowed slots empty. `test_manual_builder.py`.
+- **24.3 The web's session builder — done.** Dev Lab ▸ Session builder (`/dev?tab=session`,
+  `&edit=<id>` opens a saved session): `components/devlab/sessionbuilder/` over
+  `lib/sessionBuilder.ts` (the draft's edits, what an exercise becomes when dropped, the
+  search's ranking — pure, tested) and `store/sessionBuilderStore.ts` (the draft survives a
+  reload). A library that narrows as it is typed; exercises dragged (pointer or keyboard,
+  `lib/dndKeyboard`) into a stage or onto a block, or taken from each block's own search
+  field; block editors with the fields their kind takes and the weekly steps; the server's
+  reading of the draft beside it (`/manual/preview`: the blocks, minutes, equipment, week by
+  week); save; Edit · Duplicate · Add to a day · Delete on the saved list. Run end to end on
+  a scratch database on 2026-11-24: saved, added to today, logged, read back by
+  `/analytics/program` (prescribed "3 × 5 @ 80 kg", done "80×5, 80×5, 80×5"), the briefing
+  and `today-session?spec=1`. Dragging itself was not exercised in a browser, only its
+  drop rules.
+- **24.4 The program builder — open, to be planned.** Real tracks in the same package,
+  replacing the generated "Library" track: a weeks × days grid the saved sessions are
+  dragged onto (`week_templates`, one category a session), phases with their length and
+  kind, a deload rule (`deload_protocol`), then Program ▸ Preview → Start as any other
+  program. To settle in its plan: several tracks or one, whether a track may mix hand-built
+  sessions with a shipped package's, and how a session edited after a program started
+  reaches that program.
+
+**Still to do** — left open on purpose when the session builder was planned (2026-11-24),
+in the order they are worth doing:
+
+1. *Earned progression.* The plan follows the calendar: a missed or failed session does
+   not hold next week back. Next = what was last logged + the step (made → step, missed →
+   repeat, the reading `load_per_exposure` gives a contract) for a templated slot. Decided
+   to come with 24.4.
+2. *Per-set reps and weights* — pyramids, 5/3/1, back-off sets. One slot has one weight
+   today. Needs a per-set scheme on the slot, the stored load, the web's and phone's
+   loggers and both watches (docs/watch.md: one contract, in one change). "5-3-1" as reps
+   in words is what there is until then.
+3. *Out of the Dev Lab.* The builder moves into `/program/new` beside Your methods once
+   24.4 is in; the routes stay behind `require_builder` (the `dev` role) until then. With
+   it: "My sessions" must not offer Revise (it would hand the package to the model), and
+   Explore should show it as the athlete's sessions rather than a philosophy.
+4. *The phone.* Nothing on iOS builds a session. The wire shape is the server's
+   (`/api/manual`), so the phone needs screens only; a saved session already runs on the
+   phone, the player and both watches once it is on a day.
+5. *Creating an exercise.* Existing exercises only (the shipped catalog and the athlete's
+   methods'). A small form — name, category, equipment, movement pattern — into the same
+   package's `exercises.yaml`, which `compose` writes empty today.
+6. *Fields that are words today.* Tempo, each side, a % of 1RM, an RPE target for a slot
+   and a rest after a block go in a note. Each is a slot field the engine would have to
+   read (`intensity_pct_1rm` and `rpe_target` exist in the schema and nothing computes
+   them outside `rpe_autoregulation`). Heart rate is a zone (Z1–Z5), never a bpm or a pace.
+7. *Dragging.* Blocks reorder by dragging onto a gap or through the Move menu; movements
+   inside a block by their up and down buttons only (`@dnd-kit/sortable` was not added).
+   The drop rules are tested (`lib/sessionBuilder.test.ts`); a drag was never performed in
+   a browser — do that by hand before the builder leaves the Dev Lab, pointer and keyboard.
+8. *One exercise twice in a session.* A log is keyed by exercise, so pull-ups in a superset
+   and in the AMRAP share one logged row, and analytics reads the same sets for both. The
+   fix is the log's, not the builder's (key by slot role, as the briefing's rows do).
+9. *Distance repeats and timed sets under a computed model.* "6 × 800 m" keeps its sets
+   only because hand-built sessions are as written; nothing to do unless a hand-built
+   track ever takes a computed model.
+10. *The "Library" track.* It lays the sessions out three a week only so the package
+    passes the gate's smoke generate; it is selectable in the program builder and not
+    meant to be followed. 24.4 replaces it.
 
 ## Later
 
