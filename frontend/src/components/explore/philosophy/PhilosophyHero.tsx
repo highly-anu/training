@@ -9,12 +9,12 @@ import type { PhilosophyDescription } from '@/api/types'
 import { EditableText } from '@/components/methods/MethodEdit'
 import { Collapse } from '@/components/motion/Collapse'
 import { ModalityMark } from '@/components/shared/ModalityMark'
-import { Badge } from '@/components/ui/badge'
+import { MoreToggle } from '@/components/shared/MoreToggle'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
-import { LevelPips } from './Glance'
+import { LevelScale } from './Glance'
 
 const range = (r: { min: number; ideal: number } | null) =>
   !r ? null : r.min === r.ideal ? `${r.ideal}` : `${r.min}–${r.ideal}`
@@ -70,7 +70,6 @@ export function PhilosophyHero({ doc, editing, canEdit, onEditing, onRename, com
         <div className="flex min-w-0 items-center gap-3">
           <ModalityMark modality={doc.accent ?? g.bias[0]} size="lg" tile />
           <h2 className="min-w-0 text-2xl font-bold leading-tight tracking-tight">{doc.name}</h2>
-          {doc.own && <Badge variant="outline" className="shrink-0">Yours</Badge>}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {canEdit && (editing
@@ -88,7 +87,7 @@ export function PhilosophyHero({ doc, editing, canEdit, onEditing, onRename, com
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onSelect={() => onEditing(true)}>
-                    <Pencil className="mr-2 size-3.5" /> Edit words
+                    <Pencil className="mr-2 size-3.5" /> Edit description
                   </DropdownMenuItem>
                   <DropdownMenuItem onSelect={onRename}>
                     <TextCursorInput className="mr-2 size-3.5" /> Rename
@@ -148,10 +147,7 @@ export function PhilosophyHero({ doc, editing, canEdit, onEditing, onRename, com
             </div>
           </Collapse>
           {hasMore && !editing && (
-            <button type="button" onClick={() => setMore((m) => !m)} aria-expanded={more}
-              className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline">
-              {more ? 'Less' : 'More about it'}
-            </button>
+            <MoreToggle open={more} onToggle={() => setMore((m) => !m)} />
           )}
         </div>
       )}
@@ -163,7 +159,7 @@ export function PhilosophyHero({ doc, editing, canEdit, onEditing, onRename, com
           unit={g.longSessionMinutes ? `min · long ${g.longSessionMinutes}` : 'min a session'} />
         <Fact icon={GitBranch} value={g.counts.tracks}
           unit={`track${g.counts.tracks === 1 ? '' : 's'} · ${phases} phase${phases === 1 ? '' : 's'}`} />
-        <LevelPips levels={g.levels} />
+        <LevelScale levels={g.levels} />
       </div>
     </header>
   )

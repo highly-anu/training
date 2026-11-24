@@ -1,12 +1,13 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { CalendarDays, CalendarRange, ChevronLeft, ChevronRight, FlaskConical, Info, Repeat, Timer } from 'lucide-react'
+import { MoreToggle } from '@/components/shared/MoreToggle'
 import type { DescribedPhase, DescribedTrack, GlancePhase, GlanceTrack, PhilosophyDescription } from '@/api/types'
 import { PHASE_COLORS } from '@/lib/phaseColors'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Collapse } from '@/components/motion/Collapse'
 import { EditableText, useMethodEditing } from '@/components/methods/MethodEdit'
-import { InlinePanel, IntensityBar, IntensityLegend, LevelPips, MixLegend, PhaseBar, WeekGlyph } from './Glance'
+import { InlinePanel, IntensityBar, IntensityLegend, LevelScale, MixLegend, PhaseTimeline, WeekDays } from './Glance'
 import { PhaseWeek } from './PhaseWeek'
 
 const LEVEL_WORDS: Record<string, string> = {
@@ -16,8 +17,8 @@ const LEVEL_WORDS: Record<string, string> = {
 const span = (r: { min: number; max: number } | null, unit = '') =>
   !r ? '—' : r.min === r.max ? `${r.min}${unit}` : `${r.min}–${r.max}${unit}`
 
-/** One phase as a card: its kind's colour, its weeks, its week's shape and
- *  what it holds, how hard. The words open under the cards. */
+/** One phase as a card: its kind's colour, its weeks, its week as training
+ *  and rest days, what it holds, how hard. The words open under the cards. */
 function PhaseCard({ phase, selected, onOpen }: { phase: GlancePhase; selected: boolean; onOpen: () => void }) {
   const c = PHASE_COLORS[phase.kind]
   return (
@@ -32,15 +33,10 @@ function PhaseCard({ phase, selected, onOpen }: { phase: GlancePhase; selected: 
             {phase.weeks}wk{phase.repeatable ? ' ↻' : ''}
           </span>
         </div>
-        <WeekGlyph phase={phase} />
+        <WeekDays phase={phase} />
         <MixLegend mix={phase.mix} max={4} />
         <IntensityBar split={phase.intensitySplit} />
         <div className="mt-auto flex items-center gap-2.5 text-[10px] text-muted-foreground">
-          {phase.daysPerWeek != null && (
-            <span className="inline-flex items-center gap-0.5" title="Training days a week">
-              <CalendarDays className="size-3" />{phase.daysPerWeek}
-            </span>
-          )}
           {phase.minutes != null && (
             <span className="inline-flex items-center gap-0.5" title="Minutes a session">
               <Timer className="size-3" />{phase.minutes}
@@ -116,11 +112,11 @@ function Fact({ icon: Icon, children }: { icon: typeof CalendarDays; children: R
   )
 }
 
-/** One track, whole: who it is for, its numbers, its phases on the scale every
- *  track shares, its own words, and its phases as cards — a phase's words and
+/** One track, whole: who it is for, its numbers, its phases on a timeline of
+ *  its weeks, its own words, and its phases as cards — a phase's words and
  *  week open in place under them. Nothing of a track waits behind a button. */
-function TrackCard({ track, detail, scale, place, current }: {
-  track: GlanceTrack; detail: DescribedTrack; scale: number; place: string; current: boolean
+function TrackCard({ track, detail, place, current }: {
+  track: GlanceTrack; detail: DescribedTrack; place: string; current: boolean
 }) {
   const [phaseId, setPhaseId] = useState<string | null>(null)
   const [more, setMore] = useState(false)
@@ -134,8 +130,8 @@ function TrackCard({ track, detail, scale, place, current }: {
   return (
     <div role="group" aria-roledescription="slide" aria-label={`${track.name}, ${place}`}
       className={cn('space-y-4 rounded-xl border bg-card p-5 transition-opacity',
-        current ? 'border-border/70' : 'border-border/40 opacity-60')}>
-      <div className="flex items-start justify-between gap-3">
+        current ? 'border-border/70' : 'border-border/60 opacity-70 hover:opacity-100')}>
+      <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
         <div className="min-w-0">
           <h3 className="truncate text-sm font-semibold">
             <EditableText value={track.name} label="Track name" edits={(name) => ({ tracks: { [track.id]: { name } } })} />
@@ -143,7 +139,7 @@ function TrackCard({ track, detail, scale, place, current }: {
           {who && <p className="text-[11px] text-muted-foreground">{who}</p>}
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <LevelPips levels={track.levels} />
+          <LevelScale levels={track.levels} />
           <span className="font-mono text-[10px] text-muted-foreground">{place}</span>
         </div>
       </div>
@@ -161,7 +157,8 @@ function TrackCard({ track, detail, scale, place, current }: {
         <MixLegend mix={track.mix} />
       </div>
 
-      <PhaseBar phases={track.phases} scaleWeeks={scale} />
+      <PhaseTimeline phases={track.phases} repeats={track.repeatable} selected={phaseId}
+        onSelect={(id) => setPhaseId((cur) => (cur === id ? null : id))} />
 
       {(detail.description || detail.notes || needs || editing) && (
         <div className="max-w-3xl space-y-2 text-xs leading-relaxed text-muted-foreground">
@@ -179,10 +176,7 @@ function TrackCard({ track, detail, scale, place, current }: {
             </div>
           </Collapse>
           {(needs || detail.notes || (detail.description?.length ?? 0) > 160) && (
-            <button type="button" onClick={() => setMore((m) => !m)} aria-expanded={more}
-              className="inline-flex items-center gap-1 text-[11px] hover:text-foreground">
-              <Info className="size-3" /> {more ? 'Less' : 'About this track'}
-            </button>
+            <MoreToggle open={more} onToggle={() => setMore((m) => !m)} className="block text-[11px]" />
           )}
         </div>
       )}
@@ -204,15 +198,14 @@ function TrackCard({ track, detail, scale, place, current }: {
 }
 
 /** How the philosophy runs: one card a track, flipped through — by the track's
- *  name, the arrows or a swipe. Each card is the whole track (TrackCard); the
- *  next one shows at the edge, and the phase bars share one week scale so two
- *  tracks compare as they pass. */
+ *  name, the arrows or a swipe. Each card is the whole track (TrackCard); a
+ *  good slice of the next one shows at the edge, dimmed, and a click on it
+ *  brings it in. */
 export function PhilosophyTracks({ doc }: { doc: PhilosophyDescription }) {
   const tracks = doc.glance.tracks
   const start = Math.max(0, tracks.findIndex((t) => t.id === doc.glance.primaryTrackId))
   const [index, setIndex] = useState(start)
   const strip = useRef<HTMLDivElement>(null)
-  const scale = Math.max(...tracks.map((t) => t.weeks), 1)
   const many = tracks.length > 1
 
   const leftOf = (i: number) => {
@@ -278,8 +271,12 @@ export function PhilosophyTracks({ doc }: { doc: PhilosophyDescription }) {
         {tracks.map((t, i) => {
           const detail = doc.tracks.find((d) => d.id === t.id)
           return detail && (
-            <div key={t.id} className={cn('shrink-0 snap-center', many ? 'w-[calc(100%-2.5rem)]' : 'w-full')}>
-              <TrackCard track={t} detail={detail} scale={scale} current={i === index}
+            <div key={t.id}
+              className={cn('shrink-0 snap-center', many ? 'w-[calc(100%-3rem)] sm:w-[calc(100%-6rem)]' : 'w-full',
+                i !== index && 'cursor-pointer')}
+              // A card waiting at the edge is one target: the way to it.
+              onClickCapture={i === index ? undefined : (e) => { e.preventDefault(); e.stopPropagation(); go(i) }}>
+              <TrackCard track={t} detail={detail} current={i === index}
                 place={`${i + 1} of ${tracks.length}`} />
             </div>
           )

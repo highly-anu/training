@@ -1,7 +1,7 @@
 import { NEUTRAL_HEX } from '@/lib/dataColors'
 import { Tip } from '@/components/shared/Tip'
 import { useEffect, useRef } from 'react'
-import { X } from 'lucide-react'
+import { Check, Minus, X } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { DescribedMix, GlancePhase, TrainingLevel } from '@/api/types'
 import { INTENSITY_BUCKETS } from '@/lib/hrZones'
@@ -9,7 +9,7 @@ import { modalityLabel } from '@/lib/modalityColors'
 import { ModalityMark } from '@/components/shared/ModalityMark'
 import { PHASE_COLORS } from '@/lib/phaseColors'
 import { cn } from '@/lib/utils'
-import { TRAINING_LEVELS } from '@/lib/gen/clientVocab'
+import { TRAINING_LEVELS, TRAINING_LEVEL_LABELS } from '@/lib/gen/clientVocab'
 
 /**
  * The glance vocabulary: the same few marks for every philosophy, so a header,
@@ -21,19 +21,46 @@ import { TRAINING_LEVELS } from '@/lib/gen/clientVocab'
  */
 
 const LEVELS: readonly TrainingLevel[] = TRAINING_LEVELS
-const LEVEL_LETTER: Record<TrainingLevel, string> = { novice: 'N', intermediate: 'I', advanced: 'A', elite: 'E' }
+const levelLabel = (l: TrainingLevel) => TRAINING_LEVEL_LABELS[l] ?? l
+/** The compact scale's steps, novice → elite. */
+const STEP_HEIGHT = ['h-1.5', 'h-2.5', 'h-3.5', 'h-[1.125rem]']
 
-/** Four pips, novice → elite, filled where the method is written for it. */
-export function LevelPips({ levels, className }: { levels: TrainingLevel[]; className?: string }) {
+/** Who a method or a track is written for: every level, always, in the same
+ *  place and at the same size — the ones it serves marked, the others left
+ *  quiet. `full` names each level (a tick or a dash beside it, so it is never
+ *  said by shade alone); `compact`, for a card or a table cell, is four rising
+ *  steps, filled where it serves. */
+export function LevelScale({ levels, size = 'full', className }: {
+  levels: TrainingLevel[]; size?: 'full' | 'compact'; className?: string
+}) {
+  const on = LEVELS.filter((l) => levels.includes(l))
+  const off = LEVELS.filter((l) => !levels.includes(l))
+  const label = `Written for ${on.map(levelLabel).join(', ') || 'no level'}`
+    + (on.length && off.length ? `; not for ${off.map(levelLabel).join(', ')}` : '')
+  if (size === 'compact') {
+    return (
+      <span className={cn('inline-flex h-[1.125rem] shrink-0 items-end gap-0.5', className)} role="img"
+        aria-label={label} title={label}>
+        {LEVELS.map((l, i) => (
+          <span key={l} className={cn('w-1.5 rounded-[1px]', STEP_HEIGHT[i],
+            levels.includes(l) ? 'bg-foreground/80' : 'border border-border')} />
+        ))}
+      </span>
+    )
+  }
   return (
-    <span className={cn('inline-flex gap-0.5', className)} role="img"
-      aria-label={`Levels: ${levels.join(', ') || 'none'}`} title={levels.join(' · ')}>
-      {LEVELS.map((l) => (
-        <span key={l} className={cn('flex size-3.5 items-center justify-center rounded-sm text-[8px] font-semibold',
-          levels.includes(l) ? 'bg-foreground/80 text-background' : 'border border-border text-muted-foreground/40')}>
-          {LEVEL_LETTER[l]}
-        </span>
-      ))}
+    <span className={cn('inline-flex shrink-0 divide-x divide-border/60 overflow-hidden rounded-md border border-border/60 text-[10px] leading-none', className)}
+      role="img" aria-label={label}>
+      {LEVELS.map((l) => {
+        const serves = levels.includes(l)
+        const Mark = serves ? Check : Minus
+        return (
+          <span key={l} className={cn('inline-flex items-center gap-1 px-1.5 py-1',
+            serves ? 'bg-foreground/10 font-medium text-foreground' : 'text-muted-foreground/50')}>
+            <Mark className="size-2.5" aria-hidden />{levelLabel(l)}
+          </span>
+        )
+      })}
     </span>
   )
 }
@@ -81,31 +108,90 @@ export function MixLegend({ mix, max = 6 }: { mix: DescribedMix[]; max?: number 
   )
 }
 
-/** A week's shape at a glance: seven cells for the source's own days — filled
- *  for a training day, split when it holds two pieces, outlined for rest;
- *  without days (a contract, a framework), one dot per session a week. What
- *  the days hold is said by the mix's icons beside it, not by colour here. */
-export function WeekGlyph({ phase, size = 'md' }: { phase: Pick<GlancePhase, 'days' | 'mix'>; size?: 'sm' | 'md' }) {
-  const cell = size === 'sm' ? 'h-2.5 w-2' : 'h-4 w-3'
-  if (phase.days) {
-    return (
-      <div className="flex gap-0.5" role="img" aria-label="The week, day by day">
-        {phase.days.map((d, i) => (
-          <div key={i} className={cn(cell, 'flex flex-col overflow-hidden rounded-[2px]', d ? '' : 'border border-dashed border-border/70')}
-            title={d ? d.map(modalityLabel).join(' + ') : 'Rest'}>
-            {d?.map((_, j) => <div key={j} className={cn('flex-1 bg-foreground/30', j > 0 && 'border-t border-card')} />)}
-          </div>
-        ))}
-      </div>
-    )
-  }
-  const dots = phase.mix.flatMap((m) => Array.from({ length: Math.round(m.perWeek) }, () => m.modality))
+const DAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
+const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+/** A week as its seven days, training against rest, with the count in words
+ *  under it. Where the source writes the week day by day each cell is its
+ *  weekday — lettered, filled for training, dashed for rest. Where the days
+ *  are the athlete's to place (a contract, a framework) the cells carry no
+ *  letter: so many of the seven, never which. */
+export function WeekDays({ phase }: { phase: Pick<GlancePhase, 'days' | 'daysPerWeek' | 'sessionsPerWeek'> }) {
+  const placed = phase.days?.length === 7 ? phase.days : null
+  const training = placed
+    ? placed.filter(Boolean).length
+    : Math.max(0, Math.min(7, Math.round(phase.daysPerWeek ?? phase.sessionsPerWeek)))
+  const rest = 7 - training
+  const words = `${training} training day${training === 1 ? '' : 's'}, ${rest} rest`
   return (
-    <div className="flex flex-wrap gap-0.5" role="img" aria-label="Sessions a week">
-      {dots.map((m, i) => (
-        <div key={i} className={cn(size === 'sm' ? 'size-2' : 'size-3', 'rounded-full bg-foreground/30')}
-          title={modalityLabel(m)} />
-      ))}
+    <div className="space-y-1" role="img"
+      aria-label={placed
+        ? `${words}: trains ${DAY_NAMES.filter((_, i) => placed[i]).join(', ') || 'no day'}`
+        : `${words}, on the days you choose`}>
+      <div className="grid grid-cols-7 gap-0.5">
+        {DAY_LETTERS.map((letter, i) => {
+          const on = placed ? Boolean(placed[i]) : i < training
+          return (
+            <span key={i} aria-hidden
+              title={placed ? `${DAY_NAMES[i]}: ${placed[i]?.map(modalityLabel).join(' + ') ?? 'rest'}` : undefined}
+              className={cn('flex h-5 items-center justify-center rounded-[3px] text-[9px] font-semibold leading-none',
+                on ? 'bg-foreground/75 text-background' : 'border border-dashed border-border text-muted-foreground/50')}>
+              {placed ? letter : ''}
+            </span>
+          )
+        })}
+      </div>
+      <p className="text-[10px] leading-tight text-muted-foreground" aria-hidden>
+        <span className="font-medium text-foreground/90">{training}</span> training · {rest} rest
+        {!placed && <span className="text-muted-foreground/70"> · your days</span>}
+      </p>
+    </div>
+  )
+}
+
+/** A track from its first week to its last: a block a phase, as wide as its
+ *  share of the weeks, in its kind's colour, with its name on it and its weeks
+ *  under it. A block opens its phase. */
+export function PhaseTimeline({ phases, repeats = false, selected, onSelect }: {
+  phases: Pick<GlancePhase, 'id' | 'name' | 'kind' | 'weeks'>[]
+  repeats?: boolean; selected?: string | null; onSelect: (id: string) => void
+}) {
+  const rows = phases.map((p, i) => {
+    const from = phases.slice(0, i).reduce((n, q) => n + q.weeks, 0) + 1
+    return { ...p, from, to: from + p.weeks - 1 }
+  })
+  const total = phases.reduce((n, p) => n + p.weeks, 0)
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-baseline justify-between gap-2">
+        <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">Timeline</p>
+        <p className="font-mono text-[10px] text-muted-foreground">
+          {total} week{total === 1 ? '' : 's'}{repeats ? ', then again' : ''}
+        </p>
+      </div>
+      <div className="flex w-full gap-0.5">
+        {rows.map((p) => {
+          const c = PHASE_COLORS[p.kind]
+          const hex = c?.hex ?? NEUTRAL_HEX
+          const weeks = p.from === p.to ? `Week ${p.from}` : `Weeks ${p.from}–${p.to}`
+          return (
+            <Tip key={p.id} label={`${p.name} · ${weeks.toLowerCase()}`}>
+              <button type="button" onClick={() => onSelect(p.id)} aria-pressed={selected === p.id}
+                aria-label={`${p.name}, ${weeks.toLowerCase()}`}
+                className="group min-w-7 basis-0 text-left" style={{ flexGrow: p.weeks }}>
+                <span className={cn('block h-6 truncate rounded-[3px] px-1.5 text-[11px] font-medium leading-6 transition-shadow',
+                  c?.text, selected === p.id ? 'ring-1 ring-primary/60' : 'group-hover:ring-1 group-hover:ring-border')}
+                  style={{ backgroundColor: `color-mix(in srgb, ${hex} 20%, transparent)`, borderBottom: `2px solid ${hex}` }}>
+                  {p.name}
+                </span>
+                <span className="mt-1 block truncate font-mono text-[10px] text-muted-foreground">
+                  {p.from === p.to ? `wk ${p.from}` : `wk ${p.from}–${p.to}`}
+                </span>
+              </button>
+            </Tip>
+          )
+        })}
+      </div>
     </div>
   )
 }

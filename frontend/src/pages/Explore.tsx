@@ -36,8 +36,7 @@ import { useExploreLinks } from '@/api/exploreLinks'
 import { lineageOf, progressionOf, type ExploreTopic, type LinkedTopic } from '@/lib/exploreLinks'
 import { useBuilderStore } from '@/store/builderStore'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { LevelPips, MixLegend } from '@/components/explore/philosophy/Glance'
+import { LevelScale, MixLegend } from '@/components/explore/philosophy/Glance'
 import { parseView, type PhilosophyView } from '@/components/explore/philosophy/views'
 import { ModalityMark } from '@/components/shared/ModalityMark'
 import { SearchField } from '@/components/shared/SearchField'
@@ -261,13 +260,12 @@ function PhilosophyOverview({ philosophies, onSelect, onCompare }: {
                 <div className="min-w-0 flex-1 space-y-2">
                   <p className="flex min-w-0 items-center gap-1.5 text-sm font-semibold leading-snug">
                     <span className="truncate group-hover:text-primary transition-colors">{p.name}</span>
-                    {p.own && <Badge variant="outline" className="shrink-0 px-1.5 py-0 text-[9px]">Yours</Badge>}
                   </p>
                   {facts && <p className="truncate font-mono text-[10px] text-muted-foreground">{facts}</p>}
                   {g && (
                     <div className="flex items-center justify-between gap-2">
                       <MixLegend mix={g.mix} max={4} />
-                      <LevelPips levels={g.levels} className="shrink-0" />
+                      <LevelScale levels={g.levels} size="compact" />
                     </div>
                   )}
                 </div>

@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Pencil, Sparkles, TextCursorInput, Trash2 } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
 import { Spinner } from '@/components/ui/spinner'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { Tip } from '@/components/shared/Tip'
@@ -74,7 +73,6 @@ export function YourMethods({ philosophies, selectedId, onSelect, onDeleted }: {
                   <span className={cn('truncate text-xs font-medium leading-snug', !selected && 'group-hover:text-primary')}>
                     {method.name}
                   </span>
-                  <Badge variant="outline" className="shrink-0 px-1.5 py-0 text-[9px]">Yours</Badge>
                 </span>
                 <span className="mt-0.5 block text-[10px] text-muted-foreground/60">
                   {phil
