@@ -83,6 +83,17 @@ def test_compose_prefixes_roles_and_marks_light_days():
     assert set(arch['required_equipment']) == {'tire'}
 
 
+def test_a_light_week_runs_every_day_light():
+    entry = {'week_template': TEMPLATE, 'drop_order': []}
+    plain, _ = wt.plan_week(entry, FW, {'days_per_week': 7, 'session_time_minutes': 90}, ARCH, {}, _fits([]))
+    light, _ = wt.plan_week({**entry, 'light_week': True}, FW, {'days_per_week': 7, 'session_time_minutes': 90},
+                            ARCH, {}, _fits([]))
+    sessions = [s for day in light.values() for s in day]
+    assert sessions and all(s.get('light') for s in sessions), [s.get('light') for s in sessions]
+    assert sorted(light) == sorted(plain)
+    assert not all(s.get('light') for day in plain.values() for s in day)
+
+
 def test_category_advice_said_once_by_level():
     # A category's advice is the method's recommendation, left to the athlete
     # (ATG's ladders, Ido's versions, Built to Move's retests; owner, as

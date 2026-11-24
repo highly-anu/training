@@ -531,7 +531,14 @@ A slot may write its own numbers and how they move — a session composed by han
     `add_rounds` (a piece's rounds, an interval's sets).
 - A deload week takes no step: it repeats the week before it, and the weeks after it
   count on from there by the calendar (`written_steps`).
-- The count starts again with each phase, as `linear_load`'s does.
+- The count starts again with each phase, as `linear_load`'s does — unless the week's
+  framework says `progression_defaults.written_weeks: track`: then it is the week of the
+  track (`phases.week_in_track`), so phase 2 carries on from phase 1, and a program that
+  starts mid-track counts from the track's first week all the same.
+- On a template day marked `light` (`week_templates`), a slot with a `start_kg` is lifted
+  at the framework's `light_share` of the week's weight (0.8, to the half kilo); the note
+  still says light. A framework that says `progression_defaults.deload_light: true` runs
+  every day of a deload week that way — a hand-built track's lighter week.
 
 The plan follows the calendar, not the log: a missed session does not hold the next
 week back. Progress earned from what was logged is the training contract's

@@ -288,6 +288,21 @@ def phase_rules(philosophies: list, phase_id: str | None, framework_id: str | No
     return {'exclude_exercises': [], 'rotate_main_lifts': False, 'level_policy': None}
 
 
+def week_in_track(phase_sequence: list, entry: dict) -> int:
+    """A week's place in its track: the weeks of the phases before its own,
+    plus its week in the phase. A program that starts mid-track (a tail
+    regenerate, a later start phase) still counts from the track's first week;
+    a phase the track does not have counts as its own first."""
+    before = 0
+    for ph in phase_sequence or []:
+        if entry.get('phase_id') and ph.get('phase_id') == entry['phase_id']:
+            break
+        before += int(ph.get('weeks') or 0)
+    else:
+        before = 0
+    return before + int(entry.get('week_in_phase') or 1)
+
+
 def week_entry(phase_entry: dict, week_in_phase: int, week_in_program: int) -> dict:
     """One generator week entry. The single constructor both the plain
     generate path and the event-date calendar use, so neither can drop the

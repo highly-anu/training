@@ -443,6 +443,9 @@ def _as_written(slot: dict, week: int = 1, is_deload: bool = False) -> dict:
     lo, hi, label = zone_band(slot.get('intensity'))
     if lo is not None and slot_type in ('time_domain', 'distance'):
         out.update(zone_target=label, zone_lower=lo, zone_upper=hi)
+    if weight is not None and slot.get('light_share'):
+        # A light day (week_template): a share of the week's weight, to the half kilo.
+        weight = round(weight * float(slot['light_share']) * 2) / 2
     if weight is not None:
         out['weight_kg'] = int(weight) if float(weight).is_integer() else weight
     if slot.get('load'):
@@ -494,6 +497,7 @@ def calculate_load(
     ramps: dict | None = None,
     level_policy: dict | None = None,
     sex: str | None = None,
+    written_week: int | None = None,
 ) -> dict:
     """Calculate the load prescription for one exercise in one slot.
 
@@ -505,6 +509,9 @@ def calculate_load(
     `level_policy` is the track's (`level_scaling.policy_for`), passed only
     for a slot its archetype lets scale: the written prescription is then
     done at the athlete's share of it (src/level_scaling.py).
+    `written_week` is the week a slot's own `progress` counts from when it
+    is not the phase's (a framework whose `progression_defaults.written_weeks`
+    is `track`: the week of the track, so a step carries into the next phase).
     """
     if slot.get('standard'):
         # A test of a standard is a protocol: prescribed exactly as written
@@ -512,7 +519,7 @@ def calculate_load(
         from src.standard_tests import protocol_load
         return protocol_load(exercise, slot)
     if progression_model == 'as_written':
-        load = _as_written(slot, week_number, is_deload)
+        load = _as_written(slot, written_week or week_number, is_deload)
     else:
         load = _calculate_load(exercise, slot, progression_model, week_number, phase,
                                training_level, is_deload, session_time_minutes, deload_keep, ramps)

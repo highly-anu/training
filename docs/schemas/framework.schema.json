@@ -88,6 +88,19 @@
             "time": {"type": "number", "minimum": 0, "maximum": 1},
             "distance": {"type": "number", "minimum": 0, "maximum": 1}
           }
+        },
+        "written_weeks": {
+          "type": "string",
+          "enum": ["phase", "track"],
+          "description": "What a slot's own `progress` counts under as_written (src/progression.written_progress): the weeks of the phase (the default — each phase starts again), or of the track, so a step carries on into the next phase (src/phases.week_in_track). A track laid out by hand says `track`."
+        },
+        "deload_light": {
+          "type": "boolean",
+          "description": "A deload week (`deload_protocol.frequency_weeks`) of a week-templated phase runs every day as a `light` day: as written nothing else changes in a deload week (src/week_template.plan_week)."
+        },
+        "light_share": {
+          "type": "number", "exclusiveMinimum": 0, "maximum": 1,
+          "description": "On a `light` template day, the share of its own written weight (`start_kg` with its steps) a slot is lifted at; 0.8 without it. A weight in words stays words (src/week_template.py)."
         }
       }
     },

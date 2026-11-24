@@ -674,6 +674,10 @@ def start(goal: dict, constraints: dict, data: dict, lib: dict, policy, injury_f
         framework     = sched_result['framework']
         deload_keep   = (framework.get('deload_protocol') or {}).get('volume_reduction_pct')
         ramps         = ramps_for(framework)
+        # A slot's own steps count the phase's weeks, or the track's where the
+        # framework says so (a track laid out by hand carries on across phases).
+        written_week  = (phases.week_in_track(goal.get('phase_sequence'), entry)
+                         if (framework.get('progression_defaults') or {}).get('written_weeks') == 'track' else None)
 
         # Collect compromises from this week (only unique ones)
         week_compromises = sched_result.get('compromises', [])
@@ -682,8 +686,10 @@ def start(goal: dict, constraints: dict, data: dict, lib: dict, policy, injury_f
             # The source's own week, day by day: each day the next named
             # workout of its category the athlete can do as written.
             template_trace = {} if include_trace else None
+            light_week = is_deload and (framework.get('progression_defaults') or {}).get('deload_light')
             week_schedule, week_compromises = week_template.plan_week(
-                entry, framework, plan_constraints or constraints, archetypes_by_id, template_rotation,
+                {**entry, 'light_week': True} if light_week else entry,
+                framework, plan_constraints or constraints, archetypes_by_id, template_rotation,
                 _template_fits(entry), template_recent, template_left_out, template_trace)
         for compromise in week_compromises:
             if compromise not in all_compromises:
@@ -886,6 +892,7 @@ def start(goal: dict, constraints: dict, data: dict, lib: dict, policy, injury_f
                         ramps=ramps,
                         level_policy=_slot_level_policy(populated, ea, level_policy),
                         sex=constraints.get('sex'),
+                        written_week=written_week,
                     )
                     ea['load'] = load
 
