@@ -64,7 +64,7 @@ describe('Your methods, in the program builder', () => {
     mount(<YourMethods philosophies={[phil]} selectedId={null} onSelect={onSelect} onDeleted={() => {}} />)
     fireEvent.click(await screen.findByRole('button', { name: named(METHOD.name) }))
     expect(onSelect).toHaveBeenCalledWith(phil)
-    expect(screen.getByText('Yours')).toBeInTheDocument()
+    expect(screen.queryByText('Yours')).toBeNull()
     expect(screen.getByRole('link', { name: /Describe your own method/ })).toHaveAttribute('href', '/program/new/method')
     expect(screen.getByRole('link', { name: `Revise ${METHOD.name}` }))
       .toHaveAttribute('href', `/program/new/method?revise=${METHOD.id}`)

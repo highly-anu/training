@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * Explore's landing: an athlete's own methods lead under their own label,
- * marked Yours, and the heading counts the shipped philosophies alone.
+ * under their own heading with no badge, and the heading counts the shipped philosophies alone.
  */
 import { describe, it, expect, afterEach, vi } from 'vitest'
 import { render, cleanup, screen, within } from '@testing-library/react'
@@ -36,15 +36,14 @@ function wrap() {
 }
 
 describe('Explore landing', () => {
-  it("leads with the athlete's own methods, marked Yours, and counts the shipped ones", async () => {
+  it("leads with the athlete's own methods, with no badge, and counts the shipped ones", async () => {
     wrap()
     const mine = await screen.findByRole('region', { name: 'Your methods' })
     expect(within(mine).getByText('Stone days')).toBeTruthy()
-    expect(within(mine).getByText('Yours')).toBeTruthy()
+    expect(within(mine).queryByText('Yours')).toBeNull()
     expect(within(mine).queryByText('CrossFit')).toBeNull()
     const rest = screen.getByRole('region', { name: 'Philosophies' })
     expect(within(rest).getByText('CrossFit')).toBeTruthy()
-    expect(within(rest).queryByText('Yours')).toBeNull()
     expect(screen.getByRole('heading', { name: '2 training philosophies.' })).toBeTruthy()
     // Its own group comes first on the page.
     expect(mine.compareDocumentPosition(rest) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()

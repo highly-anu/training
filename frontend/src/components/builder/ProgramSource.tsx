@@ -16,7 +16,6 @@ import type { ModalityId, Philosophy } from '@/api/types'
 import type { SourceMode } from '@/store/builderStore'
 import { YourMethods } from '@/components/methods/YourMethods'
 import { useMethods } from '@/api/methods'
-import { Badge } from '@/components/ui/badge'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -57,14 +56,11 @@ function PhilCard({
   isSelected,
   isDisabled,
   onClick,
-  yours = false,
 }: {
   phil: Philosophy
   isSelected: boolean
   isDisabled: boolean
   onClick: () => void
-  /** One of the athlete's own methods (shown among the others in a blend). */
-  yours?: boolean
 }) {
   const hex = MODALITY_COLORS[phil.bias?.[0] as ModalityId]?.hex ?? FALLBACK_HEX
 
@@ -93,7 +89,6 @@ function PhilCard({
           )}>
             {phil.name}
           </span>
-          {yours && <Badge variant="outline" className="shrink-0 px-1.5 py-0 text-[9px]">Yours</Badge>}
         </p>
         <p className="text-[10px] text-muted-foreground/60 mt-0.5">
           {phil.bias?.length ?? 0} modalities · {phil.core_principles?.length ?? 0} principles
@@ -556,7 +551,6 @@ export function ProgramSource() {
                         isSelected={selectedPhilIds.includes(phil.id)}
                         isDisabled={!selectedPhilIds.includes(phil.id) && selectedPhilIds.length >= 4}
                         onClick={() => handleTogglePhilosophy(phil)}
-                        yours={mine.has(phil.id)}
                       />
                     ))}
                   </div>

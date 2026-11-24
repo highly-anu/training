@@ -14,7 +14,7 @@ import { modalityLabel } from '@/lib/modalityColors'
 import { ModalityMark } from '@/components/shared/ModalityMark'
 import { cn } from '@/lib/utils'
 import type { CompareGlance, CompareRow, CompareSplit, CompareStandard, PhilosophyCompare } from '@/api/types'
-import { IntensityBar, LevelPips, MixLegend, ModalityGlyph, PhaseBar } from '../philosophy/Glance'
+import { IntensityBar, LevelScale, MixLegend, ModalityGlyph, PhaseBar } from '../philosophy/Glance'
 import { ForYouSection } from './ForYouSection'
 import { Cell, Row, SectionTitle, WideLine } from './CompareGrid'
 import { MAX_COMPARE, gridStyle, nearestTo } from './compareIds'
@@ -218,7 +218,7 @@ export function ComparePage({ ids, onChange, onOpen, onBack }: {
               ))}
             </Row>
             <Row label="Level" same={doc.same.levels} hidden={hide('levels')}>
-              {cols.map((g) => <Cell key={g.id}><LevelPips levels={g.levels} /></Cell>)}
+              {cols.map((g) => <Cell key={g.id}><LevelScale levels={g.levels} size="compact" /></Cell>)}
             </Row>
 
             <SectionTitle>Shape</SectionTitle>

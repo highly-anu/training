@@ -83,6 +83,16 @@ describe('PhilosophyPage', () => {
     expect(screen.getByRole('group', { name: 'Contract, 2 of 2' })).toBeTruthy()
   })
 
+  it('opens shortened words with More… and hides them again with Less', async () => {
+    mount({ start: 'program' })
+    await screen.findByRole('group', { name: 'Templated, 1 of 2' })
+    const more = screen.getAllByRole('button', { name: 'More…' })[0]
+    expect(more.getAttribute('aria-expanded')).toBe('false')
+    fireEvent.click(more)
+    expect(screen.getAllByRole('button', { name: 'Less' })[0].getAttribute('aria-expanded')).toBe('true')
+    expect(screen.queryByText(/About this track|More about it/)).toBeNull()
+  })
+
   it('moves to the section a tab names', async () => {
     mount()
     await screen.findByRole('heading', { name: 'P', level: 2 })
@@ -101,7 +111,11 @@ describe('PhilosophyPage', () => {
   it("leads from a week's module to its session", async () => {
     mount({ start: 'program' })
     const track = within(await screen.findByRole('group', { name: 'Contract, 2 of 2' }))
-    fireEvent.click(track.getByRole('button', { name: /^C/ }))
+    // A track waiting at the edge is brought in by a click anywhere on it.
+    fireEvent.click(track.getByRole('heading', { level: 3 }))
+    expect(screen.getByRole('button', { name: 'Next track' })).toHaveProperty('disabled', true)
+    // Its phase opens from the timeline as from its card.
+    fireEvent.click(track.getByRole('button', { name: /^C.*, weeks? \d/ }))
     fireEvent.click(track.getByRole('button', { name: /See the session/ }))
     const open = within(await screen.findByRole('article'))
     expect(open.getByRole('heading', { name: 'C1' })).toBeTruthy()
@@ -126,11 +140,11 @@ describe('PhilosophyPage', () => {
     RESPONSES['/methods'] = { available: true, reason: null, methods: [], builds: [], limits: {} }
     mount()
     const menu = await screen.findByRole('button', { name: 'Change this method' })
-    expect(screen.getByText('Yours')).toBeTruthy()
+    expect(screen.queryByText('Yours')).toBeNull()
     fireEvent.keyDown(menu, { key: 'Enter' })
     expect(await screen.findByRole('menuitem', { name: /Rename/ })).toBeTruthy()
     expect(screen.getByRole('menuitem', { name: /Revise/ }).getAttribute('href')).toBe('/program/new/method?revise=p')
-    fireEvent.click(screen.getByRole('menuitem', { name: /Edit words/ }))
+    fireEvent.click(screen.getByRole('menuitem', { name: /Edit description/ }))
     expect(await screen.findByRole('button', { name: 'Done editing' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Edit summary' })).toBeTruthy()
     fireEvent.click(tab(/Sessions/))

@@ -2384,8 +2384,8 @@ writes it with replace, so Back still leaves the page; a `session` alone means S
 Words stay on demand and open in place (`InlinePanel`, `Collapse`), never in a drawer.
 
 - **Hero** (`PhilosophyHero.tsx`) — a `ModalityMark` tile, the name (an `h2`), two lines
-  of the summary (*More about it* opens the rest: models, borrows), and one line of facts
-  with no boxes: weeks · days a week · minutes · tracks and phases · `LevelPips`. Two
+  of the summary (*More…* opens the rest: models, borrows), and one line of facts
+  with no boxes: weeks · days a week · minutes · tracks and phases · `LevelScale`. Two
   actions: *Build a program* and *Compare with…*.
 - **Overview** (`OverviewTab.tsx`) — four plain cards (`rounded-xl border bg-card p-5`, a
   quiet uppercase label): *The week* (the main track's modalities as rows — mark, name,
@@ -2394,12 +2394,17 @@ Words stay on demand and open in place (`InlinePanel`, `Collapse`), never in a d
   the measures card under the row), *What you need* (equipment, what each track expects
   you to own, borrows), *Most alike*; then the lineage (§13.8).
 - **Program** (`PhilosophyTracks`) — one card a track, flipped through (a scroll-snap
-  strip: the track's name chip, the arrows or a swipe; it opens on the main track). A
-  card is the whole track: name, who it is for, `LevelPips`, weeks, days, minutes, tests,
-  the mix as icons, the `PhaseBar` on a scale all tracks share, its description, then its
-  phases as cards — the kind's colour, weeks, the `WeekGlyph` (the week's shape, neutral:
-  a template's seven days filled or outlined, else a dot a session), the mix as icons,
-  the intensity bar. A phase card opens the phase under them: the full week (`PhaseWeek`,
+  strip: the track's name chip, the arrows or a swipe; it opens on the main track). With
+  several tracks a good slice of the next card shows at the edge (6rem less than the
+  strip; 3rem on a phone), dimmed, and a click anywhere on it brings it in. A
+  card is the whole track: name, who it is for, `LevelScale`, weeks, days, minutes, tests,
+  the mix as icons, the `PhaseTimeline` (labelled *Timeline*, with the track's weeks: a
+  block a phase, as wide as its share of the weeks, in its kind's colour, its name on it
+  and "wk 5–8" under it; a block opens its phase), its description, then its
+  phases as cards — the kind's colour, weeks, `WeekDays` (seven cells: M T W T F S S
+  where the source writes the week, filled for training and dashed for rest; without
+  letters where the athlete places the days; "4 training · 3 rest" under either), the
+  mix as icons, the intensity bar. A phase card opens the phase under them: the full week (`PhaseWeek`,
   each day's piece and each module led by its mark), description, what it builds, how
   hard, tests. A contract module whose session the package writes links to it — *See the
   session* opens it in the browser (`sessionLink.ts`).
@@ -2408,12 +2413,17 @@ Words stay on demand and open in place (`InlinePanel`, `Collapse`), never in a d
   each opens its list under the tiles, the rules open on arrival.
 
 An athlete's own method (`own` on the philosophy, the glance and the describe
-document) wears a *Yours* badge beside its name, here and on its landing card; on the
-landing the athlete's methods lead under *Your methods* and the heading counts the
+document) wears no badge (since 2026-11-24: every method will be an athlete's own); on
+the landing the athlete's methods lead under *Your methods* and the heading counts the
 shipped philosophies alone.
 
+**Shortened text opens with *More…* and closes with *Less*** — `components/shared/MoreToggle.tsx`,
+the one link under any clamped paragraph or folded note (the hero's summary, a track's
+description). No other wording ("About this track", "Read more"); a list that shows some
+of its rows keeps *Show all N* / *Show fewer*.
+
 **Editing your own method.** For an own method the hero adds one "…" menu — *Edit
-words*, *Rename*, *Revise* (`canEdit`: the builder is on for the account) — and, while
+description*, *Rename*, *Revise* (`canEdit`: the builder is on for the account) — and, while
 editing, a *Done editing* button in its place. *Rename* is
 `components/methods/RenameMethodDialog.tsx`, the same dialog the builder's method card
 opens. *Edit* is a switch: while it is on, each piece of the method's text —
@@ -2430,14 +2440,16 @@ equipment, scaling and sources follow, then the lineage.
 The landing keeps §13.6's outline; its card is neutral (`rounded-xl border bg-card`) and
 leads with the philosophy's `ModalityMark` tile, then the name, one mono line (sessions a
 week · minutes · weeks · tracks or phases), the mix as icons (`MixLegend`) and the
-`LevelPips`, read from the same `glance`.
+compact `LevelScale`, read from the same `glance`.
 
 **Key patterns:**
-- **One glance vocabulary** (`Glance.tsx`): `LevelPips`, `StatTile` (with `active`),
+- **One glance vocabulary** (`Glance.tsx`): `LevelScale` (every level always, so it is
+  the same size whatever is served: `full` names the four with a tick or a dash, `compact`
+  is four rising steps for a card or a table cell), `StatTile` (with `active`),
   `InlinePanel`,
   `ModalityGlyph` (`lib/modalityIcons.ts`, the lucide counterparts of the
-  phone's `ModalityStyle.icon`), `MixLegend`, `WeekGlyph`, `PhaseBar`,
-  `IntensityBar`. A comparison view reuses them as they are.
+  phone's `ModalityStyle.icon`), `MixLegend`, `WeekDays`, `PhaseTimeline`, `PhaseBar` (the comparison's
+  unlabelled bar on a shared scale), `IntensityBar`. A comparison view reuses them as they are.
 - **A modality is its mark** — `ModalityMark` (§8.1) beside the name; no border, stripe,
   fill or tag in its colour. Phase kind (§8.2) and heart-rate zone (§8.7) keep their
   bars; surfaces neutral; levels uncoloured. `designRules` holds it.
@@ -2568,7 +2580,7 @@ Back returns; adding or removing a column replaces.
 
 - **Columns of the same rows**: a label column, then one column per philosophy
   (`gridStyle`); each row is a glance piece of §13.7 as it is — `StatTile` numbers,
-  `LevelPips`, `ModalityMix` + `MixLegend`, `IntensityBar`, `PhaseBar` on one scale for
+  `LevelScale`, `ModalityMix` + `MixLegend`, `IntensityBar`, `PhaseBar` on one scale for
   every track (`scale.trackWeeks`). Nothing is compared in the browser: the server says
   what every column shares (a "Both" / "All three" line above the row), what one has alone
   and what two of three hold, and which rows read alike (`same`).
