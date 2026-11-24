@@ -1,4 +1,5 @@
 using Toybox.Graphics as Gfx;
+using Toybox.Lang;
 
 // Canonical palette, ported verbatim from the web app's
 // frontend/src/lib/modalityColors.ts and frontend/src/lib/hrZones.ts.
@@ -50,6 +51,16 @@ module Theme {
     function sessionAccent(s) {
         var a = (s != null) ? s.accent() : null;
         return (a != null) ? a : accent((s != null) ? s.modalityId() : null);
+    }
+
+    // The colour of a served modality display ({"color" => "#rrggbb", …}), or
+    // null. A package's own modality is in no compiled table; the server sends
+    // its display with the session, and it used to be drawn grey here.
+    function servedColour(display) {
+        if (!(display instanceof Lang.Dictionary) || !display.hasKey("color")) { return null; }
+        var c = display["color"];
+        if (!(c instanceof Lang.String) || c.length() != 7 || !c.substring(0, 1).equals("#")) { return null; }
+        return c.substring(1, 7).toNumberWithBase(16);
     }
 
     // Accent for a modality id. Falls back to a neutral grey for ids we don't know

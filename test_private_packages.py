@@ -255,6 +255,10 @@ def test_routes():
     client = api.app.test_client()
     me = 'local-dev-user'
     pkg, files = package_for(me)
+    own_ex = next(e['id'] for e in yaml.safe_load(files['exercises.yaml'])['exercises']
+                  if e['id'].startswith(package_store.owner_prefix(me)))
+    files['exercise_media.yaml'] = yaml.safe_dump(
+        {own_ex: {'animation': {'type': 'none'}, 'description': 'Its own words.', 'cue_points': ['One']}})
     body = client.get('/api/packages').get_json()
     check('the list says the prefix and the limits', body['prefix'] == package_store.owner_prefix(me)
           and body['packages'] == [] and body['limits']['files'] == package_store.MAX_FILES, body)
@@ -271,6 +275,11 @@ def test_routes():
     check('listed, and read back with its files',
           [p['id'] for p in client.get('/api/packages').get_json()['packages']] == [pkg]
           and client.get(f'/api/packages/{pkg}').get_json()['files'] == files)
+    # The phone's exercise sheet reads this route: with no overlay named it
+    # answered {} for a method's own exercise.
+    check("its own exercise's media is served to its owner",
+          client.get(f'/api/exercises/{own_ex}/media').get_json().get('description') == 'Its own words.',
+          client.get(f'/api/exercises/{own_ex}/media').get_json())
     check('an unknown id is 404', client.get('/api/packages/zz_none').status_code == 404
           and client.delete('/api/packages/zz_none').status_code == 404)
 

@@ -44,11 +44,19 @@ function neutral(id: string): ModalityColor {
   }
 }
 
+/** The web icon name (lucide) each served modality asks for. */
+const registeredIcons: Record<string, string> = {}
+
+/** A served modality's icon name, for `modalityIcon` (lib/modalityIcons.ts). */
+export function servedIconName(id: string): string | undefined {
+  return registeredIcons[id]
+}
+
 /** What the server says of a modality the build does not know. */
 export interface ServedModality {
   id: string
   name?: string
-  display?: { label?: string; color?: string; tint?: string }
+  display?: { label?: string; color?: string; tint?: string; icon?: { web?: string } }
 }
 
 /**
@@ -71,8 +79,12 @@ export function registerModalities(served: ServedModality[] | undefined): boolea
       label: m.display?.label ?? m.name ?? neutral(m.id).label,
     }
     const had = registered[m.id]
-    if (!had || had.hex !== next.hex || had.label !== next.label || had.bg !== next.bg) {
+    const icon = m.display?.icon?.web
+    if (!had || had.hex !== next.hex || had.label !== next.label || had.bg !== next.bg
+      || registeredIcons[m.id] !== icon) {
       registered[m.id] = next
+      if (icon) registeredIcons[m.id] = icon
+      else delete registeredIcons[m.id]
       learned = true
       version += 1
     }

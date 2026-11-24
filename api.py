@@ -790,7 +790,9 @@ def get_exercises():
 
 @app.get('/api/exercises/<ex_id>/media')
 def get_exercise_media(ex_id: str):
-    entry = loader.load_exercise_media().get(ex_id)
+    # In the asker's view: a method's own exercise_media.yaml answered {} here.
+    with loader.overlay(_own_overlay()):
+        entry = loader.load_exercise_media().get(ex_id)
     return jsonify(entry or {}), 200
 
 
@@ -4831,6 +4833,19 @@ def _encode_watch_exercise(ea: dict, modality: str, max_hr: int | None = None) -
     return out
 
 
+def _own_modality_display(modality: str) -> dict | None:
+    """The display of a modality one of the athlete's own packages brings
+    (vocabulary.yaml), with its `family` — what a watch that has never heard of
+    the id records it as (a run, not strength). None for a commons modality."""
+    own = loader.load_vocabulary()['modalities'].get(modality)
+    if not own or not isinstance(own.get('display'), dict):
+        return None
+    out = {k: own['display'][k] for k in ('label', 'short', 'color', 'icon') if k in own['display']}
+    if own.get('family'):
+        out['family'] = own['family']
+    return out
+
+
 def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
                          spec_level: int = 0, last: dict | None = None,
                          results: dict | None = None, sex: str = 'male',
@@ -4881,10 +4896,9 @@ def encode_watch_session(s: dict, session_key: str, *, completed: bool = False,
     # A modality one of the athlete's own packages brings (vocabulary.yaml) is
     # in no client's compiled table: its display rides with the session, so the
     # watch draws its colour and label. Never for a commons modality.
-    own = loader.load_vocabulary()['modalities'].get(modality)
-    if own and isinstance(own.get('display'), dict):
-        out['modalityDisplay'] = {k: own['display'][k] for k in ('label', 'short', 'color', 'icon')
-                                  if k in own['display']}
+    display = _own_modality_display(modality)
+    if display:
+        out['modalityDisplay'] = display
     if spec_level >= 1:
         package_id = _watch_spec.session_package(s)
         table, keys = _watch_spec.session_screens(
@@ -5154,6 +5168,9 @@ def get_today_session():
             t_icon = _session_icon.session_icon(first)
             if t_icon:
                 tomorrow['icon'] = t_icon
+            t_display = _own_modality_display(first.get('modality') or '')
+            if t_display:
+                tomorrow['modalityDisplay'] = t_display
         else:
             tomorrow = {'dayName': t_day, 'sessionCount': 0}
 
@@ -6653,7 +6670,7 @@ def _program_analytics_hash(inputs, stored: dict, revision) -> str:
 def _analytics_specs_digest() -> str:
     """A digest of every package's analytics.yaml the caller sees, once per
     view: the shipped files change only with a deploy, an athlete's own with
-    an install (invalidate_package_data)."""
+    an install (a new overlay directory, so a new view)."""
     import hashlib as _h
     import json as _j
     return _h.sha256(_j.dumps(loader.load_analytics_specs(), sort_keys=True,

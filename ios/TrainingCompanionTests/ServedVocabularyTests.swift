@@ -101,6 +101,25 @@ final class ServedVocabularyTests: XCTestCase {
         XCTAssertEqual(again.modalityDisplay, session.modalityDisplay)
     }
 
+    /// A method's own aerobic modality used to be recorded as strength training.
+    func testAnOwnModalityIsRecordedByItsFamily() throws {
+        let json = """
+        {"sessionId": "1-Monday-0", "modalityId": "\(own)", "archetypeName": "Trail day", "exercises": [],
+         "modalityDisplay": {"label": "Trail", "color": "#0ea5e9", "family": "aerobic"}}
+        """
+        let session = try JSONDecoder().decode(WatchSession.self, from: Data(json.utf8))
+        let kind = WatchActivityKind.of(modalityId: session.modalityId, family: session.modalityDisplay?.family)
+        XCTAssertEqual(kind, .running)
+        XCTAssertTrue(kind.outdoor)
+        XCTAssertEqual(WatchActivityKind.of(modalityId: own, family: "durability"), .hiking)
+        XCTAssertEqual(WatchActivityKind.of(modalityId: own, family: "skill"), .flexibility)
+        XCTAssertEqual(WatchActivityKind.of(modalityId: own, family: nil), .traditionalStrength)
+        // The commons' are recorded as they were, whatever a payload says.
+        XCTAssertEqual(WatchActivityKind.of(modalityId: "max_strength", family: "aerobic"), .traditionalStrength)
+        XCTAssertEqual(WatchActivityKind.of(modalityId: "aerobic_base", family: nil), .running)
+        XCTAssertEqual(WatchActivityKind.of(modalityId: "mixed_modal_conditioning", family: nil), .crossTraining)
+    }
+
     func testASessionOfTheCommonsCarriesNone() throws {
         let json = #"{"sessionId": "1-Monday-0", "modalityId": "max_strength", "archetypeName": "A", "exercises": []}"#
         let session = try JSONDecoder().decode(WatchSession.self, from: Data(json.utf8))

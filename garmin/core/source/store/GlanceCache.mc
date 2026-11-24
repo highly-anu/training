@@ -15,6 +15,13 @@ module GlanceCache {
     function write(today as Lang.Dictionary) as Void {
         var out = { "status" => today["status"], "date" => today["date"],
                     "tomorrow" => today["tomorrow"] };
+        // Tomorrow's first session, in the colour of a modality its package
+        // brings itself (resolved here, as a session's accent is below).
+        var tm = today["tomorrow"];
+        if (tm instanceof Lang.Dictionary) {
+            var tc = Theme.servedColour(tm["modalityDisplay"]);
+            if (tc != null) { tm["accent"] = tc; }
+        }
         // A demo day carries its own readiness and is never stale; it lives only
         // here, so the real cached day and readiness survive demo mode.
         if (today.hasKey("demo")) { out["demo"] = today["demo"]; out["readiness"] = today["readiness"]; }
@@ -44,6 +51,11 @@ module GlanceCache {
                 if (w instanceof Lang.Dictionary && w.hasKey("accent")) {
                     var c = Vocab.colour(w["accent"]);
                     if (c != null) { t["accent"] = c; }
+                }
+                // A modality the package brings itself: its served colour.
+                if (!t.hasKey("accent")) {
+                    var own = Theme.servedColour(s["modalityDisplay"]);
+                    if (own != null) { t["accent"] = own; }
                 }
                 slim.add(t);
             }

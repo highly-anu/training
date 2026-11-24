@@ -106,6 +106,16 @@ def _ids(pkg: str) -> list[dict]:
     return out
 
 
+def _watch(pkg: str) -> list[dict]:
+    """Its watch.yaml against the watch vocabulary (watch_spec.spec_problems,
+    the check the shipped packages meet in check_provenance)."""
+    from src import watch_spec
+    if pkg not in loader.load_watch_specs():
+        return []
+    return [_problem('ids', 'watch_spec', m, 'watch.yaml')
+            for m in watch_spec.spec_problems(loader.load_all_data()['archetypes'], {pkg}, only=pkg)]
+
+
 def _prefix(pkg_dir: str, pkg: str, prefix: str) -> list[dict]:
     """An athlete's own package (docs/roadmap.md 20.3): its id and every id it
     declares for itself — frameworks, archetypes, standards and their
@@ -272,6 +282,7 @@ def check_package(pkg_dir: str, *, smoke: bool = True, owner_prefix: str | None 
 
     ran.append('ids')
     problems += _ids(pkg)
+    problems += _watch(pkg)
     if owner_prefix:
         problems += _prefix(pkg_dir, pkg, owner_prefix)
     if problems:

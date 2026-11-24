@@ -46,3 +46,16 @@ describe('modality styles for an id the build does not carry', () => {
     expect(lookup('zz_plain').bg).toBe('bg-slate-500/15')
   })
 })
+
+describe("a served modality's icon", () => {
+  it('is the lucide icon its file names, when the build carries it, else the dumbbell', async () => {
+    const { modalityIcon } = await import('./modalityIcons')
+    registerModalities([
+      { id: 'zz_run', display: { color: '#0ea5e9', icon: { web: 'Footprints' } } },
+      { id: 'zz_odd', display: { color: '#0ea5e9', icon: { web: 'NoSuchIcon' } } },
+    ])
+    expect(modalityIcon('zz_run')).toBe(MODALITY_DISPLAY.aerobic_base.icon)
+    expect(modalityIcon('zz_odd')).toBe(MODALITY_DISPLAY.max_strength.icon)
+    expect(modalityIcon('aerobic_base')).toBe(MODALITY_DISPLAY.aerobic_base.icon)
+  })
+})

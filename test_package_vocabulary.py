@@ -278,8 +278,12 @@ def test_in_the_view():
         sent = api.encode_watch_session(theirs, '1-Monday-0')
         own_display = served[MODALITY]['display']
         check('a watch session of its modality carries the display: label, short, colour, icons',
-              sent.get('modalityDisplay') == {k: own_display[k] for k in ('label', 'short', 'color', 'icon') if k in own_display}
+              {k: v for k, v in (sent.get('modalityDisplay') or {}).items() if k != 'family'}
+              == {k: own_display[k] for k in ('label', 'short', 'color', 'icon') if k in own_display}
               and sent['modalityDisplay']['color'].startswith('#'), sent.get('modalityDisplay'))
+        check('and its family, so a watch records a run as a run',
+              sent['modalityDisplay'].get('family') == served[MODALITY].get('family') and sent['modalityDisplay']['family'],
+              (sent.get('modalityDisplay'), served[MODALITY].get('family')))
         check('and with the screen specs too', 'modalityDisplay' in api.encode_watch_session(theirs, '1-Monday-0', spec_level=1))
         common = next((s for raw in programs for w in raw['weeks'] for day in w['schedule'].values() for s in day
                        if s.get('modality') in commons), None)

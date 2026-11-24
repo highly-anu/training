@@ -184,6 +184,7 @@ final class AppState: ObservableObject {
         await withTaskGroup(of: Void.self) { group in
             group.addTask { await self.loadProgram() }
             group.addTask { await self.loadVocabulary() }
+            group.addTask { await self.refreshCatalogs() }
             // Today's Development card is the program scorecard. It was loaded
             // once and refreshed only after the phone itself completed a
             // session, so matches from the watch, Garmin or the web, and a
@@ -1164,6 +1165,23 @@ final class AppState: ObservableObject {
         await loadMethods()
         await reloadPhilosophies()
         await loadVocabulary()
+        await refreshCatalogs(philosophies: false)
+    }
+
+    /// The catalogs a screen loaded once, read again — each only if it was
+    /// loaded, a failed fetch keeping what there was. They were read once a
+    /// launch, so a method built, renamed or deleted on the web left Today
+    /// without its goal's name, a track badge with a raw id and its exercises'
+    /// sheets without their facts until the app was started again.
+    func refreshCatalogs(philosophies names: Bool = true) async {
+        guard let api else { return }
+        if names, !philosophies.isEmpty { await reloadPhilosophies() }
+        if !exerciseCatalog.isEmpty, let list = try? await api.fetchExercises(), !list.isEmpty {
+            exerciseCatalog = Dictionary(list.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        }
+        if !injuryFlagDefs.isEmpty, let flags = try? await api.fetchInjuryFlags(), !flags.isEmpty {
+            injuryFlagDefs = flags
+        }
     }
 
     /// What the athlete's own methods add to the vocabulary (roadmap 21.5): the

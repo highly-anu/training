@@ -2195,6 +2195,19 @@ Training contracts are refused. Not planned: push notifications, sharing a metho
   offered a rebuild; the phone's own page for a method. **Structure** (a new session, a
   track, the progression) stays with a revise build. **Never:** the id, another
   athlete's method, sharing.
+- **21.11 A method on every client, without an update (S).** *Done 2026-11-24.* No client
+  downloads a package; each reads the server's answers in the athlete's view. What was
+  missing at the edges: the exercise media route named no overlay (a method's own media
+  answered `{}`); the phone read philosophies, the glance, the exercise catalog and the
+  injury flags once a launch (`AppState.refreshCatalogs`, on every full load now); the
+  Garmin never read `modalityDisplay` (grey) and both watches recorded a method's aerobic
+  modality as strength (`family` on the display); `tomorrow` carried no display; the web
+  left standards and injury flags stale after a change and drew every own modality with
+  the dumbbell; the gate read a `watch.yaml` against the schema alone
+  (`watch_spec.spec_problems`). *Open:* a modality's SF Symbol names are not checked (a
+  misspelt one draws nothing on the phone); deleting a method leaves earlier blocks built
+  from it without their derived icons; the builder writes no `watch.yaml`, so a method's
+  screens are the slot-type defaults.
 
 ---
 
