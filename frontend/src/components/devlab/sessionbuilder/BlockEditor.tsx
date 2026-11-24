@@ -160,7 +160,7 @@ export function BlockEditor({ block, index, exercises, catalog, actions, problem
     id: `blk|${block.uid}`, data: { type: 'block', uid: block.uid, title },
   })
   const { setNodeRef: dropRef, isOver, active } = useDroppable({
-    id: `block|${block.uid}`, data: { type: 'block', uid: block.uid, title },
+    id: `block|${block.uid}`, data: { type: 'block', uid: block.uid, title: `onto ${title}` },
   })
   const over = isOver && active?.data.current?.type === 'exercise'
   const own = problems.filter((p) => p.movement === null)

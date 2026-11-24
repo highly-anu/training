@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
-  DndContext, DragOverlay, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent,
+  DndContext, DragOverlay, KeyboardSensor, MeasuringStrategy, PointerSensor, useSensor, useSensors, type DragEndEvent,
 } from '@dnd-kit/core'
 import { FilePlus2 } from 'lucide-react'
 import type { Exercise } from '@/api/types'
@@ -9,6 +9,7 @@ import { useExercises } from '@/api/exercises'
 import { useModalities } from '@/api/modalities'
 import { manualRefusal, useManualPreview, useManualSessions, useSaveManualSession } from '@/api/manual'
 import { useDebounce } from '@/hooks/useDebounce'
+import { pointerFirst } from '@/lib/dndCollision'
 import { dropTargetCoordinates } from '@/lib/dndKeyboard'
 import { MODALITY_IDS, EQUIPMENT_LABELS } from '@/lib/gen/clientVocab'
 import { modalityHex, modalityLabel } from '@/lib/modalityColors'
@@ -141,6 +142,9 @@ export function SessionBuilderPanel() {
   return (
     <DndContext
       sensors={sensors}
+      collisionDetection={pointerFirst}
+      // Drop targets are measured all through a drag: the page moves under it (gaps open, a problem line appears).
+      measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
       onDragStart={(e) => setDragging({ title: titleOf(e.active.data.current) })}
       onDragEnd={onDragEnd}
       onDragCancel={() => setDragging(null)}
@@ -150,7 +154,7 @@ export function SessionBuilderPanel() {
         },
         announcements: {
           onDragStart: ({ active }) => `Picked up ${titleOf(active.data.current)}.`,
-          onDragOver: ({ active, over }) => (over ? `${titleOf(active.data.current)} is over ${titleOf(over.data.current)}.` : undefined),
+          onDragOver: ({ active, over }) => (over ? `${titleOf(active.data.current)}: ${titleOf(over.data.current)}.` : undefined),
           onDragEnd: ({ active, over }) => (over ? `${titleOf(active.data.current)} dropped ${titleOf(over.data.current)}.`
             : `${titleOf(active.data.current)} was not moved.`),
           onDragCancel: ({ active }) => `Cancelled. ${titleOf(active.data.current)} was not moved.`,

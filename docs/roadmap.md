@@ -2410,10 +2410,15 @@ in the order they are worth doing:
    and a rest after a block go in a note. Each is a slot field the engine would have to
    read (`intensity_pct_1rm` and `rpe_target` exist in the schema and nothing computes
    them outside `rpe_autoregulation`). Heart rate is a zone (Z1–Z5), never a bpm or a pace.
-7. *Dragging.* Blocks reorder by dragging onto a gap or through the Move menu; movements
-   inside a block by their up and down buttons only (`@dnd-kit/sortable` was not added).
-   The drop rules are tested (`lib/sessionBuilder.test.ts`); a drag was never performed in
-   a browser — do that by hand before the builder leaves the Dev Lab, pointer and keyboard.
+7. *Dragging.* Driven in Chrome on 2026-11-24, both builders, pointer and keyboard: a
+   session onto a day and between days, an exercise into a gap and onto a block, a block
+   by its handle, and the keyboard's pick up · arrows · drop with its announcements. Two
+   fixes came of it: a drop lands on the target under the pointer (`lib/dndCollision.ts`;
+   dnd-kit's default asks which target the dragged card's box overlaps most), and drop
+   targets are measured all through a drag, since the page moves under it. Still open:
+   movements inside a block move by their up and down buttons only (`@dnd-kit/sortable`
+   was not added), and dragging near the top or bottom edge scrolls the page under the
+   pointer.
 8. *One exercise twice in a session.* A log is keyed by exercise, so pull-ups in a superset
    and in the AMRAP share one logged row, and analytics reads the same sets for both. The
    fix is the log's, not the builder's (key by slot role, as the briefing's rows do).
