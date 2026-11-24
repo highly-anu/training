@@ -710,6 +710,10 @@ struct ModalityDisplay: Codable, Hashable {
     /// "#rrggbb".
     var color: String? = nil
     var icon: Icon? = nil
+    /// The family it rolls up into (strength, aerobic, intervals, durability,
+    /// skill, combat): what a watch that has never heard of the id records it
+    /// as (`WatchActivityKind`).
+    var family: String? = nil
 
     /// The shape `ClientVocab.remember(served:)` keeps.
     var stored: [String: Any] {
@@ -722,6 +726,35 @@ struct ModalityDisplay: Codable, Hashable {
         if let watch = icon?.watch { icons["watch"] = watch }
         if !icons.isEmpty { out["icon"] = icons }
         return out
+    }
+}
+
+/// What a session is recorded as on the wrist. The commons' modalities are
+/// known by id; a method's own modality by the family the server sends with
+/// it — without it an aerobic modality of the athlete's own was recorded as
+/// strength training, indoors.
+enum WatchActivityKind: Equatable {
+    case running, hiking, flexibility, functionalStrength, crossTraining, traditionalStrength
+
+    var outdoor: Bool { self == .running || self == .hiking }
+
+    static func of(modalityId: String, family: String?) -> WatchActivityKind {
+        switch modalityId {
+        case "aerobic_base", "anaerobic_intervals": return .running
+        case "durability": return .hiking
+        case "movement_skill", "mobility": return .flexibility
+        case "kettlebell": return .functionalStrength
+        case "mixed_modal_conditioning": return .crossTraining
+        default: break
+        }
+        guard ClientVocab.modalities[modalityId] == nil else { return .traditionalStrength }
+        switch family {
+        case "aerobic": return .running
+        case "durability": return .hiking
+        case "skill": return .flexibility
+        case "intervals": return .crossTraining
+        default: return .traditionalStrength
+        }
     }
 }
 

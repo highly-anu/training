@@ -74,8 +74,9 @@ final class WorkoutManager: NSObject, ObservableObject {
 
         guard HKHealthStore.isHealthDataAvailable() else { return }
         let config = HKWorkoutConfiguration()
-        config.activityType = hkActivityType(for: session.modalityId)
-        config.locationType = hkLocationType(for: session.modalityId)
+        let kind = WatchActivityKind.of(modalityId: session.modalityId, family: session.modalityDisplay?.family)
+        config.activityType = hkActivityType(for: kind)
+        config.locationType = kind.outdoor ? .outdoor : .unknown
 
         do {
             let hkSession = try HKWorkoutSession(healthStore: healthStore,
@@ -262,21 +263,14 @@ final class WorkoutManager: NSObject, ObservableObject {
         elapsedTimer = nil
     }
 
-    private func hkActivityType(for modalityId: String) -> HKWorkoutActivityType {
-        switch modalityId {
-        case "aerobic_base", "anaerobic_intervals": return .running
-        case "durability":   return .hiking
-        case "movement_skill", "mobility": return .flexibility
-        case "kettlebell":   return .functionalStrengthTraining
-        case "mixed_modal_conditioning": return .crossTraining
-        default:             return .traditionalStrengthTraining
-        }
-    }
-
-    private func hkLocationType(for modalityId: String) -> HKWorkoutSessionLocationType {
-        switch modalityId {
-        case "aerobic_base", "anaerobic_intervals", "durability": return .outdoor
-        default: return .unknown
+    private func hkActivityType(for kind: WatchActivityKind) -> HKWorkoutActivityType {
+        switch kind {
+        case .running: return .running
+        case .hiking: return .hiking
+        case .flexibility: return .flexibility
+        case .functionalStrength: return .functionalStrengthTraining
+        case .crossTraining: return .crossTraining
+        case .traditionalStrength: return .traditionalStrengthTraining
         }
     }
 

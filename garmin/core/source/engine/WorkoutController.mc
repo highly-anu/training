@@ -245,7 +245,7 @@ class WorkoutController {
         _rec = Rec.createSession({
             :name => _session.archetypeName(),
             :sport => _isCardio ? Rec.SPORT_RUNNING : Rec.SPORT_TRAINING,
-            :subSport => subSportForModality(_session.modalityId())
+            :subSport => subSportForModality(_session.modalityId(), _session.family())
         });
         _rec.start();
         _state = ACTIVE;
@@ -1569,7 +1569,11 @@ class WorkoutController {
     // the spot, and recording it as a run with GPS was wrong.
     hidden function isCardioSession() {
         var m = _session.modalityId();
-        if (!isCardioModality(m) && (m == null || !m.equals("durability"))) { return false; }
+        // A modality the package brings itself goes by its family.
+        var f = _session.family();
+        var moves = isCardioModality(m) || (m != null && m.equals("durability"))
+            || (f != null && (f.equals("aerobic") || f.equals("durability")));
+        if (!moves) { return false; }
         var list = _session.exercises();
         for (var i = 0; i < list.size(); i += 1) {
             if (isLocomotion(list[i])) { return true; }
@@ -1593,12 +1597,14 @@ class WorkoutController {
 
     // SUB_SPORT_* are ActivityRecording constants (verified against SDK 9.2.0 by
     // compilation — an unknown symbol fails the monkeyc build).
-    hidden function subSportForModality(m) {
+    hidden function subSportForModality(m, family) {
         if (m == null) { return Rec.SUB_SPORT_GENERIC; }
         if (m.find("strength") != null || m.equals("power")) {
             return Rec.SUB_SPORT_STRENGTH_TRAINING;
         }
         if (m.equals("aerobic_base")) { return Rec.SUB_SPORT_CARDIO_TRAINING; }
+        if (family != null && family.equals("strength")) { return Rec.SUB_SPORT_STRENGTH_TRAINING; }
+        if (family != null && family.equals("aerobic")) { return Rec.SUB_SPORT_CARDIO_TRAINING; }
         return Rec.SUB_SPORT_GENERIC;
     }
 }

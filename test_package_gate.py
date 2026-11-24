@@ -157,6 +157,20 @@ def test_ids():
     shutil.rmtree(copy)
     check('gone with the copy', not package_gate.check_package(os.path.join(FOLDER, 'atg'), smoke=False)['problems'])
 
+    print('a watch.yaml outside the watch vocabulary')
+    scratch = os.path.join(FOLDER, SCRATCH)
+    watch = os.path.join(scratch, 'watch.yaml')
+    open(watch, 'w', encoding='utf-8').write(
+        f'id: {SCRATCH}\nspec_version: 1\nidentity: {{accent: zz_no_token}}\narchetypes: {{zz_none: {{}}}}\n')
+    r = package_gate.check_package(scratch, smoke=False)
+    found = [p['message'] for p in r['problems'] if (p['stage'], p['code']) == ('ids', 'watch_spec')]
+    check('is refused as the shipped packages are: the accent, the archetype',
+          any('palette token' in m for m in found) and any('unknown archetype' in m for m in found), r['problems'])
+    open(watch, 'w', encoding='utf-8').write(f'id: {SCRATCH}\nspec_version: 1\nidentity: {{accent: amber}}\n')
+    r = package_gate.check_package(scratch, smoke=False)
+    check('and one within it passes', not r['problems'], r['problems'])
+    os.remove(watch)
+
     print('a folder outside the packages directory')
     away = _copy(FIXTURE, FIXTURE, folder=OUTSIDE, rename=False)
     r = package_gate.check_package(away)

@@ -182,10 +182,21 @@ class WorkoutSession {
         var w = s("watch");
         return (w instanceof Lang.Dictionary) ? w : {};
     }
-    // The package's accent colour, or null to use the modality's.
+    // The package's accent colour, else the colour of a modality the package
+    // brings itself (modalityDisplay, which only such a session carries), or
+    // null to use the modality's compiled one.
     function accent() {
         var w = watch();
-        return w.hasKey("accent") ? Vocab.colour(w["accent"]) : null;
+        var a = w.hasKey("accent") ? Vocab.colour(w["accent"]) : null;
+        return (a != null) ? a : Theme.servedColour(s("modalityDisplay"));
+    }
+    // The family of a modality the package brings itself (strength, aerobic,
+    // intervals, durability, skill, combat), or null: what the recording takes
+    // it for, since its id is one this build has never heard of.
+    function family() {
+        var m = s("modalityDisplay");
+        var f = (m instanceof Lang.Dictionary && m.hasKey("family")) ? m["family"] : null;
+        return (f instanceof Lang.String) ? f : null;
     }
     function summaryPages() {
         var w = watch();

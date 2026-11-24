@@ -80,13 +80,15 @@ export function useMethodBuild(id: string | undefined) {
 /**
  * Everything that lists packages was read before this method existed (or
  * while it had other contents): the philosophies, Explore's documents, the
- * frameworks, archetypes and exercises, the vocabulary a package may bring.
+ * frameworks, archetypes and exercises (their media with them), the
+ * vocabulary a package may bring — and the standards and the injury flags'
+ * patterns it adds, which stayed stale until a reload.
  */
 export function refreshAfterMethodChange(client: QueryClient): Promise<unknown> {
   return Promise.all([
     queryKeys.methods.all, queryKeys.philosophies.all, queryKeys.frameworks.all, queryKeys.archetypes.all,
     queryKeys.exercises.all, queryKeys.modalities.all, queryKeys.equipment.all, queryKeys.similarity.all,
-    queryKeys.analytics.specs, ['explore'] as const,
+    queryKeys.analytics.specs, queryKeys.standards.all, queryKeys.constraints.injuryFlags, ['explore'] as const,
   ].map((queryKey) => client.invalidateQueries({ queryKey })))
 }
 

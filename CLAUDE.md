@@ -1129,6 +1129,19 @@ way they own their analytics. Layout and the add-a-philosophy walk-through:
   `template`, never by slot type or archetype id; `ArchetypeBehavior.mc` is gone,
   and with it three bugs its archetype-wide flags hid (a get-up that never
   switched sides, a ruck's warm-up shown in km, a dead distance flag).
+- **An athlete's own method needs no app update** (since 2026-11-24). No client
+  downloads a package: the phone and both watches read what the server answers with the
+  athlete's overlay — the reference routes, the program, and `today-session?spec=1`, whose
+  `screens` are the slot-type defaults for a method without a `watch.yaml` (the builder
+  writes none; one an athlete installs meets `watch_spec.spec_problems` in the gate, as the
+  shipped ones do in `check_provenance`). A modality the method brings travels as
+  `modalityDisplay` — label, colour, icons and `family` — on each session and on `tomorrow`:
+  both watches draw its colour and record it by its family (`WatchActivityKind.of`, the
+  Garmin's `isCardioSession`), where it was grey on the Garmin and strength training on
+  both. The phone reads its catalogs again on every full load (`AppState.refreshCatalogs`:
+  philosophies, glance, exercises, injury flags, each only if a screen had loaded it), so a
+  method made on the web is there after a pull to refresh. Workout icons, watch templates
+  and the Garmin's pattern icons stay compiled.
 - **Compiled modules are the escape hatch**, not the norm: `garmin/packages/<id>/`
   + `gen_registry.py` (Monkey C has no reflection, so `Registry.mc` is generated).
   A module's slots keep a complete declarative spec; `--without <id>` builds draw it.
@@ -1676,8 +1689,8 @@ their view, kept bounded beside the shared answers (`api._USER_STATIC`, keyed by
 directory), sent `private`; the shared answers and the image's build are never touched (20.4).
 **A package may add vocabulary** (since 2026-11-13, roadmap 20.6): `vocabulary.yaml` — `modalities`
 (a modality with its `family` and `display`), `movement_patterns` (`regions`, `excluded_by`: the
-injury flags that rule it out) and `equipment` (id, label; roadmap 20.7: the web's pickers list it
-under "From your packages", the phone's cannot yet) — for itself and whoever borrows from it (`loader.load_vocabulary`).
+injury flags that rule it out) and `equipment` (id, label; both clients' pickers list it — "From your packages" on the web,
+"From your methods" on the phone) — for itself and whoever borrows from it (`loader.load_vocabulary`).
 Never a commons id. The web draws a served modality it does not know (`registerModalities`); slot
 types, progression and contract models, phase kinds, levels, intensities, watch templates and
 icons stay the engine's.
