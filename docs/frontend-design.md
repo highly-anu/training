@@ -2631,6 +2631,30 @@ sessions, the archetype detail and the session panel.
 Colour is the modality's, on the rail and the main work's mark only. A component never
 words a prescription: a new wording is a change to `session_blocks.py` and its test.
 
+
+### 13.14 Shared links
+
+`/s/:token` (`pages/SharedLink.tsx`) is the web's one page outside sign-in besides `/login`: a
+sibling of the protected layout in `App.tsx`, in `components/share/ShareLayout.tsx` — no
+sidebar, a header that says what was shared (the page's `h1`) and **Open in the app**
+(`lib/share.appLink`: the app's own scheme until the web has a permanent domain). It reads
+`GET /api/shares/<token>` and nothing else: what the page shows rides in the link's document,
+because the reader may be signed out and cannot load the sharer's method.
+
+- **A session** (`components/share/SharedSession.tsx`) is drawn with `SessionExercises`, so a
+  round's movements sit in their round as everywhere else (§13.12); each row is the movement
+  and its prescription as planned, and opens **in place** (§13.7) to
+  `components/explore/ExerciseFacts.tsx` — the exercise's own document, the same component
+  Explore's exercise panel draws. One row open at a time; the open row takes the modality's
+  colour on its left edge.
+- **A revoked or unknown link** says so in words ("This link is no longer shared"), with no
+  retry; a failed request is `FailedState` with one.
+- **Sharing out** is `components/share/ShareButton.tsx`: it makes the link
+  (`POST /api/shares`), then the system's share sheet, else the clipboard (`lib/share.ts`).
+  The result is said on the button — "Link copied" for 2.5 s, and to the live region — never
+  a toast (toasts are for undo and failed saves). Where neither works the link is shown to
+  copy by hand.
+
 ### 13.13 Session Browser
 
 **Use case:** every session a method writes, browsed in one place

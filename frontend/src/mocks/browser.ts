@@ -6,6 +6,7 @@ import { modalityHandlers } from './handlers/modalities'
 import { devlabHandlers } from './handlers/devlab'
 import { methodHandlers } from './handlers/methods'
 import { manualHandlers } from './handlers/manual'
+import { shareHandlers } from './handlers/shares'
 
 export const worker = setupWorker(
   ...exerciseHandlers,
@@ -15,4 +16,5 @@ export const worker = setupWorker(
   ...devlabHandlers,
   ...methodHandlers,
   ...manualHandlers,
+  ...shareHandlers,
 )

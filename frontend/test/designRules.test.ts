@@ -371,8 +371,10 @@ describe('hue is data, emerald is done (§8.12, §12.11)', () => {
     expect(layout).toMatch(/id="main"/)
     expect(findings({
       pattern: /<h1\b/,
-      // Three pages outside the sidebar's sections write their own header, one h1 each.
-      allow: either(is('components/layout/PageHeader.tsx', 'pages/ProgramHistoryDetail.tsx', 'pages/WorkoutDetail.tsx', 'pages/LoginPage.tsx'), DEV_LAB, TESTS),
+      // Three pages outside the sidebar's sections write their own header, one h1 each;
+      // a shared link's page has no sidebar at all (components/share/ShareLayout.tsx).
+      allow: either(is('components/layout/PageHeader.tsx', 'pages/ProgramHistoryDetail.tsx', 'pages/WorkoutDetail.tsx', 'pages/LoginPage.tsx',
+        'components/share/ShareLayout.tsx'), DEV_LAB, TESTS),
     }), 'The page\'s name is PageHeader\'s `title`, its only h1; a section is an h2.').toEqual([])
   })
 })
