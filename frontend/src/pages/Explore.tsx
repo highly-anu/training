@@ -7,11 +7,7 @@ import { useState, useMemo } from 'react'
 import { useSearchParams, useNavigate, useLocation } from 'react-router-dom'
 import { Page } from '@/components/layout/Page'
 import { ArrowLeft, Columns3, Compass, Wand2 } from 'lucide-react'
-import { ModalityBadge } from '@/components/shared/ModalityBadge'
 import { PrereqChain } from '@/components/exercises/PrereqChain'
-import { ExerciseAnimationPanel } from '@/components/exercises/ExerciseAnimationPanel'
-import { ExerciseCuePoints } from '@/components/exercises/ExerciseCuePoints'
-import { MuscleHighlightDiagram } from '@/components/exercises/MuscleHighlightDiagram'
 import { usePhilosophies } from '@/api/philosophies'
 import { useFrameworks } from '@/api/frameworks'
 import { useModalities } from '@/api/modalities'
@@ -22,6 +18,7 @@ import { MODALITY_COLORS } from '@/lib/modalityColors'
 import { ARCH_CAT_COLORS, EX_CATEGORY_COLORS, philosophyHex } from '@/lib/exploreColors'
 import { cn } from '@/lib/utils'
 import { ArchetypeCard } from '@/components/explore/ArchetypeCard'
+import { ExerciseFacts } from '@/components/explore/ExerciseFacts'
 import { PhilosophyPage } from '@/components/explore/philosophy/PhilosophyPage'
 import { ComparePage } from '@/components/explore/compare/ComparePage'
 import { MAX_COMPARE, MIN_COMPARE, parseCompare } from '@/components/explore/compare/compareIds'
@@ -890,87 +887,7 @@ function ExercisePanel({
           All exercises
         </button>
 
-        {/* Header */}
-        <div>
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium mb-1">Exercise</p>
-          <h2 className="text-base font-semibold"
-            style={{ color: EX_CATEGORY_COLORS[exercise.category] ?? undefined }}>
-            {exercise.name}
-          </h2>
-          <div className="flex flex-wrap gap-1 mt-2">
-            {exercise.modality.map((m) => <ModalityBadge key={m} modality={m} />)}
-          </div>
-        </div>
-
-        {/* Animation */}
-        {exercise.animation && exercise.animation.type !== 'none' && (
-          <ExerciseAnimationPanel
-            animation={exercise.animation}
-            exerciseName={exercise.name}
-            category={exercise.category}
-            variant="drawer"
-          />
-        )}
-
-        {/* Meta grid */}
-        <div className="grid grid-cols-2 gap-2">
-          {[
-            { label: 'Category', value: exercise.category.replace(/_/g, ' ') },
-            { label: 'Effort',   value: exercise.effort },
-            { label: 'Bilateral', value: exercise.bilateral ? 'Yes' : 'No' },
-            ...(exercise.typical_volume
-              ? [{ label: 'Typical', value: `${exercise.typical_volume.sets}×${exercise.typical_volume.reps}` }]
-              : []),
-          ].map(({ label, value }) => (
-            <div key={label} className="rounded-md border border-border/30 bg-card/30 px-2.5 py-2">
-              <p className="text-[9px] uppercase tracking-wider text-muted-foreground/50 font-medium mb-0.5">{label}</p>
-              <p className="text-[11px] font-medium capitalize">{value}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Progressions */}
-        {exercise.progressions && Object.keys(exercise.progressions).length > 0 && (
-          <div className="space-y-1.5">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">Progressions</p>
-            <div className="space-y-1 text-xs text-muted-foreground">
-              {exercise.progressions.load && <p><span className="text-foreground font-medium">Load:</span> {exercise.progressions.load}</p>}
-              {exercise.progressions.volume && <p><span className="text-foreground font-medium">Volume:</span> {exercise.progressions.volume}</p>}
-              {exercise.progressions.complexity && <p><span className="text-foreground font-medium">Complexity:</span> {exercise.progressions.complexity}</p>}
-            </div>
-          </div>
-        )}
-
-        {/* Notes */}
-        {exercise.notes && (
-          <div className="space-y-1.5">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">Coaching Notes</p>
-            <p className="text-xs text-muted-foreground leading-relaxed">{exercise.notes}</p>
-          </div>
-        )}
-
-        {/* Description */}
-        {exercise.description && (
-          <div className="space-y-1.5">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">About</p>
-            <p className="text-xs text-muted-foreground leading-relaxed">{exercise.description}</p>
-          </div>
-        )}
-
-        {/* Cue points */}
-        {(exercise.cue_points?.length || exercise.coaching_focus || exercise.common_errors?.length) && (
-          <ExerciseCuePoints
-            cues={exercise.cue_points ?? []}
-            errors={exercise.common_errors}
-            coachingFocus={exercise.coaching_focus}
-          />
-        )}
-
-        {/* Muscle diagram */}
-        {exercise.muscle_diagram &&
-          (exercise.muscle_diagram.highlight_primary.length > 0 || exercise.muscle_diagram.highlight_secondary.length > 0) && (
-          <MuscleHighlightDiagram diagram={exercise.muscle_diagram} />
-        )}
+        <ExerciseFacts exercise={exercise} />
 
         {/* Prereq chain */}
         <div className="space-y-2 border-t border-border/30 pt-4">

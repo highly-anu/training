@@ -8,6 +8,8 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { SessionHeader } from '@/components/session/SessionHeader'
+import { ShareButton } from '@/components/share/ShareButton'
+import { sessionCalendarDate } from '@/lib/workoutMatcher'
 import { ReplaceSessionSheet } from '@/components/session/ReplaceSessionSheet'
 import { SwapExerciseSheet } from '@/components/session/SwapExerciseSheet'
 import { ExerciseRow } from '@/components/session/ExerciseRow'
@@ -55,6 +57,9 @@ export function SessionPanel({ program, weekData, weekIndex, day, compact = fals
   const workoutMatches = useBioStore((s) => s.workoutMatches)
   const importedWorkouts = useBioStore((s) => s.importedWorkouts)
   const programVersionId = useProgramStore((s) => s.programVersionId)
+  const programStartDate = useProgramStore((s) => s.programStartDate)
+  // The day a shared link is asked for: a spliced program can carry one week number twice.
+  const sessionDate = programStartDate ? sessionCalendarDate(programStartDate, weekIndex, day) : ''
   const [replaceTarget, setReplaceTarget] = useState<{ idx: number } | null>(null)
   const [swapTarget, setSwapTarget] = useState<{ si: number; ei: number } | null>(null)
 
@@ -135,6 +140,10 @@ export function SessionPanel({ program, weekData, weekIndex, day, compact = fals
                   />
                 </div>
                 <div className="flex items-center gap-2 shrink-0 mt-1">
+                  <ShareButton
+                    title={session.archetype?.name ?? 'Session'}
+                    request={{ kind: 'session', key: `${sessionKey}-${si}`, ...(sessionDate ? { date: sessionDate } : {}) }}
+                  />
                   {matchedWorkout && (
                     <Link
                       to={`/log/${encodeURIComponent(matchedWorkout.id)}`}

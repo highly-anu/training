@@ -24,6 +24,7 @@ import { WorkoutAnalytics } from '@/pages/WorkoutAnalytics'
 import { LoginPage } from '@/pages/LoginPage'
 import { NotFound } from '@/pages/NotFound'
 import { PairDevice } from '@/pages/PairDevice'
+import { SharedLink } from '@/pages/SharedLink'
 import { LegacyRedirect } from '@/components/layout/LegacyRedirect'
 import { HealthDataProvider } from '@/components/HealthDataProvider'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
@@ -61,6 +62,8 @@ export default function App() {
               <HealthDataProvider>
                 <Routes>
                   <Route path="/login" element={<LoginPage />} />
+                  {/* A shared link: read by whoever has it, signed in or not. */}
+                  <Route path="/s/:token" element={<SharedLink />} />
                   <Route element={
                     <ProtectedRoute>
                       <RootLayout />

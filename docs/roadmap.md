@@ -61,7 +61,7 @@ deferred is under *Later*.
 | 22 | Pre-workout briefing: before a session, today's numbers beside the earlier times the same session was done, its place in the cycle and one suggestion — declared by the package (`briefing.yaml`), built on the server. The server and Wildman's file (22.1) the phone's screen (22.2), the web's block (22.3) and the reading of every package's default (22.4) are in | P2 | M | engine, API, iOS, web, content |
 | 23 | Levels: every package from novice to elite — all eleven done 2026-11-08; what is left is listed under Open | P2 | S | engine, content |
 | 24 | Manual builder: an athlete composes sessions, then a track, from existing exercises — in the Dev Lab first. A slot's own weight and steps (24.1), the server's session library (24.2) and the web's session builder (24.3), the program builder (24.4) and earned progression (24.5) are in; what is left is listed under Still to do | P1 | L | engine, API, web |
-| 25 | Sharing: a method, a program or a session as a link that opens on the web and in the app — the server (25.1) is in; the web page, the phone and sharing out are next | P1 | L | API, web, iOS |
+| 25 | Sharing: a method, a program or a session as a link that opens on the web and in the app — all five steps are in (2026-11-25); what is left is listed under Open | P1 | L | API, web, iOS |
 
 ---
 
@@ -2467,17 +2467,17 @@ Steps:
   `save`) and the routes `POST/GET /api/shares`, `DELETE /api/shares/<token>`, the public
   `GET /api/shares/<token>` and `POST /api/shares/<token>/save`; `GET /api/methods` lists
   held methods for an account that may not build. `test_sharing.py`.
-- **25.2 The web's public page and a shared session (M).** `/s/:token` outside
+- **25.2 The web's public page and a shared session (M).** *Done 2026-11-25.* `/s/:token` outside
   `ProtectedRoute`; the session drawn with `WorkoutBlocks`, an exercise opening in place
   (`ExercisePanel` extracted from `pages/Explore.tsx`); the share button on a session.
-- **25.3 Methods and programs on the web (M).** The method's page fed from the link's
+- **25.3 Methods and programs on the web (M).** *Done 2026-11-25.* The method's page fed from the link's
   document, Save to your methods; the program's summary, "Methods it needs" and Build it
   for me into the existing preview; share buttons on a method and on Program ▸ Overview;
   Settings ▸ Account ▸ Shared links. `YourMethods` lists held methods where building is
   not enabled.
-- **25.4 The phone receives (L).** `share?token=` in `DeepLink`, kept across sign-in; a
+- **25.4 The phone receives (L).** *Done 2026-11-25.* `share?token=` in `DeepLink`, kept across sign-in; a
   sheet with the three kinds; the phone's first workout-blocks view.
-- **25.5 The phone shares (S).** `ShareLink` from a method, the program and a session;
+- **25.5 The phone shares (S).** *Done 2026-11-25.* `ShareLink` from a method, the program and a session;
   Settings ▸ Account ▸ Shared links.
 
 Open:
@@ -2490,6 +2490,10 @@ Open:
    saves; the sharer shares again. Nothing tells a receiver a newer version exists.
 4. *A shared method's words are public* to whoever holds the link; revoking is the only
    moderation. No report or takedown path exists.
+6. *The phone's session detail still draws a flat list*: `SessionBlocksView` (design-system
+   §6.62) exists for it since 25.4.
+7. *Not seen on a device:* the phone's Save and Build it for me (behind a tap; their models
+   are tested), the share sheet from a session and the program, and Shared links in Settings.
 5. *A program regenerated mid-way* is shared from its first week: the recipe is the whole
    program, not where the sharer stands in it.
 

@@ -182,4 +182,19 @@ final class AppRouter: ObservableObject {
     func openCompare(_ ids: [String]) {
         pendingCompare = ids
     }
+
+    /// A shared link to open (`share?token=…`); `ContentView` presents its
+    /// sheet over whatever tab is showing.
+    @Published var pendingShare: SharedLinkRequest? = nil
+
+    func openShare(_ token: String) {
+        pendingShare = SharedLinkRequest(token: token)
+    }
+}
+
+/// One request to open a shared link: a new one each time, so opening the
+/// same link twice presents it twice.
+struct SharedLinkRequest: Identifiable, Equatable {
+    let id = UUID()
+    let token: String
 }

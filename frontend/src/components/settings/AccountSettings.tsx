@@ -5,6 +5,7 @@ import { LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAuthStore } from '@/store/authStore'
+import { SharedLinksCard } from '@/components/share/SharedLinksCard'
 
 /**
  * Settings → Account: who is signed in, the saved accounts to switch
@@ -70,6 +71,11 @@ export function AccountSettings() {
               Sign in with another account from the login page to switch between them here.
             </p>
           )}
+        </div>
+
+        <div className="space-y-3">
+          <h3 className="text-xs uppercase tracking-wider text-muted-foreground/50 font-medium">Sharing</h3>
+          <SharedLinksCard />
         </div>
       </div>
     </ScrollPanel>

@@ -13,8 +13,14 @@ struct ProgramBuilderFlow: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
 
+    /// A shared program's recipe (docs/roadmap.md item 25): the builder opens
+    /// on its methods, tracks and length, at Schedule — the athlete's own
+    /// settings are the steps that follow.
+    var start: BuilderStart? = nil
+
     @StateObject private var builder = BuilderState()
     @State private var step = 1
+    @State private var appliedStart = false
 
     var body: some View {
         NavigationStack {
@@ -29,6 +35,13 @@ struct ProgramBuilderFlow: View {
             }
             .navigationTitle("New Program")
             .navigationBarTitleDisplayMode(.inline)
+            .task {
+                guard let start, !appliedStart else { return }
+                appliedStart = true
+                await appState.loadPhilosophiesIfNeeded()
+                builder.apply(start, philosophies: appState.philosophies)
+                if builder.isStep1Valid { step = 2 }
+            }
             #if DEBUG
             .task {
                 guard let launch = BuilderDebugLaunch.current else { return }

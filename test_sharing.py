@@ -32,6 +32,17 @@ from src import auth, db, package_store, share_store, sharing  # noqa: E402
 
 FAILURES: list[str] = []
 CARL = 'user-carl'
+# What the web and the phone decode in their tests: the page's document for
+# each kind, as these routes answered it (`--write` re-records).
+FIXTURE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'frontend', 'src', 'mocks', 'fixtures', 'shares.json')
+RECORDED: dict = {}
+
+
+def record(name: str, doc: dict) -> None:
+    """A page's document under a fixed token and date, so the file only
+    changes when the document does."""
+    text = json.dumps(doc).replace(doc['token'], f'tok_{name}')
+    RECORDED[name] = {**json.loads(text), 'createdAt': '2026-11-25T08:00:00Z'}
 client = api.app.test_client()
 
 
@@ -187,6 +198,7 @@ def test_routes():
                   and all(m['private'] for m in doc['methods']), doc['methods'])
             raw = page.get_data(as_text=True)
             check('never the files, never the sharer', '"files"' not in raw and ANN not in raw)
+            record('method', client.get(f"/api/shares/{link['token']}", headers=ben).get_json())
             seen = client.get(f"/api/shares/{link['token']}", headers=ben).get_json()['availability']
             check('Ben has neither: missing, two to save, under his own ids', not seen['yours'] and not seen['ready']
                   and seen['toSave'] == 2 and seen['canSave']
@@ -237,6 +249,7 @@ def test_routes():
             check('the page carries no week of Ann\'s', 'schedule' not in json.dumps(doc) and 'load' not in json.dumps(doc['program']))
             carl_doc = client.get(f"/api/shares/{plink['token']}", headers=carl).get_json()
             c = package_store.owner_prefix(CARL)
+            record('program', carl_doc)
             check('Carl has none of it; the recipe names his ids', not carl_doc['availability']['ready']
                   and carl_doc['recipe']['philosophy_id'] == c + pkg[len(a):] and carl_doc['recipe']['num_weeks'] == 2, carl_doc.get('recipe'))
             early = client.post('/api/programs/generate', headers=carl,
@@ -260,6 +273,7 @@ def test_routes():
             page = client.get(f"/api/shares/{slink['token']}")
             doc = page.get_json()
             sess = (doc.get('session') or {}).get('session') or {}
+            record('session', doc)
             check('shared as planned: blocks, icon, exercises, where it stood', made.status_code == 200 and page.status_code == 200
                   and sess.get('blocks') and 'icon' in sess and sess.get('exercises') and doc['session']['day'] == day
                   and doc['session']['week']['week_number'] == week['week_number'] and doc['session']['method']['id'] == pkg,
@@ -376,10 +390,28 @@ def test_sql():
         conn.close()
 
 
+def test_fixture():
+    print('the clients\' fixture')
+    if '--write' in sys.argv:
+        with open(FIXTURE_PATH, 'w', encoding='utf-8') as fh:
+            json.dump(RECORDED, fh, indent=1, ensure_ascii=False, sort_keys=True)
+            fh.write('\n')
+        print(f'  wrote {FIXTURE_PATH}')
+        return
+    try:
+        with open(FIXTURE_PATH, encoding='utf-8') as fh:
+            on_disk = json.load(fh)
+    except (OSError, ValueError):
+        on_disk = None
+    check('frontend/src/mocks/fixtures/shares.json is what the routes answer (run test_sharing.py --write)',
+          on_disk == json.loads(json.dumps(RECORDED)))
+
+
 def main() -> int:
     test_rehome()
     test_recipe()
     test_routes()
+    test_fixture()
     test_sql()
     print()
     if FAILURES:
