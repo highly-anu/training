@@ -19,6 +19,7 @@ enum ProgramTab: Int, AppSubTab {
 
 struct ProgramView: View {
     @EnvironmentObject var appState: AppState
+    @StateObject private var sharer = LinkSharer()
     @EnvironmentObject var router: AppRouter
 
     /// The week Calendar's pager shows (§6.49).
@@ -60,9 +61,16 @@ struct ProgramView: View {
             }
             .navigationTitle("Program")
             .appTabStyle()
+            .sharesLinks(sharer)
             .task { applyRequestedSection() }
             .onChange(of: router.programSection) { applyRequestedSection() }
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    if section != .history, !appState.allWeeks.isEmpty {
+                        Button { sharer.share(.program, with: appState.api) } label: { Image(systemName: "square.and.arrow.up") }
+                            .accessibilityLabel("Share this program")
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     // History is a record, not something to build or configure.
                     if section != .history {

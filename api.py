@@ -130,6 +130,20 @@ def require_builder(f):
     return wrapper
 
 
+def require_methods(f):
+    """Gate for what an athlete does with a method they hold — rename it,
+    remove it, save one shared with them: no model is called, so it needs no
+    builder role. 403 `not_enabled` only where athletes' own methods are off."""
+    from functools import wraps
+
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if _builder_mode() == 'off':
+            return jsonify({'error': 'not_enabled', 'detail': 'Your own methods are not available here.'}), 403
+        return f(*args, **kwargs)
+    return wrapper
+
+
 def _schema_errors(kind: str, obj: dict) -> list[str]:
     """Validate an authored entity against docs/schemas/<kind>.schema.json —
     the contract tools/validate_entities.py enforces on the YAML, applied to
@@ -2432,19 +2446,22 @@ def list_methods():
     """Whether the athlete can build methods of their own, and the ones they
     have. Always 200: `available: false` with a `reason` (`not_enabled` for
     this account, `no_model_key` on this server) tells a client to show
-    nothing, or the methods without the way to make another."""
+    nothing, or the methods without the way to make another. An account
+    that may not build still lists the methods it holds — ones saved from a
+    shared link (docs/roadmap.md item 25) — unless athletes' methods are off."""
     from src import package_store
     available, reason = _builder_availability()
     daily = _builder_daily_limit()
     body = {'available': available, 'reason': reason, 'methods': [], 'builds': [],
             'limits': {'daily': daily, 'remaining': daily, 'kept': package_store.MAX_PACKAGES}}
-    if reason == 'not_enabled':
+    if _builder_mode() == 'off':
         return jsonify(body)
     from src import build_store
     try:
         rows = package_store.list_packages(g.user_id)
-        body['builds'] = [build_store.public(b) for b in build_store.recent(g.user_id)]
-        body['limits']['remaining'] = max(0, daily - build_store.started_since(g.user_id))
+        if reason != 'not_enabled':
+            body['builds'] = [build_store.public(b) for b in build_store.recent(g.user_id)]
+            body['limits']['remaining'] = max(0, daily - build_store.started_since(g.user_id))
     except (package_store.StoreError, build_store.StoreError) as e:
         return _package_store_error(e)
     from src import db as _db
@@ -2620,7 +2637,7 @@ def _resume_builds():
 
 @app.delete('/api/methods/<package_id>')
 @require_auth
-@require_builder
+@require_methods
 def delete_method(package_id):
     """Remove one of the athlete's methods: 409 `in_use` while their program
     is built from it, 404 when they have none by that id."""
@@ -2629,7 +2646,7 @@ def delete_method(package_id):
 
 @app.patch('/api/methods/<package_id>')
 @require_auth
-@require_builder
+@require_methods
 def edit_method(package_id):
     """Rename one of the athlete's methods, or edit its words: `{name?,
     summary?, tracks?, sessions?}` (src/method_edits.py). No model, no build:
@@ -2660,6 +2677,169 @@ def edit_method(package_id):
             app.logger.warning('program names not updated after a method edit: %s', e)
     return jsonify({'id': package_id, 'name': result['name'], 'revision': result['revision'],
                     'changed': result['changed'], 'programRenamed': renamed})
+
+
+# ── Shared links ─────────────────────────────────────────────────────────────
+# A method, the athlete's program or one session as a link
+# (docs/roadmap.md item 25): https://<web host>/s/<token>. The row holds what
+# the page shows (src/sharing.py, src/share_store.py); the page needs no
+# sign-in, saving a method does.
+
+def _share_url(token: str) -> str:
+    base = next((o.strip() for o in _raw_origins.split(',') if o.strip()), 'http://localhost:5173')
+    return f"{base.rstrip('/')}/s/{token}"
+
+
+def _share_store_error(e):
+    app.logger.warning('shares: %s', e)
+    return jsonify({'error': 'store_unavailable', 'detail': 'The link could not be saved. Try again.'}), 503
+
+
+@app.post('/api/shares')
+@require_auth
+def create_share():
+    """Share something as a link: `{kind: package, package_id}` (a method the
+    athlete sees), `{kind: program}` (their stored program, as a recipe) or
+    `{kind: session, key, date?}` (one session of it, as planned). →
+    `{token, url, kind, title}`. 404 when there is nothing by that name to
+    share, 409 `too_many_shares` at the cap, 503 when the write fails."""
+    from src import package_store, share_store, sharing
+    from src.db import get_user_program
+    body = request.get_json(silent=True) or {}
+    kind = body.get('kind')
+    try:
+        if kind == 'package':
+            payload = sharing.package_payload(g.user_id, str(body.get('package_id') or ''))
+        elif kind in ('program', 'session'):
+            program = get_user_program(g.user_id)
+            program = _normalize_program_keys(program) if isinstance(program, dict) else {}
+            if kind == 'program':
+                payload = sharing.program_payload(g.user_id, program) if program.get('currentProgram') else None
+            else:
+                payload = _session_share_payload(program, str(body.get('key') or '').strip(), body.get('date'))
+        else:
+            return jsonify({'error': 'bad_kind', 'detail': 'kind is package, program or session'}), 422
+        if payload is None:
+            return jsonify({'error': 'not_found', 'detail': 'Nothing to share by that name.'}), 404
+        row = share_store.create(g.user_id, kind, payload.get('name'), payload)
+    except share_store.TooMany:
+        return jsonify({'error': 'too_many_shares', 'detail': f'You have {share_store.MAX_LIVE} shared links. '
+                        'Remove one first.'}), 409
+    except (share_store.StoreError, package_store.StoreError) as e:
+        return _share_store_error(e)
+    return jsonify({**row, 'url': _share_url(row['token'])})
+
+
+def _session_share_payload(program: dict, key: str, on) -> dict | None:
+    from src import sharing
+    weeks = (program.get('currentProgram') or {}).get('weeks') or []
+    try:
+        start = _date.fromisoformat(str(program.get('programStartDate'))[:10])
+    except (ValueError, TypeError):
+        return None
+    tz = None
+    try:
+        tz = (_db.get_user_profile(g.user_id) or {}).get('timezone')
+    except Exception:  # noqa: BLE001
+        pass
+    hit = _briefing_target(weeks, start, key, on, _today_for(tz)) if key else None
+    if not hit:
+        return None
+    wi, day, i, _on = hit
+    session = weeks[wi]['schedule'][day][i]
+    return sharing.session_payload(session, weeks[wi], day, package=_watch_spec.session_package(session),
+                                   modality_display=_own_modality_display(session.get('modality') or ''))
+
+
+@app.get('/api/shares')
+@require_auth
+def list_shares():
+    """The athlete's own live links, newest first."""
+    from src import share_store
+    try:
+        rows = share_store.list_for(g.user_id)
+    except share_store.StoreError as e:
+        return _share_store_error(e)
+    return jsonify({'shares': [{**r, 'url': _share_url(r['token'])} for r in rows], 'limit': share_store.MAX_LIVE})
+
+
+@app.delete('/api/shares/<token>')
+@require_auth
+def revoke_share(token):
+    """Revoke one of the athlete's links: it answers 404 from then on. 404
+    when it is not theirs."""
+    from src import share_store
+    try:
+        if not share_store.revoke(g.user_id, token):
+            return jsonify({'error': 'not_found'}), 404
+    except share_store.StoreError as e:
+        return _share_store_error(e)
+    return jsonify({'revoked': True})
+
+
+@app.get('/api/shares/<token>')
+def get_share(token):
+    """A link's page, for anyone who has it: the session, the method as
+    Explore describes it, or the program's summary with the methods it needs —
+    never a package's files. Signed in, also `availability` (which of those
+    methods the viewer has: shipped, have, different, missing) and, for a
+    program, `recipe`: generate's body with the viewer's own ids. 404 for an
+    unknown or revoked link."""
+    from src import auth as _auth, package_store, share_store, sharing
+    try:
+        share = share_store.get(token)
+        if share is None:
+            return jsonify({'error': 'not_found', 'detail': 'This link is no longer shared.'}), 404
+        doc = sharing.document(share)
+        viewer = _auth.optional_user_id()
+        if viewer:
+            doc['availability'] = {**sharing.availability(share, viewer), 'canSave': _builder_mode() != 'off'}
+            if share['kind'] == 'program':
+                doc['recipe'] = sharing.recipe_for(share, viewer)
+    except (share_store.StoreError, package_store.StoreError) as e:
+        return _share_store_error(e)
+    resp = jsonify(doc)
+    resp.headers['Cache-Control'] = 'private, no-cache'
+    resp.headers['Vary'] = 'Authorization'
+    return resp
+
+
+@app.post('/api/shares/<token>/save')
+@require_auth
+@require_methods
+def save_share(token):
+    """Save a link's methods to the athlete's own: each package the link needs
+    and they lack, renamed to their id prefix and installed through every gate
+    (borrowed ones first). `{replace?: true}` overwrites a copy of theirs that
+    differs. 200 `{installed: [{id, name}]}`; 404 unknown link; 409 `different`
+    (with the methods) without `replace`; 422 with the gate's `problems`; 429
+    while another check runs; 503 when the write fails."""
+    from src import package_store, share_store, sharing
+    body = request.get_json(silent=True) or {}
+    user_id = g.user_id
+    try:
+        share = share_store.get(token)
+    except share_store.StoreError as e:
+        return _share_store_error(e)
+    if share is None:
+        return jsonify({'error': 'not_found', 'detail': 'This link is no longer shared.'}), 404
+
+    def run(b):
+        try:
+            result = sharing.save(share, user_id, replace=bool(b.get('replace')))
+        except sharing.Different as e:
+            return {'error': 'different', 'methods': e.methods,
+                    'detail': 'You already have another version of this method.'}, 409
+        except package_store.StoreError as e:
+            app.logger.warning('user_packages: %s', e)
+            return {'error': 'store_unavailable', 'detail': 'The method could not be saved. Try again.'}, 503
+        if not result['ok']:
+            cap = any(p.get('code') == 'too_many_packages' for p in result['problems'])
+            return {**result, 'error': 'too_many_packages' if cap else 'not_installable'}, (409 if cap else 422)
+        return result, 200
+
+    out, status = _heavy_run('share_save', {'token': token, **body}, run)
+    return jsonify(out), status
 
 
 @app.get('/api/dev/model-map')

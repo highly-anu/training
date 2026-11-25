@@ -61,6 +61,7 @@ deferred is under *Later*.
 | 22 | Pre-workout briefing: before a session, today's numbers beside the earlier times the same session was done, its place in the cycle and one suggestion — declared by the package (`briefing.yaml`), built on the server. The server and Wildman's file (22.1) the phone's screen (22.2), the web's block (22.3) and the reading of every package's default (22.4) are in | P2 | M | engine, API, iOS, web, content |
 | 23 | Levels: every package from novice to elite — all eleven done 2026-11-08; what is left is listed under Open | P2 | S | engine, content |
 | 24 | Manual builder: an athlete composes sessions, then a track, from existing exercises — in the Dev Lab first. A slot's own weight and steps (24.1), the server's session library (24.2) and the web's session builder (24.3), the program builder (24.4) and earned progression (24.5) are in; what is left is listed under Still to do | P1 | L | engine, API, web |
+| 25 | Sharing: a method, a program or a session as a link that opens on the web and in the app — all five steps are in (2026-11-25); what is left is listed under Open | P1 | L | API, web, iOS |
 
 ---
 
@@ -2036,7 +2037,7 @@ package's own vocabulary, the spec. Decided with the athlete on 2026-11-13:
 - The athlete reads *method*; the code keeps *package* and *philosophy*.
 
 What the model may write in the first version: the modality scheduler and week templates.
-Training contracts are refused. Not planned: push notifications, sharing a method.
+Training contracts are refused. Not planned: push notifications. Sharing a method is item 25.
 
 - **21.1 Who may use it (S).** Done 2026-11-13. `require_auth` keeps the verified claims
   (`g.claims`) and `auth.has_role('dev')` reads `app_metadata.roles` — the claim the web
@@ -2195,7 +2196,7 @@ Training contracts are refused. Not planned: push notifications, sharing a metho
   phase's weeks — through the same route and the full gate, with the running program
   offered a rebuild; the phone's own page for a method. **Structure** (a new session, a
   track, the progression) stays with a revise build. **Never:** the id, another
-  athlete's method, sharing.
+  athlete's method. (Sharing was a "never" here until 2026-11-25; it is item 25.)
 - **21.11 A method on every client, without an update (S).** *Done 2026-11-24.* No client
   downloads a package; each reads the server's answers in the athlete's view. What was
   missing at the edges: the exercise media route named no overlay (a method's own media
@@ -2433,6 +2434,68 @@ in the order they are worth doing:
     track* (a category may pool only the package's own) — all left out of 24.4 on purpose.
 12. *The preview page's `?back=`* is covered only through the builder's test; no test
     mounts the page itself.
+
+### 25. Sharing: methods, programs and sessions by link — P1 · L
+
+An athlete shares a method of theirs, their program or one session as a link. Nothing could
+be shared before: no public page (every web route but `/login` was behind sign-in), no
+universal links, no share sheet on the phone, and item 21 ruled it out for methods.
+
+Decided with the owner (2026-11-25):
+
+- **The link** is `https://<web host>/s/<token>`: a public web page with an "Open in the
+  app" button (`trainingcompanion://share?token=…`). Universal links replace the button
+  once the web has a permanent domain (item 11.6).
+- **A method** is shown as Explore describes it and can be saved to the receiver's own
+  methods. Every id of an athlete's package carries its owner's prefix, so a save renames
+  the sharer's prefix to the receiver's (`sharing.rehome`) and installs through every gate.
+  A method that borrows from another of the sharer's travels with it.
+- **A program** is a **recipe** — methods, tracks, weights, start phase, length, a
+  contract's options — never the weeks: the sharer's loads, schedule and earned progress
+  are theirs. The receiver saves the methods they lack, then it is generated on their own
+  profile and opens in the preview before Start.
+- **A session** is a public, unlisted snapshot as planned, with the sharer's loads and no
+  name, revocable; its blocks and movements open in place as on Explore.
+- **Receiving needs no builder role** (no model is called): saving, renaming and removing
+  a held method are refused only where `PACKAGE_BUILDER=off`.
+
+Steps:
+
+- **25.1 The server (M).** *Done 2026-11-25.* `shares` (`migrations/015_shares.sql`,
+  `src/share_store.py`: a token, the sharer, a snapshot; 50 live links an athlete),
+  `src/sharing.py` (what each kind carries, `rehome`, `program_recipe`, `availability`,
+  `save`) and the routes `POST/GET /api/shares`, `DELETE /api/shares/<token>`, the public
+  `GET /api/shares/<token>` and `POST /api/shares/<token>/save`; `GET /api/methods` lists
+  held methods for an account that may not build. `test_sharing.py`.
+- **25.2 The web's public page and a shared session (M).** *Done 2026-11-25.* `/s/:token` outside
+  `ProtectedRoute`; the session drawn with `WorkoutBlocks`, an exercise opening in place
+  (`ExercisePanel` extracted from `pages/Explore.tsx`); the share button on a session.
+- **25.3 Methods and programs on the web (M).** *Done 2026-11-25.* The method's page fed from the link's
+  document, Save to your methods; the program's summary, "Methods it needs" and Build it
+  for me into the existing preview; share buttons on a method and on Program ▸ Overview;
+  Settings ▸ Account ▸ Shared links. `YourMethods` lists held methods where building is
+  not enabled.
+- **25.4 The phone receives (L).** *Done 2026-11-25.* `share?token=` in `DeepLink`, kept across sign-in; a
+  sheet with the three kinds; the phone's first workout-blocks view.
+- **25.5 The phone shares (S).** *Done 2026-11-25.* `ShareLink` from a method, the program and a session;
+  Settings ▸ Account ▸ Shared links.
+
+Open:
+
+1. *Production:* the table is made lazily on first use (row security on, no policy); run
+   `015` after `scripts/backup_prod.sh` for the own-rows policy.
+2. *Universal links* wait for the permanent domain (11.6); until then the page's button
+   uses the custom scheme, which does nothing on a device without the app.
+3. *A link is a snapshot.* A method revised after it was shared is not what the link
+   saves; the sharer shares again. Nothing tells a receiver a newer version exists.
+4. *A shared method's words are public* to whoever holds the link; revoking is the only
+   moderation. No report or takedown path exists.
+6. *The phone's session detail still draws a flat list*: `SessionBlocksView` (design-system
+   §6.62) exists for it since 25.4.
+7. *Not seen on a device:* the phone's Save and Build it for me (behind a tap; their models
+   are tested), the share sheet from a session and the program, and Shared links in Settings.
+5. *A program regenerated mid-way* is shared from its first week: the recipe is the whole
+   program, not where the sharer stands in it.
 
 ## Later
 

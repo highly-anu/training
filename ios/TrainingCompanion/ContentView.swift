@@ -7,7 +7,31 @@ struct ContentView: View {
     @StateObject private var router = AppRouter()
     @Environment(\.scenePhase) private var scenePhase
 
+    /// A link opened while nobody was signed in, opened once someone is
+    /// (a shared link survives the sign-in; it used to be dropped).
+    @State private var keptLink: DeepLink? = nil
+
     var body: some View {
+        signedInOrOut
+            .onOpenURL { url in
+                // .fit file import
+                if url.pathExtension.lowercased() == "fit" {
+                    if auth.isSignedIn { appState.pendingFITURL = url }
+                    return
+                }
+                // trainingcompanion://today | session?key=… (widgets) | program |
+                // analytics?section=… | profile | share?token=… — through the router (§6.9).
+                guard let link = DeepLink.parse(url) else { return }
+                if auth.isSignedIn {
+                    router.open(link)
+                } else if link.survivesSignIn {
+                    keptLink = link
+                }
+            }
+    }
+
+    @ViewBuilder
+    private var signedInOrOut: some View {
         if auth.isSignedIn {
             MainTabView()
                 .environmentObject(router)
@@ -49,6 +73,10 @@ struct ContentView: View {
                     scheduleNextSync()
                     // A section asked for at launch (run_sim.sh ROUTE=…).
                     if let link = DeepLink.fromLaunchEnvironment() { router.open(link) }
+                    if let kept = keptLink {
+                        keptLink = nil
+                        router.open(kept)
+                    }
                 }
                 .onChange(of: router.pendingWorkoutComplete) { _, _ in
                     if !appState.importedWorkouts.isEmpty { presentRequestedWorkoutComplete() }
@@ -91,15 +119,10 @@ struct ContentView: View {
                 .onReceive(NotificationCenter.default.publisher(for: .watchWorkoutStored)) { _ in
                     Task { await appState.refreshAfterWatchWorkout() }
                 }
-                .onOpenURL { url in
-                    // .fit file import
-                    if url.pathExtension.lowercased() == "fit" {
-                        appState.pendingFITURL = url
-                        return
-                    }
-                    // trainingcompanion://today | session?key=… (widgets) | program |
-                    // analytics?section=… | profile — through the router (§6.9).
-                    if let link = DeepLink.parse(url) { router.open(link) }
+                // A shared link (design-system §6.63), over whatever tab is showing.
+                .sheet(item: $router.pendingShare) { request in
+                    SharedLinkView(token: request.token)
+                        .environmentObject(appState)
                 }
                 .sheet(isPresented: Binding(
                     get: { appState.pendingFITURL != nil },

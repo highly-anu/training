@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import {
   CalendarDays, CalendarRange, ChevronLeft, Columns3, Ellipsis, GitBranch, Pencil, Sparkles,
@@ -46,13 +46,15 @@ export function BackToPhilosophies({ onBack }: { onBack: () => void }) {
  * minutes, levels — on one line. Two actions show (build, compare); an own
  * method's editing sits behind one menu.
  */
-export function PhilosophyHero({ doc, editing, canEdit, onEditing, onRename, compareWith, onCompare, onBuild }: {
+export function PhilosophyHero({ doc, editing, canEdit, onEditing, onRename, compareWith, onCompare, onBuild, share }: {
   doc: PhilosophyDescription
   editing: boolean; canEdit: boolean; onEditing: (on: boolean) => void; onRename: () => void
   /** The philosophies to offer for a comparison, most alike first. */
   compareWith: Array<{ id: string; name: string }>
   onCompare?: (id: string) => void
   onBuild?: () => void
+  /** The share action, where the page offers one. */
+  share?: ReactNode
 }) {
   const [more, setMore] = useState(false)
   const g = doc.glance
@@ -100,6 +102,7 @@ export function PhilosophyHero({ doc, editing, canEdit, onEditing, onRename, com
                 </DropdownMenuContent>
               </DropdownMenu>
             ))}
+          {share}
           {onCompare && (
             <Popover>
               <PopoverTrigger asChild>

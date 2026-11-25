@@ -44,7 +44,7 @@ function Chips({ items, empty = '—' }: { items: string[]; empty?: string }) {
  * that is measured, what the athlete needs, and what it sits beside. Four
  * cards and no colour but the marks'.
  */
-export function OverviewTab({ doc, spec, vocabulary, lineage, nameOf, onSelect, onCompare }: {
+export function OverviewTab({ doc, spec, vocabulary, lineage, nameOf, onSelect, onCompare, standalone = false }: {
   doc: PhilosophyDescription
   spec: AnalyticsSpecs['philosophies'][string] | undefined
   vocabulary: AnalyticsSpecs['vocabulary'] | undefined
@@ -52,6 +52,8 @@ export function OverviewTab({ doc, spec, vocabulary, lineage, nameOf, onSelect, 
   nameOf: (id: string) => string
   onSelect: (id: string) => void
   onCompare?: (id: string) => void
+  /** Outside Explore (a shared link's page): nothing that leads into the library. */
+  standalone?: boolean
 }) {
   const g = doc.glance
   const [measures, setMeasures] = useState(false)
@@ -167,14 +169,18 @@ export function OverviewTab({ doc, spec, vocabulary, lineage, nameOf, onSelect, 
           )}
         </Card>
 
-        <Card title="Most alike">
-          <SimilarItems category="philosophies" id={doc.id} getLabel={nameOf} onSelect={onSelect}
-            onCompare={onCompare} count={4} bare />
-        </Card>
+        {!standalone && (
+          <Card title="Most alike">
+            <SimilarItems category="philosophies" id={doc.id} getLabel={nameOf} onSelect={onSelect}
+              onCompare={onCompare} count={4} bare />
+          </Card>
+        )}
       </div>
 
-      <LineageSection lineage={lineage} emptyUp="Nothing: a philosophy is where a program starts."
-        emptyDown="It runs no framework." />
+      {!standalone && (
+        <LineageSection lineage={lineage} emptyUp="Nothing: a philosophy is where a program starts."
+          emptyDown="It runs no framework." />
+      )}
     </div>
   )
 }

@@ -13,6 +13,7 @@ import { SubTabs } from '@/components/layout/SubTabs'
 import { MethodEditProvider } from '@/components/methods/MethodEdit'
 import { RenameMethodDialog } from '@/components/methods/RenameMethodDialog'
 import { TabPanels } from '@/components/motion/TabPanels'
+import { ShareButton } from '@/components/share/ShareButton'
 import { FailedState, LoadingState } from '@/components/shared/states'
 import { lineageOf } from '@/lib/exploreLinks'
 import { useBuilderStore } from '@/store/builderStore'
@@ -99,6 +100,7 @@ export function PhilosophyPage({ id, view, onView, sessionId, onSession, onSelec
 
             <PhilosophyHero doc={doc} editing={editing} canEdit={canEdit} onEditing={setEditing}
               onRename={() => setRenaming(true)}
+              share={<ShareButton title={doc.name} request={{ kind: 'package', package_id: doc.id }} />}
               compareWith={nearestTo([doc.id], philosophies.map((p) => p.id), matrix?.['philosophies'])
                 .map((pid) => ({ id: pid, name: nameOf(pid) }))}
               onCompare={onCompare && ((pid) => onCompare([doc.id, pid]))}
