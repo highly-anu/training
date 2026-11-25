@@ -12,7 +12,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import recorded from '@/mocks/fixtures/shares.json'
 import { useAuthStore } from '@/store/authStore'
 import { useBuilderStore } from '@/store/builderStore'
-import { saveRefusal } from '@/components/share/MethodsNeeded'
+import { saveRefusal } from '@/lib/shareRefusal'
 import { SharedLink } from './SharedLink'
 
 const getMock = vi.fn()

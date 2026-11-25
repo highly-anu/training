@@ -2656,7 +2656,7 @@ because the reader may be signed out and cannot load the sharer's method.
   as Explore's (`ShareLayout wide`); a session and a program read as a column.
 - **A copy the reader changed is never overwritten unasked**: a 409 `different` turns the button
   into **Replace my version** with a sentence saying what is lost. Every other refusal is one
-  sentence (`saveRefusal`).
+  sentence (`lib/shareRefusal.saveRefusal`).
 - **A program** (`SharedProgram.tsx`) shows its shape — weeks, days, tracks, its phases as one
   bar in the phase kinds' colours — then the methods it needs, then **Build it for me** once
   nothing is missing: `lib/shareRecipe.draftFromRecipe` → `builderStore.loadFromRecipe` → the
