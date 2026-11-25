@@ -8,6 +8,7 @@ struct SessionDetailView: View {
     var sessionIndex: Int? = nil
 
     @EnvironmentObject var appState: AppState
+    @StateObject private var sharer = LinkSharer()
     @Environment(\.dismiss) private var dismiss
 
     @State private var notes: String = ""
@@ -92,10 +93,19 @@ struct SessionDetailView: View {
             .navigationTitle(currentSession.archetype?.name ?? ModalityStyle.label(for: currentSession.modality))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        let date = weekIndex.flatMap { w in dayName.flatMap { appState.sessionDate(weekIndex: w, dayName: $0) } }
+                        sharer.share(.session(key: sessionKey, date: date), with: appState.api)
+                    } label: { Image(systemName: "square.and.arrow.up") }
+                        .accessibilityLabel("Share this session")
+                        .disabled(appState.api == nil)
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") { dismiss() }
                 }
             }
+            .sharesLinks(sharer)
             .appActionBar {
                 if !isDone { startButton }
                 completionButton

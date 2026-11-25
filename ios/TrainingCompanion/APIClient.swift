@@ -354,6 +354,45 @@ final class APIClient {
         return MethodBuildWords.renameRefusal(status: (response as? HTTPURLResponse)?.statusCode ?? 0, body: data)
     }
 
+    // MARK: Shared links (docs/roadmap.md item 25)
+
+    /// A link's document: what it is and what the athlete has of what it
+    /// needs. nil when it is no longer shared.
+    func fetchShare(_ token: String) async throws -> ShareDocument? {
+        let (data, status) = try await sendForStatus("GET", "/shares/\(Self.segment(token))")
+        if status == 404 { return nil }
+        guard (200...299).contains(status) else { throw APIError.serverErrorDetail(status, Self.detail(from: data) ?? "The link could not be opened") }
+        guard let doc = try? JSONDecoder().decode(ShareDocument.self, from: data) else { throw APIError.decodingError }
+        return doc
+    }
+
+    /// Saves the link's methods the athlete lacks. A refusal is an answer.
+    func saveShare(_ token: String, replace: Bool = false) async throws -> ShareSaveOutcome {
+        let body = try JSONSerialization.data(withJSONObject: ["replace": replace])
+        let (data, status) = try await postForStatus("/shares/\(Self.segment(token))/save", body: body)
+        if status == 401 { throw APIError.unauthenticated }
+        return ShareWords.saveOutcome(status: status, body: data)
+    }
+
+    /// Makes a link for a method, the program or a session.
+    func createShare(_ request: ShareRequest) async throws -> ShareLinkInfo {
+        let (data, status) = try await postForStatus("/shares", body: try JSONSerialization.data(withJSONObject: request.body))
+        guard (200...299).contains(status) else {
+            throw APIError.serverErrorDetail(status, Self.detail(from: data) ?? "The link could not be made")
+        }
+        guard let link = try? JSONDecoder().decode(ShareLinkInfo.self, from: data) else { throw APIError.decodingError }
+        return link
+    }
+
+    func fetchShares() async throws -> [ShareLinkInfo] {
+        try JSONDecoder().decode(ShareLinkList.self, from: try await get("/shares")).shares
+    }
+
+    /// Removes a link: it stops for everyone who has it.
+    func revokeShare(_ token: String) async throws {
+        try await sendExpectingSuccess("DELETE", "/shares/\(Self.segment(token))", body: nil, fallback: "Could not remove the link")
+    }
+
     private static func build(in data: Data) throws -> MethodBuild {
         struct Envelope: Decodable { let build: MethodBuild }
         guard let build = try? JSONDecoder().decode(Envelope.self, from: data).build else { throw APIError.decodingError }

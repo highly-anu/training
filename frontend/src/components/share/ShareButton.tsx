@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button'
 import { useCreateShare, type ShareRequest } from '@/api/shares'
 import { announce } from '@/lib/announce'
 import { shareLink } from '@/lib/share'
+import { toast } from '@/lib/toast'
+import { Tip } from '@/components/shared/Tip'
 import { cn } from '@/lib/utils'
 
 /**
@@ -12,11 +14,13 @@ import { cn } from '@/lib/utils'
  * itself — "Link copied" — and to a screen reader; a failure stays beside it
  * with the link to copy by hand (docs/frontend-design.md §13.14).
  */
-export function ShareButton({ request, title, label = 'Share', className }: {
+export function ShareButton({ request, title, label = 'Share', icon = false, className }: {
   request: ShareRequest
   /** What the share sheet calls it. */
   title: string
   label?: string
+  /** Among a card's icon actions: the mark alone, named for a screen reader; a failure is a toast. */
+  icon?: boolean
   className?: string
 }) {
   const create = useCreateShare()
@@ -38,11 +42,25 @@ export function ShareButton({ request, title, label = 'Share', className }: {
         setSaid('copied')
         announce('Link copied')
       } else if (outcome === 'failed') {
-        setManual(link.url)
+        if (icon) toast.failed(`Copy the link: ${link.url}`)
+        else setManual(link.url)
       }
-    } catch {
-      // create.error says why, below.
+    } catch (err) {
+      // The button says why below; the icon has no room to.
+      if (icon) toast.failed((err as Error).message)
     }
+  }
+
+  if (icon) {
+    return (
+      <Tip label={said ? 'Link copied' : `${label} ${title}`}>
+        <button type="button" aria-label={`${label} ${title}`} disabled={create.isPending} onClick={share}
+          className={cn('flex size-7 items-center justify-center rounded-md text-muted-foreground/70 hover:bg-muted/40 '
+            + 'hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40', className)}>
+          {said ? <Check className="size-3.5 text-done" aria-hidden /> : <Share2 className="size-3.5" aria-hidden />}
+        </button>
+      </Tip>
+    )
   }
 
   return (

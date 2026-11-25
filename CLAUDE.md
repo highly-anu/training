@@ -1411,7 +1411,25 @@ sharer's view and reads it in the receiver's.
   `components/explore/ExerciseFacts.tsx` (shared with Explore's exercise panel). `ShareButton`
   (the session panel today) makes the link and hands it to the share sheet or the clipboard.
   `test_sharing.py --write` records `mocks/fixtures/shares.json`, the documents both clients'
-  tests decode. Methods and programs on the web, and the phone, are roadmap 25.3–25.5.
+  tests decode.
+- **A method's and a program's page** (`SharedMethod.tsx`, `SharedProgram.tsx`) lead with
+  `MethodsNeeded` — what the reader has of what the link needs, and Save (Sign in to save when
+  signed out; Replace my version only after a 409 `different`). A method is then drawn by
+  Explore's own sub-components from the link's document. A program's **Build it for me** loads
+  its recipe into the program builder (`lib/shareRecipe.draftFromRecipe`,
+  `builderStore.loadFromRecipe`, step 2), so the reader's settings and the preview are the
+  builder's own. `ShareButton` is on the session panel, Your methods' cards, a philosophy's hero
+  and the Program header; Settings ▸ Account lists the links (`SharedLinksCard`). `YourMethods`
+  lists held methods for an account that may not build.
+- **The phone opens a link as a sheet** (`trainingcompanion://share?token=…`, `DeepLink.share`,
+  `Views/SharedLinkView.swift`, design-system §6.63), kept across a sign-in
+  (`DeepLink.survivesSignIn`). A session is drawn with the phone's first blocks view
+  (`Views/SessionBlocksView.swift`, §6.62; `ProgramSession.blocks`); a method saves through
+  `APIClient.saveShare`; a program's **Build it for me** opens `ProgramBuilderFlow(start:)` on
+  the recipe (`BuilderStart`, `BuilderState.apply`). Sharing out is `LinkSharer` +
+  `.sharesLinks(_:)` (`Views/ShareLinkSheet.swift`) on the session detail, Program and a
+  method card's menu; Settings ▸ Account ▸ Shared links lists them. Words are `ShareWords`
+  (the web's `lib/shareRefusal.ts`: change both); `SharedLinkTests` decodes the fixture.
 
 ```bash
 SUPABASE_URL='' .venv/bin/python test_sharing.py   # rehome, recipe, the routes with two athletes; SQL half on its own database
@@ -1562,7 +1580,7 @@ Routes: `today`, `workout-complete[?id=…]` (the Workout complete sheet, newest
 `analytics?section=progress|blocks|load|recovery` (`overview`, `development` and `program`
 still alias Load, Blocks and Progress; `&measure=<entry id>` or `&exercise=<id>` selects it on Progress's chart,
 `&open=readiness|sleep|hrv|resting-hr|checkins` a Recovery one, `pmc|load-focus|mix|weekly` Load's, `score|scorecard|intensity|movement|workouts` Progress's (`shapes` aliases workouts), `block-load` Blocks'), `log?section=workouts|linking|sessions` (`suggestions` aliases Linking),
-`profile?section=…` (`DeepLink.swift`, routed through `AppRouter`). The route travels
+`profile?section=…`, `share?token=<token>` (a shared link's sheet) (`DeepLink.swift`, routed through `AppRouter`). The route travels
 in the launch environment (`SIMCTL_CHILD_TC_ROUTE`), because `simctl openurl` makes
 iOS ask "Open in Training Companion?" and nothing can tap that. Screens behind a tap
 (the swap sheet, the exercise sheet) are still out of reach; test their models.

@@ -1,8 +1,11 @@
 import { useParams } from 'react-router-dom'
 import { useShare, type ShareDocument } from '@/api/shares'
 import { ShareLayout } from '@/components/share/ShareLayout'
+import { SharedMethod } from '@/components/share/SharedMethod'
+import { SharedProgram } from '@/components/share/SharedProgram'
 import { SharedSession } from '@/components/share/SharedSession'
 import { FailedState, LoadingState } from '@/components/shared/states'
+import { useAuthStore } from '@/store/authStore'
 
 const KIND = { session: 'Session', package: 'Method', program: 'Program' } as const
 
@@ -12,7 +15,8 @@ const KIND = { session: 'Session', package: 'Method', program: 'Program' } as co
  */
 export function SharedLink() {
   const { token } = useParams()
-  const share = useShare(token)
+  const viewer = useAuthStore((s) => s.user?.id)
+  const share = useShare(token, viewer)
   const status = (share.error as { status?: number } | null)?.status
 
   if (share.isLoading) {
@@ -34,7 +38,7 @@ export function SharedLink() {
   }
   const doc = share.data
   return (
-    <ShareLayout token={doc.token} kind={KIND[doc.kind]} title={doc.title}>
+    <ShareLayout token={doc.token} kind={KIND[doc.kind]} title={doc.title} wide={doc.kind === 'package'}>
       <Body doc={doc} />
     </ShareLayout>
   )
@@ -42,19 +46,7 @@ export function SharedLink() {
 
 function Body({ doc }: { doc: ShareDocument }) {
   if (doc.kind === 'session' && doc.session) return <SharedSession doc={doc.session} />
-  // Methods and programs get their own views with 25.3; until then the page
-  // says what the link is and sends the reader to the app.
-  return (
-    <div className="space-y-3">
-      <p className="text-sm">
-        {doc.kind === 'program' ? 'A program' : 'A method'} was shared with you: <span className="font-medium">{doc.title}</span>.
-      </p>
-      {!!doc.methods?.length && (
-        <ul className="space-y-1 text-xs text-muted-foreground">
-          {doc.methods.map((m) => <li key={m.id}>{m.name}</li>)}
-        </ul>
-      )}
-      <p className="text-xs text-muted-foreground">Open it in the app to save it.</p>
-    </div>
-  )
+  if (doc.kind === 'program' && doc.program) return <SharedProgram doc={doc} />
+  if (doc.kind === 'package' && doc.method) return <SharedMethod doc={doc} />
+  return <p className="text-sm text-muted-foreground">This link has nothing this version of the page can show.</p>
 }

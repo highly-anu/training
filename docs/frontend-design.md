@@ -2647,13 +2647,33 @@ because the reader may be signed out and cannot load the sharer's method.
   `components/explore/ExerciseFacts.tsx` — the exercise's own document, the same component
   Explore's exercise panel draws. One row open at a time; the open row takes the modality's
   colour on its left edge.
+- **A method** (`SharedMethod.tsx`) leads with what the reader can do — `MethodsNeeded`: each
+  method the link needs with what they have of it (In the app · You have it · You have another
+  version · Not saved yet) and one button, **Save to your methods**; signed out, **Sign in to
+  save**, which returns to the link. Below it the method as Explore lays one out — the same
+  `PhilosophyHero`, `OverviewTab` (`standalone`: no "Most alike", no lineage), `PhilosophyTracks`,
+  `SessionBrowser` and `PhilosophyRules`, fed the document the link carries. This page is as wide
+  as Explore's (`ShareLayout wide`); a session and a program read as a column.
+- **A copy the reader changed is never overwritten unasked**: a 409 `different` turns the button
+  into **Replace my version** with a sentence saying what is lost. Every other refusal is one
+  sentence (`lib/shareRefusal.saveRefusal`).
+- **A program** (`SharedProgram.tsx`) shows its shape — weeks, days, tracks, its phases as one
+  bar in the phase kinds' colours — then the methods it needs, then **Build it for me** once
+  nothing is missing: `lib/shareRecipe.draftFromRecipe` → `builderStore.loadFromRecipe` → the
+  program builder at step 2, as Explore's "Build a program" enters it. The reader's own level,
+  equipment and schedule are the builder's later steps; the preview shows it before Start.
 - **A revoked or unknown link** says so in words ("This link is no longer shared"), with no
   retry; a failed request is `FailedState` with one.
 - **Sharing out** is `components/share/ShareButton.tsx`: it makes the link
   (`POST /api/shares`), then the system's share sheet, else the clipboard (`lib/share.ts`).
   The result is said on the button — "Link copied" for 2.5 s, and to the live region — never
   a toast (toasts are for undo and failed saves). Where neither works the link is shown to
-  copy by hand.
+  copy by hand. Among a card's icon actions it is `icon` (the mark alone; a failure is a toast,
+  the icon has no room for a sentence). It sits on the session panel, each of Your methods'
+  cards, a philosophy's hero in Explore and the Program page's header.
+- **Settings ▸ Account ▸ Sharing** (`SharedLinksCard.tsx`) lists the account's live links with
+  Remove, and says the one thing that surprises: a link keeps showing what it showed when it
+  was shared.
 
 ### 13.13 Session Browser
 

@@ -1,5 +1,6 @@
 import { useScrollRestore } from '@/lib/useScrollRestore'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { ShareButton } from '@/components/share/ShareButton'
 import { SubTabs, tabDomId } from '@/components/layout/SubTabs'
 import { Button } from '@/components/ui/button'
 import { LoadingState, FailedState } from '@/components/shared/states'
@@ -208,6 +209,7 @@ export function ProgramView() {
               <Plus className="size-3.5" aria-hidden="true" />
               New program
             </button>
+            <ShareButton title={programTitle} request={{ kind: 'program' }} />
             <button
               type="button"
               onClick={() => setInjurySheetOpen(true)}

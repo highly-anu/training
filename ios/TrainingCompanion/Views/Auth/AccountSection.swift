@@ -10,6 +10,8 @@ struct AccountSection: View {
 
     var body: some View {
         Section {
+            // The links this account shared (docs/roadmap.md item 25), local API or not.
+            NavigationLink { SharedLinksView() } label: { Label("Shared links", systemImage: "link") }
             if auth.isLocalTarget {
                 Text("Local API — no account. Switch back to production to sign in.")
                     .font(.caption).foregroundStyle(.secondary)

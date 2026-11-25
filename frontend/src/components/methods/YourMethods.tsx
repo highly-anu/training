@@ -5,6 +5,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { Tip } from '@/components/shared/Tip'
 import { RenameMethodDialog } from './RenameMethodDialog'
+import { ShareButton } from '@/components/share/ShareButton'
 import { isOpen, useDeleteMethod, useMethods, type Method } from '@/api/methods'
 import { buildHeadline, deleteRefusal, unavailableReason } from '@/lib/methodBuild'
 import { toast } from '@/lib/toast'
@@ -22,8 +23,7 @@ const ICON_BUTTON = 'flex size-7 items-center justify-center rounded-md text-mut
  * The athlete's own methods in the program builder's first step, with the way
  * to describe another (docs/roadmap.md 21.4). A method is a philosophy like
  * the shipped ones — picking one selects it — with two things only its owner
- * can do: revise it and delete it. Renders nothing for an account the builder
- * is not on for.
+ * can do: revise it and delete it — and share it (docs/roadmap.md item 25).
  */
 export function YourMethods({ philosophies, selectedId, onSelect, onDeleted }: {
   philosophies: Philosophy[]
@@ -37,7 +37,10 @@ export function YourMethods({ philosophies, selectedId, onSelect, onDeleted }: {
   const [deleting, setDeleting] = useState<Method | null>(null)
   const [renaming, setRenaming] = useState<Method | null>(null)
 
-  if (!data || data.reason === 'not_enabled') return null
+  if (!data) return null
+  // An account the builder is not on for may still hold methods — ones saved
+  // from a shared link — and keeps them here, without the way to make another.
+  const building = data.reason !== 'not_enabled'
   const open = data.builds.find(isOpen)
   const unavailable = unavailableReason(data)
   // Nothing of theirs and no way to make one: no group at all.
@@ -88,7 +91,8 @@ export function YourMethods({ philosophies, selectedId, onSelect, onDeleted }: {
                   </button>
                 </Tip>
                 {/* Built by hand (Dev Lab's builders): a revise would hand it to the model. */}
-                {!method.composed && (
+                {phil && <ShareButton icon title={method.name} request={{ kind: 'package', package_id: method.id }} />}
+                {!method.composed && building && (
                 <Tip label="Revise">
                   <Link
                     to={`/program/new/method?revise=${encodeURIComponent(method.id)}`}
@@ -128,7 +132,7 @@ export function YourMethods({ philosophies, selectedId, onSelect, onDeleted }: {
               </span>
             </span>
           </Link>
-        ) : unavailable ? (
+        ) : !building ? null : unavailable ? (
           <div className={cn(CARD, 'border-border/30 bg-card/20 text-muted-foreground/60')}>
             <p className="text-xs font-medium leading-snug">Describe your own method</p>
             <p className="mt-0.5 text-[10px]">{unavailable}</p>
