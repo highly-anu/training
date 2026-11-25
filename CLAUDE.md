@@ -178,6 +178,9 @@ All prefixed `/api/`:
 | GET | `/dev/builds`, `/dev/builds/<id>` | For Dev Lab ▸ Builds (`components/devlab/BuildsPanel.tsx`): the signed-in account's own last builds of a method with what each spent (turns, checks, tokens, seconds, the tokens' cost at `package_builder.PRICE`) and their totals; one build in full — the request, each turn's calls, answers and tokens, each check's problems and the program the model was shown, replies thrown away at the output limit, the draft's files (`src/build_report.py`, pure over a `package_builds` row; the list reads no transcript). The builder's gate (`require_builder`), never another account's build (404) |
 | GET/POST/PUT/DELETE | `/manual/sessions[/<id>]`, POST `/manual/preview` | Sessions composed by hand (roadmap 24, `src/manual_builder.py`): a session is `blocks` (`kind`: sets, superset, alternate, rounds, amrap, emom, for_time, interval, timed, distance, hold, practice; a `stage`; `movements` naming existing exercises with their counts, `start_kg` and `progress`). The server writes it as an archetype (`to_archetype`; `from_archetype` reads it back), composes all of an athlete's into one package of theirs, "My sessions" (`compose`), and installs it through the gates; every answer carries what the server derives (`preview` blocks, minutes, equipment, `forecast`: the first weeks in words). `/preview` stores nothing and runs no gate. 422 `problems` name the block and movement; 409 `in_use` for a session on a day of the program. The builder's gate (`require_builder`); a saved session goes on a day through `/sessions/generate {archetype_id, add: true}` |
 | GET/POST/PUT/DELETE | `/manual/tracks[/<id>]`, POST `/manual/tracks/preview` | Programs laid out by hand (roadmap 24.4, `src/manual_builder.py`): a track is `phases` (`name`, `kind`, `weeks`, `template`: 1–8 weeks of seven days that repeat through the phase, a day `{sessions: [saved session id, at most two], light?}`) and `deload_every`. It is stored as a track of the same "My sessions" package on a framework of its own (`track_files`: `fixed_days`, `written_weeks: track`, `deload_light`), read back from the files (`stored_tracks`) so saving a session keeps it; the generated "Library" track exists only while the athlete has none. Every answer carries what the server derives (`described_track`: each phase's weeks named and timed, `lighterWeeks`, equipment, the numbers week by week, `startWith` — the generate constraints). 422 `problems` name phase, week and day; deleting a session a track places is 409 `in_track`, a track the active program runs 409 `in_use`. `GET /api/methods` marks the package `composed` |
+| POST / GET / DELETE | `/shares`, `/shares/<token>` | Shared links (roadmap 25, `src/sharing.py`, `src/share_store.py`). POST `{kind: package, package_id}` · `{kind: program}` · `{kind: session, key, date?}` → `{token, url, kind, title}` (`url` is `FRONTEND_URL`'s `/s/<token>`; 404 nothing by that name, 409 `too_many_shares` at 50 live); GET the athlete's own links; DELETE revokes (404 when not theirs) |
+| GET | `/shares/<token>` | The link's page, **no sign-in**: `session` (as planned, with `blocks` and `icon`), `method` (the Explore document built in the sharer's view) or `program` (a summary), and `methods` it needs — never a package's files, never the sharer. Signed in, also `availability` (`yours`, each method `shipped` · `have` · `different` · `missing` under the viewer's own id, `ready`, `toSave`, `room`, `canSave`) and, for a program, `recipe`: generate's body with the viewer's ids. 404 unknown or revoked |
+| POST | `/shares/<token>/save` | Save the link's methods the athlete lacks: each renamed to their id prefix (`sharing.rehome`) and installed through every gate, borrowed ones first. `{replace: true}` overwrites a copy of theirs that differs (else 409 `different`). 200 `{installed}`; 422 the gate's `problems` (`olderEngine` when the link predates the engine); 409 `too_many_packages`; 429 `busy`; 403 only with `PACKAGE_BUILDER=off` |
 | POST | `/exercises/substitute` | `{alternatives: [{assignment, score, reasons}]}` — ranked swaps for one slot, selector-scored, loads for the week; 422 when nothing fits |
 | POST | `/programs/impact` | The preview's Held back: `/dev/constraint-impact`'s answer for any signed-in athlete (`api._constraint_impact`, shared); ≤ 7 generations, 12 weeks; one run in the process at a time and one per athlete — a taken gate answers 429 `busy` at once, never waiting (the clients retry); small answers cached ten minutes per body and day. Clients send the draft's own first phase and length (`impactParams`, `impactRequest(for:)`), never its event date |
 | POST | `/programs/constraint-change` | Does a profile change change the program? The regenerate body (`constraints` = the profile's) + `baseline_constraints` (the program's): both generated, diffed by `constraint_impact.diff_programs` (exercises *and* each slot's numbers, so a level change that moves only loads is affected) → `{affected, sessions, first_week_number, changes, program?}` (`program`, the new tail, only when affected); same gate as impact, never cached on the server |
@@ -1378,6 +1381,37 @@ SUPABASE_URL='' .venv/bin/python test_briefing.py   # the spec, history by modul
 SUPABASE_URL='' .venv/bin/python tools/print_briefings.py [package id …]   # each package's briefing beside its programs, for reading
 ```
 
+## Sharing
+
+**A method, a program or a session is shared as a link** (since 2026-11-25, roadmap 25):
+`https://<web host>/s/<token>`, a row in `shares` (`migrations/015_shares.sql`,
+`src/share_store.py`) holding a snapshot of what the page shows. `src/sharing.py` builds it in the
+sharer's view and reads it in the receiver's.
+
+- **A link carries what its page shows.** A receiver cannot load the sharer's package, so a
+  method's link stores the Explore document (`explore_philosophy.describe`) beside the files, and
+  the public route never calls the loader for it. The files never leave the server except
+  through a save.
+- **Ids are rehomed, never shared.** Every id an athlete's package declares starts with
+  `u<sha256(user)[:8]>_` and the gate refuses another's. `sharing.rehome` swaps the sharer's
+  prefix for the receiver's in each file's text and path; a program's recipe is rehomed the same
+  way (a track or phase id may carry the prefix too — the first version rehomed only the package
+  id and the receiver's generate answered 422 "has no track"). The sharer's own packages a method
+  `borrows_from` travel with it and are installed first.
+- **A program is a recipe** (`sharing.program_recipe`, the server's reading of
+  `lib/programSource.regenerateSource` from the program's first week): no constraints, loads,
+  dates or contract state. The receiver generates it with their own.
+- **"Have" is by content.** `availability` compares the digest of the rehomed files with the
+  receiver's copy of that id: `have`, `different` (never overwritten without `replace`) or
+  `missing`.
+- **A link is a snapshot**: it reads the same after the sharer edits or removes what it came from,
+  until they revoke it. `user_id` is the sharer, so account deletion empties their links.
+- The clients (the public web page, the phone's sheet, the share buttons) are roadmap 25.2–25.5.
+
+```bash
+SUPABASE_URL='' .venv/bin/python test_sharing.py   # rehome, recipe, the routes with two athletes; SQL half on its own database
+```
+
 ## Program History
 
 `user_programs` holds **one row per athlete** and `save_user_program` upserts it,
@@ -1723,9 +1757,12 @@ commons' vocabulary, a schema enum, the gate's stages or that package, run
 **The package builder** (roadmap item 21; production steps open, 21.8): an athlete describes a method and a model
 writes the package. The athlete reads *method*; the code keeps *package*. `PACKAGE_BUILDER` = `off |
 dev | all` (default `dev`: the `dev` role in the verified token's `app_metadata.roles`,
-`auth.has_role`; local dev is allowed) gates `/api/packages` and `DELETE /api/methods/<id>`
-(`api.require_builder`); `GET /api/methods` always answers 200 with `available`, a `reason`, the
-athlete's methods, their builds and the limits (`test_builder_access.py`). **A build is a row a
+`auth.has_role`; local dev is allowed) gates `/api/packages` and the builds
+(`api.require_builder`); removing or renaming a method the athlete holds, and saving a shared one,
+are refused only when it is `off` (`api.require_methods` — no model is called). `GET /api/methods`
+always answers 200 with `available`, a `reason`, the athlete's methods (also for an account that
+may not build: it may hold ones saved from a link), their builds and the limits
+(`test_builder_access.py`). **A build is a row a
 worker thread runs** (`package_builds`, `migrations/014`; `src/build_store.py`,
 `src/build_worker.py`): `POST /api/methods/builds` queues it, `GET …/<id>` is what clients poll,
 `POST …/<id>/cancel` stops it. The worker saves the draft and transcript after every turn, beats a

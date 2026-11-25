@@ -125,8 +125,11 @@ def test_roles():
                       and body['available'] is False and body['reason'] == 'not_enabled' and body['methods'] == [], body)
                 check(f'{token}: the package routes answer 403',
                       client.get('/api/packages', headers=bearer(token)).status_code == 403
-                      and client.post('/api/packages', headers=bearer(token), json={'files': {}}).status_code == 403
-                      and client.delete('/api/methods/zz', headers=bearer(token)).status_code == 403)
+                      and client.post('/api/packages', headers=bearer(token), json={'files': {}}).status_code == 403)
+                # A method an account holds (one saved from a shared link) is its own to
+                # remove or rename, builder or not (test_sharing.py); it holds none here.
+                check(f'{token}: removing a method it does not hold is 404',
+                      client.delete('/api/methods/zz', headers=bearer(token)).status_code == 404)
             check('no token is 401 before anything else', client.get('/api/methods').status_code == 401
                   and client.get('/api/packages').status_code == 401)
             check('a token that does not verify is 401', client.get('/api/methods', headers=bearer('forged')).status_code == 401)

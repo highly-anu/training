@@ -45,6 +45,7 @@ suites:
   - test_package_builds.py            # a build as a durable job: the store, the worker, the routes, a restart resumed; SQL half on its own database (roadmap 21.2)
   - test_builder_access.py            # who may use the package builder: the flag, the dev role from the verified token, GET /api/methods (roadmap 21.1)
   - test_private_packages.py          # an athlete's own packages: the store, the gate on install, the routes; SQL half on its own database (roadmap 20.5)
+  - test_sharing.py                   # shared links: rehome, a program's recipe, the routes with two athletes, save through the gate; SQL half on its own database (roadmap 25.1)
   - test_earned_progress.py           # a slot's steps earned from the log: made, missed, rebased, light days, the routes (roadmap 24.5)
   - test_manual_builder.py            # sessions composed by hand: blocks to an archetype and back, one package through the gates, the routes (roadmap 24)
   - test_method_edits.py              # renaming an athlete's method and editing its words: no model, no build; ids and numbers refused (roadmap 21.10)
