@@ -76,6 +76,8 @@ interface BuilderStore {
   prefillFromPhilosophy: (phil: Philosophy, frameworks: Framework[]) => void
   /** Same, starting at the track and phase that run this framework. */
   prefillFromFramework: (fw: Framework, phil: Philosophy, frameworks: Framework[]) => void
+  /** A shared program's recipe (lib/shareRecipe.ts): a fresh draft at step 2 with its source, track and length. */
+  loadFromRecipe: (state: Partial<ReturnType<typeof freshState>>) => void
   loadFromProgram: (opts: {
     goalIds: string[]
     goalWeights: Record<string, number>
@@ -206,6 +208,7 @@ export const useBuilderStore = create<BuilderStore>()(
         const hit = trackForFramework(phil, fw.id)
         set(prefilled(phil, frameworks, hit?.track.id ?? null, hit?.phaseId ?? null))
       },
+      loadFromRecipe: (state) => set({ ...freshState(), ...state, step: 2 }),
       loadFromProgram: ({ goalIds, goalWeights, constraints, numWeeks, eventDate }) =>
         set({
           step: goalIds.length > 1 ? 2 : 3,

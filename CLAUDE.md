@@ -1411,7 +1411,16 @@ sharer's view and reads it in the receiver's.
   `components/explore/ExerciseFacts.tsx` (shared with Explore's exercise panel). `ShareButton`
   (the session panel today) makes the link and hands it to the share sheet or the clipboard.
   `test_sharing.py --write` records `mocks/fixtures/shares.json`, the documents both clients'
-  tests decode. Methods and programs on the web, and the phone, are roadmap 25.3–25.5.
+  tests decode.
+- **A method's and a program's page** (`SharedMethod.tsx`, `SharedProgram.tsx`) lead with
+  `MethodsNeeded` — what the reader has of what the link needs, and Save (Sign in to save when
+  signed out; Replace my version only after a 409 `different`). A method is then drawn by
+  Explore's own sub-components from the link's document. A program's **Build it for me** loads
+  its recipe into the program builder (`lib/shareRecipe.draftFromRecipe`,
+  `builderStore.loadFromRecipe`, step 2), so the reader's settings and the preview are the
+  builder's own. `ShareButton` is on the session panel, Your methods' cards, a philosophy's hero
+  and the Program header; Settings ▸ Account lists the links (`SharedLinksCard`). `YourMethods`
+  lists held methods for an account that may not build. The phone is roadmap 25.4–25.5.
 
 ```bash
 SUPABASE_URL='' .venv/bin/python test_sharing.py   # rehome, recipe, the routes with two athletes; SQL half on its own database

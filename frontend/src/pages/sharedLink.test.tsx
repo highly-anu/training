@@ -11,11 +11,14 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import recorded from '@/mocks/fixtures/shares.json'
 import { useAuthStore } from '@/store/authStore'
+import { useBuilderStore } from '@/store/builderStore'
+import { saveRefusal } from '@/components/share/MethodsNeeded'
 import { SharedLink } from './SharedLink'
 
 const getMock = vi.fn()
+const postMock = vi.fn()
 vi.mock('@/api/client', () => ({
-  apiClient: { get: (...args: unknown[]) => getMock(...args), post: vi.fn(), put: vi.fn(), delete: vi.fn() },
+  apiClient: { get: (...args: unknown[]) => getMock(...args), post: (...args: unknown[]) => postMock(...args), put: vi.fn(), delete: vi.fn() },
 }))
 
 function mount(token: string) {
@@ -25,6 +28,7 @@ function mount(token: string) {
       <MemoryRouter initialEntries={[`/s/${token}`]}>
         <Routes>
           <Route path="/login" element={<p>login</p>} />
+          <Route path="/program/new" element={<p>the builder</p>} />
           <Route path="/s/:token" element={<SharedLink />} />
         </Routes>
       </MemoryRouter>
@@ -34,6 +38,7 @@ function mount(token: string) {
 
 beforeEach(() => {
   getMock.mockReset()
+  postMock.mockReset()
   // Nobody is signed in: the page must not ask for it.
   useAuthStore.setState({ user: null, isLoading: false })
 })
@@ -86,10 +91,74 @@ describe('/s/:token', () => {
     expect(await screen.findByText('The link could not be opened')).toBeInTheDocument()
   })
 
-  it('names a method or a program until their pages land', async () => {
+  it('shows a method as Explore lays one out, and asks a signed-out reader to sign in to save', async () => {
+    getMock.mockResolvedValue({ ...recorded.method, availability: undefined })
+    mount('tok_method')
+    expect(await screen.findByRole('heading', { level: 1, name: recorded.method.title })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: recorded.method.method.describe.name })).toBeInTheDocument()
+    for (const m of recorded.method.methods) expect(screen.getAllByText(m.name).length).toBeGreaterThan(0)
+    expect(screen.getByRole('link', { name: 'Sign in to save' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Save to your methods' })).toBeNull()
+  })
+
+  it('saves a method to a signed-in reader, and asks again for what they have', async () => {
+    useAuthStore.setState({ user: { id: 'ben' } as never, isLoading: false })
+    getMock.mockResolvedValue(recorded.method)
+    postMock.mockResolvedValue({ ok: true, installed: recorded.method.availability.methods.map((m) => ({ id: m.id, name: m.name })) })
+    mount('tok_method')
+    expect((await screen.findAllByText('Not saved yet')).length).toBe(recorded.method.availability.methods.length)
+    fireEvent.click(screen.getByRole('button', { name: 'Save to your methods' }))
+    await waitFor(() => expect(postMock).toHaveBeenCalledWith('/shares/tok_method/save', { replace: false }))
+    expect(await screen.findByRole('status')).toHaveTextContent('to your methods')
+    // The page's document is read again: it now says what the reader has.
+    await waitFor(() => expect(getMock.mock.calls.filter(([url]) => url === '/shares/tok_method').length).toBeGreaterThan(1))
+  })
+
+  it('never overwrites a version the reader changed without being told to', async () => {
+    useAuthStore.setState({ user: { id: 'ben' } as never, isLoading: false })
+    getMock.mockResolvedValue(recorded.method)
+    postMock.mockRejectedValueOnce(Object.assign(new Error('You already have another version of this method.'),
+      { status: 409, body: { error: 'different', methods: [{ id: 'x', name: 'Blocks' }] } }))
+    postMock.mockResolvedValue({ ok: true, installed: [{ id: 'x', name: 'Blocks' }] })
+    mount('tok_method')
+    fireEvent.click(await screen.findByRole('button', { name: 'Save to your methods' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Replace my version' }))
+    await waitFor(() => expect(postMock).toHaveBeenLastCalledWith('/shares/tok_method/save', { replace: true }))
+  })
+
+  it('says why a save was refused', () => {
+    expect(saveRefusal({ message: 'x', body: { busy: true } })).toMatch(/busy/)
+    expect(saveRefusal({ message: 'x', body: { error: 'too_many_packages' } })).toMatch(/Remove one/)
+    expect(saveRefusal({ message: 'x', body: { error: 'not_installable', olderEngine: true, name: 'Blocks' } }))
+      .toBe('Blocks was written for an earlier version of the app and no longer passes its checks. Ask for a new link.')
+    expect(saveRefusal({ message: 'x', body: { error: 'not_installable', name: 'Blocks', problems: [{ message: 'no track' }] } }))
+      .toBe("Blocks did not pass the app's checks: no track")
+    expect(saveRefusal({ message: 'Network Error' })).toBe('Network Error')
+  })
+
+  it('shows a program as its shape and the methods it needs, and builds only once they are saved', async () => {
+    useAuthStore.setState({ user: { id: 'carl' } as never, isLoading: false })
     getMock.mockResolvedValue(recorded.program)
     mount('tok_program')
     expect(await screen.findByRole('heading', { level: 1, name: recorded.program.title })).toBeInTheDocument()
-    expect(screen.getByText(recorded.program.methods[0].name)).toBeInTheDocument()
+    expect(screen.getByText(`${recorded.program.program.weeks} weeks`)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Save the methods it needs' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Build it for me/ })).toBeNull()
+  })
+
+  it('builds a ready program from its recipe, in the program builder', async () => {
+    useAuthStore.setState({ user: { id: 'carl' } as never, isLoading: false })
+    const a = recorded.program.availability
+    getMock.mockResolvedValue({ ...recorded.program,
+      availability: { ...a, ready: true, toSave: 0, methods: a.methods.map((m) => ({ ...m, state: 'have' })) } })
+    mount('tok_program')
+    fireEvent.click(await screen.findByRole('button', { name: /Build it for me/ }))
+    expect(await screen.findByText('the builder')).toBeInTheDocument()
+    const b = useBuilderStore.getState()
+    expect(b.step).toBe(2)
+    expect(b.sourceMode).toBe('philosophy')
+    expect(b.selectedPhilosophyIds).toEqual([recorded.program.recipe.philosophy_id])
+    expect(b.selectedTrackId).toBe(recorded.program.recipe.track_id)
+    expect(b.numWeeks).toBe(recorded.program.recipe.num_weeks)
   })
 })
