@@ -48,6 +48,17 @@ enum DeepLink: Equatable {
     case workoutCompleteDemo
     /// `compare?ids=a,b[,c]` — two or three philosophies side by side (§6.42).
     case compare([String])
+    /// `share?token=<token>` — a shared link's sheet (docs/roadmap.md item 25):
+    /// what the web's `/s/<token>` page opens with "Open in the app".
+    case share(String)
+
+    /// Whether a link opened while signed out is kept and opened after the
+    /// sign-in: a shared link is the one somebody else sends, and may reach a
+    /// phone before its owner has an account.
+    var survivesSignIn: Bool {
+        if case .share = self { return true }
+        return false
+    }
 
     static let scheme = "trainingcompanion"
     static let launchEnvironmentKey = "TC_ROUTE"
@@ -136,6 +147,9 @@ enum DeepLink: Equatable {
                 ids.append(id)
             }
             return (2...3).contains(ids.count) ? .compare(ids) : nil
+        case "share":
+            guard let token = query.first(where: { $0.name == "token" })?.value, !token.isEmpty else { return nil }
+            return .share(token)
         case "workout-complete":
             if query.first(where: { $0.name == "demo" })?.value == "1" { return .workoutCompleteDemo }
             let id = query.first(where: { $0.name == "id" })?.value
@@ -163,6 +177,7 @@ extension AppRouter {
         case .workoutComplete(let id): showWorkoutComplete(id)
         case .workoutCompleteDemo: showWorkoutComplete(AppRouter.workoutCompleteDemo)
         case .compare(let ids): openCompare(ids)
+        case .share(let token): openShare(token)
         }
     }
 }

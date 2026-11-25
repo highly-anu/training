@@ -23,7 +23,7 @@ The visual language, interaction patterns, and implementation decisions for the 
 | Surfaces and controls | 6.3 states · 6.4 section header · 6.6 buttons · 6.15 card and status · 6.37 card and detail · 6.47 floating controls and the action bar · 6.59 long text |
 | Navigation | 6.8 sub-tabs · 6.9 cross-tab routes · 6.13 tab structure · 6.48 sheets, pushes and zoom · 6.49 pager · 6.50 week strip |
 | Actions | 6.43 session actions · 6.51 row actions · 6.24 filter menu · 6.38 constraint toggles · 6.52 tips |
-| Sessions and the player | 6.1 session card · 6.2 modality badge · 6.5 load text · 6.14 exercise detail · 6.16 logging · 6.40 session icon · 6.44 player · 6.45 start and resume · 6.54 after the session · 6.61 briefing |
+| Sessions and the player | 6.1 session card · 6.2 modality badge · 6.5 load text · 6.14 exercise detail · 6.16 logging · 6.40 session icon · 6.44 player · 6.45 start and resume · 6.54 after the session · 6.61 briefing · 6.62 workout blocks · 6.63 shared links |
 | Today and Program | 6.53 Today · 6.17 regenerate offer · 6.18 methodology · 6.22 tracks and phases · 6.26 phase changes · 6.28 header card · 6.36 phase bar · 6.39 preview · 6.55 builder · 6.60 your methods and the method builder |
 | Analytics | 6.11 period filter · 6.20 Blocks · 6.21 readiness · 6.25 score · 6.35 zone plan · 6.41 progress chart |
 | Log and workouts | 6.10 route and charts · 6.12 activity icons · 6.19 Log · 6.23 workout row · 6.30 Workout complete |
@@ -2574,6 +2574,62 @@ detail of a session not yet done, as "Before you start". **Not** after a session
 done and the confirm are §6.54's. Debug builds rest on the player's pre-start screen with
 `SIMCTL_CHILD_TC_PLAYER=<key>` + `TC_PLAYER_OVERVIEW=1`; `TC_BRIEFING_SHEET=<n>` opens the
 nth row's sheet there or in the session detail. `BriefingModelTests`.
+
+### 6.62 Workout Blocks
+
+`Views/SessionBlocksView.swift` draws a session as the server reads it
+(`src/session_blocks.py`, decoded by `SessionBlock` in `ShareModels.swift`; the web's
+`WorkoutBlocks`, frontend-design §13.12): one compact card a block — the shape's symbol, the
+headline in monospaced digits, the title when the block has several movements — its
+movements, then its rest. A stage ("Start", "Main work") is a `SectionLabel`, shown only when
+the session has more than one. A loop (rounds, AMRAP, EMOM, for time, intervals with several
+movements) puts its movements on a 2 pt rail in the session's modality colour, with what ends
+the round at its foot. The main work's symbol takes the modality colour; the start and the
+cool-down stay secondary.
+
+- **The caller draws a movement's row** (`row:`): a shared session gives each its planned
+  numbers and opens the exercise; a method's session uses `BlockMovementRow` (the count in
+  the tint, the name, the note). `showsLoad: false` where the rows already carry each
+  movement's note, which is the block's load line again.
+- **Every word is the server's.** The view formats nothing; `SessionBlock.isLoop`, `foot` and
+  `stages` only decide where a word goes.
+- `ProgramSession.blocks` reads them from the session's unmodelled keys, so the session
+  detail can adopt the view without a model change. It does not yet (roadmap 25).
+
+### 6.63 Shared Links
+
+`trainingcompanion://share?token=…` (what the web's `/s/<token>` page offers as "Open in the
+app") presents `Views/SharedLinkView.swift` as a sheet over whatever tab is showing
+(`AppRouter.pendingShare`, a new request each time). A link opened while signed out is kept
+and opened after the sign-in (`DeepLink.survivesSignIn`); every other link is still dropped.
+
+- **Loading, gone, failed** are the three states before content: a labelled spinner, an
+  `AppEmptyState` saying the link is no longer shared (no retry: it will not come back), and
+  `AppFailedState` with one.
+- **A session**: the modality's icon and colour, the name, one line of facts (week and day,
+  minutes, phase, the method), then §6.62 with each movement as planned for the sharer. A
+  movement is a row with a chevron and opens `ExerciseDetailSheet` (§6.14).
+- **A method** leads with a card of what the link needs and what the athlete has of each — a
+  dashed circle or an emerald tick, the name, the server's state in secondary — and one
+  `.primary` button, **Save to your methods**. A copy of theirs that differs is never
+  replaced unasked: the button becomes a `.secondary` **Replace my version** under a
+  sentence saying what is lost. A refusal is one caption line in the warning colour; a save
+  is said in emerald. Below: the name, summary and size, each track's phases (the phase
+  kind's dot, name, focus, weeks) and its sessions by group, each pushing its blocks.
+- **A program**: name, a line of facts, its phases as one bar in the phase kinds' colours
+  with a legend, "Methods it needs" (the same card), then **Build it for me** once nothing
+  is missing — the program builder as a full-screen cover, opened on the recipe
+  (`ProgramBuilderFlow(start:)`, `BuilderState.apply`) at Schedule.
+- **Sharing out** is `LinkSharer` + `.sharesLinks(_:)` (`Views/ShareLinkSheet.swift`): one a
+  screen; the server makes the link, the system share sheet takes it, a failure is an alert.
+  It is the `square.and.arrow.up` button at the leading edge of the session detail's and
+  Program's bars, and **Share** in a method card's menu (§6.60).
+- **Settings ▸ Account ▸ Shared links** (`SharedLinksView`) lists the account's links — tap
+  one to share it again, swipe or long-press to Remove — over a footer that says a link
+  keeps showing what it showed when it was shared.
+- Every sentence is `ShareWords` (the web's `lib/shareRefusal.ts` and `MethodsNeeded`: change
+  both). `SharedLinkTests` decodes the server's recorded documents
+  (`frontend/src/mocks/fixtures/shares.json`).
 
 ## 7. Motion & Animation
 

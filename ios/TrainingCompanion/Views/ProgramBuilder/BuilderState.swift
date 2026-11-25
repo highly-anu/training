@@ -93,6 +93,25 @@ final class BuilderState: ObservableObject {
         }
     }
 
+    /// Start from a shared program's recipe: its tracks, where each starts,
+    /// its length and a contract's options. A method the athlete does not have
+    /// is left out (the link's sheet offers the build only once none is missing).
+    func apply(_ start: BuilderStart, philosophies: [PhilosophyCard]) {
+        let known = start.lanes.filter { lane in philosophies.contains { $0.id == lane.philosophyId } }
+        guard !known.isEmpty else { return }
+        lanes = known
+        if known.count == 1 {
+            // After `lanes`: picking the philosophy clears the track and phase.
+            selectedTrackId = known[0].trackId
+            startPhaseId = known[0].startPhaseId
+            lengthSetFor = track(in: philosophies.first { $0.id == known[0].philosophyId })?.id
+        } else {
+            lengthSetFor = "lanes:" + known.map { "\($0.philosophyId)/\(track(of: $0, in: philosophies)?.id ?? "")" }.joined(separator: ",")
+        }
+        if let weeks = start.numWeeks, weeks > 0 { numWeeks = weeks }
+        for (option, choice) in start.contractOptions { constraints.contractOptions[option] = choice }
+    }
+
     /// The track a lane runs: its pick, else the one for the athlete's level.
     func track(of lane: BuilderLane, in philosophies: [PhilosophyCard]) -> PhilosophyTrack? {
         philosophies.first { $0.id == lane.philosophyId }?.track(lane.trackId, level: constraints.trainingLevel)
