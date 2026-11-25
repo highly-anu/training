@@ -20,6 +20,7 @@ struct BuilderStep1PhilosophyView: View {
     @State private var deleting: PhilosophyCard? = nil
     @State private var deleteRefusal: String? = nil
     @State private var renaming: PhilosophyCard? = nil
+    @StateObject private var sharer = LinkSharer()
     @State private var newName = ""
 
     /// The methodologies that are the athlete's own methods, and the rest.
@@ -103,6 +104,7 @@ struct BuilderStep1PhilosophyView: View {
             // Back from a build: it may have ended while its screen was not asking.
             if now == nil { Task { await appState.loadMethods() } }
         }
+        .sharesLinks(sharer)
         .confirmationDialog("Delete \(deleting?.name ?? "this method")?", isPresented: Binding(
             get: { deleting != nil }, set: { if !$0 { deleting = nil } }), titleVisibility: .visible) {
             Button("Delete method", role: .destructive) {
@@ -298,6 +300,9 @@ struct BuilderStep1PhilosophyView: View {
                         Button { methodRoute = .describe(revises: philosophy.id) } label: {
                             Label("Revise", systemImage: "pencil")
                         }
+                    }
+                    Button { sharer.share(.package(philosophy.id), with: appState.api) } label: {
+                        Label("Share", systemImage: "square.and.arrow.up")
                     }
                     Button {
                         newName = philosophy.name
