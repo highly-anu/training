@@ -349,7 +349,10 @@ def id_collisions() -> list[dict]:
 
 
 def _borrows_sessions(pkg: str) -> bool:
-    philosophy = _yaml(os.path.join(loader.package_dir(pkg), 'philosophy.yaml')) or {}
+    try:
+        philosophy = _yaml(os.path.join(loader.package_dir(pkg), 'philosophy.yaml')) or {}
+    except Exception:   # a report made by hand may name a folder that is not there
+        return False
     return any(isinstance(b, str) or 'archetypes' in (b.get('kinds') or ['archetypes'])
                for b in philosophy.get('borrows_from') or [])
 
@@ -363,7 +366,7 @@ def problems(pkg: str, report: dict) -> list[str]:
     out = [f"{f['path']} is missing" for f in row['files'] if f['required'] and not f['present']
            # A package that borrows another's sessions may write none of its own
            # (a program laid by hand from other methods' sessions).
-           and not (f['id'] == 'archetypes' and _borrows_sessions(pkg))]
+           and not (f['path'] == 'archetypes' and _borrows_sessions(pkg))]
     for c in report['collisions']:
         if pkg in c['packages']:
             others = ', '.join(p for p in c['packages'] if p != pkg)
