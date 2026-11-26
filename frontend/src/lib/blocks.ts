@@ -1,4 +1,4 @@
-import type { BlockStage, Session, SessionBlock } from '@/api/types'
+import type { BlockMovement, BlockStage, Session, SessionBlock } from '@/api/types'
 
 /**
  * Reading a session's blocks (src/session_blocks.py). The server groups the
@@ -42,4 +42,11 @@ export function blockRows(session: Pick<Session, 'blocks' | 'exercises'>): Map<s
   if (roles.some((r) => !byRole.has(r))) return null
   if (new Set(roles.map((r) => byRole.get(r))).size !== session.exercises.length) return null
   return byRole
+}
+
+/** The width of a block's count column, in the count's own (monospace) characters: eight,
+ *  or the longest count where that is longer ("10-15-20-15-10"), so none wraps. */
+export function countColumn(movements: Pick<BlockMovement, 'count'>[]): string {
+  const longest = Math.max(0, ...movements.map((m) => (m.count ?? '').length))
+  return `${Math.max(8, longest)}ch`
 }

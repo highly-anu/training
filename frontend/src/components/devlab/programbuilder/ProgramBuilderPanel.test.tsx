@@ -39,11 +39,21 @@ function mount(node: ReactNode) {
   )
 }
 
+const LIBRARY = [
+  { id: 'cf_fran', name: 'Fran', modality: 'mixed_modal_conditioning', _package: 'crossfit', duration_estimate_minutes: 20,
+    blocks: [{ id: 'fran', stage: 'main', stageLabel: 'Main work', movements: [{ role: 'fran', name: 'Thruster', exercises: [] }] }] },
+  { id: 'kb_snatch', name: 'Snatch practice', modality: 'power', _package: 'wildman_kettlebell', duration_estimate_minutes: 30 },
+  // The athlete's own package is theirs already: never listed twice.
+  { id: first.id, name: first.name, modality: first.modality, _package: sessionsFixture.list.packageId, duration_estimate_minutes: 40 },
+]
+const METHODS = [{ id: 'crossfit', name: 'CrossFit' }, { id: 'wildman_kettlebell', name: 'Wildman Kettlebell' }]
+
 beforeEach(() => {
   useProgramBuilderStore.getState().reset()
   usePreviewStore.getState().clear()
   api.get.mockImplementation((url: string) => Promise.resolve(
-    url === '/manual/sessions' ? sessionsFixture.list : url === '/manual/tracks' ? tracksFixture.list : {}))
+    url === '/manual/sessions' ? sessionsFixture.list : url === '/manual/tracks' ? tracksFixture.list
+      : url === '/archetypes' ? LIBRARY : url === '/philosophies' ? METHODS : {}))
   api.post.mockImplementation((url: string) => Promise.resolve(
     url === '/manual/tracks/preview' ? tracksFixture.preview
       : url === '/programs/generate' ? { validation: { feasible: true }, weeks: [{ schedule: {} }] }
@@ -61,6 +71,41 @@ describe('Dev Lab ▸ Program builder', () => {
     const shelf = await screen.findByRole('region', { name: 'Your sessions' })
     expect(within(shelf).getByText(first.name)).toBeTruthy()
     expect(within(shelf).getByText(second.name)).toBeTruthy()
+  })
+
+  it('offers every other session, by name, method or movement, and links the athlete\'s own to the session builder', async () => {
+    mount(<ProgramBuilderPanel />)
+    const all = await screen.findByRole('region', { name: 'All sessions' })
+    expect(await within(all).findByText('Fran')).toBeTruthy()
+    expect(within(all).getByText('CrossFit · 20 min')).toBeTruthy()
+    expect(within(all).queryByText(first.name)).toBeNull()
+    fireEvent.change(within(all).getByLabelText('Search all sessions'), { target: { value: 'thruster' } })
+    await waitFor(() => expect(within(all).queryByText('Snatch practice')).toBeNull())
+    expect(within(all).getByText('Fran')).toBeTruthy()
+    fireEvent.change(within(all).getByLabelText('Search all sessions'), { target: { value: '' } })
+    fireEvent.change(within(all).getByLabelText('Method'), { target: { value: 'wildman_kettlebell' } })
+    await waitFor(() => expect(within(all).queryByText('Fran')).toBeNull())
+    const own = screen.getByRole('region', { name: 'Your sessions' })
+    expect(within(own).getByRole('link', { name: `Edit ${first.name}` }).getAttribute('href'))
+      .toBe(`/dev?tab=session&edit=${encodeURIComponent(first.id)}`)
+    expect(within(all).queryByRole('link', { name: /^Edit/ })).toBeNull()
+  })
+
+  it('with no session of the athlete\'s own, a program is still built from the others', async () => {
+    api.get.mockImplementation((url: string) => Promise.resolve(
+      url === '/manual/sessions' ? { ...sessionsFixture.list, sessions: [] } : url === '/manual/tracks' ? { ...tracksFixture.list, tracks: [] }
+        : url === '/archetypes' ? LIBRARY : url === '/philosophies' ? METHODS : {}))
+    const store = useProgramBuilderStore.getState()
+    store.edit((d) => ({ ...placeSession(d, d.phases[0].uid, { week: 0, day: 2 }, 'cf_fran'), name: 'Borrowed' }))
+    mount(<ProgramBuilderPanel />)
+    expect(await within(await screen.findByRole('region', { name: 'Your sessions' })).findByText(/None of your own yet/)).toBeTruthy()
+    const wednesday = cell('Wednesday')
+    expect(await within(wednesday).findByText('Fran')).toBeTruthy()
+    expect(within(wednesday).getByText(/20 min · CrossFit/)).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Save program' }))
+    await waitFor(() => expect(api.post.mock.calls.some(([url]) => url === '/manual/tracks')).toBe(true))
+    const [, body] = api.post.mock.calls.find(([url]) => url === '/manual/tracks')!
+    expect(body.track.phases[0].template[0][2]).toEqual({ sessions: ['cf_fran'] })
   })
 
   it('draws the draft: a day of two sessions is one session of both, a light day says so', async () => {

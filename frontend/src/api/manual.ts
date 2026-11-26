@@ -92,7 +92,8 @@ export interface DescribedDay {
   day: string
   light: boolean
   minutes: number
-  sessions: { id: string; name: string; modality: string; minutes: number }[]
+  /** `from`: the package of a session that is another method's. */
+  sessions: { id: string; name: string; modality: string; minutes: number; from?: string }[]
 }
 
 export interface DescribedPhase {

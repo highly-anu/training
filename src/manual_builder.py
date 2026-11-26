@@ -92,6 +92,8 @@ def catalog() -> dict:
     with open(os.path.join(_HERE, '..', 'docs', 'schemas', 'archetype.schema.json'), encoding='utf-8') as fh:
         schema = json.load(fh)
     return {'exercises': exercises, 'modalities': loader.load_all_modalities(),
+            # Every session in view, by id: a program may lay any of them on a day.
+            'archetypes': {a['id']: a for a in loader.load_all_archetypes() if a.get('id')},
             'equipment': set(schema['properties']['required_equipment']['items']['enum']),
             'intensities': set(schema['properties']['slots']['items']['properties']['intensity']['enum']),
             'schema': schema, 'kinds': phases.kinds()}
@@ -545,11 +547,47 @@ def from_archetype(arch: dict) -> dict:
 # ─── Every session → one package ─────────────────────────────────────────────
 
 def _category(archetype_id: str, prefix: str) -> str:
-    return f'c_{archetype_id[len(prefix):]}'
+    """The day category of one session: `c_` and its own name for a session
+    of the athlete's, `x_` and the whole id for another package's."""
+    if archetype_id.startswith(f'{prefix}{SESSION_MARK}'):
+        return f'c_{archetype_id[len(prefix):]}'
+    return f'x_{archetype_id}'
 
 
 def _session_of(category: str, prefix: str) -> str:
-    return f'{prefix}{category[2:]}'
+    return category[2:] if category.startswith('x_') else f'{prefix}{category[2:]}'
+
+
+def sessions_in_view(archetypes: list[dict], cat: dict) -> dict:
+    """Every session a program may lay on a day, by id: the athlete's own
+    (as given, which may be newer than what is stored) and every other
+    package's in view."""
+    library = {i: a for i, a in (cat.get('archetypes') or {}).items()
+               # A stored hand-built session is in view only as given: one just
+               # deleted is no longer a session of anyone's.
+               if not (str(a.get('_package') or '').endswith(PACKAGE_SUFFIX) and SESSION_MARK in i)}
+    return {**library, **{a['id']: a for a in archetypes}}
+
+
+def _lead_exercise(slot: dict) -> str | None:
+    return ((slot.get('exercise_filter') or {}).get('exercise_ids') or [None])[0]
+
+
+def borrowed_sessions(tracks: list[dict], archetypes: list[dict], cat: dict) -> list[dict]:
+    """The sessions of other packages the tracks have on a day, in the
+    order first laid."""
+    own = {a['id'] for a in archetypes}
+    library = sessions_in_view([], cat)
+    out, seen = [], set()
+    for t in tracks or []:
+        for ph in t['phases']:
+            for row in ph['template']:
+                for day in row:
+                    for sid in day['sessions']:
+                        if sid not in own and sid not in seen and sid in library:
+                            seen.add(sid)
+                            out.append(library[sid])
+    return out
 
 
 def _categories(archetypes: list[dict], prefix: str) -> dict:
@@ -637,7 +675,7 @@ def read_track(track, track_id: str, archetypes: list[dict], cat: dict) -> tuple
     problems: list[dict] = []
     if not isinstance(track, dict):
         return None, [_track_problem('This program could not be read.')]
-    by_id = {a['id']: a for a in archetypes}
+    by_id = sessions_in_view(archetypes, cat)
     name = _text(track.get('name'), NAME_MAX)
     if not name:
         problems.append(_track_problem('Give the program a name.', field='name'))
@@ -680,10 +718,10 @@ def read_track(track, track_id: str, archetypes: list[dict], cat: dict) -> tuple
                 for sid in day['sessions']:
                     arch = by_id.get(sid)
                     if arch is None:
-                        problems.append(_track_problem('This session is no longer among your saved ones.', i, w, d))
+                        problems.append(_track_problem('This session is no longer available.', i, w, d))
                     elif kind and cat['kinds'].get(kind, {}).get('excludes_max_effort') and any(
-                            (cat['exercises'].get(s['exercise_filter']['exercise_ids'][0]) or {}).get('effort') == 'max'
-                            for s in arch['slots']):
+                            (cat['exercises'].get(_lead_exercise(s)) or {}).get('effort') == 'max'
+                            for s in arch.get('slots') or []):
                         problems.append(_track_problem(
                             f'{arch["name"]} has a maximal-effort exercise, which a {kind} phase leaves out. '
                             'Pick another kind of phase or another session.', i, w, d))
@@ -712,10 +750,13 @@ def _day_minutes(day: dict, by_id: dict) -> int:
     return sum((by_id.get(s) or {}).get('duration_estimate_minutes') or 0 for s in day['sessions'])
 
 
-def track_files(track: dict, archetypes: list[dict], prefix: str, pkg: str) -> tuple[dict, dict]:
+def track_files(track: dict, archetypes: list[dict], prefix: str, pkg: str, cat: dict | None = None) -> tuple[dict, dict]:
     """A whole track (read_track's) as the philosophy's track and the
-    framework that builds its weeks."""
-    by_id = {a['id']: a for a in archetypes}
+    framework that builds its weeks: a category for every session of the
+    athlete's, and one for each session of another package it lays on a day."""
+    cat = cat or catalog()
+    by_id = sessions_in_view(archetypes, cat)
+    pooled = archetypes + borrowed_sessions([track], archetypes, cat)
     framework_id = f'{pkg}_t_{track["id"]}'
 
     def day_out(day: dict):
@@ -744,9 +785,10 @@ def track_files(track: dict, archetypes: list[dict], prefix: str, pkg: str) -> t
         'applicable_when': {'days_per_week_min': 1, 'days_per_week_max': 7},
         'expectations': {'min_weeks': 1, 'ideal_weeks': sum(ph['weeks'] for ph in track['phases']),
                          'min_days_per_week': 1, 'ideal_days_per_week': busiest,
-                         'min_session_minutes': min(minutes), 'ideal_session_minutes': max(MIN_SESSION_ROOM, *minutes),
+                         'min_session_minutes': min(minutes or [MIN_SESSION_ROOM]),
+                         'ideal_session_minutes': max(MIN_SESSION_ROOM, *minutes),
                          'supports_split_days': False},
-        'categories': _categories(archetypes, prefix),
+        'categories': _categories(pooled, prefix),
     }
     if track.get('deload_every'):
         framework['deload_protocol'] = {'frequency_weeks': track['deload_every'], 'volume_reduction_pct': 1.0,
@@ -822,18 +864,28 @@ def compose(archetypes: list[dict], prefix: str, cat: dict | None = None, tracks
     generates; nothing else is invented."""
     cat = cat or catalog()
     pkg = package_id(prefix)
-    modalities = list(dict.fromkeys(a['modality'] for a in archetypes))
-    owners = sorted({o for a in archetypes for s in a['slots']
-                     for o in [(cat['exercises'].get(s['exercise_filter']['exercise_ids'][0]) or {}).get('_package')]
-                     if o and o != pkg})
-    built = [track_files(t, archetypes, prefix, pkg) for t in tracks or []] or [_library(archetypes, prefix, pkg)]
+    modalities = list(dict.fromkeys(a['modality'] for a in archetypes)) or list(dict.fromkeys(
+        a['modality'] for a in borrowed_sessions(tracks or [], archetypes, cat)))
+    owners = {o for a in archetypes for s in a['slots']
+              for o in [(cat['exercises'].get(s['exercise_filter']['exercise_ids'][0]) or {}).get('_package')]
+              if o and o != pkg}
+    # A session of another package laid on a day is borrowed whole, with the
+    # movements its own package borrows in turn (so it fills as it does there).
+    lenders = {a['_package'] for a in borrowed_sessions(tracks or [], archetypes, cat) if a.get('_package')} - {pkg}
+    for lender in lenders:
+        owners |= _lends_from(lender) - {pkg}
+    owners -= lenders
+    built = [track_files(t, archetypes, prefix, pkg, cat) for t in tracks or []] or [_library(archetypes, prefix, pkg)]
     philosophy = {
         'id': pkg, 'name': PACKAGE_NAME,
         'core_principles': ['Sessions composed by hand, done as written.'],
         'scope': modalities, 'bias': modalities[:3],
         'self_contained': True,
-        **({'borrows_from': [{'package': o, 'kinds': ['exercises'],
-                              'reason': 'A session of mine uses its movements.'} for o in owners]} if owners else {}),
+        **({'borrows_from': [{'package': o, **_label(o), 'kinds': ['archetypes', 'exercises'],
+                              'reason': 'A program of mine has its sessions.'} for o in sorted(lenders)]
+                            + [{'package': o, 'kinds': ['exercises'],
+                                'reason': 'A session of mine uses its movements.'} for o in sorted(owners)]}
+           if owners or lenders else {}),
         'notes': 'The sessions and programs I built myself.',
         'primary_track_id': built[0][0]['id'],
         'tracks': [track for track, _ in built],
@@ -844,6 +896,26 @@ def compose(archetypes: list[dict], prefix: str, cat: dict | None = None, tracks
     for a in archetypes:
         files[f'archetypes/{a["id"]}.yaml'] = _dump(a)
     return files
+
+
+def _label(package: str) -> dict:
+    """The lender's own name, for the "via …" a borrowed session carries."""
+    from src import loader
+    try:
+        name = loader.load_philosophy(package).get('name')
+    except (FileNotFoundError, KeyError):
+        name = None
+    return {'label': name} if name else {}
+
+
+def _lends_from(package: str) -> set:
+    """The packages a package borrows from itself."""
+    from src import loader
+    try:
+        phil = loader.load_philosophy(package)
+    except (FileNotFoundError, KeyError):
+        return set()
+    return {(b if isinstance(b, str) else b.get('package')) for b in phil.get('borrows_from') or []} - {None, package}
 
 
 def stored_archetypes(files: dict | None) -> list[dict]:
@@ -891,6 +963,14 @@ def described(arch: dict, cat: dict | None = None, weeks: int = 4) -> dict:
             'forecast': forecast}
 
 
+class _Sessions(dict):
+    """Sessions by id; one that has since left its package still has a name."""
+
+    def __missing__(self, key):
+        return {'id': key, 'name': 'A session no longer available', 'modality': None,
+                'duration_estimate_minutes': 0, 'slots': []}
+
+
 def described_track(track: dict, archetypes: list[dict], prefix: str, cat: dict | None = None, weeks: int = 16) -> dict:
     """A track with what the server derives from it: each phase's weeks with
     their sessions named and timed, which weeks of the track are lighter, the
@@ -899,7 +979,8 @@ def described_track(track: dict, archetypes: list[dict], prefix: str, cat: dict 
     from src.analytics.exercise_series import prescribed_text
     from src.progression import calculate_load
     cat = cat or catalog()
-    by_id = {a['id']: a for a in archetypes}
+    own = {a['id'] for a in archetypes}
+    by_id = _Sessions(sessions_in_view(archetypes, cat))
     deload = track.get('deload_every')
     phases_out, calendar, at = [], [], 0
     for ph in track['phases']:
@@ -907,7 +988,9 @@ def described_track(track: dict, archetypes: list[dict], prefix: str, cat: dict 
         for row in ph['template']:
             rows.append([{'day': DAY_NAMES[d], 'light': day['light'], 'minutes': _day_minutes(day, by_id),
                           'sessions': [{'id': s, 'name': by_id[s]['name'], 'modality': by_id[s]['modality'],
-                                        'minutes': by_id[s]['duration_estimate_minutes']} for s in day['sessions']]}
+                                        'minutes': by_id[s].get('duration_estimate_minutes') or 0,
+                                        **({} if s in own else {'from': by_id[s].get('_package')})}
+                                       for s in day['sessions']]}
                          for d, day in enumerate(row)])
         lighter = []
         for w in range(1, ph['weeks'] + 1):
@@ -925,12 +1008,12 @@ def described_track(track: dict, archetypes: list[dict], prefix: str, cat: dict 
     used = [by_id[s] for ph in track['phases'] for row in ph['template'] for d in row for s in d['sessions']]
     forecast, seen = [], set()
     for arch in used:
-        for slot in arch['slots']:
+        for slot in arch.get('slots') or []:
             key = (arch['id'], slot['role'])
             if key in seen or not (slot.get('progress') or slot.get('start_kg') is not None):
                 continue
             seen.add(key)
-            ex = cat['exercises'].get(slot['exercise_filter']['exercise_ids'][0]) or {}
+            ex = cat['exercises'].get(_lead_exercise(slot)) or {}
             lines = []
             for week, _, is_deload, row in calendar[:weeks]:
                 day = next((d for d in row if arch['id'] in d['sessions']), None)

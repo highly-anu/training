@@ -62,6 +62,14 @@ describe('WorkoutBlocks', () => {
     expect(screen.getByText('10-15-20-15-10')).toBeTruthy()
   })
 
+  it('gives a round\'s counts a column as wide as the longest, on one line', () => {
+    render(<WorkoutBlocks blocks={blocks.pyramid} />)
+    const long = screen.getByText('10-15-20-15-10')
+    expect(long.style.width).toBe('14ch')
+    expect(long.className).toContain('whitespace-nowrap')
+    expect(screen.getByText('3-4-5-4-3').style.width).toBe(long.style.width)
+  })
+
   it('brackets alternating sets', () => {
     render(<WorkoutBlocks blocks={blocks.ladders} />)
     expect(screen.getByText('Alternate sets')).toBeTruthy()

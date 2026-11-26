@@ -1,13 +1,16 @@
 /**
  * The manual program builder's draft (docs/roadmap.md item 24.4): a track of
  * phases, each a few template weeks of seven days that repeat through the
- * phase, a day holding up to two saved sessions. Every edit is a pure function.
+ * phase, a day holding up to two sessions — the athlete's own or any other in
+ * view. Every edit is a pure function.
  *
  * The wire shape is the server's (src/manual_builder.py `read_track`); a
  * draft adds a `uid` to each phase, for React keys. The server describes the
  * track (minutes, lighter weeks, the numbers week by week); nothing here
  * words a prescription.
  */
+
+import type { SessionBlock } from '@/api/types'
 
 export interface ManualDay { sessions: string[]; light?: boolean }
 
@@ -215,3 +218,61 @@ export const duplicateOf = (track: ManualTrack): DraftTrack => {
 export const problemsAt = (problems: TrackProblem[], phase: number, cell?: Cell): TrackProblem[] =>
   problems.filter((p) => p.phase === phase && (cell ? p.week === cell.week && p.day === cell.day : p.day === null))
 export const trackProblems = (problems: TrackProblem[]): TrackProblem[] => problems.filter((p) => p.phase === null)
+
+// ─── The sessions a program may lay on a day ─────────────────────────────────
+
+/** A session as the shelf and the grid show it: one of the athlete's, or any other in view. */
+export interface ShelfSession {
+  id: string
+  name: string
+  modality: string
+  minutes: number
+  /** The session as blocks (src/session_blocks.py), where the server sent them. */
+  preview: SessionBlock[]
+  /** Built by the athlete in the session builder. */
+  own: boolean
+  /** The method it belongs to, by id and name; absent on one of the athlete's. */
+  from?: { id: string; name: string }
+}
+
+interface OwnSession { id: string; name: string; modality: string; minutes: number; preview: SessionBlock[] }
+interface LibraryArchetype {
+  id: string; name: string; modality: string; _package?: string
+  duration_estimate_minutes?: number; blocks?: SessionBlock[]
+}
+
+/** The athlete's sessions first, then every other session in view, by method and name. */
+export function shelfSessions(
+  own: OwnSession[], archetypes: LibraryArchetype[], methods: { id: string; name: string }[], ownPackage?: string,
+): ShelfSession[] {
+  const mine = new Set(own.map((s) => s.id))
+  const names = new Map(methods.map((m) => [m.id, m.name]))
+  const library = archetypes
+    .filter((a) => a.id && !mine.has(a.id) && a._package !== ownPackage)
+    .map((a): ShelfSession => ({
+      id: a.id, name: a.name, modality: a.modality, minutes: a.duration_estimate_minutes ?? 0, preview: a.blocks ?? [], own: false,
+      from: a._package ? { id: a._package, name: names.get(a._package) ?? a._package.replace(/_/g, ' ') } : undefined,
+    }))
+    .sort((a, b) => (a.from?.name ?? '').localeCompare(b.from?.name ?? '') || a.name.localeCompare(b.name))
+  return [...own.map((s): ShelfSession => ({ id: s.id, name: s.name, modality: s.modality, minutes: s.minutes, preview: s.preview, own: true })),
+    ...library]
+}
+
+/** The methods the library's sessions come from, by name. */
+export function libraryMethods(sessions: ShelfSession[]): { id: string; name: string }[] {
+  const seen = new Map<string, string>()
+  for (const s of sessions) if (!s.own && s.from) seen.set(s.from.id, s.from.name)
+  return [...seen].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name))
+}
+
+/** The library's sessions a search leaves: every word in the name, the method or a movement; one method when chosen. */
+export function searchLibrary(sessions: ShelfSession[], query: string, method: string | null): ShelfSession[] {
+  const words = query.toLowerCase().split(/\s+/).filter(Boolean)
+  return sessions.filter((s) => {
+    if (s.own) return false
+    if (method && s.from?.id !== method) return false
+    if (words.length === 0) return true
+    const hay = [s.name, s.from?.name ?? '', ...s.preview.flatMap((b) => b.movements.map((m) => m.name))].join(' ').toLowerCase()
+    return words.every((w) => hay.includes(w))
+  })
+}

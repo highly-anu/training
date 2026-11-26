@@ -425,7 +425,14 @@ def _as_written(slot: dict, week: int = 1, is_deload: bool = False, steps: int |
         out = {'time_minutes': minutes or 10, 'format': slot_type.upper()}
         out.update(_parent_count(slot))
     elif slot_type in ('for_time', 'rounds_for_time'):
-        out = {'target_rounds': slot.get('rounds', 1), 'format': 'FOR TIME'}
+        if slot_type == 'rounds_for_time' and slot.get('rest_sec') is not None:
+            # Rounds with a written rest between them (even none) are a
+            # circuit, never a race: the rest rides in the load (under its own
+            # key: `rest_sec` there is an interval's), since the
+            # slot does not survive storage (session_blocks reads it).
+            out = {'target_rounds': slot.get('rounds', 1), 'round_rest_sec': slot['rest_sec']}
+        else:
+            out = {'target_rounds': slot.get('rounds', 1), 'format': 'FOR TIME'}
         cap = slot.get('time_cap_sec') or slot.get('duration_sec')
         if cap:
             out['time_minutes'] = max(1, round(cap / 60))

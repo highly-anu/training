@@ -50,7 +50,7 @@
       "stage": "prep",
       "stageLabel": "Start",
       "shape": "practice",
-      "title": "B1",
+      "title": "",
       "headline": "5 min",
       "repeat": null,
       "rest": null,
@@ -89,7 +89,7 @@
       "stage": "main",
       "stageLabel": "Main work",
       "shape": "sets",
-      "title": "B2",
+      "title": "",
       "headline": "3 × 5",
       "repeat": {
        "sets": 3
@@ -295,7 +295,7 @@
       "stage": "main",
       "stageLabel": "Main work",
       "shape": "sets",
-      "title": "B1",
+      "title": "",
       "headline": "5 × 5-3-1",
       "repeat": {
        "sets": 5,
@@ -341,7 +341,7 @@
       "stage": "main",
       "stageLabel": "Main work",
       "shape": "sets",
-      "title": "B2 1",
+      "title": "",
       "headline": "4 × 5",
       "repeat": {
        "sets": 4
@@ -385,7 +385,7 @@
       "stage": "main",
       "stageLabel": "Main work",
       "shape": "sets",
-      "title": "B2 2",
+      "title": "",
       "headline": "4 × 10",
       "repeat": {
        "sets": 4
@@ -429,7 +429,7 @@
       "stage": "main",
       "stageLabel": "Main work",
       "shape": "rounds",
-      "title": "B3",
+      "title": "",
       "headline": "3 rounds",
       "repeat": {
        "rounds": 3
@@ -491,7 +491,7 @@
       "stage": "main",
       "stageLabel": "Main work",
       "shape": "for_time",
-      "title": "B4",
+      "title": "",
       "headline": "21-15-9 for time",
       "repeat": {
        "rounds": 3,
@@ -563,7 +563,7 @@
       "stage": "main",
       "stageLabel": "Main work",
       "shape": "emom",
-      "title": "B5",
+      "title": "",
       "headline": "Every minute × 10",
       "repeat": {
        "everySec": 60,
@@ -606,7 +606,7 @@
       "stage": "main",
       "stageLabel": "Main work",
       "shape": "emom",
-      "title": "B6",
+      "title": "",
       "headline": "Every 1 min 20 s × 8",
       "repeat": {
        "rounds": 8,
@@ -650,7 +650,7 @@
       "stage": "main",
       "stageLabel": "Main work",
       "shape": "distance",
-      "title": "B7",
+      "title": "",
       "headline": "4 × 400 m",
       "repeat": {
        "sets": 4
@@ -695,7 +695,7 @@
       "stage": "finisher",
       "stageLabel": "Finisher",
       "shape": "hold",
-      "title": "B8",
+      "title": "",
       "headline": "3 × 30 s hold",
       "repeat": {
        "sets": 3
@@ -741,10 +741,10 @@
       "role": "b3",
       "exercise": "Full Push-Up Progression",
       "weeks": [
-       "10 reps/round | 3 rounds FOR TIME",
-       "10 reps/round | 4 rounds FOR TIME",
-       "10 reps/round | 5 rounds FOR TIME",
-       "10 reps/round | 6 rounds FOR TIME"
+       "10 reps/round | 3 rounds",
+       "10 reps/round | 4 rounds",
+       "10 reps/round | 5 rounds",
+       "10 reps/round | 6 rounds"
       ]
      },
      {
@@ -891,7 +891,7 @@
      "stage": "prep",
      "stageLabel": "Start",
      "shape": "practice",
-     "title": "B1",
+     "title": "",
      "headline": "5 min",
      "repeat": null,
      "rest": null,
@@ -930,7 +930,7 @@
      "stage": "main",
      "stageLabel": "Main work",
      "shape": "sets",
-     "title": "B2",
+     "title": "",
      "headline": "3 × 5",
      "repeat": {
       "sets": 3
@@ -975,7 +975,7 @@
      "stage": "main",
      "stageLabel": "Main work",
      "shape": "sets",
-     "title": "B3 1",
+     "title": "",
      "headline": "3 × max",
      "repeat": {
       "sets": 3
@@ -1019,7 +1019,7 @@
      "stage": "main",
      "stageLabel": "Main work",
      "shape": "sets",
-     "title": "B3 2",
+     "title": "",
      "headline": "3 × 12",
      "repeat": {
       "sets": 3
@@ -1067,7 +1067,7 @@
      "stage": "finisher",
      "stageLabel": "Finisher",
      "shape": "amrap",
-     "title": "B4",
+     "title": "",
      "headline": "20 min AMRAP",
      "repeat": {
       "minutes": 20
@@ -1142,7 +1142,7 @@
      "stage": "cooldown",
      "stageLabel": "Cool-down",
      "shape": "timed",
-     "title": "B5",
+     "title": "",
      "headline": "30 min",
      "repeat": null,
      "rest": null,
