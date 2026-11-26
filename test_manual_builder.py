@@ -275,6 +275,60 @@ def test_tracks():
     package_store.remove(user, mb.package_id(prefix))
 
 
+def test_any_session():
+    print('a program may lay any existing session on a day')
+    user = 'user-dee'
+    prefix = package_store.owner_prefix(user)
+    own = mb.to_archetype(SESSION, mb.new_session_id(prefix, SESSION['name'], []), CAT)[0]
+    library = CAT['archetypes']
+    fran = next(i for i in sorted(library) if i.endswith('fran') and library[i].get('_package') == 'crossfit')
+    other = next(i for i, a in sorted(library.items()) if a.get('_package') == 'wildman_kettlebell'
+                 and a.get('modality') == 'power')
+    for label, archetypes, days in (('beside the athlete\'s own', [own], dict(mon=[own['id']], wed=[fran], fri=[other])),
+                                    ('with none of the athlete\'s own', [], dict(wed=[fran], fri=[other]))):
+        track, problems = mb.read_track({'name': 'Mix', 'phases': [{'name': 'P', 'kind': 'build', 'weeks': 2,
+                                         'template': [week(**days)]}]}, 'mix', archetypes, CAT)
+        check(f'{label}: it reads', track is not None, problems)
+        files = mb.compose(archetypes, prefix, CAT, [track])
+        phil = __import__('yaml').safe_load(files['philosophy.yaml'])
+        lent = {b['package']: b['kinds'] for b in phil.get('borrows_from') or []}
+        check(f'{label}: their packages lend their sessions',
+              lent.get('crossfit') == ['archetypes', 'exercises'] and lent.get('wildman_kettlebell') == ['archetypes', 'exercises'], lent)
+        check(f'{label}: under their own names', next(b for b in phil['borrows_from'] if b['package'] == 'crossfit').get('label')
+              == loader.load_philosophy('crossfit')['name'], phil['borrows_from'])
+        check(f'{label}: read back from the files as sent', mb.stored_tracks(files, prefix) == [track])
+        result = package_store.install(user, files)
+        check(f'{label}: it installs through every gate', result.get('installed'), result.get('problems', [])[:4])
+        d = mb.described_track(track, archetypes, prefix, CAT)
+        wednesday = d['phases'][0]['weeksDescribed'][0][2]['sessions'][0]
+        check(f'{label}: the described day names the session and where it is from',
+              wednesday['name'] == library[fran]['name'] and wednesday['from'] == 'crossfit'
+              and all('from' not in s for day in d['phases'][0]['weeksDescribed'][0] for s in day['sessions']
+                      if s['id'] == own['id']), wednesday)
+        with loader.overlay(package_store.overlay_for(user)):
+            from src.generator import generate
+            from src.goals import philosophy_to_goal
+            goal = philosophy_to_goal(mb.package_id(prefix), list(loader.load_all_frameworks().values()), track_id='mix')
+            raw = generate(goal_id=goal['id'], goal_dict=goal, num_weeks=2, output_format='dict',
+                           constraints={**d['startWith'], 'training_level': 'intermediate', 'injury_flags': [],
+                                        'equipment': sorted(CAT['equipment'])})
+        got = {day: (s['archetype']['id'], (s.get('provenance') or {}).get('package'),
+                     all(e.get('exercise') for e in s['exercises']))
+               for day, ss in raw['weeks'][0]['schedule'].items() for s in ss}
+        check(f'{label}: the program has them on their days, filled, marked as borrowed',
+              got.get(3) == (fran, 'crossfit', True) and got.get(5) == (other, 'wildman_kettlebell', True)
+              and (not archetypes or got.get(1, ('',))[0] == own['id']), got)
+        package_store.remove(user, mb.package_id(prefix))
+    gone, problems = mb.read_track({'name': 'Mix', 'phases': [{'name': 'P', 'kind': 'build', 'weeks': 1,
+                                    'template': [week(mon=['no_such_session'])]}]}, 'mix', [], CAT)
+    check('a session that is nowhere is said at its day', gone is None
+          and problems[0]['message'] == 'This session is no longer available.' and problems[0]['day'] == 0, problems)
+    stale, problems = mb.read_track({'name': 'Mix', 'phases': [{'name': 'P', 'kind': 'build', 'weeks': 1,
+                                     'template': [week(mon=[own['id']])]}]}, 'mix', [],
+                                    {**CAT, 'archetypes': {**library, own['id']: {**own, '_package': mb.package_id(prefix)}}})
+    check('a deleted session of the athlete\'s is not found again in the library', stale is None, problems)
+
+
 def test_routes(write: bool = False):
     print('the routes (local dev: every request is local-dev-user)')
     import api
@@ -449,6 +503,7 @@ if __name__ == '__main__':
     test_problems()
     test_package()
     test_tracks()
+    test_any_session()
     test_routes(write)
     test_fixture_is_current()
     print(f"\n{'FAILED: ' + ', '.join(FAILURES) if FAILURES else 'all passed'}")

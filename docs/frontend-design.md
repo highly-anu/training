@@ -2610,12 +2610,14 @@ sessions, the archetype detail and the session panel.
 
 - **Stages.** Consecutive blocks of one stage (Start · Main work · Finisher · Cool-down)
   sit under a small label — only when the session has more than one stage.
-- **A block** leads with a mark for its shape (a rep scheme draws its own steps: a ladder
-  climbs, a pyramid comes back down) and its headline in mono ("6 rounds", "Every minute ×
+- **A block** leads with a mark for its shape (straight sets a dumbbell; a rep scheme draws
+  its own steps: a ladder climbs, a pyramid comes back down) and its headline in mono ("6 rounds", "Every minute ×
   20", "21-15-9 for time"), then chips: what is lifted, the intensity, a cap, a rest
   between sets.
 - **A round is a rail.** Movements done one after another and then again sit on a rail in
-  the session's modality colour, each with its own count a round; the rail's foot says the
+  the session's modality colour, each with its own count a round — the count column is as wide
+  as the round's longest count (`lib/blocks.countColumn`), so "10-15-20-15-10" stays on one
+  line; the rail's foot says the
   rest between rounds and the way back to the top ("2 min 30 s rest between rounds · 6
   rounds in all"). A lone movement has no rail. Blocks tied by `group` share a bracket
   ("Superset", "Alternate sets").
@@ -2627,6 +2629,12 @@ sessions, the archetype detail and the session panel.
   `ExerciseRow` with its logger and swap; a lone movement then gets no block header (the
   row says its numbers), a round keeps its header and rail. When the blocks do not account
   for every exercise (`lib/blocks.blockRows`), the list is drawn flat.
+
+**Rounds are raced only when written so.** "For time" is fixed work as fast as possible; an
+EMOM is fixed time. Rounds with a written rest — the session builder's Rounds always writes
+one, zero included — read "20 rounds", never "20 rounds for time", in an archetype and in a
+program's session alike (the load carries `round_rest_sec`). A block whose role only counts
+(the builder's `b1`, `b2`…) has no title.
 
 Colour is the modality's, on the rail and the main work's mark only. A component never
 words a prescription: a new wording is a change to `session_blocks.py` and its test.

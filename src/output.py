@@ -56,7 +56,10 @@ def _fmt_load(load: dict) -> str:
         fmt = load.get('format', 'AMRAP')
         n = load['target_rounds']
         rounds = f"{n} round{'' if n == 1 else 's'}"
-        if 'time_minutes' in load:
+        if 'round_rest_sec' in load:
+            # Rounds with a rest between them: a circuit, not a race.
+            parts.append(rounds)
+        elif 'time_minutes' in load:
             parts.append(f"{load['time_minutes']} min {fmt} — target {rounds}")
         elif 'rep_scheme' in load:
             # The scheme already says the rounds (21-15-9 is three).

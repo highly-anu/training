@@ -384,32 +384,32 @@
       "weeks": [
        {
         "week": 1,
-        "text": "10 reps/round | 3 rounds FOR TIME",
+        "text": "10 reps/round | 3 rounds",
         "light": false
        },
        {
         "week": 2,
-        "text": "10 reps/round | 4 rounds FOR TIME",
+        "text": "10 reps/round | 4 rounds",
         "light": true
        },
        {
         "week": 3,
-        "text": "10 reps/round | 5 rounds FOR TIME",
+        "text": "10 reps/round | 5 rounds",
         "light": false
        },
        {
         "week": 4,
-        "text": "10 reps/round | 6 rounds FOR TIME",
+        "text": "10 reps/round | 6 rounds",
         "light": true
        },
        {
         "week": 5,
-        "text": "10 reps/round | 7 rounds FOR TIME",
+        "text": "10 reps/round | 7 rounds",
         "light": false
        },
        {
         "week": 6,
-        "text": "10 reps/round | 8 rounds FOR TIME",
+        "text": "10 reps/round | 8 rounds",
         "light": false
        }
       ]
@@ -986,32 +986,32 @@
      "weeks": [
       {
        "week": 1,
-       "text": "10 reps/round | 3 rounds FOR TIME",
+       "text": "10 reps/round | 3 rounds",
        "light": false
       },
       {
        "week": 2,
-       "text": "10 reps/round | 4 rounds FOR TIME",
+       "text": "10 reps/round | 4 rounds",
        "light": true
       },
       {
        "week": 3,
-       "text": "10 reps/round | 5 rounds FOR TIME",
+       "text": "10 reps/round | 5 rounds",
        "light": false
       },
       {
        "week": 4,
-       "text": "10 reps/round | 5 rounds FOR TIME",
+       "text": "10 reps/round | 5 rounds",
        "light": true
       },
       {
        "week": 5,
-       "text": "10 reps/round | 7 rounds FOR TIME",
+       "text": "10 reps/round | 7 rounds",
        "light": false
       },
       {
        "week": 6,
-       "text": "10 reps/round | 8 rounds FOR TIME",
+       "text": "10 reps/round | 8 rounds",
        "light": false
       }
      ]

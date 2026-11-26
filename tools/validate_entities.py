@@ -153,8 +153,9 @@ def _extra_checks(data: dict, schema_filename: str, path: str | None = None) -> 
                             errors.append(f"{fw.get('id')}: category '{cid}' falls back to unknown '{other}'")
                     for aid in cat['archetypes']:
                         pooled.add(aid)
-                        if aid not in pool_only:
-                            errors.append(f"{fw.get('id')}: category '{cid}' names '{aid}', not an archetype of this package")
+                        if aid not in pool_only and aid not in _borrowed_archetypes(data):
+                            errors.append(f"{fw.get('id')}: category '{cid}' names '{aid}', not an archetype of this "
+                                          "package or of one it borrows sessions from")
         for aid, flag in pool_only.items():
             if flag and aid not in pooled and frameworks:
                 errors.append(f"'{aid}' is pool_only but no day category of a templated phase names it")
@@ -245,6 +246,30 @@ def _extra_checks(data: dict, schema_filename: str, path: str | None = None) -> 
                 )
 
     return errors
+
+
+def _borrowed_archetypes(philosophy: dict) -> set:
+    """The archetype ids of the packages a philosophy borrows sessions from
+    (`borrows_from` with `kinds` naming archetypes, or naming no kind): a day
+    category may pool one of those beside the package's own."""
+    sys.path.insert(0, _ROOT)
+    from src import loader
+    out: set = set()
+    for entry in philosophy.get('borrows_from') or []:
+        entry = {'package': entry} if isinstance(entry, str) else entry
+        if 'archetypes' not in (entry.get('kinds') or ['archetypes']):
+            continue
+        listed = set(entry.get('archetypes') or [])
+        try:
+            folder = loader.package_dir(entry.get('package'))
+        except Exception:
+            continue
+        for f in glob.glob(os.path.join(folder or '', 'archetypes', '**', '*.yaml'), recursive=True):
+            with open(f, encoding='utf-8') as fh:
+                aid = (yaml.safe_load(fh) or {}).get('id')
+            if aid and (not listed or aid in listed):
+                out.add(aid)
+    return out
 
 
 def _category_errors(item: dict, own: set) -> list[str]:

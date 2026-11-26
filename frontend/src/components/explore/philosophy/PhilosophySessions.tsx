@@ -1,8 +1,11 @@
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Pencil } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import type { PhilosophyDescription } from '@/api/types'
 import { useExploreNavigate } from '@/components/explore/topics'
 import { EditableText, useMethodEditing } from '@/components/methods/MethodEdit'
 import { SessionBrowser } from '@/components/sessions/SessionBrowser'
+import { useMethods } from '@/api/methods'
+import { useDevLabEnabled } from '@/lib/featureFlags'
 
 /**
  * Every session the package writes, in the session browser: grouped as the
@@ -17,6 +20,10 @@ export function PhilosophySessions({ doc, sessionId, onSession }: {
 }) {
   const go = useExploreNavigate()
   const editing = useMethodEditing()
+  // Sessions the athlete composed by hand open in the session builder.
+  const builder = useDevLabEnabled()
+  const methods = useMethods()
+  const composed = builder && !!methods.data?.methods?.find((m) => m.id === doc.id)?.composed
   return (
     <SessionBrowser
       groups={doc.groups}
@@ -25,9 +32,17 @@ export function PhilosophySessions({ doc, sessionId, onSession }: {
       onSelect={onSession}
       onExercise={(id) => go('exercises', id)}
       detailFooter={(s) => (
-        <button type="button" onClick={() => go('archetypes', s.id)} className="inline-flex items-center gap-1 hover:text-foreground">
-          Open as an archetype <ArrowRight className="size-3" />
-        </button>
+        <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          {composed && (
+            <Link to={`/dev?tab=session&edit=${encodeURIComponent(s.id)}`}
+              className="inline-flex items-center gap-1 font-medium text-foreground hover:underline">
+              <Pencil className="size-3" /> Edit session
+            </Link>
+          )}
+          <button type="button" onClick={() => go('archetypes', s.id)} className="inline-flex items-center gap-1 hover:text-foreground">
+            Open as an archetype <ArrowRight className="size-3" />
+          </button>
+        </span>
       )}
       editing={editing ? {
         name: (s) => (

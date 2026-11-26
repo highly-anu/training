@@ -165,6 +165,15 @@ def _written_kg(slot: dict) -> str | None:
     return f"{int(kg) if float(kg).is_integer() else kg} kg"
 
 
+def _first_rest(*written) -> int | None:
+    """The first rest that is some seconds, else a written zero (rounds with
+    no rest between them are still rounds), else none written."""
+    for seconds in written:
+        if seconds:
+            return seconds
+    return 0 if any(seconds == 0 and seconds is not False for seconds in written) else None
+
+
 def _from_assignment(ea: dict, written: dict | None) -> dict:
     """A stored session's exercise as the same fields: its load is what the
     generator prescribed, its slot's `stage` and `group` what the archetype
@@ -187,7 +196,7 @@ def _from_assignment(ea: dict, written: dict | None) -> dict:
         'per_round': load.get('reps_per_round'),
         'each_side': bool(load.get('each_side')) or each,
         'work_sec': load.get('work_sec'),
-        'rest_sec': load.get('rest_sec') if interval else ea.get('rest_sec') or load.get('rest_sec'),
+        'rest_sec': load.get('rest_sec') if interval else _first_rest(ea.get('rest_sec'), load.get('rest_sec'), load.get('round_rest_sec')),
         'seconds': minutes * 60 if minutes and kind not in ('for_time', 'rounds_for_time') else None,
         'cap_sec': minutes * 60 if minutes and kind in ('for_time', 'rounds_for_time') else None,
         'distance_m': metres,
@@ -228,8 +237,8 @@ def _shape(lead: dict, has_children: bool) -> str:
     if lead['technique']:
         return 'note'
     if kind in ('for_time', 'rounds_for_time'):
-        # Rounds with a written rest between them are not raced.
-        return 'rounds' if kind == 'rounds_for_time' and lead['rest_sec'] else 'for_time'
+        # Rounds with a written rest between them — even none — are not raced.
+        return 'rounds' if kind == 'rounds_for_time' and lead['rest_sec'] is not None else 'for_time'
     if kind == 'amrap':
         return 'interval' if lead['work_sec'] else 'amrap'
     if kind == 'emom':
@@ -401,7 +410,7 @@ def _block(items: list[dict], names: dict, pools: dict) -> dict:
         'stage': (stage := stage_of(lead['role'], lead['stage'])),
         'stageLabel': stage_label(stage),
         'shape': pattern or shape,
-        'title': _words(_bare(lead['role'])),
+        'title': _title(lead['role']),
         'headline': _headline(shape, lead, repeat,
                               movements[0]['count'] if len(items) == 1 and not movements[0]['perRound'] else None),
         'repeat': repeat or None,
@@ -417,6 +426,16 @@ def _block(items: list[dict], names: dict, pools: dict) -> dict:
         'roles': [i['role'] for i in items],
         'movements': movements,
     }
+
+
+_POSITIONAL = re.compile(r'b\d+(_\d+)?')
+
+
+def _title(role) -> str:
+    """A block's name from its role; none where the role only counts (a
+    session composed by hand numbers its blocks b1, b2…)."""
+    bare = _bare(role)
+    return '' if _POSITIONAL.fullmatch(bare) else _words(bare)
 
 
 def _bare(role) -> str:

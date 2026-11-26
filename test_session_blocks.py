@@ -148,6 +148,18 @@ class Shapes(unittest.TestCase):
         self.assertEqual(sb.for_archetype(COMPLEX)[1]['shape'], 'rounds')
         self.assertEqual(self.shape(slot('h', 'rounds_for_time', rounds=3)), 'for_time')
 
+    def test_rounds_with_no_rest_written_as_none_are_still_rounds(self):
+        # "Rounds" in the session builder always writes its rest, zero included.
+        b = sb.for_archetype(arch(slot('b1', 'rounds_for_time', rounds=20, reps_per_round=5, rest_sec=0)))[0]
+        self.assertEqual((b['shape'], b['headline'], b['rest']), ('rounds', '20 rounds', None))
+        raced = sb.for_archetype(arch(slot('b1', 'rounds_for_time', rounds=20, reps_per_round=5)))[0]
+        self.assertEqual(raced['headline'], '20 rounds for time')
+
+    def test_a_role_that_only_counts_names_nothing(self):
+        self.assertEqual(sb.for_archetype(arch(slot('b1', 'amrap', duration_sec=600)))[0]['title'], '')
+        self.assertEqual(sb.for_archetype(arch(slot('u1_ms_x__b12_2', sets=3, reps=5)))[0]['title'], '')
+        self.assertEqual(sb.for_archetype(arch(slot('bench', sets=3, reps=5)))[0]['title'], 'Bench')
+
     def test_the_rest(self):
         self.assertEqual(self.shape(slot('e', 'emom', duration_sec=600)), 'emom')
         self.assertEqual(self.shape(slot('t', 'time_domain', sets=6, duration_sec=30, rest_sec=30)), 'interval')
@@ -224,6 +236,20 @@ class Sessions(unittest.TestCase):
         self.assertEqual(blocks[1]['load'], '43 kg')
         self.assertEqual(blocks[2]['rest']['text'], '3 min rest between sets')
         self.assertEqual(blocks[0]['title'], 'Jog')
+
+    def test_rested_rounds_stay_rounds_in_a_program(self):
+        # The slot does not survive storage: the load carries the round's rest
+        # (progression._as_written), and a zero is still a rest written.
+        from src.progression import calculate_load
+        for rest, text in ((60, '1 min rest between rounds'), (0, None)):
+            written = slot('b1', 'rounds_for_time', rounds=20, reps_per_round=5, rest_sec=rest)
+            load = calculate_load({'id': 'swing'}, written, 'as_written', 1, 'build', 'intermediate', False)
+            self.assertNotIn('format', load)
+            b = sb.for_session({'exercises': [assignment('b1', 'rounds_for_time', load, 'Swing')]})[0]
+            self.assertEqual((b['shape'], b['headline'], (b['rest'] or {}).get('text')), ('rounds', '20 rounds', text))
+        raced = calculate_load({'id': 'swing'}, slot('b1', 'rounds_for_time', rounds=5, reps_per_round=5),
+                               'as_written', 1, 'build', 'intermediate', False)
+        self.assertEqual(raced['format'], 'FOR TIME')
 
     def test_a_generated_amrap_shows_no_forecast_of_rounds(self):
         s = {'exercises': [assignment('a', 'amrap', {'time_minutes': 12, 'target_rounds': 5, 'format': 'AMRAP'})]}

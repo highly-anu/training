@@ -1905,6 +1905,12 @@ ranking), the draft lives in `store/sessionBuilderStore.ts`, and the server read
 `mocks/fixtures/manual-sessions.json`.
 
 **Programs are laid out by hand in Dev Lab ▸ Program builder** (`/dev?tab=program`, roadmap 24.4):
+a day takes one of the athlete's sessions or **any session in view** (the shelf's All sessions,
+`lib/programBuilder.shelfSessions` over `/api/archetypes`). Another package's session is
+borrowed by reference — a category `x_<id>` and `borrows_from … kinds: [archetypes, exercises]`
+(`manual_builder.borrowed_sessions`, `compose`) — never copied, so a program needs no saved
+session of the athlete's own; the athlete's own have Edit session on the shelf and in
+Explore's session browser.
 `components/devlab/programbuilder/` draws, `lib/programBuilder.ts` holds every edit as a pure
 function, the draft lives in `store/programBuilderStore.ts`, the server reads it
 (`POST /api/manual/tracks/preview`) and answers the constraints that build it as laid

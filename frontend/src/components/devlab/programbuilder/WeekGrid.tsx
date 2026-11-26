@@ -1,9 +1,8 @@
 import { useDraggable, useDroppable } from '@dnd-kit/core'
 import { Copy, Eraser, Feather, MoreHorizontal, Plus, Trash2 } from 'lucide-react'
-import type { DescribedSession } from '@/api/manual'
 import {
   DAYS, DAY_SHORT, MAX_DAY_SESSIONS, canPlace, problemsAt, sessionsInWeek,
-  type Cell, type DraftPhase, type ManualDay, type TrackProblem,
+  type Cell, type DraftPhase, type ManualDay, type ShelfSession, type TrackProblem,
 } from '@/lib/programBuilder'
 import { modalityHex } from '@/lib/modalityColors'
 import {
@@ -26,7 +25,7 @@ const iconButton = 'rounded p-1 text-muted-foreground hover:bg-muted hover:text-
 const cellName = (cell: Cell) => `week ${cell.week + 1}, ${DAYS[cell.day]}`
 
 function PlacedChip({ phase, cell, index, session, name, actions }: {
-  phase: DraftPhase; cell: Cell; index: number; session: DescribedSession | undefined; name: string; actions: GridActions
+  phase: DraftPhase; cell: Cell; index: number; session: ShelfSession | undefined; name: string; actions: GridActions
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `p|${phase.uid}|${cell.week}|${cell.day}|${index}`,
@@ -41,7 +40,11 @@ function PlacedChip({ phase, cell, index, session, name, actions }: {
         aria-label={`${name}, ${cellName(cell)}. Drag to another day`}
         className="min-w-0 flex-1 cursor-grab touch-none rounded-l px-1.5 py-1 text-left hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:cursor-grabbing">
         <span className="block line-clamp-2 break-words text-xs font-medium">{name}</span>
-        {session && <span className="block text-[11px] text-muted-foreground">{session.minutes} min</span>}
+        {session && (
+          <span className="block truncate text-[11px] text-muted-foreground">
+            {[session.minutes ? `${session.minutes} min` : null, session.from?.name].filter(Boolean).join(' · ')}
+          </span>
+        )}
       </button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -64,7 +67,7 @@ function PlacedChip({ phase, cell, index, session, name, actions }: {
 }
 
 function DayCell({ phase, cell, day, sessions, actions, problems, dragging }: {
-  phase: DraftPhase; cell: Cell; day: ManualDay; sessions: DescribedSession[]; actions: GridActions
+  phase: DraftPhase; cell: Cell; day: ManualDay; sessions: ShelfSession[]; actions: GridActions
   problems: TrackProblem[]; dragging: { sessionId: string } | null
 }) {
   const { setNodeRef, isOver } = useDroppable({
@@ -73,7 +76,9 @@ function DayCell({ phase, cell, day, sessions, actions, problems, dragging }: {
   const byId = new Map(sessions.map((s) => [s.id, s]))
   const takes = dragging ? canPlace(day, dragging.sessionId) : false
   const full = day.sessions.length >= MAX_DAY_SESSIONS
-  const addable = sessions.filter((s) => canPlace(day, s.id))
+  // The menu offers the athlete's own and whatever else the phase already has; the rest is dragged from the shelf.
+  const inPhase = new Set(phase.template.flatMap((w) => w.flatMap((d) => d.sessions)))
+  const addable = sessions.filter((s) => (s.own || inPhase.has(s.id)) && canPlace(day, s.id))
   const minutes = day.sessions.reduce((n, id) => n + (byId.get(id)?.minutes ?? 0), 0)
   return (
     <div ref={setNodeRef} role="group" aria-label={`${DAYS[cell.day]}, week ${cell.week + 1}`}
@@ -83,7 +88,7 @@ function DayCell({ phase, cell, day, sessions, actions, problems, dragging }: {
         isOver && !takes && dragging && 'ring-2 ring-bad/40', problems.length > 0 && 'border-bad')}>
       {day.sessions.map((id, i) => (
         <PlacedChip key={`${id}-${i}`} phase={phase} cell={cell} index={i} session={byId.get(id)}
-          name={byId.get(id)?.name ?? 'A session no longer saved'} actions={actions} />
+          name={byId.get(id)?.name ?? 'A session no longer available'} actions={actions} />
       ))}
       {day.sessions.length === 2 && (
         <p className="text-[11px] leading-tight text-muted-foreground">One session of both · {minutes} min</p>
@@ -126,7 +131,7 @@ export function WeekGrid({ phase, phaseIndex, sessions, actions, problems, dragg
   phase: DraftPhase
   /** The phase's place in the track, which is how the server names it in a problem. */
   phaseIndex: number
-  sessions: DescribedSession[]
+  sessions: ShelfSession[]
   actions: GridActions
   problems: TrackProblem[]
   dragging: { sessionId: string } | null

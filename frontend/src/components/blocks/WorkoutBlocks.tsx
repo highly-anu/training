@@ -1,11 +1,11 @@
 import { useState, type ReactNode } from 'react'
 import {
-  ChevronDown, Clock, CornerLeftUp, Flag, Hourglass, type LucideIcon, Pause, Repeat, Route, Rows3, Sparkles,
-  StickyNote, Timer, Zap,
+  ChevronDown, Clock, CornerLeftUp, Dumbbell, Flag, Hourglass, type LucideIcon, Pause, Repeat, Route, Sparkles,
+  StickyNote, Timer, TrendingUp, Triangle, Zap,
 } from 'lucide-react'
 import type { BlockMovement, BlockShape, BlockStage, SessionBlock } from '@/api/types'
 import { Collapse } from '@/components/motion/Collapse'
-import { isLoop, STAGE_ORDER, stageRuns } from '@/lib/blocks'
+import { countColumn, isLoop, STAGE_ORDER, stageRuns } from '@/lib/blocks'
 import { cn } from '@/lib/utils'
 
 /**
@@ -17,8 +17,8 @@ import { cn } from '@/lib/utils'
  */
 
 const SHAPE_ICON: Record<BlockShape, LucideIcon> = {
-  sets: Rows3, rounds: Repeat, for_time: Flag, amrap: Hourglass, emom: Timer, interval: Zap,
-  ladder: Rows3, pyramid: Rows3, timed: Clock, distance: Route, hold: Pause, practice: Sparkles, note: StickyNote,
+  sets: Dumbbell, rounds: Repeat, for_time: Flag, amrap: Hourglass, emom: Timer, interval: Zap,
+  ladder: TrendingUp, pyramid: Triangle, timed: Clock, distance: Route, hold: Pause, practice: Sparkles, note: StickyNote,
 }
 
 /** A rep scheme as steps: a ladder climbs, a pyramid comes back down, 21-15-9 falls. */
@@ -35,7 +35,7 @@ export function SchemeBars({ scheme, className }: { scheme: number[]; className?
 
 function ShapeMark({ block, accent }: { block: SessionBlock; accent?: string }) {
   const scheme = block.repeat?.scheme
-  const Icon = SHAPE_ICON[block.shape] ?? Rows3
+  const Icon = SHAPE_ICON[block.shape] ?? Dumbbell
   return (
     <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted/60 text-muted-foreground"
       style={accent && block.stage === 'main' ? { color: accent } : undefined}>
@@ -50,8 +50,11 @@ function Chip({ children }: { children: ReactNode }) {
 
 /** One movement: its count a round, its name, and — on demand — its note and
  *  what else may fill the slot. */
-function MovementRow({ movement: m, onExercise, renderNote }: {
-  movement: BlockMovement; onExercise?: (id: string) => void; renderNote?: NoteRenderer
+function MovementRow({ movement: m, countWidth, onExercise, renderNote }: {
+  movement: BlockMovement
+  /** The block's count column: as wide as its longest count ("10-15-20-15-10"), so none wraps. */
+  countWidth: string
+  onExercise?: (id: string) => void; renderNote?: NoteRenderer
 }) {
   const [open, setOpen] = useState(false)
   const others = m.listed ? m.exercises.slice(1) : m.exercises
@@ -59,7 +62,8 @@ function MovementRow({ movement: m, onExercise, renderNote }: {
   const first = m.listed ? m.exercises[0] : undefined
   const line = (
     <>
-      <span className="w-14 shrink-0 text-right font-mono text-[11px] text-primary tabular-nums">{m.count ?? ''}</span>
+      <span className="shrink-0 whitespace-nowrap text-right font-mono text-[11px] text-primary tabular-nums"
+        style={{ width: countWidth }}>{m.count ?? ''}</span>
       <span className="min-w-0 flex-1 truncate text-xs">
         {m.name}
         {m.eachSide && <span className="text-muted-foreground"> · each side</span>}
@@ -78,7 +82,7 @@ function MovementRow({ movement: m, onExercise, renderNote }: {
         <div className="flex items-center gap-2 px-1 py-1">{line}</div>
       )}
       <Collapse open={open}>
-        <div className="space-y-1.5 pb-1.5 pl-[4.25rem] pr-1">
+        <div className="space-y-1.5 pb-1.5 pr-1" style={{ paddingLeft: `calc(${countWidth} + 0.75rem)` }}>
           {m.note && <p className="text-[11px] leading-relaxed text-muted-foreground">{renderNote ? renderNote(m.role, m.note) : m.note}</p>}
           {(first || others.length > 0) && (
             <div className="flex flex-wrap items-center gap-1">
@@ -146,7 +150,9 @@ export function BlockCard({ block: b, accent, onExercise, renderMovement, render
   const name = single && !loop ? single.name : b.title
   const rows = renderMovement
     ? b.movements.map((m) => <li key={m.role}>{renderMovement(m, b)}</li>)
-    : b.movements.map((m) => <MovementRow key={m.role} movement={m} onExercise={onExercise} renderNote={renderNote} />)
+    : b.movements.map((m) => (
+      <MovementRow key={m.role} movement={m} countWidth={countColumn(b.movements)} onExercise={onExercise} renderNote={renderNote} />
+    ))
 
   // A caller's own rows say a lone movement's numbers themselves: no header
   // over one row, only over a round.
@@ -178,7 +184,7 @@ export function BlockCard({ block: b, accent, onExercise, renderMovement, render
         </div>
         {details.length > 0 && (
           <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open}
-            aria-label={`${open ? 'Hide' : 'Show'} notes for ${name}`}
+            aria-label={`${open ? 'Hide' : 'Show'} notes for ${name || b.headline}`}
             className="flex size-6 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted/40 hover:text-foreground">
             <ChevronDown className={cn('size-3.5', open && 'rotate-180')} aria-hidden />
           </button>

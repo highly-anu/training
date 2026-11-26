@@ -9,6 +9,8 @@ import {
   trackRefusal, useDeleteManualTrack, useManualSessions, useManualTrackPreview, useManualTracks, useSaveManualTrack,
   type DescribedTrack,
 } from '@/api/manual'
+import { useArchetypes } from '@/api/archetypes'
+import { usePhilosophies } from '@/api/philosophies'
 import { useGenerateDraft, type GenerateParams } from '@/api/programs'
 import type { AthleteConstraints, PhaseKind } from '@/api/types'
 import { useDebounce } from '@/hooks/useDebounce'
@@ -19,7 +21,7 @@ import { EQUIPMENT_LABELS } from '@/lib/gen/clientVocab'
 import { PHASE_COLORS } from '@/lib/phaseColors'
 import {
   addPhase, addWeek, clearWeek, duplicateOf, duplicateWeek, fromWire, isBlank, lighterWeeks, moveSession, nudgePhase,
-  phaseStarts, placeSession, placedSessions, problemsAt, removePhase, removeSession, removeWeek, repeatLine, toWire,
+  phaseStarts, placeSession, placedSessions, problemsAt, removePhase, removeSession, removeWeek, repeatLine, shelfSessions, toWire,
   toggleLight, totalWeeks, trackProblems, updatePhase, type Cell, type TrackProblem,
 } from '@/lib/programBuilder'
 import { regenerateSource, tailResume } from '@/lib/programSource'
@@ -145,8 +147,8 @@ function RunningNote({ track }: { track: DescribedTrack }) {
 }
 
 /**
- * Dev Lab ▸ Program builder (docs/roadmap.md item 24.4): lay the saved
- * sessions on the days of a week, the weeks into phases, see what the server
+ * Dev Lab ▸ Program builder (docs/roadmap.md item 24.4): lay sessions — the
+ * athlete's own or any method's — on the days of a week, the weeks into phases, see what the server
  * reads of it, save, and open it in Program ▸ Preview.
  */
 export function ProgramBuilderPanel() {
@@ -161,7 +163,15 @@ export function ProgramBuilderPanel() {
   const [deleting, setDeleting] = useState<DescribedTrack | null>(null)
   const [starting, setStarting] = useState<DescribedTrack | null>(null)
 
-  const sessions = useMemo(() => sessionsQuery.data?.sessions ?? [], [sessionsQuery.data])
+  // Every other session in view — any method's — may be laid on a day beside the athlete's own.
+  const archetypesQuery = useArchetypes()
+  const philosophiesQuery = usePhilosophies()
+  const sessions = useMemo(() => shelfSessions(
+    sessionsQuery.data?.sessions ?? [],
+    Array.isArray(archetypesQuery.data) ? archetypesQuery.data : [],
+    Array.isArray(philosophiesQuery.data) ? philosophiesQuery.data : [],
+    sessionsQuery.data?.packageId ?? tracksQuery.data?.packageId,
+  ), [sessionsQuery.data, archetypesQuery.data, philosophiesQuery.data, tracksQuery.data?.packageId])
   const limits = tracksQuery.data?.limits ?? { tracks: 6, phases: 8, templateWeeks: 8, daySessions: 2, phaseWeeks: 52 }
   const kinds = tracksQuery.data?.kinds ?? []
 
@@ -265,7 +275,7 @@ export function ProgramBuilderPanel() {
     >
       <div className="grid gap-6 p-6 lg:grid-cols-[16rem_minmax(0,1fr)] 2xl:grid-cols-[16rem_minmax(0,1fr)_22rem]">
         <aside className="flex max-h-[calc(100vh-10rem)] flex-col gap-4 lg:sticky lg:top-0">
-          <SessionShelf sessions={sessions} placed={placedSessions(draft)} />
+          <SessionShelf sessions={sessions} placed={placedSessions(draft)} libraryLoading={archetypesQuery.isLoading} />
         </aside>
 
         <main className="flex min-w-0 flex-col gap-4">

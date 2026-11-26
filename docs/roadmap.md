@@ -2364,6 +2364,16 @@ with the program builder; per-set weights are later; existing exercises only.
     draft from elsewhere). A track the active program runs offers "Preview changes from
     today" (the existing tail regenerate). Your methods hides Revise for the composed
     package on the web.
+  - *Any existing session (2026-11-26).* A day takes any session in view, not only a saved
+    one: the shelf's **All sessions** searches every method's by name, method or movement.
+    Another package's session is pooled by reference, never copied — its own day category
+    (`x_<id>`), its package under `borrows_from` with `kinds: [archetypes, exercises]` (and
+    the movements that package borrows in turn), so the program's session is marked
+    "via X" and fills as it does at home. `validate_entities` lets a day category name a
+    borrowed package's archetype, and a package that borrows sessions may write none of its
+    own (`portability.problems`): a program can be built with no saved session at all. An
+    own session has **Edit session** on the shelf and in Explore's session browser
+    (`/dev?tab=session&edit=<id>`).
   - Run end to end on a scratch database on 2026-11-24: three sessions, a two-phase
     track (4 + 4 weeks, lighter every fourth, one two-session day) saved, generated with
     other preferred days and started — sessions on the laid days, squat 80 → 82.5 → 85 →

@@ -2282,7 +2282,7 @@ def delete_manual_session(session_id):
                 return {'error': 'in_use', 'detail': 'Your program has this session on a day. '
                         'Remove it there first.'}, 409
             kept = [a for a in archetypes if a['id'] != session_id]
-            if not kept:
+            if not kept and not tracks:
                 package_store.remove(user_id, pkg)
                 return {'removed': True}, 200
             result = package_store.install(user_id, manual_builder.compose(kept, prefix, tracks=tracks))
@@ -2370,9 +2370,6 @@ def _save_manual_track(track_id):
             if track_id is None and len(ids) >= manual_builder.MAX_TRACKS:
                 return {'error': 'too_many', 'problems': [{'phase': None, 'week': None, 'day': None, 'field': None,
                         'message': f'You can keep {manual_builder.MAX_TRACKS} programs. Delete one first.'}]}, 422
-            if not archetypes:
-                return {'error': 'invalid', 'problems': [{'phase': None, 'week': None, 'day': None, 'field': None,
-                        'message': 'Save a session first: a program is made of your saved sessions.'}]}, 422
             cat = manual_builder.catalog()
             draft = b.get('track') if isinstance(b.get('track'), dict) else {}
             new_id = track_id or manual_builder.new_track_id(draft.get('name'), ids)
@@ -2418,12 +2415,16 @@ def delete_manual_track(track_id):
 
     def run(_b):
         try:
-            prefix, _, archetypes, tracks = _manual_library(user_id)
+            prefix, pkg, archetypes, tracks = _manual_library(user_id)
             if track_id not in [t['id'] for t in tracks]:
                 return {'error': 'not_found'}, 404
             if _program_uses(_db.get_user_program(user_id), manual_builder.framework_id_of(track_id, prefix)):
                 return {'error': 'in_use', 'detail': 'Your program runs on this. Start another program first.'}, 409
             kept = [t for t in tracks if t['id'] != track_id]
+            if not kept and not archetypes:
+                # A program of other methods' sessions alone: nothing of the athlete's is left.
+                package_store.remove(user_id, pkg)
+                return {'removed': True}, 200
             result = package_store.install(user_id, manual_builder.compose(archetypes, prefix, tracks=kept))
             if not result.get('installed'):
                 return {'error': 'invalid', 'problems': _manual_track_gate_problems(result)}, 422
