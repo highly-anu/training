@@ -458,9 +458,15 @@ final class AppState: ObservableObject {
     /// Link a workout to a session on any day. A session of the current
     /// program is also marked complete; one of an earlier program is only
     /// linked — its key would tick this program's session of that name.
-    func link(workoutId: String, to session: LinkSession) async {
+    /// `replacing` is the workout the session held: it is unlinked first, so
+    /// a session never keeps two recordings from a change of mind.
+    func link(workoutId: String, to session: LinkSession, replacing old: String? = nil) async {
         guard let api else { return }
         if let doc = linking { linking = Linking.applyingLink(doc, workoutId: workoutId, session: session) }
+        if let old, old != workoutId {
+            try? await api.saveWorkoutMatch(Linking.unlinkPayload(workoutId: old))
+            workoutMatches[old] = WorkoutMatch(workoutId: old, sessionKey: "", confidence: "rejected")
+        }
         if !session.historical, let workout = importedWorkouts.first(where: { $0.id == workoutId }) {
             try? await matchAndComplete(workout: workout, sessionKey: session.legacyKey ?? session.key,
                                         session: session)

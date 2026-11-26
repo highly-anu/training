@@ -3,27 +3,28 @@ import UniformTypeIdentifiers
 
 /// The Log tab's sections. Internal so `AppRouter` can name one.
 enum LogTab: Int, AppSubTab {
-    case activity, linking
+    case linking, activity
 
     var label: String {
         switch self {
-        case .activity: return "Activity"
         case .linking: return "Linking"
+        case .activity: return "Activity"
         }
     }
 }
 
-/// The record and the decision queue — the phone's counterpart to the web's
-/// Log area (design-system §6.19). Activity is recorded workouts and what
-/// was logged against planned sessions in one list, with the `.fit`
-/// importer (`LogActivityTab`; Workouts and Sessions until 2026-10-20);
-/// Linking is one section per day, workouts beside planned sessions, with
-/// same-day suggestions and links across days (`LogLinkingTab`).
+/// The decision queue and the record — the phone's counterpart to the web's
+/// Log area (design-system §6.19). Linking leads (since 2026-11-26): one
+/// section per day with a planned session, each session with the workout
+/// linked to it or suggested for it (`LogLinkingTab`). Activity is recorded
+/// workouts and what was logged against planned sessions in one list, with
+/// the `.fit` importer (`LogActivityTab`; Workouts and Sessions until
+/// 2026-10-20).
 struct LogView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var router: AppRouter
 
-    @State private var selectedSegment: LogTab = .activity
+    @State private var selectedSegment: LogTab = .linking
     @State private var workoutFilter = WorkoutListFilter()
     @State private var selectedWorkout: ImportedWorkout? = nil
     /// A workout's detail grows out of its row (§6.48).

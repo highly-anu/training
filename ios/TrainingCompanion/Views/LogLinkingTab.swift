@@ -1,25 +1,27 @@
 import SwiftUI
 
-/// Log ▸ Linking: one section per day, the workouts recorded that day beside
-/// the sessions planned for it — the current program's and every earlier
-/// program's — with the links already made and same-day suggestions
-/// (`GET /health/linking`, design-system §6.19).
+/// Log ▸ Linking: giving each planned session its recording. One section per
+/// day that has a planned session — the current program's and every earlier
+/// program's — and under each session the workout linked to it, the one
+/// suggested for it, or nothing yet (`GET /health/linking`, design-system
+/// §6.19).
 ///
-/// Suggestions stay inside a day; linking across days is the athlete's call:
-/// tap Link… on a workout, then any session on any day. The web drags a
-/// workout onto a session; a long list on a phone is no place to drag.
-/// Every row's actions are in its "…" (§6.51); the swipe and the long press
-/// are the same ones.
+/// A day without a session is not listed, and a day's other workouts are not
+/// rows of their own: a session's Link workout… (or, once it has one, Link a
+/// different workout… in its "…") lists that day's workouts, then the unlinked
+/// ones of the days around it. The web drags a workout onto a session; a long
+/// list on a phone is no place to drag. Every row's actions are in its "…"
+/// (§6.51); the swipe and the long press are the same ones.
 struct LogLinkingTab: View {
     @EnvironmentObject var appState: AppState
     @Binding var reviewWorkout: ImportedWorkout?
 
-    @State private var showAll = false
-    /// The workout being linked by hand, while the athlete picks its session.
-    @State private var picking: LinkWorkout?
+    @State private var showAll = LogLinkingTab.debugShowAll
+    /// The session being given a workout by hand.
+    @State private var picking: Linking.SessionRow?
 
     var body: some View {
-        let all = appState.linking?.days ?? []
+        let all = Linking.visible(appState.linking?.days ?? [], showAll: true)
         let days = Linking.visible(all, showAll: showAll)
         Group {
             if appState.linking == nil, let error = appState.linkingError {
@@ -31,16 +33,13 @@ struct LogLinkingTab: View {
                 AppLoadingState(shape: .list, label: "Loading links")
             } else if all.isEmpty {
                 AppEmptyState(icon: "link", title: "Nothing to link yet",
-                              message: "Once you have a program and recorded workouts, each day shows them side by side here.")
+                              message: "Once you have a program, each day's planned sessions show here with the workouts recorded for them.")
             } else {
                 List {
-                    Section {
-                        scopeLine(open: all.filter(\.needsAttention).count)
-                        if let picking { pickingBanner(picking) }
-                    }
+                    Section { scopeLine(open: all.filter(Linking.toLink).count) }
                     if days.isEmpty {
                         Section {
-                            Text("Every day is linked.")
+                            Text("Every recorded workout has its session.")
                                 .font(.subheadline).foregroundStyle(.secondary)
                         }
                     }
@@ -50,13 +49,39 @@ struct LogLinkingTab: View {
                 }
             }
         }
-        .task { if appState.linking == nil { await appState.loadLinking() } }
+        .task {
+            if appState.linking == nil { await appState.loadLinking() }
+            #if DEBUG
+            // `SIMCTL_CHILD_TC_LINKING_PICK=1` opens the first session's workout picker.
+            if ProcessInfo.processInfo.environment["TC_LINKING_PICK"] == "1" {
+                picking = Linking.visible(appState.linking?.days ?? [], showAll: true)
+                    .first.flatMap { Linking.rows(for: $0).first }
+            }
+            #endif
+        }
         .refreshable {
             await AppRefresh.perform {
                 await appState.loadWorkouts()
                 await appState.loadLinking()
             }
         }
+        .sheet(item: $picking) { row in
+            LinkWorkoutPicker(row: row,
+                              candidates: appState.linking.map { Linking.candidates($0, for: row) }
+                                  ?? Linking.Candidates(sameDay: [], otherDays: [])) { workout in
+                act { await appState.link(workoutId: workout.id, to: row.session, replacing: row.linked?.id) }
+            }
+        }
+    }
+
+    /// Debug builds open on All days with `SIMCTL_CHILD_TC_LINKING_ALL=1`:
+    /// the simulator cannot be tapped from a script.
+    private static var debugShowAll: Bool {
+        #if DEBUG
+        return ProcessInfo.processInfo.environment["TC_LINKING_ALL"] == "1"
+        #else
+        return false
+        #endif
     }
 
     // MARK: - Pieces
@@ -72,19 +97,6 @@ struct LogLinkingTab: View {
             }
             .font(.subheadline)
         }
-    }
-
-    private func pickingBanner(_ workout: LinkWorkout) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: "hand.tap").foregroundStyle(Color.accentColor)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Linking \(workout.title)").font(.subheadline.weight(.semibold))
-                Text("Tap a session on any day.").font(.caption).foregroundStyle(.secondary)
-            }
-            Spacer()
-            Button("Cancel") { picking = nil }.font(.subheadline)
-        }
-        .accessibilityElement(children: .combine)
     }
 
     private func header(for day: LinkingDay) -> some View {
@@ -104,130 +116,79 @@ struct LogLinkingTab: View {
 
     @ViewBuilder
     private func rows(for day: LinkingDay) -> some View {
-        ForEach(day.links) { pair in
-            HStack {
-                pairRow(pair.workout, pair.session, linked: true)
-                Spacer(minLength: 0)
-                moreMenu(pair.workout, unlink: true)
-            }
-                .swipeActions {
-                    Button("Unlink", role: .destructive) { act { await appState.unlink(workoutId: pair.workout.id) } }
-                }
-                .contextMenu {
-                    Button("Unlink", systemImage: "link.badge.plus") { act { await appState.unlink(workoutId: pair.workout.id) } }
-                    openButton(pair.workout)
-                }
-        }
-        ForEach(day.suggestions) { s in
-            VStack(alignment: .leading, spacing: 10) {
+        ForEach(Linking.rows(for: day)) { row in
+            if let w = row.linked {
                 HStack {
-                    pairRow(s.workout, s.session, linked: false)
+                    pair(row.session, w, linked: true)
                     Spacer(minLength: 0)
-                    moreMenu(s.workout)
+                    moreMenu(row, workout: w)
                 }
+                .swipeActions {
+                    Button("Unlink", role: .destructive) { act { await appState.unlink(workoutId: w.id) } }
+                }
+                .contextMenu { menuItems(row, workout: w) }
+            } else if let w = row.suggested {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        pair(row.session, w, linked: false)
+                        Spacer(minLength: 0)
+                        moreMenu(row, workout: w)
+                    }
+                    AppAdaptiveStack {
+                        Button("Link") { act { await appState.link(workoutId: w.id, to: row.session) } }
+                            .appButton(.primary)
+                            .accessibilityLabel("Link \(w.title) to \(row.session.name)")
+                        Button("Not this") {
+                            act { await appState.dismissLink(workoutId: w.id, sessionKey: row.session.key) }
+                        }
+                        .appButton(.secondary)
+                    }
+                    .font(.subheadline)
+                }
+                .contextMenu { menuItems(row, workout: w) }
+            } else {
+                // The action under the session at the accessibility sizes (§6.57).
                 AppAdaptiveStack {
-                    Button("Link") { act { await appState.link(workoutId: s.workout.id, to: s.session) } }
-                        .appButton(.primary)
-                        .accessibilityLabel("Link \(s.workout.title) to \(s.session.name)")
-                    Button("Not this") {
-                        act { await appState.dismissLink(workoutId: s.workout.id, sessionKey: s.session.key) }
+                    VStack(alignment: .leading, spacing: 4) {
+                        sessionLine(row.session)
+                        if !day.workouts.isEmpty {
+                            Text(day.workouts.count == 1 ? "1 workout recorded this day"
+                                                         : "\(day.workouts.count) workouts recorded this day")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
                     }
-                    .appButton(.secondary)
-                    if picking != nil { pickTarget(s.session) }
-                }
-                .font(.subheadline)
-            }
-            .contextMenu { openButton(s.workout) }
-        }
-        ForEach(day.workouts) { w in
-            // The action under the workout at the accessibility sizes (§6.57).
-            AppAdaptiveStack {
-                workoutLine(w)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                HStack {
-                    Button(picking?.id == w.id ? "Picking…" : "Link…") {
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    Button("Link workout…") {
                         AppHaptics.selection()
-                        picking = picking?.id == w.id ? nil : w
+                        picking = row
                     }
                     .appButton(.secondary).font(.subheadline)
                     .lineLimit(1).fixedSize()
-                    .accessibilityLabel("Select \(w.title) to link")
-                    moreMenu(w)
+                    .accessibilityLabel("Link a workout to \(row.session.name)")
                 }
             }
-            .contextMenu { openButton(w) }
-        }
-        ForEach(day.sessions) { s in
-            HStack {
-                sessionLine(s)
-                Spacer()
-                if picking != nil { pickTarget(s) }
-            }
-        }
-        ForEach(day.elsewhere) { e in
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    workoutLine(e.workout)
-                    Text("Linked to a session not shown here").font(.caption).foregroundStyle(.secondary)
-                }
-                Spacer(minLength: 0)
-                moreMenu(e.workout)
-            }
-            .contextMenu { openButton(e.workout) }
-        }
-        ForEach(day.declined) { w in
-            AppAdaptiveStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    workoutLine(w)
-                    Text("Set aside: no session").font(.caption).foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                HStack {
-                    Button(picking?.id == w.id ? "Picking…" : "Link…") {
-                        AppHaptics.selection()
-                        picking = picking?.id == w.id ? nil : w
-                    }
-                    .appButton(.secondary).font(.subheadline)
-                    .lineLimit(1).fixedSize()
-                    .accessibilityLabel("Select \(w.title) to link")
-                    moreMenu(w)
-                }
-            }
-            .swipeActions {
-                Button("Link…") { picking = w }.tint(.accentColor)
-            }
-            .contextMenu { openButton(w) }
         }
     }
 
-    private func pickTarget(_ session: LinkSession) -> some View {
-        Button("Link here") {
-            guard let w = picking else { return }
-            picking = nil
-            act { await appState.link(workoutId: w.id, to: session) }
-        }
-        .appButton(.primary).font(.subheadline)
-        .accessibilityLabel("Link to \(session.name)")
-    }
-
-    private func pairRow(_ w: LinkWorkout, _ s: LinkSession, linked: Bool) -> some View {
+    /// The session, then the workout that is (or may be) its recording.
+    private func pair(_ s: LinkSession, _ w: LinkWorkout, linked: Bool) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            workoutLine(w, linkedTo: linked ? s : nil)
+            sessionLine(s)
             HStack(spacing: 8) {
                 Image(systemName: linked ? "checkmark.circle.fill" : "arrow.turn.down.right")
                     .foregroundStyle(linked ? AppColor.complete : Color.secondary)
                     .appSymbolReplace(value: linked)
                     .frame(minWidth: 22)
-                sessionLine(s)
+                Self.workoutLine(w, linkedTo: linked ? s : nil)
             }
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(linked ? "\(w.title) linked to \(s.name)" : "\(w.title) may be \(s.name)")
+        .accessibilityLabel(linked ? "\(s.name), linked to \(w.title)" : "\(s.name) may be \(w.title)")
     }
 
     /// A workout linked to a session shows that session's icon and colour, so
     /// the pair reads as one; any other leads with what the device recorded.
-    private func workoutLine(_ w: LinkWorkout, linkedTo s: LinkSession? = nil) -> some View {
+    static func workoutLine(_ w: LinkWorkout, linkedTo s: LinkSession? = nil) -> some View {
         let sessionIcon = s?.icon.flatMap { AppSymbol.custom.contains($0) ? $0 : nil }
         return HStack(spacing: 8) {
             Image(symbol: sessionIcon ?? ActivityIcon.forWorkout(activityType: w.activityType ?? "",
@@ -236,7 +197,7 @@ struct LogLinkingTab: View {
                 .frame(minWidth: 22)
             VStack(alignment: .leading, spacing: 1) {
                 Text(w.title).font(.subheadline.weight(.medium)).lineLimit(1)
-                Text(Self.workoutDetail(w)).font(.caption).foregroundStyle(.secondary)
+                Text(workoutDetail(w)).font(.caption).foregroundStyle(.secondary)
             }
         }
     }
@@ -247,41 +208,36 @@ struct LogLinkingTab: View {
                 .foregroundStyle(ModalityStyle.color(for: s.modality ?? ""))
                 .frame(minWidth: 22)
             VStack(alignment: .leading, spacing: 1) {
-                Text(s.name).font(.subheadline).lineLimit(1)
+                Text(s.name).font(.subheadline.weight(.medium)).lineLimit(1)
                 Text(Self.sessionDetail(s)).font(.caption).foregroundStyle(.secondary)
             }
         }
     }
 
-    /// The row's visible "…": Unlink for a linked pair, Open Workout when the
-    /// phone has the recording. Nothing when it would be empty.
-    @ViewBuilder
-    private func moreMenu(_ w: LinkWorkout, unlink: Bool = false) -> some View {
-        let canOpen = appState.importedWorkouts.contains { $0.id == w.id }
-        if unlink || canOpen {
-            Menu {
-                openButton(w)
-                if unlink {
-                    Button("Unlink", systemImage: "link.badge.plus", role: .destructive) {
-                        act { await appState.unlink(workoutId: w.id) }
-                    }
-                }
-            } label: {
-                Image(systemName: "ellipsis")
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 44, height: 44)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.borderless)
-            .accessibilityLabel("\(w.title) actions")
+    /// The row's visible "…": Open Workout when the phone has the recording,
+    /// another workout for the session, and Unlink for a linked pair.
+    private func moreMenu(_ row: Linking.SessionRow, workout w: LinkWorkout) -> some View {
+        Menu { menuItems(row, workout: w) } label: {
+            Image(systemName: "ellipsis")
+                .font(.body.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
         }
+        .buttonStyle(.borderless)
+        .accessibilityLabel("\(row.session.name) actions")
     }
 
     @ViewBuilder
-    private func openButton(_ w: LinkWorkout) -> some View {
+    private func menuItems(_ row: Linking.SessionRow, workout w: LinkWorkout) -> some View {
         if let full = appState.importedWorkouts.first(where: { $0.id == w.id }) {
             Button("Open Workout", systemImage: "arrow.up.right") { reviewWorkout = full }
+        }
+        Button("Link a Different Workout…", systemImage: "arrow.left.arrow.right") { picking = row }
+        if row.linked != nil {
+            Button("Unlink", systemImage: "link.badge.plus", role: .destructive) {
+                act { await appState.unlink(workoutId: w.id) }
+            }
         }
     }
 
@@ -332,5 +288,66 @@ struct LogLinkingTab: View {
         if let m = s.durationMinutes, m > 0 { parts.append("\(Int(m.rounded())) min planned") }
         if s.completedAt != nil { parts.append("done") }
         return parts.joined(separator: " · ")
+    }
+}
+
+/// The workouts a session can be given by hand: its own day's first, then
+/// the unlinked ones of the days around it (`Linking.candidates`).
+private struct LinkWorkoutPicker: View {
+    let row: Linking.SessionRow
+    let candidates: Linking.Candidates
+    let onPick: (LinkWorkout) -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if candidates.isEmpty {
+                    AppEmptyState(icon: "figure.run", title: "No other workout",
+                                  message: "Nothing else was recorded on \(LogLinkingTab.dayTitle(row.session.date)) or the days around it.")
+                } else {
+                    List {
+                        if !candidates.sameDay.isEmpty {
+                            Section(LogLinkingTab.dayTitle(row.session.date)) {
+                                ForEach(candidates.sameDay) { line($0, dated: false) }
+                            }
+                        }
+                        if !candidates.otherDays.isEmpty {
+                            Section("Other days") {
+                                ForEach(candidates.otherDays) { line($0, dated: true) }
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle(row.session.name)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+            }
+        }
+        .appSheet(.flexible)
+    }
+
+    private func line(_ c: Linking.Candidate, dated: Bool) -> some View {
+        Button {
+            onPick(c.workout)
+            dismiss()
+        } label: {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    LogLinkingTab.workoutLine(c.workout)
+                    let notes = [dated ? LogLinkingTab.dayTitle(c.workout.date) : nil, c.note].compactMap { $0 }
+                    if !notes.isEmpty {
+                        Text(notes.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+                Spacer(minLength: 0)
+                Text("Link").font(.subheadline.weight(.semibold)).foregroundStyle(Color.accentColor)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Link \(c.workout.title) to \(row.session.name)")
     }
 }
