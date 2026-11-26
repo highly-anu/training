@@ -9,11 +9,12 @@ import {
 } from '@/lib/sessionBuilder'
 import { NumberField } from '@/components/ui/number-field'
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Tip } from '@/components/shared/Tip'
 import { cn } from '@/lib/utils'
 import { ExerciseCombobox } from './ExerciseCombobox'
+import { NoteField } from './NoteField'
 
 export interface BlockActions {
   update: (patch: Partial<DraftBlock>) => void
@@ -45,14 +46,16 @@ function TextField({ label, value, onChange, placeholder, invalid, className }: 
   )
 }
 
-function Choice({ label, value, onChange, children, className }: {
+function Choice({ label, value, onChange, children, className, focusKey }: {
   label: string; value: string; onChange: (value: string) => void; children: ReactNode; className?: string
+  /** The name the builder finds it by, to put the focus back after a move. */
+  focusKey?: string
 }) {
   const id = useId()
   return (
     <div className={cn('flex flex-col gap-1', className)}>
       <label htmlFor={id} className="text-xs text-muted-foreground">{label}</label>
-      <select id={id} value={value} onChange={(e) => onChange(e.target.value)} className={cn(textInput, 'pr-6')}>
+      <select id={id} data-focus={focusKey} value={value} onChange={(e) => onChange(e.target.value)} className={cn(textInput, 'pr-6')}>
         {children}
       </select>
     </div>
@@ -100,7 +103,7 @@ function MovementRow({ block, movement, index, name, actions, problems }: {
   const bad = (field: string) => mine.some((p) => p.field === field)
   const set = (patch: Partial<DraftMovement>) => actions.updateMovement(movement.uid, patch)
   return (
-    <li className="flex flex-col gap-2 rounded-md border bg-background p-2">
+    <li data-movement={movement.uid} className="flex flex-col gap-2 rounded-md border bg-background p-2">
       <div className="flex items-center gap-1">
         <span className="min-w-0 flex-1 truncate text-sm font-medium">{name}</span>
         {block.movements.length > 1 && (
@@ -145,7 +148,7 @@ function MovementRow({ block, movement, index, name, actions, problems }: {
 }
 
 /** One block of the session: its kind, its numbers, its exercises. Takes a dropped exercise. */
-export function BlockEditor({ block, index, exercises, catalog, actions, problems }: {
+export function BlockEditor({ block, index, exercises, catalog, actions, problems, canEarlier, canLater, onMenuClosed }: {
   block: DraftBlock
   /** Its place in the session, which is how the server names it in a problem. */
   index: number
@@ -153,6 +156,10 @@ export function BlockEditor({ block, index, exercises, catalog, actions, problem
   catalog: Record<string, Exercise>
   actions: BlockActions
   problems: BuilderProblem[]
+  /** Earlier and Later stay inside the block's part; the Part choice is what changes it. */
+  canEarlier: boolean
+  canLater: boolean
+  onMenuClosed: (e: Event) => void
 }) {
   const spec = BLOCK_KINDS[block.kind]
   const title = `${spec.label} ${index + 1}`
@@ -170,10 +177,10 @@ export function BlockEditor({ block, index, exercises, catalog, actions, problem
   const full = spec.max !== undefined && block.movements.length >= spec.max
 
   return (
-    <article ref={(node) => { dragRef(node); dropRef(node) }} aria-label={title}
+    <article ref={(node) => { dragRef(node); dropRef(node) }} aria-label={title} data-block={block.uid}
       className={cn('flex flex-col gap-2 rounded-lg border bg-card p-3', over && 'border-primary ring-2 ring-primary/30',
         isDragging && 'opacity-40', problems.length > 0 && 'border-bad')}>
-      <header className="flex items-end gap-2">
+      <header className="flex flex-wrap items-end gap-2">
         <Tip label="Drag to move">
           <button type="button" ref={setActivatorNodeRef} {...attributes} {...listeners}
             aria-label={`Move ${title}`} className={cn(iconButton, 'mb-1.5 cursor-grab touch-none active:cursor-grabbing')}>
@@ -182,6 +189,9 @@ export function BlockEditor({ block, index, exercises, catalog, actions, problem
         </Tip>
         <Choice label="Block" value={block.kind} onChange={(kind) => actions.setKind(kind as BlockKind)} className="w-40">
           {KIND_ORDER.map((kind) => <option key={kind} value={kind}>{BLOCK_KINDS[kind].label}</option>)}
+        </Choice>
+        <Choice label="Part" value={block.stage} onChange={(stage) => actions.toStage(stage as BlockStage)} className="w-32" focusKey="part">
+          {STAGES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
         </Choice>
         {intensities.length > 0 && (
           <Choice label="Intensity" value={block.intensity ?? ''} onChange={(v) => actions.update({ intensity: v || undefined })} className="w-32">
@@ -193,18 +203,14 @@ export function BlockEditor({ block, index, exercises, catalog, actions, problem
         <DropdownMenu>
           <Tip label="Move or delete">
             <DropdownMenuTrigger asChild>
-              <button type="button" aria-label={`${title}: move or delete`} className={cn(iconButton, 'mb-1.5')}>
+              <button type="button" data-focus="menu" aria-label={`${title}: move or delete`} className={cn(iconButton, 'mb-1.5')}>
                 <MoreHorizontal className="size-4" />
               </button>
             </DropdownMenuTrigger>
           </Tip>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Move to</DropdownMenuLabel>
-            <DropdownMenuItem onSelect={() => actions.nudge(-1)}>Earlier</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => actions.nudge(1)}>Later</DropdownMenuItem>
-            {STAGES.filter((s) => s.id !== block.stage).map((s) => (
-              <DropdownMenuItem key={s.id} onSelect={() => actions.toStage(s.id)}>{s.label}</DropdownMenuItem>
-            ))}
+          <DropdownMenuContent align="end" onCloseAutoFocus={onMenuClosed}>
+            <DropdownMenuItem disabled={!canEarlier} onSelect={() => actions.nudge(-1)}>Move earlier</DropdownMenuItem>
+            <DropdownMenuItem disabled={!canLater} onSelect={() => actions.nudge(1)}>Move later</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={actions.remove}>Delete block</DropdownMenuItem>
           </DropdownMenuContent>
@@ -232,7 +238,8 @@ export function BlockEditor({ block, index, exercises, catalog, actions, problem
         <ExerciseCombobox exercises={exercises} onPick={actions.addExercise} label={`Add an exercise to ${title}`}
           placeholder={block.movements.length ? 'Add another exercise…' : 'Type an exercise, or drop one here…'} />
       )}
-      <TextField label="Note" value={block.note ?? ''} onChange={(note) => actions.update({ note })} placeholder="Tempo, each side, how to do it" />
+      <NoteField label="Note" addLabel="Add a note" value={block.note ?? ''} onChange={(note) => actions.update({ note })}
+        placeholder="Tempo, each side, how to do it" />
       {own.map((p) => <p key={p.message} role="alert" className="text-xs text-bad">{p.message}</p>)}
     </article>
   )

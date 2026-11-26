@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
   DndContext, DragOverlay, KeyboardSensor, MeasuringStrategy, PointerSensor, useSensor, useSensors, type DragEndEvent,
 } from '@dnd-kit/core'
-import { FilePlus2 } from 'lucide-react'
+import { FilePlus2, Library } from 'lucide-react'
 import type { Exercise } from '@/api/types'
 import { useExercises } from '@/api/exercises'
 import { useModalities } from '@/api/modalities'
@@ -16,20 +16,50 @@ import { modalityHex, modalityLabel } from '@/lib/modalityColors'
 import {
   addExercise, blockFor, duplicateOf, emptyBlock, fromWire, insertBlock, isBlank, moveBlock, nudgeBlock, nudgeMovement,
   removeBlock, removeMovement, sessionProblems, setKind, suggestModality, toWire, updateBlock, updateMovement,
-  type BlockStage, type BuilderProblem, type DraftBlock,
+  STAGES, type BlockStage, type BuilderProblem, type DraftBlock, type DraftSession,
 } from '@/lib/sessionBuilder'
 import { useSessionBuilderStore } from '@/store/sessionBuilderStore'
 import { Button } from '@/components/ui/button'
 import { WorkoutBlocks } from '@/components/blocks/WorkoutBlocks'
 import { FailedState, LoadingState } from '@/components/shared/states'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
+import { Tip } from '@/components/shared/Tip'
 import { announce } from '@/lib/announce'
+import { cn } from '@/lib/utils'
 import { BuilderCanvas } from './BuilderCanvas'
 import type { BlockActions } from './BlockEditor'
 import { ExerciseLibrary } from './ExerciseLibrary'
+import { NoteField } from './NoteField'
 import { SavedSessions } from './SavedSessions'
 
 const field = 'h-9 rounded-md border border-input bg-background px-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+
+/** Where the focus goes after an edit, so the keyboard never loses its place. */
+type Focus =
+  | { movement: string }
+  | { block: string; at: 'add' | 'part' | 'menu' }
+  | { at: 'first' }
+
+function focusTarget(root: HTMLElement, want: Focus): HTMLElement | null {
+  const first = () => root.querySelector<HTMLElement>('[data-canvas] input, [data-canvas] select')
+  if ('movement' in want) {
+    const row = root.querySelector<HTMLElement>(`[data-movement="${want.movement}"]`)
+    const block = row?.closest<HTMLElement>('[data-block]')
+    // A movement with no numbers of its own (a timed piece, a practice): the block's.
+    return row?.querySelector<HTMLElement>('input') ?? block?.querySelector<HTMLElement>('input:not([role="combobox"])')
+      ?? block?.querySelector<HTMLElement>('input') ?? first()
+  }
+  if ('block' in want) {
+    const block = root.querySelector<HTMLElement>(`[data-block="${want.block}"]`)
+    if (!block) return first()
+    const menu = block.querySelector<HTMLElement>('[data-focus="menu"]')
+    if (want.at === 'add') return block.querySelector<HTMLElement>('input[role="combobox"]') ?? menu
+    return block.querySelector<HTMLElement>(`[data-focus="${want.at}"]`) ?? menu
+  }
+  return first()
+}
+
+const partLabel = (stage: BlockStage) => STAGES.find((s) => s.id === stage)?.label ?? stage
 
 /**
  * Dev Lab ▸ Session builder (docs/roadmap.md item 24): compose a session from
@@ -37,6 +67,11 @@ const field = 'h-9 rounded-md border border-input bg-background px-2 text-sm pla
  * their numbers and how they move — see it as the app will draw it, save it,
  * and put it on a day. The server reads the draft; nothing here words a
  * prescription.
+ *
+ * The screen starts as a name and one exercise field; the library, the notes
+ * and the next block are asked for. Tab runs in the order of the work (name,
+ * kind, blocks, Add block, Save) and after every edit the focus is put on what
+ * comes next (`Focus`); ⌘/Ctrl+Enter saves from anywhere.
  */
 export function SessionBuilderPanel() {
   const exercisesQuery = useExercises()
@@ -47,6 +82,31 @@ export function SessionBuilderPanel() {
   const [dragging, setDragging] = useState<{ title: string } | null>(null)
   const [refused, setRefused] = useState<{ problems: BuilderProblem[]; message: string } | null>(null)
   const [replacing, setReplacing] = useState<(() => void) | null>(null)
+  const [libraryOpen, setLibraryOpen] = useState(false)
+  const root = useRef<HTMLDivElement>(null)
+  const browse = useRef<HTMLButtonElement>(null)
+  const wanted = useRef<Focus | null>(null)
+  const focused = useRef<{ el: HTMLElement; at: number } | null>(null)
+  const [focusTick, setFocusTick] = useState(0)
+
+  // After the edit is drawn, the focus goes where the work continues.
+  useEffect(() => {
+    const want = wanted.current
+    wanted.current = null
+    const el = want && root.current ? focusTarget(root.current, want) : null
+    if (!el) return
+    el.focus()
+    if (el instanceof HTMLInputElement && el.getAttribute('role') !== 'combobox') el.select()
+    focused.current = { el, at: Date.now() }
+  }, [focusTick])
+  const focusOn = (want: Focus) => { wanted.current = want; setFocusTick((t) => t + 1) }
+  /** A menu gives the focus back to its button as it closes; an action that just moved it keeps it. */
+  const onMenuClosed = (e: Event) => {
+    const last = focused.current
+    if (!last || Date.now() - last.at > 1000 || !last.el.isConnected) return
+    e.preventDefault()
+    last.el.focus()
+  }
 
   const exercises = useMemo(() => exercisesQuery.data ?? [], [exercisesQuery.data])
 
@@ -79,25 +139,58 @@ export function SessionBuilderPanel() {
   )
 
   const change: typeof edit = (fn) => { setRefused(null); edit(fn) }
+  const now = (): DraftSession => useSessionBuilderStore.getState().draft
   const addToMain = (exercise: Exercise) => {
-    change((d) => insertBlock(d, blockFor(exercise, 'main'), 'main'))
-    announce(`${exercise.name} added to Main work.`)
+    const block = blockFor(exercise, 'main')
+    change((d) => insertBlock(d, block, 'main'))
+    announce(`${exercise.name} added.`)
+    return block
   }
+  const addBlock = (kind: Parameters<typeof emptyBlock>[0]) => {
+    const block = emptyBlock(kind, 'main')
+    change((d) => insertBlock(d, block, 'main'))
+    announce('Block added. Type its exercise.')
+    focusOn({ block: block.uid, at: 'add' })
+  }
+  const closeLibrary = () => { setLibraryOpen(false); browse.current?.focus() }
 
   function actionsFor(block: DraftBlock): BlockActions {
     const id = block.uid
     return {
       update: (patch) => change((d) => updateBlock(d, id, patch)),
       setKind: (kind) => change((d) => setKind(d, id, kind, catalog)),
-      remove: () => change((d) => removeBlock(d, id)),
-      nudge: (by) => change((d) => nudgeBlock(d, id, by)),
-      toStage: (stage: BlockStage) => change((d) => moveBlock(d, id, stage)),
-      addExercise: (exercise) => change((d) => addExercise(d, id, exercise)),
+      remove: () => {
+        const at = now().blocks.findIndex((b) => b.uid === id)
+        change((d) => removeBlock(d, id))
+        const left = now().blocks
+        const near = left[Math.max(0, at - 1)]
+        announce('Block deleted.')
+        focusOn(near ? { block: near.uid, at: 'add' } : { at: 'first' })
+      },
+      nudge: (by) => {
+        change((d) => nudgeBlock(d, id, by))
+        announce(by < 0 ? 'Moved earlier.' : 'Moved later.')
+        focusOn({ block: id, at: 'menu' })
+      },
+      toStage: (stage: BlockStage) => {
+        change((d) => moveBlock(d, id, stage))
+        announce(`Now in ${partLabel(stage)}.`)
+        focusOn({ block: id, at: 'part' })
+      },
+      addExercise: (exercise) => {
+        const before = new Set(now().blocks.flatMap((b) => b.movements.map((m) => m.uid)))
+        change((d) => addExercise(d, id, exercise))
+        const added = now().blocks.flatMap((b) => b.movements).find((m) => !before.has(m.uid))
+        if (added) focusOn({ movement: added.uid })
+      },
       updateMovement: (uid, patch) => change((d) => updateMovement(d, id, uid, patch)),
       replaceMovement: (uid, movement) => change((d) => updateBlock(d, id, {
         movements: (d.blocks.find((b) => b.uid === id)?.movements ?? []).map((m) => (m.uid === uid ? movement : m)),
       })),
-      removeMovement: (uid) => change((d) => removeMovement(d, id, uid)),
+      removeMovement: (uid) => {
+        change((d) => removeMovement(d, id, uid))
+        focusOn({ block: id, at: 'add' })
+      },
       nudgeMovement: (uid, by) => change((d) => nudgeMovement(d, id, uid, by)),
     }
   }
@@ -161,16 +254,29 @@ export function SessionBuilderPanel() {
         },
       }}
     >
-      <div className="grid gap-6 p-6 lg:grid-cols-[18rem_minmax(0,1fr)] xl:grid-cols-[18rem_minmax(0,1fr)_22rem]">
-        <aside className="flex max-h-[calc(100vh-10rem)] flex-col gap-4 lg:sticky lg:top-0">
-          <ExerciseLibrary exercises={exercises} onAdd={addToMain} />
-        </aside>
+      {/* ⌘/Ctrl+Enter saves from any field of the builder: the keys of its controls, heard here. */}
+      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
+      <div ref={root}
+        onKeyDown={(e) => {
+          if (e.key !== 'Enter' || !(e.metaKey || e.ctrlKey) || blank || save.isPending) return
+          e.preventDefault()
+          saveNow()
+        }}
+        className={cn('grid gap-6 p-6', libraryOpen ? 'lg:grid-cols-[18rem_minmax(0,1fr)] xl:grid-cols-[18rem_minmax(0,1fr)_22rem]'
+          : 'xl:grid-cols-[minmax(0,1fr)_22rem]')}>
+        {libraryOpen && (
+          <aside className="flex max-h-[calc(100vh-10rem)] flex-col gap-4 lg:sticky lg:top-0">
+            <ExerciseLibrary id="session-builder-library" exercises={exercises} onAdd={addToMain} onClose={closeLibrary} />
+          </aside>
+        )}
 
-        <main className="flex min-w-0 flex-col gap-4">
+        <div className="flex min-w-0 flex-col gap-4">
           <div className="flex flex-wrap items-end gap-2">
             <label className="flex min-w-48 flex-1 flex-col gap-1">
               <span className="text-xs text-muted-foreground">Session name</span>
               <input value={draft.name} onChange={(e) => change((d) => ({ ...d, name: e.target.value }))}
+                // Enter is "next": on to the exercises.
+                onKeyDown={(e) => { if (e.key === 'Enter' && !e.metaKey && !e.ctrlKey) { e.preventDefault(); focusOn({ at: 'first' }) } }}
                 placeholder="Squat day" aria-invalid={problems.some((p) => p.field === 'name') || undefined} className={field} />
             </label>
             <label className="flex w-52 flex-col gap-1">
@@ -183,24 +289,32 @@ export function SessionBuilderPanel() {
                 </select>
               </span>
             </label>
-            <Button variant="outline" onClick={() => replaceDraft(reset)}><FilePlus2 className="size-4" /> New</Button>
-            <Button onClick={saveNow} loading={save.isPending} disabled={blank}>{draft.id ? 'Save changes' : 'Save session'}</Button>
+            <Button ref={browse} variant="outline" aria-expanded={libraryOpen} aria-controls="session-builder-library"
+              onClick={() => (libraryOpen ? closeLibrary() : setLibraryOpen(true))}>
+              <Library className="size-4" /> Browse exercises
+            </Button>
           </div>
           {!draft.modality && suggested && (
             <p className="text-xs text-muted-foreground">Read as {modalityLabel(suggested)} from its exercises. Choose another if it is not.</p>
           )}
-          <label className="flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">Notes for the whole session</span>
-            <input value={draft.notes ?? ''} onChange={(e) => change((d) => ({ ...d, notes: e.target.value }))} className={field} />
-          </label>
+          <NoteField label="Notes for the whole session" addLabel="Add a session note" value={draft.notes ?? ''}
+            onChange={(notes) => change((d) => ({ ...d, notes }))} />
           {refused && refused.problems.length === 0 && <p role="alert" className="text-sm text-bad">{refused.message}</p>}
           {!blank && sessionProblems(problems).map((p) => <p key={p.message} role="alert" className="text-sm text-bad">{p.message}</p>)}
 
           <BuilderCanvas draft={draft} exercises={exercises} catalog={catalog} problems={blank ? [] : problems} dragging={dragging !== null}
-            actionsFor={actionsFor} onAddBlock={(kind, stage) => change((d) => insertBlock(d, emptyBlock(kind, stage), stage))} />
-        </main>
+            actionsFor={actionsFor} onAddBlock={addBlock} onMenuClosed={onMenuClosed}
+            onFirstExercise={(exercise) => focusOn({ movement: addToMain(exercise).movements[0].uid })} />
 
-        <aside className="flex flex-col gap-6 lg:col-span-2 xl:col-span-1">
+          <div className="flex flex-wrap justify-end gap-2 border-t pt-4">
+            <Button variant="outline" onClick={() => replaceDraft(reset)}><FilePlus2 className="size-4" /> New</Button>
+            <Tip label={draft.id ? 'Save changes' : 'Save session'} keys="⌘ ↵">
+              <Button onClick={saveNow} loading={save.isPending} disabled={blank}>{draft.id ? 'Save changes' : 'Save session'}</Button>
+            </Tip>
+          </div>
+        </div>
+
+        <aside className={cn('flex flex-col gap-6', libraryOpen && 'lg:col-span-2 xl:col-span-1')}>
           <section aria-label="Preview" className="flex flex-col gap-3">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">As it will be shown</h3>
             {blank && <p className="text-sm text-muted-foreground">Add an exercise and the session appears here as the app draws it.</p>}

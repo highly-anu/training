@@ -2341,6 +2341,12 @@ with the program builder; per-set weights are later; existing exercises only.
   `/analytics/program` (prescribed "3 × 5 @ 80 kg", done "80×5, 80×5, 80×5"), the briefing
   and `today-session?spec=1`. Dragging itself was not exercised in a browser, only its
   drop rules.
+  **Quieter, and from the keyboard (2026-11-26, the owner's feedback):** the library opens
+  on demand (Browse exercises); one list of blocks, a block's part its own choice, a part's
+  heading only once a block is outside Main work; notes behind "Add a note"; one Add block,
+  offered once every block has its exercise; New and Save at the foot, ⌘/Ctrl+Enter saves;
+  the focus follows every edit. Walked in Chrome with the keyboard alone: name, first
+  exercise, numbers, Add block, Move earlier, the library's arrows and Enter, Escape.
 - **24.4 The program builder — done but for earned progression (24.5).** Decided with the
   owner (2026-11-24): two sessions on a day are one session of both; the grid's weekdays
   win over the profile's schedule; earned progression last.
