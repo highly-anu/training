@@ -1902,7 +1902,17 @@ function (block kinds and the fields each takes, what a dropped exercise becomes
 ranking), the draft lives in `store/sessionBuilderStore.ts`, and the server reads it
 (`POST /api/manual/preview`) — the builder words no prescription. After a change to the
 `/manual` routes' answers, `test_manual_builder.py --write` re-records
-`mocks/fixtures/manual-sessions.json`.
+`mocks/fixtures/manual-sessions.json`. **The screen starts as a name and one exercise field,
+and the rest is asked for** (since 2026-11-26): the library is a column behind Browse exercises;
+the blocks are one list, each block choosing its own Part (`stage`; a part's heading shows only
+once a block is outside Main work); a note is behind "Add a note" (`NoteField`); the one Add
+block appears once every block has its exercise (`blockReady`). **It is worked from the
+keyboard**: Tab runs in the order of the work (name, kind, blocks, Add block, New, Save),
+⌘/Ctrl+Enter saves, a number is one tab stop (the arrow keys step it), the library's list is one
+tab stop (arrows move, Enter adds), and after every edit the panel puts the focus on what comes
+next (`Focus` in `SessionBuilderPanel.tsx`: a picked exercise's first number, a new block's
+exercise field, the control that moved a block) — an edit that leaves the focus on `<body>` is
+a bug, and `SessionBuilderPanel.test.tsx` holds each case.
 
 **Programs are laid out by hand in Dev Lab ▸ Program builder** (`/dev?tab=program`, roadmap 24.4):
 a day takes one of the athlete's sessions or **any session in view** (the shelf's All sessions,

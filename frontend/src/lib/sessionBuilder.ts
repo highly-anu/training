@@ -248,6 +248,18 @@ export function nudgeBlock(draft: DraftSession, blockUid: string, by: -1 | 1): D
   return moveBlock(draft, blockUid, next.id, by === 1 ? 0 : undefined)
 }
 
+/** Whether Earlier (−1) or Later (+1) has somewhere to go inside the block's own part. */
+export function canNudge(draft: DraftSession, blockUid: string, by: -1 | 1): boolean {
+  const block = draft.blocks.find((b) => b.uid === blockUid)
+  if (!block) return false
+  const inStage = blocksOfStage(draft, block.stage)
+  const to = inStage.findIndex((b) => b.uid === blockUid) + by
+  return to >= 0 && to < inStage.length
+}
+
+/** A block has its exercises (a superset its two): the next block may be asked for. */
+export const blockReady = (block: DraftBlock): boolean => block.movements.length >= (block.kind === 'superset' ? 2 : 1)
+
 export const removeBlock = (draft: DraftSession, blockUid: string): DraftSession =>
   withBlocks(draft, draft.blocks.filter((b) => b.uid !== blockUid))
 

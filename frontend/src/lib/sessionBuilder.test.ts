@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Exercise } from '@/api/types'
 import {
-  addExercise, blockFor, blocksOfStage, countText, emptyBlock, emptyDraft, fromWire, insertBlock, kindFor, moveBlock,
+  addExercise, blockFor, blockReady, blocksOfStage, canNudge, countText, emptyBlock, emptyDraft, fromWire, insertBlock, kindFor, moveBlock,
   nudgeBlock, parseCount, programSlot, removeMovement, searchExercises, searchScore, setKind, suggestModality, toWire,
   updateMovement, withCount, type DraftSession,
 } from './sessionBuilder'
@@ -59,6 +59,20 @@ describe('edits', () => {
     d = nudgeBlock(d, first, 1)
     expect(d.blocks.find((b) => b.uid === first)?.stage).toBe('finisher')
     expect(nudgeBlock(d, first, -1).blocks.find((b) => b.uid === first)?.stage).toBe('main')
+  })
+  it('says whether Earlier and Later have somewhere to go inside the block\'s own part', () => {
+    let d = withBlock(pullUp, withBlock(squat))
+    const [first, second] = d.blocks.map((b) => b.uid)
+    expect([canNudge(d, first, -1), canNudge(d, first, 1), canNudge(d, second, 1)]).toEqual([false, true, false])
+    d = moveBlock(d, second, 'finisher')
+    expect([canNudge(d, first, 1), canNudge(d, second, -1), canNudge(d, 'nobody', 1)]).toEqual([false, false, false])
+  })
+  it('reads a block as ready once it has its exercise, a superset its two', () => {
+    expect(blockReady(emptyBlock('sets', 'main'))).toBe(false)
+    expect(blockReady(blockFor(squat, 'main'))).toBe(true)
+    expect(blockReady({ ...blockFor(squat, 'main'), kind: 'superset' })).toBe(false)
+    const d = withBlock(squat)
+    expect(blockReady(addExercise(d, d.blocks[0].uid, pullUp).blocks[0])).toBe(true)
   })
   it('makes straight sets a superset when a second exercise is dropped on them', () => {
     const d = withBlock(squat)

@@ -52,7 +52,9 @@ export function ExerciseCombobox({ exercises, onPick, label, placeholder = 'Add 
           if (e.key === 'ArrowDown') { e.preventDefault(); setOpen(true); setActive(Math.min(at + 1, results.length - 1)) }
           else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(Math.max(at - 1, 0)) }
           else if (e.key === 'Enter' && shown) { e.preventDefault(); pick(results[at]) }
-          else if (e.key === 'Escape' && open) { e.stopPropagation(); setOpen(false) }
+          else if (e.key === 'Escape' && shown) { e.stopPropagation(); setOpen(false) }
+          // A second Escape empties the field; a third is the page's.
+          else if (e.key === 'Escape' && query) { e.stopPropagation(); setQuery('') }
         }}
         className="h-9 w-full rounded-md border border-input bg-background pl-8 pr-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       />

@@ -26,7 +26,7 @@ export function NumberField({ label, value, onChange, min = 0, max = 100000, ste
     <div className={cn('flex flex-col gap-1', className)}>
       <label htmlFor={id} className="text-xs text-muted-foreground">{label}</label>
       <div className={cn('flex h-9 items-stretch rounded-md border border-input bg-background', invalid && 'border-bad')}>
-        <button type="button" aria-label={`Less: ${label}`} onClick={() => nudge(-step)}
+        <button type="button" tabIndex={-1} aria-label={`Less: ${label}`} onClick={() => nudge(-step)}
           className="flex w-7 items-center justify-center rounded-l-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <Minus className="size-3" />
         </button>
@@ -35,6 +35,12 @@ export function NumberField({ label, value, onChange, min = 0, max = 100000, ste
           inputMode="decimal"
           aria-invalid={invalid || undefined}
           value={value ?? ''}
+          // The arrow keys step it, so the − and + beside it need no tab stop of their own.
+          onKeyDown={(e) => {
+            if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return
+            e.preventDefault()
+            nudge(e.key === 'ArrowUp' ? step : -step)
+          }}
           onChange={(e) => {
             const text = e.target.value.replace(',', '.').trim()
             if (text === '') return onChange(undefined)
@@ -43,7 +49,7 @@ export function NumberField({ label, value, onChange, min = 0, max = 100000, ste
           }}
           className="w-12 min-w-0 flex-1 bg-transparent text-center text-sm tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
-        <button type="button" aria-label={`More: ${label}`} onClick={() => nudge(step)}
+        <button type="button" tabIndex={-1} aria-label={`More: ${label}`} onClick={() => nudge(step)}
           className="flex w-7 items-center justify-center rounded-r-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <Plus className="size-3" />
         </button>
