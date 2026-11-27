@@ -1579,7 +1579,7 @@ Routes: `today`, `workout-complete[?id=…]` (the Workout complete sheet, newest
 (`&phase=<n>|compare` pushes a phase's screen or Compare phases from Overview),
 `analytics?section=progress|blocks|load|recovery` (`overview`, `development` and `program`
 still alias Load, Blocks and Progress; `&measure=<entry id>` or `&exercise=<id>` selects it on Progress's chart,
-`&open=readiness|sleep|hrv|resting-hr|checkins` a Recovery one, `pmc|load-focus|mix|weekly` Load's, `score|scorecard|intensity|movement|workouts` Progress's (`shapes` aliases workouts), `block-load` Blocks'), `log?section=workouts|linking|sessions` (`suggestions` aliases Linking),
+`&open=readiness|sleep|hrv|resting-hr|checkins` a Recovery one, `pmc|load-focus|mix|weekly` Load's, `score|scorecard|intensity|movement|workouts` Progress's (`shapes` aliases workouts), `block-load` Blocks'), `log?section=workouts|linking|sessions` (`suggestions` aliases Linking; Log opens on Linking, which lists only days with a planned session, session first — design-system §6.19; debug builds take `SIMCTL_CHILD_TC_LINKING_ALL=1` for All days and `TC_LINKING_PICK=1` for the first session's workout picker),
 `profile?section=…`, `share?token=<token>` (a shared link's sheet) (`DeepLink.swift`, routed through `AppRouter`). The route travels
 in the launch environment (`SIMCTL_CHILD_TC_ROUTE`), because `simctl openurl` makes
 iOS ask "Open in Training Companion?" and nothing can tap that. Screens behind a tap

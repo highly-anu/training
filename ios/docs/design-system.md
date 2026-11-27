@@ -954,7 +954,7 @@ modality and no session, so the modality icon is the correct and only answer.
 | **Today** | `Views/Today/TodayView` | — (the day's sessions, what waits for an answer, three tiles — §6.53) |
 | **Program** | `ProgramView` | Overview · Calendar · History |
 | **Analytics** | `AnalyticsView` | Progress · Blocks · Load · Recovery |
-| **Log** | `LogView` | Activity · Linking |
+| **Log** | `LogView` | Linking · Activity |
 | **Profile** | `ProfileView` | Athlete (incl. injuries and HR zones) · Equipment · Schedule · Standards |
 
 The section names and their order are the web's, item for item
@@ -1270,13 +1270,21 @@ selection; the sheet is the one methodology reference on the phone.
   workouts only. A workout swipes to delete, carries the TRIMP badge and
   pushes `WorkoutDetailView`; a session row reads as `LogSessions.rows`
   builds it (below) and opens the session detail when it resolves.
-- *Linking* (`LogLinkingTab`): one section per day, the workouts recorded
-  that day beside the sessions planned for it — the current program's and
-  every earlier program's, the header naming the program and marking an
-  earlier one. A day holds its links (a check; swipe to unlink), same-day
-  suggestions with Link and Not this, and the workouts and sessions still
-  free. Linking across days is Link… on a workout, then Link here on any
-  session — the phone's form of the web's drag. The days are built on the
+- *Linking* (`LogLinkingTab`), the first section and the one Log opens on
+  (since 2026-11-26): giving a planned session its recording. One section
+  per day **that has a planned session** — the current program's and every
+  earlier program's, the header naming the program and marking an earlier
+  one — and a row per session, the session first: its linked workout under
+  it (a check; swipe or "…" to unlink), the workout suggested for it with
+  Link and Not this, or Link workout…. A workout is never a row of its own,
+  so a day whose session has its recording shows no other workout of that
+  day; Link a different workout… in the row's "…" (Link workout… on an open
+  session) opens a sheet of that day's other workouts, then the unlinked
+  ones of the week either side, and picking one unlinks the workout the
+  session held (`Linking.rows`, `candidates`, `AppState.link(replacing:)`).
+  "Days to link" are days with a suggestion, or an open session beside a
+  recorded workout (`Linking.toLink`); a session nobody recorded is not a
+  task. The days are built on the
   server (`GET /health/linking`, `src/linking.py`, the copy of the web's
   `lib/linking.ts`), since the phone has no matcher; every link sends the
   session's `sessionUid`, and one into an earlier program only links — its
@@ -1285,7 +1293,10 @@ selection; the sheet is the one methodology reference on the phone.
   an unlink or a "Not this" changes the list at once (`Linking.applying…`)
   and the server's reload, a couple of seconds, replaces it; the list is
   never disabled while it runs — doing so froze scrolling and every button
-  until the reload landed, which read as a hung screen. Today
+  until the reload landed, which read as a hung screen. Debug builds open on
+  All days with `SIMCTL_CHILD_TC_LINKING_ALL=1` and on the first session's
+  picker with `TC_LINKING_PICK=1`. The web still lists every day with its
+  workouts first (`components/log/LinkingTab.tsx`). Today
   still shows the server's own suggestions (`SuggestionRowView`).
 - A session row of Activity: what was logged against a planned session —
   `LogSessions.rows` builds the rows from the server's session logs: the session's name when the key
@@ -2307,7 +2318,7 @@ has a visible twin, built into the row's own component:
 |---|---|---|
 | Session card, Calendar day row | "…" (`SessionActionsMenu`), "+ Add session" on a rest day (§6.43) | long press |
 | Session detail's exercise row | leading log circle (logs, or opens the logger); the row opens the exercise; trailing "…" (Log, Swap, About) | swipes |
-| Log ▸ Linking | "…" on a linked pair, a suggestion and a loose workout (Unlink, Open Workout); **Link…** a button on a declined workout too | swipe to unlink, long press |
+| Log ▸ Linking | "…" on a linked session and a suggestion (Open Workout, Link a Different Workout…, Unlink); **Link workout…** a button on an open session | swipe to unlink, long press |
 | Standard detail's result | "…" (Edit, Delete) | swipe |
 | Set logger's set | `minus.circle` | swipe |
 | Profile ▸ Injuries' custom flag | remove button | swipe |

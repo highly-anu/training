@@ -97,6 +97,28 @@ struct LinkElsewhere: Decodable, Equatable, Identifiable {
 
 /// The phone's side of Linking, pure so it is tested without a server.
 enum Linking {
+    /// One planned session of a day with its recording, if it has one.
+    struct SessionRow: Equatable, Identifiable {
+        /// A session holding two recordings is a row for each.
+        var id: String { linked.map { "\(session.key)|\($0.id)" } ?? session.key }
+        let session: LinkSession
+        let linked: LinkWorkout?
+        let suggested: LinkWorkout?
+    }
+
+    /// A workout offered for a session, with why it is not simply free.
+    struct Candidate: Equatable, Identifiable {
+        var id: String { workout.id }
+        let workout: LinkWorkout
+        let note: String?
+    }
+
+    struct Candidates: Equatable {
+        let sameDay: [Candidate]
+        let otherDays: [Candidate]
+        var isEmpty: Bool { sameDay.isEmpty && otherDays.isEmpty }
+    }
+
     /// `"<workoutId>|<session key>"`, the web's `dismissKey`.
     static func dismissKey(workoutId: String, sessionKey: String) -> String {
         "\(workoutId)|\(sessionKey)"
@@ -113,9 +135,72 @@ enum Linking {
         return (c.percentEncodedQuery ?? "").replacingOccurrences(of: "|", with: "%7C")
     }
 
-    /// The days the list shows: those waiting on the athlete, or all of them.
+    /// The days the list shows: only days with a planned session, since the
+    /// screen's job is to give a session its recording — those with something
+    /// to link, or all of them. A workout on a day with no session is reached
+    /// from a session's picker (`candidates`).
     static func visible(_ days: [LinkingDay], showAll: Bool) -> [LinkingDay] {
-        showAll ? days : days.filter(\.needsAttention)
+        days.filter { !rows(for: $0).isEmpty && (showAll || toLink($0)) }
+    }
+
+    /// A day waits on the athlete: a suggestion to answer, or a session still
+    /// open on a day a workout was recorded.
+    static func toLink(_ day: LinkingDay) -> Bool {
+        !day.suggestions.isEmpty || (!day.sessions.isEmpty && !day.workouts.isEmpty)
+    }
+
+    /// A day's sessions, each with the workout linked to it or suggested for
+    /// it: what waits for an answer first, then the open ones, then the linked.
+    /// A pair made across days shows on the session's day only.
+    static func rows(for day: LinkingDay) -> [SessionRow] {
+        var seen = Set<String>()
+        var out: [SessionRow] = []
+        for s in day.suggestions where seen.insert(s.session.key).inserted {
+            out.append(SessionRow(session: s.session, linked: nil, suggested: s.workout))
+        }
+        for s in day.sessions where seen.insert(s.key).inserted {
+            out.append(SessionRow(session: s, linked: nil, suggested: nil))
+        }
+        for p in day.links where p.session.date == day.date {
+            out.append(SessionRow(session: p.session, linked: p.workout, suggested: nil))
+        }
+        return out
+    }
+
+    /// The workouts a session may be linked to by hand: every other workout
+    /// of its own day (one linked elsewhere says so), then the unlinked ones
+    /// of the week either side, nearest day first.
+    static func candidates(_ doc: LinkingDocument, for row: SessionRow) -> Candidates {
+        var same: [Candidate] = []
+        var other: [(Int, Candidate)] = []
+        for d in doc.days {
+            var free = d.suggestions.map(\.workout).map { Candidate(workout: $0, note: nil) }
+            free += d.workouts.map { Candidate(workout: $0, note: nil) }
+            free += d.declined.map { Candidate(workout: $0, note: "Set aside") }
+            if d.date == row.session.date {
+                same += free
+                same += d.links.filter { $0.session.key != row.session.key }
+                    .map { Candidate(workout: $0.workout, note: "Linked to \($0.session.name)") }
+                same += d.elsewhere.map { Candidate(workout: $0.workout, note: "Linked to another session") }
+            } else if let gap = dayGap(d.date, row.session.date), gap <= 7 {
+                other += free.map { (gap, $0) }
+            }
+        }
+        var seen: Set<String> = row.linked.map { [$0.id] } ?? []
+        let unique = { (c: Candidate) in seen.insert(c.workout.id).inserted }
+        let sameDay = same.filter(unique)
+        let nearby = other.sorted { $0.0 < $1.0 }.map(\.1).filter(unique)
+        return Candidates(sameDay: sameDay, otherDays: nearby)
+    }
+
+    private static func dayGap(_ a: String, _ b: String) -> Int? {
+        let f = DateFormatter()
+        f.calendar = Calendar(identifier: .gregorian)
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = TimeZone(identifier: "UTC")
+        f.dateFormat = "yyyy-MM-dd"
+        guard let x = f.date(from: a), let y = f.date(from: b) else { return nil }
+        return abs(Int((x.timeIntervalSince(y) / 86_400).rounded()))
     }
 
     /// The `POST /health/matches` body for a link: the session's uid always
@@ -154,6 +239,13 @@ enum Linking {
             d.declined.removeAll { $0.id == workoutId }
             d.elsewhere.removeAll { $0.workout.id == workoutId }
             d.links.removeAll { $0.workout.id == workoutId }
+            // Another workout the session held is set aside, as an unlink leaves it.
+            for old in d.links where old.session.key == session.key {
+                if d.date == old.workout.date, !d.declined.contains(where: { $0.id == old.workout.id }) {
+                    d.declined.append(old.workout)
+                }
+            }
+            d.links.removeAll { $0.session.key == session.key }
             d.sessions.removeAll { $0.key == session.key }
             if d.date == workout.date || d.date == session.date { d.links.append(pair) }
             d.needsAttention = !d.suggestions.isEmpty || !d.workouts.isEmpty

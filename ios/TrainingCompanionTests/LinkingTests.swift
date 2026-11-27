@@ -41,10 +41,66 @@ final class LinkingTests: XCTestCase {
         XCTAssertEqual(d.days[2].programLabel, "Marcus Filly / Functional Bodybuilding")
     }
 
-    func testVisibleKeepsDaysWaitingUnlessAll() throws {
+    func testOnlyDaysWithAPlannedSessionShow() throws {
         let days = try doc().days
-        XCTAssertEqual(Linking.visible(days, showAll: false).map(\.date), ["2026-10-13"])
-        XCTAssertEqual(Linking.visible(days, showAll: true).count, 3)
+        XCTAssertEqual(Linking.visible(days, showAll: true).map(\.date), ["2026-10-12", "2026-10-09"],
+                       "the 13th has a workout and no session")
+        XCTAssertEqual(Linking.visible(days, showAll: false), [], "nothing on a session's day waits")
+        XCTAssertEqual(Linking.visible(try suggested().days, showAll: false).map(\.date), ["2026-10-09"])
+    }
+
+    func testAnOpenSessionWaitsOnlyBesideAWorkout() throws {
+        var day = try doc().days[2]
+        XCTAssertFalse(Linking.toLink(day), "a session nobody recorded is not a task")
+        day.workouts = [try doc().days[0].workouts[0]]
+        XCTAssertTrue(Linking.toLink(day))
+    }
+
+    func testRowsAreTheDaysSessions() throws {
+        let d = try suggested()
+        XCTAssertEqual(Linking.rows(for: d.days[0]), [], "a workout is never a row of its own")
+        let linked = Linking.rows(for: d.days[1])
+        XCTAssertEqual(linked.map(\.session.key), ["4-Monday-0"])
+        XCTAssertEqual(linked[0].linked?.id, "kbpower")
+        let offered = Linking.rows(for: d.days[2])
+        XCTAssertEqual(offered[0].suggested?.id, "lift")
+        XCTAssertNil(offered[0].linked)
+    }
+
+    func testAPairAcrossDaysShowsOnTheSessionsDayOnly() throws {
+        let before = try doc()
+        let session = before.days[2].sessions[0]
+        let after = Linking.applyingLink(before, workoutId: "boxstep", session: session)
+        XCTAssertEqual(Linking.rows(for: after.days[0]), [])
+        XCTAssertEqual(Linking.rows(for: after.days[2]).map(\.linked?.id), ["boxstep"])
+    }
+
+    func testCandidatesAreTheDaysOthersThenNearbyUnlinked() throws {
+        var d = try doc()
+        let other = LinkWorkout(id: "walk", date: "2026-10-12", startTime: nil, source: "garmin",
+                                activityType: "walking", name: nil, durationMinutes: 20, inferredModalityId: nil)
+        d.days[1].declined = [other]
+        let row = Linking.rows(for: d.days[1])[0]
+        let c = Linking.candidates(d, for: row)
+        XCTAssertEqual(c.sameDay.map(\.workout.id), ["walk"], "never the workout it already has")
+        XCTAssertEqual(c.sameDay[0].note, "Set aside")
+        XCTAssertEqual(c.otherDays.map(\.workout.id), ["boxstep"], "the next day's unlinked workout")
+
+        let friday = Linking.rows(for: d.days[2])[0]
+        XCTAssertEqual(Linking.candidates(d, for: friday).otherDays.map(\.workout.id), ["walk", "boxstep"],
+                       "nearest day first; a linked workout of another day is not offered")
+    }
+
+    func testADifferentWorkoutSetsTheFirstAside() throws {
+        var d = try doc()
+        let other = LinkWorkout(id: "walk", date: "2026-10-12", startTime: nil, source: "garmin",
+                                activityType: "walking", name: nil, durationMinutes: 20, inferredModalityId: nil)
+        d.days[1].workouts = [other]
+        let session = d.days[1].links[0].session
+        let day = Linking.applyingLink(d, workoutId: "walk", session: session).days[1]
+        XCTAssertEqual(day.links.map(\.workout.id), ["walk"])
+        XCTAssertEqual(day.declined.map(\.id), ["kbpower"])
+        XCTAssertEqual(day.workouts, [])
     }
 
     func testLinkCarriesTheSessionUidAndLegacyKey() throws {

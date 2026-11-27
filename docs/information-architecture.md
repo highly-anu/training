@@ -66,7 +66,7 @@ web's Insight group into Train.
 | **Today** | — (web route `/`) | — |
 | **Program** | Overview · Calendar · History | Overview · Calendar · History |
 | **Analytics** | Progress · Blocks · Load · Recovery | Progress · Blocks · Load · Recovery |
-| **Log** | Activity · Linking | Activity · Linking |
+| **Log** | Activity · Linking | Linking · Activity (the phone leads with Linking since 2026-11-26; the web has not followed) |
 | **Explore** | Philosophies · Frameworks · Modalities · Archetypes · Exercises · Movements · Equipment · Standards | — |
 | **Profile** | Athlete · Equipment · Injuries · Schedule · Standards | Athlete (incl. injuries) · Equipment · Schedule · Standards — Injuries folded into Athlete on 2026-10-17; `section=injuries` lands there. Benchmarks was renamed Standards the same day (`?tab=benchmarks` / `section=benchmarks` land there): *This program* · *Your results* · *All standards*, each standard's history one tap away |
 | **Settings** | Connections · Appearance · Account (· Developer) | Connections · Devices · Pair · Notifications · Appearance · Account · developer sections (pushed from Profile's gear) |
@@ -192,7 +192,7 @@ Standards), sex (a new profile key; unblocks the female standards' tables), body
 | **Today** | `TodayView` | — | Renamed from "Dashboard". Empty state gets a "Generate a program" button (design system §6.3); adds a Suggestions card and a Progress card that routes to Analytics ▸ Progress. |
 | **Program** | `ProgramView` | Overview · Calendar · History | Builder picks a methodology from `/api/philosophies`; Settings sheet has its title and Cancel; Overview holds "About this methodology", the phases and the priority mix. |
 | **Analytics** | `AnalyticsView` | Progress · Blocks · Load · Recovery | Progress = the program document and the review in one (`AnalyticsProgressTab`; Program until 2026-10-23); Blocks = every program (design system §6.20); Load = the old Overview. |
-| **Log** | `LogView` | Activity · Linking | Added 2026-10-01 once the phone could log: the recorded-workout list (with the `.fit` importer) moved here from Analytics, the suggestions inbox with accept/review/dismiss, and what was logged against planned sessions across the program — earlier programs' logs included, named by the server from `planned_sessions`. |
+| **Log** | `LogView` | Linking · Activity | Added 2026-10-01 once the phone could log: the recorded-workout list (with the `.fit` importer) moved here from Analytics, the suggestions inbox with accept/review/dismiss, and what was logged against planned sessions across the program — earlier programs' logs included, named by the server from `planned_sessions`. |
 | **Profile** | `ProfileView` | Athlete · Equipment · Schedule · Standards | Athlete = level, DOB, bodyweight, editable HR zones (a zone-coloured bar, §3.5), injuries. Toolbar gear pushes **Settings**: Connections (integration toggles), Devices & Sync (pair Garmin, Sync Now, last sync, sync details, debug log), Account (sign out), Appearance. |
 
 The **Sync** tab is removed. `resetProgramStartToToday()` — a program mutation hiding on
