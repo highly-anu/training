@@ -64,6 +64,17 @@ A training logic system that algorithmically generates periodized training progr
   at once: the worker passed 140 MB and was OOM-killed — the browser showed CORS errors and
   "timeout of 30000ms" because no answer came back at all. A new route that reads only
   package data takes `@static_json` and goes in `_static_paths`; one that reads the user must not.
+- **A 401 on every request is first a Supabase question** (2026-11-27). Supabase restricted
+  the project for its egress quota (`exceed_egress_quota`): its HTTP services, the key
+  endpoint included, answered 402, the API could verify no token and said 401 to every
+  athlete, and the phone showed "Server error 401" with no way to sign in again (the same
+  service signs in). Check `curl -i $SUPABASE_URL/auth/v1/.well-known/jwks.json` before
+  reading app or server code; only the project's owner can lift it (plan, spend cap, or
+  the next billing cycle). Since then `auth._signing_key` keeps every key it has verified
+  with for the life of the process and answers **503 `auth_unavailable`** when the key
+  service cannot be reached — never 401, which means "sign in again"
+  (`test_auth_unavailable.py`). Egress is mostly the API's own reads of Postgres through
+  the pooler: keep large rows (GPS tracks, program envelopes) out of routine reads.
 - **The app runs beside its database** (Fly `cdg`, Supabase `aws-1-eu-west-3`, both
   Paris, since 2026-10-17). In `sjc` every query crossed the Atlantic (~150 ms), and
   Log ▸ Linking took 17 s; keep `primary_region` with the database. Reads that may

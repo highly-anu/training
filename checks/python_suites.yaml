@@ -60,6 +60,7 @@ suites:
   - test_engine_tables.py             # levels, intensities and progression constants as data: the code's values, the override
   - test_written_progress.py         # a slot's own weight and steps under as_written (a hand-composed session)
   - test_level_scaling.py             # a prescription written for one level, done at another: shares, scales, min_level
+  - test_auth_unavailable.py          # a key service that does not answer is 503, never 401; a key seen before still verifies
   - test_authoring.py                 # the API's writes stay in custom; the MCP tools check every file kind
   - test_recovery_schedule.py
   - test_recovery_regions.py

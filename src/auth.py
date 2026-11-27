@@ -13,6 +13,7 @@ from functools import wraps
 
 import jwt as pyjwt
 from jwt import PyJWKClient
+from jwt.exceptions import PyJWKClientConnectionError, PyJWKClientError
 from flask import g, jsonify, request
 
 SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
@@ -39,18 +40,49 @@ def _decode_token(token: str):
 
     # Fall back to asymmetric (RS256/ES256) via JWKS
     if _jwks_client:
-        try:
-            signing_key = _jwks_client.get_signing_key_from_jwt(token)
-            return pyjwt.decode(
-                token,
-                signing_key.key,
-                algorithms=['ES256', 'RS256'],
-                options={'verify_aud': False},
-            )
-        except Exception:
-            pass
+        return pyjwt.decode(
+            token,
+            _signing_key(token),
+            algorithms=['ES256', 'RS256'],
+            options={'verify_aud': False},
+        )
 
     raise pyjwt.InvalidTokenError('No valid signing key available')
+
+
+class AuthUnavailable(Exception):
+    """The token could not be checked because the key service did not answer
+    — an outage of ours, not a bad token."""
+
+
+# kid → key, every key this process has verified with. PyJWKClient keeps its
+# own copy for five minutes only; signing keys change rarely, so a key service
+# that stops answering must not turn every signed-in athlete away.
+_known_keys: dict = {}
+
+
+def _signing_key(token: str):
+    """The key that signed `token`. When the key service cannot be reached:
+    the key last seen for its kid, else `AuthUnavailable` — never "invalid
+    token", which tells a client to sign in again (it cannot, the same
+    service signs in). On 2026-11-27 the Supabase project was restricted for
+    its egress quota, the key endpoint answered 402, and every request of
+    every athlete read 401."""
+    try:
+        kid = pyjwt.get_unverified_header(token).get('kid')
+    except pyjwt.PyJWTError as e:
+        raise pyjwt.InvalidTokenError(str(e))
+    try:
+        key = _jwks_client.get_signing_key_from_jwt(token).key
+    except PyJWKClientConnectionError as e:
+        if kid in _known_keys:
+            return _known_keys[kid]
+        raise AuthUnavailable(str(e))
+    except PyJWKClientError as e:
+        raise pyjwt.InvalidTokenError(str(e))
+    if kid:
+        _known_keys[kid] = key
+    return key
 
 
 # The routes a paired watch may call with its ciqdev_ token, as (method, rule).
@@ -150,6 +182,11 @@ def require_auth(f):
             # Kept for the request: a role is read from the verified token
             # (has_role), never from anything the client says about itself.
             g.claims = payload
+        except AuthUnavailable as e:
+            # 503, never 401: nothing is wrong with the athlete's sign-in.
+            print(f'[auth] key service unavailable: {e}', flush=True)
+            return jsonify({'detail': 'Sign-in cannot be checked right now. Try again shortly.',
+                            'reason': 'auth_unavailable'}), 503
         except pyjwt.ExpiredSignatureError:
             return jsonify({'detail': 'Token expired'}), 401
         except pyjwt.InvalidTokenError as e:
