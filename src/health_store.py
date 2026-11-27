@@ -1231,6 +1231,28 @@ def _ensure_snapshot_table(cur) -> None:
     _SNAPSHOT_TABLE_CREATED = True
 
 
+def get_progression_headline(user_id: str, period_key: str) -> dict | None:
+    """The lead methodology's headline of the cached program analytics, picked
+    out by Postgres. The watch's today-session shows that one sentence and
+    used to read the whole document for it (~120 KB a sync)."""
+    from src.db import get_conn
+    try:
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                _ensure_snapshot_table(cur)
+                cur.execute(
+                    "SELECT data::jsonb #> '{methodologies,0,headlineSummary}' FROM progression_snapshots "
+                    "WHERE user_id = %s AND period_key = %s AND period_type = 'program'",
+                    (user_id, period_key),
+                )
+                row = cur.fetchone()
+        if not row or row[0] is None:
+            return None
+        return row[0] if isinstance(row[0], dict) else json.loads(row[0])
+    except Exception:
+        return None
+
+
 def get_progression_snapshot(user_id: str, period_key: str, period_type: str) -> dict | None:
     from src.db import get_conn
     try:

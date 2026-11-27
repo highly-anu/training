@@ -77,7 +77,10 @@ A training logic system that algorithmically generates periodized training progr
   pooler, and the stored program (~600 KB) was read on nearly every request:
   `db.get_user_program` now keeps it per athlete and row version (`xmin` + `updated_at`,
   asked for every time, so never stale) and parses it per call (`test_program_cache.py`;
-  today-session went from 0.9 MB to 0.3 MB of database reads). Before adding a route,
+  today-session went from 0.9 MB to 0.2 MB of database reads). Archived versions are kept
+  the same way (`program_history._version_envelopes`: the progression routes read all 35 of
+  one athlete's, 3.8 MB a call, now 0.2 MB), and the watch's headline is picked out by
+  Postgres (`health_store.get_progression_headline`), not read with its 120 KB document. Before adding a route,
   count what it reads, not what it answers: a counting proxy between the API and a local
   restore of `backups/` ranks every GET route in a minute.
 - **The app runs beside its database** (Fly `cdg`, Supabase `aws-1-eu-west-3`, both

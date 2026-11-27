@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 """The stored program is read from Postgres once per revision, not once per
-request (src/db.get_user_program). On 2026-11-27 re-reading its ~600 KB on
+request (src/db.get_user_program); so is each archived version
+(program_history._version_envelopes), and the watch's headline is picked out
+by Postgres (health_store.get_progression_headline). On 2026-11-27 re-reading its ~600 KB on
 nearly every route had used the month's database egress.
 
 Runs on a database it makes and drops; skips (exit 0) without a local server.
@@ -105,9 +107,61 @@ def run(psycopg2) -> int:
         db.save_user_program(f'u{i}', {'i': i})
         db.get_user_program(f'u{i}')
     check('the cache is bounded', len(db._PROGRAM_CACHE) <= db._PROGRAM_CACHE_SIZE, len(db._PROGRAM_CACHE))
+    versions(cur)
+    headline(cur)
     own.close()
     print(f"\n{len(FAILURES)} failed" if FAILURES else '\nall passed')
     return 1 if FAILURES else 0
+
+
+def versions(cur) -> None:
+    """Archived versions (program_history.session_lookup) are read once each."""
+    from src import program_history as ph
+    cur.execute('CREATE TABLE program_versions (user_id TEXT, id TEXT, program_data JSONB NOT NULL, '
+                'PRIMARY KEY (user_id, id))')
+    for vid in ('v1', 'v2'):
+        cur.execute('INSERT INTO program_versions VALUES (%s, %s, %s)',
+                    ('a', vid, json.dumps({'currentProgram': {'weeks': [{'v': vid}]}})))
+    asked: list[str] = []
+    real = ph._query
+    ph._query = lambda sql, params: (asked.append(sql), real(sql, params))[1]
+    bodies = lambda: sum('AS body' in q for q in asked)
+    try:
+        first = ph._version_envelopes('a', ['v1', 'v2', 'nope'])
+        check('each named version the athlete has', sorted(first) == ['v1', 'v2'], sorted(first))
+        check('  as stored', first['v1'] == {'currentProgram': {'weeks': [{'v': 'v1'}]}}, first['v1'])
+        n = bodies()
+        again = ph._version_envelopes('a', ['v1', 'v2'])
+        check('a second read fetches no body', bodies() == n and again == first)
+        again['v1']['currentProgram']['weeks'].append('mine')
+        check("a caller's changes stay its own", ph._version_envelopes('a', ['v1']) == {'v1': first['v1']})
+        cur.execute("UPDATE program_versions SET program_data = %s WHERE id = 'v1'", (json.dumps({'x': 1}),))
+        n = bodies()
+        got = ph._version_envelopes('a', ['v1', 'v2'])
+        check('a refreshed snapshot is read again', got['v1'] == {'x': 1} and got['v2'] == first['v2'], got['v1'])
+        check('  and only that one', bodies() == n + 1 and "'v2'" not in str(asked[-1:]))
+        check("another athlete's version is not theirs", ph._version_envelopes('b', ['v1']) == {})
+        ph._ENVELOPES.clear()
+        ph._ENVELOPES_MAX_BYTES, kept = 10, ph._ENVELOPES_MAX_BYTES
+        ph._version_envelopes('a', ['v1', 'v2'])
+        ph._ENVELOPES_MAX_BYTES = kept
+        check('the cache is bounded by size', len(ph._ENVELOPES) <= 1, len(ph._ENVELOPES))
+    finally:
+        ph._query = real
+
+
+def headline(cur) -> None:
+    """The watch's headline is picked out by Postgres, not read with its document."""
+    from src import health_store
+    check('no snapshot: no headline', health_store.get_progression_headline('a', 'k') is None)
+    put = lambda key, data: cur.execute(
+        'INSERT INTO progression_snapshots (user_id, period_key, period_type, generated_at, session_hash, data) '
+        "VALUES ('a', %s, 'program', NOW(), 'hash', %s::jsonb)", (key, json.dumps(data)))
+    put('k', {'methodologies': [{'headlineSummary': {'label': 'Load', 'text': 'Squat 100kg'}, 'big': 'x' * 5000}]})
+    check('the lead methodology\'s headline', health_store.get_progression_headline('a', 'k')
+          == {'label': 'Load', 'text': 'Squat 100kg'}, health_store.get_progression_headline('a', 'k'))
+    put('k2', {'methodologies': []})
+    check('a document without one: None', health_store.get_progression_headline('a', 'k2') is None)
 
 
 if __name__ == '__main__':
