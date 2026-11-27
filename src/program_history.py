@@ -39,8 +39,10 @@ are real and both paths must agree.
 """
 from __future__ import annotations
 
+import collections
 import hashlib
 import json
+import threading
 from datetime import date, timedelta
 
 from src.program_keys import DAY_NAMES, normalize_program_keys, pick
@@ -1183,6 +1185,48 @@ def planned_rows_for_uids(user_id: str, uids: list[str]) -> dict[str, dict]:
     return out
 
 
+# An archived version's envelope as Postgres sent it, per (athlete, version),
+# with the row version it was read at. A version is frozen (its content is
+# refreshed in place at most, which moves xmin), yet the progression routes
+# read every one an athlete's logs touch on each call — 3.8 MB a request for
+# 35 versions when Supabase restricted the project for egress on 2026-11-27.
+# The row versions are asked for every time, so a refreshed snapshot is read
+# again; the text is parsed per call, so callers share nothing.
+_ENVELOPES: 'collections.OrderedDict[tuple[str, str], tuple[str, str]]' = collections.OrderedDict()
+_ENVELOPES_LOCK = threading.Lock()
+_ENVELOPES_MAX_BYTES = 48 * 1024 * 1024
+
+
+def _version_envelopes(user_id: str, version_ids: list[str]) -> dict[str, dict]:
+    """The stored envelope of each named version the athlete has."""
+    heads = _query('SELECT id, xmin::text AS row_version FROM program_versions '
+                   'WHERE user_id = %s AND id = ANY(%s::text[])', (user_id, version_ids))
+    texts: dict[str, str] = {}
+    missing: list[str] = []
+    with _ENVELOPES_LOCK:
+        for h in heads:
+            kept = _ENVELOPES.get((user_id, h['id']))
+            if kept and kept[0] == h['row_version']:
+                _ENVELOPES.move_to_end((user_id, h['id']))
+                texts[h['id']] = kept[1]
+            else:
+                missing.append(h['id'])
+    if missing:
+        rows = _query('SELECT id, xmin::text AS row_version, program_data::text AS body '
+                      'FROM program_versions WHERE user_id = %s AND id = ANY(%s::text[])',
+                      (user_id, missing))
+        with _ENVELOPES_LOCK:
+            for r in rows:
+                if r['body'] is None:
+                    continue
+                texts[r['id']] = r['body']
+                _ENVELOPES[(user_id, r['id'])] = (r['row_version'], r['body'])
+                _ENVELOPES.move_to_end((user_id, r['id']))
+            while len(_ENVELOPES) > 1 and sum(len(v[1]) for v in _ENVELOPES.values()) > _ENVELOPES_MAX_BYTES:
+                _ENVELOPES.popitem(last=False)
+    return {vid: json.loads(body) for vid, body in texts.items()}
+
+
 def session_lookup(user_id: str, uids: list[str]) -> list[dict]:
     """Full records for named sessions, including the session JSON itself.
 
@@ -1211,12 +1255,8 @@ def session_lookup(user_id: str, uids: list[str]) -> list[dict]:
         return []
 
     version_ids = sorted({r['program_version_id'] for r in rows})
-    snapshots = {
-        v['id']: unwrap(v['program_data'])
-        for v in _query('SELECT id, program_data FROM program_versions '
-                        'WHERE user_id = %s AND id = ANY(%s::text[])',
-                        (user_id, version_ids))
-    }
+    snapshots = {vid: unwrap(envelope)
+                 for vid, envelope in _version_envelopes(user_id, version_ids).items()}
 
     out: list[dict] = []
     for row in rows:

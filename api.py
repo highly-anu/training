@@ -5536,9 +5536,7 @@ def _watch_progress(user_id: str, program: dict, weeks: list, start: _date, toda
     }
     try:
         key = f"{start.isoformat()}:{(program.get('sourceGoalIds') or ['-'])[0]}"
-        cached = _health.get_progression_snapshot(user_id, key, 'program')
-        method = (((cached or {}).get('data') or {}).get('methodologies') or [None])[0] or {}
-        h = method.get('headlineSummary')
+        h = _health.get_progression_headline(user_id, key)
         if h:
             out['headline'] = {k: h.get(k) for k in ('label', 'text', 'trendText', 'status')}
     except Exception:

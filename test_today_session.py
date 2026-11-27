@@ -86,19 +86,18 @@ def run():
     # progress: this week's sessions done of those due (Friday's two; Saturday's
     # is ahead) and of all three, the program so far, and no headline until the
     # analytics document has been cached.
-    api._health.get_progression_snapshot = lambda uid, key, kind: None
+    api._health.get_progression_headline = lambda uid, key: None
     p = client.get('/api/user/today-session?date=2026-10-09').get_json()['progress']
     check(p['week'] == {'number': 1, 'of': 1, 'done': 1, 'due': 2, 'sessions': 3}, f"week {p['week']}")
     check(p['program'] == {'done': 1, 'due': 2, 'pct': 50}, f"program {p['program']}")
     check('headline' not in p, 'no headline without a cached document')
     seen = {}
 
-    def snapshot(uid, key, kind):
-        seen['key'] = (key, kind)
-        return {'data': {'methodologies': [{'headlineSummary': {
-            'label': 'Load on the bar', 'text': 'Back squat 102.5kg', 'trendText': '+1.2% per session',
-            'status': 'on_track', 'value': 102.5}}]}}
-    api._health.get_progression_snapshot = snapshot
+    def snapshot(uid, key):
+        seen['key'] = (key, 'program')
+        return {'label': 'Load on the bar', 'text': 'Back squat 102.5kg', 'trendText': '+1.2% per session',
+                'status': 'on_track', 'value': 102.5}
+    api._health.get_progression_headline = snapshot
     p = client.get('/api/user/today-session?date=2026-10-09').get_json()['progress']
     check(p.get('headline') == {'label': 'Load on the bar', 'text': 'Back squat 102.5kg',
                                 'trendText': '+1.2% per session', 'status': 'on_track'},
@@ -259,7 +258,7 @@ def fixture_check(client, write=False):
     saved = (src.db.get_user_program, src.db.get_user_profile, src.last_time.last_by_exercise,
              ph.active_version_id, api._get_user_max_hr, api._bio_for_scoring, api._compute_readiness,
              api._standards_context, api._health.get_session_logs, api._health.get_session_logs_by_uid,
-             api._health.get_matches, api._health.get_performance_logs, api._health.get_progression_snapshot)
+             api._health.get_matches, api._health.get_performance_logs, api._health.get_progression_headline)
     src.db.get_user_program = lambda uid: FIXTURE_PROGRAM
     src.db.get_user_profile = lambda uid: {}
     src.last_time.last_by_exercise = lambda logs, today, tz=None: {'back_squat': '100kg × 5'}
@@ -274,15 +273,15 @@ def fixture_check(client, write=False):
     api._health.get_matches = lambda uid: []
     api._health.get_performance_logs = lambda uid: {'row_2km_minutes': [
         {'id': 1, 'value': 7.8, 'date': '2026-09-01', 'loggedOn': '2026-09-01', 'source': 'manual', 'note': None}]}
-    api._health.get_progression_snapshot = lambda uid, key, kind: {'data': {'methodologies': [{'headlineSummary': {
-        'label': 'Load on the bar', 'text': 'Back squat 102.5kg', 'trendText': None, 'status': 'on_track'}}]}}
+    api._health.get_progression_headline = lambda uid, key: {
+        'label': 'Load on the bar', 'text': 'Back squat 102.5kg', 'trendText': None, 'status': 'on_track'}
     try:
         body = client.get('/api/user/today-session?date=2026-10-12&spec=1&week=1').get_json()
     finally:
         (src.db.get_user_program, src.db.get_user_profile, src.last_time.last_by_exercise,
          ph.active_version_id, api._get_user_max_hr, api._bio_for_scoring, api._compute_readiness,
          api._standards_context, api._health.get_session_logs, api._health.get_session_logs_by_uid,
-         api._health.get_matches, api._health.get_performance_logs, api._health.get_progression_snapshot) = saved
+         api._health.get_matches, api._health.get_performance_logs, api._health.get_progression_headline) = saved
 
     import json
     text = json.dumps(body, indent=2, sort_keys=True, ensure_ascii=False) + '\n'
