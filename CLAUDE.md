@@ -80,7 +80,12 @@ A training logic system that algorithmically generates periodized training progr
   today-session went from 0.9 MB to 0.2 MB of database reads). Archived versions are kept
   the same way (`program_history._version_envelopes`: the progression routes read all 35 of
   one athlete's, 3.8 MB a call, now 0.2 MB), and the watch's headline is picked out by
-  Postgres (`health_store.get_progression_headline`), not read with its 120 KB document. Before adding a route,
+  Postgres (`health_store.get_progression_headline`), not read with its 120 KB document.
+  The workout summaries, the block's matched workouts with their series and the session
+  logs are kept per athlete under a fingerprint of that athlete's rows, computed by
+  Postgres and asked for on every call (`health_store._kept`): a reader of a whole
+  per-athlete table goes through it. After all of it no route reads over 0.2 MB once warm
+  (today-session 44 KB, from 0.9 MB). Before adding a route,
   count what it reads, not what it answers: a counting proxy between the API and a local
   restore of `backups/` ranks every GET route in a minute.
 - **The app runs beside its database** (Fly `cdg`, Supabase `aws-1-eu-west-3`, both

@@ -96,7 +96,7 @@ suites:
   - test_profile_merge.py
   - test_workout_dedupe.py
   # Accounts, devices, wellness, the server
-  - test_program_cache.py             # the stored program and archived versions read once per revision, never stale; the watch's headline alone; on its own database
+  - test_program_cache.py             # the stored program and archived versions read once per revision, never stale; the watch's headline alone; workouts and logs kept by row fingerprint; on its own database
   - test_account_delete.py            # SQL half on its own database
   - test_apple_client_secret.py
   - test_device_scope.py

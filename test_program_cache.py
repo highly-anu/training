@@ -2,7 +2,9 @@
 """The stored program is read from Postgres once per revision, not once per
 request (src/db.get_user_program); so is each archived version
 (program_history._version_envelopes), and the watch's headline is picked out
-by Postgres (health_store.get_progression_headline). On 2026-11-27 re-reading its ~600 KB on
+by Postgres (health_store.get_progression_headline). The workout summaries,
+the matched workouts and the session logs are kept under a fingerprint of
+the athlete's rows (health_store._kept). On 2026-11-27 re-reading its ~600 KB on
 nearly every route had used the month's database egress.
 
 Runs on a database it makes and drops; skips (exit 0) without a local server.
@@ -110,6 +112,7 @@ def run(psycopg2) -> int:
     db._get_pg_conn = real
     versions(cur)
     headline(cur)
+    kept_reads(cur)
     own.close()
     print(f"\n{len(FAILURES)} failed" if FAILURES else '\nall passed')
     return 1 if FAILURES else 0
@@ -166,6 +169,47 @@ def headline(cur) -> None:
           == {'label': 'Load', 'text': 'Squat 100kg'}, health_store.get_progression_headline('a', 'k'))
     put('k2', {'methodologies': []})
     check('a document without one: None', health_store.get_progression_headline('a', 'k2') is None)
+
+
+def kept_reads(cur) -> None:
+    """health_store._kept: a reader's answer per athlete, for as long as the
+    athlete's rows in the table are what they were."""
+    from src import health_store as hs
+    calls = []
+    load = lambda: (calls.append(1), [{'n': len(calls)}])[1]
+    check('no table: read every time, nothing kept',
+          hs._kept('a', 'session_logs', ('t',), load) == [{'n': 1}]
+          and hs._kept('a', 'session_logs', ('t',), load) == [{'n': 2}] and not hs._KEPT)
+    cur.execute('CREATE TABLE session_logs (user_id TEXT, session_key TEXT, session_uid TEXT, note TEXT)')
+    check('no rows: an empty answer is never kept',
+          hs._session_log_rows('a') == [] and not hs._KEPT)
+    cur.execute("INSERT INTO session_logs VALUES ('a', '1-Monday-0', 'v:w0-Monday-0', 'one'), ('b', 'x', NULL, 'theirs')")
+    rows = hs._session_log_rows('a')
+    check("the athlete's rows", [r['note'] for r in rows] == ['one'], rows)
+    calls.clear()
+    first = hs._kept('a', 'session_logs', ('t',), load)
+    second = hs._kept('a', 'session_logs', ('t',), load)
+    check('a second read is from memory', len(calls) == 1 and second == first, calls)
+    second[0]['n'] = 'mine'
+    check("a caller's changes stay its own", hs._kept('a', 'session_logs', ('t',), load) == first)
+    for label, sql in (('an update', "UPDATE session_logs SET note = 'two' WHERE user_id = 'a'"),
+                       ('an insert', "INSERT INTO session_logs VALUES ('a', '1-Tuesday-0', NULL, 'three')"),
+                       ('a delete', "DELETE FROM session_logs WHERE user_id = 'a' AND note = 'three'")):
+        before = len(calls)
+        cur.execute(sql)
+        hs._kept('a', 'session_logs', ('t',), load)
+        check(f'{label} is read at once', len(calls) == before + 1)
+    check('  and the rows are the new ones', [r['note'] for r in hs._session_log_rows('a')] == ['two'])
+    before = len(calls)
+    cur.execute("UPDATE session_logs SET note = 'still theirs' WHERE user_id = 'b'")
+    hs._kept('a', 'session_logs', ('t',), load)
+    check("another athlete's write reads nothing again", len(calls) == before)
+    hs._KEPT.clear()
+    hs._KEPT_MAX_BYTES, was = 10, hs._KEPT_MAX_BYTES
+    hs._kept('a', 'session_logs', ('t',), load)
+    hs._kept('a', 'session_logs', ('u',), load)
+    hs._KEPT_MAX_BYTES = was
+    check('the cache is bounded by size', len(hs._KEPT) <= 1, len(hs._KEPT))
 
 
 if __name__ == '__main__':
