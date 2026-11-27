@@ -1,7 +1,10 @@
 """Supabase-backed storage for all user health and performance data."""
 from __future__ import annotations
 
+import collections
 import json
+import pickle
+import threading
 import psycopg2.extras as _pg_extras
 
 from src import session_scope
@@ -432,7 +435,72 @@ SUMMARY_COLUMNS = (
 )
 
 
+# ── Reads kept per athlete ────────────────────────────────────────────────────
+# What a route reads from Postgres crosses the pooler, and that is the
+# project's egress: on 2026-11-27 Supabase restricted it for the month's quota.
+# The workout summaries (91 KB), the session logs (60 KB, read twice) and the
+# current block's matched workouts with their series (344 KB) were fetched
+# again on every request. `_kept` keeps a reader's answer per athlete under a
+# fingerprint of the table's rows for that athlete, which Postgres computes and
+# every call asks for (a few bytes): any insert, update or delete, by anyone,
+# changes it. Each caller gets a copy of its own. Nothing is kept when the
+# fingerprint cannot be read, or for an empty answer — the readers answer
+# empty on an error too, and an error must not be remembered.
+_KEPT: 'collections.OrderedDict[tuple, tuple[str, bytes]]' = collections.OrderedDict()
+_KEPT_LOCK = threading.Lock()
+_KEPT_MAX_BYTES = 32 * 1024 * 1024
+_KEPT_TABLES = ('workouts', 'session_logs')
+
+
+def _fingerprint(user_id: str, table: str) -> str | None:
+    """A digest of every row version the athlete has in `table`; None when it
+    cannot be read (no database, no such table)."""
+    from src.db import get_conn
+    assert table in _KEPT_TABLES
+    try:
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT md5(coalesce(string_agg(xmin::text || '.' || ctid::text, ',' ORDER BY ctid), '')) "
+                    f"FROM {table} WHERE user_id = %s", (user_id,))
+                row = cur.fetchone()
+        return row[0] if row else None
+    except Exception:
+        return None
+
+
+def _kept(user_id: str, table: str, name: tuple, load):
+    """`load()`'s answer, from memory while the athlete's rows in `table` are
+    what they were when it was read."""
+    fingerprint = _fingerprint(user_id, table)
+    if fingerprint is None:
+        return load()
+    key = (user_id, table) + name
+    with _KEPT_LOCK:
+        kept = _KEPT.get(key)
+        if kept and kept[0] == fingerprint:
+            _KEPT.move_to_end(key)
+            return pickle.loads(kept[1])
+    value = load()
+    if value:
+        body = pickle.dumps(value, pickle.HIGHEST_PROTOCOL)
+        with _KEPT_LOCK:
+            _KEPT[key] = (fingerprint, body)
+            _KEPT.move_to_end(key)
+            while len(_KEPT) > 1 and sum(len(v[1]) for v in _KEPT.values()) > _KEPT_MAX_BYTES:
+                _KEPT.popitem(last=False)
+    return value
+
+
 def get_workouts(user_id: str, summary_only: bool = False) -> list[dict]:
+    # The summaries are what nearly every route reads; full rows carry every
+    # series and are never kept whole.
+    if summary_only:
+        return _kept(user_id, 'workouts', ('summaries',), lambda: _read_workouts(user_id, True))
+    return _read_workouts(user_id, False)
+
+
+def _read_workouts(user_id: str, summary_only: bool) -> list[dict]:
     from src.db import get_conn
     try:
         with get_conn() as conn:
@@ -468,10 +536,14 @@ def get_workouts_by_ids(user_id: str, ids: list[str]) -> list[dict]:
     gps_track and hr_samples blob is what OOM-killed the worker once (see
     get_workouts). Callers pass the ids the matcher already resolved.
     """
-    from src.db import get_conn
-    wanted = [i for i in (ids or []) if i]
+    wanted = sorted({i for i in (ids or []) if i})
     if not wanted:
         return []
+    return _kept(user_id, 'workouts', ('by_ids', tuple(wanted)), lambda: _read_workouts_by_ids(user_id, wanted))
+
+
+def _read_workouts_by_ids(user_id: str, wanted: list[str]) -> list[dict]:
+    from src.db import get_conn
     try:
         with get_conn() as conn:
             with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
@@ -801,10 +873,7 @@ def get_session_logs(user_id: str) -> dict:
         return 2 if uid and active_vid and uid.startswith(active_vid + ':') else 1
 
     try:
-        with get_conn() as conn:
-            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
-                cur.execute('SELECT * FROM session_logs WHERE user_id = %s', (user_id,))
-                rows = cur.fetchall()
+        rows = _session_log_rows(user_id)
         result = {}
         ranks: dict[str, int] = {}
         for row in rows:
@@ -884,6 +953,19 @@ def get_session_log(user_id: str, session_uid: str | None, session_key: str | No
     return None
 
 
+def _session_log_rows(user_id: str) -> list[dict]:
+    """Every session log row the athlete has, read once for both readers
+    (they used to fetch the table one after the other) and kept (`_kept`).
+    Raises when the read fails: each reader answers empty itself."""
+    def load() -> list[dict]:
+        from src.db import get_conn
+        with get_conn() as conn:
+            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
+                cur.execute('SELECT * FROM session_logs WHERE user_id = %s', (user_id,))
+                return [dict(r) for r in cur.fetchall()]
+    return _kept(user_id, 'session_logs', ('rows',), load)
+
+
 def get_session_logs_by_uid(user_id: str) -> dict:
     """Every scoped session log, keyed by session_uid.
 
@@ -894,13 +976,8 @@ def get_session_logs_by_uid(user_id: str) -> dict:
     read this instead. Logs with no uid are absent by definition — they were
     written before a log could say which program it belonged to.
     """
-    from src.db import get_conn
     try:
-        with get_conn() as conn:
-            with conn.cursor(cursor_factory=_pg_extras.RealDictCursor) as cur:
-                cur.execute('SELECT * FROM session_logs WHERE user_id = %s '
-                            'AND session_uid IS NOT NULL', (user_id,))
-                rows = cur.fetchall()
+        rows = [r for r in _session_log_rows(user_id) if r.get('session_uid') is not None]
         # Every reader's shape (_log_entry), the timeline included: the
         # matcher lines a band's recording up with the session the phone ran.
         return {row['session_uid']: _log_entry(row) for row in rows}
