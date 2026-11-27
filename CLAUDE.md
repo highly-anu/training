@@ -1674,7 +1674,13 @@ osascript -e 'tell application "System Events" to click at {1812, 105}'
 
 **Every check runs locally, before the push; GitHub runs none** (since 2026-10-26;
 the Training contracts and Frontend Build workflows are gone, Deploy API and Cloudflare
-Pages still deploy). The shared hooks in `../code-checks` (`core.hooksPath`; once per
+Pages still deploy). **A merge is not a deploy until its Deploy API run exists**: on
+2026-11-27 GitHub made no run for #354's push and production stayed a commit behind
+with nothing to re-run. After a backend merge look at `gh run list --workflow
+deploy-api.yml`; when the commit has no run, `gh workflow run deploy-api.yml` deploys
+master as it stands, and `scripts/deploy_api.sh` does the same from this Mac without
+GitHub (a clean export of `origin/master`, `--ha=false`, the one-machine check; it
+needs `fly auth login` and refuses beside a run in flight). The shared hooks in `../code-checks` (`core.hooksPath`; once per
 machine `../code-checks/install.sh`) call `checks.sh`: at commit the syntax of the
 changed Python and each changed data YAML against its schema; at push, by the paths the
 pushed commits touch:
