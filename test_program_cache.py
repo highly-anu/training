@@ -153,6 +153,9 @@ def versions(cur) -> None:
 def headline(cur) -> None:
     """The watch's headline is picked out by Postgres, not read with its document."""
     from src import health_store
+    cur.execute('CREATE TABLE IF NOT EXISTS progression_snapshots (id SERIAL PRIMARY KEY, user_id TEXT NOT NULL, '
+                'period_key TEXT NOT NULL, period_type TEXT NOT NULL, generated_at TIMESTAMP NOT NULL, '
+                'session_hash TEXT NOT NULL, data JSONB NOT NULL, UNIQUE (user_id, period_key, period_type))')
     check('no snapshot: no headline', health_store.get_progression_headline('a', 'k') is None)
     put = lambda key, data: cur.execute(
         'INSERT INTO progression_snapshots (user_id, period_key, period_type, generated_at, session_hash, data) '
