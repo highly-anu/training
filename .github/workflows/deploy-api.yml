@@ -15,6 +15,11 @@ on:
       - 'docs/schemas/**'
       - 'tools/portability_gaps.json'   # served by /api/dev/portability
       - 'fly.toml'
+  # By hand, for a push GitHub made no run for (2026-11-27, #354: merged, never
+  # deployed, and nothing to re-run): `gh workflow run deploy-api.yml`, or
+  # Actions ▸ Deploy API ▸ Run workflow. It deploys master as it stands.
+  # Without GitHub at all: scripts/deploy_api.sh.
+  workflow_dispatch:
 
 # One deploy at a time. Merging a stack pushes master several times in a row,
 # and parallel runs fought over the Fly machines' lease: on 2026-10-31 8 of 13
