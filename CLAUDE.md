@@ -73,8 +73,13 @@ A training logic system that algorithmically generates periodized training progr
   the next billing cycle). Since then `auth._signing_key` keeps every key it has verified
   with for the life of the process and answers **503 `auth_unavailable`** when the key
   service cannot be reached — never 401, which means "sign in again"
-  (`test_auth_unavailable.py`). Egress is mostly the API's own reads of Postgres through
-  the pooler: keep large rows (GPS tracks, program envelopes) out of routine reads.
+  (`test_auth_unavailable.py`). Egress is the API's own reads of Postgres through the
+  pooler, and the stored program (~600 KB) was read on nearly every request:
+  `db.get_user_program` now keeps it per athlete and row version (`xmin` + `updated_at`,
+  asked for every time, so never stale) and parses it per call (`test_program_cache.py`;
+  today-session went from 0.9 MB to 0.3 MB of database reads). Before adding a route,
+  count what it reads, not what it answers: a counting proxy between the API and a local
+  restore of `backups/` ranks every GET route in a minute.
 - **The app runs beside its database** (Fly `cdg`, Supabase `aws-1-eu-west-3`, both
   Paris, since 2026-10-17). In `sjc` every query crossed the Atlantic (~150 ms), and
   Log ▸ Linking took 17 s; keep `primary_region` with the database. Reads that may

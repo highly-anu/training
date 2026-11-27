@@ -6,6 +6,7 @@ In local dev (no DATABASE_URL), falls back to JSON file storage in data/user_pro
 from __future__ import annotations
 
 import os
+import collections
 import json
 import threading
 import time
@@ -235,19 +236,62 @@ def get_program_revision(user_id: str) -> str | None:
     return None
 
 
+# The stored program as Postgres sent it, per athlete, with the revision it was
+# read at. Nearly every route reads the program, and it is ~600 KB on the wire:
+# on 2026-11-27 those reads had used the month's database egress (today-session
+# alone read 0.9 MB for an answer of a few KB) and Supabase restricted the
+# project. A hit costs the revision's few bytes; the text is parsed per call, so
+# every caller still gets a dict of its own to change. One process serves
+# production; a second would only miss more often, never read stale — the
+# revision is asked for every time.
+_PROGRAM_CACHE: 'collections.OrderedDict[str, tuple[str, str]]' = collections.OrderedDict()
+_PROGRAM_CACHE_LOCK = threading.Lock()
+_PROGRAM_CACHE_SIZE = 16
+# The row's own version: xmin changes with every write of the row, whoever
+# made it — a script or a test that updates program_data without touching
+# updated_at included.
+_ROW_VERSION = "xmin::text || ' ' || coalesce(updated_at::text, '')"
+
+
+def _forget_program(user_id: str) -> None:
+    with _PROGRAM_CACHE_LOCK:
+        _PROGRAM_CACHE.pop(user_id, None)
+
+
 def get_user_program(user_id: str) -> dict[str, Any] | None:
     """Fetch user's current program from database or local file."""
     conn = _get_pg_conn()
     if conn:
         try:
-            import psycopg2.extras
-            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-                cur.execute(
-                    'SELECT program_data FROM user_programs WHERE user_id = %s',
-                    (user_id,)
-                )
+            with conn.cursor() as cur:
+                cur.execute(f'SELECT {_ROW_VERSION} FROM user_programs WHERE user_id = %s',
+                            (user_id,))
                 row = cur.fetchone()
-                return dict(row['program_data']) if row else None
+                if not row:
+                    _forget_program(user_id)
+                    return None
+                revision = row[0]
+                with _PROGRAM_CACHE_LOCK:
+                    kept = _PROGRAM_CACHE.get(user_id)
+                    if kept and revision is not None and kept[0] == revision:
+                        _PROGRAM_CACHE.move_to_end(user_id)
+                        return dict(json.loads(kept[1]))
+                # The revision travels with the text: a save between the two
+                # statements must not file the new program under the old one.
+                cur.execute(f'SELECT program_data::text, {_ROW_VERSION} FROM user_programs '
+                            'WHERE user_id = %s', (user_id,))
+                row = cur.fetchone()
+                if not row or row[0] is None:
+                    _forget_program(user_id)
+                    return None
+                text, revision = row
+                if revision is not None:
+                    with _PROGRAM_CACHE_LOCK:
+                        _PROGRAM_CACHE[user_id] = (revision, text)
+                        _PROGRAM_CACHE.move_to_end(user_id)
+                        while len(_PROGRAM_CACHE) > _PROGRAM_CACHE_SIZE:
+                            _PROGRAM_CACHE.popitem(last=False)
+                return dict(json.loads(text))
         except Exception as e:
             print(f"Error fetching program from database: {e}")
             return None
@@ -300,6 +344,8 @@ def save_user_program(user_id: str, program_data: dict[str, Any]) -> None:
         except Exception as e:
             print(f"Error saving program to database: {e}")
             raise
+        finally:
+            _forget_program(user_id)
     else:
         # Local dev mode
         _ensure_local_storage()
