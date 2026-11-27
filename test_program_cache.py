@@ -107,6 +107,7 @@ def run(psycopg2) -> int:
         db.save_user_program(f'u{i}', {'i': i})
         db.get_user_program(f'u{i}')
     check('the cache is bounded', len(db._PROGRAM_CACHE) <= db._PROGRAM_CACHE_SIZE, len(db._PROGRAM_CACHE))
+    db._get_pg_conn = real
     versions(cur)
     headline(cur)
     own.close()
